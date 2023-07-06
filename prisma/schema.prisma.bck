@@ -1,0 +1,455 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model crm_Accounts {
+  id                   String              @id @default(auto()) @map("_id") @db.ObjectId
+  v                    Int                 @map("__v")
+  annual_revenue       String?
+  assigned_to          String?             @db.ObjectId
+  billing_city         String?
+  billing_country      String?
+  billing_postal_code  String?
+  billing_state        String?
+  billing_street       String?
+  company_id           String?
+  description          String?
+  email                String?
+  employees            String?
+  fax                  String?
+  industry             String?             @db.ObjectId
+  member_of            String?
+  name                 String
+  office_phone         String?
+  shipping_city        String?
+  shipping_country     String?
+  shipping_postal_code String?
+  shipping_state       String?
+  shipping_street      String?
+  status               String?             @default("Inactive")
+  type                 String?             @default("Customer")
+  vat                  String?
+  website              String?
+  invoices             Invoices[]
+  documents            Documents[]
+  industry_type        crm_Industry_Type?  @relation(fields: [industry], references: [id])
+  contacts             crm_Contacts[]
+  opportunities        crm_Opportunities[]
+  assigned_to_user     Users?              @relation(fields: [assigned_to], references: [id])
+}
+
+model crm_Leads {
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
+  v                Int       @default(0) @map("__v")
+  date_created     DateTime? @default(now()) @db.Date
+  date_modify      DateTime? @default(now()) @db.Date
+  last_activity_by String?   @db.ObjectId
+  firstName        String?
+  lastName         String?
+  company          String?
+  jobTitle         String?
+  email            String?
+  phone            String?
+  description      String?
+  lead_source      String?
+  refered_by       String?
+  campaign         String?
+  assigned_to      String?   @db.ObjectId
+  status           String?   @default("NEW")
+  type             String?   @default("DEMO")
+  assigned_to_user Users?    @relation(fields: [assigned_to], references: [id])
+}
+
+enum crm_Lead_Status {
+  NEW
+  CONTACTED
+  QUALIFIED
+  LOST
+}
+
+enum crm_Lead_Type {
+  DEMO
+}
+
+model crm_Opportunities {
+  id                   String                          @id @default(auto()) @map("_id") @db.ObjectId
+  v                    Int                             @default(0) @map("__v")
+  account              String?                         @db.ObjectId
+  assigned_to          String?                         @db.ObjectId
+  budget               String?
+  campaign             String?
+  close_date           DateTime?                       @db.Date
+  contact              String?                         @db.ObjectId
+  created_by           String?                         @db.ObjectId
+  created_on           DateTime?                       @default(now()) @db.Date
+  last_activity        DateTime?                       @db.Date
+  last_activity_by     String?                         @db.ObjectId
+  currency             String?
+  description          String?
+  expected_revenue     String?
+  name                 String?
+  next_step            String?
+  sales_stage          String?                         @default("New") @db.ObjectId
+  status               String?                         @default("Active")
+  type                 String?                         @default("New") @db.ObjectId
+  assigned_type        crm_Opportunities_Type?         @relation(fields: [type], references: [id])
+  assigned_sales_stage crm_Opportunities_Sales_Stages? @relation(name: "assinged_sales_stage", fields: [sales_stage], references: [id])
+  assigned_to_user     Users?                          @relation(name: "assigned_to_user_relation", fields: [assigned_to], references: [id])
+  created_by_user      Users?                          @relation(name: "created_by_user_relation", fields: [created_by], references: [id])
+  assigned_account     crm_Accounts?                   @relation(fields: [account], references: [id])
+  assigned_contact     crm_Contacts?                   @relation(fields: [contact], references: [id])
+}
+
+model crm_Opportunities_Sales_Stages {
+  id                                 String              @id @default(auto()) @map("_id") @db.ObjectId
+  v                                  Int                 @map("__v")
+  name                               String
+  probability                        Int?
+  order                              Int?
+  assigned_opportunities_sales_stage crm_Opportunities[] @relation(name: "assinged_sales_stage")
+}
+
+model crm_Opportunities_Type {
+  id                     String              @id @default(auto()) @map("_id") @db.ObjectId
+  v                      Int                 @map("__v")
+  name                   String
+  order                  Int?
+  assigned_opportunities crm_Opportunities[]
+}
+
+model crm_Contacts {
+  id               String              @id @default(auto()) @map("_id") @db.ObjectId
+  v                Int                 @default(0) @map("__v")
+  account          String?             @db.ObjectId
+  assigned_to      String?             @db.ObjectId
+  birthday         String?
+  created_by       String              @db.ObjectId
+  created_on       DateTime            @default(now())
+  last_activity    DateTime?           @default(now()) @db.Date
+  last_activity_by String?             @db.ObjectId
+  description      String?
+  email            String?
+  personal_email   String?
+  first_name       String?
+  last_name        String
+  office_phone     String?
+  mobile_phone     String?
+  website          String?
+  position         String?
+  status           String?             @default("Inactive")
+  social_twitter   String?
+  social_facebook  String?
+  social_linkedin  String?
+  social_skype     String?
+  social_instagram String?
+  social_youtube   String?
+  social_tiktok    String?
+  type             String?             @default("Customer")
+  opportunities    crm_Opportunities[]
+  assigned_to_user Users?              @relation(name: "assigned_contacts", fields: [assigned_to], references: [id])
+  crate_by_user    Users?              @relation(name: "created_contacts", fields: [created_by], references: [id])
+  assigned_account crm_Accounts?       @relation(fields: [account], references: [id])
+}
+
+model Boards {
+  id                String    @id @default(auto()) @map("_id") @db.ObjectId
+  v                 Int       @map("__v")
+  description       String
+  favourite         Boolean?
+  favouritePosition Int?
+  icon              String?
+  position          Int?
+  title             String
+  user              String    @db.ObjectId
+  visibility        String?
+  date_created      DateTime? @default(now()) @db.Date
+  last_edited       DateTime? @db.Date
+}
+
+model Employees {
+  id     String  @id @default(auto()) @map("_id") @db.ObjectId
+  v      Int     @map("__v")
+  avatar String
+  email  String?
+  name   String
+  salary Int
+  status String
+}
+
+model ImageUpload {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+}
+
+model Invoices {
+  id                          String          @id @default(auto()) @map("_id") @db.ObjectId
+  v                           Int?            @map("__v")
+  connected_documents         Json?
+  date_created                DateTime        @default(now()) @db.Date
+  date_received               DateTime?       @db.Date
+  date_of_case                DateTime?       @db.Date
+  date_tax                    DateTime?       @db.Date
+  date_due                    DateTime?       @db.Date
+  description                 String?
+  document_type               String?
+  favorite                    Boolean?
+  variable_symbol             String?
+  constant_symbol             String?
+  specific_symbol             String?
+  order_number                String?
+  internal_number             String?
+  invoice_number              String?
+  invoice_amount              String?
+  invoice_file_mimeType       String
+  invoice_file_url            String
+  invoice_items               Json?
+  invoice_type                String?
+  inovice_currency            String?
+  partner                     String?
+  partner_address             String?
+  partner_VAT_number          String?
+  partner_TAX_number          String?
+  partner_TAX_local_number    String?
+  partner_account_number      String?
+  partner_account_bank_number String?
+  partner_IBAN                String?
+  partner_SWIFT               String?
+  partner_BIC                 String?
+  rossum_annotation_id        String?
+  rossum_annotation_url       String?
+  rossum_document_id          String?
+  rossum_document_url         String?
+  status                      String?
+  invoice_state               String?         @db.ObjectId
+  user                        String?         @db.ObjectId
+  account                     String?         @db.ObjectId
+  visibility                  String?
+  invoice_states              invoice_States? @relation(fields: [invoice_state], references: [id])
+  assigned_user               Users?          @relation(fields: [user], references: [id])
+  crm_account                 crm_Accounts?   @relation(fields: [account], references: [id])
+}
+
+model invoice_States {
+  id                String     @id @default(auto()) @map("_id") @db.ObjectId
+  name              String
+  assigned_invoices Invoices[]
+}
+
+model Documents {
+  id                     String              @id @default(auto()) @map("_id") @db.ObjectId
+  v                      Int?                @map("__v")
+  connected_documents    Json?
+  date_created           DateTime            @default(now()) @db.Date
+  last_updated           DateTime?           @db.Date
+  document_name          String?
+  created_by_user        String?             @db.ObjectId
+  description            String?
+  document_type          String?             @db.ObjectId
+  favourite              Boolean?
+  document_file_mimeType String?
+  document_file_url      String?
+  status                 String?
+  visibility             String?
+  tags                   Json?
+  assigned_user          String?             @db.ObjectId
+  account                String?             @db.ObjectId
+  tasksIDs               String[]            @db.ObjectId
+  tasks                  Tasks[]             @relation(fields: [tasksIDs], references: [id])
+  created_by             Users?              @relation(fields: [assigned_user], references: [id])
+  crm_account            crm_Accounts?       @relation(fields: [account], references: [id])
+  documents_type         Documents_Types?    @relation(fields: [document_type], references: [id])
+  document_system_type   DocumentSystemType? @default(OTHER)
+}
+
+enum DocumentSystemType {
+  INVOICE
+  RECEIPT
+  CONTRACT
+  OFFER
+  OTHER
+}
+
+model Documents_Types {
+  id                 String      @id @default(auto()) @map("_id") @db.ObjectId
+  v                  Int         @map("__v")
+  name               String
+  assigned_documents Documents[]
+}
+
+model Sections {
+  id       String  @id @default(auto()) @map("_id") @db.ObjectId
+  v        Int     @map("__v")
+  board    String  @db.ObjectId
+  title    String
+  position Int?
+  tasks    Tasks[]
+}
+
+model SetupIndustry {
+  id   String @id @default(auto()) @map("_id") @db.ObjectId
+  v    Int    @map("__v")
+  name String
+}
+
+model crm_Industry_Type {
+  id       String         @id @default(auto()) @map("_id") @db.ObjectId
+  v        Int            @map("__v")
+  name     String
+  accounts crm_Accounts[]
+}
+
+model modulStatus {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  isVisible Boolean
+}
+
+model Tasks {
+  id               String          @id @default(auto()) @map("_id") @db.ObjectId
+  v                Int             @map("__v")
+  content          String?
+  createdAt        DateTime        @db.Date
+  createdBy        String?         @db.ObjectId
+  dueDateAt        DateTime?       @db.Date
+  lastEditedAt     DateTime?       @db.Date
+  position         Int
+  priority         String
+  section          String          @db.ObjectId
+  tags             Json?
+  title            String
+  user             String?         @db.ObjectId
+  documentIDs      String[]        @db.ObjectId
+  comments         tasksComments[]
+  documents        Documents[]     @relation(fields: [documentIDs], references: [id])
+  taskStatus       taskStatus?
+  assigned_user    Users?          @relation(fields: [user], references: [id])
+  assigned_section Sections?       @relation(fields: [section], references: [id])
+}
+
+model tasksComments {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  v             Int      @map("__v")
+  comment       String
+  createdAt     DateTime @db.Date
+  task          String   @db.ObjectId
+  user          String   @db.ObjectId
+  assigned_task Tasks?   @relation(fields: [task], references: [id])
+  assigned_user Users?   @relation(fields: [user], references: [id])
+}
+
+enum taskStatus {
+  ACTIVE
+  PENDING
+  COMPLETE
+}
+
+model TodoList {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt   String
+  description String
+  title       String
+  url         String
+  user        String
+}
+
+enum ActiveStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
+model Users {
+  id                   String                @id @default(auto()) @map("_id") @db.ObjectId
+  v                    Int                   @default(0) @map("__v")
+  account_name         String?
+  avatar               String?
+  email                String?              
+  is_account_admin     Boolean               @default(false)
+  is_admin             Boolean               @default(false)
+  created_on           DateTime?             @default(now()) @db.Date
+  name                 String?
+  password             String?
+  username             String?
+  userStatus           ActiveStatus          @default(PENDING)
+  userLanguage         Language              @default(en)
+  tasksComment         tasksComments[]
+  documents            Documents[]
+  tasks                Tasks[]
+  accounts             crm_Accounts[]
+  leads                crm_Leads[]
+  created_by_user      crm_Opportunities[]   @relation(name: "created_by_user_relation")
+  assigned_opportunity crm_Opportunities[]   @relation(name: "assigned_to_user_relation")
+  assigned_contacts    crm_Contacts[]        @relation(name: "assigned_contacts")
+  crated_contacts      crm_Contacts[]        @relation(name: "created_contacts")
+  notion_account       secondBrain_notions[]
+  assigned_invoices    Invoices[]
+
+  @@index([email], map: "email_1")
+}
+
+enum Language {
+  cz
+  en
+}
+
+//Strings for translation
+model Translation {
+  id       String  @id @default(auto()) @map("_id") @db.ObjectId
+  key      String
+  language String
+  text     String
+  module   Modules @default(allmodules)
+}
+
+//Because of big amount of translation labeles, we need to split them into modules
+enum Modules {
+  admin
+  crm
+  documents
+  projects
+  secondbrain
+  invoice
+  allmodules
+}
+
+model system_Modules_Enabled {
+  id       String  @id @default(auto()) @map("_id") @db.ObjectId
+  v        Int     @map("__v")
+  name     String
+  enabled  Boolean
+  icon     String
+  open     String
+  route    String
+  menuItem String
+  position Int
+}
+
+model secondBrain_notions {
+  id             String @id @default(auto()) @map("_id") @db.ObjectId
+  v              Int    @map("__v")
+  user           String @db.ObjectId
+  notion_api_key String
+  notion_db_id   String
+  assigned_user  Users? @relation(fields: [user], references: [id])
+}
+
+model gpt_models {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  v           Int        @map("__v")
+  model       String
+  description String?
+  status      gptStatus?
+  created_on  DateTime?  @default(now()) @db.Date
+}
+
+enum gptStatus {
+  ACTIVE
+  INACTIVE
+}
