@@ -67,16 +67,14 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid credentials");
         }
 
-        console.log(user, "user");
+        //console.log(user, "user");
         return user;
       },
     }),
   ],
   callbacks: {
     async session({ token, session }: any) {
-      /*
-       console.log(token, "token");
-      if (token) {
+      /*     if (token) {
         session.user.id = token.id;
         session.user.name = token.name;
         session.user.email = token.email;
@@ -84,9 +82,8 @@ export const authOptions: NextAuthOptions = {
       } 
 
 
-      return session;
-      //Search user in database with Token data
-     */
+      return session; */
+
       const user = await prismadb.users.findFirst({
         where: {
           email: token.email,
@@ -100,6 +97,7 @@ export const authOptions: NextAuthOptions = {
             data: {
               email: token.email,
               name: token.name,
+              avatar: token.picture,
               is_admin: false,
               is_account_admin: false,
               userStatus: "PENDING",

@@ -5,6 +5,13 @@ import { z, ZodType } from "zod";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+//import { toast } from "react-hot-toast";
+import { useToast } from "@/components/ui/use-toast";
+
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import axios from "axios";
+import { FingerprintIcon } from "lucide-react";
 
 import { Icons } from "@/components/icons";
 import { Button } from "@/components/ui/button";
@@ -17,10 +24,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import axios from "axios";
 import {
   Form,
   FormControl,
@@ -29,11 +32,19 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { toast } from "@/components/ui/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function RegisterComponent() {
   const router = useRouter();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
+  const [show, setShow] = React.useState<boolean>(false);
 
   const formSchema = z.object({
     name: z.string().min(3).max(50),
@@ -62,14 +73,19 @@ export function RegisterComponent() {
     setIsLoading(true);
     try {
       const response = await axios.post("/api/user", data);
+      toast({
+        title: "Success",
+        description: "User created successfully, please login.",
+      });
 
       if (response.status === 200) {
         router.push("/");
       }
     } catch (error: any) {
       toast({
+        variant: "destructive",
         title: "Error",
-        description: error?.message,
+        description: error?.response?.data,
       });
     } finally {
       setIsLoading(false);
@@ -80,12 +96,19 @@ export function RegisterComponent() {
     setIsLoading(true);
 
     try {
-      await signIn("google");
+      await signIn("google", {
+        callbackUrl: process.env.NEXT_PUBLIC_APP_URL,
+      });
     } catch (error) {
     } finally {
       setIsLoading(false);
     }
   };
+
+  const languageOptions = [
+    { value: "en", label: "English" },
+    { value: "cz", label: "Czech" },
+  ];
 
   return (
     <Card className="shadow-lg ">
@@ -147,7 +170,7 @@ export function RegisterComponent() {
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="Username"
+                        placeholder="jdoe"
                         {...field}
                       />
                     </FormControl>
@@ -177,52 +200,87 @@ export function RegisterComponent() {
                 name="language"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Prefered language</FormLabel>
-                    <FormControl>
-                      <Input
-                        disabled={isLoading}
-                        placeholder="Username"
-                        {...field}
-                      />
-                    </FormControl>
+                    <FormLabel>Language</FormLabel>
+                    <Select
+                      disabled={isLoading}
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue
+                            defaultValue={field.value}
+                            placeholder="Select a billboard"
+                          />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {languageOptions.map((language, index) => (
+                          <SelectItem key={index} value={language.value}>
+                            {language.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input
-                        disabled={isLoading}
-                        placeholder="Password"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Confirm password</FormLabel>
-                    <FormControl>
-                      <Input
-                        disabled={isLoading}
-                        placeholder="Confirm password"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="flex items-center w-full ">
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem className="w-full">
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          className="w-full"
+                          disabled={isLoading}
+                          placeholder="Password"
+                          type={show ? "text" : "password"}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <span
+                  className="flex px-4 pt-7 w-16"
+                  onClick={() => setShow(!show)}
+                >
+                  <FingerprintIcon size={25} className="text-gray-400" />
+                </span>
+              </div>
+              <div className="flex items-center w-full ">
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem className="w-full">
+                      <FormLabel>Confirm Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          className="w-full"
+                          disabled={isLoading}
+                          placeholder="Password"
+                          type={show ? "text" : "password"}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <span
+                  className="flex px-4 pt-7 w-16"
+                  onClick={() => setShow(!show)}
+                >
+                  <FingerprintIcon size={25} className="text-gray-400" />
+                </span>
+              </div>
             </div>
 
             <div className="grid gap-2 py-5">

@@ -16,6 +16,10 @@ export async function POST(
       return new NextResponse("Unauthenticated", { status: 401 });
     }
 
+    if (password !== confirmPassword) {
+      return new NextResponse("Password does not match", { status: 401 });
+    }
+
     const checkexisting = await prismadb.users.findFirst({
       where: {
         email: email,

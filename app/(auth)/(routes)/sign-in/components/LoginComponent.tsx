@@ -29,9 +29,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "react-hot-toast";
+import { FingerprintIcon } from "lucide-react";
 
 export function LoginComponent() {
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
+  const [show, setShow] = React.useState<boolean>(false);
   const router = useRouter();
 
   const formSchema = z.object({
@@ -51,9 +53,10 @@ export function LoginComponent() {
 
   const loginWithGoogle = async () => {
     setIsLoading(true);
-
     try {
-      await signIn("google");
+      await signIn("google", {
+        callbackUrl: process.env.NEXT_PUBLIC_APP_URL,
+      });
     } catch (error) {
     } finally {
       setIsLoading(false);
@@ -128,23 +131,33 @@ export function LoginComponent() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input
-                        disabled={isLoading}
-                        placeholder="Password"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="flex items-center w-full ">
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem className="w-full">
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          className="w-full"
+                          disabled={isLoading}
+                          placeholder="Password"
+                          type={show ? "text" : "password"}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <span
+                  className="flex px-4 pt-7 w-16"
+                  onClick={() => setShow(!show)}
+                >
+                  <FingerprintIcon size={25} className="text-gray-400" />
+                </span>
+              </div>
             </div>
             <div className="grid gap-2 py-5">
               <Button disabled={isLoading} type="submit">
