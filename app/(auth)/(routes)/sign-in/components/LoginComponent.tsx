@@ -16,9 +16,38 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { redirect, useRouter } from "next/navigation";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { toast } from "react-hot-toast";
 
 export function LoginComponent() {
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
+  const router = useRouter();
+
+  const formSchema = z.object({
+    email: z.string().min(3).max(50),
+    password: z.string().min(8).max(50),
+  });
+
+  type BillboardFormValues = z.infer<typeof formSchema>;
+
+  const form = useForm<BillboardFormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
   const loginWithGoogle = async () => {
     setIsLoading(true);
@@ -31,8 +60,25 @@ export function LoginComponent() {
     }
   };
 
+  //Login with username(email)/password
+  async function onSubmit(data: BillboardFormValues) {
+    const status = await signIn("credentials", {
+      redirect: false,
+      email: data.email,
+      password: data.password,
+      callbackUrl: "/",
+    });
+    console.log(status, "status");
+    if (status?.error) {
+      toast.error(status.error);
+    }
+    if (status?.ok) {
+      router.push("/");
+    }
+  }
+
   return (
-    <Card>
+    <Card className="shadow-lg">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl">Login</CardTitle>
         <CardDescription>Click here to login with: </CardDescription>
@@ -62,19 +108,55 @@ export function LoginComponent() {
             </span>
           </div>
         </div>
-        <div className="grid gap-2">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" placeholder="m@example.com" />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="password">Password</Label>
-          <Input id="password" type="password" />
-        </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <div className="grid gap-2">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>E-mail</FormLabel>
+                    <FormControl>
+                      <Input
+                        disabled={isLoading}
+                        placeholder="John Doe"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        disabled={isLoading}
+                        placeholder="Password"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="grid gap-2 py-5">
+              <Button disabled={isLoading} type="submit">
+                Login
+              </Button>
+            </div>
+          </form>
+        </Form>
       </CardContent>
       <CardFooter className="flex flex-col space-y-5">
-        <Button className="w-full">Create account</Button>
         <div className="text-sm text-gray-500">
-          Or create new account{" "}
+          Need account? Register{" "}
           <Link href={"/register"} className="text-blue-500">
             here
           </Link>

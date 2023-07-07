@@ -13,7 +13,7 @@ const AuthLayout = ({ children }: { children: React.ReactNode }) => {
       <div className="flex justify-end w-full p-5">
         <ThemeToggle />
       </div>
-      <div className="flex items-center h-full "> {children}</div>
+      <div className="flex items-center h-full overflow-hidden">{children}</div>
       <Footer />
     </div>
   );

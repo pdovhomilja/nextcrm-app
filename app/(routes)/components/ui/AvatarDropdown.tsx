@@ -21,7 +21,13 @@ const AvatarDropdown = ({ avatar }: Props) => {
     <DropdownMenu>
       <DropdownMenuTrigger>
         <Avatar>
-          <AvatarImage src={avatar} />
+          <AvatarImage
+            src={
+              avatar
+                ? avatar
+                : `${process.env.NEXT_PUBLIC_APP_URL}/images/nouser.png`
+            }
+          />
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent>

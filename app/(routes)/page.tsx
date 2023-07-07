@@ -1,7 +1,35 @@
-import Image from "next/image";
+import Heading from "@/components/ui/heading";
+import { Separator } from "@/components/ui/separator";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
-export default function Home() {
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DollarSign } from "lucide-react";
+import Container from "./components/ui/Container";
+
+const DashboardPage = async () => {
+  const session = await getServerSession(authOptions);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24"></main>
+    <Container title="Dashboard" description={"some desc"}>
+      <div>
+        <pre>
+          <code>{JSON.stringify(session, null, 2)}</code>
+        </pre>
+      </div>
+      <div className="grid gap-4 grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <DollarSign className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-medium">{"0"}</div>
+          </CardContent>
+        </Card>
+      </div>
+    </Container>
   );
-}
+};
+
+export default DashboardPage;

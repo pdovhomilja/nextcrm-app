@@ -18,9 +18,14 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const session = await getServerSession(authOptions);
+  const user = session?.user;
 
   if (!session) {
     return redirect("/sign-in");
+  }
+
+  if (user?.userStatus === "PENDING") {
+    return redirect("/pending");
   }
 
   return (

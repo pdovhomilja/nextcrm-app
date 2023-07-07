@@ -25,19 +25,25 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
-  pages: {},
+  pages: {
+    signIn: "/auth/signin",
+    signOut: "/auth/signout",
+    error: "/auth/error",
+  },
   providers: [
     GoogleProvider({
       clientId: getGoogleCredentials().clientId,
       clientSecret: getGoogleCredentials().clientSecret,
     }),
-    /*     CredentialsProvider({
+    CredentialsProvider({
       name: "credentials",
       credentials: {
         email: { label: "email", type: "text" },
         password: { label: "password", type: "password" },
       },
+
       async authorize(credentials) {
+        // console.log(credentials, "credentials");
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Invalid credentials");
         }
@@ -61,22 +67,26 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid credentials");
         }
 
+        console.log(user, "user");
         return user;
       },
-    }), */
+    }),
   ],
   callbacks: {
     async session({ token, session }: any) {
+      /*
+       console.log(token, "token");
       if (token) {
         session.user.id = token.id;
         session.user.name = token.name;
         session.user.email = token.email;
         session.user.image = token.picture;
-      }
+      } 
+
 
       return session;
       //Search user in database with Token data
-      /*  console.log(token, "token");
+     */
       const user = await prismadb.users.findFirst({
         where: {
           email: token.email,
@@ -124,11 +134,11 @@ export const authOptions: NextAuthOptions = {
         session.user.userLanguage = user.userLanguage;
         session.user.userStatus = user.userStatus;
         return session;
-      } */
+      }
     },
 
-    async redirect() {
-      return "/dashboard";
-    },
+    /*    redirect() {
+      return "/";
+    }, */
   },
 };
