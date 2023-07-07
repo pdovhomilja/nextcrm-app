@@ -32,7 +32,7 @@ export default async function RootLayout({
           email={session.user.email as string}
           avatar={session.user.image as string}
         />
-        <div className="h-full overflow-hidden pt-10">{children}</div>
+        <div className="h-full overflow-hidden p-5">{children}</div>
         <Footer />
       </div>
     </div>

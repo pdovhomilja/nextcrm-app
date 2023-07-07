@@ -16,7 +16,7 @@ const App = () => {
   ];
 
   return (
-    <div className="flex">
+    <div className="flex border-r">
       <div
         className={` ${
           open ? "w-72" : "w-20 "
