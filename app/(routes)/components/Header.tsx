@@ -12,9 +12,10 @@ type Props = {
   name: string;
   email: string;
   avatar: string;
+  lang: string;
 };
 
-const Header = ({ name, email, avatar }: Props) => {
+const Header = ({ name, email, avatar, lang }: Props) => {
   return (
     <>
       <div className="flex h-20 justify-between items-center px-5 space-x-5">
@@ -34,6 +35,7 @@ const Header = ({ name, email, avatar }: Props) => {
           <div className="flex flex-col text-xs text-gray-500">
             <div>{name}</div>
             <div>{email}</div>
+            <div>Language: {lang}</div>
           </div>
           <AvatarDropdown avatar={avatar} />
         </div>

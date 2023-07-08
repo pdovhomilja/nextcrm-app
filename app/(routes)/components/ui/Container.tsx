@@ -13,7 +13,7 @@ const Container = ({ title, description, children }: ContainerProps) => {
     <div className="flex-1 space-y-4 p-8 pt-6 border-l h-full">
       <Heading title={title} description={description} />
       <Separator />
-      <div className="text-sm">{children}</div>
+      <div className="h-full overflow-hidden text-sm">{children}</div>
     </div>
   );
 };

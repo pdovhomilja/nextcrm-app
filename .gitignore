@@ -5,6 +5,10 @@
 /.pnp
 .pnp.js
 
+
+#jsons
+/jsons
+
 # testing
 /coverage
 

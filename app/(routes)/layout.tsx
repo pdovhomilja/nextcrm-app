@@ -18,11 +18,12 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const session = await getServerSession(authOptions);
-  const user = session?.user;
 
   if (!session) {
     return redirect("/sign-in");
   }
+
+  const user = session?.user;
 
   if (user?.userStatus === "PENDING") {
     return redirect("/pending");
@@ -36,6 +37,7 @@ export default async function RootLayout({
           name={session.user.name as string}
           email={session.user.email as string}
           avatar={session.user.image as string}
+          lang={session.user.userLanguage as string}
         />
         <div className="h-full overflow-hidden p-5">{children}</div>
         <Footer />

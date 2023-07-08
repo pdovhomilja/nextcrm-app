@@ -1,19 +1,18 @@
 import Heading from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
-import React from "react";
+import { getUser } from "@/actions/get-user";
 import Container from "../components/ui/Container";
 
-type Props = {};
-
-const CrmPage = (props: Props) => {
+const ProfilePage = async () => {
+  const data = await getUser();
   return (
     <Container
-      title="CRM"
-      description={"Everything you need to know about sales"}
+      title="Ai assistant"
+      description={"Ask anything you need to know"}
     >
       <div>Module content here</div>
     </Container>
   );
 };
 
-export default CrmPage;
+export default ProfilePage;

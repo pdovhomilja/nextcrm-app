@@ -4,7 +4,7 @@ import React from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 
-import { Icons } from "@/components/icons";
+import { Icons } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import {
   Card,

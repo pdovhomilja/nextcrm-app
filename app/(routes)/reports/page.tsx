@@ -8,8 +8,8 @@ type Props = {};
 const CrmPage = (props: Props) => {
   return (
     <Container
-      title="CRM"
-      description={"Everything you need to know about sales"}
+      title="Reports"
+      description={"Everything you need to know about whole company"}
     >
       <div>Module content here</div>
     </Container>

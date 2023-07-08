@@ -26,9 +26,7 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   pages: {
-    signIn: "/auth/signin",
-    signOut: "/auth/signout",
-    error: "/auth/error",
+    signIn: "/sign-in",
   },
   providers: [
     GoogleProvider({
@@ -74,16 +72,6 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async session({ token, session }: any) {
-      /*     if (token) {
-        session.user.id = token.id;
-        session.user.name = token.name;
-        session.user.email = token.email;
-        session.user.image = token.picture;
-      } 
-
-
-      return session; */
-
       const user = await prismadb.users.findFirst({
         where: {
           email: token.email,
@@ -134,9 +122,5 @@ export const authOptions: NextAuthOptions = {
         return session;
       }
     },
-
-    /*    redirect() {
-      return "/";
-    }, */
   },
 };
