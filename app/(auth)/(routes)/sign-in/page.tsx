@@ -1,14 +1,16 @@
 import UserAuthForm from "@/components/UserAuthForm";
 import { LoginComponent } from "./components/LoginComponent";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
-const SignInPage = () => {
-  /*   return (
-    <div className="flex text-3xl text-black gap-2">
-      <div className="space-x-2">
-        <UserAuthForm />
-      </div>
-    </div>
-  ); */
+const SignInPage = async () => {
+  const session = await getServerSession(authOptions);
+
+  if (session) {
+    return redirect("/");
+  }
+
   return (
     <div>
       <div className="py-10">

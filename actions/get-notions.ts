@@ -14,12 +14,11 @@ type NotionItem = {
   url: string;
 };
 
-// Define function outside of try-catch
 async function fetchDatabaseItems(
   notion: NotionClient,
   notionDbId: string,
   startCursor?: string
-): Promise<any[]> {
+) {
   const response: any = await notion.databases.query({
     database_id: notionDbId,
     start_cursor: startCursor,
