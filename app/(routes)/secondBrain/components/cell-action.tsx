@@ -3,8 +3,8 @@ import { useState } from "react";
 import axios from "axios";
 import { useParams, useRouter } from "next/navigation";
 import { Copy, Edit, MoreHorizontal, Trash } from "lucide-react";
-import { toast } from "react-hot-toast";
 
+import { useToast } from "@/components/ui/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,23 +14,27 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 
-import { ProductColumn } from "./Columns";
+import { NotionColumn } from "./Columns";
 import AlertModal from "@/components/modals/alert-modal";
 
 interface CellActionProps {
-  data: ProductColumn;
+  data: NotionColumn;
 }
 
 export const CellAction = ({ data }: CellActionProps) => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
 
+  const { toast } = useToast();
   const router = useRouter();
   const params = useParams();
 
   const onCopy = (id: string) => {
     navigator.clipboard.writeText(id);
-    toast.success("Product ID copied to the clipboard");
+    toast({
+      title: "Copied",
+      description: "The URL has been copied to your clipboard.",
+    });
   };
 
   //Action triggered when the delete button is clicked to delete the store
@@ -39,11 +43,14 @@ export const CellAction = ({ data }: CellActionProps) => {
       setLoading(true);
       await axios.delete(`/api/products/${data.id}`);
       router.refresh();
-      toast.success("Products deleted");
+      //Place for toast
     } catch (error) {
-      toast.error(
-        "Something went wrong while deleting the product. Please try again."
-      );
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description:
+          "Something went wrong while deleting the product. Please try again.",
+      });
     } finally {
       setLoading(false);
       setOpen(false);
@@ -67,9 +74,9 @@ export const CellAction = ({ data }: CellActionProps) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => onCopy(data.id)}>
+          <DropdownMenuItem onClick={() => onCopy(data?.url)}>
             <Copy className="mr-2 w-4 h-4" />
-            Copy ID
+            Copy URL
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => router.push(`/products/${data.id}`)}>
             <Edit className="mr-2 w-4 h-4" />

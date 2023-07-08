@@ -30,7 +30,7 @@ export default async function RootLayout({
   }
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen overflow-hidden">
       <SideBar />
       <div className="flex flex-col h-full w-full overflow-hidden">
         <Header
@@ -39,9 +39,17 @@ export default async function RootLayout({
           avatar={session.user.image as string}
           lang={session.user.userLanguage as string}
         />
-        <div className="h-full overflow-hidden p-5">{children}</div>
+        <div className="flex-grow overflow-y-auto h-full p-5">{children}</div>
         <Footer />
       </div>
     </div>
   );
 }
+<main>
+  <div>sidebar</div>
+  <div>
+    <header>header</header>
+    <div>main</div>
+    <footer>footer</footer>
+  </div>
+</main>;

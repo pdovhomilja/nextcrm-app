@@ -4,59 +4,30 @@ import { ColumnDef } from "@tanstack/react-table";
 
 import { CellAction } from "./cell-action";
 
-export type ProductColumn = {
+export type NotionColumn = {
   id: string;
-  name: string;
-  price: string;
-  size: string;
-  category: string;
-  color: string;
-  isFeatured: boolean;
-  isArchived: boolean;
   createdAt: string;
+  title: string;
+  urlShort: string;
+  url: string;
 };
 
-export const columns: ColumnDef<ProductColumn>[] = [
+export const columns: ColumnDef<NotionColumn>[] = [
   {
     accessorKey: "id",
     header: "ID",
   },
   {
-    accessorKey: "",
-    header: "Archived",
-  },
-  {
-    accessorKey: "isFeatured",
-    header: "Featured",
-  },
-  {
-    accessorKey: "price",
-    header: "Price",
-  },
-  {
-    accessorKey: "category",
-    header: "Category",
-  },
-  {
-    accessorKey: "size",
-    header: "Size",
-  },
-  {
-    accessorKey: "color",
-    header: "Color",
-    cell: ({ row }) => (
-      <div className="flex items-center">
-        {row.original.color}
-        <div
-          className="w-4 h-4 rounded-full"
-          style={{ backgroundColor: row.original.color }}
-        />
-      </div>
-    ),
-  },
-  {
     accessorKey: "createdAt",
-    header: "Date",
+    header: "Created At",
+  },
+  {
+    accessorKey: "title",
+    header: "Title",
+  },
+  {
+    accessorKey: "urlShort",
+    header: "Url",
   },
   {
     id: "actions",

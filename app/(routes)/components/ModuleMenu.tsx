@@ -30,7 +30,7 @@ const ModuleMenu = ({ modules }: Props) => {
           </div>
 
           <h1
-            className={`text-white origin-left font-medium text-xl duration-200 ${
+            className={` origin-left font-medium text-xl duration-200 ${
               !open && "scale-0"
             }`}
           >

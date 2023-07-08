@@ -18,12 +18,12 @@ type Props = {
 const Header = ({ name, email, avatar, lang }: Props) => {
   return (
     <>
-      <div className="flex h-20 justify-between items-center px-5 space-x-5">
+      <div className="flex h-20 justify-between items-center p-5 space-x-5">
         <div className="flex justify-center ">
           <div className="flex w-full max-w-sm items-center space-x-2">
             <Input type="text" placeholder={"Search"} />
             <Button type="submit" className="gap-2">
-              Search
+              <span className="hidden md:flex">Search</span>
               <SearchIcon />
             </Button>
           </div>

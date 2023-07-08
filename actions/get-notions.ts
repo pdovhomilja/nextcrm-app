@@ -1,46 +1,35 @@
-import { Client } from "@notionhq/client";
-
-const notionSecret = process.env.NOTION_API_KEY;
-const notionDatabaseId = process.env.NOTION_DATABASE_ID;
-
-const notion = new Client({ auth: notionSecret });
-
-if (!notionSecret || !notionDatabaseId) {
-  throw new Error("Notion API Key or Notion Database ID not found");
-}
-
-export const getNotions = async () => {
-  const response = await notion.databases.query({
-    database_id: notionDatabaseId,
-  });
-
-  //console.log(response);
-  return response;
-};
-
-/* import { prismadb } from "@/lib/prisma";
+import { prismadb } from "@/lib/prisma";
 import initNotionClient from "@/lib/notion";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import { Session } from "next-auth";
 import { Client as NotionClient } from "@notionhq/client";
+import moment from "moment";
+
+type NotionItem = {
+  id: string;
+  createdAt: string;
+  title: string;
+  urlShort: string;
+  url: string;
+};
 
 // Define function outside of try-catch
 async function fetchDatabaseItems(
   notion: NotionClient,
   notionDbId: string,
   startCursor?: string
-): any {
-  const response = await notion.databases.query({
+): Promise<any[]> {
+  const response: any = await notion.databases.query({
     database_id: notionDbId,
     start_cursor: startCursor,
     page_size: 100,
   });
 
-  const items:  = response.results;
+  const items: any[] = response.results;
 
   if (response.has_more) {
-    const nextItems:  = await fetchDatabaseItems(
+    const nextItems: any[] = await fetchDatabaseItems(
       notion,
       notionDbId,
       response.next_cursor
@@ -51,7 +40,7 @@ async function fetchDatabaseItems(
   }
 }
 
-export const getNotions = async (): Promise< | null> => {
+export const getNotions = async (): Promise<any[] | null> => {
   const session: Session | null = await getServerSession(authOptions);
   const userId: string | undefined = session?.user?.id;
 
@@ -64,19 +53,23 @@ export const getNotions = async (): Promise< | null> => {
   try {
     const notionDb = await prismadb.secondBrain_notions.findFirst({
       where: {
-        user: session.user.id,
+        user: session?.user.id,
       },
     });
 
     if (!notionDb) {
-      throw new Error("Notion DB not found");
+      const notionItems: any = {
+        error: "API key not found in the database.",
+      };
+      return notionItems;
+      //throw new Error("Notion DB not found");
     }
 
-    const databases:  = await fetchDatabaseItems(
+    const databases: any[] = await fetchDatabaseItems(
       notion,
       notionDb.notion_db_id
     )
-      .then((items: ) => {
+      .then((items: any[]) => {
         return items;
       })
       .catch((error: any) => {
@@ -84,10 +77,25 @@ export const getNotions = async (): Promise< | null> => {
         return [];
       });
 
-    return databases;
+    const notionItems = databases.map(
+      (item) =>
+        ({
+          id:
+            item.id.substring(0, 3) +
+            "-" +
+            item.id.substring(item.id.length - 3),
+          createdAt: moment(item.created_time).format("YYYY-MM-DD"),
+          title:
+            item.properties.Tweet.title[0].plain_text.substring(0, 60) + " ...",
+          urlShort:
+            item.properties["Tweet Link"]?.url?.substring(0, 40) + " ...",
+          url: item.properties["Tweet Link"]?.url,
+        } as NotionItem)
+    );
+
+    return notionItems;
   } catch (error) {
     console.log(error);
     return null;
   }
 };
- */

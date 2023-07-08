@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { redirect, useRouter } from "next/navigation";
 import { z } from "zod";
-import { useForm } from "react-hook-form";
+import { set, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
@@ -65,13 +65,14 @@ export function LoginComponent() {
 
   //Login with username(email)/password
   async function onSubmit(data: BillboardFormValues) {
+    setIsLoading(true);
     const status = await signIn("credentials", {
       redirect: false,
       email: data.email,
       password: data.password,
       callbackUrl: "/",
     });
-    console.log(status, "status");
+    setIsLoading(false);
     if (status?.error) {
       toast.error(status.error);
     }
@@ -97,7 +98,11 @@ export function LoginComponent() {
             onClick={loginWithGoogle}
             disabled={isLoading}
           >
-            <Icons.google className="mr-2 h-4 w-4" />
+            {isLoading ? (
+              <Icons.google className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Icons.google className="mr-2 h-4 w-4" />
+            )}{" "}
             Google
           </Button>
         </div>
@@ -159,9 +164,23 @@ export function LoginComponent() {
                 </span>
               </div>
             </div>
-            <div className="grid gap-2 py-5">
-              <Button disabled={isLoading} type="submit">
-                Login
+            <div className="grid gap-2 py-8">
+              <Button
+                disabled={isLoading}
+                type="submit"
+                className="flex gap-2 h-12"
+              >
+                <span
+                  className={
+                    isLoading
+                      ? " border rounded-full px-3 py-2 animate-spin"
+                      : "hidden"
+                  }
+                >
+                  N
+                </span>
+                <span className={isLoading ? " " : "hidden"}>Loanding ...</span>
+                <span className={isLoading ? "hidden" : ""}>Loading</span>
               </Button>
             </div>
           </form>

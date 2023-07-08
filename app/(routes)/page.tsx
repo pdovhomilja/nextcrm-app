@@ -22,7 +22,7 @@ const DashboardPage = async () => {
   const users = await getUsers();
   const employees = await getEmployees();
   const accounts = await getAccounts();
-  const notions = await getNotions();
+  //const notions = await getNotions();
 
   return (
     <Container title="Dashboard" description={"some desc"}>
@@ -81,15 +81,17 @@ const DashboardPage = async () => {
             <div className="text-2xl font-medium">{accounts.length}</div>
           </CardContent>
         </Card>
-        <Card>
+        {/*  <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Notions</CardTitle>
             <LightbulbIcon className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-medium">{notions.results.length}</div>
+            <div className="text-2xl font-medium">
+              {notions != null ? notions.length : "not available"}
+            </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
     </Container>
   );
