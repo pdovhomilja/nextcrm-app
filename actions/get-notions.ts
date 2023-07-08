@@ -14,7 +14,8 @@ export const getNotions = async () => {
     database_id: notionDatabaseId,
   });
 
-  console.log(response);
+  //console.log(response);
+  return response;
 };
 
 /* import { prismadb } from "@/lib/prisma";

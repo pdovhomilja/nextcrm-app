@@ -26,7 +26,7 @@ const DashboardPage = async () => {
 
   return (
     <Container title="Dashboard" description={"some desc"}>
-      <div className="grid gap-4 grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
@@ -87,7 +87,7 @@ const DashboardPage = async () => {
             <LightbulbIcon className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-medium">{"not integrated"}</div>
+            <div className="text-2xl font-medium">{notions.results.length}</div>
           </CardContent>
         </Card>
       </div>

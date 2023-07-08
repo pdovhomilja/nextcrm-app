@@ -32,7 +32,7 @@ const Header = ({ name, email, avatar, lang }: Props) => {
           <CommandComponent />
           <SetLanguage />
           <ThemeToggle />
-          <div className="flex flex-col text-xs text-gray-500">
+          <div className="hidden lg:flex flex-col text-xs text-gray-500">
             <div>{name}</div>
             <div>{email}</div>
             <div>Language: {lang}</div>
