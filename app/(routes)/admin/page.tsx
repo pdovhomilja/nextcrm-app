@@ -2,6 +2,8 @@ import Heading from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
 import { getUser } from "@/actions/get-user";
 import Container from "../components/ui/Container";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 const AdminPage = async () => {
   const user = await getUser();
@@ -24,7 +26,11 @@ const AdminPage = async () => {
       title="Administation"
       description={"Here you can setup your NextCRM instance"}
     >
-      <div>Module content here</div>
+      <div>
+        <Button asChild>
+          <Link href="/admin/users">Users administration</Link>
+        </Button>
+      </div>
     </Container>
   );
 };
