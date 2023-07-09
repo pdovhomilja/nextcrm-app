@@ -1,19 +1,23 @@
-import Heading from "@/components/ui/heading";
-import { Separator } from "@/components/ui/separator";
-import React from "react";
+import { getDocuments } from "@/actions/documents/get-documents";
 import Container from "../components/ui/Container";
+import { DocumentsDataTable } from "./components/data-table";
+import { columns } from "./components/columns";
 
-type Props = {};
-
-const CrmPage = (props: Props) => {
+const DocumentsPage = async () => {
+  const documents: any = await getDocuments();
   return (
     <Container
       title="Documents"
       description={"Everything you need to know about company documents"}
     >
-      <div>Module content here</div>
+      {/*       <div>
+        <pre>
+          <code>{JSON.stringify(documents[0], null, 2)}</code>
+        </pre>
+      </div> */}
+      <DocumentsDataTable data={documents} columns={columns} />
     </Container>
   );
 };
 
-export default CrmPage;
+export default DocumentsPage;

@@ -8,7 +8,7 @@ type Props = {};
 
 const TasksPage = async (props: Props) => {
   const tasks: any = await getTasks();
-  console.log(tasks, "tasks");
+
   return (
     <Container
       title="All tasks"

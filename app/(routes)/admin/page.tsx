@@ -26,9 +26,12 @@ const AdminPage = async () => {
       title="Administation"
       description={"Here you can setup your NextCRM instance"}
     >
-      <div>
+      <div className="space-x-2">
         <Button asChild>
           <Link href="/admin/users">Users administration</Link>
+        </Button>
+        <Button asChild>
+          <Link href="/admin/modules">Modules administration</Link>
         </Button>
       </div>
     </Container>

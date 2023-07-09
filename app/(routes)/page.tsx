@@ -22,6 +22,8 @@ import { getOpportunities } from "@/actions/crm/get-opportunities";
 import { getTasks } from "@/actions/projects/get-tasks";
 import { getUserTasks } from "@/actions/projects/get-user-tasks";
 import { getBoards } from "@/actions/projects/get-boards";
+import { getInvoices } from "@/actions/invoice/get-invoices";
+import { getDocuments } from "@/actions/documents/get-documents";
 
 const DashboardPage = async () => {
   const session = await getServerSession(authOptions);
@@ -35,6 +37,8 @@ const DashboardPage = async () => {
   const tasks = await getTasks();
   const usersTasks = await getUserTasks(userId);
   const projects = await getBoards();
+  const invoices = await getInvoices();
+  const documents = await getDocuments();
   //const notions = await getNotions();
 
   return (
@@ -124,6 +128,24 @@ const DashboardPage = async () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-medium">{usersTasks.length}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Invoices</CardTitle>
+            <CoinsIcon className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-medium">{invoices.length}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Documents</CardTitle>
+            <CoinsIcon className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-medium">{documents.length}</div>
           </CardContent>
         </Card>
         {/*  <Card>
