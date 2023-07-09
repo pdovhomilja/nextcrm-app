@@ -15,17 +15,35 @@ import Container from "./components/ui/Container";
 
 import { getUsers } from "@/actions/get-users";
 import { getEmployees } from "@/actions/get-empoloyees";
-import { getAccounts } from "@/actions/get-accounts";
+import { getAccounts } from "@/actions/crm/get-accounts";
 import { getNotions } from "@/actions/get-notions";
+import { getLeads } from "@/actions/crm/get-leads";
+import { getOpportunities } from "@/actions/crm/get-opportunities";
+import { getTasks } from "@/actions/projects/get-tasks";
+import { getUserTasks } from "@/actions/projects/get-user-tasks";
+import { getBoards } from "@/actions/projects/get-boards";
 
 const DashboardPage = async () => {
+  const session = await getServerSession(authOptions);
+  if (!session) return null;
+  const userId = session?.user?.id;
   const users = await getUsers();
   const employees = await getEmployees();
   const accounts = await getAccounts();
+  const leads = await getLeads();
+  const opportunities = await getOpportunities();
+  const tasks = await getTasks();
+  const usersTasks = await getUserTasks(userId);
+  const projects = await getBoards();
   //const notions = await getNotions();
 
   return (
-    <Container title="Dashboard" description={"some desc"}>
+    <Container
+      title="Dashboard"
+      description={
+        "Welcome to NextCRM cockpit, here you can see your company overview"
+      }
+    >
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -69,7 +87,7 @@ const DashboardPage = async () => {
             <FactoryIcon className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-medium">{accounts.length}</div>
+            <div className="text-2xl font-medium">{opportunities.length}</div>
           </CardContent>
         </Card>
         <Card>
@@ -78,7 +96,34 @@ const DashboardPage = async () => {
             <CoinsIcon className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-medium">{accounts.length}</div>
+            <div className="text-2xl font-medium">{leads.length}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Projects</CardTitle>
+            <CoinsIcon className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-medium">{projects.length}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Tasks</CardTitle>
+            <CoinsIcon className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-medium">{tasks.length}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">My Tasks</CardTitle>
+            <CoinsIcon className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-medium">{usersTasks.length}</div>
           </CardContent>
         </Card>
         {/*  <Card>

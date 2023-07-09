@@ -12,7 +12,7 @@ const SecondBrainPage = async (props: Props) => {
       title="Second Brain"
       description={"Everything you need to know about Your notions"}
     >
-      <DataTable columns={columns} data={notions} />
+      <DataTable columns={columns} data={notions} search="title" />
     </Container>
   );
 };
