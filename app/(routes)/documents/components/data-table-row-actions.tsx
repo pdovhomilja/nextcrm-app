@@ -21,6 +21,11 @@ import {
 import { labels } from "../data/data";
 import { taskSchema } from "../data/schema";
 import { useRouter } from "next/navigation";
+import DocumentViewModal from "@/components/modals/document-view-modal";
+import { useState } from "react";
+import AlertModal from "@/components/modals/alert-modal";
+import { useToast } from "@/components/ui/use-toast";
+import axios from "axios";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -29,34 +34,83 @@ interface DataTableRowActionsProps<TData> {
 export function DataTableRowActions<TData>({
   row,
 }: DataTableRowActionsProps<TData>) {
+  const [open, setOpen] = useState(false);
+  const [openView, setOpenView] = useState(false);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const task = taskSchema.parse(row.original);
+  const document = taskSchema.parse(row.original);
+  const { toast } = useToast();
+
+  //Action triggered when the delete button is clicked to delete the store
+  const onDelete = async () => {
+    try {
+      setLoading(true);
+      await axios.delete(`/api/documents/${document.id}`);
+      router.refresh();
+      toast({
+        title: "Success",
+        description: "Document has been deleted",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description:
+          "Something went wrong while deleting document. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+      setOpen(false);
+    }
+  };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
-        >
-          <DotsHorizontalIcon className="h-4 w-4" />
-          <span className="sr-only">Open menu</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[160px]">
-        <DropdownMenuItem
-          onClick={
-            //@ts-ignore
-            //TODO: fix this
-            () => router.push(`${row.original.document_file_url}`)
-          }
-        >
-          View
-        </DropdownMenuItem>
-        <DropdownMenuItem>Make a copy</DropdownMenuItem>
-        <DropdownMenuItem>Favorite</DropdownMenuItem>
-        <DropdownMenuSeparator />
-        {/*  <DropdownMenuSub>
+    <>
+      <DocumentViewModal
+        isOpen={openView}
+        onClose={() => setOpenView(false)}
+        loading={loading}
+        document={document}
+      />
+      <AlertModal
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        onConfirm={onDelete}
+        loading={loading}
+      />
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
+          >
+            <DotsHorizontalIcon className="h-4 w-4" />
+            <span className="sr-only">Open menu</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-[160px]">
+          {/*  <DropdownMenuItem
+            onClick={
+              //@ts-ignore
+              //TODO: fix this
+              // () => router.push(`${row.original.document_file_url}`, "_blank")
+              () => {
+                //@ts-ignore
+                const newTab = window.open(
+                  `${row.original.document_file_url}`,
+                  "_blank"
+                );
+                newTab.focus();
+              }
+            }
+          >
+            View
+          </DropdownMenuItem> */}
+          <DropdownMenuItem onClick={() => setOpenView(true)}>
+            View
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          {/*  <DropdownMenuSub>
           <DropdownMenuSubTrigger>Labels</DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
             <DropdownMenuRadioGroup value={task.label}>
@@ -68,12 +122,13 @@ export function DataTableRowActions<TData>({
             </DropdownMenuRadioGroup>
           </DropdownMenuSubContent>
         </DropdownMenuSub> */}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          Delete
-          <DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setOpen(true)}>
+            Delete
+            <DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
   );
 }

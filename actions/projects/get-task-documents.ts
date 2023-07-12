@@ -1,7 +1,12 @@
 import { prismadb } from "@/lib/prisma";
 
-export const getDocuments = async () => {
+export const getTaskDocuments = async (taskId: string) => {
   const data = await prismadb.documents.findMany({
+    where: {
+      tasksIDs: {
+        has: taskId,
+      },
+    },
     include: {
       created_by: {
         select: {
@@ -13,9 +18,6 @@ export const getDocuments = async () => {
           name: true,
         },
       },
-    },
-    orderBy: {
-      date_created: "desc",
     },
   });
   return data;

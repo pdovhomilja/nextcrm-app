@@ -259,6 +259,7 @@ model Documents {
   status                 String?
   visibility             String?
   tags                   Json?
+  key               String?
   assigned_user          String?             @db.ObjectId
   account                String?             @db.ObjectId
   tasksIDs               String[]            @db.ObjectId

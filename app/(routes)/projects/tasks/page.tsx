@@ -4,9 +4,7 @@ import { getTasks } from "@/actions/projects/get-tasks";
 import { TasksDataTable } from "./components/data-table";
 import { columns } from "./components/columns";
 
-type Props = {};
-
-const TasksPage = async (props: Props) => {
+const TasksPage = async () => {
   const tasks: any = await getTasks();
 
   return (

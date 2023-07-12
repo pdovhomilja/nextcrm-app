@@ -8,9 +8,6 @@ export const taskSchema = z.object({
   taskStatus: z.string(),
   dueDateAt: z.date(),
   priority: z.string(),
-  assigned_user: z.object({
-    name: z.string(),
-  }),
 });
 
 export type Task = z.infer<typeof taskSchema>;

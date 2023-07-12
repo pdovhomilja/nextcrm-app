@@ -45,7 +45,7 @@ export function DataTableRowActions<TData>({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[160px]">
         <DropdownMenuItem
-          onClick={() => router.push(`/projects/tasks/${row?.id}`)}
+          onClick={() => router.push(`/projects/tasks/viewtask/${task?.id}`)}
         >
           View
         </DropdownMenuItem>
