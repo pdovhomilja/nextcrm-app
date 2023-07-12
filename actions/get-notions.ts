@@ -72,8 +72,11 @@ export const getNotions = async (): Promise<any[] | null> => {
         return items;
       })
       .catch((error: any) => {
-        console.error(error);
-        return [];
+        //console.error(error);
+        const notionItems: any = {
+          error: "API key is invalid.",
+        };
+        return notionItems;
       });
 
     const notionItems = databases.map(
