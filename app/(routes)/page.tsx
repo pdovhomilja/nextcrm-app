@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import {
@@ -24,6 +25,9 @@ import { getUserTasks } from "@/actions/projects/get-user-tasks";
 import { getBoards } from "@/actions/projects/get-boards";
 import { getInvoices } from "@/actions/invoice/get-invoices";
 import { getDocuments } from "@/actions/documents/get-documents";
+import { getStorageSize } from "@/actions/documents/get-storage-size";
+import NotionsBox from "./components/dasboard/notions";
+import LoadingBox from "./components/dasboard/loading-box";
 
 const DashboardPage = async () => {
   const session = await getServerSession(authOptions);
@@ -39,7 +43,7 @@ const DashboardPage = async () => {
   const projects = await getBoards();
   const invoices = await getInvoices();
   const documents = await getDocuments();
-  //const notions = await getNotions();
+  const storage = await getStorageSize();
 
   return (
     <Container
@@ -148,17 +152,18 @@ const DashboardPage = async () => {
             <div className="text-2xl font-medium">{documents.length}</div>
           </CardContent>
         </Card>
-        {/*  <Card>
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Notions</CardTitle>
-            <LightbulbIcon className="w-4 h-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Storage</CardTitle>
+            <CoinsIcon className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-medium">
-              {notions != null ? notions.length : "not available"}
-            </div>
+            <div className="text-2xl font-medium">{storage}/MB</div>
           </CardContent>
-        </Card> */}
+        </Card>
+        <Suspense fallback={<LoadingBox />}>
+          <NotionsBox />
+        </Suspense>
       </div>
     </Container>
   );
