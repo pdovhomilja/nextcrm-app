@@ -36,6 +36,34 @@ export const ourFileRouter = {
       //TODO: save file.url to database
     }),
 
+  //FileRoute for uploading profile photos
+  profilePhotoUploader: f({ image: { maxFileSize: "4MB" } })
+    // Set permissions and file types for this FileRoute
+    .middleware(async ({ req }) => {
+      // This code runs on your server before upload
+      const user = await auth(req);
+
+      // If you throw, the user will not be able to upload
+      if (!user) throw new Error("Unauthorized");
+
+      // Whatever is returned here is accessible in onUploadComplete as `metadata`
+      return { userId: user.id };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      // This code RUNS ON YOUR SERVER after upload
+      console.log("Upload complete for userId:", metadata.userId);
+      console.log("file url", file.url);
+      //TODO: save file.url to database
+      await prismadb.users.update({
+        data: {
+          avatar: file.url,
+        },
+        where: {
+          id: metadata.userId,
+        },
+      });
+    }),
+
   //FileRoute for documents
   pdfUploader: f({ pdf: { maxFileSize: "64MB", maxFileCount: 1 } })
     // Set permissions and file types for this FileRoute

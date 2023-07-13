@@ -9,5 +9,6 @@ export const getUser = async () => {
       id: session?.user?.id,
     },
   });
+  if (!data) throw new Error("User not found");
   return data;
 };

@@ -6,7 +6,11 @@ import { OurFileRouter } from "@/app/api/uploadthing/core";
 import "@uploadthing/react/styles.css";
 
 interface Props {
-  uploader: "pdfUploader" | "imageUploader" | "docUploader";
+  uploader:
+    | "pdfUploader"
+    | "imageUploader"
+    | "docUploader"
+    | "profilePhotoUploader";
 }
 
 export const FileUploaderDropzone = ({ uploader }: Props) => (
