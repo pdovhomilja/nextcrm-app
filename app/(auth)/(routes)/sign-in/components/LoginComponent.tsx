@@ -43,6 +43,8 @@ import {
 export function LoginComponent() {
   const [isLoading, setIsLoading] = useState(false);
   const [show, setShow] = useState(false);
+  //State for dialog to be by opened and closed by DialogTrigger
+  const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const { toast } = useToast();
 
@@ -117,6 +119,7 @@ export function LoginComponent() {
       }
     } finally {
       setIsLoading(false);
+      setOpen(false);
     }
   }
 
@@ -234,7 +237,7 @@ export function LoginComponent() {
         </div>
         <div className="text-sm text-gray-500">
           Need password reset? Click
-          <Dialog>
+          <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger className="text-blue-500">
               <span className="px-2">here</span>
             </DialogTrigger>
