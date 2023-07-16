@@ -1,4 +1,4 @@
-import sendEmail from "../../../utils/sendmail";
+import sendEmail from "@/lib/sendmail";
 import { NextApiResponse } from "next";
 
 export default async function handler(res: NextApiResponse) {

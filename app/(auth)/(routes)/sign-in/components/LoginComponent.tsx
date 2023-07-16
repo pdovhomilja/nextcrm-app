@@ -39,6 +39,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import LoadingComponent from "@/components/LoadingComponent";
 
 export function LoginComponent() {
   const [isLoading, setIsLoading] = useState(false);
@@ -249,21 +250,25 @@ export function LoginComponent() {
                   e-mail.
                 </DialogDescription>
               </DialogHeader>
-              <div className="flex px-2 space-x-5 py-5">
-                <Input
-                  type="email"
-                  placeholder="name@domain.com"
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-                <Button
-                  disabled={isLoading || email === ""}
-                  onClick={() => {
-                    onPasswordReset(email);
-                  }}
-                >
-                  Reset
-                </Button>
-              </div>
+              {isLoading ? (
+                <LoadingComponent />
+              ) : (
+                <div className="flex px-2 space-x-5 py-5">
+                  <Input
+                    type="email"
+                    placeholder="name@domain.com"
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                  <Button
+                    disabled={email === ""}
+                    onClick={() => {
+                      onPasswordReset(email);
+                    }}
+                  >
+                    Reset
+                  </Button>
+                </div>
+              )}
               <DialogTrigger className="w-full text-right pt-5 ">
                 <Button variant={"destructive"}>Cancel</Button>
               </DialogTrigger>
