@@ -48,7 +48,7 @@ export async function POST(
     });
     //console.log(checkexisting, "checkexisting");
 
-    if (checkexisting) {
+    if (!checkexisting) {
       return new NextResponse("Name, Email, and Language is required!", {
         status: 401,
       });

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 
@@ -16,9 +16,9 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { z } from "zod";
-import { set, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
@@ -28,12 +28,24 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { toast } from "react-hot-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { FingerprintIcon } from "lucide-react";
+import axios from "axios";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export function LoginComponent() {
-  const [isLoading, setIsLoading] = React.useState<boolean>(false);
-  const [show, setShow] = React.useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [show, setShow] = useState(false);
+  const [email, setEmail] = useState("");
+  const { toast } = useToast();
+
   const router = useRouter();
 
   const formSchema = z.object({
@@ -74,10 +86,37 @@ export function LoginComponent() {
     });
     setIsLoading(false);
     if (status?.error) {
-      toast.error(status.error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: status.error,
+      });
     }
     if (status?.ok) {
       router.push("/");
+    }
+  }
+
+  async function onPasswordReset(email: string) {
+    try {
+      setIsLoading(true);
+      await axios.post("/api/user/passwordReset", {
+        email,
+      });
+      toast({
+        title: "Success",
+        description: "Password reset email has been sent.",
+      });
+    } catch (error) {
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Something went wrong while resetting the password.",
+        });
+      }
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -192,6 +231,41 @@ export function LoginComponent() {
           <Link href={"/register"} className="text-blue-500">
             here
           </Link>
+        </div>
+        <div className="text-sm text-gray-500">
+          Need password reset? Click
+          <Dialog>
+            <DialogTrigger className="text-blue-500">
+              <span className="px-2">here</span>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="p-5">Password Reset</DialogTitle>
+                <DialogDescription className="p-5">
+                  Enter your email address and we will send new password to your
+                  e-mail.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex px-2 space-x-5 py-5">
+                <Input
+                  type="email"
+                  placeholder="name@domain.com"
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                <Button
+                  disabled={isLoading || email === ""}
+                  onClick={() => {
+                    onPasswordReset(email);
+                  }}
+                >
+                  Reset
+                </Button>
+              </div>
+              <DialogTrigger className="w-full text-right pt-5 ">
+                <Button variant={"destructive"}>Cancel</Button>
+              </DialogTrigger>
+            </DialogContent>
+          </Dialog>
         </div>
       </CardFooter>
     </Card>
