@@ -102,12 +102,12 @@ export function NewAccountForm({ industries, users }: Props) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="h-full ">
-        <div>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="h-full px-10">
+        {/*         <div>
           <pre>
             <code>{JSON.stringify(form.watch(), null, 2)}</code>
           </pre>
-        </div>
+        </div> */}
         <div className=" w-[800px] text-sm">
           <div className="pb-5 space-y-2">
             <FormField
@@ -492,7 +492,6 @@ export function NewAccountForm({ industries, users }: Props) {
               />
             </div>
           </div>
-          <div>status</div>
         </div>
         <div className="grid gap-2 py-5">
           <Button disabled={isLoading} type="submit">

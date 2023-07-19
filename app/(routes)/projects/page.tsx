@@ -9,6 +9,7 @@ import { Session } from "next-auth";
 import { getBoards } from "@/actions/projects/get-boards";
 import { ProjectsDataTable } from "./components/data-table";
 import { columns } from "./components/columns";
+import NewProjectDialog from "./dialogs/NewProject";
 
 const CrmPage = async () => {
   const session: Session | null = await getServerSession(authOptions);
@@ -18,7 +19,7 @@ const CrmPage = async () => {
   const userId = session?.user.id;
 
   const boards: any = await getBoards();
-  console.log(boards, "boards");
+  //console.log(boards, "boards");
 
   return (
     <Container
@@ -26,6 +27,7 @@ const CrmPage = async () => {
       description={"Everything you need to know about projects"}
     >
       <div className="flex gap-2 py-10">
+        <NewProjectDialog />
         <Button asChild>
           <Link href="/projects/tasks">Tasks</Link>
         </Button>

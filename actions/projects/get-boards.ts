@@ -9,6 +9,9 @@ export const getBoards = async () => {
         },
       },
     },
+    orderBy: {
+      date_created: "desc",
+    },
   });
   return data;
 };

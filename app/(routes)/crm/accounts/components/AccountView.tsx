@@ -22,7 +22,7 @@ const AccountView = async () => {
           <RightViewModal
             label={"Add new account"}
             title="Add new account"
-            description="Modal description"
+            description=""
           >
             <NewAccountForm industries={industries} users={users} />
           </RightViewModal>
