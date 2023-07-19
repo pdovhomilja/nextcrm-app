@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
+
+import { prismadb } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
-import { hash } from "bcryptjs";
 
 export async function GET(
   req: Request,

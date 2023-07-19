@@ -58,7 +58,7 @@ export async function POST(req: Request) {
         shipping_country,
         description,
         assigned_to,
-        status,
+        status: "Active",
         annual_revenue,
         member_of,
         industry,

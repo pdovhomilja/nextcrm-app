@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Modal from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
+import { spawn } from "child_process";
 
 interface AlertModalProps {
   isOpen: boolean;
@@ -39,7 +40,11 @@ const AlertModal = ({
           Cancel
         </Button>
         <Button disabled={loading} variant={"destructive"} onClick={onConfirm}>
-          Continue
+          {loading ? (
+            <span className="animate-pulse">Deleting ...</span>
+          ) : (
+            "Continue"
+          )}
         </Button>
       </div>
     </Modal>

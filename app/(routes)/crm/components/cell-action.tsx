@@ -41,8 +41,13 @@ export const CellAction = ({ data }: CellActionProps) => {
   const onDelete = async () => {
     try {
       setLoading(true);
-      await axios.delete(`/api/products/${data.name}`);
+      await axios.delete(`/api/crm/account/${data.id}`);
+      toast({
+        title: "Success",
+        description: `The account ${data.name} has been deleted.`,
+      });
       router.refresh();
+
       //Place for toast
     } catch (error) {
       toast({
