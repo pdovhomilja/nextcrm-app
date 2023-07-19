@@ -33,7 +33,7 @@ export function ProfilePhotoForm({ data }: ProfileFormProps) {
   });
 
   return (
-    <div className="flex items-center">
+    <div className="flex items-center space-x-5">
       <div>
         <Image src={data.avatar} alt="avatar" width={100} height={100} />
       </div>

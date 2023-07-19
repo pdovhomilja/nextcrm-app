@@ -9,13 +9,14 @@ import { SearchIcon } from "lucide-react";
 import { SetLanguage } from "@/components/SetLanguage";
 
 type Props = {
+  id: string;
   name: string;
   email: string;
   avatar: string;
   lang: string;
 };
 
-const Header = ({ name, email, avatar, lang }: Props) => {
+const Header = ({ id, name, email, avatar, lang }: Props) => {
   return (
     <>
       <div className="flex h-20 justify-between items-center p-5 space-x-5">
@@ -30,7 +31,7 @@ const Header = ({ name, email, avatar, lang }: Props) => {
         </div>
         <div className="flex items-center gap-5">
           <CommandComponent />
-          <SetLanguage />
+          <SetLanguage userId={id} />
           <ThemeToggle />
           <div className="hidden lg:flex flex-col text-xs text-gray-500">
             <div>{name}</div>

@@ -34,6 +34,7 @@ export default async function RootLayout({
       <SideBar />
       <div className="flex flex-col h-full w-full overflow-hidden">
         <Header
+          id={session.user.id as string}
           name={session.user.name as string}
           email={session.user.email as string}
           avatar={session.user.image as string}

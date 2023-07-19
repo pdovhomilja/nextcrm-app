@@ -29,6 +29,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { toast } from "@/components/ui/use-toast";
+import { on } from "events";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
 const languages = [
   { label: "English", value: "en" },
@@ -41,20 +44,27 @@ const FormSchema = z.object({
   }),
 });
 
-export function SetLanguage() {
+type Props = {
+  userId: string;
+};
+
+export function SetLanguage({ userId }: Props) {
+  const router = useRouter();
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   });
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    await axios.put(`/api/user/${userId}/set-language`, data);
     toast({
-      title: "You submitted the following values:",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
+      title: "Success",
+      description:
+        "You change user language to:" +
+        data.language +
+        " but it's not working yet.",
     });
+    router.refresh();
   }
 
   return (
@@ -99,6 +109,7 @@ export function SetLanguage() {
                           key={language.value}
                           onSelect={(value) => {
                             form.setValue("language", value);
+                            onSubmit(form.getValues());
                           }}
                         >
                           <Check
@@ -116,9 +127,7 @@ export function SetLanguage() {
                   </Command>
                 </PopoverContent>
               </Popover>
-              {/*          <FormDescription>
-                This is the language that will be used in the dashboard.
-              </FormDescription> */}
+
               <FormMessage />
             </FormItem>
           )}
