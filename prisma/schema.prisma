@@ -13,6 +13,9 @@ datasource db {
 model crm_Accounts {
   id                   String              @id @default(auto()) @map("_id") @db.ObjectId
   v                    Int                 @map("__v")
+  date_created         DateTime?           @default(now()) @db.Date
+  date_last_modified   DateTime?           @default(now()) @db.Date
+  created_by           String?             @db.ObjectId
   annual_revenue       String?
   assigned_to          String?             @db.ObjectId
   billing_city         String?
