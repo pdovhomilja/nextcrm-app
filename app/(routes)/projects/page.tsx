@@ -10,15 +10,16 @@ import { getBoards } from "@/actions/projects/get-boards";
 import { ProjectsDataTable } from "./components/data-table";
 import { columns } from "./components/columns";
 import NewProjectDialog from "./dialogs/NewProject";
+import H2Title from "@/components/typography/h2";
 
-const CrmPage = async () => {
+const ProjectsPage = async () => {
   const session: Session | null = await getServerSession(authOptions);
 
   if (!session) return redirect("/sign-in");
 
   const userId = session?.user.id;
 
-  const boards: any = await getBoards();
+  const boards: any = await getBoards(userId);
   //console.log(boards, "boards");
 
   return (
@@ -35,11 +36,12 @@ const CrmPage = async () => {
           <Link href={`/projects/tasks/${userId}`}>My Tasks</Link>
         </Button>
       </div>
-      <div>
+      <div className="pt-2 space-y-3">
+        <H2Title>Projects</H2Title>
         <ProjectsDataTable data={boards} columns={columns} />
       </div>
     </Container>
   );
 };
 
-export default CrmPage;
+export default ProjectsPage;

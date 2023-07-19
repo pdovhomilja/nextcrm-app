@@ -91,6 +91,13 @@ export const columns: ColumnDef<Task>[] = [
       <div className="w-[300px]">{row.getValue("description")}</div>
     ),
   },
+  {
+    accessorKey: "visibility",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Visibility" />
+    ),
+    cell: ({ row }) => <div className="">{row.getValue("visibility")}</div>,
+  },
 
   {
     id: "actions",

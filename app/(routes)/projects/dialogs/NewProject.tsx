@@ -20,13 +20,20 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -36,12 +43,15 @@ const NewProjectDialog = (props: Props) => {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const [isMounted, setIsMounted] = useState(false);
+
   const router = useRouter();
   const { toast } = useToast();
 
   const formSchema = z.object({
     title: z.string().min(3).max(255),
     description: z.string().min(3).max(500),
+    visibility: z.string().min(3).max(255),
   });
 
   type NewAccountFormValues = z.infer<typeof formSchema>;
@@ -49,6 +59,16 @@ const NewProjectDialog = (props: Props) => {
   const form = useForm<NewAccountFormValues>({
     resolver: zodResolver(formSchema),
   });
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return null;
+  }
+
+  //Actions
 
   const onSubmit = async (data: NewAccountFormValues) => {
     console.log(data);
@@ -128,8 +148,34 @@ const NewProjectDialog = (props: Props) => {
                       </FormItem>
                     )}
                   />
+                  <FormField
+                    control={form.control}
+                    name="visibility"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Assigned to</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select projects visibility" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value={"public"}>{`Public`}</SelectItem>
+                            <SelectItem
+                              value={"private"}
+                            >{`Private`}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
-                <div className="flex w-full justify-end space-x-2 ">
+                <div className="flex w-full justify-end space-x-2 pt-2">
                   <Button type="submit">Create</Button>
                   <DialogTrigger asChild>
                     <Button variant={"destructive"}>Cancel</Button>

@@ -83,7 +83,7 @@ export function DataTableRowActions<TData>({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-[160px]">
           <DropdownMenuItem
-            onClick={() => router.push(`/projects/project/${row?.id}`)}
+            onClick={() => router.push(`/projects/boards/${project.id}`)}
           >
             <EyeIcon className="mr-2 w-4 h-4" />
             View project

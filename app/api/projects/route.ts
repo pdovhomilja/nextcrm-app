@@ -6,7 +6,7 @@ import { authOptions } from "@/lib/auth";
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   const body = await req.json();
-  const { title, description } = body;
+  const { title, description, visibility } = body;
 
   if (!session) {
     return new NextResponse("Unauthenticated", { status: 401 });
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
         title: title,
         description: description,
         position: boardsCount > 0 ? boardsCount : 0,
-        visibility: "public",
+        visibility: visibility,
       },
     });
 

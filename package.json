@@ -49,6 +49,7 @@
     "openai-edge": "^1.2.0",
     "postcss": "8.4.24",
     "react": "18.2.0",
+    "react-beautiful-dnd": "^13.1.1",
     "react-doc-viewer": "^0.1.5",
     "react-dom": "18.2.0",
     "react-dropzone": "^14.2.3",
@@ -66,6 +67,7 @@
     "@types/bcryptjs": "^2.4.2",
     "@types/node": "^20.4.0",
     "@types/nodemailer": "^6.4.8",
+    "@types/react-beautiful-dnd": "^13.1.4",
     "prisma": "^4.16.2",
     "ts-node": "^10.9.1",
     "typescript": "^5.1.6"

@@ -6,7 +6,6 @@ import {
   DollarSignIcon,
   FactoryIcon,
   LandmarkIcon,
-  LightbulbIcon,
   UserIcon,
   Users2Icon,
 } from "lucide-react";
@@ -17,7 +16,6 @@ import Container from "./components/ui/Container";
 import { getUsers } from "@/actions/get-users";
 import { getEmployees } from "@/actions/get-empoloyees";
 import { getAccounts } from "@/actions/crm/get-accounts";
-import { getNotions } from "@/actions/get-notions";
 import { getLeads } from "@/actions/crm/get-leads";
 import { getOpportunities } from "@/actions/crm/get-opportunities";
 import { getTasks } from "@/actions/projects/get-tasks";
@@ -40,7 +38,7 @@ const DashboardPage = async () => {
   const opportunities = await getOpportunities();
   const tasks = await getTasks();
   const usersTasks = await getUserTasks(userId);
-  const projects = await getBoards();
+  const projects = await getBoards(userId);
   const invoices = await getInvoices();
   const documents = await getDocuments();
   const storage = await getStorageSize();
@@ -113,7 +111,7 @@ const DashboardPage = async () => {
             <CoinsIcon className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-medium">{projects.length}</div>
+            <div className="text-2xl font-medium">{projects?.length}</div>
           </CardContent>
         </Card>
         <Card>
