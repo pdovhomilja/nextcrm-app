@@ -29,7 +29,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useToast } from "@/components/ui/use-toast";
-import { FingerprintIcon } from "lucide-react";
+import { CrossIcon, FingerprintIcon, PencilIcon } from "lucide-react";
 import axios from "axios";
 import {
   Dialog,
@@ -39,6 +39,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+
 import LoadingComponent from "@/components/LoadingComponent";
 
 export function LoginComponent() {
@@ -46,6 +47,7 @@ export function LoginComponent() {
   const [show, setShow] = useState(false);
   //State for dialog to be by opened and closed by DialogTrigger
   const [open, setOpen] = useState(false);
+
   const [email, setEmail] = useState("");
   const { toast } = useToast();
 
@@ -238,6 +240,7 @@ export function LoginComponent() {
         </div>
         <div className="text-sm text-gray-500">
           Need password reset? Click
+          {/* Dialog start */}
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger className="text-blue-500">
               <span className="px-2">here</span>
@@ -274,6 +277,7 @@ export function LoginComponent() {
               </DialogTrigger>
             </DialogContent>
           </Dialog>
+          {/* Dialog end */}
         </div>
       </CardFooter>
     </Card>
