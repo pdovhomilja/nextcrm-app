@@ -13,6 +13,10 @@ export const getUserTasks = async (userId: string) => {
         },
       },
     },
+    orderBy: {
+      createdAt: "desc",
+    },
   });
+
   return data;
 };

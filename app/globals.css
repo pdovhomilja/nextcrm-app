@@ -39,6 +39,10 @@
   }
 }
 
+.dropBox {
+  @apply flex flex-col overflow-hidden items-start justify-center text-xs p-2 m-2 rounded-md border border-slate-300 shadow-md;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

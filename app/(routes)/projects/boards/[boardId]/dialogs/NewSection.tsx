@@ -37,9 +37,11 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-type Props = {};
+type Props = {
+  boardId: string;
+};
 
-const NewProjectDialog = (props: Props) => {
+const NewSectionDialog = ({ boardId }: Props) => {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -50,8 +52,6 @@ const NewProjectDialog = (props: Props) => {
 
   const formSchema = z.object({
     title: z.string().min(3).max(255),
-    description: z.string().min(3).max(500),
-    visibility: z.string().min(3).max(255),
   });
 
   type NewAccountFormValues = z.infer<typeof formSchema>;
@@ -71,10 +71,9 @@ const NewProjectDialog = (props: Props) => {
   //Actions
 
   const onSubmit = async (data: NewAccountFormValues) => {
-    console.log(data);
     setIsLoading(true);
     try {
-      await axios.post("/api/projects/", data);
+      await axios.post(`/api/projects/sections/${boardId}`, data);
       toast({
         title: "Success",
         description: `New project: ${data.title}, created successfully`,
@@ -95,13 +94,13 @@ const NewProjectDialog = (props: Props) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger>
-        <Button className="px-2">New project</Button>
+        <Button className="px-2">Create new section</Button>
       </DialogTrigger>
       <DialogContent className="">
         <DialogHeader>
-          <DialogTitle className="p-2">New Project</DialogTitle>
+          <DialogTitle className="p-2">Create new section</DialogTitle>
           <DialogDescription className="p-2">
-            Fill out the form below to create a new project.
+            Fill out the form below to create a new section to this project.
           </DialogDescription>
         </DialogHeader>
         {isLoading ? (
@@ -119,57 +118,14 @@ const NewProjectDialog = (props: Props) => {
                     name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>New project name</FormLabel>
+                        <FormLabel>New section name</FormLabel>
                         <FormControl>
                           <Input
                             disabled={isLoading}
-                            placeholder="Enter project name"
+                            placeholder="Enter section name"
                             {...field}
                           />
                         </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Project description</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            disabled={isLoading}
-                            placeholder="Enter project description"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="visibility"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Project visibility</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select projects visibility" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value={"public"}>{`Public`}</SelectItem>
-                            <SelectItem
-                              value={"private"}
-                            >{`Private`}</SelectItem>
-                          </SelectContent>
-                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -190,4 +146,4 @@ const NewProjectDialog = (props: Props) => {
   );
 };
 
-export default NewProjectDialog;
+export default NewSectionDialog;

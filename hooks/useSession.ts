@@ -1,15 +1,26 @@
 import { create } from "zustand";
 
-import { Session } from "@/types/types";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 interface PreviewModalStore {
-  data?: Session;
+  session?: any;
+  getSession: () => void;
 }
 
-const useSession = create<PreviewModalStore>(async (set) => ({
-  data: await getServerSession(authOptions),
+const useSessionStore = create<PreviewModalStore>((set) => ({
+  session: {
+    id: "",
+    _id: "",
+    name: "",
+    isAdmin: false,
+    userLanguage: "",
+    userStatus: "",
+  },
+  getSession: async () => {
+    const session = await getServerSession(authOptions);
+    set({ session });
+  },
 }));
 
-export default useSession;
+export default useSessionStore;

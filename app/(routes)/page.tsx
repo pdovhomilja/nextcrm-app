@@ -120,7 +120,9 @@ const DashboardPage = async () => {
             <CoinsIcon className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-medium">{tasks.length}</div>
+            <div className="text-2xl font-medium">
+              {tasks?.length ? tasks.length : 0}
+            </div>
           </CardContent>
         </Card>
         <Card>

@@ -34,6 +34,15 @@ export async function POST(req: Request) {
       },
     });
 
+    await prismadb.sections.create({
+      data: {
+        v: 0,
+        board: newBoard.id,
+        title: "Backlog",
+        position: 0,
+      },
+    });
+
     return NextResponse.json({ newBoard }, { status: 200 });
   } catch (error) {
     console.log("[NEW_BOARD_POST]", error);

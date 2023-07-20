@@ -2,11 +2,10 @@ import { CommandComponent } from "@/components/CommandComponent";
 import AvatarDropdown from "./ui/AvatarDropdown";
 
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { SearchIcon } from "lucide-react";
+
 import { SetLanguage } from "@/components/SetLanguage";
+import FulltextSearch from "./FulltextSearch";
 
 type Props = {
   id: string;
@@ -21,13 +20,7 @@ const Header = ({ id, name, email, avatar, lang }: Props) => {
     <>
       <div className="flex h-20 justify-between items-center p-5 space-x-5">
         <div className="flex justify-center ">
-          <div className="flex w-full max-w-sm items-center space-x-2">
-            <Input type="text" placeholder={"Search"} />
-            <Button type="submit" className="gap-2">
-              <span className="hidden md:flex">Search</span>
-              <SearchIcon />
-            </Button>
-          </div>
+          <FulltextSearch />
         </div>
         <div className="flex items-center gap-5">
           <CommandComponent />

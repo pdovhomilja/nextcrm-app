@@ -11,16 +11,18 @@ import { ProjectsDataTable } from "./components/data-table";
 import { columns } from "./components/columns";
 import NewProjectDialog from "./dialogs/NewProject";
 import H2Title from "@/components/typography/h2";
+import NewTaskDialog from "./dialogs/NewTask";
+import { getUsers } from "@/actions/get-users";
 
 const ProjectsPage = async () => {
   const session: Session | null = await getServerSession(authOptions);
 
   if (!session) return redirect("/sign-in");
-
   const userId = session?.user.id;
 
+  const users = await getUsers();
+
   const boards: any = await getBoards(userId);
-  //console.log(boards, "boards");
 
   return (
     <Container
@@ -29,6 +31,7 @@ const ProjectsPage = async () => {
     >
       <div className="flex gap-2 py-10">
         <NewProjectDialog />
+        <NewTaskDialog users={users} boards={boards} />
         <Button asChild>
           <Link href="/projects/tasks">Tasks</Link>
         </Button>

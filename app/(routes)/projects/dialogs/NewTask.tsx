@@ -37,9 +37,12 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-type Props = {};
+type Props = {
+  users: any;
+  boards: any;
+};
 
-const NewProjectDialog = (props: Props) => {
+const NewTaskDialog = ({ users, boards }: Props) => {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -50,8 +53,10 @@ const NewProjectDialog = (props: Props) => {
 
   const formSchema = z.object({
     title: z.string().min(3).max(255),
-    description: z.string().min(3).max(500),
-    visibility: z.string().min(3).max(255),
+    user: z.string().min(3).max(255),
+    board: z.string().min(3).max(255),
+    priority: z.string().min(3).max(10),
+    content: z.string().min(3).max(500),
   });
 
   type NewAccountFormValues = z.infer<typeof formSchema>;
@@ -74,10 +79,10 @@ const NewProjectDialog = (props: Props) => {
     console.log(data);
     setIsLoading(true);
     try {
-      await axios.post("/api/projects/", data);
+      await axios.post(`/api/projects/tasks/create-task`, data);
       toast({
         title: "Success",
-        description: `New project: ${data.title}, created successfully`,
+        description: `New task: ${data.title}, created successfully`,
       });
     } catch (error: any) {
       toast({
@@ -95,13 +100,18 @@ const NewProjectDialog = (props: Props) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger>
-        <Button className="px-2">New project</Button>
+        <Button className="px-2">Create task</Button>
       </DialogTrigger>
       <DialogContent className="">
+        {/*        <div>
+          <pre>
+            <code>{JSON.stringify(form.getValues(), null, 2)}</code>
+          </pre>
+        </div> */}
         <DialogHeader>
-          <DialogTitle className="p-2">New Project</DialogTitle>
+          <DialogTitle className="p-2">Create New Task</DialogTitle>
           <DialogDescription className="p-2">
-            Fill out the form below to create a new project.
+            Fill out the form below to create a new task.
           </DialogDescription>
         </DialogHeader>
         {isLoading ? (
@@ -119,11 +129,11 @@ const NewProjectDialog = (props: Props) => {
                     name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>New project name</FormLabel>
+                        <FormLabel>New task name</FormLabel>
                         <FormControl>
                           <Input
                             disabled={isLoading}
-                            placeholder="Enter project name"
+                            placeholder="Enter task name"
                             {...field}
                           />
                         </FormControl>
@@ -133,14 +143,14 @@ const NewProjectDialog = (props: Props) => {
                   />
                   <FormField
                     control={form.control}
-                    name="description"
+                    name="content"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Project description</FormLabel>
+                        <FormLabel>Task description</FormLabel>
                         <FormControl>
                           <Textarea
                             disabled={isLoading}
-                            placeholder="Enter project description"
+                            placeholder="Enter task description"
                             {...field}
                           />
                         </FormControl>
@@ -150,24 +160,78 @@ const NewProjectDialog = (props: Props) => {
                   />
                   <FormField
                     control={form.control}
-                    name="visibility"
+                    name="user"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Project visibility</FormLabel>
+                        <FormLabel>Assigned to</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select projects visibility" />
+                              <SelectValue placeholder="Select assigned user" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value={"public"}>{`Public`}</SelectItem>
-                            <SelectItem
-                              value={"private"}
-                            >{`Private`}</SelectItem>
+                            {users.map((user: any) => (
+                              <SelectItem key={user.id} value={user.id}>
+                                {user.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="board"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Choose project</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select tasks board" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {boards.map((board: any) => (
+                              <SelectItem key={board.id} value={board.id}>
+                                {board.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="priority"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Choose task priority</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select tasks priority" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="low">Low</SelectItem>
+                            <SelectItem value="medium">Medium</SelectItem>
+                            <SelectItem value="high">High</SelectItem>
+                            <SelectItem value="critical">Critical</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -190,4 +254,4 @@ const NewProjectDialog = (props: Props) => {
   );
 };
 
-export default NewProjectDialog;
+export default NewTaskDialog;
