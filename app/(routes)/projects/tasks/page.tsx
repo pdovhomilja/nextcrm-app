@@ -31,6 +31,7 @@ const TasksPage = async () => {
         <RightViewModal
           label={"Create new task"}
           title="Create new task"
+          trigger={true}
           description=""
         >
           <NewTaskForm users={users} boards={boards} sections={sections} />

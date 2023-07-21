@@ -23,7 +23,7 @@ const BoardDasboard = ({ boardData, tasks }: Props) => {
   const { toast } = useToast();
   const router = useRouter();
 
-  const salesStages = boardData.sections;
+  const boardSections = boardData.sections;
 
   useEffect(() => {
     setData(tasks);
@@ -33,15 +33,30 @@ const BoardDasboard = ({ boardData, tasks }: Props) => {
     if (!destination) return;
 
     // Update the local data optimistically
-    const newOpportunities = [...data];
-    const [reorderedItem] = newOpportunities.splice(source.index, 1);
-    newOpportunities.splice(destination.index, 0, reorderedItem);
-    setData(newOpportunities);
+    const newTasks = [...data];
+    const [reorderedItem] = newTasks.splice(source.index, 1);
+    newTasks.splice(destination.index, 0, reorderedItem);
+    setData(newTasks);
 
-    // Update the server
-    //await mutate(updateOppSaleStage(draggableId, destination.droppableId));
-
-    // toast.success("Opportunity sale stage updated successfully");
+    try {
+      await axios.put(`/api/projects/tasks/`, {
+        id: draggableId,
+        section: destination.droppableId,
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description:
+          "Something went wrong while updating task. Please try again.",
+      });
+    } finally {
+      router.refresh();
+      toast({
+        title: "Success",
+        description: `Task updated successfully`,
+      });
+    }
   };
 
   const onDelete = async () => {
@@ -76,31 +91,32 @@ const BoardDasboard = ({ boardData, tasks }: Props) => {
       />
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="flex flex-row w-full h-full  justify-center space-x-2">
-          {salesStages.map((stage: any) => (
+          {boardSections.map((section: any) => (
             <div
-              key={stage.id}
+              key={section.id}
               className="flex flex-col grow w-full h-full border rounded-md items-center"
             >
-              <Droppable key={stage.id} droppableId={stage.id}>
+              <Droppable key={section.id} droppableId={section.id}>
                 {(provided) => (
                   <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                     className="w-full h-full"
-                    key={stage.id}
+                    key={section.id}
                   >
-                    <div className="flex flex-col items-center p-4 text-sm space-x-2 ">
-                      <p> {stage.name} </p>
+                    <div className="flex flex-col items-center py-4 text-sm space-x-2 ">
+                      <p> {section.name} </p>
                       <p className="flex justify-between w-full px-3">
-                        {salesStages && salesStages
-                          ? salesStages?.find(
-                              (stagex: any) => stagex?.id === stage.id
+                        {boardSections && boardSections
+                          ? boardSections?.find(
+                              (sectionName: any) =>
+                                sectionName?.id === section.id
                             )?.title
                           : "Nepřiřazeno"}
                         <TrashIcon
-                          className={`w-4 h-4 cursor-pointer hover:text-red-500`}
+                          className={`w-4 h-4 cursor-pointer hover:text-red-500 mr-2`}
                           onClick={() => {
-                            setDeleteSection(stage.id);
+                            setDeleteSection(section.id);
                             setOpen(true);
                           }}
                         />
@@ -110,14 +126,11 @@ const BoardDasboard = ({ boardData, tasks }: Props) => {
                     <div className="flex flex-col overflow-x-auto  h-full ">
                       {data &&
                         data
-                          .filter(
-                            (opportunity: any) =>
-                              opportunity.section === stage.id
-                          )
-                          .map((opportunity: any, index) => (
+                          .filter((task: any) => task.section === section.id)
+                          .map((task: any, index) => (
                             <Draggable
-                              key={opportunity.id}
-                              draggableId={opportunity.id}
+                              key={task.id}
+                              draggableId={task.id}
                               index={index}
                             >
                               {(provided, snapshot) => (
@@ -125,17 +138,17 @@ const BoardDasboard = ({ boardData, tasks }: Props) => {
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
-                                  key={opportunity.id}
+                                  key={task.id}
                                   className="dropBox space-y-2 "
                                 >
                                   <p className="font-bold text-sm">
-                                    {opportunity.title}
+                                    {task.title}
                                   </p>
                                   <p className="opacity-75 text-xs">
-                                    {opportunity.content}
+                                    {task.content}
                                   </p>
                                   <p className="opacity-75 text-xs">
-                                    Priority: {opportunity.priority}
+                                    Priority: {task.priority}
                                   </p>
                                 </div>
                               )}

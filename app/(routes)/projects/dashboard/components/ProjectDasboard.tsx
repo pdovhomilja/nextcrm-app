@@ -4,33 +4,65 @@ import moment from "moment";
 import Link from "next/link";
 import { useState } from "react";
 
-import toast, { Toaster } from "react-hot-toast";
 import { ChatBubbleIcon, ExclamationTriangleIcon } from "@radix-ui/react-icons";
-import { CheckCheck, EyeIcon } from "lucide-react";
-import { CheckIcon } from "lucide-react";
+import { CheckCheck, EyeIcon, CheckIcon } from "lucide-react";
+
+import RightViewModalNoTrigger from "@/components/modals/right-view-notrigger";
+import { TeamConversations } from "../../tasks/viewtask/[taskId]/components/team-conversation";
+import { useToast } from "@/components/ui/use-toast";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
 type Props = {
   dashboardData: any;
 };
 
 const ProjectDashboardCockpit = ({ dashboardData }: Props) => {
-  const [selectedTask, setSelectedTask] = useState(undefined);
+  //TODO: fix any
+  const [selectedTask, setSelectedTask]: any = useState(undefined);
   const [openChat, setOpenChat] = useState(false);
+
+  const { toast } = useToast();
+  const router = useRouter();
+
+  //Actions
+  const onDone = async (taskId: string) => {
+    try {
+      await axios.post(`/api/projects/tasks/mark-task-as-done/${taskId}`);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error, task not marked as done.",
+      });
+    } finally {
+      toast({
+        title: "Success, task marked as done.",
+      });
+      router.refresh();
+    }
+  };
 
   //Console logs
 
   return (
-    <div className="flex flex-row items-start justify-center h-full w-full">
-      {/* Toasts */}
-      <Toaster toastOptions={{ position: "top-right", duration: 1500 }} />
+    <div className="flex flex-col md:flex-row items-start justify-center h-full w-full overflow-auto">
       {/* Modals */}
-      {/*       <ChatModal
-        openChat={openChat}
-        setOpenChat={setOpenChat}
-        task={selectedTask}
-      /> */}
-      {/*     <pre>{JSON.stringify(dashboardData, null, 2)}</pre> */}
-      <div className="w-1/2">
+
+      <RightViewModalNoTrigger
+        title={`Chat about task: ${selectedTask?.title}`}
+        description="Chat with your team members about this task."
+        open={openChat}
+        setOpen={setOpenChat}
+      >
+        <div className="flex flex-col justify-between items-center w-[500px]">
+          <TeamConversations
+            taskId={selectedTask?.id}
+            data={selectedTask?.comments}
+          />
+        </div>
+      </RightViewModalNoTrigger>
+
+      <div className="w-full md:w-1/2">
         <div>
           <h2 className="font-bold text-lg ">
             Tasks due Today ({dashboardData?.getTaskPastDue?.length})
@@ -79,21 +111,19 @@ const ProjectDashboardCockpit = ({ dashboardData }: Props) => {
                   setOpenChat(true);
                 }}
               />
-              <CheckCheck
+              <CheckIcon
                 aria-label="Mark as done"
                 className="w-4 h-4 text-slate-600"
                 onClick={async () => {
-                  toast.loading("Marking task as done...");
                   await setSelectedTask(task);
-
-                  toast.success("Task marked as done");
+                  await onDone(task.id);
                 }}
               />
             </div>
           </div>
         ))}
       </div>
-      <div className="w-1/2">
+      <div className="w-full pt-5 md:w-1/2 md:pt-0">
         <div>
           <h2 className="font-bold text-lg ">
             Tasks due in 7 days (
@@ -148,10 +178,8 @@ const ProjectDashboardCockpit = ({ dashboardData }: Props) => {
                   aria-label="Mark as done"
                   className="w-4 h-4 text-slate-600"
                   onClick={async () => {
-                    toast.loading("Marking task as done...");
                     await setSelectedTask(task);
-
-                    toast.success("Task marked as done");
+                    await onDone(task.id);
                   }}
                 />
               </div>

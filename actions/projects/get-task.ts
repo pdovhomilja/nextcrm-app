@@ -19,6 +19,20 @@ export const getTask = async (taskId: string) => {
           document_file_url: true,
         },
       },
+      comments: {
+        select: {
+          id: true,
+          comment: true,
+          createdAt: true,
+          assigned_user: {
+            select: {
+              id: true,
+              name: true,
+              avatar: true,
+            },
+          },
+        },
+      },
     },
   });
   return data;

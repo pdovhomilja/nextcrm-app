@@ -85,7 +85,7 @@ export function TeamConversations({
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="flex space-x-5 w-full py-2 items-end"
+          className="flex space-x-5 w-full py-2 items-end pb-5"
         >
           <FormField
             control={form.control}
@@ -109,7 +109,7 @@ export function TeamConversations({
           </Button>
         </form>
       </Form>
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Team conversation</CardTitle>
           <CardDescription>

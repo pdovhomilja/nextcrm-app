@@ -26,6 +26,25 @@ export const getTasksPastDue = async () => {
           },
         ],
       },
+      include: {
+        comments: {
+          select: {
+            id: true,
+            comment: true,
+            createdAt: true,
+            assigned_user: {
+              select: {
+                id: true,
+                name: true,
+                avatar: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
+      },
     });
 
     const getTaskPastDueInSevenDays = await prismadb.tasks.findMany({
@@ -47,6 +66,25 @@ export const getTasksPastDue = async () => {
             },
           },
         ],
+      },
+      include: {
+        comments: {
+          select: {
+            id: true,
+            comment: true,
+            createdAt: true,
+            assigned_user: {
+              select: {
+                id: true,
+                name: true,
+                avatar: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
       },
     });
 
