@@ -17,17 +17,37 @@ export async function DELETE(
   if (!params.projectId) {
     return new NextResponse("Missing project ID", { status: 400 });
   }
+  const boardId = params.projectId;
 
   try {
+    const sections = await prismadb.sections.findMany({
+      where: {
+        board: boardId,
+      },
+    });
+
+    for (const section of sections) {
+      await prismadb.tasks.deleteMany({
+        where: {
+          section: section.id,
+        },
+      });
+    }
+    await prismadb.sections.deleteMany({
+      where: {
+        board: boardId,
+      },
+    });
+
     await prismadb.boards.delete({
       where: {
-        id: params.projectId,
+        id: boardId,
       },
     });
 
     return NextResponse.json({ message: "Board deleted" }, { status: 200 });
   } catch (error) {
-    console.log("[Account_DELETE]", error);
+    console.log("[PROJECT_DELETE]", error);
     return new NextResponse("Initial error", { status: 500 });
   }
 }

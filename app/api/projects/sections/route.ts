@@ -16,7 +16,21 @@ export async function DELETE(req: Request) {
     return new NextResponse("Missing section ID ", { status: 400 });
   }
 
+  console.log(id, "id");
+
   try {
+    const tasks = await prismadb.tasks.findMany({});
+
+    for (const task of tasks) {
+      if (task.section === id) {
+        await prismadb.tasks.delete({
+          where: {
+            id: task.id,
+          },
+        });
+      }
+    }
+
     await prismadb.sections.delete({
       where: {
         id: id,
@@ -25,7 +39,7 @@ export async function DELETE(req: Request) {
 
     return NextResponse.json("deletedSection");
   } catch (error) {
-    console.log("[Document_DELETE]", error);
+    console.log("[PROJECT_SECTION_DELETE]", error);
     return new NextResponse("Initial error", { status: 500 });
   }
 }

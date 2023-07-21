@@ -9,6 +9,7 @@ import NewSectionDialog from "./dialogs/NewSection";
 import NewTaskInProjectDialog from "./dialogs/NewTaskInProject";
 import { getUsers } from "@/actions/get-users";
 import { getBoardSections } from "@/actions/projects/get-board-sections";
+import DeleteProjectDialog from "./dialogs/DeleteProject";
 
 interface BoardDetailProps {
   params: { boardId: string };
@@ -22,14 +23,25 @@ const BoardPage = async ({ params }: BoardDetailProps) => {
   const sections: any = await getBoardSections(boardId);
 
   return (
-    <Container title={board.board.title} description={board.board.description}>
-      <div className="py-5 space-x-2">
-        <NewSectionDialog boardId={boardId} />
-        <NewTaskInProjectDialog
-          boardId={boardId}
-          users={users}
-          sections={sections}
-        />
+    <Container
+      title={board?.board?.title}
+      description={board?.board?.description}
+    >
+      <div className="flex justify-between py-5 w-full">
+        <div className="space-x-2">
+          <NewSectionDialog boardId={boardId} />
+          <NewTaskInProjectDialog
+            boardId={boardId}
+            users={users}
+            sections={sections}
+          />
+        </div>
+        <div>
+          <DeleteProjectDialog
+            boardId={boardId}
+            boardName={board.board.title}
+          />
+        </div>
       </div>
 
       <div className="w-full overflow-x-auto">

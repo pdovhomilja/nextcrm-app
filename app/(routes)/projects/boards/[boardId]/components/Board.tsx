@@ -97,7 +97,7 @@ const BoardDasboard = ({ boardData, tasks }: Props) => {
                             )?.title
                           : "Nepřiřazeno"}
                         <TrashIcon
-                          className="w-4 h-4"
+                          className={`w-4 h-4 cursor-pointer hover:text-red-500`}
                           onClick={() => {
                             setDeleteSection(stage.id);
                             setOpen(true);
