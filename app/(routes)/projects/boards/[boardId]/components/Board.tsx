@@ -1,6 +1,7 @@
 "use client";
 
 import AlertModal from "@/components/modals/alert-modal";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
 import axios from "axios";
 import { TrashIcon } from "lucide-react";
@@ -74,11 +75,11 @@ const BoardDasboard = ({ boardData, tasks }: Props) => {
         loading={loading}
       />
       <DragDropContext onDragEnd={onDragEnd}>
-        <div className="flex flex-row w-full h-full border justify-center">
+        <div className="flex flex-row w-full h-full  justify-center space-x-2">
           {salesStages.map((stage: any) => (
             <div
               key={stage.id}
-              className="flex flex-col grow w-full h-full border-l items-center"
+              className="flex flex-col grow w-full h-full border rounded-md items-center"
             >
               <Droppable key={stage.id} droppableId={stage.id}>
                 {(provided) => (
@@ -105,7 +106,7 @@ const BoardDasboard = ({ boardData, tasks }: Props) => {
                         />
                       </p>
                     </div>
-
+                    <Separator />
                     <div className="flex flex-col overflow-x-auto  h-full ">
                       {data &&
                         data

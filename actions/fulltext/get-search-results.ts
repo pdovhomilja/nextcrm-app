@@ -49,6 +49,26 @@ export const getSearch = async (search: string) => {
     },
   });
 
+  const resultsTasks = await prismadb.tasks.findMany({
+    where: {
+      OR: [
+        { title: { contains: search, mode: "insensitive" } },
+        { content: { contains: search, mode: "insensitive" } },
+        // add more fields as needed
+      ],
+    },
+  });
+
+  const reslutsProjects = await prismadb.boards.findMany({
+    where: {
+      OR: [
+        { title: { contains: search, mode: "insensitive" } },
+        { description: { contains: search, mode: "insensitive" } },
+        // add more fields as needed
+      ],
+    },
+  });
+
   const data = {
     message: "Fulltext search response",
     results: {
@@ -56,6 +76,8 @@ export const getSearch = async (search: string) => {
       accounts: resultsCrmAccounts,
       contacts: resultsCrmContacts,
       users: resultsUser,
+      tasks: resultsTasks,
+      projects: reslutsProjects,
     },
   };
 

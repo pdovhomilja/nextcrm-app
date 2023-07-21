@@ -29,6 +29,14 @@ const ResultPage = ({ results, search }: Props) => {
         <h1>Search results in Local users: </h1>
         <p>{results?.results?.users?.length}</p>
       </div>
+      <div className="flex flex-row gap-2">
+        <h1>Search results in Local Tasks: </h1>
+        <p>{results?.results?.tasks?.length}</p>
+      </div>
+      <div className="flex flex-row gap-2">
+        <h1>Search results in Local Projects: </h1>
+        <p>{results?.results?.projects?.length}</p>
+      </div>
       {/*   {results?.results?.opportunities?.length > 0 && (
         <div>
           <OppsResults data={results?.results?.opportunities} />
