@@ -33,10 +33,12 @@ const AvatarDropdown = ({ avatar }: Props) => {
       <DropdownMenuContent>
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem asChild>
           <Link href="/profile">Profile</Link>
         </DropdownMenuItem>
-        <DropdownMenuItem>Billing</DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/projects/dashboard">Todo dashboard</Link>
+        </DropdownMenuItem>
         <DropdownMenuItem>Team</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem>
