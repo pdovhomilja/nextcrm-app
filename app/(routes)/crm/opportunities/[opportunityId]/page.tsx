@@ -1,11 +1,11 @@
 import { getOpportunity } from "@/actions/crm/get-opportunity";
 import React from "react";
 
-type Props = {
-  opportunityId: string;
-};
-
-const OpportunityView = async ({ opportunityId }: Props) => {
+const OpportunityView = async ({
+  params: { opportunityId },
+}: {
+  params: { opportunityId: string };
+}) => {
   const opportunity = await getOpportunity(opportunityId);
   return (
     <div>
