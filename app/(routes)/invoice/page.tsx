@@ -16,7 +16,6 @@ const InvoicePage = async () => {
         <RightViewModal
           label={"Test button 2"}
           title="Modal title"
-          trigger={true}
           description="Modal description"
         >
           <div className="w-[1600px]">modal content</div>
@@ -24,7 +23,6 @@ const InvoicePage = async () => {
         <RightViewModal
           label={"Test button"}
           title="Modal title"
-          trigger={true}
           description="Modal description"
         >
           Modal content

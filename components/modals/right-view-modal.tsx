@@ -11,17 +11,10 @@ type Props = {
   label?: string;
   title: string;
   description: string;
-  trigger?: boolean;
   children: ReactNode;
 };
 
-const RightViewModal = ({
-  label,
-  title,
-  description,
-  children,
-  trigger,
-}: Props) => {
+const RightViewModal = ({ label, title, description, children }: Props) => {
   const [open, setOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -35,11 +28,9 @@ const RightViewModal = ({
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
-      {trigger ? (
-        <Dialog.Trigger asChild>
-          <Button>{label}</Button>
-        </Dialog.Trigger>
-      ) : null}
+      <Dialog.Trigger asChild>
+        <Button className="mb-5">{label}</Button>
+      </Dialog.Trigger>
       <Dialog.Portal className="">
         <Dialog.Overlay className="data-[state=open]:animate-[dialog-overlay-show_1000ms] data-[state=closed]:animate-[dialog-overlay-hide_1000ms] fixed inset-0 bg-black/50" />
         <Dialog.Content

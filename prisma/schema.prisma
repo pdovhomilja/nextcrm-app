@@ -88,7 +88,7 @@ model crm_Opportunities {
   account              String?                         @db.ObjectId
   assigned_to          String?                         @db.ObjectId
   budget               String?
-  campaign             String?
+  campaign             String?                         @db.ObjectId
   close_date           DateTime?                       @db.Date
   contact              String?                         @db.ObjectId
   created_by           String?                         @db.ObjectId
@@ -109,6 +109,23 @@ model crm_Opportunities {
   created_by_user      Users?                          @relation(name: "created_by_user_relation", fields: [created_by], references: [id])
   assigned_account     crm_Accounts?                   @relation(fields: [account], references: [id])
   assigned_contact     crm_Contacts?                   @relation(fields: [contact], references: [id])
+  assigned_campaings   crm_campains?                   @relation(fields: [campaign], references: [id])
+}
+
+enum crm_Opportunities_Status {
+  ACTIVE
+  INACTIVE
+  PENDING
+  CLOSED
+}
+
+model crm_campains {
+  id            String              @id @default(auto()) @map("_id") @db.ObjectId
+  v             Int                 @map("__v")
+  name          String
+  description   String?
+  status        String?
+  opportunities crm_Opportunities[]
 }
 
 model crm_Opportunities_Sales_Stages {
