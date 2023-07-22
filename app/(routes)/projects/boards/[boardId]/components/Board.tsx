@@ -25,7 +25,7 @@ const BoardDasboard = ({ boardData, tasks }: Props) => {
 
   const boardSections = boardData.sections;
 
-  //Use useEffect to update the data
+  //Use useEffect to update the data when tasks change
   useEffect(() => {
     setData(tasks);
   }, [tasks]);
