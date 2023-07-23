@@ -495,7 +495,7 @@ export function NewOpportunityForm({
                 Saving data ...
               </span>
             ) : (
-              "Create account"
+              "Create opportunity"
             )}
           </Button>
         </div>

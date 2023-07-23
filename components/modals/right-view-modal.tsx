@@ -41,9 +41,9 @@ const RightViewModal = ({ label, title, description, children }: Props) => {
           <div className="flex flex-col h-full">
             <div className="flex justify-between w-full">
               <Dialog.Title className="font-semibold p-3 w-full">
-                <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">
+                <span className="scroll-m-20 text-xl font-semibold tracking-tight">
                   {title}
-                </h4>
+                </span>
               </Dialog.Title>
               <Dialog.Close className="flex justify-end text-right w-full pr-5 pt-5">
                 <Cross1Icon className="w-5 h-5 opacity-50 hover:opacity-100" />
@@ -55,11 +55,14 @@ const RightViewModal = ({ label, title, description, children }: Props) => {
             <div className="flex-grow border p-5 w-full h-full overflow-auto">
               {children}
             </div>
-            <Dialog.Close className="flex justify-end w-full p-3">
-              <Button variant={"destructive"} onClick={() => setOpen(false)}>
-                Close
-              </Button>
-            </Dialog.Close>
+            <div className="flex justify-end w-full p-3">
+              {" "}
+              <Dialog.Close asChild>
+                <Button variant={"destructive"} onClick={() => setOpen(false)}>
+                  Close
+                </Button>
+              </Dialog.Close>
+            </div>
           </div>
         </Dialog.Content>
       </Dialog.Portal>

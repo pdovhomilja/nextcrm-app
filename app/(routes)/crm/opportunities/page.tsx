@@ -1,5 +1,3 @@
-import React from "react";
-
 import Container from "../../components/ui/Container";
 import OpportunityView from "./components/OpportunityView";
 

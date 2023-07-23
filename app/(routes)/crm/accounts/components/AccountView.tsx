@@ -8,13 +8,15 @@ import { NewAccountForm } from "./NewAccountForm";
 import { getAccounts } from "@/actions/crm/get-accounts";
 import { getIndustries } from "@/actions/crm/get-industries";
 import { getUsers } from "@/actions/get-users";
+import { getAllCrmData } from "@/actions/crm/get-crm-data";
 
 type Props = {};
 
 const AccountView = async () => {
   const accounts: any[] = await getAccounts();
-  const industries: any[] = await getIndustries();
-  const users: any[] = await getUsers();
+  const crmData = await getAllCrmData();
+  const { users, industries } = crmData;
+
   return (
     <div className="border rounded-md p-5 mt-5">
       <div className="flex items-center gap-3">

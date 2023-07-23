@@ -100,9 +100,9 @@ model crm_Opportunities {
   expected_revenue     String?
   name                 String?
   next_step            String?
-  sales_stage          String?                         @default("New") @db.ObjectId
-  status               String?                         @default("Active")
-  type                 String?                         @default("New") @db.ObjectId
+  sales_stage          String?                         @db.ObjectId
+  type                 String?                         @db.ObjectId
+  status               crm_Opportunity_Status?         @default(ACTIVE)
   assigned_type        crm_Opportunities_Type?         @relation(fields: [type], references: [id])
   assigned_sales_stage crm_Opportunities_Sales_Stages? @relation(name: "assinged_sales_stage", fields: [sales_stage], references: [id])
   assigned_to_user     Users?                          @relation(name: "assigned_to_user_relation", fields: [assigned_to], references: [id])
@@ -112,7 +112,7 @@ model crm_Opportunities {
   assigned_campaings   crm_campains?                   @relation(fields: [campaign], references: [id])
 }
 
-enum crm_Opportunities_Status {
+enum crm_Opportunity_Status {
   ACTIVE
   INACTIVE
   PENDING

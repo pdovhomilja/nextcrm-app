@@ -6,17 +6,22 @@ import {
 
 export const statuses = [
   {
-    value: "Active",
+    value: "ACTIVE",
     label: "Active",
     icon: QuestionMarkCircledIcon,
   },
   {
-    value: "Inactive",
+    value: "INACTIVE",
     label: "Inactive",
     icon: CircleIcon,
   },
   {
-    value: "Closed",
+    value: "PENDING",
+    label: "Pending",
+    icon: CircleIcon,
+  },
+  {
+    value: "CLOSED",
     label: "Closed",
     icon: StopwatchIcon,
   },

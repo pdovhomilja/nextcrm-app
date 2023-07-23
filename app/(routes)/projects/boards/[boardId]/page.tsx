@@ -1,7 +1,5 @@
 import { getBoard } from "@/actions/projects/get-board";
 import React from "react";
-import BoardDasboard from "./components/Board";
-import { getTasks } from "@/actions/projects/get-tasks";
 
 import Container from "@/app/(routes)/components/ui/Container";
 import NewSectionDialog from "./dialogs/NewSection";
@@ -10,6 +8,8 @@ import NewTaskInProjectDialog from "./dialogs/NewTaskInProject";
 import { getUsers } from "@/actions/get-users";
 import { getBoardSections } from "@/actions/projects/get-board-sections";
 import DeleteProjectDialog from "./dialogs/DeleteProject";
+import { getKanbanData } from "@/actions/projects/get-kanban-data";
+import Kanban from "./components/Kanban";
 
 interface BoardDetailProps {
   params: { boardId: string };
@@ -18,9 +18,10 @@ interface BoardDetailProps {
 const BoardPage = async ({ params }: BoardDetailProps) => {
   const { boardId } = params;
   const board: any = await getBoard(boardId);
-  const tasks: any = await getTasks();
+
   const users: any = await getUsers();
   const sections: any = await getBoardSections(boardId);
+  const kanbanData = await getKanbanData(boardId);
 
   return (
     <Container
@@ -45,7 +46,7 @@ const BoardPage = async ({ params }: BoardDetailProps) => {
       </div>
 
       <div className="w-full overflow-x-auto">
-        <BoardDasboard boardData={board} tasks={tasks} />
+        <Kanban data={kanbanData.sections} />
       </div>
     </Container>
   );

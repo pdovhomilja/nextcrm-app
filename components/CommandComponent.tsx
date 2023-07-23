@@ -21,14 +21,27 @@ import {
   CommandShortcut,
 } from "@/components/ui/command";
 import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
+
+import { signOut } from "next-auth/react";
 
 export function CommandComponent() {
   const [open, setOpen] = React.useState(false);
+  const router = useRouter();
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "j" && e.metaKey) {
         setOpen((open) => !open);
+      }
+      if (e.key === "Escape") {
+        setOpen(false);
+      }
+      if (e.key === "p" && e.metaKey) {
+        router.push("/profile");
+      }
+      if (e.key === "k" && e.metaKey) {
+        signOut();
       }
     };
 
@@ -66,7 +79,7 @@ export function CommandComponent() {
           <CommandGroup heading="Settings">
             <CommandItem onClick={() => redirect("/profile")}>
               <User className="mr-2 h-4 w-4" />
-              <span onClick={() => alert("test")}>Profile</span>
+              <span>Profile</span>
               <CommandShortcut>⌘P</CommandShortcut>
             </CommandItem>
             <CommandItem>
@@ -78,6 +91,11 @@ export function CommandComponent() {
               <Settings className="mr-2 h-4 w-4" />
               <span>Settings</span>
               <CommandShortcut>⌘S</CommandShortcut>
+            </CommandItem>
+            <CommandItem>
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Logout</span>
+              <CommandShortcut>⌘q</CommandShortcut>
             </CommandItem>
           </CommandGroup>
         </CommandList>

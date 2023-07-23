@@ -46,11 +46,3 @@ export default async function RootLayout({
     </div>
   );
 }
-<main>
-  <div>sidebar</div>
-  <div>
-    <header>header</header>
-    <div>main</div>
-    <footer>footer</footer>
-  </div>
-</main>;

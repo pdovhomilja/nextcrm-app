@@ -7,7 +7,12 @@ import axios from "axios";
 import { TrashIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
+import {
+  DragDropContext,
+  Draggable,
+  DropResult,
+  Droppable,
+} from "react-beautiful-dnd";
 
 type Props = {
   boardData: any;
@@ -30,11 +35,18 @@ const BoardDasboard = ({ boardData, tasks }: Props) => {
     setData(tasks);
   }, [tasks]);
 
-  const onDragEnd = async ({ source, destination, draggableId }: any) => {
+  const onDragEnd = async ({
+    source,
+    destination,
+    draggableId,
+  }: DropResult) => {
+    console.log(source, destination, draggableId);
+
     if (!destination) return;
 
     // Update the local data optimistically
     const newTasks = [...data];
+    console.log(newTasks, "newTasks");
     const [reorderedItem] = newTasks.splice(source.index, 1);
     newTasks.splice(destination.index, 0, reorderedItem);
     setData(newTasks);
