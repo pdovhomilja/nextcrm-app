@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { ChangeEvent, useEffect } from "react";
 import { useState } from "react";
 import {
   DragDropContext,
@@ -44,8 +44,8 @@ import { useToast } from "@/components/ui/use-toast";
 // import TaskDocuments from "./components/TaskDocuments";
 //import TipTapEditor from "../../components/tipTapEditor/TipTapEditor";
 
-let timer;
-const timeout = 500;
+let timer: any;
+const timeout = 1000;
 
 const Kanban = (props: any) => {
   const [selectedTask, setSelectedTask] = useState(undefined);
@@ -98,12 +98,6 @@ const Kanban = (props: any) => {
     }
 
     try {
-      /*       await updateTaskPosition({
-        resourceList: sourceTasks,
-        destinationList: destinationTasks,
-        resourceSectionId: sourceSectionId,
-        destinationSectionId: destinationSectionId,
-      }); */
       setData(data);
       await axios.put(`/api/projects/tasks/update-kanban-position`, {
         resourceList: sourceTasks,
@@ -149,7 +143,10 @@ const Kanban = (props: any) => {
   }; */
 
   //Done
-  /*   const updateSectionTitle = async (e, sectionId) => {
+  const updateSectionTitle = async (
+    e: ChangeEvent<HTMLInputElement>,
+    sectionId: string
+  ) => {
     //console.log(e, "e - updateSectionTitle");
     //console.log(sectionId, "sectionId - updateSectionTitle");
     clearTimeout(timer);
@@ -160,13 +157,19 @@ const Kanban = (props: any) => {
     setData(newData);
     timer = setTimeout(async () => {
       try {
-        updateSection(sectionId, { title: newTitle });
+        //updateSection(sectionId, { title: newTitle });
+        await axios.put(`/api/projects/sections/update-title/${sectionId}`, {
+          newTitle,
+        });
+        toast({
+          title: "Section title updated",
+          description: "New section title saved in database",
+        });
       } catch (err) {
         alert(err);
       }
     }, timeout);
-    mutate();
-  }; */
+  };
 
   //Done
   /*   const createTask = async (sectionId) => {
@@ -290,7 +293,7 @@ const Kanban = (props: any) => {
                           type="text"
                           className="  pl-2 bg-slate-900 px-1 py-3 rounded-md m-2  "
                           placeholder={section?.title}
-                          //onChange={(e) => updateSectionTitle(e, section.id)}
+                          onChange={(e) => updateSectionTitle(e, section.id)}
                         />
                         <div className="flex items-center justify-end pr-2">
                           <span className="border rounded-full px-2 m-2">
@@ -331,7 +334,7 @@ const Kanban = (props: any) => {
                               className="flex flex-col overflow-hidden items-start justify-center text-xs p-2 m-2  rounded-md border  shadow-md "
                             >
                               <div className="flex flex-row justify-between mx-auto w-full">
-                                <h2 className="font-bold text-sm ">
+                                <h2 className="font-bold text-sm py-1">
                                   {task.title === "" ? "Untitled" : task.title}
                                 </h2>
                                 {task?.dueDateAt &&
@@ -339,7 +342,7 @@ const Kanban = (props: any) => {
                                     <ExclamationTriangleIcon className="w-4 h-4 text-red-500" />
                                   )}
                               </div>
-                              <div>
+                              <div className="py-1">
                                 Due date:{" "}
                                 {moment(task.dueDateAt).format("YYYY-MM-DD")}
                               </div>
@@ -358,9 +361,11 @@ const Kanban = (props: any) => {
                                   Priorita: {task.priority}
                                 </p>
                               </div>
-                              <div>
-                                <p className="line-clamp-2">{task.content}</p>
-                              </div>
+
+                              <p className="line-clamp-2 py-2">
+                                {task.content}
+                              </p>
+
                               <div className="flex  gap-2 pt-2">
                                 <Link
                                   href={`/projects/tasks/viewtask/${task.id}`}

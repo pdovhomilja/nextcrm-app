@@ -18,6 +18,8 @@ export async function GET(req: Request) {
       },
     });
 
+    if (!users) return NextResponse.json({ message: "No users found" });
+
     for (const user of users) {
       const getTaskPastDue = await prismadb.tasks.findMany({
         where: {
@@ -111,7 +113,7 @@ export async function GET(req: Request) {
       }
 
       const getAiResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_APP_URL}/api/openai/createChatCompletion`,
+        `${process.env.NEXT_PUBLIC_APP_URL}/api/openai/create-chat-completion`,
         {
           method: "POST",
           headers: {
