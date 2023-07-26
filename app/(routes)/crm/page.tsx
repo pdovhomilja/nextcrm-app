@@ -1,16 +1,13 @@
 import React, { Suspense } from "react";
 import Link from "next/link";
 
-import { DataTable } from "@/components/ui/data-table";
 import H2Title from "@/components/typography/h2";
-
-import { getLeads } from "@/actions/crm/get-leads";
-import { getOpportunities } from "@/actions/crm/get-opportunities";
 
 import AccountView from "./accounts/components/AccountView";
 import Container from "../components/ui/Container";
-import { columns } from "./components/Columns";
+
 import OpportunityView from "./opportunities/components/OpportunityView";
+import ContactView from "./contacts/components/ContactView";
 
 type Props = {};
 
@@ -25,6 +22,12 @@ const CrmPage = async (props: Props) => {
           <H2Title>Accounts</H2Title>
         </Link>
         <AccountView />
+      </Suspense>
+      <Suspense fallback={"Loading ..."}>
+        <Link href="/crm/contacts">
+          <H2Title>Contacts</H2Title>
+        </Link>
+        <ContactView />
       </Suspense>
       <Suspense fallback={"Loading ..."}>
         <Link href="/crm/opportunities">

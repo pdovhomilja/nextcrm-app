@@ -178,6 +178,12 @@ model crm_Contacts {
   crate_by_user    Users?              @relation(name: "created_contacts", fields: [created_by], references: [id])
   assigned_account crm_Accounts?       @relation(fields: [account], references: [id])
 }
+enum crm_Contact_Type{
+Customer
+Partner
+Vendor
+}
+
 
 model Boards {
   id                String    @id @default(auto()) @map("_id") @db.ObjectId
