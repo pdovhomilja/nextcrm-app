@@ -3,7 +3,10 @@ This API endpoint is used to add a new task to a section.
 */
 import { prismadb } from "@/lib/prisma";
 import sendEmail from "@/lib/sendmail";
+import { data } from "autoprefixer";
+import axios from "axios";
 import dayjs from "dayjs";
+import { get } from "http";
 import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
@@ -112,6 +115,8 @@ export async function GET(req: Request) {
           break;
       }
 
+      if (!prompt) return NextResponse.json({ message: "No prompt found" });
+
       const getAiResponse = await fetch(
         `${process.env.NEXT_PUBLIC_APP_URL}/api/openai/create-chat-completion`,
         {
@@ -125,12 +130,17 @@ export async function GET(req: Request) {
         }
       ).then((res) => res.json());
 
-      await sendEmail({
-        from: process.env.EMAIL_FROM,
-        to: user.email!,
-        subject: `${process.env.NEXT_PUBLIC_APP_NAME} OpenAI Project manager assistant`,
-        text: getAiResponse.response,
-      });
+      //skip if api response is error
+      if (getAiResponse.error) {
+        console.log("Error from OpenAI API");
+      } else {
+        await sendEmail({
+          from: process.env.EMAIL_FROM,
+          to: user.email!,
+          subject: `${process.env.NEXT_PUBLIC_APP_NAME} OpenAI Project manager assistant`,
+          text: getAiResponse.response,
+        });
+      }
     }
 
     return NextResponse.json({ message: "Emails sent" });

@@ -8,6 +8,10 @@ export async function POST(req: Request) {
   const body = await req.json();
   const { prompt } = body;
 
+  if (!prompt) {
+    return new NextResponse("No prompt", { status: 400 });
+  }
+
   try {
     const gptModel = await prismadb.gpt_models.findMany({
       where: {
@@ -18,7 +22,8 @@ export async function POST(req: Request) {
     console.log("Active GPT Model:", gptModel[0].model);
 
     const completion = await openailib.createChatCompletion({
-      model: gptModel[0].model,
+      //model: gptModel[0].model,
+      model: "gpt-3.5-turbo-16k",
       messages: [{ role: "user", content: prompt }],
       max_tokens: 4096,
       temperature: 0,
