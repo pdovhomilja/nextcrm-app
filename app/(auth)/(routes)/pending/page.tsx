@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
+import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
 import Link from "next/link";
 
 const PendingPage = async () => {
+  const session = await getServerSession(authOptions);
   const adminUsers = await prismadb.users.findMany({
     where: {
       is_admin: true,
@@ -11,6 +14,9 @@ const PendingPage = async () => {
 
   return (
     <div className="flex flex-col space-y-5 justify-center items-center max-w-3xl border rounded-md p-10 shadow-md">
+      {/*       <pre>
+        <code>{JSON.stringify(session, null, 2)}</code>
+      </pre> */}
       <div className="flex flex-col">
         <h1 className="text-3xl">
           {process.env.NEXT_PUBLIC_APP_NAME} - your account must be allowed by

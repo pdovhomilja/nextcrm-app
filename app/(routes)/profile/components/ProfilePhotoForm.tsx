@@ -22,20 +22,15 @@ const FormSchema = z.object({
 });
 
 export function ProfilePhotoForm({ data }: ProfileFormProps) {
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  const router = useRouter();
-
-  const { toast } = useToast();
-
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
-  });
-
   return (
     <div className="flex items-center space-x-5">
       <div>
-        <Image src={data.avatar} alt="avatar" width={100} height={100} />
+        <Image
+          src={data?.avatar || "/images/nouser.png"}
+          alt="avatar"
+          width={100}
+          height={100}
+        />
       </div>
       <div>
         <FileUploaderDropzone uploader={"profilePhotoUploader"} />

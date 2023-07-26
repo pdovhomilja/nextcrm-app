@@ -25,6 +25,8 @@ export default async function RootLayout({
 
   const user = session?.user;
 
+  // console.log(user.userStatus, "userStatus");
+
   if (user?.userStatus === "PENDING") {
     return redirect("/pending");
   }

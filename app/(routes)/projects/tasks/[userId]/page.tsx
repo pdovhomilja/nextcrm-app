@@ -17,9 +17,9 @@ type TaskDetailPageProps = {
 const TaskDetailPage = async ({ params }: TaskDetailPageProps) => {
   const session: Session | null = await getServerSession(authOptions);
   const { userId } = params;
-  console.log(userId, "userId");
+
   const tasks: any = await getUserTasks(userId);
-  console.log(tasks, "tasks");
+
   return (
     <Container
       title={`${session?.user.name}'s Tasks`}
