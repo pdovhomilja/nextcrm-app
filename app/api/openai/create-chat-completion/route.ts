@@ -20,8 +20,8 @@ export async function POST(req: Request) {
     const completion = await openailib.createChatCompletion({
       model: gptModel[0].model,
       messages: [{ role: "user", content: prompt }],
-      max_tokens: 1000,
-      temperature: 0.1,
+      max_tokens: 4096,
+      temperature: 0,
     });
     console.log(completion.data.choices[0].message?.content, "completion");
     return NextResponse.json(

@@ -135,7 +135,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ message: "Emails sent" });
   } catch (error) {
-    console.log("[Document_DELETE]", error);
+    console.log("[TASK_CRON_API]", error);
     return new NextResponse("Initial error", { status: 500 });
   }
 }
