@@ -49,6 +49,8 @@ export const getNotions = async (): Promise<any[] | null> => {
 
   const notion: NotionClient = await initNotionClient(userId);
 
+  //console.log(notion, "notion");
+
   try {
     const notionDb = await prismadb.secondBrain_notions.findFirst({
       where: {
