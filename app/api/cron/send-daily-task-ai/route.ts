@@ -11,7 +11,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
   try {
-    const today = dayjs().startOf("day");
+    /*   const today = dayjs().startOf("day");
     const nextWeek = dayjs().add(7, "day").startOf("day");
     let prompt = "";
 
@@ -141,7 +141,7 @@ export async function GET(req: Request) {
           text: getAiResponse.response,
         });
       }
-    }
+    } */
 
     return NextResponse.json({ message: "Emails sent" });
   } catch (error) {
