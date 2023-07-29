@@ -84,10 +84,7 @@ export const getNotions = async (): Promise<any[] | null> => {
     const notionItems = databases.map(
       (item) =>
         ({
-          id:
-            item.id.substring(0, 3) +
-            "-" +
-            item.id.substring(item.id.length - 3),
+          id: item.id,
           createdAt: moment(item.created_time).format("YYYY-MM-DD"),
           title:
             item.properties.Tweet.title[0].plain_text.substring(0, 60) + " ...",

@@ -17,28 +17,31 @@ const CrmPage = async (props: Props) => {
       title="CRM"
       description={"Everything you need to know about sales"}
     >
+      <Link href="/crm/accounts">
+        <H2Title>Accounts</H2Title>
+      </Link>
       <Suspense fallback={"Loading ..."}>
-        <Link href="/crm/accounts">
-          <H2Title>Accounts</H2Title>
-        </Link>
         <AccountView />
       </Suspense>
+
+      <Link href="/crm/contacts">
+        <H2Title>Contacts</H2Title>
+      </Link>
       <Suspense fallback={"Loading ..."}>
-        <Link href="/crm/contacts">
-          <H2Title>Contacts</H2Title>
-        </Link>
         <ContactView />
       </Suspense>
+
+      <Link href="/crm/opportunities">
+        <H2Title>Opportunities</H2Title>
+      </Link>
       <Suspense fallback={"Loading ..."}>
-        <Link href="/crm/opportunities">
-          <H2Title>Opportunities</H2Title>
-        </Link>
         <OpportunityView />
       </Suspense>
+
+      <Link href="/crm/leads">
+        <H2Title>Leads</H2Title>
+      </Link>
       <Suspense fallback={"Loading ..."}>
-        <Link href="/crm/leads">
-          <H2Title>Leads</H2Title>
-        </Link>
         <AccountView />
       </Suspense>
     </Container>

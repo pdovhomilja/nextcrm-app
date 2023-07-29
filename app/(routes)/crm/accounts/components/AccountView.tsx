@@ -6,8 +6,6 @@ import RightViewModal from "@/components/modals/right-view-modal";
 import { columns } from "../../components/Columns";
 import { NewAccountForm } from "./NewAccountForm";
 import { getAccounts } from "@/actions/crm/get-accounts";
-import { getIndustries } from "@/actions/crm/get-industries";
-import { getUsers } from "@/actions/get-users";
 import { getAllCrmData } from "@/actions/crm/get-crm-data";
 
 type Props = {};

@@ -47,9 +47,13 @@ export const CellAction = ({ data }: CellActionProps) => {
   const onDelete = async () => {
     try {
       setLoading(true);
-      await axios.delete(`/api/products/${data.id}`);
+      await axios.delete(`/api/secondBrain/${data.id}`);
       router.refresh();
       //Place for toast
+      toast({
+        title: "Success",
+        description: "The Notion has been deleted.",
+      });
     } catch (error) {
       toast({
         variant: "destructive",

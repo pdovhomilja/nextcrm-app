@@ -3,7 +3,8 @@ import { StateCreator } from "zustand";
 export interface IsOpenSliceInterface {
   isOpen: boolean;
   notionUrl: string;
-  setIsOpen: (isLoading: boolean) => void;
+  setIsOpen: (isOpen: boolean) => void;
+  setNotionUrl: (notionUrl: string) => void;
 }
 
 export const createIsOpenSlice: StateCreator<IsOpenSliceInterface> = (set) => ({
