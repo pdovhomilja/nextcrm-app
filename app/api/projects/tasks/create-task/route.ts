@@ -6,7 +6,7 @@ import { authOptions } from "@/lib/auth";
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   const body = await req.json();
-  const { title, user, board, priority, content } = body;
+  const { title, user, board, priority, content, notionUrl } = body;
 
   if (!session) {
     return new NextResponse("Unauthenticated", { status: 401 });
@@ -37,12 +37,18 @@ export async function POST(req: Request) {
       },
     });
 
+    let contentUpdated = content;
+
+    if (notionUrl) {
+      contentUpdated = content + "\n\n" + notionUrl;
+    }
+
     const task = await prismadb.tasks.create({
       data: {
         v: 0,
         priority: priority,
         title: title,
-        content: content,
+        content: contentUpdated,
         section: sectionId.id,
         dueDateAt: new Date(),
         createdAt: new Date(),

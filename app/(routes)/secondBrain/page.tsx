@@ -5,10 +5,20 @@ import { columns } from "./components/Columns";
 import Link from "next/link";
 import H4Title from "@/components/typography/h4";
 
+import NewTask from "./components/NewTask";
+import { getUsers } from "@/actions/get-users";
+import { getBoards } from "@/actions/projects/get-boards";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+
 type Props = {};
 
 const SecondBrainPage = async (props: Props) => {
   const notions: any = await getNotions();
+  const users: any = await getUsers();
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+  const boards: any = await getBoards(userId!);
 
   if (!notions) {
     return (
@@ -50,12 +60,15 @@ const SecondBrainPage = async (props: Props) => {
     );
   }
   return (
-    <Container
-      title="Second Brain"
-      description={"Everything you need to know about Your notions"}
-    >
-      <DataTable columns={columns} data={notions} search="title" />
-    </Container>
+    <>
+      <NewTask users={users} boards={boards} />
+      <Container
+        title="Second Brain"
+        description={"Everything you need to know about Your notions"}
+      >
+        <DataTable columns={columns} data={notions} search="title" />
+      </Container>
+    </>
   );
 };
 

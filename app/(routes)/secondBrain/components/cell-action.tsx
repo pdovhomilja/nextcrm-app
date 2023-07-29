@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import axios from "axios";
 import { useParams, useRouter } from "next/navigation";
@@ -17,6 +18,8 @@ import { Button } from "@/components/ui/button";
 import { NotionColumn } from "./Columns";
 import AlertModal from "@/components/modals/alert-modal";
 
+import { useAppStore } from "@/store/store";
+
 interface CellActionProps {
   data: NotionColumn;
 }
@@ -24,6 +27,9 @@ interface CellActionProps {
 export const CellAction = ({ data }: CellActionProps) => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+
+  //zustand
+  const { setIsOpen, setNotionUrl } = useAppStore();
 
   const { toast } = useToast();
   const router = useRouter();
@@ -65,6 +71,7 @@ export const CellAction = ({ data }: CellActionProps) => {
         onConfirm={onDelete}
         loading={loading}
       />
+
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant={"ghost"} className="h-8 w-8 p-0">
@@ -78,9 +85,14 @@ export const CellAction = ({ data }: CellActionProps) => {
             <Copy className="mr-2 w-4 h-4" />
             Copy URL
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push(`/products/${data.id}`)}>
+          <DropdownMenuItem
+            onClick={() => {
+              setIsOpen(true);
+              setNotionUrl(data?.url);
+            }}
+          >
             <Edit className="mr-2 w-4 h-4" />
-            Update
+            Create task from Notion
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setOpen(true)}>
             <Trash className="mr-2 w-4 h-4" />

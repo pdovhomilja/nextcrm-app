@@ -3,7 +3,7 @@ import { prismadb } from "./prisma";
 import { error } from "console";
 
 const initNotionClient = async (userId: string) => {
-  console.log(userId, "User ID from Notion - lib");
+  //console.log(userId, "User ID from Notion - lib");
 
   try {
     const apiKey = await prismadb.secondBrain_notions.findFirst({
