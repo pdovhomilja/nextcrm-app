@@ -87,6 +87,10 @@ const TaskPage = async ({ params }: TaskPageProps) => {
                 <td className="py-2 px-4 border-b">{task.title}</td>
               </tr>
               <tr>
+                <td className="py-2 px-4 border-b">Content</td>
+                <td className="py-2 px-4 border-b">{task.content}</td>
+              </tr>
+              <tr>
                 <td className="py-2 px-4 border-b">Assigned to</td>
                 <td className="py-2 px-4 border-b">
                   {task.assigned_user.name || "Not assigned"}
