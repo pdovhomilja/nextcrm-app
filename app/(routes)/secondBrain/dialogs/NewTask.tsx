@@ -133,9 +133,9 @@ const NewTaskDialog = ({
           <LoadingComponent />
         ) : (
           <div className="flex flex-col w-full ">
-            <pre>
+            {/*     <pre>
               <code>{JSON.stringify(form.getValues(), null, 2)}</code>
-            </pre>
+            </pre> */}
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
