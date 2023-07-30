@@ -1,6 +1,17 @@
 import { prismadb } from "@/lib/prisma";
 
 export const getLeads = async () => {
-  const data = await prismadb.crm_Leads.findMany({});
+  const data = await prismadb.crm_Leads.findMany({
+    include: {
+      assigned_to_user: {
+        select: {
+          name: true,
+        },
+      },
+    },
+    orderBy: {
+      date_created: "desc",
+    },
+  });
   return data;
 };

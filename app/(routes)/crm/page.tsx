@@ -9,6 +9,7 @@ import Container from "../components/ui/Container";
 
 import OpportunityView from "./opportunities/components/OpportunityView";
 import ContactView from "./contacts/components/ContactView";
+import LeadView from "./leads/components/LeadView";
 
 type Props = {};
 
@@ -43,7 +44,7 @@ const CrmPage = async (props: Props) => {
         <H2Title>Leads</H2Title>
       </Link>
       <Suspense fallback={<SuspenseLoading />}>
-        <AccountView />
+        <LeadView />
       </Suspense>
     </Container>
   );

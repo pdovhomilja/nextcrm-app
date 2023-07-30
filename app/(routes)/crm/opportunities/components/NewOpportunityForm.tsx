@@ -101,6 +101,7 @@ export function NewOpportunityForm({
     } finally {
       setIsLoading(false);
       router.refresh();
+      router.push("/crm/opportunities");
     }
   };
 

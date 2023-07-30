@@ -101,6 +101,7 @@ export function NewContactForm({ users, accounts }: NewTaskFormProps) {
       });
     } finally {
       setIsLoading(false);
+      router.refresh();
       router.push("/crm/contacts");
     }
   };

@@ -1,23 +1,14 @@
-import React from "react";
-
-import { getLeads } from "@/actions/crm/get-leads";
-
 import Container from "../../components/ui/Container";
-import { DataTable } from "@/components/ui/data-table";
-import { columns } from "./components/Columns";
-
-type Props = {};
+import LeadView from "./components/LeadView";
 
 const LeadsPage = async () => {
-  const leads: any = await getLeads();
   return (
     <Container
       title="Leads"
-      description={"Everything you need to know about sales potential"}
+      description={"Everything you need to know about your leads"}
     >
       <div>
-        <h1>Leads</h1>
-        <DataTable data={leads} search="name" columns={columns} />
+        <LeadView />
       </div>
     </Container>
   );

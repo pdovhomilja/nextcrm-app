@@ -75,7 +75,7 @@ export function NewAccountForm({ industries, users }: Props) {
   });
 
   const onSubmit = async (data: NewAccountFormValues) => {
-    console.log(data);
+    //console.log(data);
     setIsLoading(true);
     try {
       const response = await axios.post("/api/crm/account", data);
@@ -94,9 +94,9 @@ export function NewAccountForm({ industries, users }: Props) {
         description: error?.response?.data,
       });
     } finally {
-      router.push("/crm/");
-      //Is loading must be active to prevent multiple submits
-      //setIsLoading(false);
+      router.refresh();
+      setIsLoading(false);
+      router.push("/crm/accounts");
     }
   };
 
