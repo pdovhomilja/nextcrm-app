@@ -13,7 +13,7 @@ import { getContacts } from "@/actions/crm/get-contacts";
 const ContactView = async () => {
   const contacts = await getContacts();
   const crmData = await getAllCrmData();
-  const { users, accounts, saleTypes, saleStages, campaigns } = crmData;
+  const { users, accounts } = crmData;
 
   return (
     <div className="border rounded-md p-5 mt-5">

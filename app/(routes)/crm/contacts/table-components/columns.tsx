@@ -11,7 +11,7 @@ import { DataTableRowActions } from "./data-table-row-actions";
 import moment from "moment";
 
 export const columns: ColumnDef<Opportunity>[] = [
-  {
+  /*   {
     id: "select",
     header: ({ table }) => (
       <Checkbox
@@ -31,7 +31,7 @@ export const columns: ColumnDef<Opportunity>[] = [
     ),
     enableSorting: false,
     enableHiding: false,
-  },
+  }, */
   {
     accessorKey: "created_on",
     header: ({ column }) => (
@@ -127,7 +127,7 @@ export const columns: ColumnDef<Opportunity>[] = [
       <DataTableColumnHeader column={column} title="Status" />
     ),
 
-    cell: ({ row }) => <div className="">{row.getValue("status")}</div>,
+    cell: ({ row }) => <div className="">{row.original.status}</div>,
     enableSorting: true,
     enableHiding: true,
   },

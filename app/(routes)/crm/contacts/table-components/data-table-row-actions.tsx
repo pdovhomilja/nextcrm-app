@@ -24,6 +24,8 @@ import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import axios from "axios";
+import RightViewModalNoTrigger from "@/components/modals/right-view-notrigger";
+import { UpdateContactForm } from "../components/UpdateContactForm";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -37,6 +39,7 @@ export function DataTableRowActions<TData>({
 
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [updateOpen, setUpdateOpen] = useState(false);
 
   const { toast } = useToast();
 
@@ -70,6 +73,20 @@ export function DataTableRowActions<TData>({
         onConfirm={onDelete}
         loading={loading}
       />
+      <RightViewModalNoTrigger
+        title={
+          "Update Contact" +
+          " - " +
+          contact?.first_name +
+          " " +
+          contact?.last_name
+        }
+        description="Update contact details"
+        open={updateOpen}
+        setOpen={setUpdateOpen}
+      >
+        <UpdateContactForm initialData={row.original} />
+      </RightViewModalNoTrigger>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -85,6 +102,9 @@ export function DataTableRowActions<TData>({
             onClick={() => router.push(`/crm/contacts/${contact?.id}`)}
           >
             View
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setUpdateOpen(true)}>
+            Update
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setOpen(true)}>
