@@ -1,6 +1,8 @@
 import { prismadb } from "@/lib/prisma";
 
 export const getSearch = async (search: string) => {
+  //TODO: This action is now offtopic, because it is not used in the frontend.
+
   //Search in modul CRM (Oppotunities)
   const resultsCrmOpportunities = await prismadb.crm_Opportunities.findMany({
     where: {

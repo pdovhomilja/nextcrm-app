@@ -1,7 +1,5 @@
-import { useRouter } from "next/navigation";
-import React from "react";
 import ResultPage from "./components/ResultPage";
-import axios from "axios";
+
 import { getSearch } from "@/actions/fulltext/get-search-results";
 import Container from "../../components/ui/Container";
 
@@ -12,9 +10,10 @@ const FullTextSearchPage = async ({
 }) => {
   const { search } = params;
   const results: any = await getSearch(search);
+
   return (
     <Container
-      title={`Search: ${search}`}
+      title={`Search: ${search} `}
       description={`Search results for ${search}`}
     >
       <ResultPage search={search} results={results} />

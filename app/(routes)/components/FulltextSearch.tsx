@@ -10,7 +10,7 @@ const FulltextSearch = () => {
   const router = useRouter();
 
   const handleSearch = async () => {
-    router.push(`/fulltext-search/${search}`);
+    router.push(`/fulltext-search?q=${search}`);
     setSearch("");
   };
 
@@ -18,7 +18,8 @@ const FulltextSearch = () => {
     <div className="flex w-full max-w-sm items-center space-x-2">
       <Input
         type="text"
-        placeholder={"Search"}
+        placeholder={"Search something ..."}
+        value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
       <Button type="submit" className="gap-2" onClick={handleSearch}>
