@@ -1,3 +1,7 @@
+import { Suspense } from "react";
+
+import SuspenseLoading from "@/components/loadings/suspense";
+
 import Container from "../../components/ui/Container";
 import LeadView from "./components/LeadView";
 
@@ -7,9 +11,9 @@ const LeadsPage = async () => {
       title="Leads"
       description={"Everything you need to know about your leads"}
     >
-      <div>
+      <Suspense fallback={<SuspenseLoading />}>
         <LeadView />
-      </div>
+      </Suspense>
     </Container>
   );
 };

@@ -20,8 +20,8 @@ const ContactView = async () => {
       <div className="flex items-center gap-3">
         <div className="flex w-full h-full">
           <RightViewModal
-            label={"Add new Contact"}
-            title="Add new Contact"
+            label={"Create Contact"}
+            title="Create Contact"
             description=""
           >
             <NewContactForm users={users} accounts={accounts} />

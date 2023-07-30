@@ -1,3 +1,7 @@
+import { Suspense } from "react";
+
+import SuspenseLoading from "@/components/loadings/suspense";
+
 import Container from "../../components/ui/Container";
 import OpportunityView from "./components/OpportunityView";
 
@@ -7,9 +11,9 @@ const AccountsPage = async () => {
       title="Opportunities"
       description={"Everything you need to know about your accounts"}
     >
-      <div>
+      <Suspense fallback={<SuspenseLoading />}>
         <OpportunityView />
-      </div>
+      </Suspense>
     </Container>
   );
 };

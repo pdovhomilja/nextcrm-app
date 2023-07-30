@@ -21,8 +21,8 @@ const OpportunityView = async () => {
       <div className="flex items-center gap-3">
         <div className="flex w-full h-full">
           <RightViewModal
-            label={"Add new opportunity"}
-            title="Add new opportunity"
+            label={"Create opportunity"}
+            title="Create opportunity"
             description=""
           >
             <NewOpportunityForm

@@ -1,12 +1,12 @@
 import React from "react";
 
-import { DataTable } from "@/components/ui/data-table";
 import RightViewModal from "@/components/modals/right-view-modal";
 
-import { columns } from "../../components/Columns";
+import { columns } from "../table-components/columns";
 import { NewAccountForm } from "./NewAccountForm";
 import { getAccounts } from "@/actions/crm/get-accounts";
 import { getAllCrmData } from "@/actions/crm/get-crm-data";
+import { AccountDataTable } from "../table-components/data-table";
 
 type Props = {};
 
@@ -20,8 +20,8 @@ const AccountView = async () => {
       <div className="flex items-center gap-3">
         <div className="flex w-full h-full">
           <RightViewModal
-            label={"Add new account"}
-            title="Add new account"
+            label={"Create account"}
+            title="Create account"
             description=""
           >
             <NewAccountForm industries={industries} users={users} />
@@ -29,7 +29,10 @@ const AccountView = async () => {
         </div>
       </div>
       <div>
-        <DataTable data={accounts} search="name" columns={columns} />
+        {/*         <pre>
+          <code>{JSON.stringify(accounts[0], null, 2)}</code>
+        </pre> */}
+        <AccountDataTable data={accounts} columns={columns} />
       </div>
     </div>
   );
