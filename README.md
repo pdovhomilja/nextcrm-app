@@ -1,34 +1,25 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# NextCRM
 
-## Getting Started
+NextCRM is a CRM build on top of the Next.JS 13.4 using TypeScript, great UI library shadcn, Prisma and MongoDB as a database. Uploadthings as a S3 blob for document storage. You can try it with credentials: demo@nextcrm.io / demo12345 or login via google account but there is a pending state for new user which must by allowed by demo@nextcrm.io
 
-First, run the development server:
+## What we use to build it
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
+Next.js - React framework
+shadcn - UI
+Prisma ORM - together with mongoDB (tested with version 5.0)
+useSWR - for client side data fetching
+NextAUTH - for user authentication
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Warning
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+If you create new user in demo instance there is a PENDING state, you must log in as a demo@nextcrm.io and active new user in admin section!
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+![hero](/public/og.png)
 
-## Learn More
+## Documentation
 
-To learn more about Next.js, take a look at the following resources:
+Visit http://docs.nexcrm.io to view the documentation.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+Licensed under the [MIT license](https://github.com/shadcn/ui/blob/main/LICENSE.md).
