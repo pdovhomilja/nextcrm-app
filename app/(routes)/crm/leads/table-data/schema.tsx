@@ -5,6 +5,9 @@ import { z } from "zod";
 export const leadSchema = z.object({
   //TODO: fix all the types and nullable
   id: z.string(),
+  date_modify: z.date(),
+  firstName: z.string(),
+  lastName: z.string().min(3).max(30).nonempty(),
 });
 
 export type Lead = z.infer<typeof leadSchema>;

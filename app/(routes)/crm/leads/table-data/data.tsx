@@ -15,4 +15,9 @@ export const statuses = [
     label: "In progress",
     icon: StopwatchIcon,
   },
+  {
+    value: "COMPLETED",
+    label: "Completed",
+    icon: StopwatchIcon,
+  },
 ];

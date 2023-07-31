@@ -86,3 +86,88 @@ export async function POST(req: Request) {
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+export async function PUT(req: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return new NextResponse("Unauthenticated", { status: 401 });
+  }
+  try {
+    const body = await req.json();
+    const userId = session.user.id;
+
+    if (!body) {
+      return new NextResponse("No form data", { status: 400 });
+    }
+
+    const {
+      id,
+      firstName,
+      lastName,
+      company,
+      jobTitle,
+      email,
+      phone,
+      description,
+      lead_source,
+      refered_by,
+      campaign,
+      assigned_to,
+      status,
+      type,
+    } = body;
+
+    const updatedLead = await prismadb.crm_Leads.update({
+      where: {
+        id,
+      },
+      data: {
+        v: 1,
+        date_modify: new Date(),
+        last_activity_by: userId,
+        firstName,
+        lastName,
+        company,
+        jobTitle,
+        email,
+        phone,
+        description,
+        lead_source,
+        refered_by,
+        campaign,
+        assigned_to: assigned_to || userId,
+        status,
+        type,
+      },
+    });
+
+    /* if (assigned_to !== userId) {
+      const notifyRecipient = await prismadb.users.findFirst({
+        where: {
+          id: assigned_to,
+        },
+      });
+
+      if (!notifyRecipient) {
+        return new NextResponse("No user found", { status: 400 });
+      }
+
+      await sendEmail({
+        from: process.env.EMAIL_FROM as string,
+        to: notifyRecipient.email || "info@softbase.cz",
+        subject:
+          notifyRecipient.userLanguage === "en"
+            ? `New lead ${first_name} ${last_name} has been added to the system and assigned to you.`
+            : `Nová příležitost ${first_name} ${last_name} byla přidána do systému a přidělena vám.`,
+        text:
+          notifyRecipient.userLanguage === "en"
+            ? `New lead ${first_name} ${last_name} has been added to the system and assigned to you. You can click here for detail: ${process.env.NEXT_PUBLIC_APP_URL}/crm/opportunities/${newLead.id}`
+            : `Nová příležitost ${first_name} ${last_name} byla přidána do systému a přidělena vám. Detaily naleznete zde: ${process.env.NEXT_PUBLIC_APP_URL}/crm/opportunities/${newLead.id}`,
+      });
+    } */
+
+    return NextResponse.json({ updatedLead }, { status: 200 });
+  } catch (error) {
+    console.log("[UPDATED_LEAD_POST]", error);
+    return new NextResponse("Initial error", { status: 500 });
+  }
+}

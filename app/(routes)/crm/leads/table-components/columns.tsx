@@ -26,6 +26,19 @@ export const columns: ColumnDef<Lead>[] = [
     enableHiding: false,
   },
   {
+    accessorKey: "date_modify",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Last update" />
+    ),
+    cell: ({ row }) => (
+      <div className="w-[80px]">
+        {moment(row.getValue("date_modify")).format("YY-MM-DD")}
+      </div>
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
     accessorKey: "assigned_to_user",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Assigned to" />

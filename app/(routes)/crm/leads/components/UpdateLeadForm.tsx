@@ -36,45 +36,61 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import fetcher from "@/lib/fetcher";
+import useSWR from "swr";
+import SuspenseLoading from "@/components/loadings/suspense";
+import { Switch } from "@/components/ui/switch";
 
 //TODO: fix all the types
 type NewTaskFormProps = {
-  users: any[];
+  initialData: any;
 };
 
-export function NewLeadForm({ users }: NewTaskFormProps) {
+export function UpdateLeadForm({ initialData }: NewTaskFormProps) {
   const router = useRouter();
   const { toast } = useToast();
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  const { data: users, isLoading: isLoadingUsers } = useSWR(
+    "/api/user",
+    fetcher
+  );
+
   const formSchema = z.object({
-    first_name: z.string(),
-    last_name: z.string().min(3).max(30).nonempty(),
+    id: z.string().min(5).max(30),
+    firstName: z.string().optional().nullable(),
+    lastName: z.string().min(3).max(30).nonempty(),
     company: z.string().optional(),
     jobTitle: z.string().optional(),
     email: z.string().email(),
     phone: z.string().min(7).max(15),
-    description: z.string().optional(),
+    description: z.string(),
     lead_source: z.string().optional(),
-    refered_by: z.string().optional(),
-    campaign: z.string().optional(),
+    refered_by: z.string().optional().nullable(),
+    //TODO: add campaing schema from db as data source
+    campaign: z.string().optional().nullable(),
     assigned_to: z.string().optional(),
+    status: z.string(),
+    //TODO: add type schema from db as data source
+    type: z.string().optional(),
   });
 
   type NewLeadFormValues = z.infer<typeof formSchema>;
 
-  const form = useForm<NewLeadFormValues>({
+  //TODO: fix this any
+  const form = useForm<any>({
     resolver: zodResolver(formSchema),
+    defaultValues: initialData,
   });
 
   const onSubmit = async (data: NewLeadFormValues) => {
     setIsLoading(true);
     try {
-      await axios.post("/api/crm/leads", data);
+      await axios.put("/api/crm/leads", data);
       toast({
         title: "Success",
-        description: "Lead created successfully",
+        description: "Lead updated successfully",
       });
     } catch (error: any) {
       toast({
@@ -89,6 +105,22 @@ export function NewLeadForm({ users }: NewTaskFormProps) {
     }
   };
 
+  const leadStatus = [
+    { name: "New", id: "NEW" },
+    { name: "In progress", id: "IN_PROGRESS" },
+    { name: "Completed", id: "COMPLETED" },
+  ];
+
+  if (isLoadingUsers)
+    return (
+      <div>
+        <SuspenseLoading />
+      </div>
+    );
+
+  if (!users || !initialData)
+    return <div>Something went wrong, there is no data for form</div>;
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="h-full px-10">
@@ -102,7 +134,7 @@ export function NewLeadForm({ users }: NewTaskFormProps) {
           <div className="pb-5 space-y-2">
             <FormField
               control={form.control}
-              name="first_name"
+              name="firstName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>First name</FormLabel>
@@ -119,7 +151,7 @@ export function NewLeadForm({ users }: NewTaskFormProps) {
             />
             <FormField
               control={form.control}
-              name="last_name"
+              name="lastName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Last name</FormLabel>
@@ -267,33 +299,83 @@ export function NewLeadForm({ users }: NewTaskFormProps) {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="assigned_to"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Assigned to</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a user to assign the account" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {users.map((user) => (
-                        <SelectItem key={user.id} value={user.id}>
-                          {user.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="flex w-full  space-x-5">
+              <div className="w-1/2">
+                <FormField
+                  control={form.control}
+                  name="assigned_to"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Assigned to</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a user to assign the account" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {users.map((user: any) => (
+                            <SelectItem key={user.id} value={user.id}>
+                              {user.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="w-1/2 space-y-3">
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Lead status</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select lead status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {leadStatus.map((status: any) => (
+                            <SelectItem key={status.id} value={status.id}>
+                              {status.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Type</FormLabel>
+                      <FormControl>
+                        <Input
+                          disabled={isLoading}
+                          placeholder="Social networks"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
           </div>
         </div>
         <div className="grid gap-2 py-5">
@@ -303,7 +385,7 @@ export function NewLeadForm({ users }: NewTaskFormProps) {
                 Saving data ...
               </span>
             ) : (
-              "Create lead"
+              "Update lead"
             )}
           </Button>
         </div>

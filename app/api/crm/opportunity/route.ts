@@ -131,7 +131,6 @@ export async function PUT(req: Request) {
         close_date: close_date,
         contact: contact,
         created_by: userId,
-        created_on: new Date(),
         last_activity: new Date(),
         last_activity_by: userId,
         currency: currency,
