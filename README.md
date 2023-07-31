@@ -18,8 +18,12 @@ If you create new user in demo instance there is a PENDING state, you must log i
 
 ## Documentation
 
-Visit http://docs.nexcrm.io to view the documentation.
+Will be soon at domain: http://docs.nextcrm.io
+
+## Contact
+
+[www.dovhomilja.cz](https://www.dovhomilja.cz).
 
 ## License
 
-Licensed under the [MIT license](https://github.com/shadcn/ui/blob/main/LICENSE.md).
+Licensed under the [MIT license](https://github.com/pdovhomilja/nextcrm-app/blob/main/LICENSE.md).
