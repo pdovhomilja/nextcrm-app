@@ -135,11 +135,11 @@ export function UpdateContactForm({ initialData }: NewTaskFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="h-full px-10">
-        <div>
+        {/*        <div>
           <pre>
             <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
           </pre>
-        </div>
+        </div> */}
         {/*     <pre>
           <code>{JSON.stringify(initialData, null, 2)}</code>
         </pre> */}

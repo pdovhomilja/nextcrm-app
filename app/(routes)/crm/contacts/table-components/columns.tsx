@@ -127,7 +127,9 @@ export const columns: ColumnDef<Opportunity>[] = [
       <DataTableColumnHeader column={column} title="Status" />
     ),
 
-    cell: ({ row }) => <div className="">{row.original.status}</div>,
+    cell: ({ row }) => (
+      <div className="">{row.original.status ? "Active" : "Inactive"}</div>
+    ),
     enableSorting: true,
     enableHiding: true,
   },
