@@ -1,16 +1,7 @@
 import UserAuthForm from "@/components/UserAuthForm";
 import { LoginComponent } from "./components/LoginComponent";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
 
 const SignInPage = async () => {
-  const session = await getServerSession(authOptions);
-
-  if (session) {
-    return redirect("/");
-  }
-
   return (
     <div>
       <div className="py-10">

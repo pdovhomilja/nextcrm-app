@@ -3,14 +3,22 @@ import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import TryAgain from "./components/TryAgain";
 
 const PendingPage = async () => {
-  const session = await getServerSession(authOptions);
   const adminUsers = await prismadb.users.findMany({
     where: {
       is_admin: true,
+      userStatus: "ACTIVE",
     },
   });
+
+  const session = await getServerSession(authOptions);
+
+  if (session?.user.userStatus !== "PENDING") {
+    return redirect("/");
+  }
 
   return (
     <div className="flex flex-col space-y-5 justify-center items-center max-w-3xl border rounded-md p-10 shadow-md">
@@ -51,9 +59,7 @@ const PendingPage = async () => {
           <Link href="/sign-in">Log-in with another account</Link>
         </Button>
         <p>or</p>
-        <Button asChild>
-          <Link href="/">Try again</Link>
-        </Button>
+        <TryAgain />
       </div>
     </div>
   );
