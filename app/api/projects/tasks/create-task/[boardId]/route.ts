@@ -20,36 +20,67 @@ export async function POST(
     return new NextResponse("Missing board id", { status: 400 });
   }
 
-  if (!title || !user || !section || !priority || !content) {
-    return new NextResponse("Missing one of the task data ", { status: 400 });
+  if (!section) {
+    return new NextResponse("Missing section id", { status: 400 });
   }
+  console.log(section, "section");
+  if (!title || !user || !priority || !content) {
+    try {
+      const tasksCount = await prismadb.tasks.count({
+        where: {
+          section: section,
+        },
+      });
 
-  try {
-    const tasksCount = await prismadb.tasks.count({
-      where: {
-        section: section,
-      },
-    });
+      await prismadb.tasks.create({
+        data: {
+          v: 0,
+          priority: "normal",
+          title: "New task",
+          content: "",
+          section: section,
+          dueDateAt: new Date(),
+          createdAt: new Date(),
+          createdBy: session.user.id,
+          position: tasksCount > 0 ? tasksCount : 0,
+          user: user,
+          taskStatus: "ACTIVE",
+        },
+      });
 
-    await prismadb.tasks.create({
-      data: {
-        v: 0,
-        priority: priority,
-        title: title,
-        content: content,
-        section: section,
-        dueDateAt: new Date(),
-        createdAt: new Date(),
-        createdBy: user,
-        position: tasksCount > 0 ? tasksCount : 0,
-        user: user,
-        taskStatus: "ACTIVE",
-      },
-    });
+      return NextResponse.json({ status: 200 });
+    } catch (error) {
+      console.log("[NEW_TASK_IN_PROJECT_POST]", error);
+      return new NextResponse("Initial error", { status: 500 });
+    }
+  } else {
+    try {
+      const tasksCount = await prismadb.tasks.count({
+        where: {
+          section: section,
+        },
+      });
 
-    return NextResponse.json({ status: 200 });
-  } catch (error) {
-    console.log("[NEW_TASK_IN_PROJECT_POST]", error);
-    return new NextResponse("Initial error", { status: 500 });
+      await prismadb.tasks.create({
+        data: {
+          v: 0,
+          priority: priority,
+          title: title,
+          content: content,
+          section: section,
+          dueDateAt: new Date(),
+          createdAt: new Date(),
+          createdBy: user,
+          position: tasksCount > 0 ? tasksCount : 0,
+          user: user,
+          taskStatus: "ACTIVE",
+        },
+      });
+
+      return NextResponse.json({ status: 200 });
+    } catch (error) {
+      console.log("[NEW_TASK_IN_PROJECT_POST]", error);
+      return new NextResponse("Initial error", { status: 500 });
+    }
   }
 }

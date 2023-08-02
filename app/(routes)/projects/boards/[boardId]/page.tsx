@@ -1,5 +1,5 @@
 import { getBoard } from "@/actions/projects/get-board";
-import React from "react";
+import React, { Suspense } from "react";
 
 import Container from "@/app/(routes)/components/ui/Container";
 import NewSectionDialog from "./dialogs/NewSection";
@@ -44,10 +44,7 @@ const BoardPage = async ({ params }: BoardDetailProps) => {
           />
         </div>
       </div>
-
-      <div className="w-full overflow-x-auto">
-        <Kanban data={kanbanData.sections} />
-      </div>
+      <Kanban data={kanbanData.sections} boardId={boardId} />
     </Container>
   );
 };

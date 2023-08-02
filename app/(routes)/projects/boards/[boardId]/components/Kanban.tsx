@@ -39,6 +39,8 @@ import { Icon } from "@radix-ui/react-select";
 import LoadingComponent from "@/components/LoadingComponent";
 import axios from "axios";
 import { useToast } from "@/components/ui/use-toast";
+import AlertModal from "@/components/modals/alert-modal";
+import { useRouter } from "next/navigation";
 // import ChatModal from "../../components/modals/ChatModal";
 // import ConfirmDeleteTask from "../../components/modals/ConfirmDeleteTask";
 // import TaskDocuments from "./components/TaskDocuments";
@@ -48,14 +50,17 @@ let timer: any;
 const timeout = 1000;
 
 const Kanban = (props: any) => {
-  const [selectedTask, setSelectedTask] = useState(undefined);
+  const [selectedTask, setSelectedTask] = useState(null);
   const [openProject, setOpenProject] = useState(false);
   const [openConfirmDelete, setOpenConfirmDelete] = useState(false);
   const [openChat, setOpenChat] = useState(false);
   const [openDocuments, setOpenDocuments] = useState(false);
+  const [open, setOpen] = useState(false);
   const [data, setData]: any = useState([]);
   const boardId = props.boardId;
   const [isLoading, setIsLoading] = useState(true);
+
+  const router = useRouter();
 
   const { toast } = useToast();
 
@@ -172,21 +177,39 @@ const Kanban = (props: any) => {
   };
 
   //Done
-  /*   const createTask = async (sectionId) => {
+  const createTask = async (sectionId: string) => {
+    setIsLoading(true);
+    //console.log(sectionId, "sectionId - createTask");
+    //const task = await addTask(boardId, sectionId);
     try {
-      //console.log(sectionId, "sectionId - createTask");
-      const task = await addTask(boardId, sectionId);
+      const task = await axios.post(
+        `/api/projects/tasks/create-task/${boardId}`,
+        {
+          section: sectionId,
+        }
+      );
       //console.log(task, "task - createTask");
       const newData = [...data];
       //console.log(newData, "newData - createTask");
       const index = newData.findIndex((e) => e.id === sectionId);
       newData[index].tasks.unshift(task);
       setData(newData);
-      mutate();
-    } catch (err) {
-      alert(err);
+      toast({
+        title: "Task created",
+        description: "New task saved in database",
+      });
+    } catch (error) {
+      console.log(error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Something went wrong, during creating task",
+      });
+    } finally {
+      setIsLoading(false);
+      router.refresh();
     }
-  }; */
+  };
 
   //Done
   /*   const onUpdateTask = (task) => {
@@ -204,43 +227,51 @@ const Kanban = (props: any) => {
   }; */
 
   //Done
-  /*   const onDeleteTask = (task) => {
-    const newData = [...data];
-    const sectionIndex = newData.findIndex((e) => e.id === task.section);
-    const taskIndex = newData[sectionIndex].tasks.findIndex(
-      (e) => e.id === task.id
-    );
-    newData[sectionIndex].tasks.splice(taskIndex, 1);
-    setData(newData);
-    mutate();
-  };
- */
-  //Done
-  /*   const handelDeleteTask = async (task) => {
-    //console.log("delete task");
-    //console.log(boardId, "boardId", task.id, "task.id", "Deleting Task");
+  //TODO: fix this any
+  const onDelete = async () => {
+    setOpen(false);
+    setIsLoading(true);
     try {
-      toast.loading("Deleting Task...");
-      console.log(task.id, "task.id fron hendelDeleteTask");
-      await deleteTask(task.id);
-      onDeleteTask(task);
-      toast.success("Task Deleted");
-      mutate();
-    } catch (err) {
-      alert(err);
+      await axios.delete(`/api/projects/tasks/`, {
+        data: {
+          //@ts-ignore
+          //TODO: fix this
+          id: selectedTask?.id,
+          //@ts-ignore
+          //TODO: fix this
+          section: selectedTask?.section,
+        },
+      });
+      toast({
+        title: "Task deleted",
+        description: "Task deleted successfully",
+      });
+    } catch (error) {
+      console.log(error);
+      toast({
+        variant: "destructive",
+        title: "Task deleted",
+        description: "Something went wrong, during deleting task",
+      });
+    } finally {
+      setIsLoading(false);
+      router.refresh();
     }
-  }; */
+  };
 
-  //console.log(data, "data - Kanban");
-  //console.log(selectedTask?.id, "selectedTask - Kanban");
   if (isLoading) return <LoadingComponent />;
 
   return (
-    <div className="overflow-scroll flex flex-col space-y-2  ">
-      {/* Toasts */}
-      <Toaster toastOptions={{ position: "top-right", duration: 1500 }} />
-      {/* Modals */}
-      {/*       <div>
+    <>
+      <AlertModal
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        onConfirm={onDelete}
+        loading={isLoading}
+      />
+      <div className="overflow-scroll flex flex-col space-y-2  ">
+        {/* Modals */}
+        {/*       <div>
         <ProjectModal
           openProject={openProject}
           setOpenProject={setOpenProject}
@@ -270,161 +301,159 @@ const Kanban = (props: any) => {
           boardId={boardId}
         />
       </div> */}
-      <div className="p-2 text-xs">
-        <p>{data?.length} Sections</p>
-      </div>
-      <DragDropContext onDragEnd={onDragEnd}>
-        <div className="flex flex-row items-start  ">
-          {data?.map((section: any, index: any) => (
-            <div
-              className="flex flex-col items-center justify-center  h-full w-80 "
-              key={section.id}
-            >
-              <Droppable key={section.id} droppableId={section.id}>
-                {(provided) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className="flex flex-col  w-full h-full px-2 "
-                  >
-                    <div className="flex flex-col items-center justify-center py-2   ">
-                      <div className="flex flex-row items-center justify-between w-full border ">
-                        <input
-                          type="text"
-                          className="  pl-2 bg-slate-900 px-1 py-3 rounded-md m-2  "
-                          placeholder={section?.title}
-                          onChange={(e) => updateSectionTitle(e, section.id)}
-                        />
-                        <div className="flex items-center justify-end pr-2">
-                          <span className="border rounded-full px-2 m-2">
-                            {section?.tasks?.length}
-                          </span>
-
-                          <button
-                          //onClick={() => handelDeleteSection(section.id)}
-                          >
-                            <TrashIcon className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                      <div className="w-full">
-                        <div className="flex flex-row items-center justify-center space-x-5 py-2  w-full">
-                          <button
-                            className="w-80 border justify-center items-center flex flex-row "
-                            //onClick={() => createTask(section.id)}
-                          >
-                            <PlusIcon className="w-6 h-6" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="">
-                      {section.tasks?.map((task: any, index: any) => (
-                        <Draggable
-                          key={task.id}
-                          draggableId={task.id}
-                          index={index}
-                        >
-                          {(provided: any, snapshot: any) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              cursor={snapshot.isDragging ? "grabbing" : "grab"}
-                              className="flex flex-col overflow-hidden items-start justify-center text-xs p-2 m-2  rounded-md border  shadow-md "
-                            >
-                              <div className="flex flex-row justify-between mx-auto w-full">
-                                <h2 className="font-bold text-sm py-1">
-                                  {task.title === "" ? "Untitled" : task.title}
-                                </h2>
-                                {task?.dueDateAt &&
-                                  task.dueDateAt > Date.now() && (
-                                    <ExclamationTriangleIcon className="w-4 h-4 text-red-500" />
-                                  )}
-                              </div>
-                              <div className="py-1">
-                                Due date:{" "}
-                                {moment(task.dueDateAt).format("YYYY-MM-DD")}
-                              </div>
-                              <div>
-                                <p
-                                  className={
-                                    task.priority === "normal"
-                                      ? `text-yellow-500`
-                                      : task.priority === "high"
-                                      ? `text-red-500`
-                                      : task.priority === "low"
-                                      ? `text-green-500`
-                                      : `text-slate-600`
-                                  }
-                                >
-                                  Priorita: {task.priority}
-                                </p>
-                              </div>
-
-                              <p className="line-clamp-2 py-2">
-                                {task.content}
-                              </p>
-
-                              <div className="flex  gap-2 pt-2">
-                                <Link
-                                  href={`/projects/tasks/viewtask/${task.id}`}
-                                >
-                                  <EyeIcon className="w-4 h-4 text-slate-600" />
-                                </Link>
-                                <Pencil
-                                  className="w-4 h-4 text-slate-600"
-                                  onClick={() => {
-                                    setSelectedTask(task);
-                                    setOpenProject(true);
-                                    //setOpen(true);
-                                  }}
-                                />
-                                <ChatBubbleIcon
-                                  className="w-4 h-4 text-slate-600"
-                                  onClick={async () => {
-                                    await setSelectedTask(task);
-                                    setOpenChat(true);
-                                  }}
-                                />
-                                <Icon
-                                  title="Edit task documents"
-                                  className="w-4 h-4 text-slate-600"
-                                  onClick={() => {
-                                    setSelectedTask(task);
-                                    setOpenDocuments(true);
-                                  }}
-                                />
-                                <TrashIcon
-                                  className="w-4 h-4"
-                                  onClick={() => {
-                                    setSelectedTask(task);
-                                    setOpenConfirmDelete(true);
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </div>
-                  </div>
-                )}
-              </Droppable>
-            </div>
-          ))}
+        <div className="p-2 text-xs">
+          <p>{data?.length} Sections</p>
         </div>
-      </DragDropContext>
-      {/*  <TaskModalRight
-        task={selectedTask}
-        show={true}
-        boardId={boardId}
-        onClose={() => setSelectedTask(undefined)}
-        onUpdate={onUpdateTask}
-        onDelete={onDeleteTask}
-      /> */}
-    </div>
+        <DragDropContext onDragEnd={onDragEnd}>
+          <div className="flex flex-row items-start  ">
+            {data?.map((section: any, index: any) => (
+              <div
+                className="flex flex-col items-center justify-center  h-full w-80 "
+                key={section.id}
+              >
+                <Droppable key={section.id} droppableId={section.id}>
+                  {(provided) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className="flex flex-col  w-full h-full px-2 "
+                    >
+                      <div className="flex flex-col items-center justify-center py-2   ">
+                        <div className="flex flex-row items-center justify-between w-full border ">
+                          <input
+                            type="text"
+                            className="  pl-2  px-1 py-1 rounded-md m-2  "
+                            placeholder={section?.title}
+                            onChange={(e) => updateSectionTitle(e, section.id)}
+                          />
+                          <div className="flex items-center justify-end pr-2">
+                            <span className="border rounded-full px-2 m-2">
+                              {section?.tasks?.length}
+                            </span>
+
+                            <button
+                            //onClick={() => handelDeleteSection(section.id)}
+                            >
+                              <TrashIcon className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="w-full">
+                          <div className="flex flex-row items-center justify-center space-x-5 py-2  w-full">
+                            <button
+                              className="w-80 border justify-center items-center flex flex-row "
+                              onClick={() => createTask(section.id)}
+                            >
+                              <PlusIcon className="w-6 h-6" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="">
+                        {section.tasks?.map((task: any, index: any) => (
+                          <Draggable
+                            key={task.id}
+                            draggableId={task.id}
+                            index={index}
+                          >
+                            {(provided: any, snapshot: any) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                cursor={
+                                  snapshot.isDragging ? "grabbing" : "grab"
+                                }
+                                className="flex flex-col overflow-hidden items-start justify-center text-xs p-3 mb-2  rounded-md border  shadow-md "
+                              >
+                                <div className="flex flex-row justify-between mx-auto w-full">
+                                  <h2 className="font-bold text-sm py-1">
+                                    {task.title === ""
+                                      ? "Untitled"
+                                      : task.title}
+                                  </h2>
+                                  {task?.dueDateAt &&
+                                    task.dueDateAt > Date.now() && (
+                                      <ExclamationTriangleIcon className="w-4 h-4 text-red-500" />
+                                    )}
+                                </div>
+                                <div className="py-1">
+                                  Due date:{" "}
+                                  {moment(task.dueDateAt).format("YYYY-MM-DD")}
+                                </div>
+                                <div className="my-2">
+                                  <p
+                                    className={
+                                      task.priority === "normal"
+                                        ? `text-yellow-500`
+                                        : task.priority === "high"
+                                        ? `text-red-500`
+                                        : task.priority === "low"
+                                        ? `text-green-500`
+                                        : `text-slate-600`
+                                    }
+                                  >
+                                    Priorita: {task.priority}
+                                  </p>
+                                </div>
+
+                                <p className="line-clamp-2 mb-2">
+                                  {task.content}
+                                </p>
+
+                                <div className="flex  gap-2 pt-2">
+                                  <Link
+                                    href={`/projects/tasks/viewtask/${task.id}`}
+                                  >
+                                    <EyeIcon className="w-4 h-4 opacity-50" />
+                                  </Link>
+
+                                  {/*  <Pencil
+                                    className="w-4 h-4 text-slate-600"
+                                    onClick={() => {
+                                      setSelectedTask(task);
+                                      setOpenProject(true);
+                                      //setOpen(true);
+                                    }}
+                                  />
+                                  <ChatBubbleIcon
+                                    className="w-4 h-4 text-slate-600"
+                                    onClick={async () => {
+                                      await setSelectedTask(task);
+                                      setOpenChat(true);
+                                    }}
+                                  />
+                                  <Icon
+                                    title="Edit task documents"
+                                    className="w-4 h-4 text-slate-600"
+                                    onClick={() => {
+                                      setSelectedTask(task);
+                                      setOpenDocuments(true);
+                                    }}
+                                  /> */}
+                                  <TrashIcon
+                                    className="w-4 h-4 opacity-50"
+                                    onClick={() => {
+                                      setSelectedTask(task);
+                                      setOpen(true);
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </div>
+                    </div>
+                  )}
+                </Droppable>
+              </div>
+            ))}
+          </div>
+        </DragDropContext>
+      </div>
+    </>
   );
 };
 
