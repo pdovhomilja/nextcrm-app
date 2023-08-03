@@ -20,6 +20,45 @@ If you create new user in demo instance there is a PENDING state, you must log i
 
 Will be soon at domain: http://docs.nextcrm.io
 
+## Installation
+
+<details><summary><b>Show instructions</b></summary>
+
+1. Install the preset:
+
+   ```sh
+   npm install
+   ```
+
+2. .env + .env.local - Change .env.example to .env and .env.local.example to .env.local
+
+# .env
+
+- You will need mongodb URI string for Prisma ORM
+
+# .env.local
+
+- NextAUTH - for auth
+- uploadthings - for storing files
+- rossum - for invoice data exporting
+- openAI - for automatic Project management assistant
+- SMPT and IMAP for emails
+
+3. Init Prisma
+
+   ```sh
+    npx prisma generate
+    npx prisma db push
+   ```
+
+4. Run app on local
+
+   ```sh
+   npm run dev
+   ```
+
+</details>
+
 ## Contact
 
 [www.dovhomilja.cz](https://www.dovhomilja.cz).
