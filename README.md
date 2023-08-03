@@ -32,17 +32,17 @@ Will be soon at domain: http://docs.nextcrm.io
 
 2. .env + .env.local - Change .env.example to .env and .env.local.example to .env.local
 
-### .env
+**bold** .env
 
-- You will need mongodb URI string for Prisma ORM
+> > - You will need mongodb URI string for Prisma ORM
 
-### .env.local
+**bold** .env.local
 
-- NextAUTH - for auth
-- uploadthings - for storing files
-- rossum - for invoice data exporting
-- openAI - for automatic Project management assistant
-- SMPT and IMAP for emails
+> > - NextAUTH - for auth
+> > - uploadthings - for storing files
+> > - rossum - for invoice data exporting
+> > - openAI - for automatic Project management assistant
+> > - SMPT and IMAP for emails
 
 3. Init Prisma
 
