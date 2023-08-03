@@ -32,11 +32,11 @@ Will be soon at domain: http://docs.nextcrm.io
 
 2. .env + .env.local - Change .env.example to .env and .env.local.example to .env.local
 
-# .env
+### .env
 
 - You will need mongodb URI string for Prisma ORM
 
-# .env.local
+### .env.local
 
 - NextAUTH - for auth
 - uploadthings - for storing files
