@@ -1,6 +1,16 @@
 # NextCRM
 
-NextCRM is a CRM build on top of the Next.JS 13.4 using TypeScript, great UI library shadcn, Prisma and MongoDB as a database. Uploadthings as a S3 blob for document storage. You can try it with credentials: demo@nextcrm.io / demo12345 or login via google account but there is a pending state for new user which must by allowed by demo@nextcrm.io
+NextCRM is a CRM build on top of the Next.JS 13.4 using TypeScript, great UI library shadcn, Prisma and MongoDB as a database. Uploadthings as a S3 blob for document storage.
+
+## Online Demo
+
+[demo.nextcrm.io](https://demo.nextcrm.io).
+
+You can try it with credentials: demo@nextcrm.io / demo12345
+
+or login via google account
+
+**but there is a pending state for new user which must by allowed by demo@nextcrm.io user which has admin rights**
 
 ## What we use to build it
 
