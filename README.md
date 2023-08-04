@@ -4,9 +4,7 @@ NextCRM is a CRM build on top of the Next.JS 13.4 using TypeScript, great UI lib
 
 ## Online Demo
 
-[demo.nextcrm.io](https://demo.nextcrm.io).
-
-You can try it with credentials: demo@nextcrm.io / demo12345
+You can try it here [demo.nextcrm.io](https://demo.nextcrm.io), with credentials: demo@nextcrm.io / demo12345
 
 or login via google account
 
