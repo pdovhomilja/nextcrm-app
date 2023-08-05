@@ -1,7 +1,8 @@
 import { getAccount } from "@/actions/crm/get-account";
-import { getLead } from "@/actions/crm/get-lead";
 import Container from "@/app/(routes)/components/ui/Container";
 import React from "react";
+
+import { crm_Accounts } from "@prisma/client";
 
 interface AccountDetailPageProps {
   params: {
@@ -11,10 +12,10 @@ interface AccountDetailPageProps {
 
 const AccountDetailPage = async ({ params }: AccountDetailPageProps) => {
   const { accountId } = params;
-  const account: any = await getAccount(accountId);
+  const account: crm_Accounts | null = await getAccount(accountId);
   return (
     <Container
-      title={`Account: ${account?.map((a: any) => a.name)}`}
+      title={`Account: ${account?.name}`}
       description={"Everything you need to know about sales potential"}
     >
       <div>
