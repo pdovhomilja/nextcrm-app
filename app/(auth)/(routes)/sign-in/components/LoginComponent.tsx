@@ -224,8 +224,8 @@ export function LoginComponent() {
                 >
                   N
                 </span>
-                <span className={isLoading ? " " : "hidden"}>Loanding ...</span>
-                <span className={isLoading ? "hidden" : ""}>Loading</span>
+                <span className={isLoading ? " " : "hidden"}>Loading ...</span>
+                <span className={isLoading ? "hidden" : ""}>Login</span>
               </Button>
             </div>
           </form>
