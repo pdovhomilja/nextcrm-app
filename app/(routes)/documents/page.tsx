@@ -15,8 +15,13 @@ const DocumentsPage = async () => {
       title="Documents"
       description={"Everything you need to know about company documents"}
     >
-      <div className="py-5">
-        <ModalDropzone />
+      <div className="flex space-x-5 py-5">
+        <ModalDropzone buttonLabel="Upload pdf" fileType="pdfUploader" />
+        <ModalDropzone buttonLabel="Upload images" fileType="imageUploader" />
+        <ModalDropzone
+          buttonLabel="Upload other files"
+          fileType="docUploader"
+        />
       </div>
 
       <DocumentsDataTable data={documents} columns={columns} />
