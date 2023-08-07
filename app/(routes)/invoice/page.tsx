@@ -1,9 +1,9 @@
 import Container from "../components/ui/Container";
 import { getInvoices } from "@/actions/invoice/get-invoices";
-import { InvoiceDataTable } from "./components/data-table";
-import { columns } from "./components/columns";
-
-import RightViewModal from "../../../components/modals/right-view-modal";
+import { InvoiceDataTable } from "./data-table/data-table";
+import { columns } from "./data-table/columns";
+import ModalDropzone from "./components/modal-dropzone";
+import { FileInput } from "./components/FileInput";
 
 const InvoicePage = async () => {
   const invoices: any = await getInvoices();
@@ -13,20 +13,7 @@ const InvoicePage = async () => {
       description={"Everything you need to know about invoices and TAX"}
     >
       <div className="py-5 space-x-3">
-        <RightViewModal
-          label={"Test button 2"}
-          title="Modal title"
-          description="Modal description"
-        >
-          <div className="w-[1600px]">modal content</div>
-        </RightViewModal>
-        <RightViewModal
-          label={"Test button"}
-          title="Modal title"
-          description="Modal description"
-        >
-          Modal content
-        </RightViewModal>
+        <ModalDropzone buttonLabel="Upload pdf" fileType="pdfUploader" />
       </div>
       <div>
         {/*         <pre>

@@ -98,6 +98,7 @@ export const ourFileRouter = {
         },
       });
     }),
+
   //FileRoute for documents
   docUploader: f({ blob: { maxFileSize: "64MB", maxFileCount: 1 } })
     // Set permissions and file types for this FileRoute

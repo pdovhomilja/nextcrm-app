@@ -51,6 +51,8 @@
     "openai": "^3.3.0",
     "openai-edge": "^1.2.0",
     "postcss": "8.4.24",
+    "primeicons": "^6.0.1",
+    "primereact": "^9.6.1",
     "react": "18.2.0",
     "react-beautiful-dnd": "^13.1.1",
     "react-day-picker": "^8.8.0",
