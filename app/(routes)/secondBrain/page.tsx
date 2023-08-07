@@ -20,7 +20,7 @@ const SecondBrainPage = async (props: Props) => {
   const userId = session?.user?.id;
   const boards: any = await getBoards(userId!);
 
-  if (!notions) {
+  if (!notions || notions.error) {
     return (
       <div>
         <H4Title>

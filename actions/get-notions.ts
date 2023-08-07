@@ -62,8 +62,9 @@ export const getNotions = async (): Promise<any[] | null> => {
       const notionItems: any = {
         error: "API key not found in the database.",
       };
+      //return notionItems;
+      console.log("User has no notion database enabled yet.");
       return notionItems;
-      //throw new Error("Notion DB not found");
     }
 
     const databases: any[] = await fetchDatabaseItems(

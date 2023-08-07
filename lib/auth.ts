@@ -72,9 +72,6 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     //TODO: fix this any
     async session({ token, session }: any) {
-      console.log("Entering session callback...");
-      //console.log(token, "token");
-      //console.log(session, "session");
       const user = await prismadb.users.findFirst({
         where: {
           email: token.email,
@@ -82,7 +79,6 @@ export const authOptions: NextAuthOptions = {
       });
 
       if (!user) {
-        console.log("Creating new user...");
         try {
           const newUser = await prismadb.users.create({
             data: {
@@ -110,7 +106,6 @@ export const authOptions: NextAuthOptions = {
           return console.log(error);
         }
       } else {
-        console.log("Using existing user...");
         //User allready exist in localDB, put user data in session
         session.user.id = user.id;
         session.user._id = user.id;
@@ -122,7 +117,7 @@ export const authOptions: NextAuthOptions = {
         session.user.userLanguage = user.userLanguage;
         session.user.userStatus = user.userStatus;
       }
-      console.log("Exiting session callback...");
+
       //console.log(session, "session");
       return session;
     },
