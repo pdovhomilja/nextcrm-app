@@ -164,7 +164,7 @@ model crm_Contacts {
   mobile_phone     String?
   website          String?
   position         String?
-  status           Boolean @default(true)
+  status           Boolean             @default(true)
   social_twitter   String?
   social_facebook  String?
   social_linkedin  String?
@@ -179,12 +179,11 @@ model crm_Contacts {
   assigned_account crm_Accounts?       @relation(fields: [account], references: [id])
 }
 
-enum crm_Contact_Type{
-Customer
-Partner
-Vendor
+enum crm_Contact_Type {
+  Customer
+  Partner
+  Vendor
 }
-
 
 model Boards {
   id                String    @id @default(auto()) @map("_id") @db.ObjectId
@@ -395,7 +394,7 @@ model Users {
   v                    Int                   @default(0) @map("__v")
   account_name         String?
   avatar               String?
-  email                String?
+  email                String                @unique
   is_account_admin     Boolean               @default(false)
   is_admin             Boolean               @default(false)
   created_on           DateTime?             @default(now()) @db.Date
@@ -417,8 +416,6 @@ model Users {
   notion_account       secondBrain_notions[]
   assigned_invoices    Invoices[]
   boards               Boards[]
-
-  @@index([email], map: "email_1")
 }
 
 enum Language {

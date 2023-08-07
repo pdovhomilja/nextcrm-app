@@ -211,7 +211,7 @@ export function RegisterComponent() {
                         <SelectTrigger>
                           <SelectValue
                             defaultValue={field.value}
-                            placeholder="Select a billboard"
+                            placeholder="Select a language"
                           />
                         </SelectTrigger>
                       </FormControl>
