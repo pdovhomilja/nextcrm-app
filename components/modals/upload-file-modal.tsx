@@ -1,6 +1,6 @@
 "use client";
 
-import { Dialog, DialogContent } from "./dialog-document-view";
+import { Dialog, DialogContent } from "../ui/dialog";
 
 interface ModalProps {
   isOpen: boolean;
@@ -8,7 +8,7 @@ interface ModalProps {
   children?: React.ReactNode;
 }
 
-export default function ModalDocumentView({
+export default function UploadFileModal({
   isOpen,
   onClose,
   children,
@@ -21,8 +21,8 @@ export default function ModalDocumentView({
 
   return (
     <Dialog open={isOpen} onOpenChange={onChange}>
-      <DialogContent className="w-full h-4/5">
-        <div className="h-full py-10">{children}</div>
+      <DialogContent className="">
+        <div className=" py-10">{children}</div>
       </DialogContent>
     </Dialog>
   );

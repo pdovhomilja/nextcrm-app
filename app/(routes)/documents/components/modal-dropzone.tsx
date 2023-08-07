@@ -1,12 +1,11 @@
 "use client";
 
-import DocumentViewModal from "@/components/modals/document-view-modal";
-import { Button } from "@/components/ui/button";
-import FileUploader from "@/components/ui/file-uploader";
-import { FileUploaderDropzone } from "@/components/ui/file-uploader-dropzone";
-import ModalDocumentView from "@/components/ui/modal-document-view";
-import { useRouter } from "next/navigation";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+
+import UploadFileModal from "@/components/modals/upload-file-modal";
+import { Button } from "@/components/ui/button";
+import { FileUploaderDropzone } from "@/components/ui/file-uploader-dropzone";
 
 type Props = {
   buttonLabel: string;
@@ -24,7 +23,7 @@ const ModalDropzone = ({ buttonLabel, fileType }: Props) => {
   return (
     <div>
       <Button onClick={() => setOpen(true)}>{buttonLabel}</Button>
-      <ModalDocumentView
+      <UploadFileModal
         isOpen={open}
         onClose={() => {
           setOpen(false);
@@ -32,7 +31,7 @@ const ModalDropzone = ({ buttonLabel, fileType }: Props) => {
         }}
       >
         <FileUploaderDropzone uploader={fileType} />
-      </ModalDocumentView>
+      </UploadFileModal>
     </div>
   );
 };
