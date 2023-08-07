@@ -36,7 +36,13 @@ const SecondBrainPage = async (props: Props) => {
               http://abdulhadeahmad.notion.site/87bfd5b5862e425d82de6ce47c88a2d4
             </Link>
           </ol>
-          <ol>3. Create NextCRM integration</ol>
+          <ol>
+            3. Create NextCRM integration in Notion (
+            <a href="https://www.notion.so/my-integrations">
+              https://www.notion.so/my-integrations
+            </a>
+            )
+          </ol>
           <ol>4. Copy integration token</ol>
           <ol>
             5. Paste integration token to your{" "}
