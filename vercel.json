@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/send-daily-task-ai",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/demo-pwd-reset",
+      "schedule": "* * * 1 *"
     }
   ]
 }
