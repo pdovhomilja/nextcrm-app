@@ -2,9 +2,9 @@ import { prismadb } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
-  //check if domain is demo.nextcrm.io if yes, then return 404
-  console.log(req.headers.get("host"), "req.headers");
+  //console.log(req.headers.get("host"), "req.headers");
 
+  //check if domain is demo.nextcrm.io if yes, reset password to default
   if (req.headers.get("host") === "demo.nextcrm.io") {
     try {
       await prismadb.users.update({
@@ -14,6 +14,9 @@ export async function GET(req: Request) {
         data: {
           password:
             "$2a$10$3W99vHPKrmB/rAhubRzahu4Q2jbnXTvchk2LoYKNWX7TcfVeUZ8YG",
+          name: "Demo Admin",
+          is_admin: true,
+          userStatus: "ACTIVE",
         },
       });
       return NextResponse.json({
