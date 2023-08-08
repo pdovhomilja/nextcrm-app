@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/cron/demo-pwd-reset",
-      "schedule": "* * * 1 *"
+      "schedule": "* * * * *"
     }
   ]
 }
