@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.387.0",
+    "@aws-sdk/signature-v4-crt": "^3.387.0",
     "@hookform/resolvers": "^3.1.1",
     "@next-auth/prisma-adapter": "^1.0.7",
     "@notionhq/client": "^2.2.6",
@@ -32,6 +33,7 @@
     "@uploadthing/react": "^5.1.0",
     "ai": "^2.1.17",
     "autoprefixer": "10.4.14",
+    "aws-crt": "^1.17.1",
     "axios": "^1.4.0",
     "bcrypt": "^5.1.0",
     "bcryptjs": "^2.4.3",
