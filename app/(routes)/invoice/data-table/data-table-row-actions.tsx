@@ -105,7 +105,7 @@ export function DataTableRowActions<TData>({
             View Document
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setOpenRossumView(true)}>
-            View Rossum Document
+            Edit metadata with Rossum
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setOpen(true)}>

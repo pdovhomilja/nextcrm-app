@@ -3,6 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
+import { useRouter } from "next/navigation";
 
 import { useState } from "react";
 
@@ -13,6 +15,10 @@ type Props = {
 export function FileInput({ onClose }: Props) {
   const [file, setFile] = useState<File>();
   const [isLoading, setIsLoading] = useState(false);
+
+  const router = useRouter();
+
+  const { toast } = useToast();
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -33,6 +39,11 @@ export function FileInput({ onClose }: Props) {
       // Handle errors here
       console.error(e);
     }
+    router.refresh();
+    toast({
+      title: "Success",
+      description: "Invoice uploaded successfully",
+    });
     setIsLoading(false);
     onClose();
   };

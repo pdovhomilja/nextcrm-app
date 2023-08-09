@@ -9,6 +9,9 @@ export const getInvoices = async () => {
         },
       },
     },
+    orderBy: {
+      date_created: "desc",
+    },
   });
 
   return data;

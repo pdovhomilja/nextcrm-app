@@ -1,5 +1,3 @@
-import { join } from "path";
-import { writeFile } from "fs/promises";
 import { NextRequest, NextResponse } from "next/server";
 import { s3Client } from "@/lib/digital-ocean-s3";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
@@ -27,14 +25,7 @@ export async function POST(request: NextRequest) {
 
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
-  console.log(buffer, "buffer");
-
-  // With the file data in the buffer, you can do whatever you want with it.
-  // For this, we'll just write it to the filesystem in a new location
-  //const path = `/tmp/${file.name}`;
-  //const path = join(process.cwd(), "public", "tmp", file.name);
-  //await writeFile(path, buffer);
-  //console.log(`open ${path} to see the uploaded file`);
+  //console.log(buffer, "buffer");
 
   //Rossum integration
   const rossumURL = process.env.ROSSUM_API_URL;
@@ -43,12 +34,8 @@ export async function POST(request: NextRequest) {
   const username = process.env.ROSSUM_USER;
   const password = process.env.ROSSUM_PASS;
 
-  //const dataBuffer = await fs.promises.readFile(path); // Read the file using promises
-
-  //console.log(dataBuffer, "dataBuffer");
-
   const form = new FormData();
-  form.append("content", buffer, file.name); // Append dataBuffer to the form
+  form.append("content", buffer, file.name);
 
   let rossumDocument;
   let rossumAnnotation;
@@ -121,18 +108,6 @@ export async function POST(request: NextRequest) {
       rossum_annotation_id: rossumAnnotationId,
     },
   });
-
-  //delete file from tmp folder after 5 seconds
-  /*   setTimeout(() => {
-    fs.unlink(path, (err: any) => {
-      if (err) {
-        console.error(err);
-        return;
-      }
-      //file removed
-      console.log(path, "deleted");
-    });
-  }, 5000); */
 
   return NextResponse.json({ success: true });
 }

@@ -22,8 +22,8 @@ const ModalDropzone = ({ buttonLabel }: Props) => {
       <UploadFileModal
         isOpen={open}
         onClose={() => {
-          setOpen(false);
           router.refresh();
+          setOpen(false);
         }}
       >
         <FileInput onClose={() => setOpen(false)} />
