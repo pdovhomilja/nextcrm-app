@@ -346,8 +346,8 @@ model Tasks {
   content          String?
   createdAt        DateTime        @db.Date
   createdBy        String?         @db.ObjectId
-  dueDateAt        DateTime        @default(now()) @db.Date
-  lastEditedAt     DateTime        @updatedAt @db.Date
+  dueDateAt        DateTime?       @default(now()) @db.Date
+  lastEditedAt     DateTime?       @updatedAt @db.Date
   position         Int
   priority         String
   section          String          @db.ObjectId
