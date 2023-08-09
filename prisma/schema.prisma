@@ -346,8 +346,8 @@ model Tasks {
   content          String?
   createdAt        DateTime        @db.Date
   createdBy        String?         @db.ObjectId
-  dueDateAt        DateTime?       @db.Date
-  lastEditedAt     DateTime?       @db.Date
+  dueDateAt        DateTime        @default(now()) @db.Date
+  lastEditedAt     DateTime        @updatedAt @db.Date
   position         Int
   priority         String
   section          String          @db.ObjectId
@@ -357,7 +357,7 @@ model Tasks {
   documentIDs      String[]        @db.ObjectId
   comments         tasksComments[]
   documents        Documents[]     @relation(fields: [documentIDs], references: [id])
-  taskStatus       taskStatus?
+  taskStatus       taskStatus?     @default(ACTIVE)
   assigned_user    Users?          @relation(fields: [user], references: [id])
   assigned_section Sections?       @relation(fields: [section], references: [id])
 }

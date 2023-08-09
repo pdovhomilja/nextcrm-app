@@ -45,11 +45,14 @@ export function PasswordChangeForm({ userId }: { userId: string }) {
         title: "Password changed  successfully",
       });
       router.refresh();
-    } catch (error) {
+    } catch (error: any) {
+      console.log(error.response.data);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Something went wrong while changing password.",
+        description:
+          "Something went wrong while changing your password: " +
+          error.response.data,
       });
     } finally {
       setIsLoading(false);

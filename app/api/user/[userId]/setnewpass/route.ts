@@ -27,6 +27,15 @@ export async function PUT(
     return new NextResponse("Passwords do not match", { status: 400 });
   }
 
+  if (session.user.email === "demo@nextcrm.io") {
+    return new NextResponse(
+      "Hey, don't be a fool! There are so many works done! Thanks!",
+      {
+        status: 400,
+      }
+    );
+  }
+
   try {
     const newUserPass = await prismadb.users.update({
       data: {
@@ -39,7 +48,7 @@ export async function PUT(
 
     return NextResponse.json(newUserPass);
   } catch (error) {
-    console.log("[NEWUSERPASS_PUT]", error);
+    console.log("[NEW_USERPASS_PUT]", error);
     return new NextResponse("Initial error", { status: 500 });
   }
 }
