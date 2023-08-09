@@ -13,7 +13,7 @@ interface AlertModalProps {
   document: any;
 }
 
-const DocumentViewModal = ({
+const InvoiceViewModal = ({
   isOpen,
   onClose,
   loading,
@@ -29,7 +29,7 @@ const DocumentViewModal = ({
     return null;
   }
 
-  if (document.document_file_mimeType !== "application/pdf") {
+  if (document.invoice_file_mimeType !== "application/pdf") {
     return (
       <ModalDocumentView isOpen={isOpen} onClose={onClose}>
         <div className="flex flex-col h-full ">
@@ -57,7 +57,7 @@ const DocumentViewModal = ({
               height: "100%",
             }}
             type="application/pdf"
-            src={document.document_file_url}
+            src={document.document_file_url || document.invoice_file_url}
           />
           <div className="pt-6 space-x-2 flex items-center justify-end w-full ">
             <Button disabled={loading} variant={"outline"} onClick={onClose}>
@@ -70,4 +70,4 @@ const DocumentViewModal = ({
   }
 };
 
-export default DocumentViewModal;
+export default InvoiceViewModal;

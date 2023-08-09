@@ -5,7 +5,9 @@ import { z } from "zod";
 export const taskSchema = z.object({
   id: z.string(),
   date_created: z.date(),
-  date_due: z.date(),
+  invoice_file_mimeType: z.string(),
+  invoice_file_url: z.string(),
+  status: z.string(),
 });
 
 export type Task = z.infer<typeof taskSchema>;

@@ -3,6 +3,8 @@ import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
+import sendEmail from "./sendmail";
+import { newUserNotify } from "./new-user-notify";
 
 function getGoogleCredentials(): { clientId: string; clientSecret: string } {
   const clientId = process.env.GOOGLE_ID;
@@ -90,6 +92,8 @@ export const authOptions: NextAuthOptions = {
               userStatus: "PENDING",
             },
           });
+
+          newUserNotify(newUser);
 
           //Put new created user data in session
           session.user.id = newUser.id;

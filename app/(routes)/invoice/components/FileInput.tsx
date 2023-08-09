@@ -33,9 +33,6 @@ export function FileInput({ onClose }: Props) {
       // Handle errors here
       console.error(e);
     }
-    alert(
-      "File uploaded - in the next app version there will be a api to Rossum for automatic invoice processing. Stay tuned!"
-    );
     setIsLoading(false);
     onClose();
   };

@@ -3,6 +3,8 @@ import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { hash } from "bcryptjs";
+import sendEmail from "@/lib/sendmail";
+import { newUserNotify } from "@/lib/new-user-notify";
 
 export async function POST(req: Request) {
   try {
@@ -40,6 +42,11 @@ export async function POST(req: Request) {
         password: await hash(password, 12),
       },
     });
+
+    /*
+    Function will send email to all admins about new user registration which is in PENDING state and need to be activated
+    */
+    newUserNotify(user);
 
     return NextResponse.json(user);
   } catch (error) {

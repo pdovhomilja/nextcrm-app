@@ -38,8 +38,9 @@ export function DataTableRowActions<TData>({
   const [openView, setOpenView] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const document = taskSchema.parse(row.original);
   const { toast } = useToast();
+
+  const document = taskSchema.parse(row.original);
 
   //Action triggered when the delete button is clicked to delete the store
   const onDelete = async () => {
@@ -89,39 +90,10 @@ export function DataTableRowActions<TData>({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-[160px]">
-          {/*  <DropdownMenuItem
-            onClick={
-              //@ts-ignore
-              //TODO: fix this
-              // () => router.push(`${row.original.document_file_url}`, "_blank")
-              () => {
-                //@ts-ignore
-                const newTab = window.open(
-                  `${row.original.document_file_url}`,
-                  "_blank"
-                );
-                newTab.focus();
-              }
-            }
-          >
-            View
-          </DropdownMenuItem> */}
           <DropdownMenuItem onClick={() => setOpenView(true)}>
             View
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          {/*  <DropdownMenuSub>
-          <DropdownMenuSubTrigger>Labels</DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
-            <DropdownMenuRadioGroup value={task.label}>
-              {labels.map((label) => (
-                <DropdownMenuRadioItem key={label.value} value={label.value}>
-                  {label.label}
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
-          </DropdownMenuSubContent>
-        </DropdownMenuSub> */}
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setOpen(true)}>
             Delete
