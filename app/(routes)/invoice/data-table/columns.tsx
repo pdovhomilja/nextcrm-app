@@ -20,7 +20,7 @@ export const columns: ColumnDef<Task>[] = [
       </div>
     ),
     enableSorting: false,
-    enableHiding: false,
+    enableHiding: true,
   },
   {
     accessorKey: "date_due",
@@ -33,7 +33,51 @@ export const columns: ColumnDef<Task>[] = [
       </div>
     ),
     enableSorting: false,
+    enableHiding: true,
+  },
+  {
+    accessorKey: "variable_symbol",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Number" />
+    ),
+    cell: ({ row }) => (
+      <div className="w-[120px]">{row.getValue("variable_symbol")}</div>
+    ),
+    enableSorting: false,
+    enableHiding: true,
+  },
+  {
+    accessorKey: "invoice_amount",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title=" Amount" />
+    ),
+    cell: ({ row }) => (
+      <div className="w-[120px]">{row.getValue("invoice_amount")}</div>
+    ),
+    enableSorting: false,
     enableHiding: false,
+  },
+  {
+    accessorKey: "invoice_currency",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Currency" />
+    ),
+    cell: ({ row }) => (
+      <div className="w-[120px]">{row.getValue("invoice_currency")}</div>
+    ),
+    enableSorting: false,
+    enableHiding: true,
+  },
+  {
+    accessorKey: "partner",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Partner" />
+    ),
+    cell: ({ row }) => (
+      <div className="w-[120px]">{row.getValue("partner")}</div>
+    ),
+    enableSorting: false,
+    enableHiding: true,
   },
   {
     accessorKey: "users",
@@ -51,7 +95,7 @@ export const columns: ColumnDef<Task>[] = [
       </div>
     ),
     enableSorting: false,
-    enableHiding: false,
+    enableHiding: true,
   },
   {
     accessorKey: "description",
@@ -59,8 +103,10 @@ export const columns: ColumnDef<Task>[] = [
       <DataTableColumnHeader column={column} title="Description" />
     ),
     cell: ({ row }) => (
-      <div className="w-[300px]">{row.getValue("description")}</div>
+      <div className="w-[150px]">{row.getValue("description")}</div>
     ),
+    enableSorting: false,
+    enableHiding: true,
   },
   {
     accessorKey: "status",

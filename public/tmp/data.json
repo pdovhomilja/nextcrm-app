@@ -1,0 +1,260 @@
+{
+  "pagination": {
+    "total": 1,
+    "total_pages": 1,
+    "next": null,
+    "previous": null
+  },
+  "results": [
+    {
+      "url": "https://elis.rossum.ai/api/v1/annotations/37385514",
+      "status": "confirmed",
+      "arrived_at": "2023-08-09T18:10:29.434270Z",
+      "exported_at": null,
+      "document": {
+        "url": "https://elis.rossum.ai/api/v1/documents/40133161",
+        "file_name": "01_2021_Bitto_faktura.pdf",
+        "file": "https://elis.rossum.ai/api/v1/documents/40133161/content"
+      },
+      "modifier": {
+        "url": "https://elis.rossum.ai/api/v1/users/213384",
+        "username": "pavel@dovhomilja.cz"
+      },
+      "schema": { "url": "https://elis.rossum.ai/api/v1/schemas/4427421" },
+      "metadata": {},
+      "content": [
+        {
+          "category": "section",
+          "schema_id": "basic_info_section",
+          "children": [
+            {
+              "category": "datapoint",
+              "schema_id": "document_id",
+              "rir_confidence": 0.9976579356998373,
+              "value": "2021-0001",
+              "type": "string"
+            },
+            {
+              "category": "datapoint",
+              "schema_id": "order_id",
+              "rir_confidence": 0.9663755939343275,
+              "value": "",
+              "type": "string"
+            },
+            {
+              "category": "datapoint",
+              "schema_id": "date_issue",
+              "rir_confidence": 0.999898127403122,
+              "value": "2021-02-01",
+              "type": "date"
+            },
+            {
+              "category": "datapoint",
+              "schema_id": "date_due",
+              "rir_confidence": 0.9999755492359751,
+              "value": "2021-02-14",
+              "type": "date"
+            },
+            {
+              "category": "datapoint",
+              "schema_id": "document_type",
+              "rir_confidence": 0.9799032243630382,
+              "value": "tax_invoice",
+              "type": "enum"
+            },
+            {
+              "category": "datapoint",
+              "schema_id": "language",
+              "rir_confidence": 0.983801822534531,
+              "value": "ces",
+              "type": "enum"
+            }
+          ]
+        },
+        {
+          "category": "section",
+          "schema_id": "payment_info_section",
+          "children": [
+            {
+              "category": "datapoint",
+              "schema_id": "account_num",
+              "rir_confidence": 0.999485324904592,
+              "value": "1016408873",
+              "type": "string"
+            },
+            {
+              "category": "datapoint",
+              "schema_id": "iban",
+              "rir_confidence": 0.982340912877991,
+              "value": "",
+              "type": "string"
+            },
+            {
+              "category": "datapoint",
+              "schema_id": "bic",
+              "rir_confidence": 0.972412411998222,
+              "value": "",
+              "type": "string"
+            },
+            {
+              "category": "datapoint",
+              "schema_id": "var_sym",
+              "rir_confidence": 0.9889772177728628,
+              "value": "",
+              "type": "string"
+            },
+            {
+              "category": "datapoint",
+              "schema_id": "spec_sym",
+              "rir_confidence": 0.9989065471440312,
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "category": "section",
+          "schema_id": "amounts_section",
+          "children": [
+            {
+              "category": "datapoint",
+              "schema_id": "amount_total",
+              "rir_confidence": 0.9993379537975637,
+              "value": "41800",
+              "type": "number"
+            },
+            {
+              "category": "datapoint",
+              "schema_id": "amount_total_base",
+              "rir_confidence": 0.9519513195319578,
+              "value": "",
+              "type": "number"
+            },
+            {
+              "category": "datapoint",
+              "schema_id": "amount_total_tax",
+              "rir_confidence": 0.9681369932345559,
+              "value": "",
+              "type": "number"
+            },
+            {
+              "category": "datapoint",
+              "schema_id": "currency",
+              "rir_confidence": 0.9662160438442408,
+              "value": "czk",
+              "type": "enum"
+            },
+            {
+              "category": "multivalue",
+              "schema_id": "tax_details",
+              "children": []
+            }
+          ]
+        },
+        {
+          "category": "section",
+          "schema_id": "vendor_section",
+          "children": [
+            {
+              "category": "datapoint",
+              "schema_id": "sender_name",
+              "rir_confidence": 0.9964453534271588,
+              "value": "Matouš Bitto",
+              "type": "string"
+            },
+            {
+              "category": "datapoint",
+              "schema_id": "sender_address",
+              "rir_confidence": 0.9824887618522511,
+              "value": "Jurkovičova 28\nPraha\n14900",
+              "type": "string"
+            },
+            {
+              "category": "datapoint",
+              "schema_id": "sender_ic",
+              "rir_confidence": 0.999373485407922,
+              "value": "5827515",
+              "type": "string"
+            },
+            {
+              "category": "datapoint",
+              "schema_id": "sender_vat_id",
+              "rir_confidence": 0.9743729186142447,
+              "value": "",
+              "type": "string"
+            },
+            {
+              "category": "datapoint",
+              "schema_id": "recipient_name",
+              "rir_confidence": 0.9922413876996048,
+              "value": "Information Systems\nFactory Group s.r.o",
+              "type": "string"
+            },
+            {
+              "category": "datapoint",
+              "schema_id": "recipient_address",
+              "rir_confidence": 0.9978002682565197,
+              "value": "Sazovická 455/26\nPraha 5\n155 21",
+              "type": "string"
+            },
+            {
+              "category": "datapoint",
+              "schema_id": "recipient_ic",
+              "rir_confidence": 0.9997629038312642,
+              "value": "3440621",
+              "type": "string"
+            },
+            {
+              "category": "datapoint",
+              "schema_id": "recipient_vat_id",
+              "rir_confidence": 0.9991013747562992,
+              "value": "CZ03440621",
+              "type": "string"
+            },
+            {
+              "category": "datapoint",
+              "schema_id": "recipient_delivery_name",
+              "rir_confidence": 0.9455003656807337,
+              "value": "",
+              "type": "string"
+            },
+            {
+              "category": "datapoint",
+              "schema_id": "recipient_delivery_address",
+              "rir_confidence": 0.9270084829974929,
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "category": "section",
+          "schema_id": "line_items_section",
+          "children": [
+            {
+              "category": "multivalue",
+              "schema_id": "line_items",
+              "children": []
+            }
+          ]
+        },
+        {
+          "category": "section",
+          "schema_id": "other_section",
+          "children": [
+            {
+              "category": "datapoint",
+              "schema_id": "notes",
+              "rir_confidence": null,
+              "value": "",
+              "type": "string"
+            }
+          ]
+        }
+      ],
+      "automated": false,
+      "modified_at": "2023-08-09T20:13:05.967750Z",
+      "assigned_at": "2023-08-09T20:12:56.576474Z"
+    }
+  ]
+}

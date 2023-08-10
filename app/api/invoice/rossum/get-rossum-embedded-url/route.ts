@@ -1,4 +1,5 @@
 import { authOptions } from "@/lib/auth";
+import { getRossumToken } from "@/lib/get-rossum-token";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
@@ -13,21 +14,7 @@ export async function POST(req: Request) {
   const { rossum_annotation_url: embUrl } = body;
 
   try {
-    const loginUrl = `${process.env.ROSSUM_API_URL}/auth/login`;
-    const username = process.env.ROSSUM_USER;
-    const password = process.env.ROSSUM_PASS;
-
-    const key = await fetch(loginUrl, {
-      method: "POST",
-      body: JSON.stringify({ username, password }),
-      headers: { "Content-Type": "application/json" },
-    })
-      .then((r) => r.json())
-      .then(({ key }) => {
-        return key;
-      });
-
-    const token = "token " + " " + key;
+    const token = await getRossumToken();
 
     const data = await fetch(embUrl + "/create_embedded_url", {
       method: "POST",

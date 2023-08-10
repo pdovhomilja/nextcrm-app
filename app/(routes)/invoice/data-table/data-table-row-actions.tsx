@@ -28,6 +28,7 @@ import axios from "axios";
 import InvoiceViewModal from "@/components/modals/invoice-view-modal";
 import RightViewModalNoTrigger from "@/components/modals/right-view-notrigger";
 import RossumCockpit from "../components/RossumCockpit";
+import Link from "next/link";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -68,6 +69,29 @@ export function DataTableRowActions<TData>({
     }
   };
 
+  const onExtract = async () => {
+    setLoading(true);
+    try {
+      await axios.get(
+        `/api/invoice/rossum/get-annotation/${invoice.rossum_annotation_id}`
+      );
+      toast({
+        title: "Success",
+        description: `Data from invoice with annotation ID ${invoice.rossum_annotation_id} has been extracted`,
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description:
+          "Something went wrong while extracting data. Please try again.",
+      });
+    } finally {
+      router.refresh();
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <InvoiceViewModal
@@ -104,8 +128,25 @@ export function DataTableRowActions<TData>({
           <DropdownMenuItem onClick={() => setOpenView(true)}>
             View Document
           </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+          <span className="underline px-1">Rossum</span>
           <DropdownMenuItem onClick={() => setOpenRossumView(true)}>
-            Edit metadata with Rossum
+            Edit metadata with Rossum cockpit
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onExtract}>
+            Extract data from invoice
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <Link
+              href={
+                invoice.rossum_annotation_json_url
+                  ? invoice.rossum_annotation_json_url
+                  : "/invoice"
+              }
+            >
+              Download json from Rossum
+            </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setOpen(true)}>
