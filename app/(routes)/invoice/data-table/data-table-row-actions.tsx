@@ -29,6 +29,8 @@ import InvoiceViewModal from "@/components/modals/invoice-view-modal";
 import RightViewModalNoTrigger from "@/components/modals/right-view-notrigger";
 import RossumCockpit from "../components/RossumCockpit";
 import Link from "next/link";
+import LoadingModal from "@/components/modals/loading-modal";
+import { set } from "date-fns";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -41,6 +43,7 @@ export function DataTableRowActions<TData>({
   const [openView, setOpenView] = useState(false);
   const [openRossumView, setOpenRossumView] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingOpen, setLoadingOpen] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -71,6 +74,7 @@ export function DataTableRowActions<TData>({
 
   const onExtract = async () => {
     setLoading(true);
+    setLoadingOpen(true);
     try {
       await axios.get(
         `/api/invoice/rossum/get-annotation/${invoice.rossum_annotation_id}`
@@ -87,8 +91,9 @@ export function DataTableRowActions<TData>({
           "Something went wrong while extracting data. Please try again.",
       });
     } finally {
-      router.refresh();
+      setLoadingOpen(false);
       setLoading(false);
+      router.refresh();
     }
   };
 
@@ -106,6 +111,13 @@ export function DataTableRowActions<TData>({
         onConfirm={onDelete}
         loading={loading}
       />
+
+      <LoadingModal
+        title="Extracting data from Rossum"
+        description="Extracting data from Invoice via Rossum Ai tool. Extracted data will be saved in the database. Please wait..."
+        isOpen={loadingOpen}
+      />
+
       <RightViewModalNoTrigger
         title={"Update Account" + " - " + invoice?.id}
         description="Update account details"

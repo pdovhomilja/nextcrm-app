@@ -19,7 +19,7 @@ export const columns: ColumnDef<Task>[] = [
         {moment(row.getValue("date_created")).format("YY-MM-DD-HH:mm")}
       </div>
     ),
-    enableSorting: false,
+    enableSorting: true,
     enableHiding: true,
   },
   {
@@ -32,7 +32,7 @@ export const columns: ColumnDef<Task>[] = [
         {moment(row.getValue("date_due")).format("YY-MM-DD-HH:mm")}
       </div>
     ),
-    enableSorting: false,
+    enableSorting: true,
     enableHiding: true,
   },
   {
@@ -54,7 +54,7 @@ export const columns: ColumnDef<Task>[] = [
     cell: ({ row }) => (
       <div className="w-[120px]">{row.getValue("invoice_amount")}</div>
     ),
-    enableSorting: false,
+    enableSorting: true,
     enableHiding: false,
   },
   {
@@ -65,7 +65,7 @@ export const columns: ColumnDef<Task>[] = [
     cell: ({ row }) => (
       <div className="w-[120px]">{row.getValue("invoice_currency")}</div>
     ),
-    enableSorting: false,
+    enableSorting: true,
     enableHiding: true,
   },
   {
