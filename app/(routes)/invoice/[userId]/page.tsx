@@ -5,18 +5,28 @@ import { getServerSession } from "next-auth";
 import { getUserInvoices } from "@/actions/invoice/get-user-invoices";
 import { UsersInvoiceDataTable } from "./data-table/data-table";
 import { columns } from "../data-table/columns";
-import { Invoices, Users } from "@prisma/client";
 
-type Props = {
-  userId: string;
-};
+import { redirect } from "next/navigation";
 
-const MyInvoicesPage = async ({ userId }: Props) => {
-  const session = await getServerSession(authOptions);
+interface UserInvoicesPageProps {
+  params: {
+    userId: string;
+  };
+}
+
+const MyInvoicesPage = async ({ params }: UserInvoicesPageProps) => {
+  const { userId } = params;
   const userInvoices: any = await getUserInvoices(userId);
+
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    redirect("/signin");
+  }
+
   return (
     <Container
-      title={`${session?.user.name} - invoices`}
+      title={`${session.user.name} - invoices`}
       description="Invoices assigned to me"
     >
       <UsersInvoiceDataTable data={userInvoices} columns={columns} />
