@@ -28,7 +28,7 @@ import { useState } from "react";
 import axios from "axios";
 import InvoiceViewModal from "@/components/modals/invoice-view-modal";
 import RightViewModalNoTrigger from "@/components/modals/right-view-notrigger";
-import RossumCockpit from "../components/RossumCockpit";
+import RossumCockpit from "../../components/RossumCockpit";
 import Link from "next/link";
 import LoadingModal from "@/components/modals/loading-modal";
 import { set } from "date-fns";

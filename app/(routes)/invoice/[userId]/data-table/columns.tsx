@@ -79,7 +79,7 @@ export const columns: ColumnDef<Task>[] = [
     enableSorting: false,
     enableHiding: true,
   },
-  {
+  /*  {
     accessorKey: "users",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Assigned to" />
@@ -96,7 +96,7 @@ export const columns: ColumnDef<Task>[] = [
     ),
     enableSorting: false,
     enableHiding: true,
-  },
+  }, */
   /*   {
     accessorKey: "description",
     header: ({ column }) => (

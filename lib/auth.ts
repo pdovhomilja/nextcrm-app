@@ -5,6 +5,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
 import sendEmail from "./sendmail";
 import { newUserNotify } from "./new-user-notify";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
 
 function getGoogleCredentials(): { clientId: string; clientSecret: string } {
   const clientId = process.env.GOOGLE_ID;

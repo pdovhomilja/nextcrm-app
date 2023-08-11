@@ -39,7 +39,6 @@ const AvatarDropdown = ({ avatar }: Props) => {
         <DropdownMenuItem asChild>
           <Link href="/projects/dashboard">Todo dashboard</Link>
         </DropdownMenuItem>
-        <DropdownMenuItem>Team</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem>
           <div onClick={() => signOut()}>Sign out</div>
