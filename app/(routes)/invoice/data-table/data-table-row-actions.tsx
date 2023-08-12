@@ -31,7 +31,6 @@ import RightViewModalNoTrigger from "@/components/modals/right-view-notrigger";
 import RossumCockpit from "../components/RossumCockpit";
 import Link from "next/link";
 import LoadingModal from "@/components/modals/loading-modal";
-import { set } from "date-fns";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -45,6 +44,7 @@ export function DataTableRowActions<TData>({
   const [openRossumView, setOpenRossumView] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingOpen, setLoadingOpen] = useState(false);
+  const [loadingMoneyS3export, setLoadingMoneyS3export] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -84,15 +84,60 @@ export function DataTableRowActions<TData>({
         title: "Success",
         description: `Data from invoice with annotation ID ${invoice.rossum_annotation_id} has been extracted`,
       });
-    } catch (error) {
+    } catch (error: any) {
+      //console.log(error);
       toast({
         variant: "destructive",
         title: "Error",
-        description:
-          "Something went wrong while extracting data. Please try again.",
+        description: error.response.data.error,
       });
     } finally {
       setLoadingOpen(false);
+      setLoading(false);
+      router.refresh();
+    }
+  };
+
+  const onMoneyS3export = async () => {
+    setLoading(true);
+    setLoadingMoneyS3export(true);
+    try {
+      await axios.get(`/api/invoice/money-s3-xml/${invoice.id}`);
+      toast({
+        title: "Success",
+        description: `Create XML fro Money S3 import and store XML in S3 bucket`,
+      });
+    } catch (error: any) {
+      //console.log(error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.response.data.error,
+      });
+    } finally {
+      setLoadingMoneyS3export(false);
+      setLoading(false);
+      router.refresh();
+    }
+  };
+  const onSendToMail = async () => {
+    setLoading(true);
+    setLoadingMoneyS3export(true);
+    try {
+      await axios.get(`/api/invoice/send-by-email/${invoice.id}`);
+      toast({
+        title: "Success",
+        description: `XML for ERP import sent to accountant email`,
+      });
+    } catch (error: any) {
+      //console.log(error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.response.data.error,
+      });
+    } finally {
+      setLoadingMoneyS3export(false);
       setLoading(false);
       router.refresh();
     }
@@ -118,6 +163,11 @@ export function DataTableRowActions<TData>({
         description="Extracting data from Invoice via Rossum Ai tool. Extracted data will be saved in the database. Please wait..."
         isOpen={loadingOpen}
       />
+      <LoadingModal
+        title="Exporting XML for Money S3"
+        description="Exporting XML for Money S3. Please wait..."
+        isOpen={loadingMoneyS3export}
+      />
 
       <RightViewModalNoTrigger
         title={"Update Invoice" + " - " + invoice?.id}
@@ -139,28 +189,50 @@ export function DataTableRowActions<TData>({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-[260px]">
           <DropdownMenuItem onClick={() => setOpenView(true)}>
-            View Document
+            Preview Document
           </DropdownMenuItem>
-
+          <Link href={`/invoice/detail/${invoice.id}`}>
+            <DropdownMenuItem>Invoice detail</DropdownMenuItem>
+          </Link>
+          <Link href={invoice.invoice_file_url} target={"_blank"}>
+            <DropdownMenuItem>Preview invoice in new window</DropdownMenuItem>
+          </Link>
           <DropdownMenuSeparator />
           <DropdownMenuLabel>Rossum</DropdownMenuLabel>
-          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setOpenRossumView(true)}>
             Edit metadata with Rossum cockpit
           </DropdownMenuItem>
           <DropdownMenuItem onClick={onExtract}>
             Extract data from invoice
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Link
-              href={
-                invoice.rossum_annotation_json_url
-                  ? invoice.rossum_annotation_json_url
-                  : "/invoice"
-              }
-            >
-              Download json from Rossum
-            </Link>
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel>Export for ERPs</DropdownMenuLabel>
+
+          <DropdownMenuItem onClick={onMoneyS3export}>
+            XML for Money S3
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel>Download data for ERPs</DropdownMenuLabel>
+          <Link
+            href={
+              invoice.rossum_annotation_json_url
+                ? invoice.rossum_annotation_json_url
+                : "/invoice"
+            }
+            target="_blank"
+          >
+            <DropdownMenuItem>JSON</DropdownMenuItem>
+          </Link>
+          <Link
+            href={invoice.money_s3_url ? invoice.money_s3_url : "/invoice"}
+            target="_blank"
+          >
+            <DropdownMenuItem>MoneyS3 XML</DropdownMenuItem>
+          </Link>
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel>Send XML by mail</DropdownMenuLabel>
+          <DropdownMenuItem onClick={onSendToMail}>
+            Send XML to accountant email
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setOpen(true)}>

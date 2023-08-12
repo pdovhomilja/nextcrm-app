@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MoneyData ICAgendy="19197934" description="Incoming invoice">
+  <SeznamFaktPrij>
+    <FaktPrij>
+      <Doklad>2021-0001</Doklad>
+      <GUID>64d68b562d25286957d594a9</GUID>
+      <Vystaveno/>
+      <DatUcPr/>
+      <PlnenoDPH/>
+      <Splatno>2021-02-13</Splatno>
+      <Doruceno>2023-08-11</Doruceno>
+      <DatSkPoh/>
+      <KonstSym/>
+      <VarSymbol>2021-0001</VarSymbol>
+      <PrijatDokl>2021-0001</PrijatDokl>
+      <Proplatit>41800</Proplatit>
+      <Vyuctovano/>
+      <Celkem>41800</Celkem>
+      <DodOdb>
+        <ObchNaz>Matouš Bitto</ObchNaz>
+        <ObchAdresa>
+          <Ulice/>
+          <Misto/>
+          <PSC/>
+          <Stat/>
+          <KodStatu/>
+        </ObchAdresa>
+        <FaktNazev>Matouš Bitto</FaktNazev>
+        <ICO>5827515</ICO>
+        <DIC/>
+        <FakAdresa>
+          <Ulice/>
+          <Misto/>
+          <PSC/>
+          <Stat/>
+          <KodStatu/>
+        </FakAdresa>
+        <GUID/>
+        <Tel>
+          <Pred/>
+          <Cislo/>
+        </Tel>
+        <Fax>
+          <Pred/>
+          <Cislo/>
+        </Fax>
+        <Email/>
+        <WWW/>
+        <PlatceDPH>0</PlatceDPH>
+        <FyzOsoba>0</FyzOsoba>
+        <Banka/>
+        <Ucet/>
+      </DodOdb>
+      <DopravaTuz/>
+      <DopravaZahr/>
+      <DatumITS/>
+      <Sleva/>
+      <SeznamPolozek/>
+      <MojeFirma>
+        <Nazev>Documex s.r.o.</Nazev>
+        <Adresa>
+          <Ulice>Kubánské náměstí 11</Ulice>
+          <Misto>Praha 10</Misto>
+          <PSC>100 00</PSC>
+          <Stat>Czechia</Stat>
+          <KodStatu>CZ</KodStatu>
+        </Adresa>
+        <ObchNazev>Documex s.r.o.</ObchNazev>
+        <ObchAdresa>
+          <Ulice>Rybná 716/24</Ulice>
+          <Misto>Praha 1</Misto>
+          <PSC>110 00</PSC>
+          <Stat>Czechia</Stat>
+          <KodStatu>CZ</KodStatu>
+        </ObchAdresa>
+        <FaktNazev>Documex s.r.o.</FaktNazev>
+        <FatkAdresa>
+          <Ulice>Rybná 716/24</Ulice>
+          <Misto>Praha 1</Misto>
+          <PSC>110 00</PSC>
+          <Stat>Czechia</Stat>
+          <KodStatu>CZ</KodStatu>
+        </FatkAdresa>
+        <Tel>
+          <Pred/>
+          <Cislo/>
+        </Tel>
+        <Fax>
+          <Pred/>
+          <Cislo/>
+        </Fax>
+        <Mobil>
+          <Pred/>
+          <Cislo/>
+        </Mobil>
+        <Email>info@documex.cz</Email>
+        <WWW>https://www.documex.cz</WWW>
+        <ICO>19197934</ICO>
+        <DIC/>
+        <Banka>Fio a.s.</Banka>
+        <Ucet>123456</Ucet>
+        <KodBanky>2100</KodBanky>
+        <FyzOsoba>0</FyzOsoba>
+        <MenaSymbol>Kč</MenaSymbol>
+        <MenaKod>CZK</MenaKod>
+      </MojeFirma>
+    </FaktPrij>
+  </SeznamFaktPrij>
+  <SeznamFaktPrij_DPP/>
+</MoneyData>

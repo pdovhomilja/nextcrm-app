@@ -57,7 +57,7 @@ export const columns: ColumnDef<Task>[] = [
     enableSorting: true,
     enableHiding: false,
   },
-  {
+  /*   {
     accessorKey: "invoice_currency",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Currency" />
@@ -67,7 +67,7 @@ export const columns: ColumnDef<Task>[] = [
     ),
     enableSorting: true,
     enableHiding: true,
-  },
+  }, */
   {
     accessorKey: "partner",
     header: ({ column }) => (
@@ -79,7 +79,7 @@ export const columns: ColumnDef<Task>[] = [
     enableSorting: false,
     enableHiding: true,
   },
-  {
+  /*   {
     accessorKey: "users",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Assigned to" />
@@ -96,18 +96,16 @@ export const columns: ColumnDef<Task>[] = [
     ),
     enableSorting: false,
     enableHiding: true,
-  },
-  /*   {
-    accessorKey: "description",
+  }, */
+  {
+    accessorKey: "rossum_status",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Description" />
+      <DataTableColumnHeader column={column} title="Rosssum state" />
     ),
-    cell: ({ row }) => (
-      <div className="w-[150px]">{row.getValue("description")}</div>
-    ),
+    cell: ({ row }) => <div className="">{row.getValue("rossum_status")}</div>,
     enableSorting: false,
     enableHiding: true,
-  }, */
+  },
   {
     accessorKey: "status",
     header: ({ column }) => (

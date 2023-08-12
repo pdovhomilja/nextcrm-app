@@ -5,7 +5,7 @@ import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-const fs = require("fs");
+//const fs = require("fs");
 const fetch = require("node-fetch");
 const FormData = require("form-data");
 
@@ -51,8 +51,11 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    //console.log(response, "response");
     if (response.ok) {
       const responseData = await response.json();
+      console.log(responseData, "responseData");
+
       const {
         results: [{ annotation, document }],
       } = responseData;
@@ -71,10 +74,11 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.log("Was not able to upload the document...", err);
   }
+  const invoiceFileName = new Date().getTime() + "-" + file.name;
 
   const bucketParams = {
     Bucket: process.env.DO_BUCKET,
-    Key: file.name,
+    Key: invoiceFileName,
     Body: buffer,
     ContentType: file.type,
     ContentDisposition: "inline",
@@ -84,17 +88,17 @@ export async function POST(request: NextRequest) {
   await s3Client.send(new PutObjectCommand(bucketParams));
 
   //S3 bucket url for the invoice
-  const url = `https://${process.env.DO_BUCKET}.${process.env.DO_REGION}.digitaloceanspaces.com/${file.name}`;
+  const url = `https://${process.env.DO_BUCKET}.${process.env.DO_REGION}.digitaloceanspaces.com/${invoiceFileName}`;
   //console.log(url, "url");
   const rossumDocumentId = rossumDocument.split("/").slice(-1)[0];
   const rossumAnnotationId = rossumAnnotation.split("/").slice(-1)[0];
   //Save the data to the database
 
-  const invoice = await prismadb.invoices.create({
+  await prismadb.invoices.create({
     data: {
       last_updated_by: session.user.id,
       date_due: new Date(),
-      description: "Invoice description",
+      description: "Incoming invoice",
       document_type: "invoice",
       invoice_type: "Taxable document",
       status: "new",
@@ -102,6 +106,7 @@ export async function POST(request: NextRequest) {
       assigned_user_id: session.user.id,
       invoice_file_url: url,
       invoice_file_mimeType: file.type,
+      rossum_status: "importing",
       rossum_document_url: rossumDocument,
       rossum_document_id: rossumDocumentId,
       rossum_annotation_url: rossumAnnotation,

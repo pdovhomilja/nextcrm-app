@@ -46,7 +46,16 @@ export async function GET(
       return data;
     });
 
-  console.log(data, "data");
+  //console.log(data.results[0].status, "data from get annotation route");
+
+  if (data.results[0].status === "importing") {
+    return NextResponse.json(
+      { error: "Data from rossum API not ready yet!" },
+      {
+        status: 400,
+      }
+    );
+  }
 
   //Variables for invoice definition
   let invoiceId;
@@ -219,6 +228,7 @@ export async function GET(
       invoice_currency: invoice_currency,
       partner: partner,
       partner_VAT_number: partner_VAT_number,
+      rossum_status: data.results[0].status,
       rossum_annotation_json_url: urlJSON,
       //rossum_annotation_xml_url: urlXML,
     },

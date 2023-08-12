@@ -215,58 +215,116 @@ model ImageUpload {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 }
 
+model MyAccount {
+  id                   String  @id @default(auto()) @map("_id") @db.ObjectId
+  v                    Int     @map("__v")
+  company_name         String
+  is_person            Boolean @default(false)
+  email                String?
+  email_accountant     String?
+  phone_prefix         String?
+  phone                String?
+  mobile_prefix        String?
+  mobile               String?
+  fax_prefix           String?
+  fax                  String?
+  website              String?
+  // office Address
+  street               String?
+  city                 String?
+  state                String?
+  zip                  String?
+  country              String?
+  country_code         String?
+  // billing Address
+  billing_street       String?
+  billing_city         String?
+  billing_state        String?
+  billing_zip          String?
+  billing_country      String?
+  billing_country_code String?
+  //other
+  currency             String?
+  currency_symbol      String?
+  VAT_number           String
+  TAX_number           String?
+  bank_name            String?
+  bank_account         String?
+  bank_code            String?
+  bank_IBAN            String?
+  bank_SWIFT           String?
+}
+
 model Invoices {
-  id                          String          @id @default(auto()) @map("_id") @db.ObjectId
-  v                           Int?            @map("__v")
-  date_created                DateTime        @default(now()) @db.Date
-  last_updated                DateTime        @updatedAt
-  last_updated_by             String?         @db.ObjectId
-  date_received               DateTime?       @db.Date
-  date_of_case                DateTime?       @db.Date
-  date_tax                    DateTime?       @db.Date
-  date_due                    DateTime?       @db.Date
-  description                 String?
-  document_type               String?
-  favorite                    Boolean?        @default(false)
-  variable_symbol             String?
-  constant_symbol             String?
-  specific_symbol             String?
-  order_number                String?
-  internal_number             String?
-  invoice_number              String?
-  invoice_amount              String?
-  invoice_file_mimeType       String
-  invoice_file_url            String
-  invoice_items               Json?
-  invoice_type                String?
-  invoice_currency            String?
-  partner                     String?
-  partner_address             String?
-  partner_VAT_number          String?
-  partner_TAX_number          String?
-  partner_TAX_local_number    String?
-  partner_account_number      String?
-  partner_account_bank_number String?
-  partner_IBAN                String?
-  partner_SWIFT               String?
-  partner_BIC                 String?
-  rossum_status               String?
-  rossum_annotation_id        String?
-  rossum_annotation_url       String?
-  rossum_document_id          String?
-  rossum_document_url         String?
-  rossum_annotation_json_url  String?
-  rossum_annotation_xml_url   String?
-  status                      String?
-  invoice_state_id            String?         @db.ObjectId
-  assigned_user_id            String?         @db.ObjectId
-  assigned_account_id         String?         @db.ObjectId
-  visibility                  Boolean         @default(true)
-  invoice_states              invoice_States? @relation(fields: [invoice_state_id], references: [id])
-  users                       Users?          @relation(fields: [assigned_user_id], references: [id])
-  accounts                    crm_Accounts?   @relation(fields: [assigned_account_id], references: [id])
-  connected_documents         String[]        @db.ObjectId
-  documents                   Documents[]     @relation(fields: [connected_documents], references: [id])
+  id                            String          @id @default(auto()) @map("_id") @db.ObjectId
+  v                             Int?            @map("__v")
+  date_created                  DateTime        @default(now()) @db.Date
+  last_updated                  DateTime        @updatedAt
+  last_updated_by               String?         @db.ObjectId
+  date_received                 DateTime?       @default(now()) @db.Date
+  date_of_case                  DateTime?       @db.Date
+  date_tax                      DateTime?       @db.Date
+  date_due                      DateTime?       @db.Date
+  description                   String?
+  document_type                 String?
+  favorite                      Boolean?        @default(false)
+  variable_symbol               String?
+  constant_symbol               String?
+  specific_symbol               String?
+  order_number                  String?
+  internal_number               String?
+  invoice_number                String?
+  invoice_amount                String?
+  invoice_file_mimeType         String
+  invoice_file_url              String
+  invoice_items                 Json?
+  invoice_type                  String?
+  invoice_currency              String?
+  partner                       String?
+  partner_street                String?
+  partner_city                  String?
+  partner_zip                   String?
+  partner_country               String?
+  partner_country_code          String?
+  partner_business_street       String?
+  partner_business_city         String?
+  partner_business_zip          String?
+  partner_business_country      String?
+  partner_business_country_code String?
+  partner_VAT_number            String?
+  partner_TAX_number            String?
+  partner_TAX_local_number      String?
+  partner_phone_prefix          String?
+  partner_phone_number          String?
+  partner_fax_prefix            String?
+  partner_fax_number            String?
+  partner_email                 String?
+  partner_website               String?
+  partner_is_person             Boolean?
+  partner_bank                  String?
+  partner_account_number        String?
+  partner_account_bank_number   String?
+  partner_IBAN                  String?
+  partner_SWIFT                 String?
+  partner_BIC                   String?
+  rossum_status                 String?
+  rossum_annotation_id          String?
+  rossum_annotation_url         String?
+  rossum_document_id            String?
+  rossum_document_url           String?
+  rossum_annotation_json_url    String?
+  rossum_annotation_xml_url     String?
+  money_s3_url                  String?
+  status                        String?
+  invoice_state_id              String?         @db.ObjectId
+  assigned_user_id              String?         @db.ObjectId
+  assigned_account_id           String?         @db.ObjectId
+  visibility                    Boolean         @default(true)
+  invoice_states                invoice_States? @relation(fields: [invoice_state_id], references: [id])
+  users                         Users?          @relation(fields: [assigned_user_id], references: [id])
+  accounts                      crm_Accounts?   @relation(fields: [assigned_account_id], references: [id])
+  connected_documents           String[]        @db.ObjectId
+  documents                     Documents[]     @relation(fields: [connected_documents], references: [id])
 }
 
 model invoice_States {

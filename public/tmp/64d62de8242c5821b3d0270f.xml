@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MoneyData description="Invoice description">
+  <SeznamFaktPrij>
+    <FaktPrij>
+      <Doklad>2925782992</Doklad>
+      <GUID>64d62de8242c5821b3d0270f</GUID>
+      <Vystaveno/>
+      <DatUcPr/>
+      <PlnenoDPH/>
+      <Splatno>2022-10-23</Splatno>
+      <Doruceno/>
+      <DatSkPoh/>
+      <KonstSym/>
+      <VarSymbol>2925782992</VarSymbol>
+      <PrijatDokl>2925782992</PrijatDokl>
+      <Proplatit>18916.98</Proplatit>
+      <Vyuctovano/>
+      <Celkem>18916.98</Celkem>
+      <DodOdb>
+        <ObchNaz>Alza.cz a.s.</ObchNaz>
+        <ObchAdresa>
+          <Ulice/>
+          <Misto/>
+          <PSC/>
+          <Stat/>
+          <KodStatu/>
+        </ObchAdresa>
+        <FaktNazev>Alza.cz a.s.</FaktNazev>
+        <ICO>27082440</ICO>
+        <DIC/>
+        <FakAdresa>
+          <Ulice/>
+          <Misto/>
+          <PSC/>
+          <Stat/>
+          <KodStatu/>
+        </FakAdresa>
+        <GUID/>
+        <Tel>
+          <Pred/>
+          <Cislo/>
+        </Tel>
+        <Fax>
+          <Pred/>
+          <Cislo/>
+        </Fax>
+        <Email/>
+        <WWW/>
+        <PlatceDPH>1</PlatceDPH>
+        <FyzOsoba>0</FyzOsoba>
+        <Banka/>
+        <Ucet/>
+      </DodOdb>
+      <END/>
+    </FaktPrij>
+  </SeznamFaktPrij>
+</MoneyData>

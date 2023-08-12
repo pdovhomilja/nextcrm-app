@@ -11,10 +11,17 @@ type Props = {
   label?: string;
   title: string;
   description: string;
+  width?: string;
   children: ReactNode;
 };
 
-const RightViewModal = ({ label, title, description, children }: Props) => {
+const RightViewModal = ({
+  label,
+  title,
+  description,
+  width,
+  children,
+}: Props) => {
   const [open, setOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -38,7 +45,7 @@ const RightViewModal = ({ label, title, description, children }: Props) => {
             "data-[state=open]:animate-[dialog-content-show_1000ms] data-[state=closed]:animate-[dialog-content-hide_1000ms] fixed top-0 right-0 rounded-md border  h-full bg-white dark:bg-slate-900 shadow-md overflow-hidden"
           }
         >
-          <div className="flex flex-col h-full">
+          <div className={`flex flex-col h-full ${width}`}>
             <div className="flex justify-between w-full">
               <Dialog.Title className="font-semibold p-3 w-full">
                 <span className="scroll-m-20 text-xl font-semibold tracking-tight">

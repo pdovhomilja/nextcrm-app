@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MoneyData ICAgendy="19197934" description="Invoice description">
+  <SeznamFaktPrij>
+    <FaktPrij>
+      <Doklad>2925919082</Doklad>
+      <GUID>64d620d4242c5821b3d0270d</GUID>
+      <Vystaveno/>
+      <DatUcPr/>
+      <PlnenoDPH/>
+      <Splatno>2022-10-27</Splatno>
+      <Doruceno/>
+      <DatSkPoh/>
+      <KonstSym/>
+      <VarSymbol>2925919082</VarSymbol>
+      <PrijatDokl>2925919082</PrijatDokl>
+      <Proplatit>6544.01</Proplatit>
+      <Vyuctovano/>
+      <Celkem>6544.01</Celkem>
+      <DodOdb>
+        <ObchNaz>Alza.cz a.s.</ObchNaz>
+        <ObchAdresa>
+          <Ulice/>
+          <Misto/>
+          <PSC/>
+          <Stat/>
+          <KodStatu/>
+        </ObchAdresa>
+        <FaktNazev>Alza.cz a.s.</FaktNazev>
+        <ICO>27082440</ICO>
+        <DIC/>
+        <FakAdresa>
+          <Ulice/>
+          <Misto/>
+          <PSC/>
+          <Stat/>
+          <KodStatu/>
+        </FakAdresa>
+        <GUID/>
+        <Tel>
+          <Pred/>
+          <Cislo/>
+        </Tel>
+        <Fax>
+          <Pred/>
+          <Cislo/>
+        </Fax>
+        <Email>info@alza.cz</Email>
+        <WWW>https://www.alza.cz</WWW>
+        <PlatceDPH>0</PlatceDPH>
+        <FyzOsoba>0</FyzOsoba>
+        <Banka/>
+        <Ucet/>
+      </DodOdb>
+      <DopravaTuz/>
+      <DopravaZahr/>
+      <DatumITS/>
+      <Sleva/>
+      <SeznamPolozek/>
+      <MojeFirma>
+        <Nazev>Documex s.r.o.</Nazev>
+        <Adresa>
+          <Ulice>Kubánské náměstí 11</Ulice>
+          <Misto>Praha 10</Misto>
+          <PSC>100 00</PSC>
+          <Stat>Czechia</Stat>
+          <KodStatu>CZ</KodStatu>
+        </Adresa>
+        <ObchNazev>Documex s.r.o.</ObchNazev>
+        <ObchAdresa>
+          <Ulice>Rybná 716/24</Ulice>
+          <Misto>Praha 1</Misto>
+          <PSC>110 00</PSC>
+          <Stat>Czechia</Stat>
+          <KodStatu>CZ</KodStatu>
+        </ObchAdresa>
+        <FaktNazev>Documex s.r.o.</FaktNazev>
+        <FatkAdresa>
+          <Ulice>Rybná 716/24</Ulice>
+          <Misto>Praha 1</Misto>
+          <PSC>110 00</PSC>
+          <Stat>Czechia</Stat>
+          <KodStatu>CZ</KodStatu>
+        </FatkAdresa>
+        <Tel>
+          <Pred/>
+          <Cislo/>
+        </Tel>
+        <Fax>
+          <Pred/>
+          <Cislo/>
+        </Fax>
+        <Mobil>
+          <Pred/>
+          <Cislo/>
+        </Mobil>
+        <Email>info@documex.cz</Email>
+        <WWW>https://www.documex.cz</WWW>
+        <ICO>19197934</ICO>
+        <DIC/>
+        <Banka>Fio a.s.</Banka>
+        <Ucet>123456</Ucet>
+        <KodBanky>2100</KodBanky>
+        <FyzOsoba>0</FyzOsoba>
+        <MenaSymbol>Kč</MenaSymbol>
+        <MenaKod>CZK</MenaKod>
+      </MojeFirma>
+    </FaktPrij>
+  </SeznamFaktPrij>
+  <SeznamFaktPrij_DPP/>
+</MoneyData>

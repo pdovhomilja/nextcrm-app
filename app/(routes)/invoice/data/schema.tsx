@@ -12,8 +12,10 @@ export const taskSchema = z.object({
   invoice_file_mimeType: z.string(),
   invoice_file_url: z.string(),
   status: z.string(),
+  rossum_status: z.string().nullable(),
   rossum_annotation_id: z.string().nullable(),
   rossum_annotation_json_url: z.string().nullable(),
+  money_s3_url: z.string().nullable(),
 });
 
 export type Task = z.infer<typeof taskSchema>;
