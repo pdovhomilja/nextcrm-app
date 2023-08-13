@@ -280,6 +280,7 @@ model Invoices {
   invoice_items                 Json?
   invoice_type                  String?
   invoice_currency              String?
+  invoice_language              String?
   partner                       String?
   partner_street                String?
   partner_city                  String?

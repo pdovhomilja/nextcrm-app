@@ -1,3 +1,8 @@
+/*
+This route will get annotation from Rossum API and store it in S3 bucket as JSON and XML file and make it available for download
+Next step is to update invoice metadata from annotation in database (invoice table)
+TODO: think about how to handle annotation files security - now they are public
+*/
 import { authOptions } from "@/lib/auth";
 import { s3Client } from "@/lib/digital-ocean-s3";
 import { getRossumToken } from "@/lib/get-rossum-token";
@@ -33,6 +38,8 @@ export async function GET(
     return NextResponse.json("No rossum token", { status: 400 });
   }
 
+  //console.log(annotationId, "annotationId");
+
   const data = await fetch(
     `${process.env.ROSSUM_API_URL}/queues/${queueId}/export/?format=json&id=${annotationId}`,
     {
@@ -58,85 +65,97 @@ export async function GET(
   }
 
   //Variables for invoice definition
-  let invoiceId;
-  let dueDate;
-  let invoice_amount;
-  let partner;
-  let partner_VAT_number;
-  let invoice_currency;
+  const basicInfoSectionData = {
+    document_id: "",
+    order_id: "",
+    date_issue: new Date(),
+    date_due: new Date(),
+    document_type: "",
+    language: "",
+  };
+  const paymentInfoSectionData = {
+    account_num: "",
+    iban: "",
+    bic: "",
+    var_sym: "",
+    spec_sym: "",
+  };
+  const amountSectionData = {
+    amount_total: "",
+    amount_total_base: "",
+    amount_total_tax: "",
+    currency: "",
+  };
+  const vendorSectionData = {
+    sender_name: "",
+    sender_address: {
+      street: "",
+      city: "",
+      zip: "",
+    },
+    sender_ic: "",
+    sender_vat_id: "",
+    recipient_ic: "",
+  };
 
   if (data.results && data.results.length > 0) {
-    const documentIdDataPoint = data.results[0].content[0].children.find(
-      (datapoint: any) => datapoint.schema_id === "document_id"
-    );
-
-    const dueDateDataPoint = data.results[0].content[0].children.find(
-      (datapoint: any) => datapoint.schema_id === "date_due"
-    );
-
     //Section for invoice definition
+    const basicInfoSection = data.results[0].content.find(
+      (section: any) => section.schema_id === "basic_info_section"
+    );
+
     const amountsSection = data.results[0].content.find(
       (section: any) => section.schema_id === "amounts_section"
+    );
+
+    const paymentInfoSection = data.results[0].content.find(
+      (section: any) => section.schema_id === "payment_info_section"
     );
 
     const vendorSection = data.results[0].content.find(
       (section: any) => section.schema_id === "vendor_section"
     );
 
-    //Data from amounts section
-    const amountTotalDataPoint = amountsSection.children.find(
-      (datapoint: any) => datapoint.schema_id === "amount_total"
+    //Data from basic info section
+    const documentIdDataPoint = basicInfoSection.children.find(
+      (datapoint: any) => datapoint.schema_id === "document_id"
     );
-
-    if (amountTotalDataPoint) {
-      invoice_amount = amountTotalDataPoint.value;
-      console.log("Invoice Amount:", invoice_amount);
-    }
-
-    const amountCurrencyDataPoint = amountsSection.children.find(
-      (datapoint: any) => datapoint.schema_id === "currency"
-    );
-
-    if (amountCurrencyDataPoint) {
-      invoice_currency = amountCurrencyDataPoint.value;
-      console.log("Invoice Currency:", invoice_currency);
-    }
-    //Data from vendor section
-    const vendorNameDataPoint = vendorSection.children.find(
-      (datapoint: any) => datapoint.schema_id === "sender_name"
-    );
-
-    if (vendorNameDataPoint) {
-      partner = vendorNameDataPoint.value;
-      console.log("Vendor Name:", partner);
-    }
-
-    const vendorVATDataPoint = vendorSection.children.find(
-      (datapoint: any) => datapoint.schema_id === "sender_ic"
-    );
-
-    if (vendorVATDataPoint) {
-      partner_VAT_number = vendorVATDataPoint.value;
-      console.log("Vendor VAT:", partner_VAT_number);
-    }
-    //Data from document id section
-
     if (documentIdDataPoint) {
-      const documentIdValue = documentIdDataPoint.value;
-      invoiceId = documentIdValue;
-      console.log("Document ID:", documentIdValue);
-    } else {
-      console.log("Document ID data point not found.");
+      basicInfoSectionData.document_id = documentIdDataPoint.value;
+      console.log("Document ID:", basicInfoSectionData.document_id);
     }
 
-    if (dueDateDataPoint) {
-      const dueDateValue = dueDateDataPoint.value;
-      const dateComponents = dueDateValue.split("-").map(Number);
+    const orderIdDataPoint = basicInfoSection.children.find(
+      (datapoint: any) => datapoint.schema_id === "order_id"
+    );
+    if (orderIdDataPoint) {
+      basicInfoSectionData.order_id = orderIdDataPoint.value;
+      console.log("Order ID:", basicInfoSectionData.order_id);
+    }
+
+    const documentTypeDataPoint = basicInfoSection.children.find(
+      (datapoint: any) => datapoint.schema_id === "document_type"
+    );
+    if (documentTypeDataPoint) {
+      basicInfoSectionData.document_type = documentTypeDataPoint.value;
+      console.log("Document Type:", basicInfoSection.document_type);
+    }
+
+    const dateIssueDataPoint = basicInfoSection.children.find(
+      (datapoint: any) => datapoint.schema_id === "date_issue"
+    );
+    if (dateIssueDataPoint) {
+      basicInfoSectionData.date_issue = dateIssueDataPoint.value;
+      console.log("Issue Date:", basicInfoSectionData.date_issue);
+    }
+    if (dateIssueDataPoint) {
+      const DateValue = dateIssueDataPoint.value;
+      const dateComponents = DateValue.split("-").map(Number);
       if (dateComponents.length === 3 && !dateComponents.some(isNaN)) {
         const [year, month, day] = dateComponents;
         const formattedDate = new Date(year, month - 1, day); // Note: Month is 0-based in JavaScript Date
 
-        dueDate = formattedDate;
+        basicInfoSectionData.date_issue = formattedDate;
         if (!isNaN(formattedDate.getTime())) {
           console.log(formattedDate);
         } else {
@@ -145,8 +164,124 @@ export async function GET(
       } else {
         console.error("Invalid date format");
       }
+    }
 
-      console.log("Due date:", dueDateValue);
+    const dueDateDataPoint = basicInfoSection.children.find(
+      (datapoint: any) => datapoint.schema_id === "date_due"
+    );
+    if (dueDateDataPoint) {
+      basicInfoSectionData.date_due = dueDateDataPoint.value;
+      console.log("Due Date:", basicInfoSectionData.date_due);
+    }
+    if (dueDateDataPoint) {
+      const DateValue = dueDateDataPoint.value;
+      const dateComponents = DateValue.split("-").map(Number);
+      if (dateComponents.length === 3 && !dateComponents.some(isNaN)) {
+        const [year, month, day] = dateComponents;
+        const formattedDate = new Date(year, month - 1, day); // Note: Month is 0-based in JavaScript Date
+
+        basicInfoSectionData.date_due = formattedDate;
+        if (!isNaN(formattedDate.getTime())) {
+          console.log(formattedDate);
+        } else {
+          console.error("Invalid date components");
+        }
+      } else {
+        console.error("Invalid date format");
+      }
+    }
+
+    const languageDataPoint = basicInfoSection.children.find(
+      (datapoint: any) => datapoint.schema_id === "language"
+    );
+    if (languageDataPoint) {
+      basicInfoSectionData.language = languageDataPoint.value;
+      console.log("Language:", basicInfoSectionData.language);
+    }
+
+    //Data from amounts section
+    const amountTotalDataPoint = amountsSection.children.find(
+      (datapoint: any) => datapoint.schema_id === "amount_total"
+    );
+    if (amountTotalDataPoint) {
+      amountSectionData.amount_total = amountTotalDataPoint.value;
+      console.log("Invoice Amount:", amountSectionData.amount_total);
+    }
+
+    const amountCurrencyDataPoint = amountsSection.children.find(
+      (datapoint: any) => datapoint.schema_id === "currency"
+    );
+    if (amountCurrencyDataPoint) {
+      amountSectionData.currency = amountCurrencyDataPoint.value;
+      console.log("Invoice Currency:", amountSectionData.currency);
+    }
+    /*
+    Data from payment info section
+    */
+
+    //Data from account number
+    const accountNumberDataPoint = paymentInfoSection.children.find(
+      (datapoint: any) => datapoint.schema_id === "account_num"
+    );
+    if (accountNumberDataPoint) {
+      paymentInfoSectionData.account_num = accountNumberDataPoint.value;
+      console.log("Account Number:", paymentInfoSectionData.account_num);
+    }
+
+    /*
+    End of data from payment info section
+    */
+
+    //Data from vendor section
+    const vendorNameDataPoint = vendorSection.children.find(
+      (datapoint: any) => datapoint.schema_id === "sender_name"
+    );
+    if (vendorNameDataPoint) {
+      vendorSectionData.sender_name = vendorNameDataPoint.value;
+      console.log("Vendor Name:", vendorSectionData.sender_name);
+    }
+
+    const vendorVATDataPoint = vendorSection.children.find(
+      (datapoint: any) => datapoint.schema_id === "sender_ic"
+    );
+    if (vendorVATDataPoint) {
+      vendorSectionData.sender_ic = vendorVATDataPoint.value;
+      console.log("Vendor VAT ID:", vendorSectionData.sender_ic);
+    }
+
+    const vendorTaxDataPoint = vendorSection.children.find(
+      (datapoint: any) => datapoint.schema_id === "sender_vat_id"
+    );
+    if (vendorTaxDataPoint) {
+      vendorSectionData.sender_vat_id = vendorTaxDataPoint.value;
+      console.log("Vendor Tax ID:", vendorSectionData.sender_vat_id);
+    }
+
+    //TODO: Add recipient IC to vendor section and check if it is a recipient invoice or reject
+
+    const vendorAddressDataPoint = vendorSection.children.find(
+      (datapoint: any) => datapoint.schema_id === "sender_address"
+    );
+    if (vendorAddressDataPoint) {
+      const addressString = vendorAddressDataPoint.value;
+
+      // Split the address string into street and rest (which includes zip and city)
+      const [streetPart, rest] = addressString.split(",");
+
+      // Further split the rest into zip and city
+      const [zipPart, cityPart] = rest.trim().split(" ");
+
+      // Extract the street number from the street part
+      const [street, streetNumber] = streetPart.split(" ");
+      const fullStreet = `${street} ${streetNumber}`;
+
+      // Extract zip and city from their respective parts
+      const zip = zipPart.trim();
+      const city = cityPart.trim();
+
+      vendorSectionData.sender_address.street = fullStreet;
+      vendorSectionData.sender_address.city = city;
+      vendorSectionData.sender_address.zip = zip;
     }
   } else {
     console.log("No results found in the JSON data.");
@@ -217,17 +352,31 @@ export async function GET(
     return NextResponse.json("No invoice found", { status: 400 });
   }
 
+  console.log(basicInfoSectionData, "basicInfoSectionData");
+  console.log(amountSectionData, "amountSectionData");
+  console.log(vendorSectionData, "vendorSectionData");
+  console.log(paymentInfoSectionData, "paymentInfoSectionData");
+
   await prismadb.invoices.update({
     where: {
       id: invoice.id,
     },
     data: {
-      variable_symbol: invoiceId,
-      date_due: dueDate,
-      invoice_amount: invoice_amount,
-      invoice_currency: invoice_currency,
-      partner: partner,
-      partner_VAT_number: partner_VAT_number,
+      variable_symbol: basicInfoSectionData.document_id,
+      date_of_case: basicInfoSectionData.date_issue,
+      date_due: basicInfoSectionData.date_due,
+      document_type: basicInfoSectionData.document_type,
+      order_number: basicInfoSectionData.order_id,
+      invoice_number: basicInfoSectionData.document_id,
+      invoice_amount: amountSectionData.amount_total,
+      invoice_currency: amountSectionData.currency,
+      invoice_language: basicInfoSectionData.language,
+      partner: vendorSectionData.sender_name,
+      partner_business_street: vendorSectionData.sender_address.street,
+      partner_business_city: vendorSectionData.sender_address.city,
+      partner_business_zip: vendorSectionData.sender_address.zip,
+      partner_VAT_number: vendorSectionData.sender_ic,
+      partner_account_number: paymentInfoSectionData.account_num,
       rossum_status: data.results[0].status,
       rossum_annotation_json_url: urlJSON,
       //rossum_annotation_xml_url: urlXML,

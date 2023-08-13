@@ -248,6 +248,25 @@ export function DataTableRowActions<TData>({
             Delete
             <DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>
           </DropdownMenuItem>
+          {process.env.NODE_ENV === "development" && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Development mode only</DropdownMenuLabel>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <DropdownMenuItem>Rossum annotation JSON</DropdownMenuItem>
+                  <DropdownMenuSubContent>
+                    <Link
+                      href={`/invoice/annotation/${invoice.rossum_annotation_id}`}
+                      target="_blank"
+                    >
+                      <DropdownMenuItem>Show annotation</DropdownMenuItem>
+                    </Link>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSubTrigger>
+              </DropdownMenuSub>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </>
