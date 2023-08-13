@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.log("Was not able to upload the document...", err);
   }
-  const invoiceFileName = new Date().getTime() + "-" + file.name;
+  const invoiceFileName = "invoices/" + new Date().getTime() + "-" + file.name;
 
   const bucketParams = {
     Bucket: process.env.DO_BUCKET,

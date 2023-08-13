@@ -175,8 +175,8 @@ export async function GET(
   const buffer = Buffer.from(JSON.stringify(data));
   //const bufferXML = Buffer.from(JSON.stringify(dataXML));
 
-  const fileNameJSON = `invoice_annotation-${annotationId}.json`;
-  const fileNameXML = `invoice_annotation-${annotationId}.xml`;
+  const fileNameJSON = `rossum/invoice_annotation-${annotationId}.json`;
+  const fileNameXML = `rossum/invoice_annotation-${annotationId}.xml`;
 
   const bucketParamsJSON = {
     Bucket: process.env.DO_BUCKET,

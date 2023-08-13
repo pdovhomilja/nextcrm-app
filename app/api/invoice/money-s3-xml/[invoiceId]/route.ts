@@ -21,19 +21,31 @@ export async function GET(
 
   const { invoiceId } = params;
 
+  if (!invoiceId) {
+    return NextResponse.json({
+      status: 400,
+      body: { error: "There is no inovice ID, invoice ID is mandatory" },
+    });
+  }
+
+  //Get data for invoice headers
   const myCompany = await prismadb.myAccount.findFirst({});
 
+  //Get data for invoice body
   const invoiceData = await prismadb.invoices.findFirst({
     where: {
       id: invoiceId,
     },
   });
 
+  //This function will generate XML file from template and data
   const xmlString = fillXmlTemplate(invoiceData, myCompany);
 
   //write xml to file in public folder /public/tmp/[invoiceId].xml
   //fs.writeFileSync(`public/tmp/${invoiceId}.xml`, xmlString);
   //fs.writeFileSync(`public/tmp/${invoiceData}.json`, invoiceData);
+
+  //Store raw XML string in buffer
   const buffer = Buffer.from(xmlString);
 
   //Upload xml to S3 bucket and return url
@@ -48,10 +60,12 @@ export async function GET(
 
   await s3Client.send(new PutObjectCommand(bucketParamsJSON));
 
+  //S3 bucket url for the invoice
   const urlMoneyS3 = `https://${process.env.DO_BUCKET}.${process.env.DO_REGION}.digitaloceanspaces.com/xml/invoice-${invoiceId}.xml`;
 
   //console.log(urlMoneyS3, "url MoneyS3");
 
+  //Write url to database assigned to invoice
   await prismadb.invoices.update({
     where: {
       id: invoiceId,

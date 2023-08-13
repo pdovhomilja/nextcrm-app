@@ -31,8 +31,25 @@ export const ourFileRouter = {
     })
     .onUploadComplete(async ({ metadata, file }) => {
       // This code RUNS ON YOUR SERVER after upload
+
+      await prismadb.documents.create({
+        data: {
+          v: 0,
+          date_created: new Date(),
+          last_updated: new Date(),
+          document_name: file.name,
+          description: "new document",
+          document_file_url: file.url,
+          key: file.key,
+          size: file.size,
+          document_file_mimeType: `image/${file.name.split(".").pop()}`,
+          created_by_user: metadata.userId,
+          assigned_user: metadata.userId,
+        },
+      });
+
       console.log("Upload complete for userId:", metadata.userId);
-      console.log("file url", file.url);
+      console.log("file data:", file);
       //TODO: save file.url to database
     }),
 

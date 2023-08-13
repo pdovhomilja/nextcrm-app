@@ -41,6 +41,7 @@ export async function GET(
   return NextResponse.json({ invoice }, { status: 200 });
 }
 
+//Delete single invoice by invoiceId
 export async function DELETE(
   request: Request,
   { params }: { params: { invoiceId: string } }
@@ -79,7 +80,9 @@ export async function DELETE(
     if (invoiceData?.invoice_file_url) {
       const bucketParams = {
         Bucket: process.env.DO_BUCKET,
-        Key: invoiceData?.invoice_file_url?.split("/").slice(-1)[0],
+        Key: `invoices/${
+          invoiceData?.invoice_file_url?.split("/").slice(-1)[0]
+        }`,
       };
       await s3Client.send(new DeleteObjectCommand(bucketParams));
       console.log("Success - invoice deleted from S3 bucket");
@@ -90,7 +93,9 @@ export async function DELETE(
       //Delete file from S3
       const bucketParams = {
         Bucket: process.env.DO_BUCKET,
-        Key: invoiceData?.rossum_annotation_json_url?.split("/").slice(-1)[0],
+        Key: `rossum/${
+          invoiceData?.rossum_annotation_json_url?.split("/").slice(-1)[0]
+        }`,
       };
       await s3Client.send(new DeleteObjectCommand(bucketParams));
       console.log("Success - rossum annotation json deleted from S3 bucket");
@@ -101,7 +106,9 @@ export async function DELETE(
       //Delete file from S3
       const bucketParams = {
         Bucket: process.env.DO_BUCKET,
-        Key: invoiceData?.rossum_annotation_xml_url?.split("/").slice(-1)[0],
+        Key: `rossum/${
+          invoiceData?.rossum_annotation_xml_url?.split("/").slice(-1)[0]
+        }`,
       };
       await s3Client.send(new DeleteObjectCommand(bucketParams));
       console.log("Success - rossum annotation xml deleted from S3 bucket");

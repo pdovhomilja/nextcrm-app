@@ -3,6 +3,9 @@ import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
+//Endpoint: /api/my-account
+
+//Endpoint for adding my account data
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -91,6 +94,7 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ message: "PUT" }, { status: 200 });
 }
+//Endpoint for updating my account
 export async function PUT(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session) {

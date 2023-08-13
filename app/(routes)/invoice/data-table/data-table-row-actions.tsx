@@ -42,11 +42,14 @@ export function DataTableRowActions<TData>({
   const [open, setOpen] = useState(false);
   const [openView, setOpenView] = useState(false);
   const [openRossumView, setOpenRossumView] = useState(false);
+
+  const router = useRouter();
+  const { toast } = useToast();
+
   const [loading, setLoading] = useState(false);
   const [loadingOpen, setLoadingOpen] = useState(false);
   const [loadingMoneyS3export, setLoadingMoneyS3export] = useState(false);
-  const router = useRouter();
-  const { toast } = useToast();
+  const [loadingXMLEmail, setLoadingXMLEmail] = useState(false);
 
   const invoice = taskSchema.parse(row.original);
 
@@ -120,9 +123,10 @@ export function DataTableRowActions<TData>({
       router.refresh();
     }
   };
+
   const onSendToMail = async () => {
     setLoading(true);
-    setLoadingMoneyS3export(true);
+    setLoadingXMLEmail(true);
     try {
       await axios.get(`/api/invoice/send-by-email/${invoice.id}`);
       toast({
@@ -137,7 +141,7 @@ export function DataTableRowActions<TData>({
         description: error.response.data.error,
       });
     } finally {
-      setLoadingMoneyS3export(false);
+      setLoadingXMLEmail(false);
       setLoading(false);
       router.refresh();
     }
@@ -167,6 +171,11 @@ export function DataTableRowActions<TData>({
         title="Exporting XML for Money S3"
         description="Exporting XML for Money S3. Please wait..."
         isOpen={loadingMoneyS3export}
+      />
+      <LoadingModal
+        title="Sending XML for ERP import by email"
+        description="Extracted data from inovice will be sent to accountant email. Please wait..."
+        isOpen={loadingXMLEmail}
       />
 
       <RightViewModalNoTrigger
