@@ -20,7 +20,6 @@ export function fillXmlTemplate(data: any, myCompany: any) {
     .txt(data.variable_symbol)
     .up() // move back to the parent element
     .ele("GUID")
-    .txt(data.id)
     .up()
     .ele("Vystaveno")
     .txt(

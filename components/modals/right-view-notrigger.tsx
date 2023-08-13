@@ -43,7 +43,7 @@ const RightViewModalNoTrigger = ({
         >
           <div className="flex flex-col h-full">
             <div className="flex justify-between w-full">
-              <Dialog.Title className="font-semibold p-3 w-full">
+              <Dialog.Title className="font-semibold p-3 w-full" asChild>
                 <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">
                   {title}
                 </h4>
@@ -58,11 +58,13 @@ const RightViewModalNoTrigger = ({
             <div className="flex-grow border p-5 w-full h-full overflow-auto">
               {children}
             </div>
-            <Dialog.Close className="flex justify-end w-full p-3">
-              <Button variant={"destructive"} onClick={() => setOpen(false)}>
-                Close
-              </Button>
-            </Dialog.Close>
+            <div className="flex justify-end p-3">
+              <Dialog.Close className="" asChild>
+                <Button variant={"destructive"} onClick={() => setOpen(false)}>
+                  Close
+                </Button>
+              </Dialog.Close>
+            </div>
           </div>
         </Dialog.Content>
       </Dialog.Portal>

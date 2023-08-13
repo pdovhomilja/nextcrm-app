@@ -74,7 +74,9 @@ export async function GET(
     language: "",
   };
   const paymentInfoSectionData = {
+    vendor_bank: "",
     account_num: "",
+    bank_num: "",
     iban: "",
     bic: "",
     var_sym: "",
@@ -88,13 +90,12 @@ export async function GET(
   };
   const vendorSectionData = {
     sender_name: "",
-    sender_address: {
-      street: "",
-      city: "",
-      zip: "",
-    },
+    vendor_street: "",
+    vendor_city: "",
+    vendor_zip: "",
     sender_ic: "",
     sender_vat_id: "",
+    sender_email: "",
     recipient_ic: "",
   };
 
@@ -220,12 +221,27 @@ export async function GET(
     */
 
     //Data from account number
+    const bankNameDataPoint = paymentInfoSection.children.find(
+      (datapoint: any) => datapoint.schema_id === "vendor_bank"
+    );
+    if (bankNameDataPoint) {
+      paymentInfoSectionData.vendor_bank = bankNameDataPoint.value;
+      console.log("Vendor Bank:", paymentInfoSectionData.vendor_bank);
+    }
+
     const accountNumberDataPoint = paymentInfoSection.children.find(
       (datapoint: any) => datapoint.schema_id === "account_num"
     );
     if (accountNumberDataPoint) {
       paymentInfoSectionData.account_num = accountNumberDataPoint.value;
       console.log("Account Number:", paymentInfoSectionData.account_num);
+    }
+    const bankNumberDataPoint = paymentInfoSection.children.find(
+      (datapoint: any) => datapoint.schema_id === "bank_num"
+    );
+    if (bankNumberDataPoint) {
+      paymentInfoSectionData.bank_num = bankNumberDataPoint.value;
+      console.log("Bank Number:", paymentInfoSectionData.bank_num);
     }
 
     /*
@@ -257,31 +273,38 @@ export async function GET(
       console.log("Vendor Tax ID:", vendorSectionData.sender_vat_id);
     }
 
+    const vendorEmailDataPoint = vendorSection.children.find(
+      (datapoint: any) => datapoint.schema_id === "sender_email"
+    );
+    if (vendorEmailDataPoint) {
+      vendorSectionData.sender_email = vendorEmailDataPoint.value;
+      console.log("Vendor Email:", vendorSectionData.sender_email);
+    }
+
     //TODO: Add recipient IC to vendor section and check if it is a recipient invoice or reject
 
-    const vendorAddressDataPoint = vendorSection.children.find(
-      (datapoint: any) => datapoint.schema_id === "sender_address"
+    const vendorAddressStreetDataPoint = vendorSection.children.find(
+      (datapoint: any) => datapoint.schema_id === "vendor_street"
     );
-    if (vendorAddressDataPoint) {
-      const addressString = vendorAddressDataPoint.value;
+    if (vendorAddressStreetDataPoint) {
+      vendorSectionData.vendor_street = vendorAddressStreetDataPoint.value;
+      console.log("Vendor Address Street:", vendorSectionData.vendor_street);
+    }
 
-      // Split the address string into street and rest (which includes zip and city)
-      const [streetPart, rest] = addressString.split(",");
+    const vendorAddressCityDataPoint = vendorSection.children.find(
+      (datapoint: any) => datapoint.schema_id === "vendor_city"
+    );
+    if (vendorAddressCityDataPoint) {
+      vendorSectionData.vendor_city = vendorAddressCityDataPoint.value;
+      console.log("Vendor Address City:", vendorSectionData.vendor_city);
+    }
 
-      // Further split the rest into zip and city
-      const [zipPart, cityPart] = rest.trim().split(" ");
-
-      // Extract the street number from the street part
-      const [street, streetNumber] = streetPart.split(" ");
-      const fullStreet = `${street} ${streetNumber}`;
-
-      // Extract zip and city from their respective parts
-      const zip = zipPart.trim();
-      const city = cityPart.trim();
-
-      vendorSectionData.sender_address.street = fullStreet;
-      vendorSectionData.sender_address.city = city;
-      vendorSectionData.sender_address.zip = zip;
+    const vendorAddressZipDataPoint = vendorSection.children.find(
+      (datapoint: any) => datapoint.schema_id === "vendor_zip"
+    );
+    if (vendorAddressZipDataPoint) {
+      vendorSectionData.vendor_zip = vendorAddressZipDataPoint.value;
+      console.log("Vendor Address Zip:", vendorSectionData.vendor_zip);
     }
   } else {
     console.log("No results found in the JSON data.");
@@ -372,11 +395,15 @@ export async function GET(
       invoice_currency: amountSectionData.currency,
       invoice_language: basicInfoSectionData.language,
       partner: vendorSectionData.sender_name,
-      partner_business_street: vendorSectionData.sender_address.street,
-      partner_business_city: vendorSectionData.sender_address.city,
-      partner_business_zip: vendorSectionData.sender_address.zip,
+      partner_business_street: vendorSectionData.vendor_street,
+      partner_business_city: vendorSectionData.vendor_city,
+      partner_business_zip: vendorSectionData.vendor_zip,
       partner_VAT_number: vendorSectionData.sender_ic,
+      partner_TAX_number: vendorSectionData.sender_vat_id,
+      partner_bank: paymentInfoSectionData.vendor_bank,
       partner_account_number: paymentInfoSectionData.account_num,
+      partner_account_bank_number: paymentInfoSectionData.bank_num,
+      partner_email: vendorSectionData.sender_email,
       rossum_status: data.results[0].status,
       rossum_annotation_json_url: urlJSON,
       //rossum_annotation_xml_url: urlXML,
