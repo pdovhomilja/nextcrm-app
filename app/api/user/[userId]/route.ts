@@ -48,6 +48,6 @@ export async function DELETE(
     return NextResponse.json(user);
   } catch (error) {
     console.log("[USER_DELETE]", error);
-    return new NextResponse("Initial error", { status: 500 });
+    return NextResponse.json({ message: error }, { status: 500 });
   }
 }

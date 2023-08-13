@@ -51,8 +51,7 @@ export const CellAction = ({ data }: CellActionProps) => {
       toast({
         variant: "destructive",
         title: "Error",
-        description:
-          "Something went wrong while deleting the product. Please try again.",
+        description: "Something went wrong: " + error + ". Please try again.",
       });
     } finally {
       setLoading(false);

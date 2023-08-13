@@ -41,6 +41,8 @@ export async function POST(
         message = `You have been invited to ${process.env.NEXT_PUBLIC_APP_NAME} \n\n Your username is: ${email} \n\n Your password is: ${password} \n\n Please login to ${process.env.NEXT_PUBLIC_APP_URL} \n\n Thank you \n\n ${process.env.NEXT_PUBLIC_APP_NAME}`;
         break;
     }
+
+    //Check if user already exists in local database
     const checkexisting = await prismadb.users.findFirst({
       where: {
         email: email,
@@ -48,8 +50,9 @@ export async function POST(
     });
     //console.log(checkexisting, "checkexisting");
 
-    if (!checkexisting) {
-      return new NextResponse("Name, Email, and Language is required!", {
+    //If user already exists, return error else create user and send email
+    if (checkexisting) {
+      return new NextResponse("User already exist, reset password instead!", {
         status: 401,
       });
     } else {
@@ -65,7 +68,7 @@ export async function POST(
         const user = await prismadb.users.create({
           data: {
             name,
-            username: "  ",
+            username: "",
             avatar: "",
             account_name: "",
             is_account_admin: false,
