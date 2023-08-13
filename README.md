@@ -24,12 +24,6 @@ If you create new user in demo instance there is a PENDING state, you must log i
 
 ![hero](/public/og.png)
 
-## Video (YouTube channel with functions showcase)
-
-Channel link - [https://www.youtube.com/channel/UCQneopupgtjG4py68-edA0w](https://www.youtube.com/@NextCRM_IO)
-</br>
-Invoice module - https://youtu.be/NSMsBMy07Pg
-
 ## Documentation
 
 Will be soon at domain: http://docs.nextcrm.io
