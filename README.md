@@ -25,7 +25,7 @@ If you create new user in demo instance there is a PENDING state, you must log i
 ![hero](/public/og.png)
 
 ## Video
-[https://youtu.be/NSMsBMy07Pg](https://youtu.be/NSMsBMy07Pg)
+[![Invoice Demo](https://youtu.be/NSMsBMy07Pg)](https://youtu.be/NSMsBMy07Pg)
 
 
 
