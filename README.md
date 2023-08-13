@@ -12,17 +12,23 @@ or login via google account
 
 ## What we use to build it
 
-Next.js - React framework
-shadcn - UI
-Prisma ORM - together with mongoDB (tested with version 5.0)
-useSWR - for client side data fetching
-NextAUTH - for user authentication
+Next.js - React framework</br>
+shadcn - UI</br>
+Prisma ORM - together with mongoDB (tested with version 5.0)</br>
+useSWR - for client side data fetching</br>
+NextAUTH - for user authentication</br>
 
 ## Warning
 
 If you create new user in demo instance there is a PENDING state, you must log in as a demo@nextcrm.io and active new user in admin section!
 
 ![hero](/public/og.png)
+
+## Video (YouTube channel with functions showcase)
+
+Channel link - [https://www.youtube.com/channel/UCQneopupgtjG4py68-edA0w](https://www.youtube.com/@NextCRM_IO)
+</br>
+Invoice module - https://youtu.be/NSMsBMy07Pg
 
 ## Documentation
 
