@@ -1,7 +1,7 @@
 import Footer from "@/app/(routes)/components/Footer";
 import "@/app/globals.css";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { GithubIcon } from "lucide-react";
+import { GithubIcon, Star } from "lucide-react";
 import Link from "next/link";
 
 export const metadata = {
@@ -9,7 +9,12 @@ export const metadata = {
   description: "",
 };
 
-const AuthLayout = ({ children }: { children: React.ReactNode }) => {
+const AuthLayout = async ({ children }: { children: React.ReactNode }) => {
+  //Get github stars from github api
+  const github = await fetch(
+    `https://api.github.com/repos/pdovhomilja/nextcrm-app`
+  ).then((res) => res.json());
+
   return (
     <div className="flex flex-col justify-center items-center h-screen w-full">
       <div className="flex justify-end items-center space-x-5 w-full p-5">
@@ -19,6 +24,11 @@ const AuthLayout = ({ children }: { children: React.ReactNode }) => {
         >
           <GithubIcon className="w-5 h-5" />
         </Link>
+        <div className="flex items-center border rounded-md p-2">
+          <span className="sr-only">Github stars</span>
+          {github?.stargazers_count}
+          <Star className="w-4 h-4" />
+        </div>
         <ThemeToggle />
       </div>
       <div className="flex items-center h-full overflow-hidden">{children}</div>

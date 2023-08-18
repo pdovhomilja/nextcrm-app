@@ -3,7 +3,6 @@ import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { hash } from "bcryptjs";
-import sendEmail from "@/lib/sendmail";
 import { newUserNotify } from "@/lib/new-user-notify";
 
 export async function POST(req: Request) {
@@ -39,6 +38,10 @@ export async function POST(req: Request) {
         is_admin: false,
         email,
         userLanguage: language,
+        userStatus:
+          process.env.NEXT_PUBLIC_APP_URL === "https://demo.nextcrm.io"
+            ? "ACTIVE"
+            : "PENDING",
         password: await hash(password, 12),
       },
     });

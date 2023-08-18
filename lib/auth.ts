@@ -3,7 +3,6 @@ import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
-import sendEmail from "./sendmail";
 import { newUserNotify } from "./new-user-notify";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 
@@ -90,7 +89,10 @@ export const authOptions: NextAuthOptions = {
               avatar: token.picture,
               is_admin: false,
               is_account_admin: false,
-              userStatus: "PENDING",
+              userStatus:
+                process.env.NEXT_PUBLIC_APP_URL === "https://demo.nextcrm.io"
+                  ? "ACTIVE"
+                  : "PENDING",
             },
           });
 
