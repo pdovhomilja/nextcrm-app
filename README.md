@@ -4,11 +4,7 @@ NextCRM is a CRM build on top of the Next.JS 13.4 using TypeScript, great UI lib
 
 ## Online Demo
 
-You can try it here [demo.nextcrm.io](https://demo.nextcrm.io), with credentials: demo@nextcrm.io / demo12345
-
-or login via google account
-
-**but there is a pending state for new user which must by allowed by demo@nextcrm.io user which has admin rights**
+You can try it here [demo.nextcrm.io](https://demo.nextcrm.io), login via google account or create new user and password
 
 ## What we use to build it
 
@@ -17,10 +13,8 @@ shadcn - UI</br>
 Prisma ORM - together with mongoDB (tested with version 5.0)</br>
 useSWR - for client side data fetching</br>
 NextAUTH - for user authentication</br>
-
-## Warning
-
-If you create new user in demo instance there is a PENDING state, you must log in as a demo@nextcrm.io and active new user in admin section!
+Rossum - for invoice data parsing with AI
+OpenAI API - for automated email notifications
 
 ![hero](/public/og.png)
 
