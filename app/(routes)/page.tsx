@@ -27,6 +27,7 @@ import { getStorageSize } from "@/actions/documents/get-storage-size";
 import NotionsBox from "./components/dasboard/notions";
 import LoadingBox from "./components/dasboard/loading-box";
 import Link from "next/link";
+import { getModules } from "@/actions/get-modules";
 
 const DashboardPage = async () => {
   const session = await getServerSession(authOptions);
@@ -43,6 +44,14 @@ const DashboardPage = async () => {
   const invoices = await getInvoices();
   const documents = await getDocuments();
   const storage = await getStorageSize();
+  const modules = await getModules();
+
+  //Find which modules are enabled
+  const crmModule = modules.find((module) => module.name === "crm");
+  const employeesModule = modules.find((module) => module.name === "employees");
+  const documentsModule = modules.find((module) => module.name === "documents");
+  const projectsModule = modules.find((module) => module.name === "projects");
+  const invoiceModule = modules.find((module) => module.name === "invoice");
 
   return (
     <Container
@@ -74,107 +83,139 @@ const DashboardPage = async () => {
             </CardContent>
           </Card>
         </Link>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Employees</CardTitle>
-            <Users2Icon className="w-4 h-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-medium">{employees.length}</div>
-          </CardContent>
-        </Card>
-        <Link href="/crm/accounts">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Accounts</CardTitle>
-              <LandmarkIcon className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-medium">{accounts.length}</div>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href="/crm/opportunities">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Opportunities
-              </CardTitle>
-              <FactoryIcon className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-medium">{opportunities.length}</div>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href="/crm/leads">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Leads</CardTitle>
-              <CoinsIcon className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-medium">{leads.length}</div>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href="/projects">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Projects</CardTitle>
-              <CoinsIcon className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-medium">{projects?.length}</div>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href="/projects/tasks">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Tasks</CardTitle>
-              <CoinsIcon className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-medium">
-                {tasks?.length ? tasks.length : 0}
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href={`/projects/tasks/${userId}`}>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">My Tasks</CardTitle>
-              <CoinsIcon className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-medium">{usersTasks.length}</div>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href="/invoice">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Invoices</CardTitle>
-              <CoinsIcon className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-medium">{invoices.length}</div>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href="/documents">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Documents</CardTitle>
-              <CoinsIcon className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-medium">{documents.length}</div>
-            </CardContent>
-          </Card>
-        </Link>
+        {
+          //show crm module only if enabled is true
+          employeesModule?.enabled && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Employees</CardTitle>
+                <Users2Icon className="w-4 h-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-medium">{employees.length}</div>
+              </CardContent>
+            </Card>
+          )
+        }
+        {
+          //show crm module only if enabled is true
+          crmModule?.enabled && (
+            <>
+              <Link href="/crm/accounts">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Accounts
+                    </CardTitle>
+                    <LandmarkIcon className="w-4 h-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-medium">
+                      {accounts.length}
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+              <Link href="/crm/opportunities">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Opportunities
+                    </CardTitle>
+                    <FactoryIcon className="w-4 h-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-medium">
+                      {opportunities.length}
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+              <Link href="/crm/leads">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Leads</CardTitle>
+                    <CoinsIcon className="w-4 h-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-medium">{leads.length}</div>
+                  </CardContent>
+                </Card>
+              </Link>
+            </>
+          )
+        }
+        {projectsModule?.enabled && (
+          <>
+            <Link href="/projects">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Projects
+                  </CardTitle>
+                  <CoinsIcon className="w-4 h-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-medium">{projects?.length}</div>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/projects/tasks">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Tasks</CardTitle>
+                  <CoinsIcon className="w-4 h-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-medium">
+                    {tasks?.length ? tasks.length : 0}
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href={`/projects/tasks/${userId}`}>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    My Tasks
+                  </CardTitle>
+                  <CoinsIcon className="w-4 h-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-medium">
+                    {usersTasks.length}
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          </>
+        )}
+        {invoiceModule?.enabled && (
+          <Link href="/invoice">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Invoices</CardTitle>
+                <CoinsIcon className="w-4 h-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-medium">{invoices.length}</div>
+              </CardContent>
+            </Card>
+          </Link>
+        )}
+        {documentsModule?.enabled && (
+          <Link href="/documents">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Documents</CardTitle>
+                <CoinsIcon className="w-4 h-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-medium">{documents.length}</div>
+              </CardContent>
+            </Card>
+          </Link>
+        )}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Storage</CardTitle>

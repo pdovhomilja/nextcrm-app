@@ -6,10 +6,25 @@ import { columns } from "./components/Columns";
 import { InviteForm } from "./components/IviteForm";
 import { Separator } from "@/components/ui/separator";
 import { getModules } from "@/actions/get-modules";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
-type Props = {};
+const AdminModulesPage = async () => {
+  const session = await getServerSession(authOptions);
 
-const AdminUsersPage = async (props: Props) => {
+  if (!session?.user?.isAdmin) {
+    return (
+      <Container
+        title="Administration"
+        description="You are not admin, access not allowed"
+      >
+        <div className="flex w-full h-full items-center justify-center">
+          Access not allowed
+        </div>
+      </Container>
+    );
+  }
+
   const modules: any = await getModules();
   return (
     <Container
@@ -21,4 +36,4 @@ const AdminUsersPage = async (props: Props) => {
   );
 };
 
-export default AdminUsersPage;
+export default AdminModulesPage;

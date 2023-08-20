@@ -5,11 +5,30 @@ import { DataTable } from "./components/data-table";
 import { columns } from "./components/Columns";
 import { InviteForm } from "./components/IviteForm";
 import { Separator } from "@/components/ui/separator";
+import { getUser } from "@/actions/get-user";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 type Props = {};
 
 const AdminUsersPage = async (props: Props) => {
   const users: any = await getUsers();
+
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.isAdmin) {
+    return (
+      <Container
+        title="Administration"
+        description="You are not admin, access not allowed"
+      >
+        <div className="flex w-full h-full items-center justify-center">
+          Access not allowed
+        </div>
+      </Container>
+    );
+  }
+
   return (
     <Container
       title="Users administration"
