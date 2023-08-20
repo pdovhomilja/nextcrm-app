@@ -67,12 +67,14 @@ export function DataTableRowActions<TData>({
 
   return (
     <>
-      <DocumentViewModal
-        isOpen={openView}
-        onClose={() => setOpenView(false)}
-        loading={loading}
-        document={document}
-      />
+      {openView && (
+        <DocumentViewModal
+          isOpen={openView}
+          onClose={() => setOpenView(false)}
+          loading={loading}
+          document={document}
+        />
+      )}
       <AlertModal
         isOpen={open}
         onClose={() => setOpen(false)}

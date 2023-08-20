@@ -1,6 +1,7 @@
 import Footer from "@/app/(routes)/components/Footer";
 import "@/app/globals.css";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import axios from "axios";
 import { GithubIcon, Star } from "lucide-react";
 import Link from "next/link";
 
@@ -11,9 +12,10 @@ export const metadata = {
 
 const AuthLayout = async ({ children }: { children: React.ReactNode }) => {
   //Get github stars from github api
-  const github = await fetch(
-    `https://api.github.com/repos/pdovhomilja/nextcrm-app`
-  ).then((res) => res.json());
+
+  const github = await axios
+    .get(`https://api.github.com/repos/pdovhomilja/nextcrm-app`)
+    .then((res) => res.data);
 
   return (
     <div className="flex flex-col justify-center items-center h-screen w-full">
