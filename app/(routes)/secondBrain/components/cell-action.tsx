@@ -3,7 +3,14 @@
 import { useState } from "react";
 import axios from "axios";
 import { useParams, useRouter } from "next/navigation";
-import { Copy, Edit, MoreHorizontal, Trash } from "lucide-react";
+import {
+  Copy,
+  Edit,
+  Link2,
+  LinkIcon,
+  MoreHorizontal,
+  Trash,
+} from "lucide-react";
 
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -19,6 +26,7 @@ import { NotionColumn } from "./Columns";
 import AlertModal from "@/components/modals/alert-modal";
 
 import { useAppStore } from "@/store/store";
+import Link from "next/link";
 
 interface CellActionProps {
   data: NotionColumn;
@@ -89,6 +97,12 @@ export const CellAction = ({ data }: CellActionProps) => {
             <Copy className="mr-2 w-4 h-4" />
             Copy URL
           </DropdownMenuItem>
+          <Link href={data.url} target={"_blank"}>
+            <DropdownMenuItem>
+              <LinkIcon className="mr-2 w-4 h-4" />
+              Open in new tab
+            </DropdownMenuItem>
+          </Link>
           <DropdownMenuItem
             onClick={() => {
               setIsOpen(true);
