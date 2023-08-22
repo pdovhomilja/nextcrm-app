@@ -1,34 +1,48 @@
 "use client";
-import { useState } from "react";
-import axios from "axios";
-import { useParams, useRouter } from "next/navigation";
-import { Copy, Edit, MoreHorizontal, Trash } from "lucide-react";
 
-import { useToast } from "@/components/ui/use-toast";
+import { DotsHorizontalIcon } from "@radix-ui/react-icons";
+import { Row } from "@tanstack/react-table";
+
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 
-import { NotionColumn } from "./Columns";
+import { adminUserSchema } from "../table-data/schema";
+import { useRouter } from "next/navigation";
 import AlertModal from "@/components/modals/alert-modal";
+import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
+import axios from "axios";
 
-interface CellActionProps {
-  data: NotionColumn;
+import { Copy, Edit, MoreHorizontal, Trash } from "lucide-react";
+
+interface DataTableRowActionsProps<TData> {
+  row: Row<TData>;
 }
 
-export const CellAction = ({ data }: CellActionProps) => {
-  const [loading, setLoading] = useState(false);
+export function DataTableRowActions<TData>({
+  row,
+}: DataTableRowActionsProps<TData>) {
+  const router = useRouter();
+  const data = adminUserSchema.parse(row.original);
+
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [updateOpen, setUpdateOpen] = useState(false);
 
   const { toast } = useToast();
-  const router = useRouter();
-  const params = useParams();
-
   const onCopy = (id: string) => {
     navigator.clipboard.writeText(id);
     toast({
@@ -191,4 +205,4 @@ export const CellAction = ({ data }: CellActionProps) => {
       </DropdownMenu>
     </>
   );
-};
+}

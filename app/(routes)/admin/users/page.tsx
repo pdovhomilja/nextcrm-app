@@ -1,17 +1,15 @@
 import { getUsers } from "@/actions/get-users";
 import React from "react";
 import Container from "../../components/ui/Container";
-import { DataTable } from "./components/data-table";
-import { columns } from "./components/Columns";
 import { InviteForm } from "./components/IviteForm";
 import { Separator } from "@/components/ui/separator";
-import { getUser } from "@/actions/get-user";
+
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { AdminUserDataTable } from "./table-components/data-table";
+import { columns } from "./table-components/columns";
 
-type Props = {};
-
-const AdminUsersPage = async (props: Props) => {
+const AdminUsersPage = async () => {
   const users: any = await getUsers();
 
   const session = await getServerSession(authOptions);
@@ -40,8 +38,8 @@ const AdminUsersPage = async (props: Props) => {
         </h4>
         <InviteForm />
       </div>
-      <Separator />
-      <DataTable columns={columns} data={users} search="name" />
+      <Separator className="" />
+      <AdminUserDataTable columns={columns} data={users} />
     </Container>
   );
 };
