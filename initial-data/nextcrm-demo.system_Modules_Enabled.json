@@ -1,0 +1,117 @@
+[{
+  "_id": {
+    "$oid": "644a67f40be7719749939b2f"
+  },
+  "__v": 0,
+  "name": "crm",
+  "enabled": true,
+  "icon": "userGroup",
+  "open": "open",
+  "route": "/crm",
+  "menuItem": "CRM",
+  "position": 1
+},
+{
+  "_id": {
+    "$oid": "644a699302fa6a3c54da9b6d"
+  },
+  "__v": 0,
+  "name": "projects",
+  "enabled": true,
+  "icon": "server",
+  "open": "open",
+  "route": "/projects",
+  "menuItem": "Projects",
+  "position": 2
+},
+{
+  "_id": {
+    "$oid": "644a69d002fa6a3c54da9b78"
+  },
+  "__v": 0,
+  "name": "secondBrain",
+  "enabled": true,
+  "icon": "lightBulb",
+  "open": "open",
+  "route": "/secondBrain",
+  "menuItem": "SecondBrain",
+  "position": 3
+},
+{
+  "_id": {
+    "$oid": "644a69fb02fa6a3c54da9b7b"
+  },
+  "__v": 0,
+  "name": "employee",
+  "enabled": false,
+  "icon": "user",
+  "open": "open",
+  "route": "/employees",
+  "menuItem": "Employees",
+  "position": 4
+},
+{
+  "_id": {
+    "$oid": "644a6a2102fa6a3c54da9b7e"
+  },
+  "__v": 0,
+  "name": "invoice",
+  "enabled": true,
+  "icon": "documentCheck",
+  "open": "open",
+  "route": "/invoice",
+  "menuItem": "Invoices",
+  "position": 5
+},
+{
+  "_id": {
+    "$oid": "644a6a5002fa6a3c54da9b81"
+  },
+  "__v": 0,
+  "name": "reports",
+  "enabled": true,
+  "icon": "documentChart",
+  "open": "open",
+  "route": "/reports",
+  "menuItem": "Reports",
+  "position": 6
+},
+{
+  "_id": {
+    "$oid": "644a6a6f02fa6a3c54da9b84"
+  },
+  "__v": 0,
+  "name": "documents",
+  "enabled": true,
+  "icon": "document",
+  "open": "open",
+  "route": "/documents",
+  "menuItem": "Documents",
+  "position": 7
+},
+{
+  "_id": {
+    "$oid": "644a6a9802fa6a3c54da9b87"
+  },
+  "__v": 0,
+  "name": "databox",
+  "enabled": false,
+  "icon": "clipBoardDocument",
+  "open": "open",
+  "route": "/databox",
+  "menuItem": "Databoxes",
+  "position": 8
+},
+{
+  "_id": {
+    "$oid": "644a6afc02fa6a3c54da9b8d"
+  },
+  "__v": 0,
+  "name": "openai",
+  "enabled": true,
+  "icon": "academicCap",
+  "open": "open",
+  "route": "/openAi",
+  "menuItem": "ChatGPT",
+  "position": 10
+}]
