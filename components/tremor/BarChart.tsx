@@ -6,10 +6,10 @@ const dataFormatter = (number: number) => {
   return Intl.NumberFormat("us").format(number).toString();
 };
 
-export const BarChartDemo = ({ chartData }: any) => {
+export const BarChartDemo = ({ chartData, title }: any) => {
   return (
     <Card className="rounded-md">
-      <Title>Number of new users by month (2021)</Title>
+      <Title>{title}</Title>
 
       <BarChart
         className="mt-6"

@@ -5,11 +5,16 @@ import Container from "../components/ui/Container";
 
 import { BarChartDemo } from "@/components/tremor/BarChart";
 import { getUsersByMonth } from "@/actions/get-users";
+import { AreaChartDemo } from "@/components/tremor/AreaChart";
+import { getTasksByMonth } from "@/actions/projects/get-tasks";
 
 type Props = {};
 
 const ReportsPage = async (props: Props) => {
   const newUsers = await getUsersByMonth();
+  const tasks = await getTasksByMonth();
+
+  console.log(tasks, "tasks");
 
   return (
     <Container
@@ -19,7 +24,16 @@ const ReportsPage = async (props: Props) => {
       }
     >
       <div className="pt-5">
-        <BarChartDemo chartData={newUsers} />
+        <BarChartDemo
+          chartData={newUsers}
+          title={"Number of new users by month (2023)"}
+        />
+      </div>
+      <div className="pt-5">
+        <BarChartDemo chartData={tasks} title={"New tasks by month (2023)"} />
+      </div>
+      <div className="pt-3">
+        <AreaChartDemo chartData={newUsers} title={"New users by month"} />
       </div>
     </Container>
   );

@@ -15,8 +15,15 @@ useSWR - for client side data fetching</br>
 NextAUTH - for user authentication</br>
 Rossum - for invoice data parsing with AI
 OpenAI API - for automated email notifications
+Tremor - for creating charts
 
 ![hero](/public/og.png)
+
+## Reports
+
+We use Tremor charts as a tool for creating charts in NextCRM
+
+![hero](/public/reports.png)
 
 ## Video (YouTube channel with functions showcase)
 

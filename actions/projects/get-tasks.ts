@@ -63,3 +63,33 @@ export const getTasks = async () => {
   });
   return data;
 };
+
+//get tasks by month for chart
+export const getTasksByMonth = async () => {
+  const tasks = await prismadb.tasks.findMany({
+    select: {
+      createdAt: true,
+    },
+  });
+
+  if (!tasks) {
+    return {};
+  }
+
+  const tasksByMonth = tasks.reduce((acc: any, task: any) => {
+    const month = new Date(task.createdAt).toLocaleString("default", {
+      month: "long",
+    });
+    acc[month] = (acc[month] || 0) + 1;
+    return acc;
+  }, {});
+
+  const chartData = Object.keys(tasksByMonth).map((month) => {
+    return {
+      name: month,
+      Number: tasksByMonth[month],
+    };
+  });
+
+  return chartData;
+};
