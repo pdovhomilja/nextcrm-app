@@ -3,6 +3,7 @@ import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+//Create new account route
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -39,9 +40,8 @@ export async function POST(req: Request) {
     const newAccount = await prismadb.crm_Accounts.create({
       data: {
         v: 0,
-        date_created: new Date(),
-        date_last_modified: new Date(),
-        created_by: session.user.id,
+        createdBy: session.user.id,
+        updatedBy: session.user.id,
         name,
         office_phone,
         website,
@@ -75,6 +75,7 @@ export async function POST(req: Request) {
   }
 }
 
+//Update account route
 export async function PUT(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -115,9 +116,7 @@ export async function PUT(req: Request) {
       },
       data: {
         v: 0,
-        date_created: new Date(),
-        date_last_modified: new Date(),
-        created_by: session.user.id,
+        updatedBy: session.user.id,
         name,
         office_phone,
         website,
@@ -137,7 +136,7 @@ export async function PUT(req: Request) {
         shipping_country,
         description,
         assigned_to,
-        status: "Active",
+        status: status,
         annual_revenue,
         member_of,
         industry,
@@ -146,11 +145,12 @@ export async function PUT(req: Request) {
 
     return NextResponse.json({ newAccount }, { status: 200 });
   } catch (error) {
-    console.log("[NEW_ACCOUNT_POST]", error);
+    console.log("[UPDATE_ACCOUNT_PUT]", error);
     return new NextResponse("Initial error", { status: 500 });
   }
 }
 
+//GET all accounts route
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session) {

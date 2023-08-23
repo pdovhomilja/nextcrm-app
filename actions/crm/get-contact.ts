@@ -5,6 +5,11 @@ export const getContact = async (contactId: string) => {
     where: {
       id: contactId,
     },
+    include: {
+      assigned_accounts: true,
+      assigned_opportunities: true,
+      assigned_documents: true,
+    },
   });
   return data;
 };

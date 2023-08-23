@@ -19,7 +19,7 @@ const OpportunityView = async ({
 
   return (
     <Container
-      title={`Opportunit ${opportunity.name} - detail view`}
+      title={`Opportunity ${opportunity.name} - detail view`}
       description={"Description - " + opportunity.description}
     >
       <div className="space-y-5">

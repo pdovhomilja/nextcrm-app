@@ -111,9 +111,9 @@ export async function BasicView({ data }: OppsViewProps) {
           <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
             <CalendarDays className="mt-px h-5 w-5" />
             <div className="space-y-1">
-              <p className="text-sm font-medium leading-none">Created</p>
+              <p className="text-sm font-medium leading-none">Date created</p>
               <p className="text-sm text-muted-foreground">
-                {moment(data.created_on).format("MMM DD YYYY")}
+                {moment(data.createdAt).format("MMM DD YYYY")}
               </p>
             </div>
             <div className="space-y-1">

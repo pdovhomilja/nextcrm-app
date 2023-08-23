@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { prismadb } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 
+//Contact delete route
 export async function DELETE(
   req: Request,
   { params }: { params: { contactId: string } }
@@ -25,12 +26,9 @@ export async function DELETE(
       },
     });
 
-    return NextResponse.json(
-      { message: "Opportunity deleted" },
-      { status: 200 }
-    );
+    return NextResponse.json({ message: "Contact deleted" }, { status: 200 });
   } catch (error) {
-    console.log("[OPPORTUNITY_DELETE]", error);
+    console.log("[CONTACT_DELETE]", error);
     return new NextResponse("Initial error", { status: 500 });
   }
 }

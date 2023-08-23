@@ -13,9 +13,10 @@ datasource db {
 model crm_Accounts {
   id                   String              @id @default(auto()) @map("_id") @db.ObjectId
   v                    Int                 @map("__v")
-  date_created         DateTime?           @default(now()) @db.Date
-  date_last_modified   DateTime?           @default(now()) @db.Date
-  created_by           String?             @db.ObjectId
+  createdAt            DateTime?           @default(now()) @db.Date
+  createdBy            String?             @db.ObjectId
+  updatedAt            DateTime?           @updatedAt @db.Date
+  updatedBy            String?             @db.ObjectId
   annual_revenue       String?
   assigned_to          String?             @db.ObjectId
   billing_city         String?
@@ -93,8 +94,12 @@ model crm_Opportunities {
   close_date           DateTime?                       @db.Date
   contact              String?                         @db.ObjectId
   created_by           String?                         @db.ObjectId
+  createdBy            String?                         @db.ObjectId
   created_on           DateTime?                       @default(now()) @db.Date
+  createdAt            DateTime?                       @default(now()) @db.Date
   last_activity        DateTime?                       @db.Date
+  updatedAt            DateTime?                       @updatedAt @db.Date
+  updatedBy            String?                         @db.ObjectId
   last_activity_by     String?                         @db.ObjectId
   currency             String?
   description          String?
@@ -156,8 +161,12 @@ model crm_Contacts {
   assigned_to            String?             @db.ObjectId
   birthday               String?
   created_by             String              @db.ObjectId
+  createdBy              String?             @db.ObjectId
   created_on             DateTime            @default(now())
+  cratedAt               DateTime?           @default(now()) @db.Date
   last_activity          DateTime?           @default(now()) @db.Date
+  updatedAt              DateTime?           @updatedAt @db.Date
+  updatedBy              String?             @db.ObjectId
   last_activity_by       String?             @db.ObjectId
   description            String?
   email                  String?
@@ -183,6 +192,8 @@ model crm_Contacts {
   assigned_opportunities crm_Opportunities[] @relation(fields: [opportunitiesIDs], references: [id])
   accountsIDs            String[]            @db.ObjectId
   assigned_accounts      crm_Accounts[]      @relation(fields: [accountsIDs], references: [id])
+  documentsIDs           String[]            @db.ObjectId
+  assigned_documents     Documents[]         @relation(fields: [documentsIDs], references: [id])
 }
 
 enum crm_Contact_Type {
@@ -362,9 +373,11 @@ model Documents {
   account                String?             @db.ObjectId
   invoiceIDs             String[]            @db.ObjectId
   opportunityIDs         String[]            @db.ObjectId
+  contactsIDs            String[]            @db.ObjectId
   tasksIDs               String[]            @db.ObjectId
   invoices               Invoices[]          @relation(fields: [invoiceIDs], references: [id])
   opportunities          crm_Opportunities[] @relation(fields: [opportunityIDs], references: [id])
+  contacts               crm_Contacts[]      @relation(fields: [contactsIDs], references: [id])
   tasks                  Tasks[]             @relation(fields: [tasksIDs], references: [id])
   created_by             Users?              @relation(name: "created_by_user", fields: [created_by_user], references: [id])
   assigned_to_user       Users?              @relation(name: "assigned_to_user", fields: [assigned_user], references: [id])

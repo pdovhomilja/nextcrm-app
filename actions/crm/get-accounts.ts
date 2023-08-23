@@ -16,7 +16,7 @@ export const getAccounts = async () => {
       },
     },
     orderBy: {
-      date_created: "desc",
+      createdAt: "desc",
     },
   });
   return data;

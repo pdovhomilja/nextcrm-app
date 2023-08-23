@@ -23,7 +23,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Account deleted" }, { status: 200 });
   } catch (error) {
-    console.log("[Account_DELETE]", error);
+    console.log("[ACCOUNT_DELETE]", error);
     return new NextResponse("Initial error", { status: 500 });
   }
 }

@@ -5,6 +5,17 @@ export const getAccount = async (accountId: string) => {
     where: {
       id: accountId,
     },
+    include: {
+      contacts: true,
+      opportunities: true,
+      documents: true,
+      invoices: true,
+      assigned_to_user: {
+        select: {
+          name: true,
+        },
+      },
+    },
   });
   return data;
 };
