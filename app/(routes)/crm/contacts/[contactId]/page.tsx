@@ -11,7 +11,6 @@ import ContactView from "./components/ContactView";
 const ContactViewPage = async ({ params }: any) => {
   const { contactId } = params;
   const contact: any = await getContact(contactId);
-  console.log(contact, "contact");
 
   if (!contact) return <div>Contact not found</div>;
 

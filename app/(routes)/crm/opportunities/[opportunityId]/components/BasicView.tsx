@@ -57,7 +57,9 @@ export async function BasicView({ data }: OppsViewProps) {
             <div className="space-y-1">
               <p className="text-sm font-medium leading-none">Sales stage</p>
               <p className="text-sm text-muted-foreground">
-                {data.assigned_sales_stage.name}
+                {data.assigned_sales_stage?.name
+                  ? data.assigned_sales_stage?.name
+                  : "Not assigned"}
               </p>
             </div>
           </div>
@@ -119,7 +121,7 @@ export async function BasicView({ data }: OppsViewProps) {
             <div className="space-y-1">
               <p className="text-sm font-medium leading-none">Created by</p>
               <p className="text-sm text-muted-foreground">
-                {users.find((user) => user.id === data.created_by)?.name}
+                {users.find((user) => user.id === data.createdBy)?.name}
               </p>
             </div>
           </div>
@@ -128,13 +130,13 @@ export async function BasicView({ data }: OppsViewProps) {
             <div className="space-y-1">
               <p className="text-sm font-medium leading-none">Last update</p>
               <p className="text-sm text-muted-foreground">
-                {moment(data.last_activity).format("MMM DD YYYY")}
+                {moment(data.updatedAt).format("MMM DD YYYY")}
               </p>
             </div>
             <div className="space-y-1">
               <p className="text-sm font-medium leading-none">Last update by</p>
               <p className="text-sm text-muted-foreground">
-                {users.find((user) => user.id === data.last_activity_by)?.name}
+                {users.find((user) => user.id === data.updatedBy)?.name}
               </p>
             </div>
           </div>
@@ -143,7 +145,7 @@ export async function BasicView({ data }: OppsViewProps) {
             <div className="space-y-1">
               <p className="text-sm font-medium leading-none">Type</p>
               <p className="text-sm text-muted-foreground">
-                {data.assigned_type.name}
+                {data.assigned_type?.name ? data.assigned_type?.name : "N/A"}
               </p>
             </div>
           </div>

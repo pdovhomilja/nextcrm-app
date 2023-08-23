@@ -13,11 +13,7 @@ export const getContacts = async () => {
           name: true,
         },
       },
-      assigned_accounts: {
-        select: {
-          name: true,
-        },
-      },
+      assigned_accounts: true,
     },
   });
   return data;

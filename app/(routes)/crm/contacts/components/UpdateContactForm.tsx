@@ -78,6 +78,7 @@ export function UpdateContactForm({ initialData }: NewTaskFormProps) {
     type: z.string(),
     assigned_to: z.string(),
     accountsIDs: z.string().nullable().optional(),
+    account: z.string().nullable().optional(),
     social_twitter: z.string().nullable().optional(),
     social_facebook: z.string().nullable().optional(),
     social_linkedin: z.string().nullable().optional(),
@@ -106,7 +107,7 @@ export function UpdateContactForm({ initialData }: NewTaskFormProps) {
       await axios.put("/api/crm/contacts", data);
       toast({
         title: "Success",
-        description: "Contact created successfully",
+        description: "Contact updated successfully",
       });
     } catch (error: any) {
       toast({
@@ -135,7 +136,7 @@ export function UpdateContactForm({ initialData }: NewTaskFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="h-full px-10">
-        {/*        <div>
+        {/*    <div>
           <pre>
             <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
           </pre>
@@ -143,7 +144,7 @@ export function UpdateContactForm({ initialData }: NewTaskFormProps) {
         {/*     <pre>
           <code>{JSON.stringify(initialData, null, 2)}</code>
         </pre> */}
-        {/*        <div>
+        {/*   <div>
           <pre>
             <code>{JSON.stringify(form.watch(), null, 2)}</code>
           </pre>
@@ -560,7 +561,7 @@ export function UpdateContactForm({ initialData }: NewTaskFormProps) {
                 Saving data ...
               </span>
             ) : (
-              "Create contact"
+              "Update contact"
             )}
           </Button>
         </div>

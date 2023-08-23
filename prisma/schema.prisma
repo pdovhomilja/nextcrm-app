@@ -44,8 +44,7 @@ model crm_Accounts {
   website              String?
   invoices             Invoices[]
   documents            Documents[]
-  connected_contacts   String[]            @db.ObjectId
-  contacts             crm_Contacts[]      @relation(fields: [connected_contacts], references: [id])
+  contacts             crm_Contacts[]
   industry_type        crm_Industry_Type?  @relation(fields: [industry], references: [id])
   opportunities        crm_Opportunities[]
   assigned_to_user     Users?              @relation(fields: [assigned_to], references: [id])
@@ -190,8 +189,8 @@ model crm_Contacts {
   crate_by_user          Users?              @relation(name: "created_contacts", fields: [created_by], references: [id])
   opportunitiesIDs       String[]            @db.ObjectId
   assigned_opportunities crm_Opportunities[] @relation(fields: [opportunitiesIDs], references: [id])
-  accountsIDs            String[]            @db.ObjectId
-  assigned_accounts      crm_Accounts[]      @relation(fields: [accountsIDs], references: [id])
+  accountsIDs            String?             @db.ObjectId
+  assigned_accounts      crm_Accounts?       @relation(fields: [accountsIDs], references: [id])
   documentsIDs           String[]            @db.ObjectId
   assigned_documents     Documents[]         @relation(fields: [documentsIDs], references: [id])
 }

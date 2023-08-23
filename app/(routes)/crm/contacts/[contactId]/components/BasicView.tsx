@@ -53,7 +53,7 @@ export async function BasicView({ data }: OppsViewProps) {
                 <div className="space-y-1">
                   <p className="text-sm font-medium leading-none">Account</p>
                   <p className="text-sm text-muted-foreground">
-                    {data.assigned_accounts[0]?.name}
+                    {data.assigned_accounts?.name}
                   </p>
                 </div>
               </div>
