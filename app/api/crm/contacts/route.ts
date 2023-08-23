@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import sendEmail from "@/lib/sendmail";
 
+//Create route
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -46,7 +47,7 @@ export async function POST(req: Request) {
         created_on: new Date(),
         last_activity: new Date(),
         last_activity_by: userId,
-        account,
+        accountsIDs: [account],
         assigned_to,
         birthday,
         created_by: userId,
@@ -102,6 +103,7 @@ export async function POST(req: Request) {
   }
 }
 
+//Update route
 export async function PUT(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -147,7 +149,7 @@ export async function PUT(req: Request) {
         v: 0,
         last_activity: new Date(),
         last_activity_by: userId,
-        account,
+        accountsIDs: [account],
         assigned_to,
         birthday,
         created_by: userId,

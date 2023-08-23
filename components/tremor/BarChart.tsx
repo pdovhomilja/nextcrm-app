@@ -3,7 +3,8 @@
 import { Card, Title, BarChart, Subtitle } from "@tremor/react";
 
 const dataFormatter = (number: number) => {
-  return Intl.NumberFormat("us").format(number).toString();
+  // return number no decimal places
+  return number.toFixed(0);
 };
 
 export const BarChartDemo = ({ chartData, title }: any) => {

@@ -77,7 +77,7 @@ export function UpdateContactForm({ initialData }: NewTaskFormProps) {
     status: z.boolean(),
     type: z.string(),
     assigned_to: z.string(),
-    account: z.string().nullable().optional(),
+    accountsIDs: z.string().nullable().optional(),
     social_twitter: z.string().nullable().optional(),
     social_facebook: z.string().nullable().optional(),
     social_linkedin: z.string().nullable().optional(),

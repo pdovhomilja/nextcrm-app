@@ -72,6 +72,8 @@ Will be soon at domain: http://docs.nextcrm.io
    npm run dev
    ```
 
+5. Import initial data from initial-data folder
+
 </details>
 
 ## Contact

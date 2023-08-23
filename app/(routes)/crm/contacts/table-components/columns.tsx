@@ -73,8 +73,7 @@ export const columns: ColumnDef<Opportunity>[] = [
       <div className="min-w-[150px]">
         {
           //@ts-ignore
-          //TODO: fix this
-          row.getValue("assigned_account")?.name ?? "Unassigned"
+          row.original.assigned_accounts[0]?.name ?? "Unassigned"
         }
       </div>
     ),

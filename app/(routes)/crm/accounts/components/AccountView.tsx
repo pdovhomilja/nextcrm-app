@@ -29,9 +29,6 @@ const AccountView = async () => {
         </div>
       </div>
       <div>
-        {/*         <pre>
-          <code>{JSON.stringify(accounts[0], null, 2)}</code>
-        </pre> */}
         <AccountDataTable data={accounts} columns={columns} />
       </div>
     </div>

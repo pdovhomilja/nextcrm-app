@@ -43,8 +43,9 @@ model crm_Accounts {
   website              String?
   invoices             Invoices[]
   documents            Documents[]
+  connected_contacts   String[]            @db.ObjectId
+  contacts             crm_Contacts[]      @relation(fields: [connected_contacts], references: [id])
   industry_type        crm_Industry_Type?  @relation(fields: [industry], references: [id])
-  contacts             crm_Contacts[]
   opportunities        crm_Opportunities[]
   assigned_to_user     Users?              @relation(fields: [assigned_to], references: [id])
 }
@@ -108,8 +109,11 @@ model crm_Opportunities {
   assigned_to_user     Users?                          @relation(name: "assigned_to_user_relation", fields: [assigned_to], references: [id])
   created_by_user      Users?                          @relation(name: "created_by_user_relation", fields: [created_by], references: [id])
   assigned_account     crm_Accounts?                   @relation(fields: [account], references: [id])
-  assigned_contact     crm_Contacts?                   @relation(fields: [contact], references: [id])
   assigned_campaings   crm_campains?                   @relation(fields: [campaign], references: [id])
+  connected_documents  String[]                        @db.ObjectId
+  documents            Documents[]                     @relation(fields: [connected_documents], references: [id])
+  connected_contacts   String[]                        @db.ObjectId
+  contacts             crm_Contacts[]                  @relation(fields: [connected_contacts], references: [id])
 }
 
 enum crm_Opportunity_Status {
@@ -146,37 +150,39 @@ model crm_Opportunities_Type {
 }
 
 model crm_Contacts {
-  id               String              @id @default(auto()) @map("_id") @db.ObjectId
-  v                Int                 @default(0) @map("__v")
-  account          String?             @db.ObjectId
-  assigned_to      String?             @db.ObjectId
-  birthday         String?
-  created_by       String              @db.ObjectId
-  created_on       DateTime            @default(now())
-  last_activity    DateTime?           @default(now()) @db.Date
-  last_activity_by String?             @db.ObjectId
-  description      String?
-  email            String?
-  personal_email   String?
-  first_name       String?
-  last_name        String
-  office_phone     String?
-  mobile_phone     String?
-  website          String?
-  position         String?
-  status           Boolean             @default(true)
-  social_twitter   String?
-  social_facebook  String?
-  social_linkedin  String?
-  social_skype     String?
-  social_instagram String?
-  social_youtube   String?
-  social_tiktok    String?
-  type             String?             @default("Customer")
-  opportunities    crm_Opportunities[]
-  assigned_to_user Users?              @relation(name: "assigned_contacts", fields: [assigned_to], references: [id])
-  crate_by_user    Users?              @relation(name: "created_contacts", fields: [created_by], references: [id])
-  assigned_account crm_Accounts?       @relation(fields: [account], references: [id])
+  id                     String              @id @default(auto()) @map("_id") @db.ObjectId
+  v                      Int                 @default(0) @map("__v")
+  account                String?             @db.ObjectId
+  assigned_to            String?             @db.ObjectId
+  birthday               String?
+  created_by             String              @db.ObjectId
+  created_on             DateTime            @default(now())
+  last_activity          DateTime?           @default(now()) @db.Date
+  last_activity_by       String?             @db.ObjectId
+  description            String?
+  email                  String?
+  personal_email         String?
+  first_name             String?
+  last_name              String
+  office_phone           String?
+  mobile_phone           String?
+  website                String?
+  position               String?
+  status                 Boolean             @default(true)
+  social_twitter         String?
+  social_facebook        String?
+  social_linkedin        String?
+  social_skype           String?
+  social_instagram       String?
+  social_youtube         String?
+  social_tiktok          String?
+  type                   String?             @default("Customer")
+  assigned_to_user       Users?              @relation(name: "assigned_contacts", fields: [assigned_to], references: [id])
+  crate_by_user          Users?              @relation(name: "created_contacts", fields: [created_by], references: [id])
+  opportunitiesIDs       String[]            @db.ObjectId
+  assigned_opportunities crm_Opportunities[] @relation(fields: [opportunitiesIDs], references: [id])
+  accountsIDs            String[]            @db.ObjectId
+  assigned_accounts      crm_Accounts[]      @relation(fields: [accountsIDs], references: [id])
 }
 
 enum crm_Contact_Type {
@@ -355,8 +361,10 @@ model Documents {
   assigned_user          String?             @db.ObjectId
   account                String?             @db.ObjectId
   invoiceIDs             String[]            @db.ObjectId
+  opportunityIDs         String[]            @db.ObjectId
   tasksIDs               String[]            @db.ObjectId
   invoices               Invoices[]          @relation(fields: [invoiceIDs], references: [id])
+  opportunities          crm_Opportunities[] @relation(fields: [opportunityIDs], references: [id])
   tasks                  Tasks[]             @relation(fields: [tasksIDs], references: [id])
   created_by             Users?              @relation(name: "created_by_user", fields: [created_by_user], references: [id])
   assigned_to_user       Users?              @relation(name: "assigned_to_user", fields: [assigned_user], references: [id])
