@@ -46,11 +46,7 @@ export async function POST(req: Request) {
         v: 0,
         createdBy: userId,
         updatedBy: userId,
-        assigned_accounts: {
-          connect: {
-            id: account,
-          },
-        },
+        accountsIDs: account,
         assigned_to_user: {
           connect: {
             id: assigned_to,
@@ -156,11 +152,7 @@ export async function PUT(req: Request) {
       data: {
         v: 0,
         updatedBy: userId,
-        assigned_accounts: {
-          connect: {
-            id: account,
-          },
-        },
+        accountsIDs: account,
         assigned_to_user: {
           connect: {
             id: assigned_to,
