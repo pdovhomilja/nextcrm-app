@@ -29,7 +29,7 @@ const SecondBrainPage = async (props: Props) => {
 
         <div>
           Here is how to enable it:
-          <ol>1. Registr and login to Notion.so</ol>
+          <ol>1. Register and login to Notion.so</ol>
           <ol>
             2. Create (Click on duplicate) new database from this source -{" "}
             <Link href="http://abdulhadeahmad.notion.site/87bfd5b5862e425d82de6ce47c88a2d4">
@@ -41,7 +41,9 @@ const SecondBrainPage = async (props: Props) => {
             <a href="https://www.notion.so/my-integrations">
               https://www.notion.so/my-integrations
             </a>
-            )
+            ) and connect new integration with your database by click on ...
+            (three dots on top right corner of database), find your newly
+            created integration and click on it
           </ol>
           <ol>4. Copy integration token</ol>
           <ol>

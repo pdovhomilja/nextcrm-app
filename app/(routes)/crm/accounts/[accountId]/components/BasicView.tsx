@@ -11,8 +11,13 @@ import {
   ClipboardList,
   CoinsIcon,
   Combine,
+  File,
+  Globe,
+  Globe2,
   Landmark,
   List,
+  Percent,
+  Phone,
   SquareStack,
   Text,
   User,
@@ -20,6 +25,9 @@ import {
 import moment from "moment";
 import { Clapperboard } from "lucide-react";
 import { prismadb } from "@/lib/prisma";
+import Link from "next/link";
+import { EnvelopeClosedIcon, LightningBoltIcon } from "@radix-ui/react-icons";
+import { LucideLandmark } from "lucide-react";
 
 interface OppsViewProps {
   data: any;
@@ -38,7 +46,7 @@ export async function BasicView({ data }: OppsViewProps) {
           <CardDescription>ID:{data.id}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 w-full ">
+          <div className="grid grid-cols-2 w-full gap-5 ">
             <div>
               <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
                 <CoinsIcon className="mt-px h-5 w-5" />
@@ -52,7 +60,7 @@ export async function BasicView({ data }: OppsViewProps) {
                 </div>
               </div>
               <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
-                <CoinsIcon className="mt-px h-5 w-5" />
+                <Landmark className="mt-px h-5 w-5" />
                 <div className="space-y-1">
                   <p className="text-sm font-medium leading-none">Company ID</p>
                   <p className="text-sm text-muted-foreground">
@@ -61,7 +69,7 @@ export async function BasicView({ data }: OppsViewProps) {
                 </div>
               </div>
               <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
-                <CoinsIcon className="mt-px h-5 w-5" />
+                <Percent className="mt-px h-5 w-5" />
                 <div className="space-y-1">
                   <p className="text-sm font-medium leading-none">VAT number</p>
                   <p className="text-sm text-muted-foreground">
@@ -70,7 +78,7 @@ export async function BasicView({ data }: OppsViewProps) {
                 </div>
               </div>
               <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
-                <CoinsIcon className="mt-px h-5 w-5" />
+                <File className="mt-px h-5 w-5" />
                 <div className="space-y-1">
                   <p className="text-sm font-medium leading-none">
                     Description
@@ -80,24 +88,34 @@ export async function BasicView({ data }: OppsViewProps) {
                   </p>
                 </div>
               </div>
-              <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
-                <CoinsIcon className="mt-px h-5 w-5" />
-                <div className="space-y-1">
-                  <p className="text-sm font-medium leading-none">Email</p>
-                  <p className="text-sm text-muted-foreground">{data.email}</p>
+              <div className="-mx-2 flex items-start justify-between space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
+                <div className="flex mt-px gap-5">
+                  <EnvelopeClosedIcon className="mt-px h-5 w-5" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium leading-none">Email</p>
+
+                    <Link
+                      href={`mailto:${data.email}`}
+                      className="flex items-center  gap-5 text-sm text-muted-foreground"
+                    >
+                      {data.email}
+                      <EnvelopeClosedIcon />
+                    </Link>
+                  </div>
                 </div>
+                <p className="pr-20"></p>
               </div>
               <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
-                <CoinsIcon className="mt-px h-5 w-5" />
+                <Globe2 className="mt-px h-5 w-5" />
                 <div className="space-y-1">
                   <p className="text-sm font-medium leading-none">Website</p>
                   <p className="text-sm text-muted-foreground">
-                    {data.website}
+                    <Link href={data.website}>{data.website}</Link>
                   </p>
                 </div>
               </div>
               <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
-                <CoinsIcon className="mt-px h-5 w-5" />
+                <Phone className="mt-px h-5 w-5" />
                 <div className="space-y-1">
                   <p className="text-sm font-medium leading-none">
                     Office phone
@@ -162,7 +180,7 @@ export async function BasicView({ data }: OppsViewProps) {
                 </div>
               </div>
               <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
-                <CoinsIcon className="mt-px h-5 w-5" />
+                <LightningBoltIcon className="mt-px h-5 w-5" />
                 <div className="space-y-1">
                   <p className="text-sm font-medium leading-none">Status</p>
                   <p className="text-sm text-muted-foreground">{data.status}</p>

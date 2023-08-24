@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -31,6 +32,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { ScrollDownButton } from "@radix-ui/react-select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { CaretSortIcon } from "@radix-ui/react-icons";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import { CheckIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type Props = {
   industries: any[];
@@ -103,11 +121,11 @@ export function NewAccountForm({ industries, users }: Props) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="h-full px-10">
-        {/*         <div>
+        <div>
           <pre>
             <code>{JSON.stringify(form.watch(), null, 2)}</code>
           </pre>
-        </div> */}
+        </div>
         <div className=" w-[800px] text-sm">
           <div className="pb-5 space-y-2">
             <FormField
@@ -478,7 +496,7 @@ export function NewAccountForm({ industries, users }: Props) {
                           <SelectValue placeholder="Select a user to assign the account" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="overflow-y-auto h-56">
                         {users.map((user) => (
                           <SelectItem key={user.id} value={user.id}>
                             {user.name}
