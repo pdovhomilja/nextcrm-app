@@ -304,7 +304,7 @@ export function NewContactForm({ users, accounts }: NewTaskFormProps) {
                             <SelectValue placeholder="Choose an user " />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="h-96 overflow-y-auto">
                           {users.map((user) => (
                             <SelectItem key={user.id} value={user.id}>
                               {user.name}

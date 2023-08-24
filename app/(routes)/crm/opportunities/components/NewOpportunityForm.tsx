@@ -331,7 +331,7 @@ export function NewOpportunityForm({
                             <SelectValue placeholder="Select a user to assign the account" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="overflow-y-auto h-56">
                           {users.map((user) => (
                             <SelectItem key={user.id} value={user.id}>
                               {user.name}
