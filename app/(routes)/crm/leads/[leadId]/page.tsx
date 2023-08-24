@@ -1,6 +1,9 @@
 import { getLead } from "@/actions/crm/get-lead";
 import Container from "@/app/(routes)/components/ui/Container";
 import React from "react";
+import { BasicView } from "./components/BasicView";
+import ContactView from "./components/ContactView";
+import DocumentsView from "./components/DocumentsView";
 
 interface LeadDetailPageProps {
   params: {
@@ -10,15 +13,21 @@ interface LeadDetailPageProps {
 
 const LeadDetailPage = async ({ params }: LeadDetailPageProps) => {
   const { leadId } = params;
-  const lead = await getLead(leadId);
+  const lead: any = await getLead(leadId);
+
+  if (!lead) return <div>Lead not found</div>;
   return (
     <Container
-      title="Lead - Detail"
+      title={`Lead: ${lead?.firstName} ${lead?.lastName}`}
       description={"Everything you need to know about sales potential"}
     >
-      <div>
-        <h1>Leads</h1>
-        <pre>{JSON.stringify(lead, null, 2)}</pre>
+      {/*       <pre>
+        <code>{JSON.stringify(lead, null, 2)}</code>
+      </pre> */}
+      <div className="space-y-5">
+        <BasicView data={lead} />
+        <ContactView data={lead?.contacts} leadId={lead.id} />
+        <DocumentsView data={lead?.documents} />
       </div>
     </Container>
   );

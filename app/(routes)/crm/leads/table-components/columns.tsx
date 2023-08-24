@@ -13,26 +13,26 @@ import moment from "moment";
 
 export const columns: ColumnDef<Lead>[] = [
   {
-    accessorKey: "date_created",
+    accessorKey: "createdAt",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Expected close" />
     ),
     cell: ({ row }) => (
       <div className="w-[80px]">
-        {moment(row.getValue("date_created")).format("YY-MM-DD")}
+        {moment(row.getValue("createdAt")).format("YY-MM-DD")}
       </div>
     ),
     enableSorting: false,
     enableHiding: false,
   },
   {
-    accessorKey: "date_modify",
+    accessorKey: "updatedAt",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Last update" />
     ),
     cell: ({ row }) => (
       <div className="w-[80px]">
-        {moment(row.getValue("date_modify")).format("YY-MM-DD")}
+        {moment(row.getValue("updatedAt")).format("YY-MM-DD")}
       </div>
     ),
     enableSorting: false,

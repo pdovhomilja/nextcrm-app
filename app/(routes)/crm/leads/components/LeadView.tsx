@@ -12,7 +12,7 @@ const LeadView = async () => {
   const leads: any[] = await getLeads();
 
   const crmData = await getAllCrmData();
-  const { users } = crmData;
+  const { users, accounts } = crmData;
 
   return (
     <div className="border rounded-md p-5 mt-5">
@@ -23,7 +23,7 @@ const LeadView = async () => {
             title="Create new lead"
             description=""
           >
-            <NewLeadForm users={users} />
+            <NewLeadForm users={users} accounts={accounts} />
           </RightViewModal>
         </div>
       </div>

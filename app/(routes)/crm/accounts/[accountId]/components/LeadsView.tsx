@@ -1,5 +1,4 @@
 "use client";
-import RightViewModal from "@/components/modals/right-view-modal";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,11 +19,13 @@ import axios from "axios";
 import { Link, PlusIcon, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { NewOpportunityForm } from "../../../opportunities/components/NewOpportunityForm";
-import { OpportunitiesDataTable } from "../../../opportunities/table-components/data-table";
-import { columns } from "../../../opportunities/table-components/columns";
 
-const OpportunitiesView = ({ data, opportunityId, crmData }: any) => {
+import { LeadDataTable } from "../../../leads/table-components/data-table";
+import { columns } from "../../../leads/table-components/columns";
+import RightViewModal from "@/components/modals/right-view-modal";
+import { NewLeadForm } from "../../../leads/components/NewLeadForm";
+
+const LeadsView = ({ data, opportunityId, crmData }: any) => {
   const router = useRouter();
 
   const { toast } = useToast();
@@ -39,15 +40,14 @@ const OpportunitiesView = ({ data, opportunityId, crmData }: any) => {
     return null;
   }
 
-  const { users, accounts, contacts, saleTypes, saleStages, campaigns } =
-    crmData;
+  const { users, accounts } = crmData;
 
   const onAddNew = () => {
     alert("Actions - not yet implemented");
   };
 
   const onView = (id: string) => {
-    router.push(`/crm/opportunities/${id}`);
+    router.push(`/crm/contacts/${id}`);
   };
 
   const onUnlink = async (id: string) => {
@@ -75,7 +75,7 @@ const OpportunitiesView = ({ data, opportunityId, crmData }: any) => {
         <CardHeader className="pb-3">
           <div className="flex justify-between">
             <div>
-              <CardTitle>Opportunities</CardTitle>
+              <CardTitle>Leads</CardTitle>
               <CardDescription></CardDescription>
             </div>
             <div className="flex space-x-2">
@@ -84,22 +84,15 @@ const OpportunitiesView = ({ data, opportunityId, crmData }: any) => {
               </Button>
               <RightViewModal
                 label={"+"}
-                title="Create opportunity"
+                title="Create new lead"
                 description=""
               >
-                <NewOpportunityForm
-                  users={users}
-                  accounts={accounts}
-                  contacts={contacts}
-                  salesType={saleTypes}
-                  saleStages={saleStages}
-                  campaigns={campaigns}
-                />
+                <NewLeadForm users={users} accounts={accounts} />
               </RightViewModal>
             </div>
           </div>
         </CardHeader>
-        <CardContent>No assigned opportunities found</CardContent>
+        <CardContent>No assigned leads found</CardContent>
       </Card>
     );
 
@@ -108,35 +101,24 @@ const OpportunitiesView = ({ data, opportunityId, crmData }: any) => {
       <CardHeader className="pb-3">
         <div className="flex justify-between">
           <div>
-            <CardTitle>Opportunities</CardTitle>
+            <CardTitle>Leads</CardTitle>
             <CardDescription></CardDescription>
           </div>
           <div className="flex space-x-2">
             <Button onClick={onAddNew}>
               <Link className="h-3 w-3" />
             </Button>
-            <RightViewModal
-              label={"+"}
-              title="Create opportunity"
-              description=""
-            >
-              <NewOpportunityForm
-                users={users}
-                accounts={accounts}
-                contacts={contacts}
-                salesType={saleTypes}
-                saleStages={saleStages}
-                campaigns={campaigns}
-              />
+            <RightViewModal label={"+"} title="Create new lead" description="">
+              <NewLeadForm users={users} accounts={accounts} />
             </RightViewModal>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <OpportunitiesDataTable data={data} columns={columns} />
+        <LeadDataTable data={data} columns={columns} />
       </CardContent>
     </Card>
   );
 };
 
-export default OpportunitiesView;
+export default LeadsView;

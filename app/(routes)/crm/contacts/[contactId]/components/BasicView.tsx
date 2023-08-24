@@ -26,6 +26,8 @@ import {
 import moment from "moment";
 import { Clapperboard } from "lucide-react";
 import { prismadb } from "@/lib/prisma";
+import Link from "next/link";
+import { EnvelopeClosedIcon } from "@radix-ui/react-icons";
 
 interface OppsViewProps {
   data: any;
@@ -182,7 +184,15 @@ export async function BasicView({ data }: OppsViewProps) {
             <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
               <div className="space-y-1">
                 <p className="text-sm font-medium leading-none">E-mail</p>
-                <p className="text-sm text-muted-foreground">{data.email}</p>
+                {data?.email ? (
+                  <Link
+                    href={`mailto:${data.email}`}
+                    className="flex items-center  gap-5 text-sm text-muted-foreground"
+                  >
+                    {data.email}
+                    <EnvelopeClosedIcon />
+                  </Link>
+                ) : null}
               </div>
             </div>
             <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
@@ -190,9 +200,15 @@ export async function BasicView({ data }: OppsViewProps) {
                 <p className="text-sm font-medium leading-none">
                   Personal e-mail
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  {data.personal_email}
-                </p>
+                {data?.personal_email ? (
+                  <Link
+                    href={`mailto:${data.personal_email}`}
+                    className="flex items-center  gap-5 text-sm text-muted-foreground"
+                  >
+                    {data.personal_email}
+                    <EnvelopeClosedIcon />
+                  </Link>
+                ) : null}
               </div>
             </div>
             <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
@@ -214,7 +230,13 @@ export async function BasicView({ data }: OppsViewProps) {
             <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
               <div className="space-y-1">
                 <p className="text-sm font-medium leading-none">Website</p>
-                <p className="text-sm text-muted-foreground">{data.website}</p>
+                <p className="text-sm text-muted-foreground">
+                  {data?.website ? (
+                    <Link href={data.website}>{data.website}</Link>
+                  ) : (
+                    "N/A"
+                  )}
+                </p>
               </div>
             </div>
             <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">

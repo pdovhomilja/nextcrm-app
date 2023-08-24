@@ -12,7 +12,7 @@ import { DataTableRowActions } from "./data-table-row-actions";
 import moment from "moment";
 
 export const columns: ColumnDef<Opportunity>[] = [
-  {
+  /* {
     id: "select",
     header: ({ table }) => (
       <Checkbox
@@ -21,7 +21,7 @@ export const columns: ColumnDef<Opportunity>[] = [
         aria-label="Select all"
         className="translate-y-[2px]"
       />
-    ),
+    ), 
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
@@ -33,6 +33,7 @@ export const columns: ColumnDef<Opportunity>[] = [
     enableSorting: false,
     enableHiding: false,
   },
+  */
   {
     accessorKey: "close_date",
     header: ({ column }) => (

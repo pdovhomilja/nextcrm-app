@@ -110,7 +110,11 @@ export async function BasicView({ data }: OppsViewProps) {
                 <div className="space-y-1">
                   <p className="text-sm font-medium leading-none">Website</p>
                   <p className="text-sm text-muted-foreground">
-                    <Link href={data.website}>{data.website}</Link>
+                    {data?.website ? (
+                      <Link href={data.website}>{data.website}</Link>
+                    ) : (
+                      "N/A"
+                    )}
                   </p>
                 </div>
               </div>

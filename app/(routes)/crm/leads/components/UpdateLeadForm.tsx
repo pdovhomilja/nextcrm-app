@@ -52,6 +52,11 @@ export function UpdateLeadForm({ initialData }: NewTaskFormProps) {
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  const { data: accounts, isLoading: isLoadingAccounts } = useSWR(
+    "/api/crm/account",
+    fetcher
+  );
+
   const { data: users, isLoading: isLoadingUsers } = useSWR(
     "/api/user",
     fetcher
@@ -74,6 +79,7 @@ export function UpdateLeadForm({ initialData }: NewTaskFormProps) {
     status: z.string(),
     //TODO: add type schema from db as data source
     type: z.string().optional(),
+    accountIDs: z.string().optional(),
   });
 
   type NewLeadFormValues = z.infer<typeof formSchema>;
@@ -111,7 +117,7 @@ export function UpdateLeadForm({ initialData }: NewTaskFormProps) {
     { name: "Completed", id: "COMPLETED" },
   ];
 
-  if (isLoadingUsers)
+  if (isLoadingUsers || isLoadingAccounts)
     return (
       <div>
         <SuspenseLoading />
@@ -320,6 +326,33 @@ export function UpdateLeadForm({ initialData }: NewTaskFormProps) {
                           {users.map((user: any) => (
                             <SelectItem key={user.id} value={user.id}>
                               {user.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="accountIDs"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Assign an Account</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Choose assigned account " />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {accounts.map((account: any) => (
+                            <SelectItem key={account.id} value={account.id}>
+                              {account.name}
                             </SelectItem>
                           ))}
                         </SelectContent>

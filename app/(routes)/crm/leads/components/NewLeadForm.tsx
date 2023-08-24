@@ -40,9 +40,10 @@ import { Calendar } from "@/components/ui/calendar";
 //TODO: fix all the types
 type NewTaskFormProps = {
   users: any[];
+  accounts: any[];
 };
 
-export function NewLeadForm({ users }: NewTaskFormProps) {
+export function NewLeadForm({ users, accounts }: NewTaskFormProps) {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -60,6 +61,7 @@ export function NewLeadForm({ users }: NewTaskFormProps) {
     refered_by: z.string().optional(),
     campaign: z.string().optional(),
     assigned_to: z.string().optional(),
+    accountIDs: z.string().optional(),
   });
 
   type NewLeadFormValues = z.infer<typeof formSchema>;
@@ -286,6 +288,33 @@ export function NewLeadForm({ users }: NewTaskFormProps) {
                       {users.map((user) => (
                         <SelectItem key={user.id} value={user.id}>
                           {user.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="accountIDs"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Assign an Account</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose assigned account " />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {accounts.map((account) => (
+                        <SelectItem key={account.id} value={account.id}>
+                          {account.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
