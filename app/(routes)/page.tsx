@@ -28,6 +28,7 @@ import NotionsBox from "./components/dasboard/notions";
 import LoadingBox from "./components/dasboard/loading-box";
 import Link from "next/link";
 import { getModules } from "@/actions/get-modules";
+import StorageQuota from "./components/dasboard/storage-quota";
 
 const DashboardPage = async () => {
   const session = await getServerSession(authOptions);
@@ -216,15 +217,8 @@ const DashboardPage = async () => {
             </Card>
           </Link>
         )}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Storage</CardTitle>
-            <CoinsIcon className="w-4 h-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-medium">{storage}/MB</div>
-          </CardContent>
-        </Card>
+
+        <StorageQuota actual={storage} />
         <Suspense fallback={<LoadingBox />}>
           <NotionsBox />
         </Suspense>
