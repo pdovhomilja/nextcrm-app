@@ -13,6 +13,7 @@ import { getOpportunitiesFullByAccountId } from "@/actions/crm/get-opportunities
 import { getContactsByAccountId } from "@/actions/crm/get-contacts-by-accountId";
 import LeadsView from "./components/LeadsView";
 import { getLeadsByAccountId } from "@/actions/crm/get-leads-by-accountId";
+import { getDocumentsByAccountId } from "@/actions/documents/get-documents-by-accountId";
 
 interface AccountDetailPageProps {
   params: {
@@ -26,6 +27,7 @@ const AccountDetailPage = async ({ params }: AccountDetailPageProps) => {
   const opportunities: any = await getOpportunitiesFullByAccountId(accountId);
   const contacts: any = await getContactsByAccountId(accountId);
   const leads: any = await getLeadsByAccountId(accountId);
+  const documents: any = await getDocumentsByAccountId(accountId);
   //console.log(account, "account");
 
   const crmData = await getAllCrmData();
@@ -49,7 +51,7 @@ const AccountDetailPage = async ({ params }: AccountDetailPageProps) => {
 
         <ContactView data={contacts} crmData={crmData} accountId={account.id} />
         <LeadsView data={leads} crmData={crmData} />
-        <DocumentsView data={account?.documents} />
+        <DocumentsView data={documents} />
       </div>
     </Container>
   );

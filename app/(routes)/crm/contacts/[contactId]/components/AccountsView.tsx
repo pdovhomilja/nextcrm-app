@@ -19,12 +19,14 @@ import axios from "axios";
 import { Link, PlusIcon, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { OpportunitiesDataTable } from "../../../opportunities/table-components/data-table";
-import { columns } from "../../../opportunities/table-components/columns";
+
 import RightViewModal from "@/components/modals/right-view-modal";
 import { NewOpportunityForm } from "../../../opportunities/components/NewOpportunityForm";
+import { AccountDataTable } from "../../../accounts/table-components/data-table";
+import { columns } from "../../../accounts/table-components/columns";
+import { NewAccountForm } from "../../../accounts/components/NewAccountForm";
 
-const OpportunitiesView = ({ data, opportunityId, crmData }: any) => {
+const AccountsView = ({ data, opportunityId, crmData }: any) => {
   const router = useRouter();
 
   const { toast } = useToast();
@@ -39,8 +41,15 @@ const OpportunitiesView = ({ data, opportunityId, crmData }: any) => {
     return null;
   }
 
-  const { users, accounts, contacts, saleTypes, saleStages, campaigns } =
-    crmData;
+  const {
+    users,
+    industries,
+    accounts,
+    contacts,
+    saleTypes,
+    saleStages,
+    campaigns,
+  } = crmData;
 
   const onAddNew = () => {
     alert("Actions - not yet implemented");
@@ -75,7 +84,7 @@ const OpportunitiesView = ({ data, opportunityId, crmData }: any) => {
         <CardHeader className="pb-3">
           <div className="flex justify-between">
             <div>
-              <CardTitle>Opportunities</CardTitle>
+              <CardTitle>Accounts</CardTitle>
               <CardDescription></CardDescription>
             </div>
             <div className="flex space-x-2">
@@ -84,17 +93,10 @@ const OpportunitiesView = ({ data, opportunityId, crmData }: any) => {
               </Button>
               <RightViewModal
                 label={"+"}
-                title="Create opportunity"
+                title="Create new Account"
                 description=""
               >
-                <NewOpportunityForm
-                  users={users}
-                  accounts={accounts}
-                  contacts={contacts}
-                  salesType={saleTypes}
-                  saleStages={saleStages}
-                  campaigns={campaigns}
-                />
+                <NewAccountForm industries={industries} users={users} />
               </RightViewModal>
             </div>
           </div>
@@ -108,7 +110,7 @@ const OpportunitiesView = ({ data, opportunityId, crmData }: any) => {
       <CardHeader className="pb-3">
         <div className="flex justify-between">
           <div>
-            <CardTitle>Opportunities</CardTitle>
+            <CardTitle>Accounts</CardTitle>
             <CardDescription></CardDescription>
           </div>
           <div className="flex space-x-2">
@@ -117,26 +119,19 @@ const OpportunitiesView = ({ data, opportunityId, crmData }: any) => {
             </Button>
             <RightViewModal
               label={"+"}
-              title="Create opportunity"
+              title="Create new Account"
               description=""
             >
-              <NewOpportunityForm
-                users={users}
-                accounts={accounts}
-                contacts={contacts}
-                salesType={saleTypes}
-                saleStages={saleStages}
-                campaigns={campaigns}
-              />
+              <NewAccountForm industries={industries} users={users} />
             </RightViewModal>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <OpportunitiesDataTable data={data} columns={columns} />
+        <AccountDataTable data={data} columns={columns} />
       </CardContent>
     </Card>
   );
 };
 
-export default OpportunitiesView;
+export default AccountsView;

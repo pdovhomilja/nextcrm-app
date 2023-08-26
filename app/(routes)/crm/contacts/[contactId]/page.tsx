@@ -6,11 +6,21 @@ import { BasicView } from "./components/BasicView";
 
 import DocumentsView from "./components/DocumentsView";
 import OpportunitiesView from "./components/OpportunitiesView";
-import ContactView from "./components/ContactView";
+
+import { getOpportunitiesFullByContactId } from "@/actions/crm/get-opportunities-with-includes-by-contactId";
+import { getAllCrmData } from "@/actions/crm/get-crm-data";
+import { getDocumentsByContactId } from "@/actions/documents/get-documents-by-contactId";
+import AccountsView from "./components/AccountsView";
+import { getAccountsByContactId } from "@/actions/crm/get-accounts-by-contactId";
 
 const ContactViewPage = async ({ params }: any) => {
   const { contactId } = params;
   const contact: any = await getContact(contactId);
+  const opportunities: any = await getOpportunitiesFullByContactId(contactId);
+  const documents = await getDocumentsByContactId(contactId);
+  const accounts = await getAccountsByContactId(contactId);
+
+  const crmData = await getAllCrmData();
 
   if (!contact) return <div>Contact not found</div>;
 
@@ -21,12 +31,14 @@ const ContactViewPage = async ({ params }: any) => {
     >
       <div className="space-y-5">
         <BasicView data={contact} />
+        <AccountsView data={accounts} crmData={crmData} />
         <OpportunitiesView
-          data={contact?.assigned_opportunities}
+          data={opportunities}
+          crmData={crmData}
           accountId={contact.id}
         />
 
-        <DocumentsView data={contact?.assigned_documents} />
+        <DocumentsView data={documents} />
       </div>
     </Container>
   );

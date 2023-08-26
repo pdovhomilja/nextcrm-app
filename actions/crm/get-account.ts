@@ -8,7 +8,7 @@ export const getAccount = async (accountId: string) => {
     include: {
       contacts: true,
       opportunities: true,
-      documents: true,
+      assigned_documents: true,
       invoices: true,
       assigned_to_user: {
         select: {

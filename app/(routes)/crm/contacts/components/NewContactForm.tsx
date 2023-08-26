@@ -48,6 +48,12 @@ export function NewContactForm({ users, accounts }: NewTaskFormProps) {
   const router = useRouter();
   const { toast } = useToast();
 
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredData = users.filter((item) =>
+    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const formSchema = z.object({
@@ -105,7 +111,7 @@ export function NewContactForm({ users, accounts }: NewTaskFormProps) {
       router.push("/crm/contacts");
     }
   };
-
+  console.log(filteredData, "filteredData");
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="h-full px-10">
@@ -305,9 +311,19 @@ export function NewContactForm({ users, accounts }: NewTaskFormProps) {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="h-96 overflow-y-auto">
-                          {users.map((user) => (
+                          {/*     {users.map((user) => (
                             <SelectItem key={user.id} value={user.id}>
                               {user.name}
+                            </SelectItem>
+                          ))} */}
+                          <Input
+                            type="text"
+                            placeholder="Search in users ..."
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                          />
+                          {filteredData.map((item, index) => (
+                            <SelectItem key={index} value={item.id}>
+                              {item.name}
                             </SelectItem>
                           ))}
                         </SelectContent>

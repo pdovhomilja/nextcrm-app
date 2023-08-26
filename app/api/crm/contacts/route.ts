@@ -46,7 +46,13 @@ export async function POST(req: Request) {
         v: 0,
         createdBy: userId,
         updatedBy: userId,
-        accountsIDs: account,
+        ...(account !== null && {
+          assigned_accounts: {
+            connect: {
+              id: account,
+            },
+          },
+        }),
         assigned_to_user: {
           connect: {
             id: assigned_to,
@@ -152,7 +158,14 @@ export async function PUT(req: Request) {
       data: {
         v: 0,
         updatedBy: userId,
-        accountsIDs: account,
+        //Update accountsIDs only if account is not empty
+        ...(account !== null && {
+          assigned_accounts: {
+            connect: {
+              id: account,
+            },
+          },
+        }),
         assigned_to_user: {
           connect: {
             id: assigned_to,

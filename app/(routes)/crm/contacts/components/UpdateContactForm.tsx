@@ -62,6 +62,8 @@ export function UpdateContactForm({ initialData }: NewTaskFormProps) {
     fetcher
   );
 
+  const [searchTerm, setSearchTerm] = useState("");
+
   const formSchema = z.object({
     id: z.string().min(5).max(30),
     birthday: z.date().nullable().optional(),
@@ -128,6 +130,10 @@ export function UpdateContactForm({ initialData }: NewTaskFormProps) {
         <SuspenseLoading />
       </div>
     );
+
+  const filteredData = users.filter((item: any) =>
+    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (!users || !accounts || !initialData)
     return <div>Something went wrong, there is no data for form</div>;
@@ -279,7 +285,7 @@ export function UpdateContactForm({ initialData }: NewTaskFormProps) {
                             !field.value && "text-muted-foreground"
                           )}
                         >
-                          {field.value ? (
+                          {field.value || field.value !== null ? (
                             format(field.value, "PPP")
                           ) : (
                             <span>Pick a contact birth day</span>
@@ -339,14 +345,24 @@ export function UpdateContactForm({ initialData }: NewTaskFormProps) {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="h-96 overflow-y-auto">
-                          {
+                          {/*                {
                             //TODO: fix this
                             users.map((user: any) => (
                               <SelectItem key={user.id} value={user.id}>
                                 {user.name}
                               </SelectItem>
                             ))
-                          }
+                          } */}
+                          <Input
+                            type="text"
+                            placeholder="Search in users ..."
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                          />
+                          {filteredData.map((item: any) => (
+                            <SelectItem key={item.id} value={item.id}>
+                              {item.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
