@@ -1,7 +1,7 @@
 import { DataTable } from "@/components/ui/data-table";
 import Container from "../components/ui/Container";
 import { getNotions } from "@/actions/get-notions";
-import { columns } from "./components/Columns";
+import { columns } from "./table-components/columns";
 import Link from "next/link";
 import H4Title from "@/components/typography/h4";
 
@@ -10,6 +10,7 @@ import { getUsers } from "@/actions/get-users";
 import { getBoards } from "@/actions/projects/get-boards";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { SecondBrainDataTable } from "./table-components/data-table";
 
 type Props = {};
 
@@ -74,7 +75,7 @@ const SecondBrainPage = async (props: Props) => {
         title="Second Brain"
         description={"Everything you need to know about Your notions"}
       >
-        <DataTable columns={columns} data={notions} search="title" />
+        <SecondBrainDataTable columns={columns} data={notions} />
       </Container>
     </>
   );

@@ -1,38 +1,43 @@
 "use client";
 
-import { useState } from "react";
-import axios from "axios";
-import { useParams, useRouter } from "next/navigation";
-import {
-  Copy,
-  Edit,
-  Link2,
-  LinkIcon,
-  MoreHorizontal,
-  Trash,
-} from "lucide-react";
+import { DotsHorizontalIcon } from "@radix-ui/react-icons";
+import { Row } from "@tanstack/react-table";
 
-import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 
-import { NotionColumn } from "./Columns";
+import { useParams, useRouter } from "next/navigation";
 import AlertModal from "@/components/modals/alert-modal";
+import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
+import axios from "axios";
 
+import { Copy, Edit, LinkIcon, MoreHorizontal, Trash } from "lucide-react";
 import { useAppStore } from "@/store/store";
+import { secondBrainSchema } from "../table-data/schema";
 import Link from "next/link";
 
-interface CellActionProps {
-  data: NotionColumn;
+interface DataTableRowActionsProps<TData> {
+  row: Row<TData>;
 }
 
-export const CellAction = ({ data }: CellActionProps) => {
+export function DataTableRowActions<TData>({
+  row,
+}: DataTableRowActionsProps<TData>) {
+  const data = secondBrainSchema.parse(row.original);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -41,7 +46,7 @@ export const CellAction = ({ data }: CellActionProps) => {
 
   const { toast } = useToast();
   const router = useRouter();
-  const params = useParams();
+  
 
   const onCopy = (id: string) => {
     navigator.clipboard.writeText(id);
@@ -120,4 +125,4 @@ export const CellAction = ({ data }: CellActionProps) => {
       </DropdownMenu>
     </>
   );
-};
+}

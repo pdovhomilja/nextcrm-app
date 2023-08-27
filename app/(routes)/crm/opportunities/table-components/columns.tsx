@@ -41,7 +41,7 @@ export const columns: ColumnDef<Opportunity>[] = [
     ),
     cell: ({ row }) => (
       <div className="w-[80px]">
-        {moment(row.getValue("close_date")).format("YY-MM-dd")}
+        {moment(row.getValue("close_date")).format("YY-MM-DD")}
       </div>
     ),
     enableSorting: false,
@@ -89,7 +89,7 @@ export const columns: ColumnDef<Opportunity>[] = [
       <DataTableColumnHeader column={column} title="Name" />
     ),
 
-    cell: ({ row }) => <div className="w-[150px]">{row.getValue("name")}</div>,
+    cell: ({ row }) => <div className="w-[250px]">{row.getValue("name")}</div>,
     enableSorting: true,
     enableHiding: true,
   },

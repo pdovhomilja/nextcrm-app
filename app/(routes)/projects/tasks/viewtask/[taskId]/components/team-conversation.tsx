@@ -44,7 +44,7 @@ interface TeamConversationsProps {
 }
 
 const FormSchema = z.object({
-  comment: z.string().min(3).max(50),
+  comment: z.string().min(3).max(160),
 });
 
 export function TeamConversations({
@@ -64,11 +64,9 @@ export function TeamConversations({
     try {
       setIsLoading(true);
       await axios.post(`/api/projects/tasks/addCommentToTask/${taskId}`, data);
-      form.reset();
       toast({
         title: "Success, comment added.",
       });
-      router.refresh();
     } catch (error) {
       toast({
         variant: "destructive",
@@ -76,6 +74,10 @@ export function TeamConversations({
         description: "Something went wrong while sending comment to the DB",
       });
     } finally {
+      form.reset({
+        comment: "",
+      });
+      router.refresh();
       setIsLoading(false);
     }
   }
@@ -134,7 +136,7 @@ export function TeamConversations({
                     <p className="text-sm font-medium leading-none">
                       {comment.assigned_user?.name}
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs text-muted-foreground py-2">
                       {comment.comment}
                     </p>
                   </div>
