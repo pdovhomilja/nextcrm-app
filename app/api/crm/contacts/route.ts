@@ -21,7 +21,9 @@ export async function POST(req: Request) {
     const {
       account,
       assigned_to,
-      birthday,
+      birthday_day,
+      birthday_month,
+      birthday_year,
       description,
       email,
       personal_email,
@@ -46,19 +48,21 @@ export async function POST(req: Request) {
         v: 0,
         createdBy: userId,
         updatedBy: userId,
-        ...(account !== null && {
-          assigned_accounts: {
-            connect: {
-              id: account,
-            },
-          },
-        }),
+        ...(account !== null && account !== undefined
+          ? {
+              assigned_accounts: {
+                connect: {
+                  id: account,
+                },
+              },
+            }
+          : {}),
         assigned_to_user: {
           connect: {
             id: assigned_to,
           },
         },
-        birthday,
+        birthday: birthday_day + "/" + birthday_month + "/" + birthday_year,
         description,
         email,
         personal_email,
@@ -129,7 +133,9 @@ export async function PUT(req: Request) {
       id,
       account,
       assigned_to,
-      birthday,
+      birthday_day,
+      birthday_month,
+      birthday_year,
       description,
       email,
       personal_email,
@@ -171,7 +177,7 @@ export async function PUT(req: Request) {
             id: assigned_to,
           },
         },
-        birthday,
+        birthday: birthday_day + "/" + birthday_month + "/" + birthday_year,
         description,
         email,
         personal_email,

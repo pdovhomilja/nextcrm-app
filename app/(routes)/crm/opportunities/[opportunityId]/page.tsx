@@ -1,19 +1,28 @@
-import { getOpportunity } from "@/actions/crm/get-opportunity";
 import Container from "@/app/(routes)/components/ui/Container";
 import React from "react";
+
 import { BasicView } from "./components/BasicView";
-import { crm_Opportunities } from "@prisma/client";
-import ContactView from "./components/ContactView";
-import DocumentsView from "./components/DocumentsView";
+
+import DocumentsView from "../../components/DocumentsView";
+import ContactsView from "../../components/ContactsView";
+import AccountsView from "../../components/AccountsView";
+
+import { getAllCrmData } from "@/actions/crm/get-crm-data";
+import { getOpportunity } from "@/actions/crm/get-opportunity";
+import { getContactsByOpportunityId } from "@/actions/crm/get-contacts-by-opportunityId";
+import { getDocumentsByOpportunityId } from "@/actions/documents/get-documents-by-opportunityId";
+import { getAccountsByOpportunityId } from "@/actions/crm/get-accounts-by-opportunityId";
 
 const OpportunityView = async ({
   params: { opportunityId },
 }: {
   params: { opportunityId: string };
 }) => {
-  //TODO: Add a loading state
-  //TODO: fix any
   const opportunity: any = await getOpportunity(opportunityId);
+  const crmData = await getAllCrmData();
+  const accounts = await getAccountsByOpportunityId(opportunityId);
+  const contacts = await getContactsByOpportunityId(opportunityId);
+  const documents = await getDocumentsByOpportunityId(opportunityId);
 
   if (!opportunity) return <div>Opportunity not found</div>;
 
@@ -24,11 +33,9 @@ const OpportunityView = async ({
     >
       <div className="space-y-5">
         <BasicView data={opportunity} />
-        <ContactView
-          data={opportunity.contacts}
-          opportunityId={opportunity.id}
-        />
-        <DocumentsView data={opportunity.documents} />
+        <AccountsView crmData={crmData} data={accounts} />
+        <ContactsView crmData={crmData} data={contacts} />
+        <DocumentsView data={documents} />
       </div>
     </Container>
   );

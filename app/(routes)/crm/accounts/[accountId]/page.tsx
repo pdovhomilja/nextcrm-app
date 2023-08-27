@@ -1,19 +1,18 @@
-import { getAccount } from "@/actions/crm/get-account";
 import Container from "@/app/(routes)/components/ui/Container";
 import React from "react";
 import { BasicView } from "./components/BasicView";
 
-import ContactView from "./components/ContactView";
-import DocumentsView from "./components/DocumentsView";
-
-import OpportunitiesView from "./components/OpportunitiesView";
-
+import { getAccount } from "@/actions/crm/get-account";
 import { getAllCrmData } from "@/actions/crm/get-crm-data";
 import { getOpportunitiesFullByAccountId } from "@/actions/crm/get-opportunities-with-includes-by-accountId";
 import { getContactsByAccountId } from "@/actions/crm/get-contacts-by-accountId";
-import LeadsView from "./components/LeadsView";
 import { getLeadsByAccountId } from "@/actions/crm/get-leads-by-accountId";
 import { getDocumentsByAccountId } from "@/actions/documents/get-documents-by-accountId";
+
+import OpportunitiesView from "../../components/OpportunitiesView";
+import LeadsView from "../../components/LeadsView";
+import ContactsView from "../../components/ContactsView";
+import DocumentsView from "../../components/DocumentsView";
 
 interface AccountDetailPageProps {
   params: {
@@ -28,9 +27,8 @@ const AccountDetailPage = async ({ params }: AccountDetailPageProps) => {
   const contacts: any = await getContactsByAccountId(accountId);
   const leads: any = await getLeadsByAccountId(accountId);
   const documents: any = await getDocumentsByAccountId(accountId);
-  //console.log(account, "account");
-
   const crmData = await getAllCrmData();
+  //console.log(account, "account");
 
   if (!account) return <div>Account not found</div>;
 
@@ -49,7 +47,11 @@ const AccountDetailPage = async ({ params }: AccountDetailPageProps) => {
           />
         </div>
 
-        <ContactView data={contacts} crmData={crmData} accountId={account.id} />
+        <ContactsView
+          data={contacts}
+          crmData={crmData}
+          accountId={account.id}
+        />
         <LeadsView data={leads} crmData={crmData} />
         <DocumentsView data={documents} />
       </div>

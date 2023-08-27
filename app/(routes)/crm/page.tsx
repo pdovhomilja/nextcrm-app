@@ -1,51 +1,33 @@
-import React, { Suspense } from "react";
-import Link from "next/link";
-
-import H2Title from "@/components/typography/h2";
-import SuspenseLoading from "@/components/loadings/suspense";
-
-import AccountView from "./accounts/components/AccountView";
+import LeadsView from "./components/LeadsView";
 import Container from "../components/ui/Container";
+import AccountsView from "./components/AccountsView";
+import ContactsView from "./components/ContactsView";
+import OpportunitiesView from "./components/OpportunitiesView";
 
-import OpportunityView from "./opportunities/components/OpportunityView";
-import ContactView from "./contacts/components/ContactView";
-import LeadView from "./leads/components/LeadView";
+import { getLeads } from "@/actions/crm/get-leads";
+import { getAccounts } from "@/actions/crm/get-accounts";
+import { getContacts } from "@/actions/crm/get-contacts";
+import { getAllCrmData } from "@/actions/crm/get-crm-data";
+import { getOpportunitiesFull } from "@/actions/crm/get-opportunities-with-includes";
 
-type Props = {};
+const CrmPage = async () => {
+  const crmData = await getAllCrmData();
+  const accounts = await getAccounts();
+  const contacts = await getContacts();
+  const opportunities = await getOpportunitiesFull();
+  const leads = await getLeads();
 
-const CrmPage = async (props: Props) => {
   return (
     <Container
       title="CRM"
       description={"Everything you need to know about sales"}
     >
-      <Link href="/crm/accounts">
-        <H2Title>Accounts</H2Title>
-      </Link>
-      <Suspense fallback={<SuspenseLoading />}>
-        <AccountView />
-      </Suspense>
-
-      <Link href="/crm/contacts">
-        <H2Title>Contacts</H2Title>
-      </Link>
-      <Suspense fallback={<SuspenseLoading />}>
-        <ContactView />
-      </Suspense>
-
-      <Link href="/crm/opportunities">
-        <H2Title>Opportunities</H2Title>
-      </Link>
-      <Suspense fallback={<SuspenseLoading />}>
-        <OpportunityView />
-      </Suspense>
-
-      <Link href="/crm/leads">
-        <H2Title>Leads</H2Title>
-      </Link>
-      <Suspense fallback={<SuspenseLoading />}>
-        <LeadView />
-      </Suspense>
+      <div className="space-y-5">
+        <AccountsView crmData={crmData} data={accounts} />
+        <ContactsView crmData={crmData} data={contacts} />
+        <OpportunitiesView crmData={crmData} data={opportunities} />
+        <LeadsView crmData={crmData} data={leads} />
+      </div>
     </Container>
   );
 };

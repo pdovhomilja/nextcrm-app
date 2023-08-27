@@ -6,10 +6,6 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-
-import { cn } from "@/lib/utils";
 
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
@@ -30,12 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+
 import { Switch } from "@/components/ui/switch";
 
 //TODO: fix all the types
@@ -57,7 +48,9 @@ export function NewContactForm({ users, accounts }: NewTaskFormProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const formSchema = z.object({
-    birthday: z.date().optional(),
+    birthday_year: z.string().optional().nullable(),
+    birthday_month: z.string().optional().nullable(),
+    birthday_day: z.string().optional().nullable(),
     first_name: z.string().optional(),
     last_name: z.string(),
     description: z.string().optional(),
@@ -91,6 +84,12 @@ export function NewContactForm({ users, accounts }: NewTaskFormProps) {
     { name: "Vendor", id: "Vendor" },
   ];
 
+  const yearArray = Array.from(
+    //start in 1923 and count to +100 years
+    { length: 100 },
+    (_, i) => i + 1923
+  );
+
   const onSubmit = async (data: NewAccountFormValues) => {
     setIsLoading(true);
     try {
@@ -115,8 +114,9 @@ export function NewContactForm({ users, accounts }: NewTaskFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="h-full px-10">
-        {/*         <div>
+        {/*        <div>
           <pre>
+            <code>{JSON.stringify(form.formState, null, 2)}</code>
             <code>{JSON.stringify(form.watch(), null, 2)}</code>
             <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
           </pre>
@@ -235,47 +235,88 @@ export function NewContactForm({ users, accounts }: NewTaskFormProps) {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="birthday"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Birthday</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-[240px] pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
+            <h3>Birthday - (optional)</h3>
+            <div className="flex space-x-3 w-full mx-auto">
+              <FormField
+                control={form.control}
+                name="birthday_year"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <div className="flex space-x-2 w-32">
+                      <Select onValueChange={field.onChange}>
+                        <SelectTrigger>Year</SelectTrigger>
+                        <SelectContent className="flex overflow-y-auto h-56">
+                          {yearArray.map((yearOption) => (
+                            <SelectItem
+                              key={yearOption}
+                              value={yearOption.toString()}
+                            >
+                              {yearOption}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="birthday_month"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <div className="flex space-x-2 w-28">
+                      <Select onValueChange={field.onChange}>
+                        <SelectTrigger>Month</SelectTrigger>
+                        <SelectContent>
+                          {/* Replace this with the range of months you want to allow */}
+                          {Array.from({ length: 12 }, (_, i) => i + 1).map(
+                            (monthOption) => (
+                              <SelectItem
+                                key={monthOption}
+                                value={monthOption.toString()}
+                              >
+                                {monthOption}
+                              </SelectItem>
+                            )
                           )}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>Pick a contact birth day</span>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="birthday_day"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <div className="flex space-x-2">
+                      <Select onValueChange={field.onChange}>
+                        <SelectTrigger>Day</SelectTrigger>
+                        <SelectContent>
+                          {/* Replace this with the range of months you want to allow */}
+                          {Array.from({ length: 31 }, (_, i) => i + 1).map(
+                            (dayOption) => (
+                              <SelectItem
+                                key={dayOption}
+                                value={dayOption.toString()}
+                              >
+                                {dayOption}
+                              </SelectItem>
+                            )
                           )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        //@ts-ignore
-                        //TODO: fix this
-                        onSelect={field.onChange}
-                        disabled={(date) => date < new Date("1900-01-01")}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
               name="description"
