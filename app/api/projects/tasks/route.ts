@@ -53,10 +53,6 @@ export async function DELETE(req: Request) {
     return new NextResponse("Missing board id", { status: 400 });
   }
 
-  if (!section) {
-    return new NextResponse("Missing section id", { status: 400 });
-  }
-
   try {
     //Find data for current task by ID
     /*     const currentTask = await Tasks.findById(taskId); */
@@ -69,6 +65,7 @@ export async function DELETE(req: Request) {
     /*     
       Delete all tasks comments
       You must delete tasks comments before you delete task, because of foreign key constraint.
+      TODO: This can be done by PRISMA cascade delete
       */
     await prismadb.tasksComments.deleteMany({
       where: {
@@ -102,10 +99,7 @@ export async function DELETE(req: Request) {
     //console.log(tasks, "tasks from deleteTask API call");
     for (const key in tasks) {
       const position = parseInt(key);
-      //POZOR na id vs _id
-      /*     await Tasks.findByIdAndUpdate(tasks[key]._id, {
-          $set: { position: key },
-        }); */
+
       await prismadb.tasks.update({
         where: {
           id: tasks[key].id,
@@ -115,6 +109,7 @@ export async function DELETE(req: Request) {
         },
       });
     }
+
     return NextResponse.json({ status: 200 });
   } catch (error) {
     console.log("[NEW_BOARD_POST]", error);

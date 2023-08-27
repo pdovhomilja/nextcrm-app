@@ -13,6 +13,9 @@ import OpportunitiesView from "../../components/OpportunitiesView";
 import LeadsView from "../../components/LeadsView";
 import ContactsView from "../../components/ContactsView";
 import DocumentsView from "../../components/DocumentsView";
+import TasksView from "../../components/TasksView";
+import { getTasksByAcccountId } from "@/actions/projects/get-tasks-by-accountsId";
+import { crm_Accounts } from "@prisma/client";
 
 interface AccountDetailPageProps {
   params: {
@@ -22,13 +25,14 @@ interface AccountDetailPageProps {
 
 const AccountDetailPage = async ({ params }: AccountDetailPageProps) => {
   const { accountId } = params;
-  const account: any = await getAccount(accountId);
+  const account: crm_Accounts | null = await getAccount(accountId);
   const opportunities: any = await getOpportunitiesFullByAccountId(accountId);
   const contacts: any = await getContactsByAccountId(accountId);
   const leads: any = await getLeadsByAccountId(accountId);
   const documents: any = await getDocumentsByAccountId(accountId);
+  const tasks: any = await getTasksByAcccountId(accountId);
   const crmData = await getAllCrmData();
-  //console.log(account, "account");
+  console.log(tasks, "tasks");
 
   if (!account) return <div>Account not found</div>;
 
@@ -39,19 +43,13 @@ const AccountDetailPage = async ({ params }: AccountDetailPageProps) => {
     >
       <div className="space-y-5">
         <BasicView data={account} />
-        <div>
-          <OpportunitiesView
-            data={opportunities}
-            crmData={crmData}
-            accountId={accountId}
-          />
-        </div>
-
-        <ContactsView
-          data={contacts}
+        <TasksView data={tasks} account={account} />
+        <OpportunitiesView
+          data={opportunities}
           crmData={crmData}
-          accountId={account.id}
+          accountId={accountId}
         />
+        <ContactsView data={contacts} crmData={crmData} accountId={accountId} />
         <LeadsView data={leads} crmData={crmData} />
         <DocumentsView data={documents} />
       </div>

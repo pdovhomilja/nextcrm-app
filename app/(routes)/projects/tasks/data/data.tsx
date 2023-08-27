@@ -54,6 +54,11 @@ export const priorities = [
     icon: ArrowRightIcon,
   },
   {
+    label: "Medium",
+    value: "medium",
+    icon: ArrowRightIcon,
+  },
+  {
     label: "High",
     value: "high",
     icon: ArrowUpIcon,

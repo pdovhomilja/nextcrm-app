@@ -12,7 +12,7 @@ import { DataTableRowActions } from "./data-table-row-actions";
 import moment from "moment";
 
 export const columns: ColumnDef<Task>[] = [
-  {
+  /*   {
     id: "select",
     header: ({ table }) => (
       <Checkbox
@@ -32,7 +32,7 @@ export const columns: ColumnDef<Task>[] = [
     ),
     enableSorting: false,
     enableHiding: false,
-  },
+  }, */
   {
     accessorKey: "dueDateAt",
     header: ({ column }) => (
@@ -40,7 +40,7 @@ export const columns: ColumnDef<Task>[] = [
     ),
     cell: ({ row }) => (
       <div className="w-[80px]">
-        {moment(row.getValue("dueDateAt")).format("YY-MM-dd")}
+        {moment(row.getValue("dueDateAt")).format("YY-MM-DD")}
       </div>
     ),
     enableSorting: false,
@@ -53,7 +53,7 @@ export const columns: ColumnDef<Task>[] = [
     ),
 
     cell: ({ row }) => (
-      <div className="w-[80px]">
+      <div className="w-[180px]">
         {
           //@ts-ignore
           //TODO: fix this

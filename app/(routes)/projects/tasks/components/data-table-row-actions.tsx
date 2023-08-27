@@ -1,31 +1,24 @@
 "use client";
 
-import { DotsHorizontalIcon } from "@radix-ui/react-icons";
+import axios from "axios";
+import { useState } from "react";
 import { Row } from "@tanstack/react-table";
+import { useRouter } from "next/navigation";
+import { DotsHorizontalIcon } from "@radix-ui/react-icons";
 
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-import { labels } from "../data/data";
-import { taskSchema } from "../data/schema";
-import { useRouter } from "next/navigation";
-import AlertModal from "@/components/modals/alert-modal";
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import axios from "axios";
-import { set } from "date-fns";
+import AlertModal from "@/components/modals/alert-modal";
+
+import { taskSchema } from "../data/schema";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -95,8 +88,8 @@ export function DataTableRowActions<TData>({
           >
             View
           </DropdownMenuItem>
-          <DropdownMenuItem>Make a copy</DropdownMenuItem>
-          <DropdownMenuItem>Favorite</DropdownMenuItem>
+          {/*           <DropdownMenuItem>Make a copy</DropdownMenuItem>
+          <DropdownMenuItem>Favorite</DropdownMenuItem> */}
           <DropdownMenuSeparator />
           {/*  <DropdownMenuSub>
           <DropdownMenuSubTrigger>Labels</DropdownMenuSubTrigger>

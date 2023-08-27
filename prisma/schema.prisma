@@ -50,6 +50,7 @@ model crm_Accounts {
   industry_type        crm_Industry_Type?  @relation(fields: [industry], references: [id])
   opportunities        crm_Opportunities[]
   assigned_to_user     Users?              @relation(fields: [assigned_to], references: [id])
+  Tasks                Tasks[]
 }
 
 model crm_Leads {
@@ -128,6 +129,7 @@ model crm_Opportunities {
   documents            Documents[]                     @relation(fields: [connected_documents], references: [id])
   connected_contacts   String[]                        @db.ObjectId
   contacts             crm_Contacts[]                  @relation(fields: [connected_contacts], references: [id])
+  Tasks                Tasks[]
 }
 
 enum crm_Opportunity_Status {
@@ -203,6 +205,7 @@ model crm_Contacts {
   assigned_accounts      crm_Accounts?       @relation(fields: [accountsIDs], references: [id])
   documentsIDs           String[]            @db.ObjectId
   assigned_documents     Documents[]         @relation(fields: [documentsIDs], references: [id])
+  Tasks                  Tasks[]
 }
 
 enum crm_Contact_Type {
@@ -438,32 +441,42 @@ model modulStatus {
 }
 
 model Tasks {
-  id               String          @id @default(auto()) @map("_id") @db.ObjectId
-  v                Int             @map("__v")
+  id               String             @id @default(auto()) @map("_id") @db.ObjectId
+  v                Int                @map("__v")
   content          String?
-  createdAt        DateTime        @db.Date
-  createdBy        String?         @db.ObjectId
-  dueDateAt        DateTime?       @default(now()) @db.Date
-  lastEditedAt     DateTime?       @default(now()) @updatedAt @db.Date
+  createdAt        DateTime?          @default(now()) @db.Date
+  createdBy        String?            @db.ObjectId
+  updatedAt        DateTime?          @updatedAt @db.Date
+  updatedBy        String?            @db.ObjectId
+  dueDateAt        DateTime?          @default(now()) @db.Date
+  lastEditedAt     DateTime?          @default(now()) @updatedAt @db.Date
   position         Int
   priority         String
-  section          String          @db.ObjectId
+  section          String?            @db.ObjectId
   tags             Json?
   title            String
-  user             String?         @db.ObjectId
-  documentIDs      String[]        @db.ObjectId
+  user             String?            @db.ObjectId
+  documentIDs      String[]           @db.ObjectId
   comments         tasksComments[]
-  documents        Documents[]     @relation(fields: [documentIDs], references: [id])
-  taskStatus       taskStatus?     @default(ACTIVE)
-  assigned_user    Users?          @relation(fields: [user], references: [id])
-  assigned_section Sections?       @relation(fields: [section], references: [id])
+  documents        Documents[]        @relation(fields: [documentIDs], references: [id])
+  assigned_user    Users?             @relation(fields: [user], references: [id])
+  assigned_section Sections?          @relation(fields: [section], references: [id])
+  //CRM assigments
+  account          String?            @db.ObjectId
+  crm_accounts     crm_Accounts?      @relation(fields: [account], references: [id])
+  opportunity      String?            @db.ObjectId
+  crm_opportunity  crm_Opportunities? @relation(fields: [opportunity], references: [id])
+  contact          String?            @db.ObjectId
+  crm_contact      crm_Contacts?      @relation(fields: [contact], references: [id])
+  //Staus
+  taskStatus       taskStatus?        @default(ACTIVE)
 }
 
 model tasksComments {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
   v             Int      @map("__v")
   comment       String
-  createdAt     DateTime @db.Date
+  createdAt     DateTime @default(now()) @db.Date
   task          String   @db.ObjectId
   user          String   @db.ObjectId
   assigned_task Tasks?   @relation(fields: [task], references: [id])

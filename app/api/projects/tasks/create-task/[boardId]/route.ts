@@ -10,20 +10,24 @@ export async function POST(
   const session = await getServerSession(authOptions);
   const body = await req.json();
   const { boardId } = params;
-  const { title, user, priority, content, section } = body;
+  const { title, priority, content, section } = body;
 
   if (!session) {
     return new NextResponse("Unauthenticated", { status: 401 });
   }
 
-  if (!boardId) {
+  let user = session.user.id;
+
+  /*  if (!boardId) {
     return new NextResponse("Missing board id", { status: 400 });
-  }
+  } */
 
   if (!section) {
     return new NextResponse("Missing section id", { status: 400 });
   }
-  console.log(section, "section");
+
+  //console.log(section, "section");
+
   if (!title || !user || !priority || !content) {
     try {
       const tasksCount = await prismadb.tasks.count({
@@ -39,9 +43,8 @@ export async function POST(
           title: "New task",
           content: "",
           section: section,
-          dueDateAt: new Date(),
-          createdAt: new Date(),
-          createdBy: session.user.id,
+          createdBy: user,
+          updatedBy: user,
           position: tasksCount > 0 ? tasksCount : 0,
           user: user,
           taskStatus: "ACTIVE",
@@ -68,9 +71,8 @@ export async function POST(
           title: title,
           content: content,
           section: section,
-          dueDateAt: new Date(),
-          createdAt: new Date(),
           createdBy: user,
+          updatedBy: user,
           position: tasksCount > 0 ? tasksCount : 0,
           user: user,
           taskStatus: "ACTIVE",

@@ -74,14 +74,6 @@ export function OpportunitiesDataTable<TData, TValue>({
     <div className="space-y-4">
       <div className="flex justify-between items-start gap-3">
         <div></div>
-        {/*         <RightViewModal
-          label={"Create account"}
-          title="Create account"
-          description=""
-        >
-          <NewAccountForm industries={industries} users={users} />
-        </RightViewModal> */}
-
         <div className="flex justify-end space-x-2">
           {hide ? (
             <PanelTopOpen
