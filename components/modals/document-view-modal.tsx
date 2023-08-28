@@ -43,6 +43,7 @@ const DocumentViewModal = ({
     "image/jpg",
     "image/jpeg",
     "image/gif",
+    "image/webp",
   ];
 
   console.log(document.document_file_mimeType, "mimeType");
