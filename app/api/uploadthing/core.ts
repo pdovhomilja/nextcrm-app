@@ -35,15 +35,13 @@ export const ourFileRouter = {
       await prismadb.documents.create({
         data: {
           v: 0,
-          date_created: new Date(),
-          last_updated: new Date(),
           document_name: file.name,
           description: "new document",
           document_file_url: file.url,
           key: file.key,
           size: file.size,
           document_file_mimeType: `image/${file.name.split(".").pop()}`,
-          created_by_user: metadata.userId,
+          createdBy: metadata.userId,
           assigned_user: metadata.userId,
         },
       });
@@ -102,15 +100,13 @@ export const ourFileRouter = {
       await prismadb.documents.create({
         data: {
           v: 0,
-          date_created: new Date(),
-          last_updated: new Date(),
           document_name: file.name,
           description: "new document",
           document_file_url: file.url,
           key: file.key,
           size: file.size,
           document_file_mimeType: "application/pdf",
-          created_by_user: metadata.userId,
+          createdBy: metadata.userId,
           assigned_user: metadata.userId,
         },
       });
@@ -137,15 +133,13 @@ export const ourFileRouter = {
       await prismadb.documents.create({
         data: {
           v: 0,
-          date_created: new Date(),
-          last_updated: new Date(),
           document_name: file.name,
           description: "new document",
           document_file_url: file.url,
           key: file.key,
           size: file.size,
           document_file_mimeType: "application/docs",
-          created_by_user: metadata.userId,
+          createdBy: metadata.userId,
           assigned_user: metadata.userId,
         },
       });
