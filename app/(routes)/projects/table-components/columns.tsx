@@ -3,7 +3,6 @@
 import { ColumnDef } from "@tanstack/react-table";
 
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 
 import { labels, priorities, statuses } from "../data/data";
 import { Task } from "../data/schema";
@@ -12,7 +11,7 @@ import { DataTableRowActions } from "./data-table-row-actions";
 import moment from "moment";
 
 export const columns: ColumnDef<Task>[] = [
-  {
+  /* {
     id: "select",
     header: ({ table }) => (
       <Checkbox
@@ -32,7 +31,7 @@ export const columns: ColumnDef<Task>[] = [
     ),
     enableSorting: false,
     enableHiding: false,
-  },
+  }, */
   {
     accessorKey: "date_created",
     header: ({ column }) => (

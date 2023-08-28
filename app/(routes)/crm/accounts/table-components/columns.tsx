@@ -10,6 +10,7 @@ import { Account } from "../table-data/schema";
 import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
 import moment from "moment";
+import Link from "next/link";
 
 export const columns: ColumnDef<Account>[] = [
   {
@@ -50,13 +51,15 @@ export const columns: ColumnDef<Account>[] = [
     ),
 
     cell: ({ row }) => (
-      <div className="w-[250px]">
-        {
-          //@ts-ignore
-          //TODO: fix this
-          row.getValue("name")
-        }
-      </div>
+      <Link href={`/crm/accounts/${row.original?.id}`}>
+        <div className="w-[250px]">
+          {
+            //@ts-ignore
+            //TODO: fix this
+            row.getValue("name")
+          }
+        </div>
+      </Link>
     ),
     enableSorting: false,
     enableHiding: true,
