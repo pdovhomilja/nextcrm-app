@@ -34,6 +34,8 @@ const DashboardPage = async () => {
   const session = await getServerSession(authOptions);
   if (!session) return null;
   const userId = session?.user?.id;
+
+  //Fetch data for dashboard
   const users = await getUsers();
   const employees = await getEmployees();
   const accounts = await getAccounts();
