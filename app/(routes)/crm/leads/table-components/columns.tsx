@@ -63,11 +63,29 @@ export const columns: ColumnDef<Lead>[] = [
     ),
 
     cell: ({ row }) => (
-      <div className="w-[250px]">
+      <div className="">
         {
           //@ts-ignore
           //TODO: fix this
           row.getValue("company") ?? "Unassigned"
+        }
+      </div>
+    ),
+    enableSorting: false,
+    enableHiding: true,
+  },
+  {
+    accessorKey: "firstName",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Name" />
+    ),
+
+    cell: ({ row }) => (
+      <div>
+        {
+          //@ts-ignore
+          //TODO: fix this
+          row.getValue("firstName") + " " + row.original.lastName
         }
       </div>
     ),

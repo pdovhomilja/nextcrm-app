@@ -30,23 +30,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+
 import fetcher from "@/lib/fetcher";
 import useSWR from "swr";
 import SuspenseLoading from "@/components/loadings/suspense";
-import { Switch } from "@/components/ui/switch";
 
 //TODO: fix all the types
 type NewTaskFormProps = {
   initialData: any;
+  setOpen: (value: boolean) => void;
 };
 
-export function UpdateLeadForm({ initialData }: NewTaskFormProps) {
+export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -66,12 +61,12 @@ export function UpdateLeadForm({ initialData }: NewTaskFormProps) {
     id: z.string().min(5).max(30),
     firstName: z.string().optional().nullable(),
     lastName: z.string().min(3).max(30).nonempty(),
-    company: z.string().optional(),
-    jobTitle: z.string().optional(),
-    email: z.string().email(),
-    phone: z.string().min(7).max(15),
-    description: z.string(),
-    lead_source: z.string().optional(),
+    company: z.string().nullable().optional(),
+    jobTitle: z.string().nullable().optional(),
+    email: z.string().email().nullable().optional(),
+    phone: z.string().min(0).max(15).nullable().optional(),
+    description: z.string().nullable().optional(),
+    lead_source: z.string().nullable().optional(),
     refered_by: z.string().optional().nullable(),
     //TODO: add campaing schema from db as data source
     campaign: z.string().optional().nullable(),
@@ -106,8 +101,8 @@ export function UpdateLeadForm({ initialData }: NewTaskFormProps) {
       });
     } finally {
       setIsLoading(false);
+      setOpen(false);
       router.refresh();
-      router.push("/crm/leads");
     }
   };
 

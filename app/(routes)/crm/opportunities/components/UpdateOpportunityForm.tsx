@@ -43,9 +43,13 @@ import useSWR from "swr";
 //TODO: fix all the types
 type NewTaskFormProps = {
   initialData: any;
+  setOpen: (value: boolean) => void;
 };
 
-export function UpdateOpportunityForm({ initialData }: NewTaskFormProps) {
+export function UpdateOpportunityForm({
+  initialData,
+  setOpen,
+}: NewTaskFormProps) {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -99,8 +103,8 @@ export function UpdateOpportunityForm({ initialData }: NewTaskFormProps) {
       });
     } finally {
       setIsLoading(false);
+      setOpen(false);
       router.refresh();
-      router.push("/crm/opportunities");
     }
   };
 

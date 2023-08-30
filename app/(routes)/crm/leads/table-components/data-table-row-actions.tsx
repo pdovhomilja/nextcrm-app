@@ -79,7 +79,7 @@ export function DataTableRowActions<TData>({
         open={updateOpen}
         setOpen={setUpdateOpen}
       >
-        <UpdateLeadForm initialData={row.original} />
+        <UpdateLeadForm initialData={row.original} setOpen={setUpdateOpen} />
       </RightViewModalNoTrigger>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

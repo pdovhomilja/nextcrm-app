@@ -172,7 +172,7 @@ const NewTaskDialog = ({ users, boards }: Props) => {
                               <SelectValue placeholder="Select assigned user" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
+                          <SelectContent className="h-56 overflow-y-auto">
                             {users.map((user: any) => (
                               <SelectItem key={user.id} value={user.id}>
                                 {user.name}

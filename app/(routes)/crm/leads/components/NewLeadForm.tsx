@@ -54,8 +54,8 @@ export function NewLeadForm({ users, accounts }: NewTaskFormProps) {
     last_name: z.string().min(3).max(30).nonempty(),
     company: z.string().optional(),
     jobTitle: z.string().optional(),
-    email: z.string().email(),
-    phone: z.string().min(7).max(15),
+    email: z.string().email().optional(),
+    phone: z.string().min(0).max(15).optional(),
     description: z.string().optional(),
     lead_source: z.string().optional(),
     refered_by: z.string().optional(),
@@ -86,8 +86,21 @@ export function NewLeadForm({ users, accounts }: NewTaskFormProps) {
       });
     } finally {
       setIsLoading(false);
+      form.reset({
+        first_name: "",
+        last_name: "",
+        company: "",
+        jobTitle: "",
+        email: "",
+        phone: "",
+        description: "",
+        lead_source: "",
+        refered_by: "",
+        campaign: "",
+        assigned_to: "",
+        accountIDs: "",
+      });
       router.refresh();
-      router.push("/crm/leads");
     }
   };
 
