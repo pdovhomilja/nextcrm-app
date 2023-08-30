@@ -19,8 +19,8 @@ export async function POST(req: Request) {
     }
 
     const {
-      account,
       assigned_to,
+      assigned_account,
       birthday_day,
       birthday_month,
       birthday_year,
@@ -48,11 +48,11 @@ export async function POST(req: Request) {
         v: 0,
         createdBy: userId,
         updatedBy: userId,
-        ...(account !== null && account !== undefined
+        ...(assigned_account !== null && assigned_account !== undefined
           ? {
               assigned_accounts: {
                 connect: {
-                  id: account,
+                  id: assigned_account,
                 },
               },
             }
@@ -131,7 +131,7 @@ export async function PUT(req: Request) {
 
     const {
       id,
-      account,
+      assigned_account,
       assigned_to,
       birthday_day,
       birthday_month,
@@ -155,7 +155,7 @@ export async function PUT(req: Request) {
       type,
     } = body;
 
-    console.log(account, "account");
+    console.log(assigned_account, "assigned_account");
 
     const newContact = await prismadb.crm_Contacts.update({
       where: {
@@ -164,14 +164,16 @@ export async function PUT(req: Request) {
       data: {
         v: 0,
         updatedBy: userId,
-        //Update accountsIDs only if account is not empty
-        ...(account !== null && {
-          assigned_accounts: {
-            connect: {
-              id: account,
-            },
-          },
-        }),
+        //Update assigned_accountsIDs only if assigned_account is not empty
+        ...(assigned_account !== null && assigned_account !== undefined
+          ? {
+              assigned_accounts: {
+                connect: {
+                  id: assigned_account,
+                },
+              },
+            }
+          : {}),
         assigned_to_user: {
           connect: {
             id: assigned_to,

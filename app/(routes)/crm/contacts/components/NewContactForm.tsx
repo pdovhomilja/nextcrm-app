@@ -106,11 +106,36 @@ export function NewContactForm({ users, accounts }: NewTaskFormProps) {
       });
     } finally {
       setIsLoading(false);
+      form.reset({
+        first_name: "",
+        last_name: "",
+        description: "",
+        email: "",
+        personal_email: "",
+        office_phone: "",
+        mobile_phone: "",
+        website: "",
+        position: "",
+        status: false,
+        type: "",
+        assigned_to: "",
+        assigned_account: "",
+        social_twitter: "",
+        social_facebook: "",
+        social_linkedin: "",
+        social_skype: "",
+        social_youtube: "",
+        social_tiktok: "",
+        birthday_year: "",
+        birthday_month: "",
+        birthday_day: "",
+      });
       router.refresh();
-      router.push("/crm/contacts");
     }
   };
-  console.log(filteredData, "filteredData");
+
+  //console.log(filteredData, "filteredData");
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="h-full px-10">

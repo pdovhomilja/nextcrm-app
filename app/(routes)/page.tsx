@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import {
   CoinsIcon,
+  Contact,
   DollarSignIcon,
   FactoryIcon,
   LandmarkIcon,
@@ -29,6 +30,7 @@ import LoadingBox from "./components/dasboard/loading-box";
 import Link from "next/link";
 import { getModules } from "@/actions/get-modules";
 import StorageQuota from "./components/dasboard/storage-quota";
+import { getAllCrmData } from "@/actions/crm/get-crm-data";
 
 const DashboardPage = async () => {
   const session = await getServerSession(authOptions);
@@ -38,9 +40,6 @@ const DashboardPage = async () => {
   //Fetch data for dashboard
   const users = await getUsers();
   const employees = await getEmployees();
-  const accounts = await getAccounts();
-  const leads = await getLeads();
-  const opportunities = await getOpportunities();
   const tasks = await getTasks();
   const usersTasks = await getUserTasks(userId);
   const projects = await getBoards(userId);
@@ -48,6 +47,7 @@ const DashboardPage = async () => {
   const documents = await getDocuments();
   const storage = await getStorageSize();
   const modules = await getModules();
+  const crmData = await getAllCrmData();
 
   //Find which modules are enabled
   const crmModule = modules.find((module) => module.name === "crm");
@@ -55,6 +55,9 @@ const DashboardPage = async () => {
   const documentsModule = modules.find((module) => module.name === "documents");
   const projectsModule = modules.find((module) => module.name === "projects");
   const invoiceModule = modules.find((module) => module.name === "invoice");
+  const secondBrainModule = modules.find(
+    (module) => module.name === "secondBrain"
+  );
 
   return (
     <Container
@@ -114,7 +117,7 @@ const DashboardPage = async () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-medium">
-                      {accounts.length}
+                      {crmData.accounts.length}
                     </div>
                   </CardContent>
                 </Card>
@@ -129,7 +132,22 @@ const DashboardPage = async () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-medium">
-                      {opportunities.length}
+                      {crmData.opportunities.length}
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+              <Link href="/crm/contacts">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Contacts
+                    </CardTitle>
+                    <Contact className="w-4 h-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-medium">
+                      {crmData.contacts.length}
                     </div>
                   </CardContent>
                 </Card>
@@ -141,7 +159,9 @@ const DashboardPage = async () => {
                     <CoinsIcon className="w-4 h-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-medium">{leads.length}</div>
+                    <div className="text-2xl font-medium">
+                      {crmData.leads.length}
+                    </div>
                   </CardContent>
                 </Card>
               </Link>
@@ -221,9 +241,13 @@ const DashboardPage = async () => {
         )}
 
         <StorageQuota actual={storage} />
-        <Suspense fallback={<LoadingBox />}>
-          <NotionsBox />
-        </Suspense>
+        {secondBrainModule?.enabled && (
+          <>
+            <Suspense fallback={<LoadingBox />}>
+              <NotionsBox />
+            </Suspense>
+          </>
+        )}
       </div>
     </Container>
   );

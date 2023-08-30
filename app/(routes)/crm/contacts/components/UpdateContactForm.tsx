@@ -35,9 +35,10 @@ import SuspenseLoading from "@/components/loadings/suspense";
 //TODO: fix all the types
 type NewTaskFormProps = {
   initialData: any;
+  setOpen: (value: boolean) => void;
 };
 
-export function UpdateContactForm({ initialData }: NewTaskFormProps) {
+export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -73,7 +74,7 @@ export function UpdateContactForm({ initialData }: NewTaskFormProps) {
     type: z.string(),
     assigned_to: z.string(),
     accountsIDs: z.string().nullable().optional(),
-    account: z.string().nullable().optional(),
+    assigned_account: z.string().nullable().optional(),
     social_twitter: z.string().nullable().optional(),
     social_facebook: z.string().nullable().optional(),
     social_linkedin: z.string().nullable().optional(),
@@ -113,7 +114,7 @@ export function UpdateContactForm({ initialData }: NewTaskFormProps) {
     } finally {
       setIsLoading(false);
       router.refresh();
-      router.push("/crm/contacts");
+      setOpen(false);
     }
   };
 
@@ -410,7 +411,7 @@ export function UpdateContactForm({ initialData }: NewTaskFormProps) {
                 />
                 <FormField
                   control={form.control}
-                  name="account"
+                  name="assigned_account"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Assign an Account</FormLabel>

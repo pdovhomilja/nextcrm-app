@@ -66,7 +66,7 @@ export function NewAccountForm({ industries, users }: Props) {
     website: z.string().optional(),
     fax: z.string().optional(),
     company_id: z.string().min(5).max(10),
-    vat: z.string().min(5).max(10).optional(),
+    vat: z.string().min(0).max(10).optional(),
     email: z.string().email(),
     billing_street: z.string().min(3).max(50),
     billing_postal_code: z.string().min(5).max(6),

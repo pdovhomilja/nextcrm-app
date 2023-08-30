@@ -100,7 +100,7 @@ export function MyAccountSettingsForm({ initialData }: UpdateAccountFormProps) {
       .optional(),
     billing_street: z.string(),
     billing_city: z.string(),
-    billing_state: z.string(),
+    billing_state: z.string().nullable().optional(),
     billing_zip: z.string(),
     billing_country: z.string(),
     billing_country_code: z

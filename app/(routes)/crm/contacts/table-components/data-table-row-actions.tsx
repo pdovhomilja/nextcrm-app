@@ -85,7 +85,7 @@ export function DataTableRowActions<TData>({
         open={updateOpen}
         setOpen={setUpdateOpen}
       >
-        <UpdateContactForm initialData={row.original} />
+        <UpdateContactForm initialData={row.original} setOpen={setUpdateOpen} />
       </RightViewModalNoTrigger>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

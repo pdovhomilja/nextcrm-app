@@ -5,6 +5,9 @@ export const getUsers = async () => {
     orderBy: {
       created_on: "desc",
     },
+    where: {
+      userStatus: "ACTIVE",
+    },
   });
   return data;
 };
