@@ -16,8 +16,10 @@ const Footer = (props: Props) => {
       </div>
       <div className="hidden md:flex space-x-2 pr-2">
         powered by Next.js{" "}
-        <span className="bg-black rounded-md text-white px-1">13</span> hosted
-        by:
+        <span className="bg-black rounded-md text-white px-1">
+          13 + <Link href={"https://ui.shadcn.com/"}>shadcnUI</Link>
+        </span>{" "}
+        hosted by:
         <span className="text-bold underline">
           <Link href="https://www.vercel.com">Vercel</Link>
         </span>

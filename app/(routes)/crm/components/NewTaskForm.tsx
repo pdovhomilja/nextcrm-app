@@ -59,6 +59,7 @@ const NewTaskForm = ({ account }: NewTaskFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [date, setDate] = useState<Date>();
+  //  const [userSearch, setUserSearch] = useState<string>("");
 
   const { data: users, isLoading: isLoadingUsers } = useSWR(
     "/api/user",
@@ -118,6 +119,10 @@ const NewTaskForm = ({ account }: NewTaskFormProps) => {
   if (isLoadingUsers) {
     return <LoadingComponent />;
   }
+
+  /*   const filteredUsers = users?.filter((user: any) =>
+    user.name.toLowerCase().includes(userSearch.toLowerCase())
+  ); */
 
   return (
     <div className="flex flex-col">
@@ -222,11 +227,25 @@ const NewTaskForm = ({ account }: NewTaskFormProps) => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="h-56 overflow-y-auto">
+                          {/*                    <Input
+                            {...field}
+                            placeholder="Search user ..."
+                            onChange={(e) => {
+                              setTimeout(() => {
+                                setUserSearch(e.target.value);
+                              }, 1000);
+                            }}
+                          /> */}
                           {users.map((user: any) => (
                             <SelectItem key={user.id} value={user.id}>
                               {user.name}
                             </SelectItem>
                           ))}
+                          {/*           {filteredUsers.map((user: any) => (
+                            <SelectItem key={user.id} value={user.id}>
+                              {user.name}
+                            </SelectItem>
+                          ))} */}
                         </SelectContent>
                       </Select>
                       <FormMessage />

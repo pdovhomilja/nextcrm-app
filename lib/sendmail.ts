@@ -11,7 +11,7 @@ export default async function sendEmail(
   emailOptions: EmailOptions
 ): Promise<void> {
   const transporter = nodemailer.createTransport({
-    host: "mail.isfgroup.cz",
+    host: process.env.EMAIL_HOST,
     port: 465,
     secure: true,
     auth: {

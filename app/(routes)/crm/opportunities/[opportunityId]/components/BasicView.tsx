@@ -95,7 +95,9 @@ export async function BasicView({ data }: OppsViewProps) {
             <div className="space-y-1">
               <p className="text-sm font-medium leading-none">Account name</p>
               <p className="text-sm text-muted-foreground">
-                {data.assigned_account.name}
+                {data.assigned_account?.name
+                  ? data.assigned_account?.name
+                  : "Not assigned"}
               </p>
             </div>
           </div>
