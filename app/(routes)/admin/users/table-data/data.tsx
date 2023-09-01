@@ -17,3 +17,15 @@ export const statuses = [
     icon: PauseIcon,
   },
 ];
+export const isAdmin = [
+  {
+    value: "true",
+    label: "True",
+    icon: PlayIcon,
+  },
+  {
+    value: "false",
+    label: "False",
+    icon: StopIcon,
+  },
+];

@@ -48,9 +48,16 @@ export function InviteForm() {
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       await axios.post("/api/user/inviteuser", data);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Something went wrong while inviting the user.",
+      });
+    } finally {
       //TODO: send data to the server
       toast({
         title: "You submitted the following values:",
@@ -60,14 +67,12 @@ export function InviteForm() {
           </pre>
         ),
       });
-      router.refresh();
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Something went wrong while inviting the user.",
+      form.reset({
+        name: "",
+        email: "",
+        language: "",
       });
-    } finally {
+      router.refresh();
       setIsLoading(false);
     }
   }

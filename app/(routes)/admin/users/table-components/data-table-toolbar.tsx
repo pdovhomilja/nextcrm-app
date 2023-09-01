@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataTableViewOptions } from "./data-table-view-options";
 
-import { statuses } from "../table-data/data";
+import { statuses, isAdmin } from "../table-data/data";
 import { DataTableFacetedFilter } from "./data-table-faceted-filter";
 
 interface DataTableToolbarProps<TData> {
@@ -36,6 +36,13 @@ export function DataTableToolbar<TData>({
             column={table.getColumn("userStatus")}
             title="Status"
             options={statuses}
+          />
+        )}
+        {table.getColumn("is_admin") && (
+          <DataTableFacetedFilter
+            column={table.getColumn("is_admin")}
+            title="Admin"
+            options={isAdmin}
           />
         )}
         {isFiltered && (

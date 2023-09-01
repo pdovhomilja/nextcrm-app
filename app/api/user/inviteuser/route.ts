@@ -3,8 +3,13 @@ import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { generateRandomPassword } from "@/lib/utils";
-import sendEmail from "@/lib/sendmail";
+
 import { hash } from "bcryptjs";
+
+import { Resend } from "resend";
+import InviteUserEmail from "@/emails/InviteUser";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(
   req: Request,
@@ -57,12 +62,7 @@ export async function POST(
       });
     } else {
       //console.log(message, "message");
-      await sendEmail({
-        from: process.env.EMAIL_FROM,
-        to: email,
-        subject: `Invitation to ${process.env.NEXT_PUBLIC_APP_NAME}`,
-        text: message,
-      });
+
       //return res.status(201).json({ status: true, password });
       try {
         const user = await prismadb.users.create({
@@ -79,6 +79,30 @@ export async function POST(
             password: await hash(password, 12),
           },
         });
+
+        if (!user) {
+          return new NextResponse("User not created", { status: 500 });
+        }
+
+        const data = await resend.emails.send({
+          from:
+            process.env.NEXT_PUBLIC_APP_NAME +
+            " <" +
+            process.env.EMAIL_FROM +
+            ">",
+          to: user.email,
+          subject: `You have been invited to ${process.env.NEXT_PUBLIC_APP_NAME} `,
+          text: message, // Add this line to fix the types issue
+          react: InviteUserEmail({
+            invitedByUsername: session.user?.name! || "admin",
+            username: user?.name!,
+            invitedUserPassword: password,
+            userLanguage: language,
+          }),
+        });
+
+        console.log(data, "data");
+
         return NextResponse.json(user);
       } catch (err) {
         console.log(err);

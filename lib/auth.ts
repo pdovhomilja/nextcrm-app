@@ -34,6 +34,7 @@ export const authOptions: NextAuthOptions = {
       clientId: getGoogleCredentials().clientId,
       clientSecret: getGoogleCredentials().clientSecret,
     }),
+
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -96,11 +97,10 @@ export const authOptions: NextAuthOptions = {
             },
           });
 
-          newUserNotify(newUser);
+          await newUserNotify(newUser);
 
           //Put new created user data in session
           session.user.id = newUser.id;
-          session.user._id = newUser.id;
           session.user.name = newUser.name;
           session.user.email = newUser.email;
           session.user.avatar = newUser.avatar;
@@ -115,7 +115,6 @@ export const authOptions: NextAuthOptions = {
       } else {
         //User allready exist in localDB, put user data in session
         session.user.id = user.id;
-        session.user._id = user.id;
         session.user.name = user.name;
         session.user.email = user.email;
         session.user.avatar = user.avatar;

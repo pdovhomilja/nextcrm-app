@@ -73,9 +73,10 @@ export function LoginComponent() {
     try {
       await signIn("google", {
         callbackUrl: process.env.NEXT_PUBLIC_APP_URL,
+        //callbackUrl: "/",
       });
     } catch (error) {
-      console.log(error);
+      console.log(error, "error");
     } finally {
       setIsLoading(false);
     }
@@ -84,21 +85,22 @@ export function LoginComponent() {
   //Login with username(email)/password
   async function onSubmit(data: BillboardFormValues) {
     setIsLoading(true);
-    const status = await signIn("credentials", {
-      redirect: false,
-      email: data.email,
-      password: data.password,
-      callbackUrl: "/",
-    });
-    setIsLoading(false);
-    if (status?.error) {
+    try {
+      const status = await signIn("credentials", {
+        redirect: false,
+        email: data.email,
+        password: data.password,
+        callbackUrl: "/",
+      });
+    } catch (error: any) {
+      console.log(error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: status.error,
+        description: error!,
       });
-    }
-    if (status?.ok) {
+    } finally {
+      setIsLoading(false);
       router.push("/");
     }
   }
