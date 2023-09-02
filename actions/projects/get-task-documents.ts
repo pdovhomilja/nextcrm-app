@@ -20,5 +20,14 @@ export const getTaskDocuments = async (taskId: string) => {
       },
     },
   });
+  /*   const data = await prismadb.tasks.findMany({
+    where: {
+      documents: {
+        some: {
+          id: taskId,
+        },
+      },
+    },
+  }); */
   return data;
 };

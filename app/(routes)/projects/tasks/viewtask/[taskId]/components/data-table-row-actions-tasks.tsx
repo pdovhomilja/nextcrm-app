@@ -32,7 +32,7 @@ interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
 }
 
-export function DataTableRowActions<TData>({
+export function DataTableRowActionsTasks<TData>({
   row,
 }: DataTableRowActionsProps<TData>) {
   const [open, setOpen] = useState(false);
@@ -46,22 +46,23 @@ export function DataTableRowActions<TData>({
 
   const { toast } = useToast();
 
-  const onAssign = async () => {
+  const onDisconnect = async () => {
     setLoading(true);
     try {
-      await axios.post(`/api/projects/tasks/${document.id}/assign`, {
+      await axios.post(`/api/projects/tasks/${document.id}/disconnect`, {
         taskId: params?.taskId!,
       });
     } catch (error) {
       console.error(error);
       toast({
         title: "Error",
-        description: "Something went wrong, while assigning document to task",
+        description:
+          "Something went wrong, while disconnecting document from task",
       });
     } finally {
       toast({
         title: "Success",
-        description: "Document was assigned to task",
+        description: "Document was disconnected from task",
       });
       router.refresh();
       setLoading(false);
@@ -86,9 +87,9 @@ export function DataTableRowActions<TData>({
             <span className="sr-only">Open menu</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-[160px]">
-          <DropdownMenuItem onClick={onAssign}>
-            Connect to task
+        <DropdownMenuContent align="end" className="w-[260px]">
+          <DropdownMenuItem onClick={onDisconnect}>
+            Disconnect from task
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setOpen(true)}>
             View

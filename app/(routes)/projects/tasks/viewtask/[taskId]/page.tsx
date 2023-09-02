@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { TeamConversations } from "./components/team-conversation";
 import { TaskDataTable } from "./components/data-table";
 import { columns } from "./components/columns";
+import { columnsTask } from "./components/columns-task";
 
 type TaskPageProps = {
   params: {
@@ -25,6 +26,8 @@ const TaskPage = async ({ params }: TaskPageProps) => {
   const taskDocuments: any = await getTaskDocuments(taskId);
   const documents: any = await getDocuments();
   const comments: any = await getTaskComments(taskId);
+
+  //console.log(taskDocuments, "taskDocuments");
 
   return (
     <div className="flex flex-col md:flex-row w-full px-2 space-x-2 ">
@@ -105,7 +108,7 @@ const TaskPage = async ({ params }: TaskPageProps) => {
         <h4 className="scroll-m-20 text-xl font-semibold tracking-tight py-5">
           Task documents ({taskDocuments.length})
         </h4>
-        <TaskDataTable data={taskDocuments} columns={columns} />
+        <TaskDataTable data={taskDocuments} columns={columnsTask} />
         <Separator />
         <h4 className="scroll-m-20 text-xl font-semibold tracking-tight py-5">
           Available documents ({documents.length})

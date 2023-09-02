@@ -43,7 +43,7 @@ export const columns: ColumnDef<Task>[] = [
         <div className="flex space-x-2">
           {label && <Badge variant="outline">{label.label}</Badge>}
           <span className="max-w-[500px] truncate font-medium">
-            {row.original.document_name.slice(14, 65) + " ..."}
+            {row.original.document_name}
           </span>
         </div>
       );
