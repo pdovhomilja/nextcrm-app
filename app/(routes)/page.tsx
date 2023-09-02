@@ -10,27 +10,24 @@ import {
   UserIcon,
   Users2Icon,
 } from "lucide-react";
+import Link from "next/link";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Container from "./components/ui/Container";
-
-import { getUsers } from "@/actions/get-users";
-import { getEmployees } from "@/actions/get-empoloyees";
-import { getAccounts } from "@/actions/crm/get-accounts";
-import { getLeads } from "@/actions/crm/get-leads";
-import { getOpportunities } from "@/actions/crm/get-opportunities";
-import { getTasks } from "@/actions/projects/get-tasks";
-import { getUserTasks } from "@/actions/projects/get-user-tasks";
-import { getBoards } from "@/actions/projects/get-boards";
-import { getInvoices } from "@/actions/invoice/get-invoices";
-import { getDocuments } from "@/actions/documents/get-documents";
-import { getStorageSize } from "@/actions/documents/get-storage-size";
 import NotionsBox from "./components/dasboard/notions";
 import LoadingBox from "./components/dasboard/loading-box";
-import Link from "next/link";
-import { getModules } from "@/actions/get-modules";
 import StorageQuota from "./components/dasboard/storage-quota";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+import { getModules } from "@/actions/get-modules";
+import { getActiveUsers } from "@/actions/get-users";
+import { getTasks } from "@/actions/projects/get-tasks";
+import { getEmployees } from "@/actions/get-empoloyees";
+import { getBoards } from "@/actions/projects/get-boards";
 import { getAllCrmData } from "@/actions/crm/get-crm-data";
+import { getInvoices } from "@/actions/invoice/get-invoices";
+import { getUserTasks } from "@/actions/projects/get-user-tasks";
+import { getDocuments } from "@/actions/documents/get-documents";
+import { getStorageSize } from "@/actions/documents/get-storage-size";
 
 const DashboardPage = async () => {
   const session = await getServerSession(authOptions);
@@ -38,23 +35,23 @@ const DashboardPage = async () => {
   const userId = session?.user?.id;
 
   //Fetch data for dashboard
-  const users = await getUsers();
-  const employees = await getEmployees();
   const tasks = await getTasks();
-  const usersTasks = await getUserTasks(userId);
-  const projects = await getBoards(userId);
-  const invoices = await getInvoices();
-  const documents = await getDocuments();
-  const storage = await getStorageSize();
   const modules = await getModules();
+  const invoices = await getInvoices();
+  const users = await getActiveUsers();
   const crmData = await getAllCrmData();
+  const documents = await getDocuments();
+  const employees = await getEmployees();
+  const storage = await getStorageSize();
+  const projects = await getBoards(userId);
+  const usersTasks = await getUserTasks(userId);
 
   //Find which modules are enabled
   const crmModule = modules.find((module) => module.name === "crm");
-  const employeesModule = modules.find((module) => module.name === "employees");
-  const documentsModule = modules.find((module) => module.name === "documents");
-  const projectsModule = modules.find((module) => module.name === "projects");
   const invoiceModule = modules.find((module) => module.name === "invoice");
+  const projectsModule = modules.find((module) => module.name === "projects");
+  const documentsModule = modules.find((module) => module.name === "documents");
+  const employeesModule = modules.find((module) => module.name === "employees");
   const secondBrainModule = modules.find(
     (module) => module.name === "secondBrain"
   );
@@ -242,11 +239,11 @@ const DashboardPage = async () => {
 
         <StorageQuota actual={storage} />
         {secondBrainModule?.enabled && (
-          <>
+          <Link href={"/secondBrain"}>
             <Suspense fallback={<LoadingBox />}>
               <NotionsBox />
             </Suspense>
-          </>
+          </Link>
         )}
       </div>
     </Container>

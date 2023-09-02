@@ -5,6 +5,15 @@ export const getUsers = async () => {
     orderBy: {
       created_on: "desc",
     },
+  });
+  return data;
+};
+
+export const getActiveUsers = async () => {
+  const data = await prismadb.users.findMany({
+    orderBy: {
+      created_on: "desc",
+    },
     where: {
       userStatus: "ACTIVE",
     },

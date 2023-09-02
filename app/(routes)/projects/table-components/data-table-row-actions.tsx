@@ -24,7 +24,7 @@ import { useRouter } from "next/navigation";
 import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
 import axios from "axios";
-import { EyeIcon, Trash } from "lucide-react";
+import { Eye, EyeIcon, EyeOff, Glasses, Magnet, Trash } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 interface DataTableRowActionsProps<TData> {
@@ -43,14 +43,9 @@ export function DataTableRowActions<TData>({
   const { toast } = useToast();
 
   const onDelete = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       await axios.delete(`/api/projects/${project.id}`);
-      toast({
-        title: "Success",
-        description: `Project: ${project.title}, deleted successfully`,
-      });
-      router.refresh();
     } catch (error) {
       toast({
         variant: "destructive",
@@ -58,7 +53,50 @@ export function DataTableRowActions<TData>({
       });
       console.log(error);
     } finally {
+      toast({
+        title: "Success",
+        description: `Project: ${project.title}, deleted successfully`,
+      });
+      router.refresh();
       setOpen(false);
+      setLoading(false);
+    }
+  };
+
+  const onWatch = async () => {
+    setLoading(true);
+    try {
+      await axios.post(`/api/projects/${project.id}/watch`);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error, project not watched. Please try again.",
+      });
+      console.log(error);
+    } finally {
+      toast({
+        title: "Success",
+        description: `Project: ${project.title}, watched successfully`,
+      });
+      setLoading(false);
+    }
+  };
+
+  const onUnWatch = async () => {
+    setLoading(true);
+    try {
+      await axios.post(`/api/projects/${project.id}/unwatch`);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error, project not watched. Please try again.",
+      });
+      console.log(error);
+    } finally {
+      toast({
+        title: "Success",
+        description: `Project: ${project.title}, You stop watching this project successfully`,
+      });
       setLoading(false);
     }
   };
@@ -81,12 +119,20 @@ export function DataTableRowActions<TData>({
             <span className="sr-only">Open menu</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-[160px]">
+        <DropdownMenuContent align="end" className="w-[260px]">
           <DropdownMenuItem
             onClick={() => router.push(`/projects/boards/${project.id}`)}
           >
-            <EyeIcon className="mr-2 w-4 h-4" />
+            <Glasses className="mr-2 w-4 h-4" />
             View project
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onWatch}>
+            <Eye className="mr-2 w-4 h-4" />
+            Watch project
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onUnWatch}>
+            <EyeOff className="mr-2 w-4 h-4" />
+            Stop watching project
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setOpen(true)}>

@@ -227,7 +227,10 @@ model Boards {
   visibility        String?
   date_created      DateTime? @default(now()) @db.Date
   last_edited       DateTime? @db.Date
-  assigned_user     Users?    @relation(fields: [user], references: [id])
+  //Create watechers field for board. It will be array of users
+  watchers          String[]  @db.ObjectId
+  assigned_user     Users?    @relation(name: "assigned_user", fields: [user], references: [id])
+  watchers_users    Users[]   @relation(name: "watching_users", fields: [watchers], references: [id])
 }
 
 model Employees {
@@ -455,6 +458,7 @@ model Tasks {
   section          String?            @db.ObjectId
   tags             Json?
   title            String
+  likes            Int?               @default(0)
   user             String?            @db.ObjectId
   documentIDs      String[]           @db.ObjectId
   comments         tasksComments[]
@@ -530,7 +534,9 @@ model Users {
   crated_contacts      crm_Contacts[]        @relation(name: "created_contacts")
   notion_account       secondBrain_notions[]
   assigned_invoices    Invoices[]
-  boards               Boards[]
+  boards               Boards[]              @relation(name: "assigned_user")
+  watching_boardsIDs   String[]              @db.ObjectId
+  watching_boards      Boards[]              @relation(name: "watching_users", fields: [watching_boardsIDs], references: [id])
 }
 
 enum Language {
