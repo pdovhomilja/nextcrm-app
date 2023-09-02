@@ -39,7 +39,7 @@ export const columns: ColumnDef<Task>[] = [
     ),
     cell: ({ row }) => (
       <div className="w-[80px]">
-        {moment(row.getValue("date_created")).format("YY-MM-dd")}
+        {moment(row.getValue("date_created")).format("YY-MM-DD")}
       </div>
     ),
     enableSorting: false,

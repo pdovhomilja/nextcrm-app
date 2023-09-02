@@ -6,7 +6,7 @@ NextCRM is a CRM build on top of the Next.JS 13.4 using TypeScript, great UI lib
 
 You can try it here [demo.nextcrm.io](https://demo.nextcrm.io), login via google account or create new user and password
 
-## What we use to build it
+## What we used to build it
 
 Next.js - React framework</br>
 shadcn - UI</br>
@@ -16,8 +16,21 @@ NextAUTH - for user authentication</br>
 Rossum - for invoice data parsing with AI</br>
 OpenAI API - for automated email notifications</br>
 Tremor - for creating charts</br>
+Resend.com - together with react.email </br>
 
 ![hero](/public/og.png)
+
+## What we plan to build next
+
+1. More AI powered - daily summary of tasks and project (OpenAI integration ) - in test
+2. Email campaigns management - integration to MailChimp and Listmonk - in planning
+3. Docker version - in planning (There will be complete bundle to run NextCRM on-premise)
+
+## Emails
+
+We use Resend.com + React.email as primary email sender and email templates
+
+[resend.com](https://resend.com) + [react.email](https://react.email)
 
 ## Reports
 
