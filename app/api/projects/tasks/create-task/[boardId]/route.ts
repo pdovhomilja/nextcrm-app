@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { Resend } from "resend";
+
+import NewTaskFromProject from "@/emails/NewTaskFromProject";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(
   req: Request,
@@ -10,13 +15,11 @@ export async function POST(
   const session = await getServerSession(authOptions);
   const body = await req.json();
   const { boardId } = params;
-  const { title, priority, content, section } = body;
+  const { title, priority, content, section, user } = body;
 
   if (!session) {
     return new NextResponse("Unauthenticated", { status: 401 });
   }
-
-  let user = session.user.id;
 
   /*  if (!boardId) {
     return new NextResponse("Missing board id", { status: 400 });
@@ -28,6 +31,7 @@ export async function POST(
 
   //console.log(section, "section");
 
+  //This is when user click on "Add new task" button in project board DnD section
   if (!title || !user || !priority || !content) {
     try {
       const tasksCount = await prismadb.tasks.count({
@@ -43,10 +47,10 @@ export async function POST(
           title: "New task",
           content: "",
           section: section,
-          createdBy: user,
-          updatedBy: user,
+          createdBy: session.user.id,
+          updatedBy: session.user.id,
           position: tasksCount > 0 ? tasksCount : 0,
-          user: user,
+          user: session.user.id,
           taskStatus: "ACTIVE",
         },
       });
@@ -57,6 +61,7 @@ export async function POST(
       return new NextResponse("Initial error", { status: 500 });
     }
   } else {
+    //This is when user click on "Add new task" button in project board page
     try {
       const tasksCount = await prismadb.tasks.count({
         where: {
@@ -64,7 +69,7 @@ export async function POST(
         },
       });
 
-      await prismadb.tasks.create({
+      const task = await prismadb.tasks.create({
         data: {
           v: 0,
           priority: priority,
@@ -79,6 +84,47 @@ export async function POST(
         },
       });
 
+      //console.log(user, "user");
+      //console.log(session.user.id, "session.user.id");
+
+      //Notification to user who is not a task creator
+      if (user !== session.user.id) {
+        try {
+          const notifyRecipient = await prismadb.users.findUnique({
+            where: { id: user },
+          });
+
+          const boardData = await prismadb.boards.findUnique({
+            where: { id: boardId },
+          });
+
+          //console.log(notifyRecipient, "notifyRecipient");
+
+          await resend.emails.send({
+            from:
+              process.env.NEXT_PUBLIC_APP_NAME +
+              " <" +
+              process.env.EMAIL_FROM +
+              ">",
+            to: notifyRecipient?.email!,
+            subject:
+              session.user.userLanguage === "en"
+                ? `New task -  ${title}.`
+                : `Nový úkol - ${title}.`,
+            text: "", // Add this line to fix the types issue
+            react: NewTaskFromProject({
+              taskFromUser: session.user.name!,
+              username: notifyRecipient?.name!,
+              userLanguage: notifyRecipient?.userLanguage!,
+              taskData: task,
+              boardData: boardData,
+            }),
+          });
+          console.log("Email sent to user: ", notifyRecipient?.email!);
+        } catch (error) {
+          console.log(error);
+        }
+      }
       return NextResponse.json({ status: 200 });
     } catch (error) {
       console.log("[NEW_TASK_IN_PROJECT_POST]", error);

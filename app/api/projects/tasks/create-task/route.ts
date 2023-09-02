@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { Resend } from "resend";
+import NewTaskFromCRMEmail from "@/emails/NewTaskFromCRM";
+import NewTaskFromProject from "@/emails/NewTaskFromProject";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 //Create new task in project route
 /*
@@ -47,7 +52,7 @@ export async function POST(req: Request) {
       contentUpdated = content + "\n\n" + notionUrl;
     }
 
-    await prismadb.tasks.create({
+    const task = await prismadb.tasks.create({
       data: {
         v: 0,
         priority: priority,
@@ -61,6 +66,45 @@ export async function POST(req: Request) {
         taskStatus: "ACTIVE",
       },
     });
+
+    //Notification to user who is not a task creator
+    if (user !== session.user.id) {
+      try {
+        const notifyRecipient = await prismadb.users.findUnique({
+          where: { id: user },
+        });
+
+        const boardData = await prismadb.boards.findUnique({
+          where: { id: board },
+        });
+
+        //console.log(notifyRecipient, "notifyRecipient");
+
+        await resend.emails.send({
+          from:
+            process.env.NEXT_PUBLIC_APP_NAME +
+            " <" +
+            process.env.EMAIL_FROM +
+            ">",
+          to: notifyRecipient?.email!,
+          subject:
+            session.user.userLanguage === "en"
+              ? `New task -  ${title}.`
+              : `Nový úkol - ${title}.`,
+          text: "", // Add this line to fix the types issue
+          react: NewTaskFromProject({
+            taskFromUser: session.user.name!,
+            username: notifyRecipient?.name!,
+            userLanguage: notifyRecipient?.userLanguage!,
+            taskData: task,
+            boardData: boardData,
+          }),
+        });
+        console.log("Email sent to user: ", notifyRecipient?.email!);
+      } catch (error) {
+        console.log(error);
+      }
+    }
 
     return NextResponse.json({ status: 200 });
   } catch (error) {

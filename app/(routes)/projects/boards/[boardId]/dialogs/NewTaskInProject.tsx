@@ -94,6 +94,13 @@ const NewTaskInProjectDialog = ({ users, boardId, sections }: Props) => {
     } finally {
       setIsLoading(false);
       setOpen(false);
+      form.reset({
+        title: "",
+        content: "",
+        user: "",
+        priority: "",
+        section: "",
+      });
       router.refresh();
     }
   };
@@ -241,10 +248,10 @@ const NewTaskInProjectDialog = ({ users, boardId, sections }: Props) => {
                   />
                 </div>
                 <div className="flex w-full justify-end space-x-2 pt-2">
-                  <Button type="submit">Create</Button>
                   <DialogTrigger asChild>
                     <Button variant={"destructive"}>Cancel</Button>
                   </DialogTrigger>
+                  <Button type="submit">Create</Button>
                 </div>
               </form>
             </Form>
