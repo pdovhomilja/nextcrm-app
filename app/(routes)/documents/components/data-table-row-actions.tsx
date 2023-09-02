@@ -95,6 +95,11 @@ export function DataTableRowActions<TData>({
           <DropdownMenuItem onClick={() => setOpenView(true)}>
             View
           </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => router.push(document.document_file_url)}
+          >
+            Download
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setOpen(true)}>
