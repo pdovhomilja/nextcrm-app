@@ -8,6 +8,7 @@ import { SetLanguage } from "@/components/SetLanguage";
 import FulltextSearch from "./FulltextSearch";
 import Link from "next/link";
 import { GithubIcon } from "lucide-react";
+import Feedback from "./Feedback";
 
 type Props = {
   id: string;
@@ -27,7 +28,7 @@ const Header = ({ id, name, email, avatar, lang }: Props) => {
         <div className="flex items-center gap-5">
           <CommandComponent />
           <SetLanguage userId={id} />
-
+          <Feedback />
           <ThemeToggle />
           <div className="hidden lg:flex flex-col text-xs text-gray-500">
             <div>{name}</div>

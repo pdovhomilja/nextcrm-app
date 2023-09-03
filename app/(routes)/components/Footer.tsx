@@ -15,10 +15,11 @@ const Footer = (props: Props) => {
         </Link>
       </div>
       <div className="hidden md:flex space-x-2 pr-2">
-        powered by Next.js{" "}
-        <span className="bg-black rounded-md text-white px-1">
-          13 + <Link href={"https://ui.shadcn.com/"}>shadcnUI</Link>
-        </span>{" "}
+        powered by Next.js
+        <span className="bg-black rounded-md text-white px-1 mx-1">13.4</span>+
+        <Link href={"https://ui.shadcn.com/"}>
+          <span className="rounded-md mr-2">shadcnUI</span>
+        </Link>{" "}
         hosted by:
         <span className="text-bold underline">
           <Link href="https://www.vercel.com">Vercel</Link>
