@@ -8,13 +8,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -26,6 +21,7 @@ import { useState } from "react";
 import AlertModal from "@/components/modals/alert-modal";
 import { useToast } from "@/components/ui/use-toast";
 import axios from "axios";
+import Link from "next/link";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -75,12 +71,14 @@ export function DataTableRowActions<TData>({
           document={document}
         />
       )}
-      <AlertModal
-        isOpen={open}
-        onClose={() => setOpen(false)}
-        onConfirm={onDelete}
-        loading={loading}
-      />
+      {open && (
+        <AlertModal
+          isOpen={open}
+          onClose={() => setOpen(false)}
+          onConfirm={onDelete}
+          loading={loading}
+        />
+      )}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -95,12 +93,6 @@ export function DataTableRowActions<TData>({
           <DropdownMenuItem onClick={() => setOpenView(true)}>
             View
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => router.push(document.document_file_url)}
-          >
-            Download
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setOpen(true)}>
             Delete

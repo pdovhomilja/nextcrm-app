@@ -90,12 +90,10 @@ const DocumentViewModal = ({
     return (
       <ModalDocumentView isOpen={isOpen} onClose={onClose}>
         <div className="flex flex-col h-full ">
-          {/*           <DocViewer
-           documents={docs}
-           pluginRenderers={DocViewerRenderers}
-           style={{ height: 800 }}
-         /> */}
-          This file can not be previewed.
+          This format can not be previewed. Please download the file to view it.
+          <Button>
+            <Link href={document.document_file_url}> Download</Link>
+          </Button>
           <div className="pt-6 space-x-2 flex items-center justify-end w-full ">
             <Button disabled={loading} variant={"outline"} onClick={onClose}>
               Cancel

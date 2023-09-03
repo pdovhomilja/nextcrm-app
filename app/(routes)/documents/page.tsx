@@ -5,11 +5,15 @@ import { columns } from "./components/columns";
 import FileUploader from "@/components/ui/file-uploader";
 import { FileUploaderDropzone } from "@/components/ui/file-uploader-dropzone";
 import ModalDropzone from "./components/modal-dropzone";
-
-export const revalidate = 1;
+import { Documents } from "@prisma/client";
 
 const DocumentsPage = async () => {
-  const documents: any = await getDocuments();
+  const documents: Documents[] = await getDocuments();
+
+  if (!documents) {
+    return <div>Something went wrong</div>;
+  }
+
   return (
     <Container
       title="Documents"

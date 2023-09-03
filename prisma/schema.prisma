@@ -369,25 +369,25 @@ model invoice_States {
 model Documents {
   id                     String              @id @default(auto()) @map("_id") @db.ObjectId
   v                      Int?                @map("__v")
-  connected_documents    String[]
   date_created           DateTime?           @default(now()) @db.Date
   createdAt              DateTime?           @default(now()) @db.Date
   last_updated           DateTime?           @updatedAt
   updatedAt              DateTime?           @updatedAt @db.Date
-  document_name          String?
+  document_name          String
   created_by_user        String?             @db.ObjectId
   createdBy              String?             @db.ObjectId
   description            String?
   document_type          String?             @db.ObjectId
   favourite              Boolean?
-  document_file_mimeType String?
-  document_file_url      String?
+  document_file_mimeType String
+  document_file_url      String
   status                 String?
   visibility             String?
   tags                   Json?
   key                    String?
   size                   Int?
   assigned_user          String?             @db.ObjectId
+  connected_documents    String[]
   invoiceIDs             String[]            @db.ObjectId
   opportunityIDs         String[]            @db.ObjectId
   contactsIDs            String[]            @db.ObjectId
