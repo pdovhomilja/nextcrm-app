@@ -13,9 +13,17 @@ import OpportunitiesView from "../../components/OpportunitiesView";
 import LeadsView from "../../components/LeadsView";
 import ContactsView from "../../components/ContactsView";
 import DocumentsView from "../../components/DocumentsView";
-import TasksView from "../../components/TasksView";
-import { getTasksByAcccountId } from "@/actions/projects/get-tasks-by-accountsId";
-import { crm_Accounts } from "@prisma/client";
+
+import {
+  Documents,
+  crm_Accounts,
+  crm_Accounts_Tasks,
+  crm_Contacts,
+  crm_Leads,
+  crm_Opportunities,
+} from "@prisma/client";
+import AccountsTasksView from "./components/TasksView";
+import { getAccountsTasks } from "@/actions/crm/account/get-tasks";
 
 interface AccountDetailPageProps {
   params: {
@@ -26,13 +34,13 @@ interface AccountDetailPageProps {
 const AccountDetailPage = async ({ params }: AccountDetailPageProps) => {
   const { accountId } = params;
   const account: crm_Accounts | null = await getAccount(accountId);
-  const opportunities: any = await getOpportunitiesFullByAccountId(accountId);
-  const contacts: any = await getContactsByAccountId(accountId);
-  const leads: any = await getLeadsByAccountId(accountId);
-  const documents: any = await getDocumentsByAccountId(accountId);
-  const tasks: any = await getTasksByAcccountId(accountId);
+  const opportunities: crm_Opportunities[] =
+    await getOpportunitiesFullByAccountId(accountId);
+  const contacts: crm_Contacts[] = await getContactsByAccountId(accountId);
+  const leads: crm_Leads[] = await getLeadsByAccountId(accountId);
+  const documents: Documents[] = await getDocumentsByAccountId(accountId);
+  const tasks: crm_Accounts_Tasks[] = await getAccountsTasks(accountId);
   const crmData = await getAllCrmData();
-  console.log(tasks, "tasks");
 
   if (!account) return <div>Account not found</div>;
 
@@ -43,7 +51,7 @@ const AccountDetailPage = async ({ params }: AccountDetailPageProps) => {
     >
       <div className="space-y-5">
         <BasicView data={account} />
-        <TasksView data={tasks} account={account} />
+        <AccountsTasksView data={tasks} account={account} />
         <OpportunitiesView
           data={opportunities}
           crmData={crmData}

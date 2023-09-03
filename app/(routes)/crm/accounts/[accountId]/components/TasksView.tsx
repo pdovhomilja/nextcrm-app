@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { crm_Accounts } from "@prisma/client";
+
 import {
   Card,
   CardContent,
@@ -11,12 +13,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-
-import { columns } from "../../projects/tasks/components/columns";
-import { TasksDataTable } from "../../projects/tasks/components/data-table";
 import SheetComponent from "@/components/sheets/Sheet";
+
+import { columns } from "../tasks-data-table/components/columns";
+import { TasksDataTable } from "../tasks-data-table/components/data-table";
+
 import NewTaskForm from "./NewTaskForm";
-import { crm_Accounts } from "@prisma/client";
 
 //TODO:
 interface TasksViewProps {
@@ -24,7 +26,7 @@ interface TasksViewProps {
   account: crm_Accounts | null;
 }
 
-const TasksView = ({ data, account }: TasksViewProps) => {
+const AccountsTasksView = ({ data, account }: TasksViewProps) => {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
 
@@ -62,7 +64,7 @@ const TasksView = ({ data, account }: TasksViewProps) => {
       </CardHeader>
       <CardContent>
         {!data || data.length === 0 ? (
-          "No assigned documents found"
+          "No assigned tasks found"
         ) : (
           <TasksDataTable data={data} columns={columns} />
         )}
@@ -71,4 +73,4 @@ const TasksView = ({ data, account }: TasksViewProps) => {
   );
 };
 
-export default TasksView;
+export default AccountsTasksView;

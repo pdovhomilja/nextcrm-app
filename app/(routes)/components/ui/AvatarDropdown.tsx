@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
+import { Settings } from "lucide-react";
 
 type Props = {
   avatar: string;
@@ -34,10 +35,17 @@ const AvatarDropdown = ({ avatar }: Props) => {
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/profile">Profile</Link>
+          <Link href="/projects/dashboard">Todo dashboard</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/projects/dashboard">Todo dashboard</Link>
+          <Link href="/crm/dashboard">CRM dashboard</Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/profile">
+            <Settings className="w-4 h-4 inline-block mr-2 stroke-current text-gray-500" />
+            Profile
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem>

@@ -26,6 +26,7 @@ import { useToast } from "@/components/ui/use-toast";
 import axios from "axios";
 import RightViewModalNoTrigger from "@/components/modals/right-view-notrigger";
 import { UpdateAccountForm } from "../components/UpdateAccountForm";
+import { Eye, EyeOff } from "lucide-react";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -65,6 +66,44 @@ export function DataTableRowActions<TData>({
     }
   };
 
+  const onWatch = async () => {
+    setLoading(true);
+    try {
+      await axios.post(`/api/crm/account/${account.id}/watch`);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error, Account not watched. Please try again.",
+      });
+      console.log(error);
+    } finally {
+      toast({
+        title: "Success",
+        description: `You are now Account: ${account.name}, watcher`,
+      });
+      setLoading(false);
+    }
+  };
+
+  const onUnWatch = async () => {
+    setLoading(true);
+    try {
+      await axios.post(`/api/crm/account/${account.id}/unwatch`);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error, Account not watched. Please try again.",
+      });
+      console.log(error);
+    } finally {
+      toast({
+        title: "Success",
+        description: `You are no longer Project: ${account.name}, watcher`,
+      });
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <AlertModal
@@ -91,7 +130,7 @@ export function DataTableRowActions<TData>({
             <span className="sr-only">Open menu</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-[160px]">
+        <DropdownMenuContent align="end" className="w-[260px]">
           <DropdownMenuItem
             onClick={() => router.push(`/crm/accounts/${account?.id}`)}
           >
@@ -99,6 +138,15 @@ export function DataTableRowActions<TData>({
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setUpdateOpen(true)}>
             Update
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={onWatch}>
+            <Eye className="mr-2 w-4 h-4" />
+            Watch Account
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onUnWatch}>
+            <EyeOff className="mr-2 w-4 h-4" />
+            Stop watching Account
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setOpen(true)}>

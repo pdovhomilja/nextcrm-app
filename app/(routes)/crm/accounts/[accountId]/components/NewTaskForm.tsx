@@ -44,7 +44,7 @@ import axios from "axios";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -67,6 +67,7 @@ const NewTaskForm = ({ account }: NewTaskFormProps) => {
   );
 
   const router = useRouter();
+
   const { toast } = useToast();
 
   const formSchema = z.object({
@@ -95,10 +96,10 @@ const NewTaskForm = ({ account }: NewTaskFormProps) => {
   //Actions
 
   const onSubmit = async (data: NewAccountFormValues) => {
-    console.log(data);
+    //console.log(data);
     setIsLoading(true);
     try {
-      await axios.post(`/api/projects/tasks/create-task/from-crm`, data);
+      await axios.post(`/api/crm/account/${account?.id}/task/create`, data);
       toast({
         title: "Success",
         description: `New task: ${data.title}, created successfully`,
@@ -111,7 +112,14 @@ const NewTaskForm = ({ account }: NewTaskFormProps) => {
       });
     } finally {
       setIsLoading(false);
-
+      form.reset({
+        title: "",
+        content: "",
+        user: "",
+        account: "",
+        dueDateAt: new Date(),
+        priority: "",
+      });
       router.refresh();
     }
   };

@@ -8,23 +8,15 @@ You can try it here [demo.nextcrm.io](https://demo.nextcrm.io), login via google
 
 ## What we used to build it
 
-Next.js - React framework</br>
-shadcn - UI</br>
-Prisma ORM - together with mongoDB (tested with version 5.0)</br>
-useSWR - for client side data fetching</br>
-NextAUTH - for user authentication</br>
-Rossum - for invoice data parsing with AI</br>
-OpenAI API - for automated email notifications</br>
-Tremor - for creating charts</br>
-Resend.com - together with react.email </br>
+Next.js - React framework&lt;/br&gt; shadcn - UI&lt;/br&gt; Prisma ORM - together with mongoDB (tested with version 5.0)&lt;/br&gt; useSWR - for client side data fetching&lt;/br&gt; NextAUTH - for user authentication&lt;/br&gt; Rossum - for invoice data parsing with AI&lt;/br&gt; OpenAI API - for automated email notifications&lt;/br&gt; Tremor - for creating charts&lt;/br&gt; Resend.com - together with react.email &lt;/br&gt;
 
-![hero](/public/og.png)
-
-## What we plan to build next
+![hero](/public/og.png)## What we plan to build next
 
 1. More AI powered - daily summary of tasks and project (OpenAI integration ) - in test
-2. Email campaigns management - integration to MailChimp and Listmonk - in planning
+2. Email campaigns management - integration with MailChimp and Listmonk - in planning
 3. Docker version - in planning (There will be complete bundle to run NextCRM on-premise)
+4. Testing - Jest + Cypress (if anyone want to help I will be very happy) - in planning
+5. Fix all Types issue ( nom more "any" ) - in progress
 
 ## Emails
 
@@ -36,13 +28,9 @@ We use Resend.com + React.email as primary email sender and email templates
 
 We use Tremor charts as a tool for creating charts in NextCRM
 
-![hero](/public/reports.png)
+![hero](/public/reports.png)## Video (YouTube channel with functions showcase)
 
-## Video (YouTube channel with functions showcase)
-
-Channel link - [https://www.youtube.com/channel/UCQneopupgtjG4py68-edA0w](https://www.youtube.com/@NextCRM_IO)
-</br>
-Invoice module - https://youtu.be/NSMsBMy07Pg
+Channel link - [https://www.youtube.com/channel/UCQneopupgtjG4py68-edA0w](https://www.youtube.com/@NextCRM_IO) &lt;/br&gt; Invoice module - https://youtu.be/NSMsBMy07Pg
 
 ## Documentation
 
@@ -50,7 +38,7 @@ Will be soon at domain: http://docs.nextcrm.io
 
 ## Installation
 
-<details><summary><b>Show instructions</b></summary>
+&lt;details&gt;&lt;summary&gt;&lt;b&gt;Show instructions&lt;/b&gt;&lt;/summary&gt;
 
 1. Install the preset:
 
@@ -72,22 +60,22 @@ Will be soon at domain: http://docs.nextcrm.io
 > > - openAI - for automatic Project management assistant
 > > - SMPT and IMAP for emails
 
-3. Init Prisma
+1. Init Prisma
 
    ```sh
     npx prisma generate
     npx prisma db push
    ```
 
-4. Run app on local
+2. Run app on local
 
    ```sh
    npm run dev
    ```
 
-5. Import initial data from initial-data folder
+3. Import initial data from initial-data folder
 
-</details>
+&lt;/details&gt;
 
 ## Contact
 

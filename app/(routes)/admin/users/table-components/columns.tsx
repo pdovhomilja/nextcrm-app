@@ -5,7 +5,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 
-import { statuses } from "../table-data/data";
+import { statuses, isAdmin } from "../table-data/data";
 import { AdminUser } from "../table-data/schema";
 import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
@@ -55,7 +55,7 @@ export const columns: ColumnDef<AdminUser>[] = [
     enableHiding: true,
   },
   {
-    accessorKey: "is_admin",
+    accessorKey: "isAdmin",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Admin" />
     ),
@@ -66,6 +66,7 @@ export const columns: ColumnDef<AdminUser>[] = [
     enableSorting: true,
     enableHiding: true,
   },
+
   {
     accessorKey: "userStatus",
     header: ({ column }) => (
