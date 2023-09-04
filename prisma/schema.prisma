@@ -537,7 +537,7 @@ model Users {
   email                String                @unique
   is_account_admin     Boolean               @default(false)
   is_admin             Boolean               @default(false)
-  created_on           DateTime?             @default(now()) @db.Date
+  created_on           DateTime             @default(now()) @db.Date
   name                 String?
   password             String?
   username             String?

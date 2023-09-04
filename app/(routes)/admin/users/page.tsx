@@ -8,9 +8,10 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { AdminUserDataTable } from "./table-components/data-table";
 import { columns } from "./table-components/columns";
+import { Users } from "@prisma/client";
 
 const AdminUsersPage = async () => {
-  const users: any = await getUsers();
+  const users: Users[] = await getUsers();
 
   const session = await getServerSession(authOptions);
 

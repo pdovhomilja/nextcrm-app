@@ -1,5 +1,6 @@
 import { prismadb } from "@/lib/prisma";
 
+//Get all users  for admin module
 export const getUsers = async () => {
   const data = await prismadb.users.findMany({
     orderBy: {
@@ -9,6 +10,7 @@ export const getUsers = async () => {
   return data;
 };
 
+//Get active users for Selects in app etc
 export const getActiveUsers = async () => {
   const data = await prismadb.users.findMany({
     orderBy: {

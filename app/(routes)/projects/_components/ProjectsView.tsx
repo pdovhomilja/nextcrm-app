@@ -1,4 +1,4 @@
-import { getUsers } from "@/actions/get-users";
+import { getActiveUsers } from "@/actions/get-users";
 import { getBoards } from "@/actions/projects/get-boards";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
@@ -17,8 +17,7 @@ const ProjectsView = async (props: Props) => {
   const session = await getServerSession(authOptions);
   const userId = session?.user.id;
 
-  const users = await getUsers();
-
+  const users = await getActiveUsers();
   const boards: any = await getBoards(userId!);
 
   return (

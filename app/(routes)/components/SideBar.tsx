@@ -1,5 +1,5 @@
 import { getModules } from "@/actions/get-modules";
-import { useState } from "react";
+
 import ModuleMenu from "./ModuleMenu";
 
 const SideBar = async () => {
