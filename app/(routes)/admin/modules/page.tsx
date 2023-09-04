@@ -1,13 +1,12 @@
-import { getUsers } from "@/actions/get-users";
 import React from "react";
-import Container from "../../components/ui/Container";
-import { DataTable } from "./components/data-table";
-import { columns } from "./components/Columns";
-import { InviteForm } from "./components/IviteForm";
-import { Separator } from "@/components/ui/separator";
-import { getModules } from "@/actions/get-modules";
-import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
+
+import { columns } from "./components/Columns";
+import { DataTable } from "./components/data-table";
+import Container from "../../components/ui/Container";
+
+import { authOptions } from "@/lib/auth";
+import { getModules } from "@/actions/get-modules";
 
 const AdminModulesPage = async () => {
   const session = await getServerSession(authOptions);

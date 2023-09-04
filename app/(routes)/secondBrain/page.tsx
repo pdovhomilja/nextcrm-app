@@ -1,22 +1,22 @@
-import { DataTable } from "@/components/ui/data-table";
-import Container from "../components/ui/Container";
-import { getNotions } from "@/actions/get-notions";
-import { columns } from "./table-components/columns";
 import Link from "next/link";
-import H4Title from "@/components/typography/h4";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+
+import Container from "../components/ui/Container";
 
 import NewTask from "./components/NewTask";
-import { getUsers } from "@/actions/get-users";
-import { getBoards } from "@/actions/projects/get-boards";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import H4Title from "@/components/typography/h4";
+
+import { columns } from "./table-components/columns";
 import { SecondBrainDataTable } from "./table-components/data-table";
 
-type Props = {};
+import { getNotions } from "@/actions/get-notions";
+import { getActiveUsers } from "@/actions/get-users";
+import { getBoards } from "@/actions/projects/get-boards";
 
-const SecondBrainPage = async (props: Props) => {
+const SecondBrainPage = async () => {
   const notions: any = await getNotions();
-  const users: any = await getUsers();
+  const users: any = await getActiveUsers();
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
   const boards: any = await getBoards(userId!);

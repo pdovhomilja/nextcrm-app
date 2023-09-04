@@ -5,7 +5,7 @@ import Container from "@/app/(routes)/components/ui/Container";
 import NewSectionDialog from "./dialogs/NewSection";
 
 import NewTaskInProjectDialog from "./dialogs/NewTaskInProject";
-import { getUsers } from "@/actions/get-users";
+import { getActiveUsers } from "@/actions/get-users";
 import { getBoardSections } from "@/actions/projects/get-board-sections";
 import DeleteProjectDialog from "./dialogs/DeleteProject";
 import { getKanbanData } from "@/actions/projects/get-kanban-data";
@@ -19,7 +19,7 @@ const BoardPage = async ({ params }: BoardDetailProps) => {
   const { boardId } = params;
   const board: any = await getBoard(boardId);
 
-  const users: any = await getUsers();
+  const users: any = await getActiveUsers();
   const sections: any = await getBoardSections(boardId);
   const kanbanData = await getKanbanData(boardId);
 
