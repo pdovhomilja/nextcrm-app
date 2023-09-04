@@ -1,9 +1,11 @@
 "use client";
-import React from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+
 import * as z from "zod";
 import axios from "axios";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
 import {
   Form,
   FormField,
@@ -17,6 +19,7 @@ import { Button } from "@/components/ui/button";
 
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
+import { Icons } from "@/components/ui/icons";
 
 const formSchema = z.object({
   feedback: z.string().min(1, {
@@ -24,7 +27,12 @@ const formSchema = z.object({
   }),
 });
 
-const FeedbackForm = () => {
+interface FeedbackFormProps {
+  setOpen: (open: boolean) => void;
+}
+
+const FeedbackForm = ({ setOpen }: FeedbackFormProps) => {
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   const form = useForm({
@@ -32,6 +40,7 @@ const FeedbackForm = () => {
   });
 
   const onSubmit = async (data: any) => {
+    setLoading(true);
     try {
       await axios.post("/api/feedback", data);
     } catch (error) {
@@ -46,6 +55,8 @@ const FeedbackForm = () => {
         title: "Success",
         description: "Thank you for your feedback.",
       });
+      setOpen(false);
+      setLoading(false);
     }
   };
 
@@ -59,7 +70,11 @@ const FeedbackForm = () => {
             <FormItem>
               <FormLabel>Send us a feedback</FormLabel>
               <FormControl>
-                <Textarea placeholder="Your feedback" {...field} />
+                <Textarea
+                  placeholder="Your feedback"
+                  disabled={loading}
+                  {...field}
+                />
               </FormControl>
               <FormDescription className="text-xs text-muted-foreground">
                 We appreciate every feedback. Thank you for helping us make this
@@ -69,7 +84,25 @@ const FeedbackForm = () => {
             </FormItem>
           )}
         />
-        <Button type="submit">Submit</Button>
+        <div className="flex justify-end space-x-2">
+          <Button
+            variant={"outline"}
+            onClick={() => setOpen(false)}
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" variant={"secondary"} disabled={loading}>
+            {loading ? (
+              <div className="flex space-x-2">
+                <Icons.spinner className="h-4 w-4 animate-spin" />
+                <span>Sending ...</span>
+              </div>
+            ) : (
+              "Submit"
+            )}
+          </Button>
+        </div>
       </form>
     </Form>
   );
