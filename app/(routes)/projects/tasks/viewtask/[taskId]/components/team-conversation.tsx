@@ -1,4 +1,5 @@
 "use client";
+import { Comment } from "@/app/(routes)/projects/dashboard/components/ProjectDasboard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,22 +28,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-interface TeamConversationsProps {
-  data: Array<{
-    id: string;
-    v: number;
-    comment: string;
-    createdAt: string;
-    task: string;
-    user: string;
-    assigned_user: {
-      name: string;
-      avatar: string;
-    };
-  }>;
-  taskId: string;
-}
-
 const FormSchema = z.object({
   comment: z.string().min(3).max(160),
 });
@@ -50,7 +35,10 @@ const FormSchema = z.object({
 export function TeamConversations({
   data: comments,
   taskId,
-}: TeamConversationsProps) {
+}: {
+  data: Comment[];
+  taskId: string;
+}) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const router = useRouter();
 

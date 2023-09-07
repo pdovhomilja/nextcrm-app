@@ -231,7 +231,7 @@ export function UpdateOpportunityForm({
                             <SelectValue placeholder="Choose type " />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="flex overflow-y-auto h-56">
                           {saleTypes.map((type: any) => (
                             <SelectItem key={type.id} value={type.id}>
                               {type.name}
@@ -258,7 +258,7 @@ export function UpdateOpportunityForm({
                             <SelectValue placeholder="Choose actual stage " />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="flex overflow-y-auto h-56">
                           {saleStages.map((stage: any) => (
                             <SelectItem key={stage.id} value={stage.id}>
                               {stage.name}
@@ -382,7 +382,7 @@ export function UpdateOpportunityForm({
                             <SelectValue placeholder="Choose account " />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="flex overflow-y-auto h-56">
                           {accounts.map((account: any) => (
                             <SelectItem key={account.id} value={account.id}>
                               {account.name}
@@ -409,7 +409,7 @@ export function UpdateOpportunityForm({
                             <SelectValue placeholder="Select a user to assign the account" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="flex overflow-y-auto h-56">
                           {contacts.map((contact: any) => (
                             <SelectItem key={contact.id} value={contact.id}>
                               {contact.first_name + " " + contact.last_name}
@@ -436,7 +436,7 @@ export function UpdateOpportunityForm({
                             <SelectValue placeholder="Select a campaign" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="flex overflow-y-auto h-56">
                           {campaigns.map((campaign: any) => (
                             <SelectItem key={campaign.id} value={campaign.id}>
                               {campaign.name}

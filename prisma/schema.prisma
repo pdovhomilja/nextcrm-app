@@ -46,7 +46,7 @@ model crm_Accounts {
   documentsIDs         String[]             @db.ObjectId
   assigned_documents   Documents[]          @relation(fields: [documentsIDs], references: [id])
   contacts             crm_Contacts[]
-  leads                crm_Leads[]
+  leads                crm_Leads[] 
   industry_type        crm_Industry_Type?   @relation(fields: [industry], references: [id])
   opportunities        crm_Opportunities[]
   assigned_to_user     Users?               @relation(fields: [assigned_to], references: [id])

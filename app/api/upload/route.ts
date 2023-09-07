@@ -85,34 +85,44 @@ export async function POST(request: NextRequest) {
     ACL: "public-read",
   };
 
-  await s3Client.send(new PutObjectCommand(bucketParams));
+  try {
+    await s3Client.send(new PutObjectCommand(bucketParams));
+    console.log(data, "data");
+  } catch (err) {
+    console.log("Error - uploading to S3(Digital Ocean)", err);
+  }
 
-  //S3 bucket url for the invoice
-  const url = `https://${process.env.DO_BUCKET}.${process.env.DO_REGION}.digitaloceanspaces.com/${invoiceFileName}`;
-  //console.log(url, "url");
-  const rossumDocumentId = rossumDocument.split("/").slice(-1)[0];
-  const rossumAnnotationId = rossumAnnotation.split("/").slice(-1)[0];
-  //Save the data to the database
+  try {
+    //S3 bucket url for the invoice
+    const url = `https://${process.env.DO_BUCKET}.${process.env.DO_REGION}.digitaloceanspaces.com/${invoiceFileName}`;
+    //console.log(url, "url");
+    const rossumDocumentId = rossumDocument.split("/").slice(-1)[0];
+    const rossumAnnotationId = rossumAnnotation.split("/").slice(-1)[0];
+    //Save the data to the database
 
-  await prismadb.invoices.create({
-    data: {
-      last_updated_by: session.user.id,
-      date_due: new Date(),
-      description: "Incoming invoice",
-      document_type: "invoice",
-      invoice_type: "Taxable document",
-      status: "new",
-      favorite: false,
-      assigned_user_id: session.user.id,
-      invoice_file_url: url,
-      invoice_file_mimeType: file.type,
-      rossum_status: "importing",
-      rossum_document_url: rossumDocument,
-      rossum_document_id: rossumDocumentId,
-      rossum_annotation_url: rossumAnnotation,
-      rossum_annotation_id: rossumAnnotationId,
-    },
-  });
+    await prismadb.invoices.create({
+      data: {
+        last_updated_by: session.user.id,
+        date_due: new Date(),
+        description: "Incoming invoice",
+        document_type: "invoice",
+        invoice_type: "Taxable document",
+        status: "new",
+        favorite: false,
+        assigned_user_id: session.user.id,
+        invoice_file_url: url,
+        invoice_file_mimeType: file.type,
+        rossum_status: "importing",
+        rossum_document_url: rossumDocument,
+        rossum_document_id: rossumDocumentId,
+        rossum_annotation_url: rossumAnnotation,
+        rossum_annotation_id: rossumAnnotationId,
+      },
+    });
 
-  return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.log("Error - storing data to DB", error);
+    return NextResponse.json({ success: false });
+  }
 }

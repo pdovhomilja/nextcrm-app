@@ -469,7 +469,7 @@ export function NewAccountForm({ industries, users }: Props) {
                           <SelectValue placeholder="Select new account industry" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="flex overflow-y-auto h-56">
                         {industries.map((industry) => (
                           <SelectItem key={industry.id} value={industry.id}>
                             {industry.name}

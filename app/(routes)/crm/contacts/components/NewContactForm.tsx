@@ -270,7 +270,7 @@ export function NewContactForm({ users, accounts }: NewTaskFormProps) {
                     <div className="flex space-x-2 w-32">
                       <Select onValueChange={field.onChange}>
                         <SelectTrigger>Year</SelectTrigger>
-                        <SelectContent className="flex overflow-y-auto h-56">
+                        <SelectContent>
                           {yearArray.map((yearOption) => (
                             <SelectItem
                               key={yearOption}
@@ -413,7 +413,7 @@ export function NewContactForm({ users, accounts }: NewTaskFormProps) {
                             <SelectValue placeholder="Choose assigned account " />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="flex overflow-y-auto h-56">
                           {accounts.map((account) => (
                             <SelectItem key={account.id} value={account.id}>
                               {account.name}
@@ -476,7 +476,7 @@ export function NewContactForm({ users, accounts }: NewTaskFormProps) {
                             <SelectValue placeholder="Choose contact type " />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="flex overflow-y-auto h-56">
                           {contactType.map((type) => (
                             <SelectItem key={type.id} value={type.id}>
                               {type.name}

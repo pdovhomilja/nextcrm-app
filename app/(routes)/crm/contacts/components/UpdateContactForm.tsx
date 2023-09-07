@@ -424,7 +424,7 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
                             <SelectValue placeholder="Choose assigned account " />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="flex overflow-y-auto h-56">
                           {
                             //TODO: fix this
                             accounts.map((account: any) => (
@@ -490,7 +490,7 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
                             <SelectValue placeholder="Choose contact type " />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="flex overflow-y-auto h-56">
                           {contactType.map((type) => (
                             <SelectItem key={type.id} value={type.id}>
                               {type.name}

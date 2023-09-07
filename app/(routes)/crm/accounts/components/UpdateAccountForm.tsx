@@ -512,7 +512,7 @@ export function UpdateAccountForm({ initialData }: UpdateAccountFormProps) {
                           <SelectValue placeholder="Select new account industry" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="flex overflow-y-auto h-56">
                         {industries.map((industry: any) => (
                           <SelectItem key={industry.id} value={industry.id}>
                             {industry.name}

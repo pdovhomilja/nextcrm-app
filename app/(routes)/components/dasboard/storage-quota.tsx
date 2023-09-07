@@ -4,7 +4,8 @@ import { Database, Server } from "lucide-react";
 
 // Single KPI card in the demo dashboard with sample inputs
 export default function StorageQuota({ actual }: any) {
-  const percent = 100 * (actual / 2000);
+  const percent = parseFloat((100 * (actual / 2000)).toFixed(2));
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

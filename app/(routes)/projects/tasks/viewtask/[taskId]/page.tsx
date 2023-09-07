@@ -14,6 +14,21 @@ import { TaskDataTable } from "./components/data-table";
 import { columns } from "./components/columns";
 import { columnsTask } from "./components/columns-task";
 
+import TaskViewActions from "./components/TaskViewActions";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Calendar, Shield, User } from "lucide-react";
+import { getActiveUsers } from "@/actions/get-users";
+import { getBoards } from "@/actions/projects/get-boards";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+
 type TaskPageProps = {
   params: {
     taskId: string;
@@ -21,86 +36,114 @@ type TaskPageProps = {
 };
 
 const TaskPage = async ({ params }: TaskPageProps) => {
+  const session = await getServerSession(authOptions);
+  const user = session?.user;
+
   const { taskId } = params;
   const task: any = await getTask(taskId);
   const taskDocuments: any = await getTaskDocuments(taskId);
   const documents: any = await getDocuments();
   const comments: any = await getTaskComments(taskId);
+  const activeUsers: any = await getActiveUsers();
+  const boards = await getBoards(user?.id!);
 
   //console.log(taskDocuments, "taskDocuments");
 
   return (
     <div className="flex flex-col md:flex-row w-full px-2 space-x-2 ">
       <div className="flex flex-col w-full md:w-2/3">
-        <h4 className="scroll-m-20 text-xl font-semibold tracking-tight py-5">
-          Task details
-        </h4>
         <div className="w-full border rounded-lg mb-5">
-          {/*          <pre>
+          {/*      <pre>
             <code>{JSON.stringify(task, null, 2)}</code>
           </pre> */}
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr>
-                <th className="py-2 px-4 border-b font-semibold">
-                  <span className="flex justify-start">Property</span>
-                </th>
-                <th className="py-2 px-4 border-b font-semibold">
-                  <span className="flex justify-start">Value</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="py-2 px-4 border-b">ID</td>
-                <td className="py-2 px-4 border-b">{task.id}</td>
-              </tr>
-              <tr>
-                <td className="py-2 px-4 border-b">Date created</td>
-                <td className="py-2 px-4 border-b">
-                  {moment(task.createdAt).format("YYYY-MM-DD")}
-                </td>
-              </tr>
-              <tr>
-                <td className="py-2 px-4 border-b">Date due</td>
-                <td className="py-2 px-4 border-b">
-                  {moment(task.dueDateAt).format("YYYY-MM-DD")}
-                </td>
-              </tr>
-              <tr>
-                <td className="py-2 px-4 border-b">Date modified</td>
-                <td className="py-2 px-4 border-b">
-                  {moment(task.lastEditedAt).format("YYYY-MM-DD")}
-                </td>
-              </tr>
-              <tr>
-                <td className="py-2 px-4 border-b">Priority</td>
-                <td className="py-2 px-4 border-b">
-                  <Badge
-                    variant={
-                      task.priority === "high" ? `destructive` : `outline`
-                    }
-                  >
-                    {task.priority}
-                  </Badge>
-                </td>
-              </tr>
-              <tr>
-                <td className="py-2 px-4 border-b">Title</td>
-                <td className="py-2 px-4 border-b">{task.title}</td>
-              </tr>
-              <tr>
-                <td className="py-2 px-4 border-b">Content</td>
-                <td className="py-2 px-4 border-b">{task.content}</td>
-              </tr>
-              <tr>
-                <td className="py-2 px-4 border-b">Assigned to</td>
-                <td className="py-2 px-4 border-b">
-                  {task.assigned_user?.name || "Not assigned"}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle>{task.title}</CardTitle>
+              <CardDescription>{task.content}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div>
+                <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
+                  <Calendar className="mt-px h-5 w-5" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      Date created
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {moment(task.createdAt).format("YYYY-MM-DD HH:mm:ss")}
+                    </p>
+                  </div>
+                </div>
+                <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
+                  <Calendar className="mt-px h-5 w-5" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium leading-none">Date due</p>
+                    <p className="text-sm text-muted-foreground">
+                      {moment(task.dueDateAt).format("YYYY-MM-DD HH:mm")}
+                    </p>
+                  </div>
+                </div>
+                <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
+                  <Calendar className="mt-px h-5 w-5" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      Last modified
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {moment(task.lastEditedAt).format("YYYY-MM-DD HH:mm:ss")}
+                    </p>
+                  </div>
+                </div>
+                <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
+                  <Shield className="mt-px h-5 w-5" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium leading-none">Priority</p>
+                    <Badge
+                      variant={
+                        task.priority === "high" ? `destructive` : `outline`
+                      }
+                    >
+                      {task.priority}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
+                  <Shield className="mt-px h-5 w-5" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium leading-none">Status</p>
+                    <Badge
+                      variant={
+                        task.taskStatus === "COMPLETE"
+                          ? `destructive`
+                          : `outline`
+                      }
+                    >
+                      {task.taskStatus}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
+                  <User className="mt-px h-5 w-5" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      Assigned to
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {task.assigned_user?.name || "Not assigned"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="space-x-2">
+              <TaskViewActions
+                taskId={taskId}
+                users={activeUsers}
+                boards={boards}
+                initialData={task}
+              />
+            </CardFooter>
+          </Card>
         </div>
         {/*         <pre>
           <code>{JSON.stringify(taskDocuments, null, 2)}</code>
