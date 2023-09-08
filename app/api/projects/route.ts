@@ -49,3 +49,42 @@ export async function POST(req: Request) {
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+
+export async function PUT(req: Request) {
+  const session = await getServerSession(authOptions);
+  const body = await req.json();
+  const { id, title, description, visibility } = body;
+
+  if (!session) {
+    return new NextResponse("Unauthenticated", { status: 401 });
+  }
+
+  if (!title) {
+    return new NextResponse("Missing project name", { status: 400 });
+  }
+
+  if (!description) {
+    return new NextResponse("Missing project description", { status: 400 });
+  }
+
+  try {
+    await prismadb.boards.update({
+      where: {
+        id,
+      },
+      data: {
+        title: title,
+        description: description,
+        visibility: visibility,
+      },
+    });
+
+    return NextResponse.json(
+      { message: "Board updated successfullsy" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.log("[UPDATE_BOARD_POST]", error);
+    return new NextResponse("Initial error", { status: 500 });
+  }
+}

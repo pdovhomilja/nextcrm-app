@@ -8,13 +8,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -23,8 +17,25 @@ import { useRouter } from "next/navigation";
 import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
 import axios from "axios";
-import { Eye, EyeIcon, EyeOff, Glasses, Magnet, Trash } from "lucide-react";
+import {
+  Eye,
+  EyeIcon,
+  EyeOff,
+  Glasses,
+  Magnet,
+  Pencil,
+  Trash,
+} from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+
+import UpdateProjectForm from "../forms/UpdateProject";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -37,6 +48,7 @@ export function DataTableRowActions<TData>({
   const project = taskSchema.parse(row.original);
 
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const { toast } = useToast();
@@ -108,6 +120,15 @@ export function DataTableRowActions<TData>({
         onConfirm={onDelete}
         loading={loading}
       />
+      <Sheet open={editOpen} onOpenChange={() => setEditOpen(false)}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Edit your project data</SheetTitle>
+            <SheetDescription></SheetDescription>
+          </SheetHeader>
+          <UpdateProjectForm initialData={project} openEdit={setEditOpen} />
+        </SheetContent>
+      </Sheet>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -123,8 +144,13 @@ export function DataTableRowActions<TData>({
             onClick={() => router.push(`/projects/boards/${project.id}`)}
           >
             <Glasses className="mr-2 w-4 h-4" />
-            View project
+            View detail
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setEditOpen(true)}>
+            <Pencil className="mr-2 w-4 h-4" />
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={onWatch}>
             <Eye className="mr-2 w-4 h-4" />
             Watch project

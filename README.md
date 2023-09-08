@@ -19,6 +19,7 @@ Next.js - React framework </br> shadcn - UI </br> Prisma ORM - together with mon
 3. Docker version - in planning (There will be complete bundle to run NextCRM on-premise)
 4. Testing - Jest + Cypress (if anyone want to help I will be very happy) - in planning
 5. Fix all Types issue ( nom more "any" ) - in progress
+6. i18n - localization - in planning (if anyone want to help I will be very happy)
 
 ## Emails
 
