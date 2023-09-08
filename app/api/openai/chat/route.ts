@@ -1,21 +1,15 @@
 // app/api/chat/route.ts
 
-import { Configuration, OpenAIApi } from "openai-edge";
+import { openai } from "@/lib/openai";
 import { OpenAIStream, StreamingTextResponse } from "ai";
 
 // Optional, but recommended: run on the edge runtime.
 // See https://vercel.com/docs/concepts/functions/edge-functions
 export const runtime = "edge";
 
-const apiConfig = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY!,
-});
-
-const openai = new OpenAIApi(apiConfig);
-
 export async function POST(req: Request) {
   // Extract the `messages` from the body of the request
-  const { messages } = await req.json();
+  /*   const { messages } = await req.json();
 
   // Request the OpenAI API for the response based on the prompt
   const response = await openai.createChatCompletion({
@@ -30,5 +24,6 @@ export async function POST(req: Request) {
   const stream = OpenAIStream(response);
 
   // Respond with the stream
-  return new StreamingTextResponse(stream);
+  return new StreamingTextResponse(stream); */
+  return new Response("Hello world");
 }
