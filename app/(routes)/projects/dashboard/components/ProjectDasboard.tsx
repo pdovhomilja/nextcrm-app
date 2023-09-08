@@ -24,7 +24,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { CheckSquare, Eye, MessagesSquare } from "lucide-react";
+import { CheckSquare, Eye, MessagesSquare, Pencil } from "lucide-react";
+import UpdateTaskDialog from "../../dialogs/UpdateTask";
 
 interface DashboardData {
   getTaskPastDue: Tasks[];
@@ -49,8 +50,12 @@ export interface Comment {
 
 const ProjectDashboardCockpit = ({
   dashboardData,
+  users,
+  boards,
 }: {
   dashboardData: DashboardData;
+  users: any;
+  boards: any;
 }) => {
   const { toast } = useToast();
   const router = useRouter();
@@ -85,6 +90,7 @@ const ProjectDashboardCockpit = ({
             <code>{JSON.stringify(dashboardData, null, 2)}</code>
           </pre> */}
         </div>
+
         {dashboardData?.getTaskPastDue?.map((task: Tasks) => (
           <Card key={task.id} className="m-2">
             <CardHeader>
@@ -94,7 +100,13 @@ const ProjectDashboardCockpit = ({
               <CardDescription>{task.content}</CardDescription>
             </CardHeader>
             <CardContent>
-              <div>Due date: {moment(task.dueDateAt).format("YYYY-MM-DD")}</div>
+              <div
+                className={
+                  task.dueDateAt < new Date() ? "text-red-500 text-xs" : ""
+                }
+              >
+                Due date: {moment(task.dueDateAt).format("YYYY-MM-DD")}
+              </div>
               <div>
                 <p
                   className={
@@ -111,7 +123,7 @@ const ProjectDashboardCockpit = ({
                 </p>
               </div>
             </CardContent>
-            <CardFooter className="space-x-2">
+            <CardFooter className="space-x-2 ">
               <Link href={`/projects/tasks/viewtask/${task.id}`}>
                 <Badge variant={"outline"}>
                   <Eye className="w-4 h-4 mr-2" />
@@ -120,7 +132,7 @@ const ProjectDashboardCockpit = ({
               </Link>
               <Sheet>
                 <SheetTrigger asChild>
-                  <Badge variant={"outline"}>
+                  <Badge variant={"outline"} className="cursor-pointer">
                     <MessagesSquare className="w-4 h-4 mr-2" />
                     <span>Chat</span>
                   </Badge>
@@ -132,9 +144,28 @@ const ProjectDashboardCockpit = ({
                   <TeamConversations taskId={task.id} data={task.comments} />
                 </SheetContent>
               </Sheet>
-              <Badge variant={"outline"} onClick={() => onDone(task.id)}>
+              <Badge
+                variant={"outline"}
+                onClick={() => onDone(task.id)}
+                className="cursor-pointer"
+              >
                 <CheckSquare className="w-4 h-4 mr-2" />
                 <span>Mark as done</span>
+              </Badge>
+              <Badge variant={"outline"} className="cursor-pointer">
+                <Pencil className="w-4 h-4 mr-2" />
+                <Sheet>
+                  <SheetTrigger>
+                    <span>Edit</span>
+                  </SheetTrigger>
+                  <SheetContent>
+                    <UpdateTaskDialog
+                      users={users}
+                      boards={boards}
+                      initialData={task}
+                    />
+                  </SheetContent>
+                </Sheet>
               </Badge>
             </CardFooter>
           </Card>
@@ -156,7 +187,15 @@ const ProjectDashboardCockpit = ({
               <CardDescription>{task.content}</CardDescription>
             </CardHeader>
             <CardContent>
-              <div>Due date: {moment(task.dueDateAt).format("YYYY-MM-DD")}</div>
+              <div
+                className={
+                  task.dueDateAt < new Date()
+                    ? "text-red-500 text-xs"
+                    : "text-xs"
+                }
+              >
+                Due date: {moment(task.dueDateAt).format("YYYY-MM-DD")}
+              </div>
               <div>
                 <p
                   className={
@@ -200,6 +239,21 @@ const ProjectDashboardCockpit = ({
               <Badge variant={"outline"} onClick={() => onDone(task.id)}>
                 <CheckSquare className="w-4 h-4 mr-2" />
                 <span>Mark as done</span>
+              </Badge>
+              <Badge variant={"outline"} className="cursor-pointer">
+                <Pencil className="w-4 h-4 mr-2" />
+                <Sheet>
+                  <SheetTrigger>
+                    <span>Edit</span>
+                  </SheetTrigger>
+                  <SheetContent>
+                    <UpdateTaskDialog
+                      users={users}
+                      boards={boards}
+                      initialData={task}
+                    />
+                  </SheetContent>
+                </Sheet>
               </Badge>
             </CardFooter>
           </Card>

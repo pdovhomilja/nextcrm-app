@@ -2,7 +2,7 @@
 
 import { NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
-import openailib from "@/lib/openai";
+import { openai } from "@/lib/openai";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -19,18 +19,20 @@ export async function POST(req: Request) {
       },
     });
 
-    console.log("Active GPT Model:", gptModel[0].model);
+    //console.log("Active GPT Model:", gptModel[0].model);
 
-    const completion = await openailib.createChatCompletion({
-      //model: gptModel[0].model,
-      model: "gpt-3.5-turbo-16k",
-      messages: [{ role: "user", content: prompt }],
-      max_tokens: 4096,
-      temperature: 0,
+    //console.log(prompt, "prompt");
+    // Ask OpenAI for a chats completion given the prompt
+    const response = await openai.chat.completions.create({
+      messages: [
+        { role: "system", content: "You are a helpful assistant." },
+        { role: "user", content: prompt },
+      ],
+      model: gptModel[0].model,
     });
-    console.log(completion.data.choices[0].message?.content, "completion");
+
     return NextResponse.json(
-      { response: completion.data.choices[0].message?.content },
+      { response: response.choices[0] },
       { status: 200 }
     );
   } catch (error) {

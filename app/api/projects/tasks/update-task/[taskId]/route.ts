@@ -17,7 +17,7 @@ export async function PUT(
 ) {
   const session = await getServerSession(authOptions);
   const body = await req.json();
-  const { title, user, board, priority, content, notionUrl } = body;
+  const { title, user, board, priority, content, notionUrl, dueDateAt } = body;
 
   const taskId = params.taskId;
 
@@ -69,6 +69,7 @@ export async function PUT(
         title: title,
         content: contentUpdated,
         updatedBy: user,
+        dueDateAt: dueDateAt,
         user: user,
       },
     });

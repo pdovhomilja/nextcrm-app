@@ -1,11 +1,6 @@
-import { Configuration, OpenAIApi } from "openai";
+import OpenAI from "openai";
 
-//OpenAI API config file
-const config = new Configuration({
-  organization: process.env.OPEN_AI_ORGANIZATION_ID,
+// Create an OpenAI API client (that's edge friendly!)
+export const openai = new OpenAI({
   apiKey: process.env.OPEN_AI_API_KEY,
 });
-
-const openailib = new OpenAIApi(config);
-
-export default openailib;

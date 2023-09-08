@@ -2,6 +2,7 @@
 
 import LoadingComponent from "@/components/LoadingComponent";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +19,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Icons } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -28,8 +35,11 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
+import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import React, { useEffect, useState } from "react";
@@ -54,7 +64,7 @@ const UpdateTaskDialog = ({ users, boards, initialData }: Props) => {
   const formSchema = z.object({
     title: z.string().min(3).max(255),
     user: z.string().min(3).max(255),
-
+    dueDateAt: z.date(),
     priority: z.string().min(3).max(10),
     content: z.string().min(3).max(500),
   });
@@ -145,6 +155,47 @@ const UpdateTaskDialog = ({ users, boards, initialData }: Props) => {
             />
             <FormField
               control={form.control}
+              name="dueDateAt"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Due date</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-[240px] pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Pick a expected close date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        //@ts-ignore
+                        //TODO: fix this
+                        onSelect={field.onChange}
+                        disabled={(date) => date < new Date("1900-01-01")}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name="user"
               render={({ field }) => (
                 <FormItem>
@@ -202,7 +253,13 @@ const UpdateTaskDialog = ({ users, boards, initialData }: Props) => {
             <DialogTrigger asChild>
               <Button variant={"destructive"}>Cancel</Button>
             </DialogTrigger>
-            <Button type="submit">Update</Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? (
+                <Icons.spinner className="animate-spin" />
+              ) : (
+                "Update"
+              )}
+            </Button>
           </div>
         </form>
       </Form>

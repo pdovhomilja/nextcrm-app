@@ -11,7 +11,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
   try {
-    /*   const today = dayjs().startOf("day");
+    const today = dayjs().startOf("day");
     const nextWeek = dayjs().add(7, "day").startOf("day");
     let prompt = "";
 
@@ -75,7 +75,7 @@ export async function GET(req: Request) {
           \n\n
           As a personal assistant, write a message to ${
             user.name
-          }  to remind them of their tasks. And also dont forget to send them a some positive vibes.
+          }  to remind them of their tasks. And also do not forget to send them a some positive vibes.
           \n\n
           `;
           break;
@@ -130,6 +130,8 @@ export async function GET(req: Request) {
         }
       ).then((res) => res.json());
 
+      console.log(getAiResponse.response, "getAiResponse");
+
       //skip if api response is error
       if (getAiResponse.error) {
         console.log("Error from OpenAI API");
@@ -138,10 +140,10 @@ export async function GET(req: Request) {
           from: process.env.EMAIL_FROM,
           to: user.email!,
           subject: `${process.env.NEXT_PUBLIC_APP_NAME} OpenAI Project manager assistant`,
-          text: getAiResponse.response,
+          text: getAiResponse.response.message.content,
         });
       }
-    } */
+    }
 
     return NextResponse.json({ message: "Emails sent" });
   } catch (error) {

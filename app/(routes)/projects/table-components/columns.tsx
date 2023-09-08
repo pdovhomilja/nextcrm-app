@@ -9,6 +9,7 @@ import { Task } from "../data/schema";
 import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
 import moment from "moment";
+import Link from "next/link";
 
 export const columns: ColumnDef<Task>[] = [
   {
@@ -44,7 +45,11 @@ export const columns: ColumnDef<Task>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Name" />
     ),
-    cell: ({ row }) => <div className="w-[300px]">{row.getValue("title")}</div>,
+    cell: ({ row }) => (
+      <Link href={`/projects/boards/${row.original.id}`}>
+        <div className="w-[300px]">{row.getValue("title")}</div>
+      </Link>
+    ),
   },
   {
     accessorKey: "description",
