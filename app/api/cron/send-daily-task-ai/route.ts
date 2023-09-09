@@ -6,11 +6,11 @@ import sendEmail from "@/lib/sendmail";
 import { data } from "autoprefixer";
 import axios from "axios";
 import dayjs from "dayjs";
-import { get } from "http";
+
 import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
-  try {
+  /*   try {
     const today = dayjs().startOf("day");
     const nextWeek = dayjs().add(7, "day").startOf("day");
     let prompt = "";
@@ -149,5 +149,6 @@ export async function GET(req: Request) {
   } catch (error) {
     console.log("[TASK_CRON_API]", error);
     return new NextResponse("Initial error", { status: 500 });
-  }
+  } */
+  return new NextResponse("Initial error", { status: 500 });
 }
