@@ -27,6 +27,13 @@ import axios from "axios";
 import RightViewModalNoTrigger from "@/components/modals/right-view-notrigger";
 import { UpdateAccountForm } from "../components/UpdateAccountForm";
 import { Eye, EyeOff } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -118,8 +125,22 @@ export function DataTableRowActions<TData>({
         open={updateOpen}
         setOpen={setUpdateOpen}
       >
-        <UpdateAccountForm initialData={row.original} />
+        <UpdateAccountForm initialData={row.original} open={setUpdateOpen} />
       </RightViewModalNoTrigger>
+
+      {/*       <Sheet open={updateOpen} onOpenChange={() => setUpdateOpen(false)}>
+        <SheetContent className=" overflow-auto h-full w-[600px]" side={"left"}>
+          <SheetHeader>
+            <SheetTitle>Are you sure absolutely sure?</SheetTitle>
+            <SheetDescription>
+              This action cannot be undone. This will permanently delete your
+              account and remove your data from our servers.
+            </SheetDescription>
+          </SheetHeader>
+          <UpdateAccountForm initialData={row.original} open={setUpdateOpen} />
+        </SheetContent>
+      </Sheet> */}
+
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button

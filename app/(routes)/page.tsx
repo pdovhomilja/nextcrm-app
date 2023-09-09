@@ -28,6 +28,7 @@ import { getInvoices } from "@/actions/invoice/get-invoices";
 import { getUserTasks } from "@/actions/projects/get-user-tasks";
 import { getDocuments } from "@/actions/documents/get-documents";
 import { getStorageSize } from "@/actions/documents/get-storage-size";
+import { getExpectedRevenue } from "@/actions/crm/opportunity/get-expected-revenue";
 
 const DashboardPage = async () => {
   const session = await getServerSession(authOptions);
@@ -45,6 +46,9 @@ const DashboardPage = async () => {
   const storage = await getStorageSize();
   const projects = await getBoards(userId);
   const usersTasks = await getUserTasks(userId);
+  const revenue = await getExpectedRevenue();
+
+  console.log(revenue, "revenue");
 
   //Find which modules are enabled
   const crmModule = modules.find((module) => module.name === "crm");
@@ -71,6 +75,17 @@ const DashboardPage = async () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-medium">{"0"}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Expected Revenue
+            </CardTitle>
+            <DollarSignIcon className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-medium">{revenue}</div>
           </CardContent>
         </Card>
         <Link href="/admin/users">

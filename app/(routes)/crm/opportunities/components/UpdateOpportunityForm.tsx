@@ -81,7 +81,6 @@ export function UpdateOpportunityForm({
 
   type NewAccountFormValues = z.infer<typeof formSchema>;
 
-  //TODO: fix all the types
   const form = useForm<any>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData,
@@ -90,6 +89,7 @@ export function UpdateOpportunityForm({
   const onSubmit = async (data: NewAccountFormValues) => {
     setIsLoading(true);
     try {
+      //Convert data.budget and data.expected_revenue to number
       await axios.put("/api/crm/opportunity", data);
       toast({
         title: "Success",
@@ -278,8 +278,9 @@ export function UpdateOpportunityForm({
                       <FormLabel>Bugdget</FormLabel>
                       <FormControl>
                         <Input
+                          type={"number"}
                           disabled={isLoading}
-                          placeholder="1.000.000"
+                          placeholder="1000000"
                           {...field}
                         />
                       </FormControl>
@@ -312,8 +313,9 @@ export function UpdateOpportunityForm({
                       <FormLabel>Expected revenue</FormLabel>
                       <FormControl>
                         <Input
+                          type="number"
                           disabled={isLoading}
-                          placeholder="500.000"
+                          placeholder="500000"
                           {...field}
                         />
                       </FormControl>

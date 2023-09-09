@@ -38,9 +38,13 @@ import { crm_Accounts } from "@prisma/client";
 interface UpdateAccountFormProps {
   //TODO: fix this any
   initialData: any;
+  open: (value: boolean) => void;
 }
 
-export function UpdateAccountForm({ initialData }: UpdateAccountFormProps) {
+export function UpdateAccountForm({
+  initialData,
+  open,
+}: UpdateAccountFormProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
@@ -128,10 +132,6 @@ export function UpdateAccountForm({ initialData }: UpdateAccountFormProps) {
         title: "Success",
         description: "Account updated successfully",
       });
-
-      /*     if (response.status === 200) {
-        router.push("/");
-      } */
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -140,8 +140,8 @@ export function UpdateAccountForm({ initialData }: UpdateAccountFormProps) {
       });
     } finally {
       setIsLoading(false);
+      open(false);
       router.refresh();
-      router.push("/crm/accounts");
     }
   };
 
@@ -157,7 +157,10 @@ export function UpdateAccountForm({ initialData }: UpdateAccountFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="h-full px-10">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="w-full h-full px-10"
+      >
         {/*    <div>
           <pre>
             <code>{JSON.stringify(form.formState.errors, null, 2)}</code>

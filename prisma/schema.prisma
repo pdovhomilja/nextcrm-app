@@ -101,7 +101,7 @@ model crm_Opportunities {
   v                    Int                             @default(0) @map("__v")
   account              String?                         @db.ObjectId
   assigned_to          String?                         @db.ObjectId
-  budget               String?
+  budget               Int                             @default(0)
   campaign             String?                         @db.ObjectId
   close_date           DateTime?                       @db.Date
   contact              String?                         @db.ObjectId
@@ -115,7 +115,7 @@ model crm_Opportunities {
   last_activity_by     String?                         @db.ObjectId
   currency             String?
   description          String?
-  expected_revenue     String?
+  expected_revenue     Int                            @default(0)
   name                 String?
   next_step            String?
   sales_stage          String?                         @db.ObjectId

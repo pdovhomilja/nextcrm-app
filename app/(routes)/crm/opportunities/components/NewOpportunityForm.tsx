@@ -68,9 +68,13 @@ export function NewOpportunityForm({
     description: z.string(),
     type: z.string(),
     sales_stage: z.string(),
-    budget: z.string(),
+    budget: z.number({
+      required_error: "A budget is required. And must be a number.",
+    }),
     currency: z.string(),
-    expected_revenue: z.string(),
+    expected_revenue: z.number({
+      required_error: "A expected revenue is required. And must be a number.",
+    }),
     next_step: z.string(),
     assigned_to: z.string(),
     account: z.string(),
@@ -254,8 +258,9 @@ export function NewOpportunityForm({
                       <FormLabel>Bugdget</FormLabel>
                       <FormControl>
                         <Input
+                          type="number"
                           disabled={isLoading}
-                          placeholder="1.000.000"
+                          placeholder="1000000"
                           {...field}
                         />
                       </FormControl>
@@ -288,8 +293,9 @@ export function NewOpportunityForm({
                       <FormLabel>Expected revenue</FormLabel>
                       <FormControl>
                         <Input
+                          type="number"
                           disabled={isLoading}
-                          placeholder="500.000"
+                          placeholder="500000"
                           {...field}
                         />
                       </FormControl>

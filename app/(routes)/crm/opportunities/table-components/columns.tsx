@@ -10,6 +10,7 @@ import { Opportunity } from "../table-data/schema";
 import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
 import moment from "moment";
+import Link from "next/link";
 
 export const columns: ColumnDef<Opportunity>[] = [
   /* {
@@ -89,7 +90,11 @@ export const columns: ColumnDef<Opportunity>[] = [
       <DataTableColumnHeader column={column} title="Name" />
     ),
 
-    cell: ({ row }) => <div className="w-[250px]">{row.getValue("name")}</div>,
+    cell: ({ row }) => (
+      <Link href={`/crm/opportunities/${row.original.id}`}>
+        <div className="w-[250px]">{row.getValue("name")}</div>
+      </Link>
+    ),
     enableSorting: true,
     enableHiding: true,
   },
