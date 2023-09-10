@@ -1,0 +1,12 @@
+{
+  "RootLayout": {
+    "title": "NextCRM",
+    "description": "Willkommen bei NextCRM CRM mit Prisma und Next.js 13"
+  },
+  "RegisterComponent": {
+    "cardTitle": "Neuen Account erstellen",
+    "cardDescription": "Erstellen Sie ein Konto, indem Sie sich anmelden mit",
+    "label": "Sprache",
+    "locale": "{locale, select, de {Deutsch} en {Englisch} cz {Tschechisch} other {Unbekannt}}"
+  }
+}

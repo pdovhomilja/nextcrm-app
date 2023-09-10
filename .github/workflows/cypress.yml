@@ -4,23 +4,6 @@ jobs:
   cypress-run:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres
-
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_USER: postgres
-          POSTGRES_DB: postgres
-
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-    
     # Runs tests in parallel with matrix strategy https://docs.cypress.io/guides/guides/parallelization
     # https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs
     # Also see warning here https://github.com/cypress-io/github-action#parallel
@@ -28,28 +11,32 @@ jobs:
       fail-fast: false # https://github.com/cypress-io/github-action/issues/48
       matrix:
         containers: [1, 2] # Uses 2 parallel instances
+        mongodb-version: ['4.2', '4.4', '5.0', '6.0']
     steps:
-      - name: Test postgres connection
-        run: psql postgres://postgres:postgres@localhost:5432/postgres -c 'SELECT 1;'
 
-      - name: Create additional database
-        run: psql postgres://postgres:postgres@localhost:5432/postgres -c 'create database nextcrm;'
-      
+      - name: Start MongoDB
+        uses: supercharge/mongodb-github-action@1.10.0
+        with:
+          mongodb-version: ${{ matrix.mongodb-version }}
+          mongodb-username: nextcrm
+          mongodb-password: nextcrm
+          mongodb-db: nextcrm
+
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: Prisma Schema Validate
         uses: elijaholmos/prisma-schema-validate@v1.0.0
-        env: 
+        env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Prisma Generate and Push
         run: |
           npx prisma generate
           npx prisma db push
-        env: 
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}          
- 
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
       - name: Cypress run
         # Uses the official Cypress GitHub action https://github.com/cypress-io/github-action
         uses: cypress-io/github-action@v5
@@ -77,11 +64,9 @@ jobs:
           DO_ACCESS_KEY_ID: ${{ secrets.DO_ACCESS_KEY_ID }}
           DO_ACCESS_KEY_SECRET: ${{ secrets.DO_ACCESS_KEY_SECRET }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          POSTGRES_PORT: 5432
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           NEXTCRM_TOKEN: ${{ secrets.NEXTCRM_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
           NEXT_PUBLIC_APP_NAME: ${{ secrets.NEXT_PUBLIC_APP_NAME }}
           NEXT_PUBLIC_APP_V: ${{ secrets.NEXT_PUBLIC_APP_V }}
