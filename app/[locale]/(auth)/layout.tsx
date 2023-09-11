@@ -1,14 +1,15 @@
-import Footer from "@/app/[locale]/(routes)/components/Footer";
+import axios from "axios";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { createTranslator } from "next-intl";
+import { GithubIcon, Star } from "lucide-react";
+
 import "@/app/[locale]/globals.css";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import axios from "axios";
-import { GithubIcon, Star } from "lucide-react";
-import { createTranslator } from "next-intl";
-import { notFound } from "next/navigation";
-import Link from "next/link";
+import Footer from "@/app/[locale]/(routes)/components/Footer";
 
 type Props = {
-  params: {locale: string};
+  params: { locale: string };
 };
 
 async function getLocales(locale: string) {
@@ -19,20 +20,17 @@ async function getLocales(locale: string) {
   }
 }
 
-export async function generateMetadata({params: {locale}}: Props) {
+export async function generateMetadata({ params: { locale } }: Props) {
   const messages = await getLocales(locale);
-
-  const t = createTranslator({locale, messages});
-
+  const t = createTranslator({ locale, messages });
   return {
-    title: t('RootLayout.title'),
-    description: t('RootLayout.description')
+    title: t("RootLayout.title"),
+    description: t("RootLayout.description"),
   };
 }
 
 const AuthLayout = async ({ children }: { children: React.ReactNode }) => {
   //Get github stars from github api
-
   const github = await axios
     .get(`https://api.github.com/repos/pdovhomilja/nextcrm-app`)
     .then((res) => res.data);

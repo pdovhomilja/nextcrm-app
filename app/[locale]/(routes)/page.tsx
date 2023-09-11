@@ -48,8 +48,6 @@ const DashboardPage = async () => {
   const usersTasks = await getUserTasks(userId);
   const revenue = await getExpectedRevenue();
 
-  console.log(revenue, "revenue");
-
   //Find which modules are enabled
   const crmModule = modules.find((module) => module.name === "crm");
   const invoiceModule = modules.find((module) => module.name === "invoice");
@@ -85,7 +83,15 @@ const DashboardPage = async () => {
             <DollarSignIcon className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-medium">{revenue}</div>
+            <div className="text-2xl font-medium">
+              {
+                //I need revenue value in forma 1.000.000
+                revenue.toLocaleString("en-US", {
+                  style: "currency",
+                  currency: "USD",
+                })
+              }
+            </div>
           </CardContent>
         </Card>
         <Link href="/admin/users">

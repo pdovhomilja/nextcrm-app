@@ -15,7 +15,16 @@ TODO: there is second route for creating task in board, but it is the same as th
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   const body = await req.json();
-  const { title, user, board, priority, content, notionUrl, account } = body;
+  const {
+    title,
+    user,
+    board,
+    priority,
+    content,
+    notionUrl,
+    account,
+    dueDateAt,
+  } = body;
 
   if (!session) {
     return new NextResponse("Unauthenticated", { status: 401 });
@@ -58,6 +67,7 @@ export async function POST(req: Request) {
         priority: priority,
         title: title,
         content: contentUpdated,
+        dueDateAt: dueDateAt,
         section: sectionId.id,
         createdBy: user,
         updatedBy: user,

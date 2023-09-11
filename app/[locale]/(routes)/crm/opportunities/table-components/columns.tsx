@@ -99,6 +99,28 @@ export const columns: ColumnDef<Opportunity>[] = [
     enableHiding: true,
   },
   {
+    accessorKey: "budget",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Budget" />
+    ),
+
+    cell: ({ row }) => {
+      console.log(row.original.budget);
+      return (
+        <div>
+          {row.original.budget
+            ? row.original.budget.toLocaleString("en-US", {
+                style: "currency",
+                currency: "USD",
+              })
+            : "N/A"}
+        </div>
+      );
+    },
+    enableSorting: true,
+    enableHiding: true,
+  },
+  {
     accessorKey: "next_step",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Next step" />

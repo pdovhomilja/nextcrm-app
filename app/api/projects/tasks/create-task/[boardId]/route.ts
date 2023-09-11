@@ -15,7 +15,7 @@ export async function POST(
   const session = await getServerSession(authOptions);
   const body = await req.json();
   const { boardId } = params;
-  const { title, priority, content, section, user } = body;
+  const { title, priority, content, section, user, dueDateAt } = body;
 
   if (!session) {
     return new NextResponse("Unauthenticated", { status: 401 });
@@ -75,6 +75,7 @@ export async function POST(
           priority: priority,
           title: title,
           content: content,
+          dueDateAt: dueDateAt,
           section: section,
           createdBy: user,
           updatedBy: user,

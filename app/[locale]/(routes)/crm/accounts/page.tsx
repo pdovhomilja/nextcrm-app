@@ -9,6 +9,7 @@ import { getAccounts } from "@/actions/crm/get-accounts";
 const AccountsPage = async () => {
   const crmData = await getAllCrmData();
   const accounts = await getAccounts();
+
   return (
     <Container
       title="Accounts"

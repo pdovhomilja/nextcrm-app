@@ -1,29 +1,24 @@
 "use client";
-
-import React, { startTransition, useCallback } from "react";
-import { z, ZodType } from "zod";
-import { signIn } from "next-auth/react";
-import Link from "next/link";
-import { useRouter } from "next-intl/client";
-//import { toast } from "react-hot-toast";
-import { useToast } from "@/components/ui/use-toast";
-
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import axios from "axios";
+import Link from "next/link";
+import { signIn } from "next-auth/react";
+import { useForm } from "react-hook-form";
+import { useRouter } from "next-intl/client";
+import React, { startTransition } from "react";
 import { FingerprintIcon } from "lucide-react";
+import { usePathname } from "next-intl/client";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useLocale, useTranslations } from "next-intl";
 
-import { Icons } from "@/components/ui/icons";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -39,9 +34,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-import { useLocale, useTranslations } from "next-intl";
-import { usePathname } from "next-intl/client";
+import { Icons } from "@/components/ui/icons";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
 
 export function RegisterComponent() {
   const router = useRouter();
@@ -108,22 +104,22 @@ export function RegisterComponent() {
     }
   };
 
-  const t = useTranslations('RegisterComponent');
+  const t = useTranslations("RegisterComponent");
   const locale = useLocale();
   const pathname = usePathname();
 
-  function onValueChange( value: string ) {
+  function onValueChange(value: string) {
     const nextLocale = value;
     startTransition(() => {
-      router.replace(pathname, {locale: nextLocale});
+      router.replace(pathname, { locale: nextLocale });
     });
   }
 
   return (
     <Card className="shadow-lg ">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl">{t('cardTitle')}</CardTitle>
-        <CardDescription>{t('cardDescription')}</CardDescription>
+        <CardTitle className="text-2xl">{t("cardTitle")}</CardTitle>
+        <CardDescription>{t("cardDescription")}</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 overflow-auto">
         <div className="grid grid-cols-2 gap-6">
@@ -209,7 +205,7 @@ export function RegisterComponent() {
                 name="language"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('label')}</FormLabel>
+                    <FormLabel>{t("label")}</FormLabel>
                     <Select
                       disabled={isLoading}
                       onValueChange={onValueChange}
@@ -224,9 +220,9 @@ export function RegisterComponent() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {['en', 'de', 'cz'].map((cur) => (
+                        {["en", "de", "cz"].map((cur) => (
                           <SelectItem key={cur} value={cur}>
-                            {t('locale', {locale: cur})}
+                            {t("locale", { locale: cur })}
                           </SelectItem>
                         ))}
                       </SelectContent>

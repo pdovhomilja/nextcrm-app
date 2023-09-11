@@ -1,8 +1,6 @@
 import { RegisterComponent } from "./components/RegisterComponent";
 
-type Props = {};
-
-const RegistrPage = (props: Props) => {
+const RegisterPage = () => {
   return (
     <div className="flex flex-col w-full h-full overflow-auto p-10 space-y-5">
       <div className="">
@@ -15,4 +13,4 @@ const RegistrPage = (props: Props) => {
   );
 };
 
-export default RegistrPage;
+export default RegisterPage;

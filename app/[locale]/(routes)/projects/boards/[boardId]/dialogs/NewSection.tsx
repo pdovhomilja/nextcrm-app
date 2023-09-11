@@ -1,16 +1,12 @@
 "use client";
 
-import LoadingComponent from "@/components/LoadingComponent";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTrigger,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { z } from "zod";
+import axios from "axios";
+import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+
 import {
   Form,
   FormControl,
@@ -19,23 +15,18 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTrigger,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
-import { useRouter } from "next/navigation";
-
-import React, { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import LoadingComponent from "@/components/LoadingComponent";
 
 type Props = {
   boardId: string;
@@ -85,6 +76,9 @@ const NewSectionDialog = ({ boardId }: Props) => {
         description: error?.response?.data,
       });
     } finally {
+      form.reset({
+        title: "",
+      });
       setIsLoading(false);
       setOpen(false);
       router.refresh();
@@ -132,10 +126,10 @@ const NewSectionDialog = ({ boardId }: Props) => {
                   />
                 </div>
                 <div className="flex w-full justify-end space-x-2 pt-2">
-                  <Button type="submit">Create</Button>
                   <DialogTrigger asChild>
                     <Button variant={"destructive"}>Cancel</Button>
                   </DialogTrigger>
+                  <Button type="submit">Create</Button>
                 </div>
               </form>
             </Form>
