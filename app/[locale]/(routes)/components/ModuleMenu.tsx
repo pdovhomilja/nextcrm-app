@@ -1,6 +1,15 @@
 "use client";
 import React, { useState } from "react";
 import MenuItem from "./ui/MenuItem";
+import CrmMenu from "./menu-items/Crm";
+import ProjectModuleMenu from "./menu-items/Projects";
+import SecondBrainModuleMenu from "./menu-items/SecondBrain";
+import InvoicesModuleMenu from "./menu-items/Invoices";
+import ReportsModuleMenu from "./menu-items/Reports";
+import DocumentsModuleMenu from "./menu-items/Documents";
+import ChatGPTModuleMenu from "./menu-items/ChatGPT";
+import EmployeesModuleMenu from "./menu-items/Employees";
+import DataboxModuleMenu from "./menu-items/Databoxes";
 
 type Props = {
   modules: any;
@@ -34,7 +43,7 @@ const ModuleMenu = ({ modules }: Props) => {
               !open && "scale-0"
             }`}
           >
-            NextCRM
+            {process.env.NEXT_PUBLIC_APP_NAME}
           </h1>
         </div>
         <ul className="pt-6">
@@ -44,7 +53,54 @@ const ModuleMenu = ({ modules }: Props) => {
             route={"/"}
             menuItem={"Dashboard"}
           />
-          {modules.map((menuItem: any) => {
+          {modules.find(
+            (menuItem: any) => menuItem.name === "crm" && menuItem.enabled
+          ) ? (
+            <CrmMenu open={open} />
+          ) : null}
+          {modules.find(
+            (menuItem: any) => menuItem.name === "projects" && menuItem.enabled
+          ) ? (
+            <ProjectModuleMenu open={open} />
+          ) : null}
+          {modules.find(
+            (menuItem: any) =>
+              menuItem.name === "secondBrain" && menuItem.enabled
+          ) ? (
+            <SecondBrainModuleMenu open={open} />
+          ) : null}
+          {modules.find(
+            (menuItem: any) => menuItem.name === "employee" && menuItem.enabled
+          ) ? (
+            <EmployeesModuleMenu open={open} />
+          ) : null}
+          {modules.find(
+            (menuItem: any) => menuItem.name === "invoice" && menuItem.enabled
+          ) ? (
+            <InvoicesModuleMenu open={open} />
+          ) : null}
+          {modules.find(
+            (menuItem: any) => menuItem.name === "reports" && menuItem.enabled
+          ) ? (
+            <ReportsModuleMenu open={open} />
+          ) : null}
+          {modules.find(
+            (menuItem: any) => menuItem.name === "documents" && menuItem.enabled
+          ) ? (
+            <DocumentsModuleMenu open={open} />
+          ) : null}
+          {modules.find(
+            (menuItem: any) => menuItem.name === "databox" && menuItem.enabled
+          ) ? (
+            <DataboxModuleMenu open={open} />
+          ) : null}
+          {modules.find(
+            (menuItem: any) => menuItem.name === "openai" && menuItem.enabled
+          ) ? (
+            <ChatGPTModuleMenu open={open} />
+          ) : null}
+
+          {/*  {modules.map((menuItem: any) => {
             if (menuItem.enabled === true) {
               return (
                 <MenuItem
@@ -58,17 +114,7 @@ const ModuleMenu = ({ modules }: Props) => {
             } else {
               return null;
             }
-          })}
-          {/*             <li
-              key={Menu.id}
-              className={`flex  rounded-md p-2 cursor-pointer hover:bg-light-white text-sm items-center gap-x-4 
-          ${Menu.gap ? "mt-9" : "mt-2"}  `}
-            >
-              <span className={`${!open && "hidden"} origin-left duration-200`}>
-                {Menu.name}
-              </span>
-            </li>
-          ))} */}
+          })} */}
           <li>
             {/* Admin menu item is allways enabled */}
             <MenuItem

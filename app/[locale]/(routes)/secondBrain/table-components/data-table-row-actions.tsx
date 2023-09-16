@@ -1,7 +1,11 @@
 "use client";
 
-import { DotsHorizontalIcon } from "@radix-ui/react-icons";
+import axios from "axios";
+import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Row } from "@tanstack/react-table";
+import { Copy, Edit, LinkIcon, MoreHorizontal, Trash } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -9,26 +13,15 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { useParams, useRouter } from "next/navigation";
-import AlertModal from "@/components/modals/alert-modal";
-import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
-import axios from "axios";
-
-import { Copy, Edit, LinkIcon, MoreHorizontal, Trash } from "lucide-react";
 import { useAppStore } from "@/store/store";
+import { useToast } from "@/components/ui/use-toast";
+import AlertModal from "@/components/modals/alert-modal";
+
+import useSession from "@/hooks/useSession";
 import { secondBrainSchema } from "../table-data/schema";
-import Link from "next/link";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -43,10 +36,10 @@ export function DataTableRowActions<TData>({
 
   //zustand
   const { setIsOpen, setNotionUrl } = useAppStore();
+  const { users } = useSession();
 
   const { toast } = useToast();
   const router = useRouter();
-  
 
   const onCopy = (id: string) => {
     navigator.clipboard.writeText(id);
@@ -58,10 +51,9 @@ export function DataTableRowActions<TData>({
 
   //Action triggered when the delete button is clicked to delete the store
   const onDelete = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       await axios.delete(`/api/secondBrain/${data.id}`);
-      router.refresh();
       //Place for toast
       toast({
         title: "Success",
@@ -75,11 +67,13 @@ export function DataTableRowActions<TData>({
           "Something went wrong while deleting the product. Please try again.",
       });
     } finally {
+      router.refresh();
       setLoading(false);
       setOpen(false);
     }
   };
 
+  console.log(users, "users");
   return (
     <>
       <AlertModal

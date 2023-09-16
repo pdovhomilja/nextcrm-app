@@ -9,6 +9,8 @@
 #jsons
 /jsons
 
+/examples
+
 # testing
 /coverage
 

@@ -1,26 +1,19 @@
 import { create } from "zustand";
 
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { Users } from "@prisma/client";
+import { getUsers } from "@/actions/get-users";
 
-interface PreviewModalStore {
-  session?: any;
-  getSession: () => void;
+interface UsersStore {
+  users?: Users[];
+  getUsers: () => void;
 }
 
-const useSessionStore = create<PreviewModalStore>((set) => ({
-  session: {
-    id: "",
-    _id: "",
-    name: "",
-    isAdmin: false,
-    userLanguage: "",
-    userStatus: "",
-  },
-  getSession: async () => {
-    const session = await getServerSession(authOptions);
-    set({ session });
+const useUsers = create<UsersStore>((set) => ({
+  users: undefined,
+  getUsers: async () => {
+    const users = await getUsers();
+    set({ users });
   },
 }));
 
-export default useSessionStore;
+export default useUsers;

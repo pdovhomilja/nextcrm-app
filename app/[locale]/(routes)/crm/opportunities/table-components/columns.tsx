@@ -105,7 +105,7 @@ export const columns: ColumnDef<Opportunity>[] = [
     ),
 
     cell: ({ row }) => {
-      console.log(row.original.budget);
+      //console.log(row.original.budget);
       return (
         <div>
           {row.original.budget

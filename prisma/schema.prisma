@@ -568,26 +568,6 @@ enum Language {
   en
 }
 
-//Strings for translation
-model Translation {
-  id       String  @id @default(auto()) @map("_id") @db.ObjectId
-  key      String
-  language String
-  text     String
-  module   Modules @default(allmodules)
-}
-
-//Because of big amount of translation labeles, we need to split them into modules
-enum Modules {
-  admin
-  crm
-  documents
-  projects
-  secondbrain
-  invoice
-  allmodules
-}
-
 model system_Modules_Enabled {
   id       String  @id @default(auto()) @map("_id") @db.ObjectId
   v        Int     @map("__v")
