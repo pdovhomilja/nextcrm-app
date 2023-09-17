@@ -9,15 +9,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { Settings } from "lucide-react";
 
 type Props = {
   avatar: string;
+  userId: string;
 };
 
-const AvatarDropdown = ({ avatar }: Props) => {
+const AvatarDropdown = ({ avatar, userId }: Props) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
@@ -35,10 +36,10 @@ const AvatarDropdown = ({ avatar }: Props) => {
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/projects/dashboard">Todo dashboard</Link>
+          <Link href={`/projects/dashboard`}>Todo dashboard</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/crm/dashboard">CRM dashboard</Link>
+          <Link href={`/crm/dashboard/${userId}`}>CRM dashboard</Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>

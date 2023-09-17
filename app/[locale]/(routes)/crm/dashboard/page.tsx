@@ -1,48 +1,26 @@
-import { authOptions } from "@/lib/auth";
-import { getServerSession } from "next-auth";
 import React from "react";
 import Container from "../../components/ui/Container";
-import { getAccountsTasks } from "@/actions/crm/account/get-tasks";
-import { getUserCRMTasks } from "@/actions/crm/tasks/get-user-tasks";
+import { getSaleStages } from "@/actions/crm/get-sales-stage";
+import CRMKanban from "./_components/CRMKanban";
+import { getOpportunities } from "@/actions/crm/get-opportunities";
+import CRMKanbanServer from "./_components/CRMKanbanServer";
 
-const UserCRMDashboard = async () => {
-  const session = await getServerSession(authOptions);
-
-  if (!session) {
-    return {
-      redirect: {
-        destination: "/auth/signin",
-        permanent: false,
-      },
-    };
-  }
-
-  const task = await getUserCRMTasks(session.user.id);
+const CrmDashboardPage = async () => {
+  const salesStages = await getSaleStages();
+  const opportunities = await getOpportunities();
 
   return (
-    <div>
-      <Container
-        title={`${session.user.name} | CRM Dashboard (in-progress) `}
-        description="Your sales data in one place"
-      >
-        <div className="grid grid-cols-2 w-full ">
-          <div className="">Calls overview</div>
-          <div className="">
-            <h1>Tasks in Accounts</h1>
-            <pre>{JSON.stringify(task, null, 2)}</pre>
-          </div>
-          <div className="">Meetings overview</div>
-          <div className="">
-            <h1></h1>
-          </div>
-          <div className="">Leads overview</div>
-          <div className="">
-            <h1></h1>
-          </div>
-        </div>
-      </Container>
-    </div>
+    <Container
+      title="CRM Dashboard"
+      description="In development. After this compoment is finished, there will be a optimistic update of the data."
+    >
+      <CRMKanban salesStages={salesStages} opportunities={opportunities} />
+      {/*     <CRMKanbanServer
+        salesStages={salesStages}
+        opportunities={opportunities}
+      /> */}
+    </Container>
   );
 };
 
-export default UserCRMDashboard;
+export default CrmDashboardPage;

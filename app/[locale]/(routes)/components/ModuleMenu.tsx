@@ -1,7 +1,8 @@
 "use client";
+
 import React, { useState } from "react";
 import MenuItem from "./ui/MenuItem";
-import CrmMenu from "./menu-items/Crm";
+
 import ProjectModuleMenu from "./menu-items/Projects";
 import SecondBrainModuleMenu from "./menu-items/SecondBrain";
 import InvoicesModuleMenu from "./menu-items/Invoices";
@@ -10,6 +11,7 @@ import DocumentsModuleMenu from "./menu-items/Documents";
 import ChatGPTModuleMenu from "./menu-items/ChatGPT";
 import EmployeesModuleMenu from "./menu-items/Employees";
 import DataboxModuleMenu from "./menu-items/Databoxes";
+import CrmModuleMenu from "./menu-items/Crm";
 
 type Props = {
   modules: any;
@@ -56,7 +58,7 @@ const ModuleMenu = ({ modules }: Props) => {
           {modules.find(
             (menuItem: any) => menuItem.name === "crm" && menuItem.enabled
           ) ? (
-            <CrmMenu open={open} />
+            <CrmModuleMenu open={open} />
           ) : null}
           {modules.find(
             (menuItem: any) => menuItem.name === "projects" && menuItem.enabled

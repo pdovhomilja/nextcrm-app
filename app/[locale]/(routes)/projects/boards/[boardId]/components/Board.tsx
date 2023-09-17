@@ -56,6 +56,10 @@ const BoardDasboard = ({ boardData, tasks }: Props) => {
         id: draggableId,
         section: destination.droppableId,
       });
+      toast({
+        title: "Success",
+        description: `Task updated successfully`,
+      });
     } catch (error) {
       toast({
         variant: "destructive",
@@ -65,10 +69,6 @@ const BoardDasboard = ({ boardData, tasks }: Props) => {
       });
     } finally {
       router.refresh();
-      toast({
-        title: "Success",
-        description: `Task updated successfully`,
-      });
     }
   };
 

@@ -8,5 +8,11 @@
     "cardDescription": "Vytvořte si účet přihlášením pomocí",
     "label": "Jazyk",
     "locale": "{locale, select, de {Němčina} en {Angličtina} cz {Čeština} other {Neznámý}}"
+  },
+  "CrmModuleMenuComponent": {
+    "menuTitle": "Obchod",
+    "cardDescription": "Vytvořte si účet přihlášením pomocí",
+    "label": "Jazyk",
+    "locale": "{locale, select, de {Němčina} en {Angličtina} cz {Čeština} other {Neznámý}}"
   }
 }

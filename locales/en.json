@@ -7,6 +7,9 @@
     "cardTitle": "Create new account",
     "cardDescription": "Create account by login with",
     "label": "Language",
-    "locale": "{locale, select, de {German} en {Engish} cz {Czech} other {Unknown}}"    
+    "locale": "{locale, select, de {German} en {Engish} cz {Czech} other {Unknown}}"
+  },
+  "CrmModuleMenuComponent": {
+    "menuTitle": "Sales"
   }
 }

@@ -35,7 +35,7 @@ const Header = ({ id, name, email, avatar, lang }: Props) => {
             <div>{email}</div>
             <div>Language: {lang}</div>
           </div>
-          <AvatarDropdown avatar={avatar} />
+          <AvatarDropdown avatar={avatar} userId={id} />
         </div>
       </div>
       <Separator />

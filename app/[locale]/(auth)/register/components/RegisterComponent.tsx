@@ -7,8 +7,9 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next-intl/client";
 import React, { startTransition } from "react";
 import { FingerprintIcon } from "lucide-react";
-import { usePathname } from "next-intl/client";
 import { zodResolver } from "@hookform/resolvers/zod";
+
+import { usePathname } from "next-intl/client";
 import { useLocale, useTranslations } from "next-intl";
 
 import {
@@ -42,6 +43,8 @@ import { useToast } from "@/components/ui/use-toast";
 export function RegisterComponent() {
   const router = useRouter();
   const { toast } = useToast();
+
+  //Local states
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [show, setShow] = React.useState<boolean>(false);
 
@@ -104,6 +107,7 @@ export function RegisterComponent() {
     }
   };
 
+  //Localizations
   const t = useTranslations("RegisterComponent");
   const locale = useLocale();
   const pathname = usePathname();
