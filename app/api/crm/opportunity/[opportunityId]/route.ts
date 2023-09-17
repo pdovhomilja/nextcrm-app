@@ -32,8 +32,20 @@ export async function PUT(
       },
     });
 
+    const data = await prismadb.crm_Opportunities.findMany({
+      include: {
+        assigned_to_user: {
+          select: {
+            avatar: true,
+            name: true,
+          },
+        },
+      },
+    });
+
     return NextResponse.json(
-      { message: "Opportunity updated" },
+      { message: "Opportunity updated", data },
+
       { status: 200 }
     );
   } catch (error) {

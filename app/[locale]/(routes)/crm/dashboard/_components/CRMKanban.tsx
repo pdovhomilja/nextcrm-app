@@ -1,6 +1,10 @@
 "use client";
 
-import { experimental_useOptimistic as useOptimistic, useState } from "react";
+import {
+  useEffect,
+  experimental_useOptimistic as useOptimistic,
+  useState,
+} from "react";
 
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
@@ -14,20 +18,33 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
+import LoadingComponent from "@/components/LoadingComponent";
 
 interface CRMKanbanProps {
   salesStages: crm_Opportunities_Sales_Stages[];
   opportunities: crm_Opportunities[];
 }
 
-const CRMKanban = ({ salesStages, opportunities }: CRMKanbanProps) => {
+const CRMKanban = ({ salesStages, opportunities: data }: CRMKanbanProps) => {
   const router = useRouter();
 
   const { toast } = useToast();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
-  const onDragEnd = (result: any) => {
+  const [opportunities, setOpportunities] = useState(data);
+
+  useEffect(() => {
+    setOpportunities(data);
+    setIsLoading(false);
+  }, [data]);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const onDragEnd = async (result: any) => {
     setIsLoading(true);
     //Implement drag end logic
     const { destination, source, draggableId } = result;
@@ -45,24 +62,12 @@ const CRMKanban = ({ salesStages, opportunities }: CRMKanbanProps) => {
       return;
     }
 
-    // Getting start and end stages
-    const start = salesStages.find(
-      (stage: any) => stage.id === source.droppableId
-    );
-    const end = salesStages.find(
-      (stage: any) => stage.id === destination.droppableId
-    );
-
-    console.log(draggableId, "dragableId");
-    console.log(source, "source");
-    console.log(destination, "destination");
-    console.log(start, "start");
-    console.log(end, "end");
     try {
-      axios.put(`/api/crm/opportunity/${draggableId}`, {
+      const response = await axios.put(`/api/crm/opportunity/${draggableId}`, {
         source: source.droppableId,
         destination: destination.droppableId,
       });
+      setOpportunities(response.data.data);
       toast({
         title: "Success",
         description: "Opportunity sale stage changed",
@@ -98,11 +103,13 @@ const CRMKanban = ({ salesStages, opportunities }: CRMKanbanProps) => {
     alert("Thumbs down - not implemented yet");
   };
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <LoadingComponent />;
+
+  // console.log(opportunities, "opportunities");
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="flex w-full h-full justify-center overflow-x-auto ">
+      <div className="flex w-full h-full overflow-x-auto ">
         {salesStages.map((stage: any, index: number) => (
           <Droppable droppableId={stage.id} key={index}>
             {(provided) => (
@@ -142,10 +149,10 @@ const CRMKanban = ({ salesStages, opportunities }: CRMKanbanProps) => {
                             <CardContent className="text-xs text-muted-foreground">
                               <div className="flex flex-col">
                                 <div>{opportunity.description}</div>
-                                <div>
+                                {/*          <div>
                                   id:
                                   {opportunity.id}
-                                </div>
+                                </div> */}
                               </div>
                             </CardContent>
                             <CardFooter className="flex justify-between">

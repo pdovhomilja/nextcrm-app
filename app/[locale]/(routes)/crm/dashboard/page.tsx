@@ -14,7 +14,7 @@ const CrmDashboardPage = async () => {
       title="CRM Dashboard"
       description="In development. After this compoment is finished, there will be a optimistic update of the data."
     >
-      <div className="w-full  h-full  overflow-hidden">
+      <div className="w-full h-full  overflow-hidden">
         <CRMKanban salesStages={salesStages} opportunities={opportunities} />
       </div>
 
