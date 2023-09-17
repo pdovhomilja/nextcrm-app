@@ -102,110 +102,103 @@ const CRMKanban = ({ salesStages, opportunities }: CRMKanbanProps) => {
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="flex w-full h-full justify-center">
+      <div className="flex w-full h-full justify-center overflow-x-auto ">
         {salesStages.map((stage: any, index: number) => (
           <Droppable droppableId={stage.id} key={index}>
             {(provided) => (
               <Card
                 {...provided.droppableProps}
                 ref={provided.innerRef}
-                className="mx-1 w-full overflow-hidden"
+                className="mx-1 w-full min-w-[300px] overflow-hidden"
               >
                 <CardTitle className="flex gap-2 p-3 justify-between">
-                  <span> {stage.name}</span>
+                  <span className="text-sm font-bold">{stage.name}</span>
                   <PlusCircledIcon
-                    className="w-6 h-6 cursor-pointer"
+                    className="w-5 h-5 cursor-pointer"
                     onClick={() => onCreateOpportunity(stage.id)}
                   />
                 </CardTitle>
                 <CardContent className="w-full h-full overflow-y-scroll">
-                  <div className="w-full ">
-                    {opportunities
-                      .filter(
-                        (opportunity: any) =>
-                          opportunity.sales_stage === stage.id
-                      )
-                      .map((opportunity: any, index: number) => (
-                        <Draggable
-                          draggableId={opportunity.id}
-                          index={index}
-                          key={opportunity.id}
-                        >
-                          {(provided) => (
-                            <Card
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              ref={provided.innerRef}
-                              className="my-2 w-full"
-                            >
-                              <CardTitle className="p-2">
-                                {opportunity.name}
-                              </CardTitle>
-                              <CardContent>
-                                <div className="flex flex-col">
-                                  <div>{opportunity.description}</div>
-                                  <div>
-                                    id:
-                                    {opportunity.id}
-                                  </div>
+                  {opportunities
+                    .filter(
+                      (opportunity: any) => opportunity.sales_stage === stage.id
+                    )
+                    .map((opportunity: any, index: number) => (
+                      <Draggable
+                        draggableId={opportunity.id}
+                        index={index}
+                        key={opportunity.id}
+                      >
+                        {(provided) => (
+                          <Card
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            ref={provided.innerRef}
+                            className="my-2 w-full"
+                          >
+                            <CardTitle className="p-2 text-sm">
+                              {opportunity.name}
+                            </CardTitle>
+                            <CardContent className="text-xs text-muted-foreground">
+                              <div className="flex flex-col">
+                                <div>{opportunity.description}</div>
+                                <div>
+                                  id:
+                                  {opportunity.id}
                                 </div>
-                              </CardContent>
-                              <CardFooter className="flex justify-between">
-                                <div className="flex text-xs items-center gap-2">
-                                  {/*         <pre>
+                              </div>
+                            </CardContent>
+                            <CardFooter className="flex justify-between">
+                              <div className="flex text-xs items-center gap-2">
+                                {/*         <pre>
                                     {JSON.stringify(opportunity, null, 2)}
                                   </pre> */}
-                                  <Avatar className="w-6 h-6">
-                                    <AvatarImage
-                                      src={
-                                        opportunity.assigned_to_user.avatar
-                                          ? opportunity.assigned_to_user.avatar
-                                          : `${process.env.NEXT_PUBLIC_APP_URL}/images/nouser.png`
-                                      }
-                                    />
-                                  </Avatar>
-                                  <span className="text-xs text-white">
-                                    {opportunity.assigned_to_user.name}
-                                  </span>
-                                </div>
-                                <div className="flex space-x-2">
-                                  {
-                                    //Hide thumbs up and down for last sales stage
-                                    stage.probability !==
-                                      Math.max(
-                                        ...salesStages.map(
-                                          (s) => s.probability || 0
-                                        )
-                                      ) && (
-                                      <ThumbsUp
-                                        className="w-4 h-4 text-green-500"
-                                        onClick={() =>
-                                          onThumbsUp(opportunity.id)
-                                        }
-                                      />
-                                    )
-                                  }
-                                  {stage.probability !==
+                                <Avatar className="w-6 h-6">
+                                  <AvatarImage
+                                    src={
+                                      opportunity.assigned_to_user.avatar
+                                        ? opportunity.assigned_to_user.avatar
+                                        : `${process.env.NEXT_PUBLIC_APP_URL}/images/nouser.png`
+                                    }
+                                  />
+                                </Avatar>
+                                <span className="text-xs ">
+                                  {opportunity.assigned_to_user.name}
+                                </span>
+                              </div>
+                              <div className="flex space-x-2">
+                                {
+                                  //Hide thumbs up and down for last sales stage
+                                  stage.probability !==
                                     Math.max(
                                       ...salesStages.map(
                                         (s) => s.probability || 0
                                       )
                                     ) && (
-                                    <ThumbsDown
-                                      className="w-4 h-4 text-red-500"
-                                      onClick={() =>
-                                        onThumbsDown(opportunity.id)
-                                      }
+                                    <ThumbsUp
+                                      className="w-4 h-4 text-green-500"
+                                      onClick={() => onThumbsUp(opportunity.id)}
                                     />
-                                  )}
-                                </div>
-                              </CardFooter>
-                            </Card>
-                          )}
-                        </Draggable>
-                      ))}
-                    {provided.placeholder}
-                  </div>
+                                  )
+                                }
+                                {stage.probability !==
+                                  Math.max(
+                                    ...salesStages.map(
+                                      (s) => s.probability || 0
+                                    )
+                                  ) && (
+                                  <ThumbsDown
+                                    className="w-4 h-4 text-red-500"
+                                    onClick={() => onThumbsDown(opportunity.id)}
+                                  />
+                                )}
+                              </div>
+                            </CardFooter>
+                          </Card>
+                        )}
+                      </Draggable>
+                    ))}
+                  {provided.placeholder}
                 </CardContent>
               </Card>
             )}
