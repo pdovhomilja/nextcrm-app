@@ -31,6 +31,8 @@ import RightViewModalNoTrigger from "@/components/modals/right-view-notrigger";
 import RossumCockpit from "../components/RossumCockpit";
 import Link from "next/link";
 import LoadingModal from "@/components/modals/loading-modal";
+import { useAppStore } from "@/store/store";
+import { Edit } from "lucide-react";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -42,6 +44,9 @@ export function DataTableRowActions<TData>({
   const [open, setOpen] = useState(false);
   const [openView, setOpenView] = useState(false);
   const [openRossumView, setOpenRossumView] = useState(false);
+
+  //zustand
+  const { setIsOpen } = useAppStore();
 
   const router = useRouter();
   const { toast } = useToast();
@@ -206,6 +211,14 @@ export function DataTableRowActions<TData>({
           <Link href={invoice.invoice_file_url} target={"_blank"}>
             <DropdownMenuItem>Preview invoice in new window</DropdownMenuItem>
           </Link>
+          <DropdownMenuItem
+            onClick={() => {
+              setIsOpen(true);
+            }}
+          >
+            <Edit className="mr-2 w-4 h-4" />
+            Create task from Notion
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuLabel>Rossum</DropdownMenuLabel>
           <DropdownMenuItem onClick={() => setOpenRossumView(true)}>

@@ -32,6 +32,7 @@ import moment from "moment";
 import Link from "next/link";
 import {
   ChatBubbleIcon,
+  DotsHorizontalIcon,
   ExclamationTriangleIcon,
   TrashIcon,
 } from "@radix-ui/react-icons";
@@ -42,6 +43,12 @@ import axios from "axios";
 import { useToast } from "@/components/ui/use-toast";
 import AlertModal from "@/components/modals/alert-modal";
 import { useRouter } from "next/navigation";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 // import ChatModal from "../../components/modals/ChatModal";
 // import ConfirmDeleteTask from "../../components/modals/ConfirmDeleteTask";
 // import TaskDocuments from "./components/TaskDocuments";
@@ -377,6 +384,34 @@ const Kanban = (props: any) => {
                                     task.dueDateAt > Date.now() && (
                                       <ExclamationTriangleIcon className="w-4 h-4 text-red-500" />
                                     )}
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <DotsHorizontalIcon className="w-4 h-4 text-slate-600" />
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent className="w-[200px]">
+                                      <DropdownMenuItem
+                                        className="gap-2"
+                                        onClick={() =>
+                                          router.push(
+                                            `/projects/tasks/viewtask/${task.id}`
+                                          )
+                                        }
+                                      >
+                                        <EyeIcon className="w-4 h-4 opacity-50" />
+                                        View
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        className="gap-2"
+                                        onClick={() => {
+                                          setSelectedTask(task);
+                                          setOpen(true);
+                                        }}
+                                      >
+                                        <TrashIcon className="w-4 h-4 opacity-50" />
+                                        Delete
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
                                 </div>
                                 <div className="py-1">
                                   Due date:{" "}
@@ -403,12 +438,6 @@ const Kanban = (props: any) => {
                                 </p>
 
                                 <div className="flex  gap-2 pt-2">
-                                  <Link
-                                    href={`/projects/tasks/viewtask/${task.id}`}
-                                  >
-                                    <EyeIcon className="w-4 h-4 opacity-50" />
-                                  </Link>
-
                                   {/*  <Pencil
                                     className="w-4 h-4 text-slate-600"
                                     onClick={() => {
@@ -432,13 +461,6 @@ const Kanban = (props: any) => {
                                       setOpenDocuments(true);
                                     }}
                                   /> */}
-                                  <TrashIcon
-                                    className="w-4 h-4 opacity-50"
-                                    onClick={() => {
-                                      setSelectedTask(task);
-                                      setOpen(true);
-                                    }}
-                                  />
                                 </div>
                               </div>
                             )}

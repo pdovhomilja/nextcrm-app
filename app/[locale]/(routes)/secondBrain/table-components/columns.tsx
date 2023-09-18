@@ -34,9 +34,7 @@ export const columns: ColumnDef<SecondBrain>[] = [
       <DataTableColumnHeader column={column} title="Url" />
     ),
 
-    cell: ({ row }) => (
-      <div className="w-[150px]">{row.getValue("urlShort")}</div>
-    ),
+    cell: ({ row }) => <div className="">{row.getValue("urlShort")}</div>,
     enableSorting: true,
     enableHiding: true,
   },

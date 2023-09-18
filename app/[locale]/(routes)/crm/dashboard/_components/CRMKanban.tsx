@@ -18,7 +18,7 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
-import LoadingComponent from "@/components/LoadingComponent";
+
 import { format } from "date-fns";
 import LoadingModal from "@/components/modals/loading-modal";
 import {
@@ -164,7 +164,7 @@ const CRMKanban = ({ salesStages, opportunities: data }: CRMKanbanProps) => {
                                   <div>
                                     <DropdownMenu>
                                       <DropdownMenuTrigger asChild>
-                                        <DotsHorizontalIcon className="w-4 h-4" />
+                                        <DotsHorizontalIcon className="w-4 h-4 text-slate-600" />
                                       </DropdownMenuTrigger>
                                       <DropdownMenuContent
                                         align="end"
