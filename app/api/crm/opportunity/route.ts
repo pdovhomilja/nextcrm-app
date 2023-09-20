@@ -39,7 +39,7 @@ export async function POST(req: Request) {
       data: {
         account: account,
         assigned_to: assigned_to,
-        budget: budget,
+        budget: Number(budget),
         campaign: campaign,
         close_date: close_date,
         contact: contact,
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
         updatedBy: userId,
         currency: currency,
         description: description,
-        expected_revenue: expected_revenue,
+        expected_revenue: Number(expected_revenue),
         name: name,
         next_step: next_step,
         sales_stage: sales_stage,

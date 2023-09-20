@@ -68,13 +68,9 @@ export function NewOpportunityForm({
     description: z.string(),
     type: z.string(),
     sales_stage: z.string(),
-    budget: z.number({
-      required_error: "A budget is required. And must be a number.",
-    }),
+    budget: z.string(),
     currency: z.string(),
-    expected_revenue: z.number({
-      required_error: "A expected revenue is required. And must be a number.",
-    }),
+    expected_revenue: z.string(),
     next_step: z.string(),
     assigned_to: z.string(),
     account: z.string(),

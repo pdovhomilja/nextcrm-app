@@ -83,7 +83,11 @@ export function UpdateOpportunityForm({
 
   const form = useForm<any>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData,
+    defaultValues: {
+      ...initialData,
+      budget: String(initialData.budget),
+      expected_revenue: String(initialData.expected_revenue),
+    },
   });
 
   const onSubmit = async (data: NewAccountFormValues) => {
