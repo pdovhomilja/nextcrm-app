@@ -68,6 +68,7 @@
     "react-dropzone": "^14.2.3",
     "react-hook-form": "^7.45.1",
     "react-hot-toast": "^2.4.1",
+    "react-youtube": "^10.1.0",
     "resend": "^1.0.0",
     "swr": "^2.2.0",
     "tailwind-merge": "^1.13.2",

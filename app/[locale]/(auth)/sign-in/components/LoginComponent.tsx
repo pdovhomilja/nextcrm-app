@@ -106,6 +106,10 @@ export function LoginComponent() {
         });
       }
       if (status?.ok) {
+        console.log("Status OK");
+        toast({
+          description: "Login successful.",
+        });
         router.push("/");
       }
     } catch (error: any) {

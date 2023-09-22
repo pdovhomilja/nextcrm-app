@@ -13,6 +13,8 @@ import { SecondBrainDataTable } from "./table-components/data-table";
 import { getNotions } from "@/actions/get-notions";
 import { getActiveUsers } from "@/actions/get-users";
 import { getBoards } from "@/actions/projects/get-boards";
+import { Button } from "@/components/ui/button";
+import Youtube from "./components/Youtube";
 
 const SecondBrainPage = async () => {
   const notions: any = await getNotions();
@@ -61,9 +63,12 @@ const SecondBrainPage = async () => {
             </span>
             ?v=e563b6c36b6649bba29eaad6b4c52ab4)
           </ol>
-          <Link href="/profile" className="my-button-v2">
-            Enable Second Brain
-          </Link>
+          <Button asChild className="my-3">
+            <Link href="/profile">Enable Second Brain </Link>
+          </Button>
+        </div>
+        <div className="w-full ">
+          <Youtube />
         </div>
       </div>
     );
