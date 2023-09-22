@@ -58,9 +58,9 @@ export function LoginComponent() {
     password: z.string().min(8).max(50),
   });
 
-  type BillboardFormValues = z.infer<typeof formSchema>;
+  type LoginFormValues = z.infer<typeof formSchema>;
 
-  const form = useForm<BillboardFormValues>({
+  const form = useForm<LoginFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
@@ -77,13 +77,18 @@ export function LoginComponent() {
       });
     } catch (error) {
       console.log(error, "error");
+      toast({
+        variant: "destructive",
+        description:
+          "Something went wrong while logging with your Google account.",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   //Login with username(email)/password
-  async function onSubmit(data: BillboardFormValues) {
+  async function onSubmit(data: LoginFormValues) {
     setIsLoading(true);
     try {
       const status = await signIn("credentials", {
@@ -92,6 +97,17 @@ export function LoginComponent() {
         password: data.password,
         callbackUrl: "/",
       });
+      console.log(status, "status");
+      if (status?.error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: status.error,
+        });
+      }
+      if (status?.ok) {
+        router.push("/");
+      }
     } catch (error: any) {
       console.log(error);
       toast({
@@ -101,7 +117,6 @@ export function LoginComponent() {
       });
     } finally {
       setIsLoading(false);
-      router.push("/");
     }
   }
 

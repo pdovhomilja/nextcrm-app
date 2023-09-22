@@ -260,11 +260,9 @@ const DashboardPage = async () => {
 
         <StorageQuota actual={storage} />
         {secondBrainModule?.enabled && (
-          <Link href={"/secondBrain"}>
-            <Suspense fallback={<LoadingBox />}>
-              <NotionsBox />
-            </Suspense>
-          </Link>
+          <Suspense fallback={<LoadingBox />}>
+            <NotionsBox />
+          </Suspense>
         )}
       </div>
     </Container>

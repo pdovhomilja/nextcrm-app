@@ -45,7 +45,7 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         // console.log(credentials, "credentials");
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Invalid credentials");
+          throw new Error("Email or password is missing");
         }
 
         const user = await prismadb.users.findFirst({
@@ -55,7 +55,7 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user || !user?.password) {
-          throw new Error("Invalid credentials");
+          throw new Error("User not found, please register first");
         }
 
         const isCorrectPassword = await bcrypt.compare(
@@ -64,7 +64,7 @@ export const authOptions: NextAuthOptions = {
         );
 
         if (!isCorrectPassword) {
-          throw new Error("Invalid credentials");
+          throw new Error("Password is incorrect");
         }
 
         //console.log(user, "user");
