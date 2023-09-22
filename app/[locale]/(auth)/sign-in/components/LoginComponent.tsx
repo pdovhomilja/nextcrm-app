@@ -92,7 +92,7 @@ export function LoginComponent() {
     setIsLoading(true);
     try {
       const status = await signIn("credentials", {
-        redirect: false,
+        redirect: true,
         email: data.email,
         password: data.password,
         callbackUrl: process.env.NEXT_PUBLIC_APP_URL,
