@@ -4,13 +4,12 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 const SignInPage = async () => {
-  const session = await getServerSession(authOptions);
+  /*   const session = await getServerSession(authOptions);
 
-  console.log(session, "session");
   // If the user is authenticated, redirect to the dashboard page.
   if (session?.user) {
     redirect("/");
-  }
+  } */
 
   return (
     <div>
