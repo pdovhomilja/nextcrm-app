@@ -106,7 +106,7 @@ export function LoginComponent() {
         });
       }
       if (status?.ok) {
-        console.log("Status OK");
+        // console.log("Status OK");
         toast({
           description: "Login successful.",
         });

@@ -37,8 +37,13 @@ export function CommandComponent() {
       if (e.key === "Escape") {
         setOpen(false);
       }
-      if (e.key === "p" && e.metaKey) {
+      if (e.key === "D" && e.metaKey && e.shiftKey) {
+        router.push("/");
+        setOpen(false);
+      }
+      if (e.key === "P" && e.metaKey && e.shiftKey) {
         router.push("/profile");
+        setOpen(false);
       }
       if (e.key === "k" && e.metaKey) {
         signOut();
@@ -47,7 +52,7 @@ export function CommandComponent() {
 
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
-  }, []);
+  }, [router]);
 
   return (
     <div className="hidden lg:block">
@@ -77,10 +82,15 @@ export function CommandComponent() {
           </CommandGroup>
           <CommandSeparator />
           <CommandGroup heading="Settings">
+            <CommandItem onClick={() => redirect("/")}>
+              <User className="mr-2 h-4 w-4" />
+              <span>Dashboard</span>
+              <CommandShortcut>Shift + ⌘ + D</CommandShortcut>
+            </CommandItem>
             <CommandItem onClick={() => redirect("/profile")}>
               <User className="mr-2 h-4 w-4" />
               <span>Profile</span>
-              <CommandShortcut>⌘P</CommandShortcut>
+              <CommandShortcut>Shift + ⌘ + P</CommandShortcut>
             </CommandItem>
             <CommandItem>
               <CreditCard className="mr-2 h-4 w-4" />

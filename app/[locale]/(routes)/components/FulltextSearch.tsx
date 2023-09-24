@@ -23,7 +23,7 @@ const FulltextSearch = () => {
         onChange={(e) => setSearch(e.target.value)}
       />
       <Button type="submit" className="gap-2" onClick={handleSearch}>
-        <span className="hidden md:flex">Search</span>
+        <span className="hidden sm:flex">Search</span>
         <SearchIcon />
       </Button>
     </div>

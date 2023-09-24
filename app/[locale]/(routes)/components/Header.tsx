@@ -1,14 +1,11 @@
-import { CommandComponent } from "@/components/CommandComponent";
+import Feedback from "./Feedback";
+import FulltextSearch from "./FulltextSearch";
 import AvatarDropdown from "./ui/AvatarDropdown";
 
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { Separator } from "@/components/ui/separator";
-
 import { SetLanguage } from "@/components/SetLanguage";
-import FulltextSearch from "./FulltextSearch";
-import Link from "next/link";
-import { GithubIcon } from "lucide-react";
-import Feedback from "./Feedback";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { CommandComponent } from "@/components/CommandComponent";
 
 type Props = {
   id: string;
@@ -30,12 +27,13 @@ const Header = ({ id, name, email, avatar, lang }: Props) => {
           <SetLanguage userId={id} />
           <Feedback />
           <ThemeToggle />
-          <div className="hidden lg:flex flex-col text-xs text-gray-500">
-            <div>{name}</div>
-            <div>{email}</div>
-            <div>Language: {lang}</div>
-          </div>
-          <AvatarDropdown avatar={avatar} userId={id} />
+          <div className="hidden lg:flex flex-col text-xs text-gray-500"></div>
+          <AvatarDropdown
+            avatar={avatar}
+            userId={id}
+            name={name}
+            email={email}
+          />
         </div>
       </div>
       <Separator />
