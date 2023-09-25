@@ -17,6 +17,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
   DropdownMenuLabel,
+  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 
 import {} from "../data/data";
@@ -201,58 +202,90 @@ export function DataTableRowActions<TData>({
             <span className="sr-only">Open menu</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-[260px]">
-          <DropdownMenuItem onClick={() => setOpenView(true)}>
-            Preview Document
-          </DropdownMenuItem>
-          <Link href={`/invoice/detail/${invoice.id}`}>
-            <DropdownMenuItem>Invoice detail</DropdownMenuItem>
-          </Link>
-          <Link href={invoice.invoice_file_url} target={"_blank"}>
-            <DropdownMenuItem>Preview invoice in new window</DropdownMenuItem>
-          </Link>
-          <DropdownMenuItem
-            onClick={() => {
-              setIsOpen(true);
-            }}
-          >
-            <Edit className="mr-2 w-4 h-4" />
-            Create task from Notion
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuLabel>Rossum</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => setOpenRossumView(true)}>
-            Edit metadata with Rossum cockpit
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={onExtract}>
-            Extract data from invoice
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuLabel>Export for ERPs</DropdownMenuLabel>
+        <DropdownMenuContent align="end" className="w-[260px] ">
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>Actions</DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuItem onClick={() => setOpenView(true)}>
+                Preview invoice
+              </DropdownMenuItem>
 
-          <DropdownMenuItem onClick={onMoneyS3export}>
-            XML for Money S3
-          </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => router.push(`/invoice/detail/${invoice.id}`)}
+              >
+                Invoice detail
+              </DropdownMenuItem>
+
+              <Link href={invoice.invoice_file_url} target={"_blank"}>
+                <DropdownMenuItem>
+                  Preview invoice in new window
+                </DropdownMenuItem>
+              </Link>
+              <DropdownMenuItem
+                onClick={() => {
+                  setIsOpen(true);
+                }}
+              >
+                <Edit className="mr-2 w-4 h-4" />
+                Create task from Notion
+              </DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
           <DropdownMenuSeparator />
-          <DropdownMenuLabel>Download data for ERPs</DropdownMenuLabel>
-          <Link
-            href={
-              invoice.rossum_annotation_json_url
-                ? invoice.rossum_annotation_json_url
-                : "/invoice"
-            }
-            target="_blank"
-          >
-            <DropdownMenuItem>JSON</DropdownMenuItem>
-          </Link>
-          <Link
-            href={invoice.money_s3_url ? invoice.money_s3_url : "/invoice"}
-            target="_blank"
-          >
-            <DropdownMenuItem>MoneyS3 XML</DropdownMenuItem>
-          </Link>
+
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>Rossum</DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuItem onClick={() => setOpenRossumView(true)}>
+                Edit metadata with Rossum cockpit
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onExtract}>
+                Extract data from invoice
+              </DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
           <DropdownMenuSeparator />
-          <DropdownMenuLabel>Send XML by mail</DropdownMenuLabel>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>Exports for ERPs</DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuItem onClick={onMoneyS3export}>
+                Money S3 XML
+              </DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+          <DropdownMenuSeparator />
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              Download data for ERPs
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuItem
+                onClick={() =>
+                  router.push(
+                    invoice.rossum_annotation_json_url
+                      ? invoice.rossum_annotation_json_url
+                      : "/invoice"
+                  )
+                }
+              >
+                JSON
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  router.push(
+                    invoice.money_s3_url ? invoice.money_s3_url : "/invoice"
+                  )
+                }
+              >
+                MoneyS3 XML
+              </DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+
+          <DropdownMenuLabel></DropdownMenuLabel>
+
+          <DropdownMenuSeparator />
+
           <DropdownMenuItem onClick={onSendToMail}>
             Send XML to accountant email
           </DropdownMenuItem>
