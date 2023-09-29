@@ -63,6 +63,10 @@ export const NewTaskCommentEmail = ({
                 : ` zanechal(a) komentář v Projektu - (Boardu), který sledujete. `}
             </Text>
             <Text className="text-black text-[14px] leading-[24px]">
+              {userLanguage === "en" ? `Comment: ` : `Komentář: `}
+              <strong>{comment}</strong>
+            </Text>
+            <Text className="text-black text-[14px] leading-[24px]">
               {userLanguage === "en"
                 ? `
               Details you can find here: `
