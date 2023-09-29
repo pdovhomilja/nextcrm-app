@@ -101,10 +101,6 @@ export function NewAccountForm({ industries, users }: Props) {
         title: "Success",
         description: "Account created successfully",
       });
-
-      /*     if (response.status === 200) {
-        router.push("/");
-      } */
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -114,7 +110,31 @@ export function NewAccountForm({ industries, users }: Props) {
     } finally {
       router.refresh();
       setIsLoading(false);
-      router.push("/crm/accounts");
+      form.reset({
+        name: "",
+        office_phone: "",
+        website: "",
+        fax: "",
+        company_id: "",
+        vat: "",
+        email: "",
+        billing_street: "",
+        billing_postal_code: "",
+        billing_city: "",
+        billing_state: "",
+        billing_country: "",
+        shipping_street: "",
+        shipping_postal_code: "",
+        shipping_city: "",
+        shipping_state: "",
+        shipping_country: "",
+        description: "",
+        assigned_to: "",
+        status: "",
+        annual_revenue: "",
+        member_of: "",
+        industry: "",
+      });
     }
   };
 

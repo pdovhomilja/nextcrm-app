@@ -43,7 +43,6 @@ type Props = {
   boards: any;
   open: boolean;
   setOpen: (open: boolean) => void;
-
   notionUrl: string;
 };
 
@@ -52,7 +51,6 @@ const NewTaskDialog = ({
   boards,
   open,
   setOpen,
-
   notionUrl,
 }: Props) => {
   //const [open, setOpen] = useState(false);
@@ -80,7 +78,7 @@ const NewTaskDialog = ({
   });
 
   useEffect(() => {
-    form.setValue("notionUrl", notionUrl);
+    form.setValue("notionUrl", notionUrl); 
     setIsMounted(true);
   }, [notionUrl, form]);
 

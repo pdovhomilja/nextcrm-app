@@ -251,7 +251,7 @@ const UpdateTaskDialog = ({ users, boards, initialData }: Props) => {
           </div>
           <div className="flex w-full justify-end space-x-2 pt-2">
             <DialogTrigger asChild>
-              <Button variant={"destructive"}>Cancel</Button>
+              <Button variant={"destructive"}>Close</Button>
             </DialogTrigger>
             <Button type="submit" disabled={isLoading}>
               {isLoading ? (

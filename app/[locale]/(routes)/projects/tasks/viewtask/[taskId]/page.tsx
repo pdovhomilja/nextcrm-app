@@ -53,7 +53,7 @@ const TaskPage = async ({ params }: TaskPageProps) => {
     <div className="flex flex-col md:flex-row w-full px-2 space-x-2 ">
       <div className="flex flex-col w-full md:w-2/3">
         <div className="w-full border rounded-lg mb-5">
-          {/*      <pre>
+          {/*           <pre>
             <code>{JSON.stringify(task, null, 2)}</code>
           </pre> */}
           <Card>
@@ -130,6 +130,19 @@ const TaskPage = async ({ params }: TaskPageProps) => {
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {task.assigned_user?.name || "Not assigned"}
+                    </p>
+                  </div>
+                </div>
+                <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
+                  <User className="mt-px h-5 w-5" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      Created by
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {activeUsers.find(
+                        (user: any) => user.id === task.createdBy
+                      )?.name || "Unknown"}
                     </p>
                   </div>
                 </div>
