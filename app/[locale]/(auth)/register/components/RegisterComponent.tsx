@@ -126,6 +126,9 @@ export function RegisterComponent() {
         <CardDescription>{t("cardDescription")}</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 overflow-auto">
+        {/*  <pre>
+          <code>{JSON.stringify(form.watch(), null, 2)}</code>
+        </pre> */}
         <div className="grid grid-cols-2 gap-6">
           {/*        <Button variant="outline">
             <Icons.gitHub className="mr-2 h-4 w-4" />
@@ -209,24 +212,20 @@ export function RegisterComponent() {
                 name="language"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("label")}</FormLabel>
+                    <FormLabel>Choose industry</FormLabel>
                     <Select
-                      disabled={isLoading}
-                      onValueChange={onValueChange}
-                      defaultValue={locale}
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue
-                            defaultValue={field.value}
-                            placeholder="Select a language"
-                          />
+                          <SelectValue placeholder="Select a language" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
-                        {["en", "de", "cz"].map((cur) => (
-                          <SelectItem key={cur} value={cur}>
-                            {t("locale", { locale: cur })}
+                      <SelectContent className="flex overflow-y-auto h-56">
+                        {["en", "de", "cz"].map((lng, index) => (
+                          <SelectItem key={index} value={lng}>
+                            {t("locale", { locale: lng })}
                           </SelectItem>
                         ))}
                       </SelectContent>
