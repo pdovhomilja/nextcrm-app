@@ -76,7 +76,7 @@
     "tailwindcss-animate": "^1.0.6",
     "uploadthing": "^5.1.0",
     "xmlbuilder2": "^3.1.1",
-    "zod": "^3.21.4",
+    "zod": "^3.22.3",
     "zustand": "^4.3.9"
   },
   "devDependencies": {
