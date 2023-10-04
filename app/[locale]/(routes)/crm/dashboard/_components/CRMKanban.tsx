@@ -27,13 +27,33 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { NewOpportunityForm } from "../../opportunities/components/NewOpportunityForm";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 
 interface CRMKanbanProps {
   salesStages: crm_Opportunities_Sales_Stages[];
   opportunities: crm_Opportunities[];
+  crmData: any;
 }
 
-const CRMKanban = ({ salesStages, opportunities: data }: CRMKanbanProps) => {
+const CRMKanban = ({
+  salesStages,
+  opportunities: data,
+  crmData,
+}: CRMKanbanProps) => {
   const router = useRouter();
 
   const { toast } = useToast();
@@ -42,6 +62,9 @@ const CRMKanban = ({ salesStages, opportunities: data }: CRMKanbanProps) => {
   const [isMounted, setIsMounted] = useState(false);
 
   const [opportunities, setOpportunities] = useState(data);
+
+  const { users, accounts, contacts, saleTypes, saleStages, campaigns } =
+    crmData;
 
   useEffect(() => {
     setOpportunities(data);
@@ -53,6 +76,7 @@ const CRMKanban = ({ salesStages, opportunities: data }: CRMKanbanProps) => {
   }, []);
 
   const onDragEnd = async (result: any) => {
+    //TODO: Add optimistic ui
     setIsLoading(true);
     //Implement drag end logic
     const { destination, source, draggableId } = result;
@@ -92,14 +116,6 @@ const CRMKanban = ({ salesStages, opportunities: data }: CRMKanbanProps) => {
     }
     // If start is the same as end, we're in the same column
   };
-  const onCreateOpportunity = (stage: string) => {
-    // Implement create opportunity logic
-    alert(
-      "Create opportunity - not implemented yet" +
-        "new opps will be created in stage:" +
-        stage
-    );
-  };
 
   const onThumbsUp = (opportunity: crm_Opportunities) => {
     // Implement thumbs up logic
@@ -120,10 +136,14 @@ const CRMKanban = ({ salesStages, opportunities: data }: CRMKanbanProps) => {
         description="Please wait while we reorder the opportunities"
         isOpen={isLoading}
       />
+
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="flex w-full h-full overflow-x-auto ">
           {salesStages.map((stage: any, index: number) => (
             <Droppable droppableId={stage.id} key={index}>
+              {
+                //TODO: fix problem with droppable defaultProps
+              }
               {(provided) => (
                 <Card
                   {...provided.droppableProps}
@@ -132,10 +152,46 @@ const CRMKanban = ({ salesStages, opportunities: data }: CRMKanbanProps) => {
                 >
                   <CardTitle className="flex gap-2 p-3 justify-between">
                     <span className="text-sm font-bold">{stage.name}</span>
-                    <PlusCircledIcon
-                      className="w-5 h-5 cursor-pointer"
-                      onClick={() => onCreateOpportunity(stage.id)}
-                    />
+                    {/*   <Sheet>
+                      <SheetTrigger asChild>
+                        <PlusCircledIcon className="w-5 h-5 cursor-pointer" />
+                      </SheetTrigger>
+                      <SheetContent
+                        side={"top"}
+                        className="w-[1000px] overflow-auto mx-auto my-auto"
+                      >
+                        <SheetHeader>
+                          <SheetTitle>Are you sure absolutely sure?</SheetTitle>
+                          <SheetDescription>
+                            <NewOpportunityForm
+                              users={users}
+                              accounts={accounts}
+                              contacts={contacts}
+                              salesType={saleTypes}
+                              saleStages={saleStages}
+                              campaigns={campaigns}
+                              selectedStage={stage.id}
+                            />
+                          </SheetDescription>
+                        </SheetHeader>
+                      </SheetContent>
+                    </Sheet> */}
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <PlusCircledIcon className="w-5 h-5 cursor-pointer" />
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full py-10 overflow-auto ">
+                        <NewOpportunityForm
+                          users={users}
+                          accounts={accounts}
+                          contacts={contacts}
+                          salesType={saleTypes}
+                          saleStages={saleStages}
+                          campaigns={campaigns}
+                          selectedStage={stage.id}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </CardTitle>
                   <CardContent className="w-full h-full overflow-y-scroll">
                     {opportunities

@@ -45,6 +45,7 @@ type NewTaskFormProps = {
   salesType: any[];
   saleStages: any[];
   campaigns: any[];
+  selectedStage?: string;
 };
 
 export function NewOpportunityForm({
@@ -54,6 +55,7 @@ export function NewOpportunityForm({
   salesType,
   saleStages,
   campaigns,
+  selectedStage,
 }: NewTaskFormProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -82,6 +84,9 @@ export function NewOpportunityForm({
 
   const form = useForm<NewAccountFormValues>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      sales_stage: selectedStage || "",
+    },
   });
 
   const onSubmit = async (data: NewAccountFormValues) => {
@@ -101,18 +106,34 @@ export function NewOpportunityForm({
     } finally {
       setIsLoading(false);
       router.refresh();
-      router.push("/crm/opportunities");
+
+      form.reset({
+        name: "",
+        close_date: new Date(),
+        description: "",
+        type: "",
+        sales_stage: "",
+        budget: "",
+        currency: "",
+        expected_revenue: "",
+        next_step: "",
+        assigned_to: "",
+        account: "",
+        contact: "",
+        campaign: "",
+      });
     }
   };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="h-full px-10">
-        {/*        <div>
+        {/*         <div>
           <pre>
             <code>{JSON.stringify(form.watch(), null, 2)}</code>
           </pre>
         </div> */}
+
         <div className=" w-[800px] text-sm">
           <div className="pb-5 space-y-2">
             <FormField
@@ -223,11 +244,11 @@ export function NewOpportunityForm({
                   control={form.control}
                   name="sales_stage"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem hidden={selectedStage ? true : false}>
                       <FormLabel>Sale stage</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        defaultValue={selectedStage}
                       >
                         <FormControl>
                           <SelectTrigger>
