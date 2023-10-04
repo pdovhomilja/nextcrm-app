@@ -57,7 +57,7 @@
     "nodemailer": "^6.9.3",
     "novel": "^0.1.20",
     "openai": "^4.5.0",
-    "postcss": "8.4.24",
+    "postcss": "8.4.31",
     "primeicons": "^6.0.1",
     "primereact": "^9.6.1",
     "react": "18.2.0",
