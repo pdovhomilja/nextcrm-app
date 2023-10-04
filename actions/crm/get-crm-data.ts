@@ -12,7 +12,7 @@ export const getAllCrmData = async () => {
   const contacts = await prismadb.crm_Contacts.findMany({});
   const saleTypes = await prismadb.crm_Opportunities_Type.findMany({});
   const saleStages = await prismadb.crm_Opportunities_Sales_Stages.findMany({});
-  const campaigns = await prismadb.crm_campains.findMany({});
+  const campaigns = await prismadb.crm_campaigns.findMany({});
   const industries = await prismadb.crm_Industry_Type.findMany({});
 
   const data = {

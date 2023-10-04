@@ -187,7 +187,7 @@ export async function GET(req: Request) {
     const saleStages = await prismadb.crm_Opportunities_Sales_Stages.findMany(
       {}
     );
-    const campaigns = await prismadb.crm_campains.findMany({});
+    const campaigns = await prismadb.crm_campaigns.findMany({});
     const industries = await prismadb.crm_Industry_Type.findMany({});
 
     const data = {

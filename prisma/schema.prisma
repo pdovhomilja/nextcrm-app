@@ -126,7 +126,7 @@ model crm_Opportunities {
   assigned_to_user     Users?                          @relation(name: "assigned_to_user_relation", fields: [assigned_to], references: [id])
   created_by_user      Users?                          @relation(name: "created_by_user_relation", fields: [created_by], references: [id])
   assigned_account     crm_Accounts?                   @relation(fields: [account], references: [id])
-  assigned_campaings   crm_campains?                   @relation(fields: [campaign], references: [id])
+  assigned_campaings   crm_campaigns?                   @relation(fields: [campaign], references: [id])
   connected_documents  String[]                        @db.ObjectId
   documents            Documents[]                     @relation(fields: [connected_documents], references: [id])
   connected_contacts   String[]                        @db.ObjectId
@@ -140,7 +140,7 @@ enum crm_Opportunity_Status {
   CLOSED
 }
 
-model crm_campains {
+model crm_campaigns {
   id            String              @id @default(auto()) @map("_id") @db.ObjectId
   v             Int                 @map("__v")
   name          String

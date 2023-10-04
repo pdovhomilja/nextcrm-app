@@ -36,15 +36,24 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import useDebounce from "@/hooks/useDebounce";
+import {
+  Users,
+  crm_Accounts,
+  crm_Contacts,
+  crm_Opportunities_Sales_Stages,
+  crm_Opportunities_Type,
+  crm_campaigns,
+} from "@prisma/client";
 
 //TODO: fix all the types
 type NewTaskFormProps = {
   users: any[];
-  accounts: any[];
-  contacts: any[];
-  salesType: any[];
-  saleStages: any[];
-  campaigns: any[];
+  accounts: crm_Accounts[];
+  contacts: crm_Contacts[];
+  salesType: crm_Opportunities_Type[];
+  saleStages: crm_Opportunities_Sales_Stages[];
+  campaigns: crm_campaigns[];
   selectedStage?: string;
 };
 
@@ -61,6 +70,34 @@ export function NewOpportunityForm({
   const { toast } = useToast();
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const [searchUserValue, setSearchUserValue] = useState<string>("");
+  const debouncedValue = useDebounce(searchUserValue, 1000);
+
+  const filteredUsers = users.filter((user) =>
+    user.name.toLowerCase().includes(debouncedValue.toLowerCase())
+  );
+
+  const [searchAccountValue, setSearchAccountValue] = useState<string>("");
+  const debouncedAccountValue = useDebounce(searchAccountValue, 1000);
+
+  const filteredAccounts = accounts.filter((account) =>
+    account.name.toLowerCase().includes(debouncedAccountValue.toLowerCase())
+  );
+
+  const [searchContactValue, setSearchContactValue] = useState<string>("");
+  const debouncedContactValue = useDebounce(searchContactValue, 1000);
+
+  const filteredContacts = contacts.filter(
+    (contact) =>
+      contact.last_name
+        .toLowerCase()
+        .includes(debouncedContactValue.toLowerCase()) ||
+      (contact.first_name &&
+        contact.first_name
+          .toLowerCase()
+          .includes(debouncedContactValue.toLowerCase()))
+  );
 
   const formSchema = z.object({
     name: z.string(),
@@ -355,7 +392,11 @@ export function NewOpportunityForm({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="overflow-y-auto h-56">
-                          {users.map((user) => (
+                          <Input
+                            placeholder="Search user..."
+                            onChange={(e) => setSearchUserValue(e.target.value)}
+                          />
+                          {filteredUsers.map((user) => (
                             <SelectItem key={user.id} value={user.id}>
                               {user.name}
                             </SelectItem>
@@ -382,7 +423,13 @@ export function NewOpportunityForm({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="flex overflow-y-auto h-56">
-                          {accounts.map((account) => (
+                          <Input
+                            placeholder="Search account..."
+                            onChange={(e) =>
+                              setSearchAccountValue(e.target.value)
+                            }
+                          />
+                          {filteredAccounts.map((account) => (
                             <SelectItem key={account.id} value={account.id}>
                               {account.name}
                             </SelectItem>
@@ -409,7 +456,13 @@ export function NewOpportunityForm({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="flex overflow-y-auto h-56">
-                          {contacts.map((contact) => (
+                          <Input
+                            placeholder="Search contact..."
+                            onChange={(e) =>
+                              setSearchContactValue(e.target.value)
+                            }
+                          />
+                          {filteredContacts.map((contact) => (
                             <SelectItem key={contact.id} value={contact.id}>
                               {contact.first_name + " " + contact.last_name}
                             </SelectItem>

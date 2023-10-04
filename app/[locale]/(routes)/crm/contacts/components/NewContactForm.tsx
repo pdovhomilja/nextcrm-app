@@ -28,6 +28,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 import { Switch } from "@/components/ui/switch";
+import useDebounce from "@/hooks/useDebounce";
 
 //TODO: fix all the types
 type NewTaskFormProps = {
@@ -41,8 +42,10 @@ export function NewContactForm({ users, accounts }: NewTaskFormProps) {
 
   const [searchTerm, setSearchTerm] = useState("");
 
+  const debounceSearchTerm = useDebounce(searchTerm, 1000);
+
   const filteredData = users.filter((item) =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    item.name.toLowerCase().includes(debounceSearchTerm.toLowerCase())
   );
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -377,11 +380,6 @@ export function NewContactForm({ users, accounts }: NewTaskFormProps) {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="h-96 overflow-y-auto">
-                          {/*     {users.map((user) => (
-                            <SelectItem key={user.id} value={user.id}>
-                              {user.name}
-                            </SelectItem>
-                          ))} */}
                           <Input
                             type="text"
                             placeholder="Search in users ..."
