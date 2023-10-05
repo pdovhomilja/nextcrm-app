@@ -26,7 +26,7 @@ const ProjectsView = async (props: Props) => {
         <NewProjectDialog />
         <NewTaskDialog users={users} boards={boards} />
         <Button asChild>
-          <Link href="/projects/tasks">Tasks</Link>
+          <Link href="/projects/tasks">All Tasks</Link>
         </Button>
         <Button asChild>
           <Link href={`/projects/tasks/${userId}`}>My Tasks</Link>

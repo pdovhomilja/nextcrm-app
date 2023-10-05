@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
 import Modal from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
-import { spawn } from "child_process";
+
+import { Icons } from "../ui/icons";
 
 interface AlertModalProps {
   isOpen: boolean;
@@ -40,11 +42,7 @@ const AlertModal = ({
           Cancel
         </Button>
         <Button disabled={loading} variant={"destructive"} onClick={onConfirm}>
-          {loading ? (
-            <span className="animate-pulse">Deleting ...</span>
-          ) : (
-            "Continue"
-          )}
+          {loading ? <Icons.spinner className="animate-spin" /> : "Continue"}
         </Button>
       </div>
     </Modal>
