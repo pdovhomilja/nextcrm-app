@@ -5,43 +5,32 @@ import {
   experimental_useOptimistic as useOptimistic,
   useState,
 } from "react";
+import axios from "axios";
+import { format } from "date-fns";
+import { useRouter } from "next/navigation";
+import { ThumbsDown, ThumbsUp } from "lucide-react";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 import {
   crm_Opportunities,
   crm_Opportunities_Sales_Stages,
 } from "@prisma/client";
-import { DotsHorizontalIcon, PlusCircledIcon } from "@radix-ui/react-icons";
-import { ThumbsDown, ThumbsUp } from "lucide-react";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import axios from "axios";
-import { useRouter } from "next/navigation";
-import { useToast } from "@/components/ui/use-toast";
 
-import { format } from "date-fns";
-import LoadingModal from "@/components/modals/loading-modal";
+import { DotsHorizontalIcon, PlusCircledIcon } from "@radix-ui/react-icons";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { useToast } from "@/components/ui/use-toast";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import LoadingModal from "@/components/modals/loading-modal";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
+
 import { NewOpportunityForm } from "../../opportunities/components/NewOpportunityForm";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
 
 interface CRMKanbanProps {
   salesStages: crm_Opportunities_Sales_Stages[];
@@ -60,6 +49,9 @@ const CRMKanban = ({
 
   const [isLoading, setIsLoading] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+
+  const [selectedStage, setSelectedStage] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const [opportunities, setOpportunities] = useState(data);
 
@@ -136,6 +128,22 @@ const CRMKanban = ({
         description="Please wait while we reorder the opportunities"
         isOpen={isLoading}
       />
+      {/* Dialog */}
+
+      <Dialog open={isDialogOpen} onOpenChange={() => setIsDialogOpen(false)}>
+        <DialogContent className="min-w-[1000px] py-10 overflow-auto ">
+          <NewOpportunityForm
+            users={users}
+            accounts={accounts}
+            contacts={contacts}
+            salesType={saleTypes}
+            saleStages={saleStages}
+            campaigns={campaigns}
+            selectedStage={selectedStage}
+            onDialogClose={() => setIsDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
 
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="flex w-full h-full overflow-x-auto ">
@@ -152,46 +160,13 @@ const CRMKanban = ({
                 >
                   <CardTitle className="flex gap-2 p-3 justify-between">
                     <span className="text-sm font-bold">{stage.name}</span>
-                    {/*   <Sheet>
-                      <SheetTrigger asChild>
-                        <PlusCircledIcon className="w-5 h-5 cursor-pointer" />
-                      </SheetTrigger>
-                      <SheetContent
-                        side={"top"}
-                        className="w-[1000px] overflow-auto mx-auto my-auto"
-                      >
-                        <SheetHeader>
-                          <SheetTitle>Are you sure absolutely sure?</SheetTitle>
-                          <SheetDescription>
-                            <NewOpportunityForm
-                              users={users}
-                              accounts={accounts}
-                              contacts={contacts}
-                              salesType={saleTypes}
-                              saleStages={saleStages}
-                              campaigns={campaigns}
-                              selectedStage={stage.id}
-                            />
-                          </SheetDescription>
-                        </SheetHeader>
-                      </SheetContent>
-                    </Sheet> */}
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <PlusCircledIcon className="w-5 h-5 cursor-pointer" />
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full py-10 overflow-auto ">
-                        <NewOpportunityForm
-                          users={users}
-                          accounts={accounts}
-                          contacts={contacts}
-                          salesType={saleTypes}
-                          saleStages={saleStages}
-                          campaigns={campaigns}
-                          selectedStage={stage.id}
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <PlusCircledIcon
+                      className="w-5 h-5 cursor-pointer"
+                      onClick={() => {
+                        setSelectedStage(stage.id);
+                        setIsDialogOpen(true);
+                      }}
+                    />
                   </CardTitle>
                   <CardContent className="w-full h-full overflow-y-scroll">
                     {opportunities

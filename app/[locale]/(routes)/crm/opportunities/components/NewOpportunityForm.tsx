@@ -1,19 +1,21 @@
 "use client";
 
-import { useState } from "react";
 import { z } from "zod";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
-import { CalendarIcon } from "lucide-react";
+import { useState } from "react";
 import { format } from "date-fns";
+import { useForm } from "react-hook-form";
+import { CalendarIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 import { cn } from "@/lib/utils";
 
-import { useToast } from "@/components/ui/use-toast";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
 import {
   Form,
   FormControl,
@@ -29,22 +31,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import useDebounce from "@/hooks/useDebounce";
 import {
-  Users,
   crm_Accounts,
   crm_Contacts,
   crm_Opportunities_Sales_Stages,
   crm_Opportunities_Type,
   crm_campaigns,
 } from "@prisma/client";
+
+import useDebounce from "@/hooks/useDebounce";
 
 //TODO: fix all the types
 type NewTaskFormProps = {
@@ -55,6 +55,7 @@ type NewTaskFormProps = {
   saleStages: crm_Opportunities_Sales_Stages[];
   campaigns: crm_campaigns[];
   selectedStage?: string;
+  onDialogClose: () => void;
 };
 
 export function NewOpportunityForm({
@@ -65,6 +66,7 @@ export function NewOpportunityForm({
   saleStages,
   campaigns,
   selectedStage,
+  onDialogClose,
 }: NewTaskFormProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -143,7 +145,7 @@ export function NewOpportunityForm({
     } finally {
       setIsLoading(false);
       router.refresh();
-
+      onDialogClose();
       form.reset({
         name: "",
         close_date: new Date(),
@@ -164,7 +166,10 @@ export function NewOpportunityForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="h-full px-10">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="w-full h-full px-10"
+      >
         {/*         <div>
           <pre>
             <code>{JSON.stringify(form.watch(), null, 2)}</code>

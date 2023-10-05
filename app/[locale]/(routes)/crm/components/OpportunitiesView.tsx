@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import {
   Card,
@@ -9,17 +10,24 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import RightViewModal from "@/components/modals/right-view-modal";
 
 import { columns } from "../opportunities/table-components/columns";
 import { NewOpportunityForm } from "../opportunities/components/NewOpportunityForm";
 import { OpportunitiesDataTable } from "../opportunities/table-components/data-table";
-import { useRouter } from "next/navigation";
 
 const OpportunitiesView = ({ data, crmData }: any) => {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
+
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -46,20 +54,25 @@ const OpportunitiesView = ({ data, crmData }: any) => {
             <CardDescription></CardDescription>
           </div>
           <div className="flex space-x-2">
-            <RightViewModal
-              label={"+"}
-              title="Create opportunity"
-              description=""
-            >
-              <NewOpportunityForm
-                users={users}
-                accounts={accounts}
-                contacts={contacts}
-                salesType={saleTypes}
-                saleStages={saleStages}
-                campaigns={campaigns}
-              />
-            </RightViewModal>
+            <Button className="my-2" onClick={() => setDialogOpen(true)}>
+              +
+            </Button>
+            <Dialog open={dialogOpen} onOpenChange={() => setDialogOpen(false)}>
+              <DialogContent className="min-w-[1000px]">
+                <DialogHeader>
+                  <DialogTitle>Create new opportunity form</DialogTitle>
+                </DialogHeader>
+                <NewOpportunityForm
+                  users={users}
+                  accounts={accounts}
+                  contacts={contacts}
+                  salesType={saleTypes}
+                  saleStages={saleStages}
+                  campaigns={campaigns}
+                  onDialogClose={() => setDialogOpen(false)}
+                />
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
         <Separator />
