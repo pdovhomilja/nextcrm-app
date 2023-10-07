@@ -2,8 +2,22 @@ import { prismadb } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
+  if (req.headers.get("content-type") !== "application/json") {
+    return NextResponse.json(
+      { message: "Invalid content-type" },
+      { status: 400 }
+    );
+  }
+
   const body = await req.json();
   const headers = req.headers;
+
+  if (!body) {
+    return NextResponse.json({ message: "No body" }, { status: 400 });
+  }
+  if (!headers) {
+    return NextResponse.json({ message: "No headers" }, { status: 400 });
+  }
 
   const { firstName, lastName, account, job, email, phone, lead_source } = body;
 
@@ -25,6 +39,12 @@ export async function POST(req: Request) {
     console.log("Unauthorized");
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   } else {
+    if (!lastName) {
+      return NextResponse.json(
+        { message: "Missing required fields" },
+        { status: 400 }
+      );
+    }
     try {
       await prismadb.crm_Leads.create({
         data: {

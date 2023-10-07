@@ -7,8 +7,7 @@ export const leadSchema = z.object({
   id: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),
-  date_modify: z.date(),
-  firstName: z.string(),
+  firstName: z.string().optional().nullable(),
   lastName: z.string().min(3).max(30).nonempty(),
 });
 

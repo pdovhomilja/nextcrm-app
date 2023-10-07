@@ -13,7 +13,7 @@ export const getLeadsByAccountId = async (accountId: string) => {
       },
     },
     orderBy: {
-      date_created: "desc",
+      createdAt: "desc",
     },
   });
   return data;

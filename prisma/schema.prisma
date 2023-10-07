@@ -58,15 +58,13 @@ model crm_Accounts {
 model crm_Leads {
   id                 String        @id @default(auto()) @map("_id") @db.ObjectId
   v                  Int           @default(0) @map("__v")
-  date_created       DateTime?     @default(now()) @db.Date
+
   createdAt          DateTime?     @default(now()) @db.Date
   createdBy          String?       @db.ObjectId
-  date_modify        DateTime?     @default(now()) @db.Date
   updatedAt          DateTime?     @updatedAt @db.Date
-  last_activity_by   String?       @db.ObjectId
   updatedBy          String?       @db.ObjectId
   firstName          String?
-  lastName           String?
+  lastName           String
   company            String?
   jobTitle           String?
   email              String?

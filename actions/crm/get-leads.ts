@@ -10,7 +10,7 @@ export const getLeads = async () => {
       },
     },
     orderBy: {
-      date_created: "desc",
+      createdAt: "desc",
     },
   });
   return data;

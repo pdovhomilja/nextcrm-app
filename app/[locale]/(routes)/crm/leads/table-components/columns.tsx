@@ -82,11 +82,9 @@ export const columns: ColumnDef<Lead>[] = [
 
     cell: ({ row }) => (
       <div>
-        {
-          //@ts-ignore
-          //TODO: fix this
-          row.getValue("firstName") + " " + row.original.lastName
-        }
+        {row.original.firstName
+          ? row.getValue("firstName")
+          : "" + " " + row.original.lastName}
       </div>
     ),
     enableSorting: false,

@@ -40,7 +40,6 @@ export async function POST(req: Request) {
         v: 1,
         createdBy: userId,
         updatedBy: userId,
-        last_activity_by: userId,
         firstName: first_name,
         lastName: last_name,
         company,
@@ -129,7 +128,6 @@ export async function PUT(req: Request) {
       data: {
         v: 1,
         updatedBy: userId,
-        last_activity_by: userId,
         firstName,
         lastName,
         company,
