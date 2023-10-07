@@ -55,6 +55,7 @@ type NewTaskFormProps = {
   saleStages: crm_Opportunities_Sales_Stages[];
   campaigns: crm_campaigns[];
   selectedStage?: string;
+  accountId?: string;
   onDialogClose: () => void;
 };
 
@@ -66,6 +67,7 @@ export function NewOpportunityForm({
   saleStages,
   campaigns,
   selectedStage,
+  accountId,
   onDialogClose,
 }: NewTaskFormProps) {
   const router = useRouter();
@@ -124,7 +126,8 @@ export function NewOpportunityForm({
   const form = useForm<NewAccountFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      sales_stage: selectedStage || "",
+      sales_stage: selectedStage ? selectedStage : undefined,
+      account: accountId ? accountId : undefined,
     },
   });
 
@@ -416,7 +419,7 @@ export function NewOpportunityForm({
                   control={form.control}
                   name="account"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem hidden={accountId ? true : false}>
                       <FormLabel>Assigned Account</FormLabel>
                       <Select
                         onValueChange={field.onChange}

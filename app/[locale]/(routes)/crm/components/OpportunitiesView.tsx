@@ -22,8 +22,15 @@ import { Separator } from "@/components/ui/separator";
 import { columns } from "../opportunities/table-components/columns";
 import { NewOpportunityForm } from "../opportunities/components/NewOpportunityForm";
 import { OpportunitiesDataTable } from "../opportunities/table-components/data-table";
-
-const OpportunitiesView = ({ data, crmData }: any) => {
+const OpportunitiesView = ({
+  data,
+  crmData,
+  accountId,
+}: {
+  data: any;
+  crmData: any;
+  accountId?: string;
+}) => {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
 
@@ -40,6 +47,7 @@ const OpportunitiesView = ({ data, crmData }: any) => {
   const { users, accounts, contacts, saleTypes, saleStages, campaigns } =
     crmData;
 
+  //console.log(accountId, "accountId");
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -69,6 +77,7 @@ const OpportunitiesView = ({ data, crmData }: any) => {
                   salesType={saleTypes}
                   saleStages={saleStages}
                   campaigns={campaigns}
+                  accountId={accountId}
                   onDialogClose={() => setDialogOpen(false)}
                 />
               </DialogContent>

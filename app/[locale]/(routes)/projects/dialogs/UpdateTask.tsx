@@ -50,10 +50,10 @@ type Props = {
   users: any;
   boards: any;
   initialData: any;
+  onDone?: () => void;
 };
 
-const UpdateTaskDialog = ({ users, boards, initialData }: Props) => {
-  const [open, setOpen] = useState(false);
+const UpdateTaskDialog = ({ users, boards, initialData, onDone }: Props) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const [isMounted, setIsMounted] = useState(false);
@@ -106,7 +106,7 @@ const UpdateTaskDialog = ({ users, boards, initialData }: Props) => {
       });
     } finally {
       setIsLoading(false);
-      setOpen(false);
+      onDone && onDone();
       router.refresh();
     }
   };
@@ -124,7 +124,7 @@ const UpdateTaskDialog = ({ users, boards, initialData }: Props) => {
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Update task - {initialData.id}</FormLabel>
+                  <FormLabel>Update task - Id: {initialData.id}</FormLabel>
                   <FormControl>
                     <Input
                       disabled={isLoading}

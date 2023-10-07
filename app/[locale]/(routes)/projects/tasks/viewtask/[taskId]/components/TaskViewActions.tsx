@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import UpdateTaskDialog from "@/app/[locale]/(routes)/projects/dialogs/UpdateTask";
 import { getActiveUsers } from "@/actions/get-users";
+import { useState } from "react";
 
 const TaskViewActions = ({
   taskId,
@@ -26,6 +27,8 @@ const TaskViewActions = ({
 }) => {
   const { toast } = useToast();
   const router = useRouter();
+
+  const [openEdit, setOpenEdit] = useState(false);
 
   //Actions
   const onDone = async () => {
@@ -52,17 +55,20 @@ const TaskViewActions = ({
         <CheckSquare className="w-4 h-4 mr-2" />
         <span>Mark as done</span>
       </Badge>
-      <Badge variant={"outline"} className="cursor-pointer">
+      <Badge
+        variant={"outline"}
+        className="cursor-pointer"
+        onClick={() => setOpenEdit(true)}
+      >
         <Pencil className="w-4 h-4 mr-2" />
-        <Sheet>
-          <SheetTrigger>
-            <span>Edit</span>
-          </SheetTrigger>
+        Edit
+        <Sheet open={openEdit} onOpenChange={() => setOpenEdit(false)}>
           <SheetContent>
             <UpdateTaskDialog
               users={users}
               boards={boards}
               initialData={initialData}
+              onDone={() => setOpenEdit(false)}
             />
           </SheetContent>
         </Sheet>

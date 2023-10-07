@@ -10,16 +10,22 @@ import { getBoardSections } from "@/actions/projects/get-board-sections";
 import DeleteProjectDialog from "./dialogs/DeleteProject";
 import { getKanbanData } from "@/actions/projects/get-kanban-data";
 import Kanban from "./components/Kanban";
+import { getBoards } from "@/actions/projects/get-boards";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { Users } from "@prisma/client";
 
 interface BoardDetailProps {
   params: { boardId: string };
 }
 
 const BoardPage = async ({ params }: BoardDetailProps) => {
+  const session = await getServerSession(authOptions);
+  const user = session?.user;
   const { boardId } = params;
   const board: any = await getBoard(boardId);
-
-  const users: any = await getActiveUsers();
+  const boards = await getBoards(user?.id!);
+  const users: Users[] = await getActiveUsers();
   const sections: any = await getBoardSections(boardId);
   const kanbanData = await getKanbanData(boardId);
 
@@ -44,7 +50,12 @@ const BoardPage = async ({ params }: BoardDetailProps) => {
           />
         </div>
       </div>
-      <Kanban data={kanbanData.sections} boardId={boardId} />
+      <Kanban
+        data={kanbanData.sections}
+        boardId={boardId}
+        boards={boards}
+        users={users}
+      />
     </Container>
   );
 };

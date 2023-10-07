@@ -33,24 +33,35 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/components/ui/use-toast";
 import AlertModal from "@/components/modals/alert-modal";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import LoadingComponent from "@/components/LoadingComponent";
 import { DialogHeader } from "@/components/ui/dialog-document-view";
 
 import NewSectionForm from "../forms/NewSection";
+import UpdateTaskDialog from "../../../dialogs/UpdateTask";
 
 let timer: any;
 const timeout = 1000;
 
+interface Task {
+  id: string;
+  section: string;
+}
+
 const Kanban = (props: any) => {
   const boardId = props.boardId;
+  const boards = props.boards;
+  const users = props.users;
+
   const [data, setData]: any = useState([]);
 
   const [sectionId, setSectionId] = useState(null);
-  const [selectedTask, setSelectedTask] = useState(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   const [open, setOpen] = useState(false);
   const [openSectionAlert, setOpenSectionAlert] = useState(false);
   const [sectionOpenDialog, setSectionOpenDialog] = useState(false);
+  const [updateOpenSheet, setUpdateOpenSheet] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingSection, setIsLoadingSection] = useState(false);
@@ -201,15 +212,20 @@ const Kanban = (props: any) => {
   const onDelete = async () => {
     setOpen(false);
     setIsLoading(true);
+    if (!selectedTask || !selectedTask.id || !selectedTask.section) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Invalid task. Please select a valid task to delete.",
+      });
+      setIsLoading(false);
+      return;
+    }
     try {
       await axios.delete(`/api/projects/tasks/`, {
         data: {
-          //@ts-ignore
-          //TODO: fix this
-          id: selectedTask?.id,
-          //@ts-ignore
-          //TODO: fix this
-          section: selectedTask?.section,
+          id: selectedTask.id,
+          section: selectedTask.section,
         },
       });
       toast({
@@ -232,6 +248,7 @@ const Kanban = (props: any) => {
   if (isLoading) return <LoadingComponent />;
 
   //console.log(sectionId, "sectionId - Kanban");
+  //console.log(updateOpenSheet, "updateOpenSheet - Kanban");
 
   return (
     <>
@@ -267,6 +284,25 @@ const Kanban = (props: any) => {
           </DialogContent>
         </Dialog>
         {/* Dialogs end */}
+        {
+          //Sheets
+        }
+        <Sheet
+          open={updateOpenSheet}
+          onOpenChange={() => setUpdateOpenSheet(false)}
+        >
+          <SheetContent>
+            <UpdateTaskDialog
+              users={users}
+              boards={boards}
+              initialData={selectedTask}
+              onDone={() => setUpdateOpenSheet(false)}
+            />
+          </SheetContent>
+        </Sheet>
+        {
+          //Sheets end
+        }
 
         <div className="p-2 text-xs">
           <p>{data?.length} Sections</p>
@@ -367,6 +403,16 @@ const Kanban = (props: any) => {
                                         <DropdownMenuItem
                                           className="gap-2"
                                           onClick={() => {
+                                            setUpdateOpenSheet(true);
+                                            setSelectedTask(task);
+                                          }}
+                                        >
+                                          <Pencil className="w-4 h-4 opacity-50" />
+                                          Edit
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                          className="gap-2"
+                                          onClick={() => {
                                             setSelectedTask(task);
                                             setOpen(true);
                                           }}
@@ -415,7 +461,7 @@ const Kanban = (props: any) => {
             </div>
             <div className="flex justify-center items-center pl-3 h-16">
               <PlusCircle
-                className="w-8 h-8 text-slate-600"
+                className="w-8 h-8 text-slate-600 cursor-pointer"
                 onClick={() => {
                   setSectionOpenDialog(true);
                 }}
