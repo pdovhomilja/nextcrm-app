@@ -1,9 +1,10 @@
-import Heading from "@/components/ui/heading";
-import { Separator } from "@/components/ui/separator";
-import { getUser } from "@/actions/get-user";
-import Container from "../components/ui/Container";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
+
+import { getUser } from "@/actions/get-user";
+
+import { Button } from "@/components/ui/button";
+import Container from "../components/ui/Container";
+import GptCard from "./_components/GptCard";
 
 const AdminPage = async () => {
   const user = await getUser();
@@ -23,7 +24,7 @@ const AdminPage = async () => {
 
   return (
     <Container
-      title="Administation"
+      title="Administration"
       description={"Here you can setup your NextCRM instance"}
     >
       <div className="space-x-2">
@@ -33,6 +34,9 @@ const AdminPage = async () => {
         <Button asChild>
           <Link href="/admin/modules">Modules administration</Link>
         </Button>
+      </div>
+      <div>
+        <GptCard />
       </div>
     </Container>
   );
