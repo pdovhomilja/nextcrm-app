@@ -1,15 +1,15 @@
-import { Separator } from "@/components/ui/separator";
 import { getUser } from "@/actions/get-user";
+
 import Container from "../components/ui/Container";
 import { NotionForm } from "./components/NotionForm";
-import H4Title from "@/components/typography/h4";
 import { ProfileForm } from "./components/ProfileForm";
-import { Users } from "@prisma/client";
 import { PasswordChangeForm } from "./components/PasswordChange";
 import { ProfilePhotoForm } from "./components/ProfilePhotoForm";
 
+import H4Title from "@/components/typography/h4";
+
 const ProfilePage = async () => {
-  const data: Users = await getUser();
+  const data = await getUser();
 
   if (!data) {
     return <div>No user data.</div>;

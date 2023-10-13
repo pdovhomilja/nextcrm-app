@@ -11,15 +11,18 @@ interface Props {
     | "imageUploader"
     | "docUploader"
     | "profilePhotoUploader";
+  onUploadSuccess?: (newAvatar: string) => void;
 }
 
-export const FileUploaderDropzone = ({ uploader }: Props) => (
+export const FileUploaderDropzone = ({ uploader, onUploadSuccess }: Props) => (
   <UploadDropzone<OurFileRouter>
     endpoint={uploader}
     onClientUploadComplete={(res) => {
       // Do something with the response
-
       console.log("Files: ", res);
+      if (onUploadSuccess && res) {
+        onUploadSuccess(res[0]?.url);
+      }
     }}
     onUploadError={(error: Error) => {
       alert(`ERROR! ${error.message}`);

@@ -1,39 +1,48 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
+import Image from "next/image";
 
+import { Users } from "@prisma/client";
+
+import { FileUploaderDropzone } from "@/components/ui/file-uploader-dropzone";
+import { useEffect, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 
-import { useState } from "react";
-import axios from "axios";
-import { useRouter } from "next/navigation";
-
-import Image from "next/image";
-import { FileUploaderDropzone } from "@/components/ui/file-uploader-dropzone";
-
 interface ProfileFormProps {
-  data: any;
+  data: Users;
 }
 
-const FormSchema = z.object({
-  avatar: z.string().min(3).max(150),
-});
-
 export function ProfilePhotoForm({ data }: ProfileFormProps) {
+  const [avatar, setAvatar] = useState(data.avatar);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    setAvatar(data.avatar);
+  }, [data.avatar, toast]);
+
+  const handleUploadSuccess = (newAvatar: string) => {
+    setAvatar(newAvatar);
+    toast({
+      title: "Profile photo updated.",
+      description: "Your profile photo has been updated.",
+      duration: 5000,
+    });
+  };
   return (
     <div className="flex items-center space-x-5">
       <div>
         <Image
-          src={data?.avatar || "/images/nouser.png"}
+          src={avatar || "/images/nouser.png"}
           alt="avatar"
           width={100}
           height={100}
         />
       </div>
       <div>
-        <FileUploaderDropzone uploader={"profilePhotoUploader"} />
+        <FileUploaderDropzone
+          uploader={"profilePhotoUploader"}
+          onUploadSuccess={handleUploadSuccess}
+        />
       </div>
     </div>
   );
