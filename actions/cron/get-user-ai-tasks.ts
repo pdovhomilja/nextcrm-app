@@ -135,7 +135,7 @@ export async function getUserAiTasks(userId: string) {
     await sendEmail({
       from: process.env.EMAIL_FROM,
       to: user.email!,
-      subject: `${process.env.NEXT_PUBLIC_APP_NAME} OpenAI Project manager assistant`,
+      subject: `${process.env.NEXT_PUBLIC_APP_NAME} OpenAI Project manager assistant from: ${process.env.NEXT_PUBLIC_APP_URL}`,
       text: getAiResponse.response.message.content,
     });
   }

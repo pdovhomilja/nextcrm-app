@@ -20,7 +20,6 @@ import { useAppStore } from "@/store/store";
 import { useToast } from "@/components/ui/use-toast";
 import AlertModal from "@/components/modals/alert-modal";
 
-import useSession from "@/hooks/useSession";
 import { secondBrainSchema } from "../table-data/schema";
 
 interface DataTableRowActionsProps<TData> {
@@ -36,7 +35,6 @@ export function DataTableRowActions<TData>({
 
   //zustand
   const { setIsOpen, setNotionUrl } = useAppStore();
-  const { users } = useSession();
 
   const { toast } = useToast();
   const router = useRouter();
@@ -73,7 +71,6 @@ export function DataTableRowActions<TData>({
     }
   };
 
-  console.log(users, "users");
   return (
     <>
       <AlertModal

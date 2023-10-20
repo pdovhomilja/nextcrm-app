@@ -19,19 +19,19 @@ async function fetchDatabaseItems(
   notionDbId: string,
   startCursor?: string
 ) {
-  const response: any = await notion.databases.query({
+  const response = await notion.databases.query({
     database_id: notionDbId,
     start_cursor: startCursor,
     page_size: 100,
   });
 
-  const items: any[] = response.results;
+  const items = response.results;
 
   if (response.has_more) {
     const nextItems: any[] = await fetchDatabaseItems(
       notion,
       notionDbId,
-      response.next_cursor
+      response.next_cursor || ""
     );
     return items.concat(nextItems);
   } else {
