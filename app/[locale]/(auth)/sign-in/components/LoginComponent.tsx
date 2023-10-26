@@ -15,7 +15,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -29,7 +28,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useToast } from "@/components/ui/use-toast";
-import { CrossIcon, FingerprintIcon, PencilIcon } from "lucide-react";
+import { FingerprintIcon } from "lucide-react";
 import axios from "axios";
 import {
   Dialog,
@@ -149,7 +148,7 @@ export function LoginComponent() {
   }
 
   return (
-    <Card className="shadow-lg">
+    <Card className="shadow-lg my-5 ">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl">Login</CardTitle>
         <CardDescription>Click here to login with: </CardDescription>

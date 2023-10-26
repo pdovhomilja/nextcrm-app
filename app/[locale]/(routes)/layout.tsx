@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import Header from "./components/Header";
 import SideBar from "./components/SideBar";
 import Footer from "./components/Footer";
+import useSessionStore from "@/store/useSessionStore";
 
 export const metadata = {
   title: "NextCRM",
@@ -24,8 +25,6 @@ export default async function RootLayout({
   }
 
   const user = session?.user;
-
-  //  console.log(user.userStatus, "userStatus");
 
   if (user?.userStatus === "PENDING") {
     return redirect("/pending");
