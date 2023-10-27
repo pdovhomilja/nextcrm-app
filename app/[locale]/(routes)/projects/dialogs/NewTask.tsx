@@ -115,7 +115,7 @@ const NewTaskDialog = ({ users, boards }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger>
+      <DialogTrigger asChild>
         <Button className="px-2">Create task</Button>
       </DialogTrigger>
       <DialogContent className="">

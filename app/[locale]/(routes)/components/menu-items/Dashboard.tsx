@@ -1,27 +1,27 @@
-import { ServerIcon } from "lucide-react";
+import { Home } from "lucide-react";
 import Link from "next/link";
-
 import { usePathname } from "next/navigation";
+
 import React from "react";
 
 type Props = {
   open: boolean;
 };
 
-const ProjectModuleMenu = ({ open }: Props) => {
+const DashboardMenu = ({ open }: Props) => {
   const pathname = usePathname();
-  const isPath = pathname.includes("projects");
+  const isPath = pathname.includes("nevermind");
   return (
     <div className="flex flex-row items-center mx-auto p-2">
       <Link
-        href={"/projects"}
+        href={"/"}
         className={`flex gap-2 p-2 ${isPath ? "text-muted-foreground" : null}`}
       >
-        <ServerIcon className="w-6" />
-        <span className={open ? "" : "hidden"}> Projects</span>
+        <Home className="w-6" />
+        <span className={open ? "" : "hidden"}>Dashboard</span>
       </Link>
     </div>
   );
 };
 
-export default ProjectModuleMenu;
+export default DashboardMenu;

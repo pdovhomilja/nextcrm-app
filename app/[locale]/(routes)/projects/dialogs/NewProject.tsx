@@ -37,9 +37,7 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-type Props = {};
-
-const NewProjectDialog = (props: Props) => {
+const NewProjectDialog = () => {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -94,7 +92,7 @@ const NewProjectDialog = (props: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger>
+      <DialogTrigger asChild>
         <Button className="px-2">New project</Button>
       </DialogTrigger>
       <DialogContent className="">

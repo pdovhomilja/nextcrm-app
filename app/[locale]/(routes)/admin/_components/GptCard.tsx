@@ -20,15 +20,13 @@ const GptCard = async () => {
       <CardHeader className="text-lg">
         <CardTitle>AI assistant GPT model</CardTitle>
         <CardDescription>
-          <div>
-            actual model:{" "}
-            {
-              //filter in gptModels where status = ACTIVE
-              gptModels
-                .filter((model) => model.status === "ACTIVE")
-                .map((model) => model.model)
-            }
-          </div>
+          actual model:{" "}
+          {
+            //filter in gptModels where status = ACTIVE
+            gptModels
+              .filter((model) => model.status === "ACTIVE")
+              .map((model) => model.model)
+          }
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">

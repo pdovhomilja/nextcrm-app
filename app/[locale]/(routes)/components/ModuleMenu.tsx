@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
-import MenuItem from "./ui/MenuItem";
+import React, { useEffect, useState } from "react";
 
 import ProjectModuleMenu from "./menu-items/Projects";
 import SecondBrainModuleMenu from "./menu-items/SecondBrain";
@@ -13,12 +12,24 @@ import EmployeesModuleMenu from "./menu-items/Employees";
 import DataboxModuleMenu from "./menu-items/Databoxes";
 import CrmModuleMenu from "./menu-items/Crm";
 
+import AdministrationMenu from "./menu-items/Administration";
+import DashboardMenu from "./menu-items/Dashboard";
+
 type Props = {
   modules: any;
 };
 
 const ModuleMenu = ({ modules }: Props) => {
   const [open, setOpen] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return null;
+  }
 
   //Console logs
   //console.log(modules, "modules");
@@ -28,7 +39,7 @@ const ModuleMenu = ({ modules }: Props) => {
       <div
         className={` ${
           open ? "w-72" : "w-20 "
-        } bg-dark-purple h-screen p-5  pt-8 relative duration-300`}
+        }  h-screen p-5  pt-8 relative duration-300`}
       >
         <div className="flex gap-x-4 items-center">
           <div
@@ -48,13 +59,8 @@ const ModuleMenu = ({ modules }: Props) => {
             {process.env.NEXT_PUBLIC_APP_NAME}
           </h1>
         </div>
-        <ul className="pt-6">
-          <MenuItem
-            icon="home"
-            open={open}
-            route={"/"}
-            menuItem={"Dashboard"}
-          />
+        <div className="pt-6">
+          <DashboardMenu open={open} />
           {modules.find(
             (menuItem: any) => menuItem.name === "crm" && menuItem.enabled
           ) ? (
@@ -101,32 +107,8 @@ const ModuleMenu = ({ modules }: Props) => {
           ) ? (
             <ChatGPTModuleMenu open={open} />
           ) : null}
-
-          {/*  {modules.map((menuItem: any) => {
-            if (menuItem.enabled === true) {
-              return (
-                <MenuItem
-                  key={menuItem.id}
-                  icon={menuItem.icon}
-                  open={open}
-                  route={menuItem.route}
-                  menuItem={menuItem.menuItem}
-                />
-              );
-            } else {
-              return null;
-            }
-          })} */}
-          <li>
-            {/* Admin menu item is allways enabled */}
-            <MenuItem
-              icon="wrenchScrewdriver"
-              open={open}
-              route={"/admin"}
-              menuItem={"Administrace"}
-            />
-          </li>
-        </ul>
+          <AdministrationMenu open={open} />
+        </div>
       </div>
     </div>
   );

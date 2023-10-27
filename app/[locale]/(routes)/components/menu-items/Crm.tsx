@@ -6,7 +6,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Coins, UserIcon } from "lucide-react";
+import { Coins } from "lucide-react";
 
 import { useRouter } from "next/navigation";
 import React, { startTransition } from "react";
@@ -33,8 +33,14 @@ const CrmModuleMenu = ({ open }: Props) => {
     });
   }
 
+  const isPath = pathname.includes("crm");
+
   return (
-    <div className="flex flex-row items-center mx-auto p-2">
+    <div
+      className={`flex flex-row items-center mx-auto p-2 ${
+        isPath ? "text-muted-foreground" : null
+      }`}
+    >
       <DropdownMenu>
         <DropdownMenuTrigger
           className={
