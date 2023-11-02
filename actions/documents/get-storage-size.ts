@@ -4,7 +4,7 @@ export const getStorageSize = async () => {
   const data = await prismadb.documents.findMany({});
 
   //TODO: fix this any
-  const storageSize = data.reduce((acc, doc: any) => {
+  const storageSize = data.reduce((acc: number, doc: any) => {
     return acc + doc?.size;
   }, 0);
 
