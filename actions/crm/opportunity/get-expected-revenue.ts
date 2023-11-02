@@ -1,5 +1,4 @@
 import { prismadb } from "@/lib/prisma";
-import { crm_Opportunities } from "@prisma/client";
 
 export const getExpectedRevenue = async () => {
   const activeOpportunities = await prismadb.crm_Opportunities.findMany({
@@ -9,8 +8,7 @@ export const getExpectedRevenue = async () => {
   });
 
   const totalAmount = activeOpportunities.reduce(
-    (sum: number, opportunity: crm_Opportunities) =>
-      sum + Number(opportunity.budget),
+    (sum: number, opportunity: any) => sum + Number(opportunity.budget),
     0
   );
 
