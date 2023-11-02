@@ -8,7 +8,7 @@ export const getExpectedRevenue = async () => {
   });
 
   const totalAmount = activeOpportunities.reduce(
-    (sum, opportunity) => sum + Number(opportunity.budget),
+    (sum: number, opportunity) => sum + Number(opportunity.budget),
     0
   );
 
