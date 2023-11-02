@@ -156,7 +156,7 @@ const CRMKanban = ({
                 <Card
                   {...provided.droppableProps}
                   ref={provided.innerRef}
-                  className="mx-1 w-full min-w-[300px] overflow-hidden"
+                  className="mx-1 w-full min-w-[300px] overflow-hidden pb-10"
                 >
                   <CardTitle className="flex gap-2 p-3 justify-between">
                     <span className="text-sm font-bold">{stage.name}</span>
