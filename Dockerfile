@@ -2,7 +2,9 @@ FROM node:20.9.0-alpine AS deps
 
 WORKDIR /app
 COPY package*.json ./
-RUN npm install 
+RUN npm install
+# Copy .env and .env.local before the build stage
+COPY .env .env.local ./
 
 FROM node:20.9.0-alpine AS BUILD_IMAGE
 
@@ -10,10 +12,10 @@ WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm run build
+RUN  npx prisma generate && npx prisma db push && npm run build
 
 RUN rm -rf node_modules
-RUN npm install 
+RUN npm install
 
 FROM node:20.9.0-alpine
 
@@ -28,9 +30,6 @@ COPY --from=BUILD_IMAGE --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=BUILD_IMAGE --chown=nextjs:nodejs /app/public ./public
 COPY --from=BUILD_IMAGE --chown=nextjs:nodejs /app/.next ./.next
 
-# Copy .env and .env.local to the final image
-COPY --from=deps --chown=nextjs:nodejs /app/.env ./.env
-COPY --from=deps --chown=nextjs:nodejs /app/.env.local ./.env.local
 
 USER nextjs
 
