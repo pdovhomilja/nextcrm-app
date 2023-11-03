@@ -83,7 +83,7 @@ export const getNotions = async (): Promise<any[] | null> => {
       });
 
     const notionItems = databases.map(
-      (item) =>
+      (item:any) =>
         ({
           id: item.id,
           createdAt: moment(item.created_time).format("YYYY-MM-DD"),

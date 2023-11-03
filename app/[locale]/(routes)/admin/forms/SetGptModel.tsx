@@ -25,10 +25,16 @@ import {
 import { toast } from "@/components/ui/use-toast";
 import updateModel from "@/actions/admin/update-gpt-model";
 import { useRouter } from "next/navigation";
+import { gpt_models } from "@prisma/client";
 
 const FormSchema = z.object({
   model: z.string().min(10).max(30),
 });
+
+type Model = {
+  id: string;
+  model: string;
+};
 
 const SetGptModel = ({ models }: any) => {
   const router = useRouter();
@@ -70,7 +76,7 @@ const SetGptModel = ({ models }: any) => {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {models.map((model: any) => (
+                  {models.map((model: Model) => (
                     <SelectItem key={model.id} value={model.id}>
                       {model.model}
                     </SelectItem>

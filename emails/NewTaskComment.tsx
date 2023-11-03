@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Body,
   Button,
@@ -77,8 +79,6 @@ export const NewTaskCommentEmail = ({
             </Text>
             <Section className="text-center mt-[32px] mb-[32px]">
               <Button
-                pX={20}
-                pY={12}
                 className="bg-black text-[#ffffff] rounded text-[12px] font-semibold no-underline text-center"
                 href={`${process.env.NEXT_PUBLIC_APP_URL}/projects/tasks/viewtask/${taskId}`}
               >

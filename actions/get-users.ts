@@ -43,7 +43,7 @@ export const getUsersByMonth = async () => {
     return acc;
   }, {});
 
-  const chartData = Object.keys(usersByMonth).map((month) => {
+  const chartData = Object.keys(usersByMonth).map((month: any) => {
     return {
       name: month,
       Number: usersByMonth[month],

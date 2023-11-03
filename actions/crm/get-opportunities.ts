@@ -37,7 +37,7 @@ export const getOpportunitiesByMonth = async () => {
     {}
   );
 
-  const chartData = Object.keys(opportunitiesByMonth).map((month) => {
+  const chartData = Object.keys(opportunitiesByMonth).map((month: any) => {
     return {
       name: month,
       Number: opportunitiesByMonth[month],
@@ -73,7 +73,7 @@ export const getOpportunitiesByStage = async () => {
     {}
   );
 
-  const chartData = Object.keys(opportunitiesByStage).map((stage) => {
+  const chartData = Object.keys(opportunitiesByStage).map((stage: any) => {
     return {
       name: stage,
       Number: opportunitiesByStage[stage],

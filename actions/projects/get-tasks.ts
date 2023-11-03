@@ -35,7 +35,7 @@ export const getTasks = async () => {
   //Filtering tasks by section and board
   const sections = await prismadb.sections.findMany({
     where: {
-      OR: boards.map((board:any) => {
+      OR: boards.map((board: any) => {
         return {
           board: board.id,
         };
@@ -45,7 +45,7 @@ export const getTasks = async () => {
 
   const data = await prismadb.tasks.findMany({
     where: {
-      OR: sections.map((section:any) => {
+      OR: sections.map((section: any) => {
         return {
           section: section.id,
         };
@@ -84,7 +84,7 @@ export const getTasksByMonth = async () => {
     return acc;
   }, {});
 
-  const chartData = Object.keys(tasksByMonth).map((month) => {
+  const chartData = Object.keys(tasksByMonth).map((month: any) => {
     return {
       name: month,
       Number: tasksByMonth[month],

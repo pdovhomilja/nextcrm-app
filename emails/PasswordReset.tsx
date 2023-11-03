@@ -1,8 +1,7 @@
+"use client";
 import {
   Body,
-  Button,
   Container,
-  Column,
   Head,
   Heading,
   Hr,
@@ -10,7 +9,6 @@ import {
   Img,
   Link,
   Preview,
-  Row,
   Section,
   Tailwind,
   Text,

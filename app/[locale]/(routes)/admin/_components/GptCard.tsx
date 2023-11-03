@@ -10,9 +10,10 @@ import { prismadb } from "@/lib/prisma";
 import SetGptModel from "../forms/SetGptModel";
 
 import OnTestButton from "./OnTestButton";
+import { gpt_models } from "@prisma/client";
 
 const GptCard = async () => {
-  const gptModels = await prismadb.gpt_models.findMany();
+  const gptModels: gpt_models[] = await prismadb.gpt_models.findMany();
   //console.log(gptModels, "gptModels");
 
   return (
@@ -24,8 +25,8 @@ const GptCard = async () => {
           {
             //filter in gptModels where status = ACTIVE
             gptModels
-              .filter((model) => model.status === "ACTIVE")
-              .map((model) => model.model)
+              .filter((model: gpt_models) => model.status === "ACTIVE")
+              .map((model: gpt_models) => model.model)
           }
         </CardDescription>
       </CardHeader>

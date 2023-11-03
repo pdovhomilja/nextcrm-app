@@ -1,10 +1,10 @@
-FROM node:18-alpine AS deps
+FROM node:20.9.0-alpine AS deps
 
 WORKDIR /app
 COPY package*.json ./
 RUN npm install 
 
-FROM node:18-alpine AS BUILD_IMAGE
+FROM node:20.9.0-alpine AS BUILD_IMAGE
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ RUN npm run build
 RUN rm -rf node_modules
 RUN npm install 
 
-FROM node:18-alpine
+FROM node:20.9.0-alpine
 
 ENV NODE_ENV production
 
@@ -27,7 +27,10 @@ COPY --from=BUILD_IMAGE --chown=nextjs:nodejs /app/package.json /app/package-loc
 COPY --from=BUILD_IMAGE --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=BUILD_IMAGE --chown=nextjs:nodejs /app/public ./public
 COPY --from=BUILD_IMAGE --chown=nextjs:nodejs /app/.next ./.next
-COPY --from=BUILD_IMAGE --chown=nextjs:nodejs /app/.env.local ./.env.local
+
+# Copy .env and .env.local to the final image
+COPY --from=deps --chown=nextjs:nodejs /app/.env ./.env
+COPY --from=deps --chown=nextjs:nodejs /app/.env.local ./.env.local
 
 USER nextjs
 

@@ -1,3 +1,4 @@
+"use client";
 import {
   Body,
   Button,
@@ -84,8 +85,6 @@ export const InviteUserEmail = ({
 
             <Section className="text-center mt-[32px] mb-[32px]">
               <Button
-                pX={20}
-                pY={12}
                 className="bg-[#000000] rounded text-white text-[12px] font-semibold no-underline text-center"
                 href={process.env.NEXT_PUBLIC_APP_URL}
               >

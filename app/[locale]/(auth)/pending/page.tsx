@@ -5,9 +5,10 @@ import { getServerSession } from "next-auth";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import TryAgain from "./components/TryAgain";
+import { Users } from "@prisma/client";
 
 const PendingPage = async () => {
-  const adminUsers = await prismadb.users.findMany({
+  const adminUsers: Users[] = await prismadb.users.findMany({
     where: {
       is_admin: true,
       userStatus: "ACTIVE",
@@ -39,7 +40,7 @@ const PendingPage = async () => {
       <div className="flex flex-col justify-center ">
         <h2 className="flex justify-center text-xl">Admin List</h2>
         {adminUsers &&
-          adminUsers?.map((user) => (
+          adminUsers?.map((user: Users) => (
             <div
               key={user.id}
               className="flex flex-col p-5 m-2 gap-3 border rounded-md"
