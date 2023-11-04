@@ -16,10 +16,10 @@ Next.js - React framework </br> shadcn - UI </br> Prisma ORM - together with mon
 
 1. More AI powered - daily summary of tasks and project (OpenAI integration ) - in test
 2. Email campaigns management - integration with MailChimp and Listmonk - in planning
-   ~~3. Docker version - in planning (There will be complete bundle to run NextCRM on-premise)~~
-3. Testing - Jest + Cypress (if anyone want to help I will be very happy) - in planning
-4. Fix all Types issue ( nom more "any" ) - in progress
-5. i18n - localization - in planning (if anyone want to help I will be very happy)
+3. ~~Docker version - in planning (There will be complete bundle to run NextCRM on-premise)~~
+4. Testing - Jest + Cypress (if anyone want to help I will be very happy) - in planning
+5. Fix all Types issue ( nom more "any" ) - in progress
+6. i18n - localization - in planning (if anyone want to help I will be very happy)
 
 ## Emails
 
@@ -83,6 +83,8 @@ Will be soon at domain: http://docs.nextcrm.io
 </details>
 
 ## Docker installation
+
+[Link to Docker HUB](https://hub.docker.com/repository/docker/nextcrmio/nextcrm/general).
 
 <details><summary><b>Show instructions</b></summary>
 
