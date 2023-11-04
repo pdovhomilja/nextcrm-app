@@ -4,7 +4,7 @@ services:
     image: nextcrmio/nextcrm:0.0.3-beta
     container_name: nexcrm
     ports:
-      - "3001:3000"
+      - "3000:3000"
     volumes:
       - .env:/app/.env
       - .env.local:/app/.env.local

@@ -16,10 +16,10 @@ Next.js - React framework </br> shadcn - UI </br> Prisma ORM - together with mon
 
 1. More AI powered - daily summary of tasks and project (OpenAI integration ) - in test
 2. Email campaigns management - integration with MailChimp and Listmonk - in planning
-3. Docker version - in planning (There will be complete bundle to run NextCRM on-premise)
-4. Testing - Jest + Cypress (if anyone want to help I will be very happy) - in planning
-5. Fix all Types issue ( nom more "any" ) - in progress
-6. i18n - localization - in planning (if anyone want to help I will be very happy)
+   ~~3. Docker version - in planning (There will be complete bundle to run NextCRM on-premise)~~
+3. Testing - Jest + Cypress (if anyone want to help I will be very happy) - in planning
+4. Fix all Types issue ( nom more "any" ) - in progress
+5. i18n - localization - in planning (if anyone want to help I will be very happy)
 
 ## Emails
 
@@ -80,6 +80,36 @@ Will be soon at domain: http://docs.nextcrm.io
 
 3. Import initial data from initial-data folder
 
+</details>
+
+## Docker installation
+
+<details><summary><b>Show instructions</b></summary>
+
+1. MongoDB URI string for Prisma ORM:
+
+2. Install the preset:
+
+   ```create
+   .env (for Prisma URI string) and .env.local (all others ENVs) file inside docker folder
+   ```
+
+3. run docker-compose
+
+   ```sh
+   docker-compose up -d
+   ```
+
+4. Init Prisma
+
+   ```sh
+    docker-compose exec nextcrm npx prisma generate
+    docker-compose exec nextcrm npx prisma db push
+   ```
+
+5. Import initial data from initial-data folder
+
+6. http://localhost:3000
 </details>
 
 ## Contact
