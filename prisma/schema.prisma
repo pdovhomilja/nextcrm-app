@@ -46,7 +46,7 @@ model crm_Accounts {
   documentsIDs         String[]             @db.ObjectId
   assigned_documents   Documents[]          @relation(fields: [documentsIDs], references: [id])
   contacts             crm_Contacts[]
-  leads                crm_Leads[] 
+  leads                crm_Leads[]
   industry_type        crm_Industry_Type?   @relation(fields: [industry], references: [id])
   opportunities        crm_Opportunities[]
   assigned_to_user     Users?               @relation(fields: [assigned_to], references: [id])
@@ -56,8 +56,8 @@ model crm_Accounts {
 }
 
 model crm_Leads {
-  id                 String        @id @default(auto()) @map("_id") @db.ObjectId
-  v                  Int           @default(0) @map("__v")
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  v  Int    @default(0) @map("__v")
 
   createdAt          DateTime?     @default(now()) @db.Date
   createdBy          String?       @db.ObjectId
@@ -113,7 +113,7 @@ model crm_Opportunities {
   last_activity_by     String?                         @db.ObjectId
   currency             String?
   description          String?
-  expected_revenue     Int                            @default(0)
+  expected_revenue     Int                             @default(0)
   name                 String?
   next_step            String?
   sales_stage          String?                         @db.ObjectId
@@ -124,7 +124,7 @@ model crm_Opportunities {
   assigned_to_user     Users?                          @relation(name: "assigned_to_user_relation", fields: [assigned_to], references: [id])
   created_by_user      Users?                          @relation(name: "created_by_user_relation", fields: [created_by], references: [id])
   assigned_account     crm_Accounts?                   @relation(fields: [account], references: [id])
-  assigned_campaings   crm_campaigns?                   @relation(fields: [campaign], references: [id])
+  assigned_campaings   crm_campaigns?                  @relation(fields: [campaign], references: [id])
   connected_documents  String[]                        @db.ObjectId
   documents            Documents[]                     @relation(fields: [connected_documents], references: [id])
   connected_contacts   String[]                        @db.ObjectId
@@ -535,7 +535,7 @@ model Users {
   email                String                @unique
   is_account_admin     Boolean               @default(false)
   is_admin             Boolean               @default(false)
-  created_on           DateTime             @default(now()) @db.Date
+  created_on           DateTime              @default(now()) @db.Date
   name                 String?
   password             String?
   username             String?
@@ -553,6 +553,7 @@ model Users {
   assigned_contacts    crm_Contacts[]        @relation(name: "assigned_contacts")
   crated_contacts      crm_Contacts[]        @relation(name: "created_contacts")
   notion_account       secondBrain_notions[]
+  openAi_key           openAi_keys[]
   assigned_invoices    Invoices[]
   boards               Boards[]              @relation(name: "assigned_user")
   watching_boardsIDs   String[]              @db.ObjectId
@@ -585,6 +586,15 @@ model secondBrain_notions {
   notion_api_key String
   notion_db_id   String
   assigned_user  Users? @relation(fields: [user], references: [id])
+}
+
+model openAi_keys {
+  id              String @id @default(auto()) @map("_id") @db.ObjectId
+  v               Int    @map("__v")
+  user            String @db.ObjectId
+  organization_id String
+  api_key         String
+  assigned_user   Users? @relation(fields: [user], references: [id])
 }
 
 model gpt_models {

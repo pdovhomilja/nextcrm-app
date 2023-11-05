@@ -7,6 +7,7 @@ import { PasswordChangeForm } from "./components/PasswordChange";
 import { ProfilePhotoForm } from "./components/ProfilePhotoForm";
 
 import H4Title from "@/components/typography/h4";
+import { OpenAiForm } from "./components/OpenAiForm";
 
 const ProfilePage = async () => {
   const data = await getUser();
@@ -35,6 +36,9 @@ const ProfilePage = async () => {
 
         <H4Title>Notion Integration</H4Title>
         <NotionForm userId={data.id} />
+
+        <H4Title>OpenAI Integration</H4Title>
+        <OpenAiForm userId={data.id} />
       </div>
     </Container>
   );
