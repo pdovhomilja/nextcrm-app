@@ -6,15 +6,17 @@ import { generateRandomPassword } from "@/lib/utils";
 
 import { hash } from "bcryptjs";
 
-import { Resend } from "resend";
 import InviteUserEmail from "@/emails/InviteUser";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import resendHelper from "@/lib/resend";
 
 export async function POST(
   req: Request,
   { params }: { params: { userId: string } }
 ) {
+  /*
+  Resend.com function init - this is a helper function that will be used to send emails
+  */
+  const resend = await resendHelper();
   const session = await getServerSession(authOptions);
 
   if (!session) {

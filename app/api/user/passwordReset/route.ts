@@ -5,11 +5,13 @@ import { generateRandomPassword } from "@/lib/utils";
 
 import { hash } from "bcryptjs";
 import PasswordResetEmail from "@/emails/PasswordReset";
-import { Resend } from "resend";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import resendHelper from "@/lib/resend";
 
 export async function POST(req: Request) {
+  /*
+  Resend.com function init - this is a helper function that will be used to send emails
+  */
+  const resend = await resendHelper();
   try {
     const body = await req.json();
     const { email } = body;

@@ -2,15 +2,18 @@ import { NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { Resend } from "resend";
-import NewTaskCommentEmail from "@/emails/NewTaskComment";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+import NewTaskCommentEmail from "@/emails/NewTaskComment";
+import resendHelper from "@/lib/resend";
 
 export async function POST(
   req: Request,
   { params }: { params: { taskId: string } }
 ) {
+  /*
+  Resend.com function init - this is a helper function that will be used to send emails
+  */
+  const resend = await resendHelper();
   const session = await getServerSession(authOptions);
   const body = await req.json();
   const { comment } = body;

@@ -2,17 +2,20 @@ import { NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { Resend } from "resend";
+
 import NewTaskFromCRMEmail from "@/emails/NewTaskFromCRM";
 import NewTaskFromProject from "@/emails/NewTaskFromProject";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import resendHelper from "@/lib/resend";
 
 //Create new task in project route
 /*
 TODO: there is second route for creating task in board, but it is the same as this one. Consider merging them (/api/projects/tasks/create-task/[boardId]). 
 */
 export async function POST(req: Request) {
+  /*
+  Resend.com function init - this is a helper function that will be used to send emails
+  */
+  const resend = await resendHelper();
   const session = await getServerSession(authOptions);
   const body = await req.json();
   const {

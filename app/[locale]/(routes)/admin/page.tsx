@@ -5,6 +5,7 @@ import { getUser } from "@/actions/get-user";
 import { Button } from "@/components/ui/button";
 import Container from "../components/ui/Container";
 import GptCard from "./_components/GptCard";
+import ResendCard from "./_components/ResendCard";
 
 const AdminPage = async () => {
   const user = await getUser();
@@ -35,8 +36,9 @@ const AdminPage = async () => {
           <Link href="/admin/modules">Modules administration</Link>
         </Button>
       </div>
-      <div>
+      <div className="flex flex-col-1 gap-2">
         <GptCard />
+        <ResendCard />
       </div>
     </Container>
   );

@@ -597,6 +597,18 @@ model openAi_keys {
   assigned_user   Users? @relation(fields: [user], references: [id])
 }
 
+model systemServices {
+  id              String  @id @default(auto()) @map("_id") @db.ObjectId
+  v               Int     @map("__v")
+  name            String
+  serviceUrl      String?
+  serviceId       String?
+  serviceKey      String?
+  servicePassword String?
+  servicePort     String?
+  description     String?
+}
+
 model gpt_models {
   id          String     @id @default(auto()) @map("_id") @db.ObjectId
   v           Int        @map("__v")

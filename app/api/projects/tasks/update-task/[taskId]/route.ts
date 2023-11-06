@@ -2,10 +2,9 @@ import { NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { Resend } from "resend";
-import NewTaskFromProject from "@/emails/NewTaskFromProject";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+import NewTaskFromProject from "@/emails/NewTaskFromProject";
+import resendHelper from "@/lib/resend";
 
 //Create new task in project route
 /*
@@ -15,6 +14,10 @@ export async function PUT(
   req: Request,
   { params }: { params: { taskId: string } }
 ) {
+  /*
+  Resend.com function init - this is a helper function that will be used to send emails
+  */
+  const resend = await resendHelper();
   const session = await getServerSession(authOptions);
   const body = await req.json();
   const { title, user, board, priority, content, notionUrl, dueDateAt } = body;
