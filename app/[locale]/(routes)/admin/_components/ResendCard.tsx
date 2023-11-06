@@ -63,14 +63,21 @@ const ResendCard = async () => {
         <CardTitle>Resend.com - API Key</CardTitle>
         <CardDescription>
           {/*  Here will be actual settings */}
-          API key: {resend_key ? resend_key?.serviceKey : "Not set"}
+          <p>ENV API key:</p>
+          <p>
+            {process.env.RESEND_API_KEY === undefined
+              ? "not enabled"
+              : process.env.RESEND_API_KEY}
+          </p>
+          <p>API key from DB:</p>
+          <p>{resend_key ? resend_key?.serviceKey : "Not set"}</p>
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
         <form action={setSMTP}>
           <div>
             <input type="hidden" name="id" value={resend_key?.id} />
-            <Input type="text" name="serviceKey" placeholder="SMTP host" />
+            <Input type="text" name="serviceKey" placeholder="Your API key" />
           </div>
           <div className="flex justify-end pt-2">
             <Button type="submit">Set Resend key</Button>
