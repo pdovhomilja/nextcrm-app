@@ -41,7 +41,7 @@ jobs:
           echo NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }} >> .env.local
           echo NEXT_PUBLIC_APP_NAME: ${{ secrets.NEXT_PUBLIC_APP_NAME }} >> .env.local
           echo NEXT_PUBLIC_APP_V: ${{ secrets.NEXT_PUBLIC_APP_V }} >> .env.local
-          echo  NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }} >> .env.local
+          echo NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }} >> .env.local
 
       - name: Build and push Docker image
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
