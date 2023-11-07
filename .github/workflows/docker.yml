@@ -26,7 +26,7 @@ jobs:
 
       - name: Use secrets
         run: |
-          echo DATABASE_URL: ${{ secrets.DATABASE_URL }} >> .env.local
+          echo DATABASE_URL: ${{ secrets.DATABASE_URL }} >> .env
           echo GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} >> .env.local
           echo GOOGLE_ID: ${{ secrets.GOOGLE_ID }} >> .env.local
           echo GOOGLE_SECRET: ${{ secrets.GOOGLE_SECRET }} >> .env.local
