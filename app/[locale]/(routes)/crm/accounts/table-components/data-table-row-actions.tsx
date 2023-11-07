@@ -54,7 +54,7 @@ export function DataTableRowActions<TData>({
   const onDelete = async () => {
     setLoading(true);
     try {
-      await axios.delete(`/api/crm/accounts/${account?.id}`);
+      await axios.delete(`/api/crm/account/${account.id}`);
       toast({
         title: "Success",
         description: "Opportunity has been deleted",
