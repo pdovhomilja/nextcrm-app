@@ -14,6 +14,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 COPY .env /app/.env
 COPY .env.local /app/.env.local
+ENV GOOGLE_ID: "GOOGLE_ID"
+ENV GOOGLE_SECRET: "Just_for_build"
 RUN  npx prisma generate && npm run build
 
 RUN rm -fr /app/.env
