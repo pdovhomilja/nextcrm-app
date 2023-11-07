@@ -12,8 +12,8 @@ WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-COPY .env .env
-COPY .env.local .env.local
+COPY .env ./.env
+COPY .env.local ./.env.local
 #RUN echo GOOGLE_ID: "Just_for_build" >> /.env.local
 #RUN echo GOOGLE_SECRET: "Just_for_build" >> /.env.local
 RUN  npx prisma generate && npm run build
