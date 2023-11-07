@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 # Copy .env and .env.local before the build stage
-# COPY .env .env.local ./
+COPY .env .env.local ./
 
 FROM node:20.9.0-alpine AS BUILD_IMAGE
 
@@ -12,10 +12,7 @@ WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-COPY .env ./.env
-COPY .env.local ./.env.local
-#RUN echo GOOGLE_ID: "Just_for_build" >> /.env.local
-#RUN echo GOOGLE_SECRET: "Just_for_build" >> /.env.local
+
 RUN  npx prisma generate && npm run build
 
 RUN rm -fr .env
