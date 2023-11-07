@@ -26,7 +26,23 @@ jobs:
 
       - name: Use secrets
         run: |
-          echo DATABASE_URL: ${{ secrets.DATABASE_URL }} >> .env
+          echo DATABASE_URL: ${{ secrets.DATABASE_URL }} >> .env.local
+          echo GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} >> .env.local
+          echo GOOGLE_ID: ${{ secrets.GOOGLE_ID }} >> .env.local
+          echo GOOGLE_SECRET: ${{ secrets.GOOGLE_SECRET }} >> .env.local
+          echo RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }} >> .env.local
+          echo DO_ENDPOINT: ${{ secrets.DO_ENDPOINT }} >> .env.local 
+          echo DO_REGION: ${{ secrets.DO_REGION }} >> .env.local
+          echo DO_ACCESS_KEY_ID: ${{ secrets.DO_ACCESS_KEY_ID }} >> .env.local
+          echo DO_ACCESS_KEY_SECRET: ${{ secrets.DO_ACCESS_KEY_SECRET }} >> .env.local
+          echo DATABASE_URL: ${{ secrets.DATABASE_URL }} >> .env.local
+          echo JWT_SECRET: ${{ secrets.JWT_SECRET }} >> .env.local
+          echo NEXTCRM_TOKEN: ${{ secrets.NEXTCRM_TOKEN }} >> .env.local
+          echo OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }} >> .env.local
+          echo NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }} >> .env.local
+          echo NEXT_PUBLIC_APP_NAME: ${{ secrets.NEXT_PUBLIC_APP_NAME }} >> .env.local
+          echo NEXT_PUBLIC_APP_V: ${{ secrets.NEXT_PUBLIC_APP_V }} >> .env.local
+          echo NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }} >> .env.local
 
       - name: Build and push Docker image
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc

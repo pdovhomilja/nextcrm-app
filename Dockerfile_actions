@@ -13,8 +13,11 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 COPY .env /app/.env
-RUN  npx prisma generate && npx prisma db push && npm run build
+COPY .env.local /app/.env.local
+RUN  npx prisma generate && npm run build
 
+RUN rm -fr /app/.env
+RUN rm -fr /app/.env.local
 RUN rm -rf node_modules
 RUN npm install
 
