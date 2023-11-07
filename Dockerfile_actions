@@ -12,7 +12,7 @@ WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-ENV DATABASE_URL: ${{ secrets.DATABASE_URL }}
+COPY .env /app/.env
 RUN  npx prisma generate && npx prisma db push && npm run build
 
 RUN rm -rf node_modules
