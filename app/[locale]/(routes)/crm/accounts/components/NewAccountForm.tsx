@@ -1,24 +1,18 @@
 "use client";
 
-import React, { useCallback } from "react";
-import { z, ZodType } from "zod";
-import { signIn } from "next-auth/react";
-import Link from "next/link";
+import { z } from "zod";
+import axios from "axios";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-//import { toast } from "react-hot-toast";
+
 import { useToast } from "@/components/ui/use-toast";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 
-import { Button } from "@/components/ui/button";
-
-import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -31,34 +25,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ScrollDownButton } from "@radix-ui/react-select";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { CaretSortIcon } from "@radix-ui/react-icons";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
-import { CheckIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 type Props = {
   industries: any[];
   users: any[];
+  onFinish: () => void;
 };
 
-export function NewAccountForm({ industries, users }: Props) {
+export function NewAccountForm({ industries, users, onFinish }: Props) {
   const router = useRouter();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = React.useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const formSchema = z.object({
     name: z.string().min(3).max(50),
@@ -66,10 +46,10 @@ export function NewAccountForm({ industries, users }: Props) {
     website: z.string().optional(),
     fax: z.string().optional(),
     company_id: z.string().min(5).max(10),
-    vat: z.string().min(0).max(10).optional(),
+    vat: z.string().max(20).optional(),
     email: z.string().email(),
     billing_street: z.string().min(3).max(50),
-    billing_postal_code: z.string().min(5).max(6),
+    billing_postal_code: z.string().min(2).max(10),
     billing_city: z.string().min(3).max(50),
     billing_state: z.string().min(3).max(50).optional(),
     billing_country: z.string().min(3).max(50),
@@ -96,45 +76,22 @@ export function NewAccountForm({ industries, users }: Props) {
     //console.log(data);
     setIsLoading(true);
     try {
-      const response = await axios.post("/api/crm/account", data);
+      await axios.post("/api/crm/account", data);
       toast({
         title: "Success",
         description: "Account created successfully",
       });
-    } catch (error: any) {
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error?.response?.data,
+        description: "Something went wrong. Please try again.",
       });
     } finally {
+      form.reset();
       router.refresh();
+      onFinish();
       setIsLoading(false);
-      form.reset({
-        name: "",
-        office_phone: "",
-        website: "",
-        fax: "",
-        company_id: "",
-        vat: "",
-        email: "",
-        billing_street: "",
-        billing_postal_code: "",
-        billing_city: "",
-        billing_state: "",
-        billing_country: "",
-        shipping_street: "",
-        shipping_postal_code: "",
-        shipping_city: "",
-        shipping_state: "",
-        shipping_country: "",
-        description: "",
-        assigned_to: "",
-        status: "",
-        annual_revenue: "",
-        member_of: "",
-        industry: "",
-      });
     }
   };
 

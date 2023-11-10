@@ -10,16 +10,23 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import RightViewModal from "@/components/modals/right-view-modal";
 
 import { columns } from "../accounts/table-components/columns";
 import { NewAccountForm } from "../accounts/components/NewAccountForm";
 import { AccountDataTable } from "../accounts/table-components/data-table";
 import { useRouter } from "next/navigation";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
 const AccountsView = ({ data, crmData }: any) => {
   const router = useRouter();
 
+  const [open, setOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -46,13 +53,26 @@ const AccountsView = ({ data, crmData }: any) => {
             <CardDescription></CardDescription>
           </div>
           <div className="flex space-x-2">
-            <RightViewModal
-              label={"+"}
-              title="Create new Account"
-              description=""
-            >
-              <NewAccountForm industries={industries} users={users} />
-            </RightViewModal>
+            <Sheet open={open} onOpenChange={() => setOpen(false)}>
+              <Button
+                className="m-2 cursor-pointer"
+                onClick={() => setOpen(true)}
+              >
+                +
+              </Button>
+              <SheetContent className="min-w-[1000px] space-y-2">
+                <SheetHeader>
+                  <SheetTitle>Create new Account</SheetTitle>
+                </SheetHeader>
+                <div className="h-full overflow-y-auto">
+                  <NewAccountForm
+                    industries={industries}
+                    users={users}
+                    onFinish={() => setOpen(false)}
+                  />
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
         <Separator />
