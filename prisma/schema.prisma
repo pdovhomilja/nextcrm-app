@@ -536,6 +536,7 @@ model Users {
   is_account_admin     Boolean               @default(false)
   is_admin             Boolean               @default(false)
   created_on           DateTime              @default(now()) @db.Date
+  lastLoginAt          DateTime?             @db.Date
   name                 String?
   password             String?
   username             String?

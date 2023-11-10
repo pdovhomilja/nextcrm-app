@@ -1,15 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { set, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -27,13 +25,16 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { Icons } from "@/components/ui/icons";
 
 const FormSchema = z.object({
   name: z.string().min(3).max(50),
   email: z.string().email(),
-  language: z.string({
-    required_error: "Please select a user language.",
-  }),
+  language: z
+    .string({
+      required_error: "Please select a user language.",
+    })
+    .min(2),
 });
 
 export function InviteForm() {
@@ -50,7 +51,20 @@ export function InviteForm() {
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setIsLoading(true);
     try {
-      await axios.post("/api/user/inviteuser", data);
+      const response = await axios.post("/api/user/inviteuser", data);
+
+      if (response.data.error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: response.data.error,
+        });
+      } else {
+        toast({
+          title: "Success!",
+          description: "User invited successfully.",
+        });
+      }
     } catch (error) {
       toast({
         variant: "destructive",
@@ -58,19 +72,10 @@ export function InviteForm() {
         description: "Something went wrong while inviting the user.",
       });
     } finally {
-      //TODO: send data to the server
-      toast({
-        title: "You submitted the following values:",
-        description: (
-          <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-            <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-          </pre>
-        ),
-      });
       form.reset({
         name: "",
         email: "",
-        language: "",
+        language: "en",
       });
       router.refresh();
       setIsLoading(false);
@@ -134,8 +139,12 @@ export function InviteForm() {
             </FormItem>
           )}
         />
-        <Button className="w-[150px]" type="submit">
-          Invite user
+        <Button className="w-[150px]" type="submit" disabled={isLoading}>
+          {isLoading ? (
+            <Icons.spinner className="animate-spin" />
+          ) : (
+            "Invite user"
+          )}
         </Button>
       </form>
     </Form>

@@ -2,17 +2,14 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-
-import { statuses, isAdmin } from "../table-data/data";
+import { statuses } from "../table-data/data";
 import { AdminUser } from "../table-data/schema";
 import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
 import moment from "moment";
 
 export const columns: ColumnDef<AdminUser>[] = [
-  {
+  /*   {
     accessorKey: "id",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="id" />
@@ -20,19 +17,32 @@ export const columns: ColumnDef<AdminUser>[] = [
     cell: ({ row }) => <div className="">{row.getValue("id")}</div>,
     enableSorting: false,
     enableHiding: false,
-  },
+  }, */
   {
     accessorKey: "created_on",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Date created" />
     ),
     cell: ({ row }) => (
-      <div className="w-[180px]">
-        {moment(row.getValue("created_on")).format("YY-MM-DD-HH:mm")}
+      <div className="w-[130px]">
+        {moment(row.getValue("created_on")).format("YYYY/MM/DD-HH:mm")}
       </div>
     ),
     enableSorting: true,
     enableHiding: true,
+  },
+  {
+    accessorKey: "lastLoginAt",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Last login" />
+    ),
+    cell: ({ row }) => (
+      <div className="w-[130px]">
+        {moment(row.getValue("lastLoginAt")).format("YYYY/MM/DD-HH:mm")}
+      </div>
+    ),
+    enableSorting: false,
+    enableHiding: false,
   },
   {
     accessorKey: "name",
@@ -55,7 +65,7 @@ export const columns: ColumnDef<AdminUser>[] = [
     enableHiding: true,
   },
   {
-    accessorKey: "isAdmin",
+    accessorKey: "is_admin",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Admin" />
     ),
@@ -82,7 +92,7 @@ export const columns: ColumnDef<AdminUser>[] = [
       }
 
       return (
-        <div className="flex w-[100px] items-center">
+        <div className="flex items-center">
           {status.icon && (
             <status.icon className="mr-2 h-4 w-4 text-muted-foreground" />
           )}

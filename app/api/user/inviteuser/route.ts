@@ -28,9 +28,12 @@ export async function POST(
     const { name, email, language } = body;
 
     if (!name || !email || !language) {
-      return new NextResponse("Name, Email, and Language is required!", {
-        status: 401,
-      });
+      return NextResponse.json(
+        { error: "Name, Email, and Language is required!" },
+        {
+          status: 200,
+        }
+      );
     }
 
     const password = generateRandomPassword();
@@ -59,13 +62,13 @@ export async function POST(
 
     //If user already exists, return error else create user and send email
     if (checkexisting) {
-      return new NextResponse("User already exist, reset password instead!", {
-        status: 401,
-      });
+      return NextResponse.json(
+        { error: "User already exist, reset password instead!" },
+        {
+          status: 200,
+        }
+      );
     } else {
-      //console.log(message, "message");
-
-      //return res.status(201).json({ status: true, password });
       try {
         const user = await prismadb.users.create({
           data: {
@@ -105,7 +108,7 @@ export async function POST(
 
         console.log(data, "data");
 
-        return NextResponse.json(user);
+        return NextResponse.json(user, { status: 200 });
       } catch (err) {
         console.log(err);
       }

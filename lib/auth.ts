@@ -88,6 +88,7 @@ export const authOptions: NextAuthOptions = {
               avatar: token.picture,
               is_admin: false,
               is_account_admin: false,
+              lastLoginAt: new Date(),
               userStatus:
                 process.env.NEXT_PUBLIC_APP_URL === "https://demo.nextcrm.io"
                   ? "ACTIVE"
@@ -106,11 +107,20 @@ export const authOptions: NextAuthOptions = {
           session.user.isAdmin = false;
           session.user.userLanguage = newUser.userLanguage;
           session.user.userStatus = newUser.userStatus;
+          session.user.lastLoginAt = newUser.lastLoginAt;
           return session;
         } catch (error) {
           return console.log(error);
         }
       } else {
+        await prismadb.users.update({
+          where: {
+            id: user.id,
+          },
+          data: {
+            lastLoginAt: new Date(),
+          },
+        });
         //User allready exist in localDB, put user data in session
         session.user.id = user.id;
         session.user.name = user.name;
@@ -120,6 +130,7 @@ export const authOptions: NextAuthOptions = {
         session.user.isAdmin = user.is_admin;
         session.user.userLanguage = user.userLanguage;
         session.user.userStatus = user.userStatus;
+        session.user.lastLoginAt = user.lastLoginAt;
       }
 
       //console.log(session, "session");

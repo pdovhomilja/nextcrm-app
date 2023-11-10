@@ -6,6 +6,7 @@ export const adminUserSchema = z.object({
   //TODO: fix all the types and nullable
   id: z.string(),
   created_on: z.date(),
+  lastLoginAt: z.date().nullable().optional(),
   is_admin: z.boolean(),
   name: z.string().nullable().optional(),
   email: z.string(),
