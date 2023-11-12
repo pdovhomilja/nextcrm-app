@@ -2,9 +2,6 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-
 import { statuses } from "../table-data/data";
 import { Account } from "../table-data/schema";
 import { DataTableColumnHeader } from "./data-table-column-header";
@@ -14,13 +11,13 @@ import Link from "next/link";
 
 export const columns: ColumnDef<Account>[] = [
   {
-    accessorKey: "date_created",
+    accessorKey: "createdAt",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Expected close" />
+      <DataTableColumnHeader column={column} title="Created" />
     ),
     cell: ({ row }) => (
-      <div className="w-[80px]">
-        {moment(row.getValue("date_created")).format("YY-MM-DD")}
+      <div className="">
+        {moment(row.getValue("createdAt")).format("YY/MM/DD-HH:mm")}
       </div>
     ),
     enableSorting: false,
