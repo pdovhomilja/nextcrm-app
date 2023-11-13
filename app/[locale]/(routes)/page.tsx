@@ -18,16 +18,22 @@ import LoadingBox from "./components/dasboard/loading-box";
 import StorageQuota from "./components/dasboard/storage-quota";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+import {
+  getTasksCount,
+  getUsersTasksCount,
+} from "@/actions/dashboard/get-tasks-count";
 import { getModules } from "@/actions/get-modules";
-import { getActiveUsers } from "@/actions/get-users";
-import { getTasks } from "@/actions/projects/get-tasks";
 import { getEmployees } from "@/actions/get-empoloyees";
-import { getBoards } from "@/actions/projects/get-boards";
-import { getAllCrmData } from "@/actions/crm/get-crm-data";
-import { getInvoices } from "@/actions/invoice/get-invoices";
-import { getUserTasks } from "@/actions/projects/get-user-tasks";
-import { getDocuments } from "@/actions/documents/get-documents";
+
+import { getLeadsCount } from "@/actions/dashboard/get-leads-count";
+import { getBoardsCount } from "@/actions/dashboard/get-boards-count";
 import { getStorageSize } from "@/actions/documents/get-storage-size";
+import { getContactCount } from "@/actions/dashboard/get-contacts-count";
+import { getAccountsCount } from "@/actions/dashboard/get-accounts-count";
+import { getInvoicesCount } from "@/actions/dashboard/get-invoices-count";
+import { getDocumentsCount } from "@/actions/dashboard/get-documents-count";
+import { getActiveUsersCount } from "@/actions/dashboard/get-active-users-count";
+import { getOpportunitiesCount } from "@/actions/dashboard/get-opportunities-count";
 import { getExpectedRevenue } from "@/actions/crm/opportunity/get-expected-revenue";
 
 const DashboardPage = async () => {
@@ -36,17 +42,20 @@ const DashboardPage = async () => {
   const userId = session?.user?.id;
 
   //Fetch data for dashboard
-  const tasks = await getTasks();
   const modules = await getModules();
-  const invoices = await getInvoices();
-  const users = await getActiveUsers();
-  const crmData = await getAllCrmData();
-  const documents = await getDocuments();
+  const leads = await getLeadsCount();
+  const tasks = await getTasksCount();
   const employees = await getEmployees();
   const storage = await getStorageSize();
-  const projects = await getBoards(userId);
-  const usersTasks = await getUserTasks(userId);
+  const projects = await getBoardsCount();
+  const contacts = await getContactCount();
+  const users = await getActiveUsersCount();
+  const accounts = await getAccountsCount();
+  const invoices = await getInvoicesCount();
   const revenue = await getExpectedRevenue();
+  const documents = await getDocumentsCount();
+  const opportunities = getOpportunitiesCount();
+  const usersTasks = await getUsersTasksCount(userId);
 
   //Find which modules are enabled
   const crmModule = modules.find((module) => module.name === "crm");
@@ -103,7 +112,7 @@ const DashboardPage = async () => {
               <UserIcon className="w-4 h-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-medium">{users.length}</div>
+              <div className="text-2xl font-medium">{users}</div>
             </CardContent>
           </Card>
         </Link>
@@ -134,9 +143,7 @@ const DashboardPage = async () => {
                     <LandmarkIcon className="w-4 h-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-medium">
-                      {crmData.accounts.length}
-                    </div>
+                    <div className="text-2xl font-medium">{accounts}</div>
                   </CardContent>
                 </Card>
               </Link>
@@ -149,9 +156,7 @@ const DashboardPage = async () => {
                     <FactoryIcon className="w-4 h-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-medium">
-                      {crmData.opportunities.length}
-                    </div>
+                    <div className="text-2xl font-medium">{opportunities}</div>
                   </CardContent>
                 </Card>
               </Link>
@@ -164,9 +169,7 @@ const DashboardPage = async () => {
                     <Contact className="w-4 h-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-medium">
-                      {crmData.contacts.length}
-                    </div>
+                    <div className="text-2xl font-medium">{contacts}</div>
                   </CardContent>
                 </Card>
               </Link>
@@ -177,9 +180,7 @@ const DashboardPage = async () => {
                     <CoinsIcon className="w-4 h-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-medium">
-                      {crmData.leads.length}
-                    </div>
+                    <div className="text-2xl font-medium">{leads}</div>
                   </CardContent>
                 </Card>
               </Link>
@@ -197,7 +198,7 @@ const DashboardPage = async () => {
                   <CoinsIcon className="w-4 h-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-medium">{projects?.length}</div>
+                  <div className="text-2xl font-medium">{projects}</div>
                 </CardContent>
               </Card>
             </Link>
@@ -208,9 +209,7 @@ const DashboardPage = async () => {
                   <CoinsIcon className="w-4 h-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-medium">
-                    {tasks?.length ? tasks.length : 0}
-                  </div>
+                  <div className="text-2xl font-medium">{tasks}</div>
                 </CardContent>
               </Card>
             </Link>
@@ -223,9 +222,7 @@ const DashboardPage = async () => {
                   <CoinsIcon className="w-4 h-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-medium">
-                    {usersTasks.length}
-                  </div>
+                  <div className="text-2xl font-medium">{usersTasks}</div>
                 </CardContent>
               </Card>
             </Link>
@@ -239,7 +236,7 @@ const DashboardPage = async () => {
                 <CoinsIcon className="w-4 h-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-medium">{invoices.length}</div>
+                <div className="text-2xl font-medium">{invoices}</div>
               </CardContent>
             </Card>
           </Link>
@@ -252,7 +249,7 @@ const DashboardPage = async () => {
                 <CoinsIcon className="w-4 h-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-medium">{documents.length}</div>
+                <div className="text-2xl font-medium">{documents}</div>
               </CardContent>
             </Card>
           </Link>
