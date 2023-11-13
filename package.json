@@ -33,7 +33,7 @@
     "@tremor/react": "^3.6.5",
     "@types/react": "18.2.14",
     "@types/react-dom": "18.2.6",
-    "@uploadthing/react": "^5.1.0",
+    "@uploadthing/react": "^5.7.0",
     "ai": "^2.2.12",
     "autoprefixer": "10.4.14",
     "aws-crt": "^1.17.1",
