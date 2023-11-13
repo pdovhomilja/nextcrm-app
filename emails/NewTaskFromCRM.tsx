@@ -71,7 +71,7 @@ export const NewTaskFromCRMEmail = ({
             </Text>
             <Section className="text-center mt-[32px] mb-[32px]">
               <Button
-                className="bg-black text-[#ffffff] rounded text-[12px] font-semibold no-underline text-center"
+                className="bg-slate-800 rounded-md text-white  py-3 px-4 text-[12px] font-semibold no-underline text-center"
                 href={`${process.env.NEXT_PUBLIC_APP_URL}/projects/tasks/viewtask/${taskData.id}`}
               >
                 {userLanguage === "en" ? "View task detail" : "Zobrazit úkol"}
