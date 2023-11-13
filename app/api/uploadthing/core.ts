@@ -64,20 +64,7 @@ export const ourFileRouter = {
       // Whatever is returned here is accessible in onUploadComplete as `metadata`
       return { userId: user.id };
     })
-    .onUploadComplete(async ({ metadata, file }) => {
-      // This code RUNS ON YOUR SERVER after upload
-      console.log("Upload complete for userId:", metadata.userId);
-      console.log("file url", file.url);
-      //TODO: save file.url to database
-      await prismadb.users.update({
-        data: {
-          avatar: file.url,
-        },
-        where: {
-          id: metadata.userId,
-        },
-      });
-    }),
+    .onUploadComplete(async ({ metadata, file }) => {}),
 
   //FileRoute for documents
   pdfUploader: f({ pdf: { maxFileSize: "64MB", maxFileCount: 1 } })

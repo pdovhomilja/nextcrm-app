@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { FileUploaderDropzone } from "@/components/ui/file-uploader-dropzone";
 
 import useAvatarStore from "@/store/useAvatarStore";
+import axios from "axios";
 
 interface ProfileFormProps {
   data: Users;
@@ -25,10 +26,11 @@ export function ProfilePhotoForm({ data }: ProfileFormProps) {
     setAvatar(data.avatar);
   }, [data.avatar, toast]);
 
-  const handleUploadSuccess = (newAvatar: string) => {
+  const handleUploadSuccess = async (newAvatar: string) => {
     try {
       setAvatar(newAvatar);
       setAvatarStore(newAvatar);
+      await axios.put("/api/profile/updateProfilePhoto", { avatar: newAvatar });
       toast({
         title: "Profile photo updated.",
         description: "Your profile photo has been updated.",
@@ -36,6 +38,12 @@ export function ProfilePhotoForm({ data }: ProfileFormProps) {
       });
     } catch (e) {
       console.log(e);
+      toast({
+        variant: "default",
+        title: "Error updating profile photo.",
+        description: "There was an error updating your profile photo.",
+        duration: 5000,
+      });
     } finally {
       router.refresh();
     }
