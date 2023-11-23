@@ -33,8 +33,8 @@ const TaskViewActions = ({
   const [openEdit, setOpenEdit] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  console.log(initialData, "initialData");
-  console.log(openEdit, "openEdit");
+  //console.log(initialData, "initialData");
+  //console.log(openEdit, "openEdit");
 
   //Actions
   const onDone = async () => {
