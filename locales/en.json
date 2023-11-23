@@ -1,7 +1,7 @@
 {
   "RootLayout": {
     "title": "NextCRM",
-    "description": "Welcome to NextCRM CRM with Prisma and Next.js 13"
+    "description": "NextCRM is an open source CRM build on top of NextJS."
   },
   "RegisterComponent": {
     "cardTitle": "Create new account",

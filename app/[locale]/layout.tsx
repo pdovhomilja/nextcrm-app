@@ -3,8 +3,6 @@ import "./globals.css";
 import { Inter } from "next/font/google";
 import { GeistSans, GeistMono } from "geist/font";
 
-import type { Metadata } from "next";
-
 import { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { createTranslator, NextIntlClientProvider } from "next-intl";
@@ -13,11 +11,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/app/providers/ThemeProvider";
 
 const inter = Inter({ subsets: ["latin"] });
-
-export const metadata: Metadata = {
-  title: "NextCRM.io",
-  description: "NextCRM is an open source CRM build on top of NextJS.",
-};
 
 type Props = {
   children: ReactNode;

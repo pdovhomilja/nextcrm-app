@@ -1,7 +1,7 @@
 {
   "RootLayout": {
     "title": "NextCRM",
-    "description": "Vítejte v NextCRM CRM s Prisma a Next.js 13"
+    "description": "NextCRM je open source CRM vytvořené na frameworku NextJS."
   },
   "RegisterComponent": {
     "cardTitle": "Vytvořit nový účet",
