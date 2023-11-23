@@ -33,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SheetTrigger } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
@@ -250,9 +251,6 @@ const UpdateTaskDialog = ({ users, boards, initialData, onDone }: Props) => {
             />
           </div>
           <div className="flex w-full justify-end space-x-2 pt-2">
-            <DialogTrigger asChild>
-              <Button variant={"destructive"}>Close</Button>
-            </DialogTrigger>
             <Button type="submit" disabled={isLoading}>
               {isLoading ? (
                 <Icons.spinner className="animate-spin" />

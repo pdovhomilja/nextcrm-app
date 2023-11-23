@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/sheet";
 import { CheckSquare, Eye, MessagesSquare, Pencil } from "lucide-react";
 import UpdateTaskDialog from "../../dialogs/UpdateTask";
+import { Button } from "@/components/ui/button";
 
 interface DashboardData {
   getTaskPastDue: Tasks[];
@@ -164,6 +165,11 @@ const ProjectDashboardCockpit = ({
                       boards={boards}
                       initialData={task}
                     />
+                    <div className="flex w-full justify-end pt-2">
+                      <SheetTrigger asChild>
+                        <Button variant={"destructive"}>Close</Button>
+                      </SheetTrigger>
+                    </div>
                   </SheetContent>
                 </Sheet>
               </Badge>

@@ -18,6 +18,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Icons } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -40,6 +41,7 @@ export function TeamConversations({
   taskId: string;
 }) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
   const router = useRouter();
 
   const { toast } = useToast();
@@ -49,8 +51,8 @@ export function TeamConversations({
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       await axios.post(`/api/projects/tasks/addCommentToTask/${taskId}`, data);
       toast({
         title: "Success, comment added.",
@@ -95,7 +97,7 @@ export function TeamConversations({
           />
 
           <Button className="w-[80px]" disabled={isLoading} type="submit">
-            Add
+            {isLoading ? <Icons.spinner className="animate-spin" /> : "Add"}
           </Button>
         </form>
       </Form>

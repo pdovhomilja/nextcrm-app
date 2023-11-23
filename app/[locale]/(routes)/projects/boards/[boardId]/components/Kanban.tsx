@@ -33,12 +33,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/components/ui/use-toast";
 import AlertModal from "@/components/modals/alert-modal";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import LoadingComponent from "@/components/LoadingComponent";
 import { DialogHeader } from "@/components/ui/dialog-document-view";
 
 import NewSectionForm from "../forms/NewSection";
 import UpdateTaskDialog from "../../../dialogs/UpdateTask";
+import { Button } from "@/components/ui/button";
 
 let timer: any;
 const timeout = 1000;
@@ -298,6 +299,11 @@ const Kanban = (props: any) => {
               initialData={selectedTask}
               onDone={() => setUpdateOpenSheet(false)}
             />
+            <div className="flex w-full justify-end pt-2">
+              <SheetTrigger asChild>
+                <Button variant={"destructive"}>Close</Button>
+              </SheetTrigger>
+            </div>
           </SheetContent>
         </Sheet>
         {
