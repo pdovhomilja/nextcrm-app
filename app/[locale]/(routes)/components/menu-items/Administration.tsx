@@ -4,9 +4,10 @@ import { usePathname } from "next/navigation";
 
 type Props = {
   open: boolean;
+  title: string;
 };
 
-const AdministrationMenu = ({ open }: Props) => {
+const AdministrationMenu = ({ open, title }: Props) => {
   const pathname = usePathname();
   const isPath = pathname.includes("admin");
   return (
@@ -16,7 +17,7 @@ const AdministrationMenu = ({ open }: Props) => {
         className={`flex gap-2 p-2 ${isPath ? "text-muted-foreground" : null}`}
       >
         <Wrench className="w-6" />
-        <span className={open ? "" : "hidden"}>Administration</span>
+        <span className={open ? "" : "hidden"}>{title}</span>
       </Link>
     </div>
   );

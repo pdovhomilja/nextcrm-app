@@ -6,9 +6,10 @@ import React from "react";
 
 type Props = {
   open: boolean;
+  title: string;
 };
 
-const DocumentsModuleMenu = ({ open }: Props) => {
+const DocumentsModuleMenu = ({ open, title }: Props) => {
   const pathname = usePathname();
   const isPath = pathname.includes("documents");
   return (
@@ -18,7 +19,7 @@ const DocumentsModuleMenu = ({ open }: Props) => {
         className={`flex gap-2 p-2 ${isPath ? "text-muted-foreground" : null}`}
       >
         <FileText className="w-6" />
-        <span className={open ? "" : "hidden"}>Documents</span>
+        <span className={open ? "" : "hidden"}>{title}</span>
       </Link>
     </div>
   );

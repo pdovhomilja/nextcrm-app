@@ -3,6 +3,40 @@
     "title": "NextCRM",
     "description": "NextCRM je open source CRM vytvořené na frameworku NextJS."
   },
+  "ModuleMenu": {
+    "dashboard": "Přehled",
+    "crm": {
+      "title": "Obchod",
+      "accounts": "Firmy",
+      "opportunities": "Obchody",
+      "contacts": "Kontakty",
+      "leads": "Leady"
+    },
+    "projects": "Projekty",
+    "tasks": "Úkoly",
+    "invoices": "Faktury",
+    "reports": "Reporty",
+    "documents": "Dokumenty",
+    "storage": "Úložiště",
+    "settings": "Nastavení"
+  },
+  "DashboardPage": {
+    "containerTitle": "Přehled",
+    "containerDescription": "Vítejte v NextCRM, zde můžete vidět všechny důležité informace o vašem podniku.",
+    "totalRevenue": "Celkový obrat",
+    "expectedRevenue": "Očekávaný obrat",
+    "activeUsers": "Aktivní uživatelé",
+    "accounts": "Firmy",
+    "opportunities": "Obchody",
+    "contacts": "Kontakty",
+    "leads": "Leady",
+    "projects": "Projekty",
+    "tasks": "Úkoly",
+    "myTasks": "Moje úkoly",
+    "invoices": "Faktury",
+    "documents": "Dokumenty",
+    "storage": "Úložiště"
+  },
   "RegisterComponent": {
     "cardTitle": "Vytvořit nový účet",
     "cardDescription": "Vytvořte si účet přihlášením pomocí",

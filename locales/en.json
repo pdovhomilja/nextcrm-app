@@ -3,6 +3,40 @@
     "title": "NextCRM",
     "description": "NextCRM is an open source CRM build on top of NextJS."
   },
+  "ModuleMenu": {
+    "dashboard": "Přehled",
+    "crm": {
+      "title": "Sales",
+      "accounts": "Companies",
+      "opportunities": "Deals",
+      "contacts": "Contacts",
+      "leads": "Leads"
+    },
+    "projects": "Projects",
+    "tasks": "Úkoly",
+    "invoices": "Faktury",
+    "reports": "Reports",
+    "documents": "Dokumenty",
+    "storage": "Úložiště",
+    "settings": "Nastavení"
+  },
+  "DashboardPage": {
+    "containerTitle": "Dashboard",
+    "totalRevenue": "Total revenue",
+    "containerDescription": "Welcome to NextCRM, here you can see all important information about your business.",
+    "expectedRevenue": "Expected revenue",
+    "activeUsers": "Active users",
+    "accounts": "Companies",
+    "opportunities": "Deals",
+    "contacts": "Contacts",
+    "leads": "Leads",
+    "projects": "Projects",
+    "tasks": "Tasks",
+    "myTasks": "My tasks",
+    "invoices": "Invoices",
+    "documents": "Documents",
+    "storage": "Storage"
+  },
   "RegisterComponent": {
     "cardTitle": "Create new account",
     "cardDescription": "Create account by login with",

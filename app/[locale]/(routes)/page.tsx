@@ -35,13 +35,21 @@ import { getDocumentsCount } from "@/actions/dashboard/get-documents-count";
 import { getActiveUsersCount } from "@/actions/dashboard/get-active-users-count";
 import { getOpportunitiesCount } from "@/actions/dashboard/get-opportunities-count";
 import { getExpectedRevenue } from "@/actions/crm/opportunity/get-expected-revenue";
+import { getDictionary } from "@/dictionaries";
 
 const DashboardPage = async () => {
   const session = await getServerSession(authOptions);
+
   if (!session) return null;
+
   const userId = session?.user?.id;
 
-  //Fetch data for dashboard
+  //Get user language
+  const lang = session?.user?.userLanguage;
+
+  //Fetch translations from dictionary
+  const dict = await getDictionary(lang as "en" | "cz" | "de"); //Fetch data for dashboard
+
   const modules = await getModules();
   const leads = await getLeadsCount();
   const tasks = await getTasksCount();
@@ -69,7 +77,7 @@ const DashboardPage = async () => {
 
   return (
     <Container
-      title="Dashboard"
+      title={dict.DashboardPage.containerTitle}
       description={
         "Welcome to NextCRM cockpit, here you can see your company overview"
       }
@@ -77,7 +85,9 @@ const DashboardPage = async () => {
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {dict.DashboardPage.totalRevenue}
+            </CardTitle>
             <DollarSignIcon className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -87,7 +97,7 @@ const DashboardPage = async () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Expected Revenue
+              {dict.DashboardPage.expectedRevenue}
             </CardTitle>
             <DollarSignIcon className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
@@ -107,7 +117,7 @@ const DashboardPage = async () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Active users
+                {dict.DashboardPage.activeUsers}
               </CardTitle>
               <UserIcon className="w-4 h-4 text-muted-foreground" />
             </CardHeader>
@@ -138,7 +148,7 @@ const DashboardPage = async () => {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">
-                      Accounts
+                      {dict.DashboardPage.accounts}
                     </CardTitle>
                     <LandmarkIcon className="w-4 h-4 text-muted-foreground" />
                   </CardHeader>
@@ -151,7 +161,7 @@ const DashboardPage = async () => {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">
-                      Opportunities
+                      {dict.DashboardPage.opportunities}
                     </CardTitle>
                     <FactoryIcon className="w-4 h-4 text-muted-foreground" />
                   </CardHeader>
@@ -164,7 +174,7 @@ const DashboardPage = async () => {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">
-                      Contacts
+                      {dict.DashboardPage.contacts}
                     </CardTitle>
                     <Contact className="w-4 h-4 text-muted-foreground" />
                   </CardHeader>
@@ -176,7 +186,10 @@ const DashboardPage = async () => {
               <Link href="/crm/leads">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Leads</CardTitle>
+                    <CardTitle className="text-sm font-medium">
+                      {" "}
+                      {dict.DashboardPage.leads}
+                    </CardTitle>
                     <CoinsIcon className="w-4 h-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
@@ -193,7 +206,7 @@ const DashboardPage = async () => {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Projects
+                    {dict.DashboardPage.projects}
                   </CardTitle>
                   <CoinsIcon className="w-4 h-4 text-muted-foreground" />
                 </CardHeader>
@@ -205,7 +218,10 @@ const DashboardPage = async () => {
             <Link href="/projects/tasks">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Tasks</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    {" "}
+                    {dict.DashboardPage.tasks}
+                  </CardTitle>
                   <CoinsIcon className="w-4 h-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -217,7 +233,7 @@ const DashboardPage = async () => {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
-                    My Tasks
+                    {dict.DashboardPage.myTasks}
                   </CardTitle>
                   <CoinsIcon className="w-4 h-4 text-muted-foreground" />
                 </CardHeader>
@@ -232,7 +248,10 @@ const DashboardPage = async () => {
           <Link href="/invoice">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Invoices</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  {" "}
+                  {dict.DashboardPage.invoices}
+                </CardTitle>
                 <CoinsIcon className="w-4 h-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -245,7 +264,10 @@ const DashboardPage = async () => {
           <Link href="/documents">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Documents</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  {" "}
+                  {dict.DashboardPage.documents}
+                </CardTitle>
                 <CoinsIcon className="w-4 h-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -255,7 +277,7 @@ const DashboardPage = async () => {
           </Link>
         )}
 
-        <StorageQuota actual={storage} />
+        <StorageQuota actual={storage} title={dict.DashboardPage.storage} />
         {secondBrainModule?.enabled && (
           <Suspense fallback={<LoadingBox />}>
             <NotionsBox />

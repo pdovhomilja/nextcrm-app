@@ -6,9 +6,10 @@ import React from "react";
 
 type Props = {
   open: boolean;
+  title: string;
 };
 
-const InvoicesModuleMenu = ({ open }: Props) => {
+const InvoicesModuleMenu = ({ open, title }: Props) => {
   const pathname = usePathname();
   const isPath = pathname.includes("invoice");
   return (
@@ -18,7 +19,7 @@ const InvoicesModuleMenu = ({ open }: Props) => {
         className={`flex gap-2 p-2 ${isPath ? "text-muted-foreground" : null}`}
       >
         <FileCheck className="w-6" />
-        <span className={open ? "" : "hidden"}>Invoices</span>
+        <span className={open ? "" : "hidden"}>{title}</span>
       </Link>
     </div>
   );

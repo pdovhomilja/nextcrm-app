@@ -6,9 +6,10 @@ import React from "react";
 
 type Props = {
   open: boolean;
+  title: string;
 };
 
-const ReportsModuleMenu = ({ open }: Props) => {
+const ReportsModuleMenu = ({ open, title }: Props) => {
   const pathname = usePathname();
   const isPath = pathname.includes("reports");
   return (
@@ -18,7 +19,7 @@ const ReportsModuleMenu = ({ open }: Props) => {
         className={`flex gap-2 p-2 ${isPath ? "text-muted-foreground" : null}`}
       >
         <FileBarChart className={`w-6 `} />
-        <span className={open ? "" : "hidden"}>Reports</span>
+        <span className={open ? "" : "hidden"}>{title}</span>
       </Link>
     </div>
   );

@@ -8,31 +8,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Coins } from "lucide-react";
 
-import { useRouter } from "next/navigation";
-import React, { startTransition } from "react";
-
-import { usePathname } from "next-intl/client";
-import { useLocale, useTranslations } from "next-intl";
+import { usePathname, useRouter } from "next/navigation";
 
 type Props = {
   open: boolean;
+  localizations: any;
 };
 
-const CrmModuleMenu = ({ open }: Props) => {
+const CrmModuleMenu = ({ open, localizations }: Props) => {
   const router = useRouter();
-
-  //Localizations
-  const t = useTranslations("CrmModuleMenuComponent");
-  const locale = useLocale();
   const pathname = usePathname();
-
-  function onValueChange(value: string) {
-    const nextLocale = value;
-    startTransition(() => {
-      router.replace(pathname, { locale: nextLocale });
-    });
-  }
-
   const isPath = pathname.includes("crm");
 
   return (
@@ -51,7 +36,7 @@ const CrmModuleMenu = ({ open }: Props) => {
         >
           <div className="flex gap-2 p-2">
             <Coins />
-            <span className={open ? "" : "hidden"}>{t("menuTitle")}</span>
+            <span className={open ? "" : "hidden"}>{localizations.title}</span>
           </div>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-[250px] ml-10">
@@ -66,16 +51,16 @@ const CrmModuleMenu = ({ open }: Props) => {
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => router.push("/crm/accounts")}>
-            Accounts
+            {localizations.accounts}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => router.push("/crm/contacts")}>
-            Contacts
+            {localizations.contacts}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => router.push("/crm/leads")}>
-            Leads
+            {localizations.leads}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => router.push("/crm/opportunities")}>
-            Opportunities
+            {localizations.opportunities}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

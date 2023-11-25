@@ -17,9 +17,10 @@ import DashboardMenu from "./menu-items/Dashboard";
 
 type Props = {
   modules: any;
+  dict: any;
 };
 
-const ModuleMenu = ({ modules }: Props) => {
+const ModuleMenu = ({ modules, dict }: Props) => {
   const [open, setOpen] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -30,9 +31,6 @@ const ModuleMenu = ({ modules }: Props) => {
   if (!isMounted) {
     return null;
   }
-
-  //Console logs
-  //console.log(modules, "modules");
 
   return (
     <div className="flex">
@@ -60,16 +58,16 @@ const ModuleMenu = ({ modules }: Props) => {
           </h1>
         </div>
         <div className="pt-6">
-          <DashboardMenu open={open} />
+          <DashboardMenu open={open} title={dict.ModuleMenu.dashboard} />
           {modules.find(
             (menuItem: any) => menuItem.name === "crm" && menuItem.enabled
           ) ? (
-            <CrmModuleMenu open={open} />
+            <CrmModuleMenu open={open} localizations={dict.ModuleMenu.crm} />
           ) : null}
           {modules.find(
             (menuItem: any) => menuItem.name === "projects" && menuItem.enabled
           ) ? (
-            <ProjectModuleMenu open={open} />
+            <ProjectModuleMenu open={open} title={dict.ModuleMenu.projects} />
           ) : null}
           {modules.find(
             (menuItem: any) =>
@@ -85,17 +83,20 @@ const ModuleMenu = ({ modules }: Props) => {
           {modules.find(
             (menuItem: any) => menuItem.name === "invoice" && menuItem.enabled
           ) ? (
-            <InvoicesModuleMenu open={open} />
+            <InvoicesModuleMenu open={open} title={dict.ModuleMenu.invoices} />
           ) : null}
           {modules.find(
             (menuItem: any) => menuItem.name === "reports" && menuItem.enabled
           ) ? (
-            <ReportsModuleMenu open={open} />
+            <ReportsModuleMenu open={open} title={dict.ModuleMenu.reports} />
           ) : null}
           {modules.find(
             (menuItem: any) => menuItem.name === "documents" && menuItem.enabled
           ) ? (
-            <DocumentsModuleMenu open={open} />
+            <DocumentsModuleMenu
+              open={open}
+              title={dict.ModuleMenu.documents}
+            />
           ) : null}
           {modules.find(
             (menuItem: any) => menuItem.name === "databox" && menuItem.enabled
@@ -107,7 +108,7 @@ const ModuleMenu = ({ modules }: Props) => {
           ) ? (
             <ChatGPTModuleMenu open={open} />
           ) : null}
-          <AdministrationMenu open={open} />
+          <AdministrationMenu open={open} title={dict.ModuleMenu.settings} />
         </div>
       </div>
     </div>

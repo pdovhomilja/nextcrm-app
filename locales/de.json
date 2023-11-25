@@ -3,6 +3,40 @@
     "title": "NextCRM",
     "description": "Willkommen bei NextCRM CRM mit Prisma und Next.js 13"
   },
+  "ModuleMenu": {
+    "dashboard": "Přehled",
+    "crm": {
+      "title": "Handel",
+      "accounts": "Firmen",
+      "opportunities": "Möglichkeiten",
+      "contacts": "Kontakte",
+      "leads": "Leads"
+    },
+    "projects": "Projekte",
+    "tasks": "Aufgaben",
+    "invoices": "Rechnungen",
+    "reports": "Berichte",
+    "documents": "Dokumente",
+    "storage": "Speicher",
+    "settings": "Einstellungen"
+  },
+  "DashboardPage": {
+    "containerTitle": "Dashboard",
+    "totalRevenue": "Gesamtumsatz",
+    "containerDescription": "Willkommen bei NextCRM, hier können Sie alle wichtigen Informationen über Ihr Unternehmen sehen.",
+    "expectedRevenue": "Erwarteter Umsatz",
+    "activeUsers": "Aktive Benutzer",
+    "accounts": "Unternehmen",
+    "opportunities": "Angebote",
+    "contacts": "Kontakte",
+    "leads": "Leads",
+    "projects": "Projekte",
+    "tasks": "Aufgaben",
+    "myTasks": "Meine Aufgaben",
+    "invoices": "Rechnungen",
+    "documents": "Dokumente",
+    "storage": "Speicher"
+  },
   "RegisterComponent": {
     "cardTitle": "Neuen Account erstellen",
     "cardDescription": "Erstellen Sie ein Konto, indem Sie sich anmelden mit",
