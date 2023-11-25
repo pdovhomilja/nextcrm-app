@@ -16,8 +16,8 @@ import { type } from "os";
 
 type LoadingModalProps = {
   isOpen: boolean;
-  title: string;
-  description: string;
+  title?: string;
+  description?: string;
 };
 
 const LoadingModal = ({ isOpen, title, description }: LoadingModalProps) => {

@@ -4,7 +4,7 @@
     "description": "NextCRM is an open source CRM build on top of NextJS."
   },
   "ModuleMenu": {
-    "dashboard": "Přehled",
+    "dashboard": "Dashboard",
     "crm": {
       "title": "Sales",
       "accounts": "Companies",
@@ -13,12 +13,12 @@
       "leads": "Leads"
     },
     "projects": "Projects",
-    "tasks": "Úkoly",
-    "invoices": "Faktury",
+    "tasks": "Tasks",
+    "invoices": "Invoices",
     "reports": "Reports",
-    "documents": "Dokumenty",
-    "storage": "Úložiště",
-    "settings": "Nastavení"
+    "documents": "Documents",
+    "storage": "Storage",
+    "settings": "Administration"
   },
   "DashboardPage": {
     "containerTitle": "Dashboard",

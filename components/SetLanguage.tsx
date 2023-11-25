@@ -29,13 +29,16 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { toast } from "@/components/ui/use-toast";
-import { on } from "events";
+
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import LoadingModal from "./modals/loading-modal";
 
 const languages = [
   { label: "English", value: "en" },
   { label: "Czech", value: "cz" },
+  { label: "German", value: "de" },
 ] as const;
 
 const FormSchema = z.object({
@@ -55,16 +58,36 @@ export function SetLanguage({ userId }: Props) {
     resolver: zodResolver(FormSchema),
   });
 
+  const [isLoading, setIsLoading] = useState(false);
+
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    await axios.put(`/api/user/${userId}/set-language`, data);
-    toast({
-      title: "Success",
-      description:
-        "You change user language to:" +
-        data.language +
-        " but it's not working yet.",
-    });
-    router.refresh();
+    setIsLoading(true);
+    try {
+      await axios.put(`/api/user/${userId}/set-language`, data);
+      toast({
+        title: "Success",
+        description: "You change user language to: " + data.language,
+      });
+    } catch (e) {
+      console.log(e, "error");
+      toast({
+        title: "Error",
+        description: "Something went wrong.",
+        variant: "destructive",
+      });
+    } finally {
+      router.refresh();
+      setIsLoading(false);
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <LoadingModal
+        isOpen={isLoading}
+        description="Changing NextCRM language"
+      />
+    );
   }
 
   return (
@@ -100,7 +123,7 @@ export function SetLanguage({ userId }: Props) {
                 </PopoverTrigger>
                 <PopoverContent className="w-[200px] p-0">
                   <Command>
-                    <CommandInput placeholder="Search framework..." />
+                    <CommandInput placeholder="Search language ..." />
                     <CommandEmpty>No framework found.</CommandEmpty>
                     <CommandGroup>
                       {languages.map((language) => (

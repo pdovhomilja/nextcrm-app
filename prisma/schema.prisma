@@ -566,6 +566,7 @@ model Users {
 enum Language {
   cz
   en
+  de
 }
 
 model system_Modules_Enabled {

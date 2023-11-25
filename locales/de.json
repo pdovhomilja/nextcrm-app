@@ -4,7 +4,7 @@
     "description": "Willkommen bei NextCRM CRM mit Prisma und Next.js 13"
   },
   "ModuleMenu": {
-    "dashboard": "Přehled",
+    "dashboard": "Dashboard",
     "crm": {
       "title": "Handel",
       "accounts": "Firmen",
