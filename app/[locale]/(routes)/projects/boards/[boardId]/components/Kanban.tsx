@@ -26,20 +26,25 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import AlertModal from "@/components/modals/alert-modal";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import LoadingComponent from "@/components/LoadingComponent";
 import { DialogHeader } from "@/components/ui/dialog-document-view";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 import NewSectionForm from "../forms/NewSection";
 import UpdateTaskDialog from "../../../dialogs/UpdateTask";
-import { Button } from "@/components/ui/button";
 
 let timer: any;
 const timeout = 1000;
@@ -387,8 +392,16 @@ const Kanban = (props: any) => {
                                         : task.title}
                                     </h2>
                                     {task?.dueDateAt &&
-                                      task.dueDateAt > Date.now() && (
-                                        <ExclamationTriangleIcon className="w-4 h-4 text-red-500" />
+                                      task.dueDateAt < Date.now() && (
+                                        <HoverCard>
+                                          <HoverCardTrigger>
+                                            {" "}
+                                            <ExclamationTriangleIcon className="w-4 h-4 text-red-500" />
+                                          </HoverCardTrigger>
+                                          <HoverCardContent>
+                                            Attention! This task is overdue!
+                                          </HoverCardContent>
+                                        </HoverCard>
                                       )}
                                     <DropdownMenu>
                                       <DropdownMenuTrigger asChild>
@@ -450,9 +463,14 @@ const Kanban = (props: any) => {
                                       Priorita: {task.priority}
                                     </p>
                                   </div>
-                                  <p className="line-clamp-2 mb-2">
-                                    {task.content}
-                                  </p>
+                                  <HoverCard>
+                                    <HoverCardTrigger className="line-clamp-2 mb-2">
+                                      {task.content}
+                                    </HoverCardTrigger>
+                                    <HoverCardContent>
+                                      {task.content}
+                                    </HoverCardContent>
+                                  </HoverCard>
                                 </div>
                               )}
                             </Draggable>
