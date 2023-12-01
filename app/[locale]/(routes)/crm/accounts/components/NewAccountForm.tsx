@@ -58,7 +58,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
     shipping_city: z.string().optional(),
     shipping_state: z.string().optional(),
     shipping_country: z.string().optional(),
-    description: z.string().min(3).max(250).optional(),
+    description: z.string().min(3).max(1000).optional(),
     assigned_to: z.string().min(3).max(50),
     status: z.string().min(3).max(50).optional(),
     annual_revenue: z.string().min(3).max(50).optional(),
