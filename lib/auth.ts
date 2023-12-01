@@ -52,12 +52,15 @@ export const authOptions: NextAuthOptions = {
           },
         });
 
+        //clear white space from password
+        const trimmedPassword = credentials.password.trim();
+
         if (!user || !user?.password) {
           throw new Error("User not found, please register first");
         }
 
         const isCorrectPassword = await bcrypt.compare(
-          credentials.password,
+          trimmedPassword,
           user.password
         );
 
