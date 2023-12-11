@@ -1,0 +1,14 @@
+[
+  {
+    "v": 0,
+    "name": "Social networks",
+    "description": "Instagram, Facebook, Twitter",
+    "status": "ACTIVE"
+  },
+  {
+    "v": 0,
+    "name": "Cold calls",
+    "description": "Our call center",
+    "status": null
+  }
+]

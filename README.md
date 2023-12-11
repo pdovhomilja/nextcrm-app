@@ -70,6 +70,7 @@ Will be soon at domain: http://docs.nextcrm.io
    ```sh
     npx prisma generate
     npx prisma db push
+    npx prisma seed
    ```
 
 2. Run app on local
@@ -110,6 +111,10 @@ Will be soon at domain: http://docs.nextcrm.io
    ```
 
 5. Import initial data from initial-data folder
+
+   ```sh
+   npx prisma db seed
+   ```
 
 6. http://localhost:3000
 </details>

@@ -1,0 +1,22 @@
+[
+  {
+    "v": 0,
+    "name": "Business from partners",
+    "order": 2
+  },
+  {
+    "v": 0,
+    "name": "Upsale",
+    "order": 3
+  },
+  {
+    "v": 0,
+    "name": "New deal",
+    "order": 1
+  },
+  {
+    "v": 0,
+    "name": "Cross sale",
+    "order": 4
+  }
+]

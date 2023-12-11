@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Modal from "@/components/ui/modal";
-import { Button } from "@/components/ui/button";
-import { spawn } from "child_process";
+
 import SuspenseLoading from "../loadings/suspense";
 import {
   Dialog,

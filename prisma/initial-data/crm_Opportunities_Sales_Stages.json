@@ -1,0 +1,56 @@
+[
+  {
+    "v": 0,
+    "name": "New",
+    "order": 0,
+    "probability": 10
+  },
+  {
+    "v": 0,
+    "name": "Need analysis",
+    "order": 0,
+    "probability": 25
+  },
+  {
+    "v": 0,
+    "name": "Signing",
+    "probability": 95,
+    "order": null
+  },
+  {
+    "v": 0,
+    "name": "Offer sent",
+    "probability": 30,
+    "order": null
+  },
+  {
+    "v": 0,
+    "name": "Offer accepted",
+    "probability": 45,
+    "order": null
+  },
+  {
+    "v": 0,
+    "name": "Contract draft",
+    "probability": 65,
+    "order": null
+  },
+  {
+    "v": 0,
+    "name": "Contract negotiation",
+    "probability": 75,
+    "order": null
+  },
+  {
+    "v": 0,
+    "name": "Send for signing",
+    "probability": 80,
+    "order": null
+  },
+  {
+    "v": 0,
+    "name": "Realization of the project",
+    "probability": 100,
+    "order": null
+  }
+]
