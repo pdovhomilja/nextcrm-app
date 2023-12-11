@@ -10,7 +10,7 @@ import { getLeads } from "@/actions/crm/get-leads";
 
 const LeadsPage = async () => {
   const crmData = await getAllCrmData();
-  const leads = await getLeads();
+  const leads = await getLeads();  
   return (
     <Container
       title="Leads"

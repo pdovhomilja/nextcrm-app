@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { opportunitySchema } from "../table-data/schema";
+import { contactSchema } from "../table-data/schema";
 import { useRouter } from "next/navigation";
 import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
@@ -35,7 +35,7 @@ export function DataTableRowActions<TData>({
   row,
 }: DataTableRowActionsProps<TData>) {
   const router = useRouter();
-  const contact = opportunitySchema.parse(row.original);
+  const contact = contactSchema.parse(row.original);
 
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);

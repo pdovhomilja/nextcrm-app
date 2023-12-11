@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import SheetComponent from "@/components/sheets/Sheet";
+import SheetComponent from "@/components/sheets/sheet";
 
 import { columns } from "../tasks-data-table/components/columns";
 import { TasksDataTable } from "../tasks-data-table/components/data-table";

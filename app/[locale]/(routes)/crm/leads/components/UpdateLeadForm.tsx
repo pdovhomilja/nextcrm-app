@@ -38,7 +38,7 @@ import SuspenseLoading from "@/components/loadings/suspense";
 //TODO: fix all the types
 type NewTaskFormProps = {
   initialData: any;
-  setOpen: (value: boolean) => void;
+  setOpen: (value: boolean) => void;  
 };
 
 export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
@@ -101,7 +101,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
       });
     } finally {
       setIsLoading(false);
-      setOpen(false);
+      setOpen(false);      
       router.refresh();
     }
   };
@@ -355,7 +355,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                       <FormMessage />
                     </FormItem>
                   )}
-                />
+                />                
               </div>
               <div className="w-1/2 space-y-3">
                 <FormField

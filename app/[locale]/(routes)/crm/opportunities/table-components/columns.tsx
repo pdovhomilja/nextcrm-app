@@ -22,7 +22,7 @@ export const columns: ColumnDef<Opportunity>[] = [
         aria-label="Select all"
         className="translate-y-[2px]"
       />
-    ), 
+    ),
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
@@ -34,7 +34,7 @@ export const columns: ColumnDef<Opportunity>[] = [
     enableSorting: false,
     enableHiding: false,
   },
-  */
+   */
   {
     accessorKey: "close_date",
     header: ({ column }) => (
@@ -119,7 +119,7 @@ export const columns: ColumnDef<Opportunity>[] = [
     },
     enableSorting: true,
     enableHiding: true,
-  },
+  },  
   {
     accessorKey: "next_step",
     header: ({ column }) => (

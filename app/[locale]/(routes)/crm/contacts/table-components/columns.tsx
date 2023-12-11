@@ -5,12 +5,12 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 
-import { Opportunity } from "../table-data/schema";
+import { Contact } from "../table-data/schema";
 import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
 import moment from "moment";
 
-export const columns: ColumnDef<Opportunity>[] = [
+export const columns: ColumnDef<Contact>[] = [
   /*   {
     id: "select",
     header: ({ table }) => (

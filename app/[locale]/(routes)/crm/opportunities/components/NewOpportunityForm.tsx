@@ -55,7 +55,7 @@ type NewTaskFormProps = {
   saleStages: crm_Opportunities_Sales_Stages[];
   campaigns: crm_campaigns[];
   selectedStage?: string;
-  accountId?: string;
+  accountId?: string;  
   onDialogClose: () => void;
 };
 
@@ -67,7 +67,7 @@ export function NewOpportunityForm({
   saleStages,
   campaigns,
   selectedStage,
-  accountId,
+  accountId,  
   onDialogClose,
 }: NewTaskFormProps) {
   const router = useRouter();

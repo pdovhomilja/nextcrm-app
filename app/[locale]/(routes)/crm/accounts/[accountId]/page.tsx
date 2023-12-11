@@ -39,7 +39,7 @@ const AccountDetailPage = async ({ params }: AccountDetailPageProps) => {
   const contacts: crm_Contacts[] = await getContactsByAccountId(accountId);
   const leads: crm_Leads[] = await getLeadsByAccountId(accountId);
   const documents: Documents[] = await getDocumentsByAccountId(accountId);
-  const tasks: crm_Accounts_Tasks[] = await getAccountsTasks(accountId);
+  const tasks: crm_Accounts_Tasks[] = await getAccountsTasks(accountId);  
   const crmData = await getAllCrmData();
 
   if (!account) return <div>Account not found</div>;
@@ -57,7 +57,7 @@ const AccountDetailPage = async ({ params }: AccountDetailPageProps) => {
           crmData={crmData}
           accountId={accountId}
         />
-        <ContactsView data={contacts} crmData={crmData} accountId={accountId} />
+        <ContactsView data={contacts} crmData={crmData} accountId={accountId} />        
         <LeadsView data={leads} crmData={crmData} />
         <DocumentsView data={documents} />
       </div>

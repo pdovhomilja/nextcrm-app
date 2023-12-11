@@ -32,10 +32,10 @@ import { Textarea } from "@/components/ui/textarea";
 type Props = {
   industries: any[];
   users: any[];
-  onFinish: () => void;
+  onFinish: () => void;  
 };
 
-export function NewAccountForm({ industries, users, onFinish }: Props) {
+export function NewAccountForm({ industries, users }: Props) {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -98,11 +98,11 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="h-full px-10">
-        {/*        <div>
+        <div>
           <pre>
             <code>{JSON.stringify(form.watch(), null, 2)}</code>
           </pre>
-        </div> */}
+        </div>
         <div className=" w-[800px] text-sm">
           <div className="pb-5 space-y-2">
             <FormField
@@ -199,7 +199,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                   <FormControl>
                     <Input
                       disabled={isLoading}
-                      placeholder="CZ1234567890"
+                      placeholder="DE1234567890"
                       {...field}
                     />
                   </FormControl>
@@ -219,7 +219,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="Švábova 772/18"
+                        placeholder="1931 Norris Ave."
                         {...field}
                       />
                     </FormControl>
@@ -236,7 +236,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="252 18"
+                        placeholder="L2A5M4"
                         {...field}
                       />
                     </FormControl>
@@ -253,7 +253,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="Prague"
+                        placeholder="Berlin"
                         {...field}
                       />
                     </FormControl>
@@ -283,7 +283,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="Czechia"
+                        placeholder="Germany"
                         {...field}
                       />
                     </FormControl>
@@ -302,7 +302,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="Švábova 772/18"
+                        placeholder="1931 Norris Ave."
                         {...field}
                       />
                     </FormControl>
@@ -319,7 +319,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="252 18"
+                        placeholder="L2A5N4"
                         {...field}
                       />
                     </FormControl>
@@ -336,7 +336,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="Prague"
+                        placeholder="Berlin"
                         {...field}
                       />
                     </FormControl>
@@ -366,7 +366,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="Czechia"
+                        placeholder="Germany"
                         {...field}
                       />
                     </FormControl>
@@ -497,3 +497,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
     </Form>
   );
 }
+function onFinish() {
+  throw new Error("Function not implemented.");
+}
+

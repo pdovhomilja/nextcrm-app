@@ -35,7 +35,7 @@ import SuspenseLoading from "@/components/loadings/suspense";
 //TODO: fix all the types
 type NewTaskFormProps = {
   initialData: any;
-  setOpen: (value: boolean) => void;
+  setOpen: (value: boolean) => void;  
 };
 
 export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {

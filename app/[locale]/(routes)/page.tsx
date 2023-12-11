@@ -23,7 +23,6 @@ import {
   getUsersTasksCount,
 } from "@/actions/dashboard/get-tasks-count";
 import { getModules } from "@/actions/get-modules";
-import { getEmployees } from "@/actions/get-empoloyees";
 
 import { getLeadsCount } from "@/actions/dashboard/get-leads-count";
 import { getBoardsCount } from "@/actions/dashboard/get-boards-count";
@@ -34,6 +33,7 @@ import { getInvoicesCount } from "@/actions/dashboard/get-invoices-count";
 import { getDocumentsCount } from "@/actions/dashboard/get-documents-count";
 import { getActiveUsersCount } from "@/actions/dashboard/get-active-users-count";
 import { getOpportunitiesCount } from "@/actions/dashboard/get-opportunities-count";
+import { getEmployeeCount } from "@/actions/dashboard/get-employee-count";
 import { getExpectedRevenue } from "@/actions/crm/opportunity/get-expected-revenue";
 import { getDictionary } from "@/dictionaries";
 
@@ -53,7 +53,7 @@ const DashboardPage = async () => {
   const modules = await getModules();
   const leads = await getLeadsCount();
   const tasks = await getTasksCount();
-  const employees = await getEmployees();
+  const employees = await getEmployeeCount();
   const storage = await getStorageSize();
   const projects = await getBoardsCount();
   const contacts = await getContactCount();
@@ -79,7 +79,7 @@ const DashboardPage = async () => {
     <Container
       title={dict.DashboardPage.containerTitle}
       description={
-        "Welcome to NextCRM cockpit, here you can see your company overview"
+        "Welcome to SaasHQ cockpit, here you can see your company overview"
       }
     >
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
@@ -126,20 +126,17 @@ const DashboardPage = async () => {
             </CardContent>
           </Card>
         </Link>
-        {
-          //show crm module only if enabled is true
-          employeesModule?.enabled && (
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Employees</CardTitle>
-                <Users2Icon className="w-4 h-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-medium">{employees.length}</div>
-              </CardContent>
-            </Card>
-          )
-        }
+        <Link href="/employees">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Employees</CardTitle>
+              <Users2Icon className="w-4 h-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-medium">{employees}</div>
+            </CardContent>
+          </Card>
+        </Link>
         {
           //show crm module only if enabled is true
           crmModule?.enabled && (

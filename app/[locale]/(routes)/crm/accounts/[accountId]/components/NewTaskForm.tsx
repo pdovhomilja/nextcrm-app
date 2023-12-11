@@ -52,7 +52,7 @@ const NewTaskForm = ({ account }: NewTaskFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [date, setDate] = useState<Date>();
-  //  const [userSearch, setUserSearch] = useState<string>("");
+  //  const [userSearch, setUserSearch] = useState<string>("");  
 
   const { data: users, isLoading: isLoadingUsers } = useSWR(
     "/api/user",
@@ -121,7 +121,7 @@ const NewTaskForm = ({ account }: NewTaskFormProps) => {
     return <LoadingComponent />;
   }
 
-  /*   const filteredUsers = users?.filter((user: any) =>
+    /*   const filteredUsers = users?.filter((user: any) =>
     user.name.toLowerCase().includes(userSearch.toLowerCase())
   ); */
 
@@ -236,7 +236,7 @@ const NewTaskForm = ({ account }: NewTaskFormProps) => {
                                 setUserSearch(e.target.value);
                               }, 1000);
                             }}
-                          /> */}
+                          /> */}                          
                           {users.map((user: any) => (
                             <SelectItem key={user.id} value={user.id}>
                               {user.name}
@@ -246,7 +246,7 @@ const NewTaskForm = ({ account }: NewTaskFormProps) => {
                             <SelectItem key={user.id} value={user.id}>
                               {user.name}
                             </SelectItem>
-                          ))} */}
+                          ))} */}                          
                         </SelectContent>
                       </Select>
                       <FormMessage />

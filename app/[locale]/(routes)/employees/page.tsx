@@ -1,19 +1,27 @@
-import Heading from "@/components/ui/heading";
-import { Separator } from "@/components/ui/separator";
-import React from "react";
+import { Suspense } from "react";
+
+import SuspenseLoading from "@/components/loadings/suspense";
+
 import Container from "../components/ui/Container";
+import EmployeesView from "./components/EmployeesView";
 
-type Props = {};
+import { getAllCrmData } from "@/actions/crm/get-crm-data";
+import { getEmployee } from "@/actions/get-employee";
 
-const CrmPage = (props: Props) => {
+const EmployeePage = async () => {
+  const crmData = await getAllCrmData();
+  const employee = await getEmployee();
+
   return (
     <Container
       title="Employees"
-      description={"Everything you need to know about Human Resources"}
+      description={"Everything you need to know about your Employees"}
     >
-      <div>Module content here</div>
+      <Suspense fallback={<SuspenseLoading />}>
+        <EmployeesView crmData={crmData} data={employee} />
+      </Suspense>
     </Container>
   );
 };
 
-export default CrmPage;
+export default EmployeePage;

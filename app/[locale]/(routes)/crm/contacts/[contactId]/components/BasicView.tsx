@@ -36,7 +36,7 @@ interface OppsViewProps {
 export async function BasicView({ data }: OppsViewProps) {
   //console.log(data, "data");
   const users = await prismadb.users.findMany();
-  if (!data) return <div>Opportunity not found</div>;
+  if (!data) return <div>Contact not found</div>;
   return (
     <div className="pb-3 space-y-5">
       {/*       <pre>{JSON.stringify(data, null, 2)}</pre> */}

@@ -22,7 +22,7 @@ const OpportunityView = async ({
   const crmData = await getAllCrmData();
   const accounts = await getAccountsByOpportunityId(opportunityId);
   const contacts = await getContactsByOpportunityId(opportunityId);
-  const documents = await getDocumentsByOpportunityId(opportunityId);
+  const documents = await getDocumentsByOpportunityId(opportunityId);  
 
   if (!opportunity) return <div>Opportunity not found</div>;
 

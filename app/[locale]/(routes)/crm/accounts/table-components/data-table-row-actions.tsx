@@ -144,7 +144,7 @@ export function DataTableRowActions<TData>({
             <EyeOff className="mr-2 w-4 h-4" />
             Stop watching Account
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
+          <DropdownMenuSeparator />          
           <DropdownMenuItem onClick={() => setOpen(true)}>
             Delete
             <DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>

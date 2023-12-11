@@ -43,7 +43,7 @@ import useSWR from "swr";
 //TODO: fix all the types
 type NewTaskFormProps = {
   initialData: any;
-  setOpen: (value: boolean) => void;
+  setOpen: (value: boolean) => void;  
 };
 
 export function UpdateOpportunityForm({
@@ -107,7 +107,7 @@ export function UpdateOpportunityForm({
       });
     } finally {
       setIsLoading(false);
-      setOpen(false);
+      setOpen(false);      
       router.refresh();
     }
   };
@@ -282,7 +282,7 @@ export function UpdateOpportunityForm({
                       <FormLabel>Bugdget</FormLabel>
                       <FormControl>
                         <Input
-                          type={"number"}
+                          type={"number"}                        
                           disabled={isLoading}
                           placeholder="1000000"
                           {...field}
@@ -317,7 +317,7 @@ export function UpdateOpportunityForm({
                       <FormLabel>Expected revenue</FormLabel>
                       <FormControl>
                         <Input
-                          type="number"
+                          type="number"                        
                           disabled={isLoading}
                           placeholder="500000"
                           {...field}
@@ -388,7 +388,7 @@ export function UpdateOpportunityForm({
                             <SelectValue placeholder="Choose account " />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="flex overflow-y-auto h-56">
+                        <SelectContent>
                           {accounts.map((account: any) => (
                             <SelectItem key={account.id} value={account.id}>
                               {account.name}

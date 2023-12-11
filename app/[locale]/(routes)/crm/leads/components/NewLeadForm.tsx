@@ -40,7 +40,7 @@ import { Calendar } from "@/components/ui/calendar";
 //TODO: fix all the types
 type NewTaskFormProps = {
   users: any[];
-  accounts: any[];
+  accounts: any[];  
 };
 
 export function NewLeadForm({ users, accounts }: NewTaskFormProps) {
@@ -99,7 +99,7 @@ export function NewLeadForm({ users, accounts }: NewTaskFormProps) {
         campaign: "",
         assigned_to: "",
         accountIDs: "",
-      });
+      });      
       router.refresh();
     }
   };
@@ -335,7 +335,7 @@ export function NewLeadForm({ users, accounts }: NewTaskFormProps) {
                   <FormMessage />
                 </FormItem>
               )}
-            />
+            />            
           </div>
         </div>
         <div className="grid gap-2 py-5">

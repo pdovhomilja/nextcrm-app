@@ -7,9 +7,9 @@ import ContactsView from "../components/ContactsView";
 import { getContacts } from "@/actions/crm/get-contacts";
 import { getAllCrmData } from "@/actions/crm/get-crm-data";
 
-const AccountsPage = async () => {
+const ContactsPage = async () => {
   const crmData = await getAllCrmData();
-  const contacts = await getContacts();
+  const contacts = await getContacts();  
   return (
     <Container
       title="Contacts"
@@ -22,4 +22,4 @@ const AccountsPage = async () => {
   );
 };
 
-export default AccountsPage;
+export default ContactsPage;

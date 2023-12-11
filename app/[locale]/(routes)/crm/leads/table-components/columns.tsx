@@ -89,7 +89,7 @@ export const columns: ColumnDef<Lead>[] = [
     ),
     enableSorting: false,
     enableHiding: true,
-  },
+  },  
   {
     accessorKey: "email",
     header: ({ column }) => (

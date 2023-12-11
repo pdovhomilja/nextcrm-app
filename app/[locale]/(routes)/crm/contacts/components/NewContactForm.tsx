@@ -94,6 +94,8 @@ export function NewContactForm({ users, accounts }: NewTaskFormProps) {
   );
 
   const onSubmit = async (data: NewAccountFormValues) => {
+    console.log(data);
+    alert(data);
     setIsLoading(true);
     try {
       await axios.post("/api/crm/contacts", data);
@@ -132,7 +134,7 @@ export function NewContactForm({ users, accounts }: NewTaskFormProps) {
         birthday_year: "",
         birthday_month: "",
         birthday_day: "",
-      });
+      });      
       router.refresh();
     }
   };
@@ -158,7 +160,7 @@ export function NewContactForm({ users, accounts }: NewTaskFormProps) {
                 <FormItem>
                   <FormLabel>First name</FormLabel>
                   <FormControl>
-                    <Input disabled={isLoading} placeholder="John" {...field} />
+                    <Input disabled={isLoading} placeholder="Ian" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -171,7 +173,7 @@ export function NewContactForm({ users, accounts }: NewTaskFormProps) {
                 <FormItem>
                   <FormLabel>Last name</FormLabel>
                   <FormControl>
-                    <Input disabled={isLoading} placeholder="Doe" {...field} />
+                    <Input disabled={isLoading} placeholder="Curtis" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -194,7 +196,6 @@ export function NewContactForm({ users, accounts }: NewTaskFormProps) {
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="office_phone"

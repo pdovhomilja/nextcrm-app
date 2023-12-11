@@ -38,7 +38,7 @@ import { crm_Accounts } from "@prisma/client";
 interface UpdateAccountFormProps {
   //TODO: fix this any
   initialData: any;
-  open: (value: boolean) => void;
+  open: (value: boolean) => void;  
 }
 
 export function UpdateAccountForm({
@@ -96,7 +96,6 @@ export function UpdateAccountForm({
       ? initialData
       : {
           id: "",
-          v: 0,
           name: "",
           office_phone: "" as string | null,
           website: "",
@@ -140,8 +139,8 @@ export function UpdateAccountForm({
       });
     } finally {
       setIsLoading(false);
-      open(false);
       router.refresh();
+      open(false);
     }
   };
 
@@ -268,7 +267,7 @@ export function UpdateAccountForm({
                   <FormControl>
                     <Input
                       disabled={isLoading}
-                      placeholder="CZ1234567890"
+                      placeholder="DE1234567890"
                       {...field}
                     />
                   </FormControl>
@@ -288,7 +287,7 @@ export function UpdateAccountForm({
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="Švábova 772/18"
+                        placeholder="1931 Norris Ave."
                         {...field}
                       />
                     </FormControl>
@@ -305,7 +304,7 @@ export function UpdateAccountForm({
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="252 18"
+                        placeholder="L2M 4X3"
                         {...field}
                       />
                     </FormControl>
@@ -322,7 +321,7 @@ export function UpdateAccountForm({
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="Prague"
+                        placeholder="Berlin"
                         {...field}
                       />
                     </FormControl>
@@ -352,7 +351,7 @@ export function UpdateAccountForm({
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="Czechia"
+                        placeholder="Germany"
                         {...field}
                       />
                     </FormControl>
@@ -371,7 +370,7 @@ export function UpdateAccountForm({
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="Švábova 772/18"
+                        placeholder="1931 Norris Ave."
                         {...field}
                       />
                     </FormControl>
@@ -388,7 +387,7 @@ export function UpdateAccountForm({
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="252 18"
+                        placeholder="L2R5J1"
                         {...field}
                       />
                     </FormControl>
@@ -405,7 +404,7 @@ export function UpdateAccountForm({
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="Prague"
+                        placeholder="Berlin"
                         {...field}
                       />
                     </FormControl>
@@ -435,7 +434,7 @@ export function UpdateAccountForm({
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="Czechia"
+                        placeholder="Germany"
                         {...field}
                       />
                     </FormControl>
