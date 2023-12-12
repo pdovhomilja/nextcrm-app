@@ -46,9 +46,10 @@ import { z } from "zod";
 
 interface NewTaskFormProps {
   account: crm_Accounts | null;
+  onFinish: () => void;
 }
 
-const NewTaskForm = ({ account }: NewTaskFormProps) => {
+const NewTaskForm = ({ account, onFinish }: NewTaskFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [date, setDate] = useState<Date>();
@@ -105,14 +106,7 @@ const NewTaskForm = ({ account }: NewTaskFormProps) => {
       });
     } finally {
       setIsLoading(false);
-      form.reset({
-        title: "",
-        content: "",
-        user: "",
-        account: "",
-        dueDateAt: new Date(),
-        priority: "",
-      });
+      onFinish();
       router.refresh();
     }
   };
