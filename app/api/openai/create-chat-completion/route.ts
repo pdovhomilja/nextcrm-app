@@ -29,6 +29,7 @@ export async function POST(req: Request) {
         { role: "user", content: prompt },
       ],
       model: gptModel[0].model,
+      temperature: 0,
     });
 
     return NextResponse.json(

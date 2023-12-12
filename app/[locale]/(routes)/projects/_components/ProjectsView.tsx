@@ -10,12 +10,16 @@ import Link from "next/link";
 import H2Title from "@/components/typography/h2";
 import { ProjectsDataTable } from "../table-components/data-table";
 import { columns } from "../table-components/columns";
+import AiAssistant from "./AiAssistant";
 
 type Props = {};
 
 const ProjectsView = async (props: Props) => {
   const session = await getServerSession(authOptions);
-  const userId = session?.user.id;
+
+  if (!session) return null;
+
+  const userId = session.user.id;
 
   const users = await getActiveUsers();
   const boards: any = await getBoards(userId!);
@@ -31,6 +35,10 @@ const ProjectsView = async (props: Props) => {
         <Button asChild>
           <Link href={`/projects/tasks/${userId}`}>My Tasks</Link>
         </Button>
+        <Button asChild>
+          <Link href="/projects/dashboard">Dashboard</Link>
+        </Button>
+        <AiAssistant session={session} />
       </div>
       <div className="pt-2 space-y-3">
         <H2Title>Projects</H2Title>
