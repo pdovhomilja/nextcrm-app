@@ -4,7 +4,6 @@ import { NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { openai } from "@/lib/openai";
 
-export const runtime = "edge";
 export const maxDuration = 300;
 
 export async function POST(req: Request) {
