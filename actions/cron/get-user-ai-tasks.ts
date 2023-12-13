@@ -6,7 +6,6 @@ import axios from "axios";
 import { prismadb } from "@/lib/prisma";
 import resendHelper from "@/lib/resend";
 import AiTasksReportEmail from "@/emails/AiTasksReport";
-import { User } from "next-auth";
 
 export async function getUserAiTasks(session: any) {
   /*
@@ -124,6 +123,7 @@ export async function getUserAiTasks(session: any) {
       `${process.env.NEXT_PUBLIC_APP_URL}/api/openai/create-chat-completion`,
       {
         prompt: prompt,
+        userId: session.user.id,
       },
       {
         headers: {
@@ -134,7 +134,7 @@ export async function getUserAiTasks(session: any) {
     .then((res) => res.data);
 
   //console.log(getAiResponse, "getAiResponse");
-  console.log(getAiResponse.response.message.content, "getAiResponse");
+  //console.log(getAiResponse.response.message.content, "getAiResponse");
 
   //skip if api response is error
   if (getAiResponse.error) {
@@ -149,12 +149,11 @@ export async function getUserAiTasks(session: any) {
         react: AiTasksReportEmail({
           username: session.user.name,
           avatar: session.user.avatar,
-          email: session.user.email,
           userLanguage: session.user.userLanguage,
           data: getAiResponse.response.message.content,
         }),
       });
-      console.log(data, "Email sent");
+      //console.log(data, "Email sent");
     } catch (error) {
       console.log(error, "Error from get-user-ai-tasks");
     }

@@ -1,14 +1,16 @@
-// app/api/chat/route.ts
-
 import { NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
-import { openai } from "@/lib/openai";
+
+import { openAiHelper } from "@/lib/openai";
+
 
 export const maxDuration = 300;
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { prompt } = body;
+  const { prompt, userId } = body;
+
+  const openai = await openAiHelper(userId);
 
   if (!prompt) {
     return new NextResponse("No prompt", { status: 400 });

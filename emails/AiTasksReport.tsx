@@ -20,7 +20,6 @@ import * as React from "react";
 interface VercelInviteUserEmailProps {
   username?: string;
   avatar?: string | null;
-  email: string;
   userLanguage: string;
   data: string;
 }
@@ -30,9 +29,6 @@ const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
 export const AiTasksReportEmail = ({
   username,
   avatar,
-  email,
-
-  userLanguage,
   data,
 }: VercelInviteUserEmailProps) => {
   const previewText = `Password reset from ${process.env.NEXT_PUBLIC_APP_NAME}`;

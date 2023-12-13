@@ -4,8 +4,10 @@ import { getUser } from "@/actions/get-user";
 
 import { Button } from "@/components/ui/button";
 import Container from "../components/ui/Container";
+
 import GptCard from "./_components/GptCard";
 import ResendCard from "./_components/ResendCard";
+import OpenAiCard from "./_components/OpenAiCard";
 
 const AdminPage = async () => {
   const user = await getUser();
@@ -39,6 +41,7 @@ const AdminPage = async () => {
       <div className="flex flex-col-1 gap-2">
         <GptCard />
         <ResendCard />
+        <OpenAiCard />
       </div>
     </Container>
   );
