@@ -66,4 +66,4 @@ npx prisma db seed
 echo "-------------------------------------- START SCRIPT --------------------------------------"
 echo "Starting the server..."
 echo "------------------------------------------------------------------------------------------"
-#pm2 start npm --name "nextcrm-$instance" -- start -- --port $port
+pm2 start npm --name "nextcrm-$instance" -- start -- --port $port
