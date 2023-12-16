@@ -37,18 +37,11 @@ echo "Initializing the project..."
 echo "-----------------------------------------------------------------------------------------"
 npm install
 
-# This script builds the project
-echo "-------------------------------------- BUILD SCRIPT -------------------------------------"
-echo "Building the project..."
-echo "-----------------------------------------------------------------------------------------"
-npm run build
-
-
 # This script is used to generate the prisma client and schema
 echo "-------------------------------------- PRISMA SCRIPT ------------------------------------"
 echo "Generating the prisma client and schema..."
 echo "-----------------------------------------------------------------------------------------"
-npx prisma genereate
+npx prisma generate
 
 # This script is used to initialize the database
 echo "-------------------------------------- PRISMA - DB PUSH SCRIPT --------------------------"
@@ -62,8 +55,16 @@ echo "Seeding the database..."
 echo "-----------------------------------------------------------------------------------------"
 npx prisma db seed 
 
+# This script builds the project
+echo "-------------------------------------- BUILD SCRIPT -------------------------------------"
+echo "Building the project..."
+echo "-----------------------------------------------------------------------------------------"
+npm run build
+
 # This script is used to start the server
 echo "-------------------------------------- START SCRIPT --------------------------------------"
 echo "Starting the server..."
+echo " Instance: https://$instance.nextcrm.online"
+echo " Port: $port"
 echo "------------------------------------------------------------------------------------------"
 pm2 start npm --name "nextcrm-$instance" -- start -- --port $port
