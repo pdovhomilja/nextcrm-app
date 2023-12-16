@@ -68,3 +68,4 @@ echo " Instance: https://$instance.nextcrm.online"
 echo " Port: $port"
 echo "------------------------------------------------------------------------------------------"
 pm2 start npm --name "nextcrm-$instance" -- start -- --port $port
+pm2 save
