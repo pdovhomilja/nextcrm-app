@@ -1,10 +1,10 @@
 # NextCRM
 
-NextCRM is a CRM build on top of the Next.JS 13.4 using TypeScript, great UI library shadcn, Prisma and MongoDB as a database. Uploadthings as a S3 blob for document storage.
+NextCRM is a CRM build on top of the Next.JS 13.4 using TypeScript, great UI library shadcn, Prisma and MongoDB as a database. Upload things as a S3 blob for document storage.
 
 ## Online Demo
 
-You can try it here [demo.nextcrm.io](https://demo.nextcrm.io), login via google account or create new user and password
+You can try it here [demo.nextcrm.io](https://demo.nextcrm.io), login via Google account or create new user and password.
 
 ## What we used to build it
 
@@ -14,18 +14,16 @@ Next.js - React framework </br> shadcn - UI </br> Prisma ORM - together with mon
 
 ## What we plan to build next
 
-1. More AI powered - daily summary of tasks and project (OpenAI integration ) - in test
+1. More AI powered - daily summary of tasks and project (OpenAI integration) - in test
 2. Email campaigns management - integration with MailChimp and Listmonk - in planning
 3. ~~Docker version - in planning (There will be complete bundle to run NextCRM on-premise)~~
 4. Testing - Jest + Cypress (if anyone want to help I will be very happy) - in planning
-5. Fix all Types issue ( nom more "any" ) - in progress
+5. Fix all Types issue (no more "any") - in progress
 6. i18n - localization - in planning (if anyone want to help I will be very happy)
 
 ## Emails
 
-We use Resend.com + React.email as primary email sender and email templates
-
-[resend.com](https://resend.com) + [react.email](https://react.email)
+We use [resend.com](https://resend.com) + [react.email](https://react.email) as primary email sender and email templates.
 
 ## Reports
 
@@ -35,11 +33,12 @@ We use Tremor charts as a tool for creating charts in NextCRM
 
 ## Video (YouTube channel with functions showcase)
 
-Channel link - [https://www.youtube.com/channel/UCQneopupgtjG4py68-edA0w](https://www.youtube.com/@NextCRM_IO) &lt;/br> Invoice module - https://youtu.be/NSMsBMy07Pg
+[Youtube Channel](https://www.youtube.com/@NextCRM_IO) </br> 
+[Invoice module (video)](https://youtu.be/NSMsBMy07Pg)
 
 ## Documentation
 
-Will be soon at domain: http://docs.nextcrm.io
+Available soon at: http://docs.nextcrm.io
 
 ## Installation
 
@@ -85,7 +84,7 @@ Will be soon at domain: http://docs.nextcrm.io
 
 ## Docker installation
 
-[Link to Docker HUB](https://hub.docker.com/repository/docker/nextcrmio/nextcrm/general).
+[Link to Docker HUB](https://hub.docker.com/repository/docker/nextcrmio/nextcrm/general)
 
 <details><summary><b>Show instructions</b></summary>
 
@@ -121,7 +120,7 @@ Will be soon at domain: http://docs.nextcrm.io
 
 ## Contact
 
-[www.dovhomilja.cz](https://www.dovhomilja.cz).
+[www.dovhomilja.cz](https://www.dovhomilja.cz)
 
 ## License
 
