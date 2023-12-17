@@ -8,7 +8,7 @@ You can try it here [demo.nextcrm.io](https://demo.nextcrm.io), login via Google
 
 ## What we used to build it
 
-Next.js - React framework </br> shadcn - UI </br> Prisma ORM - together with mongoDB (tested with version 5.0) </br> useSWR - for client side data fetching </br> NextAUTH - for user authentication </br> Rossum - for invoice data parsing with AI </br> OpenAI API - for automated email notifications </br> Tremor - for creating charts </br> Resend.com - together with react.email </br>
+[Next.js](https://nextjs.org/) - React framework </br> [shadcn](https://ui.shadcn.com/) - UI </br> [Prisma](https://prisma.io/) ORM - together with [MongoDB](https://www.mongodb.com/) (tested with version 5.0) </br> [useSWR](https://swr.vercel.app/) - for client side data fetching </br> [NextAUTH](https://next-auth.js.org/) - for user authentication </br> [Rossum](https://rossum.ai/) - for invoice data parsing with AI </br> [OpenAI API](https://openai.com/blog/openai-api) - for automated email notifications </br> [Tremor](https://www.tremor.so/) - for creating charts </br> [resend.com](https://resend.com) - together with [react.email](https://react.email) </br>
 
 ![hero](/public/og.png)
 
@@ -44,25 +44,39 @@ Available soon at: http://docs.nextcrm.io
 
 <details><summary><b>Show instructions</b></summary>
 
+1. Clone the repository:
+
+   ```sh
+   git clone https://github.com/pdovhomilja/nextcrm-app.git
+   cd nextcrm-app
+   ```
+
 1. Install the preset:
 
    ```sh
    npm install
    ```
 
-2. .env + .env.local - Change .env.example to .env and .env.local.example to .env.local
+1. Copy the environment variables to .env
 
-**.env**
+   ```sh
+   cp .env.example .env
+   ```
+   ```sh
+   cp .env.local.example .env.local
+   ```
 
-> > - You will need mongodb URI string for Prisma ORM
+   **.env**
 
-**.env.local**
+   > > - You will need mongodb URI string for Prisma ORM
 
-> > - NextAUTH - for auth
-> > - uploadthings - for storing files
-> > - rossum - for invoice data exporting
-> > - openAI - for automatic Project management assistant
-> > - SMPT and IMAP for emails
+   **.env.local**
+
+   > > - NextAUTH - for auth
+   > > - uploadthings - for storing files
+   > > - rossum - for invoice data exporting
+   > > - openAI - for automatic Project management assistant
+   > > - SMPT and IMAP for emails
 
 1. Init Prisma
 
@@ -72,13 +86,19 @@ Available soon at: http://docs.nextcrm.io
     npx prisma seed
    ```
 
-2. Run app on local
+1. Run app on local
 
    ```sh
    npm run dev
    ```
 
-3. Import initial data from initial-data folder
+1. Import initial data from initial-data folder
+
+   ```sh
+   npx prisma db seed
+   ```
+   
+1. http://localhost:3000
 
 </details>
 
