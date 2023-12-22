@@ -20,6 +20,8 @@ interface BoardDetailProps {
   params: { boardId: string };
 }
 
+export const maxDuration = 300;
+
 const BoardPage = async ({ params }: BoardDetailProps) => {
   const session = await getServerSession(authOptions);
   const user = session?.user;
