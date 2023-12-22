@@ -6,11 +6,9 @@ import {
   Hr,
   Html,
   Img,
-  Link,
   Preview,
   Section,
   Tailwind,
-  Text,
 } from "@react-email/components";
 
 import { Markdown } from "@react-email/markdown";
@@ -26,7 +24,7 @@ interface VercelInviteUserEmailProps {
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
 
-export const AiTasksReportEmail = ({
+export const AiProjectReportEmail = ({
   username,
   avatar,
   data,
@@ -50,7 +48,7 @@ export const AiTasksReportEmail = ({
               />
             </Section>
             <Heading className="text-black text-[24px] font-normal text-center p-0 my-[30px] mx-0">
-              Ai assistant tasks report for: <strong>{username}</strong>
+              Ai assistant Project report for: <strong>{username}</strong>
             </Heading>
             <Markdown>{data}</Markdown>
             <Hr className="border border-solid border-[#eaeaea] my-[26px] mx-0 w-full" />
@@ -61,4 +59,4 @@ export const AiTasksReportEmail = ({
   );
 };
 
-export default AiTasksReportEmail;
+export default AiProjectReportEmail;
