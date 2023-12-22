@@ -1,31 +1,29 @@
 # NextCRM
 
-NextCRM is a CRM build on top of the Next.JS 13.4 using TypeScript, great UI library shadcn, Prisma and MongoDB as a database. Uploadthings as a S3 blob for document storage.
+NextCRM is a CRM build on top of the Next.JS 13.4 using TypeScript, great UI library shadcn, Prisma and MongoDB as a database. Upload things as a S3 blob for document storage.
 
 ## Online Demo
 
-You can try it here [demo.nextcrm.io](https://demo.nextcrm.io), login via google account or create new user and password
+You can try it here [demo.nextcrm.io](https://demo.nextcrm.io), login via Google account or create new user and password.
 
 ## What we used to build it
 
-Next.js - React framework </br> shadcn - UI </br> Prisma ORM - together with mongoDB (tested with version 5.0) </br> useSWR - for client side data fetching </br> NextAUTH - for user authentication </br> Rossum - for invoice data parsing with AI </br> OpenAI API - for automated email notifications </br> Tremor - for creating charts </br> Resend.com - together with react.email </br>
+[Next.js](https://nextjs.org/) - React framework </br> [shadcn](https://ui.shadcn.com/) - UI </br> [Prisma](https://prisma.io/) ORM - together with [MongoDB](https://www.mongodb.com/) (tested with version 5.0) </br> [useSWR](https://swr.vercel.app/) - for client side data fetching </br> [NextAUTH](https://next-auth.js.org/) - for user authentication </br> [Rossum](https://rossum.ai/) - for invoice data parsing with AI </br> [OpenAI API](https://openai.com/blog/openai-api) - for automated email notifications </br> [Tremor](https://www.tremor.so/) - for creating charts </br> [resend.com](https://resend.com) - together with [react.email](https://react.email) </br>
 
 ![hero](/public/og.png)
 
 ## What we plan to build next
 
-1. More AI powered - daily summary of tasks and project (OpenAI integration ) - in test
+1. More AI powered - daily summary of tasks and project (OpenAI integration) - in test
 2. Email campaigns management - integration with MailChimp and Listmonk - in planning
 3. ~~Docker version - in planning (There will be complete bundle to run NextCRM on-premise)~~
 4. Testing - Jest + Cypress (if anyone want to help I will be very happy) - in planning
-5. Fix all Types issue ( nom more "any" ) - in progress
+5. Fix all Types issue (no more "any") - in progress
 6. i18n - localization - in planning (if anyone want to help I will be very happy)
 
 ## Emails
 
-We use Resend.com + React.email as primary email sender and email templates
-
-[resend.com](https://resend.com) + [react.email](https://react.email)
+We use [resend.com](https://resend.com) + [react.email](https://react.email) as primary email sender and email templates.
 
 ## Reports
 
@@ -35,15 +33,23 @@ We use Tremor charts as a tool for creating charts in NextCRM
 
 ## Video (YouTube channel with functions showcase)
 
-Channel link - [https://www.youtube.com/channel/UCQneopupgtjG4py68-edA0w](https://www.youtube.com/@NextCRM_IO) &lt;/br> Invoice module - https://youtu.be/NSMsBMy07Pg
+[Youtube Channel](https://www.youtube.com/@NextCRM_IO) </br> 
+[Invoice module (video)](https://youtu.be/NSMsBMy07Pg)
 
 ## Documentation
 
-Will be soon at domain: http://docs.nextcrm.io
+Available soon at: http://docs.nextcrm.io
 
 ## Installation
 
 <details><summary><b>Show instructions</b></summary>
+
+1. Clone the repository:
+
+   ```sh
+   git clone https://github.com/pdovhomilja/nextcrm-app.git
+   cd nextcrm-app
+   ```
 
 1. Install the preset:
 
@@ -51,19 +57,26 @@ Will be soon at domain: http://docs.nextcrm.io
    npm install
    ```
 
-2. .env + .env.local - Change .env.example to .env and .env.local.example to .env.local
+1. Copy the environment variables to .env
 
-**.env**
+   ```sh
+   cp .env.example .env
+   ```
+   ```sh
+   cp .env.local.example .env.local
+   ```
 
-> > - You will need mongodb URI string for Prisma ORM
+   **.env**
 
-**.env.local**
+   > > - You will need mongodb URI string for Prisma ORM
 
-> > - NextAUTH - for auth
-> > - uploadthings - for storing files
-> > - rossum - for invoice data exporting
-> > - openAI - for automatic Project management assistant
-> > - SMPT and IMAP for emails
+   **.env.local**
+
+   > > - NextAUTH - for auth
+   > > - uploadthings - for storing files
+   > > - rossum - for invoice data exporting
+   > > - openAI - for automatic Project management assistant
+   > > - SMPT and IMAP for emails
 
 1. Init Prisma
 
@@ -73,19 +86,25 @@ Will be soon at domain: http://docs.nextcrm.io
     npx prisma seed
    ```
 
-2. Run app on local
+1. Run app on local
 
    ```sh
    npm run dev
    ```
 
-3. Import initial data from initial-data folder
+1. Import initial data from initial-data folder
+
+   ```sh
+   npx prisma db seed
+   ```
+   
+1. http://localhost:3000
 
 </details>
 
 ## Docker installation
 
-[Link to Docker HUB](https://hub.docker.com/repository/docker/nextcrmio/nextcrm/general).
+[Link to Docker HUB](https://hub.docker.com/repository/docker/nextcrmio/nextcrm/general)
 
 <details><summary><b>Show instructions</b></summary>
 
@@ -121,7 +140,7 @@ Will be soon at domain: http://docs.nextcrm.io
 
 ## Contact
 
-[www.dovhomilja.cz](https://www.dovhomilja.cz).
+[www.dovhomilja.cz](https://www.dovhomilja.cz)
 
 ## License
 
