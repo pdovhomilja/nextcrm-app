@@ -9,12 +9,12 @@ const SideBar = async () => {
   const modules = await getModules();
   const session = await getServerSession(authOptions);
 
+  //console.log(modules, "modules");
+
   if (!session) return null;
 
-  const userId = session?.user?.id;
-
   //Get user language
-  const lang = session?.user?.userLanguage;
+  const lang = session.user.userLanguage;
 
   //Fetch translations from dictionary
   const dict = await getDictionary(lang as "en" | "cz" | "de");

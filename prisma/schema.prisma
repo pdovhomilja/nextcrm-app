@@ -574,10 +574,6 @@ model system_Modules_Enabled {
   v        Int     @map("__v")
   name     String
   enabled  Boolean
-  icon     String
-  open     String
-  route    String
-  menuItem String
   position Int
 }
 
