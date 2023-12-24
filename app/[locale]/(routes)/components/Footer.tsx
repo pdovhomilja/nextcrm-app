@@ -1,9 +1,10 @@
+import getNextVersion from "@/actions/system/get-next-version";
 import Link from "next/link";
 import React from "react";
 
-type Props = {};
-
-const Footer = (props: Props) => {
+const Footer = async () => {
+  const nextVersion = await getNextVersion();
+  //console.log(nextVersion, "nextVersion");
   return (
     <footer className="flex flex-row h-8 justify-end items-center w-full text-xs text-gray-500 p-5">
       <div className="hidden md:flex pr-5">
@@ -17,7 +18,7 @@ const Footer = (props: Props) => {
       <div className="hidden md:flex space-x-2 pr-2">
         powered by Next.js
         <span className="bg-black rounded-md text-white px-1 mx-1">
-          {process.env.NEXT_PUBLIC_NEXT_VERSION?.substring(0, 2)}
+          {nextVersion.substring(1, 7) || process.env.NEXT_PUBLIC_NEXT_VERSION}
         </span>
         +
         <Link href={"https://ui.shadcn.com/"}>
