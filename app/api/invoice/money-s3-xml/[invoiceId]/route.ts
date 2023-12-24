@@ -2,7 +2,7 @@ import { authOptions } from "@/lib/auth";
 import { s3Client } from "@/lib/digital-ocean-s3";
 import { prismadb } from "@/lib/prisma";
 import { fillXmlTemplate } from "@/lib/xml-generator";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { PutObjectAclCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
@@ -55,10 +55,10 @@ export async function GET(
     Body: buffer,
     ContentType: "application/json",
     ContentDisposition: "inline",
-    ACL: "public-read",
+    //   ACL: "public-read",
   };
 
-  await s3Client.send(new PutObjectCommand(bucketParamsJSON));
+  await s3Client.send(new PutObjectAclCommand(bucketParamsJSON));
 
   //S3 bucket url for the invoice
   const urlMoneyS3 = `https://${process.env.DO_BUCKET}.${process.env.DO_REGION}.digitaloceanspaces.com/xml/invoice-${invoiceId}.xml`;

@@ -9,7 +9,7 @@ interface Email {
   date?: Date;
 }
 
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   const imap = new Imap({
     user: process.env.IMAP_USER!,
     password: process.env.IMAP_PASSWORD!,

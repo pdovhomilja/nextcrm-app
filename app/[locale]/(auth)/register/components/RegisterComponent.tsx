@@ -4,13 +4,12 @@ import axios from "axios";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next-intl/client";
-import React, { startTransition } from "react";
+import { useRouter } from "next/navigation";
+import React from "react";
 import { FingerprintIcon } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { usePathname } from "next-intl/client";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 
 import {
   Card,
@@ -109,15 +108,6 @@ export function RegisterComponent() {
 
   //Localizations
   const t = useTranslations("RegisterComponent");
-  const locale = useLocale();
-  const pathname = usePathname();
-
-  function onValueChange(value: string) {
-    const nextLocale = value;
-    startTransition(() => {
-      router.replace(pathname, { locale: nextLocale });
-    });
-  }
 
   return (
     <Card className="shadow-lg ">

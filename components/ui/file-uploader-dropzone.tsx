@@ -1,5 +1,3 @@
-"use client";
-
 import { UploadDropzone } from "@uploadthing/react";
 import { OurFileRouter } from "@/app/api/uploadthing/core";
 
@@ -15,6 +13,8 @@ interface Props {
 }
 
 export const FileUploaderDropzone = ({ uploader, onUploadSuccess }: Props) => (
+  //@ts-ignore
+  //TODO: Fix this issue with the type OurFileRouter
   <UploadDropzone<OurFileRouter>
     endpoint={uploader}
     onClientUploadComplete={(res) => {
