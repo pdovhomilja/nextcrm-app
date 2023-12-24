@@ -12,11 +12,9 @@ WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN  npx prisma generate && npx prisma db push && npm run build
+RUN  npx prisma generate && npx prisma db push && npx prisma db seed && npm run build
 
 RUN rm -rf node_modules
-RUN rm -rf .env
-RUN rm -rf .env.local
 RUN npm install
 
 FROM node:20.9.0-alpine

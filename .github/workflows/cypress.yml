@@ -11,9 +11,8 @@ jobs:
       fail-fast: false # https://github.com/cypress-io/github-action/issues/48
       matrix:
         containers: [1, 2] # Uses 2 parallel instances
-        mongodb-version: ['4.2', '4.4', '5.0', '6.0']
+        mongodb-version: ["4.2", "4.4", "5.0", "6.0"]
     steps:
-
       - name: Start MongoDB
         uses: supercharge/mongodb-github-action@1.10.0
         with:
@@ -34,6 +33,7 @@ jobs:
         run: |
           npx prisma generate
           npx prisma db push
+          npx prisma db seed
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
@@ -45,8 +45,8 @@ jobs:
           # https://docs.cypress.io/guides/continuous-integration/introduction#Boot-your-server
           build: npm run build
           start: npm start
-          wait-on: 'http://localhost:3000' # Waits for above
-          # Records to Cypress Cloud 
+          wait-on: "http://localhost:3000" # Waits for above
+          # Records to Cypress Cloud
           # https://docs.cypress.io/guides/cloud/projects#Set-up-a-project-to-record
           record: false
           parallel: false # Runs test in parallel using settings above
