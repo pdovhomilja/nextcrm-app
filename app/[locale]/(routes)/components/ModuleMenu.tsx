@@ -19,9 +19,10 @@ import EmailsModuleMenu from "./menu-items/Emails";
 type Props = {
   modules: any;
   dict: any;
+  build: number;
 };
 
-const ModuleMenu = ({ modules, dict }: Props) => {
+const ModuleMenu = ({ modules, dict, build }: Props) => {
   const [open, setOpen] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -34,7 +35,7 @@ const ModuleMenu = ({ modules, dict }: Props) => {
   }
 
   return (
-    <div className="flex">
+    <div className="flex flex-col">
       <div
         className={` ${
           open ? "w-72" : "w-20 "
@@ -116,6 +117,11 @@ const ModuleMenu = ({ modules, dict }: Props) => {
           ) : null}
           <AdministrationMenu open={open} title={dict.ModuleMenu.settings} />
         </div>
+      </div>
+      <div className="flex justify-center items-center w-full ">
+        <span className="text-xs text-gray-500 pb-2">
+          build: 0.0.3-beta-{build}
+        </span>
       </div>
     </div>
   );

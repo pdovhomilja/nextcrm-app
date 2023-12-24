@@ -16,7 +16,10 @@ const Footer = (props: Props) => {
       </div>
       <div className="hidden md:flex space-x-2 pr-2">
         powered by Next.js
-        <span className="bg-black rounded-md text-white px-1 mx-1">13.4</span>+
+        <span className="bg-black rounded-md text-white px-1 mx-1">
+          {process.env.NEXT_PUBLIC_NEXT_VERSION?.substring(0, 2)}
+        </span>
+        +
         <Link href={"https://ui.shadcn.com/"}>
           <span className="rounded-md mr-2">shadcnUI</span>
         </Link>{" "}
