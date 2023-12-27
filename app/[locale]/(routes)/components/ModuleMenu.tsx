@@ -15,6 +15,7 @@ import CrmModuleMenu from "./menu-items/Crm";
 import AdministrationMenu from "./menu-items/Administration";
 import DashboardMenu from "./menu-items/Dashboard";
 import EmailsModuleMenu from "./menu-items/Emails";
+import { cn } from "@/lib/utils";
 
 type Props = {
   modules: any;
@@ -118,7 +119,11 @@ const ModuleMenu = ({ modules, dict, build }: Props) => {
           <AdministrationMenu open={open} title={dict.ModuleMenu.settings} />
         </div>
       </div>
-      <div className="flex justify-center items-center w-full ">
+      <div
+        className={cn("flex justify-center items-center w-full", {
+          hidden: !open,
+        })}
+      >
         <span className="text-xs text-gray-500 pb-2">
           build: 0.0.3-beta-{build}
         </span>
