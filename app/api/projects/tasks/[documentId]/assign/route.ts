@@ -32,6 +32,7 @@ export async function POST(
           id: taskId,
         },
         data: {
+          updatedBy: session.user.id,
           documents: {
             connect: {
               id: documentId,

@@ -39,6 +39,7 @@ export async function PUT(req: Request) {
             data: {
               section: resourceSectionId,
               position: position,
+              updatedBy: session.user.id,
             },
           });
         }
@@ -55,6 +56,7 @@ export async function PUT(req: Request) {
           data: {
             section: destinationSectionId,
             position: position,
+            updatedBy: session.user.id,
           },
         });
       }

@@ -28,6 +28,7 @@ export async function PUT(req: Request) {
         id: id,
       },
       data: {
+        updatedBy: session.user.id,
         section: section,
       },
     });
@@ -105,6 +106,7 @@ export async function DELETE(req: Request) {
           id: tasks[key].id,
         },
         data: {
+          updatedBy: session.user.id,
           position: position,
         },
       });

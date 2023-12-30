@@ -8,7 +8,7 @@
     "crm": {
       "title": "Sales",
       "accounts": "Companies",
-      "opportunities": "Deals",
+      "opportunities": "Opportunities",
       "contacts": "Contacts",
       "leads": "Leads"
     },

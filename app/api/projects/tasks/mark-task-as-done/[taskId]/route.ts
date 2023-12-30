@@ -25,6 +25,7 @@ export async function POST(
       },
       data: {
         taskStatus: "COMPLETE",
+        updatedBy: session.user.id,
       },
     });
 
