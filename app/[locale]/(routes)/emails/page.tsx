@@ -10,8 +10,17 @@ import { getDictionary } from "@/dictionaries";
 
 const EmailRoute = async () => {
   const session = await getServerSession(authOptions);
+
+  if (!session) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
   //Get user language
-  const lang = session?.user?.userLanguage;
+  const lang = session.user.userLanguage;
 
   //Fetch translations from dictionary
   const dict = await getDictionary(lang as "en" | "cz" | "de");

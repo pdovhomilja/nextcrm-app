@@ -16,6 +16,7 @@ import {
   Globe2,
   Landmark,
   List,
+  MoreHorizontal,
   Percent,
   Phone,
   SquareStack,
@@ -42,8 +43,19 @@ export async function BasicView({ data }: OppsViewProps) {
       {/*      <pre>{JSON.stringify(data, null, 2)}</pre> */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle>{data.name}</CardTitle>
-          <CardDescription>ID:{data.id}</CardDescription>
+          <div className="flex w-full justify-between">
+            <div>
+              <CardTitle>{data.name}</CardTitle>
+              <CardDescription>ID:{data.id}</CardDescription>
+            </div>
+            <div>
+              {
+                //TODO: Add menu
+                //TODO: Add edit button
+              }
+              <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 w-full gap-5 ">

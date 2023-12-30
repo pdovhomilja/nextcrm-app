@@ -1,8 +1,8 @@
 import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
+import { utapi } from "@/lib/server/uploadthings";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
-import { utapi } from "uploadthing/server";
 
 export async function DELETE(
   req: Request,
@@ -41,8 +41,7 @@ export async function DELETE(
     if (!document[0].key)
       return new NextResponse("Document key not found", { status: 404 });
 
-    const utapiFile = await utapi.deleteFiles(document[0].key);
-
+    const utapiFile = await utapi.deleteFiles([document[0].key]);
     console.log(utapiFile, "utapiFile");
 
     return NextResponse.json("deletedDocument");

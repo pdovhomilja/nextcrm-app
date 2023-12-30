@@ -87,7 +87,7 @@ const NewSectionDialog = ({ boardId }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger>
+      <DialogTrigger asChild>
         <Button className="px-2">Create new section</Button>
       </DialogTrigger>
       <DialogContent className="">

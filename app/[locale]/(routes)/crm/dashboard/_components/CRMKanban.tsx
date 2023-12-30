@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  experimental_useOptimistic as useOptimistic,
-  useState,
-} from "react";
+import { useEffect, useOptimistic, useState } from "react";
 import axios from "axios";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";

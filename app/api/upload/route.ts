@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { s3Client } from "@/lib/digital-ocean-s3";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { PutObjectAclCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -82,11 +82,10 @@ export async function POST(request: NextRequest) {
     Body: buffer,
     ContentType: file.type,
     ContentDisposition: "inline",
-    ACL: "public-read",
   };
 
   try {
-    await s3Client.send(new PutObjectCommand(bucketParams));
+    await s3Client.send(new PutObjectAclCommand(bucketParams));
     console.log(data, "data");
   } catch (err) {
     console.log("Error - uploading to S3(Digital Ocean)", err);

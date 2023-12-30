@@ -39,6 +39,7 @@ export async function POST(
               id: documentId,
             },
           },
+          updatedBy: session.user.id,
         },
       });
 

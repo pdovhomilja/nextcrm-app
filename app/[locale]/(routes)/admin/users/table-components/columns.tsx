@@ -1,13 +1,14 @@
 "use client";
 
+import moment from "moment";
+import formatDistanceToNow from "date-fns/formatDistanceToNow";
+
 import { ColumnDef } from "@tanstack/react-table";
 
 import { statuses } from "../table-data/data";
 import { AdminUser } from "../table-data/schema";
-import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
-import moment from "moment";
-import formatDistanceToNow from "date-fns/formatDistanceToNow";
+import { DataTableColumnHeader } from "./data-table-column-header";
 
 export const columns: ColumnDef<AdminUser>[] = [
   /*   {

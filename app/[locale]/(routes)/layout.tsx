@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import Header from "./components/Header";
 import SideBar from "./components/SideBar";
 import Footer from "./components/Footer";
+import getAllCommits from "@/actions/github/get-repo-commits";
 
 export const metadata = {
   title: "NextCRM",
@@ -29,9 +30,12 @@ export default async function RootLayout({
     return redirect("/pending");
   }
 
+  const build = await getAllCommits();
+
+  //console.log(typeof build, "build");
   return (
     <div className="flex h-screen overflow-hidden">
-      <SideBar />
+      <SideBar build={build} />
       <div className="flex flex-col h-full w-full overflow-hidden">
         <Header
           id={session.user.id as string}

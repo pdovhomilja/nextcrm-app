@@ -66,7 +66,7 @@ export const getOpportunitiesByStage = async () => {
 
   const opportunitiesByStage = opportunities.reduce(
     (acc: any, opportunity: any) => {
-      const stage = opportunity.assigned_sales_stage.name;
+      const stage = opportunity.assigned_sales_stage?.name;
       acc[stage] = (acc[stage] || 0) + 1;
       return acc;
     },

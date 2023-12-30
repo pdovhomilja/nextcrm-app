@@ -38,7 +38,7 @@ const RightViewModal = ({
       <Dialog.Trigger asChild>
         <Button className="mb-5">{label}</Button>
       </Dialog.Trigger>
-      <Dialog.Portal className="">
+      <Dialog.Portal>
         <Dialog.Overlay className="data-[state=open]:animate-[dialog-overlay-show_1000ms] data-[state=closed]:animate-[dialog-overlay-hide_1000ms] fixed inset-0 bg-black/50" />
         <Dialog.Content
           className={
