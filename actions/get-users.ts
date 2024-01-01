@@ -24,7 +24,7 @@ export const getActiveUsers = async () => {
 };
 
 //Get new users by month for chart
-export const getUsersByMonth = async () => {
+export const getUsersByMonth = async (year: number) => {
   const users = await prismadb.users.findMany({
     select: {
       created_on: true,
@@ -36,10 +36,15 @@ export const getUsersByMonth = async () => {
   }
 
   const usersByMonth = users.reduce((acc: any, user: any) => {
+    const yearCreated = new Date(user.created_on).getFullYear();
     const month = new Date(user.created_on).toLocaleString("default", {
       month: "long",
     });
-    acc[month] = (acc[month] || 0) + 1;
+
+    if (yearCreated === year) {
+      acc[month] = (acc[month] || 0) + 1;
+    }
+
     return acc;
   }, {});
 

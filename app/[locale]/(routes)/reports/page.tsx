@@ -15,7 +15,8 @@ import {
 type Props = {};
 
 const ReportsPage = async (props: Props) => {
-  const newUsers = await getUsersByMonth();
+  const newUsers = await getUsersByMonth(2023);
+  const newUsers2024 = await getUsersByMonth(2024);
   const tasks = await getTasksByMonth();
   const oppsByStage = await getOpportunitiesByStage();
   const oppsByMonth = await getOpportunitiesByMonth();
@@ -29,11 +30,19 @@ const ReportsPage = async (props: Props) => {
         "Here will be predefined reports for every module. We use Tremor for data visualization."
       }
     >
-      <div className="pt-5">
+      <div className="pt-5 space-y-3">
         <BarChartDemo
           chartData={newUsers}
           title={"Number of new users by month (2023)"}
         />
+        <AreaChartDemo chartData={newUsers} title={"New users by month"} />
+      </div>
+      <div className="pt-5 space-y-3">
+        <BarChartDemo
+          chartData={newUsers2024}
+          title={"Number of new users by month (2024)"}
+        />
+        <AreaChartDemo chartData={newUsers2024} title={"New users by month"} />
       </div>
       <div className="pt-5">
         <BarChartDemo chartData={tasks} title={"New tasks by month (2023)"} />
@@ -47,9 +56,6 @@ const ReportsPage = async (props: Props) => {
           chartData={oppsByMonth}
           title={"New Opps by month (2023)"}
         />
-      </div>
-      <div className="pt-3">
-        <AreaChartDemo chartData={newUsers} title={"New users by month"} />
       </div>
     </Container>
   );
