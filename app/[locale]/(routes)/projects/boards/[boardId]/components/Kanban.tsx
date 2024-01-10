@@ -10,7 +10,7 @@ import {
 } from "react-beautiful-dnd";
 import { useRouter } from "next/navigation";
 import { ChangeEvent, useEffect, useState } from "react";
-import { EyeIcon, Pencil, PlusCircle, PlusIcon } from "lucide-react";
+import { Check, EyeIcon, Pencil, PlusCircle, PlusIcon } from "lucide-react";
 
 import {
   ChatBubbleIcon,
@@ -45,6 +45,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 import NewSectionForm from "../forms/NewSection";
 import UpdateTaskDialog from "../../../dialogs/UpdateTask";
+import { getTaskDone } from "../../../actions/get-task-done";
 
 let timer: any;
 const timeout = 1000;
@@ -208,6 +209,24 @@ const Kanban = (props: any) => {
         variant: "destructive",
         title: "Error",
         description: "Something went wrong, during creating task",
+      });
+    } finally {
+      setIsLoading(false);
+      router.refresh();
+    }
+  };
+
+  const onDone = async (id: string) => {
+    setIsLoading(true);
+    try {
+      await getTaskDone(id);
+      toast({
+        title: "Success, task marked as done.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error, task not marked as done.",
       });
     } finally {
       setIsLoading(false);
@@ -386,16 +405,17 @@ const Kanban = (props: any) => {
                                   className="flex flex-col overflow-hidden items-start justify-center text-xs p-3 mb-2  rounded-md border  shadow-md "
                                 >
                                   <div className="flex flex-row justify-between mx-auto w-full">
+                                    {/*  <pre>{JSON.stringify(task, null, 2)}</pre> */}
                                     <h2 className="font-bold text-sm py-1">
                                       {task.title === ""
                                         ? "Untitled"
                                         : task.title}
                                     </h2>
                                     {task?.dueDateAt &&
+                                      task.taskStatus != "COMPLETE" &&
                                       task.dueDateAt < Date.now() && (
                                         <HoverCard>
                                           <HoverCardTrigger>
-                                            {" "}
                                             <ExclamationTriangleIcon className="w-4 h-4 text-red-500" />
                                           </HoverCardTrigger>
                                           <HoverCardContent>
@@ -403,6 +423,17 @@ const Kanban = (props: any) => {
                                           </HoverCardContent>
                                         </HoverCard>
                                       )}
+                                    {task.taskStatus === "COMPLETE" && (
+                                      <HoverCard>
+                                        <HoverCardTrigger>
+                                          <Check className="w-4 h-4 text-green-500" />
+                                        </HoverCardTrigger>
+                                        <HoverCardContent>
+                                          This task is done!
+                                        </HoverCardContent>
+                                      </HoverCard>
+                                    )}
+
                                     <DropdownMenu>
                                       <DropdownMenuTrigger asChild>
                                         <DotsHorizontalIcon className="w-4 h-4 text-slate-600" />
@@ -419,16 +450,29 @@ const Kanban = (props: any) => {
                                           <EyeIcon className="w-4 h-4 opacity-50" />
                                           View
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                          className="gap-2"
-                                          onClick={() => {
-                                            setUpdateOpenSheet(true);
-                                            setSelectedTask(task);
-                                          }}
-                                        >
-                                          <Pencil className="w-4 h-4 opacity-50" />
-                                          Edit
-                                        </DropdownMenuItem>
+                                        {task.taskStatus !== "COMPLETE" && (
+                                          <DropdownMenuItem
+                                            className="gap-2"
+                                            onClick={() => {
+                                              setUpdateOpenSheet(true);
+                                              setSelectedTask(task);
+                                            }}
+                                          >
+                                            <Pencil className="w-4 h-4 opacity-50" />
+                                            Edit
+                                          </DropdownMenuItem>
+                                        )}
+                                        {task.taskStatus !== "COMPLETE" && (
+                                          <DropdownMenuItem
+                                            className="gap-2"
+                                            onClick={() => {
+                                              onDone(task.id);
+                                            }}
+                                          >
+                                            <Check className="w-4 h-4 opacity-50" />
+                                            Mark as done - {task.status}
+                                          </DropdownMenuItem>
+                                        )}
                                         <DropdownMenuItem
                                           className="gap-2"
                                           onClick={() => {
