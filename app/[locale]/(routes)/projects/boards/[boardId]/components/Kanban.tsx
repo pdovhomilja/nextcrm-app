@@ -403,6 +403,7 @@ const Kanban = (props: any) => {
                                     snapshot.isDragging ? "grabbing" : "grab"
                                   }
                                   className="flex flex-col overflow-hidden items-start justify-center text-xs p-3 mb-2  rounded-md border  shadow-md "
+                                  type="button"
                                 >
                                   <div className="flex flex-row justify-between mx-auto w-full">
                                     {/*  <pre>{JSON.stringify(task, null, 2)}</pre> */}
@@ -435,8 +436,11 @@ const Kanban = (props: any) => {
                                     )}
 
                                     <DropdownMenu>
-                                      <DropdownMenuTrigger asChild>
-                                        <DotsHorizontalIcon className="w-4 h-4 text-slate-600" />
+                                      <DropdownMenuTrigger
+                                        asChild
+                                        className="w-[25px] ml-2"
+                                      >
+                                        <DotsHorizontalIcon className="w-4 h-4 text-slate-600 pl-2" />
                                       </DropdownMenuTrigger>
                                       <DropdownMenuContent className="w-[200px]">
                                         <DropdownMenuItem
@@ -470,7 +474,7 @@ const Kanban = (props: any) => {
                                             }}
                                           >
                                             <Check className="w-4 h-4 opacity-50" />
-                                            Mark as done - {task.status}
+                                            Mark as done
                                           </DropdownMenuItem>
                                         )}
                                         <DropdownMenuItem
