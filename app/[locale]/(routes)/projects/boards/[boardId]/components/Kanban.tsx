@@ -405,40 +405,41 @@ const Kanban = (props: any) => {
                                   className="flex flex-col overflow-hidden items-start justify-center text-xs p-3 mb-2  rounded-md border  shadow-md "
                                   type="button"
                                 >
-                                  <div className="flex flex-row justify-between mx-auto w-full">
+                                  <div className="flex flex-row justify-between mx-auto w-full py-1">
                                     {/*  <pre>{JSON.stringify(task, null, 2)}</pre> */}
-                                    <h2 className="font-bold text-sm py-1">
+                                    <h2 className="grow font-bold text-sm ">
                                       {task.title === ""
                                         ? "Untitled"
                                         : task.title}
                                     </h2>
-                                    {task?.dueDateAt &&
-                                      task.taskStatus != "COMPLETE" &&
-                                      task.dueDateAt < Date.now() && (
+                                    <div className="ml-1">
+                                      {task?.dueDateAt &&
+                                        task.taskStatus != "COMPLETE" &&
+                                        task.dueDateAt < Date.now() && (
+                                          <HoverCard>
+                                            <HoverCardTrigger>
+                                              <ExclamationTriangleIcon className="w-4 h-4 text-red-500" />
+                                            </HoverCardTrigger>
+                                            <HoverCardContent>
+                                              Attention! This task is overdue!
+                                            </HoverCardContent>
+                                          </HoverCard>
+                                        )}
+                                      {task.taskStatus === "COMPLETE" && (
                                         <HoverCard>
                                           <HoverCardTrigger>
-                                            <ExclamationTriangleIcon className="w-4 h-4 text-red-500" />
+                                            <Check className="w-4 h-4 text-green-500" />
                                           </HoverCardTrigger>
                                           <HoverCardContent>
-                                            Attention! This task is overdue!
+                                            This task is done!
                                           </HoverCardContent>
                                         </HoverCard>
                                       )}
-                                    {task.taskStatus === "COMPLETE" && (
-                                      <HoverCard>
-                                        <HoverCardTrigger>
-                                          <Check className="w-4 h-4 text-green-500" />
-                                        </HoverCardTrigger>
-                                        <HoverCardContent>
-                                          This task is done!
-                                        </HoverCardContent>
-                                      </HoverCard>
-                                    )}
-
+                                    </div>
                                     <DropdownMenu>
                                       <DropdownMenuTrigger
                                         asChild
-                                        className="w-[25px] ml-2"
+                                        className="w-[25px] ml-1 "
                                       >
                                         <DotsHorizontalIcon className="w-4 h-4 text-slate-600 pl-2" />
                                       </DropdownMenuTrigger>
