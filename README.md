@@ -3,14 +3,27 @@
 </a>
 
 <p align="center">
-NextCRM is a CRM build on top of the Next.JS 13.4 using TypeScript, great UI library shadcn, Prisma and MongoDB as a database. Upload things as a S3 blob for document storage.
+NextCRM is a CRM build on top of the Next.JS 14 using TypeScript, great UI library shadcn, Prisma and MongoDB as a database. Upload things as a S3 blob for document storage.
 </p>
 
 <p align="center">
+<a href="https://twitter.com/nextcrmapp">
+<img alt="X (formerly Twitter) URL" src="https://img.shields.io/twitter/url?url=https%3A%2F%2Ftwitter.com%2Fnextcrmapp">
+</a>
   <a href="https://github.com/pdovhomilja/nextcrm-app/blob/main/LICENSE">
     <img alt="GitHub License" src="https://img.shields.io/github/license/pdovhomilja/nextcrm-app">
   </a>
 </p>
+
+<p align="center">
+  <a href="#online-demo"><strong>Introduction</strong></a> ·
+<a href="#tech-stack--features"><strong>Tech Stack + Features</strong></a> ·
+<a href="#roadmap"><strong>Roadmap</strong></a> ·
+<a href="#installation"><strong>Installation</strong></a> ·
+<a href="#repo-activity"><strong>Repo activity</strong></a> ·
+<a href="#license"><strong>License</strong></a>
+</p>
+<br/>
 
 ## Online Demo
 
@@ -184,8 +197,11 @@ Available soon at: http://docs.nextcrm.io
 ## Contact
 
 [www.dovhomilja.cz](https://www.dovhomilja.cz)
+</br>
+[<img alt="X (formerly Twitter) URL" src="https://img.shields.io/twitter/url?url=https%3A%2F%2Ftwitter.com%2Fdovhomilja">
+](https://twitter.com/dovhomilja)
 
-## Repo Activity (by Axiom)
+## Repo Activity
 
 ![Alt](https://repobeats.axiom.co/api/embed/e6bed6e15724f38c278ad2edcf0573a1bb24bed6.svg "Repobeats analytics image")
 
