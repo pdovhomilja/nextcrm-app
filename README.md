@@ -16,12 +16,13 @@ NextCRM is a CRM build on top of the Next.JS 14 using TypeScript, great UI libra
 </p>
 
 <p align="center">
-  <a href="#online-demo"><strong>Introduction</strong></a> ·
-<a href="#tech-stack--features"><strong>Tech Stack + Features</strong></a> ·
-<a href="#roadmap"><strong>Roadmap</strong></a> ·
-<a href="#installation"><strong>Installation</strong></a> ·
-<a href="#repo-activity"><strong>Repo activity</strong></a> ·
-<a href="#license"><strong>License</strong></a>
+   <a href="#online-demo"><strong>Introduction</strong></a> ·
+   <a href="#tech-stack--features"><strong>Tech Stack + Features</strong></a> ·
+   <a href="#roadmap"><strong>Roadmap</strong></a> ·
+   <a href="#installation"><strong>Installation</strong></a> ·
+   <a href="#repo-activity"><strong>Repo activity</strong></a> ·
+   <a href="#license"><strong>License</strong></a> ·
+   <a href="https://discord.gg/dHyxhTEzUb"><strong>Discord</strong>
 </p>
 <br/>
 
