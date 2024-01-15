@@ -12,9 +12,9 @@ export default async function getGithubRepoStars(): Promise<number> {
         },
       }
     );
-    console.log(response, "response");
+    //console.log(response, "response");
     const stars = response.data;
-    console.log(stars.stargazers_count);
+    //console.log(stars.stargazers_count);
     return stars.stargazers_count;
   } catch (error) {
     console.error("Error fetching commits:", error);
