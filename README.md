@@ -3,8 +3,12 @@
 </a>
 
 <p align="center">
-NextCRM is a CRM build on top of the Next.JS 14 using TypeScript, great UI library shadcn, Prisma and MongoDB as a database. Upload things as a S3 blob for document storage.
+<img alt="OG" src="public/images/opengraph-image.png" />
 </p>
+
+<!-- <p align="center">
+NextCRM is a CRM build on top of the Next.JS 14 using TypeScript, great UI library shadcn, Prisma and MongoDB as a database. Upload things as a S3 blob for document storage.
+</p> -->
 
 <p align="center">
 <a href="https://twitter.com/nextcrmapp">
