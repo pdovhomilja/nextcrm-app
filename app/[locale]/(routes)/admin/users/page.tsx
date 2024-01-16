@@ -9,6 +9,8 @@ import { authOptions } from "@/lib/auth";
 import { AdminUserDataTable } from "./table-components/data-table";
 import { columns } from "./table-components/columns";
 import { Users } from "@prisma/client";
+import { Button } from "@/components/ui/button";
+import SendMailToAll from "./components/send-mail-to-all";
 
 const AdminUsersPage = async () => {
   const users: Users[] = await getUsers();
@@ -39,7 +41,12 @@ const AdminUsersPage = async () => {
         </h4>
         <InviteForm />
       </div>
-      <Separator className="" />
+      <Separator />
+      <div>
+        <SendMailToAll />
+      </div>
+      <Separator />
+
       <AdminUserDataTable columns={columns} data={users} />
     </Container>
   );

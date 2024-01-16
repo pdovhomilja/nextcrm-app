@@ -8,6 +8,7 @@ import { notFound } from "next/navigation";
 import { createTranslator, NextIntlClientProvider } from "next-intl";
 
 import { Toaster } from "@/components/ui/toaster";
+import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/app/providers/ThemeProvider";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -52,6 +53,7 @@ export default async function RootLayout({
           </ThemeProvider>
         </NextIntlClientProvider>
         <Toaster />
+        <SonnerToaster />
       </body>
     </html>
   );
