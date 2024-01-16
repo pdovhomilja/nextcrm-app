@@ -41,14 +41,14 @@ const handler = async (data: InputType): Promise<ReturnType> => {
 
   try {
     const users = await prismadb.users.findMany({
-      where: {
+      /*       where: {
         email: {
           //contains: "pavel@softbase.cz",
           equals: "pavel@softbase.cz",
         },
-      },
+      }, */
     });
-    console.log(users.length, "user.length");
+    //console.log(users.length, "user.length");
 
     //For each user, send mail
     for (const user of users) {
