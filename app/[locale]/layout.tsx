@@ -1,7 +1,7 @@
 import "./globals.css";
 
+import { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { GeistSans, GeistMono } from "geist/font";
 
 import { ReactNode } from "react";
 import { notFound } from "next/navigation";
@@ -34,6 +34,16 @@ export async function generateMetadata({ params: { locale } }: Props) {
   return {
     title: t("RootLayout.title"),
     description: t("RootLayout.description"),
+    openGraph: {
+      images: [
+        {
+          url: "/images/opengraph-image.png",
+          width: 1200,
+          height: 630,
+          alt: t("RootLayout.title"),
+        },
+      ],
+    },
   };
 }
 
@@ -45,7 +55,30 @@ export default async function RootLayout({
 
   return (
     <html lang={locale}>
-      {/*       <body className={inter.className + "h-screen overflow-hidden"}> */}
+      <head>
+        <meta
+          name="viewport"
+          content="width=device-width, height=device-height, initial-scale=1"
+        />
+        <meta property="og:url" content="https://www.nextcrm.io" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="NextCRM" />
+        <meta
+          property="og:description"
+          content="NextCRM is an open source CRM build on top of NextJS. Technology stack: NextJS with Typescrtipt, MongoDB, TailwindCSS, React, Prisma, shadCN, resend.com, react.email and more."
+        />
+        <meta property="og:image" content="https://nextcrm.io/api/og" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta property="twitter:domain" content="nextcrm.io" />
+        <meta property="twitter:url" content="https://www.nextcrm.io" />
+        <meta name="twitter:title" content="NextCRM" />
+        <meta
+          name="twitter:description"
+          content="NextCRM is an open source CRM build on top of NextJS. Technology stack: NextJS with Typescrtipt, MongoDB, TailwindCSS, React, Prisma, shadCN, resend.com, react.email and more."
+        />
+        <meta name="twitter:image" content="https://nextcrm.io/api/og" />
+      </head>
       <body className={inter.className + "h-screen overflow-hidden"}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>

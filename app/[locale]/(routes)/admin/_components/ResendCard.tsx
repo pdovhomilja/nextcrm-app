@@ -13,6 +13,7 @@ import { prismadb } from "@/lib/prisma";
 
 import { revalidatePath } from "next/cache";
 import { Input } from "@/components/ui/input";
+import CopyKeyComponent from "./copy-key";
 
 const ResendCard = async () => {
   const setSMTP = async (formData: FormData) => {
@@ -58,19 +59,32 @@ const ResendCard = async () => {
   });
 
   return (
-    <Card className="w-1/3">
+    <Card className="min-w-[350px] max-w-[450px]">
       <CardHeader className="text-lg">
         <CardTitle>Resend.com - API Key</CardTitle>
-        <CardDescription>
-          {/*  Here will be actual settings */}
+        <CardDescription className="text-xs">
           <p>ENV API key:</p>
           <p>
-            {process.env.RESEND_API_KEY === undefined
-              ? "not enabled"
-              : process.env.RESEND_API_KEY}
+            {process.env.RESEND_API_KEY ? (
+              <CopyKeyComponent
+                keyValue={process.env.RESEND_API_KEY}
+                message="Resend - API Key"
+              />
+            ) : (
+              "not enabled"
+            )}
           </p>
           <p>API key from DB:</p>
-          <p>{resend_key ? resend_key?.serviceKey : "Not set"}</p>
+          <p>
+            {resend_key?.serviceKey ? (
+              <CopyKeyComponent
+                keyValue={resend_key?.serviceKey}
+                message="Resend - API Key"
+              />
+            ) : (
+              "not enabled"
+            )}
+          </p>
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
@@ -79,7 +93,8 @@ const ResendCard = async () => {
             <input type="hidden" name="id" value={resend_key?.id} />
             <Input type="text" name="serviceKey" placeholder="Your API key" />
           </div>
-          <div className="flex justify-end pt-2">
+          <div className="flex justify-end pt-2 gap-2">
+            <Button type={"reset"}>Reset</Button>
             <Button type="submit">Set Resend key</Button>
           </div>
         </form>

@@ -13,6 +13,7 @@ import { prismadb } from "@/lib/prisma";
 
 import { revalidatePath } from "next/cache";
 import { Input } from "@/components/ui/input";
+import CopyKeyComponent from "./copy-key";
 
 const OpenAiCard = async () => {
   const setOpenAiKey = async (formData: FormData) => {
@@ -58,19 +59,31 @@ const OpenAiCard = async () => {
   });
 
   return (
-    <Card className="w-1/3">
+    <Card className="min-w-[350px]  max-w-[450px]">
       <CardHeader className="text-lg">
         <CardTitle>OpenAi - API Key</CardTitle>
-        <CardDescription>
+        <CardDescription className="text-xs">
           {/*  Here will be actual settings */}
           <p>ENV API key:</p>
           <p>
-            {process.env.OPEN_AI_API_KEY === undefined
-              ? "not enabled"
-              : process.env.OPEN_AI_API_KEY}
+            {process.env.OPENAI_API_KEY ? (
+              <CopyKeyComponent
+                envValue={process.env.OPENAI_API_KEY}
+                message="OpenAi - API Key"
+              />
+            ) : (
+              "not enabled"
+            )}
           </p>
           <p>API key from DB:</p>
-          <p>{openAi_key ? openAi_key?.serviceKey : "Not set"}</p>
+          {openAi_key?.serviceKey ? (
+            <CopyKeyComponent
+              keyValue={openAi_key.serviceKey}
+              message="OpenAi - API Key"
+            />
+          ) : (
+            "not enabled"
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
@@ -79,7 +92,8 @@ const OpenAiCard = async () => {
             <input type="hidden" name="id" value={openAi_key?.id} />
             <Input type="text" name="serviceKey" placeholder="Your API key" />
           </div>
-          <div className="flex justify-end pt-2">
+          <div className="flex justify-end pt-2 gap-2">
+            <Button type={"reset"}>Reset</Button>
             <Button type="submit">Set OpenAi key</Button>
           </div>
         </form>

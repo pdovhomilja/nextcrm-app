@@ -17,10 +17,10 @@ const GptCard = async () => {
   //console.log(gptModels, "gptModels");
 
   return (
-    <Card className="w-1/3">
+    <Card className="min-w-[350px]  max-w-[450px]">
       <CardHeader className="text-lg">
         <CardTitle>AI assistant GPT model</CardTitle>
-        <CardDescription>
+        <CardDescription className="text-xs">
           actual model:{" "}
           {
             //filter in gptModels where status = ACTIVE

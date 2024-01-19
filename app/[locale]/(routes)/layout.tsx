@@ -7,13 +7,9 @@ import Header from "./components/Header";
 import SideBar from "./components/SideBar";
 import Footer from "./components/Footer";
 import getAllCommits from "@/actions/github/get-repo-commits";
+import { Metadata } from "next";
 
-export const metadata = {
-  title: "NextCRM",
-  description: "",
-};
-
-export default async function RootLayout({
+export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode;

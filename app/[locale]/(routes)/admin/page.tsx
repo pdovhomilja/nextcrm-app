@@ -38,7 +38,7 @@ const AdminPage = async () => {
           <Link href="/admin/modules">Modules administration</Link>
         </Button>
       </div>
-      <div className="flex flex-col-1 gap-2">
+      <div className="flex flex-row flex-wrap space-y-2 md:space-y-0 gap-2">
         <GptCard />
         <ResendCard />
         <OpenAiCard />
