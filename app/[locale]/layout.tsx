@@ -32,6 +32,7 @@ export async function generateMetadata({ params: { locale } }: Props) {
   const t = createTranslator({ locale, messages });
 
   return {
+    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL!),
     title: t("RootLayout.title"),
     description: t("RootLayout.description"),
     openGraph: {
@@ -43,6 +44,13 @@ export async function generateMetadata({ params: { locale } }: Props) {
           alt: t("RootLayout.title"),
         },
       ],
+    },
+    twitter: {
+      cardType: "summary_large_image",
+      image: "/images/opengraph-image.png",
+      width: 1200,
+      height: 630,
+      alt: t("RootLayout.title"),
     },
   };
 }
