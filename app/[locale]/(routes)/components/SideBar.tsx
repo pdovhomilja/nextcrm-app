@@ -6,12 +6,11 @@ import { authOptions } from "@/lib/auth";
 import { getDictionary } from "@/dictionaries";
 
 const SideBar = async ({ build }: { build: number }) => {
-  const modules = await getModules();
   const session = await getServerSession(authOptions);
 
-  //console.log(modules, "modules");
-
   if (!session) return null;
+
+  const modules = await getModules();
 
   //Get user language
   const lang = session.user.userLanguage;

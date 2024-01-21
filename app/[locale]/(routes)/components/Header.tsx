@@ -29,7 +29,6 @@ const Header = ({ id, name, email, avatar, lang }: Props) => {
           <Feedback />
           <ThemeToggle />
           <SupportComponent />
-          <div className="hidden lg:flex flex-col text-xs text-gray-500"></div>
           <AvatarDropdown
             avatar={avatar}
             userId={id}

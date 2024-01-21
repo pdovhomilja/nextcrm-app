@@ -206,6 +206,22 @@ Available soon at: http://docs.nextcrm.io
 [<img alt="X (formerly Twitter) URL" src="https://img.shields.io/twitter/url?url=https%3A%2F%2Ftwitter.com%2Fdovhomilja">
 ](https://twitter.com/dovhomilja)
 
+## Contributing
+
+We are open to the NextCRM community contributions. Every contribution is welcome.
+
+### Issues
+
+- [Open an issue](https://github.com/pdovhomilja/nextcrm-app/issues) if you find a bug or have a suggestion for improvements.
+
+### NextCRM Super heroes
+
+<a href="https://github.com/pdovhomilja/nextcrm-app/graphs/contributors">
+<img src="https://contrib.rocks/image?repo=pdovhomilja/nextcrm-app" />
+</a>
+
+Made with [contrib.rocks](https://contrib.rocks).
+
 ## Repo Activity
 
 ![Alt](https://repobeats.axiom.co/api/embed/e6bed6e15724f38c278ad2edcf0573a1bb24bed6.svg "Repobeats analytics image")

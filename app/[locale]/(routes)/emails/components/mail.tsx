@@ -71,8 +71,6 @@ export function MailComponent({
           collapsible={true}
           minSize={15}
           maxSize={20}
-          //@ts-ignore
-          //TODO: fix this issue with onCollapse
           onCollapse={(collapsed) => {
             setIsCollapsed(collapsed);
             document.cookie = `react-resizable-panels:collapsed=${JSON.stringify(
