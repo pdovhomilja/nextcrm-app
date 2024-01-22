@@ -4,7 +4,7 @@ import React from "react";
 import Container from "../components/ui/Container";
 
 import { BarChartDemo } from "@/components/tremor/BarChart";
-import { getUsersByMonth } from "@/actions/get-users";
+import { getUsersByMonth, getUsersByMonthAndYear } from "@/actions/get-users";
 import { AreaChartDemo } from "@/components/tremor/AreaChart";
 import { getTasksByMonth } from "@/actions/projects/get-tasks";
 import {
@@ -15,8 +15,9 @@ import {
 type Props = {};
 
 const ReportsPage = async (props: Props) => {
-  const newUsers = await getUsersByMonth(2023);
-  const newUsers2024 = await getUsersByMonth(2024);
+  const newUsersOverall = await getUsersByMonth();
+  const newUsers = await getUsersByMonthAndYear(2023);
+  const newUsers2024 = await getUsersByMonthAndYear(2024);
   const tasks = await getTasksByMonth();
   const oppsByStage = await getOpportunitiesByStage();
   const oppsByMonth = await getOpportunitiesByMonth();
@@ -30,6 +31,16 @@ const ReportsPage = async (props: Props) => {
         "Here will be predefined reports for every module. We use Tremor for data visualization."
       }
     >
+      <div className="pt-5 space-y-3">
+        <BarChartDemo
+          chartData={newUsersOverall}
+          title={"Number of new users by month (Overall)"}
+        />
+        <AreaChartDemo
+          chartData={newUsersOverall}
+          title={"New users by month (Overall)"}
+        />
+      </div>
       <div className="pt-5 space-y-3">
         <BarChartDemo
           chartData={newUsers}

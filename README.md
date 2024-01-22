@@ -79,7 +79,7 @@ You can try it here [demo.nextcrm.io](https://demo.nextcrm.io), login via Google
 5. Fix all Types issue (no more "any") - in progress
 6. i18n - localization - in progress (if anyone want to help I will be very happy)
 7. Turborepo - in planning
-8. Upgrade to Next.js 14 - in planning
+8. ~~Upgrade to Next.js 14 - in planning~~
 9. Email client - in planning
 
 ## Emails
