@@ -44,6 +44,8 @@ export default async function AppLayout({
 }) {
   const session = await getServerSession(authOptions);
 
+  //console.log(session, "session");
+
   if (!session) {
     return redirect("/sign-in");
   }
@@ -52,6 +54,10 @@ export default async function AppLayout({
 
   if (user?.userStatus === "PENDING") {
     return redirect("/pending");
+  }
+
+  if (user?.userStatus === "INACTIVE") {
+    return redirect("/inactive");
   }
 
   const build = await getAllCommits();

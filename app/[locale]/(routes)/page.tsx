@@ -278,11 +278,10 @@ const DashboardPage = async () => {
         )}
 
         <StorageQuota actual={storage} title={dict.DashboardPage.storage} />
-        {secondBrainModule?.enabled && (
-          <Suspense fallback={<LoadingBox />}>
-            <NotionsBox />
-          </Suspense>
-        )}
+
+        <Suspense fallback={<LoadingBox />}>
+          {secondBrainModule?.enabled && <NotionsBox />}
+        </Suspense>
       </div>
     </Container>
   );
