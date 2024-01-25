@@ -1,6 +1,6 @@
 name: 🐞 Bug report
 description: Create a bug report to help us improve NextCRM App
-title: "Bug: "
+title: "[BUG:]"
 labels: [👀 Exploration Pending, 🐞 bug]
 body:
   - type: markdown
@@ -31,6 +31,7 @@ body:
       description: Select the browsers where the issue can be reproduced (that you know of).
       options:
         - "Chrome"
+        - "Brave"
         - "Firefox"
         - "Safari"
         - "Edge"
