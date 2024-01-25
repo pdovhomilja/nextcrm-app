@@ -2,7 +2,7 @@ name: 🐞 Bug report
 description: Create a bug report to help us improve NextCRM App
 title: "[BUG:]"
 labels: [👀 Exploration Pending, 🐞 bug]
-projects: [pdovhomilja/projects/1]
+projects: ["pdovhomilja/1"]
 body:
   - type: markdown
     attributes:
