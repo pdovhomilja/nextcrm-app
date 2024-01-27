@@ -6,6 +6,7 @@ import {
   Contact,
   DollarSignIcon,
   FactoryIcon,
+  HeartHandshakeIcon,
   LandmarkIcon,
   UserIcon,
   Users2Icon,
@@ -62,7 +63,7 @@ const DashboardPage = async () => {
   const invoices = await getInvoicesCount();
   const revenue = await getExpectedRevenue();
   const documents = await getDocumentsCount();
-  const opportunities = getOpportunitiesCount();
+  const opportunities = await getOpportunitiesCount();
   const usersTasks = await getUsersTasksCount(userId);
 
   //Find which modules are enabled
@@ -83,208 +84,164 @@ const DashboardPage = async () => {
       }
     >
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {dict.DashboardPage.totalRevenue}
-            </CardTitle>
-            <DollarSignIcon className="w-4 h-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-medium">{"0"}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {dict.DashboardPage.expectedRevenue}
-            </CardTitle>
-            <DollarSignIcon className="w-4 h-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-medium">
-              {
-                //I need revenue value in forma 1.000.000
-                revenue.toLocaleString("en-US", {
-                  style: "currency",
-                  currency: "USD",
-                })
-              }
-            </div>
-          </CardContent>
-        </Card>
-        <Link href="/admin/users">
+        <Suspense fallback={<LoadingBox />}>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                {dict.DashboardPage.activeUsers}
+                {dict.DashboardPage.totalRevenue}
               </CardTitle>
-              <UserIcon className="w-4 h-4 text-muted-foreground" />
+              <DollarSignIcon className="w-4 h-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-medium">{users}</div>
+              <div className="text-2xl font-medium">{"0"}</div>
             </CardContent>
           </Card>
-        </Link>
+        </Suspense>
+        <Suspense fallback={<LoadingBox />}>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                {dict.DashboardPage.expectedRevenue}
+              </CardTitle>
+              <DollarSignIcon className="w-4 h-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-medium">
+                {
+                  //I need revenue value in format 1.000.000
+                  revenue.toLocaleString("en-US", {
+                    style: "currency",
+                    currency: "USD",
+                  })
+                }
+              </div>
+            </CardContent>
+          </Card>
+        </Suspense>
+
+        <DashboardCard
+          href="/admin/users"
+          title={dict.DashboardPage.activeUsers}
+          IconComponent={UserIcon}
+          content={users}
+        />
         {
           //show crm module only if enabled is true
           employeesModule?.enabled && (
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Employees</CardTitle>
-                <Users2Icon className="w-4 h-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-medium">{employees.length}</div>
-              </CardContent>
-            </Card>
+            <DashboardCard
+              href="/employees"
+              title="Employees"
+              IconComponent={Users2Icon}
+              content={employees.length}
+            />
           )
         }
         {
           //show crm module only if enabled is true
           crmModule?.enabled && (
             <>
-              <Link href="/crm/accounts">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      {dict.DashboardPage.accounts}
-                    </CardTitle>
-                    <LandmarkIcon className="w-4 h-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-medium">{accounts}</div>
-                  </CardContent>
-                </Card>
-              </Link>
-              <Link href="/crm/opportunities">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      {dict.DashboardPage.opportunities}
-                    </CardTitle>
-                    <FactoryIcon className="w-4 h-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-medium">{opportunities}</div>
-                  </CardContent>
-                </Card>
-              </Link>
-              <Link href="/crm/contacts">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      {dict.DashboardPage.contacts}
-                    </CardTitle>
-                    <Contact className="w-4 h-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-medium">{contacts}</div>
-                  </CardContent>
-                </Card>
-              </Link>
-              <Link href="/crm/leads">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      {" "}
-                      {dict.DashboardPage.leads}
-                    </CardTitle>
-                    <CoinsIcon className="w-4 h-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-medium">{leads}</div>
-                  </CardContent>
-                </Card>
-              </Link>
+              <DashboardCard
+                href="/crm/accounts"
+                title={dict.DashboardPage.accounts}
+                IconComponent={LandmarkIcon}
+                content={accounts}
+              />
+              <DashboardCard
+                href="/crm/opportunities"
+                title={dict.DashboardPage.opportunities}
+                IconComponent={HeartHandshakeIcon}
+                content={opportunities}
+              />
+              <DashboardCard
+                href="/crm/contacts"
+                title={dict.DashboardPage.contacts}
+                IconComponent={Contact}
+                content={contacts}
+              />
+              <DashboardCard
+                href="/crm/leads"
+                title={dict.DashboardPage.leads}
+                IconComponent={CoinsIcon}
+                content={leads}
+              />
             </>
           )
         }
         {projectsModule?.enabled && (
           <>
-            <Link href="/projects">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    {dict.DashboardPage.projects}
-                  </CardTitle>
-                  <CoinsIcon className="w-4 h-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-medium">{projects}</div>
-                </CardContent>
-              </Card>
-            </Link>
-            <Link href="/projects/tasks">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    {" "}
-                    {dict.DashboardPage.tasks}
-                  </CardTitle>
-                  <CoinsIcon className="w-4 h-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-medium">{tasks}</div>
-                </CardContent>
-              </Card>
-            </Link>
-            <Link href={`/projects/tasks/${userId}`}>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    {dict.DashboardPage.myTasks}
-                  </CardTitle>
-                  <CoinsIcon className="w-4 h-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-medium">{usersTasks}</div>
-                </CardContent>
-              </Card>
-            </Link>
+            <DashboardCard
+              href="/projects"
+              title={dict.DashboardPage.projects}
+              IconComponent={CoinsIcon}
+              content={projects}
+            />
+            <DashboardCard
+              href="/projects/tasks"
+              title={dict.DashboardPage.tasks}
+              IconComponent={CoinsIcon}
+              content={tasks}
+            />
+            <DashboardCard
+              href={`/projects/tasks/${userId}`}
+              title={dict.DashboardPage.myTasks}
+              IconComponent={CoinsIcon}
+              content={usersTasks}
+            />
           </>
         )}
         {invoiceModule?.enabled && (
-          <Link href="/invoice">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {" "}
-                  {dict.DashboardPage.invoices}
-                </CardTitle>
-                <CoinsIcon className="w-4 h-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-medium">{invoices}</div>
-              </CardContent>
-            </Card>
-          </Link>
+          <DashboardCard
+            href="/invoice"
+            title={dict.DashboardPage.invoices}
+            IconComponent={CoinsIcon}
+            content={invoices}
+          />
         )}
         {documentsModule?.enabled && (
-          <Link href="/documents">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {" "}
-                  {dict.DashboardPage.documents}
-                </CardTitle>
-                <CoinsIcon className="w-4 h-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-medium">{documents}</div>
-              </CardContent>
-            </Card>
-          </Link>
+          <DashboardCard
+            href="/documents"
+            title={dict.DashboardPage.documents}
+            IconComponent={CoinsIcon}
+            content={documents}
+          />
         )}
 
         <StorageQuota actual={storage} title={dict.DashboardPage.storage} />
 
-        <Suspense fallback={<LoadingBox />}>
-          {secondBrainModule?.enabled && <NotionsBox />}
-        </Suspense>
+        {secondBrainModule?.enabled && (
+          <Suspense fallback={<LoadingBox />}>
+            <NotionsBox />
+          </Suspense>
+        )}
       </div>
     </Container>
   );
 };
 
 export default DashboardPage;
+
+const DashboardCard = ({
+  href,
+  title,
+  IconComponent,
+  content,
+}: {
+  href?: string;
+  title: string;
+  IconComponent: any;
+  content: number;
+}) => (
+  <Link href={href || "#"}>
+    <Suspense fallback={<LoadingBox />}>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">{title}</CardTitle>
+          <IconComponent className="w-4 h-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-medium">{content}</div>
+        </CardContent>
+      </Card>
+    </Suspense>
+  </Link>
+);
