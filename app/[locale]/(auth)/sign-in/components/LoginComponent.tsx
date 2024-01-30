@@ -86,6 +86,24 @@ export function LoginComponent() {
     }
   };
 
+  const loginWithGitHub = async () => {
+    setIsLoading(true);
+    try {
+      await signIn("github", {
+        callbackUrl: process.env.NEXT_PUBLIC_APP_URL,
+        //callbackUrl: "/",
+      });
+    } catch (error) {
+      console.log(error, "error");
+      toast({
+        variant: "destructive",
+        description:
+          "Something went wrong while logging with your Google account.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
   //Login with username(email)/password
   async function onSubmit(data: LoginFormValues) {
     setIsLoading(true);
@@ -155,10 +173,10 @@ export function LoginComponent() {
       </CardHeader>
       <CardContent className="grid gap-4">
         <div className="grid grid-cols-2 gap-6">
-          {/*           <Button variant="outline">
+          <Button variant="outline" onClick={loginWithGitHub}>
             <Icons.gitHub className="mr-2 h-4 w-4" />
             Github
-          </Button> */}
+          </Button>
           <Button
             variant="outline"
             onClick={loginWithGoogle}
