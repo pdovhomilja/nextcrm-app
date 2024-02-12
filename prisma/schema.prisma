@@ -567,6 +567,7 @@ enum Language {
   cz
   en
   de
+  uk
 }
 
 model system_Modules_Enabled {
