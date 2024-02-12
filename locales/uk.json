@@ -1,0 +1,50 @@
+{
+  "RootLayout": {
+    "title": "NextCRM",
+    "description": "NextCRM — це CRM з відкритим вихідним кодом, створена на основі NextJS."
+  },
+  "ModuleMenu": {
+    "dashboard": "Панель приладів",
+    "crm": {
+      "title": "Продажі",
+      "accounts": "Компанії",
+      "opportunities": "Можливості",
+      "contacts": "Контакти",
+      "leads": "Ліди"
+    },
+    "projects": "Проекти",
+    "emails": "електронні листи",
+    "tasks": "завдання",
+    "invoices": "Рахунки-фактури",
+    "reports": "Звіти",
+    "documents": "Документи",
+    "storage": "Зберігання",
+    "settings": "Адміністрація"
+  },
+  "DashboardPage": {
+    "containerTitle": "Панель приладів",
+    "totalRevenue": "Загальна виручка",
+    "containerDescription": "Ласкаво просимо до NextCRM, тут Ви можете побачити всю важливу інформацію про ваш бізнес.",
+    "expectedRevenue": "Очікуваний дохід",
+    "activeUsers": "Активні користувачі",
+    "accounts": "Компанії",
+    "opportunities": "Угоди",
+    "contacts": "Контакти",
+    "leads": "Ліди",
+    "projects": "Проекти",
+    "tasks": "Завдання",
+    "myTasks": "Мої завдання",
+    "invoices": "Рахунки-фактури",
+    "documents": "Документи",
+    "storage": "Зберігання"
+  },
+  "RegisterComponent": {
+    "cardTitle": "Створити новий обліковий запис",
+    "cardDescription": "Створіть обліковий запис, увійшовши за допомогою",
+    "label": "Мова",
+    "locale": "{locale, select, de {German} en {Engish} cz {Czech} uk {Ukrainian} other {Unknown}}"
+  },
+  "CrmModuleMenuComponent": {
+    "menuTitle": "Продажі"
+  }
+}
