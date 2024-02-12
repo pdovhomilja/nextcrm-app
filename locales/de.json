@@ -42,6 +42,6 @@
     "cardTitle": "Neuen Account erstellen",
     "cardDescription": "Erstellen Sie ein Konto, indem Sie sich anmelden mit",
     "label": "Sprache",
-    "locale": "{locale, select, de {Deutsch} en {Englisch} cz {Tschechisch} other {Unbekannt}}"
+    "locale": "{locale, select, de {Deutsch} en {Englisch} cz {Tschechisch} uk {Ukrainian} other {Unbekannt}}"
   }
 }

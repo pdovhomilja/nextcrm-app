@@ -42,7 +42,7 @@
     "cardTitle": "Vytvořit nový účet",
     "cardDescription": "Vytvořte si účet přihlášením pomocí",
     "label": "Jazyk",
-    "locale": "{locale, select, de {Němčina} en {Angličtina} cz {Čeština} other {Neznámý}}"
+    "locale": "{locale, select, de {Němčina} en {Angličtina} cz {Čeština} uk {Ukrainian} other {Neznámý}}"
   },
   "CrmModuleMenuComponent": {
     "menuTitle": "Obchod",
