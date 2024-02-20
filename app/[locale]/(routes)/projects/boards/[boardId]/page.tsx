@@ -15,6 +15,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Users } from "@prisma/client";
 import AiAssistantProject from "./components/AiAssistantProject";
+import { Lock } from "lucide-react";
 
 interface BoardDetailProps {
   params: { boardId: string };
@@ -32,10 +33,12 @@ const BoardPage = async ({ params }: BoardDetailProps) => {
   const sections: any = await getBoardSections(boardId);
   const kanbanData = await getKanbanData(boardId);
 
+  //console.log(board, "board");
   return (
     <Container
       title={board?.board?.title}
       description={board?.board?.description}
+      visibility={board?.board?.visibility}
     >
       <div className="flex justify-between py-5 w-full">
         <div className="space-x-2">
