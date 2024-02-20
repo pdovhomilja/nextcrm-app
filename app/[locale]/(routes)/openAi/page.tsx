@@ -10,14 +10,21 @@ import Link from "next/link";
 const ProfilePage = async () => {
   const user = await getServerSession(authOptions);
 
-  const openAiKey = await prismadb.openAi_keys.findFirst({
+  const openAiKeyUser = await prismadb.openAi_keys.findFirst({
     where: {
       user: user?.user?.id,
     },
   });
 
-  //console.log(openAiKey);
-  if (!openAiKey)
+  const openAiKeySystem = await prismadb.systemServices.findFirst({
+    where: {
+      name: "openAiKey",
+    },
+  });
+
+  //console.log(openAiKeySystem, "openAiKeySystem");
+
+  if (process.env.OPENAI_API_KEY && !openAiKeyUser && !openAiKeySystem)
     return (
       <Container
         title="Ai assistant"
@@ -28,9 +35,8 @@ const ProfilePage = async () => {
           <p>
             Please add your open ai key in your
             <Link href={"/profile"} className="text-blue-500">
-              {" "}
               profile settings page{" "}
-            </Link>{" "}
+            </Link>
             to use the assistant
           </p>
         </div>

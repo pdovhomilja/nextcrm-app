@@ -22,12 +22,15 @@ export async function openAiHelper(userId: string) {
   let apiKey = openAiKey?.serviceKey || userOpenAiKey?.api_key;
 
   if (!apiKey) {
-    if (!process.env.OPEN_AI_API_KEY) {
-      throw new Error("OPEN_AI_API_KEY is not defined in the environment");
+    if (!process.env.OPENAI_API_KEY) {
+      console.log("No API key found in the environment");
+      return null;
+      //throw new Error("OPEN_AI_API_KEY is not defined in the environment");
     }
-    apiKey = process.env.OPEN_AI_API_KEY;
+    apiKey = process.env.OPENAI_API_KEY;
   }
 
+  //console.log(apiKey, "apiKey");
   const openai = new OpenAI({
     apiKey: apiKey,
   });
