@@ -3,7 +3,6 @@ import { prismadb } from "@/lib/prisma";
 
 import { openAiHelper } from "@/lib/openai";
 
-
 export const maxDuration = 300;
 
 export async function POST(req: Request) {
@@ -11,6 +10,10 @@ export async function POST(req: Request) {
   const { prompt, userId } = body;
 
   const openai = await openAiHelper(userId);
+
+  if (!openai) {
+    return new NextResponse("No openai key found", { status: 500 });
+  }
 
   if (!prompt) {
     return new NextResponse("No prompt", { status: 400 });
