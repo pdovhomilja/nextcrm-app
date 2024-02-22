@@ -320,6 +320,7 @@ const Kanban = (props: any) => {
             <UpdateTaskDialog
               users={users}
               boards={boards}
+              boardId={boardId}
               initialData={selectedTask}
               onDone={() => setUpdateOpenSheet(false)}
             />

@@ -50,11 +50,18 @@ import { z } from "zod";
 type Props = {
   users: any;
   boards: any;
+  boardId?: string;
   initialData: any;
   onDone?: () => void;
 };
 
-const UpdateTaskDialog = ({ users, boards, initialData, onDone }: Props) => {
+const UpdateTaskDialog = ({
+  users,
+  boards,
+  boardId,
+  initialData,
+  onDone,
+}: Props) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const [isMounted, setIsMounted] = useState(false);
@@ -68,13 +75,21 @@ const UpdateTaskDialog = ({ users, boards, initialData, onDone }: Props) => {
     dueDateAt: z.date(),
     priority: z.string().min(3).max(10),
     content: z.string().min(3).max(500),
+    boardId: z.string().min(3).max(255),
   });
 
   type UpdatedTaskForm = z.infer<typeof formSchema>;
 
   const form = useForm<UpdatedTaskForm>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData,
+    defaultValues: {
+      title: initialData.title,
+      user: initialData.user,
+      dueDateAt: initialData.dueDateAt,
+      priority: initialData.priority,
+      content: initialData.content,
+      boardId: boardId,
+    },
   });
 
   useEffect(() => {
@@ -114,6 +129,17 @@ const UpdateTaskDialog = ({ users, boards, initialData, onDone }: Props) => {
 
   return (
     <div className="flex w-full ">
+      {/*       <div>
+        <pre>
+          {JSON.stringify(
+            {
+              boards,
+            },
+            null,
+            2
+          )}
+        </pre>
+      </div> */}
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}

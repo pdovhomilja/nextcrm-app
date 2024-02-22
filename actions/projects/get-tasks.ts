@@ -25,7 +25,7 @@ export const getTasks = async () => {
       },
     },
     orderBy: {
-      date_created: "desc",
+      createdAt: "desc",
     },
   });
 

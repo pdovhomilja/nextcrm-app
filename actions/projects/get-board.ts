@@ -12,9 +12,6 @@ export const getBoard = async (id: string) => {
         },
       },
     },
-    orderBy: {
-      date_created: "desc",
-    },
   });
 
   const sections = await prismadb.sections.findMany({

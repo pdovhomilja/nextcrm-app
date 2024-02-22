@@ -57,6 +57,16 @@ export async function POST(
         },
       });
 
+      //Make update to Board - updatedAt field to trigger re-render and reorder
+      await prismadb.boards.update({
+        where: {
+          id: boardId,
+        },
+        data: {
+          updatedAt: new Date(),
+        },
+      });
+
       return NextResponse.json({ status: 200 });
     } catch (error) {
       console.log("[NEW_TASK_IN_PROJECT_POST]", error);

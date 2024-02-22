@@ -223,12 +223,16 @@ model Boards {
   title             String
   user              String    @db.ObjectId
   visibility        String?
-  date_created      DateTime? @default(now()) @db.Date
-  last_edited       DateTime? @db.Date
+  sharedWith        String[]  @db.ObjectId
+  createdAt         DateTime? @default(now()) @db.Date
+  createdBy         String?   @db.ObjectId
+  updatedAt         DateTime? @updatedAt @db.Date
+  updatedBy         String?   @db.ObjectId
+
   //Create watechers field for board. It will be array of users
-  watchers          String[]  @db.ObjectId
-  assigned_user     Users?    @relation(name: "assigned_user", fields: [user], references: [id])
-  watchers_users    Users[]   @relation(name: "watching_users", fields: [watchers], references: [id])
+  watchers       String[] @db.ObjectId
+  assigned_user  Users?   @relation(name: "assigned_user", fields: [user], references: [id])
+  watchers_users Users[]  @relation(name: "watching_users", fields: [watchers], references: [id])
 }
 
 model Employees {

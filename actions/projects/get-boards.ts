@@ -23,7 +23,7 @@ export const getBoards = async (userId: string) => {
       },
     },
     orderBy: {
-      date_created: "desc",
+      updatedAt: "desc",
     },
   });
   return data;

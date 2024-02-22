@@ -80,6 +80,16 @@ export async function POST(req: Request) {
       },
     });
 
+    //Make update to Board - updatedAt field to trigger re-render and reorder
+    await prismadb.boards.update({
+      where: {
+        id: board,
+      },
+      data: {
+        updatedAt: new Date(),
+      },
+    });
+
     //Notification to user who is not a task creator
     if (user !== session.user.id) {
       try {
