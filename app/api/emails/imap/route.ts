@@ -10,9 +10,17 @@ interface Email {
 }
 
 export async function GET(): Promise<NextResponse> {
+  if (
+    !process.env.IMAP_USER ||
+    !process.env.IMAP_PASSWORD ||
+    !process.env.IMAP_HOST
+  ) {
+    return new NextResponse("IMAP configuration is missing", { status: 500 });
+  }
+
   const imap = new Imap({
-    user: process.env.IMAP_USER!,
-    password: process.env.IMAP_PASSWORD!,
+    user: process.env.IMAP_USER,
+    password: process.env.IMAP_PASSWORD,
     host: process.env.IMAP_HOST,
     port: Number(process.env.IMAP_PORT) || 993,
     tls: true,
