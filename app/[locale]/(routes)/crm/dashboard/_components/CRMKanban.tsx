@@ -27,6 +27,8 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 
 import { NewOpportunityForm } from "../../opportunities/components/NewOpportunityForm";
+import { set } from "cypress/types/lodash";
+import { setInactiveOpportunity } from "@/actions/crm/opportunity/dashboard/set-inactive";
 
 interface CRMKanbanProps {
   salesStages: crm_Opportunities_Sales_Stages[];
@@ -105,14 +107,27 @@ const CRMKanban = ({
     // If start is the same as end, we're in the same column
   };
 
-  const onThumbsUp = (opportunity: crm_Opportunities) => {
+  const onThumbsUp = async (opportunity: crm_Opportunities) => {
     // Implement thumbs up logic
     alert("Thumbs up - not implemented yet");
   };
 
-  const onThumbsDown = (opportunity: crm_Opportunities) => {
+  const onThumbsDown = async (opportunity: string) => {
     // Implement thumbs down logic
-    alert("Thumbs down - not implemented yet");
+    console.log(opportunity, "opportunity");
+    try {
+      await setInactiveOpportunity(opportunity);
+      toast({
+        title: "Success",
+        description: "Opportunity has been set to inactive",
+      });
+    } catch (error) {
+      console.log(error);
+    } finally {
+      router.refresh();
+    }
+
+    //alert("Thumbs down - not implemented yet");
   };
 
   // console.log(opportunities, "opportunities");
@@ -168,7 +183,8 @@ const CRMKanban = ({
                     {opportunities
                       .filter(
                         (opportunity: any) =>
-                          opportunity.sales_stage === stage.id
+                          opportunity.sales_stage === stage.id &&
+                          opportunity.status === "ACTIVE"
                       )
                       .map((opportunity: any, index: number) => (
                         <Draggable
@@ -264,7 +280,7 @@ const CRMKanban = ({
                                   </span>
                                 </div>
                                 <div className="flex space-x-2">
-                                  {
+                                  {/*                            {
                                     //Hide thumbs up and down for last sales stage
                                     stage.probability !==
                                       Math.max(
@@ -279,7 +295,7 @@ const CRMKanban = ({
                                         }
                                       />
                                     )
-                                  }
+                                  } */}
                                   {stage.probability !==
                                     Math.max(
                                       ...salesStages.map(
@@ -305,6 +321,53 @@ const CRMKanban = ({
               )}
             </Droppable>
           ))}
+          <Card className="mx-1 w-full min-w-[300px] overflow-hidden pb-10">
+            <CardTitle className="flex gap-2 p-3 justify-between">
+              <span className="text-sm font-bold">Lost</span>
+            </CardTitle>
+            <CardContent className="w-full h-full overflow-y-scroll space-y-2">
+              {opportunities
+                .filter((opportunity: any) => opportunity.status === "INACTIVE")
+                .map((opportunity: any, index: number) => (
+                  <Card key={index}>
+                    <CardTitle className="p-2 text-sm">
+                      <span className="font-bold">{opportunity?.name}</span>
+                    </CardTitle>
+                    <CardContent className="text-xs text-muted-foreground">
+                      <div className="flex flex-col space-y-1">
+                        <div>{opportunity.description.substring(0, 200)}</div>
+                        {/*          <div>
+                                  id:
+                                  {opportunity.id}
+                                </div> */}
+                        <div className="space-x-1">
+                          <span>Amount:</span>
+                          <span>{opportunity.budget}</span>
+                        </div>
+                        <div className="space-x-1">
+                          <span>Expected closing:</span>
+                          <span
+                            className={
+                              opportunity.close_date &&
+                              new Date(opportunity.close_date) < new Date()
+                                ? "text-red-500"
+                                : ""
+                            }
+                          >
+                            {format(
+                              opportunity.close_date
+                                ? new Date(opportunity.close_date)
+                                : new Date(),
+                              "dd/MM/yyyy"
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+            </CardContent>
+          </Card>
         </div>
       </DragDropContext>
     </>
