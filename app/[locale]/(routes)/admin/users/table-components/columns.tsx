@@ -41,7 +41,7 @@ export const columns: ColumnDef<AdminUser>[] = [
     cell: ({ row }) => (
       <div className="min-w-[150px]">
         {/*   {moment(row.getValue("lastLoginAt")).format("YYYY/MM/DD-HH:mm")} */}
-        {formatDistanceToNow(new Date(row.getValue("lastLoginAt")), {
+        {formatDistanceToNow(new Date(row.original.lastLoginAt || new Date()), {
           addSuffix: true,
         })}
       </div>
