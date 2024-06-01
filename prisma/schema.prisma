@@ -51,6 +51,7 @@ model crm_Accounts {
   opportunities        crm_Opportunities[]
   assigned_to_user     Users?               @relation(fields: [assigned_to], references: [id])
   crm_accounts_tasks   crm_Accounts_Tasks[]
+  contracts            crm_Contracts[]
   watchers             String[]             @db.ObjectId
   watching_users       Users[]              @relation(name: "watching_accounts", fields: [watchers], references: [id])
 }
@@ -210,6 +211,22 @@ enum crm_Contact_Type {
   Customer
   Partner
   Vendor
+}
+
+model crm_Contracts {
+  id               String        @id @default(auto()) @map("_id") @db.ObjectId
+  v                Int           @map("__v")
+  account          String?       @db.ObjectId
+  assigned_to      String?       @db.ObjectId
+  createdAt        DateTime?     @default(now()) @db.Date
+  createdBy        String?       @db.ObjectId
+  updatedAt        DateTime?     @updatedAt @db.Date
+  updatedBy        String?       @db.ObjectId
+  description      String?
+  status           String?
+  type             String?
+  assigned_account crm_Accounts? @relation(fields: [account], references: [id])
+  assigned_to_user Users?        @relation(fields: [assigned_to], references: [id])
 }
 
 model Boards {
@@ -560,6 +577,7 @@ model Users {
   notion_account       secondBrain_notions[]
   openAi_key           openAi_keys[]
   assigned_invoices    Invoices[]
+  assigned_contracts   crm_Contracts[]
   boards               Boards[]              @relation(name: "assigned_user")
   watching_boardsIDs   String[]              @db.ObjectId
   watching_boards      Boards[]              @relation(name: "watching_users", fields: [watching_boardsIDs], references: [id])

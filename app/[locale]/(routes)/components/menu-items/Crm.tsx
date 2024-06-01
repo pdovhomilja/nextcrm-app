@@ -1,4 +1,5 @@
 "use client";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -61,6 +62,9 @@ const CrmModuleMenu = ({ open, localizations }: Props) => {
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => router.push("/crm/opportunities")}>
             {localizations.opportunities}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push("/crm/contracts")}>
+            {localizations.contracts}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
