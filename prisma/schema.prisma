@@ -214,19 +214,32 @@ enum crm_Contact_Type {
 }
 
 model crm_Contracts {
-  id               String        @id @default(auto()) @map("_id") @db.ObjectId
-  v                Int           @map("__v")
-  account          String?       @db.ObjectId
-  assigned_to      String?       @db.ObjectId
-  createdAt        DateTime?     @default(now()) @db.Date
-  createdBy        String?       @db.ObjectId
-  updatedAt        DateTime?     @updatedAt @db.Date
-  updatedBy        String?       @db.ObjectId
-  description      String?
-  status           String?
-  type             String?
-  assigned_account crm_Accounts? @relation(fields: [account], references: [id])
-  assigned_to_user Users?        @relation(fields: [assigned_to], references: [id])
+  id                  String                @id @default(auto()) @map("_id") @db.ObjectId
+  v                   Int                   @map("__v")
+  title               String
+  value               Int
+  startDate           DateTime?             @default(now()) @db.Date
+  endDate             DateTime?             @db.Date
+  renewalReminderDate DateTime?             @db.Date
+  customerSignedDate  DateTime?             @db.Date
+  companySignedDate   DateTime?             @db.Date
+  description         String?
+  account             String?               @db.ObjectId
+  assigned_to         String?               @db.ObjectId
+  createdAt           DateTime?             @default(now()) @db.Date
+  createdBy           String?               @db.ObjectId
+  updatedAt           DateTime?             @updatedAt @db.Date
+  updatedBy           String?               @db.ObjectId
+  status              crm_Contracts_Status? @default(NOTSTARTED)
+  type                String?
+  assigned_account    crm_Accounts?         @relation(fields: [account], references: [id])
+  assigned_to_user    Users?                @relation(fields: [assigned_to], references: [id])
+}
+
+enum crm_Contracts_Status {
+  NOTSTARTED
+  INPROGRESS
+  SIGNED
 }
 
 model Boards {

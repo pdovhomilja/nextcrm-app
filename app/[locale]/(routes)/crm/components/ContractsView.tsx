@@ -12,10 +12,12 @@ import {
 import { Separator } from "@/components/ui/separator";
 import RightViewModal from "@/components/modals/right-view-modal";
 
-import { columns } from "../leads/table-components/columns";
-import { NewLeadForm } from "../leads/components/NewLeadForm";
-import { LeadDataTable } from "../leads/table-components/data-table";
+import { columns } from "../contracts/table-components/columns";
+
 import { useRouter } from "next/navigation";
+import { ContractsDataTable } from "../contracts/table-components/data-table";
+
+import FormSheet from "@/components/sheets/form-sheet";
 
 const ContractsView = ({ data, crmData }: any) => {
   const router = useRouter();
@@ -36,26 +38,36 @@ const ContractsView = ({ data, crmData }: any) => {
       <CardHeader className="pb-3">
         <div className="flex justify-between">
           <CardTitle
-            onClick={() => router.push("/crm/leads")}
+            onClick={() => router.push("/crm/contracts")}
             className="cursor-pointer"
           >
             Contracts
           </CardTitle>
 
           <div className="flex space-x-2">
-            <RightViewModal label={"+"} title="Create new lead" description="">
-              <NewLeadForm users={users} accounts={accounts} />
-            </RightViewModal>
+            <FormSheet trigger={"+"} title="Create new contract" description="">
+              <div>test</div>
+              {/* <NewLeadForm users={users} accounts={accounts} /> */}
+            </FormSheet>
           </div>
         </div>
         <Separator />
       </CardHeader>
       <CardContent>
+        {/*         <pre>
+          {JSON.stringify(
+            {
+              data,
+            },
+            null,
+            2
+          )}
+        </pre> */}
         {!data ||
           (data.length === 0 ? (
             "No assigned contracts found"
           ) : (
-            <LeadDataTable data={data} columns={columns} />
+            <ContractsDataTable data={data} columns={columns} />
           ))}
       </CardContent>
     </Card>

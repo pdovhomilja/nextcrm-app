@@ -11,6 +11,8 @@ import { getLeads } from "@/actions/crm/get-leads";
 const LeadsPage = async () => {
   const crmData = await getAllCrmData();
   const leads = await getLeads();
+
+  console.log(leads[0], "leads");
   return (
     <Container
       title="Leads"

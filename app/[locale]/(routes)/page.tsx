@@ -6,6 +6,7 @@ import {
   Contact,
   DollarSignIcon,
   FactoryIcon,
+  FilePenLine,
   HeartHandshakeIcon,
   LandmarkIcon,
   UserIcon,
@@ -33,6 +34,7 @@ import { getBoardsCount } from "@/actions/dashboard/get-boards-count";
 import { getStorageSize } from "@/actions/documents/get-storage-size";
 import { getContactCount } from "@/actions/dashboard/get-contacts-count";
 import { getAccountsCount } from "@/actions/dashboard/get-accounts-count";
+import { getContractsCount } from "@/actions/dashboard/get-contracts-count";
 import { getInvoicesCount } from "@/actions/dashboard/get-invoices-count";
 import { getDocumentsCount } from "@/actions/dashboard/get-documents-count";
 import { getActiveUsersCount } from "@/actions/dashboard/get-active-users-count";
@@ -59,6 +61,7 @@ const DashboardPage = async () => {
   const storage = await getStorageSize();
   const projects = await getBoardsCount();
   const contacts = await getContactCount();
+  const contracts = await getContractsCount();
   const users = await getActiveUsersCount();
   const accounts = await getAccountsCount();
   const invoices = await getInvoicesCount();
@@ -164,6 +167,12 @@ const DashboardPage = async () => {
                 title={dict.DashboardPage.leads}
                 IconComponent={CoinsIcon}
                 content={leads}
+              />
+              <DashboardCard
+                href="/crm/contracts"
+                title={dict.ModuleMenu.crm.contracts}
+                IconComponent={FilePenLine}
+                content={contracts}
               />
             </>
           )
