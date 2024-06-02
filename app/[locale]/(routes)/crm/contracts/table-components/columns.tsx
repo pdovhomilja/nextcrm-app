@@ -71,7 +71,9 @@ export const columns: ColumnDef<Lead>[] = [
 
     cell: ({ row }) => (
       <div className="w-[150px]">
-        {row.original.assigned_to_user.name ?? "Unassigned"}
+        {row.original.assigned_to_user
+          ? row.original.assigned_to_user.name
+          : "Unassigned"}
       </div>
     ),
     enableSorting: true,
@@ -85,7 +87,9 @@ export const columns: ColumnDef<Lead>[] = [
 
     cell: ({ row }) => (
       <div className="">
-        {row.original.assigned_account.name ?? "Unassigned"}
+        {row.original.assigned_account
+          ? row.original.assigned_account.name
+          : "Unassigned"}
       </div>
     ),
     enableSorting: false,

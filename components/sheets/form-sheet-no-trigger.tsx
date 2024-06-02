@@ -6,37 +6,29 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
-import { Button } from "../ui/button";
 
 type RightSheetProps = {
   open?: boolean;
-  setOpen?: (open: boolean) => void;
+  setOpen: (open: boolean) => void;
   position?: "left" | "right" | "top" | "bottom";
   trigger?: string;
   title: string;
   description: string;
   children: React.ReactNode;
-  onClose: React.RefObject<HTMLButtonElement> | null;
 };
 
-const FormSheet = ({
+const FormSheetNoTrigger = ({
   open,
   setOpen,
   position,
-  trigger,
   title,
   description,
   children,
-  onClose,
 }: RightSheetProps) => {
   console.log(open, "open");
   return (
-    <Sheet>
-      <SheetTrigger asChild ref={onClose}>
-        <Button className="mb-5">{trigger}</Button>
-      </SheetTrigger>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetContent side={position || "right"}>
         <SheetHeader>
           <SheetTitle>{title}</SheetTitle>
@@ -48,4 +40,4 @@ const FormSheet = ({
   );
 };
 
-export default FormSheet;
+export default FormSheetNoTrigger;

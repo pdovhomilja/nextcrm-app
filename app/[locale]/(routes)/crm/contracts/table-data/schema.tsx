@@ -8,12 +8,16 @@ export const contractsSchema = z.object({
   createdAt: z.date(),
   updatedAt: z.date(),
   customerSignedDate: z.date().nullable(),
-  assigned_to_user: z.object({
-    name: z.string(),
-  }),
-  assigned_account: z.object({
-    name: z.string(),
-  }),
+  assigned_to_user: z
+    .object({
+      name: z.string(),
+    })
+    .nullable(),
+  assigned_account: z
+    .object({
+      name: z.string(),
+    })
+    .nullable(),
 });
 
 export type Lead = z.infer<typeof contractsSchema>;
