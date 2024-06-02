@@ -18,7 +18,7 @@ import { ContractsDataTable } from "../contracts/table-components/data-table";
 
 import CreateContractForm from "../contracts/_forms/create-contract";
 
-const ContractsView = ({ data, crmData }: any) => {
+const ContractsView = ({ data, crmData, accountId }: any) => {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
 
@@ -44,7 +44,11 @@ const ContractsView = ({ data, crmData }: any) => {
           </CardTitle>
 
           <div className="flex space-x-2">
-            <CreateContractForm users={users} accounts={accounts} />
+            <CreateContractForm
+              users={users}
+              accounts={accounts}
+              accountId={accountId}
+            />
           </div>
         </div>
         <Separator />

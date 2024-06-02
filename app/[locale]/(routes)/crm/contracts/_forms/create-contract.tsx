@@ -21,12 +21,16 @@ import { FormSelect } from "@/components/form/from-select";
 const CreateContractForm = ({
   users,
   accounts,
+  accountId,
 }: {
   users: Users[];
   accounts: crm_Accounts[];
+  accountId: string;
 }) => {
   const router = useRouter();
   const closeRef = useRef<ElementRef<"button">>(null);
+
+  console.log(accountId, "accountId");
 
   const { execute, fieldErrors, isLoading } = useAction(createNewContract, {
     onSuccess: (data) => {
@@ -124,6 +128,7 @@ const CreateContractForm = ({
           type="hidden"
           data={accounts}
           errors={fieldErrors}
+          defaultValue={accountId}
         />
         <FormSelect
           id="assigned_to"

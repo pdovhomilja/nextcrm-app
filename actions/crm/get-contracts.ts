@@ -22,3 +22,24 @@ export const getContractsWithIncludes = async () => {
   });
   return data;
 };
+
+export const getContractsByAccountId = async (accountId: string) => {
+  const data = await prismadb.crm_Contracts.findMany({
+    where: {
+      account: accountId,
+    },
+    include: {
+      assigned_to_user: {
+        select: {
+          name: true,
+        },
+      },
+      assigned_account: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+  return data;
+};

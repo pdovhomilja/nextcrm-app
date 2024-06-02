@@ -8,6 +8,8 @@ import { getOpportunitiesFullByAccountId } from "@/actions/crm/get-opportunities
 import { getContactsByAccountId } from "@/actions/crm/get-contacts-by-accountId";
 import { getLeadsByAccountId } from "@/actions/crm/get-leads-by-accountId";
 import { getDocumentsByAccountId } from "@/actions/documents/get-documents-by-accountId";
+import { getContractsByAccountId } from "@/actions/crm/get-contracts";
+import { getAccountsTasks } from "@/actions/crm/account/get-tasks";
 
 import OpportunitiesView from "../../components/OpportunitiesView";
 import LeadsView from "../../components/LeadsView";
@@ -19,11 +21,13 @@ import {
   crm_Accounts,
   crm_Accounts_Tasks,
   crm_Contacts,
+  crm_Contracts,
   crm_Leads,
   crm_Opportunities,
 } from "@prisma/client";
+
 import AccountsTasksView from "./components/TasksView";
-import { getAccountsTasks } from "@/actions/crm/account/get-tasks";
+import ContractsView from "../../components/ContractsView";
 
 interface AccountDetailPageProps {
   params: {
@@ -37,6 +41,7 @@ const AccountDetailPage = async ({ params }: AccountDetailPageProps) => {
   const opportunities: crm_Opportunities[] =
     await getOpportunitiesFullByAccountId(accountId);
   const contacts: crm_Contacts[] = await getContactsByAccountId(accountId);
+  const contracts: crm_Contracts[] = await getContractsByAccountId(accountId);
   const leads: crm_Leads[] = await getLeadsByAccountId(accountId);
   const documents: Documents[] = await getDocumentsByAccountId(accountId);
   const tasks: crm_Accounts_Tasks[] = await getAccountsTasks(accountId);
@@ -58,6 +63,11 @@ const AccountDetailPage = async ({ params }: AccountDetailPageProps) => {
           accountId={accountId}
         />
         <ContactsView data={contacts} crmData={crmData} accountId={accountId} />
+        <ContractsView
+          data={contracts}
+          crmData={crmData}
+          accountId={accountId}
+        />
         <LeadsView data={leads} crmData={crmData} />
         <DocumentsView data={documents} />
       </div>

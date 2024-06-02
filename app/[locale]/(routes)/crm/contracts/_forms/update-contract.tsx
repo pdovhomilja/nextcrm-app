@@ -43,7 +43,8 @@ const UpdateContractForm = ({
   ];
 
   const valueString = data && data.value ? data.value.toString() : "";
-  console.log("Data", data);
+
+  //console.log("Data", data);
 
   const { execute, fieldErrors, isLoading } = useAction(updateContract, {
     onSuccess: (data) => {
