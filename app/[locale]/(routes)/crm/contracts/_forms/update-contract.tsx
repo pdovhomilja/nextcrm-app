@@ -2,7 +2,7 @@
 
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { ElementRef, useRef, useState } from "react";
+
 import { useRouter } from "next/navigation";
 
 import { crm_Accounts, Users } from "@prisma/client";
@@ -35,10 +35,15 @@ const UpdateContractForm = ({
   data: any;
 }) => {
   const router = useRouter();
-  const closeRef = useRef<ElementRef<"button">>(null);
+
+  const contractStatuses = [
+    { id: "NOTSTARTED", name: "Not started" },
+    { id: "INPROGRESS", name: "In progress" },
+    { id: "SIGNED", name: "Signed" },
+  ];
 
   const valueString = data && data.value ? data.value.toString() : "";
-  //console.log("Data", data);
+  console.log("Data", data);
 
   const { execute, fieldErrors, isLoading } = useAction(updateContract, {
     onSuccess: (data) => {
@@ -67,6 +72,7 @@ const UpdateContractForm = ({
       formData.get("companySignedDate") as string
     );
     const description = formData.get("description") as string;
+    const status = formData.get("status") as any;
     const account = formData.get("account") as string;
     const assigned_to = formData.get("assigned_to") as string;
 
@@ -81,6 +87,7 @@ const UpdateContractForm = ({
       customerSignedDate,
       companySignedDate,
       description,
+      status,
       account,
       assigned_to,
     });
@@ -150,6 +157,14 @@ const UpdateContractForm = ({
           label="Description"
           errors={fieldErrors}
           defaultValue={data.description}
+        />
+        <FormSelect
+          id="status"
+          label="Status"
+          type="hidden"
+          data={contractStatuses}
+          errors={fieldErrors}
+          defaultValue={data.status}
         />
         <FormSelect
           id="account"

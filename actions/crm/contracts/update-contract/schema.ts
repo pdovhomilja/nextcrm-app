@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+enum crm_Contracts_Status {
+  NOTSTARTED = "NOTSTARTED",
+  INPROGRESS = "INPROGRESS",
+  SIGNED = "SIGNED",
+}
+
 export const UpdateContract = z.object({
   id: z.string(),
   v: z.number(),
@@ -11,6 +17,7 @@ export const UpdateContract = z.object({
   customerSignedDate: z.date(),
   companySignedDate: z.date(),
   description: z.string().max(255),
+  status: z.nativeEnum(crm_Contracts_Status),
   account: z.string(),
   assigned_to: z.string(),
 });

@@ -40,6 +40,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     customerSignedDate,
     companySignedDate,
     description,
+    status,
     account,
     assigned_to,
   } = data;
@@ -71,12 +72,14 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         customerSignedDate,
         companySignedDate,
         description,
+        status,
         account: account || undefined,
         assigned_to: assigned_to || undefined,
         createdBy: user.id,
       },
     });
-    console.log(result, "result");
+
+    //console.log("Result: ", result);
   } catch (error) {
     console.log(error);
     return {

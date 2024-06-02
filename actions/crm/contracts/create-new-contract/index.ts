@@ -65,7 +65,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         createdBy: user.id,
       },
     });
-    console.log(result, "result");
+    //console.log(result, "result");
   } catch (error) {
     console.log(error);
     return {
