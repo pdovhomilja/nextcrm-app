@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "../ui/select";
 import { data } from "cypress/types/jquery";
+import { ScrollArea } from "../ui/scroll-area";
 
 interface FormInputProps {
   id: string;
@@ -42,7 +43,7 @@ export const FormSelect = forwardRef<HTMLInputElement, FormInputProps>(
       disabled,
       errors,
       className,
-      defaultValue = "",
+      defaultValue,
       data,
       onBlur,
     },
@@ -50,9 +51,11 @@ export const FormSelect = forwardRef<HTMLInputElement, FormInputProps>(
   ) => {
     const { pending } = useFormStatus();
 
-    const [assignedTo, setAssignedTo] = useState<string>("");
+    const [value, setValue] = useState<string>(
+      defaultValue ? defaultValue : ""
+    );
 
-    console.log(assignedTo, "assignedTo");
+    // console.log("Value:", value);
 
     return (
       <div className="space-y-2">
@@ -69,7 +72,7 @@ export const FormSelect = forwardRef<HTMLInputElement, FormInputProps>(
             onBlur={onBlur}
             ref={ref}
             required={required}
-            value={assignedTo ? assignedTo : ""}
+            value={value ? value : ""}
             name={id}
             id={id}
             placeholder={placeholder}
@@ -79,20 +82,20 @@ export const FormSelect = forwardRef<HTMLInputElement, FormInputProps>(
             aria-describedby={`${id}-error`}
           />
           <Select
-            required={required}
-            disabled={pending || disabled}
-            aria-describedby={`${id}-error`}
-            onValueChange={(value: any) => setAssignedTo(value)}
+            onValueChange={(value: any) => setValue(value)}
+            defaultValue={defaultValue}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder={placeholder} />
             </SelectTrigger>
-            <SelectContent className="w-full border">
-              {data.map((item: any, index: number) => (
-                <SelectItem key={index} value={item.id}>
-                  {item.name}
-                </SelectItem>
-              ))}
+            <SelectContent className="w-full border h-[250px]">
+              <ScrollArea className="h-[250px]">
+                {data.map((item: any, index: number) => (
+                  <SelectItem key={index} value={item.id}>
+                    {item.name}
+                  </SelectItem>
+                ))}
+              </ScrollArea>
             </SelectContent>
           </Select>
         </div>

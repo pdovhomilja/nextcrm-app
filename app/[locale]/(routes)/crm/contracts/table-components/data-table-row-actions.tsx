@@ -93,6 +93,7 @@ export function DataTableRowActions<TData>({
         setOpen={setUpdateOpen}
         users={users}
         accounts={accounts}
+        data={contract}
       />
 
       <DropdownMenu>

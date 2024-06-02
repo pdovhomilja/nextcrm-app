@@ -9,7 +9,7 @@ import { crm_Accounts, Users } from "@prisma/client";
 
 import { useAction } from "@/hooks/use-action";
 
-import { createNewContract } from "@/actions/crm/contracts/create-new-contract";
+import { updateContract } from "@/actions/crm/contracts/update-contract";
 
 import FormSheetNoTrigger from "@/components/sheets/form-sheet-no-trigger";
 
@@ -25,19 +25,26 @@ const UpdateContractForm = ({
   setOpen,
   users,
   accounts,
+  data,
 }: {
   onOpen: boolean;
   setOpen: (open: boolean) => void;
   users: Users[];
   accounts: crm_Accounts[];
+  //TODO: fix type for data
+  data: any;
 }) => {
   const router = useRouter();
   const closeRef = useRef<ElementRef<"button">>(null);
 
-  const { execute, fieldErrors, isLoading } = useAction(createNewContract, {
+  const valueString = data && data.value ? data.value.toString() : "";
+  //console.log("Data", data);
+
+  const { execute, fieldErrors, isLoading } = useAction(updateContract, {
     onSuccess: (data) => {
-      toast.success("New contract created successfully!");
-      closeRef.current?.click();
+      toast.success("Contract updated successfully!");
+      //closeRef.current?.click();
+      setOpen(false);
       router.refresh();
     },
     onError: (error) => {
@@ -64,6 +71,8 @@ const UpdateContractForm = ({
     const assigned_to = formData.get("assigned_to") as string;
 
     await execute({
+      id: data.id,
+      v: data.v,
       title,
       value,
       startDate,
@@ -87,42 +96,60 @@ const UpdateContractForm = ({
       setOpen={setOpen}
     >
       <form action={onAction} className="space-y-4">
-        <FormInput id="title" label="Title" type="text" errors={fieldErrors} />
-        <FormInput id="value" label="Value" type="text" errors={fieldErrors} />
+        <FormInput
+          id="title"
+          label="Title"
+          type="text"
+          errors={fieldErrors}
+          defaultValue={data.title}
+        />
+        <FormInput
+          id="value"
+          label="Value"
+          type="text"
+          errors={fieldErrors}
+          defaultValue={valueString}
+        />
         <FormDatePicker
           id="startDate"
           label="Start Date"
           type="hidden"
           errors={fieldErrors}
+          defaultValue={data.startDate}
         />
         <FormDatePicker
           id="endDate"
           label="End Date"
           type="hidden"
           errors={fieldErrors}
+          defaultValue={data.endDate}
         />
         <FormDatePicker
           id="renewalReminderDate"
           label="Renewal Reminder Date"
           type="hidden"
           errors={fieldErrors}
+          defaultValue={data.renewalReminderDate}
         />
         <FormDatePicker
           id="customerSignedDate"
           label="Customer Signed Date"
           type="hidden"
           errors={fieldErrors}
+          defaultValue={data.customerSignedDate}
         />
         <FormDatePicker
           id="companySignedDate"
           label="Company Signed Date"
           type="hidden"
           errors={fieldErrors}
+          defaultValue={data.companySignedDate}
         />
         <FormTextarea
           id="description"
           label="Description"
           errors={fieldErrors}
+          defaultValue={data.description}
         />
         <FormSelect
           id="account"
@@ -130,6 +157,7 @@ const UpdateContractForm = ({
           type="hidden"
           data={accounts}
           errors={fieldErrors}
+          defaultValue={data.account}
         />
         <FormSelect
           id="assigned_to"
@@ -137,13 +165,10 @@ const UpdateContractForm = ({
           type="hidden"
           data={users}
           errors={fieldErrors}
+          defaultValue={data.assigned_to}
         />
         <FormSubmit className="w-full">
-          {isLoading ? (
-            <Loader2 className="h-6 w-6  animate-spin" />
-          ) : (
-            "Vytvořit"
-          )}
+          {isLoading ? <Loader2 className="h-6 w-6  animate-spin" /> : "Update"}
         </FormSubmit>
       </form>
     </FormSheetNoTrigger>

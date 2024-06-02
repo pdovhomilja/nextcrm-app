@@ -26,7 +26,6 @@ const FormSheetNoTrigger = ({
   description,
   children,
 }: RightSheetProps) => {
-  console.log(open, "open");
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetContent side={position || "right"}>
