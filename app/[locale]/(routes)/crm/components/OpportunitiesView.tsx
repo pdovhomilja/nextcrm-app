@@ -11,11 +11,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
@@ -35,6 +35,7 @@ const OpportunitiesView = ({
   const [isMounted, setIsMounted] = useState(false);
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -62,26 +63,31 @@ const OpportunitiesView = ({
             <CardDescription></CardDescription>
           </div>
           <div className="flex space-x-2">
-            <Button className="my-2" onClick={() => setDialogOpen(true)}>
-              +
-            </Button>
-            <Dialog open={dialogOpen} onOpenChange={() => setDialogOpen(false)}>
-              <DialogContent className="min-w-[1000px]">
-                <DialogHeader>
-                  <DialogTitle>Create new opportunity form</DialogTitle>
-                </DialogHeader>
-                <NewOpportunityForm
-                  users={users}
-                  accounts={accounts}
-                  contacts={contacts}
-                  salesType={saleTypes}
-                  saleStages={saleStages}
-                  campaigns={campaigns}
-                  accountId={accountId}
-                  onDialogClose={() => setDialogOpen(false)}
-                />
-              </DialogContent>
-            </Dialog>
+            <Sheet open={open} onOpenChange={() => setOpen(false)}>
+              <Button
+                className="my-2 cursor-pointer"
+                onClick={() => setOpen(true)}
+              >
+                +
+              </Button>
+              <SheetContent className="min-w-[1000px] space-y-2">
+                <SheetHeader>
+                  <SheetTitle>Create new opportunity form</SheetTitle>
+                </SheetHeader>
+                <div className="h-full overflow-y-auto">
+                  <NewOpportunityForm
+                    users={users}
+                    accounts={accounts}
+                    contacts={contacts}
+                    salesType={saleTypes}
+                    saleStages={saleStages}
+                    campaigns={campaigns}
+                    accountId={accountId}
+                    onDialogClose={() => setDialogOpen(false)}
+                  />
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
         <Separator />
