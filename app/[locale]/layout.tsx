@@ -62,7 +62,7 @@ export default async function RootLayout({
   const messages = await getLocales(locale);
 
   return (
-    <html lang={locale}>
+    <html lang={locale} suppressHydrationWarning>
       <head>
         <meta
           name="viewport"
@@ -87,7 +87,7 @@ export default async function RootLayout({
         />
         <meta name="twitter:image" content="https://nextcrm.io/api/og" />
       </head>
-      <body className={inter.className + "h-screen overflow-hidden"}>
+      <body className={inter.className + " h-screen overflow-hidden"}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             {children}
