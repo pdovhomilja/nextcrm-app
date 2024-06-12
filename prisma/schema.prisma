@@ -13,7 +13,7 @@ datasource db {
 model crm_Accounts {
   id                   String               @id @default(auto()) @map("_id") @db.ObjectId
   v                    Int                  @map("__v")
-  createdAt            DateTime?            @default(now()) @db.Date
+  createdAt            DateTime             @default(now()) @db.Date
   createdBy            String?              @db.ObjectId
   updatedAt            DateTime?            @updatedAt @db.Date
   updatedBy            String?              @db.ObjectId
@@ -107,7 +107,7 @@ model crm_Opportunities {
   created_by           String?                         @db.ObjectId
   createdBy            String?                         @db.ObjectId
   created_on           DateTime?                       @default(now()) @db.Date
-  createdAt            DateTime?                       @default(now()) @db.Date
+  createdAt            DateTime                        @default(now()) @db.Date
   last_activity        DateTime?                       @db.Date
   updatedAt            DateTime?                       @updatedAt @db.Date
   updatedBy            String?                         @db.ObjectId
