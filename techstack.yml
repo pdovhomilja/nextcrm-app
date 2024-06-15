@@ -1,0 +1,690 @@
+repo_name: DrivenIdeaLab/nextcrm-app
+report_id: 7ac7accf4cd4a237f4e8a2653c48e7a3
+version: 0.1
+repo_type: Public
+timestamp: '2024-06-15T17:55:11+00:00'
+requested_by: pdovhomilja
+provider: github
+branch: main
+detected_tools_count: 52
+tools:
+- name: CSS 3
+  description: The latest evolution of the Cascading Style Sheets language
+  website_url: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS3
+  open_source: true
+  hosted_saas: false
+  category: Languages & Frameworks
+  sub_category: Languages
+  image_url: https://img.stackshare.io/service/6727/css.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app
+  detection_source: Repo Metadata
+- name: JavaScript
+  description: Lightweight, interpreted, object-oriented language with first-class
+    functions
+  website_url: https://developer.mozilla.org/en-US/docs/Web/JavaScript
+  open_source: true
+  hosted_saas: false
+  category: Languages & Frameworks
+  sub_category: Languages
+  image_url: https://img.stackshare.io/service/1209/javascript.jpeg
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app
+  detection_source: Repo Metadata
+- name: TypeScript
+  description: A superset of JavaScript that compiles to clean JavaScript output
+  website_url: http://www.typescriptlang.org
+  license: Apache-2.0
+  open_source: true
+  hosted_saas: false
+  category: Languages & Frameworks
+  sub_category: Languages
+  image_url: https://img.stackshare.io/service/1612/bynNY5dJ.jpg
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app
+  detection_source: Repo Metadata
+- name: Autoprefixer
+  description: PostCSS plugin to parse CSS and add vendor prefixes to CSS rules
+  website_url: https://github.com/postcss/autoprefixer
+  open_source: false
+  hosted_saas: false
+  category: Languages & Frameworks
+  sub_category: CSS Pre-processors / Extensions
+  image_url: https://img.stackshare.io/service/2202/72d087642cfce6fef6f2dabec5bf49e8_400x400.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-01 05:52:27.000000000 Z
+- name: Jotai
+  description: Primitive and flexible state management for React
+  website_url: https://jotai.org/
+  license: MIT
+  open_source: false
+  hosted_saas: false
+  category: Libraries
+  sub_category: State Management Library
+  image_url: https://img.stackshare.io/service/104809/default_a92a415b1e57e7ff4b57998b50887b69d1c96701.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-30 07:59:52.000000000 Z
+- name: Next.js
+  description: A small framework for server-rendered universal JavaScript apps
+  website_url: https://nextjs.org/
+  version: 14.2.3
+  open_source: true
+  hosted_saas: false
+  category: Languages & Frameworks
+  sub_category: Frameworks (Full Stack)
+  image_url: https://img.stackshare.io/service/5936/nextjs.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: pdovhomilja
+  last_updated_on: 2023-07-06 22:24:11.000000000 Z
+- name: Node.js
+  description: A platform built on Chrome's JavaScript runtime for easily building
+    fast, scalable network applications
+  website_url: http://nodejs.org/
+  version: 20.9.0
+  open_source: true
+  hosted_saas: false
+  category: Languages & Frameworks
+  sub_category: Frameworks (Full Stack)
+  image_url: https://img.stackshare.io/service/1011/n1JRsFeB_400x400.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/Dockerfile
+  detection_source: Dockerfile
+  last_updated_by: pdovhomilja
+  last_updated_on: 2023-10-02 19:07:53.000000000 Z
+- name: PostCSS
+  description: Transform CSS with JS plugins
+  website_url: https://github.com/postcss/postcss
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Languages & Frameworks
+  sub_category: CSS Pre-processors / Extensions
+  image_url: https://img.stackshare.io/service/3339/rlFcjEdI.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: pdovhomilja
+  last_updated_on: 2023-07-06 22:24:11.000000000 Z
+- name: PrimeReact
+  description: A collection of rich UI components for React
+  website_url: https://www.primefaces.org/primereact/
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: JavaScript Framework Components
+  image_url: https://img.stackshare.io/service/8766/8KpRJctC_400x400.jpg
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-30 07:59:52.000000000 Z
+- name: React
+  description: A JavaScript library for building user interfaces
+  website_url: https://reactjs.org/
+  version: 18.3.1
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: Javascript UI Libraries
+  image_url: https://img.stackshare.io/service/1020/OYIaJ1KK.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-30 07:59:52.000000000 Z
+- name: Tailwind CSS
+  description: A utility-first CSS framework for rapid UI development
+  website_url: https://tailwindcss.com
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Languages & Frameworks
+  sub_category: Front-End Frameworks
+  image_url: https://img.stackshare.io/service/8158/default_660b7c41c3ba489cb581eec89c04655404258c19.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-30 07:59:52.000000000 Z
+- name: Zustand
+  description: Bear necessities for state management in React
+  website_url: https://github.com/react-spring/zustand
+  version: 4.5.2
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: Monitoring for Analytics
+  image_url: https://img.stackshare.io/service/11559/zustand.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-01 05:52:27.000000000 Z
+- name: react-beautiful-dnd
+  description: Beautiful and accessible drag and drop for lists with React (by Atlassian)
+  website_url: https://github.com/atlassian/react-beautiful-dnd
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: JavaScript Framework Components
+  image_url: https://img.stackshare.io/service/9878/react-beautiful-dnd-logo.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-30 07:59:52.000000000 Z
+- name: Prisma
+  description: Modern Database Access for TypeScript &amp; Node.js
+  website_url: https://www.prisma.io/
+  version: 5.13.0
+  license: Apache-2.0
+  open_source: true
+  hosted_saas: false
+  category: Data Stores
+  sub_category: Object Relational Mapper (ORM)
+  image_url: https://img.stackshare.io/service/8680/Logo_Symbol_White.jpg
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-30 07:59:52.000000000 Z
+- name: Cypress
+  description: When testing is easy, developers build better things faster and with
+    confidence.
+  website_url: https://www.cypress.io/
+  version: 13.8.1
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Build, Test, Deploy
+  sub_category: Javascript Testing Framework
+  image_url: https://img.stackshare.io/service/9231/default_66c5c1a197dcd0232e41e4ab6299d119b4e165b3.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-30 07:59:52.000000000 Z
+- name: Docker
+  description: Enterprise Container Platform for High-Velocity Innovation.
+  website_url: https://www.docker.com/
+  license: Apache-2.0
+  open_source: true
+  hosted_saas: false
+  category: Build, Test, Deploy
+  sub_category: Virtual Machine Platforms & Containers
+  image_url: https://img.stackshare.io/service/586/n4u37v9t_400x400.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app
+  detection_source: Repo Metadata
+- name: ESLint
+  description: The fully pluggable JavaScript code quality tool
+  website_url: http://eslint.org/
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Build, Test, Deploy
+  sub_category: Code Review
+  image_url: https://img.stackshare.io/service/3337/Q4L7Jncy.jpg
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: pdovhomilja
+  last_updated_on: 2023-07-06 22:24:11.000000000 Z
+- name: Git
+  description: Fast, scalable, distributed revision control system
+  website_url: http://git-scm.com/
+  open_source: true
+  hosted_saas: false
+  category: Build, Test, Deploy
+  sub_category: Version Control System
+  image_url: https://img.stackshare.io/service/1046/git.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app
+  detection_source: Repo Metadata
+- name: GitHub Actions
+  description: Automate your workflow from idea to production
+  website_url: https://github.com/features/actions
+  open_source: false
+  hosted_saas: true
+  category: Build, Test, Deploy
+  sub_category: Continuous Integration
+  image_url: https://img.stackshare.io/service/11563/actions.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/.github/workflows/cypress.yml
+  detection_source: ".github/workflows/cypress.yml"
+  last_updated_by: saashqdev
+  last_updated_on: 2023-09-09 21:54:56.000000000 Z
+- name: npm
+  description: The package manager for JavaScript.
+  website_url: https://www.npmjs.com/
+  open_source: false
+  hosted_saas: false
+  category: Build, Test, Deploy
+  sub_category: Front End Package Manager
+  image_url: https://img.stackshare.io/service/1120/lejvzrnlpb308aftn31u.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: pdovhomilja
+  last_updated_on: 2023-07-06 22:24:11.000000000 Z
+- name: Vercel
+  description: It makes serverless application deployment easy
+  website_url: https://vercel.com/
+  open_source: false
+  hosted_saas: true
+  category: Application Utilities
+  sub_category: Static Web Hosting
+  image_url: https://img.stackshare.io/service/7618/bHjpwZem_400x400.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/vercel.json
+  detection_source: vercel.json
+  last_updated_by: pdovhomilja
+  last_updated_on: 2023-07-16 15:00:30.000000000 Z
+- name: Moment.js
+  description: A JavaScript date library for parsing, validating, manipulating, and
+    formatting dates
+  website_url: http://momentjs.com/
+  version: 2.30.1
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: Javascript Utilities & Libraries
+  image_url: https://img.stackshare.io/service/3643/Xrtdc94q_400x400.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-01 05:52:27.000000000 Z
+- name: Nodemailer
+  description: A module for Node.js applications to allow email sending
+  website_url: http://www.nodemailer.com/
+  open_source: true
+  hosted_saas: false
+  category: Communications
+  sub_category: Transactional Email
+  image_url: https://img.stackshare.io/service/2862/qr2-jCLr.jpg
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-30 07:59:52.000000000 Z
+- name: OpenAI
+  description: Creating safe AGI that benefits all
+  website_url: https://openai.com/
+  version: 4.39.0
+  open_source: false
+  hosted_saas: false
+  category: Communications
+  sub_category: Large Language Models
+  image_url: https://img.stackshare.io/service/48786/default_8b1119bcbb159cebebc2f6cfc9cd2e359b169d22.jpg
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: pdovhomilja
+  last_updated_on: 2023-07-06 22:24:11.000000000 Z
+- name: Resend
+  description: Email API for developers using React
+  website_url: https://resend.com/
+  open_source: false
+  hosted_saas: false
+  category: Communications
+  sub_category: Transactional Email
+  image_url: https://img.stackshare.io/service/101735/default_a7342137a6cb7205553d5a24fe27eb8b75f2c24a.jpg
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-01 05:52:27.000000000 Z
+- name: Shell
+  description: A shell is a text-based terminal, used for manipulating programs and
+    files. Shell scripts typically manage program execution.
+  website_url: https://en.wikipedia.org/wiki/Shell_script
+  open_source: false
+  hosted_saas: false
+  category: Languages & Frameworks
+  sub_category: Languages
+  image_url: https://img.stackshare.io/service/4631/default_c2062d40130562bdc836c13dbca02d318205a962.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app
+  detection_source: Repo Metadata
+- name: Vercel AI SDK
+  description: An interoperable, streaming-enabled, edge-ready software development
+    kit for AI apps
+  website_url: https://sdk.vercel.ai/docs
+  version: 3.0.35
+  open_source: true
+  hosted_saas: false
+  category: Communications
+  sub_category: Large Language Model Tools
+  image_url: https://img.stackshare.io/service/101756/default_4f2991cba3ec7fdd1cc87de69f4868157b0f2001.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: pdovhomilja
+  last_updated_on: 2023-07-06 22:24:11.000000000 Z
+- name: Zod
+  description: TypeScript-first schema validation
+  website_url: https://zod.dev/
+  open_source: false
+  hosted_saas: false
+  image_url: https://img.stackshare.io/service/48521/default_eea961e4c374e68a1c7eb5bbc9e4a39920890342.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: pdovhomilja
+  last_updated_on: 2023-07-06 22:24:11.000000000 Z
+- name: axios
+  description: Promise based HTTP client for the browser and node.js
+  website_url: https://github.com/mzabriskie/axios
+  version: 1.6.8
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: Javascript Utilities & Libraries
+  image_url: https://img.stackshare.io/no-img-open-source.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-01 05:52:27.000000000 Z
+- name: date-fns
+  description: Modern JavaScript date utility library
+  website_url: https://date-fns.org/
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: Javascript Utilities & Libraries
+  image_url: https://img.stackshare.io/service/10865/default_5551fb8853689f607a2bc0d5a09355d5a3d52bf0.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-01 05:52:27.000000000 Z
+- name: "@next-auth/prisma-adapter"
+  description: Prisma adapter for next-auth
+  package_url: https://www.npmjs.com/@next-auth/prisma-adapter
+  version: 1.0.7
+  open_source: false
+  hosted_saas: false
+  category: Build, Test, Deploy
+  sub_category: Package Managers
+  image_url: https://img.stackshare.io/package/npm/image.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-30 07:59:52.000000000 Z
+- name: "@prisma/client"
+  description: Prisma Client is an auto-generated, type-safe and modern JavaScript/TypeScript
+    ORM for Node.js that's tailored to your data
+  package_url: https://www.npmjs.com/@prisma/client
+  version: 5.13.0
+  open_source: false
+  hosted_saas: false
+  category: Build, Test, Deploy
+  sub_category: Package Managers
+  image_url: https://img.stackshare.io/package/npm/image.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-30 07:59:52.000000000 Z
+- name: "@types/node"
+  description: TypeScript definitions for Node.js
+  package_url: https://www.npmjs.com/@types/node
+  version: 20.12.7
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/15809/default_5e5e8ac63beda29f31f1844df64d4b8247570a66.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-30 07:59:52.000000000 Z
+- name: "@types/react"
+  description: TypeScript definitions for React
+  package_url: https://www.npmjs.com/@types/react
+  version: 18.3.1
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/15894/default_1d65e37e65b7f80761374f0202776043277d505d.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-30 07:59:52.000000000 Z
+- name: "@types/react-dom"
+  description: TypeScript definitions for React
+  package_url: https://www.npmjs.com/@types/react-dom
+  version: 18.3.0
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/15946/default_54b691c123fc8979741e800e4dcd3936c0f3b246.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-30 07:59:52.000000000 Z
+- name: ai
+  description: The Vercel AI SDK is **a library for building AI-powered streaming
+    text and chat UIs**
+  package_url: https://www.npmjs.com/ai
+  version: 3.0.35
+  open_source: false
+  hosted_saas: false
+  category: Build, Test, Deploy
+  sub_category: Package Managers
+  image_url: https://img.stackshare.io/package/npm/image.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: pdovhomilja
+  last_updated_on: 2023-07-06 22:24:11.000000000 Z
+- name: bcrypt
+  description: A bcrypt library for NodeJS
+  package_url: https://www.npmjs.com/bcrypt
+  version: 5.1.1
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/16526/default_0a704f5fac0bffcf529c9a61658d0b9ddbf7504e.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-01 05:52:27.000000000 Z
+- name: bcryptjs
+  description: Optimized bcrypt in plain JavaScript with zero dependencies
+  package_url: https://www.npmjs.com/bcryptjs
+  version: 2.4.3
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/16857/default_627f05e6a07ce29fc9f119417270f38e8aa5c5e2.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-01 05:52:27.000000000 Z
+- name: dayjs
+  description: 2KB immutable date time library alternative to Moment.js with the same
+    modern API
+  package_url: https://www.npmjs.com/dayjs
+  version: 1.11.11
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/16833/default_5c6919c5e02b8e6c83f3a2b23db5b6962e3caca0.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-30 07:59:52.000000000 Z
+- name: entities
+  description: Encode &amp; decode XML/HTML entities with ease
+  package_url: https://www.npmjs.com/entities
+  version: 4.5.0
+  license: BSD-2-Clause
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/18082/image.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2023-12-24 16:24:43.000000000 Z
+- name: eslint-config-next
+  description: ESLint configuration used by Next.js
+  package_url: https://www.npmjs.com/eslint-config-next
+  version: 14.2.3
+  open_source: false
+  hosted_saas: false
+  category: Build, Test, Deploy
+  sub_category: Package Managers
+  image_url: https://img.stackshare.io/package/npm/image.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-30 08:03:30.000000000 Z
+- name: moment
+  description: Parse, validate, manipulate, and display dates
+  package_url: https://www.npmjs.com/moment
+  version: 2.30.1
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/15847/default_4479dbac220be99e50e724b2df6cf415241d71fd.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-01 05:52:27.000000000 Z
+- name: next-auth
+  description: Authentication for Next.js
+  package_url: https://www.npmjs.com/next-auth
+  version: 4.24.7
+  open_source: false
+  hosted_saas: false
+  category: Build, Test, Deploy
+  sub_category: Package Managers
+  image_url: https://img.stackshare.io/package/npm/image.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-30 07:59:52.000000000 Z
+- name: openai
+  description: The official TypeScript library for the OpenAI API
+  package_url: https://www.npmjs.com/openai
+  version: 4.39.0
+  open_source: false
+  hosted_saas: false
+  category: Build, Test, Deploy
+  sub_category: Package Managers
+  image_url: https://img.stackshare.io/package/npm/image.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-30 07:59:52.000000000 Z
+- name: prisma
+  description: Prisma is an open-source database toolkit
+  package_url: https://www.npmjs.com/prisma
+  version: 5.13.0
+  open_source: false
+  hosted_saas: false
+  category: Build, Test, Deploy
+  sub_category: Package Managers
+  image_url: https://img.stackshare.io/package/npm/image.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-30 07:59:52.000000000 Z
+- name: react-day-picker
+  description: Flexible date picker component for React
+  package_url: https://www.npmjs.com/react-day-picker
+  version: 8.10.1
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/18299/default_678ce8b19e8cee1dde03f165f62525a2c9d0c034.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-30 07:59:52.000000000 Z
+- name: react-dom
+  description: React package for working with the DOM
+  package_url: https://www.npmjs.com/react-dom
+  version: 18.3.1
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/15808/default_14fd11531839d935f920b6d55bd6f3528c890ad7.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-30 07:59:52.000000000 Z
+- name: react-dropzone
+  description: Simple HTML5 drag-drop zone with React.js
+  package_url: https://www.npmjs.com/react-dropzone
+  version: 14.2.3
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/16979/default_665377899254fe85c1cf6bf7f15e24c4180a76ac.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-30 07:59:52.000000000 Z
+- name: react-icons
+  description: SVG React icons of popular icon packs using ES6 imports
+  package_url: https://www.npmjs.com/react-icons
+  version: 5.1.0
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/16909/default_7b9968788548874538c601457e8dcd9c74bd2051.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-30 07:59:52.000000000 Z
+- name: sharp
+  description: High performance Node.js image processing
+  package_url: https://www.npmjs.com/sharp
+  version: 0.33.3
+  license: Apache-2.0
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/16806/default_31a4e0e11d348225088320f3a5c5ea6fa49c27ad.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-01 05:52:27.000000000 Z
+- name: tailwindcss
+  description: A utility-first CSS framework for rapidly building custom user interfaces
+  package_url: https://www.npmjs.com/tailwindcss
+  version: 3.4.3
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/17398/default_2cd7ed1c123f2fca074a6f4b16c4e73d5bfe82be.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-30 07:59:52.000000000 Z
+- name: ts-node
+  description: TypeScript execution environment and REPL for node.js
+  package_url: https://www.npmjs.com/ts-node
+  version: 10.9.2
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: npm Packages
+  image_url: https://img.stackshare.io/package/15830/default_6743ba96cf149a3c3c68a185199f9705d6eff80e.png
+  detection_source_url: https://github.com/DrivenIdeaLab/nextcrm-app/blob/main/package.json
+  detection_source: package.json
+  last_updated_by: Pavel Dovhomilja
+  last_updated_on: 2024-04-30 07:59:52.000000000 Z
