@@ -27,6 +27,9 @@ import {
 import { CheckSquare, Eye, MessagesSquare, Pencil } from "lucide-react";
 import UpdateTaskDialog from "../../dialogs/UpdateTask";
 import { Button } from "@/components/ui/button";
+import { Sections } from "@prisma/client";
+import { ElementRef, useRef, useState } from "react";
+import FormSheet from "@/components/sheets/form-sheet";
 
 interface DashboardData {
   getTaskPastDue: Tasks[];
@@ -39,6 +42,7 @@ export interface Tasks {
   content: string;
   dueDateAt: Date;
   priority: string;
+  section: string;
   comments: Comment[];
 }
 
@@ -53,13 +57,18 @@ const ProjectDashboardCockpit = ({
   dashboardData,
   users,
   boards,
+  sections,
 }: {
   dashboardData: DashboardData;
   users: any;
   boards: any;
+  sections: Sections[];
 }) => {
   const { toast } = useToast();
   const router = useRouter();
+
+  const [updateOpenSheet, setUpdateOpenSheet] = useState(false);
+  const closeRef = useRef<ElementRef<"button">>(null);
 
   //Actions
   const onDone = async (taskId: string) => {
@@ -153,26 +162,34 @@ const ProjectDashboardCockpit = ({
                 <CheckSquare className="w-4 h-4 mr-2" />
                 <span>Mark as done</span>
               </Badge>
-              <Badge variant={"outline"} className="cursor-pointer">
-                <Pencil className="w-4 h-4 mr-2" />
-                <Sheet>
-                  <SheetTrigger>
-                    <span>Edit</span>
-                  </SheetTrigger>
-                  <SheetContent>
-                    <UpdateTaskDialog
-                      users={users}
-                      boards={boards}
-                      initialData={task}
-                    />
-                    <div className="flex w-full justify-end pt-2">
-                      <SheetTrigger asChild>
-                        <Button variant={"destructive"}>Close</Button>
-                      </SheetTrigger>
-                    </div>
-                  </SheetContent>
-                </Sheet>
-              </Badge>
+
+              <FormSheet
+                trigger={"Edit"}
+                title="Update task"
+                description=""
+                onClose={closeRef}
+              >
+                <UpdateTaskDialog
+                  users={users}
+                  boards={boards}
+                  boardId={
+                    sections.find(
+                      (section: Sections) => section.id === task.section
+                    )?.board
+                  }
+                  initialData={task}
+                  onDone={() => closeRef.current?.click()}
+                />
+                <div className="w-full justify-end items-end flex pt-2">
+                  <Button
+                    className="ml-auto"
+                    variant={"destructive"}
+                    onClick={() => closeRef.current?.click()}
+                  >
+                    Close
+                  </Button>
+                </div>
+              </FormSheet>
             </CardFooter>
           </Card>
         ))}

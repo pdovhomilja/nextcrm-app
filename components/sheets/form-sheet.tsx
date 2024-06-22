@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "../ui/button";
 
-type RightSheetProps = {
+type FormSheetProps = {
   open?: boolean;
   setOpen?: (open: boolean) => void;
   position?: "left" | "right" | "top" | "bottom";
@@ -30,12 +30,13 @@ const FormSheet = ({
   description,
   children,
   onClose,
-}: RightSheetProps) => {
-  console.log(open, "open");
+}: FormSheetProps) => {
   return (
     <Sheet>
       <SheetTrigger asChild ref={onClose}>
-        <Button className="mb-5">{trigger}</Button>
+        <Button className="mb-5 " size={"sm"}>
+          {trigger}
+        </Button>
       </SheetTrigger>
       <SheetContent side={position || "right"}>
         <SheetHeader>

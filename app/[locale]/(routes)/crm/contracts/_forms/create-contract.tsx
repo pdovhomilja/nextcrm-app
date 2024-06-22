@@ -30,7 +30,7 @@ const CreateContractForm = ({
   const router = useRouter();
   const closeRef = useRef<ElementRef<"button">>(null);
 
-  console.log(accountId, "accountId");
+  //console.log(accountId, "accountId");
 
   const { execute, fieldErrors, isLoading } = useAction(createNewContract, {
     onSuccess: (data) => {

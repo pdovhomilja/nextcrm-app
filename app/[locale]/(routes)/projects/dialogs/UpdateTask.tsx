@@ -1,16 +1,8 @@
 "use client";
 
-import LoadingComponent from "@/components/LoadingComponent";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTrigger,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+
 import {
   Form,
   FormControl,
@@ -33,12 +25,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SheetTrigger } from "@/components/ui/sheet";
+
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
+
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -103,7 +96,6 @@ const UpdateTaskDialog = ({
   //Actions
 
   const onSubmit = async (data: UpdatedTaskForm) => {
-    console.log(data);
     setIsLoading(true);
     try {
       await axios.put(
@@ -128,8 +120,12 @@ const UpdateTaskDialog = ({
   };
 
   return (
-    <div className="flex w-full ">
-      {/*       <div>
+    <div className="flex flex-col space-y-2 w-full ">
+      {/* 
+      <pre>
+        <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
+      </pre>
+      <div>
         <pre>
           {JSON.stringify(
             {
@@ -151,7 +147,7 @@ const UpdateTaskDialog = ({
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Update task - Id: {initialData.id}</FormLabel>
+                  <FormLabel>Task - Id: {initialData.id}</FormLabel>
                   <FormControl>
                     <Input
                       disabled={isLoading}
