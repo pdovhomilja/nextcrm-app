@@ -29,8 +29,8 @@ export async function POST(req: Request) {
 
   // Ask OpenAI for a streaming completion given the prompt
   const response = await openai.completions.create({
-    model: "gpt-3.5-turbo-instruct",
-    max_tokens: 2000,
+    model: "gpt-4o",
+    max_tokens: 10000,
     stream: true,
     prompt,
   });
