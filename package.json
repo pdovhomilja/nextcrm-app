@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "prebuild": "pnpm install --no-frozen-lockfile",
-    "build": "prisma generate &&  prisma db push && prisma db seed && next build",
+    "build": "prisma generate && prisma migrate deploy && next build",
     "start": "next start",
     "lint": "next lint"
   },
