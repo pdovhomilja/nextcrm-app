@@ -1,4 +1,30 @@
-MIT License
+# General License Agreement
+
+All works specific in origin and source code to [NextCRM](https://github.com/pdovhomilja/nextcrm-app) are covered under original [MIT License](#mit-license); all other modifications to that source code, alterations, updates, and changes in this project are covered under a strict [proprietary/commercial dual license](#proprietary-license)
+
+In other words, all work derived from the NextCRM open source project is and shall legally remain open source as covered by MIT licensing included in the original source repo; anything else is proprietary and may be used *only* with express written consent by contractual agreement. Please contact [Windrose & Company, LLC](https://bit.ly/contact-windrose)
+
+## Proprietary License
+
+Copyright (c) 2024 Windrose & Company, LLC
+
+This software and associated documentation files (the "Software") may not be
+used, copied, modified, merged, published, distributed, sublicensed, and/or sold
+without explicit permission from the copyright holder. Unauthorized use of the
+Software is strictly prohibited.
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+## MIT License (originating from foundational source code @ NextCRM by [Pavel Dovhomilja](https://github.com/pdovhomilja))
 
 Copyright (c) 2023 Pavel Dovhomilja
 
