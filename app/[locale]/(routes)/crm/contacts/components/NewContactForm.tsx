@@ -565,7 +565,7 @@ export function NewContactForm({ users, accounts }: NewTaskFormProps) {
                       <FormControl>
                         <Input
                           disabled={isLoading}
-                          placeholder="https://www.youtube.com/nextcrmio"
+                          placeholder="https://youtube.com/@david-windrose"
                           {...field}
                         />
                       </FormControl>

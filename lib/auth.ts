@@ -100,7 +100,7 @@ export const authOptions: NextAuthOptions = {
               is_account_admin: false,
               lastLoginAt: new Date(),
               userStatus:
-                process.env.NEXT_PUBLIC_APP_URL === "https://demo.nextcrm.io"
+                process.env.NEXT_PUBLIC_APP_URL === "https://windrose.vercel.app"
                   ? "ACTIVE"
                   : "PENDING",
             },

@@ -221,7 +221,7 @@ export function MyAccountSettingsForm({ initialData }: UpdateAccountFormProps) {
                       <FormControl>
                         <Input
                           disabled={isLoading}
-                          placeholder="NextCRM Inc."
+                          placeholder="Windrose Inc."
                           {...field}
                         />
                       </FormControl>

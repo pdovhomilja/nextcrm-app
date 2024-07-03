@@ -152,7 +152,7 @@ export function UpdateOpportunityForm({
                   <FormControl>
                     <Input
                       disabled={isLoading}
-                      placeholder="New NextCRM functionality"
+                      placeholder="New Windrose functionality"
                       {...field}
                     />
                   </FormControl>
@@ -210,7 +210,7 @@ export function UpdateOpportunityForm({
                   <FormControl>
                     <Textarea
                       disabled={isLoading}
-                      placeholder="New NextCRM functionality"
+                      placeholder="New Windrose functionality"
                       {...field}
                     />
                   </FormControl>

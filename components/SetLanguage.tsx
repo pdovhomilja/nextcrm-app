@@ -87,7 +87,7 @@ export function SetLanguage({ userId }: Props) {
     return (
       <LoadingModal
         isOpen={isLoading}
-        description="Changing NextCRM language"
+        description="Changing Windrose language"
       />
     );
   }

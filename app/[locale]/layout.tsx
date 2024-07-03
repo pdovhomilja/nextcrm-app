@@ -68,24 +68,13 @@ export default async function RootLayout({
           name="viewport"
           content="width=device-width, height=device-height, initial-scale=1"
         />
-        <meta property="og:url" content="https://www.nextcrm.io" />
+        <meta property="og:url" content="https://www.windroseandco.com" />
         <meta property="og:type" content="website" />
-        <meta property="og:title" content="NextCRM" />
+        <meta property="og:title" content="Windrose" />
         <meta
           property="og:description"
-          content="NextCRM is an open source CRM build on top of NextJS. Technology stack: NextJS with Typescrtipt, MongoDB, TailwindCSS, React, Prisma, shadCN, resend.com, react.email and more."
+          content="Windrose is a cutting edge Client Management System. Built with Next JS using NextCRM, an open source SaaS builder. Technology stack: NextJS with Typescript, MongoDB, TailwindCSS, React, Prisma, shadCN, resend.com, react.email and more."
         />
-        <meta property="og:image" content="https://nextcrm.io/api/og" />
-
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta property="twitter:domain" content="nextcrm.io" />
-        <meta property="twitter:url" content="https://www.nextcrm.io" />
-        <meta name="twitter:title" content="NextCRM" />
-        <meta
-          name="twitter:description"
-          content="NextCRM is an open source CRM build on top of NextJS. Technology stack: NextJS with Typescrtipt, MongoDB, TailwindCSS, React, Prisma, shadCN, resend.com, react.email and more."
-        />
-        <meta name="twitter:image" content="https://nextcrm.io/api/og" />
       </head>
       <body className={inter.className + " h-screen overflow-hidden"}>
         <NextIntlClientProvider locale={locale} messages={messages}>

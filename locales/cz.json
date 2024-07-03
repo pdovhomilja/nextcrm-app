@@ -1,7 +1,7 @@
 {
   "RootLayout": {
-    "title": "NextCRM",
-    "description": "NextCRM je open source CRM vytvořené na frameworku NextJS."
+    "title": "Windrose",
+    "description": "Windrose je open source CRM vytvořené na frameworku NextJS."
   },
   "ModuleMenu": {
     "dashboard": "Přehled",
@@ -24,7 +24,7 @@
   },
   "DashboardPage": {
     "containerTitle": "Přehled",
-    "containerDescription": "Vítejte v NextCRM, zde můžete vidět všechny důležité informace o vašem podniku.",
+    "containerDescription": "Vítejte v Windrose, zde můžete vidět všechny důležité informace o vašem podniku.",
     "totalRevenue": "Celkový obrat",
     "expectedRevenue": "Očekávaný obrat",
     "activeUsers": "Aktivní uživatelé",

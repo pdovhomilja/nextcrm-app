@@ -49,7 +49,7 @@ export const MessageToAllUsers = ({
               You received this email because you are a user of the{" "}
               {process.env.NEXT_PUBLIC_APP_NAME} app:{" "}
               {process.env.NEXT_PUBLIC_APP_URL}. If you think you received this
-              email by mistake, please contact us at info@nextcrm.dev
+              email by mistake, please contact us at info@windrose.dev
             </Text>
           </Container>
         </Body>

@@ -1,7 +1,7 @@
 {
   "RootLayout": {
-    "title": "NextCRM",
-    "description": "Willkommen bei NextCRM CRM mit Prisma und Next.js 13"
+    "title": "Windrose",
+    "description": "Willkommen bei Windrose CRM mit Prisma und Next.js 13"
   },
   "ModuleMenu": {
     "dashboard": "Dashboard",
@@ -25,7 +25,7 @@
   "DashboardPage": {
     "containerTitle": "Dashboard",
     "totalRevenue": "Gesamtumsatz",
-    "containerDescription": "Willkommen bei NextCRM, hier können Sie alle wichtigen Informationen über Ihr Unternehmen sehen.",
+    "containerDescription": "Willkommen bei Windrose, hier können Sie alle wichtigen Informationen über Ihr Unternehmen sehen.",
     "expectedRevenue": "Erwarteter Umsatz",
     "activeUsers": "Aktive Benutzer",
     "accounts": "Unternehmen",

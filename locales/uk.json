@@ -1,7 +1,7 @@
 {
   "RootLayout": {
-    "title": "NextCRM",
-    "description": "NextCRM — це CRM з відкритим вихідним кодом, створена на основі NextJS."
+    "title": "Windrose",
+    "description": "Windrose — це CRM з відкритим вихідним кодом, створена на основі NextJS."
   },
   "ModuleMenu": {
     "dashboard": "Панель приладів",
@@ -25,7 +25,7 @@
   "DashboardPage": {
     "containerTitle": "Панель приладів",
     "totalRevenue": "Загальна виручка",
-    "containerDescription": "Ласкаво просимо до NextCRM, тут Ви можете побачити всю важливу інформацію про ваш бізнес.",
+    "containerDescription": "Ласкаво просимо до Windrose, тут Ви можете побачити всю важливу інформацію про ваш бізнес.",
     "expectedRevenue": "Очікуваний дохід",
     "activeUsers": "Активні користувачі",
     "accounts": "Компанії",

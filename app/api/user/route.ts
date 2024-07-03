@@ -63,7 +63,7 @@ export async function POST(req: Request) {
           email,
           userLanguage: language,
           userStatus:
-            process.env.NEXT_PUBLIC_APP_URL === "https://demo.nextcrm.io"
+            process.env.NEXT_PUBLIC_APP_URL === "https://windrose.vercel.app"
               ? "ACTIVE"
               : "PENDING",
           password: await hash(password, 12),

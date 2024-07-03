@@ -176,7 +176,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                   <FormControl>
                     <Input
                       disabled={isLoading}
-                      placeholder="NextCRM Inc."
+                      placeholder="Windrose Inc."
                       {...field}
                     />
                   </FormControl>
@@ -241,7 +241,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                   <FormControl>
                     <Textarea
                       disabled={isLoading}
-                      placeholder="New NextCRM functionality"
+                      placeholder="New Windrose functionality"
                       {...field}
                     />
                   </FormControl>
