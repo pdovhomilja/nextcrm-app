@@ -103,13 +103,13 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/imap": "^0.8.40",
     "@types/mailparser": "^3.4.4",
-    "@types/node": "^20.12.7",
+    "@types/node": "^20.14.9",
     "@types/nodemailer": "^6.4.14",
-    "@types/react": "^18.3.1",
+    "@types/react": "^18.3.3",
     "@types/react-beautiful-dnd": "^13.1.8",
     "@types/react-dom": "^18.3.0",
     "cypress": "^13.8.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.4.5"
+    "typescript": "^5.5.3"
   }
 }
