@@ -8,7 +8,8 @@
     "build": "npx prisma generate && npx prisma db push && next build",
     "postinstall": "prisma generate",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "prod": "npm run prebuild && npm run build && npm run postinstall"
   },
   "prisma": {
     "seed": "ts-node ./prisma/seeds/seed.ts"
