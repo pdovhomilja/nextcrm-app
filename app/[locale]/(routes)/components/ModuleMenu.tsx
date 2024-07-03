@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 
 import ProjectModuleMenu from "./menu-items/Projects";
-import SecondBrainModuleMenu from "./menu-items/SecondBrain";
+import JourneyBuilderModuleMenu from "./menu-items/JourneyBuilder";
 import InvoicesModuleMenu from "./menu-items/Invoices";
 import ReportsModuleMenu from "./menu-items/Reports";
 import DocumentsModuleMenu from "./menu-items/Documents";
-import ChatGPTModuleMenu from "./menu-items/ChatGPT";
+import WindroseNavModuleMenu from "./menu-items/WindroseNav";
 import EmployeesModuleMenu from "./menu-items/Employees";
 import DataboxModuleMenu from "./menu-items/Databoxes";
 import CrmModuleMenu from "./menu-items/Crm";
@@ -16,14 +17,14 @@ import AdministrationMenu from "./menu-items/Administration";
 import DashboardMenu from "./menu-items/Dashboard";
 import EmailsModuleMenu from "./menu-items/Emails";
 import { cn } from "@/lib/utils";
+import windroseLogo from "../../../../public/images/windroseLogo.png"
 
 type Props = {
   modules: any;
   dict: any;
-  build: number;
 };
 
-const ModuleMenu = ({ modules, dict, build }: Props) => {
+const ModuleMenu = ({ modules, dict }: Props) => {
   const [open, setOpen] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -42,16 +43,17 @@ const ModuleMenu = ({ modules, dict, build }: Props) => {
           open ? "w-72" : "w-20 "
         }  h-screen p-5  pt-8 relative duration-300`}
       >
-        <div className="flex gap-x-4 items-center">
+        <div className="flex flex-col gap-x-4 items-center">
           <div
             className={`cursor-pointer duration-500 border rounded-full px-4 py-2 ${
               open && "rotate-[360deg]"
             }`}
             onClick={() => setOpen(!open)}
           >
-            N
+            <Image src={windroseLogo.src} alt="windrose logo" width={40} height={40}/>
           </div>
 
+          <div>
           <h1
             className={` origin-left font-medium text-xl duration-200 ${
               !open && "scale-0"
@@ -59,6 +61,7 @@ const ModuleMenu = ({ modules, dict, build }: Props) => {
           >
             {process.env.NEXT_PUBLIC_APP_NAME}
           </h1>
+          </div>
         </div>
         <div className="pt-6">
           <DashboardMenu open={open} title={dict.ModuleMenu.dashboard} />
@@ -79,9 +82,9 @@ const ModuleMenu = ({ modules, dict, build }: Props) => {
           ) : null}
           {modules.find(
             (menuItem: any) =>
-              menuItem.name === "secondBrain" && menuItem.enabled
+              menuItem.name === "journeyBuilder" && menuItem.enabled
           ) ? (
-            <SecondBrainModuleMenu open={open} />
+            <JourneyBuilderModuleMenu open={open} />
           ) : null}
           {modules.find(
             (menuItem: any) => menuItem.name === "employee" && menuItem.enabled
@@ -114,7 +117,7 @@ const ModuleMenu = ({ modules, dict, build }: Props) => {
           {modules.find(
             (menuItem: any) => menuItem.name === "openai" && menuItem.enabled
           ) ? (
-            <ChatGPTModuleMenu open={open} />
+            <WindroseNavModuleMenu open={open} />
           ) : null}
           <AdministrationMenu open={open} title={dict.ModuleMenu.settings} />
         </div>
@@ -124,9 +127,6 @@ const ModuleMenu = ({ modules, dict, build }: Props) => {
           hidden: !open,
         })}
       >
-        <span className="text-xs text-gray-500 pb-2">
-          build: 0.0.3-beta-{build}
-        </span>
       </div>
     </div>
   );

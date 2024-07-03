@@ -131,7 +131,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                   <FormControl>
                     <Input
                       disabled={isLoading}
-                      placeholder="+420 ...."
+                      placeholder="+1 ...."
                       {...field}
                     />
                   </FormControl>
@@ -148,7 +148,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                   <FormControl>
                     <Input
                       disabled={isLoading}
-                      placeholder="account@domain.com"
+                      placeholder="account@windroseandco.com"
                       {...field}
                     />
                   </FormControl>
@@ -165,7 +165,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                   <FormControl>
                     <Input
                       disabled={isLoading}
-                      placeholder="https://www.domain.com"
+                      placeholder="https://www.windroseandco.com"
                       {...field}
                     />
                   </FormControl>
@@ -199,7 +199,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                   <FormControl>
                     <Input
                       disabled={isLoading}
-                      placeholder="CZ1234567890"
+                      placeholder="EU1234567890"
                       {...field}
                     />
                   </FormControl>
@@ -219,7 +219,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="Švábova 772/18"
+                        placeholder="20 S Sarah St"
                         {...field}
                       />
                     </FormControl>
@@ -236,7 +236,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="252 18"
+                        placeholder="63108"
                         {...field}
                       />
                     </FormControl>
@@ -253,7 +253,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="Prague"
+                        placeholder="St. Louis"
                         {...field}
                       />
                     </FormControl>
@@ -268,7 +268,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                   <FormItem>
                     <FormLabel>Billing state</FormLabel>
                     <FormControl>
-                      <Input disabled={isLoading} placeholder="" {...field} />
+                      <Input disabled={isLoading} placeholder="MO" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -283,7 +283,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="Czechia"
+                        placeholder="United States"
                         {...field}
                       />
                     </FormControl>
@@ -302,7 +302,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="Švábova 772/18"
+                        placeholder="20 S Sarah St"
                         {...field}
                       />
                     </FormControl>
@@ -319,7 +319,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="252 18"
+                        placeholder="63108"
                         {...field}
                       />
                     </FormControl>
@@ -336,7 +336,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="Prague"
+                        placeholder="St. Louis"
                         {...field}
                       />
                     </FormControl>
@@ -351,7 +351,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                   <FormItem>
                     <FormLabel>Shipping state</FormLabel>
                     <FormControl>
-                      <Input disabled={isLoading} placeholder="" {...field} />
+                      <Input disabled={isLoading} placeholder="MO" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -366,7 +366,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="Czechia"
+                        placeholder="United States"
                         {...field}
                       />
                     </FormControl>
@@ -406,7 +406,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="1.0000.000"
+                        placeholder="1,0000,000"
                         {...field}
                       />
                     </FormControl>

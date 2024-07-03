@@ -1,7 +1,7 @@
 {
   "RootLayout": {
     "title": "Windrose",
-    "description": "Windrose is an open source CRM build on top of NextJS."
+    "description": "Windrose is an open source CRM build on top of NextCRM in NextJS."
   },
   "ModuleMenu": {
     "dashboard": "Dashboard",
@@ -36,7 +36,7 @@
     "tasks": "Tasks",
     "myTasks": "My tasks",
     "invoices": "Invoices",
-    "documents": "Documents",
+    "documents": "Docs",
     "storage": "Storage"
   },
   "RegisterComponent": {

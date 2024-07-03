@@ -5,9 +5,9 @@ import { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
 
-import { SecondBrain } from "../table-data/schema";
+import { JourneyBuilder } from "../table-data/schema";
 
-export const columns: ColumnDef<SecondBrain>[] = [
+export const columns: ColumnDef<JourneyBuilder>[] = [
   {
     accessorKey: "createdAt",
     header: ({ column }) => (

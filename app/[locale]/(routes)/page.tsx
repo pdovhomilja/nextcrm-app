@@ -17,9 +17,9 @@ import Link from "next/link";
 import { getDictionary } from "@/dictionaries";
 
 import Container from "./components/ui/Container";
-import NotionsBox from "./components/dasboard/notions";
-import LoadingBox from "./components/dasboard/loading-box";
-import StorageQuota from "./components/dasboard/storage-quota";
+import NotionsBox from "./components/dashboard/notions";
+import LoadingBox from "./components/dashboard/loading-box";
+import StorageQuota from "./components/dashboard/storage-quota";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import {
@@ -27,7 +27,7 @@ import {
   getUsersTasksCount,
 } from "@/actions/dashboard/get-tasks-count";
 import { getModules } from "@/actions/get-modules";
-import { getEmployees } from "@/actions/get-empoloyees";
+import { getEmployees } from "@/actions/get-employees";
 
 import { getLeadsCount } from "@/actions/dashboard/get-leads-count";
 import { getBoardsCount } from "@/actions/dashboard/get-boards-count";
@@ -76,8 +76,8 @@ const DashboardPage = async () => {
   const projectsModule = modules.find((module) => module.name === "projects");
   const documentsModule = modules.find((module) => module.name === "documents");
   const employeesModule = modules.find((module) => module.name === "employees");
-  const secondBrainModule = modules.find(
-    (module) => module.name === "secondBrain"
+  const journeyBuilderModule = modules.find(
+    (module) => module.name === "journeyBuilder"
   );
 
   return (
@@ -218,7 +218,7 @@ const DashboardPage = async () => {
 
         <StorageQuota actual={storage} title={dict.DashboardPage.storage} />
 
-        {secondBrainModule?.enabled && (
+        {journeyBuilderModule?.enabled && (
           <Suspense fallback={<LoadingBox />}>
             <NotionsBox />
           </Suspense>

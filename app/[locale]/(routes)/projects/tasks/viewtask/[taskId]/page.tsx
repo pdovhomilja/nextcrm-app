@@ -162,12 +162,12 @@ const TaskPage = async ({ params }: TaskPageProps) => {
           <code>{JSON.stringify(taskDocuments, null, 2)}</code>
         </pre> */}
         <h4 className="scroll-m-20 text-xl font-semibold tracking-tight py-5">
-          Task documents ({taskDocuments.length})
+          Task Docs ({taskDocuments.length})
         </h4>
         <TaskDataTable data={taskDocuments} columns={columnsTask} />
         <Separator />
         <h4 className="scroll-m-20 text-xl font-semibold tracking-tight py-5">
-          Available documents ({documents.length})
+          Available Docs ({documents.length})
         </h4>
         <TaskDataTable data={documents} columns={columns} />
       </div>

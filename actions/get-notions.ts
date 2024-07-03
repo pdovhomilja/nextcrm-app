@@ -52,7 +52,7 @@ export const getNotions = async (): Promise<any[] | null> => {
   //console.log(notion, "notion");
 
   try {
-    const notionDb = await prismadb.secondBrain_notions.findFirst({
+    const notionDb = await prismadb.journeyBuilder_notions.findFirst({
       where: {
         user: session?.user.id,
       },

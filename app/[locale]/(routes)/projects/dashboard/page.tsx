@@ -1,6 +1,6 @@
 import React from "react";
 import Container from "../../components/ui/Container";
-import ProjectDashboardCockpit from "./components/ProjectDasboard";
+import ProjectDashboardCockpit from "./components/ProjectDashboard";
 import { getTasksPastDue } from "@/actions/projects/get-tasks-past-due";
 import { getActiveUsers } from "@/actions/get-users";
 import { getBoards } from "@/actions/projects/get-boards";

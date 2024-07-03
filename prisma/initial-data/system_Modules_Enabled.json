@@ -19,14 +19,14 @@
   },
   {
     "v": 0,
-    "name": "secondBrain",
+    "name": "journeyBuilder",
     "enabled": true,
     "position": 4
   },
   {
     "v": 0,
     "name": "employee",
-    "enabled": false,
+    "enabled": true,
     "position": 5
   },
   {
@@ -50,7 +50,7 @@
   {
     "v": 0,
     "name": "databox",
-    "enabled": false,
+    "enabled": true,
     "position": 9
   },
   {

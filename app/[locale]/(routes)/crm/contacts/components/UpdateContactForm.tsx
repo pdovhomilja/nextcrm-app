@@ -227,7 +227,7 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
                   <FormControl>
                     <Input
                       disabled={isLoading}
-                      placeholder="john@domain.com"
+                      placeholder="john@windroseandco.com"
                       {...field}
                     />
                   </FormControl>
@@ -261,7 +261,7 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
                   <FormControl>
                     <Input
                       disabled={isLoading}
-                      placeholder="https://www.domain.com"
+                      placeholder="https://www.windroseandco.com"
                       {...field}
                     />
                   </FormControl>
@@ -598,7 +598,7 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
                       <FormControl>
                         <Input
                           disabled={isLoading}
-                          placeholder="https://www.domain.com"
+                          placeholder="https://www.windroseandco.com"
                           {...field}
                         />
                       </FormControl>

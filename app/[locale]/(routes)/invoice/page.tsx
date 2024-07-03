@@ -30,7 +30,7 @@ const InvoicePage = async () => {
   return (
     <Container
       title="Invoices"
-      description={"Everything you need to know about invoices and TAX"}
+      description={"Overview - invoices and TAX"}
     >
       <NewTaskDialog users={users} boards={boards} />
       <div className="flex justify-between py-5 w-full">

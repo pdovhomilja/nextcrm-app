@@ -19,7 +19,7 @@ const ProjectsPage = async () => {
   return (
     <Container
       title="Projects"
-      description={"Everything you need to know about projects"}
+      description={"Overview - projects"}
     >
       <Suspense fallback={<SuspenseLoading />}>
         <ProjectsView />

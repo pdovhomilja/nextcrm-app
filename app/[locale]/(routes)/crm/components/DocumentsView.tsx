@@ -40,7 +40,7 @@ const DocumentsView = ({ data }: DocumentsViewProps) => {
               onClick={() => router.push("/documents")}
               className="cursor-pointer"
             >
-              Documents
+              Docs
             </CardTitle>
             <CardDescription></CardDescription>
           </div>
@@ -50,7 +50,7 @@ const DocumentsView = ({ data }: DocumentsViewProps) => {
       </CardHeader>
       <CardContent>
         {!data || data.length === 0 ? (
-          "No assigned documents found"
+          "No assigned Docs found"
         ) : (
           <DocumentsDataTable data={data} columns={columns} />
         )}

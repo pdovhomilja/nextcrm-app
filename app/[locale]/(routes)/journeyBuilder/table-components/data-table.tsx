@@ -35,7 +35,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
 }
 
-export function SecondBrainDataTable<TData, TValue>({
+export function JourneyBuilderDataTable<TData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {

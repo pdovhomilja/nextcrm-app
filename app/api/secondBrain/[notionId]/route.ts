@@ -18,7 +18,7 @@ export async function DELETE(
 
   try {
     //Get the notion database id from the user's profile in the database
-    const notionDb = await prismadb.secondBrain_notions.findFirst({
+    const notionDb = await prismadb.journeyBuilder_notions.findFirst({
       where: {
         user: session.user.id,
       },

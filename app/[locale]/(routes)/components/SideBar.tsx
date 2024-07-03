@@ -5,7 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDictionary } from "@/dictionaries";
 
-const SideBar = async ({ build }: { build: number }) => {
+const SideBar = async () => {
   const session = await getServerSession(authOptions);
 
   if (!session) return null;
@@ -22,6 +22,6 @@ const SideBar = async ({ build }: { build: number }) => {
 
   if (!dict) return null;
 
-  return <ModuleMenu modules={modules} dict={dict} build={build} />;
+  return <div className="overflow-auto" style={{ scrollbarColor: "#888", scrollbarWidth: "thin", height: "100vh", overflowX: "hidden" }}><ModuleMenu modules={modules} dict={dict}/></div> ;
 };
 export default SideBar;

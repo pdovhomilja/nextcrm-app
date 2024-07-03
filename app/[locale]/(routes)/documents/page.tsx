@@ -17,7 +17,7 @@ const DocumentsPage = async () => {
   return (
     <Container
       title="Documents"
-      description={"Everything you need to know about company documents"}
+      description={"Overview - company documents"}
     >
       <div className="flex space-x-5 py-5">
         <ModalDropzone buttonLabel="Upload pdf" fileType="pdfUploader" />

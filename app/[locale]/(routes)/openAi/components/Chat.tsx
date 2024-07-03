@@ -37,7 +37,7 @@ export default function AiHelpCenter() {
               <input
                 className="w-full  bottom-0 border border-gray-300 rounded p-2 shadow-xl"
                 value={input}
-                placeholder="Napište Váš dotaz ..."
+                placeholder="Describe client situation to begin journey builder"
                 onChange={handleInputChange}
               />
             </div>

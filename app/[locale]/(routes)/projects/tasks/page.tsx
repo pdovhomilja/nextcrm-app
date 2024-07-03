@@ -12,7 +12,7 @@ const TasksPage = async () => {
   return (
     <Container
       title="All tasks"
-      description={"Everything you need to know about tasks"}
+      description={"Overview - tasks"}
     >
       <div className="py-5">
         <Button>New task</Button>

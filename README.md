@@ -3,7 +3,7 @@
 </a>
 
 <p align="center">
-<img alt="OG" src="public/images/windrose-logo.png" />
+<img alt="OG" src="public/images/windroseLogo.png" />
 </p>
 
 <!-- <p align="center">

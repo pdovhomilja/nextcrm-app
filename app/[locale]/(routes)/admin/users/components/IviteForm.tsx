@@ -110,7 +110,7 @@ export function InviteForm() {
               <FormControl>
                 <Input
                   disabled={isLoading}
-                  placeholder="name@domain.com"
+                  placeholder="name@windroseandco.com"
                   {...field}
                 />
               </FormControl>

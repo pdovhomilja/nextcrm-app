@@ -189,7 +189,7 @@ export function RegisterComponent() {
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="name@domain.com"
+                        placeholder="name@windroseandco.com"
                         {...field}
                       />
                     </FormControl>

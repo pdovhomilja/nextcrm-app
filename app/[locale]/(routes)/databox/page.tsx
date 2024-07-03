@@ -10,7 +10,7 @@ const CrmPage = (props: Props) => {
     <Container
       title="Databox"
       description={
-        "Everything you need to know about Databox alias Datové schránky"
+        "Overview - Databox alias Datové schránky"
       }
     >
       <div>Module content here</div>

@@ -9,7 +9,7 @@ const CrmPage = (props: Props) => {
   return (
     <Container
       title="Employees"
-      description={"Everything you need to know about Human Resources"}
+      description={"Overview - Human Resources"}
     >
       <div>Module content here</div>
     </Container>

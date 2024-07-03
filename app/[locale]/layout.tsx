@@ -38,7 +38,7 @@ export async function generateMetadata({ params: { locale } }: Props) {
     openGraph: {
       images: [
         {
-          url: "/images/opengraph-image.png",
+          url: "images/windroseLogo.png",
           width: 1200,
           height: 630,
           alt: t("RootLayout.title"),
@@ -47,7 +47,7 @@ export async function generateMetadata({ params: { locale } }: Props) {
     },
     twitter: {
       cardType: "summary_large_image",
-      image: "/images/opengraph-image.png",
+      image: "images/windroseLogo.png",
       width: 1200,
       height: 630,
       alt: t("RootLayout.title"),
@@ -76,7 +76,7 @@ export default async function RootLayout({
           content="Windrose is a cutting edge Client Management System. Built with Next JS using NextCRM, an open source SaaS builder. Technology stack: NextJS with Typescript, MongoDB, TailwindCSS, React, Prisma, shadCN, resend.com, react.email and more."
         />
       </head>
-      <body className={inter.className + " h-screen overflow-hidden"}>
+      <body className={inter.className + "h-screen overflow-y-auto"}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             {children}

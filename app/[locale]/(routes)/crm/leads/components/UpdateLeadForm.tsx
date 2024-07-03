@@ -206,7 +206,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                   <FormControl>
                     <Input
                       disabled={isLoading}
-                      placeholder="johny@domain.com"
+                      placeholder="johny@windroseandco.com"
                       {...field}
                     />
                   </FormControl>

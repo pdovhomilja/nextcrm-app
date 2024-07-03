@@ -255,7 +255,7 @@ export function MyAccountSettingsForm({ initialData }: UpdateAccountFormProps) {
                       <FormControl>
                         <Input
                           disabled={isLoading}
-                          placeholder="CZ12345678"
+                          placeholder="EU12345678"
                           {...field}
                         />
                       </FormControl>
@@ -323,7 +323,7 @@ export function MyAccountSettingsForm({ initialData }: UpdateAccountFormProps) {
                       <FormControl>
                         <Input
                           disabled={isLoading}
-                          placeholder="CZ1234567890000060000001"
+                          placeholder="EU1234567890000060000001"
                           {...field}
                         />
                       </FormControl>
@@ -451,7 +451,7 @@ export function MyAccountSettingsForm({ initialData }: UpdateAccountFormProps) {
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="+420"
+                        placeholder="+1"
                         {...field}
                       />
                     </FormControl>
@@ -485,7 +485,7 @@ export function MyAccountSettingsForm({ initialData }: UpdateAccountFormProps) {
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="+420"
+                        placeholder="+1"
                         {...field}
                       />
                     </FormControl>
@@ -521,7 +521,7 @@ export function MyAccountSettingsForm({ initialData }: UpdateAccountFormProps) {
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="+420"
+                        placeholder="+1"
                         {...field}
                       />
                     </FormControl>

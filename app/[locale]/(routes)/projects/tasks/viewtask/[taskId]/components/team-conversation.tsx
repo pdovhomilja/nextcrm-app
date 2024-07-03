@@ -1,5 +1,5 @@
 "use client";
-import { Comment } from "@/app/[locale]/(routes)/projects/dashboard/components/ProjectDasboard";
+import { Comment } from "@/app/[locale]/(routes)/projects/dashboard/components/ProjectDashboard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {

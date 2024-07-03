@@ -20,7 +20,7 @@ import { useAppStore } from "@/store/store";
 import { useToast } from "@/components/ui/use-toast";
 import AlertModal from "@/components/modals/alert-modal";
 
-import { secondBrainSchema } from "../table-data/schema";
+import { journeyBuilderSchema } from "../table-data/schema";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -29,7 +29,7 @@ interface DataTableRowActionsProps<TData> {
 export function DataTableRowActions<TData>({
   row,
 }: DataTableRowActionsProps<TData>) {
-  const data = secondBrainSchema.parse(row.original);
+  const data = journeyBuilderSchema.parse(row.original);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -51,7 +51,7 @@ export function DataTableRowActions<TData>({
   const onDelete = async () => {
     setLoading(true);
     try {
-      await axios.delete(`/api/secondBrain/${data.id}`);
+      await axios.delete(`/api/journeyBuilder/${data.id}`);
       //Place for toast
       toast({
         title: "Success",

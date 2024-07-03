@@ -52,7 +52,7 @@ const AccountDetailPage = async ({ params }: AccountDetailPageProps) => {
   return (
     <Container
       title={`Account: ${account?.name}`}
-      description={"Everything you need to know about sales potential"}
+      description={"Overview - sales potential"}
     >
       <div className="space-y-5">
         <BasicView data={account} />

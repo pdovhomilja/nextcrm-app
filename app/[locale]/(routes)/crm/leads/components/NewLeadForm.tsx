@@ -188,7 +188,7 @@ export function NewLeadForm({ users, accounts }: NewTaskFormProps) {
                   <FormControl>
                     <Input
                       disabled={isLoading}
-                      placeholder="johny@domain.com"
+                      placeholder="johny@windroseandco.com"
                       {...field}
                     />
                   </FormControl>

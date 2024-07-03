@@ -7,7 +7,7 @@ const CrmPage = async () => {
   return (
     <Container
       title="CRM"
-      description={"Everything you need to know about sales"}
+      description={"Overview - sales"}
     >
       {/*
       TODO: Think about how to handle the loading of the data to make better UX with suspense

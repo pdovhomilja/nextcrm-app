@@ -10,7 +10,7 @@ type Props = {
   open: boolean;
 };
 
-const ChatGPTModuleMenu = ({ open }: Props) => {
+const WindroseNavModuleMenu = ({ open }: Props) => {
   const pathname = usePathname();
   const isPath = pathname.includes("openAi");
   return (
@@ -20,10 +20,10 @@ const ChatGPTModuleMenu = ({ open }: Props) => {
         className={`flex gap-2 p-2 ${isPath ? "text-muted-foreground" : null}`}
       >
         <Bot className="w-6" />
-        <span className={open ? "" : "hidden"}>ChatGPT</span>
+        <span className={open ? "" : "hidden"}>Windrose Nav</span>
       </Link>
     </div>
   );
 };
 
-export default ChatGPTModuleMenu;
+export default WindroseNavModuleMenu;

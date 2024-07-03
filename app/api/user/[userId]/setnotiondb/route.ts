@@ -28,7 +28,7 @@ export async function POST(
     });
   }
   try {
-    const checkIfExist = await prismadb.secondBrain_notions.findFirst({
+    const checkIfExist = await prismadb.journeyBuilder_notions.findFirst({
       where: {
         user: userId,
       },
@@ -37,7 +37,7 @@ export async function POST(
     //console.log(checkIfExist !== null, "Check if exist result");
     if (checkIfExist !== null) {
       try {
-        const updateNotion = await prismadb.secondBrain_notions.update({
+        const updateNotion = await prismadb.journeyBuilder_notions.update({
           where: {
             id: checkIfExist.id,
           },
@@ -53,7 +53,7 @@ export async function POST(
         console.log(error);
       }
     } else {
-      const setNotion = await prismadb.secondBrain_notions.create({
+      const setNotion = await prismadb.journeyBuilder_notions.create({
         data: {
           v: 0,
           notion_api_key: secretKey,

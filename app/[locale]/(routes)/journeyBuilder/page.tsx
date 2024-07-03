@@ -9,7 +9,7 @@ import NewTask from "./components/NewTask";
 import H4Title from "@/components/typography/h4";
 
 import { columns } from "./table-components/columns";
-import { SecondBrainDataTable } from "./table-components/data-table";
+import { JourneyBuilderDataTable } from "./table-components/data-table";
 
 import { getNotions } from "@/actions/get-notions";
 import { getActiveUsers } from "@/actions/get-users";
@@ -17,7 +17,7 @@ import { getBoards } from "@/actions/projects/get-boards";
 import { Button } from "@/components/ui/button";
 import Youtube from "./components/Youtube";
 
-const SecondBrainPage = async () => {
+const JourneyBuilderPage = async () => {
   const notions: any = await getNotions();
   const users: any = await getActiveUsers();
   const session = await getServerSession(authOptions);
@@ -65,7 +65,7 @@ const SecondBrainPage = async () => {
             ?v=e563b6c36b6649bba29eaad6b4c52ab4)
           </ol>
           <Button asChild className="my-3">
-            <Link href="/profile">Enable Second Brain </Link>
+            <Link href="/profile">Enable Journey Builder </Link>
           </Button>
         </div>
         <div className="w-full ">
@@ -78,13 +78,13 @@ const SecondBrainPage = async () => {
     <>
       <NewTask users={users} boards={boards} />
       <Container
-        title="Second Brain"
-        description={"Everything you need to know about Your notions"}
+        title="Journey Builder"
+        description={"Overview - Your notions"}
       >
-        <SecondBrainDataTable columns={columns} data={notions} />
+        <JourneyBuilderDataTable columns={columns} data={notions} />
       </Container>
     </>
   );
 };
 
-export default SecondBrainPage;
+export default JourneyBuilderPage;

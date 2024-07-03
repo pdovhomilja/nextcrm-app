@@ -248,7 +248,7 @@ export function LoginComponent() {
                 </span>
               </div>
             </div>
-            <div className="grid gap-2 py-8">
+            <div className="grid gap-2 pt-8">
               <Button
                 disabled={isLoading}
                 type="submit"
@@ -298,7 +298,7 @@ export function LoginComponent() {
                 <div className="flex px-2 space-x-5 py-5">
                   <Input
                     type="email"
-                    placeholder="name@domain.com"
+                    placeholder="name@windroseandco.com"
                     onChange={(e) => setEmail(e.target.value)}
                   />
                   <Button

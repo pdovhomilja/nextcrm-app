@@ -13,7 +13,7 @@ const AccountsPage = async () => {
   return (
     <Container
       title="Contacts"
-      description={"Everything you need to know about your contacts"}
+      description={"Overview - your contacts"}
     >
       <Suspense fallback={<SuspenseLoading />}>
         <ContactsView crmData={crmData} data={contacts} />

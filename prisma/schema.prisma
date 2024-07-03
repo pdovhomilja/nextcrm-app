@@ -246,8 +246,8 @@ model Boards {
   id                String    @id @default(auto()) @map("_id") @db.ObjectId
   v                 Int       @map("__v")
   description       String
-  favourite         Boolean?
-  favouritePosition Int?
+  favorite         Boolean?
+  favoritePosition Int?
   icon              String?
   position          Int?
   title             String
@@ -259,7 +259,7 @@ model Boards {
   updatedAt         DateTime? @updatedAt @db.Date
   updatedBy         String?   @db.ObjectId
 
-  //Create watechers field for board. It will be array of users
+  //Create watchers field for board. It will be array of users
   watchers       String[] @db.ObjectId
   assigned_user  Users?   @relation(name: "assigned_user", fields: [user], references: [id])
   watchers_users Users[]  @relation(name: "watching_users", fields: [watchers], references: [id])
@@ -410,7 +410,7 @@ model Documents {
   createdBy              String?             @db.ObjectId
   description            String?
   document_type          String?             @db.ObjectId
-  favourite              Boolean?
+  favorite              Boolean?
   document_file_mimeType String
   document_file_url      String
   status                 String?
@@ -587,7 +587,7 @@ model Users {
   assigned_opportunity crm_Opportunities[]   @relation(name: "assigned_to_user_relation")
   assigned_contacts    crm_Contacts[]        @relation(name: "assigned_contacts")
   crated_contacts      crm_Contacts[]        @relation(name: "created_contacts")
-  notion_account       secondBrain_notions[]
+  notion_account       journeyBuilder_notions[]
   openAi_key           openAi_keys[]
   assigned_invoices    Invoices[]
   assigned_contracts   crm_Contracts[]
@@ -613,7 +613,7 @@ model system_Modules_Enabled {
   position Int
 }
 
-model secondBrain_notions {
+model journeyBuilder_notions {
   id             String @id @default(auto()) @map("_id") @db.ObjectId
   v              Int    @map("__v")
   user           String @db.ObjectId

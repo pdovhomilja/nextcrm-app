@@ -23,7 +23,7 @@ const TaskDetailPage = async ({ params }: TaskDetailPageProps) => {
   return (
     <Container
       title={`${session?.user.name}'s Tasks`}
-      description={"Everything you need to know about tasks"}
+      description={"Overview - tasks"}
     >
       <TasksDataTable data={tasks} columns={columns} />
     </Container>

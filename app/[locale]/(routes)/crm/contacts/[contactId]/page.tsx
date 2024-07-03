@@ -27,7 +27,7 @@ const ContactViewPage = async ({ params }: any) => {
   return (
     <Container
       title={`Contact detail view: ${contact?.first_name} ${contact?.last_name}`}
-      description={"Everything you need to know about sales potential"}
+      description={"Overview - sales potential"}
     >
       <div className="space-y-5">
         <BasicView data={contact} />

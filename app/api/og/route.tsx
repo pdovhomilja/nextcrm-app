@@ -1,7 +1,9 @@
+import Image from "next/image";
 import { ImageResponse } from "next/og";
 import { TbBrandNextjs, TbBrandTypescript } from "react-icons/tb";
 import { BiLogoMongodb, BiLogoTailwindCss } from "react-icons/bi";
 import { SiPrisma, SiReact, SiOpenai } from "react-icons/si";
+import windroseLogo from "../../../public/images/windroseLogo.png"
 
 export const runtime = "edge";
 
@@ -30,12 +32,12 @@ export async function GET(request: Request) {
         <div tw="flex flex-row-reverse h-full bg-neutral-800 ">
           <div tw="flex w-1/2 h-full">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               tw="w-full h-full"
-              src={`${websiteUrl}/img/hero.png`}
-              width="50%"
-              height="50%"
-              alt="Prism"
+              src={windroseLogo.src}
+              width={50}
+              height={50}
+              alt="Windrose"
             />
             <div
               tw="absolute left-[-80px] top-[-30px] w-[150px] h-[120%] bg-neutral-800"

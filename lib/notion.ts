@@ -6,7 +6,7 @@ const initNotionClient = async (userId: string) => {
   //console.log(userId, "User ID from Notion - lib");
 
   try {
-    const apiKey = await prismadb.secondBrain_notions.findFirst({
+    const apiKey = await prismadb.journeyBuilder_notions.findFirst({
       where: {
         user: userId,
       },
