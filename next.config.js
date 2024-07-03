@@ -2,6 +2,7 @@ const withNextIntl = require("next-intl/plugin")(
   // This is the default (also the `src` folder is supported out of the box)
   "./i18n.ts"
 );
+const path = require('path');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -13,6 +14,10 @@ const nextConfig = {
       "uploadthing.com",
       "utfs.io",
     ],
+  },
+  webpack: (config) => {
+    config.resolve.alias['@'] = path.join(__dirname);
+    return config;
   },
 };
 
