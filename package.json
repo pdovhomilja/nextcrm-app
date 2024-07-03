@@ -1,11 +1,12 @@
 {
   "name": "windrose",
-  "version": "0.0.3-beta",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "prebuild": "pnpm install --no-frozen-lockfile",
-    "build": "npx prisma generate && npx prisma migrate deploy && next build",
+    "build": "npx prisma generate && npx prisma db push && next build",
+    "postinstall": "prisma generate",
     "start": "next start",
     "lint": "next lint"
   },

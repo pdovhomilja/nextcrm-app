@@ -1,8 +1,8 @@
 name: 🐞 Bug report
-description: Create a bug report to help us improve NextCRM App
+description: Create a bug report to help us improve Windrose App
 title: "[BUG:]"
 labels: [👀 Exploration Pending, 🐞 bug]
-projects: ["pdovhomilja/1"]
+projects: ["drod1107/1"]
 body:
   - type: markdown
     attributes:
