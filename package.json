@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "pnpm install --no-frozen-lockfile",
     "build": "prisma generate &&  prisma db push && prisma db seed && next build",
     "start": "next start",
     "lint": "next lint"
