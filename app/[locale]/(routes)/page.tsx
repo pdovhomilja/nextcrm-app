@@ -1,11 +1,10 @@
-import { Suspense } from "react";
+import React, { Suspense } from "react";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import {
   CoinsIcon,
   Contact,
   DollarSignIcon,
-  FactoryIcon,
   FilePenLine,
   HeartHandshakeIcon,
   LandmarkIcon,
@@ -21,6 +20,7 @@ import NotionsBox from "./components/dashboard/notions";
 import LoadingBox from "./components/dashboard/loading-box";
 import StorageQuota from "./components/dashboard/storage-quota";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormProvider, useForm } from "react-hook-form"; // Correct import
 
 import {
   getTasksCount,
@@ -48,11 +48,11 @@ const DashboardPage = async () => {
 
   const userId = session?.user?.id;
 
-  //Get user language
+  // Get user language
   const lang = session?.user?.userLanguage;
 
-  //Fetch translations from dictionary
-  const dict = await getDictionary(lang as "en" | "cz" | "de" | "uk"); //Fetch data for dashboard
+  // Fetch translations from dictionary
+  const dict = await getDictionary(lang as "en" | "cz" | "de" | "uk"); // Fetch data for dashboard
 
   const modules = await getModules();
   const leads = await getLeadsCount();
@@ -70,7 +70,7 @@ const DashboardPage = async () => {
   const opportunities = await getOpportunitiesCount();
   const usersTasks = await getUsersTasksCount(userId);
 
-  //Find which modules are enabled
+  // Find which modules are enabled
   const crmModule = modules.find((module) => module.name === "crm");
   const invoiceModule = modules.find((module) => module.name === "invoice");
   const projectsModule = modules.find((module) => module.name === "projects");
@@ -80,69 +80,64 @@ const DashboardPage = async () => {
     (module) => module.name === "journeyBuilder"
   );
 
+  const methods = useForm(); // Initialize react-hook-form
+
   return (
-    <Container
-      title={dict.DashboardPage.containerTitle}
-      description={
-        "Welcome to Windrose Central Stack, home to your company overview."
-      }
-    >
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        <Suspense fallback={<LoadingBox />}>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {dict.DashboardPage.totalRevenue}
-              </CardTitle>
-              <DollarSignIcon className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-medium">{"0"}</div>
-            </CardContent>
-          </Card>
-        </Suspense>
-        <Suspense fallback={<LoadingBox />}>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {dict.DashboardPage.expectedRevenue}
-              </CardTitle>
-              <DollarSignIcon className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-medium">
-                {
-                  //I need revenue value in format 1.000.000
-                  revenue.toLocaleString("en-US", {
+    <FormProvider {...methods}>
+      <Container
+        title={dict.DashboardPage.containerTitle}
+        description={
+          "Welcome to Windrose Central Stack, home to your company overview."
+        }
+      >
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          <Suspense fallback={<LoadingBox />}>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {dict.DashboardPage.totalRevenue}
+                </CardTitle>
+                <DollarSignIcon className="w-4 h-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-medium">{"0"}</div>
+              </CardContent>
+            </Card>
+          </Suspense>
+          <Suspense fallback={<LoadingBox />}>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {dict.DashboardPage.expectedRevenue}
+                </CardTitle>
+                <DollarSignIcon className="w-4 h-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-medium">
+                  {revenue.toLocaleString("en-US", {
                     style: "currency",
                     currency: "USD",
-                  })
-                }
-              </div>
-            </CardContent>
-          </Card>
-        </Suspense>
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </Suspense>
 
-        <DashboardCard
-          href="/admin/users"
-          title={dict.DashboardPage.activeUsers}
-          IconComponent={UserIcon}
-          content={users}
-        />
-        {
-          //show crm module only if enabled is true
-          employeesModule?.enabled && (
+          <DashboardCard
+            href="/admin/users"
+            title={dict.DashboardPage.activeUsers}
+            IconComponent={UserIcon}
+            content={users}
+          />
+          {employeesModule?.enabled && (
             <DashboardCard
               href="/employees"
               title="Employees"
               IconComponent={Users2Icon}
               content={employees.length}
             />
-          )
-        }
-        {
-          //show crm module only if enabled is true
-          crmModule?.enabled && (
+          )}
+          {crmModule?.enabled && (
             <>
               <DashboardCard
                 href="/crm/accounts"
@@ -175,56 +170,56 @@ const DashboardPage = async () => {
                 content={contracts}
               />
             </>
-          )
-        }
-        {projectsModule?.enabled && (
-          <>
+          )}
+          {projectsModule?.enabled && (
+            <>
+              <DashboardCard
+                href="/projects"
+                title={dict.DashboardPage.projects}
+                IconComponent={CoinsIcon}
+                content={projects}
+              />
+              <DashboardCard
+                href="/projects/tasks"
+                title={dict.DashboardPage.tasks}
+                IconComponent={CoinsIcon}
+                content={tasks}
+              />
+              <DashboardCard
+                href={`/projects/tasks/${userId}`}
+                title={dict.DashboardPage.myTasks}
+                IconComponent={CoinsIcon}
+                content={usersTasks}
+              />
+            </>
+          )}
+          {invoiceModule?.enabled && (
             <DashboardCard
-              href="/projects"
-              title={dict.DashboardPage.projects}
+              href="/invoice"
+              title={dict.DashboardPage.invoices}
               IconComponent={CoinsIcon}
-              content={projects}
+              content={invoices}
             />
+          )}
+          {documentsModule?.enabled && (
             <DashboardCard
-              href="/projects/tasks"
-              title={dict.DashboardPage.tasks}
+              href="/documents"
+              title={dict.DashboardPage.documents}
               IconComponent={CoinsIcon}
-              content={tasks}
+              content={documents}
             />
-            <DashboardCard
-              href={`/projects/tasks/${userId}`}
-              title={dict.DashboardPage.myTasks}
-              IconComponent={CoinsIcon}
-              content={usersTasks}
-            />
-          </>
-        )}
-        {invoiceModule?.enabled && (
-          <DashboardCard
-            href="/invoice"
-            title={dict.DashboardPage.invoices}
-            IconComponent={CoinsIcon}
-            content={invoices}
-          />
-        )}
-        {documentsModule?.enabled && (
-          <DashboardCard
-            href="/documents"
-            title={dict.DashboardPage.documents}
-            IconComponent={CoinsIcon}
-            content={documents}
-          />
-        )}
+          )}
 
-        <StorageQuota actual={storage} title={dict.DashboardPage.storage} />
+          <StorageQuota actual={storage} title={dict.DashboardPage.storage} />
 
-        {journeyBuilderModule?.enabled && (
-          <Suspense fallback={<LoadingBox />}>
-            <NotionsBox />
-          </Suspense>
-        )}
-      </div>
-    </Container>
+          {journeyBuilderModule?.enabled && (
+            <Suspense fallback={<LoadingBox />}>
+              <NotionsBox />
+            </Suspense>
+          )}
+        </div>
+      </Container>
+    </FormProvider>
   );
 };
 
