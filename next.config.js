@@ -5,6 +5,9 @@ const path = require('path');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  eslint: {
+    ignoreDuringBuilds: false,
+  },
   images: {
     domains: [
       "localhost",
@@ -21,3 +24,4 @@ const nextConfig = {
 };
 
 module.exports = withNextIntl(nextConfig);
+
