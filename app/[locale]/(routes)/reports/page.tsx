@@ -1,10 +1,12 @@
-import Heading from "@/components/ui/heading";
-import { Separator } from "@/components/ui/separator";
 import React from "react";
 import Container from "../components/ui/Container";
 
 import { BarChartDemo } from "@/components/tremor/BarChart";
-import { getUsersByMonth, getUsersByMonthAndYear } from "@/actions/get-users";
+import {
+  getUsersByMonth,
+  getUsersByMonthAndYear,
+  getUsersCountOverall,
+} from "@/actions/get-users";
 import { AreaChartDemo } from "@/components/tremor/AreaChart";
 import { getTasksByMonth } from "@/actions/projects/get-tasks";
 import {
@@ -16,13 +18,15 @@ type Props = {};
 
 const ReportsPage = async (props: Props) => {
   const newUsersOverall = await getUsersByMonth();
+  const newUserByMonthOverall = await getUsersCountOverall();
   const newUsers = await getUsersByMonthAndYear(2023);
   const newUsers2024 = await getUsersByMonthAndYear(2024);
   const tasks = await getTasksByMonth();
   const oppsByStage = await getOpportunitiesByStage();
   const oppsByMonth = await getOpportunitiesByMonth();
 
-  console.log(oppsByStage);
+  //console.log("newUserByMonthOverall:", newUserByMonthOverall);
+  //console.log("New users overall:", newUsersOverall);
 
   return (
     <Container
@@ -32,12 +36,16 @@ const ReportsPage = async (props: Props) => {
       }
     >
       <div className="pt-5 space-y-3">
-        <BarChartDemo
+        {/*         <BarChartDemo
           chartData={newUsersOverall}
+          title={"Number of new users by month (Overall)"}
+        /> */}
+        <BarChartDemo
+          chartData={newUserByMonthOverall}
           title={"Number of new users by month (Overall)"}
         />
         <AreaChartDemo
-          chartData={newUsersOverall}
+          chartData={newUserByMonthOverall}
           title={"New users by month (Overall)"}
         />
       </div>

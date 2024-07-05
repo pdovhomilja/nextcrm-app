@@ -89,3 +89,36 @@ export const getUsersByMonth = async () => {
 
   return chartData;
 };
+
+export const getUsersCountOverall = async () => {
+  const users = await prismadb.users.findMany({
+    select: {
+      created_on: true,
+    },
+  });
+
+  if (!users) {
+    return {};
+  }
+
+  const usersByMonth = users.reduce((acc: any, user: any) => {
+    const date = new Date(user.created_on);
+    const yearMonth = `${date.getFullYear()}-${date.getMonth() + 1}`;
+
+    acc[yearMonth] = (acc[yearMonth] || 0) + 1;
+
+    return acc;
+  }, {});
+
+  const chartData = Object.keys(usersByMonth).map((yearMonth: any) => {
+    const [year, month] = yearMonth.split("-");
+    return {
+      year: parseInt(year),
+      month: parseInt(month),
+      name: `${month}/${year}`,
+      Number: usersByMonth[yearMonth],
+    };
+  });
+
+  return chartData;
+};
