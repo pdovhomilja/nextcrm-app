@@ -36,7 +36,7 @@ const AuthLayout = async ({ children }: { children: React.ReactNode }) => {
   const githubStars = await getGithubRepoStars();
 
   return (
-    <div className="flex flex-col justify-center items-center h-screen w-full">
+    <div className="flex flex-col justify-center items-center min-h-screen w-full">
       <div className="flex justify-end items-center space-x-5 w-full p-5">
         <Link
           href={process.env.NEXT_PUBLIC_GITHUB_REPO_URL || "#"}
