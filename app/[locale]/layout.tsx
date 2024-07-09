@@ -87,7 +87,7 @@ export default async function RootLayout({
         />
         <meta name="twitter:image" content="https://nextcrm.io/api/og" />
       </head>
-      <body className={inter.className + " h-screen overflow-hidden"}>
+      <body className={inter.className + " min-h-screen"}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             {children}
