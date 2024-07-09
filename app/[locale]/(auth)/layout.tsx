@@ -42,21 +42,23 @@ const AuthLayout = async ({ children }: { children: React.ReactNode }) => {
           href={process.env.NEXT_PUBLIC_GITHUB_REPO_URL || "#"}
           className=" border rounded-md p-2"
         >
-          <GithubIcon className="w-5 h-5" />
+          <GithubIcon className="size-5" />
         </Link>
-        <div className="flex items-center border rounded-md p-2">
+        <div className="flex items-center border rounded-md p-2 ">
           <span className="sr-only">Github stars</span>
           {githubStars}
-          <Star className="w-4 h-4" />
+          <Star className="size-4" />
         </div>
         <div className="flex items-center border rounded-md p-2">
           <Link href="https://discord.gg/Dd4Aj6S4Dz">
-            <DiscordLogoIcon className="w-5 h-5" />
+            <DiscordLogoIcon className="size-5" />
           </Link>
         </div>
         <ThemeToggle />
       </div>
-      <div className="flex items-center h-full overflow-hidden">{children}</div>
+      <div className="flex items-center grow h-full overflow-hidden">
+        {children}
+      </div>
       <Footer />
     </div>
   );
