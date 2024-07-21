@@ -352,7 +352,7 @@ export function UpdateAccountForm({
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="Czechia"
+                        placeholder="USA"
                         {...field}
                       />
                     </FormControl>
@@ -435,7 +435,7 @@ export function UpdateAccountForm({
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="Czechia"
+                        placeholder="USA"
                         {...field}
                       />
                     </FormControl>

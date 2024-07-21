@@ -9,7 +9,6 @@ export const getAccount = async (accountId: string) => {
       contacts: true,
       opportunities: true,
       assigned_documents: true,
-      invoices: true,
       assigned_to_user: {
         select: {
           name: true,

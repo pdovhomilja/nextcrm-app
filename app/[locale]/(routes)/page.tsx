@@ -27,7 +27,7 @@ import {
   getUsersTasksCount,
 } from "@/actions/dashboard/get-tasks-count";
 import { getModules } from "@/actions/get-modules";
-import { getEmployees } from "@/actions/get-employees";
+import { getClients } from "@/actions/get-clients";
 
 import { getLeadsCount } from "@/actions/dashboard/get-leads-count";
 import { getBoardsCount } from "@/actions/dashboard/get-boards-count";
@@ -35,7 +35,6 @@ import { getStorageSize } from "@/actions/documents/get-storage-size";
 import { getContactCount } from "@/actions/dashboard/get-contacts-count";
 import { getAccountsCount } from "@/actions/dashboard/get-accounts-count";
 import { getContractsCount } from "@/actions/dashboard/get-contracts-count";
-import { getInvoicesCount } from "@/actions/dashboard/get-invoices-count";
 import { getDocumentsCount } from "@/actions/dashboard/get-documents-count";
 import { getActiveUsersCount } from "@/actions/dashboard/get-active-users-count";
 import { getOpportunitiesCount } from "@/actions/dashboard/get-opportunities-count";
@@ -58,20 +57,19 @@ const DashboardPage = async () => {
   const lang = session?.user?.userLanguage;
 
   //Fetch translations from dictionary
-  const dict = await getDictionary(lang as "en" | "cz" | "de" | "uk");
+  const dict = await getDictionary(lang as "en");
 
   //Fetch data for dashboard
   const modules = await getModules();
   const leads = await getLeadsCount();
   const tasks = await getTasksCount();
-  const employees = await getEmployees();
+  const clients = await getClients();
   const storage = await getStorageSize();
   const projects = await getBoardsCount();
   const contacts = await getContactCount();
   const contracts = await getContractsCount();
   const users = await getActiveUsersCount();
   const accounts = await getAccountsCount();
-  const invoices = await getInvoicesCount();
   const revenue = await getExpectedRevenue();
   const documents = await getDocumentsCount();
   const opportunities = await getOpportunitiesCount();
@@ -79,10 +77,9 @@ const DashboardPage = async () => {
 
   //Find which modules are enabled
   const crmModule = modules.find((module) => module.name === "crm");
-  const invoiceModule = modules.find((module) => module.name === "invoice");
   const projectsModule = modules.find((module) => module.name === "projects");
   const documentsModule = modules.find((module) => module.name === "documents");
-  const employeesModule = modules.find((module) => module.name === "employees");
+  const clientsModule = modules.find((module) => module.name === "clients");
   const secondBrainModule = modules.find(
     (module) => module.name === "secondBrain"
   );
@@ -133,12 +130,12 @@ const DashboardPage = async () => {
           IconComponent={UserIcon}
           content={users}
         />
-        {employeesModule?.enabled && (
+        {clientsModule?.enabled && (
           <DashboardCard
-            href="/employees"
-            title="Employees"
+            href="/clients"
+            title="Clients"
             IconComponent={Users2Icon}
-            content={employees.length}
+            content={clients.length}
           />
         )}
         {crmModule?.enabled && (
@@ -197,14 +194,7 @@ const DashboardPage = async () => {
             />
           </>
         )}
-        {invoiceModule?.enabled && (
-          <DashboardCard
-            href="/invoice"
-            title={dict.DashboardPage.invoices}
-            IconComponent={CoinsIcon}
-            content={invoices}
-          />
-        )}
+
         {documentsModule?.enabled && (
           <DashboardCard
             href="/documents"

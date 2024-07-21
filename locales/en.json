@@ -16,7 +16,6 @@
     "projects": "Projects",
     "emails": "E-mails",
     "tasks": "Tasks",
-    "invoices": "Invoices",
     "reports": "Reports",
     "documents": "Documents",
     "storage": "Storage",
@@ -35,7 +34,6 @@
     "projects": "Projects",
     "tasks": "Tasks",
     "myTasks": "My tasks",
-    "invoices": "Invoices",
     "documents": "Docs",
     "storage": "Storage"
   },
@@ -43,7 +41,7 @@
     "cardTitle": "Create new account",
     "cardDescription": "Create account by login with",
     "label": "Language",
-    "locale": "{locale, select, de {German} en {English} cz {Czech} uk {Ukrainian} other {Unknown}}"
+    "locale": "{locale, select,en {English}}"
   },
   "CrmModuleMenuComponent": {
     "menuTitle": "Sales"

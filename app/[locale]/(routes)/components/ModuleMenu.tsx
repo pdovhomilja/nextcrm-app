@@ -5,12 +5,10 @@ import Image from "next/image";
 
 import ProjectModuleMenu from "./menu-items/Projects";
 import JourneyBuilderModuleMenu from "./menu-items/JourneyBuilder";
-import InvoicesModuleMenu from "./menu-items/Invoices";
 import ReportsModuleMenu from "./menu-items/Reports";
 import DocumentsModuleMenu from "./menu-items/Documents";
 import WindroseNavModuleMenu from "./menu-items/WindroseNav";
-import EmployeesModuleMenu from "./menu-items/Employees";
-import DataboxModuleMenu from "./menu-items/Databoxes";
+import ClientsModuleMenu from "./menu-items/Clients";
 import CrmModuleMenu from "./menu-items/Crm";
 
 import AdministrationMenu from "./menu-items/Administration";
@@ -87,14 +85,9 @@ const ModuleMenu = ({ modules, dict }: Props) => {
             <JourneyBuilderModuleMenu open={open} />
           ) : null}
           {modules.find(
-            (menuItem: any) => menuItem.name === "employee" && menuItem.enabled
+            (menuItem: any) => menuItem.name === "client" && menuItem.enabled
           ) ? (
-            <EmployeesModuleMenu open={open} />
-          ) : null}
-          {modules.find(
-            (menuItem: any) => menuItem.name === "invoice" && menuItem.enabled
-          ) ? (
-            <InvoicesModuleMenu open={open} title={dict.ModuleMenu.invoices} />
+            <ClientsModuleMenu open={open} />
           ) : null}
           {modules.find(
             (menuItem: any) => menuItem.name === "reports" && menuItem.enabled
@@ -108,11 +101,6 @@ const ModuleMenu = ({ modules, dict }: Props) => {
               open={open}
               title={dict.ModuleMenu.documents}
             />
-          ) : null}
-          {modules.find(
-            (menuItem: any) => menuItem.name === "databox" && menuItem.enabled
-          ) ? (
-            <DataboxModuleMenu open={open} />
           ) : null}
           {modules.find(
             (menuItem: any) => menuItem.name === "openai" && menuItem.enabled

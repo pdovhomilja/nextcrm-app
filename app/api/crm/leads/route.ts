@@ -70,15 +70,15 @@ export async function POST(req: Request) {
 
       await sendEmail({
         from: process.env.EMAIL_FROM as string,
-        to: notifyRecipient.email || "info@softbase.cz",
+        to: notifyRecipient.email || "david@windrose.dev",
         subject:
           notifyRecipient.userLanguage === "en"
             ? `New lead ${first_name} ${last_name} has been added to the system and assigned to you.`
-            : `Nová příležitost ${first_name} ${last_name} byla přidána do systému a přidělena vám.`,
+            : `New lead ${first_name} ${last_name} has been added to the system and assigned to you.`,
         text:
           notifyRecipient.userLanguage === "en"
             ? `New lead ${first_name} ${last_name} has been added to the system and assigned to you. You can click here for detail: ${process.env.NEXT_PUBLIC_APP_URL}/crm/opportunities/${newLead.id}`
-            : `Nová příležitost ${first_name} ${last_name} byla přidána do systému a přidělena vám. Detaily naleznete zde: ${process.env.NEXT_PUBLIC_APP_URL}/crm/opportunities/${newLead.id}`,
+            : `New lead ${first_name} ${last_name} has been added to the system and assigned to you. You can click here for detail: ${process.env.NEXT_PUBLIC_APP_URL}/crm/opportunities/${newLead.id}`,
       });
     }
 
@@ -158,15 +158,15 @@ export async function PUT(req: Request) {
 
       await sendEmail({
         from: process.env.EMAIL_FROM as string,
-        to: notifyRecipient.email || "info@softbase.cz",
+        to: notifyRecipient.email || "david@windrose.dev",
         subject:
           notifyRecipient.userLanguage === "en"
             ? `New lead ${firstName} ${lastName} has been added to the system and assigned to you.`
-            : `Nová příležitost ${firstName} ${lastName} byla přidána do systému a přidělena vám.`,
+            : `New lead ${firstName} ${lastName} has been added to the system and assigned to you.`,
         text:
           notifyRecipient.userLanguage === "en"
             ? `New lead ${firstName} ${lastName} has been added to the system and assigned to you. You can click here for detail: ${process.env.NEXT_PUBLIC_APP_URL}/crm/opportunities/${updatedLead.id}`
-            : `Nová příležitost ${firstName} ${lastName} byla přidána do systému a přidělena vám. Detaily naleznete zde: ${process.env.NEXT_PUBLIC_APP_URL}/crm/opportunities/${updatedLead.id}`,
+            : `New lead ${firstName} ${lastName} has been added to the system and assigned to you. You can click here for detail: ${process.env.NEXT_PUBLIC_APP_URL}/crm/opportunities/${updatedLead.id}`,
       });
     }
 

@@ -25,38 +25,26 @@
   },
   {
     "v": 0,
-    "name": "employee",
+    "name": "client",
     "enabled": true,
     "position": 5
   },
   {
     "v": 0,
-    "name": "invoice",
+    "name": "reports",
     "enabled": true,
     "position": 6
   },
   {
     "v": 0,
-    "name": "reports",
+    "name": "documents",
     "enabled": true,
     "position": 7
   },
   {
     "v": 0,
-    "name": "documents",
-    "enabled": true,
-    "position": 8
-  },
-  {
-    "v": 0,
-    "name": "databox",
-    "enabled": true,
-    "position": 9
-  },
-  {
-    "v": 0,
     "name": "openai",
     "enabled": true,
-    "position": 10
+    "position": 8
   }
 ]

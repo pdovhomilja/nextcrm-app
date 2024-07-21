@@ -38,7 +38,7 @@
     "@tanstack/react-table": "^8.16.0",
     "@tremor/react": "^3.16.2",
     "@uploadthing/react": "^6.5.0",
-    "ai": "^3.0.35",
+    "ai": "^3.2.32",
     "autoprefixer": "^10.4.19",
     "aws-crt": "^1.21.2",
     "aws-sdk": "^2.1653.0",

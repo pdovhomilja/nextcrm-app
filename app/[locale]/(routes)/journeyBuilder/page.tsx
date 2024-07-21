@@ -15,7 +15,6 @@ import { getNotions } from "@/actions/get-notions";
 import { getActiveUsers } from "@/actions/get-users";
 import { getBoards } from "@/actions/projects/get-boards";
 import { Button } from "@/components/ui/button";
-import Youtube from "./components/Youtube";
 
 const JourneyBuilderPage = async () => {
   const notions: any = await getNotions();
@@ -67,9 +66,6 @@ const JourneyBuilderPage = async () => {
           <Button asChild className="my-3">
             <Link href="/profile">Enable Journey Builder </Link>
           </Button>
-        </div>
-        <div className="w-full ">
-          <Youtube />
         </div>
       </div>
     );

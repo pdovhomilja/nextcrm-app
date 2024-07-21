@@ -23,11 +23,11 @@ export async function POST(req: Request) {
   }
 
   try {
-    //Send mail via Resend to info@softbase.cz
+    //Send mail via Resend to david@windrose.dev
     await resend.emails.send({
       from:
         process.env.NEXT_PUBLIC_APP_NAME + " <" + process.env.EMAIL_FROM + ">",
-      to: "info@softbase.cz",
+      to: "david@windrose.dev",
       subject: "New Feedback from: " + process.env.NEXT_PUBLIC_APP_URL,
       text: feedback, // Add this line to fix the types issue
     });
