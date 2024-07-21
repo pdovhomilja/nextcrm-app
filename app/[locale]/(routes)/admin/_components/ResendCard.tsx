@@ -76,14 +76,14 @@ const ResendCard = async () => {
           </p>
           <p>API key from DB:</p>
           <p>
-            {resend_key?.serviceKey ? (
+            {/* {resend_key?.serviceKey ? (
               <CopyKeyComponent
                 // keyValue={resend_key?.serviceKey}
                 message="Resend - API Key"
               />
             ) : (
               "not enabled"
-            )}
+            )} */}
           </p>
         </CardDescription>
       </CardHeader>
