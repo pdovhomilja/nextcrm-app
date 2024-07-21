@@ -10,6 +10,7 @@ import ReportsModuleMenu from "./menu-items/Reports";
 import DocumentsModuleMenu from "./menu-items/Documents";
 import WindroseNavModuleMenu from "./menu-items/WindroseNav";
 import EmployeesModuleMenu from "./menu-items/Employees";
+import DataboxModuleMenu from "./menu-items/Databoxes";
 import CrmModuleMenu from "./menu-items/Crm";
 
 import AdministrationMenu from "./menu-items/Administration";
@@ -107,6 +108,11 @@ const ModuleMenu = ({ modules, dict }: Props) => {
               open={open}
               title={dict.ModuleMenu.documents}
             />
+          ) : null}
+          {modules.find(
+            (menuItem: any) => menuItem.name === "databox" && menuItem.enabled
+          ) ? (
+            <DataboxModuleMenu open={open} />
           ) : null}
           {modules.find(
             (menuItem: any) => menuItem.name === "openai" && menuItem.enabled
