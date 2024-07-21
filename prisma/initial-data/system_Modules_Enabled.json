@@ -49,8 +49,14 @@
   },
   {
     "v": 0,
-    "name": "openai",
+    "name": "databox",
     "enabled": true,
     "position": 9
+  },
+  {
+    "v": 0,
+    "name": "openai",
+    "enabled": true,
+    "position": 10
   }
 ]
