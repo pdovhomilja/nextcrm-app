@@ -99,24 +99,23 @@ export async function POST(request: NextRequest) {
     const rossumAnnotationId = rossumAnnotation.split("/").slice(-1)[0];
     //Save the data to the database
 
-    await prismadb.docs.create({
+    await prismadb.documents.create({
       data: {
-        last_updated_by: session.user.id,
-        date_due: new Date(),
+        document_name: "Some Document Name", // Add this required field
+        updated_by_user: session.user.id,
         description: "Incoming doc",
-        document_type: "doc",
-        doc_type: "Taxable document",
+        document_type: "RESOURCE", // Make sure this is a valid ObjectId string
         status: "new",
         favorite: false,
-        assigned_user_id: session.user.id,
-        doc_file_url: url,
-        doc_file_mimeType: file.type,
+        assigned_user: session.user.id,
+        document_file_url: url,
+        document_file_mimeType: file.type,
         rossum_status: "importing",
-        rossum_document_url: rossumDocument,
-        rossum_document_id: rossumDocumentId,
-        rossum_annotation_url: rossumAnnotation,
-        rossum_annotation_id: rossumAnnotationId,
-      },
+        rossum_document_url: rossumDocument || null,
+        rossum_document_id: rossumDocumentId || null,
+        rossum_annotation_url: rossumAnnotation || null,
+        rossum_annotation_id: rossumAnnotationId || null,
+      }
     });
 
     return NextResponse.json({ success: true });

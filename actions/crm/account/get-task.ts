@@ -12,13 +12,6 @@ export const getCrMTask = async (taskId: string) => {
           name: true,
         },
       },
-      documents: {
-        select: {
-          id: true,
-          document_name: true,
-          document_file_url: true,
-        },
-      },
       comments: {
         select: {
           id: true,

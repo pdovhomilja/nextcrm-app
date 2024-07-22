@@ -1,20 +1,11 @@
 import { authOptions } from "@/lib/auth";
 import { openAiHelper } from "@/lib/openai";
 import { getServerSession } from "next-auth";
-import type { NextRequest } from 'next/server';
+import type { NextRequest, NextResponse as NR } from 'next/server';
 import { NextResponse } from 'next/server';
 import OpenAI from "openai";
 
-// Conditionally set runtime based on the base URL
-const isLocalhost = () => {
-  return process.env.NEXT_PUBLIC_BASE_URL === 'http://localhost:3000';
-};
-
-export const config = {
-  runtime: isLocalhost() ? undefined : 'edge',
-};
-
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest): Promise<NR> {
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -24,7 +15,7 @@ export async function POST(req: NextRequest) {
   const openai = await openAiHelper(session.user.id);
 
   if (!openai) {
-    return NextResponse.json({ error: "No openai key found" }, { status: 500 });
+    return NextResponse.json({ error: "No OpenAI key found" }, { status: 500 });
   }
 
   try {
@@ -52,13 +43,15 @@ export async function POST(req: NextRequest) {
         const encoder = new TextEncoder();
         for await (const chunk of response) {
           const text = chunk.choices[0]?.delta?.content || ""; // Extract the text content
-          controller.enqueue(encoder.encode(text));
+          if (text) {
+            controller.enqueue(encoder.encode(text));
+          }
         }
         controller.close();
       },
     });
 
-    return new Response(stream, {
+    return new NextResponse(stream, {
       headers: {
         "Content-Type": "text/event-stream",
       },

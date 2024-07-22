@@ -36,14 +36,8 @@ export const getOpportunity = async (opportunityId: string) => {
           name: true,
           email: true,
         },
-      },
-      documents: {
-        select: {
-          id: true,
-          document_name: true,
-        },
-      },
-    },
+      }
+    }
   });
   return data;
 };
