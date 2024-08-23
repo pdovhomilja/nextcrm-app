@@ -6,6 +6,8 @@ import { Session } from "next-auth";
 import { Client as NotionClient } from "@notionhq/client";
 import moment from "moment";
 
+export const maxDuration = 300;
+
 type NotionItem = {
   id: string;
   createdAt: string;
@@ -83,7 +85,7 @@ export const getNotions = async (): Promise<any[] | null> => {
       });
 
     const notionItems = databases.map(
-      (item:any) =>
+      (item: any) =>
         ({
           id: item.id,
           createdAt: moment(item.created_time).format("YYYY-MM-DD"),
