@@ -29,6 +29,11 @@ import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 import { NewOpportunityForm } from "../../opportunities/components/NewOpportunityForm";
 import { set } from "cypress/types/lodash";
 import { setInactiveOpportunity } from "@/actions/crm/opportunity/dashboard/set-inactive";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 interface CRMKanbanProps {
   salesStages: crm_Opportunities_Sales_Stages[];
@@ -229,8 +234,18 @@ const CRMKanban = ({
                               </CardTitle>
                               <CardContent className="text-xs text-muted-foreground">
                                 <div className="flex flex-col space-y-1">
-                                  <div>
-                                    {opportunity.description.substring(0, 200)}
+                                  <div className="overflow-hidden">
+                                    <HoverCard>
+                                      <HoverCardTrigger>
+                                        {opportunity.description.substring(
+                                          0,
+                                          200
+                                        )}
+                                      </HoverCardTrigger>
+                                      <HoverCardContent className="overflow-hidden">
+                                        {opportunity.description}
+                                      </HoverCardContent>
+                                    </HoverCard>
                                   </div>
                                   {/*          <div>
                                   id:
