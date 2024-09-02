@@ -62,7 +62,7 @@ const OpenAiCard = async () => {
     <Card className="min-w-[350px]  max-w-[450px]">
       <CardHeader className="text-lg">
         <CardTitle>OpenAi - API Key</CardTitle>
-        <CardDescription className="text-xs">
+        <CardDescription className="text-xs overflow-hidden">
           {/*  Here will be actual settings */}
           <p>ENV API key:</p>
           <p>
