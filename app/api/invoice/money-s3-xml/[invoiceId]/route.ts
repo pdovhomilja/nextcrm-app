@@ -58,7 +58,7 @@ export async function GET(
     ACL: "public-read" as const,
   };
 
-  await s3Client.send(new PutObjectAclCommand(bucketParamsJSON));
+  await s3Client.send(new PutObjectCommand(bucketParamsJSON));
 
   //S3 bucket url for the invoice
   const urlMoneyS3 = `https://${process.env.DO_BUCKET}.${process.env.DO_REGION}.digitaloceanspaces.com/xml/invoice-${invoiceId}.xml`;
