@@ -230,7 +230,7 @@ export function DataTableRowActions<TData>({
                 }}
               >
                 <Edit className="mr-2 w-4 h-4" />
-                Create task from Notion
+                Create task from Invoice
               </DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>

@@ -18,7 +18,7 @@ export async function POST(req: Request) {
 
     const data = await fetch(embUrl + "/create_embedded_url", {
       method: "POST",
-      headers: { Authorization: token },
+      headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.json())
       .then((data) => {

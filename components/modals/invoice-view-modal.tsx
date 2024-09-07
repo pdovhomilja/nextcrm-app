@@ -1,10 +1,6 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import ModalDocumentView from "../ui/modal-document-view";
-import DocViewer, { DocViewerRenderers } from "react-doc-viewer";
-import Link from "next/link";
 
 interface AlertModalProps {
   isOpen: boolean;
@@ -33,11 +29,6 @@ const InvoiceViewModal = ({
     return (
       <ModalDocumentView isOpen={isOpen} onClose={onClose}>
         <div className="flex flex-col h-full ">
-          {/*           <DocViewer
-            documents={docs}
-            pluginRenderers={DocViewerRenderers}
-            style={{ height: 800 }}
-          /> */}
           This file can not be previewed.
           <div className="pt-6 space-x-2 flex items-center justify-end w-full ">
             <Button disabled={loading} variant={"outline"} onClick={onClose}>

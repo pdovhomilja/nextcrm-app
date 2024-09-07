@@ -55,7 +55,7 @@ export async function GET(
     Body: buffer,
     ContentType: "application/json",
     ContentDisposition: "inline",
-    //   ACL: "public-read",
+    ACL: "public-read" as const,
   };
 
   await s3Client.send(new PutObjectAclCommand(bucketParamsJSON));

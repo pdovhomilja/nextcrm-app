@@ -44,7 +44,7 @@ export async function GET(
     `${process.env.ROSSUM_API_URL}/queues/${queueId}/export/?format=json&id=${annotationId}`,
     {
       method: "POST",
-      headers: { Authorization: token },
+      headers: { Authorization: `Bearer ${token}` },
     }
   )
     .then((r) => r.json())
@@ -310,25 +310,6 @@ export async function GET(
     console.log("No results found in the JSON data.");
   }
 
-  /*   const dataXML = await fetch(
-    `${process.env.ROSSUM_API_URL}/queues/${queueId}/export/?format=xml&id=${annotationId}`,
-    {
-      method: "POST",
-      headers: { Authorization: token },
-    }
-  )
-    .then((r) => r.json())
-    .then((data) => {
-      //console.log(data);
-      return data;
-    }); */
-
-  //Write data as a data.json file to /public/tmp folder
-  //const fs = require("fs");
-  //fs.writeFileSync("./public/tmp/data.json", JSON.stringify(data));
-
-  //console.log(dataXML, "dataXML");
-
   //Write data as a buffer for import to S3 bucket
   const buffer = Buffer.from(JSON.stringify(data));
   //const bufferXML = Buffer.from(JSON.stringify(dataXML));
@@ -342,27 +323,15 @@ export async function GET(
     Body: buffer,
     ContentType: "application/json",
     ContentDisposition: "inline",
+    ACL: "public-read" as const,
   };
 
-  await s3Client.send(new PutObjectAclCommand(bucketParamsJSON));
-
-  /*   const bucketParamsXML = {
-    Bucket: process.env.DO_BUCKET,
-    Key: fileNameXML,
-    Body: bufferXML,
-    ContentType: "application/xml",
-    ContentDisposition: "inline",
-    ACL: "public-read",
-  };
-
-  await s3Client.send(new PutObjectCommand(bucketParamsXML)); */
+  await s3Client.send(new PutObjectCommand(bucketParamsJSON));
 
   //S3 bucket url for the invoice
   const urlJSON = `https://${process.env.DO_BUCKET}.${process.env.DO_REGION}.digitaloceanspaces.com/${fileNameJSON}`;
-  //const urlXML = `https://${process.env.DO_BUCKET}.${process.env.DO_REGION}.digitaloceanspaces.com/${fileNameXML}`;
 
   console.log(urlJSON, "url JSON");
-  //console.log(urlXML, "url XML");
 
   const invoice = await prismadb.invoices.findFirst({
     where: {

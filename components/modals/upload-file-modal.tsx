@@ -21,7 +21,7 @@ export default function UploadFileModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onChange}>
-      <DialogContent className="">
+      <DialogContent>
         <div className=" py-10">{children}</div>
       </DialogContent>
     </Dialog>

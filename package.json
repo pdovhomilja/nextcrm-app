@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.565.0",
+    "@aws-sdk/s3-request-presigner": "^3.645.0",
     "@aws-sdk/signature-v4-crt": "^3.556.0",
     "@hookform/resolvers": "^3.3.4",
     "@next-auth/prisma-adapter": "^1.0.7",

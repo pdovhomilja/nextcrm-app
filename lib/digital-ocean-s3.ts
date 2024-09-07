@@ -1,4 +1,5 @@
-import { S3 } from "@aws-sdk/client-s3";
+import { GetObjectCommand, S3, S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 if (!process.env.DO_ENDPOINT) {
   throw new Error("DO_ENDPOINT is not defined");

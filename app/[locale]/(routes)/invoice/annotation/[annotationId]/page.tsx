@@ -2,6 +2,7 @@
 TODO: delete this page in future - it is for testing only
 */
 import { getRossumToken } from "@/lib/get-rossum-token";
+import axios from "axios";
 import React from "react";
 
 async function AnnotationPage({
@@ -13,22 +14,20 @@ async function AnnotationPage({
   const { annotationId } = params;
   const token = await getRossumToken();
 
-  const data = await fetch(
-    `${process.env.ROSSUM_API_URL}/queues/${queueId}/export/?format=json&id=${annotationId}`,
+  console.log("Token", token);
+
+  const rossumAnnotation = await axios.get(
+    `${process.env.ROSSUM_API_URL}/annotations/${annotationId}/content`,
     {
-      method: "POST",
-      headers: { Authorization: token },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     }
-  )
-    .then((r) => r.json())
-    .then((data) => {
-      //console.log(data);
-      return data;
-    });
+  );
 
   return (
     <div>
-      <pre>{JSON.stringify(data, null, 2)}</pre>
+      <pre>{JSON.stringify(rossumAnnotation.data, null, 2)}</pre>
     </div>
   );
 }

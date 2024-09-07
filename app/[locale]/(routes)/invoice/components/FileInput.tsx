@@ -39,11 +39,11 @@ export function FileInput({ onClose }: Props) {
       // Handle errors here
       console.error(e);
     }
-    router.refresh();
     toast({
       title: "Success",
       description: "Invoice uploaded successfully",
     });
+    router.refresh();
     setIsLoading(false);
     onClose();
   };
