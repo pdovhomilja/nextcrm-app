@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 
 import NewTaskFromProject from "@/emails/NewTaskFromProject";
 import resendHelper from "@/lib/resend";
+import UpdatedTaskFromProject from "@/emails/UpdatedTaskFromProject";
 
 //Create new task in project route
 /*
@@ -97,15 +98,17 @@ export async function PUT(
       },
     });
 
-    /*  //Notification to user who is not a task creator
+    //Notification to user who is not a task creator
     if (user !== session.user.id) {
+      console.log("User property:", user);
+      console.log("Board property:", boardId);
       try {
         const notifyRecipient = await prismadb.users.findUnique({
           where: { id: user },
         });
 
         const boardData = await prismadb.boards.findUnique({
-          where: { id: board },
+          where: { id: boardId },
         });
 
         //console.log(notifyRecipient, "notifyRecipient");
@@ -119,10 +122,10 @@ export async function PUT(
           to: notifyRecipient?.email!,
           subject:
             session.user.userLanguage === "en"
-              ? `New task -  ${title}.`
-              : `Nový úkol - ${title}.`,
+              ? `Task -  ${title} - was updated.`
+              : `Úkol - ${title} - byl aktualizován.`,
           text: "", // Add this line to fix the types issue
-          react: NewTaskFromProject({
+          react: UpdatedTaskFromProject({
             taskFromUser: session.user.name!,
             username: notifyRecipient?.name!,
             userLanguage: notifyRecipient?.userLanguage!,
@@ -134,7 +137,7 @@ export async function PUT(
       } catch (error) {
         console.log(error);
       }
-    } */
+    }
 
     return NextResponse.json({ status: 200 });
   } catch (error) {

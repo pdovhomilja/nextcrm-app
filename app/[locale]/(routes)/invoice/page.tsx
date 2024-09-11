@@ -20,6 +20,8 @@ import { getActiveUsers } from "@/actions/get-users";
 import { getBoards } from "@/actions/projects/get-boards";
 import NewTaskDialog from "./dialogs/NewTask";
 
+import CronButton from "./components/cron-button";
+
 const InvoicePage = async () => {
   const session = await getServerSession(authOptions);
   const invoices: any = await getInvoices();
@@ -39,6 +41,7 @@ const InvoicePage = async () => {
           <Button asChild>
             <Link href={`/invoice/${session?.user.id}`}>My invoices</Link>
           </Button>
+          <CronButton />
         </div>
         <div>
           <RightViewModal

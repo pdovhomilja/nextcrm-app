@@ -94,6 +94,7 @@ const UpdateTaskDialog = ({
   }
 
   //Actions
+  console.log("BoardId:", boardId);
 
   const onSubmit = async (data: UpdatedTaskForm) => {
     setIsLoading(true);

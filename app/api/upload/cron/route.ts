@@ -10,34 +10,30 @@ import { getRossumToken } from "@/lib/get-rossum-token";
 const FormData = require("form-data");
 
 export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions);
+  // Parse the request body as JSON instead of FormData
+  const { file } = await request.json();
 
-  if (!session) {
-    return NextResponse.json("Unauthorized", { status: 401 });
-  }
-
-  const data = await request.formData();
-  const file: File | null = data.get("file") as unknown as File;
+  console.log("CRON JOB - UPLOAD INVOICE");
+  console.log("File: ", file);
 
   if (!file) {
     console.log("Error - no file found");
     return NextResponse.json({ success: false });
   }
-  console.log("FIle from UPLOAD API:", file);
-  const bytes = await file.arrayBuffer();
-  const buffer = Buffer.from(bytes);
-  console.log("Buffer:", buffer);
 
   //Rossum integration
   const rossumURL = process.env.ROSSUM_API_URL;
   const queueId = process.env.ROSSUM_QUEUE_ID;
   const queueUploadUrl = `${rossumURL}/uploads?queue=${queueId}`;
+
   const token = await getRossumToken();
 
-  const form = new FormData();
-  form.append("content", buffer, file.name);
+  const buffer = Buffer.from(file.content.data, "base64");
 
-  console.log("FORM DATA:", form);
+  const form = new FormData();
+  form.append("content", buffer, file.filename);
+
+  console.log("FORM form CRON JOB:", form);
 
   const uploadInvoiceToRossum = await axios.post(queueUploadUrl, form, {
     headers: {
@@ -75,7 +71,8 @@ export async function POST(request: NextRequest) {
 
   console.log("Rossum document: ", rossumDocument.data);
 
-  const invoiceFileName = "invoices/" + new Date().getTime() + "-" + file.name;
+  const invoiceFileName =
+    "invoices/" + new Date().getTime() + "-" + file.filename;
   console.log("Invoice File Name:", invoiceFileName);
 
   console.log("UPloading to S3(Digital Ocean)...", invoiceFileName);
@@ -83,9 +80,10 @@ export async function POST(request: NextRequest) {
     const bucketParams = {
       Bucket: process.env.DO_BUCKET,
       Key: invoiceFileName,
-      Body: buffer,
-      ContentType: file.type,
+      Body: Buffer.from(file.content.data),
+      ContentType: file.contentType,
       ContentDisposition: "inline",
+
       ACL: "public-read" as const,
     };
 
@@ -107,18 +105,24 @@ export async function POST(request: NextRequest) {
     console.log("Annotation ID:", rossumAnnotationId);
     //Save the data to the database
 
+    const admin = await prismadb.users.findMany({
+      where: {
+        is_admin: true,
+      },
+    });
+
     await prismadb.invoices.create({
       data: {
-        last_updated_by: session.user.id,
+        last_updated_by: admin[0].id,
         date_due: new Date(),
         description: "Incoming invoice",
         document_type: "invoice",
         invoice_type: "Taxable document",
         status: "new",
         favorite: false,
-        assigned_user_id: session.user.id,
+        assigned_user_id: admin[0].id,
         invoice_file_url: url,
-        invoice_file_mimeType: file.type,
+        invoice_file_mimeType: file.contentType,
         rossum_status: "importing",
         rossum_document_url: rossumDocument.data.annotations[0],
         rossum_document_id: rossumDocument.data.id.toString(),
