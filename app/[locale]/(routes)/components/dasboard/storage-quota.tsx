@@ -1,3 +1,5 @@
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Flex, ProgressBar, Text } from "@tremor/react";
 import { Database, Server } from "lucide-react";
