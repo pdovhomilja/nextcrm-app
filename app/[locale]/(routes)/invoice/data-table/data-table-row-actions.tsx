@@ -8,8 +8,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuSub,
@@ -17,10 +15,8 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
   DropdownMenuLabel,
-  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 
-import {} from "../data/data";
 import { taskSchema } from "../data/schema";
 import { useRouter } from "next/navigation";
 import AlertModal from "@/components/modals/alert-modal";
@@ -28,12 +24,21 @@ import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
 import axios from "axios";
 import InvoiceViewModal from "@/components/modals/invoice-view-modal";
-import RightViewModalNoTrigger from "@/components/modals/right-view-notrigger";
+
 import RossumCockpit from "../components/RossumCockpit";
 import Link from "next/link";
 import LoadingModal from "@/components/modals/loading-modal";
 import { useAppStore } from "@/store/store";
+
 import { Edit } from "lucide-react";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -45,6 +50,7 @@ export function DataTableRowActions<TData>({
   const [open, setOpen] = useState(false);
   const [openView, setOpenView] = useState(false);
   const [openRossumView, setOpenRossumView] = useState(false);
+  const [openTestSheet, setOpenTestSheet] = useState(false);
 
   //zustand
   const { setIsOpen, setNotionUrl } = useAppStore();
@@ -155,19 +161,12 @@ export function DataTableRowActions<TData>({
 
   return (
     <>
-      <InvoiceViewModal
-        isOpen={openView}
-        onClose={() => setOpenView(false)}
-        loading={loading}
-        document={invoice}
-      />
       <AlertModal
         isOpen={open}
         onClose={() => setOpen(false)}
         onConfirm={onDelete}
         loading={loading}
       />
-
       <LoadingModal
         title="Extracting data from Rossum"
         description="Extracting data from Invoice via Rossum Ai tool. Extracted data will be saved in the database. Please wait..."
@@ -183,15 +182,40 @@ export function DataTableRowActions<TData>({
         description="Extracted data from inovice will be sent to accountant email. Please wait..."
         isOpen={loadingXMLEmail}
       />
-
-      <RightViewModalNoTrigger
-        title={"Update Invoice" + " - " + invoice?.id}
-        description="Update invoice metadata with Rossum cockpit"
-        open={openRossumView}
-        setOpen={setOpenRossumView}
-      >
-        <RossumCockpit invoiceData={row.original} />
-      </RightViewModalNoTrigger>
+      <Sheet open={openView} onOpenChange={setOpenView}>
+        <SheetContent className="min-w-[90vh]">
+          <SheetHeader className="py-4">
+            <SheetTitle>{"Preview Invoice" + " - " + invoice?.id}</SheetTitle>
+          </SheetHeader>
+          <div className="h-[90vh] pb-4">
+            <embed
+              style={{
+                width: "100%",
+                height: "100%",
+              }}
+              type="application/pdf"
+              src={invoice.invoice_file_url}
+            />
+          </div>
+          <SheetClose asChild>
+            <Button>Close</Button>
+          </SheetClose>
+        </SheetContent>
+      </Sheet>
+      <Sheet open={openRossumView} onOpenChange={setOpenRossumView}>
+        <SheetContent className="min-w-[90vh] max-w-full">
+          <SheetHeader>
+            <SheetTitle>{"Update Invoice" + " - " + invoice?.id}</SheetTitle>
+            <SheetDescription>
+              Update invoice metadata with Rossum cockpit
+            </SheetDescription>
+          </SheetHeader>
+          <RossumCockpit invoiceData={row.original} />
+          <SheetClose asChild>
+            <Button>Close</Button>
+          </SheetClose>
+        </SheetContent>
+      </Sheet>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button

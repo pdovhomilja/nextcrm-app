@@ -32,7 +32,7 @@ const RossumCockpit = ({ invoiceData }: Props) => {
   }
 
   return (
-    <div className="h-full w-[1600px]  ">
+    <div className="h-full max-h-[90%] p-5 max-w-[90%] ">
       <iframe className="w-full h-full" src={rossumEmbbededUrl.url} />
     </div>
   );
