@@ -4,10 +4,8 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
 //Route to unlink contact from opportunity
-export async function PUT(
-  req: Request,
-  { params }: { params: { contactId: string } }
-) {
+export async function PUT(req: Request, props: { params: Promise<{ contactId: string }> }) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) {
     return new NextResponse("Unauthenticated", { status: 401 });

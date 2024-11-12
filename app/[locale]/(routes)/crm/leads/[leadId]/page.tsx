@@ -5,12 +5,13 @@ import { BasicView } from "./components/BasicView";
 import DocumentsView from "../../components/DocumentsView";
 
 interface LeadDetailPageProps {
-  params: {
+  params: Promise<{
     leadId: string;
-  };
+  }>;
 }
 
-const LeadDetailPage = async ({ params }: LeadDetailPageProps) => {
+const LeadDetailPage = async (props: LeadDetailPageProps) => {
+  const params = await props.params;
   const { leadId } = params;
   const lead: any = await getLead(leadId);
 

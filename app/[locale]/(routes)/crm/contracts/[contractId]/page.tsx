@@ -2,11 +2,12 @@ import { prismadb } from "@/lib/prisma";
 import React from "react";
 
 interface ContractDetailPageProps {
-  params: {
+  params: Promise<{
     contractId: string;
-  };
+  }>;
 }
-const ContractPage = async ({ params }: ContractDetailPageProps) => {
+const ContractPage = async (props: ContractDetailPageProps) => {
+  const params = await props.params;
   const { contractId } = params;
   const contract = await prismadb.crm_Contracts.findUnique({
     where: {

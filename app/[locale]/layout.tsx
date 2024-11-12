@@ -15,7 +15,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 type Props = {
   children: ReactNode;
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 };
 
 async function getLocales(locale: string) {
@@ -26,7 +26,13 @@ async function getLocales(locale: string) {
   }
 }
 
-export async function generateMetadata({ params: { locale } }: Props) {
+export async function generateMetadata(props: Props) {
+  const params = await props.params;
+
+  const {
+    locale
+  } = params;
+
   const messages = await getLocales(locale);
 
   const t = createTranslator({ locale, messages });
@@ -55,10 +61,17 @@ export async function generateMetadata({ params: { locale } }: Props) {
   };
 }
 
-export default async function RootLayout({
-  children,
-  params: { locale },
-}: Props) {
+export default async function RootLayout(props: Props) {
+  const params = await props.params;
+
+  const {
+    locale
+  } = params;
+
+  const {
+    children
+  } = props;
+
   const messages = await getLocales(locale);
 
   return (

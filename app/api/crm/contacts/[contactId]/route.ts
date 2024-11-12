@@ -5,10 +5,8 @@ import { prismadb } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 
 //Contact delete route
-export async function DELETE(
-  req: Request,
-  { params }: { params: { contactId: string } }
-) {
+export async function DELETE(req: Request, props: { params: Promise<{ contactId: string }> }) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
 
   if (!session) {

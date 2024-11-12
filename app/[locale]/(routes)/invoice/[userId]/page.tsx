@@ -9,12 +9,13 @@ import { columns } from "../data-table/columns";
 import { redirect } from "next/navigation";
 
 interface UserInvoicesPageProps {
-  params: {
+  params: Promise<{
     userId: string;
-  };
+  }>;
 }
 
-const MyInvoicesPage = async ({ params }: UserInvoicesPageProps) => {
+const MyInvoicesPage = async (props: UserInvoicesPageProps) => {
+  const params = await props.params;
   const { userId } = params;
   const userInvoices: any = await getUserInvoices(userId);
 

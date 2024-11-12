@@ -5,10 +5,8 @@ import { prismadb } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 import initNotionClient from "@/lib/notion";
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { notionId: string } }
-) {
+export async function DELETE(req: Request, props: { params: Promise<{ notionId: string }> }) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   const notion = await initNotionClient(session?.user?.id!);
 

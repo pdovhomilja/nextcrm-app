@@ -4,10 +4,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { hash } from "bcryptjs";
 
-export async function PUT(
-  req: Request,
-  { params }: { params: { userId: string } }
-) {
+export async function PUT(req: Request, props: { params: Promise<{ userId: string }> }) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   const { password, cpassword } = await req.json();
 

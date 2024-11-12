@@ -18,7 +18,7 @@ type FormSheetProps = {
   title: string;
   description: string;
   children: React.ReactNode;
-  onClose: React.RefObject<HTMLButtonElement> | null;
+  onClose: React.RefObject<HTMLButtonElement | null> | null;
 };
 
 const FormSheet = ({

@@ -13,11 +13,17 @@ import { getContactsByOpportunityId } from "@/actions/crm/get-contacts-by-opport
 import { getDocumentsByOpportunityId } from "@/actions/documents/get-documents-by-opportunityId";
 import { getAccountsByOpportunityId } from "@/actions/crm/get-accounts-by-opportunityId";
 
-const OpportunityView = async ({
-  params: { opportunityId },
-}: {
-  params: { opportunityId: string };
-}) => {
+const OpportunityView = async (
+  props: {
+    params: Promise<{ opportunityId: string }>;
+  }
+) => {
+  const params = await props.params;
+
+  const {
+    opportunityId
+  } = params;
+
   const opportunity: any = await getOpportunity(opportunityId);
   const crmData = await getAllCrmData();
   const accounts = await getAccountsByOpportunityId(opportunityId);

@@ -4,10 +4,8 @@ import { utapi } from "@/lib/server/uploadthings";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { documentId: string } }
-) {
+export async function DELETE(req: Request, props: { params: Promise<{ documentId: string }> }) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
 
   if (!session) {

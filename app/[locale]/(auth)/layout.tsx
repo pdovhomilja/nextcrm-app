@@ -11,7 +11,7 @@ import getGithubRepoStars from "@/actions/github/get-repo-stars";
 import { DiscordLogoIcon } from "@radix-ui/react-icons";
 
 type Props = {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 };
 
 async function getLocales(locale: string) {
@@ -22,7 +22,13 @@ async function getLocales(locale: string) {
   }
 }
 
-export async function generateMetadata({ params: { locale } }: Props) {
+export async function generateMetadata(props: Props) {
+  const params = await props.params;
+
+  const {
+    locale
+  } = params;
+
   const messages = await getLocales(locale);
   const t = createTranslator({ locale, messages });
   return {

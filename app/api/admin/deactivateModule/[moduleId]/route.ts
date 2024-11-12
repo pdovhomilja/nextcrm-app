@@ -3,10 +3,8 @@ import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-export async function POST(
-  req: Request,
-  { params }: { params: { moduleId: string } }
-) {
+export async function POST(req: Request, props: { params: Promise<{ moduleId: string }> }) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
 
   if (!session) {

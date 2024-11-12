@@ -73,7 +73,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
           to: user.email || "info@softbase.cz",
           subject: title,
           text: message,
-          html: emailHtml,
+          html: await emailHtml,
         });
       }
 

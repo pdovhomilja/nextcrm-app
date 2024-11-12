@@ -4,10 +4,8 @@ import { getServerSession } from "next-auth";
 import { prismadb } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { projectId: string } }
-) {
+export async function DELETE(req: Request, props: { params: Promise<{ projectId: string }> }) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
 
   if (!session) {
