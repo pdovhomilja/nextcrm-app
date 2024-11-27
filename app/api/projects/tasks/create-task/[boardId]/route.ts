@@ -6,10 +6,8 @@ import { authOptions } from "@/lib/auth";
 import NewTaskFromProject from "@/emails/NewTaskFromProject";
 import resendHelper from "@/lib/resend";
 
-export async function POST(
-  req: Request,
-  { params }: { params: { boardId: string } }
-) {
+export async function POST(req: Request, props: { params: Promise<{ boardId: string }> }) {
+  const params = await props.params;
   /*
   Resend.com function init - this is a helper function that will be used to send emails
   */

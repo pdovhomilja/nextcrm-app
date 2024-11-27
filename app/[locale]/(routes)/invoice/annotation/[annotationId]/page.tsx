@@ -5,11 +5,12 @@ import { getRossumToken } from "@/lib/get-rossum-token";
 import axios from "axios";
 import React from "react";
 
-async function AnnotationPage({
-  params,
-}: {
-  params: { annotationId: string };
-}) {
+async function AnnotationPage(
+  props: {
+    params: Promise<{ annotationId: string }>;
+  }
+) {
+  const params = await props.params;
   const queueId = process.env.ROSSUM_QUEUE_ID;
   const { annotationId } = params;
   const token = await getRossumToken();

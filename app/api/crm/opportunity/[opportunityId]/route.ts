@@ -4,10 +4,8 @@ import { getServerSession } from "next-auth";
 import { prismadb } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 
-export async function PUT(
-  req: Request,
-  { params }: { params: { opportunityId: string } }
-) {
+export async function PUT(req: Request, props: { params: Promise<{ opportunityId: string }> }) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -54,10 +52,8 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { opportunityId: string } }
-) {
+export async function DELETE(req: Request, props: { params: Promise<{ opportunityId: string }> }) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
 
   if (!session) {

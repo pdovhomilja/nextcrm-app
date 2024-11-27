@@ -15,12 +15,13 @@ import { columnsTask } from "./components/columns-task";
 import { getCrMTask } from "@/actions/crm/account/get-task";
 
 type TaskPageProps = {
-  params: {
+  params: Promise<{
     taskId: string;
-  };
+  }>;
 };
 
-const CRMTaskPage = async ({ params }: TaskPageProps) => {
+const CRMTaskPage = async (props: TaskPageProps) => {
+  const params = await props.params;
   const { taskId } = params;
   const task: any = await getCrMTask(taskId);
   const taskDocuments: any = await getTaskDocuments(taskId);

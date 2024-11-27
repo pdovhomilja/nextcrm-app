@@ -5,10 +5,11 @@ import { MessageCircle, MessagesSquare } from "lucide-react";
 import InvoiceChat from "../_dialogs/InvoiceChat";
 
 interface InvoiceDetailProps {
-  params: { invoiceId: string };
+  params: Promise<{ invoiceId: string }>;
 }
 
-const InvoiceDetailPage = async ({ params }: InvoiceDetailProps) => {
+const InvoiceDetailPage = async (props: InvoiceDetailProps) => {
+  const params = await props.params;
   const { invoiceId } = params;
   const invoiceData = await getInvoice(invoiceId);
 

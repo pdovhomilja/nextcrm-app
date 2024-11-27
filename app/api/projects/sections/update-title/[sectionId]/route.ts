@@ -3,10 +3,8 @@ import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-export async function PUT(
-  req: Request,
-  { params }: { params: { sectionId: string } }
-) {
+export async function PUT(req: Request, props: { params: Promise<{ sectionId: string }> }) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) {
     return new NextResponse("Unauthenticated", { status: 401 });

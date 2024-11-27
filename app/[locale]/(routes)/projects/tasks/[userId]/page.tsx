@@ -8,13 +8,14 @@ import { Session, getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 type TaskDetailPageProps = {
-  params: {
+  params: Promise<{
     userId: string;
     username: string;
-  };
+  }>;
 };
 
-const TaskDetailPage = async ({ params }: TaskDetailPageProps) => {
+const TaskDetailPage = async (props: TaskDetailPageProps) => {
+  const params = await props.params;
   const session: Session | null = await getServerSession(authOptions);
   const { userId } = params;
 

@@ -18,12 +18,13 @@ import AiAssistantProject from "./components/AiAssistantProject";
 import { Lock } from "lucide-react";
 
 interface BoardDetailProps {
-  params: { boardId: string };
+  params: Promise<{ boardId: string }>;
 }
 
 export const maxDuration = 300;
 
-const BoardPage = async ({ params }: BoardDetailProps) => {
+const BoardPage = async (props: BoardDetailProps) => {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   const user = session?.user;
   const { boardId } = params;

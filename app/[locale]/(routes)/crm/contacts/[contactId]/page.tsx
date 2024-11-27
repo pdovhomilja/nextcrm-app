@@ -12,7 +12,8 @@ import AccountsView from "../../components/AccountsView";
 import OpportunitiesView from "../../components/OpportunitiesView";
 import DocumentsView from "../../components/DocumentsView";
 
-const ContactViewPage = async ({ params }: any) => {
+const ContactViewPage = async (props: any) => {
+  const params = await props.params;
   const { contactId } = params;
   const contact: any = await getContact(contactId);
   const opportunities: any = await getOpportunitiesFullByContactId(contactId);

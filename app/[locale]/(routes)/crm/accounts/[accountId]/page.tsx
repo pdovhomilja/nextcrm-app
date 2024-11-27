@@ -30,12 +30,13 @@ import AccountsTasksView from "./components/TasksView";
 import ContractsView from "../../components/ContractsView";
 
 interface AccountDetailPageProps {
-  params: {
+  params: Promise<{
     accountId: string;
-  };
+  }>;
 }
 
-const AccountDetailPage = async ({ params }: AccountDetailPageProps) => {
+const AccountDetailPage = async (props: AccountDetailPageProps) => {
+  const params = await props.params;
   const { accountId } = params;
   const account: crm_Accounts | null = await getAccount(accountId);
   const opportunities: crm_Opportunities[] =

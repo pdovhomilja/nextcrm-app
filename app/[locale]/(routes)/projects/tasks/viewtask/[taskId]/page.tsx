@@ -30,12 +30,13 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 type TaskPageProps = {
-  params: {
+  params: Promise<{
     taskId: string;
-  };
+  }>;
 };
 
-const TaskPage = async ({ params }: TaskPageProps) => {
+const TaskPage = async (props: TaskPageProps) => {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   const user = session?.user;
 

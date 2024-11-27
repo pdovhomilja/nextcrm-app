@@ -6,10 +6,8 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
 //Get single invoice data
-export async function GET(
-  request: Request,
-  { params }: { params: { invoiceId: string } }
-) {
+export async function GET(request: Request, props: { params: Promise<{ invoiceId: string }> }) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -42,10 +40,8 @@ export async function GET(
 }
 
 //Delete single invoice by invoiceId
-export async function DELETE(
-  request: Request,
-  { params }: { params: { invoiceId: string } }
-) {
+export async function DELETE(request: Request, props: { params: Promise<{ invoiceId: string }> }) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ status: 401, body: { error: "Unauthorized" } });

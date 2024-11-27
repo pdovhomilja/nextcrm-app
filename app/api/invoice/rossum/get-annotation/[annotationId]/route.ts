@@ -11,10 +11,8 @@ import { PutObjectAclCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
-export async function GET(
-  req: Request,
-  { params }: { params: { annotationId: string } }
-) {
+export async function GET(req: Request, props: { params: Promise<{ annotationId: string }> }) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json("Unauthorized", { status: 401 });

@@ -25,8 +25,8 @@ const EmailRoute = async () => {
   //Fetch translations from dictionary
   const dict = await getDictionary(lang as "en" | "cz" | "de");
 
-  const layout = cookies().get("react-resizable-panels:layout");
-  const collapsed = cookies().get("react-resizable-panels:collapsed");
+  const layout = (await cookies()).get("react-resizable-panels:layout");
+  const collapsed = (await cookies()).get("react-resizable-panels:collapsed");
   //console.log(layout, collapsed, "layout, collapsed");
 
   const defaultLayout = layout ? JSON.parse(layout.value) : undefined;

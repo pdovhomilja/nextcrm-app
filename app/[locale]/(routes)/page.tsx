@@ -28,7 +28,6 @@ import {
 } from "@/actions/dashboard/get-tasks-count";
 import { getModules } from "@/actions/get-modules";
 import { getEmployees } from "@/actions/get-empoloyees";
-
 import { getLeadsCount } from "@/actions/dashboard/get-leads-count";
 import { getBoardsCount } from "@/actions/dashboard/get-boards-count";
 import { getStorageSize } from "@/actions/documents/get-storage-size";

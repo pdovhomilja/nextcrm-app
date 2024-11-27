@@ -11,10 +11,8 @@ import UpdatedTaskFromProject from "@/emails/UpdatedTaskFromProject";
 /*
 TODO: there is second route for creating task in board, but it is the same as this one. Consider merging them (/api/projects/tasks/create-task/[boardId]). 
 */
-export async function PUT(
-  req: Request,
-  { params }: { params: { taskId: string } }
-) {
+export async function PUT(req: Request, props: { params: Promise<{ taskId: string }> }) {
+  const params = await props.params;
   /*
   Resend.com function init - this is a helper function that will be used to send emails
   */
