@@ -7,7 +7,7 @@ import Link from "next/link";
 const NotionsBox = async () => {
   const notions: any = await getNotions();
 
-  if (notions.error || !notions) {
+  if (notions.error || !notions || notions === null) {
     return (
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
