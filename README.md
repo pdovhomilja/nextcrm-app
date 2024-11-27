@@ -115,7 +115,7 @@ Available soon at: http://docs.nextcrm.io
 1. Install the preset:
 
    ```sh
-   npm install
+   pnpm install
    ```
 
 1. Copy the environment variables to .env
@@ -143,20 +143,20 @@ Available soon at: http://docs.nextcrm.io
 1. Init Prisma
 
    ```sh
-    npx prisma generate
-    npx prisma db push
+    pnpm prisma generate
+    pnpm prisma db push
    ```
 
 1. Import initial data from initial-data folder
 
    ```sh
-   npx prisma db seed
+   pnpm prisma db seed
    ```
 
 1. Run app on local
 
    ```sh
-   npm run dev
+   pnpm run dev
    ```
 
 1. http://localhost:3000
@@ -167,36 +167,30 @@ Available soon at: http://docs.nextcrm.io
 
 [Link to Docker HUB](https://hub.docker.com/repository/docker/nextcrmio/nextcrm/general)
 
-<details><summary><b>Show instructions</b></summary>
+<details>
+<summary><b>Show instructions</b></summary>
 
-1. MongoDB URI string for Prisma ORM:
+1. Make sure you have docker and docker-compose installed
 
-2. Install the preset:
+2. Prepare .env and .env.local files
 
    ```create
    .env (for Prisma URI string) and .env.local (all others ENVs) file inside docker folder
    ```
 
-3. run docker-compose
+3. build docker image
 
    ```sh
-   docker-compose up -d
+   docker build -t nextcrm .
    ```
 
-4. Init Prisma
+4. Run docker container
 
    ```sh
-    docker-compose exec nextcrm npx prisma generate
-    docker-compose exec nextcrm npx prisma db push
+   docker run -p 3000:3000 nextcrm
    ```
 
-5. Import initial data from initial-data folder
-
-   ```sh
-   npx prisma db seed
-   ```
-
-6. http://localhost:3000
+5. http://localhost:3000
 </details>
 
 ## Contact

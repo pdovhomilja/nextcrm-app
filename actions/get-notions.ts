@@ -16,28 +16,40 @@ type NotionItem = {
   url: string;
 };
 
-async function fetchDatabaseItems(
+export async function fetchDatabaseItems(
   notion: NotionClient,
   notionDbId: string,
-  startCursor?: string
+  startCursor?: string,
+  retries: number = 3
 ) {
-  const response = await notion.databases.query({
-    database_id: notionDbId,
-    start_cursor: startCursor,
-    page_size: 100,
-  });
+  try {
+    const response = await notion.databases.query({
+      database_id: notionDbId,
+      start_cursor: startCursor,
+      page_size: 100,
+    });
 
-  const items = response.results;
+    const items = response.results;
 
-  if (response.has_more) {
-    const nextItems: any[] = await fetchDatabaseItems(
-      notion,
-      notionDbId,
-      response.next_cursor || ""
-    );
-    return items.concat(nextItems);
-  } else {
-    return items;
+    if (response.has_more) {
+      const nextItems: any[] = await fetchDatabaseItems(
+        notion,
+        notionDbId,
+        response.next_cursor || "",
+        retries
+      );
+      return items.concat(nextItems);
+    } else {
+      return items;
+    }
+  } catch (error) {
+    if (retries > 0) {
+      console.warn(`Fetch failed, retrying... (${3 - retries + 1})`);
+      return fetchDatabaseItems(notion, notionDbId, startCursor, retries - 1);
+    } else {
+      console.error("Max retries reached. Error:", error);
+      throw error; // Rethrow the error after max retries
+    }
   }
 }
 
