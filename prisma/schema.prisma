@@ -197,6 +197,8 @@ model crm_Contacts {
   social_youtube         String?
   social_tiktok          String?
   type                   String?             @default("Customer")
+  tags                   String[]
+  notes                  String[]
   assigned_to_user       Users?              @relation(name: "assigned_contacts", fields: [assigned_to], references: [id])
   crate_by_user          Users?              @relation(name: "created_contacts", fields: [created_by], references: [id])
   opportunitiesIDs       String[]            @db.ObjectId
@@ -211,6 +213,7 @@ enum crm_Contact_Type {
   Customer
   Partner
   Vendor
+  Prospect
 }
 
 model crm_Contracts {

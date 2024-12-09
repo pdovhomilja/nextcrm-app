@@ -29,6 +29,7 @@ import { Clapperboard } from "lucide-react";
 import { prismadb } from "@/lib/prisma";
 import Link from "next/link";
 import { EnvelopeClosedIcon } from "@radix-ui/react-icons";
+import { Badge } from "@/components/ui/badge";
 
 interface OppsViewProps {
   data: any;
@@ -40,7 +41,7 @@ export async function BasicView({ data }: OppsViewProps) {
   if (!data) return <div>Opportunity not found</div>;
   return (
     <div className="pb-3 space-y-5">
-      {/*       <pre>{JSON.stringify(data, null, 2)}</pre> */}
+      {/*      <pre>{JSON.stringify(data, null, 2)}</pre> */}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex w-full justify-between">
@@ -182,6 +183,16 @@ export async function BasicView({ data }: OppsViewProps) {
                     {data.industry}
                   </p>
                 </div>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <div> Tags:</div>
+              <div className="flex flex-wrap gap-2">
+                {data.tags.map((tag: string) => (
+                  <Badge key={tag} variant={"outline"}>
+                    {tag}
+                  </Badge>
+                ))}
               </div>
             </div>
           </div>
