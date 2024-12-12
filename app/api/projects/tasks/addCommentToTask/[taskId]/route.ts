@@ -6,7 +6,10 @@ import { authOptions } from "@/lib/auth";
 import NewTaskCommentEmail from "@/emails/NewTaskComment";
 import resendHelper from "@/lib/resend";
 
-export async function POST(req: Request, props: { params: Promise<{ taskId: string }> }) {
+export async function POST(
+  req: Request,
+  props: { params: Promise<{ taskId: string }> }
+) {
   const params = await props.params;
   /*
   Resend.com function init - this is a helper function that will be used to send emails
@@ -87,6 +90,16 @@ export async function POST(req: Request, props: { params: Promise<{ taskId: stri
           },
         },
       });
+
+      // Add the task creator to the email recipients
+      if (task.createdBy) {
+        const taskCreator = await prismadb.users.findUnique({
+          where: { id: task.createdBy },
+        });
+        if (taskCreator) {
+          emailRecipients.push(taskCreator); // Add the task creator to the recipients
+        }
+      }
 
       //Create notifications for every user watching the board except the user who created the comment
       for (const userID of emailRecipients) {
