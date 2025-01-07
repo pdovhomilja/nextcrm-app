@@ -10,15 +10,23 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import RightViewModal from "@/components/modals/right-view-modal";
 
 import { columns } from "../contacts/table-components/columns";
 import { NewContactForm } from "../contacts/components/NewContactForm";
 import { ContactsDataTable } from "../contacts/table-components/data-table";
 import { useRouter } from "next/navigation";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
 const ContactsView = ({ data, crmData }: any) => {
   const router = useRouter();
+
+  const [open, setOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -45,9 +53,26 @@ const ContactsView = ({ data, crmData }: any) => {
             <CardDescription></CardDescription>
           </div>
           <div className="flex space-x-2">
-            <RightViewModal label={"+"} title="Create Contact" description="">
-              <NewContactForm users={users} accounts={accounts} />
-            </RightViewModal>
+            <Sheet open={open} onOpenChange={() => setOpen(false)}>
+              <Button
+                className="m-2 cursor-pointer"
+                onClick={() => setOpen(true)}
+              >
+                +
+              </Button>
+              <SheetContent className="min-w-[1000px] space-y-2">
+                <SheetHeader>
+                  <SheetTitle>Create new Account</SheetTitle>
+                </SheetHeader>
+                <div className="h-full overflow-y-auto">
+                  <NewContactForm
+                    users={users}
+                    accounts={accounts}
+                    onFinish={() => setOpen(false)}
+                  />
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
         <Separator />

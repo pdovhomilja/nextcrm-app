@@ -34,9 +34,14 @@ import useDebounce from "@/hooks/useDebounce";
 type NewTaskFormProps = {
   users: any[];
   accounts: any[];
+  onFinish: () => void;
 };
 
-export function NewContactForm({ users, accounts }: NewTaskFormProps) {
+export function NewContactForm({
+  users,
+  accounts,
+  onFinish,
+}: NewTaskFormProps) {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -134,6 +139,7 @@ export function NewContactForm({ users, accounts }: NewTaskFormProps) {
         birthday_day: "",
       });
       router.refresh();
+      onFinish();
     }
   };
 
