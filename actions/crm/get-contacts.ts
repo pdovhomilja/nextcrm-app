@@ -8,7 +8,7 @@ export const getContacts = async () => {
           name: true,
         },
       },
-      crate_by_user: {
+      create_by_user: {
         select: {
           name: true,
         },

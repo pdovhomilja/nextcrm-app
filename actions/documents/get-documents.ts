@@ -3,12 +3,12 @@ import { prismadb } from "@/lib/prisma";
 export const getDocuments = async () => {
   const data = await prismadb.documents.findMany({
     include: {
-      created_by: {
+      created_by_user_relation: {
         select: {
           name: true,
         },
       },
-      assigned_to_user: {
+      assigned_to_user_relation: {
         select: {
           name: true,
         },

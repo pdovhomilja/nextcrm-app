@@ -3,7 +3,7 @@ import { prismadb } from "@/lib/prisma";
 export const getContactsByAccountId = async (accountId: string) => {
   const data = await prismadb.crm_Contacts.findMany({
     where: {
-      accountsIDs: accountId,
+      account: accountId,
     },
     include: {
       assigned_to_user: {
@@ -11,7 +11,7 @@ export const getContactsByAccountId = async (accountId: string) => {
           name: true,
         },
       },
-      crate_by_user: {
+      create_by_user: {
         select: {
           name: true,
         },

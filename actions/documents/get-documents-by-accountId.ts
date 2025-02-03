@@ -3,17 +3,19 @@ import { prismadb } from "@/lib/prisma";
 export const getDocumentsByAccountId = async (accountId: string) => {
   const data = await prismadb.documents.findMany({
     where: {
-      accountsIDs: {
-        has: accountId,
+      accounts: {
+        some: {
+          accountId: accountId,
+        },
       },
     },
     include: {
-      created_by: {
+      created_by_user_relation: {
         select: {
           name: true,
         },
       },
-      assigned_to_user: {
+      assigned_to_user_relation: {
         select: {
           name: true,
         },

@@ -16,7 +16,7 @@ export const getOpportunitiesFullByAccountId = async (accountId: string) => {
           name: true,
         },
       },
-      assigned_to_user: {
+      assigned_to_user_relation: {
         select: {
           name: true,
         },

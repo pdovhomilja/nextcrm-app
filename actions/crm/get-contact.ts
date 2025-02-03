@@ -6,8 +6,8 @@ export const getContact = async (contactId: string) => {
       id: contactId,
     },
     include: {
-      assigned_opportunities: true,
-      assigned_documents: true,
+      opportunities: true,
+      documents: true,
       assigned_accounts: true,
     },
   });

@@ -21,26 +21,34 @@ export const getOpportunity = async (opportunityId: string) => {
           name: true,
         },
       },
-      contacts: {
+      contacts_relation: {
         select: {
-          id: true,
-          first_name: true,
-          last_name: true,
-          office_phone: true,
-          mobile_phone: true,
-          email: true,
+          contact: {
+            select: {
+              id: true,
+              first_name: true,
+              last_name: true,
+              office_phone: true,
+              mobile_phone: true,
+              email: true,
+            },
+          },
         },
       },
-      assigned_to_user: {
+      assigned_to_user_relation: {
         select: {
           name: true,
           email: true,
         },
       },
-      documents: {
+      documents_relation: {
         select: {
           id: true,
-          document_name: true,
+          document: {
+            select: {
+              document_name: true,
+            },
+          },
         },
       },
     },

@@ -28,7 +28,7 @@ export async function POST(req: Request) {
       description,
       expected_revenue,
       name,
-      next_step,
+      next_step_id: next_step,
       sales_stage,
       type,
     } = body;
@@ -50,10 +50,10 @@ export async function POST(req: Request) {
         description: description,
         expected_revenue: Number(expected_revenue),
         name: name,
-        next_step: next_step,
-        sales_stage: sales_stage,
+        // next_step_id: next_step,
+        sales_stage_id: sales_stage,
         status: "ACTIVE",
-        type: type,
+        type_id: type,
       },
     });
 
@@ -134,10 +134,10 @@ export async function PUT(req: Request) {
         description: description,
         expected_revenue: Number(expected_revenue),
         name: name,
-        next_step: next_step,
-        sales_stage: sales_stage,
+        // next_step_id: next_step,
+        sales_stage_id: sales_stage,
         status: "ACTIVE",
-        type: type,
+        type_id: type,
       },
     });
 

@@ -48,14 +48,13 @@ export async function POST(req: Request) {
     try {
       await prismadb.crm_Leads.create({
         data: {
-          v: 1,
           firstName,
           lastName,
           company: account,
           jobTitle: job,
           email,
           phone,
-          lead_source,
+          lead_source: lead_source,
           status: "NEW",
           type: "DEMO",
         },

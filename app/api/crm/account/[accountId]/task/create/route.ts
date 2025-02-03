@@ -83,8 +83,10 @@ export async function POST(req: Request) {
           id: {
             not: session.user.id,
           },
-          watching_accountsIDs: {
-            has: account,
+          watching_accounts: {
+            some: {
+              accountId: account,
+            },
           },
         },
       });

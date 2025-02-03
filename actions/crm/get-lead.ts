@@ -13,7 +13,7 @@ export const getLead = async (leadId: string) => {
         },
       },
       assigned_accounts: true,
-      assigned_documents: true,
+      documents: true,
     },
   });
   return data;

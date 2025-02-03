@@ -3,8 +3,10 @@ import { prismadb } from "@/lib/prisma";
 export const getOpportunitiesFullByContactId = async (contactId: string) => {
   const data = await prismadb.crm_Opportunities.findMany({
     where: {
-      connected_contacts: {
-        has: contactId,
+      contacts_relation: {
+        some: {
+          contactId: contactId,
+        },
       },
     },
     include: {
@@ -18,7 +20,7 @@ export const getOpportunitiesFullByContactId = async (contactId: string) => {
           name: true,
         },
       },
-      assigned_to_user: {
+      assigned_to_user_relation: {
         select: {
           name: true,
         },

@@ -15,8 +15,12 @@ export const getTask = async (taskId: string) => {
       documents: {
         select: {
           id: true,
-          document_name: true,
-          document_file_url: true,
+          document: {
+            select: {
+              document_name: true,
+              document_file_url: true,
+            },
+          },
         },
       },
       comments: {

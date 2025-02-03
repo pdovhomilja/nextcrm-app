@@ -15,7 +15,7 @@ export const getOpportunitiesFull = async () => {
           name: true,
         },
       },
-      assigned_to_user: {
+      assigned_to_user_relation: {
         select: {
           name: true,
         },

@@ -62,7 +62,7 @@ export async function POST(
           id: section.board,
         },
         data: {
-          watchers_users: {
+          watchers_relation: {
             connect: {
               id: session.user.id,
             },
@@ -84,8 +84,10 @@ export async function POST(
           id: {
             not: session.user.id,
           },
-          watching_boardsIDs: {
-            has: section.board,
+          boards: {
+            some: {
+              id: section.board,
+            },
           },
         },
       });

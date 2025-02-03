@@ -37,7 +37,6 @@ export async function POST(req: Request) {
 
     const newLead = await prismadb.crm_Leads.create({
       data: {
-        v: 1,
         createdBy: userId,
         updatedBy: userId,
         firstName: first_name,
@@ -126,7 +125,6 @@ export async function PUT(req: Request) {
         id,
       },
       data: {
-        v: 1,
         updatedBy: userId,
         firstName,
         lastName,

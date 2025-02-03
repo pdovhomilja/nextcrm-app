@@ -4,7 +4,10 @@ import { getServerSession } from "next-auth";
 import { prismadb } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 
-export async function PUT(req: Request, props: { params: Promise<{ opportunityId: string }> }) {
+export async function PUT(
+  req: Request,
+  props: { params: Promise<{ opportunityId: string }> }
+) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
 
@@ -26,13 +29,13 @@ export async function PUT(req: Request, props: { params: Promise<{ opportunityId
         id: params.opportunityId,
       },
       data: {
-        sales_stage: destination,
+        sales_stage_id: destination,
       },
     });
 
     const data = await prismadb.crm_Opportunities.findMany({
       include: {
-        assigned_to_user: {
+        assigned_to_user_relation: {
           select: {
             avatar: true,
             name: true,
@@ -52,7 +55,10 @@ export async function PUT(req: Request, props: { params: Promise<{ opportunityId
   }
 }
 
-export async function DELETE(req: Request, props: { params: Promise<{ opportunityId: string }> }) {
+export async function DELETE(
+  req: Request,
+  props: { params: Promise<{ opportunityId: string }> }
+) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
 
