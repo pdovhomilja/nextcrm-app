@@ -4,7 +4,10 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { set } from "zod";
 
-export async function POST(req: Request, props: { params: Promise<{ userId: string }> }) {
+export async function POST(
+  req: Request,
+  props: { params: Promise<{ userId: string }> }
+) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
 
@@ -53,7 +56,6 @@ export async function POST(req: Request, props: { params: Promise<{ userId: stri
     } else {
       const setOpenAiKey = await prismadb.openAi_keys.create({
         data: {
-          v: 0,
           api_key: secretKey,
           organization_id: organizationId,
           user: userId,

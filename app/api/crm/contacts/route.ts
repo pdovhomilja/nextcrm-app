@@ -45,7 +45,6 @@ export async function POST(req: Request) {
 
     const newContact = await prismadb.crm_Contacts.create({
       data: {
-        v: 0,
         createdBy: userId,
         updatedBy: userId,
         ...(assigned_account !== null && assigned_account !== undefined
@@ -162,7 +161,6 @@ export async function PUT(req: Request) {
         id,
       },
       data: {
-        v: 0,
         updatedBy: userId,
         //Update assigned_accountsIDs only if assigned_account is not empty
         ...(assigned_account !== null && assigned_account !== undefined

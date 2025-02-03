@@ -1,60 +1,60 @@
 [
   {
-    "v": 0,
+    
     "name": "crm",
     "enabled": true,
     "position": 1
   },
   {
-    "v": 0,
+    
     "name": "projects",
     "enabled": true,
     "position": 2
   },
   {
-    "v": 0,
+    
     "name": "emails",
     "enabled": false,
     "position": 3
   },
   {
-    "v": 0,
+    
     "name": "secondBrain",
     "enabled": true,
     "position": 4
   },
   {
-    "v": 0,
+    
     "name": "employee",
     "enabled": false,
     "position": 5
   },
   {
-    "v": 0,
+    
     "name": "invoice",
     "enabled": true,
     "position": 6
   },
   {
-    "v": 0,
+    
     "name": "reports",
     "enabled": true,
     "position": 7
   },
   {
-    "v": 0,
+    
     "name": "documents",
     "enabled": true,
     "position": 8
   },
   {
-    "v": 0,
+    
     "name": "databox",
     "enabled": false,
     "position": 9
   },
   {
-    "v": 0,
+    
     "name": "openai",
     "enabled": true,
     "position": 10

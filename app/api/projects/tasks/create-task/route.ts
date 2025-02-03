@@ -66,7 +66,6 @@ export async function POST(req: Request) {
 
     const task = await prismadb.tasks.create({
       data: {
-        v: 0,
         priority: priority,
         title: title,
         content: contentUpdated,

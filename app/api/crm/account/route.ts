@@ -39,7 +39,6 @@ export async function POST(req: Request) {
 
     const newAccount = await prismadb.crm_Accounts.create({
       data: {
-        v: 0,
         createdBy: session.user.id,
         updatedBy: session.user.id,
         name,
@@ -115,7 +114,6 @@ export async function PUT(req: Request) {
         id,
       },
       data: {
-        v: 0,
         updatedBy: session.user.id,
         name,
         office_phone,

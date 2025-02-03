@@ -33,7 +33,7 @@ const ResendCard = async () => {
     if (!parsed.id) {
       await prismadb.systemServices.create({
         data: {
-          v: 0,
+          
           name: "resend_smtp",
           serviceKey: parsed.serviceKey,
         },

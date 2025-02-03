@@ -72,7 +72,6 @@ export async function POST(
 
       const newComment = await prismadb.tasksComments.create({
         data: {
-          v: 0,
           comment: comment,
           task: taskId,
           user: session.user.id,
@@ -137,7 +136,6 @@ export async function POST(
       //
       const newComment = await prismadb.tasksComments.create({
         data: {
-          v: 0,
           comment: comment,
           task: taskId,
           user: session.user.id,

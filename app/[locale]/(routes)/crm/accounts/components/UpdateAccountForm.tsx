@@ -96,7 +96,7 @@ export function UpdateAccountForm({
       ? initialData
       : {
           id: "",
-          v: 0,
+          
           name: "",
           office_phone: "" as string | null,
           website: "",

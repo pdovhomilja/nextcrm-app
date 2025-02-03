@@ -3,7 +3,10 @@ import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-export async function POST(req: Request, props: { params: Promise<{ boardId: string }> }) {
+export async function POST(
+  req: Request,
+  props: { params: Promise<{ boardId: string }> }
+) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
   const body = await req.json();
@@ -29,7 +32,6 @@ export async function POST(req: Request, props: { params: Promise<{ boardId: str
     console.log(sectionPosition, "sectionPosition");
     const newSection = await prismadb.sections.create({
       data: {
-        v: 0,
         board: boardId,
         title: title,
         position: sectionPosition > 0 ? sectionPosition : 0,

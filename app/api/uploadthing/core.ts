@@ -34,7 +34,6 @@ export const ourFileRouter = {
 
       await prismadb.documents.create({
         data: {
-          v: 0,
           document_name: file.name,
           description: "new document",
           document_file_url: file.url,
@@ -86,7 +85,6 @@ export const ourFileRouter = {
       //TODO: save file.url to database
       await prismadb.documents.create({
         data: {
-          v: 0,
           document_name: file.name,
           description: "new document",
           document_file_url: file.url,
@@ -119,7 +117,6 @@ export const ourFileRouter = {
       //TODO: save file.url to database
       await prismadb.documents.create({
         data: {
-          v: 0,
           document_name: file.name,
           description: "new document",
           document_file_url: file.url,

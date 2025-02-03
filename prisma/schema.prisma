@@ -42,8 +42,6 @@ model crm_Accounts {
   vat                  String?
   website              String?
   invoices             Invoices[]
-  documentsIDs         String[]             
-  assigned_documents   Documents[]          @relation(fields: [documentsIDs], references: [id])
   contacts             crm_Contacts[]
   leads                crm_Leads[]
   industry_type        crm_Industry_Type?   @relation(fields: [industry], references: [id])
@@ -52,7 +50,7 @@ model crm_Accounts {
   crm_accounts_tasks   crm_Accounts_Tasks[]
   contracts            crm_Contracts[]
   watchers             String[]             
-  watching_users       Users[]              @relation(name: "watching_accounts", fields: [watchers], references: [id])
+  watching_users  UsersOnAccounts[]
   documents            AccountsOnDocuments[]
 }
 
@@ -78,8 +76,7 @@ model crm_Leads {
   assigned_to_user   Users?        @relation(fields: [assigned_to], references: [id])
   accountsIDs        String?       
   assigned_accounts  crm_Accounts? @relation(fields: [accountsIDs], references: [id])
-  documentsIDs       String[]      
-  assigned_documents Documents[]   @relation(fields: [documentsIDs], references: [id])
+  documents          LeadsOnDocuments[]
 }
 
 enum crm_Lead_Status {
@@ -113,13 +110,9 @@ model crm_Opportunities {
   description          String?
   expected_revenue     Int                             @default(0)
   name                 String?
-  description         String?
-  budget              Int                        @default(0)
-  expected_revenue    Int                        @default(0)
-  close_date          DateTime?
   status              crm_Opportunity_Status     @default(ACTIVE)
-  createdAt           DateTime                   @default(now())
-  updatedAt           DateTime?                  @updatedAt
+  created_by_user_relation Users?                @relation(name: "created_by_user_relation", fields: [created_by], references: [id])
+  assigned_to_user_relation Users?               @relation(name: "assigned_to_user_relation", fields: [assigned_to], references: [id])
   
   // Relations
   contacts_relation    ContactsOnOpportunities[]
@@ -131,9 +124,13 @@ model crm_Opportunities {
   assigned_type       crm_Opportunities_Type?    @relation(fields: [type_id], references: [id])
   type_id            String?
 
+  campaign_relation    crm_campaigns?            @relation(fields: [campaign], references: [id])
+
   @@index([accountId])
   @@index([sales_stage_id])
   @@index([type_id])
+  @@index([created_by])
+  @@index([assigned_to])
 }
 
 enum crm_Opportunity_Status {
@@ -200,13 +197,7 @@ model crm_Contacts {
   tags                   String[]
   notes                  String[]
   assigned_to_user       Users?                    @relation(name: "assigned_contacts", fields: [assigned_to], references: [id])
-  crate_by_user          Users?                    @relation(name: "created_contacts", fields: [created_by], references: [id])
-  opportunitiesIDs         String[]                  
-  assigned_opportunities crm_Opportunities[]         @relation(fields: [opportunitiesIDs], references: [id])
-  accountsIDs              String?                   
-  assigned_accounts        crm_Accounts?               @relation(fields: [accountsIDs], references: [id])
-  documentsIDs             String[]                    
-  assigned_documents       Documents[]                 @relation(fields: [documentsIDs], references: [id])
+  create_by_user          Users?                    @relation(name: "created_contacts", fields: [created_by], references: [id])
   opportunities        ContactsOnOpportunities[]
   documents           ContactsOnDocuments[]
   assigned_accounts   crm_Accounts?             @relation(fields: [accountId], references: [id])
@@ -263,11 +254,8 @@ model Boards {
   createdBy         String?   
   updatedAt         DateTime? @updatedAt 
   updatedBy         String?   
-
-  //Create watechers field for board. It will be array of users
-  watchers       String[] 
-  assigned_user  Users?   @relation(name: "assigned_user", fields: [user], references: [id])
-  watchers_users Users[]  @relation(name: "watching_users", fields: [watchers], references: [id])
+  assigned_user     Users?    @relation("assigned_user", fields: [user], references: [id])
+  watchers_relation    UsersOnBoards[]
 }
 
 model Employees {
@@ -390,8 +378,7 @@ model Invoices {
   invoice_states                invoice_States? @relation(fields: [invoice_state_id], references: [id])
   users                         Users?          @relation(fields: [assigned_user_id], references: [id])
   accounts                      crm_Accounts?   @relation(fields: [assigned_account_id], references: [id])
-  connected_documents           String[]        
-  documents                     Documents[]     @relation(fields: [connected_documents], references: [id])
+  documents_relation              InvoicesOnDocuments[]
 }
 
 model invoice_States {
@@ -407,7 +394,8 @@ model Documents {
   last_updated           DateTime?                 @updatedAt
   updatedAt              DateTime?                 @updatedAt 
   document_name          String
-  created_by_user        String?                     
+  created_by_user        String?      
+  assigned_to_user       String?
   createdBy              String?                     
   description            String?
   document_type          String?                     
@@ -428,6 +416,9 @@ model Documents {
   contacts            ContactsOnDocuments[]
   opportunities       OpportunitiesOnDocuments[]
   accounts            AccountsOnDocuments[]
+  created_by_user_relation Users?                  @relation(name: "created_by_user", fields: [created_by_user], references: [id])
+  assigned_to_user_relation Users?                 @relation(name: "assigned_to_user", fields: [assigned_user], references: [id])
+  crm_account_tasks     crm_Accounts_Tasks[]    @relation("DocumentsToCrmAccountTasks")
 }
 
 enum DocumentSystemType {
@@ -480,6 +471,7 @@ model Tasks {
   title            String
   likes            Int?            @default(0)
   user             String?         
+  comments         tasksComments[]
   documents        TasksOnDocuments[]
   assigned_user    Users?          @relation(fields: [user], references: [id])
   assigned_section Sections?       @relation(fields: [section], references: [id])
@@ -500,13 +492,13 @@ model crm_Accounts_Tasks {
   title         String
   likes         Int?            @default(0)
   user          String?         
+  documents     Documents[]     @relation("DocumentsToCrmAccountTasks")
   comments      tasksComments[]
-  documents     Documents[]
   assigned_user Users?          @relation(fields: [user], references: [id])
   //CRM assigments
   account       String?         
   crm_accounts  crm_Accounts?   @relation(fields: [account], references: [id])
-  //Staus
+  //Status
   taskStatus    taskStatus?     @default(ACTIVE)
 }
 
@@ -573,8 +565,7 @@ model Users {
   assigned_invoices    Invoices[]
   assigned_contracts   crm_Contracts[]
   boards               Boards[]              @relation(name: "assigned_user")
-  watching_boardsIDs   String[]              
-  watching_boards      Boards[]              @relation(name: "watching_users", fields: [watching_boardsIDs], references: [id])
+  watching_boards_relation UsersOnBoards[]
   watching_accounts    UsersOnAccounts[]
 }
 
@@ -639,8 +630,8 @@ model ContactsOnOpportunities {
   opportunityId String
   assignedAt    DateTime          @default(now())
   
-  contact       crm_Contacts      @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  opportunity   crm_Opportunities @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  contact       crm_Contacts      @relation(fields: [contactId], references: [id])
+  opportunity   crm_Opportunities @relation(fields: [opportunityId], references: [id])
 
   @@unique([contactId, opportunityId])
   @@index([contactId])
@@ -667,8 +658,8 @@ model OpportunitiesOnDocuments {
   documentId    String
   assignedAt    DateTime          @default(now())
   
-  opportunity   crm_Opportunities @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
-  document      Documents         @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  opportunity   crm_Opportunities @relation(fields: [opportunityId], references: [id])
+  document      Documents         @relation(fields: [documentId], references: [id])
 
   @@unique([opportunityId, documentId])
   @@index([opportunityId])
@@ -737,10 +728,24 @@ model LeadsOnDocuments {
   documentId String
   assignedAt DateTime @default(now())
   
-  lead       crm_Leads @relation(fields: [leadId], references: [id], onDelete: Cascade)
   document   Documents @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  lead       crm_Leads @relation(fields: [leadId], references: [id], onDelete: Cascade)
 
   @@unique([leadId, documentId])
   @@index([leadId])
   @@index([documentId])
+}
+
+model UsersOnBoards {
+  id        String   @id @default(uuid())
+  userId    String
+  boardId   String
+  assignedAt DateTime @default(now())
+  
+  user      Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  board     Boards   @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, boardId])
+  @@index([userId])
+  @@index([boardId])
 }

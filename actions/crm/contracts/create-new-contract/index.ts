@@ -51,7 +51,6 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   try {
     const result = await prismadb.crm_Contracts.create({
       data: {
-        v: 0,
         title,
         value: parseFloat(value),
         startDate,

@@ -56,7 +56,6 @@ export async function POST(req: Request) {
 
   await prismadb.myAccount.create({
     data: {
-      v: 0,
       company_name,
       is_person,
       email,

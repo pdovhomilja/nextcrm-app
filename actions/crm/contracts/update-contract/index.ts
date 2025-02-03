@@ -31,7 +31,6 @@ const handler = async (data: InputType): Promise<ReturnType> => {
 
   const {
     id,
-    v,
     title,
     value,
     startDate,
@@ -63,7 +62,6 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         id: data.id,
       },
       data: {
-        v: data.v + 1,
         title,
         value: parseFloat(value),
         startDate,

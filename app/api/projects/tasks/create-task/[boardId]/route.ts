@@ -6,7 +6,10 @@ import { authOptions } from "@/lib/auth";
 import NewTaskFromProject from "@/emails/NewTaskFromProject";
 import resendHelper from "@/lib/resend";
 
-export async function POST(req: Request, props: { params: Promise<{ boardId: string }> }) {
+export async function POST(
+  req: Request,
+  props: { params: Promise<{ boardId: string }> }
+) {
   const params = await props.params;
   /*
   Resend.com function init - this is a helper function that will be used to send emails
@@ -42,7 +45,6 @@ export async function POST(req: Request, props: { params: Promise<{ boardId: str
 
       await prismadb.tasks.create({
         data: {
-          v: 0,
           priority: "normal",
           title: "New task",
           content: "",
@@ -81,7 +83,6 @@ export async function POST(req: Request, props: { params: Promise<{ boardId: str
 
       const task = await prismadb.tasks.create({
         data: {
-          v: 0,
           priority: priority,
           title: title,
           content: content,

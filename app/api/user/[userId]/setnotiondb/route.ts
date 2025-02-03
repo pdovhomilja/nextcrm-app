@@ -4,7 +4,10 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { set } from "zod";
 
-export async function POST(req: Request, props: { params: Promise<{ userId: string }> }) {
+export async function POST(
+  req: Request,
+  props: { params: Promise<{ userId: string }> }
+) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
 
@@ -53,7 +56,6 @@ export async function POST(req: Request, props: { params: Promise<{ userId: stri
     } else {
       const setNotion = await prismadb.secondBrain_notions.create({
         data: {
-          v: 0,
           notion_api_key: secretKey,
           notion_db_id: databaseId,
           user: userId,

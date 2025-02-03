@@ -25,7 +25,6 @@ export async function POST(req: Request) {
 
     const newBoard = await prismadb.boards.create({
       data: {
-        v: 0,
         user: session.user.id,
         title: title,
         description: description,
@@ -38,7 +37,6 @@ export async function POST(req: Request) {
 
     await prismadb.sections.create({
       data: {
-        v: 0,
         board: newBoard.id,
         title: "Backlog",
         position: 0,
