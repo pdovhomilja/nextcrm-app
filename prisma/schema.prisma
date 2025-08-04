@@ -1,0 +1,155 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+   binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model User {
+  id                      String    @id @default(cuid())
+  name                    String?
+  email                   String    @unique
+  emailVerified           DateTime? @map("email_verified")
+  emailVerificationToken  String?   @unique @map("email_verification_token")
+  emailTokenExpires       DateTime? @map("email_token_expires")
+  image                   String?
+  password                String?
+  cid                     String?   @default(cuid()) @map("company_id")
+  createdAt               DateTime  @default(now()) @map("created_at")
+  updatedAt               DateTime  @updatedAt @map("updated_at")
+  role                    UserRole  @default(USER)
+  
+  accounts Account[]
+  sessions Session[]
+
+  assignedTasks         Task[]                 @relation("AssignedTasks")
+  createdTasks          Task[]                 @relation("CreatedTasks")
+
+  @@map("users")
+  @@index([cid])
+  @@index([emailVerificationToken])
+}
+
+enum UserRole {
+  USER
+  CONTRIBUTOR
+  EDITOR
+  MEDIA
+  ADMIN
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verificationtokens")
+}
+// Task model
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TaskStatusNew {
+  NEW
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  ON_HOLD
+}
+
+model Task {
+  id              String         @id @default(cuid())
+  title           String
+  description     String
+  priority        TaskPriority   @default(MEDIUM)
+  status          TaskStatusNew  @default(NEW)
+  dueDate         DateTime
+  position        Int            @default(0)
+  assignedToId    String        
+  assignedTo      User           @relation("AssignedTasks", fields: [assignedToId], references: [id])
+  createdById     String         
+  createdBy       User           @relation("CreatedTasks", fields: [createdById], references: [id])
+  boardSectionId  String
+  boardSection    BoardSection   @relation(fields: [boardSectionId], references: [id])
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  history         TaskHistory[]
+}
+
+model Board {
+  id            String         @id @default(cuid())
+  name          String
+  description   String?
+  createdBy     String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  access        String[]
+  boardSections BoardSection[]
+}
+
+model BoardSection {
+  id        String   @id @default(cuid())
+  name      String
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  boardId   String
+  board     Board    @relation(fields: [boardId], references: [id])
+  tasks     Task[]
+}
+
+model TaskHistory {
+  id          String   @id @default(cuid())
+  taskId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  description String?
+  task        Task     @relation(fields: [taskId], references: [id])
+}
+
+// end of Task model
