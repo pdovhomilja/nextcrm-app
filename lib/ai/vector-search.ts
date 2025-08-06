@@ -1,5 +1,9 @@
 import db from "@/lib/db";
 import { embeddingService } from "./embedding-service";
+import {
+  findSimilarBoards,
+  findSimilarTasks,
+} from "@/lib/generated/prisma/sql";
 
 export interface VectorSearchQuery {
   query: string;
@@ -429,6 +433,62 @@ export class VectorSearchService {
         error:
           error instanceof Error ? error.message : "Unknown health check error",
       };
+    }
+  }
+
+  /**
+   * Find similar boards using TypedSQL (Prisma 6.13.0+ approach)
+   */
+  async findSimilarBoardsTyped(
+    queryEmbedding: number[],
+    limit = 10
+  ): Promise<
+    Array<{
+      boardId: string;
+      name: string;
+      description: string;
+      content: string;
+      metadata: any;
+      similarity: number;
+    }>
+  > {
+    try {
+      const embeddingVector = `[${queryEmbedding.join(",")}]`;
+      const results = await db.$queryRaw(
+        findSimilarBoards(embeddingVector, limit)
+      );
+      return results as any[];
+    } catch (error) {
+      console.error("Error finding similar boards with TypedSQL:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Find similar tasks using TypedSQL (Prisma 6.13.0+ approach)
+   */
+  async findSimilarTasksTyped(
+    queryEmbedding: number[],
+    limit = 10
+  ): Promise<
+    Array<{
+      taskId: string;
+      title: string;
+      description: string;
+      content: string;
+      metadata: any;
+      similarity: number;
+    }>
+  > {
+    try {
+      const embeddingVector = `[${queryEmbedding.join(",")}]`;
+      const results = await db.$queryRaw(
+        findSimilarTasks(embeddingVector, limit)
+      );
+      return results as any[];
+    } catch (error) {
+      console.error("Error finding similar tasks with TypedSQL:", error);
+      return [];
     }
   }
 }

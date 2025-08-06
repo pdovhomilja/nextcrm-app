@@ -36,7 +36,7 @@
   model TaskEmbedding {
     id        String   @id @default(cuid())
     taskId    String   @unique
-    embedding Unsupported("vector(1536)")
+    embedding VECTOR(1536)
     content   String
     metadata  Json
     // ... relations and timestamps
@@ -45,7 +45,7 @@
   model BoardEmbedding {
     id        String   @id @default(cuid())
     boardId   String   @unique
-    embedding Unsupported("vector(1536)")
+    embedding VECTOR(1536)
     content   String
     metadata  Json
     // ... relations and timestamps
