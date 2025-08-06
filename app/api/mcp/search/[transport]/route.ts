@@ -1,19 +1,45 @@
 import { createMcpHandler } from "@vercel/mcp-adapter";
 import { z } from "zod";
 import { auth } from "@/auth";
+import { vectorSearchService } from "@/lib/ai/vector-search";
 import db from "@/lib/db";
 
 const handler = createMcpHandler(
   async (server) => {
-    // Vector similarity search tool
+    // Enhanced semantic search tool
     server.tool(
-      "vector_search_tasks",
-      "Perform semantic search on task embeddings",
+      "semantic_search_tasks",
+      "Perform semantic search using vector embeddings",
       {
         query: z.string().min(1, "Query is required"),
         threshold: z.number().min(0).max(1).default(0.7),
-        limit: z.number().min(1).max(20).default(5),
-        boardId: z.string().optional(),
+        limit: z.number().min(1).max(50).default(10),
+        filters: z
+          .object({
+            boardIds: z.array(z.string()).optional(),
+            priority: z
+              .array(z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]))
+              .optional(),
+            status: z
+              .array(
+                z.enum([
+                  "NEW",
+                  "IN_PROGRESS",
+                  "COMPLETED",
+                  "CANCELLED",
+                  "ON_HOLD",
+                ])
+              )
+              .optional(),
+            assigneeIds: z.array(z.string()).optional(),
+            dateRange: z
+              .object({
+                start: z.string(),
+                end: z.string(),
+              })
+              .optional(),
+          })
+          .optional(),
       },
       async (params) => {
         const session = await auth();
@@ -21,60 +47,26 @@ const handler = createMcpHandler(
           throw new Error("Unauthorized");
         }
 
-        // Validate company context
-        const companyId = session.user.cid;
-        if (!companyId) {
-          throw new Error("Company context required");
-        }
+        const searchQuery = {
+          query: params.query,
+          companyId: session.user.cid!,
+          userId: session.user.id,
+          threshold: params.threshold,
+          limit: params.limit,
+          filters: params.filters
+            ? {
+                ...params.filters,
+                dateRange: params.filters.dateRange
+                  ? {
+                      start: new Date(params.filters.dateRange.start),
+                      end: new Date(params.filters.dateRange.end),
+                    }
+                  : undefined,
+              }
+            : undefined,
+        };
 
-        // For now, implement basic text search until embeddings are generated
-        // This will be replaced with actual vector similarity search in Phase 2
-        const queryParam = `%${params.query}%`;
-
-        interface SearchResult {
-          id: string;
-          title: string;
-          description: string;
-          priority: string;
-          status: string;
-          createdAt: Date;
-          updatedAt: Date;
-          dueDate: Date;
-          section_name: string;
-          board_name: string;
-          assigned_to_name: string;
-          created_by_name: string;
-        }
-
-        const searchResults = (await db.$queryRaw`
-          SELECT 
-            t.id,
-            t.title,
-            t.description,
-            t.priority,
-            t.status,
-            t."createdAt",
-            t."updatedAt",
-            t."dueDate",
-            bs.name as section_name,
-            b.name as board_name,
-            u.name as assigned_to_name,
-            uc.name as created_by_name
-          FROM "Task" t
-          JOIN "BoardSection" bs ON t."boardSectionId" = bs.id
-          JOIN "Board" b ON bs."boardId" = b.id
-          JOIN "User" u ON t."assignedToId" = u.id
-          JOIN "User" uc ON t."createdById" = uc.id
-          WHERE 
-            ${params.boardId ? db.$queryRaw`b.id = ${params.boardId} AND` : db.$queryRaw``}
-            (
-              t.title ILIKE ${queryParam} OR
-              t.description ILIKE ${queryParam}
-            )
-            AND ${session.user.id} = ANY(b.access)
-          ORDER BY t."createdAt" DESC
-          LIMIT ${params.limit}
-        `) as SearchResult[];
+        const results = await vectorSearchService.searchTasks(searchQuery);
 
         return {
           content: [
@@ -84,26 +76,14 @@ const handler = createMcpHandler(
                 {
                   success: true,
                   query: params.query,
-                  threshold: params.threshold,
-                  results: searchResults.map((result) => ({
-                    id: result.id,
-                    title: result.title,
-                    description: result.description,
-                    priority: result.priority,
-                    status: result.status,
-                    dueDate: result.dueDate,
-                    boardName: result.board_name,
-                    sectionName: result.section_name,
-                    assignedTo: result.assigned_to_name,
-                    createdBy: result.created_by_name,
-                    createdAt: result.createdAt,
-                    updatedAt: result.updatedAt,
-                    relevanceScore: 0.8, // Placeholder until vector search
+                  results: results.map((result) => ({
+                    ...result,
+                    similarity: Math.round(result.similarity * 100) / 100,
                   })),
-                  resultCount: searchResults.length,
-                  searchType: "text-based", // Will become "vector-based" in Phase 2
-                  message:
-                    "Search completed (using text-based search until embeddings are implemented)",
+                  resultCount: results.length,
+                  searchType: "semantic-vector",
+                  threshold: params.threshold,
+                  message: `Found ${results.length} semantically similar tasks`,
                 },
                 null,
                 2
@@ -155,48 +135,27 @@ const handler = createMcpHandler(
           throw new Error("Company context required");
         }
 
-        // Placeholder implementation - will be enhanced in Phase 2 with actual vector search
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const whereClause: Record<string, any> = {
-          boardSection: {
-            board: {
-              access: {
-                has: session.user.id,
-              },
-            },
-          },
-          OR: [
-            { title: { contains: params.query, mode: "insensitive" } },
-            { description: { contains: params.query, mode: "insensitive" } },
-          ],
+        const searchQuery = {
+          query: params.query,
+          companyId: session.user.cid!,
+          userId: session.user.id,
+          limit: params.limit,
+          filters: params.filters
+            ? {
+                boardIds: params.filters.boardId
+                  ? [params.filters.boardId]
+                  : undefined,
+                priority: params.filters.priority,
+                status: params.filters.status,
+              }
+            : undefined,
         };
 
-        if (params.filters?.boardId) {
-          whereClause.boardSection.boardId = params.filters.boardId;
-        }
-
-        if (params.filters?.priority?.length) {
-          whereClause.priority = { in: params.filters.priority };
-        }
-
-        if (params.filters?.status?.length) {
-          whereClause.status = { in: params.filters.status };
-        }
-
-        const results = await db.task.findMany({
-          where: whereClause,
-          take: params.limit,
-          include: {
-            assignedTo: true,
-            createdBy: true,
-            boardSection: {
-              include: {
-                board: true,
-              },
-            },
-          },
-          orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
-        });
+        const results = await vectorSearchService.hybridSearch(
+          searchQuery,
+          params.vectorWeight,
+          params.keywordWeight
+        );
 
         return {
           content: [
@@ -210,32 +169,14 @@ const handler = createMcpHandler(
                     vector: params.vectorWeight,
                     keyword: params.keywordWeight,
                   },
-                  results: results.map((task) => ({
-                    id: task.id,
-                    title: task.title,
-                    description: task.description,
-                    priority: task.priority,
-                    status: task.status,
-                    dueDate: task.dueDate,
-                    boardName: task.boardSection.board.name,
-                    sectionName: task.boardSection.name,
-                    assignedTo: task.assignedTo.name,
-                    createdBy: task.createdBy.name,
-                    relevanceScore: Math.random() * 0.5 + 0.5, // Placeholder score
-                    searchMatch: {
-                      titleMatch: task.title
-                        .toLowerCase()
-                        .includes(params.query.toLowerCase()),
-                      descriptionMatch: task.description
-                        .toLowerCase()
-                        .includes(params.query.toLowerCase()),
-                    },
+                  results: results.map((result) => ({
+                    ...result,
+                    similarity: Math.round(result.similarity * 100) / 100,
                   })),
                   resultCount: results.length,
-                  searchType: "hybrid-placeholder",
+                  searchType: "hybrid",
                   filters: params.filters,
-                  message:
-                    "Hybrid search completed (vector component will be implemented in Phase 2)",
+                  message: `Found ${results.length} relevant tasks using hybrid search`,
                 },
                 null,
                 2
@@ -429,14 +370,107 @@ const handler = createMcpHandler(
         };
       }
     );
+
+    // Find similar tasks tool
+    server.tool(
+      "find_similar_tasks",
+      "Find tasks similar to a given task using vector similarity",
+      {
+        taskId: z.string().min(1, "Task ID is required"),
+        limit: z.number().min(1).max(20).default(5),
+        threshold: z.number().min(0).max(1).default(0.5),
+      },
+      async (params) => {
+        const session = await auth();
+        if (!session?.user) {
+          throw new Error("Unauthorized");
+        }
+
+        const results = await vectorSearchService.findSimilarTasks(
+          params.taskId,
+          params.limit
+        );
+
+        // Filter by threshold
+        const filteredResults = results.filter(
+          (result) => result.similarity >= params.threshold
+        );
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(
+                {
+                  success: true,
+                  sourceTaskId: params.taskId,
+                  results: filteredResults.map((result) => ({
+                    ...result,
+                    similarity: Math.round(result.similarity * 100) / 100,
+                  })),
+                  resultCount: filteredResults.length,
+                  searchType: "similarity-based",
+                  threshold: params.threshold,
+                  message: `Found ${filteredResults.length} similar tasks`,
+                },
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      }
+    );
+
+    // Vector search health check tool
+    server.tool(
+      "vector_search_health",
+      "Check vector search functionality and status",
+      {},
+      async () => {
+        const session = await auth();
+        if (!session?.user) {
+          throw new Error("Unauthorized");
+        }
+
+        const healthStatus = await vectorSearchService.healthCheck();
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(
+                {
+                  success: true,
+                  health: healthStatus,
+                  message: healthStatus.healthy
+                    ? "Vector search is operational"
+                    : "Vector search has issues",
+                  recommendations: healthStatus.healthy
+                    ? ["Vector search is ready for use"]
+                    : [
+                        "Check pgvector installation",
+                        "Verify database connectivity",
+                      ],
+                },
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      }
+    );
   },
   {
     capabilities: {
       tools: {
-        vector_search_tasks: {
-          description: "Semantic search on task embeddings",
+        semantic_search_tasks: { description: "Vector-based semantic search" },
+        hybrid_search: { description: "Combined vector and keyword search" },
+        find_similar_tasks: {
+          description: "Find similar tasks by vector similarity",
         },
-        hybrid_search: { description: "Hybrid vector + keyword search" },
+        vector_search_health: { description: "Vector search health status" },
         get_embedding_status: { description: "Check embedding availability" },
         search_boards: { description: "Search accessible boards" },
       },

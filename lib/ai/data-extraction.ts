@@ -378,13 +378,6 @@ export class DataExtractionService {
         embedding: { isNot: null },
       },
       include: {
-        embedding: {
-          select: { updatedAt: true },
-        },
-      },
-      select: {
-        id: true,
-        updatedAt: true,
         embedding: true,
       },
     });
@@ -426,13 +419,6 @@ export class DataExtractionService {
         embedding: { isNot: null },
       },
       include: {
-        embedding: {
-          select: { updatedAt: true },
-        },
-      },
-      select: {
-        id: true,
-        updatedAt: true,
         embedding: true,
       },
     });
