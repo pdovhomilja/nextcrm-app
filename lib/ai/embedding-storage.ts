@@ -1,6 +1,7 @@
 import db from "@/lib/db";
 import { embeddingService } from "./embedding-service";
 import { dataExtractionService } from "./data-extraction";
+import { randomUUID } from "crypto";
 import { Prisma } from "@/lib/generated/prisma";
 
 export class EmbeddingStorageService {
@@ -15,18 +16,27 @@ export class EmbeddingStorageService {
     metadata: Record<string, any>
   ): Promise<void> {
     try {
-      // Temporarily disabled due to Prisma vector field compatibility issues
-      // TODO: Resolve Prisma + pgvector integration
+      // Use raw SQL for vector operations until Prisma vector support is stable
+      const embeddingArray = `[${embedding.join(",")}]`;
+
+      await db.$executeRaw`
+        INSERT INTO task_embeddings (id, task_id, embedding, content, metadata, created_at, updated_at)
+        VALUES (${randomUUID()}, ${taskId}, ${embeddingArray}::vector, ${content}, ${JSON.stringify(metadata)}::jsonb, NOW(), NOW())
+        ON CONFLICT (task_id) 
+        DO UPDATE SET 
+          embedding = ${embeddingArray}::vector,
+          content = ${content},
+          metadata = ${JSON.stringify(metadata)}::jsonb,
+          updated_at = NOW()
+      `;
+
       console.log(
-        `Would store embedding for task ${taskId}, content: ${content.substring(0, 50)}...`
+        `Successfully stored embedding for task ${taskId}, content: ${content.substring(0, 50)}...`
       );
       console.log(
         `Embedding dimensions: ${embedding.length}, metadata:`,
         metadata
       );
-
-      // For now, just log the operation without database interaction
-      return Promise.resolve();
     } catch (error) {
       console.error(`Failed to store task embedding for ${taskId}:`, error);
       throw error;
@@ -44,18 +54,27 @@ export class EmbeddingStorageService {
     metadata: Record<string, any>
   ): Promise<void> {
     try {
-      // Temporarily disabled due to Prisma vector field compatibility issues
-      // TODO: Resolve Prisma + pgvector integration
+      // Use raw SQL for vector operations until Prisma vector support is stable
+      const embeddingArray = `[${embedding.join(",")}]`;
+
+      await db.$executeRaw`
+        INSERT INTO board_embeddings (id, board_id, embedding, content, metadata, created_at, updated_at)
+        VALUES (${randomUUID()}, ${boardId}, ${embeddingArray}::vector, ${content}, ${JSON.stringify(metadata)}::jsonb, NOW(), NOW())
+        ON CONFLICT (board_id) 
+        DO UPDATE SET 
+          embedding = ${embeddingArray}::vector,
+          content = ${content},
+          metadata = ${JSON.stringify(metadata)}::jsonb,
+          updated_at = NOW()
+      `;
+
       console.log(
-        `Would store embedding for board ${boardId}, content: ${content.substring(0, 50)}...`
+        `Successfully stored embedding for board ${boardId}, content: ${content.substring(0, 50)}...`
       );
       console.log(
         `Embedding dimensions: ${embedding.length}, metadata:`,
         metadata
       );
-
-      // For now, just log the operation without database interaction
-      return Promise.resolve();
     } catch (error) {
       console.error(`Failed to store board embedding for ${boardId}:`, error);
       throw error;

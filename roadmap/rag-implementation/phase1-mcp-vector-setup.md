@@ -1,9 +1,11 @@
 # Phase 1: MCP Server Setup & Vector Database Integration
 
 ## Overview
+
 This phase establishes the foundation for the RAG implementation by setting up Model Context Protocol (MCP) servers using Vercel MCP Adapter and integrating vector database capabilities with PostgreSQL + pgvector.
 
 ## Prerequisites
+
 - Existing Next.js 15.4.4 application with TypeScript
 - PostgreSQL database with Prisma ORM
 - Vercel deployment environment
@@ -17,12 +19,14 @@ This phase establishes the foundation for the RAG implementation by setting up M
 **API Token Usage**: Low
 
 #### Tasks:
+
 - [ ] Install MCP and AI dependencies
 - [ ] Configure environment variables
 - [ ] Set up Redis for SSE transport
 - [ ] Enable Vercel Fluid Compute
 
 #### Dependencies Installation:
+
 ```bash
 pnpm add @vercel/mcp-adapter redis @modelcontextprotocol/sdk
 pnpm add ai @ai-sdk/openai
@@ -31,6 +35,7 @@ pnpm add -D @types/pg @types/redis
 ```
 
 #### Environment Variables:
+
 ```env
 # MCP Configuration
 REDIS_URL=redis://localhost:6379
@@ -63,12 +68,14 @@ NEXT_PUBLIC_APP_URL=https://your-app.vercel.app
 **API Token Usage**: Low
 
 #### Tasks:
+
 - [ ] Install pgvector extension
 - [ ] Create vector-enabled database schema
 - [ ] Update Prisma schema with vector models
 - [ ] Run database migrations
 
 #### Database Setup:
+
 ```sql
 -- Enable pgvector extension
 CREATE EXTENSION IF NOT EXISTS vector;
@@ -78,11 +85,12 @@ SELECT '[1,2,3]'::vector;
 ```
 
 #### Prisma Schema Updates:
+
 ```prisma
 model TaskEmbedding {
   id        String   @id @default(cuid())
   taskId    String   @unique
-  embedding Unsupported("vector(1536)")
+  embedding VECTOR(1536)
   content   String   // Original text that was embedded
   metadata  Json     // Additional context (priority, status, etc.)
   createdAt DateTime @default(now())
@@ -96,7 +104,7 @@ model TaskEmbedding {
 model BoardEmbedding {
   id        String   @id @default(cuid())
   boardId   String   @unique
-  embedding Unsupported("vector(1536)")
+  embedding VECTOR(1536)
   content   String   // Board name + description + context
   metadata  Json     // Board info, team members, etc.
   createdAt DateTime @default(now())
@@ -139,6 +147,7 @@ model AIMessage {
 ```
 
 #### Migration Commands:
+
 ```bash
 npx prisma generate
 npx prisma db push
@@ -150,12 +159,14 @@ npx prisma db push
 **API Token Usage**: Medium
 
 #### Tasks:
+
 - [ ] Create MCP server base structure
 - [ ] Implement Redis-backed SSE transport
 - [ ] Set up MCP handler configuration
 - [ ] Create health check endpoints
 
 #### Base MCP Server Structure:
+
 Create `/app/api/mcp/[transport]/route.ts`:
 
 ```typescript
@@ -216,6 +227,7 @@ export { handler as GET, handler as POST, handler as DELETE };
 **API Token Usage**: Medium-High
 
 #### Tasks:
+
 - [ ] Create dedicated Tasks MCP server
 - [ ] Implement task CRUD operations
 - [ ] Add task search capabilities
@@ -245,7 +257,9 @@ const handler = createMcpHandler(
         title: z.string().min(1, "Title is required"),
         description: z.string().optional(),
         boardSectionId: z.string(),
-        priority: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).default("MEDIUM"),
+        priority: z
+          .enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"])
+          .default("MEDIUM"),
         assigneeIds: z.array(z.string()).optional(),
         dueDate: z.string().optional(), // ISO date string
       },
@@ -264,7 +278,9 @@ const handler = createMcpHandler(
             status: "NEW",
             createdById: session.user.id,
             assignedToId: params.assigneeIds?.[0] || session.user.id,
-            dueDate: params.dueDate ? new Date(params.dueDate) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            dueDate: params.dueDate
+              ? new Date(params.dueDate)
+              : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
             position: 0,
           },
           include: {
@@ -282,22 +298,26 @@ const handler = createMcpHandler(
           content: [
             {
               type: "text",
-              text: JSON.stringify({
-                success: true,
-                task: {
-                  id: task.id,
-                  title: task.title,
-                  description: task.description,
-                  priority: task.priority,
-                  status: task.status,
-                  boardName: task.boardSection.board.name,
-                  sectionName: task.boardSection.name,
-                  assignedTo: task.assignedTo.name,
-                  createdBy: task.createdBy.name,
-                  createdAt: task.createdAt,
+              text: JSON.stringify(
+                {
+                  success: true,
+                  task: {
+                    id: task.id,
+                    title: task.title,
+                    description: task.description,
+                    priority: task.priority,
+                    status: task.status,
+                    boardName: task.boardSection.board.name,
+                    sectionName: task.boardSection.name,
+                    assignedTo: task.assignedTo.name,
+                    createdBy: task.createdBy.name,
+                    createdAt: task.createdAt,
+                  },
+                  message: `Task "${task.title}" created successfully`,
                 },
-                message: `Task "${task.title}" created successfully`,
-              }, null, 2),
+                null,
+                2
+              ),
             },
           ],
         };
@@ -311,8 +331,14 @@ const handler = createMcpHandler(
       {
         query: z.string().optional(),
         boardId: z.string().optional(),
-        status: z.array(z.enum(["NEW", "IN_PROGRESS", "COMPLETED", "CANCELLED", "ON_HOLD"])).optional(),
-        priority: z.array(z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"])).optional(),
+        status: z
+          .array(
+            z.enum(["NEW", "IN_PROGRESS", "COMPLETED", "CANCELLED", "ON_HOLD"])
+          )
+          .optional(),
+        priority: z
+          .array(z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]))
+          .optional(),
         assigneeIds: z.array(z.string()).optional(),
         limit: z.number().min(1).max(50).default(10),
       },
@@ -358,10 +384,7 @@ const handler = createMcpHandler(
         const tasks = await db.task.findMany({
           where: whereClause,
           take: params.limit,
-          orderBy: [
-            { priority: "desc" },
-            { createdAt: "desc" },
-          ],
+          orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
           include: {
             assignedTo: true,
             createdBy: true,
@@ -377,31 +400,35 @@ const handler = createMcpHandler(
           content: [
             {
               type: "text",
-              text: JSON.stringify({
-                success: true,
-                results: tasks.map(task => ({
-                  id: task.id,
-                  title: task.title,
-                  description: task.description,
-                  priority: task.priority,
-                  status: task.status,
-                  dueDate: task.dueDate,
-                  boardName: task.boardSection.board.name,
-                  sectionName: task.boardSection.name,
-                  assignedTo: task.assignedTo.name,
-                  createdBy: task.createdBy.name,
-                  createdAt: task.createdAt,
-                  updatedAt: task.updatedAt,
-                })),
-                totalResults: tasks.length,
-                query: params.query,
-                filters: {
-                  boardId: params.boardId,
-                  status: params.status,
-                  priority: params.priority,
-                  assigneeIds: params.assigneeIds,
+              text: JSON.stringify(
+                {
+                  success: true,
+                  results: tasks.map((task) => ({
+                    id: task.id,
+                    title: task.title,
+                    description: task.description,
+                    priority: task.priority,
+                    status: task.status,
+                    dueDate: task.dueDate,
+                    boardName: task.boardSection.board.name,
+                    sectionName: task.boardSection.name,
+                    assignedTo: task.assignedTo.name,
+                    createdBy: task.createdBy.name,
+                    createdAt: task.createdAt,
+                    updatedAt: task.updatedAt,
+                  })),
+                  totalResults: tasks.length,
+                  query: params.query,
+                  filters: {
+                    boardId: params.boardId,
+                    status: params.status,
+                    priority: params.priority,
+                    assigneeIds: params.assigneeIds,
+                  },
                 },
-              }, null, 2),
+                null,
+                2
+              ),
             },
           ],
         };
@@ -417,7 +444,9 @@ const handler = createMcpHandler(
         title: z.string().optional(),
         description: z.string().optional(),
         priority: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).optional(),
-        status: z.enum(["NEW", "IN_PROGRESS", "COMPLETED", "CANCELLED", "ON_HOLD"]).optional(),
+        status: z
+          .enum(["NEW", "IN_PROGRESS", "COMPLETED", "CANCELLED", "ON_HOLD"])
+          .optional(),
         assignedToId: z.string().optional(),
         dueDate: z.string().optional(), // ISO date string
       },
@@ -429,7 +458,8 @@ const handler = createMcpHandler(
 
         const updateData: any = {};
         if (params.title) updateData.title = params.title;
-        if (params.description !== undefined) updateData.description = params.description;
+        if (params.description !== undefined)
+          updateData.description = params.description;
         if (params.priority) updateData.priority = params.priority;
         if (params.status) updateData.status = params.status;
         if (params.assignedToId) updateData.assignedToId = params.assignedToId;
@@ -453,22 +483,26 @@ const handler = createMcpHandler(
           content: [
             {
               type: "text",
-              text: JSON.stringify({
-                success: true,
-                task: {
-                  id: task.id,
-                  title: task.title,
-                  description: task.description,
-                  priority: task.priority,
-                  status: task.status,
-                  dueDate: task.dueDate,
-                  boardName: task.boardSection.board.name,
-                  sectionName: task.boardSection.name,
-                  assignedTo: task.assignedTo.name,
-                  updatedAt: task.updatedAt,
+              text: JSON.stringify(
+                {
+                  success: true,
+                  task: {
+                    id: task.id,
+                    title: task.title,
+                    description: task.description,
+                    priority: task.priority,
+                    status: task.status,
+                    dueDate: task.dueDate,
+                    boardName: task.boardSection.board.name,
+                    sectionName: task.boardSection.name,
+                    assignedTo: task.assignedTo.name,
+                    updatedAt: task.updatedAt,
+                  },
+                  message: `Task "${task.title}" updated successfully`,
                 },
-                message: `Task "${task.title}" updated successfully`,
-              }, null, 2),
+                null,
+                2
+              ),
             },
           ],
         };
@@ -500,6 +534,7 @@ export { handler as GET, handler as POST, handler as DELETE };
 **API Token Usage**: Medium
 
 #### Tasks:
+
 - [ ] Create Vector Search MCP server
 - [ ] Implement similarity search functions
 - [ ] Add hybrid search capabilities
@@ -556,10 +591,10 @@ const handler = createMcpHandler(
           JOIN "Board" b ON bs."boardId" = b.id
           JOIN "User" u ON t."assignedToId" = u.id
           WHERE 
-            ${params.boardId ? `b.id = ${params.boardId} AND` : ''}
+            ${params.boardId ? `b.id = ${params.boardId} AND` : ""}
             (
-              t.title ILIKE ${'%' + params.query + '%'} OR
-              t.description ILIKE ${'%' + params.query + '%'}
+              t.title ILIKE ${"%" + params.query + "%"} OR
+              t.description ILIKE ${"%" + params.query + "%"}
             )
             AND b.access @> ARRAY[${session.user.id}]::text[]
           ORDER BY t."createdAt" DESC
@@ -570,15 +605,20 @@ const handler = createMcpHandler(
           content: [
             {
               type: "text",
-              text: JSON.stringify({
-                success: true,
-                query: params.query,
-                threshold: params.threshold,
-                results: searchResults,
-                resultCount: (searchResults as any[]).length,
-                searchType: "text-based", // Will become "vector-based" in Phase 2
-                message: "Search completed (using text-based search until embeddings are implemented)",
-              }, null, 2),
+              text: JSON.stringify(
+                {
+                  success: true,
+                  query: params.query,
+                  threshold: params.threshold,
+                  results: searchResults,
+                  resultCount: (searchResults as any[]).length,
+                  searchType: "text-based", // Will become "vector-based" in Phase 2
+                  message:
+                    "Search completed (using text-based search until embeddings are implemented)",
+                },
+                null,
+                2
+              ),
             },
           ],
         };
@@ -594,11 +634,25 @@ const handler = createMcpHandler(
         vectorWeight: z.number().min(0).max(1).default(0.7),
         keywordWeight: z.number().min(0).max(1).default(0.3),
         limit: z.number().min(1).max(20).default(10),
-        filters: z.object({
-          boardId: z.string().optional(),
-          priority: z.array(z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"])).optional(),
-          status: z.array(z.enum(["NEW", "IN_PROGRESS", "COMPLETED", "CANCELLED", "ON_HOLD"])).optional(),
-        }).optional(),
+        filters: z
+          .object({
+            boardId: z.string().optional(),
+            priority: z
+              .array(z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]))
+              .optional(),
+            status: z
+              .array(
+                z.enum([
+                  "NEW",
+                  "IN_PROGRESS",
+                  "COMPLETED",
+                  "CANCELLED",
+                  "ON_HOLD",
+                ])
+              )
+              .optional(),
+          })
+          .optional(),
       },
       async (params) => {
         const session = await auth();
@@ -645,38 +699,40 @@ const handler = createMcpHandler(
               },
             },
           },
-          orderBy: [
-            { priority: "desc" },
-            { createdAt: "desc" },
-          ],
+          orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
         });
 
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify({
-                success: true,
-                query: params.query,
-                searchWeights: {
-                  vector: params.vectorWeight,
-                  keyword: params.keywordWeight,
+              text: JSON.stringify(
+                {
+                  success: true,
+                  query: params.query,
+                  searchWeights: {
+                    vector: params.vectorWeight,
+                    keyword: params.keywordWeight,
+                  },
+                  results: results.map((task) => ({
+                    id: task.id,
+                    title: task.title,
+                    description: task.description,
+                    priority: task.priority,
+                    status: task.status,
+                    boardName: task.boardSection.board.name,
+                    sectionName: task.boardSection.name,
+                    assignedTo: task.assignedTo.name,
+                    relevanceScore: Math.random() * 0.5 + 0.5, // Placeholder score
+                  })),
+                  resultCount: results.length,
+                  searchType: "hybrid-placeholder",
+                  message:
+                    "Hybrid search completed (vector component will be implemented in Phase 2)",
                 },
-                results: results.map(task => ({
-                  id: task.id,
-                  title: task.title,
-                  description: task.description,
-                  priority: task.priority,
-                  status: task.status,
-                  boardName: task.boardSection.board.name,
-                  sectionName: task.boardSection.name,
-                  assignedTo: task.assignedTo.name,
-                  relevanceScore: Math.random() * 0.5 + 0.5, // Placeholder score
-                })),
-                resultCount: results.length,
-                searchType: "hybrid-placeholder",
-                message: "Hybrid search completed (vector component will be implemented in Phase 2)",
-              }, null, 2),
+                null,
+                2
+              ),
             },
           ],
         };
@@ -698,7 +754,7 @@ const handler = createMcpHandler(
 
         const taskEmbeddingCount = await db.taskEmbedding.count();
         const boardEmbeddingCount = await db.boardEmbedding.count();
-        
+
         let boardSpecificCount = 0;
         if (params.boardId) {
           boardSpecificCount = await db.taskEmbedding.count({
@@ -716,18 +772,28 @@ const handler = createMcpHandler(
           content: [
             {
               type: "text",
-              text: JSON.stringify({
-                success: true,
-                embeddings: {
-                  totalTaskEmbeddings: taskEmbeddingCount,
-                  totalBoardEmbeddings: boardEmbeddingCount,
-                  boardSpecificTaskEmbeddings: params.boardId ? boardSpecificCount : null,
+              text: JSON.stringify(
+                {
+                  success: true,
+                  embeddings: {
+                    totalTaskEmbeddings: taskEmbeddingCount,
+                    totalBoardEmbeddings: boardEmbeddingCount,
+                    boardSpecificTaskEmbeddings: params.boardId
+                      ? boardSpecificCount
+                      : null,
+                  },
+                  status:
+                    taskEmbeddingCount > 0
+                      ? "embeddings-available"
+                      : "embeddings-pending",
+                  message:
+                    taskEmbeddingCount > 0
+                      ? "Embeddings are available for semantic search"
+                      : "No embeddings found. Run embedding generation first.",
                 },
-                status: taskEmbeddingCount > 0 ? "embeddings-available" : "embeddings-pending",
-                message: taskEmbeddingCount > 0 
-                  ? "Embeddings are available for semantic search"
-                  : "No embeddings found. Run embedding generation first.",
-              }, null, 2),
+                null,
+                2
+              ),
             },
           ],
         };
@@ -737,7 +803,9 @@ const handler = createMcpHandler(
   {
     capabilities: {
       tools: {
-        vector_search_tasks: { description: "Semantic search on task embeddings" },
+        vector_search_tasks: {
+          description: "Semantic search on task embeddings",
+        },
         hybrid_search: { description: "Hybrid vector + keyword search" },
         get_embedding_status: { description: "Check embedding availability" },
       },
@@ -761,12 +829,14 @@ export { handler as GET, handler as POST, handler as DELETE };
 **API Token Usage**: Low-Medium
 
 #### Tasks:
+
 - [ ] Create MCP server health check endpoints
 - [ ] Test Redis connection and SSE transport
 - [ ] Validate database migrations
 - [ ] Test basic MCP tool execution
 
 #### Health Check Implementation:
+
 Create `/app/api/health/mcp/route.ts`:
 
 ```typescript
@@ -790,9 +860,11 @@ export async function GET() {
 
   try {
     // Test Redis connection
-    const redis = await import("redis").then(r => r.createClient({
-      url: process.env.REDIS_URL,
-    }));
+    const redis = await import("redis").then((r) =>
+      r.createClient({
+        url: process.env.REDIS_URL,
+      })
+    );
     await redis.connect();
     await redis.ping();
     await redis.disconnect();
@@ -828,17 +900,21 @@ export async function GET() {
     }
   }
 
-  const allHealthy = healthChecks.database && 
-                    healthChecks.redis && 
-                    Object.values(healthChecks.mcpServers).every(Boolean);
+  const allHealthy =
+    healthChecks.database &&
+    healthChecks.redis &&
+    Object.values(healthChecks.mcpServers).every(Boolean);
 
-  return NextResponse.json({
-    status: allHealthy ? "healthy" : "unhealthy",
-    timestamp: new Date().toISOString(),
-    checks: healthChecks,
-  }, {
-    status: allHealthy ? 200 : 503,
-  });
+  return NextResponse.json(
+    {
+      status: allHealthy ? "healthy" : "unhealthy",
+      timestamp: new Date().toISOString(),
+      checks: healthChecks,
+    },
+    {
+      status: allHealthy ? 200 : 503,
+    }
+  );
 }
 ```
 
@@ -854,6 +930,7 @@ export async function GET() {
 ## Next Steps
 
 After completing Phase 1:
+
 1. Proceed to Phase 2: Embedding Generation
 2. Set up monitoring for MCP server performance
 3. Configure Vercel deployment with proper environment variables
@@ -862,12 +939,14 @@ After completing Phase 1:
 ## Troubleshooting
 
 ### Common Issues:
+
 - **Redis connection failures**: Check REDIS_URL and network connectivity
 - **pgvector installation**: Ensure PostgreSQL version supports pgvector
 - **MCP tool errors**: Verify authentication and database permissions
 - **Vercel deployment issues**: Confirm Fluid Compute is enabled
 
 ### Debug Commands:
+
 ```bash
 # Test database connection
 npx prisma studio

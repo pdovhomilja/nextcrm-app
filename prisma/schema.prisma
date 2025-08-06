@@ -5,14 +5,16 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../lib/generated/prisma"
-   binaryTargets = ["native", "debian-openssl-3.0.x"]
+  provider        = "prisma-client-js"
+  output          = "../lib/generated/prisma"
+  binaryTargets   = ["native", "debian-openssl-3.0.x"]
+  previewFeatures = ["postgresqlExtensions", "typedSql"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
 }
 
 model Account {
@@ -162,12 +164,12 @@ model TaskHistory {
 // Vector Embeddings Models
 model TaskEmbedding {
   id        String   @id @default(cuid())
-  taskId    String   @unique
+  taskId    String   @unique @map("task_id")
   embedding Unsupported("vector(1536)")
   content   String   // Original text that was embedded
   metadata  Json     // Additional context (priority, status, etc.)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
@@ -176,12 +178,12 @@ model TaskEmbedding {
 
 model BoardEmbedding {
   id        String   @id @default(cuid())
-  boardId   String   @unique
+  boardId   String   @unique @map("board_id")
   embedding Unsupported("vector(1536)")
   content   String   // Board name + description + context
   metadata  Json     // Board info, team members, etc.
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
 

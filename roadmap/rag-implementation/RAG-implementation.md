@@ -191,7 +191,7 @@ export { handler as GET, handler as POST, handler as DELETE };
 model TaskEmbedding {
   id        String   @id @default(cuid())
   taskId    String   @unique
-  embedding Unsupported("vector(1536)")
+  embedding VECTOR(1536)
   content   String   // Original text that was embedded
   metadata  Json     // Additional context (priority, status, etc.)
   createdAt DateTime @default(now())
