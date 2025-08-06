@@ -73,6 +73,26 @@ export type AIConversation = $Result.DefaultSelection<Prisma.$AIConversationPayl
  * 
  */
 export type AIMessage = $Result.DefaultSelection<Prisma.$AIMessagePayload>
+/**
+ * Model Document
+ * 
+ */
+export type Document = $Result.DefaultSelection<Prisma.$DocumentPayload>
+/**
+ * Model DocumentEmbedding
+ * 
+ */
+export type DocumentEmbedding = $Result.DefaultSelection<Prisma.$DocumentEmbeddingPayload>
+/**
+ * Model ConversationSummary
+ * 
+ */
+export type ConversationSummary = $Result.DefaultSelection<Prisma.$ConversationSummaryPayload>
+/**
+ * Model SecurityAuditLog
+ * 
+ */
+export type SecurityAuditLog = $Result.DefaultSelection<Prisma.$SecurityAuditLogPayload>
 
 /**
  * Enums
@@ -367,6 +387,46 @@ export class PrismaClient<
     * ```
     */
   get aIMessage(): Prisma.AIMessageDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.document`: Exposes CRUD operations for the **Document** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Documents
+    * const documents = await prisma.document.findMany()
+    * ```
+    */
+  get document(): Prisma.DocumentDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.documentEmbedding`: Exposes CRUD operations for the **DocumentEmbedding** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more DocumentEmbeddings
+    * const documentEmbeddings = await prisma.documentEmbedding.findMany()
+    * ```
+    */
+  get documentEmbedding(): Prisma.DocumentEmbeddingDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.conversationSummary`: Exposes CRUD operations for the **ConversationSummary** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ConversationSummaries
+    * const conversationSummaries = await prisma.conversationSummary.findMany()
+    * ```
+    */
+  get conversationSummary(): Prisma.ConversationSummaryDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.securityAuditLog`: Exposes CRUD operations for the **SecurityAuditLog** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more SecurityAuditLogs
+    * const securityAuditLogs = await prisma.securityAuditLog.findMany()
+    * ```
+    */
+  get securityAuditLog(): Prisma.SecurityAuditLogDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -818,7 +878,11 @@ export namespace Prisma {
     TaskEmbedding: 'TaskEmbedding',
     BoardEmbedding: 'BoardEmbedding',
     AIConversation: 'AIConversation',
-    AIMessage: 'AIMessage'
+    AIMessage: 'AIMessage',
+    Document: 'Document',
+    DocumentEmbedding: 'DocumentEmbedding',
+    ConversationSummary: 'ConversationSummary',
+    SecurityAuditLog: 'SecurityAuditLog'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -837,7 +901,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "account" | "session" | "user" | "verificationToken" | "task" | "board" | "boardSection" | "taskHistory" | "taskEmbedding" | "boardEmbedding" | "aIConversation" | "aIMessage"
+      modelProps: "account" | "session" | "user" | "verificationToken" | "task" | "board" | "boardSection" | "taskHistory" | "taskEmbedding" | "boardEmbedding" | "aIConversation" | "aIMessage" | "document" | "documentEmbedding" | "conversationSummary" | "securityAuditLog"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1697,6 +1761,286 @@ export namespace Prisma {
           }
         }
       }
+      Document: {
+        payload: Prisma.$DocumentPayload<ExtArgs>
+        fields: Prisma.DocumentFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.DocumentFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.DocumentFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentPayload>
+          }
+          findFirst: {
+            args: Prisma.DocumentFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.DocumentFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentPayload>
+          }
+          findMany: {
+            args: Prisma.DocumentFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentPayload>[]
+          }
+          create: {
+            args: Prisma.DocumentCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentPayload>
+          }
+          createMany: {
+            args: Prisma.DocumentCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.DocumentCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentPayload>[]
+          }
+          delete: {
+            args: Prisma.DocumentDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentPayload>
+          }
+          update: {
+            args: Prisma.DocumentUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentPayload>
+          }
+          deleteMany: {
+            args: Prisma.DocumentDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.DocumentUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.DocumentUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentPayload>[]
+          }
+          upsert: {
+            args: Prisma.DocumentUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentPayload>
+          }
+          aggregate: {
+            args: Prisma.DocumentAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateDocument>
+          }
+          groupBy: {
+            args: Prisma.DocumentGroupByArgs<ExtArgs>
+            result: $Utils.Optional<DocumentGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.DocumentCountArgs<ExtArgs>
+            result: $Utils.Optional<DocumentCountAggregateOutputType> | number
+          }
+        }
+      }
+      DocumentEmbedding: {
+        payload: Prisma.$DocumentEmbeddingPayload<ExtArgs>
+        fields: Prisma.DocumentEmbeddingFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.DocumentEmbeddingFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentEmbeddingPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.DocumentEmbeddingFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentEmbeddingPayload>
+          }
+          findFirst: {
+            args: Prisma.DocumentEmbeddingFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentEmbeddingPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.DocumentEmbeddingFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentEmbeddingPayload>
+          }
+          findMany: {
+            args: Prisma.DocumentEmbeddingFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentEmbeddingPayload>[]
+          }
+          delete: {
+            args: Prisma.DocumentEmbeddingDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentEmbeddingPayload>
+          }
+          update: {
+            args: Prisma.DocumentEmbeddingUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentEmbeddingPayload>
+          }
+          deleteMany: {
+            args: Prisma.DocumentEmbeddingDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.DocumentEmbeddingUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.DocumentEmbeddingUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentEmbeddingPayload>[]
+          }
+          aggregate: {
+            args: Prisma.DocumentEmbeddingAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateDocumentEmbedding>
+          }
+          groupBy: {
+            args: Prisma.DocumentEmbeddingGroupByArgs<ExtArgs>
+            result: $Utils.Optional<DocumentEmbeddingGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.DocumentEmbeddingCountArgs<ExtArgs>
+            result: $Utils.Optional<DocumentEmbeddingCountAggregateOutputType> | number
+          }
+        }
+      }
+      ConversationSummary: {
+        payload: Prisma.$ConversationSummaryPayload<ExtArgs>
+        fields: Prisma.ConversationSummaryFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ConversationSummaryFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConversationSummaryPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ConversationSummaryFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConversationSummaryPayload>
+          }
+          findFirst: {
+            args: Prisma.ConversationSummaryFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConversationSummaryPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ConversationSummaryFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConversationSummaryPayload>
+          }
+          findMany: {
+            args: Prisma.ConversationSummaryFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConversationSummaryPayload>[]
+          }
+          create: {
+            args: Prisma.ConversationSummaryCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConversationSummaryPayload>
+          }
+          createMany: {
+            args: Prisma.ConversationSummaryCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ConversationSummaryCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConversationSummaryPayload>[]
+          }
+          delete: {
+            args: Prisma.ConversationSummaryDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConversationSummaryPayload>
+          }
+          update: {
+            args: Prisma.ConversationSummaryUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConversationSummaryPayload>
+          }
+          deleteMany: {
+            args: Prisma.ConversationSummaryDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ConversationSummaryUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ConversationSummaryUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConversationSummaryPayload>[]
+          }
+          upsert: {
+            args: Prisma.ConversationSummaryUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ConversationSummaryPayload>
+          }
+          aggregate: {
+            args: Prisma.ConversationSummaryAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateConversationSummary>
+          }
+          groupBy: {
+            args: Prisma.ConversationSummaryGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ConversationSummaryGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ConversationSummaryCountArgs<ExtArgs>
+            result: $Utils.Optional<ConversationSummaryCountAggregateOutputType> | number
+          }
+        }
+      }
+      SecurityAuditLog: {
+        payload: Prisma.$SecurityAuditLogPayload<ExtArgs>
+        fields: Prisma.SecurityAuditLogFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.SecurityAuditLogFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecurityAuditLogPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.SecurityAuditLogFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecurityAuditLogPayload>
+          }
+          findFirst: {
+            args: Prisma.SecurityAuditLogFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecurityAuditLogPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.SecurityAuditLogFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecurityAuditLogPayload>
+          }
+          findMany: {
+            args: Prisma.SecurityAuditLogFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecurityAuditLogPayload>[]
+          }
+          create: {
+            args: Prisma.SecurityAuditLogCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecurityAuditLogPayload>
+          }
+          createMany: {
+            args: Prisma.SecurityAuditLogCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.SecurityAuditLogCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecurityAuditLogPayload>[]
+          }
+          delete: {
+            args: Prisma.SecurityAuditLogDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecurityAuditLogPayload>
+          }
+          update: {
+            args: Prisma.SecurityAuditLogUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecurityAuditLogPayload>
+          }
+          deleteMany: {
+            args: Prisma.SecurityAuditLogDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.SecurityAuditLogUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.SecurityAuditLogUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecurityAuditLogPayload>[]
+          }
+          upsert: {
+            args: Prisma.SecurityAuditLogUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecurityAuditLogPayload>
+          }
+          aggregate: {
+            args: Prisma.SecurityAuditLogAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateSecurityAuditLog>
+          }
+          groupBy: {
+            args: Prisma.SecurityAuditLogGroupByArgs<ExtArgs>
+            result: $Utils.Optional<SecurityAuditLogGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.SecurityAuditLogCountArgs<ExtArgs>
+            result: $Utils.Optional<SecurityAuditLogCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1793,6 +2137,10 @@ export namespace Prisma {
     boardEmbedding?: BoardEmbeddingOmit
     aIConversation?: AIConversationOmit
     aIMessage?: AIMessageOmit
+    document?: DocumentOmit
+    documentEmbedding?: DocumentEmbeddingOmit
+    conversationSummary?: ConversationSummaryOmit
+    securityAuditLog?: SecurityAuditLogOmit
   }
 
   /* Types for Logging */
@@ -1892,6 +2240,8 @@ export namespace Prisma {
     assignedTasks: number
     createdTasks: number
     aiConversations: number
+    documents: number
+    securityAuditLogs: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -1900,6 +2250,8 @@ export namespace Prisma {
     assignedTasks?: boolean | UserCountOutputTypeCountAssignedTasksArgs
     createdTasks?: boolean | UserCountOutputTypeCountCreatedTasksArgs
     aiConversations?: boolean | UserCountOutputTypeCountAiConversationsArgs
+    documents?: boolean | UserCountOutputTypeCountDocumentsArgs
+    securityAuditLogs?: boolean | UserCountOutputTypeCountSecurityAuditLogsArgs
   }
 
   // Custom InputTypes
@@ -1948,6 +2300,20 @@ export namespace Prisma {
     where?: AIConversationWhereInput
   }
 
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountDocumentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: DocumentWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountSecurityAuditLogsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SecurityAuditLogWhereInput
+  }
+
 
   /**
    * Count Type TaskCountOutputType
@@ -1955,10 +2321,12 @@ export namespace Prisma {
 
   export type TaskCountOutputType = {
     history: number
+    documents: number
   }
 
   export type TaskCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     history?: boolean | TaskCountOutputTypeCountHistoryArgs
+    documents?: boolean | TaskCountOutputTypeCountDocumentsArgs
   }
 
   // Custom InputTypes
@@ -1979,6 +2347,13 @@ export namespace Prisma {
     where?: TaskHistoryWhereInput
   }
 
+  /**
+   * TaskCountOutputType without action
+   */
+  export type TaskCountOutputTypeCountDocumentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: DocumentWhereInput
+  }
+
 
   /**
    * Count Type BoardCountOutputType
@@ -1986,10 +2361,12 @@ export namespace Prisma {
 
   export type BoardCountOutputType = {
     boardSections: number
+    documents: number
   }
 
   export type BoardCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     boardSections?: boolean | BoardCountOutputTypeCountBoardSectionsArgs
+    documents?: boolean | BoardCountOutputTypeCountDocumentsArgs
   }
 
   // Custom InputTypes
@@ -2008,6 +2385,13 @@ export namespace Prisma {
    */
   export type BoardCountOutputTypeCountBoardSectionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: BoardSectionWhereInput
+  }
+
+  /**
+   * BoardCountOutputType without action
+   */
+  export type BoardCountOutputTypeCountDocumentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: DocumentWhereInput
   }
 
 
@@ -2070,6 +2454,37 @@ export namespace Prisma {
    */
   export type AIConversationCountOutputTypeCountMessagesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: AIMessageWhereInput
+  }
+
+
+  /**
+   * Count Type DocumentCountOutputType
+   */
+
+  export type DocumentCountOutputType = {
+    embeddings: number
+  }
+
+  export type DocumentCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    embeddings?: boolean | DocumentCountOutputTypeCountEmbeddingsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * DocumentCountOutputType without action
+   */
+  export type DocumentCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DocumentCountOutputType
+     */
+    select?: DocumentCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * DocumentCountOutputType without action
+   */
+  export type DocumentCountOutputTypeCountEmbeddingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: DocumentEmbeddingWhereInput
   }
 
 
@@ -4530,6 +4945,8 @@ export namespace Prisma {
     assignedTasks?: boolean | User$assignedTasksArgs<ExtArgs>
     createdTasks?: boolean | User$createdTasksArgs<ExtArgs>
     aiConversations?: boolean | User$aiConversationsArgs<ExtArgs>
+    documents?: boolean | User$documentsArgs<ExtArgs>
+    securityAuditLogs?: boolean | User$securityAuditLogsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -4585,6 +5002,8 @@ export namespace Prisma {
     assignedTasks?: boolean | User$assignedTasksArgs<ExtArgs>
     createdTasks?: boolean | User$createdTasksArgs<ExtArgs>
     aiConversations?: boolean | User$aiConversationsArgs<ExtArgs>
+    documents?: boolean | User$documentsArgs<ExtArgs>
+    securityAuditLogs?: boolean | User$securityAuditLogsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -4598,6 +5017,8 @@ export namespace Prisma {
       assignedTasks: Prisma.$TaskPayload<ExtArgs>[]
       createdTasks: Prisma.$TaskPayload<ExtArgs>[]
       aiConversations: Prisma.$AIConversationPayload<ExtArgs>[]
+      documents: Prisma.$DocumentPayload<ExtArgs>[]
+      securityAuditLogs: Prisma.$SecurityAuditLogPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -5011,6 +5432,8 @@ export namespace Prisma {
     assignedTasks<T extends User$assignedTasksArgs<ExtArgs> = {}>(args?: Subset<T, User$assignedTasksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TaskPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     createdTasks<T extends User$createdTasksArgs<ExtArgs> = {}>(args?: Subset<T, User$createdTasksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TaskPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     aiConversations<T extends User$aiConversationsArgs<ExtArgs> = {}>(args?: Subset<T, User$aiConversationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AIConversationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    documents<T extends User$documentsArgs<ExtArgs> = {}>(args?: Subset<T, User$documentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    securityAuditLogs<T extends User$securityAuditLogsArgs<ExtArgs> = {}>(args?: Subset<T, User$securityAuditLogsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SecurityAuditLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -5557,6 +5980,54 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: AIConversationScalarFieldEnum | AIConversationScalarFieldEnum[]
+  }
+
+  /**
+   * User.documents
+   */
+  export type User$documentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Document
+     */
+    omit?: DocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentInclude<ExtArgs> | null
+    where?: DocumentWhereInput
+    orderBy?: DocumentOrderByWithRelationInput | DocumentOrderByWithRelationInput[]
+    cursor?: DocumentWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: DocumentScalarFieldEnum | DocumentScalarFieldEnum[]
+  }
+
+  /**
+   * User.securityAuditLogs
+   */
+  export type User$securityAuditLogsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecurityAuditLog
+     */
+    select?: SecurityAuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecurityAuditLog
+     */
+    omit?: SecurityAuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecurityAuditLogInclude<ExtArgs> | null
+    where?: SecurityAuditLogWhereInput
+    orderBy?: SecurityAuditLogOrderByWithRelationInput | SecurityAuditLogOrderByWithRelationInput[]
+    cursor?: SecurityAuditLogWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: SecurityAuditLogScalarFieldEnum | SecurityAuditLogScalarFieldEnum[]
   }
 
   /**
@@ -6806,6 +7277,7 @@ export namespace Prisma {
     boardSection?: boolean | BoardSectionDefaultArgs<ExtArgs>
     history?: boolean | Task$historyArgs<ExtArgs>
     embedding?: boolean | Task$embeddingArgs<ExtArgs>
+    documents?: boolean | Task$documentsArgs<ExtArgs>
     _count?: boolean | TaskCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["task"]>
 
@@ -6867,6 +7339,7 @@ export namespace Prisma {
     boardSection?: boolean | BoardSectionDefaultArgs<ExtArgs>
     history?: boolean | Task$historyArgs<ExtArgs>
     embedding?: boolean | Task$embeddingArgs<ExtArgs>
+    documents?: boolean | Task$documentsArgs<ExtArgs>
     _count?: boolean | TaskCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type TaskIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -6888,6 +7361,7 @@ export namespace Prisma {
       boardSection: Prisma.$BoardSectionPayload<ExtArgs>
       history: Prisma.$TaskHistoryPayload<ExtArgs>[]
       embedding: Prisma.$TaskEmbeddingPayload<ExtArgs> | null
+      documents: Prisma.$DocumentPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -7301,6 +7775,7 @@ export namespace Prisma {
     boardSection<T extends BoardSectionDefaultArgs<ExtArgs> = {}>(args?: Subset<T, BoardSectionDefaultArgs<ExtArgs>>): Prisma__BoardSectionClient<$Result.GetResult<Prisma.$BoardSectionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     history<T extends Task$historyArgs<ExtArgs> = {}>(args?: Subset<T, Task$historyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TaskHistoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     embedding<T extends Task$embeddingArgs<ExtArgs> = {}>(args?: Subset<T, Task$embeddingArgs<ExtArgs>>): Prisma__TaskEmbeddingClient<$Result.GetResult<Prisma.$TaskEmbeddingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    documents<T extends Task$documentsArgs<ExtArgs> = {}>(args?: Subset<T, Task$documentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -7781,6 +8256,30 @@ export namespace Prisma {
   }
 
   /**
+   * Task.documents
+   */
+  export type Task$documentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Document
+     */
+    omit?: DocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentInclude<ExtArgs> | null
+    where?: DocumentWhereInput
+    orderBy?: DocumentOrderByWithRelationInput | DocumentOrderByWithRelationInput[]
+    cursor?: DocumentWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: DocumentScalarFieldEnum | DocumentScalarFieldEnum[]
+  }
+
+  /**
    * Task without action
    */
   export type TaskDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -7977,6 +8476,7 @@ export namespace Prisma {
     access?: boolean
     boardSections?: boolean | Board$boardSectionsArgs<ExtArgs>
     embedding?: boolean | Board$embeddingArgs<ExtArgs>
+    documents?: boolean | Board$documentsArgs<ExtArgs>
     _count?: boolean | BoardCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["board"]>
 
@@ -8014,6 +8514,7 @@ export namespace Prisma {
   export type BoardInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     boardSections?: boolean | Board$boardSectionsArgs<ExtArgs>
     embedding?: boolean | Board$embeddingArgs<ExtArgs>
+    documents?: boolean | Board$documentsArgs<ExtArgs>
     _count?: boolean | BoardCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type BoardIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -8024,6 +8525,7 @@ export namespace Prisma {
     objects: {
       boardSections: Prisma.$BoardSectionPayload<ExtArgs>[]
       embedding: Prisma.$BoardEmbeddingPayload<ExtArgs> | null
+      documents: Prisma.$DocumentPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -8429,6 +8931,7 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     boardSections<T extends Board$boardSectionsArgs<ExtArgs> = {}>(args?: Subset<T, Board$boardSectionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BoardSectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     embedding<T extends Board$embeddingArgs<ExtArgs> = {}>(args?: Subset<T, Board$embeddingArgs<ExtArgs>>): Prisma__BoardEmbeddingClient<$Result.GetResult<Prisma.$BoardEmbeddingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    documents<T extends Board$documentsArgs<ExtArgs> = {}>(args?: Subset<T, Board$documentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -8893,6 +9396,30 @@ export namespace Prisma {
      */
     include?: BoardEmbeddingInclude<ExtArgs> | null
     where?: BoardEmbeddingWhereInput
+  }
+
+  /**
+   * Board.documents
+   */
+  export type Board$documentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Document
+     */
+    omit?: DocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentInclude<ExtArgs> | null
+    where?: DocumentWhereInput
+    orderBy?: DocumentOrderByWithRelationInput | DocumentOrderByWithRelationInput[]
+    cursor?: DocumentWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: DocumentScalarFieldEnum | DocumentScalarFieldEnum[]
   }
 
   /**
@@ -13080,6 +13607,7 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     messages?: boolean | AIConversation$messagesArgs<ExtArgs>
+    summary?: boolean | AIConversation$summaryArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
     _count?: boolean | AIConversationCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["aIConversation"]>
@@ -13119,6 +13647,7 @@ export namespace Prisma {
   export type AIConversationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "companyId" | "title" | "context" | "createdAt" | "updatedAt", ExtArgs["result"]["aIConversation"]>
   export type AIConversationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     messages?: boolean | AIConversation$messagesArgs<ExtArgs>
+    summary?: boolean | AIConversation$summaryArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
     _count?: boolean | AIConversationCountOutputTypeDefaultArgs<ExtArgs>
   }
@@ -13133,6 +13662,7 @@ export namespace Prisma {
     name: "AIConversation"
     objects: {
       messages: Prisma.$AIMessagePayload<ExtArgs>[]
+      summary: Prisma.$ConversationSummaryPayload<ExtArgs> | null
       user: Prisma.$UserPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
@@ -13538,6 +14068,7 @@ export namespace Prisma {
   export interface Prisma__AIConversationClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     messages<T extends AIConversation$messagesArgs<ExtArgs> = {}>(args?: Subset<T, AIConversation$messagesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AIMessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    summary<T extends AIConversation$summaryArgs<ExtArgs> = {}>(args?: Subset<T, AIConversation$summaryArgs<ExtArgs>>): Prisma__ConversationSummaryClient<$Result.GetResult<Prisma.$ConversationSummaryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -13992,6 +14523,25 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: AIMessageScalarFieldEnum | AIMessageScalarFieldEnum[]
+  }
+
+  /**
+   * AIConversation.summary
+   */
+  export type AIConversation$summaryArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConversationSummary
+     */
+    select?: ConversationSummarySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConversationSummary
+     */
+    omit?: ConversationSummaryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConversationSummaryInclude<ExtArgs> | null
+    where?: ConversationSummaryWhereInput
   }
 
   /**
@@ -15081,6 +15631,4474 @@ export namespace Prisma {
 
 
   /**
+   * Model Document
+   */
+
+  export type AggregateDocument = {
+    _count: DocumentCountAggregateOutputType | null
+    _avg: DocumentAvgAggregateOutputType | null
+    _sum: DocumentSumAggregateOutputType | null
+    _min: DocumentMinAggregateOutputType | null
+    _max: DocumentMaxAggregateOutputType | null
+  }
+
+  export type DocumentAvgAggregateOutputType = {
+    size: number | null
+    confidence: number | null
+  }
+
+  export type DocumentSumAggregateOutputType = {
+    size: number | null
+    confidence: number | null
+  }
+
+  export type DocumentMinAggregateOutputType = {
+    id: string | null
+    filename: string | null
+    mimeType: string | null
+    size: number | null
+    extractedText: string | null
+    summary: string | null
+    confidence: number | null
+    uploadedBy: string | null
+    companyId: string | null
+    taskId: string | null
+    boardId: string | null
+    processedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type DocumentMaxAggregateOutputType = {
+    id: string | null
+    filename: string | null
+    mimeType: string | null
+    size: number | null
+    extractedText: string | null
+    summary: string | null
+    confidence: number | null
+    uploadedBy: string | null
+    companyId: string | null
+    taskId: string | null
+    boardId: string | null
+    processedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type DocumentCountAggregateOutputType = {
+    id: number
+    filename: number
+    mimeType: number
+    size: number
+    extractedText: number
+    summary: number
+    keyInsights: number
+    confidence: number
+    uploadedBy: number
+    companyId: number
+    taskId: number
+    boardId: number
+    processedAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type DocumentAvgAggregateInputType = {
+    size?: true
+    confidence?: true
+  }
+
+  export type DocumentSumAggregateInputType = {
+    size?: true
+    confidence?: true
+  }
+
+  export type DocumentMinAggregateInputType = {
+    id?: true
+    filename?: true
+    mimeType?: true
+    size?: true
+    extractedText?: true
+    summary?: true
+    confidence?: true
+    uploadedBy?: true
+    companyId?: true
+    taskId?: true
+    boardId?: true
+    processedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type DocumentMaxAggregateInputType = {
+    id?: true
+    filename?: true
+    mimeType?: true
+    size?: true
+    extractedText?: true
+    summary?: true
+    confidence?: true
+    uploadedBy?: true
+    companyId?: true
+    taskId?: true
+    boardId?: true
+    processedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type DocumentCountAggregateInputType = {
+    id?: true
+    filename?: true
+    mimeType?: true
+    size?: true
+    extractedText?: true
+    summary?: true
+    keyInsights?: true
+    confidence?: true
+    uploadedBy?: true
+    companyId?: true
+    taskId?: true
+    boardId?: true
+    processedAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type DocumentAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Document to aggregate.
+     */
+    where?: DocumentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Documents to fetch.
+     */
+    orderBy?: DocumentOrderByWithRelationInput | DocumentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: DocumentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Documents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Documents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Documents
+    **/
+    _count?: true | DocumentCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: DocumentAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: DocumentSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: DocumentMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: DocumentMaxAggregateInputType
+  }
+
+  export type GetDocumentAggregateType<T extends DocumentAggregateArgs> = {
+        [P in keyof T & keyof AggregateDocument]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateDocument[P]>
+      : GetScalarType<T[P], AggregateDocument[P]>
+  }
+
+
+
+
+  export type DocumentGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: DocumentWhereInput
+    orderBy?: DocumentOrderByWithAggregationInput | DocumentOrderByWithAggregationInput[]
+    by: DocumentScalarFieldEnum[] | DocumentScalarFieldEnum
+    having?: DocumentScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: DocumentCountAggregateInputType | true
+    _avg?: DocumentAvgAggregateInputType
+    _sum?: DocumentSumAggregateInputType
+    _min?: DocumentMinAggregateInputType
+    _max?: DocumentMaxAggregateInputType
+  }
+
+  export type DocumentGroupByOutputType = {
+    id: string
+    filename: string
+    mimeType: string
+    size: number
+    extractedText: string
+    summary: string
+    keyInsights: string[]
+    confidence: number
+    uploadedBy: string
+    companyId: string
+    taskId: string | null
+    boardId: string | null
+    processedAt: Date
+    createdAt: Date
+    updatedAt: Date
+    _count: DocumentCountAggregateOutputType | null
+    _avg: DocumentAvgAggregateOutputType | null
+    _sum: DocumentSumAggregateOutputType | null
+    _min: DocumentMinAggregateOutputType | null
+    _max: DocumentMaxAggregateOutputType | null
+  }
+
+  type GetDocumentGroupByPayload<T extends DocumentGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<DocumentGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof DocumentGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], DocumentGroupByOutputType[P]>
+            : GetScalarType<T[P], DocumentGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type DocumentSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    filename?: boolean
+    mimeType?: boolean
+    size?: boolean
+    extractedText?: boolean
+    summary?: boolean
+    keyInsights?: boolean
+    confidence?: boolean
+    uploadedBy?: boolean
+    companyId?: boolean
+    taskId?: boolean
+    boardId?: boolean
+    processedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    task?: boolean | Document$taskArgs<ExtArgs>
+    board?: boolean | Document$boardArgs<ExtArgs>
+    embeddings?: boolean | Document$embeddingsArgs<ExtArgs>
+    _count?: boolean | DocumentCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["document"]>
+
+  export type DocumentSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    filename?: boolean
+    mimeType?: boolean
+    size?: boolean
+    extractedText?: boolean
+    summary?: boolean
+    keyInsights?: boolean
+    confidence?: boolean
+    uploadedBy?: boolean
+    companyId?: boolean
+    taskId?: boolean
+    boardId?: boolean
+    processedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    task?: boolean | Document$taskArgs<ExtArgs>
+    board?: boolean | Document$boardArgs<ExtArgs>
+  }, ExtArgs["result"]["document"]>
+
+  export type DocumentSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    filename?: boolean
+    mimeType?: boolean
+    size?: boolean
+    extractedText?: boolean
+    summary?: boolean
+    keyInsights?: boolean
+    confidence?: boolean
+    uploadedBy?: boolean
+    companyId?: boolean
+    taskId?: boolean
+    boardId?: boolean
+    processedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    task?: boolean | Document$taskArgs<ExtArgs>
+    board?: boolean | Document$boardArgs<ExtArgs>
+  }, ExtArgs["result"]["document"]>
+
+  export type DocumentSelectScalar = {
+    id?: boolean
+    filename?: boolean
+    mimeType?: boolean
+    size?: boolean
+    extractedText?: boolean
+    summary?: boolean
+    keyInsights?: boolean
+    confidence?: boolean
+    uploadedBy?: boolean
+    companyId?: boolean
+    taskId?: boolean
+    boardId?: boolean
+    processedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type DocumentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "filename" | "mimeType" | "size" | "extractedText" | "summary" | "keyInsights" | "confidence" | "uploadedBy" | "companyId" | "taskId" | "boardId" | "processedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["document"]>
+  export type DocumentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    task?: boolean | Document$taskArgs<ExtArgs>
+    board?: boolean | Document$boardArgs<ExtArgs>
+    embeddings?: boolean | Document$embeddingsArgs<ExtArgs>
+    _count?: boolean | DocumentCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type DocumentIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    task?: boolean | Document$taskArgs<ExtArgs>
+    board?: boolean | Document$boardArgs<ExtArgs>
+  }
+  export type DocumentIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    task?: boolean | Document$taskArgs<ExtArgs>
+    board?: boolean | Document$boardArgs<ExtArgs>
+  }
+
+  export type $DocumentPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Document"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+      task: Prisma.$TaskPayload<ExtArgs> | null
+      board: Prisma.$BoardPayload<ExtArgs> | null
+      embeddings: Prisma.$DocumentEmbeddingPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      filename: string
+      mimeType: string
+      size: number
+      extractedText: string
+      summary: string
+      keyInsights: string[]
+      confidence: number
+      uploadedBy: string
+      companyId: string
+      taskId: string | null
+      boardId: string | null
+      processedAt: Date
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["document"]>
+    composites: {}
+  }
+
+  type DocumentGetPayload<S extends boolean | null | undefined | DocumentDefaultArgs> = $Result.GetResult<Prisma.$DocumentPayload, S>
+
+  type DocumentCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<DocumentFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: DocumentCountAggregateInputType | true
+    }
+
+  export interface DocumentDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Document'], meta: { name: 'Document' } }
+    /**
+     * Find zero or one Document that matches the filter.
+     * @param {DocumentFindUniqueArgs} args - Arguments to find a Document
+     * @example
+     * // Get one Document
+     * const document = await prisma.document.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends DocumentFindUniqueArgs>(args: SelectSubset<T, DocumentFindUniqueArgs<ExtArgs>>): Prisma__DocumentClient<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Document that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {DocumentFindUniqueOrThrowArgs} args - Arguments to find a Document
+     * @example
+     * // Get one Document
+     * const document = await prisma.document.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends DocumentFindUniqueOrThrowArgs>(args: SelectSubset<T, DocumentFindUniqueOrThrowArgs<ExtArgs>>): Prisma__DocumentClient<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Document that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentFindFirstArgs} args - Arguments to find a Document
+     * @example
+     * // Get one Document
+     * const document = await prisma.document.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends DocumentFindFirstArgs>(args?: SelectSubset<T, DocumentFindFirstArgs<ExtArgs>>): Prisma__DocumentClient<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Document that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentFindFirstOrThrowArgs} args - Arguments to find a Document
+     * @example
+     * // Get one Document
+     * const document = await prisma.document.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends DocumentFindFirstOrThrowArgs>(args?: SelectSubset<T, DocumentFindFirstOrThrowArgs<ExtArgs>>): Prisma__DocumentClient<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Documents that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Documents
+     * const documents = await prisma.document.findMany()
+     * 
+     * // Get first 10 Documents
+     * const documents = await prisma.document.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const documentWithIdOnly = await prisma.document.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends DocumentFindManyArgs>(args?: SelectSubset<T, DocumentFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Document.
+     * @param {DocumentCreateArgs} args - Arguments to create a Document.
+     * @example
+     * // Create one Document
+     * const Document = await prisma.document.create({
+     *   data: {
+     *     // ... data to create a Document
+     *   }
+     * })
+     * 
+     */
+    create<T extends DocumentCreateArgs>(args: SelectSubset<T, DocumentCreateArgs<ExtArgs>>): Prisma__DocumentClient<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Documents.
+     * @param {DocumentCreateManyArgs} args - Arguments to create many Documents.
+     * @example
+     * // Create many Documents
+     * const document = await prisma.document.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends DocumentCreateManyArgs>(args?: SelectSubset<T, DocumentCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Documents and returns the data saved in the database.
+     * @param {DocumentCreateManyAndReturnArgs} args - Arguments to create many Documents.
+     * @example
+     * // Create many Documents
+     * const document = await prisma.document.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Documents and only return the `id`
+     * const documentWithIdOnly = await prisma.document.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends DocumentCreateManyAndReturnArgs>(args?: SelectSubset<T, DocumentCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Document.
+     * @param {DocumentDeleteArgs} args - Arguments to delete one Document.
+     * @example
+     * // Delete one Document
+     * const Document = await prisma.document.delete({
+     *   where: {
+     *     // ... filter to delete one Document
+     *   }
+     * })
+     * 
+     */
+    delete<T extends DocumentDeleteArgs>(args: SelectSubset<T, DocumentDeleteArgs<ExtArgs>>): Prisma__DocumentClient<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Document.
+     * @param {DocumentUpdateArgs} args - Arguments to update one Document.
+     * @example
+     * // Update one Document
+     * const document = await prisma.document.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends DocumentUpdateArgs>(args: SelectSubset<T, DocumentUpdateArgs<ExtArgs>>): Prisma__DocumentClient<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Documents.
+     * @param {DocumentDeleteManyArgs} args - Arguments to filter Documents to delete.
+     * @example
+     * // Delete a few Documents
+     * const { count } = await prisma.document.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends DocumentDeleteManyArgs>(args?: SelectSubset<T, DocumentDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Documents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Documents
+     * const document = await prisma.document.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends DocumentUpdateManyArgs>(args: SelectSubset<T, DocumentUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Documents and returns the data updated in the database.
+     * @param {DocumentUpdateManyAndReturnArgs} args - Arguments to update many Documents.
+     * @example
+     * // Update many Documents
+     * const document = await prisma.document.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Documents and only return the `id`
+     * const documentWithIdOnly = await prisma.document.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends DocumentUpdateManyAndReturnArgs>(args: SelectSubset<T, DocumentUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Document.
+     * @param {DocumentUpsertArgs} args - Arguments to update or create a Document.
+     * @example
+     * // Update or create a Document
+     * const document = await prisma.document.upsert({
+     *   create: {
+     *     // ... data to create a Document
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Document we want to update
+     *   }
+     * })
+     */
+    upsert<T extends DocumentUpsertArgs>(args: SelectSubset<T, DocumentUpsertArgs<ExtArgs>>): Prisma__DocumentClient<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Documents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentCountArgs} args - Arguments to filter Documents to count.
+     * @example
+     * // Count the number of Documents
+     * const count = await prisma.document.count({
+     *   where: {
+     *     // ... the filter for the Documents we want to count
+     *   }
+     * })
+    **/
+    count<T extends DocumentCountArgs>(
+      args?: Subset<T, DocumentCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], DocumentCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Document.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends DocumentAggregateArgs>(args: Subset<T, DocumentAggregateArgs>): Prisma.PrismaPromise<GetDocumentAggregateType<T>>
+
+    /**
+     * Group by Document.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends DocumentGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: DocumentGroupByArgs['orderBy'] }
+        : { orderBy?: DocumentGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, DocumentGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetDocumentGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Document model
+   */
+  readonly fields: DocumentFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Document.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__DocumentClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    task<T extends Document$taskArgs<ExtArgs> = {}>(args?: Subset<T, Document$taskArgs<ExtArgs>>): Prisma__TaskClient<$Result.GetResult<Prisma.$TaskPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    board<T extends Document$boardArgs<ExtArgs> = {}>(args?: Subset<T, Document$boardArgs<ExtArgs>>): Prisma__BoardClient<$Result.GetResult<Prisma.$BoardPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    embeddings<T extends Document$embeddingsArgs<ExtArgs> = {}>(args?: Subset<T, Document$embeddingsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DocumentEmbeddingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Document model
+   */
+  interface DocumentFieldRefs {
+    readonly id: FieldRef<"Document", 'String'>
+    readonly filename: FieldRef<"Document", 'String'>
+    readonly mimeType: FieldRef<"Document", 'String'>
+    readonly size: FieldRef<"Document", 'Int'>
+    readonly extractedText: FieldRef<"Document", 'String'>
+    readonly summary: FieldRef<"Document", 'String'>
+    readonly keyInsights: FieldRef<"Document", 'String[]'>
+    readonly confidence: FieldRef<"Document", 'Float'>
+    readonly uploadedBy: FieldRef<"Document", 'String'>
+    readonly companyId: FieldRef<"Document", 'String'>
+    readonly taskId: FieldRef<"Document", 'String'>
+    readonly boardId: FieldRef<"Document", 'String'>
+    readonly processedAt: FieldRef<"Document", 'DateTime'>
+    readonly createdAt: FieldRef<"Document", 'DateTime'>
+    readonly updatedAt: FieldRef<"Document", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Document findUnique
+   */
+  export type DocumentFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Document
+     */
+    omit?: DocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentInclude<ExtArgs> | null
+    /**
+     * Filter, which Document to fetch.
+     */
+    where: DocumentWhereUniqueInput
+  }
+
+  /**
+   * Document findUniqueOrThrow
+   */
+  export type DocumentFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Document
+     */
+    omit?: DocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentInclude<ExtArgs> | null
+    /**
+     * Filter, which Document to fetch.
+     */
+    where: DocumentWhereUniqueInput
+  }
+
+  /**
+   * Document findFirst
+   */
+  export type DocumentFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Document
+     */
+    omit?: DocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentInclude<ExtArgs> | null
+    /**
+     * Filter, which Document to fetch.
+     */
+    where?: DocumentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Documents to fetch.
+     */
+    orderBy?: DocumentOrderByWithRelationInput | DocumentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Documents.
+     */
+    cursor?: DocumentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Documents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Documents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Documents.
+     */
+    distinct?: DocumentScalarFieldEnum | DocumentScalarFieldEnum[]
+  }
+
+  /**
+   * Document findFirstOrThrow
+   */
+  export type DocumentFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Document
+     */
+    omit?: DocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentInclude<ExtArgs> | null
+    /**
+     * Filter, which Document to fetch.
+     */
+    where?: DocumentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Documents to fetch.
+     */
+    orderBy?: DocumentOrderByWithRelationInput | DocumentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Documents.
+     */
+    cursor?: DocumentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Documents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Documents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Documents.
+     */
+    distinct?: DocumentScalarFieldEnum | DocumentScalarFieldEnum[]
+  }
+
+  /**
+   * Document findMany
+   */
+  export type DocumentFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Document
+     */
+    omit?: DocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentInclude<ExtArgs> | null
+    /**
+     * Filter, which Documents to fetch.
+     */
+    where?: DocumentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Documents to fetch.
+     */
+    orderBy?: DocumentOrderByWithRelationInput | DocumentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Documents.
+     */
+    cursor?: DocumentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Documents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Documents.
+     */
+    skip?: number
+    distinct?: DocumentScalarFieldEnum | DocumentScalarFieldEnum[]
+  }
+
+  /**
+   * Document create
+   */
+  export type DocumentCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Document
+     */
+    omit?: DocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Document.
+     */
+    data: XOR<DocumentCreateInput, DocumentUncheckedCreateInput>
+  }
+
+  /**
+   * Document createMany
+   */
+  export type DocumentCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Documents.
+     */
+    data: DocumentCreateManyInput | DocumentCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Document createManyAndReturn
+   */
+  export type DocumentCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Document
+     */
+    omit?: DocumentOmit<ExtArgs> | null
+    /**
+     * The data used to create many Documents.
+     */
+    data: DocumentCreateManyInput | DocumentCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Document update
+   */
+  export type DocumentUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Document
+     */
+    omit?: DocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Document.
+     */
+    data: XOR<DocumentUpdateInput, DocumentUncheckedUpdateInput>
+    /**
+     * Choose, which Document to update.
+     */
+    where: DocumentWhereUniqueInput
+  }
+
+  /**
+   * Document updateMany
+   */
+  export type DocumentUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Documents.
+     */
+    data: XOR<DocumentUpdateManyMutationInput, DocumentUncheckedUpdateManyInput>
+    /**
+     * Filter which Documents to update
+     */
+    where?: DocumentWhereInput
+    /**
+     * Limit how many Documents to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Document updateManyAndReturn
+   */
+  export type DocumentUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Document
+     */
+    omit?: DocumentOmit<ExtArgs> | null
+    /**
+     * The data used to update Documents.
+     */
+    data: XOR<DocumentUpdateManyMutationInput, DocumentUncheckedUpdateManyInput>
+    /**
+     * Filter which Documents to update
+     */
+    where?: DocumentWhereInput
+    /**
+     * Limit how many Documents to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Document upsert
+   */
+  export type DocumentUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Document
+     */
+    omit?: DocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Document to update in case it exists.
+     */
+    where: DocumentWhereUniqueInput
+    /**
+     * In case the Document found by the `where` argument doesn't exist, create a new Document with this data.
+     */
+    create: XOR<DocumentCreateInput, DocumentUncheckedCreateInput>
+    /**
+     * In case the Document was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<DocumentUpdateInput, DocumentUncheckedUpdateInput>
+  }
+
+  /**
+   * Document delete
+   */
+  export type DocumentDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Document
+     */
+    omit?: DocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentInclude<ExtArgs> | null
+    /**
+     * Filter which Document to delete.
+     */
+    where: DocumentWhereUniqueInput
+  }
+
+  /**
+   * Document deleteMany
+   */
+  export type DocumentDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Documents to delete
+     */
+    where?: DocumentWhereInput
+    /**
+     * Limit how many Documents to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Document.task
+   */
+  export type Document$taskArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Task
+     */
+    select?: TaskSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Task
+     */
+    omit?: TaskOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TaskInclude<ExtArgs> | null
+    where?: TaskWhereInput
+  }
+
+  /**
+   * Document.board
+   */
+  export type Document$boardArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Board
+     */
+    select?: BoardSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Board
+     */
+    omit?: BoardOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BoardInclude<ExtArgs> | null
+    where?: BoardWhereInput
+  }
+
+  /**
+   * Document.embeddings
+   */
+  export type Document$embeddingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DocumentEmbedding
+     */
+    select?: DocumentEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DocumentEmbedding
+     */
+    omit?: DocumentEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentEmbeddingInclude<ExtArgs> | null
+    where?: DocumentEmbeddingWhereInput
+    orderBy?: DocumentEmbeddingOrderByWithRelationInput | DocumentEmbeddingOrderByWithRelationInput[]
+    cursor?: DocumentEmbeddingWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: DocumentEmbeddingScalarFieldEnum | DocumentEmbeddingScalarFieldEnum[]
+  }
+
+  /**
+   * Document without action
+   */
+  export type DocumentDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Document
+     */
+    omit?: DocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model DocumentEmbedding
+   */
+
+  export type AggregateDocumentEmbedding = {
+    _count: DocumentEmbeddingCountAggregateOutputType | null
+    _min: DocumentEmbeddingMinAggregateOutputType | null
+    _max: DocumentEmbeddingMaxAggregateOutputType | null
+  }
+
+  export type DocumentEmbeddingMinAggregateOutputType = {
+    id: string | null
+    documentId: string | null
+    content: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type DocumentEmbeddingMaxAggregateOutputType = {
+    id: string | null
+    documentId: string | null
+    content: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type DocumentEmbeddingCountAggregateOutputType = {
+    id: number
+    documentId: number
+    content: number
+    metadata: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type DocumentEmbeddingMinAggregateInputType = {
+    id?: true
+    documentId?: true
+    content?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type DocumentEmbeddingMaxAggregateInputType = {
+    id?: true
+    documentId?: true
+    content?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type DocumentEmbeddingCountAggregateInputType = {
+    id?: true
+    documentId?: true
+    content?: true
+    metadata?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type DocumentEmbeddingAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DocumentEmbedding to aggregate.
+     */
+    where?: DocumentEmbeddingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DocumentEmbeddings to fetch.
+     */
+    orderBy?: DocumentEmbeddingOrderByWithRelationInput | DocumentEmbeddingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: DocumentEmbeddingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DocumentEmbeddings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DocumentEmbeddings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned DocumentEmbeddings
+    **/
+    _count?: true | DocumentEmbeddingCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: DocumentEmbeddingMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: DocumentEmbeddingMaxAggregateInputType
+  }
+
+  export type GetDocumentEmbeddingAggregateType<T extends DocumentEmbeddingAggregateArgs> = {
+        [P in keyof T & keyof AggregateDocumentEmbedding]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateDocumentEmbedding[P]>
+      : GetScalarType<T[P], AggregateDocumentEmbedding[P]>
+  }
+
+
+
+
+  export type DocumentEmbeddingGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: DocumentEmbeddingWhereInput
+    orderBy?: DocumentEmbeddingOrderByWithAggregationInput | DocumentEmbeddingOrderByWithAggregationInput[]
+    by: DocumentEmbeddingScalarFieldEnum[] | DocumentEmbeddingScalarFieldEnum
+    having?: DocumentEmbeddingScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: DocumentEmbeddingCountAggregateInputType | true
+    _min?: DocumentEmbeddingMinAggregateInputType
+    _max?: DocumentEmbeddingMaxAggregateInputType
+  }
+
+  export type DocumentEmbeddingGroupByOutputType = {
+    id: string
+    documentId: string
+    content: string
+    metadata: JsonValue | null
+    createdAt: Date
+    updatedAt: Date
+    _count: DocumentEmbeddingCountAggregateOutputType | null
+    _min: DocumentEmbeddingMinAggregateOutputType | null
+    _max: DocumentEmbeddingMaxAggregateOutputType | null
+  }
+
+  type GetDocumentEmbeddingGroupByPayload<T extends DocumentEmbeddingGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<DocumentEmbeddingGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof DocumentEmbeddingGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], DocumentEmbeddingGroupByOutputType[P]>
+            : GetScalarType<T[P], DocumentEmbeddingGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type DocumentEmbeddingSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    documentId?: boolean
+    content?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    document?: boolean | DocumentDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["documentEmbedding"]>
+
+
+  export type DocumentEmbeddingSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    documentId?: boolean
+    content?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    document?: boolean | DocumentDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["documentEmbedding"]>
+
+  export type DocumentEmbeddingSelectScalar = {
+    id?: boolean
+    documentId?: boolean
+    content?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type DocumentEmbeddingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "documentId" | "content" | "metadata" | "createdAt" | "updatedAt", ExtArgs["result"]["documentEmbedding"]>
+  export type DocumentEmbeddingInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    document?: boolean | DocumentDefaultArgs<ExtArgs>
+  }
+  export type DocumentEmbeddingIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    document?: boolean | DocumentDefaultArgs<ExtArgs>
+  }
+
+  export type $DocumentEmbeddingPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "DocumentEmbedding"
+    objects: {
+      document: Prisma.$DocumentPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      documentId: string
+      content: string
+      metadata: Prisma.JsonValue | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["documentEmbedding"]>
+    composites: {}
+  }
+
+  type DocumentEmbeddingGetPayload<S extends boolean | null | undefined | DocumentEmbeddingDefaultArgs> = $Result.GetResult<Prisma.$DocumentEmbeddingPayload, S>
+
+  type DocumentEmbeddingCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<DocumentEmbeddingFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: DocumentEmbeddingCountAggregateInputType | true
+    }
+
+  export interface DocumentEmbeddingDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['DocumentEmbedding'], meta: { name: 'DocumentEmbedding' } }
+    /**
+     * Find zero or one DocumentEmbedding that matches the filter.
+     * @param {DocumentEmbeddingFindUniqueArgs} args - Arguments to find a DocumentEmbedding
+     * @example
+     * // Get one DocumentEmbedding
+     * const documentEmbedding = await prisma.documentEmbedding.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends DocumentEmbeddingFindUniqueArgs>(args: SelectSubset<T, DocumentEmbeddingFindUniqueArgs<ExtArgs>>): Prisma__DocumentEmbeddingClient<$Result.GetResult<Prisma.$DocumentEmbeddingPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one DocumentEmbedding that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {DocumentEmbeddingFindUniqueOrThrowArgs} args - Arguments to find a DocumentEmbedding
+     * @example
+     * // Get one DocumentEmbedding
+     * const documentEmbedding = await prisma.documentEmbedding.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends DocumentEmbeddingFindUniqueOrThrowArgs>(args: SelectSubset<T, DocumentEmbeddingFindUniqueOrThrowArgs<ExtArgs>>): Prisma__DocumentEmbeddingClient<$Result.GetResult<Prisma.$DocumentEmbeddingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first DocumentEmbedding that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentEmbeddingFindFirstArgs} args - Arguments to find a DocumentEmbedding
+     * @example
+     * // Get one DocumentEmbedding
+     * const documentEmbedding = await prisma.documentEmbedding.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends DocumentEmbeddingFindFirstArgs>(args?: SelectSubset<T, DocumentEmbeddingFindFirstArgs<ExtArgs>>): Prisma__DocumentEmbeddingClient<$Result.GetResult<Prisma.$DocumentEmbeddingPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first DocumentEmbedding that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentEmbeddingFindFirstOrThrowArgs} args - Arguments to find a DocumentEmbedding
+     * @example
+     * // Get one DocumentEmbedding
+     * const documentEmbedding = await prisma.documentEmbedding.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends DocumentEmbeddingFindFirstOrThrowArgs>(args?: SelectSubset<T, DocumentEmbeddingFindFirstOrThrowArgs<ExtArgs>>): Prisma__DocumentEmbeddingClient<$Result.GetResult<Prisma.$DocumentEmbeddingPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more DocumentEmbeddings that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentEmbeddingFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all DocumentEmbeddings
+     * const documentEmbeddings = await prisma.documentEmbedding.findMany()
+     * 
+     * // Get first 10 DocumentEmbeddings
+     * const documentEmbeddings = await prisma.documentEmbedding.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const documentEmbeddingWithIdOnly = await prisma.documentEmbedding.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends DocumentEmbeddingFindManyArgs>(args?: SelectSubset<T, DocumentEmbeddingFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DocumentEmbeddingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Delete a DocumentEmbedding.
+     * @param {DocumentEmbeddingDeleteArgs} args - Arguments to delete one DocumentEmbedding.
+     * @example
+     * // Delete one DocumentEmbedding
+     * const DocumentEmbedding = await prisma.documentEmbedding.delete({
+     *   where: {
+     *     // ... filter to delete one DocumentEmbedding
+     *   }
+     * })
+     * 
+     */
+    delete<T extends DocumentEmbeddingDeleteArgs>(args: SelectSubset<T, DocumentEmbeddingDeleteArgs<ExtArgs>>): Prisma__DocumentEmbeddingClient<$Result.GetResult<Prisma.$DocumentEmbeddingPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one DocumentEmbedding.
+     * @param {DocumentEmbeddingUpdateArgs} args - Arguments to update one DocumentEmbedding.
+     * @example
+     * // Update one DocumentEmbedding
+     * const documentEmbedding = await prisma.documentEmbedding.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends DocumentEmbeddingUpdateArgs>(args: SelectSubset<T, DocumentEmbeddingUpdateArgs<ExtArgs>>): Prisma__DocumentEmbeddingClient<$Result.GetResult<Prisma.$DocumentEmbeddingPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more DocumentEmbeddings.
+     * @param {DocumentEmbeddingDeleteManyArgs} args - Arguments to filter DocumentEmbeddings to delete.
+     * @example
+     * // Delete a few DocumentEmbeddings
+     * const { count } = await prisma.documentEmbedding.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends DocumentEmbeddingDeleteManyArgs>(args?: SelectSubset<T, DocumentEmbeddingDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more DocumentEmbeddings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentEmbeddingUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many DocumentEmbeddings
+     * const documentEmbedding = await prisma.documentEmbedding.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends DocumentEmbeddingUpdateManyArgs>(args: SelectSubset<T, DocumentEmbeddingUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more DocumentEmbeddings and returns the data updated in the database.
+     * @param {DocumentEmbeddingUpdateManyAndReturnArgs} args - Arguments to update many DocumentEmbeddings.
+     * @example
+     * // Update many DocumentEmbeddings
+     * const documentEmbedding = await prisma.documentEmbedding.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more DocumentEmbeddings and only return the `id`
+     * const documentEmbeddingWithIdOnly = await prisma.documentEmbedding.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends DocumentEmbeddingUpdateManyAndReturnArgs>(args: SelectSubset<T, DocumentEmbeddingUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DocumentEmbeddingPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+
+    /**
+     * Count the number of DocumentEmbeddings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentEmbeddingCountArgs} args - Arguments to filter DocumentEmbeddings to count.
+     * @example
+     * // Count the number of DocumentEmbeddings
+     * const count = await prisma.documentEmbedding.count({
+     *   where: {
+     *     // ... the filter for the DocumentEmbeddings we want to count
+     *   }
+     * })
+    **/
+    count<T extends DocumentEmbeddingCountArgs>(
+      args?: Subset<T, DocumentEmbeddingCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], DocumentEmbeddingCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a DocumentEmbedding.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentEmbeddingAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends DocumentEmbeddingAggregateArgs>(args: Subset<T, DocumentEmbeddingAggregateArgs>): Prisma.PrismaPromise<GetDocumentEmbeddingAggregateType<T>>
+
+    /**
+     * Group by DocumentEmbedding.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentEmbeddingGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends DocumentEmbeddingGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: DocumentEmbeddingGroupByArgs['orderBy'] }
+        : { orderBy?: DocumentEmbeddingGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, DocumentEmbeddingGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetDocumentEmbeddingGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the DocumentEmbedding model
+   */
+  readonly fields: DocumentEmbeddingFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for DocumentEmbedding.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__DocumentEmbeddingClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    document<T extends DocumentDefaultArgs<ExtArgs> = {}>(args?: Subset<T, DocumentDefaultArgs<ExtArgs>>): Prisma__DocumentClient<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the DocumentEmbedding model
+   */
+  interface DocumentEmbeddingFieldRefs {
+    readonly id: FieldRef<"DocumentEmbedding", 'String'>
+    readonly documentId: FieldRef<"DocumentEmbedding", 'String'>
+    readonly content: FieldRef<"DocumentEmbedding", 'String'>
+    readonly metadata: FieldRef<"DocumentEmbedding", 'Json'>
+    readonly createdAt: FieldRef<"DocumentEmbedding", 'DateTime'>
+    readonly updatedAt: FieldRef<"DocumentEmbedding", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * DocumentEmbedding findUnique
+   */
+  export type DocumentEmbeddingFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DocumentEmbedding
+     */
+    select?: DocumentEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DocumentEmbedding
+     */
+    omit?: DocumentEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentEmbeddingInclude<ExtArgs> | null
+    /**
+     * Filter, which DocumentEmbedding to fetch.
+     */
+    where: DocumentEmbeddingWhereUniqueInput
+  }
+
+  /**
+   * DocumentEmbedding findUniqueOrThrow
+   */
+  export type DocumentEmbeddingFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DocumentEmbedding
+     */
+    select?: DocumentEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DocumentEmbedding
+     */
+    omit?: DocumentEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentEmbeddingInclude<ExtArgs> | null
+    /**
+     * Filter, which DocumentEmbedding to fetch.
+     */
+    where: DocumentEmbeddingWhereUniqueInput
+  }
+
+  /**
+   * DocumentEmbedding findFirst
+   */
+  export type DocumentEmbeddingFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DocumentEmbedding
+     */
+    select?: DocumentEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DocumentEmbedding
+     */
+    omit?: DocumentEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentEmbeddingInclude<ExtArgs> | null
+    /**
+     * Filter, which DocumentEmbedding to fetch.
+     */
+    where?: DocumentEmbeddingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DocumentEmbeddings to fetch.
+     */
+    orderBy?: DocumentEmbeddingOrderByWithRelationInput | DocumentEmbeddingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DocumentEmbeddings.
+     */
+    cursor?: DocumentEmbeddingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DocumentEmbeddings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DocumentEmbeddings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DocumentEmbeddings.
+     */
+    distinct?: DocumentEmbeddingScalarFieldEnum | DocumentEmbeddingScalarFieldEnum[]
+  }
+
+  /**
+   * DocumentEmbedding findFirstOrThrow
+   */
+  export type DocumentEmbeddingFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DocumentEmbedding
+     */
+    select?: DocumentEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DocumentEmbedding
+     */
+    omit?: DocumentEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentEmbeddingInclude<ExtArgs> | null
+    /**
+     * Filter, which DocumentEmbedding to fetch.
+     */
+    where?: DocumentEmbeddingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DocumentEmbeddings to fetch.
+     */
+    orderBy?: DocumentEmbeddingOrderByWithRelationInput | DocumentEmbeddingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DocumentEmbeddings.
+     */
+    cursor?: DocumentEmbeddingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DocumentEmbeddings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DocumentEmbeddings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DocumentEmbeddings.
+     */
+    distinct?: DocumentEmbeddingScalarFieldEnum | DocumentEmbeddingScalarFieldEnum[]
+  }
+
+  /**
+   * DocumentEmbedding findMany
+   */
+  export type DocumentEmbeddingFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DocumentEmbedding
+     */
+    select?: DocumentEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DocumentEmbedding
+     */
+    omit?: DocumentEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentEmbeddingInclude<ExtArgs> | null
+    /**
+     * Filter, which DocumentEmbeddings to fetch.
+     */
+    where?: DocumentEmbeddingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DocumentEmbeddings to fetch.
+     */
+    orderBy?: DocumentEmbeddingOrderByWithRelationInput | DocumentEmbeddingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing DocumentEmbeddings.
+     */
+    cursor?: DocumentEmbeddingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DocumentEmbeddings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DocumentEmbeddings.
+     */
+    skip?: number
+    distinct?: DocumentEmbeddingScalarFieldEnum | DocumentEmbeddingScalarFieldEnum[]
+  }
+
+  /**
+   * DocumentEmbedding update
+   */
+  export type DocumentEmbeddingUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DocumentEmbedding
+     */
+    select?: DocumentEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DocumentEmbedding
+     */
+    omit?: DocumentEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentEmbeddingInclude<ExtArgs> | null
+    /**
+     * The data needed to update a DocumentEmbedding.
+     */
+    data: XOR<DocumentEmbeddingUpdateInput, DocumentEmbeddingUncheckedUpdateInput>
+    /**
+     * Choose, which DocumentEmbedding to update.
+     */
+    where: DocumentEmbeddingWhereUniqueInput
+  }
+
+  /**
+   * DocumentEmbedding updateMany
+   */
+  export type DocumentEmbeddingUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update DocumentEmbeddings.
+     */
+    data: XOR<DocumentEmbeddingUpdateManyMutationInput, DocumentEmbeddingUncheckedUpdateManyInput>
+    /**
+     * Filter which DocumentEmbeddings to update
+     */
+    where?: DocumentEmbeddingWhereInput
+    /**
+     * Limit how many DocumentEmbeddings to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * DocumentEmbedding updateManyAndReturn
+   */
+  export type DocumentEmbeddingUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DocumentEmbedding
+     */
+    select?: DocumentEmbeddingSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the DocumentEmbedding
+     */
+    omit?: DocumentEmbeddingOmit<ExtArgs> | null
+    /**
+     * The data used to update DocumentEmbeddings.
+     */
+    data: XOR<DocumentEmbeddingUpdateManyMutationInput, DocumentEmbeddingUncheckedUpdateManyInput>
+    /**
+     * Filter which DocumentEmbeddings to update
+     */
+    where?: DocumentEmbeddingWhereInput
+    /**
+     * Limit how many DocumentEmbeddings to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentEmbeddingIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * DocumentEmbedding delete
+   */
+  export type DocumentEmbeddingDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DocumentEmbedding
+     */
+    select?: DocumentEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DocumentEmbedding
+     */
+    omit?: DocumentEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentEmbeddingInclude<ExtArgs> | null
+    /**
+     * Filter which DocumentEmbedding to delete.
+     */
+    where: DocumentEmbeddingWhereUniqueInput
+  }
+
+  /**
+   * DocumentEmbedding deleteMany
+   */
+  export type DocumentEmbeddingDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DocumentEmbeddings to delete
+     */
+    where?: DocumentEmbeddingWhereInput
+    /**
+     * Limit how many DocumentEmbeddings to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * DocumentEmbedding without action
+   */
+  export type DocumentEmbeddingDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DocumentEmbedding
+     */
+    select?: DocumentEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DocumentEmbedding
+     */
+    omit?: DocumentEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentEmbeddingInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ConversationSummary
+   */
+
+  export type AggregateConversationSummary = {
+    _count: ConversationSummaryCountAggregateOutputType | null
+    _avg: ConversationSummaryAvgAggregateOutputType | null
+    _sum: ConversationSummarySumAggregateOutputType | null
+    _min: ConversationSummaryMinAggregateOutputType | null
+    _max: ConversationSummaryMaxAggregateOutputType | null
+  }
+
+  export type ConversationSummaryAvgAggregateOutputType = {
+    confidence: number | null
+  }
+
+  export type ConversationSummarySumAggregateOutputType = {
+    confidence: number | null
+  }
+
+  export type ConversationSummaryMinAggregateOutputType = {
+    id: string | null
+    conversationId: string | null
+    summary: string | null
+    sentiment: string | null
+    confidence: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ConversationSummaryMaxAggregateOutputType = {
+    id: string | null
+    conversationId: string | null
+    summary: string | null
+    sentiment: string | null
+    confidence: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ConversationSummaryCountAggregateOutputType = {
+    id: number
+    conversationId: number
+    summary: number
+    keyTopics: number
+    actionItems: number
+    preferences: number
+    sentiment: number
+    confidence: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ConversationSummaryAvgAggregateInputType = {
+    confidence?: true
+  }
+
+  export type ConversationSummarySumAggregateInputType = {
+    confidence?: true
+  }
+
+  export type ConversationSummaryMinAggregateInputType = {
+    id?: true
+    conversationId?: true
+    summary?: true
+    sentiment?: true
+    confidence?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ConversationSummaryMaxAggregateInputType = {
+    id?: true
+    conversationId?: true
+    summary?: true
+    sentiment?: true
+    confidence?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ConversationSummaryCountAggregateInputType = {
+    id?: true
+    conversationId?: true
+    summary?: true
+    keyTopics?: true
+    actionItems?: true
+    preferences?: true
+    sentiment?: true
+    confidence?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ConversationSummaryAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ConversationSummary to aggregate.
+     */
+    where?: ConversationSummaryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ConversationSummaries to fetch.
+     */
+    orderBy?: ConversationSummaryOrderByWithRelationInput | ConversationSummaryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ConversationSummaryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ConversationSummaries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ConversationSummaries.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ConversationSummaries
+    **/
+    _count?: true | ConversationSummaryCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ConversationSummaryAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ConversationSummarySumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ConversationSummaryMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ConversationSummaryMaxAggregateInputType
+  }
+
+  export type GetConversationSummaryAggregateType<T extends ConversationSummaryAggregateArgs> = {
+        [P in keyof T & keyof AggregateConversationSummary]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateConversationSummary[P]>
+      : GetScalarType<T[P], AggregateConversationSummary[P]>
+  }
+
+
+
+
+  export type ConversationSummaryGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ConversationSummaryWhereInput
+    orderBy?: ConversationSummaryOrderByWithAggregationInput | ConversationSummaryOrderByWithAggregationInput[]
+    by: ConversationSummaryScalarFieldEnum[] | ConversationSummaryScalarFieldEnum
+    having?: ConversationSummaryScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ConversationSummaryCountAggregateInputType | true
+    _avg?: ConversationSummaryAvgAggregateInputType
+    _sum?: ConversationSummarySumAggregateInputType
+    _min?: ConversationSummaryMinAggregateInputType
+    _max?: ConversationSummaryMaxAggregateInputType
+  }
+
+  export type ConversationSummaryGroupByOutputType = {
+    id: string
+    conversationId: string
+    summary: string
+    keyTopics: string[]
+    actionItems: string[]
+    preferences: JsonValue | null
+    sentiment: string
+    confidence: number
+    createdAt: Date
+    updatedAt: Date
+    _count: ConversationSummaryCountAggregateOutputType | null
+    _avg: ConversationSummaryAvgAggregateOutputType | null
+    _sum: ConversationSummarySumAggregateOutputType | null
+    _min: ConversationSummaryMinAggregateOutputType | null
+    _max: ConversationSummaryMaxAggregateOutputType | null
+  }
+
+  type GetConversationSummaryGroupByPayload<T extends ConversationSummaryGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ConversationSummaryGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ConversationSummaryGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ConversationSummaryGroupByOutputType[P]>
+            : GetScalarType<T[P], ConversationSummaryGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ConversationSummarySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    conversationId?: boolean
+    summary?: boolean
+    keyTopics?: boolean
+    actionItems?: boolean
+    preferences?: boolean
+    sentiment?: boolean
+    confidence?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    conversation?: boolean | AIConversationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["conversationSummary"]>
+
+  export type ConversationSummarySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    conversationId?: boolean
+    summary?: boolean
+    keyTopics?: boolean
+    actionItems?: boolean
+    preferences?: boolean
+    sentiment?: boolean
+    confidence?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    conversation?: boolean | AIConversationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["conversationSummary"]>
+
+  export type ConversationSummarySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    conversationId?: boolean
+    summary?: boolean
+    keyTopics?: boolean
+    actionItems?: boolean
+    preferences?: boolean
+    sentiment?: boolean
+    confidence?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    conversation?: boolean | AIConversationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["conversationSummary"]>
+
+  export type ConversationSummarySelectScalar = {
+    id?: boolean
+    conversationId?: boolean
+    summary?: boolean
+    keyTopics?: boolean
+    actionItems?: boolean
+    preferences?: boolean
+    sentiment?: boolean
+    confidence?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type ConversationSummaryOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "conversationId" | "summary" | "keyTopics" | "actionItems" | "preferences" | "sentiment" | "confidence" | "createdAt" | "updatedAt", ExtArgs["result"]["conversationSummary"]>
+  export type ConversationSummaryInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    conversation?: boolean | AIConversationDefaultArgs<ExtArgs>
+  }
+  export type ConversationSummaryIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    conversation?: boolean | AIConversationDefaultArgs<ExtArgs>
+  }
+  export type ConversationSummaryIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    conversation?: boolean | AIConversationDefaultArgs<ExtArgs>
+  }
+
+  export type $ConversationSummaryPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ConversationSummary"
+    objects: {
+      conversation: Prisma.$AIConversationPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      conversationId: string
+      summary: string
+      keyTopics: string[]
+      actionItems: string[]
+      preferences: Prisma.JsonValue | null
+      sentiment: string
+      confidence: number
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["conversationSummary"]>
+    composites: {}
+  }
+
+  type ConversationSummaryGetPayload<S extends boolean | null | undefined | ConversationSummaryDefaultArgs> = $Result.GetResult<Prisma.$ConversationSummaryPayload, S>
+
+  type ConversationSummaryCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ConversationSummaryFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ConversationSummaryCountAggregateInputType | true
+    }
+
+  export interface ConversationSummaryDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ConversationSummary'], meta: { name: 'ConversationSummary' } }
+    /**
+     * Find zero or one ConversationSummary that matches the filter.
+     * @param {ConversationSummaryFindUniqueArgs} args - Arguments to find a ConversationSummary
+     * @example
+     * // Get one ConversationSummary
+     * const conversationSummary = await prisma.conversationSummary.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ConversationSummaryFindUniqueArgs>(args: SelectSubset<T, ConversationSummaryFindUniqueArgs<ExtArgs>>): Prisma__ConversationSummaryClient<$Result.GetResult<Prisma.$ConversationSummaryPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ConversationSummary that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ConversationSummaryFindUniqueOrThrowArgs} args - Arguments to find a ConversationSummary
+     * @example
+     * // Get one ConversationSummary
+     * const conversationSummary = await prisma.conversationSummary.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ConversationSummaryFindUniqueOrThrowArgs>(args: SelectSubset<T, ConversationSummaryFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ConversationSummaryClient<$Result.GetResult<Prisma.$ConversationSummaryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ConversationSummary that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ConversationSummaryFindFirstArgs} args - Arguments to find a ConversationSummary
+     * @example
+     * // Get one ConversationSummary
+     * const conversationSummary = await prisma.conversationSummary.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ConversationSummaryFindFirstArgs>(args?: SelectSubset<T, ConversationSummaryFindFirstArgs<ExtArgs>>): Prisma__ConversationSummaryClient<$Result.GetResult<Prisma.$ConversationSummaryPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ConversationSummary that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ConversationSummaryFindFirstOrThrowArgs} args - Arguments to find a ConversationSummary
+     * @example
+     * // Get one ConversationSummary
+     * const conversationSummary = await prisma.conversationSummary.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ConversationSummaryFindFirstOrThrowArgs>(args?: SelectSubset<T, ConversationSummaryFindFirstOrThrowArgs<ExtArgs>>): Prisma__ConversationSummaryClient<$Result.GetResult<Prisma.$ConversationSummaryPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ConversationSummaries that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ConversationSummaryFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ConversationSummaries
+     * const conversationSummaries = await prisma.conversationSummary.findMany()
+     * 
+     * // Get first 10 ConversationSummaries
+     * const conversationSummaries = await prisma.conversationSummary.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const conversationSummaryWithIdOnly = await prisma.conversationSummary.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ConversationSummaryFindManyArgs>(args?: SelectSubset<T, ConversationSummaryFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ConversationSummaryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ConversationSummary.
+     * @param {ConversationSummaryCreateArgs} args - Arguments to create a ConversationSummary.
+     * @example
+     * // Create one ConversationSummary
+     * const ConversationSummary = await prisma.conversationSummary.create({
+     *   data: {
+     *     // ... data to create a ConversationSummary
+     *   }
+     * })
+     * 
+     */
+    create<T extends ConversationSummaryCreateArgs>(args: SelectSubset<T, ConversationSummaryCreateArgs<ExtArgs>>): Prisma__ConversationSummaryClient<$Result.GetResult<Prisma.$ConversationSummaryPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ConversationSummaries.
+     * @param {ConversationSummaryCreateManyArgs} args - Arguments to create many ConversationSummaries.
+     * @example
+     * // Create many ConversationSummaries
+     * const conversationSummary = await prisma.conversationSummary.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ConversationSummaryCreateManyArgs>(args?: SelectSubset<T, ConversationSummaryCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ConversationSummaries and returns the data saved in the database.
+     * @param {ConversationSummaryCreateManyAndReturnArgs} args - Arguments to create many ConversationSummaries.
+     * @example
+     * // Create many ConversationSummaries
+     * const conversationSummary = await prisma.conversationSummary.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ConversationSummaries and only return the `id`
+     * const conversationSummaryWithIdOnly = await prisma.conversationSummary.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ConversationSummaryCreateManyAndReturnArgs>(args?: SelectSubset<T, ConversationSummaryCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ConversationSummaryPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ConversationSummary.
+     * @param {ConversationSummaryDeleteArgs} args - Arguments to delete one ConversationSummary.
+     * @example
+     * // Delete one ConversationSummary
+     * const ConversationSummary = await prisma.conversationSummary.delete({
+     *   where: {
+     *     // ... filter to delete one ConversationSummary
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ConversationSummaryDeleteArgs>(args: SelectSubset<T, ConversationSummaryDeleteArgs<ExtArgs>>): Prisma__ConversationSummaryClient<$Result.GetResult<Prisma.$ConversationSummaryPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ConversationSummary.
+     * @param {ConversationSummaryUpdateArgs} args - Arguments to update one ConversationSummary.
+     * @example
+     * // Update one ConversationSummary
+     * const conversationSummary = await prisma.conversationSummary.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ConversationSummaryUpdateArgs>(args: SelectSubset<T, ConversationSummaryUpdateArgs<ExtArgs>>): Prisma__ConversationSummaryClient<$Result.GetResult<Prisma.$ConversationSummaryPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ConversationSummaries.
+     * @param {ConversationSummaryDeleteManyArgs} args - Arguments to filter ConversationSummaries to delete.
+     * @example
+     * // Delete a few ConversationSummaries
+     * const { count } = await prisma.conversationSummary.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ConversationSummaryDeleteManyArgs>(args?: SelectSubset<T, ConversationSummaryDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ConversationSummaries.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ConversationSummaryUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ConversationSummaries
+     * const conversationSummary = await prisma.conversationSummary.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ConversationSummaryUpdateManyArgs>(args: SelectSubset<T, ConversationSummaryUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ConversationSummaries and returns the data updated in the database.
+     * @param {ConversationSummaryUpdateManyAndReturnArgs} args - Arguments to update many ConversationSummaries.
+     * @example
+     * // Update many ConversationSummaries
+     * const conversationSummary = await prisma.conversationSummary.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ConversationSummaries and only return the `id`
+     * const conversationSummaryWithIdOnly = await prisma.conversationSummary.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ConversationSummaryUpdateManyAndReturnArgs>(args: SelectSubset<T, ConversationSummaryUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ConversationSummaryPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ConversationSummary.
+     * @param {ConversationSummaryUpsertArgs} args - Arguments to update or create a ConversationSummary.
+     * @example
+     * // Update or create a ConversationSummary
+     * const conversationSummary = await prisma.conversationSummary.upsert({
+     *   create: {
+     *     // ... data to create a ConversationSummary
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ConversationSummary we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ConversationSummaryUpsertArgs>(args: SelectSubset<T, ConversationSummaryUpsertArgs<ExtArgs>>): Prisma__ConversationSummaryClient<$Result.GetResult<Prisma.$ConversationSummaryPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ConversationSummaries.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ConversationSummaryCountArgs} args - Arguments to filter ConversationSummaries to count.
+     * @example
+     * // Count the number of ConversationSummaries
+     * const count = await prisma.conversationSummary.count({
+     *   where: {
+     *     // ... the filter for the ConversationSummaries we want to count
+     *   }
+     * })
+    **/
+    count<T extends ConversationSummaryCountArgs>(
+      args?: Subset<T, ConversationSummaryCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ConversationSummaryCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ConversationSummary.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ConversationSummaryAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ConversationSummaryAggregateArgs>(args: Subset<T, ConversationSummaryAggregateArgs>): Prisma.PrismaPromise<GetConversationSummaryAggregateType<T>>
+
+    /**
+     * Group by ConversationSummary.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ConversationSummaryGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ConversationSummaryGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ConversationSummaryGroupByArgs['orderBy'] }
+        : { orderBy?: ConversationSummaryGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ConversationSummaryGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetConversationSummaryGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ConversationSummary model
+   */
+  readonly fields: ConversationSummaryFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ConversationSummary.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ConversationSummaryClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    conversation<T extends AIConversationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, AIConversationDefaultArgs<ExtArgs>>): Prisma__AIConversationClient<$Result.GetResult<Prisma.$AIConversationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ConversationSummary model
+   */
+  interface ConversationSummaryFieldRefs {
+    readonly id: FieldRef<"ConversationSummary", 'String'>
+    readonly conversationId: FieldRef<"ConversationSummary", 'String'>
+    readonly summary: FieldRef<"ConversationSummary", 'String'>
+    readonly keyTopics: FieldRef<"ConversationSummary", 'String[]'>
+    readonly actionItems: FieldRef<"ConversationSummary", 'String[]'>
+    readonly preferences: FieldRef<"ConversationSummary", 'Json'>
+    readonly sentiment: FieldRef<"ConversationSummary", 'String'>
+    readonly confidence: FieldRef<"ConversationSummary", 'Float'>
+    readonly createdAt: FieldRef<"ConversationSummary", 'DateTime'>
+    readonly updatedAt: FieldRef<"ConversationSummary", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ConversationSummary findUnique
+   */
+  export type ConversationSummaryFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConversationSummary
+     */
+    select?: ConversationSummarySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConversationSummary
+     */
+    omit?: ConversationSummaryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConversationSummaryInclude<ExtArgs> | null
+    /**
+     * Filter, which ConversationSummary to fetch.
+     */
+    where: ConversationSummaryWhereUniqueInput
+  }
+
+  /**
+   * ConversationSummary findUniqueOrThrow
+   */
+  export type ConversationSummaryFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConversationSummary
+     */
+    select?: ConversationSummarySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConversationSummary
+     */
+    omit?: ConversationSummaryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConversationSummaryInclude<ExtArgs> | null
+    /**
+     * Filter, which ConversationSummary to fetch.
+     */
+    where: ConversationSummaryWhereUniqueInput
+  }
+
+  /**
+   * ConversationSummary findFirst
+   */
+  export type ConversationSummaryFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConversationSummary
+     */
+    select?: ConversationSummarySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConversationSummary
+     */
+    omit?: ConversationSummaryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConversationSummaryInclude<ExtArgs> | null
+    /**
+     * Filter, which ConversationSummary to fetch.
+     */
+    where?: ConversationSummaryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ConversationSummaries to fetch.
+     */
+    orderBy?: ConversationSummaryOrderByWithRelationInput | ConversationSummaryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ConversationSummaries.
+     */
+    cursor?: ConversationSummaryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ConversationSummaries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ConversationSummaries.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ConversationSummaries.
+     */
+    distinct?: ConversationSummaryScalarFieldEnum | ConversationSummaryScalarFieldEnum[]
+  }
+
+  /**
+   * ConversationSummary findFirstOrThrow
+   */
+  export type ConversationSummaryFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConversationSummary
+     */
+    select?: ConversationSummarySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConversationSummary
+     */
+    omit?: ConversationSummaryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConversationSummaryInclude<ExtArgs> | null
+    /**
+     * Filter, which ConversationSummary to fetch.
+     */
+    where?: ConversationSummaryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ConversationSummaries to fetch.
+     */
+    orderBy?: ConversationSummaryOrderByWithRelationInput | ConversationSummaryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ConversationSummaries.
+     */
+    cursor?: ConversationSummaryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ConversationSummaries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ConversationSummaries.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ConversationSummaries.
+     */
+    distinct?: ConversationSummaryScalarFieldEnum | ConversationSummaryScalarFieldEnum[]
+  }
+
+  /**
+   * ConversationSummary findMany
+   */
+  export type ConversationSummaryFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConversationSummary
+     */
+    select?: ConversationSummarySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConversationSummary
+     */
+    omit?: ConversationSummaryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConversationSummaryInclude<ExtArgs> | null
+    /**
+     * Filter, which ConversationSummaries to fetch.
+     */
+    where?: ConversationSummaryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ConversationSummaries to fetch.
+     */
+    orderBy?: ConversationSummaryOrderByWithRelationInput | ConversationSummaryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ConversationSummaries.
+     */
+    cursor?: ConversationSummaryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ConversationSummaries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ConversationSummaries.
+     */
+    skip?: number
+    distinct?: ConversationSummaryScalarFieldEnum | ConversationSummaryScalarFieldEnum[]
+  }
+
+  /**
+   * ConversationSummary create
+   */
+  export type ConversationSummaryCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConversationSummary
+     */
+    select?: ConversationSummarySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConversationSummary
+     */
+    omit?: ConversationSummaryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConversationSummaryInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ConversationSummary.
+     */
+    data: XOR<ConversationSummaryCreateInput, ConversationSummaryUncheckedCreateInput>
+  }
+
+  /**
+   * ConversationSummary createMany
+   */
+  export type ConversationSummaryCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ConversationSummaries.
+     */
+    data: ConversationSummaryCreateManyInput | ConversationSummaryCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ConversationSummary createManyAndReturn
+   */
+  export type ConversationSummaryCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConversationSummary
+     */
+    select?: ConversationSummarySelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConversationSummary
+     */
+    omit?: ConversationSummaryOmit<ExtArgs> | null
+    /**
+     * The data used to create many ConversationSummaries.
+     */
+    data: ConversationSummaryCreateManyInput | ConversationSummaryCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConversationSummaryIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ConversationSummary update
+   */
+  export type ConversationSummaryUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConversationSummary
+     */
+    select?: ConversationSummarySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConversationSummary
+     */
+    omit?: ConversationSummaryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConversationSummaryInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ConversationSummary.
+     */
+    data: XOR<ConversationSummaryUpdateInput, ConversationSummaryUncheckedUpdateInput>
+    /**
+     * Choose, which ConversationSummary to update.
+     */
+    where: ConversationSummaryWhereUniqueInput
+  }
+
+  /**
+   * ConversationSummary updateMany
+   */
+  export type ConversationSummaryUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ConversationSummaries.
+     */
+    data: XOR<ConversationSummaryUpdateManyMutationInput, ConversationSummaryUncheckedUpdateManyInput>
+    /**
+     * Filter which ConversationSummaries to update
+     */
+    where?: ConversationSummaryWhereInput
+    /**
+     * Limit how many ConversationSummaries to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ConversationSummary updateManyAndReturn
+   */
+  export type ConversationSummaryUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConversationSummary
+     */
+    select?: ConversationSummarySelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConversationSummary
+     */
+    omit?: ConversationSummaryOmit<ExtArgs> | null
+    /**
+     * The data used to update ConversationSummaries.
+     */
+    data: XOR<ConversationSummaryUpdateManyMutationInput, ConversationSummaryUncheckedUpdateManyInput>
+    /**
+     * Filter which ConversationSummaries to update
+     */
+    where?: ConversationSummaryWhereInput
+    /**
+     * Limit how many ConversationSummaries to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConversationSummaryIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ConversationSummary upsert
+   */
+  export type ConversationSummaryUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConversationSummary
+     */
+    select?: ConversationSummarySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConversationSummary
+     */
+    omit?: ConversationSummaryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConversationSummaryInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ConversationSummary to update in case it exists.
+     */
+    where: ConversationSummaryWhereUniqueInput
+    /**
+     * In case the ConversationSummary found by the `where` argument doesn't exist, create a new ConversationSummary with this data.
+     */
+    create: XOR<ConversationSummaryCreateInput, ConversationSummaryUncheckedCreateInput>
+    /**
+     * In case the ConversationSummary was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ConversationSummaryUpdateInput, ConversationSummaryUncheckedUpdateInput>
+  }
+
+  /**
+   * ConversationSummary delete
+   */
+  export type ConversationSummaryDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConversationSummary
+     */
+    select?: ConversationSummarySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConversationSummary
+     */
+    omit?: ConversationSummaryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConversationSummaryInclude<ExtArgs> | null
+    /**
+     * Filter which ConversationSummary to delete.
+     */
+    where: ConversationSummaryWhereUniqueInput
+  }
+
+  /**
+   * ConversationSummary deleteMany
+   */
+  export type ConversationSummaryDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ConversationSummaries to delete
+     */
+    where?: ConversationSummaryWhereInput
+    /**
+     * Limit how many ConversationSummaries to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ConversationSummary without action
+   */
+  export type ConversationSummaryDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ConversationSummary
+     */
+    select?: ConversationSummarySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ConversationSummary
+     */
+    omit?: ConversationSummaryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ConversationSummaryInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model SecurityAuditLog
+   */
+
+  export type AggregateSecurityAuditLog = {
+    _count: SecurityAuditLogCountAggregateOutputType | null
+    _min: SecurityAuditLogMinAggregateOutputType | null
+    _max: SecurityAuditLogMaxAggregateOutputType | null
+  }
+
+  export type SecurityAuditLogMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    action: string | null
+    resource: string | null
+    timestamp: Date | null
+    ipAddress: string | null
+    userAgent: string | null
+    risk: string | null
+    createdAt: Date | null
+  }
+
+  export type SecurityAuditLogMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    action: string | null
+    resource: string | null
+    timestamp: Date | null
+    ipAddress: string | null
+    userAgent: string | null
+    risk: string | null
+    createdAt: Date | null
+  }
+
+  export type SecurityAuditLogCountAggregateOutputType = {
+    id: number
+    userId: number
+    action: number
+    resource: number
+    details: number
+    timestamp: number
+    ipAddress: number
+    userAgent: number
+    risk: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type SecurityAuditLogMinAggregateInputType = {
+    id?: true
+    userId?: true
+    action?: true
+    resource?: true
+    timestamp?: true
+    ipAddress?: true
+    userAgent?: true
+    risk?: true
+    createdAt?: true
+  }
+
+  export type SecurityAuditLogMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    action?: true
+    resource?: true
+    timestamp?: true
+    ipAddress?: true
+    userAgent?: true
+    risk?: true
+    createdAt?: true
+  }
+
+  export type SecurityAuditLogCountAggregateInputType = {
+    id?: true
+    userId?: true
+    action?: true
+    resource?: true
+    details?: true
+    timestamp?: true
+    ipAddress?: true
+    userAgent?: true
+    risk?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type SecurityAuditLogAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SecurityAuditLog to aggregate.
+     */
+    where?: SecurityAuditLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SecurityAuditLogs to fetch.
+     */
+    orderBy?: SecurityAuditLogOrderByWithRelationInput | SecurityAuditLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: SecurityAuditLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SecurityAuditLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SecurityAuditLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned SecurityAuditLogs
+    **/
+    _count?: true | SecurityAuditLogCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: SecurityAuditLogMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: SecurityAuditLogMaxAggregateInputType
+  }
+
+  export type GetSecurityAuditLogAggregateType<T extends SecurityAuditLogAggregateArgs> = {
+        [P in keyof T & keyof AggregateSecurityAuditLog]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateSecurityAuditLog[P]>
+      : GetScalarType<T[P], AggregateSecurityAuditLog[P]>
+  }
+
+
+
+
+  export type SecurityAuditLogGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SecurityAuditLogWhereInput
+    orderBy?: SecurityAuditLogOrderByWithAggregationInput | SecurityAuditLogOrderByWithAggregationInput[]
+    by: SecurityAuditLogScalarFieldEnum[] | SecurityAuditLogScalarFieldEnum
+    having?: SecurityAuditLogScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: SecurityAuditLogCountAggregateInputType | true
+    _min?: SecurityAuditLogMinAggregateInputType
+    _max?: SecurityAuditLogMaxAggregateInputType
+  }
+
+  export type SecurityAuditLogGroupByOutputType = {
+    id: string
+    userId: string
+    action: string
+    resource: string
+    details: JsonValue
+    timestamp: Date
+    ipAddress: string | null
+    userAgent: string | null
+    risk: string
+    createdAt: Date
+    _count: SecurityAuditLogCountAggregateOutputType | null
+    _min: SecurityAuditLogMinAggregateOutputType | null
+    _max: SecurityAuditLogMaxAggregateOutputType | null
+  }
+
+  type GetSecurityAuditLogGroupByPayload<T extends SecurityAuditLogGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<SecurityAuditLogGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof SecurityAuditLogGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], SecurityAuditLogGroupByOutputType[P]>
+            : GetScalarType<T[P], SecurityAuditLogGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type SecurityAuditLogSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    action?: boolean
+    resource?: boolean
+    details?: boolean
+    timestamp?: boolean
+    ipAddress?: boolean
+    userAgent?: boolean
+    risk?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["securityAuditLog"]>
+
+  export type SecurityAuditLogSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    action?: boolean
+    resource?: boolean
+    details?: boolean
+    timestamp?: boolean
+    ipAddress?: boolean
+    userAgent?: boolean
+    risk?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["securityAuditLog"]>
+
+  export type SecurityAuditLogSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    action?: boolean
+    resource?: boolean
+    details?: boolean
+    timestamp?: boolean
+    ipAddress?: boolean
+    userAgent?: boolean
+    risk?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["securityAuditLog"]>
+
+  export type SecurityAuditLogSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    action?: boolean
+    resource?: boolean
+    details?: boolean
+    timestamp?: boolean
+    ipAddress?: boolean
+    userAgent?: boolean
+    risk?: boolean
+    createdAt?: boolean
+  }
+
+  export type SecurityAuditLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "action" | "resource" | "details" | "timestamp" | "ipAddress" | "userAgent" | "risk" | "createdAt", ExtArgs["result"]["securityAuditLog"]>
+  export type SecurityAuditLogInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type SecurityAuditLogIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type SecurityAuditLogIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $SecurityAuditLogPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "SecurityAuditLog"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string
+      action: string
+      resource: string
+      details: Prisma.JsonValue
+      timestamp: Date
+      ipAddress: string | null
+      userAgent: string | null
+      risk: string
+      createdAt: Date
+    }, ExtArgs["result"]["securityAuditLog"]>
+    composites: {}
+  }
+
+  type SecurityAuditLogGetPayload<S extends boolean | null | undefined | SecurityAuditLogDefaultArgs> = $Result.GetResult<Prisma.$SecurityAuditLogPayload, S>
+
+  type SecurityAuditLogCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<SecurityAuditLogFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: SecurityAuditLogCountAggregateInputType | true
+    }
+
+  export interface SecurityAuditLogDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['SecurityAuditLog'], meta: { name: 'SecurityAuditLog' } }
+    /**
+     * Find zero or one SecurityAuditLog that matches the filter.
+     * @param {SecurityAuditLogFindUniqueArgs} args - Arguments to find a SecurityAuditLog
+     * @example
+     * // Get one SecurityAuditLog
+     * const securityAuditLog = await prisma.securityAuditLog.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends SecurityAuditLogFindUniqueArgs>(args: SelectSubset<T, SecurityAuditLogFindUniqueArgs<ExtArgs>>): Prisma__SecurityAuditLogClient<$Result.GetResult<Prisma.$SecurityAuditLogPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one SecurityAuditLog that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {SecurityAuditLogFindUniqueOrThrowArgs} args - Arguments to find a SecurityAuditLog
+     * @example
+     * // Get one SecurityAuditLog
+     * const securityAuditLog = await prisma.securityAuditLog.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends SecurityAuditLogFindUniqueOrThrowArgs>(args: SelectSubset<T, SecurityAuditLogFindUniqueOrThrowArgs<ExtArgs>>): Prisma__SecurityAuditLogClient<$Result.GetResult<Prisma.$SecurityAuditLogPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first SecurityAuditLog that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SecurityAuditLogFindFirstArgs} args - Arguments to find a SecurityAuditLog
+     * @example
+     * // Get one SecurityAuditLog
+     * const securityAuditLog = await prisma.securityAuditLog.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends SecurityAuditLogFindFirstArgs>(args?: SelectSubset<T, SecurityAuditLogFindFirstArgs<ExtArgs>>): Prisma__SecurityAuditLogClient<$Result.GetResult<Prisma.$SecurityAuditLogPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first SecurityAuditLog that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SecurityAuditLogFindFirstOrThrowArgs} args - Arguments to find a SecurityAuditLog
+     * @example
+     * // Get one SecurityAuditLog
+     * const securityAuditLog = await prisma.securityAuditLog.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends SecurityAuditLogFindFirstOrThrowArgs>(args?: SelectSubset<T, SecurityAuditLogFindFirstOrThrowArgs<ExtArgs>>): Prisma__SecurityAuditLogClient<$Result.GetResult<Prisma.$SecurityAuditLogPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more SecurityAuditLogs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SecurityAuditLogFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all SecurityAuditLogs
+     * const securityAuditLogs = await prisma.securityAuditLog.findMany()
+     * 
+     * // Get first 10 SecurityAuditLogs
+     * const securityAuditLogs = await prisma.securityAuditLog.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const securityAuditLogWithIdOnly = await prisma.securityAuditLog.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends SecurityAuditLogFindManyArgs>(args?: SelectSubset<T, SecurityAuditLogFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SecurityAuditLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a SecurityAuditLog.
+     * @param {SecurityAuditLogCreateArgs} args - Arguments to create a SecurityAuditLog.
+     * @example
+     * // Create one SecurityAuditLog
+     * const SecurityAuditLog = await prisma.securityAuditLog.create({
+     *   data: {
+     *     // ... data to create a SecurityAuditLog
+     *   }
+     * })
+     * 
+     */
+    create<T extends SecurityAuditLogCreateArgs>(args: SelectSubset<T, SecurityAuditLogCreateArgs<ExtArgs>>): Prisma__SecurityAuditLogClient<$Result.GetResult<Prisma.$SecurityAuditLogPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many SecurityAuditLogs.
+     * @param {SecurityAuditLogCreateManyArgs} args - Arguments to create many SecurityAuditLogs.
+     * @example
+     * // Create many SecurityAuditLogs
+     * const securityAuditLog = await prisma.securityAuditLog.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends SecurityAuditLogCreateManyArgs>(args?: SelectSubset<T, SecurityAuditLogCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many SecurityAuditLogs and returns the data saved in the database.
+     * @param {SecurityAuditLogCreateManyAndReturnArgs} args - Arguments to create many SecurityAuditLogs.
+     * @example
+     * // Create many SecurityAuditLogs
+     * const securityAuditLog = await prisma.securityAuditLog.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many SecurityAuditLogs and only return the `id`
+     * const securityAuditLogWithIdOnly = await prisma.securityAuditLog.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends SecurityAuditLogCreateManyAndReturnArgs>(args?: SelectSubset<T, SecurityAuditLogCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SecurityAuditLogPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a SecurityAuditLog.
+     * @param {SecurityAuditLogDeleteArgs} args - Arguments to delete one SecurityAuditLog.
+     * @example
+     * // Delete one SecurityAuditLog
+     * const SecurityAuditLog = await prisma.securityAuditLog.delete({
+     *   where: {
+     *     // ... filter to delete one SecurityAuditLog
+     *   }
+     * })
+     * 
+     */
+    delete<T extends SecurityAuditLogDeleteArgs>(args: SelectSubset<T, SecurityAuditLogDeleteArgs<ExtArgs>>): Prisma__SecurityAuditLogClient<$Result.GetResult<Prisma.$SecurityAuditLogPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one SecurityAuditLog.
+     * @param {SecurityAuditLogUpdateArgs} args - Arguments to update one SecurityAuditLog.
+     * @example
+     * // Update one SecurityAuditLog
+     * const securityAuditLog = await prisma.securityAuditLog.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends SecurityAuditLogUpdateArgs>(args: SelectSubset<T, SecurityAuditLogUpdateArgs<ExtArgs>>): Prisma__SecurityAuditLogClient<$Result.GetResult<Prisma.$SecurityAuditLogPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more SecurityAuditLogs.
+     * @param {SecurityAuditLogDeleteManyArgs} args - Arguments to filter SecurityAuditLogs to delete.
+     * @example
+     * // Delete a few SecurityAuditLogs
+     * const { count } = await prisma.securityAuditLog.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends SecurityAuditLogDeleteManyArgs>(args?: SelectSubset<T, SecurityAuditLogDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SecurityAuditLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SecurityAuditLogUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many SecurityAuditLogs
+     * const securityAuditLog = await prisma.securityAuditLog.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends SecurityAuditLogUpdateManyArgs>(args: SelectSubset<T, SecurityAuditLogUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SecurityAuditLogs and returns the data updated in the database.
+     * @param {SecurityAuditLogUpdateManyAndReturnArgs} args - Arguments to update many SecurityAuditLogs.
+     * @example
+     * // Update many SecurityAuditLogs
+     * const securityAuditLog = await prisma.securityAuditLog.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more SecurityAuditLogs and only return the `id`
+     * const securityAuditLogWithIdOnly = await prisma.securityAuditLog.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends SecurityAuditLogUpdateManyAndReturnArgs>(args: SelectSubset<T, SecurityAuditLogUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SecurityAuditLogPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one SecurityAuditLog.
+     * @param {SecurityAuditLogUpsertArgs} args - Arguments to update or create a SecurityAuditLog.
+     * @example
+     * // Update or create a SecurityAuditLog
+     * const securityAuditLog = await prisma.securityAuditLog.upsert({
+     *   create: {
+     *     // ... data to create a SecurityAuditLog
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the SecurityAuditLog we want to update
+     *   }
+     * })
+     */
+    upsert<T extends SecurityAuditLogUpsertArgs>(args: SelectSubset<T, SecurityAuditLogUpsertArgs<ExtArgs>>): Prisma__SecurityAuditLogClient<$Result.GetResult<Prisma.$SecurityAuditLogPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of SecurityAuditLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SecurityAuditLogCountArgs} args - Arguments to filter SecurityAuditLogs to count.
+     * @example
+     * // Count the number of SecurityAuditLogs
+     * const count = await prisma.securityAuditLog.count({
+     *   where: {
+     *     // ... the filter for the SecurityAuditLogs we want to count
+     *   }
+     * })
+    **/
+    count<T extends SecurityAuditLogCountArgs>(
+      args?: Subset<T, SecurityAuditLogCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], SecurityAuditLogCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a SecurityAuditLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SecurityAuditLogAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends SecurityAuditLogAggregateArgs>(args: Subset<T, SecurityAuditLogAggregateArgs>): Prisma.PrismaPromise<GetSecurityAuditLogAggregateType<T>>
+
+    /**
+     * Group by SecurityAuditLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SecurityAuditLogGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends SecurityAuditLogGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: SecurityAuditLogGroupByArgs['orderBy'] }
+        : { orderBy?: SecurityAuditLogGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, SecurityAuditLogGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetSecurityAuditLogGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the SecurityAuditLog model
+   */
+  readonly fields: SecurityAuditLogFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for SecurityAuditLog.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__SecurityAuditLogClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the SecurityAuditLog model
+   */
+  interface SecurityAuditLogFieldRefs {
+    readonly id: FieldRef<"SecurityAuditLog", 'String'>
+    readonly userId: FieldRef<"SecurityAuditLog", 'String'>
+    readonly action: FieldRef<"SecurityAuditLog", 'String'>
+    readonly resource: FieldRef<"SecurityAuditLog", 'String'>
+    readonly details: FieldRef<"SecurityAuditLog", 'Json'>
+    readonly timestamp: FieldRef<"SecurityAuditLog", 'DateTime'>
+    readonly ipAddress: FieldRef<"SecurityAuditLog", 'String'>
+    readonly userAgent: FieldRef<"SecurityAuditLog", 'String'>
+    readonly risk: FieldRef<"SecurityAuditLog", 'String'>
+    readonly createdAt: FieldRef<"SecurityAuditLog", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * SecurityAuditLog findUnique
+   */
+  export type SecurityAuditLogFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecurityAuditLog
+     */
+    select?: SecurityAuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecurityAuditLog
+     */
+    omit?: SecurityAuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecurityAuditLogInclude<ExtArgs> | null
+    /**
+     * Filter, which SecurityAuditLog to fetch.
+     */
+    where: SecurityAuditLogWhereUniqueInput
+  }
+
+  /**
+   * SecurityAuditLog findUniqueOrThrow
+   */
+  export type SecurityAuditLogFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecurityAuditLog
+     */
+    select?: SecurityAuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecurityAuditLog
+     */
+    omit?: SecurityAuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecurityAuditLogInclude<ExtArgs> | null
+    /**
+     * Filter, which SecurityAuditLog to fetch.
+     */
+    where: SecurityAuditLogWhereUniqueInput
+  }
+
+  /**
+   * SecurityAuditLog findFirst
+   */
+  export type SecurityAuditLogFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecurityAuditLog
+     */
+    select?: SecurityAuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecurityAuditLog
+     */
+    omit?: SecurityAuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecurityAuditLogInclude<ExtArgs> | null
+    /**
+     * Filter, which SecurityAuditLog to fetch.
+     */
+    where?: SecurityAuditLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SecurityAuditLogs to fetch.
+     */
+    orderBy?: SecurityAuditLogOrderByWithRelationInput | SecurityAuditLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SecurityAuditLogs.
+     */
+    cursor?: SecurityAuditLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SecurityAuditLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SecurityAuditLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SecurityAuditLogs.
+     */
+    distinct?: SecurityAuditLogScalarFieldEnum | SecurityAuditLogScalarFieldEnum[]
+  }
+
+  /**
+   * SecurityAuditLog findFirstOrThrow
+   */
+  export type SecurityAuditLogFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecurityAuditLog
+     */
+    select?: SecurityAuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecurityAuditLog
+     */
+    omit?: SecurityAuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecurityAuditLogInclude<ExtArgs> | null
+    /**
+     * Filter, which SecurityAuditLog to fetch.
+     */
+    where?: SecurityAuditLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SecurityAuditLogs to fetch.
+     */
+    orderBy?: SecurityAuditLogOrderByWithRelationInput | SecurityAuditLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SecurityAuditLogs.
+     */
+    cursor?: SecurityAuditLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SecurityAuditLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SecurityAuditLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SecurityAuditLogs.
+     */
+    distinct?: SecurityAuditLogScalarFieldEnum | SecurityAuditLogScalarFieldEnum[]
+  }
+
+  /**
+   * SecurityAuditLog findMany
+   */
+  export type SecurityAuditLogFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecurityAuditLog
+     */
+    select?: SecurityAuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecurityAuditLog
+     */
+    omit?: SecurityAuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecurityAuditLogInclude<ExtArgs> | null
+    /**
+     * Filter, which SecurityAuditLogs to fetch.
+     */
+    where?: SecurityAuditLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SecurityAuditLogs to fetch.
+     */
+    orderBy?: SecurityAuditLogOrderByWithRelationInput | SecurityAuditLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing SecurityAuditLogs.
+     */
+    cursor?: SecurityAuditLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SecurityAuditLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SecurityAuditLogs.
+     */
+    skip?: number
+    distinct?: SecurityAuditLogScalarFieldEnum | SecurityAuditLogScalarFieldEnum[]
+  }
+
+  /**
+   * SecurityAuditLog create
+   */
+  export type SecurityAuditLogCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecurityAuditLog
+     */
+    select?: SecurityAuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecurityAuditLog
+     */
+    omit?: SecurityAuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecurityAuditLogInclude<ExtArgs> | null
+    /**
+     * The data needed to create a SecurityAuditLog.
+     */
+    data: XOR<SecurityAuditLogCreateInput, SecurityAuditLogUncheckedCreateInput>
+  }
+
+  /**
+   * SecurityAuditLog createMany
+   */
+  export type SecurityAuditLogCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many SecurityAuditLogs.
+     */
+    data: SecurityAuditLogCreateManyInput | SecurityAuditLogCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * SecurityAuditLog createManyAndReturn
+   */
+  export type SecurityAuditLogCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecurityAuditLog
+     */
+    select?: SecurityAuditLogSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecurityAuditLog
+     */
+    omit?: SecurityAuditLogOmit<ExtArgs> | null
+    /**
+     * The data used to create many SecurityAuditLogs.
+     */
+    data: SecurityAuditLogCreateManyInput | SecurityAuditLogCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecurityAuditLogIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * SecurityAuditLog update
+   */
+  export type SecurityAuditLogUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecurityAuditLog
+     */
+    select?: SecurityAuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecurityAuditLog
+     */
+    omit?: SecurityAuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecurityAuditLogInclude<ExtArgs> | null
+    /**
+     * The data needed to update a SecurityAuditLog.
+     */
+    data: XOR<SecurityAuditLogUpdateInput, SecurityAuditLogUncheckedUpdateInput>
+    /**
+     * Choose, which SecurityAuditLog to update.
+     */
+    where: SecurityAuditLogWhereUniqueInput
+  }
+
+  /**
+   * SecurityAuditLog updateMany
+   */
+  export type SecurityAuditLogUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update SecurityAuditLogs.
+     */
+    data: XOR<SecurityAuditLogUpdateManyMutationInput, SecurityAuditLogUncheckedUpdateManyInput>
+    /**
+     * Filter which SecurityAuditLogs to update
+     */
+    where?: SecurityAuditLogWhereInput
+    /**
+     * Limit how many SecurityAuditLogs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * SecurityAuditLog updateManyAndReturn
+   */
+  export type SecurityAuditLogUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecurityAuditLog
+     */
+    select?: SecurityAuditLogSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecurityAuditLog
+     */
+    omit?: SecurityAuditLogOmit<ExtArgs> | null
+    /**
+     * The data used to update SecurityAuditLogs.
+     */
+    data: XOR<SecurityAuditLogUpdateManyMutationInput, SecurityAuditLogUncheckedUpdateManyInput>
+    /**
+     * Filter which SecurityAuditLogs to update
+     */
+    where?: SecurityAuditLogWhereInput
+    /**
+     * Limit how many SecurityAuditLogs to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecurityAuditLogIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * SecurityAuditLog upsert
+   */
+  export type SecurityAuditLogUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecurityAuditLog
+     */
+    select?: SecurityAuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecurityAuditLog
+     */
+    omit?: SecurityAuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecurityAuditLogInclude<ExtArgs> | null
+    /**
+     * The filter to search for the SecurityAuditLog to update in case it exists.
+     */
+    where: SecurityAuditLogWhereUniqueInput
+    /**
+     * In case the SecurityAuditLog found by the `where` argument doesn't exist, create a new SecurityAuditLog with this data.
+     */
+    create: XOR<SecurityAuditLogCreateInput, SecurityAuditLogUncheckedCreateInput>
+    /**
+     * In case the SecurityAuditLog was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<SecurityAuditLogUpdateInput, SecurityAuditLogUncheckedUpdateInput>
+  }
+
+  /**
+   * SecurityAuditLog delete
+   */
+  export type SecurityAuditLogDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecurityAuditLog
+     */
+    select?: SecurityAuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecurityAuditLog
+     */
+    omit?: SecurityAuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecurityAuditLogInclude<ExtArgs> | null
+    /**
+     * Filter which SecurityAuditLog to delete.
+     */
+    where: SecurityAuditLogWhereUniqueInput
+  }
+
+  /**
+   * SecurityAuditLog deleteMany
+   */
+  export type SecurityAuditLogDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SecurityAuditLogs to delete
+     */
+    where?: SecurityAuditLogWhereInput
+    /**
+     * Limit how many SecurityAuditLogs to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * SecurityAuditLog without action
+   */
+  export type SecurityAuditLogDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecurityAuditLog
+     */
+    select?: SecurityAuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecurityAuditLog
+     */
+    omit?: SecurityAuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecurityAuditLogInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -15250,6 +20268,71 @@ export namespace Prisma {
   };
 
   export type AIMessageScalarFieldEnum = (typeof AIMessageScalarFieldEnum)[keyof typeof AIMessageScalarFieldEnum]
+
+
+  export const DocumentScalarFieldEnum: {
+    id: 'id',
+    filename: 'filename',
+    mimeType: 'mimeType',
+    size: 'size',
+    extractedText: 'extractedText',
+    summary: 'summary',
+    keyInsights: 'keyInsights',
+    confidence: 'confidence',
+    uploadedBy: 'uploadedBy',
+    companyId: 'companyId',
+    taskId: 'taskId',
+    boardId: 'boardId',
+    processedAt: 'processedAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type DocumentScalarFieldEnum = (typeof DocumentScalarFieldEnum)[keyof typeof DocumentScalarFieldEnum]
+
+
+  export const DocumentEmbeddingScalarFieldEnum: {
+    id: 'id',
+    documentId: 'documentId',
+    content: 'content',
+    metadata: 'metadata',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type DocumentEmbeddingScalarFieldEnum = (typeof DocumentEmbeddingScalarFieldEnum)[keyof typeof DocumentEmbeddingScalarFieldEnum]
+
+
+  export const ConversationSummaryScalarFieldEnum: {
+    id: 'id',
+    conversationId: 'conversationId',
+    summary: 'summary',
+    keyTopics: 'keyTopics',
+    actionItems: 'actionItems',
+    preferences: 'preferences',
+    sentiment: 'sentiment',
+    confidence: 'confidence',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ConversationSummaryScalarFieldEnum = (typeof ConversationSummaryScalarFieldEnum)[keyof typeof ConversationSummaryScalarFieldEnum]
+
+
+  export const SecurityAuditLogScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    action: 'action',
+    resource: 'resource',
+    details: 'details',
+    timestamp: 'timestamp',
+    ipAddress: 'ipAddress',
+    userAgent: 'userAgent',
+    risk: 'risk',
+    createdAt: 'createdAt'
+  };
+
+  export type SecurityAuditLogScalarFieldEnum = (typeof SecurityAuditLogScalarFieldEnum)[keyof typeof SecurityAuditLogScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -15584,6 +20667,8 @@ export namespace Prisma {
     assignedTasks?: TaskListRelationFilter
     createdTasks?: TaskListRelationFilter
     aiConversations?: AIConversationListRelationFilter
+    documents?: DocumentListRelationFilter
+    securityAuditLogs?: SecurityAuditLogListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -15604,6 +20689,8 @@ export namespace Prisma {
     assignedTasks?: TaskOrderByRelationAggregateInput
     createdTasks?: TaskOrderByRelationAggregateInput
     aiConversations?: AIConversationOrderByRelationAggregateInput
+    documents?: DocumentOrderByRelationAggregateInput
+    securityAuditLogs?: SecurityAuditLogOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -15627,6 +20714,8 @@ export namespace Prisma {
     assignedTasks?: TaskListRelationFilter
     createdTasks?: TaskListRelationFilter
     aiConversations?: AIConversationListRelationFilter
+    documents?: DocumentListRelationFilter
+    securityAuditLogs?: SecurityAuditLogListRelationFilter
   }, "id" | "email" | "emailVerificationToken">
 
   export type UserOrderByWithAggregationInput = {
@@ -15729,6 +20818,7 @@ export namespace Prisma {
     boardSection?: XOR<BoardSectionScalarRelationFilter, BoardSectionWhereInput>
     history?: TaskHistoryListRelationFilter
     embedding?: XOR<TaskEmbeddingNullableScalarRelationFilter, TaskEmbeddingWhereInput> | null
+    documents?: DocumentListRelationFilter
   }
 
   export type TaskOrderByWithRelationInput = {
@@ -15749,6 +20839,7 @@ export namespace Prisma {
     boardSection?: BoardSectionOrderByWithRelationInput
     history?: TaskHistoryOrderByRelationAggregateInput
     embedding?: TaskEmbeddingOrderByWithRelationInput
+    documents?: DocumentOrderByRelationAggregateInput
   }
 
   export type TaskWhereUniqueInput = Prisma.AtLeast<{
@@ -15772,6 +20863,7 @@ export namespace Prisma {
     boardSection?: XOR<BoardSectionScalarRelationFilter, BoardSectionWhereInput>
     history?: TaskHistoryListRelationFilter
     embedding?: XOR<TaskEmbeddingNullableScalarRelationFilter, TaskEmbeddingWhereInput> | null
+    documents?: DocumentListRelationFilter
   }, "id">
 
   export type TaskOrderByWithAggregationInput = {
@@ -15825,6 +20917,7 @@ export namespace Prisma {
     access?: StringNullableListFilter<"Board">
     boardSections?: BoardSectionListRelationFilter
     embedding?: XOR<BoardEmbeddingNullableScalarRelationFilter, BoardEmbeddingWhereInput> | null
+    documents?: DocumentListRelationFilter
   }
 
   export type BoardOrderByWithRelationInput = {
@@ -15837,6 +20930,7 @@ export namespace Prisma {
     access?: SortOrder
     boardSections?: BoardSectionOrderByRelationAggregateInput
     embedding?: BoardEmbeddingOrderByWithRelationInput
+    documents?: DocumentOrderByRelationAggregateInput
   }
 
   export type BoardWhereUniqueInput = Prisma.AtLeast<{
@@ -15852,6 +20946,7 @@ export namespace Prisma {
     access?: StringNullableListFilter<"Board">
     boardSections?: BoardSectionListRelationFilter
     embedding?: XOR<BoardEmbeddingNullableScalarRelationFilter, BoardEmbeddingWhereInput> | null
+    documents?: DocumentListRelationFilter
   }, "id">
 
   export type BoardOrderByWithAggregationInput = {
@@ -16132,6 +21227,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"AIConversation"> | Date | string
     updatedAt?: DateTimeFilter<"AIConversation"> | Date | string
     messages?: AIMessageListRelationFilter
+    summary?: XOR<ConversationSummaryNullableScalarRelationFilter, ConversationSummaryWhereInput> | null
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }
 
@@ -16144,6 +21240,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     messages?: AIMessageOrderByRelationAggregateInput
+    summary?: ConversationSummaryOrderByWithRelationInput
     user?: UserOrderByWithRelationInput
   }
 
@@ -16159,6 +21256,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"AIConversation"> | Date | string
     updatedAt?: DateTimeFilter<"AIConversation"> | Date | string
     messages?: AIMessageListRelationFilter
+    summary?: XOR<ConversationSummaryNullableScalarRelationFilter, ConversationSummaryWhereInput> | null
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }, "id">
 
@@ -16246,6 +21344,344 @@ export namespace Prisma {
     content?: StringWithAggregatesFilter<"AIMessage"> | string
     metadata?: JsonNullableWithAggregatesFilter<"AIMessage">
     createdAt?: DateTimeWithAggregatesFilter<"AIMessage"> | Date | string
+  }
+
+  export type DocumentWhereInput = {
+    AND?: DocumentWhereInput | DocumentWhereInput[]
+    OR?: DocumentWhereInput[]
+    NOT?: DocumentWhereInput | DocumentWhereInput[]
+    id?: StringFilter<"Document"> | string
+    filename?: StringFilter<"Document"> | string
+    mimeType?: StringFilter<"Document"> | string
+    size?: IntFilter<"Document"> | number
+    extractedText?: StringFilter<"Document"> | string
+    summary?: StringFilter<"Document"> | string
+    keyInsights?: StringNullableListFilter<"Document">
+    confidence?: FloatFilter<"Document"> | number
+    uploadedBy?: StringFilter<"Document"> | string
+    companyId?: StringFilter<"Document"> | string
+    taskId?: StringNullableFilter<"Document"> | string | null
+    boardId?: StringNullableFilter<"Document"> | string | null
+    processedAt?: DateTimeFilter<"Document"> | Date | string
+    createdAt?: DateTimeFilter<"Document"> | Date | string
+    updatedAt?: DateTimeFilter<"Document"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    task?: XOR<TaskNullableScalarRelationFilter, TaskWhereInput> | null
+    board?: XOR<BoardNullableScalarRelationFilter, BoardWhereInput> | null
+    embeddings?: DocumentEmbeddingListRelationFilter
+  }
+
+  export type DocumentOrderByWithRelationInput = {
+    id?: SortOrder
+    filename?: SortOrder
+    mimeType?: SortOrder
+    size?: SortOrder
+    extractedText?: SortOrder
+    summary?: SortOrder
+    keyInsights?: SortOrder
+    confidence?: SortOrder
+    uploadedBy?: SortOrder
+    companyId?: SortOrder
+    taskId?: SortOrderInput | SortOrder
+    boardId?: SortOrderInput | SortOrder
+    processedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+    task?: TaskOrderByWithRelationInput
+    board?: BoardOrderByWithRelationInput
+    embeddings?: DocumentEmbeddingOrderByRelationAggregateInput
+  }
+
+  export type DocumentWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: DocumentWhereInput | DocumentWhereInput[]
+    OR?: DocumentWhereInput[]
+    NOT?: DocumentWhereInput | DocumentWhereInput[]
+    filename?: StringFilter<"Document"> | string
+    mimeType?: StringFilter<"Document"> | string
+    size?: IntFilter<"Document"> | number
+    extractedText?: StringFilter<"Document"> | string
+    summary?: StringFilter<"Document"> | string
+    keyInsights?: StringNullableListFilter<"Document">
+    confidence?: FloatFilter<"Document"> | number
+    uploadedBy?: StringFilter<"Document"> | string
+    companyId?: StringFilter<"Document"> | string
+    taskId?: StringNullableFilter<"Document"> | string | null
+    boardId?: StringNullableFilter<"Document"> | string | null
+    processedAt?: DateTimeFilter<"Document"> | Date | string
+    createdAt?: DateTimeFilter<"Document"> | Date | string
+    updatedAt?: DateTimeFilter<"Document"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    task?: XOR<TaskNullableScalarRelationFilter, TaskWhereInput> | null
+    board?: XOR<BoardNullableScalarRelationFilter, BoardWhereInput> | null
+    embeddings?: DocumentEmbeddingListRelationFilter
+  }, "id">
+
+  export type DocumentOrderByWithAggregationInput = {
+    id?: SortOrder
+    filename?: SortOrder
+    mimeType?: SortOrder
+    size?: SortOrder
+    extractedText?: SortOrder
+    summary?: SortOrder
+    keyInsights?: SortOrder
+    confidence?: SortOrder
+    uploadedBy?: SortOrder
+    companyId?: SortOrder
+    taskId?: SortOrderInput | SortOrder
+    boardId?: SortOrderInput | SortOrder
+    processedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: DocumentCountOrderByAggregateInput
+    _avg?: DocumentAvgOrderByAggregateInput
+    _max?: DocumentMaxOrderByAggregateInput
+    _min?: DocumentMinOrderByAggregateInput
+    _sum?: DocumentSumOrderByAggregateInput
+  }
+
+  export type DocumentScalarWhereWithAggregatesInput = {
+    AND?: DocumentScalarWhereWithAggregatesInput | DocumentScalarWhereWithAggregatesInput[]
+    OR?: DocumentScalarWhereWithAggregatesInput[]
+    NOT?: DocumentScalarWhereWithAggregatesInput | DocumentScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Document"> | string
+    filename?: StringWithAggregatesFilter<"Document"> | string
+    mimeType?: StringWithAggregatesFilter<"Document"> | string
+    size?: IntWithAggregatesFilter<"Document"> | number
+    extractedText?: StringWithAggregatesFilter<"Document"> | string
+    summary?: StringWithAggregatesFilter<"Document"> | string
+    keyInsights?: StringNullableListFilter<"Document">
+    confidence?: FloatWithAggregatesFilter<"Document"> | number
+    uploadedBy?: StringWithAggregatesFilter<"Document"> | string
+    companyId?: StringWithAggregatesFilter<"Document"> | string
+    taskId?: StringNullableWithAggregatesFilter<"Document"> | string | null
+    boardId?: StringNullableWithAggregatesFilter<"Document"> | string | null
+    processedAt?: DateTimeWithAggregatesFilter<"Document"> | Date | string
+    createdAt?: DateTimeWithAggregatesFilter<"Document"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Document"> | Date | string
+  }
+
+  export type DocumentEmbeddingWhereInput = {
+    AND?: DocumentEmbeddingWhereInput | DocumentEmbeddingWhereInput[]
+    OR?: DocumentEmbeddingWhereInput[]
+    NOT?: DocumentEmbeddingWhereInput | DocumentEmbeddingWhereInput[]
+    id?: StringFilter<"DocumentEmbedding"> | string
+    documentId?: StringFilter<"DocumentEmbedding"> | string
+    content?: StringFilter<"DocumentEmbedding"> | string
+    metadata?: JsonNullableFilter<"DocumentEmbedding">
+    createdAt?: DateTimeFilter<"DocumentEmbedding"> | Date | string
+    updatedAt?: DateTimeFilter<"DocumentEmbedding"> | Date | string
+    document?: XOR<DocumentScalarRelationFilter, DocumentWhereInput>
+  }
+
+  export type DocumentEmbeddingOrderByWithRelationInput = {
+    id?: SortOrder
+    documentId?: SortOrder
+    content?: SortOrder
+    metadata?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    document?: DocumentOrderByWithRelationInput
+  }
+
+  export type DocumentEmbeddingWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: DocumentEmbeddingWhereInput | DocumentEmbeddingWhereInput[]
+    OR?: DocumentEmbeddingWhereInput[]
+    NOT?: DocumentEmbeddingWhereInput | DocumentEmbeddingWhereInput[]
+    documentId?: StringFilter<"DocumentEmbedding"> | string
+    content?: StringFilter<"DocumentEmbedding"> | string
+    metadata?: JsonNullableFilter<"DocumentEmbedding">
+    createdAt?: DateTimeFilter<"DocumentEmbedding"> | Date | string
+    updatedAt?: DateTimeFilter<"DocumentEmbedding"> | Date | string
+    document?: XOR<DocumentScalarRelationFilter, DocumentWhereInput>
+  }, "id">
+
+  export type DocumentEmbeddingOrderByWithAggregationInput = {
+    id?: SortOrder
+    documentId?: SortOrder
+    content?: SortOrder
+    metadata?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: DocumentEmbeddingCountOrderByAggregateInput
+    _max?: DocumentEmbeddingMaxOrderByAggregateInput
+    _min?: DocumentEmbeddingMinOrderByAggregateInput
+  }
+
+  export type DocumentEmbeddingScalarWhereWithAggregatesInput = {
+    AND?: DocumentEmbeddingScalarWhereWithAggregatesInput | DocumentEmbeddingScalarWhereWithAggregatesInput[]
+    OR?: DocumentEmbeddingScalarWhereWithAggregatesInput[]
+    NOT?: DocumentEmbeddingScalarWhereWithAggregatesInput | DocumentEmbeddingScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"DocumentEmbedding"> | string
+    documentId?: StringWithAggregatesFilter<"DocumentEmbedding"> | string
+    content?: StringWithAggregatesFilter<"DocumentEmbedding"> | string
+    metadata?: JsonNullableWithAggregatesFilter<"DocumentEmbedding">
+    createdAt?: DateTimeWithAggregatesFilter<"DocumentEmbedding"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"DocumentEmbedding"> | Date | string
+  }
+
+  export type ConversationSummaryWhereInput = {
+    AND?: ConversationSummaryWhereInput | ConversationSummaryWhereInput[]
+    OR?: ConversationSummaryWhereInput[]
+    NOT?: ConversationSummaryWhereInput | ConversationSummaryWhereInput[]
+    id?: StringFilter<"ConversationSummary"> | string
+    conversationId?: StringFilter<"ConversationSummary"> | string
+    summary?: StringFilter<"ConversationSummary"> | string
+    keyTopics?: StringNullableListFilter<"ConversationSummary">
+    actionItems?: StringNullableListFilter<"ConversationSummary">
+    preferences?: JsonNullableFilter<"ConversationSummary">
+    sentiment?: StringFilter<"ConversationSummary"> | string
+    confidence?: FloatFilter<"ConversationSummary"> | number
+    createdAt?: DateTimeFilter<"ConversationSummary"> | Date | string
+    updatedAt?: DateTimeFilter<"ConversationSummary"> | Date | string
+    conversation?: XOR<AIConversationScalarRelationFilter, AIConversationWhereInput>
+  }
+
+  export type ConversationSummaryOrderByWithRelationInput = {
+    id?: SortOrder
+    conversationId?: SortOrder
+    summary?: SortOrder
+    keyTopics?: SortOrder
+    actionItems?: SortOrder
+    preferences?: SortOrderInput | SortOrder
+    sentiment?: SortOrder
+    confidence?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    conversation?: AIConversationOrderByWithRelationInput
+  }
+
+  export type ConversationSummaryWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    conversationId?: string
+    AND?: ConversationSummaryWhereInput | ConversationSummaryWhereInput[]
+    OR?: ConversationSummaryWhereInput[]
+    NOT?: ConversationSummaryWhereInput | ConversationSummaryWhereInput[]
+    summary?: StringFilter<"ConversationSummary"> | string
+    keyTopics?: StringNullableListFilter<"ConversationSummary">
+    actionItems?: StringNullableListFilter<"ConversationSummary">
+    preferences?: JsonNullableFilter<"ConversationSummary">
+    sentiment?: StringFilter<"ConversationSummary"> | string
+    confidence?: FloatFilter<"ConversationSummary"> | number
+    createdAt?: DateTimeFilter<"ConversationSummary"> | Date | string
+    updatedAt?: DateTimeFilter<"ConversationSummary"> | Date | string
+    conversation?: XOR<AIConversationScalarRelationFilter, AIConversationWhereInput>
+  }, "id" | "conversationId">
+
+  export type ConversationSummaryOrderByWithAggregationInput = {
+    id?: SortOrder
+    conversationId?: SortOrder
+    summary?: SortOrder
+    keyTopics?: SortOrder
+    actionItems?: SortOrder
+    preferences?: SortOrderInput | SortOrder
+    sentiment?: SortOrder
+    confidence?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ConversationSummaryCountOrderByAggregateInput
+    _avg?: ConversationSummaryAvgOrderByAggregateInput
+    _max?: ConversationSummaryMaxOrderByAggregateInput
+    _min?: ConversationSummaryMinOrderByAggregateInput
+    _sum?: ConversationSummarySumOrderByAggregateInput
+  }
+
+  export type ConversationSummaryScalarWhereWithAggregatesInput = {
+    AND?: ConversationSummaryScalarWhereWithAggregatesInput | ConversationSummaryScalarWhereWithAggregatesInput[]
+    OR?: ConversationSummaryScalarWhereWithAggregatesInput[]
+    NOT?: ConversationSummaryScalarWhereWithAggregatesInput | ConversationSummaryScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ConversationSummary"> | string
+    conversationId?: StringWithAggregatesFilter<"ConversationSummary"> | string
+    summary?: StringWithAggregatesFilter<"ConversationSummary"> | string
+    keyTopics?: StringNullableListFilter<"ConversationSummary">
+    actionItems?: StringNullableListFilter<"ConversationSummary">
+    preferences?: JsonNullableWithAggregatesFilter<"ConversationSummary">
+    sentiment?: StringWithAggregatesFilter<"ConversationSummary"> | string
+    confidence?: FloatWithAggregatesFilter<"ConversationSummary"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"ConversationSummary"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ConversationSummary"> | Date | string
+  }
+
+  export type SecurityAuditLogWhereInput = {
+    AND?: SecurityAuditLogWhereInput | SecurityAuditLogWhereInput[]
+    OR?: SecurityAuditLogWhereInput[]
+    NOT?: SecurityAuditLogWhereInput | SecurityAuditLogWhereInput[]
+    id?: StringFilter<"SecurityAuditLog"> | string
+    userId?: StringFilter<"SecurityAuditLog"> | string
+    action?: StringFilter<"SecurityAuditLog"> | string
+    resource?: StringFilter<"SecurityAuditLog"> | string
+    details?: JsonFilter<"SecurityAuditLog">
+    timestamp?: DateTimeFilter<"SecurityAuditLog"> | Date | string
+    ipAddress?: StringNullableFilter<"SecurityAuditLog"> | string | null
+    userAgent?: StringNullableFilter<"SecurityAuditLog"> | string | null
+    risk?: StringFilter<"SecurityAuditLog"> | string
+    createdAt?: DateTimeFilter<"SecurityAuditLog"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type SecurityAuditLogOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    action?: SortOrder
+    resource?: SortOrder
+    details?: SortOrder
+    timestamp?: SortOrder
+    ipAddress?: SortOrderInput | SortOrder
+    userAgent?: SortOrderInput | SortOrder
+    risk?: SortOrder
+    createdAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type SecurityAuditLogWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: SecurityAuditLogWhereInput | SecurityAuditLogWhereInput[]
+    OR?: SecurityAuditLogWhereInput[]
+    NOT?: SecurityAuditLogWhereInput | SecurityAuditLogWhereInput[]
+    userId?: StringFilter<"SecurityAuditLog"> | string
+    action?: StringFilter<"SecurityAuditLog"> | string
+    resource?: StringFilter<"SecurityAuditLog"> | string
+    details?: JsonFilter<"SecurityAuditLog">
+    timestamp?: DateTimeFilter<"SecurityAuditLog"> | Date | string
+    ipAddress?: StringNullableFilter<"SecurityAuditLog"> | string | null
+    userAgent?: StringNullableFilter<"SecurityAuditLog"> | string | null
+    risk?: StringFilter<"SecurityAuditLog"> | string
+    createdAt?: DateTimeFilter<"SecurityAuditLog"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id">
+
+  export type SecurityAuditLogOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    action?: SortOrder
+    resource?: SortOrder
+    details?: SortOrder
+    timestamp?: SortOrder
+    ipAddress?: SortOrderInput | SortOrder
+    userAgent?: SortOrderInput | SortOrder
+    risk?: SortOrder
+    createdAt?: SortOrder
+    _count?: SecurityAuditLogCountOrderByAggregateInput
+    _max?: SecurityAuditLogMaxOrderByAggregateInput
+    _min?: SecurityAuditLogMinOrderByAggregateInput
+  }
+
+  export type SecurityAuditLogScalarWhereWithAggregatesInput = {
+    AND?: SecurityAuditLogScalarWhereWithAggregatesInput | SecurityAuditLogScalarWhereWithAggregatesInput[]
+    OR?: SecurityAuditLogScalarWhereWithAggregatesInput[]
+    NOT?: SecurityAuditLogScalarWhereWithAggregatesInput | SecurityAuditLogScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"SecurityAuditLog"> | string
+    userId?: StringWithAggregatesFilter<"SecurityAuditLog"> | string
+    action?: StringWithAggregatesFilter<"SecurityAuditLog"> | string
+    resource?: StringWithAggregatesFilter<"SecurityAuditLog"> | string
+    details?: JsonWithAggregatesFilter<"SecurityAuditLog">
+    timestamp?: DateTimeWithAggregatesFilter<"SecurityAuditLog"> | Date | string
+    ipAddress?: StringNullableWithAggregatesFilter<"SecurityAuditLog"> | string | null
+    userAgent?: StringNullableWithAggregatesFilter<"SecurityAuditLog"> | string | null
+    risk?: StringWithAggregatesFilter<"SecurityAuditLog"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"SecurityAuditLog"> | Date | string
   }
 
   export type AccountCreateInput = {
@@ -16418,6 +21854,8 @@ export namespace Prisma {
     assignedTasks?: TaskCreateNestedManyWithoutAssignedToInput
     createdTasks?: TaskCreateNestedManyWithoutCreatedByInput
     aiConversations?: AIConversationCreateNestedManyWithoutUserInput
+    documents?: DocumentCreateNestedManyWithoutUserInput
+    securityAuditLogs?: SecurityAuditLogCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -16438,6 +21876,8 @@ export namespace Prisma {
     assignedTasks?: TaskUncheckedCreateNestedManyWithoutAssignedToInput
     createdTasks?: TaskUncheckedCreateNestedManyWithoutCreatedByInput
     aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
+    documents?: DocumentUncheckedCreateNestedManyWithoutUserInput
+    securityAuditLogs?: SecurityAuditLogUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -16458,6 +21898,8 @@ export namespace Prisma {
     assignedTasks?: TaskUpdateManyWithoutAssignedToNestedInput
     createdTasks?: TaskUpdateManyWithoutCreatedByNestedInput
     aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
+    documents?: DocumentUpdateManyWithoutUserNestedInput
+    securityAuditLogs?: SecurityAuditLogUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -16478,6 +21920,8 @@ export namespace Prisma {
     assignedTasks?: TaskUncheckedUpdateManyWithoutAssignedToNestedInput
     createdTasks?: TaskUncheckedUpdateManyWithoutCreatedByNestedInput
     aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
+    documents?: DocumentUncheckedUpdateManyWithoutUserNestedInput
+    securityAuditLogs?: SecurityAuditLogUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -16582,6 +22026,7 @@ export namespace Prisma {
     boardSection: BoardSectionCreateNestedOneWithoutTasksInput
     history?: TaskHistoryCreateNestedManyWithoutTaskInput
     embedding?: TaskEmbeddingCreateNestedOneWithoutTaskInput
+    documents?: DocumentCreateNestedManyWithoutTaskInput
   }
 
   export type TaskUncheckedCreateInput = {
@@ -16599,6 +22044,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     history?: TaskHistoryUncheckedCreateNestedManyWithoutTaskInput
     embedding?: TaskEmbeddingUncheckedCreateNestedOneWithoutTaskInput
+    documents?: DocumentUncheckedCreateNestedManyWithoutTaskInput
   }
 
   export type TaskUpdateInput = {
@@ -16616,6 +22062,7 @@ export namespace Prisma {
     boardSection?: BoardSectionUpdateOneRequiredWithoutTasksNestedInput
     history?: TaskHistoryUpdateManyWithoutTaskNestedInput
     embedding?: TaskEmbeddingUpdateOneWithoutTaskNestedInput
+    documents?: DocumentUpdateManyWithoutTaskNestedInput
   }
 
   export type TaskUncheckedUpdateInput = {
@@ -16633,6 +22080,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     history?: TaskHistoryUncheckedUpdateManyWithoutTaskNestedInput
     embedding?: TaskEmbeddingUncheckedUpdateOneWithoutTaskNestedInput
+    documents?: DocumentUncheckedUpdateManyWithoutTaskNestedInput
   }
 
   export type TaskCreateManyInput = {
@@ -16687,6 +22135,7 @@ export namespace Prisma {
     access?: BoardCreateaccessInput | string[]
     boardSections?: BoardSectionCreateNestedManyWithoutBoardInput
     embedding?: BoardEmbeddingCreateNestedOneWithoutBoardInput
+    documents?: DocumentCreateNestedManyWithoutBoardInput
   }
 
   export type BoardUncheckedCreateInput = {
@@ -16699,6 +22148,7 @@ export namespace Prisma {
     access?: BoardCreateaccessInput | string[]
     boardSections?: BoardSectionUncheckedCreateNestedManyWithoutBoardInput
     embedding?: BoardEmbeddingUncheckedCreateNestedOneWithoutBoardInput
+    documents?: DocumentUncheckedCreateNestedManyWithoutBoardInput
   }
 
   export type BoardUpdateInput = {
@@ -16711,6 +22161,7 @@ export namespace Prisma {
     access?: BoardUpdateaccessInput | string[]
     boardSections?: BoardSectionUpdateManyWithoutBoardNestedInput
     embedding?: BoardEmbeddingUpdateOneWithoutBoardNestedInput
+    documents?: DocumentUpdateManyWithoutBoardNestedInput
   }
 
   export type BoardUncheckedUpdateInput = {
@@ -16723,6 +22174,7 @@ export namespace Prisma {
     access?: BoardUpdateaccessInput | string[]
     boardSections?: BoardSectionUncheckedUpdateManyWithoutBoardNestedInput
     embedding?: BoardEmbeddingUncheckedUpdateOneWithoutBoardNestedInput
+    documents?: DocumentUncheckedUpdateManyWithoutBoardNestedInput
   }
 
   export type BoardCreateManyInput = {
@@ -16954,6 +22406,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     messages?: AIMessageCreateNestedManyWithoutConversationInput
+    summary?: ConversationSummaryCreateNestedOneWithoutConversationInput
     user: UserCreateNestedOneWithoutAiConversationsInput
   }
 
@@ -16966,6 +22419,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     messages?: AIMessageUncheckedCreateNestedManyWithoutConversationInput
+    summary?: ConversationSummaryUncheckedCreateNestedOneWithoutConversationInput
   }
 
   export type AIConversationUpdateInput = {
@@ -16976,6 +22430,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     messages?: AIMessageUpdateManyWithoutConversationNestedInput
+    summary?: ConversationSummaryUpdateOneWithoutConversationNestedInput
     user?: UserUpdateOneRequiredWithoutAiConversationsNestedInput
   }
 
@@ -16988,6 +22443,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     messages?: AIMessageUncheckedUpdateManyWithoutConversationNestedInput
+    summary?: ConversationSummaryUncheckedUpdateOneWithoutConversationNestedInput
   }
 
   export type AIConversationCreateManyInput = {
@@ -17078,6 +22534,348 @@ export namespace Prisma {
     role?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DocumentCreateInput = {
+    id?: string
+    filename: string
+    mimeType: string
+    size: number
+    extractedText: string
+    summary: string
+    keyInsights?: DocumentCreatekeyInsightsInput | string[]
+    confidence: number
+    companyId: string
+    processedAt?: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutDocumentsInput
+    task?: TaskCreateNestedOneWithoutDocumentsInput
+    board?: BoardCreateNestedOneWithoutDocumentsInput
+    embeddings?: DocumentEmbeddingCreateNestedManyWithoutDocumentInput
+  }
+
+  export type DocumentUncheckedCreateInput = {
+    id?: string
+    filename: string
+    mimeType: string
+    size: number
+    extractedText: string
+    summary: string
+    keyInsights?: DocumentCreatekeyInsightsInput | string[]
+    confidence: number
+    uploadedBy: string
+    companyId: string
+    taskId?: string | null
+    boardId?: string | null
+    processedAt?: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    embeddings?: DocumentEmbeddingUncheckedCreateNestedManyWithoutDocumentInput
+  }
+
+  export type DocumentUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    filename?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    extractedText?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    keyInsights?: DocumentUpdatekeyInsightsInput | string[]
+    confidence?: FloatFieldUpdateOperationsInput | number
+    companyId?: StringFieldUpdateOperationsInput | string
+    processedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutDocumentsNestedInput
+    task?: TaskUpdateOneWithoutDocumentsNestedInput
+    board?: BoardUpdateOneWithoutDocumentsNestedInput
+    embeddings?: DocumentEmbeddingUpdateManyWithoutDocumentNestedInput
+  }
+
+  export type DocumentUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    filename?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    extractedText?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    keyInsights?: DocumentUpdatekeyInsightsInput | string[]
+    confidence?: FloatFieldUpdateOperationsInput | number
+    uploadedBy?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    taskId?: NullableStringFieldUpdateOperationsInput | string | null
+    boardId?: NullableStringFieldUpdateOperationsInput | string | null
+    processedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    embeddings?: DocumentEmbeddingUncheckedUpdateManyWithoutDocumentNestedInput
+  }
+
+  export type DocumentCreateManyInput = {
+    id?: string
+    filename: string
+    mimeType: string
+    size: number
+    extractedText: string
+    summary: string
+    keyInsights?: DocumentCreatekeyInsightsInput | string[]
+    confidence: number
+    uploadedBy: string
+    companyId: string
+    taskId?: string | null
+    boardId?: string | null
+    processedAt?: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type DocumentUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    filename?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    extractedText?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    keyInsights?: DocumentUpdatekeyInsightsInput | string[]
+    confidence?: FloatFieldUpdateOperationsInput | number
+    companyId?: StringFieldUpdateOperationsInput | string
+    processedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DocumentUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    filename?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    extractedText?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    keyInsights?: DocumentUpdatekeyInsightsInput | string[]
+    confidence?: FloatFieldUpdateOperationsInput | number
+    uploadedBy?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    taskId?: NullableStringFieldUpdateOperationsInput | string | null
+    boardId?: NullableStringFieldUpdateOperationsInput | string | null
+    processedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DocumentEmbeddingUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    document?: DocumentUpdateOneRequiredWithoutEmbeddingsNestedInput
+  }
+
+  export type DocumentEmbeddingUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    documentId?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DocumentEmbeddingUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DocumentEmbeddingUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    documentId?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ConversationSummaryCreateInput = {
+    id?: string
+    summary: string
+    keyTopics?: ConversationSummaryCreatekeyTopicsInput | string[]
+    actionItems?: ConversationSummaryCreateactionItemsInput | string[]
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    sentiment: string
+    confidence: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    conversation: AIConversationCreateNestedOneWithoutSummaryInput
+  }
+
+  export type ConversationSummaryUncheckedCreateInput = {
+    id?: string
+    conversationId: string
+    summary: string
+    keyTopics?: ConversationSummaryCreatekeyTopicsInput | string[]
+    actionItems?: ConversationSummaryCreateactionItemsInput | string[]
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    sentiment: string
+    confidence: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ConversationSummaryUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    keyTopics?: ConversationSummaryUpdatekeyTopicsInput | string[]
+    actionItems?: ConversationSummaryUpdateactionItemsInput | string[]
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    sentiment?: StringFieldUpdateOperationsInput | string
+    confidence?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    conversation?: AIConversationUpdateOneRequiredWithoutSummaryNestedInput
+  }
+
+  export type ConversationSummaryUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    conversationId?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    keyTopics?: ConversationSummaryUpdatekeyTopicsInput | string[]
+    actionItems?: ConversationSummaryUpdateactionItemsInput | string[]
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    sentiment?: StringFieldUpdateOperationsInput | string
+    confidence?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ConversationSummaryCreateManyInput = {
+    id?: string
+    conversationId: string
+    summary: string
+    keyTopics?: ConversationSummaryCreatekeyTopicsInput | string[]
+    actionItems?: ConversationSummaryCreateactionItemsInput | string[]
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    sentiment: string
+    confidence: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ConversationSummaryUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    keyTopics?: ConversationSummaryUpdatekeyTopicsInput | string[]
+    actionItems?: ConversationSummaryUpdateactionItemsInput | string[]
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    sentiment?: StringFieldUpdateOperationsInput | string
+    confidence?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ConversationSummaryUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    conversationId?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    keyTopics?: ConversationSummaryUpdatekeyTopicsInput | string[]
+    actionItems?: ConversationSummaryUpdateactionItemsInput | string[]
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    sentiment?: StringFieldUpdateOperationsInput | string
+    confidence?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SecurityAuditLogCreateInput = {
+    id?: string
+    action: string
+    resource: string
+    details: JsonNullValueInput | InputJsonValue
+    timestamp: Date | string
+    ipAddress?: string | null
+    userAgent?: string | null
+    risk: string
+    createdAt?: Date | string
+    user: UserCreateNestedOneWithoutSecurityAuditLogsInput
+  }
+
+  export type SecurityAuditLogUncheckedCreateInput = {
+    id?: string
+    userId: string
+    action: string
+    resource: string
+    details: JsonNullValueInput | InputJsonValue
+    timestamp: Date | string
+    ipAddress?: string | null
+    userAgent?: string | null
+    risk: string
+    createdAt?: Date | string
+  }
+
+  export type SecurityAuditLogUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    resource?: StringFieldUpdateOperationsInput | string
+    details?: JsonNullValueInput | InputJsonValue
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    risk?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutSecurityAuditLogsNestedInput
+  }
+
+  export type SecurityAuditLogUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    resource?: StringFieldUpdateOperationsInput | string
+    details?: JsonNullValueInput | InputJsonValue
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    risk?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SecurityAuditLogCreateManyInput = {
+    id?: string
+    userId: string
+    action: string
+    resource: string
+    details: JsonNullValueInput | InputJsonValue
+    timestamp: Date | string
+    ipAddress?: string | null
+    userAgent?: string | null
+    risk: string
+    createdAt?: Date | string
+  }
+
+  export type SecurityAuditLogUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    resource?: StringFieldUpdateOperationsInput | string
+    details?: JsonNullValueInput | InputJsonValue
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    risk?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SecurityAuditLogUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    resource?: StringFieldUpdateOperationsInput | string
+    details?: JsonNullValueInput | InputJsonValue
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    risk?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -17330,6 +23128,18 @@ export namespace Prisma {
     none?: AIConversationWhereInput
   }
 
+  export type DocumentListRelationFilter = {
+    every?: DocumentWhereInput
+    some?: DocumentWhereInput
+    none?: DocumentWhereInput
+  }
+
+  export type SecurityAuditLogListRelationFilter = {
+    every?: SecurityAuditLogWhereInput
+    some?: SecurityAuditLogWhereInput
+    none?: SecurityAuditLogWhereInput
+  }
+
   export type AccountOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -17343,6 +23153,14 @@ export namespace Prisma {
   }
 
   export type AIConversationOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type DocumentOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type SecurityAuditLogOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -17820,6 +23638,11 @@ export namespace Prisma {
     none?: AIMessageWhereInput
   }
 
+  export type ConversationSummaryNullableScalarRelationFilter = {
+    is?: ConversationSummaryWhereInput | null
+    isNot?: ConversationSummaryWhereInput | null
+  }
+
   export type AIMessageOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -17908,6 +23731,223 @@ export namespace Prisma {
     createdAt?: SortOrder
   }
 
+  export type FloatFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
+  export type TaskNullableScalarRelationFilter = {
+    is?: TaskWhereInput | null
+    isNot?: TaskWhereInput | null
+  }
+
+  export type BoardNullableScalarRelationFilter = {
+    is?: BoardWhereInput | null
+    isNot?: BoardWhereInput | null
+  }
+
+  export type DocumentEmbeddingListRelationFilter = {
+    every?: DocumentEmbeddingWhereInput
+    some?: DocumentEmbeddingWhereInput
+    none?: DocumentEmbeddingWhereInput
+  }
+
+  export type DocumentEmbeddingOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type DocumentCountOrderByAggregateInput = {
+    id?: SortOrder
+    filename?: SortOrder
+    mimeType?: SortOrder
+    size?: SortOrder
+    extractedText?: SortOrder
+    summary?: SortOrder
+    keyInsights?: SortOrder
+    confidence?: SortOrder
+    uploadedBy?: SortOrder
+    companyId?: SortOrder
+    taskId?: SortOrder
+    boardId?: SortOrder
+    processedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DocumentAvgOrderByAggregateInput = {
+    size?: SortOrder
+    confidence?: SortOrder
+  }
+
+  export type DocumentMaxOrderByAggregateInput = {
+    id?: SortOrder
+    filename?: SortOrder
+    mimeType?: SortOrder
+    size?: SortOrder
+    extractedText?: SortOrder
+    summary?: SortOrder
+    confidence?: SortOrder
+    uploadedBy?: SortOrder
+    companyId?: SortOrder
+    taskId?: SortOrder
+    boardId?: SortOrder
+    processedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DocumentMinOrderByAggregateInput = {
+    id?: SortOrder
+    filename?: SortOrder
+    mimeType?: SortOrder
+    size?: SortOrder
+    extractedText?: SortOrder
+    summary?: SortOrder
+    confidence?: SortOrder
+    uploadedBy?: SortOrder
+    companyId?: SortOrder
+    taskId?: SortOrder
+    boardId?: SortOrder
+    processedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DocumentSumOrderByAggregateInput = {
+    size?: SortOrder
+    confidence?: SortOrder
+  }
+
+  export type FloatWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedFloatFilter<$PrismaModel>
+    _min?: NestedFloatFilter<$PrismaModel>
+    _max?: NestedFloatFilter<$PrismaModel>
+  }
+
+  export type DocumentScalarRelationFilter = {
+    is?: DocumentWhereInput
+    isNot?: DocumentWhereInput
+  }
+
+  export type DocumentEmbeddingCountOrderByAggregateInput = {
+    id?: SortOrder
+    documentId?: SortOrder
+    content?: SortOrder
+    metadata?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DocumentEmbeddingMaxOrderByAggregateInput = {
+    id?: SortOrder
+    documentId?: SortOrder
+    content?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DocumentEmbeddingMinOrderByAggregateInput = {
+    id?: SortOrder
+    documentId?: SortOrder
+    content?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ConversationSummaryCountOrderByAggregateInput = {
+    id?: SortOrder
+    conversationId?: SortOrder
+    summary?: SortOrder
+    keyTopics?: SortOrder
+    actionItems?: SortOrder
+    preferences?: SortOrder
+    sentiment?: SortOrder
+    confidence?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ConversationSummaryAvgOrderByAggregateInput = {
+    confidence?: SortOrder
+  }
+
+  export type ConversationSummaryMaxOrderByAggregateInput = {
+    id?: SortOrder
+    conversationId?: SortOrder
+    summary?: SortOrder
+    sentiment?: SortOrder
+    confidence?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ConversationSummaryMinOrderByAggregateInput = {
+    id?: SortOrder
+    conversationId?: SortOrder
+    summary?: SortOrder
+    sentiment?: SortOrder
+    confidence?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ConversationSummarySumOrderByAggregateInput = {
+    confidence?: SortOrder
+  }
+
+  export type SecurityAuditLogCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    action?: SortOrder
+    resource?: SortOrder
+    details?: SortOrder
+    timestamp?: SortOrder
+    ipAddress?: SortOrder
+    userAgent?: SortOrder
+    risk?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type SecurityAuditLogMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    action?: SortOrder
+    resource?: SortOrder
+    timestamp?: SortOrder
+    ipAddress?: SortOrder
+    userAgent?: SortOrder
+    risk?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type SecurityAuditLogMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    action?: SortOrder
+    resource?: SortOrder
+    timestamp?: SortOrder
+    ipAddress?: SortOrder
+    userAgent?: SortOrder
+    risk?: SortOrder
+    createdAt?: SortOrder
+  }
+
   export type UserCreateNestedOneWithoutAccountsInput = {
     create?: XOR<UserCreateWithoutAccountsInput, UserUncheckedCreateWithoutAccountsInput>
     connectOrCreate?: UserCreateOrConnectWithoutAccountsInput
@@ -17991,6 +24031,20 @@ export namespace Prisma {
     connect?: AIConversationWhereUniqueInput | AIConversationWhereUniqueInput[]
   }
 
+  export type DocumentCreateNestedManyWithoutUserInput = {
+    create?: XOR<DocumentCreateWithoutUserInput, DocumentUncheckedCreateWithoutUserInput> | DocumentCreateWithoutUserInput[] | DocumentUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: DocumentCreateOrConnectWithoutUserInput | DocumentCreateOrConnectWithoutUserInput[]
+    createMany?: DocumentCreateManyUserInputEnvelope
+    connect?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+  }
+
+  export type SecurityAuditLogCreateNestedManyWithoutUserInput = {
+    create?: XOR<SecurityAuditLogCreateWithoutUserInput, SecurityAuditLogUncheckedCreateWithoutUserInput> | SecurityAuditLogCreateWithoutUserInput[] | SecurityAuditLogUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: SecurityAuditLogCreateOrConnectWithoutUserInput | SecurityAuditLogCreateOrConnectWithoutUserInput[]
+    createMany?: SecurityAuditLogCreateManyUserInputEnvelope
+    connect?: SecurityAuditLogWhereUniqueInput | SecurityAuditLogWhereUniqueInput[]
+  }
+
   export type AccountUncheckedCreateNestedManyWithoutUserInput = {
     create?: XOR<AccountCreateWithoutUserInput, AccountUncheckedCreateWithoutUserInput> | AccountCreateWithoutUserInput[] | AccountUncheckedCreateWithoutUserInput[]
     connectOrCreate?: AccountCreateOrConnectWithoutUserInput | AccountCreateOrConnectWithoutUserInput[]
@@ -18024,6 +24078,20 @@ export namespace Prisma {
     connectOrCreate?: AIConversationCreateOrConnectWithoutUserInput | AIConversationCreateOrConnectWithoutUserInput[]
     createMany?: AIConversationCreateManyUserInputEnvelope
     connect?: AIConversationWhereUniqueInput | AIConversationWhereUniqueInput[]
+  }
+
+  export type DocumentUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<DocumentCreateWithoutUserInput, DocumentUncheckedCreateWithoutUserInput> | DocumentCreateWithoutUserInput[] | DocumentUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: DocumentCreateOrConnectWithoutUserInput | DocumentCreateOrConnectWithoutUserInput[]
+    createMany?: DocumentCreateManyUserInputEnvelope
+    connect?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+  }
+
+  export type SecurityAuditLogUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<SecurityAuditLogCreateWithoutUserInput, SecurityAuditLogUncheckedCreateWithoutUserInput> | SecurityAuditLogCreateWithoutUserInput[] | SecurityAuditLogUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: SecurityAuditLogCreateOrConnectWithoutUserInput | SecurityAuditLogCreateOrConnectWithoutUserInput[]
+    createMany?: SecurityAuditLogCreateManyUserInputEnvelope
+    connect?: SecurityAuditLogWhereUniqueInput | SecurityAuditLogWhereUniqueInput[]
   }
 
   export type NullableDateTimeFieldUpdateOperationsInput = {
@@ -18104,6 +24172,34 @@ export namespace Prisma {
     deleteMany?: AIConversationScalarWhereInput | AIConversationScalarWhereInput[]
   }
 
+  export type DocumentUpdateManyWithoutUserNestedInput = {
+    create?: XOR<DocumentCreateWithoutUserInput, DocumentUncheckedCreateWithoutUserInput> | DocumentCreateWithoutUserInput[] | DocumentUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: DocumentCreateOrConnectWithoutUserInput | DocumentCreateOrConnectWithoutUserInput[]
+    upsert?: DocumentUpsertWithWhereUniqueWithoutUserInput | DocumentUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: DocumentCreateManyUserInputEnvelope
+    set?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+    disconnect?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+    delete?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+    connect?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+    update?: DocumentUpdateWithWhereUniqueWithoutUserInput | DocumentUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: DocumentUpdateManyWithWhereWithoutUserInput | DocumentUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: DocumentScalarWhereInput | DocumentScalarWhereInput[]
+  }
+
+  export type SecurityAuditLogUpdateManyWithoutUserNestedInput = {
+    create?: XOR<SecurityAuditLogCreateWithoutUserInput, SecurityAuditLogUncheckedCreateWithoutUserInput> | SecurityAuditLogCreateWithoutUserInput[] | SecurityAuditLogUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: SecurityAuditLogCreateOrConnectWithoutUserInput | SecurityAuditLogCreateOrConnectWithoutUserInput[]
+    upsert?: SecurityAuditLogUpsertWithWhereUniqueWithoutUserInput | SecurityAuditLogUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: SecurityAuditLogCreateManyUserInputEnvelope
+    set?: SecurityAuditLogWhereUniqueInput | SecurityAuditLogWhereUniqueInput[]
+    disconnect?: SecurityAuditLogWhereUniqueInput | SecurityAuditLogWhereUniqueInput[]
+    delete?: SecurityAuditLogWhereUniqueInput | SecurityAuditLogWhereUniqueInput[]
+    connect?: SecurityAuditLogWhereUniqueInput | SecurityAuditLogWhereUniqueInput[]
+    update?: SecurityAuditLogUpdateWithWhereUniqueWithoutUserInput | SecurityAuditLogUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: SecurityAuditLogUpdateManyWithWhereWithoutUserInput | SecurityAuditLogUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: SecurityAuditLogScalarWhereInput | SecurityAuditLogScalarWhereInput[]
+  }
+
   export type AccountUncheckedUpdateManyWithoutUserNestedInput = {
     create?: XOR<AccountCreateWithoutUserInput, AccountUncheckedCreateWithoutUserInput> | AccountCreateWithoutUserInput[] | AccountUncheckedCreateWithoutUserInput[]
     connectOrCreate?: AccountCreateOrConnectWithoutUserInput | AccountCreateOrConnectWithoutUserInput[]
@@ -18174,6 +24270,34 @@ export namespace Prisma {
     deleteMany?: AIConversationScalarWhereInput | AIConversationScalarWhereInput[]
   }
 
+  export type DocumentUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<DocumentCreateWithoutUserInput, DocumentUncheckedCreateWithoutUserInput> | DocumentCreateWithoutUserInput[] | DocumentUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: DocumentCreateOrConnectWithoutUserInput | DocumentCreateOrConnectWithoutUserInput[]
+    upsert?: DocumentUpsertWithWhereUniqueWithoutUserInput | DocumentUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: DocumentCreateManyUserInputEnvelope
+    set?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+    disconnect?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+    delete?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+    connect?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+    update?: DocumentUpdateWithWhereUniqueWithoutUserInput | DocumentUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: DocumentUpdateManyWithWhereWithoutUserInput | DocumentUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: DocumentScalarWhereInput | DocumentScalarWhereInput[]
+  }
+
+  export type SecurityAuditLogUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<SecurityAuditLogCreateWithoutUserInput, SecurityAuditLogUncheckedCreateWithoutUserInput> | SecurityAuditLogCreateWithoutUserInput[] | SecurityAuditLogUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: SecurityAuditLogCreateOrConnectWithoutUserInput | SecurityAuditLogCreateOrConnectWithoutUserInput[]
+    upsert?: SecurityAuditLogUpsertWithWhereUniqueWithoutUserInput | SecurityAuditLogUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: SecurityAuditLogCreateManyUserInputEnvelope
+    set?: SecurityAuditLogWhereUniqueInput | SecurityAuditLogWhereUniqueInput[]
+    disconnect?: SecurityAuditLogWhereUniqueInput | SecurityAuditLogWhereUniqueInput[]
+    delete?: SecurityAuditLogWhereUniqueInput | SecurityAuditLogWhereUniqueInput[]
+    connect?: SecurityAuditLogWhereUniqueInput | SecurityAuditLogWhereUniqueInput[]
+    update?: SecurityAuditLogUpdateWithWhereUniqueWithoutUserInput | SecurityAuditLogUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: SecurityAuditLogUpdateManyWithWhereWithoutUserInput | SecurityAuditLogUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: SecurityAuditLogScalarWhereInput | SecurityAuditLogScalarWhereInput[]
+  }
+
   export type UserCreateNestedOneWithoutAssignedTasksInput = {
     create?: XOR<UserCreateWithoutAssignedTasksInput, UserUncheckedCreateWithoutAssignedTasksInput>
     connectOrCreate?: UserCreateOrConnectWithoutAssignedTasksInput
@@ -18203,6 +24327,13 @@ export namespace Prisma {
     connect?: TaskEmbeddingWhereUniqueInput
   }
 
+  export type DocumentCreateNestedManyWithoutTaskInput = {
+    create?: XOR<DocumentCreateWithoutTaskInput, DocumentUncheckedCreateWithoutTaskInput> | DocumentCreateWithoutTaskInput[] | DocumentUncheckedCreateWithoutTaskInput[]
+    connectOrCreate?: DocumentCreateOrConnectWithoutTaskInput | DocumentCreateOrConnectWithoutTaskInput[]
+    createMany?: DocumentCreateManyTaskInputEnvelope
+    connect?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+  }
+
   export type TaskHistoryUncheckedCreateNestedManyWithoutTaskInput = {
     create?: XOR<TaskHistoryCreateWithoutTaskInput, TaskHistoryUncheckedCreateWithoutTaskInput> | TaskHistoryCreateWithoutTaskInput[] | TaskHistoryUncheckedCreateWithoutTaskInput[]
     connectOrCreate?: TaskHistoryCreateOrConnectWithoutTaskInput | TaskHistoryCreateOrConnectWithoutTaskInput[]
@@ -18212,6 +24343,13 @@ export namespace Prisma {
 
   export type TaskEmbeddingUncheckedCreateNestedOneWithoutTaskInput = {
     connect?: TaskEmbeddingWhereUniqueInput
+  }
+
+  export type DocumentUncheckedCreateNestedManyWithoutTaskInput = {
+    create?: XOR<DocumentCreateWithoutTaskInput, DocumentUncheckedCreateWithoutTaskInput> | DocumentCreateWithoutTaskInput[] | DocumentUncheckedCreateWithoutTaskInput[]
+    connectOrCreate?: DocumentCreateOrConnectWithoutTaskInput | DocumentCreateOrConnectWithoutTaskInput[]
+    createMany?: DocumentCreateManyTaskInputEnvelope
+    connect?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
   }
 
   export type EnumTaskPriorityFieldUpdateOperationsInput = {
@@ -18275,6 +24413,20 @@ export namespace Prisma {
     update?: XOR<XOR<TaskEmbeddingUpdateToOneWithWhereWithoutTaskInput, TaskEmbeddingUpdateWithoutTaskInput>, TaskEmbeddingUncheckedUpdateWithoutTaskInput>
   }
 
+  export type DocumentUpdateManyWithoutTaskNestedInput = {
+    create?: XOR<DocumentCreateWithoutTaskInput, DocumentUncheckedCreateWithoutTaskInput> | DocumentCreateWithoutTaskInput[] | DocumentUncheckedCreateWithoutTaskInput[]
+    connectOrCreate?: DocumentCreateOrConnectWithoutTaskInput | DocumentCreateOrConnectWithoutTaskInput[]
+    upsert?: DocumentUpsertWithWhereUniqueWithoutTaskInput | DocumentUpsertWithWhereUniqueWithoutTaskInput[]
+    createMany?: DocumentCreateManyTaskInputEnvelope
+    set?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+    disconnect?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+    delete?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+    connect?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+    update?: DocumentUpdateWithWhereUniqueWithoutTaskInput | DocumentUpdateWithWhereUniqueWithoutTaskInput[]
+    updateMany?: DocumentUpdateManyWithWhereWithoutTaskInput | DocumentUpdateManyWithWhereWithoutTaskInput[]
+    deleteMany?: DocumentScalarWhereInput | DocumentScalarWhereInput[]
+  }
+
   export type TaskHistoryUncheckedUpdateManyWithoutTaskNestedInput = {
     create?: XOR<TaskHistoryCreateWithoutTaskInput, TaskHistoryUncheckedCreateWithoutTaskInput> | TaskHistoryCreateWithoutTaskInput[] | TaskHistoryUncheckedCreateWithoutTaskInput[]
     connectOrCreate?: TaskHistoryCreateOrConnectWithoutTaskInput | TaskHistoryCreateOrConnectWithoutTaskInput[]
@@ -18296,6 +24448,20 @@ export namespace Prisma {
     update?: XOR<XOR<TaskEmbeddingUpdateToOneWithWhereWithoutTaskInput, TaskEmbeddingUpdateWithoutTaskInput>, TaskEmbeddingUncheckedUpdateWithoutTaskInput>
   }
 
+  export type DocumentUncheckedUpdateManyWithoutTaskNestedInput = {
+    create?: XOR<DocumentCreateWithoutTaskInput, DocumentUncheckedCreateWithoutTaskInput> | DocumentCreateWithoutTaskInput[] | DocumentUncheckedCreateWithoutTaskInput[]
+    connectOrCreate?: DocumentCreateOrConnectWithoutTaskInput | DocumentCreateOrConnectWithoutTaskInput[]
+    upsert?: DocumentUpsertWithWhereUniqueWithoutTaskInput | DocumentUpsertWithWhereUniqueWithoutTaskInput[]
+    createMany?: DocumentCreateManyTaskInputEnvelope
+    set?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+    disconnect?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+    delete?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+    connect?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+    update?: DocumentUpdateWithWhereUniqueWithoutTaskInput | DocumentUpdateWithWhereUniqueWithoutTaskInput[]
+    updateMany?: DocumentUpdateManyWithWhereWithoutTaskInput | DocumentUpdateManyWithWhereWithoutTaskInput[]
+    deleteMany?: DocumentScalarWhereInput | DocumentScalarWhereInput[]
+  }
+
   export type BoardCreateaccessInput = {
     set: string[]
   }
@@ -18311,6 +24477,13 @@ export namespace Prisma {
     connect?: BoardEmbeddingWhereUniqueInput
   }
 
+  export type DocumentCreateNestedManyWithoutBoardInput = {
+    create?: XOR<DocumentCreateWithoutBoardInput, DocumentUncheckedCreateWithoutBoardInput> | DocumentCreateWithoutBoardInput[] | DocumentUncheckedCreateWithoutBoardInput[]
+    connectOrCreate?: DocumentCreateOrConnectWithoutBoardInput | DocumentCreateOrConnectWithoutBoardInput[]
+    createMany?: DocumentCreateManyBoardInputEnvelope
+    connect?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+  }
+
   export type BoardSectionUncheckedCreateNestedManyWithoutBoardInput = {
     create?: XOR<BoardSectionCreateWithoutBoardInput, BoardSectionUncheckedCreateWithoutBoardInput> | BoardSectionCreateWithoutBoardInput[] | BoardSectionUncheckedCreateWithoutBoardInput[]
     connectOrCreate?: BoardSectionCreateOrConnectWithoutBoardInput | BoardSectionCreateOrConnectWithoutBoardInput[]
@@ -18320,6 +24493,13 @@ export namespace Prisma {
 
   export type BoardEmbeddingUncheckedCreateNestedOneWithoutBoardInput = {
     connect?: BoardEmbeddingWhereUniqueInput
+  }
+
+  export type DocumentUncheckedCreateNestedManyWithoutBoardInput = {
+    create?: XOR<DocumentCreateWithoutBoardInput, DocumentUncheckedCreateWithoutBoardInput> | DocumentCreateWithoutBoardInput[] | DocumentUncheckedCreateWithoutBoardInput[]
+    connectOrCreate?: DocumentCreateOrConnectWithoutBoardInput | DocumentCreateOrConnectWithoutBoardInput[]
+    createMany?: DocumentCreateManyBoardInputEnvelope
+    connect?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
   }
 
   export type BoardUpdateaccessInput = {
@@ -18348,6 +24528,20 @@ export namespace Prisma {
     update?: XOR<XOR<BoardEmbeddingUpdateToOneWithWhereWithoutBoardInput, BoardEmbeddingUpdateWithoutBoardInput>, BoardEmbeddingUncheckedUpdateWithoutBoardInput>
   }
 
+  export type DocumentUpdateManyWithoutBoardNestedInput = {
+    create?: XOR<DocumentCreateWithoutBoardInput, DocumentUncheckedCreateWithoutBoardInput> | DocumentCreateWithoutBoardInput[] | DocumentUncheckedCreateWithoutBoardInput[]
+    connectOrCreate?: DocumentCreateOrConnectWithoutBoardInput | DocumentCreateOrConnectWithoutBoardInput[]
+    upsert?: DocumentUpsertWithWhereUniqueWithoutBoardInput | DocumentUpsertWithWhereUniqueWithoutBoardInput[]
+    createMany?: DocumentCreateManyBoardInputEnvelope
+    set?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+    disconnect?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+    delete?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+    connect?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+    update?: DocumentUpdateWithWhereUniqueWithoutBoardInput | DocumentUpdateWithWhereUniqueWithoutBoardInput[]
+    updateMany?: DocumentUpdateManyWithWhereWithoutBoardInput | DocumentUpdateManyWithWhereWithoutBoardInput[]
+    deleteMany?: DocumentScalarWhereInput | DocumentScalarWhereInput[]
+  }
+
   export type BoardSectionUncheckedUpdateManyWithoutBoardNestedInput = {
     create?: XOR<BoardSectionCreateWithoutBoardInput, BoardSectionUncheckedCreateWithoutBoardInput> | BoardSectionCreateWithoutBoardInput[] | BoardSectionUncheckedCreateWithoutBoardInput[]
     connectOrCreate?: BoardSectionCreateOrConnectWithoutBoardInput | BoardSectionCreateOrConnectWithoutBoardInput[]
@@ -18367,6 +24561,20 @@ export namespace Prisma {
     delete?: BoardEmbeddingWhereInput | boolean
     connect?: BoardEmbeddingWhereUniqueInput
     update?: XOR<XOR<BoardEmbeddingUpdateToOneWithWhereWithoutBoardInput, BoardEmbeddingUpdateWithoutBoardInput>, BoardEmbeddingUncheckedUpdateWithoutBoardInput>
+  }
+
+  export type DocumentUncheckedUpdateManyWithoutBoardNestedInput = {
+    create?: XOR<DocumentCreateWithoutBoardInput, DocumentUncheckedCreateWithoutBoardInput> | DocumentCreateWithoutBoardInput[] | DocumentUncheckedCreateWithoutBoardInput[]
+    connectOrCreate?: DocumentCreateOrConnectWithoutBoardInput | DocumentCreateOrConnectWithoutBoardInput[]
+    upsert?: DocumentUpsertWithWhereUniqueWithoutBoardInput | DocumentUpsertWithWhereUniqueWithoutBoardInput[]
+    createMany?: DocumentCreateManyBoardInputEnvelope
+    set?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+    disconnect?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+    delete?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+    connect?: DocumentWhereUniqueInput | DocumentWhereUniqueInput[]
+    update?: DocumentUpdateWithWhereUniqueWithoutBoardInput | DocumentUpdateWithWhereUniqueWithoutBoardInput[]
+    updateMany?: DocumentUpdateManyWithWhereWithoutBoardInput | DocumentUpdateManyWithWhereWithoutBoardInput[]
+    deleteMany?: DocumentScalarWhereInput | DocumentScalarWhereInput[]
   }
 
   export type BoardCreateNestedOneWithoutBoardSectionsInput = {
@@ -18462,6 +24670,12 @@ export namespace Prisma {
     connect?: AIMessageWhereUniqueInput | AIMessageWhereUniqueInput[]
   }
 
+  export type ConversationSummaryCreateNestedOneWithoutConversationInput = {
+    create?: XOR<ConversationSummaryCreateWithoutConversationInput, ConversationSummaryUncheckedCreateWithoutConversationInput>
+    connectOrCreate?: ConversationSummaryCreateOrConnectWithoutConversationInput
+    connect?: ConversationSummaryWhereUniqueInput
+  }
+
   export type UserCreateNestedOneWithoutAiConversationsInput = {
     create?: XOR<UserCreateWithoutAiConversationsInput, UserUncheckedCreateWithoutAiConversationsInput>
     connectOrCreate?: UserCreateOrConnectWithoutAiConversationsInput
@@ -18473,6 +24687,12 @@ export namespace Prisma {
     connectOrCreate?: AIMessageCreateOrConnectWithoutConversationInput | AIMessageCreateOrConnectWithoutConversationInput[]
     createMany?: AIMessageCreateManyConversationInputEnvelope
     connect?: AIMessageWhereUniqueInput | AIMessageWhereUniqueInput[]
+  }
+
+  export type ConversationSummaryUncheckedCreateNestedOneWithoutConversationInput = {
+    create?: XOR<ConversationSummaryCreateWithoutConversationInput, ConversationSummaryUncheckedCreateWithoutConversationInput>
+    connectOrCreate?: ConversationSummaryCreateOrConnectWithoutConversationInput
+    connect?: ConversationSummaryWhereUniqueInput
   }
 
   export type AIMessageUpdateManyWithoutConversationNestedInput = {
@@ -18487,6 +24707,16 @@ export namespace Prisma {
     update?: AIMessageUpdateWithWhereUniqueWithoutConversationInput | AIMessageUpdateWithWhereUniqueWithoutConversationInput[]
     updateMany?: AIMessageUpdateManyWithWhereWithoutConversationInput | AIMessageUpdateManyWithWhereWithoutConversationInput[]
     deleteMany?: AIMessageScalarWhereInput | AIMessageScalarWhereInput[]
+  }
+
+  export type ConversationSummaryUpdateOneWithoutConversationNestedInput = {
+    create?: XOR<ConversationSummaryCreateWithoutConversationInput, ConversationSummaryUncheckedCreateWithoutConversationInput>
+    connectOrCreate?: ConversationSummaryCreateOrConnectWithoutConversationInput
+    upsert?: ConversationSummaryUpsertWithoutConversationInput
+    disconnect?: ConversationSummaryWhereInput | boolean
+    delete?: ConversationSummaryWhereInput | boolean
+    connect?: ConversationSummaryWhereUniqueInput
+    update?: XOR<XOR<ConversationSummaryUpdateToOneWithWhereWithoutConversationInput, ConversationSummaryUpdateWithoutConversationInput>, ConversationSummaryUncheckedUpdateWithoutConversationInput>
   }
 
   export type UserUpdateOneRequiredWithoutAiConversationsNestedInput = {
@@ -18511,6 +24741,16 @@ export namespace Prisma {
     deleteMany?: AIMessageScalarWhereInput | AIMessageScalarWhereInput[]
   }
 
+  export type ConversationSummaryUncheckedUpdateOneWithoutConversationNestedInput = {
+    create?: XOR<ConversationSummaryCreateWithoutConversationInput, ConversationSummaryUncheckedCreateWithoutConversationInput>
+    connectOrCreate?: ConversationSummaryCreateOrConnectWithoutConversationInput
+    upsert?: ConversationSummaryUpsertWithoutConversationInput
+    disconnect?: ConversationSummaryWhereInput | boolean
+    delete?: ConversationSummaryWhereInput | boolean
+    connect?: ConversationSummaryWhereUniqueInput
+    update?: XOR<XOR<ConversationSummaryUpdateToOneWithWhereWithoutConversationInput, ConversationSummaryUpdateWithoutConversationInput>, ConversationSummaryUncheckedUpdateWithoutConversationInput>
+  }
+
   export type AIConversationCreateNestedOneWithoutMessagesInput = {
     create?: XOR<AIConversationCreateWithoutMessagesInput, AIConversationUncheckedCreateWithoutMessagesInput>
     connectOrCreate?: AIConversationCreateOrConnectWithoutMessagesInput
@@ -18523,6 +24763,151 @@ export namespace Prisma {
     upsert?: AIConversationUpsertWithoutMessagesInput
     connect?: AIConversationWhereUniqueInput
     update?: XOR<XOR<AIConversationUpdateToOneWithWhereWithoutMessagesInput, AIConversationUpdateWithoutMessagesInput>, AIConversationUncheckedUpdateWithoutMessagesInput>
+  }
+
+  export type DocumentCreatekeyInsightsInput = {
+    set: string[]
+  }
+
+  export type UserCreateNestedOneWithoutDocumentsInput = {
+    create?: XOR<UserCreateWithoutDocumentsInput, UserUncheckedCreateWithoutDocumentsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutDocumentsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type TaskCreateNestedOneWithoutDocumentsInput = {
+    create?: XOR<TaskCreateWithoutDocumentsInput, TaskUncheckedCreateWithoutDocumentsInput>
+    connectOrCreate?: TaskCreateOrConnectWithoutDocumentsInput
+    connect?: TaskWhereUniqueInput
+  }
+
+  export type BoardCreateNestedOneWithoutDocumentsInput = {
+    create?: XOR<BoardCreateWithoutDocumentsInput, BoardUncheckedCreateWithoutDocumentsInput>
+    connectOrCreate?: BoardCreateOrConnectWithoutDocumentsInput
+    connect?: BoardWhereUniqueInput
+  }
+
+  export type DocumentEmbeddingCreateNestedManyWithoutDocumentInput = {
+    connect?: DocumentEmbeddingWhereUniqueInput | DocumentEmbeddingWhereUniqueInput[]
+  }
+
+  export type DocumentEmbeddingUncheckedCreateNestedManyWithoutDocumentInput = {
+    connect?: DocumentEmbeddingWhereUniqueInput | DocumentEmbeddingWhereUniqueInput[]
+  }
+
+  export type DocumentUpdatekeyInsightsInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type FloatFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type UserUpdateOneRequiredWithoutDocumentsNestedInput = {
+    create?: XOR<UserCreateWithoutDocumentsInput, UserUncheckedCreateWithoutDocumentsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutDocumentsInput
+    upsert?: UserUpsertWithoutDocumentsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutDocumentsInput, UserUpdateWithoutDocumentsInput>, UserUncheckedUpdateWithoutDocumentsInput>
+  }
+
+  export type TaskUpdateOneWithoutDocumentsNestedInput = {
+    create?: XOR<TaskCreateWithoutDocumentsInput, TaskUncheckedCreateWithoutDocumentsInput>
+    connectOrCreate?: TaskCreateOrConnectWithoutDocumentsInput
+    upsert?: TaskUpsertWithoutDocumentsInput
+    disconnect?: TaskWhereInput | boolean
+    delete?: TaskWhereInput | boolean
+    connect?: TaskWhereUniqueInput
+    update?: XOR<XOR<TaskUpdateToOneWithWhereWithoutDocumentsInput, TaskUpdateWithoutDocumentsInput>, TaskUncheckedUpdateWithoutDocumentsInput>
+  }
+
+  export type BoardUpdateOneWithoutDocumentsNestedInput = {
+    create?: XOR<BoardCreateWithoutDocumentsInput, BoardUncheckedCreateWithoutDocumentsInput>
+    connectOrCreate?: BoardCreateOrConnectWithoutDocumentsInput
+    upsert?: BoardUpsertWithoutDocumentsInput
+    disconnect?: BoardWhereInput | boolean
+    delete?: BoardWhereInput | boolean
+    connect?: BoardWhereUniqueInput
+    update?: XOR<XOR<BoardUpdateToOneWithWhereWithoutDocumentsInput, BoardUpdateWithoutDocumentsInput>, BoardUncheckedUpdateWithoutDocumentsInput>
+  }
+
+  export type DocumentEmbeddingUpdateManyWithoutDocumentNestedInput = {
+    set?: DocumentEmbeddingWhereUniqueInput | DocumentEmbeddingWhereUniqueInput[]
+    disconnect?: DocumentEmbeddingWhereUniqueInput | DocumentEmbeddingWhereUniqueInput[]
+    delete?: DocumentEmbeddingWhereUniqueInput | DocumentEmbeddingWhereUniqueInput[]
+    connect?: DocumentEmbeddingWhereUniqueInput | DocumentEmbeddingWhereUniqueInput[]
+    update?: DocumentEmbeddingUpdateWithWhereUniqueWithoutDocumentInput | DocumentEmbeddingUpdateWithWhereUniqueWithoutDocumentInput[]
+    updateMany?: DocumentEmbeddingUpdateManyWithWhereWithoutDocumentInput | DocumentEmbeddingUpdateManyWithWhereWithoutDocumentInput[]
+    deleteMany?: DocumentEmbeddingScalarWhereInput | DocumentEmbeddingScalarWhereInput[]
+  }
+
+  export type DocumentEmbeddingUncheckedUpdateManyWithoutDocumentNestedInput = {
+    set?: DocumentEmbeddingWhereUniqueInput | DocumentEmbeddingWhereUniqueInput[]
+    disconnect?: DocumentEmbeddingWhereUniqueInput | DocumentEmbeddingWhereUniqueInput[]
+    delete?: DocumentEmbeddingWhereUniqueInput | DocumentEmbeddingWhereUniqueInput[]
+    connect?: DocumentEmbeddingWhereUniqueInput | DocumentEmbeddingWhereUniqueInput[]
+    update?: DocumentEmbeddingUpdateWithWhereUniqueWithoutDocumentInput | DocumentEmbeddingUpdateWithWhereUniqueWithoutDocumentInput[]
+    updateMany?: DocumentEmbeddingUpdateManyWithWhereWithoutDocumentInput | DocumentEmbeddingUpdateManyWithWhereWithoutDocumentInput[]
+    deleteMany?: DocumentEmbeddingScalarWhereInput | DocumentEmbeddingScalarWhereInput[]
+  }
+
+  export type DocumentUpdateOneRequiredWithoutEmbeddingsNestedInput = {
+    create?: XOR<DocumentCreateWithoutEmbeddingsInput, DocumentUncheckedCreateWithoutEmbeddingsInput>
+    connectOrCreate?: DocumentCreateOrConnectWithoutEmbeddingsInput
+    upsert?: DocumentUpsertWithoutEmbeddingsInput
+    connect?: DocumentWhereUniqueInput
+    update?: XOR<XOR<DocumentUpdateToOneWithWhereWithoutEmbeddingsInput, DocumentUpdateWithoutEmbeddingsInput>, DocumentUncheckedUpdateWithoutEmbeddingsInput>
+  }
+
+  export type ConversationSummaryCreatekeyTopicsInput = {
+    set: string[]
+  }
+
+  export type ConversationSummaryCreateactionItemsInput = {
+    set: string[]
+  }
+
+  export type AIConversationCreateNestedOneWithoutSummaryInput = {
+    create?: XOR<AIConversationCreateWithoutSummaryInput, AIConversationUncheckedCreateWithoutSummaryInput>
+    connectOrCreate?: AIConversationCreateOrConnectWithoutSummaryInput
+    connect?: AIConversationWhereUniqueInput
+  }
+
+  export type ConversationSummaryUpdatekeyTopicsInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type ConversationSummaryUpdateactionItemsInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type AIConversationUpdateOneRequiredWithoutSummaryNestedInput = {
+    create?: XOR<AIConversationCreateWithoutSummaryInput, AIConversationUncheckedCreateWithoutSummaryInput>
+    connectOrCreate?: AIConversationCreateOrConnectWithoutSummaryInput
+    upsert?: AIConversationUpsertWithoutSummaryInput
+    connect?: AIConversationWhereUniqueInput
+    update?: XOR<XOR<AIConversationUpdateToOneWithWhereWithoutSummaryInput, AIConversationUpdateWithoutSummaryInput>, AIConversationUncheckedUpdateWithoutSummaryInput>
+  }
+
+  export type UserCreateNestedOneWithoutSecurityAuditLogsInput = {
+    create?: XOR<UserCreateWithoutSecurityAuditLogsInput, UserUncheckedCreateWithoutSecurityAuditLogsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutSecurityAuditLogsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutSecurityAuditLogsNestedInput = {
+    create?: XOR<UserCreateWithoutSecurityAuditLogsInput, UserUncheckedCreateWithoutSecurityAuditLogsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutSecurityAuditLogsInput
+    upsert?: UserUpsertWithoutSecurityAuditLogsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutSecurityAuditLogsInput, UserUpdateWithoutSecurityAuditLogsInput>, UserUncheckedUpdateWithoutSecurityAuditLogsInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -18810,6 +25195,22 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
+  export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedFloatFilter<$PrismaModel>
+    _min?: NestedFloatFilter<$PrismaModel>
+    _max?: NestedFloatFilter<$PrismaModel>
+  }
+
   export type UserCreateWithoutAccountsInput = {
     id?: string
     name?: string | null
@@ -18827,6 +25228,8 @@ export namespace Prisma {
     assignedTasks?: TaskCreateNestedManyWithoutAssignedToInput
     createdTasks?: TaskCreateNestedManyWithoutCreatedByInput
     aiConversations?: AIConversationCreateNestedManyWithoutUserInput
+    documents?: DocumentCreateNestedManyWithoutUserInput
+    securityAuditLogs?: SecurityAuditLogCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutAccountsInput = {
@@ -18846,6 +25249,8 @@ export namespace Prisma {
     assignedTasks?: TaskUncheckedCreateNestedManyWithoutAssignedToInput
     createdTasks?: TaskUncheckedCreateNestedManyWithoutCreatedByInput
     aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
+    documents?: DocumentUncheckedCreateNestedManyWithoutUserInput
+    securityAuditLogs?: SecurityAuditLogUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutAccountsInput = {
@@ -18881,6 +25286,8 @@ export namespace Prisma {
     assignedTasks?: TaskUpdateManyWithoutAssignedToNestedInput
     createdTasks?: TaskUpdateManyWithoutCreatedByNestedInput
     aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
+    documents?: DocumentUpdateManyWithoutUserNestedInput
+    securityAuditLogs?: SecurityAuditLogUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -18900,6 +25307,8 @@ export namespace Prisma {
     assignedTasks?: TaskUncheckedUpdateManyWithoutAssignedToNestedInput
     createdTasks?: TaskUncheckedUpdateManyWithoutCreatedByNestedInput
     aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
+    documents?: DocumentUncheckedUpdateManyWithoutUserNestedInput
+    securityAuditLogs?: SecurityAuditLogUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutSessionsInput = {
@@ -18919,6 +25328,8 @@ export namespace Prisma {
     assignedTasks?: TaskCreateNestedManyWithoutAssignedToInput
     createdTasks?: TaskCreateNestedManyWithoutCreatedByInput
     aiConversations?: AIConversationCreateNestedManyWithoutUserInput
+    documents?: DocumentCreateNestedManyWithoutUserInput
+    securityAuditLogs?: SecurityAuditLogCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutSessionsInput = {
@@ -18938,6 +25349,8 @@ export namespace Prisma {
     assignedTasks?: TaskUncheckedCreateNestedManyWithoutAssignedToInput
     createdTasks?: TaskUncheckedCreateNestedManyWithoutCreatedByInput
     aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
+    documents?: DocumentUncheckedCreateNestedManyWithoutUserInput
+    securityAuditLogs?: SecurityAuditLogUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutSessionsInput = {
@@ -18973,6 +25386,8 @@ export namespace Prisma {
     assignedTasks?: TaskUpdateManyWithoutAssignedToNestedInput
     createdTasks?: TaskUpdateManyWithoutCreatedByNestedInput
     aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
+    documents?: DocumentUpdateManyWithoutUserNestedInput
+    securityAuditLogs?: SecurityAuditLogUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -18992,6 +25407,8 @@ export namespace Prisma {
     assignedTasks?: TaskUncheckedUpdateManyWithoutAssignedToNestedInput
     createdTasks?: TaskUncheckedUpdateManyWithoutCreatedByNestedInput
     aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
+    documents?: DocumentUncheckedUpdateManyWithoutUserNestedInput
+    securityAuditLogs?: SecurityAuditLogUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type AccountCreateWithoutUserInput = {
@@ -19068,6 +25485,7 @@ export namespace Prisma {
     boardSection: BoardSectionCreateNestedOneWithoutTasksInput
     history?: TaskHistoryCreateNestedManyWithoutTaskInput
     embedding?: TaskEmbeddingCreateNestedOneWithoutTaskInput
+    documents?: DocumentCreateNestedManyWithoutTaskInput
   }
 
   export type TaskUncheckedCreateWithoutAssignedToInput = {
@@ -19084,6 +25502,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     history?: TaskHistoryUncheckedCreateNestedManyWithoutTaskInput
     embedding?: TaskEmbeddingUncheckedCreateNestedOneWithoutTaskInput
+    documents?: DocumentUncheckedCreateNestedManyWithoutTaskInput
   }
 
   export type TaskCreateOrConnectWithoutAssignedToInput = {
@@ -19110,6 +25529,7 @@ export namespace Prisma {
     boardSection: BoardSectionCreateNestedOneWithoutTasksInput
     history?: TaskHistoryCreateNestedManyWithoutTaskInput
     embedding?: TaskEmbeddingCreateNestedOneWithoutTaskInput
+    documents?: DocumentCreateNestedManyWithoutTaskInput
   }
 
   export type TaskUncheckedCreateWithoutCreatedByInput = {
@@ -19126,6 +25546,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     history?: TaskHistoryUncheckedCreateNestedManyWithoutTaskInput
     embedding?: TaskEmbeddingUncheckedCreateNestedOneWithoutTaskInput
+    documents?: DocumentUncheckedCreateNestedManyWithoutTaskInput
   }
 
   export type TaskCreateOrConnectWithoutCreatedByInput = {
@@ -19146,6 +25567,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     messages?: AIMessageCreateNestedManyWithoutConversationInput
+    summary?: ConversationSummaryCreateNestedOneWithoutConversationInput
   }
 
   export type AIConversationUncheckedCreateWithoutUserInput = {
@@ -19156,6 +25578,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     messages?: AIMessageUncheckedCreateNestedManyWithoutConversationInput
+    summary?: ConversationSummaryUncheckedCreateNestedOneWithoutConversationInput
   }
 
   export type AIConversationCreateOrConnectWithoutUserInput = {
@@ -19165,6 +25588,86 @@ export namespace Prisma {
 
   export type AIConversationCreateManyUserInputEnvelope = {
     data: AIConversationCreateManyUserInput | AIConversationCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type DocumentCreateWithoutUserInput = {
+    id?: string
+    filename: string
+    mimeType: string
+    size: number
+    extractedText: string
+    summary: string
+    keyInsights?: DocumentCreatekeyInsightsInput | string[]
+    confidence: number
+    companyId: string
+    processedAt?: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    task?: TaskCreateNestedOneWithoutDocumentsInput
+    board?: BoardCreateNestedOneWithoutDocumentsInput
+    embeddings?: DocumentEmbeddingCreateNestedManyWithoutDocumentInput
+  }
+
+  export type DocumentUncheckedCreateWithoutUserInput = {
+    id?: string
+    filename: string
+    mimeType: string
+    size: number
+    extractedText: string
+    summary: string
+    keyInsights?: DocumentCreatekeyInsightsInput | string[]
+    confidence: number
+    companyId: string
+    taskId?: string | null
+    boardId?: string | null
+    processedAt?: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    embeddings?: DocumentEmbeddingUncheckedCreateNestedManyWithoutDocumentInput
+  }
+
+  export type DocumentCreateOrConnectWithoutUserInput = {
+    where: DocumentWhereUniqueInput
+    create: XOR<DocumentCreateWithoutUserInput, DocumentUncheckedCreateWithoutUserInput>
+  }
+
+  export type DocumentCreateManyUserInputEnvelope = {
+    data: DocumentCreateManyUserInput | DocumentCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type SecurityAuditLogCreateWithoutUserInput = {
+    id?: string
+    action: string
+    resource: string
+    details: JsonNullValueInput | InputJsonValue
+    timestamp: Date | string
+    ipAddress?: string | null
+    userAgent?: string | null
+    risk: string
+    createdAt?: Date | string
+  }
+
+  export type SecurityAuditLogUncheckedCreateWithoutUserInput = {
+    id?: string
+    action: string
+    resource: string
+    details: JsonNullValueInput | InputJsonValue
+    timestamp: Date | string
+    ipAddress?: string | null
+    userAgent?: string | null
+    risk: string
+    createdAt?: Date | string
+  }
+
+  export type SecurityAuditLogCreateOrConnectWithoutUserInput = {
+    where: SecurityAuditLogWhereUniqueInput
+    create: XOR<SecurityAuditLogCreateWithoutUserInput, SecurityAuditLogUncheckedCreateWithoutUserInput>
+  }
+
+  export type SecurityAuditLogCreateManyUserInputEnvelope = {
+    data: SecurityAuditLogCreateManyUserInput | SecurityAuditLogCreateManyUserInput[]
     skipDuplicates?: boolean
   }
 
@@ -19307,6 +25810,75 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"AIConversation"> | Date | string
   }
 
+  export type DocumentUpsertWithWhereUniqueWithoutUserInput = {
+    where: DocumentWhereUniqueInput
+    update: XOR<DocumentUpdateWithoutUserInput, DocumentUncheckedUpdateWithoutUserInput>
+    create: XOR<DocumentCreateWithoutUserInput, DocumentUncheckedCreateWithoutUserInput>
+  }
+
+  export type DocumentUpdateWithWhereUniqueWithoutUserInput = {
+    where: DocumentWhereUniqueInput
+    data: XOR<DocumentUpdateWithoutUserInput, DocumentUncheckedUpdateWithoutUserInput>
+  }
+
+  export type DocumentUpdateManyWithWhereWithoutUserInput = {
+    where: DocumentScalarWhereInput
+    data: XOR<DocumentUpdateManyMutationInput, DocumentUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type DocumentScalarWhereInput = {
+    AND?: DocumentScalarWhereInput | DocumentScalarWhereInput[]
+    OR?: DocumentScalarWhereInput[]
+    NOT?: DocumentScalarWhereInput | DocumentScalarWhereInput[]
+    id?: StringFilter<"Document"> | string
+    filename?: StringFilter<"Document"> | string
+    mimeType?: StringFilter<"Document"> | string
+    size?: IntFilter<"Document"> | number
+    extractedText?: StringFilter<"Document"> | string
+    summary?: StringFilter<"Document"> | string
+    keyInsights?: StringNullableListFilter<"Document">
+    confidence?: FloatFilter<"Document"> | number
+    uploadedBy?: StringFilter<"Document"> | string
+    companyId?: StringFilter<"Document"> | string
+    taskId?: StringNullableFilter<"Document"> | string | null
+    boardId?: StringNullableFilter<"Document"> | string | null
+    processedAt?: DateTimeFilter<"Document"> | Date | string
+    createdAt?: DateTimeFilter<"Document"> | Date | string
+    updatedAt?: DateTimeFilter<"Document"> | Date | string
+  }
+
+  export type SecurityAuditLogUpsertWithWhereUniqueWithoutUserInput = {
+    where: SecurityAuditLogWhereUniqueInput
+    update: XOR<SecurityAuditLogUpdateWithoutUserInput, SecurityAuditLogUncheckedUpdateWithoutUserInput>
+    create: XOR<SecurityAuditLogCreateWithoutUserInput, SecurityAuditLogUncheckedCreateWithoutUserInput>
+  }
+
+  export type SecurityAuditLogUpdateWithWhereUniqueWithoutUserInput = {
+    where: SecurityAuditLogWhereUniqueInput
+    data: XOR<SecurityAuditLogUpdateWithoutUserInput, SecurityAuditLogUncheckedUpdateWithoutUserInput>
+  }
+
+  export type SecurityAuditLogUpdateManyWithWhereWithoutUserInput = {
+    where: SecurityAuditLogScalarWhereInput
+    data: XOR<SecurityAuditLogUpdateManyMutationInput, SecurityAuditLogUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type SecurityAuditLogScalarWhereInput = {
+    AND?: SecurityAuditLogScalarWhereInput | SecurityAuditLogScalarWhereInput[]
+    OR?: SecurityAuditLogScalarWhereInput[]
+    NOT?: SecurityAuditLogScalarWhereInput | SecurityAuditLogScalarWhereInput[]
+    id?: StringFilter<"SecurityAuditLog"> | string
+    userId?: StringFilter<"SecurityAuditLog"> | string
+    action?: StringFilter<"SecurityAuditLog"> | string
+    resource?: StringFilter<"SecurityAuditLog"> | string
+    details?: JsonFilter<"SecurityAuditLog">
+    timestamp?: DateTimeFilter<"SecurityAuditLog"> | Date | string
+    ipAddress?: StringNullableFilter<"SecurityAuditLog"> | string | null
+    userAgent?: StringNullableFilter<"SecurityAuditLog"> | string | null
+    risk?: StringFilter<"SecurityAuditLog"> | string
+    createdAt?: DateTimeFilter<"SecurityAuditLog"> | Date | string
+  }
+
   export type UserCreateWithoutAssignedTasksInput = {
     id?: string
     name?: string | null
@@ -19324,6 +25896,8 @@ export namespace Prisma {
     sessions?: SessionCreateNestedManyWithoutUserInput
     createdTasks?: TaskCreateNestedManyWithoutCreatedByInput
     aiConversations?: AIConversationCreateNestedManyWithoutUserInput
+    documents?: DocumentCreateNestedManyWithoutUserInput
+    securityAuditLogs?: SecurityAuditLogCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutAssignedTasksInput = {
@@ -19343,6 +25917,8 @@ export namespace Prisma {
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     createdTasks?: TaskUncheckedCreateNestedManyWithoutCreatedByInput
     aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
+    documents?: DocumentUncheckedCreateNestedManyWithoutUserInput
+    securityAuditLogs?: SecurityAuditLogUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutAssignedTasksInput = {
@@ -19367,6 +25943,8 @@ export namespace Prisma {
     sessions?: SessionCreateNestedManyWithoutUserInput
     assignedTasks?: TaskCreateNestedManyWithoutAssignedToInput
     aiConversations?: AIConversationCreateNestedManyWithoutUserInput
+    documents?: DocumentCreateNestedManyWithoutUserInput
+    securityAuditLogs?: SecurityAuditLogCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutCreatedTasksInput = {
@@ -19386,6 +25964,8 @@ export namespace Prisma {
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     assignedTasks?: TaskUncheckedCreateNestedManyWithoutAssignedToInput
     aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
+    documents?: DocumentUncheckedCreateNestedManyWithoutUserInput
+    securityAuditLogs?: SecurityAuditLogUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutCreatedTasksInput = {
@@ -19440,6 +26020,52 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type DocumentCreateWithoutTaskInput = {
+    id?: string
+    filename: string
+    mimeType: string
+    size: number
+    extractedText: string
+    summary: string
+    keyInsights?: DocumentCreatekeyInsightsInput | string[]
+    confidence: number
+    companyId: string
+    processedAt?: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutDocumentsInput
+    board?: BoardCreateNestedOneWithoutDocumentsInput
+    embeddings?: DocumentEmbeddingCreateNestedManyWithoutDocumentInput
+  }
+
+  export type DocumentUncheckedCreateWithoutTaskInput = {
+    id?: string
+    filename: string
+    mimeType: string
+    size: number
+    extractedText: string
+    summary: string
+    keyInsights?: DocumentCreatekeyInsightsInput | string[]
+    confidence: number
+    uploadedBy: string
+    companyId: string
+    boardId?: string | null
+    processedAt?: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    embeddings?: DocumentEmbeddingUncheckedCreateNestedManyWithoutDocumentInput
+  }
+
+  export type DocumentCreateOrConnectWithoutTaskInput = {
+    where: DocumentWhereUniqueInput
+    create: XOR<DocumentCreateWithoutTaskInput, DocumentUncheckedCreateWithoutTaskInput>
+  }
+
+  export type DocumentCreateManyTaskInputEnvelope = {
+    data: DocumentCreateManyTaskInput | DocumentCreateManyTaskInput[]
+    skipDuplicates?: boolean
+  }
+
   export type UserUpsertWithoutAssignedTasksInput = {
     update: XOR<UserUpdateWithoutAssignedTasksInput, UserUncheckedUpdateWithoutAssignedTasksInput>
     create: XOR<UserCreateWithoutAssignedTasksInput, UserUncheckedCreateWithoutAssignedTasksInput>
@@ -19468,6 +26094,8 @@ export namespace Prisma {
     sessions?: SessionUpdateManyWithoutUserNestedInput
     createdTasks?: TaskUpdateManyWithoutCreatedByNestedInput
     aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
+    documents?: DocumentUpdateManyWithoutUserNestedInput
+    securityAuditLogs?: SecurityAuditLogUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAssignedTasksInput = {
@@ -19487,6 +26115,8 @@ export namespace Prisma {
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     createdTasks?: TaskUncheckedUpdateManyWithoutCreatedByNestedInput
     aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
+    documents?: DocumentUncheckedUpdateManyWithoutUserNestedInput
+    securityAuditLogs?: SecurityAuditLogUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutCreatedTasksInput = {
@@ -19517,6 +26147,8 @@ export namespace Prisma {
     sessions?: SessionUpdateManyWithoutUserNestedInput
     assignedTasks?: TaskUpdateManyWithoutAssignedToNestedInput
     aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
+    documents?: DocumentUpdateManyWithoutUserNestedInput
+    securityAuditLogs?: SecurityAuditLogUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCreatedTasksInput = {
@@ -19536,6 +26168,8 @@ export namespace Prisma {
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     assignedTasks?: TaskUncheckedUpdateManyWithoutAssignedToNestedInput
     aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
+    documents?: DocumentUncheckedUpdateManyWithoutUserNestedInput
+    securityAuditLogs?: SecurityAuditLogUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type BoardSectionUpsertWithoutTasksInput = {
@@ -19615,6 +26249,22 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type DocumentUpsertWithWhereUniqueWithoutTaskInput = {
+    where: DocumentWhereUniqueInput
+    update: XOR<DocumentUpdateWithoutTaskInput, DocumentUncheckedUpdateWithoutTaskInput>
+    create: XOR<DocumentCreateWithoutTaskInput, DocumentUncheckedCreateWithoutTaskInput>
+  }
+
+  export type DocumentUpdateWithWhereUniqueWithoutTaskInput = {
+    where: DocumentWhereUniqueInput
+    data: XOR<DocumentUpdateWithoutTaskInput, DocumentUncheckedUpdateWithoutTaskInput>
+  }
+
+  export type DocumentUpdateManyWithWhereWithoutTaskInput = {
+    where: DocumentScalarWhereInput
+    data: XOR<DocumentUpdateManyMutationInput, DocumentUncheckedUpdateManyWithoutTaskInput>
+  }
+
   export type BoardSectionCreateWithoutBoardInput = {
     id?: string
     name: string
@@ -19640,6 +26290,52 @@ export namespace Prisma {
 
   export type BoardSectionCreateManyBoardInputEnvelope = {
     data: BoardSectionCreateManyBoardInput | BoardSectionCreateManyBoardInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type DocumentCreateWithoutBoardInput = {
+    id?: string
+    filename: string
+    mimeType: string
+    size: number
+    extractedText: string
+    summary: string
+    keyInsights?: DocumentCreatekeyInsightsInput | string[]
+    confidence: number
+    companyId: string
+    processedAt?: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutDocumentsInput
+    task?: TaskCreateNestedOneWithoutDocumentsInput
+    embeddings?: DocumentEmbeddingCreateNestedManyWithoutDocumentInput
+  }
+
+  export type DocumentUncheckedCreateWithoutBoardInput = {
+    id?: string
+    filename: string
+    mimeType: string
+    size: number
+    extractedText: string
+    summary: string
+    keyInsights?: DocumentCreatekeyInsightsInput | string[]
+    confidence: number
+    uploadedBy: string
+    companyId: string
+    taskId?: string | null
+    processedAt?: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    embeddings?: DocumentEmbeddingUncheckedCreateNestedManyWithoutDocumentInput
+  }
+
+  export type DocumentCreateOrConnectWithoutBoardInput = {
+    where: DocumentWhereUniqueInput
+    create: XOR<DocumentCreateWithoutBoardInput, DocumentUncheckedCreateWithoutBoardInput>
+  }
+
+  export type DocumentCreateManyBoardInputEnvelope = {
+    data: DocumentCreateManyBoardInput | DocumentCreateManyBoardInput[]
     skipDuplicates?: boolean
   }
 
@@ -19692,6 +26388,22 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type DocumentUpsertWithWhereUniqueWithoutBoardInput = {
+    where: DocumentWhereUniqueInput
+    update: XOR<DocumentUpdateWithoutBoardInput, DocumentUncheckedUpdateWithoutBoardInput>
+    create: XOR<DocumentCreateWithoutBoardInput, DocumentUncheckedCreateWithoutBoardInput>
+  }
+
+  export type DocumentUpdateWithWhereUniqueWithoutBoardInput = {
+    where: DocumentWhereUniqueInput
+    data: XOR<DocumentUpdateWithoutBoardInput, DocumentUncheckedUpdateWithoutBoardInput>
+  }
+
+  export type DocumentUpdateManyWithWhereWithoutBoardInput = {
+    where: DocumentScalarWhereInput
+    data: XOR<DocumentUpdateManyMutationInput, DocumentUncheckedUpdateManyWithoutBoardInput>
+  }
+
   export type BoardCreateWithoutBoardSectionsInput = {
     id?: string
     name: string
@@ -19701,6 +26413,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     access?: BoardCreateaccessInput | string[]
     embedding?: BoardEmbeddingCreateNestedOneWithoutBoardInput
+    documents?: DocumentCreateNestedManyWithoutBoardInput
   }
 
   export type BoardUncheckedCreateWithoutBoardSectionsInput = {
@@ -19712,6 +26425,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     access?: BoardCreateaccessInput | string[]
     embedding?: BoardEmbeddingUncheckedCreateNestedOneWithoutBoardInput
+    documents?: DocumentUncheckedCreateNestedManyWithoutBoardInput
   }
 
   export type BoardCreateOrConnectWithoutBoardSectionsInput = {
@@ -19733,6 +26447,7 @@ export namespace Prisma {
     createdBy: UserCreateNestedOneWithoutCreatedTasksInput
     history?: TaskHistoryCreateNestedManyWithoutTaskInput
     embedding?: TaskEmbeddingCreateNestedOneWithoutTaskInput
+    documents?: DocumentCreateNestedManyWithoutTaskInput
   }
 
   export type TaskUncheckedCreateWithoutBoardSectionInput = {
@@ -19749,6 +26464,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     history?: TaskHistoryUncheckedCreateNestedManyWithoutTaskInput
     embedding?: TaskEmbeddingUncheckedCreateNestedOneWithoutTaskInput
+    documents?: DocumentUncheckedCreateNestedManyWithoutTaskInput
   }
 
   export type TaskCreateOrConnectWithoutBoardSectionInput = {
@@ -19781,6 +26497,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     access?: BoardUpdateaccessInput | string[]
     embedding?: BoardEmbeddingUpdateOneWithoutBoardNestedInput
+    documents?: DocumentUpdateManyWithoutBoardNestedInput
   }
 
   export type BoardUncheckedUpdateWithoutBoardSectionsInput = {
@@ -19792,6 +26509,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     access?: BoardUpdateaccessInput | string[]
     embedding?: BoardEmbeddingUncheckedUpdateOneWithoutBoardNestedInput
+    documents?: DocumentUncheckedUpdateManyWithoutBoardNestedInput
   }
 
   export type TaskUpsertWithWhereUniqueWithoutBoardSectionInput = {
@@ -19824,6 +26542,7 @@ export namespace Prisma {
     createdBy: UserCreateNestedOneWithoutCreatedTasksInput
     boardSection: BoardSectionCreateNestedOneWithoutTasksInput
     embedding?: TaskEmbeddingCreateNestedOneWithoutTaskInput
+    documents?: DocumentCreateNestedManyWithoutTaskInput
   }
 
   export type TaskUncheckedCreateWithoutHistoryInput = {
@@ -19840,6 +26559,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     embedding?: TaskEmbeddingUncheckedCreateNestedOneWithoutTaskInput
+    documents?: DocumentUncheckedCreateNestedManyWithoutTaskInput
   }
 
   export type TaskCreateOrConnectWithoutHistoryInput = {
@@ -19872,6 +26592,7 @@ export namespace Prisma {
     createdBy?: UserUpdateOneRequiredWithoutCreatedTasksNestedInput
     boardSection?: BoardSectionUpdateOneRequiredWithoutTasksNestedInput
     embedding?: TaskEmbeddingUpdateOneWithoutTaskNestedInput
+    documents?: DocumentUpdateManyWithoutTaskNestedInput
   }
 
   export type TaskUncheckedUpdateWithoutHistoryInput = {
@@ -19888,6 +26609,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     embedding?: TaskEmbeddingUncheckedUpdateOneWithoutTaskNestedInput
+    documents?: DocumentUncheckedUpdateManyWithoutTaskNestedInput
   }
 
   export type TaskCreateWithoutEmbeddingInput = {
@@ -19904,6 +26626,7 @@ export namespace Prisma {
     createdBy: UserCreateNestedOneWithoutCreatedTasksInput
     boardSection: BoardSectionCreateNestedOneWithoutTasksInput
     history?: TaskHistoryCreateNestedManyWithoutTaskInput
+    documents?: DocumentCreateNestedManyWithoutTaskInput
   }
 
   export type TaskUncheckedCreateWithoutEmbeddingInput = {
@@ -19920,6 +26643,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     history?: TaskHistoryUncheckedCreateNestedManyWithoutTaskInput
+    documents?: DocumentUncheckedCreateNestedManyWithoutTaskInput
   }
 
   export type TaskCreateOrConnectWithoutEmbeddingInput = {
@@ -19952,6 +26676,7 @@ export namespace Prisma {
     createdBy?: UserUpdateOneRequiredWithoutCreatedTasksNestedInput
     boardSection?: BoardSectionUpdateOneRequiredWithoutTasksNestedInput
     history?: TaskHistoryUpdateManyWithoutTaskNestedInput
+    documents?: DocumentUpdateManyWithoutTaskNestedInput
   }
 
   export type TaskUncheckedUpdateWithoutEmbeddingInput = {
@@ -19968,6 +26693,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     history?: TaskHistoryUncheckedUpdateManyWithoutTaskNestedInput
+    documents?: DocumentUncheckedUpdateManyWithoutTaskNestedInput
   }
 
   export type BoardCreateWithoutEmbeddingInput = {
@@ -19979,6 +26705,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     access?: BoardCreateaccessInput | string[]
     boardSections?: BoardSectionCreateNestedManyWithoutBoardInput
+    documents?: DocumentCreateNestedManyWithoutBoardInput
   }
 
   export type BoardUncheckedCreateWithoutEmbeddingInput = {
@@ -19990,6 +26717,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     access?: BoardCreateaccessInput | string[]
     boardSections?: BoardSectionUncheckedCreateNestedManyWithoutBoardInput
+    documents?: DocumentUncheckedCreateNestedManyWithoutBoardInput
   }
 
   export type BoardCreateOrConnectWithoutEmbeddingInput = {
@@ -20017,6 +26745,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     access?: BoardUpdateaccessInput | string[]
     boardSections?: BoardSectionUpdateManyWithoutBoardNestedInput
+    documents?: DocumentUpdateManyWithoutBoardNestedInput
   }
 
   export type BoardUncheckedUpdateWithoutEmbeddingInput = {
@@ -20028,6 +26757,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     access?: BoardUpdateaccessInput | string[]
     boardSections?: BoardSectionUncheckedUpdateManyWithoutBoardNestedInput
+    documents?: DocumentUncheckedUpdateManyWithoutBoardNestedInput
   }
 
   export type AIMessageCreateWithoutConversationInput = {
@@ -20056,6 +26786,35 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type ConversationSummaryCreateWithoutConversationInput = {
+    id?: string
+    summary: string
+    keyTopics?: ConversationSummaryCreatekeyTopicsInput | string[]
+    actionItems?: ConversationSummaryCreateactionItemsInput | string[]
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    sentiment: string
+    confidence: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ConversationSummaryUncheckedCreateWithoutConversationInput = {
+    id?: string
+    summary: string
+    keyTopics?: ConversationSummaryCreatekeyTopicsInput | string[]
+    actionItems?: ConversationSummaryCreateactionItemsInput | string[]
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    sentiment: string
+    confidence: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ConversationSummaryCreateOrConnectWithoutConversationInput = {
+    where: ConversationSummaryWhereUniqueInput
+    create: XOR<ConversationSummaryCreateWithoutConversationInput, ConversationSummaryUncheckedCreateWithoutConversationInput>
+  }
+
   export type UserCreateWithoutAiConversationsInput = {
     id?: string
     name?: string | null
@@ -20073,6 +26832,8 @@ export namespace Prisma {
     sessions?: SessionCreateNestedManyWithoutUserInput
     assignedTasks?: TaskCreateNestedManyWithoutAssignedToInput
     createdTasks?: TaskCreateNestedManyWithoutCreatedByInput
+    documents?: DocumentCreateNestedManyWithoutUserInput
+    securityAuditLogs?: SecurityAuditLogCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutAiConversationsInput = {
@@ -20092,6 +26853,8 @@ export namespace Prisma {
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     assignedTasks?: TaskUncheckedCreateNestedManyWithoutAssignedToInput
     createdTasks?: TaskUncheckedCreateNestedManyWithoutCreatedByInput
+    documents?: DocumentUncheckedCreateNestedManyWithoutUserInput
+    securityAuditLogs?: SecurityAuditLogUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutAiConversationsInput = {
@@ -20127,6 +26890,41 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"AIMessage"> | Date | string
   }
 
+  export type ConversationSummaryUpsertWithoutConversationInput = {
+    update: XOR<ConversationSummaryUpdateWithoutConversationInput, ConversationSummaryUncheckedUpdateWithoutConversationInput>
+    create: XOR<ConversationSummaryCreateWithoutConversationInput, ConversationSummaryUncheckedCreateWithoutConversationInput>
+    where?: ConversationSummaryWhereInput
+  }
+
+  export type ConversationSummaryUpdateToOneWithWhereWithoutConversationInput = {
+    where?: ConversationSummaryWhereInput
+    data: XOR<ConversationSummaryUpdateWithoutConversationInput, ConversationSummaryUncheckedUpdateWithoutConversationInput>
+  }
+
+  export type ConversationSummaryUpdateWithoutConversationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    keyTopics?: ConversationSummaryUpdatekeyTopicsInput | string[]
+    actionItems?: ConversationSummaryUpdateactionItemsInput | string[]
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    sentiment?: StringFieldUpdateOperationsInput | string
+    confidence?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ConversationSummaryUncheckedUpdateWithoutConversationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    keyTopics?: ConversationSummaryUpdatekeyTopicsInput | string[]
+    actionItems?: ConversationSummaryUpdateactionItemsInput | string[]
+    preferences?: NullableJsonNullValueInput | InputJsonValue
+    sentiment?: StringFieldUpdateOperationsInput | string
+    confidence?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type UserUpsertWithoutAiConversationsInput = {
     update: XOR<UserUpdateWithoutAiConversationsInput, UserUncheckedUpdateWithoutAiConversationsInput>
     create: XOR<UserCreateWithoutAiConversationsInput, UserUncheckedCreateWithoutAiConversationsInput>
@@ -20155,6 +26953,8 @@ export namespace Prisma {
     sessions?: SessionUpdateManyWithoutUserNestedInput
     assignedTasks?: TaskUpdateManyWithoutAssignedToNestedInput
     createdTasks?: TaskUpdateManyWithoutCreatedByNestedInput
+    documents?: DocumentUpdateManyWithoutUserNestedInput
+    securityAuditLogs?: SecurityAuditLogUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAiConversationsInput = {
@@ -20174,6 +26974,8 @@ export namespace Prisma {
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     assignedTasks?: TaskUncheckedUpdateManyWithoutAssignedToNestedInput
     createdTasks?: TaskUncheckedUpdateManyWithoutCreatedByNestedInput
+    documents?: DocumentUncheckedUpdateManyWithoutUserNestedInput
+    securityAuditLogs?: SecurityAuditLogUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type AIConversationCreateWithoutMessagesInput = {
@@ -20183,6 +26985,7 @@ export namespace Prisma {
     context?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
+    summary?: ConversationSummaryCreateNestedOneWithoutConversationInput
     user: UserCreateNestedOneWithoutAiConversationsInput
   }
 
@@ -20194,6 +26997,7 @@ export namespace Prisma {
     context?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
+    summary?: ConversationSummaryUncheckedCreateNestedOneWithoutConversationInput
   }
 
   export type AIConversationCreateOrConnectWithoutMessagesInput = {
@@ -20219,6 +27023,7 @@ export namespace Prisma {
     context?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    summary?: ConversationSummaryUpdateOneWithoutConversationNestedInput
     user?: UserUpdateOneRequiredWithoutAiConversationsNestedInput
   }
 
@@ -20230,6 +27035,525 @@ export namespace Prisma {
     context?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    summary?: ConversationSummaryUncheckedUpdateOneWithoutConversationNestedInput
+  }
+
+  export type UserCreateWithoutDocumentsInput = {
+    id?: string
+    name?: string | null
+    email: string
+    emailVerified?: Date | string | null
+    emailVerificationToken?: string | null
+    emailTokenExpires?: Date | string | null
+    image?: string | null
+    password?: string | null
+    cid?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    role?: $Enums.UserRole
+    accounts?: AccountCreateNestedManyWithoutUserInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
+    assignedTasks?: TaskCreateNestedManyWithoutAssignedToInput
+    createdTasks?: TaskCreateNestedManyWithoutCreatedByInput
+    aiConversations?: AIConversationCreateNestedManyWithoutUserInput
+    securityAuditLogs?: SecurityAuditLogCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutDocumentsInput = {
+    id?: string
+    name?: string | null
+    email: string
+    emailVerified?: Date | string | null
+    emailVerificationToken?: string | null
+    emailTokenExpires?: Date | string | null
+    image?: string | null
+    password?: string | null
+    cid?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    role?: $Enums.UserRole
+    accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    assignedTasks?: TaskUncheckedCreateNestedManyWithoutAssignedToInput
+    createdTasks?: TaskUncheckedCreateNestedManyWithoutCreatedByInput
+    aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
+    securityAuditLogs?: SecurityAuditLogUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutDocumentsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutDocumentsInput, UserUncheckedCreateWithoutDocumentsInput>
+  }
+
+  export type TaskCreateWithoutDocumentsInput = {
+    id?: string
+    title: string
+    description: string
+    priority?: $Enums.TaskPriority
+    status?: $Enums.TaskStatusNew
+    dueDate: Date | string
+    position?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    assignedTo: UserCreateNestedOneWithoutAssignedTasksInput
+    createdBy: UserCreateNestedOneWithoutCreatedTasksInput
+    boardSection: BoardSectionCreateNestedOneWithoutTasksInput
+    history?: TaskHistoryCreateNestedManyWithoutTaskInput
+    embedding?: TaskEmbeddingCreateNestedOneWithoutTaskInput
+  }
+
+  export type TaskUncheckedCreateWithoutDocumentsInput = {
+    id?: string
+    title: string
+    description: string
+    priority?: $Enums.TaskPriority
+    status?: $Enums.TaskStatusNew
+    dueDate: Date | string
+    position?: number
+    assignedToId: string
+    createdById: string
+    boardSectionId: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    history?: TaskHistoryUncheckedCreateNestedManyWithoutTaskInput
+    embedding?: TaskEmbeddingUncheckedCreateNestedOneWithoutTaskInput
+  }
+
+  export type TaskCreateOrConnectWithoutDocumentsInput = {
+    where: TaskWhereUniqueInput
+    create: XOR<TaskCreateWithoutDocumentsInput, TaskUncheckedCreateWithoutDocumentsInput>
+  }
+
+  export type BoardCreateWithoutDocumentsInput = {
+    id?: string
+    name: string
+    description?: string | null
+    createdBy: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    access?: BoardCreateaccessInput | string[]
+    boardSections?: BoardSectionCreateNestedManyWithoutBoardInput
+    embedding?: BoardEmbeddingCreateNestedOneWithoutBoardInput
+  }
+
+  export type BoardUncheckedCreateWithoutDocumentsInput = {
+    id?: string
+    name: string
+    description?: string | null
+    createdBy: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    access?: BoardCreateaccessInput | string[]
+    boardSections?: BoardSectionUncheckedCreateNestedManyWithoutBoardInput
+    embedding?: BoardEmbeddingUncheckedCreateNestedOneWithoutBoardInput
+  }
+
+  export type BoardCreateOrConnectWithoutDocumentsInput = {
+    where: BoardWhereUniqueInput
+    create: XOR<BoardCreateWithoutDocumentsInput, BoardUncheckedCreateWithoutDocumentsInput>
+  }
+
+  export type UserUpsertWithoutDocumentsInput = {
+    update: XOR<UserUpdateWithoutDocumentsInput, UserUncheckedUpdateWithoutDocumentsInput>
+    create: XOR<UserCreateWithoutDocumentsInput, UserUncheckedCreateWithoutDocumentsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutDocumentsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutDocumentsInput, UserUncheckedUpdateWithoutDocumentsInput>
+  }
+
+  export type UserUpdateWithoutDocumentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailTokenExpires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    cid?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    accounts?: AccountUpdateManyWithoutUserNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
+    assignedTasks?: TaskUpdateManyWithoutAssignedToNestedInput
+    createdTasks?: TaskUpdateManyWithoutCreatedByNestedInput
+    aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
+    securityAuditLogs?: SecurityAuditLogUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutDocumentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailTokenExpires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    cid?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    assignedTasks?: TaskUncheckedUpdateManyWithoutAssignedToNestedInput
+    createdTasks?: TaskUncheckedUpdateManyWithoutCreatedByNestedInput
+    aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
+    securityAuditLogs?: SecurityAuditLogUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type TaskUpsertWithoutDocumentsInput = {
+    update: XOR<TaskUpdateWithoutDocumentsInput, TaskUncheckedUpdateWithoutDocumentsInput>
+    create: XOR<TaskCreateWithoutDocumentsInput, TaskUncheckedCreateWithoutDocumentsInput>
+    where?: TaskWhereInput
+  }
+
+  export type TaskUpdateToOneWithWhereWithoutDocumentsInput = {
+    where?: TaskWhereInput
+    data: XOR<TaskUpdateWithoutDocumentsInput, TaskUncheckedUpdateWithoutDocumentsInput>
+  }
+
+  export type TaskUpdateWithoutDocumentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    priority?: EnumTaskPriorityFieldUpdateOperationsInput | $Enums.TaskPriority
+    status?: EnumTaskStatusNewFieldUpdateOperationsInput | $Enums.TaskStatusNew
+    dueDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    position?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    assignedTo?: UserUpdateOneRequiredWithoutAssignedTasksNestedInput
+    createdBy?: UserUpdateOneRequiredWithoutCreatedTasksNestedInput
+    boardSection?: BoardSectionUpdateOneRequiredWithoutTasksNestedInput
+    history?: TaskHistoryUpdateManyWithoutTaskNestedInput
+    embedding?: TaskEmbeddingUpdateOneWithoutTaskNestedInput
+  }
+
+  export type TaskUncheckedUpdateWithoutDocumentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    priority?: EnumTaskPriorityFieldUpdateOperationsInput | $Enums.TaskPriority
+    status?: EnumTaskStatusNewFieldUpdateOperationsInput | $Enums.TaskStatusNew
+    dueDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    position?: IntFieldUpdateOperationsInput | number
+    assignedToId?: StringFieldUpdateOperationsInput | string
+    createdById?: StringFieldUpdateOperationsInput | string
+    boardSectionId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    history?: TaskHistoryUncheckedUpdateManyWithoutTaskNestedInput
+    embedding?: TaskEmbeddingUncheckedUpdateOneWithoutTaskNestedInput
+  }
+
+  export type BoardUpsertWithoutDocumentsInput = {
+    update: XOR<BoardUpdateWithoutDocumentsInput, BoardUncheckedUpdateWithoutDocumentsInput>
+    create: XOR<BoardCreateWithoutDocumentsInput, BoardUncheckedCreateWithoutDocumentsInput>
+    where?: BoardWhereInput
+  }
+
+  export type BoardUpdateToOneWithWhereWithoutDocumentsInput = {
+    where?: BoardWhereInput
+    data: XOR<BoardUpdateWithoutDocumentsInput, BoardUncheckedUpdateWithoutDocumentsInput>
+  }
+
+  export type BoardUpdateWithoutDocumentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    access?: BoardUpdateaccessInput | string[]
+    boardSections?: BoardSectionUpdateManyWithoutBoardNestedInput
+    embedding?: BoardEmbeddingUpdateOneWithoutBoardNestedInput
+  }
+
+  export type BoardUncheckedUpdateWithoutDocumentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    access?: BoardUpdateaccessInput | string[]
+    boardSections?: BoardSectionUncheckedUpdateManyWithoutBoardNestedInput
+    embedding?: BoardEmbeddingUncheckedUpdateOneWithoutBoardNestedInput
+  }
+
+  export type DocumentEmbeddingUpdateWithWhereUniqueWithoutDocumentInput = {
+    where: DocumentEmbeddingWhereUniqueInput
+    data: XOR<DocumentEmbeddingUpdateWithoutDocumentInput, DocumentEmbeddingUncheckedUpdateWithoutDocumentInput>
+  }
+
+  export type DocumentEmbeddingUpdateManyWithWhereWithoutDocumentInput = {
+    where: DocumentEmbeddingScalarWhereInput
+    data: XOR<DocumentEmbeddingUpdateManyMutationInput, DocumentEmbeddingUncheckedUpdateManyWithoutDocumentInput>
+  }
+
+  export type DocumentEmbeddingScalarWhereInput = {
+    AND?: DocumentEmbeddingScalarWhereInput | DocumentEmbeddingScalarWhereInput[]
+    OR?: DocumentEmbeddingScalarWhereInput[]
+    NOT?: DocumentEmbeddingScalarWhereInput | DocumentEmbeddingScalarWhereInput[]
+    id?: StringFilter<"DocumentEmbedding"> | string
+    documentId?: StringFilter<"DocumentEmbedding"> | string
+    content?: StringFilter<"DocumentEmbedding"> | string
+    metadata?: JsonNullableFilter<"DocumentEmbedding">
+    createdAt?: DateTimeFilter<"DocumentEmbedding"> | Date | string
+    updatedAt?: DateTimeFilter<"DocumentEmbedding"> | Date | string
+  }
+
+  export type DocumentCreateWithoutEmbeddingsInput = {
+    id?: string
+    filename: string
+    mimeType: string
+    size: number
+    extractedText: string
+    summary: string
+    keyInsights?: DocumentCreatekeyInsightsInput | string[]
+    confidence: number
+    companyId: string
+    processedAt?: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutDocumentsInput
+    task?: TaskCreateNestedOneWithoutDocumentsInput
+    board?: BoardCreateNestedOneWithoutDocumentsInput
+  }
+
+  export type DocumentUncheckedCreateWithoutEmbeddingsInput = {
+    id?: string
+    filename: string
+    mimeType: string
+    size: number
+    extractedText: string
+    summary: string
+    keyInsights?: DocumentCreatekeyInsightsInput | string[]
+    confidence: number
+    uploadedBy: string
+    companyId: string
+    taskId?: string | null
+    boardId?: string | null
+    processedAt?: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type DocumentCreateOrConnectWithoutEmbeddingsInput = {
+    where: DocumentWhereUniqueInput
+    create: XOR<DocumentCreateWithoutEmbeddingsInput, DocumentUncheckedCreateWithoutEmbeddingsInput>
+  }
+
+  export type DocumentUpsertWithoutEmbeddingsInput = {
+    update: XOR<DocumentUpdateWithoutEmbeddingsInput, DocumentUncheckedUpdateWithoutEmbeddingsInput>
+    create: XOR<DocumentCreateWithoutEmbeddingsInput, DocumentUncheckedCreateWithoutEmbeddingsInput>
+    where?: DocumentWhereInput
+  }
+
+  export type DocumentUpdateToOneWithWhereWithoutEmbeddingsInput = {
+    where?: DocumentWhereInput
+    data: XOR<DocumentUpdateWithoutEmbeddingsInput, DocumentUncheckedUpdateWithoutEmbeddingsInput>
+  }
+
+  export type DocumentUpdateWithoutEmbeddingsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    filename?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    extractedText?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    keyInsights?: DocumentUpdatekeyInsightsInput | string[]
+    confidence?: FloatFieldUpdateOperationsInput | number
+    companyId?: StringFieldUpdateOperationsInput | string
+    processedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutDocumentsNestedInput
+    task?: TaskUpdateOneWithoutDocumentsNestedInput
+    board?: BoardUpdateOneWithoutDocumentsNestedInput
+  }
+
+  export type DocumentUncheckedUpdateWithoutEmbeddingsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    filename?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    extractedText?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    keyInsights?: DocumentUpdatekeyInsightsInput | string[]
+    confidence?: FloatFieldUpdateOperationsInput | number
+    uploadedBy?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    taskId?: NullableStringFieldUpdateOperationsInput | string | null
+    boardId?: NullableStringFieldUpdateOperationsInput | string | null
+    processedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AIConversationCreateWithoutSummaryInput = {
+    id?: string
+    companyId: string
+    title?: string | null
+    context?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    messages?: AIMessageCreateNestedManyWithoutConversationInput
+    user: UserCreateNestedOneWithoutAiConversationsInput
+  }
+
+  export type AIConversationUncheckedCreateWithoutSummaryInput = {
+    id?: string
+    userId: string
+    companyId: string
+    title?: string | null
+    context?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    messages?: AIMessageUncheckedCreateNestedManyWithoutConversationInput
+  }
+
+  export type AIConversationCreateOrConnectWithoutSummaryInput = {
+    where: AIConversationWhereUniqueInput
+    create: XOR<AIConversationCreateWithoutSummaryInput, AIConversationUncheckedCreateWithoutSummaryInput>
+  }
+
+  export type AIConversationUpsertWithoutSummaryInput = {
+    update: XOR<AIConversationUpdateWithoutSummaryInput, AIConversationUncheckedUpdateWithoutSummaryInput>
+    create: XOR<AIConversationCreateWithoutSummaryInput, AIConversationUncheckedCreateWithoutSummaryInput>
+    where?: AIConversationWhereInput
+  }
+
+  export type AIConversationUpdateToOneWithWhereWithoutSummaryInput = {
+    where?: AIConversationWhereInput
+    data: XOR<AIConversationUpdateWithoutSummaryInput, AIConversationUncheckedUpdateWithoutSummaryInput>
+  }
+
+  export type AIConversationUpdateWithoutSummaryInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    context?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    messages?: AIMessageUpdateManyWithoutConversationNestedInput
+    user?: UserUpdateOneRequiredWithoutAiConversationsNestedInput
+  }
+
+  export type AIConversationUncheckedUpdateWithoutSummaryInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    context?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    messages?: AIMessageUncheckedUpdateManyWithoutConversationNestedInput
+  }
+
+  export type UserCreateWithoutSecurityAuditLogsInput = {
+    id?: string
+    name?: string | null
+    email: string
+    emailVerified?: Date | string | null
+    emailVerificationToken?: string | null
+    emailTokenExpires?: Date | string | null
+    image?: string | null
+    password?: string | null
+    cid?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    role?: $Enums.UserRole
+    accounts?: AccountCreateNestedManyWithoutUserInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
+    assignedTasks?: TaskCreateNestedManyWithoutAssignedToInput
+    createdTasks?: TaskCreateNestedManyWithoutCreatedByInput
+    aiConversations?: AIConversationCreateNestedManyWithoutUserInput
+    documents?: DocumentCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutSecurityAuditLogsInput = {
+    id?: string
+    name?: string | null
+    email: string
+    emailVerified?: Date | string | null
+    emailVerificationToken?: string | null
+    emailTokenExpires?: Date | string | null
+    image?: string | null
+    password?: string | null
+    cid?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    role?: $Enums.UserRole
+    accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    assignedTasks?: TaskUncheckedCreateNestedManyWithoutAssignedToInput
+    createdTasks?: TaskUncheckedCreateNestedManyWithoutCreatedByInput
+    aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
+    documents?: DocumentUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutSecurityAuditLogsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutSecurityAuditLogsInput, UserUncheckedCreateWithoutSecurityAuditLogsInput>
+  }
+
+  export type UserUpsertWithoutSecurityAuditLogsInput = {
+    update: XOR<UserUpdateWithoutSecurityAuditLogsInput, UserUncheckedUpdateWithoutSecurityAuditLogsInput>
+    create: XOR<UserCreateWithoutSecurityAuditLogsInput, UserUncheckedCreateWithoutSecurityAuditLogsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutSecurityAuditLogsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutSecurityAuditLogsInput, UserUncheckedUpdateWithoutSecurityAuditLogsInput>
+  }
+
+  export type UserUpdateWithoutSecurityAuditLogsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailTokenExpires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    cid?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    accounts?: AccountUpdateManyWithoutUserNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
+    assignedTasks?: TaskUpdateManyWithoutAssignedToNestedInput
+    createdTasks?: TaskUpdateManyWithoutCreatedByNestedInput
+    aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
+    documents?: DocumentUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutSecurityAuditLogsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailTokenExpires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    cid?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    assignedTasks?: TaskUncheckedUpdateManyWithoutAssignedToNestedInput
+    createdTasks?: TaskUncheckedUpdateManyWithoutCreatedByNestedInput
+    aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
+    documents?: DocumentUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type AccountCreateManyUserInput = {
@@ -20287,6 +27611,35 @@ export namespace Prisma {
     context?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
+  }
+
+  export type DocumentCreateManyUserInput = {
+    id?: string
+    filename: string
+    mimeType: string
+    size: number
+    extractedText: string
+    summary: string
+    keyInsights?: DocumentCreatekeyInsightsInput | string[]
+    confidence: number
+    companyId: string
+    taskId?: string | null
+    boardId?: string | null
+    processedAt?: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type SecurityAuditLogCreateManyUserInput = {
+    id?: string
+    action: string
+    resource: string
+    details: JsonNullValueInput | InputJsonValue
+    timestamp: Date | string
+    ipAddress?: string | null
+    userAgent?: string | null
+    risk: string
+    createdAt?: Date | string
   }
 
   export type AccountUpdateWithoutUserInput = {
@@ -20363,6 +27716,7 @@ export namespace Prisma {
     boardSection?: BoardSectionUpdateOneRequiredWithoutTasksNestedInput
     history?: TaskHistoryUpdateManyWithoutTaskNestedInput
     embedding?: TaskEmbeddingUpdateOneWithoutTaskNestedInput
+    documents?: DocumentUpdateManyWithoutTaskNestedInput
   }
 
   export type TaskUncheckedUpdateWithoutAssignedToInput = {
@@ -20379,6 +27733,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     history?: TaskHistoryUncheckedUpdateManyWithoutTaskNestedInput
     embedding?: TaskEmbeddingUncheckedUpdateOneWithoutTaskNestedInput
+    documents?: DocumentUncheckedUpdateManyWithoutTaskNestedInput
   }
 
   export type TaskUncheckedUpdateManyWithoutAssignedToInput = {
@@ -20409,6 +27764,7 @@ export namespace Prisma {
     boardSection?: BoardSectionUpdateOneRequiredWithoutTasksNestedInput
     history?: TaskHistoryUpdateManyWithoutTaskNestedInput
     embedding?: TaskEmbeddingUpdateOneWithoutTaskNestedInput
+    documents?: DocumentUpdateManyWithoutTaskNestedInput
   }
 
   export type TaskUncheckedUpdateWithoutCreatedByInput = {
@@ -20425,6 +27781,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     history?: TaskHistoryUncheckedUpdateManyWithoutTaskNestedInput
     embedding?: TaskEmbeddingUncheckedUpdateOneWithoutTaskNestedInput
+    documents?: DocumentUncheckedUpdateManyWithoutTaskNestedInput
   }
 
   export type TaskUncheckedUpdateManyWithoutCreatedByInput = {
@@ -20449,6 +27806,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     messages?: AIMessageUpdateManyWithoutConversationNestedInput
+    summary?: ConversationSummaryUpdateOneWithoutConversationNestedInput
   }
 
   export type AIConversationUncheckedUpdateWithoutUserInput = {
@@ -20459,6 +27817,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     messages?: AIMessageUncheckedUpdateManyWithoutConversationNestedInput
+    summary?: ConversationSummaryUncheckedUpdateOneWithoutConversationNestedInput
   }
 
   export type AIConversationUncheckedUpdateManyWithoutUserInput = {
@@ -20470,11 +27829,117 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type DocumentUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    filename?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    extractedText?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    keyInsights?: DocumentUpdatekeyInsightsInput | string[]
+    confidence?: FloatFieldUpdateOperationsInput | number
+    companyId?: StringFieldUpdateOperationsInput | string
+    processedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    task?: TaskUpdateOneWithoutDocumentsNestedInput
+    board?: BoardUpdateOneWithoutDocumentsNestedInput
+    embeddings?: DocumentEmbeddingUpdateManyWithoutDocumentNestedInput
+  }
+
+  export type DocumentUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    filename?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    extractedText?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    keyInsights?: DocumentUpdatekeyInsightsInput | string[]
+    confidence?: FloatFieldUpdateOperationsInput | number
+    companyId?: StringFieldUpdateOperationsInput | string
+    taskId?: NullableStringFieldUpdateOperationsInput | string | null
+    boardId?: NullableStringFieldUpdateOperationsInput | string | null
+    processedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    embeddings?: DocumentEmbeddingUncheckedUpdateManyWithoutDocumentNestedInput
+  }
+
+  export type DocumentUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    filename?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    extractedText?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    keyInsights?: DocumentUpdatekeyInsightsInput | string[]
+    confidence?: FloatFieldUpdateOperationsInput | number
+    companyId?: StringFieldUpdateOperationsInput | string
+    taskId?: NullableStringFieldUpdateOperationsInput | string | null
+    boardId?: NullableStringFieldUpdateOperationsInput | string | null
+    processedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SecurityAuditLogUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    resource?: StringFieldUpdateOperationsInput | string
+    details?: JsonNullValueInput | InputJsonValue
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    risk?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SecurityAuditLogUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    resource?: StringFieldUpdateOperationsInput | string
+    details?: JsonNullValueInput | InputJsonValue
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    risk?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SecurityAuditLogUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    resource?: StringFieldUpdateOperationsInput | string
+    details?: JsonNullValueInput | InputJsonValue
+    timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    risk?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type TaskHistoryCreateManyTaskInput = {
     id?: string
     createdAt?: Date | string
     updatedAt?: Date | string
     description?: string | null
+  }
+
+  export type DocumentCreateManyTaskInput = {
+    id?: string
+    filename: string
+    mimeType: string
+    size: number
+    extractedText: string
+    summary: string
+    keyInsights?: DocumentCreatekeyInsightsInput | string[]
+    confidence: number
+    uploadedBy: string
+    companyId: string
+    boardId?: string | null
+    processedAt?: Date | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type TaskHistoryUpdateWithoutTaskInput = {
@@ -20498,10 +27963,80 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
+  export type DocumentUpdateWithoutTaskInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    filename?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    extractedText?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    keyInsights?: DocumentUpdatekeyInsightsInput | string[]
+    confidence?: FloatFieldUpdateOperationsInput | number
+    companyId?: StringFieldUpdateOperationsInput | string
+    processedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutDocumentsNestedInput
+    board?: BoardUpdateOneWithoutDocumentsNestedInput
+    embeddings?: DocumentEmbeddingUpdateManyWithoutDocumentNestedInput
+  }
+
+  export type DocumentUncheckedUpdateWithoutTaskInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    filename?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    extractedText?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    keyInsights?: DocumentUpdatekeyInsightsInput | string[]
+    confidence?: FloatFieldUpdateOperationsInput | number
+    uploadedBy?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    boardId?: NullableStringFieldUpdateOperationsInput | string | null
+    processedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    embeddings?: DocumentEmbeddingUncheckedUpdateManyWithoutDocumentNestedInput
+  }
+
+  export type DocumentUncheckedUpdateManyWithoutTaskInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    filename?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    extractedText?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    keyInsights?: DocumentUpdatekeyInsightsInput | string[]
+    confidence?: FloatFieldUpdateOperationsInput | number
+    uploadedBy?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    boardId?: NullableStringFieldUpdateOperationsInput | string | null
+    processedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type BoardSectionCreateManyBoardInput = {
     id?: string
     name: string
     position?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type DocumentCreateManyBoardInput = {
+    id?: string
+    filename: string
+    mimeType: string
+    size: number
+    extractedText: string
+    summary: string
+    keyInsights?: DocumentCreatekeyInsightsInput | string[]
+    confidence: number
+    uploadedBy: string
+    companyId: string
+    taskId?: string | null
+    processedAt?: Date | string
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -20528,6 +28063,59 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     position?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DocumentUpdateWithoutBoardInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    filename?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    extractedText?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    keyInsights?: DocumentUpdatekeyInsightsInput | string[]
+    confidence?: FloatFieldUpdateOperationsInput | number
+    companyId?: StringFieldUpdateOperationsInput | string
+    processedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutDocumentsNestedInput
+    task?: TaskUpdateOneWithoutDocumentsNestedInput
+    embeddings?: DocumentEmbeddingUpdateManyWithoutDocumentNestedInput
+  }
+
+  export type DocumentUncheckedUpdateWithoutBoardInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    filename?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    extractedText?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    keyInsights?: DocumentUpdatekeyInsightsInput | string[]
+    confidence?: FloatFieldUpdateOperationsInput | number
+    uploadedBy?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    taskId?: NullableStringFieldUpdateOperationsInput | string | null
+    processedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    embeddings?: DocumentEmbeddingUncheckedUpdateManyWithoutDocumentNestedInput
+  }
+
+  export type DocumentUncheckedUpdateManyWithoutBoardInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    filename?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    extractedText?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    keyInsights?: DocumentUpdatekeyInsightsInput | string[]
+    confidence?: FloatFieldUpdateOperationsInput | number
+    uploadedBy?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    taskId?: NullableStringFieldUpdateOperationsInput | string | null
+    processedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -20560,6 +28148,7 @@ export namespace Prisma {
     createdBy?: UserUpdateOneRequiredWithoutCreatedTasksNestedInput
     history?: TaskHistoryUpdateManyWithoutTaskNestedInput
     embedding?: TaskEmbeddingUpdateOneWithoutTaskNestedInput
+    documents?: DocumentUpdateManyWithoutTaskNestedInput
   }
 
   export type TaskUncheckedUpdateWithoutBoardSectionInput = {
@@ -20576,6 +28165,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     history?: TaskHistoryUncheckedUpdateManyWithoutTaskNestedInput
     embedding?: TaskEmbeddingUncheckedUpdateOneWithoutTaskNestedInput
+    documents?: DocumentUncheckedUpdateManyWithoutTaskNestedInput
   }
 
   export type TaskUncheckedUpdateManyWithoutBoardSectionInput = {
@@ -20622,6 +28212,30 @@ export namespace Prisma {
     content?: StringFieldUpdateOperationsInput | string
     metadata?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DocumentEmbeddingUpdateWithoutDocumentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DocumentEmbeddingUncheckedUpdateWithoutDocumentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DocumentEmbeddingUncheckedUpdateManyWithoutDocumentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 

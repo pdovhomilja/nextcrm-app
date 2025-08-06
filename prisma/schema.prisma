@@ -65,6 +65,8 @@ model User {
   assignedTasks         Task[]                 @relation("AssignedTasks")
   createdTasks          Task[]                 @relation("CreatedTasks")
   aiConversations       AIConversation[]
+  documents             Document[]
+  securityAuditLogs     SecurityAuditLog[]
 
   @@map("users")
   @@index([cid])
@@ -121,6 +123,7 @@ model Task {
   updatedAt       DateTime       @updatedAt
   history         TaskHistory[]
   embedding       TaskEmbedding?
+  documents       Document[]
 }
 
 model Board {
@@ -133,6 +136,7 @@ model Board {
   access        String[]
   boardSections BoardSection[]
   embedding     BoardEmbedding?
+  documents     Document[]
 }
 
 model BoardSection {
@@ -191,6 +195,7 @@ model AIConversation {
   companyId String
   title     String?
   messages  AIMessage[]
+  summary   ConversationSummary?
   context   Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -215,4 +220,86 @@ model AIMessage {
   @@map("ai_messages")
 }
 
-// end of Task model
+// Document Processing Models
+model Document {
+  id            String   @id @default(cuid())
+  filename      String
+  mimeType      String
+  size          Int
+  extractedText String   @db.Text
+  summary       String   @db.Text
+  keyInsights   String[]
+  confidence    Float
+  uploadedBy    String
+  companyId     String
+  taskId        String?
+  boardId       String?
+  processedAt   DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user       User               @relation(fields: [uploadedBy], references: [id])
+  task       Task?              @relation(fields: [taskId], references: [id])
+  board      Board?             @relation(fields: [boardId], references: [id])
+  embeddings DocumentEmbedding[]
+
+  @@index([companyId])
+  @@index([uploadedBy])
+  @@index([taskId])
+  @@index([boardId])
+  @@map("documents")
+}
+
+model DocumentEmbedding {
+  id         String                     @id @default(cuid())
+  documentId String
+  embedding  Unsupported("vector(1536)")
+  content    String
+  metadata   Json?
+  createdAt  DateTime                   @default(now())
+  updatedAt  DateTime                   @updatedAt
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@map("document_embeddings")
+}
+
+// Conversation Memory Models
+model ConversationSummary {
+  id             String   @id @default(cuid())
+  conversationId String   @unique
+  summary        String   @db.Text
+  keyTopics      String[]
+  actionItems    String[]
+  preferences    Json?
+  sentiment      String   // 'positive' | 'neutral' | 'negative'
+  confidence     Float
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  conversation AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@map("conversation_summaries")
+}
+
+// Security and Audit Models
+model SecurityAuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  resource  String
+  details   Json
+  timestamp DateTime
+  ipAddress String?
+  userAgent String?
+  risk      String   // 'low' | 'medium' | 'high'
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([risk])
+  @@index([timestamp])
+  @@map("security_audit_logs")
+}
