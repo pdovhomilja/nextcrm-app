@@ -24,21 +24,18 @@ const handler = createMcpHandler(async (server) => {
         const board = await db.board.findFirst({
           where: {
             id: params.boardId,
-            companyId: session.user.cid!,
+            access: {
+              has: session.user.id,
+            },
           },
           include: {
-            sections: {
+            boardSections: {
               include: {
                 tasks: {
                   include: {
                     assignedTo: true,
                   },
                 },
-              },
-            },
-            tasks: {
-              include: {
-                assignedTo: true,
               },
             },
           },
@@ -55,13 +52,17 @@ const handler = createMcpHandler(async (server) => {
           month: 30,
           quarter: 90,
         };
-        const daysBack = timeRangeMap[params.timeRange];
+        const daysBack =
+          timeRangeMap[params.timeRange as keyof typeof timeRangeMap];
         const startDate = new Date(
           now.getTime() - daysBack * 24 * 60 * 60 * 1000
         );
 
-        // Filter tasks by time range
-        const recentTasks = board.tasks.filter(
+        // Get all tasks from board sections and filter by time range
+        const allTasks = board.boardSections.flatMap(
+          (section) => section.tasks
+        );
+        const recentTasks = allTasks.filter(
           (task) => new Date(task.createdAt) >= startDate
         );
 
@@ -109,11 +110,16 @@ const handler = createMcpHandler(async (server) => {
               ),
               memberWorkload: recentTasks.reduce(
                 (acc, task) => {
-                  if (task.assignedToId && task.assignedTo) {
-                    acc[task.assignedTo.name] = {
-                      assigned: (acc[task.assignedTo.name]?.assigned || 0) + 1,
+                  if (
+                    task.assignedToId &&
+                    task.assignedTo &&
+                    task.assignedTo.name
+                  ) {
+                    const memberName = task.assignedTo.name;
+                    acc[memberName] = {
+                      assigned: (acc[memberName]?.assigned || 0) + 1,
                       completed:
-                        (acc[task.assignedTo.name]?.completed || 0) +
+                        (acc[memberName]?.completed || 0) +
                         (task.status === "COMPLETED" ? 1 : 0),
                     };
                   }
@@ -147,7 +153,7 @@ const handler = createMcpHandler(async (server) => {
 
         const result = {
           boardId: params.boardId,
-          boardTitle: board.title,
+          boardTitle: board.name,
           timeRange: params.timeRange,
           analysisDate: now.toISOString(),
           healthScore: Math.round(completionRate * 100),
@@ -213,23 +219,28 @@ const handler = createMcpHandler(async (server) => {
           month: 30,
           quarter: 90,
         };
-        const daysBack = timeRangeMap[params.timeRange];
+        const daysBack =
+          timeRangeMap[params.timeRange as keyof typeof timeRangeMap];
         const startDate = new Date(
           now.getTime() - daysBack * 24 * 60 * 60 * 1000
         );
 
         // Get tasks for analysis
         const whereClause = {
-          assignedTo: { cid: session.user.cid! },
+          assignedTo: { id: session.user.id },
           createdAt: { gte: startDate },
-          ...(params.boardId && { boardId: params.boardId }),
+          ...(params.boardId && {
+            board: {
+              id: params.boardId,
+              access: { has: session.user.id },
+            },
+          }),
         };
 
         const tasks = await db.task.findMany({
           where: whereClause,
           include: {
             assignedTo: true,
-            board: true,
           },
         });
 
@@ -239,7 +250,7 @@ const handler = createMcpHandler(async (server) => {
             if (!task.assignedTo) return acc;
 
             const userId = task.assignedTo.id;
-            const userName = task.assignedTo.name;
+            const userName = task.assignedTo.name || task.assignedTo.email;
 
             if (!acc[userId]) {
               acc[userId] = {
@@ -393,4 +404,4 @@ const handler = createMcpHandler(async (server) => {
   }
 });
 
-export const { GET, POST } = handler;
+export { handler as GET, handler as POST };
