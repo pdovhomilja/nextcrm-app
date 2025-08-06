@@ -137,8 +137,8 @@ function SortableSection({
         showDropIndicator
           ? "ring-4 ring-blue-500 ring-opacity-50 bg-blue-50 border-blue-300"
           : isValidDropZone
-          ? "border-blue-200 border-dashed border-2"
-          : ""
+            ? "border-blue-200 border-dashed border-2"
+            : ""
       }`}
       {...attributes}
     >
@@ -322,8 +322,8 @@ const customCollisionDetection: CollisionDetection = (args) => {
       type: i.id.toString().startsWith("section-drop-")
         ? "section-drop"
         : i.id.toString().includes("-drop-")
-        ? "legacy-drop"
-        : "other",
+          ? "legacy-drop"
+          : "other",
     })),
   });
 
@@ -381,7 +381,6 @@ const customCollisionDetection: CollisionDetection = (args) => {
 
 export default function DndBoard({
   initialSections,
-  board,
   boardId,
 }: DndBoardProps) {
   const [sections, setSections] = useState(initialSections);
@@ -715,9 +714,6 @@ export default function DndBoard({
   return (
     <div className="flex flex-col gap-4 p-4">
       <div className="flex items-center gap-4">
-        <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
-          {board.name}
-        </h1>
         {isLoading && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>

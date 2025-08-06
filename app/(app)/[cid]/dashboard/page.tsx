@@ -1,22 +1,23 @@
-import React from "react";
-import { auth } from "@/auth";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { ChartAreaInteractive } from "@/components/chart-area-interactive";
+import { SectionCards } from "@/components/section-cards";
+import { SiteHeader } from "@/components/site-header";
+import { SidebarInset } from "@/components/ui/sidebar";
 
-const DashboardPage = async () => {
-  const session = await auth();
-
+export default function Page() {
   return (
-    <div>
-      Dashboard Page
-      <div>User: {session?.user?.name}</div>
-      <div>
-        <Link href={`/${session?.user?.cid}/tasks`}>
-          <Button>Tasks</Button>
-        </Link>
+    <SidebarInset>
+      <SiteHeader title="Dashboard" />
+      <div className="flex flex-1 flex-col border-black">
+        <div className="@container/main flex flex-1 flex-col gap-2">
+          <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+            <SectionCards />
+            <div className="px-4 lg:px-6">
+              <ChartAreaInteractive />
+            </div>
+            {/* <DataTable data={data} /> */}
+          </div>
+        </div>
       </div>
-    </div>
+    </SidebarInset>
   );
-};
-
-export default DashboardPage;
+}

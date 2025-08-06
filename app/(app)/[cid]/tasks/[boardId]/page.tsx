@@ -3,6 +3,8 @@ import React from "react";
 import { getBoard } from "@/actions/tasks/get-board";
 import DndBoard from "./_components/dnd-board";
 import TaskErrorBoundary from "../_components/error-boundary";
+import { SidebarInset } from "@/components/ui/sidebar";
+import { SiteHeader } from "@/components/site-header";
 
 const BoardPage = async ({
   params,
@@ -19,7 +21,22 @@ const BoardPage = async ({
 
   return (
     <TaskErrorBoundary>
-      <DndBoard initialSections={boardSections} board={board} boardId={boardId} />
+      <SidebarInset>
+        <SiteHeader title={board.name} />
+        <div className="flex flex-1 flex-col border-black">
+          <div className="@container/main flex flex-1 flex-col gap-2">
+            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+              <div className="flex flex-col gap-4 p-4">
+                <DndBoard
+                  initialSections={boardSections}
+                  board={board}
+                  boardId={boardId}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </SidebarInset>
     </TaskErrorBoundary>
   );
 };
