@@ -64,6 +64,7 @@ model User {
 
   assignedTasks         Task[]                 @relation("AssignedTasks")
   createdTasks          Task[]                 @relation("CreatedTasks")
+  aiConversations       AIConversation[]
 
   @@map("users")
   @@index([cid])
@@ -119,6 +120,7 @@ model Task {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   history         TaskHistory[]
+  embedding       TaskEmbedding?
 }
 
 model Board {
@@ -130,6 +132,7 @@ model Board {
   updatedAt     DateTime       @updatedAt
   access        String[]
   boardSections BoardSection[]
+  embedding     BoardEmbedding?
 }
 
 model BoardSection {
@@ -150,6 +153,66 @@ model TaskHistory {
   updatedAt   DateTime @updatedAt
   description String?
   task        Task     @relation(fields: [taskId], references: [id])
+}
+
+// Vector Embeddings Models
+model TaskEmbedding {
+  id        String   @id @default(cuid())
+  taskId    String   @unique
+  embedding Unsupported("vector(1536)")
+  content   String   // Original text that was embedded
+  metadata  Json     // Additional context (priority, status, etc.)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("task_embeddings")
+}
+
+model BoardEmbedding {
+  id        String   @id @default(cuid())
+  boardId   String   @unique
+  embedding Unsupported("vector(1536)")
+  content   String   // Board name + description + context
+  metadata  Json     // Board info, team members, etc.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  @@map("board_embeddings")
+}
+
+// AI Conversation Models
+model AIConversation {
+  id        String   @id @default(cuid())
+  userId    String
+  companyId String
+  title     String?
+  messages  AIMessage[]
+  context   Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([companyId])
+  @@index([userId])
+  @@map("ai_conversations")
+}
+
+model AIMessage {
+  id             String @id @default(cuid())
+  conversationId String
+  role           String // 'user' | 'assistant' | 'system'
+  content        String
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  conversation AIConversation @relation(fields: [conversationId], references: [id])
+
+  @@map("ai_messages")
 }
 
 // end of Task model

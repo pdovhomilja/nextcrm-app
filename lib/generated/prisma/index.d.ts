@@ -53,6 +53,26 @@ export type BoardSection = $Result.DefaultSelection<Prisma.$BoardSectionPayload>
  * 
  */
 export type TaskHistory = $Result.DefaultSelection<Prisma.$TaskHistoryPayload>
+/**
+ * Model TaskEmbedding
+ * 
+ */
+export type TaskEmbedding = $Result.DefaultSelection<Prisma.$TaskEmbeddingPayload>
+/**
+ * Model BoardEmbedding
+ * 
+ */
+export type BoardEmbedding = $Result.DefaultSelection<Prisma.$BoardEmbeddingPayload>
+/**
+ * Model AIConversation
+ * 
+ */
+export type AIConversation = $Result.DefaultSelection<Prisma.$AIConversationPayload>
+/**
+ * Model AIMessage
+ * 
+ */
+export type AIMessage = $Result.DefaultSelection<Prisma.$AIMessagePayload>
 
 /**
  * Enums
@@ -307,6 +327,46 @@ export class PrismaClient<
     * ```
     */
   get taskHistory(): Prisma.TaskHistoryDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.taskEmbedding`: Exposes CRUD operations for the **TaskEmbedding** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more TaskEmbeddings
+    * const taskEmbeddings = await prisma.taskEmbedding.findMany()
+    * ```
+    */
+  get taskEmbedding(): Prisma.TaskEmbeddingDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.boardEmbedding`: Exposes CRUD operations for the **BoardEmbedding** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more BoardEmbeddings
+    * const boardEmbeddings = await prisma.boardEmbedding.findMany()
+    * ```
+    */
+  get boardEmbedding(): Prisma.BoardEmbeddingDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.aIConversation`: Exposes CRUD operations for the **AIConversation** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AIConversations
+    * const aIConversations = await prisma.aIConversation.findMany()
+    * ```
+    */
+  get aIConversation(): Prisma.AIConversationDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.aIMessage`: Exposes CRUD operations for the **AIMessage** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AIMessages
+    * const aIMessages = await prisma.aIMessage.findMany()
+    * ```
+    */
+  get aIMessage(): Prisma.AIMessageDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -754,7 +814,11 @@ export namespace Prisma {
     Task: 'Task',
     Board: 'Board',
     BoardSection: 'BoardSection',
-    TaskHistory: 'TaskHistory'
+    TaskHistory: 'TaskHistory',
+    TaskEmbedding: 'TaskEmbedding',
+    BoardEmbedding: 'BoardEmbedding',
+    AIConversation: 'AIConversation',
+    AIMessage: 'AIMessage'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -773,7 +837,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "account" | "session" | "user" | "verificationToken" | "task" | "board" | "boardSection" | "taskHistory"
+      modelProps: "account" | "session" | "user" | "verificationToken" | "task" | "board" | "boardSection" | "taskHistory" | "taskEmbedding" | "boardEmbedding" | "aIConversation" | "aIMessage"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1369,6 +1433,270 @@ export namespace Prisma {
           }
         }
       }
+      TaskEmbedding: {
+        payload: Prisma.$TaskEmbeddingPayload<ExtArgs>
+        fields: Prisma.TaskEmbeddingFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.TaskEmbeddingFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaskEmbeddingPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.TaskEmbeddingFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaskEmbeddingPayload>
+          }
+          findFirst: {
+            args: Prisma.TaskEmbeddingFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaskEmbeddingPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.TaskEmbeddingFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaskEmbeddingPayload>
+          }
+          findMany: {
+            args: Prisma.TaskEmbeddingFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaskEmbeddingPayload>[]
+          }
+          delete: {
+            args: Prisma.TaskEmbeddingDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaskEmbeddingPayload>
+          }
+          update: {
+            args: Prisma.TaskEmbeddingUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaskEmbeddingPayload>
+          }
+          deleteMany: {
+            args: Prisma.TaskEmbeddingDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.TaskEmbeddingUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.TaskEmbeddingUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TaskEmbeddingPayload>[]
+          }
+          aggregate: {
+            args: Prisma.TaskEmbeddingAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateTaskEmbedding>
+          }
+          groupBy: {
+            args: Prisma.TaskEmbeddingGroupByArgs<ExtArgs>
+            result: $Utils.Optional<TaskEmbeddingGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.TaskEmbeddingCountArgs<ExtArgs>
+            result: $Utils.Optional<TaskEmbeddingCountAggregateOutputType> | number
+          }
+        }
+      }
+      BoardEmbedding: {
+        payload: Prisma.$BoardEmbeddingPayload<ExtArgs>
+        fields: Prisma.BoardEmbeddingFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.BoardEmbeddingFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BoardEmbeddingPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.BoardEmbeddingFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BoardEmbeddingPayload>
+          }
+          findFirst: {
+            args: Prisma.BoardEmbeddingFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BoardEmbeddingPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.BoardEmbeddingFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BoardEmbeddingPayload>
+          }
+          findMany: {
+            args: Prisma.BoardEmbeddingFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BoardEmbeddingPayload>[]
+          }
+          delete: {
+            args: Prisma.BoardEmbeddingDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BoardEmbeddingPayload>
+          }
+          update: {
+            args: Prisma.BoardEmbeddingUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BoardEmbeddingPayload>
+          }
+          deleteMany: {
+            args: Prisma.BoardEmbeddingDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.BoardEmbeddingUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.BoardEmbeddingUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BoardEmbeddingPayload>[]
+          }
+          aggregate: {
+            args: Prisma.BoardEmbeddingAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateBoardEmbedding>
+          }
+          groupBy: {
+            args: Prisma.BoardEmbeddingGroupByArgs<ExtArgs>
+            result: $Utils.Optional<BoardEmbeddingGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.BoardEmbeddingCountArgs<ExtArgs>
+            result: $Utils.Optional<BoardEmbeddingCountAggregateOutputType> | number
+          }
+        }
+      }
+      AIConversation: {
+        payload: Prisma.$AIConversationPayload<ExtArgs>
+        fields: Prisma.AIConversationFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AIConversationFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIConversationPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AIConversationFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIConversationPayload>
+          }
+          findFirst: {
+            args: Prisma.AIConversationFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIConversationPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AIConversationFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIConversationPayload>
+          }
+          findMany: {
+            args: Prisma.AIConversationFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIConversationPayload>[]
+          }
+          create: {
+            args: Prisma.AIConversationCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIConversationPayload>
+          }
+          createMany: {
+            args: Prisma.AIConversationCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AIConversationCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIConversationPayload>[]
+          }
+          delete: {
+            args: Prisma.AIConversationDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIConversationPayload>
+          }
+          update: {
+            args: Prisma.AIConversationUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIConversationPayload>
+          }
+          deleteMany: {
+            args: Prisma.AIConversationDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AIConversationUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.AIConversationUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIConversationPayload>[]
+          }
+          upsert: {
+            args: Prisma.AIConversationUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIConversationPayload>
+          }
+          aggregate: {
+            args: Prisma.AIConversationAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAIConversation>
+          }
+          groupBy: {
+            args: Prisma.AIConversationGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AIConversationGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AIConversationCountArgs<ExtArgs>
+            result: $Utils.Optional<AIConversationCountAggregateOutputType> | number
+          }
+        }
+      }
+      AIMessage: {
+        payload: Prisma.$AIMessagePayload<ExtArgs>
+        fields: Prisma.AIMessageFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AIMessageFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIMessagePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AIMessageFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIMessagePayload>
+          }
+          findFirst: {
+            args: Prisma.AIMessageFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIMessagePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AIMessageFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIMessagePayload>
+          }
+          findMany: {
+            args: Prisma.AIMessageFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIMessagePayload>[]
+          }
+          create: {
+            args: Prisma.AIMessageCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIMessagePayload>
+          }
+          createMany: {
+            args: Prisma.AIMessageCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AIMessageCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIMessagePayload>[]
+          }
+          delete: {
+            args: Prisma.AIMessageDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIMessagePayload>
+          }
+          update: {
+            args: Prisma.AIMessageUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIMessagePayload>
+          }
+          deleteMany: {
+            args: Prisma.AIMessageDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AIMessageUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.AIMessageUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIMessagePayload>[]
+          }
+          upsert: {
+            args: Prisma.AIMessageUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AIMessagePayload>
+          }
+          aggregate: {
+            args: Prisma.AIMessageAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAIMessage>
+          }
+          groupBy: {
+            args: Prisma.AIMessageGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AIMessageGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AIMessageCountArgs<ExtArgs>
+            result: $Utils.Optional<AIMessageCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1461,6 +1789,10 @@ export namespace Prisma {
     board?: BoardOmit
     boardSection?: BoardSectionOmit
     taskHistory?: TaskHistoryOmit
+    taskEmbedding?: TaskEmbeddingOmit
+    boardEmbedding?: BoardEmbeddingOmit
+    aIConversation?: AIConversationOmit
+    aIMessage?: AIMessageOmit
   }
 
   /* Types for Logging */
@@ -1559,6 +1891,7 @@ export namespace Prisma {
     sessions: number
     assignedTasks: number
     createdTasks: number
+    aiConversations: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -1566,6 +1899,7 @@ export namespace Prisma {
     sessions?: boolean | UserCountOutputTypeCountSessionsArgs
     assignedTasks?: boolean | UserCountOutputTypeCountAssignedTasksArgs
     createdTasks?: boolean | UserCountOutputTypeCountCreatedTasksArgs
+    aiConversations?: boolean | UserCountOutputTypeCountAiConversationsArgs
   }
 
   // Custom InputTypes
@@ -1605,6 +1939,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountCreatedTasksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: TaskWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountAiConversationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AIConversationWhereInput
   }
 
 
@@ -1698,6 +2039,37 @@ export namespace Prisma {
    */
   export type BoardSectionCountOutputTypeCountTasksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: TaskWhereInput
+  }
+
+
+  /**
+   * Count Type AIConversationCountOutputType
+   */
+
+  export type AIConversationCountOutputType = {
+    messages: number
+  }
+
+  export type AIConversationCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    messages?: boolean | AIConversationCountOutputTypeCountMessagesArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * AIConversationCountOutputType without action
+   */
+  export type AIConversationCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIConversationCountOutputType
+     */
+    select?: AIConversationCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * AIConversationCountOutputType without action
+   */
+  export type AIConversationCountOutputTypeCountMessagesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AIMessageWhereInput
   }
 
 
@@ -4157,6 +4529,7 @@ export namespace Prisma {
     sessions?: boolean | User$sessionsArgs<ExtArgs>
     assignedTasks?: boolean | User$assignedTasksArgs<ExtArgs>
     createdTasks?: boolean | User$createdTasksArgs<ExtArgs>
+    aiConversations?: boolean | User$aiConversationsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -4211,6 +4584,7 @@ export namespace Prisma {
     sessions?: boolean | User$sessionsArgs<ExtArgs>
     assignedTasks?: boolean | User$assignedTasksArgs<ExtArgs>
     createdTasks?: boolean | User$createdTasksArgs<ExtArgs>
+    aiConversations?: boolean | User$aiConversationsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -4223,6 +4597,7 @@ export namespace Prisma {
       sessions: Prisma.$SessionPayload<ExtArgs>[]
       assignedTasks: Prisma.$TaskPayload<ExtArgs>[]
       createdTasks: Prisma.$TaskPayload<ExtArgs>[]
+      aiConversations: Prisma.$AIConversationPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -4635,6 +5010,7 @@ export namespace Prisma {
     sessions<T extends User$sessionsArgs<ExtArgs> = {}>(args?: Subset<T, User$sessionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     assignedTasks<T extends User$assignedTasksArgs<ExtArgs> = {}>(args?: Subset<T, User$assignedTasksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TaskPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     createdTasks<T extends User$createdTasksArgs<ExtArgs> = {}>(args?: Subset<T, User$createdTasksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TaskPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    aiConversations<T extends User$aiConversationsArgs<ExtArgs> = {}>(args?: Subset<T, User$aiConversationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AIConversationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -5157,6 +5533,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: TaskScalarFieldEnum | TaskScalarFieldEnum[]
+  }
+
+  /**
+   * User.aiConversations
+   */
+  export type User$aiConversationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIConversation
+     */
+    select?: AIConversationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIConversation
+     */
+    omit?: AIConversationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AIConversationInclude<ExtArgs> | null
+    where?: AIConversationWhereInput
+    orderBy?: AIConversationOrderByWithRelationInput | AIConversationOrderByWithRelationInput[]
+    cursor?: AIConversationWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: AIConversationScalarFieldEnum | AIConversationScalarFieldEnum[]
   }
 
   /**
@@ -6405,6 +6805,7 @@ export namespace Prisma {
     createdBy?: boolean | UserDefaultArgs<ExtArgs>
     boardSection?: boolean | BoardSectionDefaultArgs<ExtArgs>
     history?: boolean | Task$historyArgs<ExtArgs>
+    embedding?: boolean | Task$embeddingArgs<ExtArgs>
     _count?: boolean | TaskCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["task"]>
 
@@ -6465,6 +6866,7 @@ export namespace Prisma {
     createdBy?: boolean | UserDefaultArgs<ExtArgs>
     boardSection?: boolean | BoardSectionDefaultArgs<ExtArgs>
     history?: boolean | Task$historyArgs<ExtArgs>
+    embedding?: boolean | Task$embeddingArgs<ExtArgs>
     _count?: boolean | TaskCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type TaskIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -6485,6 +6887,7 @@ export namespace Prisma {
       createdBy: Prisma.$UserPayload<ExtArgs>
       boardSection: Prisma.$BoardSectionPayload<ExtArgs>
       history: Prisma.$TaskHistoryPayload<ExtArgs>[]
+      embedding: Prisma.$TaskEmbeddingPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -6897,6 +7300,7 @@ export namespace Prisma {
     createdBy<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     boardSection<T extends BoardSectionDefaultArgs<ExtArgs> = {}>(args?: Subset<T, BoardSectionDefaultArgs<ExtArgs>>): Prisma__BoardSectionClient<$Result.GetResult<Prisma.$BoardSectionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     history<T extends Task$historyArgs<ExtArgs> = {}>(args?: Subset<T, Task$historyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TaskHistoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    embedding<T extends Task$embeddingArgs<ExtArgs> = {}>(args?: Subset<T, Task$embeddingArgs<ExtArgs>>): Prisma__TaskEmbeddingClient<$Result.GetResult<Prisma.$TaskEmbeddingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -7358,6 +7762,25 @@ export namespace Prisma {
   }
 
   /**
+   * Task.embedding
+   */
+  export type Task$embeddingArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TaskEmbedding
+     */
+    select?: TaskEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TaskEmbedding
+     */
+    omit?: TaskEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TaskEmbeddingInclude<ExtArgs> | null
+    where?: TaskEmbeddingWhereInput
+  }
+
+  /**
    * Task without action
    */
   export type TaskDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -7553,6 +7976,7 @@ export namespace Prisma {
     updatedAt?: boolean
     access?: boolean
     boardSections?: boolean | Board$boardSectionsArgs<ExtArgs>
+    embedding?: boolean | Board$embeddingArgs<ExtArgs>
     _count?: boolean | BoardCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["board"]>
 
@@ -7589,6 +8013,7 @@ export namespace Prisma {
   export type BoardOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "createdBy" | "createdAt" | "updatedAt" | "access", ExtArgs["result"]["board"]>
   export type BoardInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     boardSections?: boolean | Board$boardSectionsArgs<ExtArgs>
+    embedding?: boolean | Board$embeddingArgs<ExtArgs>
     _count?: boolean | BoardCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type BoardIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -7598,6 +8023,7 @@ export namespace Prisma {
     name: "Board"
     objects: {
       boardSections: Prisma.$BoardSectionPayload<ExtArgs>[]
+      embedding: Prisma.$BoardEmbeddingPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -8002,6 +8428,7 @@ export namespace Prisma {
   export interface Prisma__BoardClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     boardSections<T extends Board$boardSectionsArgs<ExtArgs> = {}>(args?: Subset<T, Board$boardSectionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BoardSectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    embedding<T extends Board$embeddingArgs<ExtArgs> = {}>(args?: Subset<T, Board$embeddingArgs<ExtArgs>>): Prisma__BoardEmbeddingClient<$Result.GetResult<Prisma.$BoardEmbeddingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -8447,6 +8874,25 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: BoardSectionScalarFieldEnum | BoardSectionScalarFieldEnum[]
+  }
+
+  /**
+   * Board.embedding
+   */
+  export type Board$embeddingArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BoardEmbedding
+     */
+    select?: BoardEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BoardEmbedding
+     */
+    omit?: BoardEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BoardEmbeddingInclude<ExtArgs> | null
+    where?: BoardEmbeddingWhereInput
   }
 
   /**
@@ -10662,6 +11108,3979 @@ export namespace Prisma {
 
 
   /**
+   * Model TaskEmbedding
+   */
+
+  export type AggregateTaskEmbedding = {
+    _count: TaskEmbeddingCountAggregateOutputType | null
+    _min: TaskEmbeddingMinAggregateOutputType | null
+    _max: TaskEmbeddingMaxAggregateOutputType | null
+  }
+
+  export type TaskEmbeddingMinAggregateOutputType = {
+    id: string | null
+    taskId: string | null
+    content: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type TaskEmbeddingMaxAggregateOutputType = {
+    id: string | null
+    taskId: string | null
+    content: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type TaskEmbeddingCountAggregateOutputType = {
+    id: number
+    taskId: number
+    content: number
+    metadata: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type TaskEmbeddingMinAggregateInputType = {
+    id?: true
+    taskId?: true
+    content?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type TaskEmbeddingMaxAggregateInputType = {
+    id?: true
+    taskId?: true
+    content?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type TaskEmbeddingCountAggregateInputType = {
+    id?: true
+    taskId?: true
+    content?: true
+    metadata?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type TaskEmbeddingAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TaskEmbedding to aggregate.
+     */
+    where?: TaskEmbeddingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TaskEmbeddings to fetch.
+     */
+    orderBy?: TaskEmbeddingOrderByWithRelationInput | TaskEmbeddingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: TaskEmbeddingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TaskEmbeddings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TaskEmbeddings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned TaskEmbeddings
+    **/
+    _count?: true | TaskEmbeddingCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: TaskEmbeddingMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: TaskEmbeddingMaxAggregateInputType
+  }
+
+  export type GetTaskEmbeddingAggregateType<T extends TaskEmbeddingAggregateArgs> = {
+        [P in keyof T & keyof AggregateTaskEmbedding]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateTaskEmbedding[P]>
+      : GetScalarType<T[P], AggregateTaskEmbedding[P]>
+  }
+
+
+
+
+  export type TaskEmbeddingGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TaskEmbeddingWhereInput
+    orderBy?: TaskEmbeddingOrderByWithAggregationInput | TaskEmbeddingOrderByWithAggregationInput[]
+    by: TaskEmbeddingScalarFieldEnum[] | TaskEmbeddingScalarFieldEnum
+    having?: TaskEmbeddingScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: TaskEmbeddingCountAggregateInputType | true
+    _min?: TaskEmbeddingMinAggregateInputType
+    _max?: TaskEmbeddingMaxAggregateInputType
+  }
+
+  export type TaskEmbeddingGroupByOutputType = {
+    id: string
+    taskId: string
+    content: string
+    metadata: JsonValue
+    createdAt: Date
+    updatedAt: Date
+    _count: TaskEmbeddingCountAggregateOutputType | null
+    _min: TaskEmbeddingMinAggregateOutputType | null
+    _max: TaskEmbeddingMaxAggregateOutputType | null
+  }
+
+  type GetTaskEmbeddingGroupByPayload<T extends TaskEmbeddingGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<TaskEmbeddingGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof TaskEmbeddingGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], TaskEmbeddingGroupByOutputType[P]>
+            : GetScalarType<T[P], TaskEmbeddingGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type TaskEmbeddingSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    taskId?: boolean
+    content?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    task?: boolean | TaskDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["taskEmbedding"]>
+
+
+  export type TaskEmbeddingSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    taskId?: boolean
+    content?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    task?: boolean | TaskDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["taskEmbedding"]>
+
+  export type TaskEmbeddingSelectScalar = {
+    id?: boolean
+    taskId?: boolean
+    content?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type TaskEmbeddingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "taskId" | "content" | "metadata" | "createdAt" | "updatedAt", ExtArgs["result"]["taskEmbedding"]>
+  export type TaskEmbeddingInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    task?: boolean | TaskDefaultArgs<ExtArgs>
+  }
+  export type TaskEmbeddingIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    task?: boolean | TaskDefaultArgs<ExtArgs>
+  }
+
+  export type $TaskEmbeddingPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "TaskEmbedding"
+    objects: {
+      task: Prisma.$TaskPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      taskId: string
+      content: string
+      metadata: Prisma.JsonValue
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["taskEmbedding"]>
+    composites: {}
+  }
+
+  type TaskEmbeddingGetPayload<S extends boolean | null | undefined | TaskEmbeddingDefaultArgs> = $Result.GetResult<Prisma.$TaskEmbeddingPayload, S>
+
+  type TaskEmbeddingCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<TaskEmbeddingFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: TaskEmbeddingCountAggregateInputType | true
+    }
+
+  export interface TaskEmbeddingDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['TaskEmbedding'], meta: { name: 'TaskEmbedding' } }
+    /**
+     * Find zero or one TaskEmbedding that matches the filter.
+     * @param {TaskEmbeddingFindUniqueArgs} args - Arguments to find a TaskEmbedding
+     * @example
+     * // Get one TaskEmbedding
+     * const taskEmbedding = await prisma.taskEmbedding.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends TaskEmbeddingFindUniqueArgs>(args: SelectSubset<T, TaskEmbeddingFindUniqueArgs<ExtArgs>>): Prisma__TaskEmbeddingClient<$Result.GetResult<Prisma.$TaskEmbeddingPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one TaskEmbedding that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {TaskEmbeddingFindUniqueOrThrowArgs} args - Arguments to find a TaskEmbedding
+     * @example
+     * // Get one TaskEmbedding
+     * const taskEmbedding = await prisma.taskEmbedding.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends TaskEmbeddingFindUniqueOrThrowArgs>(args: SelectSubset<T, TaskEmbeddingFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TaskEmbeddingClient<$Result.GetResult<Prisma.$TaskEmbeddingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first TaskEmbedding that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TaskEmbeddingFindFirstArgs} args - Arguments to find a TaskEmbedding
+     * @example
+     * // Get one TaskEmbedding
+     * const taskEmbedding = await prisma.taskEmbedding.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends TaskEmbeddingFindFirstArgs>(args?: SelectSubset<T, TaskEmbeddingFindFirstArgs<ExtArgs>>): Prisma__TaskEmbeddingClient<$Result.GetResult<Prisma.$TaskEmbeddingPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first TaskEmbedding that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TaskEmbeddingFindFirstOrThrowArgs} args - Arguments to find a TaskEmbedding
+     * @example
+     * // Get one TaskEmbedding
+     * const taskEmbedding = await prisma.taskEmbedding.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends TaskEmbeddingFindFirstOrThrowArgs>(args?: SelectSubset<T, TaskEmbeddingFindFirstOrThrowArgs<ExtArgs>>): Prisma__TaskEmbeddingClient<$Result.GetResult<Prisma.$TaskEmbeddingPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more TaskEmbeddings that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TaskEmbeddingFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all TaskEmbeddings
+     * const taskEmbeddings = await prisma.taskEmbedding.findMany()
+     * 
+     * // Get first 10 TaskEmbeddings
+     * const taskEmbeddings = await prisma.taskEmbedding.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const taskEmbeddingWithIdOnly = await prisma.taskEmbedding.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends TaskEmbeddingFindManyArgs>(args?: SelectSubset<T, TaskEmbeddingFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TaskEmbeddingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Delete a TaskEmbedding.
+     * @param {TaskEmbeddingDeleteArgs} args - Arguments to delete one TaskEmbedding.
+     * @example
+     * // Delete one TaskEmbedding
+     * const TaskEmbedding = await prisma.taskEmbedding.delete({
+     *   where: {
+     *     // ... filter to delete one TaskEmbedding
+     *   }
+     * })
+     * 
+     */
+    delete<T extends TaskEmbeddingDeleteArgs>(args: SelectSubset<T, TaskEmbeddingDeleteArgs<ExtArgs>>): Prisma__TaskEmbeddingClient<$Result.GetResult<Prisma.$TaskEmbeddingPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one TaskEmbedding.
+     * @param {TaskEmbeddingUpdateArgs} args - Arguments to update one TaskEmbedding.
+     * @example
+     * // Update one TaskEmbedding
+     * const taskEmbedding = await prisma.taskEmbedding.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends TaskEmbeddingUpdateArgs>(args: SelectSubset<T, TaskEmbeddingUpdateArgs<ExtArgs>>): Prisma__TaskEmbeddingClient<$Result.GetResult<Prisma.$TaskEmbeddingPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more TaskEmbeddings.
+     * @param {TaskEmbeddingDeleteManyArgs} args - Arguments to filter TaskEmbeddings to delete.
+     * @example
+     * // Delete a few TaskEmbeddings
+     * const { count } = await prisma.taskEmbedding.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends TaskEmbeddingDeleteManyArgs>(args?: SelectSubset<T, TaskEmbeddingDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more TaskEmbeddings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TaskEmbeddingUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many TaskEmbeddings
+     * const taskEmbedding = await prisma.taskEmbedding.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends TaskEmbeddingUpdateManyArgs>(args: SelectSubset<T, TaskEmbeddingUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more TaskEmbeddings and returns the data updated in the database.
+     * @param {TaskEmbeddingUpdateManyAndReturnArgs} args - Arguments to update many TaskEmbeddings.
+     * @example
+     * // Update many TaskEmbeddings
+     * const taskEmbedding = await prisma.taskEmbedding.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more TaskEmbeddings and only return the `id`
+     * const taskEmbeddingWithIdOnly = await prisma.taskEmbedding.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends TaskEmbeddingUpdateManyAndReturnArgs>(args: SelectSubset<T, TaskEmbeddingUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TaskEmbeddingPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+
+    /**
+     * Count the number of TaskEmbeddings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TaskEmbeddingCountArgs} args - Arguments to filter TaskEmbeddings to count.
+     * @example
+     * // Count the number of TaskEmbeddings
+     * const count = await prisma.taskEmbedding.count({
+     *   where: {
+     *     // ... the filter for the TaskEmbeddings we want to count
+     *   }
+     * })
+    **/
+    count<T extends TaskEmbeddingCountArgs>(
+      args?: Subset<T, TaskEmbeddingCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], TaskEmbeddingCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a TaskEmbedding.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TaskEmbeddingAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends TaskEmbeddingAggregateArgs>(args: Subset<T, TaskEmbeddingAggregateArgs>): Prisma.PrismaPromise<GetTaskEmbeddingAggregateType<T>>
+
+    /**
+     * Group by TaskEmbedding.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TaskEmbeddingGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends TaskEmbeddingGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: TaskEmbeddingGroupByArgs['orderBy'] }
+        : { orderBy?: TaskEmbeddingGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, TaskEmbeddingGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTaskEmbeddingGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the TaskEmbedding model
+   */
+  readonly fields: TaskEmbeddingFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for TaskEmbedding.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__TaskEmbeddingClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    task<T extends TaskDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TaskDefaultArgs<ExtArgs>>): Prisma__TaskClient<$Result.GetResult<Prisma.$TaskPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the TaskEmbedding model
+   */
+  interface TaskEmbeddingFieldRefs {
+    readonly id: FieldRef<"TaskEmbedding", 'String'>
+    readonly taskId: FieldRef<"TaskEmbedding", 'String'>
+    readonly content: FieldRef<"TaskEmbedding", 'String'>
+    readonly metadata: FieldRef<"TaskEmbedding", 'Json'>
+    readonly createdAt: FieldRef<"TaskEmbedding", 'DateTime'>
+    readonly updatedAt: FieldRef<"TaskEmbedding", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * TaskEmbedding findUnique
+   */
+  export type TaskEmbeddingFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TaskEmbedding
+     */
+    select?: TaskEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TaskEmbedding
+     */
+    omit?: TaskEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TaskEmbeddingInclude<ExtArgs> | null
+    /**
+     * Filter, which TaskEmbedding to fetch.
+     */
+    where: TaskEmbeddingWhereUniqueInput
+  }
+
+  /**
+   * TaskEmbedding findUniqueOrThrow
+   */
+  export type TaskEmbeddingFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TaskEmbedding
+     */
+    select?: TaskEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TaskEmbedding
+     */
+    omit?: TaskEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TaskEmbeddingInclude<ExtArgs> | null
+    /**
+     * Filter, which TaskEmbedding to fetch.
+     */
+    where: TaskEmbeddingWhereUniqueInput
+  }
+
+  /**
+   * TaskEmbedding findFirst
+   */
+  export type TaskEmbeddingFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TaskEmbedding
+     */
+    select?: TaskEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TaskEmbedding
+     */
+    omit?: TaskEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TaskEmbeddingInclude<ExtArgs> | null
+    /**
+     * Filter, which TaskEmbedding to fetch.
+     */
+    where?: TaskEmbeddingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TaskEmbeddings to fetch.
+     */
+    orderBy?: TaskEmbeddingOrderByWithRelationInput | TaskEmbeddingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TaskEmbeddings.
+     */
+    cursor?: TaskEmbeddingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TaskEmbeddings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TaskEmbeddings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TaskEmbeddings.
+     */
+    distinct?: TaskEmbeddingScalarFieldEnum | TaskEmbeddingScalarFieldEnum[]
+  }
+
+  /**
+   * TaskEmbedding findFirstOrThrow
+   */
+  export type TaskEmbeddingFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TaskEmbedding
+     */
+    select?: TaskEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TaskEmbedding
+     */
+    omit?: TaskEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TaskEmbeddingInclude<ExtArgs> | null
+    /**
+     * Filter, which TaskEmbedding to fetch.
+     */
+    where?: TaskEmbeddingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TaskEmbeddings to fetch.
+     */
+    orderBy?: TaskEmbeddingOrderByWithRelationInput | TaskEmbeddingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TaskEmbeddings.
+     */
+    cursor?: TaskEmbeddingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TaskEmbeddings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TaskEmbeddings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TaskEmbeddings.
+     */
+    distinct?: TaskEmbeddingScalarFieldEnum | TaskEmbeddingScalarFieldEnum[]
+  }
+
+  /**
+   * TaskEmbedding findMany
+   */
+  export type TaskEmbeddingFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TaskEmbedding
+     */
+    select?: TaskEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TaskEmbedding
+     */
+    omit?: TaskEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TaskEmbeddingInclude<ExtArgs> | null
+    /**
+     * Filter, which TaskEmbeddings to fetch.
+     */
+    where?: TaskEmbeddingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TaskEmbeddings to fetch.
+     */
+    orderBy?: TaskEmbeddingOrderByWithRelationInput | TaskEmbeddingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing TaskEmbeddings.
+     */
+    cursor?: TaskEmbeddingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TaskEmbeddings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TaskEmbeddings.
+     */
+    skip?: number
+    distinct?: TaskEmbeddingScalarFieldEnum | TaskEmbeddingScalarFieldEnum[]
+  }
+
+  /**
+   * TaskEmbedding update
+   */
+  export type TaskEmbeddingUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TaskEmbedding
+     */
+    select?: TaskEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TaskEmbedding
+     */
+    omit?: TaskEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TaskEmbeddingInclude<ExtArgs> | null
+    /**
+     * The data needed to update a TaskEmbedding.
+     */
+    data: XOR<TaskEmbeddingUpdateInput, TaskEmbeddingUncheckedUpdateInput>
+    /**
+     * Choose, which TaskEmbedding to update.
+     */
+    where: TaskEmbeddingWhereUniqueInput
+  }
+
+  /**
+   * TaskEmbedding updateMany
+   */
+  export type TaskEmbeddingUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update TaskEmbeddings.
+     */
+    data: XOR<TaskEmbeddingUpdateManyMutationInput, TaskEmbeddingUncheckedUpdateManyInput>
+    /**
+     * Filter which TaskEmbeddings to update
+     */
+    where?: TaskEmbeddingWhereInput
+    /**
+     * Limit how many TaskEmbeddings to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * TaskEmbedding updateManyAndReturn
+   */
+  export type TaskEmbeddingUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TaskEmbedding
+     */
+    select?: TaskEmbeddingSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the TaskEmbedding
+     */
+    omit?: TaskEmbeddingOmit<ExtArgs> | null
+    /**
+     * The data used to update TaskEmbeddings.
+     */
+    data: XOR<TaskEmbeddingUpdateManyMutationInput, TaskEmbeddingUncheckedUpdateManyInput>
+    /**
+     * Filter which TaskEmbeddings to update
+     */
+    where?: TaskEmbeddingWhereInput
+    /**
+     * Limit how many TaskEmbeddings to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TaskEmbeddingIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * TaskEmbedding delete
+   */
+  export type TaskEmbeddingDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TaskEmbedding
+     */
+    select?: TaskEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TaskEmbedding
+     */
+    omit?: TaskEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TaskEmbeddingInclude<ExtArgs> | null
+    /**
+     * Filter which TaskEmbedding to delete.
+     */
+    where: TaskEmbeddingWhereUniqueInput
+  }
+
+  /**
+   * TaskEmbedding deleteMany
+   */
+  export type TaskEmbeddingDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TaskEmbeddings to delete
+     */
+    where?: TaskEmbeddingWhereInput
+    /**
+     * Limit how many TaskEmbeddings to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * TaskEmbedding without action
+   */
+  export type TaskEmbeddingDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TaskEmbedding
+     */
+    select?: TaskEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TaskEmbedding
+     */
+    omit?: TaskEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TaskEmbeddingInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model BoardEmbedding
+   */
+
+  export type AggregateBoardEmbedding = {
+    _count: BoardEmbeddingCountAggregateOutputType | null
+    _min: BoardEmbeddingMinAggregateOutputType | null
+    _max: BoardEmbeddingMaxAggregateOutputType | null
+  }
+
+  export type BoardEmbeddingMinAggregateOutputType = {
+    id: string | null
+    boardId: string | null
+    content: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type BoardEmbeddingMaxAggregateOutputType = {
+    id: string | null
+    boardId: string | null
+    content: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type BoardEmbeddingCountAggregateOutputType = {
+    id: number
+    boardId: number
+    content: number
+    metadata: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type BoardEmbeddingMinAggregateInputType = {
+    id?: true
+    boardId?: true
+    content?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type BoardEmbeddingMaxAggregateInputType = {
+    id?: true
+    boardId?: true
+    content?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type BoardEmbeddingCountAggregateInputType = {
+    id?: true
+    boardId?: true
+    content?: true
+    metadata?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type BoardEmbeddingAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BoardEmbedding to aggregate.
+     */
+    where?: BoardEmbeddingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BoardEmbeddings to fetch.
+     */
+    orderBy?: BoardEmbeddingOrderByWithRelationInput | BoardEmbeddingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: BoardEmbeddingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BoardEmbeddings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BoardEmbeddings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned BoardEmbeddings
+    **/
+    _count?: true | BoardEmbeddingCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: BoardEmbeddingMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: BoardEmbeddingMaxAggregateInputType
+  }
+
+  export type GetBoardEmbeddingAggregateType<T extends BoardEmbeddingAggregateArgs> = {
+        [P in keyof T & keyof AggregateBoardEmbedding]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateBoardEmbedding[P]>
+      : GetScalarType<T[P], AggregateBoardEmbedding[P]>
+  }
+
+
+
+
+  export type BoardEmbeddingGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: BoardEmbeddingWhereInput
+    orderBy?: BoardEmbeddingOrderByWithAggregationInput | BoardEmbeddingOrderByWithAggregationInput[]
+    by: BoardEmbeddingScalarFieldEnum[] | BoardEmbeddingScalarFieldEnum
+    having?: BoardEmbeddingScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: BoardEmbeddingCountAggregateInputType | true
+    _min?: BoardEmbeddingMinAggregateInputType
+    _max?: BoardEmbeddingMaxAggregateInputType
+  }
+
+  export type BoardEmbeddingGroupByOutputType = {
+    id: string
+    boardId: string
+    content: string
+    metadata: JsonValue
+    createdAt: Date
+    updatedAt: Date
+    _count: BoardEmbeddingCountAggregateOutputType | null
+    _min: BoardEmbeddingMinAggregateOutputType | null
+    _max: BoardEmbeddingMaxAggregateOutputType | null
+  }
+
+  type GetBoardEmbeddingGroupByPayload<T extends BoardEmbeddingGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<BoardEmbeddingGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof BoardEmbeddingGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], BoardEmbeddingGroupByOutputType[P]>
+            : GetScalarType<T[P], BoardEmbeddingGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type BoardEmbeddingSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    boardId?: boolean
+    content?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    board?: boolean | BoardDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["boardEmbedding"]>
+
+
+  export type BoardEmbeddingSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    boardId?: boolean
+    content?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    board?: boolean | BoardDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["boardEmbedding"]>
+
+  export type BoardEmbeddingSelectScalar = {
+    id?: boolean
+    boardId?: boolean
+    content?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type BoardEmbeddingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "boardId" | "content" | "metadata" | "createdAt" | "updatedAt", ExtArgs["result"]["boardEmbedding"]>
+  export type BoardEmbeddingInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    board?: boolean | BoardDefaultArgs<ExtArgs>
+  }
+  export type BoardEmbeddingIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    board?: boolean | BoardDefaultArgs<ExtArgs>
+  }
+
+  export type $BoardEmbeddingPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "BoardEmbedding"
+    objects: {
+      board: Prisma.$BoardPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      boardId: string
+      content: string
+      metadata: Prisma.JsonValue
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["boardEmbedding"]>
+    composites: {}
+  }
+
+  type BoardEmbeddingGetPayload<S extends boolean | null | undefined | BoardEmbeddingDefaultArgs> = $Result.GetResult<Prisma.$BoardEmbeddingPayload, S>
+
+  type BoardEmbeddingCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<BoardEmbeddingFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: BoardEmbeddingCountAggregateInputType | true
+    }
+
+  export interface BoardEmbeddingDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['BoardEmbedding'], meta: { name: 'BoardEmbedding' } }
+    /**
+     * Find zero or one BoardEmbedding that matches the filter.
+     * @param {BoardEmbeddingFindUniqueArgs} args - Arguments to find a BoardEmbedding
+     * @example
+     * // Get one BoardEmbedding
+     * const boardEmbedding = await prisma.boardEmbedding.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends BoardEmbeddingFindUniqueArgs>(args: SelectSubset<T, BoardEmbeddingFindUniqueArgs<ExtArgs>>): Prisma__BoardEmbeddingClient<$Result.GetResult<Prisma.$BoardEmbeddingPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one BoardEmbedding that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {BoardEmbeddingFindUniqueOrThrowArgs} args - Arguments to find a BoardEmbedding
+     * @example
+     * // Get one BoardEmbedding
+     * const boardEmbedding = await prisma.boardEmbedding.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends BoardEmbeddingFindUniqueOrThrowArgs>(args: SelectSubset<T, BoardEmbeddingFindUniqueOrThrowArgs<ExtArgs>>): Prisma__BoardEmbeddingClient<$Result.GetResult<Prisma.$BoardEmbeddingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first BoardEmbedding that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BoardEmbeddingFindFirstArgs} args - Arguments to find a BoardEmbedding
+     * @example
+     * // Get one BoardEmbedding
+     * const boardEmbedding = await prisma.boardEmbedding.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends BoardEmbeddingFindFirstArgs>(args?: SelectSubset<T, BoardEmbeddingFindFirstArgs<ExtArgs>>): Prisma__BoardEmbeddingClient<$Result.GetResult<Prisma.$BoardEmbeddingPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first BoardEmbedding that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BoardEmbeddingFindFirstOrThrowArgs} args - Arguments to find a BoardEmbedding
+     * @example
+     * // Get one BoardEmbedding
+     * const boardEmbedding = await prisma.boardEmbedding.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends BoardEmbeddingFindFirstOrThrowArgs>(args?: SelectSubset<T, BoardEmbeddingFindFirstOrThrowArgs<ExtArgs>>): Prisma__BoardEmbeddingClient<$Result.GetResult<Prisma.$BoardEmbeddingPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more BoardEmbeddings that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BoardEmbeddingFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all BoardEmbeddings
+     * const boardEmbeddings = await prisma.boardEmbedding.findMany()
+     * 
+     * // Get first 10 BoardEmbeddings
+     * const boardEmbeddings = await prisma.boardEmbedding.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const boardEmbeddingWithIdOnly = await prisma.boardEmbedding.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends BoardEmbeddingFindManyArgs>(args?: SelectSubset<T, BoardEmbeddingFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BoardEmbeddingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Delete a BoardEmbedding.
+     * @param {BoardEmbeddingDeleteArgs} args - Arguments to delete one BoardEmbedding.
+     * @example
+     * // Delete one BoardEmbedding
+     * const BoardEmbedding = await prisma.boardEmbedding.delete({
+     *   where: {
+     *     // ... filter to delete one BoardEmbedding
+     *   }
+     * })
+     * 
+     */
+    delete<T extends BoardEmbeddingDeleteArgs>(args: SelectSubset<T, BoardEmbeddingDeleteArgs<ExtArgs>>): Prisma__BoardEmbeddingClient<$Result.GetResult<Prisma.$BoardEmbeddingPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one BoardEmbedding.
+     * @param {BoardEmbeddingUpdateArgs} args - Arguments to update one BoardEmbedding.
+     * @example
+     * // Update one BoardEmbedding
+     * const boardEmbedding = await prisma.boardEmbedding.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends BoardEmbeddingUpdateArgs>(args: SelectSubset<T, BoardEmbeddingUpdateArgs<ExtArgs>>): Prisma__BoardEmbeddingClient<$Result.GetResult<Prisma.$BoardEmbeddingPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more BoardEmbeddings.
+     * @param {BoardEmbeddingDeleteManyArgs} args - Arguments to filter BoardEmbeddings to delete.
+     * @example
+     * // Delete a few BoardEmbeddings
+     * const { count } = await prisma.boardEmbedding.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends BoardEmbeddingDeleteManyArgs>(args?: SelectSubset<T, BoardEmbeddingDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BoardEmbeddings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BoardEmbeddingUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many BoardEmbeddings
+     * const boardEmbedding = await prisma.boardEmbedding.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends BoardEmbeddingUpdateManyArgs>(args: SelectSubset<T, BoardEmbeddingUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BoardEmbeddings and returns the data updated in the database.
+     * @param {BoardEmbeddingUpdateManyAndReturnArgs} args - Arguments to update many BoardEmbeddings.
+     * @example
+     * // Update many BoardEmbeddings
+     * const boardEmbedding = await prisma.boardEmbedding.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more BoardEmbeddings and only return the `id`
+     * const boardEmbeddingWithIdOnly = await prisma.boardEmbedding.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends BoardEmbeddingUpdateManyAndReturnArgs>(args: SelectSubset<T, BoardEmbeddingUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BoardEmbeddingPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+
+    /**
+     * Count the number of BoardEmbeddings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BoardEmbeddingCountArgs} args - Arguments to filter BoardEmbeddings to count.
+     * @example
+     * // Count the number of BoardEmbeddings
+     * const count = await prisma.boardEmbedding.count({
+     *   where: {
+     *     // ... the filter for the BoardEmbeddings we want to count
+     *   }
+     * })
+    **/
+    count<T extends BoardEmbeddingCountArgs>(
+      args?: Subset<T, BoardEmbeddingCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], BoardEmbeddingCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a BoardEmbedding.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BoardEmbeddingAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends BoardEmbeddingAggregateArgs>(args: Subset<T, BoardEmbeddingAggregateArgs>): Prisma.PrismaPromise<GetBoardEmbeddingAggregateType<T>>
+
+    /**
+     * Group by BoardEmbedding.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BoardEmbeddingGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends BoardEmbeddingGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: BoardEmbeddingGroupByArgs['orderBy'] }
+        : { orderBy?: BoardEmbeddingGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, BoardEmbeddingGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetBoardEmbeddingGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the BoardEmbedding model
+   */
+  readonly fields: BoardEmbeddingFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for BoardEmbedding.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__BoardEmbeddingClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    board<T extends BoardDefaultArgs<ExtArgs> = {}>(args?: Subset<T, BoardDefaultArgs<ExtArgs>>): Prisma__BoardClient<$Result.GetResult<Prisma.$BoardPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the BoardEmbedding model
+   */
+  interface BoardEmbeddingFieldRefs {
+    readonly id: FieldRef<"BoardEmbedding", 'String'>
+    readonly boardId: FieldRef<"BoardEmbedding", 'String'>
+    readonly content: FieldRef<"BoardEmbedding", 'String'>
+    readonly metadata: FieldRef<"BoardEmbedding", 'Json'>
+    readonly createdAt: FieldRef<"BoardEmbedding", 'DateTime'>
+    readonly updatedAt: FieldRef<"BoardEmbedding", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * BoardEmbedding findUnique
+   */
+  export type BoardEmbeddingFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BoardEmbedding
+     */
+    select?: BoardEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BoardEmbedding
+     */
+    omit?: BoardEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BoardEmbeddingInclude<ExtArgs> | null
+    /**
+     * Filter, which BoardEmbedding to fetch.
+     */
+    where: BoardEmbeddingWhereUniqueInput
+  }
+
+  /**
+   * BoardEmbedding findUniqueOrThrow
+   */
+  export type BoardEmbeddingFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BoardEmbedding
+     */
+    select?: BoardEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BoardEmbedding
+     */
+    omit?: BoardEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BoardEmbeddingInclude<ExtArgs> | null
+    /**
+     * Filter, which BoardEmbedding to fetch.
+     */
+    where: BoardEmbeddingWhereUniqueInput
+  }
+
+  /**
+   * BoardEmbedding findFirst
+   */
+  export type BoardEmbeddingFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BoardEmbedding
+     */
+    select?: BoardEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BoardEmbedding
+     */
+    omit?: BoardEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BoardEmbeddingInclude<ExtArgs> | null
+    /**
+     * Filter, which BoardEmbedding to fetch.
+     */
+    where?: BoardEmbeddingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BoardEmbeddings to fetch.
+     */
+    orderBy?: BoardEmbeddingOrderByWithRelationInput | BoardEmbeddingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BoardEmbeddings.
+     */
+    cursor?: BoardEmbeddingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BoardEmbeddings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BoardEmbeddings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BoardEmbeddings.
+     */
+    distinct?: BoardEmbeddingScalarFieldEnum | BoardEmbeddingScalarFieldEnum[]
+  }
+
+  /**
+   * BoardEmbedding findFirstOrThrow
+   */
+  export type BoardEmbeddingFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BoardEmbedding
+     */
+    select?: BoardEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BoardEmbedding
+     */
+    omit?: BoardEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BoardEmbeddingInclude<ExtArgs> | null
+    /**
+     * Filter, which BoardEmbedding to fetch.
+     */
+    where?: BoardEmbeddingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BoardEmbeddings to fetch.
+     */
+    orderBy?: BoardEmbeddingOrderByWithRelationInput | BoardEmbeddingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BoardEmbeddings.
+     */
+    cursor?: BoardEmbeddingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BoardEmbeddings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BoardEmbeddings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BoardEmbeddings.
+     */
+    distinct?: BoardEmbeddingScalarFieldEnum | BoardEmbeddingScalarFieldEnum[]
+  }
+
+  /**
+   * BoardEmbedding findMany
+   */
+  export type BoardEmbeddingFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BoardEmbedding
+     */
+    select?: BoardEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BoardEmbedding
+     */
+    omit?: BoardEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BoardEmbeddingInclude<ExtArgs> | null
+    /**
+     * Filter, which BoardEmbeddings to fetch.
+     */
+    where?: BoardEmbeddingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BoardEmbeddings to fetch.
+     */
+    orderBy?: BoardEmbeddingOrderByWithRelationInput | BoardEmbeddingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing BoardEmbeddings.
+     */
+    cursor?: BoardEmbeddingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BoardEmbeddings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BoardEmbeddings.
+     */
+    skip?: number
+    distinct?: BoardEmbeddingScalarFieldEnum | BoardEmbeddingScalarFieldEnum[]
+  }
+
+  /**
+   * BoardEmbedding update
+   */
+  export type BoardEmbeddingUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BoardEmbedding
+     */
+    select?: BoardEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BoardEmbedding
+     */
+    omit?: BoardEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BoardEmbeddingInclude<ExtArgs> | null
+    /**
+     * The data needed to update a BoardEmbedding.
+     */
+    data: XOR<BoardEmbeddingUpdateInput, BoardEmbeddingUncheckedUpdateInput>
+    /**
+     * Choose, which BoardEmbedding to update.
+     */
+    where: BoardEmbeddingWhereUniqueInput
+  }
+
+  /**
+   * BoardEmbedding updateMany
+   */
+  export type BoardEmbeddingUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update BoardEmbeddings.
+     */
+    data: XOR<BoardEmbeddingUpdateManyMutationInput, BoardEmbeddingUncheckedUpdateManyInput>
+    /**
+     * Filter which BoardEmbeddings to update
+     */
+    where?: BoardEmbeddingWhereInput
+    /**
+     * Limit how many BoardEmbeddings to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * BoardEmbedding updateManyAndReturn
+   */
+  export type BoardEmbeddingUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BoardEmbedding
+     */
+    select?: BoardEmbeddingSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the BoardEmbedding
+     */
+    omit?: BoardEmbeddingOmit<ExtArgs> | null
+    /**
+     * The data used to update BoardEmbeddings.
+     */
+    data: XOR<BoardEmbeddingUpdateManyMutationInput, BoardEmbeddingUncheckedUpdateManyInput>
+    /**
+     * Filter which BoardEmbeddings to update
+     */
+    where?: BoardEmbeddingWhereInput
+    /**
+     * Limit how many BoardEmbeddings to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BoardEmbeddingIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * BoardEmbedding delete
+   */
+  export type BoardEmbeddingDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BoardEmbedding
+     */
+    select?: BoardEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BoardEmbedding
+     */
+    omit?: BoardEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BoardEmbeddingInclude<ExtArgs> | null
+    /**
+     * Filter which BoardEmbedding to delete.
+     */
+    where: BoardEmbeddingWhereUniqueInput
+  }
+
+  /**
+   * BoardEmbedding deleteMany
+   */
+  export type BoardEmbeddingDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BoardEmbeddings to delete
+     */
+    where?: BoardEmbeddingWhereInput
+    /**
+     * Limit how many BoardEmbeddings to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * BoardEmbedding without action
+   */
+  export type BoardEmbeddingDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BoardEmbedding
+     */
+    select?: BoardEmbeddingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BoardEmbedding
+     */
+    omit?: BoardEmbeddingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BoardEmbeddingInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model AIConversation
+   */
+
+  export type AggregateAIConversation = {
+    _count: AIConversationCountAggregateOutputType | null
+    _min: AIConversationMinAggregateOutputType | null
+    _max: AIConversationMaxAggregateOutputType | null
+  }
+
+  export type AIConversationMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    companyId: string | null
+    title: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type AIConversationMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    companyId: string | null
+    title: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type AIConversationCountAggregateOutputType = {
+    id: number
+    userId: number
+    companyId: number
+    title: number
+    context: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type AIConversationMinAggregateInputType = {
+    id?: true
+    userId?: true
+    companyId?: true
+    title?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type AIConversationMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    companyId?: true
+    title?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type AIConversationCountAggregateInputType = {
+    id?: true
+    userId?: true
+    companyId?: true
+    title?: true
+    context?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type AIConversationAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AIConversation to aggregate.
+     */
+    where?: AIConversationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AIConversations to fetch.
+     */
+    orderBy?: AIConversationOrderByWithRelationInput | AIConversationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AIConversationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AIConversations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AIConversations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AIConversations
+    **/
+    _count?: true | AIConversationCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AIConversationMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AIConversationMaxAggregateInputType
+  }
+
+  export type GetAIConversationAggregateType<T extends AIConversationAggregateArgs> = {
+        [P in keyof T & keyof AggregateAIConversation]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAIConversation[P]>
+      : GetScalarType<T[P], AggregateAIConversation[P]>
+  }
+
+
+
+
+  export type AIConversationGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AIConversationWhereInput
+    orderBy?: AIConversationOrderByWithAggregationInput | AIConversationOrderByWithAggregationInput[]
+    by: AIConversationScalarFieldEnum[] | AIConversationScalarFieldEnum
+    having?: AIConversationScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AIConversationCountAggregateInputType | true
+    _min?: AIConversationMinAggregateInputType
+    _max?: AIConversationMaxAggregateInputType
+  }
+
+  export type AIConversationGroupByOutputType = {
+    id: string
+    userId: string
+    companyId: string
+    title: string | null
+    context: JsonValue | null
+    createdAt: Date
+    updatedAt: Date
+    _count: AIConversationCountAggregateOutputType | null
+    _min: AIConversationMinAggregateOutputType | null
+    _max: AIConversationMaxAggregateOutputType | null
+  }
+
+  type GetAIConversationGroupByPayload<T extends AIConversationGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AIConversationGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AIConversationGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AIConversationGroupByOutputType[P]>
+            : GetScalarType<T[P], AIConversationGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AIConversationSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    companyId?: boolean
+    title?: boolean
+    context?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    messages?: boolean | AIConversation$messagesArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    _count?: boolean | AIConversationCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["aIConversation"]>
+
+  export type AIConversationSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    companyId?: boolean
+    title?: boolean
+    context?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["aIConversation"]>
+
+  export type AIConversationSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    companyId?: boolean
+    title?: boolean
+    context?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["aIConversation"]>
+
+  export type AIConversationSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    companyId?: boolean
+    title?: boolean
+    context?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type AIConversationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "companyId" | "title" | "context" | "createdAt" | "updatedAt", ExtArgs["result"]["aIConversation"]>
+  export type AIConversationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    messages?: boolean | AIConversation$messagesArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    _count?: boolean | AIConversationCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type AIConversationIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type AIConversationIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $AIConversationPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AIConversation"
+    objects: {
+      messages: Prisma.$AIMessagePayload<ExtArgs>[]
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string
+      companyId: string
+      title: string | null
+      context: Prisma.JsonValue | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["aIConversation"]>
+    composites: {}
+  }
+
+  type AIConversationGetPayload<S extends boolean | null | undefined | AIConversationDefaultArgs> = $Result.GetResult<Prisma.$AIConversationPayload, S>
+
+  type AIConversationCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<AIConversationFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: AIConversationCountAggregateInputType | true
+    }
+
+  export interface AIConversationDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AIConversation'], meta: { name: 'AIConversation' } }
+    /**
+     * Find zero or one AIConversation that matches the filter.
+     * @param {AIConversationFindUniqueArgs} args - Arguments to find a AIConversation
+     * @example
+     * // Get one AIConversation
+     * const aIConversation = await prisma.aIConversation.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AIConversationFindUniqueArgs>(args: SelectSubset<T, AIConversationFindUniqueArgs<ExtArgs>>): Prisma__AIConversationClient<$Result.GetResult<Prisma.$AIConversationPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one AIConversation that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {AIConversationFindUniqueOrThrowArgs} args - Arguments to find a AIConversation
+     * @example
+     * // Get one AIConversation
+     * const aIConversation = await prisma.aIConversation.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AIConversationFindUniqueOrThrowArgs>(args: SelectSubset<T, AIConversationFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AIConversationClient<$Result.GetResult<Prisma.$AIConversationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AIConversation that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AIConversationFindFirstArgs} args - Arguments to find a AIConversation
+     * @example
+     * // Get one AIConversation
+     * const aIConversation = await prisma.aIConversation.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AIConversationFindFirstArgs>(args?: SelectSubset<T, AIConversationFindFirstArgs<ExtArgs>>): Prisma__AIConversationClient<$Result.GetResult<Prisma.$AIConversationPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AIConversation that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AIConversationFindFirstOrThrowArgs} args - Arguments to find a AIConversation
+     * @example
+     * // Get one AIConversation
+     * const aIConversation = await prisma.aIConversation.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AIConversationFindFirstOrThrowArgs>(args?: SelectSubset<T, AIConversationFindFirstOrThrowArgs<ExtArgs>>): Prisma__AIConversationClient<$Result.GetResult<Prisma.$AIConversationPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more AIConversations that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AIConversationFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AIConversations
+     * const aIConversations = await prisma.aIConversation.findMany()
+     * 
+     * // Get first 10 AIConversations
+     * const aIConversations = await prisma.aIConversation.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const aIConversationWithIdOnly = await prisma.aIConversation.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AIConversationFindManyArgs>(args?: SelectSubset<T, AIConversationFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AIConversationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a AIConversation.
+     * @param {AIConversationCreateArgs} args - Arguments to create a AIConversation.
+     * @example
+     * // Create one AIConversation
+     * const AIConversation = await prisma.aIConversation.create({
+     *   data: {
+     *     // ... data to create a AIConversation
+     *   }
+     * })
+     * 
+     */
+    create<T extends AIConversationCreateArgs>(args: SelectSubset<T, AIConversationCreateArgs<ExtArgs>>): Prisma__AIConversationClient<$Result.GetResult<Prisma.$AIConversationPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many AIConversations.
+     * @param {AIConversationCreateManyArgs} args - Arguments to create many AIConversations.
+     * @example
+     * // Create many AIConversations
+     * const aIConversation = await prisma.aIConversation.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AIConversationCreateManyArgs>(args?: SelectSubset<T, AIConversationCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many AIConversations and returns the data saved in the database.
+     * @param {AIConversationCreateManyAndReturnArgs} args - Arguments to create many AIConversations.
+     * @example
+     * // Create many AIConversations
+     * const aIConversation = await prisma.aIConversation.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AIConversations and only return the `id`
+     * const aIConversationWithIdOnly = await prisma.aIConversation.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AIConversationCreateManyAndReturnArgs>(args?: SelectSubset<T, AIConversationCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AIConversationPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a AIConversation.
+     * @param {AIConversationDeleteArgs} args - Arguments to delete one AIConversation.
+     * @example
+     * // Delete one AIConversation
+     * const AIConversation = await prisma.aIConversation.delete({
+     *   where: {
+     *     // ... filter to delete one AIConversation
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AIConversationDeleteArgs>(args: SelectSubset<T, AIConversationDeleteArgs<ExtArgs>>): Prisma__AIConversationClient<$Result.GetResult<Prisma.$AIConversationPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one AIConversation.
+     * @param {AIConversationUpdateArgs} args - Arguments to update one AIConversation.
+     * @example
+     * // Update one AIConversation
+     * const aIConversation = await prisma.aIConversation.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AIConversationUpdateArgs>(args: SelectSubset<T, AIConversationUpdateArgs<ExtArgs>>): Prisma__AIConversationClient<$Result.GetResult<Prisma.$AIConversationPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more AIConversations.
+     * @param {AIConversationDeleteManyArgs} args - Arguments to filter AIConversations to delete.
+     * @example
+     * // Delete a few AIConversations
+     * const { count } = await prisma.aIConversation.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AIConversationDeleteManyArgs>(args?: SelectSubset<T, AIConversationDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AIConversations.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AIConversationUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AIConversations
+     * const aIConversation = await prisma.aIConversation.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AIConversationUpdateManyArgs>(args: SelectSubset<T, AIConversationUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AIConversations and returns the data updated in the database.
+     * @param {AIConversationUpdateManyAndReturnArgs} args - Arguments to update many AIConversations.
+     * @example
+     * // Update many AIConversations
+     * const aIConversation = await prisma.aIConversation.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more AIConversations and only return the `id`
+     * const aIConversationWithIdOnly = await prisma.aIConversation.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends AIConversationUpdateManyAndReturnArgs>(args: SelectSubset<T, AIConversationUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AIConversationPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one AIConversation.
+     * @param {AIConversationUpsertArgs} args - Arguments to update or create a AIConversation.
+     * @example
+     * // Update or create a AIConversation
+     * const aIConversation = await prisma.aIConversation.upsert({
+     *   create: {
+     *     // ... data to create a AIConversation
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AIConversation we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AIConversationUpsertArgs>(args: SelectSubset<T, AIConversationUpsertArgs<ExtArgs>>): Prisma__AIConversationClient<$Result.GetResult<Prisma.$AIConversationPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of AIConversations.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AIConversationCountArgs} args - Arguments to filter AIConversations to count.
+     * @example
+     * // Count the number of AIConversations
+     * const count = await prisma.aIConversation.count({
+     *   where: {
+     *     // ... the filter for the AIConversations we want to count
+     *   }
+     * })
+    **/
+    count<T extends AIConversationCountArgs>(
+      args?: Subset<T, AIConversationCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AIConversationCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AIConversation.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AIConversationAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AIConversationAggregateArgs>(args: Subset<T, AIConversationAggregateArgs>): Prisma.PrismaPromise<GetAIConversationAggregateType<T>>
+
+    /**
+     * Group by AIConversation.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AIConversationGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AIConversationGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AIConversationGroupByArgs['orderBy'] }
+        : { orderBy?: AIConversationGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AIConversationGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAIConversationGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AIConversation model
+   */
+  readonly fields: AIConversationFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AIConversation.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AIConversationClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    messages<T extends AIConversation$messagesArgs<ExtArgs> = {}>(args?: Subset<T, AIConversation$messagesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AIMessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AIConversation model
+   */
+  interface AIConversationFieldRefs {
+    readonly id: FieldRef<"AIConversation", 'String'>
+    readonly userId: FieldRef<"AIConversation", 'String'>
+    readonly companyId: FieldRef<"AIConversation", 'String'>
+    readonly title: FieldRef<"AIConversation", 'String'>
+    readonly context: FieldRef<"AIConversation", 'Json'>
+    readonly createdAt: FieldRef<"AIConversation", 'DateTime'>
+    readonly updatedAt: FieldRef<"AIConversation", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AIConversation findUnique
+   */
+  export type AIConversationFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIConversation
+     */
+    select?: AIConversationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIConversation
+     */
+    omit?: AIConversationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AIConversationInclude<ExtArgs> | null
+    /**
+     * Filter, which AIConversation to fetch.
+     */
+    where: AIConversationWhereUniqueInput
+  }
+
+  /**
+   * AIConversation findUniqueOrThrow
+   */
+  export type AIConversationFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIConversation
+     */
+    select?: AIConversationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIConversation
+     */
+    omit?: AIConversationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AIConversationInclude<ExtArgs> | null
+    /**
+     * Filter, which AIConversation to fetch.
+     */
+    where: AIConversationWhereUniqueInput
+  }
+
+  /**
+   * AIConversation findFirst
+   */
+  export type AIConversationFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIConversation
+     */
+    select?: AIConversationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIConversation
+     */
+    omit?: AIConversationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AIConversationInclude<ExtArgs> | null
+    /**
+     * Filter, which AIConversation to fetch.
+     */
+    where?: AIConversationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AIConversations to fetch.
+     */
+    orderBy?: AIConversationOrderByWithRelationInput | AIConversationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AIConversations.
+     */
+    cursor?: AIConversationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AIConversations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AIConversations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AIConversations.
+     */
+    distinct?: AIConversationScalarFieldEnum | AIConversationScalarFieldEnum[]
+  }
+
+  /**
+   * AIConversation findFirstOrThrow
+   */
+  export type AIConversationFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIConversation
+     */
+    select?: AIConversationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIConversation
+     */
+    omit?: AIConversationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AIConversationInclude<ExtArgs> | null
+    /**
+     * Filter, which AIConversation to fetch.
+     */
+    where?: AIConversationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AIConversations to fetch.
+     */
+    orderBy?: AIConversationOrderByWithRelationInput | AIConversationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AIConversations.
+     */
+    cursor?: AIConversationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AIConversations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AIConversations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AIConversations.
+     */
+    distinct?: AIConversationScalarFieldEnum | AIConversationScalarFieldEnum[]
+  }
+
+  /**
+   * AIConversation findMany
+   */
+  export type AIConversationFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIConversation
+     */
+    select?: AIConversationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIConversation
+     */
+    omit?: AIConversationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AIConversationInclude<ExtArgs> | null
+    /**
+     * Filter, which AIConversations to fetch.
+     */
+    where?: AIConversationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AIConversations to fetch.
+     */
+    orderBy?: AIConversationOrderByWithRelationInput | AIConversationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AIConversations.
+     */
+    cursor?: AIConversationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AIConversations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AIConversations.
+     */
+    skip?: number
+    distinct?: AIConversationScalarFieldEnum | AIConversationScalarFieldEnum[]
+  }
+
+  /**
+   * AIConversation create
+   */
+  export type AIConversationCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIConversation
+     */
+    select?: AIConversationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIConversation
+     */
+    omit?: AIConversationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AIConversationInclude<ExtArgs> | null
+    /**
+     * The data needed to create a AIConversation.
+     */
+    data: XOR<AIConversationCreateInput, AIConversationUncheckedCreateInput>
+  }
+
+  /**
+   * AIConversation createMany
+   */
+  export type AIConversationCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AIConversations.
+     */
+    data: AIConversationCreateManyInput | AIConversationCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * AIConversation createManyAndReturn
+   */
+  export type AIConversationCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIConversation
+     */
+    select?: AIConversationSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIConversation
+     */
+    omit?: AIConversationOmit<ExtArgs> | null
+    /**
+     * The data used to create many AIConversations.
+     */
+    data: AIConversationCreateManyInput | AIConversationCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AIConversationIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * AIConversation update
+   */
+  export type AIConversationUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIConversation
+     */
+    select?: AIConversationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIConversation
+     */
+    omit?: AIConversationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AIConversationInclude<ExtArgs> | null
+    /**
+     * The data needed to update a AIConversation.
+     */
+    data: XOR<AIConversationUpdateInput, AIConversationUncheckedUpdateInput>
+    /**
+     * Choose, which AIConversation to update.
+     */
+    where: AIConversationWhereUniqueInput
+  }
+
+  /**
+   * AIConversation updateMany
+   */
+  export type AIConversationUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AIConversations.
+     */
+    data: XOR<AIConversationUpdateManyMutationInput, AIConversationUncheckedUpdateManyInput>
+    /**
+     * Filter which AIConversations to update
+     */
+    where?: AIConversationWhereInput
+    /**
+     * Limit how many AIConversations to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AIConversation updateManyAndReturn
+   */
+  export type AIConversationUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIConversation
+     */
+    select?: AIConversationSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIConversation
+     */
+    omit?: AIConversationOmit<ExtArgs> | null
+    /**
+     * The data used to update AIConversations.
+     */
+    data: XOR<AIConversationUpdateManyMutationInput, AIConversationUncheckedUpdateManyInput>
+    /**
+     * Filter which AIConversations to update
+     */
+    where?: AIConversationWhereInput
+    /**
+     * Limit how many AIConversations to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AIConversationIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * AIConversation upsert
+   */
+  export type AIConversationUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIConversation
+     */
+    select?: AIConversationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIConversation
+     */
+    omit?: AIConversationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AIConversationInclude<ExtArgs> | null
+    /**
+     * The filter to search for the AIConversation to update in case it exists.
+     */
+    where: AIConversationWhereUniqueInput
+    /**
+     * In case the AIConversation found by the `where` argument doesn't exist, create a new AIConversation with this data.
+     */
+    create: XOR<AIConversationCreateInput, AIConversationUncheckedCreateInput>
+    /**
+     * In case the AIConversation was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AIConversationUpdateInput, AIConversationUncheckedUpdateInput>
+  }
+
+  /**
+   * AIConversation delete
+   */
+  export type AIConversationDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIConversation
+     */
+    select?: AIConversationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIConversation
+     */
+    omit?: AIConversationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AIConversationInclude<ExtArgs> | null
+    /**
+     * Filter which AIConversation to delete.
+     */
+    where: AIConversationWhereUniqueInput
+  }
+
+  /**
+   * AIConversation deleteMany
+   */
+  export type AIConversationDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AIConversations to delete
+     */
+    where?: AIConversationWhereInput
+    /**
+     * Limit how many AIConversations to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * AIConversation.messages
+   */
+  export type AIConversation$messagesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIMessage
+     */
+    select?: AIMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIMessage
+     */
+    omit?: AIMessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AIMessageInclude<ExtArgs> | null
+    where?: AIMessageWhereInput
+    orderBy?: AIMessageOrderByWithRelationInput | AIMessageOrderByWithRelationInput[]
+    cursor?: AIMessageWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: AIMessageScalarFieldEnum | AIMessageScalarFieldEnum[]
+  }
+
+  /**
+   * AIConversation without action
+   */
+  export type AIConversationDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIConversation
+     */
+    select?: AIConversationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIConversation
+     */
+    omit?: AIConversationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AIConversationInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model AIMessage
+   */
+
+  export type AggregateAIMessage = {
+    _count: AIMessageCountAggregateOutputType | null
+    _min: AIMessageMinAggregateOutputType | null
+    _max: AIMessageMaxAggregateOutputType | null
+  }
+
+  export type AIMessageMinAggregateOutputType = {
+    id: string | null
+    conversationId: string | null
+    role: string | null
+    content: string | null
+    createdAt: Date | null
+  }
+
+  export type AIMessageMaxAggregateOutputType = {
+    id: string | null
+    conversationId: string | null
+    role: string | null
+    content: string | null
+    createdAt: Date | null
+  }
+
+  export type AIMessageCountAggregateOutputType = {
+    id: number
+    conversationId: number
+    role: number
+    content: number
+    metadata: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type AIMessageMinAggregateInputType = {
+    id?: true
+    conversationId?: true
+    role?: true
+    content?: true
+    createdAt?: true
+  }
+
+  export type AIMessageMaxAggregateInputType = {
+    id?: true
+    conversationId?: true
+    role?: true
+    content?: true
+    createdAt?: true
+  }
+
+  export type AIMessageCountAggregateInputType = {
+    id?: true
+    conversationId?: true
+    role?: true
+    content?: true
+    metadata?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type AIMessageAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AIMessage to aggregate.
+     */
+    where?: AIMessageWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AIMessages to fetch.
+     */
+    orderBy?: AIMessageOrderByWithRelationInput | AIMessageOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AIMessageWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AIMessages from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AIMessages.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AIMessages
+    **/
+    _count?: true | AIMessageCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AIMessageMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AIMessageMaxAggregateInputType
+  }
+
+  export type GetAIMessageAggregateType<T extends AIMessageAggregateArgs> = {
+        [P in keyof T & keyof AggregateAIMessage]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAIMessage[P]>
+      : GetScalarType<T[P], AggregateAIMessage[P]>
+  }
+
+
+
+
+  export type AIMessageGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AIMessageWhereInput
+    orderBy?: AIMessageOrderByWithAggregationInput | AIMessageOrderByWithAggregationInput[]
+    by: AIMessageScalarFieldEnum[] | AIMessageScalarFieldEnum
+    having?: AIMessageScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AIMessageCountAggregateInputType | true
+    _min?: AIMessageMinAggregateInputType
+    _max?: AIMessageMaxAggregateInputType
+  }
+
+  export type AIMessageGroupByOutputType = {
+    id: string
+    conversationId: string
+    role: string
+    content: string
+    metadata: JsonValue | null
+    createdAt: Date
+    _count: AIMessageCountAggregateOutputType | null
+    _min: AIMessageMinAggregateOutputType | null
+    _max: AIMessageMaxAggregateOutputType | null
+  }
+
+  type GetAIMessageGroupByPayload<T extends AIMessageGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AIMessageGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AIMessageGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AIMessageGroupByOutputType[P]>
+            : GetScalarType<T[P], AIMessageGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AIMessageSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    conversationId?: boolean
+    role?: boolean
+    content?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    conversation?: boolean | AIConversationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["aIMessage"]>
+
+  export type AIMessageSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    conversationId?: boolean
+    role?: boolean
+    content?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    conversation?: boolean | AIConversationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["aIMessage"]>
+
+  export type AIMessageSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    conversationId?: boolean
+    role?: boolean
+    content?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    conversation?: boolean | AIConversationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["aIMessage"]>
+
+  export type AIMessageSelectScalar = {
+    id?: boolean
+    conversationId?: boolean
+    role?: boolean
+    content?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+  }
+
+  export type AIMessageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "conversationId" | "role" | "content" | "metadata" | "createdAt", ExtArgs["result"]["aIMessage"]>
+  export type AIMessageInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    conversation?: boolean | AIConversationDefaultArgs<ExtArgs>
+  }
+  export type AIMessageIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    conversation?: boolean | AIConversationDefaultArgs<ExtArgs>
+  }
+  export type AIMessageIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    conversation?: boolean | AIConversationDefaultArgs<ExtArgs>
+  }
+
+  export type $AIMessagePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AIMessage"
+    objects: {
+      conversation: Prisma.$AIConversationPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      conversationId: string
+      role: string
+      content: string
+      metadata: Prisma.JsonValue | null
+      createdAt: Date
+    }, ExtArgs["result"]["aIMessage"]>
+    composites: {}
+  }
+
+  type AIMessageGetPayload<S extends boolean | null | undefined | AIMessageDefaultArgs> = $Result.GetResult<Prisma.$AIMessagePayload, S>
+
+  type AIMessageCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<AIMessageFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: AIMessageCountAggregateInputType | true
+    }
+
+  export interface AIMessageDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AIMessage'], meta: { name: 'AIMessage' } }
+    /**
+     * Find zero or one AIMessage that matches the filter.
+     * @param {AIMessageFindUniqueArgs} args - Arguments to find a AIMessage
+     * @example
+     * // Get one AIMessage
+     * const aIMessage = await prisma.aIMessage.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AIMessageFindUniqueArgs>(args: SelectSubset<T, AIMessageFindUniqueArgs<ExtArgs>>): Prisma__AIMessageClient<$Result.GetResult<Prisma.$AIMessagePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one AIMessage that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {AIMessageFindUniqueOrThrowArgs} args - Arguments to find a AIMessage
+     * @example
+     * // Get one AIMessage
+     * const aIMessage = await prisma.aIMessage.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AIMessageFindUniqueOrThrowArgs>(args: SelectSubset<T, AIMessageFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AIMessageClient<$Result.GetResult<Prisma.$AIMessagePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AIMessage that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AIMessageFindFirstArgs} args - Arguments to find a AIMessage
+     * @example
+     * // Get one AIMessage
+     * const aIMessage = await prisma.aIMessage.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AIMessageFindFirstArgs>(args?: SelectSubset<T, AIMessageFindFirstArgs<ExtArgs>>): Prisma__AIMessageClient<$Result.GetResult<Prisma.$AIMessagePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AIMessage that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AIMessageFindFirstOrThrowArgs} args - Arguments to find a AIMessage
+     * @example
+     * // Get one AIMessage
+     * const aIMessage = await prisma.aIMessage.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AIMessageFindFirstOrThrowArgs>(args?: SelectSubset<T, AIMessageFindFirstOrThrowArgs<ExtArgs>>): Prisma__AIMessageClient<$Result.GetResult<Prisma.$AIMessagePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more AIMessages that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AIMessageFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AIMessages
+     * const aIMessages = await prisma.aIMessage.findMany()
+     * 
+     * // Get first 10 AIMessages
+     * const aIMessages = await prisma.aIMessage.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const aIMessageWithIdOnly = await prisma.aIMessage.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AIMessageFindManyArgs>(args?: SelectSubset<T, AIMessageFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AIMessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a AIMessage.
+     * @param {AIMessageCreateArgs} args - Arguments to create a AIMessage.
+     * @example
+     * // Create one AIMessage
+     * const AIMessage = await prisma.aIMessage.create({
+     *   data: {
+     *     // ... data to create a AIMessage
+     *   }
+     * })
+     * 
+     */
+    create<T extends AIMessageCreateArgs>(args: SelectSubset<T, AIMessageCreateArgs<ExtArgs>>): Prisma__AIMessageClient<$Result.GetResult<Prisma.$AIMessagePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many AIMessages.
+     * @param {AIMessageCreateManyArgs} args - Arguments to create many AIMessages.
+     * @example
+     * // Create many AIMessages
+     * const aIMessage = await prisma.aIMessage.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AIMessageCreateManyArgs>(args?: SelectSubset<T, AIMessageCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many AIMessages and returns the data saved in the database.
+     * @param {AIMessageCreateManyAndReturnArgs} args - Arguments to create many AIMessages.
+     * @example
+     * // Create many AIMessages
+     * const aIMessage = await prisma.aIMessage.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AIMessages and only return the `id`
+     * const aIMessageWithIdOnly = await prisma.aIMessage.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AIMessageCreateManyAndReturnArgs>(args?: SelectSubset<T, AIMessageCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AIMessagePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a AIMessage.
+     * @param {AIMessageDeleteArgs} args - Arguments to delete one AIMessage.
+     * @example
+     * // Delete one AIMessage
+     * const AIMessage = await prisma.aIMessage.delete({
+     *   where: {
+     *     // ... filter to delete one AIMessage
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AIMessageDeleteArgs>(args: SelectSubset<T, AIMessageDeleteArgs<ExtArgs>>): Prisma__AIMessageClient<$Result.GetResult<Prisma.$AIMessagePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one AIMessage.
+     * @param {AIMessageUpdateArgs} args - Arguments to update one AIMessage.
+     * @example
+     * // Update one AIMessage
+     * const aIMessage = await prisma.aIMessage.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AIMessageUpdateArgs>(args: SelectSubset<T, AIMessageUpdateArgs<ExtArgs>>): Prisma__AIMessageClient<$Result.GetResult<Prisma.$AIMessagePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more AIMessages.
+     * @param {AIMessageDeleteManyArgs} args - Arguments to filter AIMessages to delete.
+     * @example
+     * // Delete a few AIMessages
+     * const { count } = await prisma.aIMessage.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AIMessageDeleteManyArgs>(args?: SelectSubset<T, AIMessageDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AIMessages.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AIMessageUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AIMessages
+     * const aIMessage = await prisma.aIMessage.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AIMessageUpdateManyArgs>(args: SelectSubset<T, AIMessageUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AIMessages and returns the data updated in the database.
+     * @param {AIMessageUpdateManyAndReturnArgs} args - Arguments to update many AIMessages.
+     * @example
+     * // Update many AIMessages
+     * const aIMessage = await prisma.aIMessage.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more AIMessages and only return the `id`
+     * const aIMessageWithIdOnly = await prisma.aIMessage.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends AIMessageUpdateManyAndReturnArgs>(args: SelectSubset<T, AIMessageUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AIMessagePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one AIMessage.
+     * @param {AIMessageUpsertArgs} args - Arguments to update or create a AIMessage.
+     * @example
+     * // Update or create a AIMessage
+     * const aIMessage = await prisma.aIMessage.upsert({
+     *   create: {
+     *     // ... data to create a AIMessage
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AIMessage we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AIMessageUpsertArgs>(args: SelectSubset<T, AIMessageUpsertArgs<ExtArgs>>): Prisma__AIMessageClient<$Result.GetResult<Prisma.$AIMessagePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of AIMessages.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AIMessageCountArgs} args - Arguments to filter AIMessages to count.
+     * @example
+     * // Count the number of AIMessages
+     * const count = await prisma.aIMessage.count({
+     *   where: {
+     *     // ... the filter for the AIMessages we want to count
+     *   }
+     * })
+    **/
+    count<T extends AIMessageCountArgs>(
+      args?: Subset<T, AIMessageCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AIMessageCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AIMessage.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AIMessageAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AIMessageAggregateArgs>(args: Subset<T, AIMessageAggregateArgs>): Prisma.PrismaPromise<GetAIMessageAggregateType<T>>
+
+    /**
+     * Group by AIMessage.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AIMessageGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AIMessageGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AIMessageGroupByArgs['orderBy'] }
+        : { orderBy?: AIMessageGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AIMessageGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAIMessageGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AIMessage model
+   */
+  readonly fields: AIMessageFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AIMessage.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AIMessageClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    conversation<T extends AIConversationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, AIConversationDefaultArgs<ExtArgs>>): Prisma__AIConversationClient<$Result.GetResult<Prisma.$AIConversationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AIMessage model
+   */
+  interface AIMessageFieldRefs {
+    readonly id: FieldRef<"AIMessage", 'String'>
+    readonly conversationId: FieldRef<"AIMessage", 'String'>
+    readonly role: FieldRef<"AIMessage", 'String'>
+    readonly content: FieldRef<"AIMessage", 'String'>
+    readonly metadata: FieldRef<"AIMessage", 'Json'>
+    readonly createdAt: FieldRef<"AIMessage", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AIMessage findUnique
+   */
+  export type AIMessageFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIMessage
+     */
+    select?: AIMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIMessage
+     */
+    omit?: AIMessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AIMessageInclude<ExtArgs> | null
+    /**
+     * Filter, which AIMessage to fetch.
+     */
+    where: AIMessageWhereUniqueInput
+  }
+
+  /**
+   * AIMessage findUniqueOrThrow
+   */
+  export type AIMessageFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIMessage
+     */
+    select?: AIMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIMessage
+     */
+    omit?: AIMessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AIMessageInclude<ExtArgs> | null
+    /**
+     * Filter, which AIMessage to fetch.
+     */
+    where: AIMessageWhereUniqueInput
+  }
+
+  /**
+   * AIMessage findFirst
+   */
+  export type AIMessageFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIMessage
+     */
+    select?: AIMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIMessage
+     */
+    omit?: AIMessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AIMessageInclude<ExtArgs> | null
+    /**
+     * Filter, which AIMessage to fetch.
+     */
+    where?: AIMessageWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AIMessages to fetch.
+     */
+    orderBy?: AIMessageOrderByWithRelationInput | AIMessageOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AIMessages.
+     */
+    cursor?: AIMessageWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AIMessages from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AIMessages.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AIMessages.
+     */
+    distinct?: AIMessageScalarFieldEnum | AIMessageScalarFieldEnum[]
+  }
+
+  /**
+   * AIMessage findFirstOrThrow
+   */
+  export type AIMessageFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIMessage
+     */
+    select?: AIMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIMessage
+     */
+    omit?: AIMessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AIMessageInclude<ExtArgs> | null
+    /**
+     * Filter, which AIMessage to fetch.
+     */
+    where?: AIMessageWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AIMessages to fetch.
+     */
+    orderBy?: AIMessageOrderByWithRelationInput | AIMessageOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AIMessages.
+     */
+    cursor?: AIMessageWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AIMessages from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AIMessages.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AIMessages.
+     */
+    distinct?: AIMessageScalarFieldEnum | AIMessageScalarFieldEnum[]
+  }
+
+  /**
+   * AIMessage findMany
+   */
+  export type AIMessageFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIMessage
+     */
+    select?: AIMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIMessage
+     */
+    omit?: AIMessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AIMessageInclude<ExtArgs> | null
+    /**
+     * Filter, which AIMessages to fetch.
+     */
+    where?: AIMessageWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AIMessages to fetch.
+     */
+    orderBy?: AIMessageOrderByWithRelationInput | AIMessageOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AIMessages.
+     */
+    cursor?: AIMessageWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AIMessages from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AIMessages.
+     */
+    skip?: number
+    distinct?: AIMessageScalarFieldEnum | AIMessageScalarFieldEnum[]
+  }
+
+  /**
+   * AIMessage create
+   */
+  export type AIMessageCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIMessage
+     */
+    select?: AIMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIMessage
+     */
+    omit?: AIMessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AIMessageInclude<ExtArgs> | null
+    /**
+     * The data needed to create a AIMessage.
+     */
+    data: XOR<AIMessageCreateInput, AIMessageUncheckedCreateInput>
+  }
+
+  /**
+   * AIMessage createMany
+   */
+  export type AIMessageCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AIMessages.
+     */
+    data: AIMessageCreateManyInput | AIMessageCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * AIMessage createManyAndReturn
+   */
+  export type AIMessageCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIMessage
+     */
+    select?: AIMessageSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIMessage
+     */
+    omit?: AIMessageOmit<ExtArgs> | null
+    /**
+     * The data used to create many AIMessages.
+     */
+    data: AIMessageCreateManyInput | AIMessageCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AIMessageIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * AIMessage update
+   */
+  export type AIMessageUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIMessage
+     */
+    select?: AIMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIMessage
+     */
+    omit?: AIMessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AIMessageInclude<ExtArgs> | null
+    /**
+     * The data needed to update a AIMessage.
+     */
+    data: XOR<AIMessageUpdateInput, AIMessageUncheckedUpdateInput>
+    /**
+     * Choose, which AIMessage to update.
+     */
+    where: AIMessageWhereUniqueInput
+  }
+
+  /**
+   * AIMessage updateMany
+   */
+  export type AIMessageUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AIMessages.
+     */
+    data: XOR<AIMessageUpdateManyMutationInput, AIMessageUncheckedUpdateManyInput>
+    /**
+     * Filter which AIMessages to update
+     */
+    where?: AIMessageWhereInput
+    /**
+     * Limit how many AIMessages to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AIMessage updateManyAndReturn
+   */
+  export type AIMessageUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIMessage
+     */
+    select?: AIMessageSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIMessage
+     */
+    omit?: AIMessageOmit<ExtArgs> | null
+    /**
+     * The data used to update AIMessages.
+     */
+    data: XOR<AIMessageUpdateManyMutationInput, AIMessageUncheckedUpdateManyInput>
+    /**
+     * Filter which AIMessages to update
+     */
+    where?: AIMessageWhereInput
+    /**
+     * Limit how many AIMessages to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AIMessageIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * AIMessage upsert
+   */
+  export type AIMessageUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIMessage
+     */
+    select?: AIMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIMessage
+     */
+    omit?: AIMessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AIMessageInclude<ExtArgs> | null
+    /**
+     * The filter to search for the AIMessage to update in case it exists.
+     */
+    where: AIMessageWhereUniqueInput
+    /**
+     * In case the AIMessage found by the `where` argument doesn't exist, create a new AIMessage with this data.
+     */
+    create: XOR<AIMessageCreateInput, AIMessageUncheckedCreateInput>
+    /**
+     * In case the AIMessage was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AIMessageUpdateInput, AIMessageUncheckedUpdateInput>
+  }
+
+  /**
+   * AIMessage delete
+   */
+  export type AIMessageDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIMessage
+     */
+    select?: AIMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIMessage
+     */
+    omit?: AIMessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AIMessageInclude<ExtArgs> | null
+    /**
+     * Filter which AIMessage to delete.
+     */
+    where: AIMessageWhereUniqueInput
+  }
+
+  /**
+   * AIMessage deleteMany
+   */
+  export type AIMessageDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AIMessages to delete
+     */
+    where?: AIMessageWhereInput
+    /**
+     * Limit how many AIMessages to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * AIMessage without action
+   */
+  export type AIMessageDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AIMessage
+     */
+    select?: AIMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AIMessage
+     */
+    omit?: AIMessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AIMessageInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -10784,12 +15203,76 @@ export namespace Prisma {
   export type TaskHistoryScalarFieldEnum = (typeof TaskHistoryScalarFieldEnum)[keyof typeof TaskHistoryScalarFieldEnum]
 
 
+  export const TaskEmbeddingScalarFieldEnum: {
+    id: 'id',
+    taskId: 'taskId',
+    content: 'content',
+    metadata: 'metadata',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type TaskEmbeddingScalarFieldEnum = (typeof TaskEmbeddingScalarFieldEnum)[keyof typeof TaskEmbeddingScalarFieldEnum]
+
+
+  export const BoardEmbeddingScalarFieldEnum: {
+    id: 'id',
+    boardId: 'boardId',
+    content: 'content',
+    metadata: 'metadata',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type BoardEmbeddingScalarFieldEnum = (typeof BoardEmbeddingScalarFieldEnum)[keyof typeof BoardEmbeddingScalarFieldEnum]
+
+
+  export const AIConversationScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    companyId: 'companyId',
+    title: 'title',
+    context: 'context',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type AIConversationScalarFieldEnum = (typeof AIConversationScalarFieldEnum)[keyof typeof AIConversationScalarFieldEnum]
+
+
+  export const AIMessageScalarFieldEnum: {
+    id: 'id',
+    conversationId: 'conversationId',
+    role: 'role',
+    content: 'content',
+    metadata: 'metadata',
+    createdAt: 'createdAt'
+  };
+
+  export type AIMessageScalarFieldEnum = (typeof AIMessageScalarFieldEnum)[keyof typeof AIMessageScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
   };
 
   export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+  export const JsonNullValueInput: {
+    JsonNull: typeof JsonNull
+  };
+
+  export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
+
+
+  export const NullableJsonNullValueInput: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull
+  };
+
+  export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
   export const QueryMode: {
@@ -10806,6 +15289,15 @@ export namespace Prisma {
   };
 
   export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+  export const JsonNullValueFilter: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull,
+    AnyNull: typeof AnyNull
+  };
+
+  export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
   /**
@@ -10894,6 +15386,20 @@ export namespace Prisma {
    * Reference to a field of type 'TaskStatusNew[]'
    */
   export type ListEnumTaskStatusNewFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TaskStatusNew[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Json'
+   */
+  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+  /**
+   * Reference to a field of type 'QueryMode'
+   */
+  export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
     
 
 
@@ -11077,6 +15583,7 @@ export namespace Prisma {
     sessions?: SessionListRelationFilter
     assignedTasks?: TaskListRelationFilter
     createdTasks?: TaskListRelationFilter
+    aiConversations?: AIConversationListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -11096,6 +15603,7 @@ export namespace Prisma {
     sessions?: SessionOrderByRelationAggregateInput
     assignedTasks?: TaskOrderByRelationAggregateInput
     createdTasks?: TaskOrderByRelationAggregateInput
+    aiConversations?: AIConversationOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -11118,6 +15626,7 @@ export namespace Prisma {
     sessions?: SessionListRelationFilter
     assignedTasks?: TaskListRelationFilter
     createdTasks?: TaskListRelationFilter
+    aiConversations?: AIConversationListRelationFilter
   }, "id" | "email" | "emailVerificationToken">
 
   export type UserOrderByWithAggregationInput = {
@@ -11219,6 +15728,7 @@ export namespace Prisma {
     createdBy?: XOR<UserScalarRelationFilter, UserWhereInput>
     boardSection?: XOR<BoardSectionScalarRelationFilter, BoardSectionWhereInput>
     history?: TaskHistoryListRelationFilter
+    embedding?: XOR<TaskEmbeddingNullableScalarRelationFilter, TaskEmbeddingWhereInput> | null
   }
 
   export type TaskOrderByWithRelationInput = {
@@ -11238,6 +15748,7 @@ export namespace Prisma {
     createdBy?: UserOrderByWithRelationInput
     boardSection?: BoardSectionOrderByWithRelationInput
     history?: TaskHistoryOrderByRelationAggregateInput
+    embedding?: TaskEmbeddingOrderByWithRelationInput
   }
 
   export type TaskWhereUniqueInput = Prisma.AtLeast<{
@@ -11260,6 +15771,7 @@ export namespace Prisma {
     createdBy?: XOR<UserScalarRelationFilter, UserWhereInput>
     boardSection?: XOR<BoardSectionScalarRelationFilter, BoardSectionWhereInput>
     history?: TaskHistoryListRelationFilter
+    embedding?: XOR<TaskEmbeddingNullableScalarRelationFilter, TaskEmbeddingWhereInput> | null
   }, "id">
 
   export type TaskOrderByWithAggregationInput = {
@@ -11312,6 +15824,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Board"> | Date | string
     access?: StringNullableListFilter<"Board">
     boardSections?: BoardSectionListRelationFilter
+    embedding?: XOR<BoardEmbeddingNullableScalarRelationFilter, BoardEmbeddingWhereInput> | null
   }
 
   export type BoardOrderByWithRelationInput = {
@@ -11323,6 +15836,7 @@ export namespace Prisma {
     updatedAt?: SortOrder
     access?: SortOrder
     boardSections?: BoardSectionOrderByRelationAggregateInput
+    embedding?: BoardEmbeddingOrderByWithRelationInput
   }
 
   export type BoardWhereUniqueInput = Prisma.AtLeast<{
@@ -11337,6 +15851,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Board"> | Date | string
     access?: StringNullableListFilter<"Board">
     boardSections?: BoardSectionListRelationFilter
+    embedding?: XOR<BoardEmbeddingNullableScalarRelationFilter, BoardEmbeddingWhereInput> | null
   }, "id">
 
   export type BoardOrderByWithAggregationInput = {
@@ -11483,6 +15998,254 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"TaskHistory"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"TaskHistory"> | Date | string
     description?: StringNullableWithAggregatesFilter<"TaskHistory"> | string | null
+  }
+
+  export type TaskEmbeddingWhereInput = {
+    AND?: TaskEmbeddingWhereInput | TaskEmbeddingWhereInput[]
+    OR?: TaskEmbeddingWhereInput[]
+    NOT?: TaskEmbeddingWhereInput | TaskEmbeddingWhereInput[]
+    id?: StringFilter<"TaskEmbedding"> | string
+    taskId?: StringFilter<"TaskEmbedding"> | string
+    content?: StringFilter<"TaskEmbedding"> | string
+    metadata?: JsonFilter<"TaskEmbedding">
+    createdAt?: DateTimeFilter<"TaskEmbedding"> | Date | string
+    updatedAt?: DateTimeFilter<"TaskEmbedding"> | Date | string
+    task?: XOR<TaskScalarRelationFilter, TaskWhereInput>
+  }
+
+  export type TaskEmbeddingOrderByWithRelationInput = {
+    id?: SortOrder
+    taskId?: SortOrder
+    content?: SortOrder
+    metadata?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    task?: TaskOrderByWithRelationInput
+  }
+
+  export type TaskEmbeddingWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    taskId?: string
+    AND?: TaskEmbeddingWhereInput | TaskEmbeddingWhereInput[]
+    OR?: TaskEmbeddingWhereInput[]
+    NOT?: TaskEmbeddingWhereInput | TaskEmbeddingWhereInput[]
+    content?: StringFilter<"TaskEmbedding"> | string
+    metadata?: JsonFilter<"TaskEmbedding">
+    createdAt?: DateTimeFilter<"TaskEmbedding"> | Date | string
+    updatedAt?: DateTimeFilter<"TaskEmbedding"> | Date | string
+    task?: XOR<TaskScalarRelationFilter, TaskWhereInput>
+  }, "id" | "taskId">
+
+  export type TaskEmbeddingOrderByWithAggregationInput = {
+    id?: SortOrder
+    taskId?: SortOrder
+    content?: SortOrder
+    metadata?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: TaskEmbeddingCountOrderByAggregateInput
+    _max?: TaskEmbeddingMaxOrderByAggregateInput
+    _min?: TaskEmbeddingMinOrderByAggregateInput
+  }
+
+  export type TaskEmbeddingScalarWhereWithAggregatesInput = {
+    AND?: TaskEmbeddingScalarWhereWithAggregatesInput | TaskEmbeddingScalarWhereWithAggregatesInput[]
+    OR?: TaskEmbeddingScalarWhereWithAggregatesInput[]
+    NOT?: TaskEmbeddingScalarWhereWithAggregatesInput | TaskEmbeddingScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"TaskEmbedding"> | string
+    taskId?: StringWithAggregatesFilter<"TaskEmbedding"> | string
+    content?: StringWithAggregatesFilter<"TaskEmbedding"> | string
+    metadata?: JsonWithAggregatesFilter<"TaskEmbedding">
+    createdAt?: DateTimeWithAggregatesFilter<"TaskEmbedding"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"TaskEmbedding"> | Date | string
+  }
+
+  export type BoardEmbeddingWhereInput = {
+    AND?: BoardEmbeddingWhereInput | BoardEmbeddingWhereInput[]
+    OR?: BoardEmbeddingWhereInput[]
+    NOT?: BoardEmbeddingWhereInput | BoardEmbeddingWhereInput[]
+    id?: StringFilter<"BoardEmbedding"> | string
+    boardId?: StringFilter<"BoardEmbedding"> | string
+    content?: StringFilter<"BoardEmbedding"> | string
+    metadata?: JsonFilter<"BoardEmbedding">
+    createdAt?: DateTimeFilter<"BoardEmbedding"> | Date | string
+    updatedAt?: DateTimeFilter<"BoardEmbedding"> | Date | string
+    board?: XOR<BoardScalarRelationFilter, BoardWhereInput>
+  }
+
+  export type BoardEmbeddingOrderByWithRelationInput = {
+    id?: SortOrder
+    boardId?: SortOrder
+    content?: SortOrder
+    metadata?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    board?: BoardOrderByWithRelationInput
+  }
+
+  export type BoardEmbeddingWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    boardId?: string
+    AND?: BoardEmbeddingWhereInput | BoardEmbeddingWhereInput[]
+    OR?: BoardEmbeddingWhereInput[]
+    NOT?: BoardEmbeddingWhereInput | BoardEmbeddingWhereInput[]
+    content?: StringFilter<"BoardEmbedding"> | string
+    metadata?: JsonFilter<"BoardEmbedding">
+    createdAt?: DateTimeFilter<"BoardEmbedding"> | Date | string
+    updatedAt?: DateTimeFilter<"BoardEmbedding"> | Date | string
+    board?: XOR<BoardScalarRelationFilter, BoardWhereInput>
+  }, "id" | "boardId">
+
+  export type BoardEmbeddingOrderByWithAggregationInput = {
+    id?: SortOrder
+    boardId?: SortOrder
+    content?: SortOrder
+    metadata?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: BoardEmbeddingCountOrderByAggregateInput
+    _max?: BoardEmbeddingMaxOrderByAggregateInput
+    _min?: BoardEmbeddingMinOrderByAggregateInput
+  }
+
+  export type BoardEmbeddingScalarWhereWithAggregatesInput = {
+    AND?: BoardEmbeddingScalarWhereWithAggregatesInput | BoardEmbeddingScalarWhereWithAggregatesInput[]
+    OR?: BoardEmbeddingScalarWhereWithAggregatesInput[]
+    NOT?: BoardEmbeddingScalarWhereWithAggregatesInput | BoardEmbeddingScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"BoardEmbedding"> | string
+    boardId?: StringWithAggregatesFilter<"BoardEmbedding"> | string
+    content?: StringWithAggregatesFilter<"BoardEmbedding"> | string
+    metadata?: JsonWithAggregatesFilter<"BoardEmbedding">
+    createdAt?: DateTimeWithAggregatesFilter<"BoardEmbedding"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"BoardEmbedding"> | Date | string
+  }
+
+  export type AIConversationWhereInput = {
+    AND?: AIConversationWhereInput | AIConversationWhereInput[]
+    OR?: AIConversationWhereInput[]
+    NOT?: AIConversationWhereInput | AIConversationWhereInput[]
+    id?: StringFilter<"AIConversation"> | string
+    userId?: StringFilter<"AIConversation"> | string
+    companyId?: StringFilter<"AIConversation"> | string
+    title?: StringNullableFilter<"AIConversation"> | string | null
+    context?: JsonNullableFilter<"AIConversation">
+    createdAt?: DateTimeFilter<"AIConversation"> | Date | string
+    updatedAt?: DateTimeFilter<"AIConversation"> | Date | string
+    messages?: AIMessageListRelationFilter
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type AIConversationOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    companyId?: SortOrder
+    title?: SortOrderInput | SortOrder
+    context?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    messages?: AIMessageOrderByRelationAggregateInput
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type AIConversationWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: AIConversationWhereInput | AIConversationWhereInput[]
+    OR?: AIConversationWhereInput[]
+    NOT?: AIConversationWhereInput | AIConversationWhereInput[]
+    userId?: StringFilter<"AIConversation"> | string
+    companyId?: StringFilter<"AIConversation"> | string
+    title?: StringNullableFilter<"AIConversation"> | string | null
+    context?: JsonNullableFilter<"AIConversation">
+    createdAt?: DateTimeFilter<"AIConversation"> | Date | string
+    updatedAt?: DateTimeFilter<"AIConversation"> | Date | string
+    messages?: AIMessageListRelationFilter
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id">
+
+  export type AIConversationOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    companyId?: SortOrder
+    title?: SortOrderInput | SortOrder
+    context?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: AIConversationCountOrderByAggregateInput
+    _max?: AIConversationMaxOrderByAggregateInput
+    _min?: AIConversationMinOrderByAggregateInput
+  }
+
+  export type AIConversationScalarWhereWithAggregatesInput = {
+    AND?: AIConversationScalarWhereWithAggregatesInput | AIConversationScalarWhereWithAggregatesInput[]
+    OR?: AIConversationScalarWhereWithAggregatesInput[]
+    NOT?: AIConversationScalarWhereWithAggregatesInput | AIConversationScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"AIConversation"> | string
+    userId?: StringWithAggregatesFilter<"AIConversation"> | string
+    companyId?: StringWithAggregatesFilter<"AIConversation"> | string
+    title?: StringNullableWithAggregatesFilter<"AIConversation"> | string | null
+    context?: JsonNullableWithAggregatesFilter<"AIConversation">
+    createdAt?: DateTimeWithAggregatesFilter<"AIConversation"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"AIConversation"> | Date | string
+  }
+
+  export type AIMessageWhereInput = {
+    AND?: AIMessageWhereInput | AIMessageWhereInput[]
+    OR?: AIMessageWhereInput[]
+    NOT?: AIMessageWhereInput | AIMessageWhereInput[]
+    id?: StringFilter<"AIMessage"> | string
+    conversationId?: StringFilter<"AIMessage"> | string
+    role?: StringFilter<"AIMessage"> | string
+    content?: StringFilter<"AIMessage"> | string
+    metadata?: JsonNullableFilter<"AIMessage">
+    createdAt?: DateTimeFilter<"AIMessage"> | Date | string
+    conversation?: XOR<AIConversationScalarRelationFilter, AIConversationWhereInput>
+  }
+
+  export type AIMessageOrderByWithRelationInput = {
+    id?: SortOrder
+    conversationId?: SortOrder
+    role?: SortOrder
+    content?: SortOrder
+    metadata?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    conversation?: AIConversationOrderByWithRelationInput
+  }
+
+  export type AIMessageWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: AIMessageWhereInput | AIMessageWhereInput[]
+    OR?: AIMessageWhereInput[]
+    NOT?: AIMessageWhereInput | AIMessageWhereInput[]
+    conversationId?: StringFilter<"AIMessage"> | string
+    role?: StringFilter<"AIMessage"> | string
+    content?: StringFilter<"AIMessage"> | string
+    metadata?: JsonNullableFilter<"AIMessage">
+    createdAt?: DateTimeFilter<"AIMessage"> | Date | string
+    conversation?: XOR<AIConversationScalarRelationFilter, AIConversationWhereInput>
+  }, "id">
+
+  export type AIMessageOrderByWithAggregationInput = {
+    id?: SortOrder
+    conversationId?: SortOrder
+    role?: SortOrder
+    content?: SortOrder
+    metadata?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: AIMessageCountOrderByAggregateInput
+    _max?: AIMessageMaxOrderByAggregateInput
+    _min?: AIMessageMinOrderByAggregateInput
+  }
+
+  export type AIMessageScalarWhereWithAggregatesInput = {
+    AND?: AIMessageScalarWhereWithAggregatesInput | AIMessageScalarWhereWithAggregatesInput[]
+    OR?: AIMessageScalarWhereWithAggregatesInput[]
+    NOT?: AIMessageScalarWhereWithAggregatesInput | AIMessageScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"AIMessage"> | string
+    conversationId?: StringWithAggregatesFilter<"AIMessage"> | string
+    role?: StringWithAggregatesFilter<"AIMessage"> | string
+    content?: StringWithAggregatesFilter<"AIMessage"> | string
+    metadata?: JsonNullableWithAggregatesFilter<"AIMessage">
+    createdAt?: DateTimeWithAggregatesFilter<"AIMessage"> | Date | string
   }
 
   export type AccountCreateInput = {
@@ -11654,6 +16417,7 @@ export namespace Prisma {
     sessions?: SessionCreateNestedManyWithoutUserInput
     assignedTasks?: TaskCreateNestedManyWithoutAssignedToInput
     createdTasks?: TaskCreateNestedManyWithoutCreatedByInput
+    aiConversations?: AIConversationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -11673,6 +16437,7 @@ export namespace Prisma {
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     assignedTasks?: TaskUncheckedCreateNestedManyWithoutAssignedToInput
     createdTasks?: TaskUncheckedCreateNestedManyWithoutCreatedByInput
+    aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -11692,6 +16457,7 @@ export namespace Prisma {
     sessions?: SessionUpdateManyWithoutUserNestedInput
     assignedTasks?: TaskUpdateManyWithoutAssignedToNestedInput
     createdTasks?: TaskUpdateManyWithoutCreatedByNestedInput
+    aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -11711,6 +16477,7 @@ export namespace Prisma {
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     assignedTasks?: TaskUncheckedUpdateManyWithoutAssignedToNestedInput
     createdTasks?: TaskUncheckedUpdateManyWithoutCreatedByNestedInput
+    aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -11814,6 +16581,7 @@ export namespace Prisma {
     createdBy: UserCreateNestedOneWithoutCreatedTasksInput
     boardSection: BoardSectionCreateNestedOneWithoutTasksInput
     history?: TaskHistoryCreateNestedManyWithoutTaskInput
+    embedding?: TaskEmbeddingCreateNestedOneWithoutTaskInput
   }
 
   export type TaskUncheckedCreateInput = {
@@ -11830,6 +16598,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     history?: TaskHistoryUncheckedCreateNestedManyWithoutTaskInput
+    embedding?: TaskEmbeddingUncheckedCreateNestedOneWithoutTaskInput
   }
 
   export type TaskUpdateInput = {
@@ -11846,6 +16615,7 @@ export namespace Prisma {
     createdBy?: UserUpdateOneRequiredWithoutCreatedTasksNestedInput
     boardSection?: BoardSectionUpdateOneRequiredWithoutTasksNestedInput
     history?: TaskHistoryUpdateManyWithoutTaskNestedInput
+    embedding?: TaskEmbeddingUpdateOneWithoutTaskNestedInput
   }
 
   export type TaskUncheckedUpdateInput = {
@@ -11862,6 +16632,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     history?: TaskHistoryUncheckedUpdateManyWithoutTaskNestedInput
+    embedding?: TaskEmbeddingUncheckedUpdateOneWithoutTaskNestedInput
   }
 
   export type TaskCreateManyInput = {
@@ -11915,6 +16686,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     access?: BoardCreateaccessInput | string[]
     boardSections?: BoardSectionCreateNestedManyWithoutBoardInput
+    embedding?: BoardEmbeddingCreateNestedOneWithoutBoardInput
   }
 
   export type BoardUncheckedCreateInput = {
@@ -11926,6 +16698,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     access?: BoardCreateaccessInput | string[]
     boardSections?: BoardSectionUncheckedCreateNestedManyWithoutBoardInput
+    embedding?: BoardEmbeddingUncheckedCreateNestedOneWithoutBoardInput
   }
 
   export type BoardUpdateInput = {
@@ -11937,6 +16710,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     access?: BoardUpdateaccessInput | string[]
     boardSections?: BoardSectionUpdateManyWithoutBoardNestedInput
+    embedding?: BoardEmbeddingUpdateOneWithoutBoardNestedInput
   }
 
   export type BoardUncheckedUpdateInput = {
@@ -11948,6 +16722,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     access?: BoardUpdateaccessInput | string[]
     boardSections?: BoardSectionUncheckedUpdateManyWithoutBoardNestedInput
+    embedding?: BoardEmbeddingUncheckedUpdateOneWithoutBoardNestedInput
   }
 
   export type BoardCreateManyInput = {
@@ -12099,6 +16874,211 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type TaskEmbeddingUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    metadata?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    task?: TaskUpdateOneRequiredWithoutEmbeddingNestedInput
+  }
+
+  export type TaskEmbeddingUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    taskId?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    metadata?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TaskEmbeddingUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    metadata?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TaskEmbeddingUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    taskId?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    metadata?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BoardEmbeddingUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    metadata?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    board?: BoardUpdateOneRequiredWithoutEmbeddingNestedInput
+  }
+
+  export type BoardEmbeddingUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    boardId?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    metadata?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BoardEmbeddingUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    metadata?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BoardEmbeddingUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    boardId?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    metadata?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AIConversationCreateInput = {
+    id?: string
+    companyId: string
+    title?: string | null
+    context?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    messages?: AIMessageCreateNestedManyWithoutConversationInput
+    user: UserCreateNestedOneWithoutAiConversationsInput
+  }
+
+  export type AIConversationUncheckedCreateInput = {
+    id?: string
+    userId: string
+    companyId: string
+    title?: string | null
+    context?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    messages?: AIMessageUncheckedCreateNestedManyWithoutConversationInput
+  }
+
+  export type AIConversationUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    context?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    messages?: AIMessageUpdateManyWithoutConversationNestedInput
+    user?: UserUpdateOneRequiredWithoutAiConversationsNestedInput
+  }
+
+  export type AIConversationUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    context?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    messages?: AIMessageUncheckedUpdateManyWithoutConversationNestedInput
+  }
+
+  export type AIConversationCreateManyInput = {
+    id?: string
+    userId: string
+    companyId: string
+    title?: string | null
+    context?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type AIConversationUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    context?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AIConversationUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    context?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AIMessageCreateInput = {
+    id?: string
+    role: string
+    content: string
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    conversation: AIConversationCreateNestedOneWithoutMessagesInput
+  }
+
+  export type AIMessageUncheckedCreateInput = {
+    id?: string
+    conversationId: string
+    role: string
+    content: string
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type AIMessageUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    conversation?: AIConversationUpdateOneRequiredWithoutMessagesNestedInput
+  }
+
+  export type AIMessageUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    conversationId?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AIMessageCreateManyInput = {
+    id?: string
+    conversationId: string
+    role: string
+    content: string
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type AIMessageUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AIMessageUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    conversationId?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -12344,6 +17324,12 @@ export namespace Prisma {
     none?: TaskWhereInput
   }
 
+  export type AIConversationListRelationFilter = {
+    every?: AIConversationWhereInput
+    some?: AIConversationWhereInput
+    none?: AIConversationWhereInput
+  }
+
   export type AccountOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -12353,6 +17339,10 @@ export namespace Prisma {
   }
 
   export type TaskOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type AIConversationOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -12484,6 +17474,11 @@ export namespace Prisma {
     none?: TaskHistoryWhereInput
   }
 
+  export type TaskEmbeddingNullableScalarRelationFilter = {
+    is?: TaskEmbeddingWhereInput | null
+    isNot?: TaskEmbeddingWhereInput | null
+  }
+
   export type TaskHistoryOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -12591,6 +17586,11 @@ export namespace Prisma {
     none?: BoardSectionWhereInput
   }
 
+  export type BoardEmbeddingNullableScalarRelationFilter = {
+    is?: BoardEmbeddingWhereInput | null
+    isNot?: BoardEmbeddingWhereInput | null
+  }
+
   export type BoardSectionOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -12691,6 +17691,222 @@ export namespace Prisma {
     updatedAt?: SortOrder
     description?: SortOrder
   }
+  export type JsonFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type TaskEmbeddingCountOrderByAggregateInput = {
+    id?: SortOrder
+    taskId?: SortOrder
+    content?: SortOrder
+    metadata?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TaskEmbeddingMaxOrderByAggregateInput = {
+    id?: SortOrder
+    taskId?: SortOrder
+    content?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TaskEmbeddingMinOrderByAggregateInput = {
+    id?: SortOrder
+    taskId?: SortOrder
+    content?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+  export type JsonWithAggregatesFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedJsonFilter<$PrismaModel>
+    _max?: NestedJsonFilter<$PrismaModel>
+  }
+
+  export type BoardEmbeddingCountOrderByAggregateInput = {
+    id?: SortOrder
+    boardId?: SortOrder
+    content?: SortOrder
+    metadata?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type BoardEmbeddingMaxOrderByAggregateInput = {
+    id?: SortOrder
+    boardId?: SortOrder
+    content?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type BoardEmbeddingMinOrderByAggregateInput = {
+    id?: SortOrder
+    boardId?: SortOrder
+    content?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+  export type JsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type AIMessageListRelationFilter = {
+    every?: AIMessageWhereInput
+    some?: AIMessageWhereInput
+    none?: AIMessageWhereInput
+  }
+
+  export type AIMessageOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type AIConversationCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    companyId?: SortOrder
+    title?: SortOrder
+    context?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AIConversationMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    companyId?: SortOrder
+    title?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AIConversationMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    companyId?: SortOrder
+    title?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+  export type JsonNullableWithAggregatesFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedJsonNullableFilter<$PrismaModel>
+    _max?: NestedJsonNullableFilter<$PrismaModel>
+  }
+
+  export type AIConversationScalarRelationFilter = {
+    is?: AIConversationWhereInput
+    isNot?: AIConversationWhereInput
+  }
+
+  export type AIMessageCountOrderByAggregateInput = {
+    id?: SortOrder
+    conversationId?: SortOrder
+    role?: SortOrder
+    content?: SortOrder
+    metadata?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AIMessageMaxOrderByAggregateInput = {
+    id?: SortOrder
+    conversationId?: SortOrder
+    role?: SortOrder
+    content?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AIMessageMinOrderByAggregateInput = {
+    id?: SortOrder
+    conversationId?: SortOrder
+    role?: SortOrder
+    content?: SortOrder
+    createdAt?: SortOrder
+  }
 
   export type UserCreateNestedOneWithoutAccountsInput = {
     create?: XOR<UserCreateWithoutAccountsInput, UserUncheckedCreateWithoutAccountsInput>
@@ -12768,6 +17984,13 @@ export namespace Prisma {
     connect?: TaskWhereUniqueInput | TaskWhereUniqueInput[]
   }
 
+  export type AIConversationCreateNestedManyWithoutUserInput = {
+    create?: XOR<AIConversationCreateWithoutUserInput, AIConversationUncheckedCreateWithoutUserInput> | AIConversationCreateWithoutUserInput[] | AIConversationUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: AIConversationCreateOrConnectWithoutUserInput | AIConversationCreateOrConnectWithoutUserInput[]
+    createMany?: AIConversationCreateManyUserInputEnvelope
+    connect?: AIConversationWhereUniqueInput | AIConversationWhereUniqueInput[]
+  }
+
   export type AccountUncheckedCreateNestedManyWithoutUserInput = {
     create?: XOR<AccountCreateWithoutUserInput, AccountUncheckedCreateWithoutUserInput> | AccountCreateWithoutUserInput[] | AccountUncheckedCreateWithoutUserInput[]
     connectOrCreate?: AccountCreateOrConnectWithoutUserInput | AccountCreateOrConnectWithoutUserInput[]
@@ -12794,6 +18017,13 @@ export namespace Prisma {
     connectOrCreate?: TaskCreateOrConnectWithoutCreatedByInput | TaskCreateOrConnectWithoutCreatedByInput[]
     createMany?: TaskCreateManyCreatedByInputEnvelope
     connect?: TaskWhereUniqueInput | TaskWhereUniqueInput[]
+  }
+
+  export type AIConversationUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<AIConversationCreateWithoutUserInput, AIConversationUncheckedCreateWithoutUserInput> | AIConversationCreateWithoutUserInput[] | AIConversationUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: AIConversationCreateOrConnectWithoutUserInput | AIConversationCreateOrConnectWithoutUserInput[]
+    createMany?: AIConversationCreateManyUserInputEnvelope
+    connect?: AIConversationWhereUniqueInput | AIConversationWhereUniqueInput[]
   }
 
   export type NullableDateTimeFieldUpdateOperationsInput = {
@@ -12860,6 +18090,20 @@ export namespace Prisma {
     deleteMany?: TaskScalarWhereInput | TaskScalarWhereInput[]
   }
 
+  export type AIConversationUpdateManyWithoutUserNestedInput = {
+    create?: XOR<AIConversationCreateWithoutUserInput, AIConversationUncheckedCreateWithoutUserInput> | AIConversationCreateWithoutUserInput[] | AIConversationUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: AIConversationCreateOrConnectWithoutUserInput | AIConversationCreateOrConnectWithoutUserInput[]
+    upsert?: AIConversationUpsertWithWhereUniqueWithoutUserInput | AIConversationUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: AIConversationCreateManyUserInputEnvelope
+    set?: AIConversationWhereUniqueInput | AIConversationWhereUniqueInput[]
+    disconnect?: AIConversationWhereUniqueInput | AIConversationWhereUniqueInput[]
+    delete?: AIConversationWhereUniqueInput | AIConversationWhereUniqueInput[]
+    connect?: AIConversationWhereUniqueInput | AIConversationWhereUniqueInput[]
+    update?: AIConversationUpdateWithWhereUniqueWithoutUserInput | AIConversationUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: AIConversationUpdateManyWithWhereWithoutUserInput | AIConversationUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: AIConversationScalarWhereInput | AIConversationScalarWhereInput[]
+  }
+
   export type AccountUncheckedUpdateManyWithoutUserNestedInput = {
     create?: XOR<AccountCreateWithoutUserInput, AccountUncheckedCreateWithoutUserInput> | AccountCreateWithoutUserInput[] | AccountUncheckedCreateWithoutUserInput[]
     connectOrCreate?: AccountCreateOrConnectWithoutUserInput | AccountCreateOrConnectWithoutUserInput[]
@@ -12916,6 +18160,20 @@ export namespace Prisma {
     deleteMany?: TaskScalarWhereInput | TaskScalarWhereInput[]
   }
 
+  export type AIConversationUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<AIConversationCreateWithoutUserInput, AIConversationUncheckedCreateWithoutUserInput> | AIConversationCreateWithoutUserInput[] | AIConversationUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: AIConversationCreateOrConnectWithoutUserInput | AIConversationCreateOrConnectWithoutUserInput[]
+    upsert?: AIConversationUpsertWithWhereUniqueWithoutUserInput | AIConversationUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: AIConversationCreateManyUserInputEnvelope
+    set?: AIConversationWhereUniqueInput | AIConversationWhereUniqueInput[]
+    disconnect?: AIConversationWhereUniqueInput | AIConversationWhereUniqueInput[]
+    delete?: AIConversationWhereUniqueInput | AIConversationWhereUniqueInput[]
+    connect?: AIConversationWhereUniqueInput | AIConversationWhereUniqueInput[]
+    update?: AIConversationUpdateWithWhereUniqueWithoutUserInput | AIConversationUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: AIConversationUpdateManyWithWhereWithoutUserInput | AIConversationUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: AIConversationScalarWhereInput | AIConversationScalarWhereInput[]
+  }
+
   export type UserCreateNestedOneWithoutAssignedTasksInput = {
     create?: XOR<UserCreateWithoutAssignedTasksInput, UserUncheckedCreateWithoutAssignedTasksInput>
     connectOrCreate?: UserCreateOrConnectWithoutAssignedTasksInput
@@ -12941,11 +18199,19 @@ export namespace Prisma {
     connect?: TaskHistoryWhereUniqueInput | TaskHistoryWhereUniqueInput[]
   }
 
+  export type TaskEmbeddingCreateNestedOneWithoutTaskInput = {
+    connect?: TaskEmbeddingWhereUniqueInput
+  }
+
   export type TaskHistoryUncheckedCreateNestedManyWithoutTaskInput = {
     create?: XOR<TaskHistoryCreateWithoutTaskInput, TaskHistoryUncheckedCreateWithoutTaskInput> | TaskHistoryCreateWithoutTaskInput[] | TaskHistoryUncheckedCreateWithoutTaskInput[]
     connectOrCreate?: TaskHistoryCreateOrConnectWithoutTaskInput | TaskHistoryCreateOrConnectWithoutTaskInput[]
     createMany?: TaskHistoryCreateManyTaskInputEnvelope
     connect?: TaskHistoryWhereUniqueInput | TaskHistoryWhereUniqueInput[]
+  }
+
+  export type TaskEmbeddingUncheckedCreateNestedOneWithoutTaskInput = {
+    connect?: TaskEmbeddingWhereUniqueInput
   }
 
   export type EnumTaskPriorityFieldUpdateOperationsInput = {
@@ -13002,6 +18268,13 @@ export namespace Prisma {
     deleteMany?: TaskHistoryScalarWhereInput | TaskHistoryScalarWhereInput[]
   }
 
+  export type TaskEmbeddingUpdateOneWithoutTaskNestedInput = {
+    disconnect?: TaskEmbeddingWhereInput | boolean
+    delete?: TaskEmbeddingWhereInput | boolean
+    connect?: TaskEmbeddingWhereUniqueInput
+    update?: XOR<XOR<TaskEmbeddingUpdateToOneWithWhereWithoutTaskInput, TaskEmbeddingUpdateWithoutTaskInput>, TaskEmbeddingUncheckedUpdateWithoutTaskInput>
+  }
+
   export type TaskHistoryUncheckedUpdateManyWithoutTaskNestedInput = {
     create?: XOR<TaskHistoryCreateWithoutTaskInput, TaskHistoryUncheckedCreateWithoutTaskInput> | TaskHistoryCreateWithoutTaskInput[] | TaskHistoryUncheckedCreateWithoutTaskInput[]
     connectOrCreate?: TaskHistoryCreateOrConnectWithoutTaskInput | TaskHistoryCreateOrConnectWithoutTaskInput[]
@@ -13016,6 +18289,13 @@ export namespace Prisma {
     deleteMany?: TaskHistoryScalarWhereInput | TaskHistoryScalarWhereInput[]
   }
 
+  export type TaskEmbeddingUncheckedUpdateOneWithoutTaskNestedInput = {
+    disconnect?: TaskEmbeddingWhereInput | boolean
+    delete?: TaskEmbeddingWhereInput | boolean
+    connect?: TaskEmbeddingWhereUniqueInput
+    update?: XOR<XOR<TaskEmbeddingUpdateToOneWithWhereWithoutTaskInput, TaskEmbeddingUpdateWithoutTaskInput>, TaskEmbeddingUncheckedUpdateWithoutTaskInput>
+  }
+
   export type BoardCreateaccessInput = {
     set: string[]
   }
@@ -13027,11 +18307,19 @@ export namespace Prisma {
     connect?: BoardSectionWhereUniqueInput | BoardSectionWhereUniqueInput[]
   }
 
+  export type BoardEmbeddingCreateNestedOneWithoutBoardInput = {
+    connect?: BoardEmbeddingWhereUniqueInput
+  }
+
   export type BoardSectionUncheckedCreateNestedManyWithoutBoardInput = {
     create?: XOR<BoardSectionCreateWithoutBoardInput, BoardSectionUncheckedCreateWithoutBoardInput> | BoardSectionCreateWithoutBoardInput[] | BoardSectionUncheckedCreateWithoutBoardInput[]
     connectOrCreate?: BoardSectionCreateOrConnectWithoutBoardInput | BoardSectionCreateOrConnectWithoutBoardInput[]
     createMany?: BoardSectionCreateManyBoardInputEnvelope
     connect?: BoardSectionWhereUniqueInput | BoardSectionWhereUniqueInput[]
+  }
+
+  export type BoardEmbeddingUncheckedCreateNestedOneWithoutBoardInput = {
+    connect?: BoardEmbeddingWhereUniqueInput
   }
 
   export type BoardUpdateaccessInput = {
@@ -13053,6 +18341,13 @@ export namespace Prisma {
     deleteMany?: BoardSectionScalarWhereInput | BoardSectionScalarWhereInput[]
   }
 
+  export type BoardEmbeddingUpdateOneWithoutBoardNestedInput = {
+    disconnect?: BoardEmbeddingWhereInput | boolean
+    delete?: BoardEmbeddingWhereInput | boolean
+    connect?: BoardEmbeddingWhereUniqueInput
+    update?: XOR<XOR<BoardEmbeddingUpdateToOneWithWhereWithoutBoardInput, BoardEmbeddingUpdateWithoutBoardInput>, BoardEmbeddingUncheckedUpdateWithoutBoardInput>
+  }
+
   export type BoardSectionUncheckedUpdateManyWithoutBoardNestedInput = {
     create?: XOR<BoardSectionCreateWithoutBoardInput, BoardSectionUncheckedCreateWithoutBoardInput> | BoardSectionCreateWithoutBoardInput[] | BoardSectionUncheckedCreateWithoutBoardInput[]
     connectOrCreate?: BoardSectionCreateOrConnectWithoutBoardInput | BoardSectionCreateOrConnectWithoutBoardInput[]
@@ -13065,6 +18360,13 @@ export namespace Prisma {
     update?: BoardSectionUpdateWithWhereUniqueWithoutBoardInput | BoardSectionUpdateWithWhereUniqueWithoutBoardInput[]
     updateMany?: BoardSectionUpdateManyWithWhereWithoutBoardInput | BoardSectionUpdateManyWithWhereWithoutBoardInput[]
     deleteMany?: BoardSectionScalarWhereInput | BoardSectionScalarWhereInput[]
+  }
+
+  export type BoardEmbeddingUncheckedUpdateOneWithoutBoardNestedInput = {
+    disconnect?: BoardEmbeddingWhereInput | boolean
+    delete?: BoardEmbeddingWhereInput | boolean
+    connect?: BoardEmbeddingWhereUniqueInput
+    update?: XOR<XOR<BoardEmbeddingUpdateToOneWithWhereWithoutBoardInput, BoardEmbeddingUpdateWithoutBoardInput>, BoardEmbeddingUncheckedUpdateWithoutBoardInput>
   }
 
   export type BoardCreateNestedOneWithoutBoardSectionsInput = {
@@ -13135,6 +18437,92 @@ export namespace Prisma {
     upsert?: TaskUpsertWithoutHistoryInput
     connect?: TaskWhereUniqueInput
     update?: XOR<XOR<TaskUpdateToOneWithWhereWithoutHistoryInput, TaskUpdateWithoutHistoryInput>, TaskUncheckedUpdateWithoutHistoryInput>
+  }
+
+  export type TaskUpdateOneRequiredWithoutEmbeddingNestedInput = {
+    create?: XOR<TaskCreateWithoutEmbeddingInput, TaskUncheckedCreateWithoutEmbeddingInput>
+    connectOrCreate?: TaskCreateOrConnectWithoutEmbeddingInput
+    upsert?: TaskUpsertWithoutEmbeddingInput
+    connect?: TaskWhereUniqueInput
+    update?: XOR<XOR<TaskUpdateToOneWithWhereWithoutEmbeddingInput, TaskUpdateWithoutEmbeddingInput>, TaskUncheckedUpdateWithoutEmbeddingInput>
+  }
+
+  export type BoardUpdateOneRequiredWithoutEmbeddingNestedInput = {
+    create?: XOR<BoardCreateWithoutEmbeddingInput, BoardUncheckedCreateWithoutEmbeddingInput>
+    connectOrCreate?: BoardCreateOrConnectWithoutEmbeddingInput
+    upsert?: BoardUpsertWithoutEmbeddingInput
+    connect?: BoardWhereUniqueInput
+    update?: XOR<XOR<BoardUpdateToOneWithWhereWithoutEmbeddingInput, BoardUpdateWithoutEmbeddingInput>, BoardUncheckedUpdateWithoutEmbeddingInput>
+  }
+
+  export type AIMessageCreateNestedManyWithoutConversationInput = {
+    create?: XOR<AIMessageCreateWithoutConversationInput, AIMessageUncheckedCreateWithoutConversationInput> | AIMessageCreateWithoutConversationInput[] | AIMessageUncheckedCreateWithoutConversationInput[]
+    connectOrCreate?: AIMessageCreateOrConnectWithoutConversationInput | AIMessageCreateOrConnectWithoutConversationInput[]
+    createMany?: AIMessageCreateManyConversationInputEnvelope
+    connect?: AIMessageWhereUniqueInput | AIMessageWhereUniqueInput[]
+  }
+
+  export type UserCreateNestedOneWithoutAiConversationsInput = {
+    create?: XOR<UserCreateWithoutAiConversationsInput, UserUncheckedCreateWithoutAiConversationsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutAiConversationsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type AIMessageUncheckedCreateNestedManyWithoutConversationInput = {
+    create?: XOR<AIMessageCreateWithoutConversationInput, AIMessageUncheckedCreateWithoutConversationInput> | AIMessageCreateWithoutConversationInput[] | AIMessageUncheckedCreateWithoutConversationInput[]
+    connectOrCreate?: AIMessageCreateOrConnectWithoutConversationInput | AIMessageCreateOrConnectWithoutConversationInput[]
+    createMany?: AIMessageCreateManyConversationInputEnvelope
+    connect?: AIMessageWhereUniqueInput | AIMessageWhereUniqueInput[]
+  }
+
+  export type AIMessageUpdateManyWithoutConversationNestedInput = {
+    create?: XOR<AIMessageCreateWithoutConversationInput, AIMessageUncheckedCreateWithoutConversationInput> | AIMessageCreateWithoutConversationInput[] | AIMessageUncheckedCreateWithoutConversationInput[]
+    connectOrCreate?: AIMessageCreateOrConnectWithoutConversationInput | AIMessageCreateOrConnectWithoutConversationInput[]
+    upsert?: AIMessageUpsertWithWhereUniqueWithoutConversationInput | AIMessageUpsertWithWhereUniqueWithoutConversationInput[]
+    createMany?: AIMessageCreateManyConversationInputEnvelope
+    set?: AIMessageWhereUniqueInput | AIMessageWhereUniqueInput[]
+    disconnect?: AIMessageWhereUniqueInput | AIMessageWhereUniqueInput[]
+    delete?: AIMessageWhereUniqueInput | AIMessageWhereUniqueInput[]
+    connect?: AIMessageWhereUniqueInput | AIMessageWhereUniqueInput[]
+    update?: AIMessageUpdateWithWhereUniqueWithoutConversationInput | AIMessageUpdateWithWhereUniqueWithoutConversationInput[]
+    updateMany?: AIMessageUpdateManyWithWhereWithoutConversationInput | AIMessageUpdateManyWithWhereWithoutConversationInput[]
+    deleteMany?: AIMessageScalarWhereInput | AIMessageScalarWhereInput[]
+  }
+
+  export type UserUpdateOneRequiredWithoutAiConversationsNestedInput = {
+    create?: XOR<UserCreateWithoutAiConversationsInput, UserUncheckedCreateWithoutAiConversationsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutAiConversationsInput
+    upsert?: UserUpsertWithoutAiConversationsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutAiConversationsInput, UserUpdateWithoutAiConversationsInput>, UserUncheckedUpdateWithoutAiConversationsInput>
+  }
+
+  export type AIMessageUncheckedUpdateManyWithoutConversationNestedInput = {
+    create?: XOR<AIMessageCreateWithoutConversationInput, AIMessageUncheckedCreateWithoutConversationInput> | AIMessageCreateWithoutConversationInput[] | AIMessageUncheckedCreateWithoutConversationInput[]
+    connectOrCreate?: AIMessageCreateOrConnectWithoutConversationInput | AIMessageCreateOrConnectWithoutConversationInput[]
+    upsert?: AIMessageUpsertWithWhereUniqueWithoutConversationInput | AIMessageUpsertWithWhereUniqueWithoutConversationInput[]
+    createMany?: AIMessageCreateManyConversationInputEnvelope
+    set?: AIMessageWhereUniqueInput | AIMessageWhereUniqueInput[]
+    disconnect?: AIMessageWhereUniqueInput | AIMessageWhereUniqueInput[]
+    delete?: AIMessageWhereUniqueInput | AIMessageWhereUniqueInput[]
+    connect?: AIMessageWhereUniqueInput | AIMessageWhereUniqueInput[]
+    update?: AIMessageUpdateWithWhereUniqueWithoutConversationInput | AIMessageUpdateWithWhereUniqueWithoutConversationInput[]
+    updateMany?: AIMessageUpdateManyWithWhereWithoutConversationInput | AIMessageUpdateManyWithWhereWithoutConversationInput[]
+    deleteMany?: AIMessageScalarWhereInput | AIMessageScalarWhereInput[]
+  }
+
+  export type AIConversationCreateNestedOneWithoutMessagesInput = {
+    create?: XOR<AIConversationCreateWithoutMessagesInput, AIConversationUncheckedCreateWithoutMessagesInput>
+    connectOrCreate?: AIConversationCreateOrConnectWithoutMessagesInput
+    connect?: AIConversationWhereUniqueInput
+  }
+
+  export type AIConversationUpdateOneRequiredWithoutMessagesNestedInput = {
+    create?: XOR<AIConversationCreateWithoutMessagesInput, AIConversationUncheckedCreateWithoutMessagesInput>
+    connectOrCreate?: AIConversationCreateOrConnectWithoutMessagesInput
+    upsert?: AIConversationUpsertWithoutMessagesInput
+    connect?: AIConversationWhereUniqueInput
+    update?: XOR<XOR<AIConversationUpdateToOneWithWhereWithoutMessagesInput, AIConversationUpdateWithoutMessagesInput>, AIConversationUncheckedUpdateWithoutMessagesInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -13375,6 +18763,52 @@ export namespace Prisma {
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatFilter<$PrismaModel> | number
   }
+  export type NestedJsonFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<NestedJsonFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+  export type NestedJsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<NestedJsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
 
   export type UserCreateWithoutAccountsInput = {
     id?: string
@@ -13392,6 +18826,7 @@ export namespace Prisma {
     sessions?: SessionCreateNestedManyWithoutUserInput
     assignedTasks?: TaskCreateNestedManyWithoutAssignedToInput
     createdTasks?: TaskCreateNestedManyWithoutCreatedByInput
+    aiConversations?: AIConversationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutAccountsInput = {
@@ -13410,6 +18845,7 @@ export namespace Prisma {
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     assignedTasks?: TaskUncheckedCreateNestedManyWithoutAssignedToInput
     createdTasks?: TaskUncheckedCreateNestedManyWithoutCreatedByInput
+    aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutAccountsInput = {
@@ -13444,6 +18880,7 @@ export namespace Prisma {
     sessions?: SessionUpdateManyWithoutUserNestedInput
     assignedTasks?: TaskUpdateManyWithoutAssignedToNestedInput
     createdTasks?: TaskUpdateManyWithoutCreatedByNestedInput
+    aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -13462,6 +18899,7 @@ export namespace Prisma {
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     assignedTasks?: TaskUncheckedUpdateManyWithoutAssignedToNestedInput
     createdTasks?: TaskUncheckedUpdateManyWithoutCreatedByNestedInput
+    aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutSessionsInput = {
@@ -13480,6 +18918,7 @@ export namespace Prisma {
     accounts?: AccountCreateNestedManyWithoutUserInput
     assignedTasks?: TaskCreateNestedManyWithoutAssignedToInput
     createdTasks?: TaskCreateNestedManyWithoutCreatedByInput
+    aiConversations?: AIConversationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutSessionsInput = {
@@ -13498,6 +18937,7 @@ export namespace Prisma {
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     assignedTasks?: TaskUncheckedCreateNestedManyWithoutAssignedToInput
     createdTasks?: TaskUncheckedCreateNestedManyWithoutCreatedByInput
+    aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutSessionsInput = {
@@ -13532,6 +18972,7 @@ export namespace Prisma {
     accounts?: AccountUpdateManyWithoutUserNestedInput
     assignedTasks?: TaskUpdateManyWithoutAssignedToNestedInput
     createdTasks?: TaskUpdateManyWithoutCreatedByNestedInput
+    aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -13550,6 +18991,7 @@ export namespace Prisma {
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     assignedTasks?: TaskUncheckedUpdateManyWithoutAssignedToNestedInput
     createdTasks?: TaskUncheckedUpdateManyWithoutCreatedByNestedInput
+    aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type AccountCreateWithoutUserInput = {
@@ -13625,6 +19067,7 @@ export namespace Prisma {
     createdBy: UserCreateNestedOneWithoutCreatedTasksInput
     boardSection: BoardSectionCreateNestedOneWithoutTasksInput
     history?: TaskHistoryCreateNestedManyWithoutTaskInput
+    embedding?: TaskEmbeddingCreateNestedOneWithoutTaskInput
   }
 
   export type TaskUncheckedCreateWithoutAssignedToInput = {
@@ -13640,6 +19083,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     history?: TaskHistoryUncheckedCreateNestedManyWithoutTaskInput
+    embedding?: TaskEmbeddingUncheckedCreateNestedOneWithoutTaskInput
   }
 
   export type TaskCreateOrConnectWithoutAssignedToInput = {
@@ -13665,6 +19109,7 @@ export namespace Prisma {
     assignedTo: UserCreateNestedOneWithoutAssignedTasksInput
     boardSection: BoardSectionCreateNestedOneWithoutTasksInput
     history?: TaskHistoryCreateNestedManyWithoutTaskInput
+    embedding?: TaskEmbeddingCreateNestedOneWithoutTaskInput
   }
 
   export type TaskUncheckedCreateWithoutCreatedByInput = {
@@ -13680,6 +19125,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     history?: TaskHistoryUncheckedCreateNestedManyWithoutTaskInput
+    embedding?: TaskEmbeddingUncheckedCreateNestedOneWithoutTaskInput
   }
 
   export type TaskCreateOrConnectWithoutCreatedByInput = {
@@ -13689,6 +19135,36 @@ export namespace Prisma {
 
   export type TaskCreateManyCreatedByInputEnvelope = {
     data: TaskCreateManyCreatedByInput | TaskCreateManyCreatedByInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type AIConversationCreateWithoutUserInput = {
+    id?: string
+    companyId: string
+    title?: string | null
+    context?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    messages?: AIMessageCreateNestedManyWithoutConversationInput
+  }
+
+  export type AIConversationUncheckedCreateWithoutUserInput = {
+    id?: string
+    companyId: string
+    title?: string | null
+    context?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    messages?: AIMessageUncheckedCreateNestedManyWithoutConversationInput
+  }
+
+  export type AIConversationCreateOrConnectWithoutUserInput = {
+    where: AIConversationWhereUniqueInput
+    create: XOR<AIConversationCreateWithoutUserInput, AIConversationUncheckedCreateWithoutUserInput>
+  }
+
+  export type AIConversationCreateManyUserInputEnvelope = {
+    data: AIConversationCreateManyUserInput | AIConversationCreateManyUserInput[]
     skipDuplicates?: boolean
   }
 
@@ -13802,6 +19278,35 @@ export namespace Prisma {
     data: XOR<TaskUpdateManyMutationInput, TaskUncheckedUpdateManyWithoutCreatedByInput>
   }
 
+  export type AIConversationUpsertWithWhereUniqueWithoutUserInput = {
+    where: AIConversationWhereUniqueInput
+    update: XOR<AIConversationUpdateWithoutUserInput, AIConversationUncheckedUpdateWithoutUserInput>
+    create: XOR<AIConversationCreateWithoutUserInput, AIConversationUncheckedCreateWithoutUserInput>
+  }
+
+  export type AIConversationUpdateWithWhereUniqueWithoutUserInput = {
+    where: AIConversationWhereUniqueInput
+    data: XOR<AIConversationUpdateWithoutUserInput, AIConversationUncheckedUpdateWithoutUserInput>
+  }
+
+  export type AIConversationUpdateManyWithWhereWithoutUserInput = {
+    where: AIConversationScalarWhereInput
+    data: XOR<AIConversationUpdateManyMutationInput, AIConversationUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type AIConversationScalarWhereInput = {
+    AND?: AIConversationScalarWhereInput | AIConversationScalarWhereInput[]
+    OR?: AIConversationScalarWhereInput[]
+    NOT?: AIConversationScalarWhereInput | AIConversationScalarWhereInput[]
+    id?: StringFilter<"AIConversation"> | string
+    userId?: StringFilter<"AIConversation"> | string
+    companyId?: StringFilter<"AIConversation"> | string
+    title?: StringNullableFilter<"AIConversation"> | string | null
+    context?: JsonNullableFilter<"AIConversation">
+    createdAt?: DateTimeFilter<"AIConversation"> | Date | string
+    updatedAt?: DateTimeFilter<"AIConversation"> | Date | string
+  }
+
   export type UserCreateWithoutAssignedTasksInput = {
     id?: string
     name?: string | null
@@ -13818,6 +19323,7 @@ export namespace Prisma {
     accounts?: AccountCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
     createdTasks?: TaskCreateNestedManyWithoutCreatedByInput
+    aiConversations?: AIConversationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutAssignedTasksInput = {
@@ -13836,6 +19342,7 @@ export namespace Prisma {
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     createdTasks?: TaskUncheckedCreateNestedManyWithoutCreatedByInput
+    aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutAssignedTasksInput = {
@@ -13859,6 +19366,7 @@ export namespace Prisma {
     accounts?: AccountCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
     assignedTasks?: TaskCreateNestedManyWithoutAssignedToInput
+    aiConversations?: AIConversationCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutCreatedTasksInput = {
@@ -13877,6 +19385,7 @@ export namespace Prisma {
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     assignedTasks?: TaskUncheckedCreateNestedManyWithoutAssignedToInput
+    aiConversations?: AIConversationUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutCreatedTasksInput = {
@@ -13958,6 +19467,7 @@ export namespace Prisma {
     accounts?: AccountUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
     createdTasks?: TaskUpdateManyWithoutCreatedByNestedInput
+    aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAssignedTasksInput = {
@@ -13976,6 +19486,7 @@ export namespace Prisma {
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     createdTasks?: TaskUncheckedUpdateManyWithoutCreatedByNestedInput
+    aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutCreatedTasksInput = {
@@ -14005,6 +19516,7 @@ export namespace Prisma {
     accounts?: AccountUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
     assignedTasks?: TaskUpdateManyWithoutAssignedToNestedInput
+    aiConversations?: AIConversationUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCreatedTasksInput = {
@@ -14023,6 +19535,7 @@ export namespace Prisma {
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     assignedTasks?: TaskUncheckedUpdateManyWithoutAssignedToNestedInput
+    aiConversations?: AIConversationUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type BoardSectionUpsertWithoutTasksInput = {
@@ -14081,6 +19594,27 @@ export namespace Prisma {
     description?: StringNullableFilter<"TaskHistory"> | string | null
   }
 
+  export type TaskEmbeddingUpdateToOneWithWhereWithoutTaskInput = {
+    where?: TaskEmbeddingWhereInput
+    data: XOR<TaskEmbeddingUpdateWithoutTaskInput, TaskEmbeddingUncheckedUpdateWithoutTaskInput>
+  }
+
+  export type TaskEmbeddingUpdateWithoutTaskInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    metadata?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TaskEmbeddingUncheckedUpdateWithoutTaskInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    metadata?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type BoardSectionCreateWithoutBoardInput = {
     id?: string
     name: string
@@ -14137,6 +19671,27 @@ export namespace Prisma {
     boardId?: StringFilter<"BoardSection"> | string
   }
 
+  export type BoardEmbeddingUpdateToOneWithWhereWithoutBoardInput = {
+    where?: BoardEmbeddingWhereInput
+    data: XOR<BoardEmbeddingUpdateWithoutBoardInput, BoardEmbeddingUncheckedUpdateWithoutBoardInput>
+  }
+
+  export type BoardEmbeddingUpdateWithoutBoardInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    metadata?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BoardEmbeddingUncheckedUpdateWithoutBoardInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    metadata?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type BoardCreateWithoutBoardSectionsInput = {
     id?: string
     name: string
@@ -14145,6 +19700,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     access?: BoardCreateaccessInput | string[]
+    embedding?: BoardEmbeddingCreateNestedOneWithoutBoardInput
   }
 
   export type BoardUncheckedCreateWithoutBoardSectionsInput = {
@@ -14155,6 +19711,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     access?: BoardCreateaccessInput | string[]
+    embedding?: BoardEmbeddingUncheckedCreateNestedOneWithoutBoardInput
   }
 
   export type BoardCreateOrConnectWithoutBoardSectionsInput = {
@@ -14175,6 +19732,7 @@ export namespace Prisma {
     assignedTo: UserCreateNestedOneWithoutAssignedTasksInput
     createdBy: UserCreateNestedOneWithoutCreatedTasksInput
     history?: TaskHistoryCreateNestedManyWithoutTaskInput
+    embedding?: TaskEmbeddingCreateNestedOneWithoutTaskInput
   }
 
   export type TaskUncheckedCreateWithoutBoardSectionInput = {
@@ -14190,6 +19748,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     history?: TaskHistoryUncheckedCreateNestedManyWithoutTaskInput
+    embedding?: TaskEmbeddingUncheckedCreateNestedOneWithoutTaskInput
   }
 
   export type TaskCreateOrConnectWithoutBoardSectionInput = {
@@ -14221,6 +19780,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     access?: BoardUpdateaccessInput | string[]
+    embedding?: BoardEmbeddingUpdateOneWithoutBoardNestedInput
   }
 
   export type BoardUncheckedUpdateWithoutBoardSectionsInput = {
@@ -14231,6 +19791,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     access?: BoardUpdateaccessInput | string[]
+    embedding?: BoardEmbeddingUncheckedUpdateOneWithoutBoardNestedInput
   }
 
   export type TaskUpsertWithWhereUniqueWithoutBoardSectionInput = {
@@ -14262,6 +19823,7 @@ export namespace Prisma {
     assignedTo: UserCreateNestedOneWithoutAssignedTasksInput
     createdBy: UserCreateNestedOneWithoutCreatedTasksInput
     boardSection: BoardSectionCreateNestedOneWithoutTasksInput
+    embedding?: TaskEmbeddingCreateNestedOneWithoutTaskInput
   }
 
   export type TaskUncheckedCreateWithoutHistoryInput = {
@@ -14277,6 +19839,7 @@ export namespace Prisma {
     boardSectionId: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    embedding?: TaskEmbeddingUncheckedCreateNestedOneWithoutTaskInput
   }
 
   export type TaskCreateOrConnectWithoutHistoryInput = {
@@ -14308,6 +19871,7 @@ export namespace Prisma {
     assignedTo?: UserUpdateOneRequiredWithoutAssignedTasksNestedInput
     createdBy?: UserUpdateOneRequiredWithoutCreatedTasksNestedInput
     boardSection?: BoardSectionUpdateOneRequiredWithoutTasksNestedInput
+    embedding?: TaskEmbeddingUpdateOneWithoutTaskNestedInput
   }
 
   export type TaskUncheckedUpdateWithoutHistoryInput = {
@@ -14321,6 +19885,349 @@ export namespace Prisma {
     assignedToId?: StringFieldUpdateOperationsInput | string
     createdById?: StringFieldUpdateOperationsInput | string
     boardSectionId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    embedding?: TaskEmbeddingUncheckedUpdateOneWithoutTaskNestedInput
+  }
+
+  export type TaskCreateWithoutEmbeddingInput = {
+    id?: string
+    title: string
+    description: string
+    priority?: $Enums.TaskPriority
+    status?: $Enums.TaskStatusNew
+    dueDate: Date | string
+    position?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    assignedTo: UserCreateNestedOneWithoutAssignedTasksInput
+    createdBy: UserCreateNestedOneWithoutCreatedTasksInput
+    boardSection: BoardSectionCreateNestedOneWithoutTasksInput
+    history?: TaskHistoryCreateNestedManyWithoutTaskInput
+  }
+
+  export type TaskUncheckedCreateWithoutEmbeddingInput = {
+    id?: string
+    title: string
+    description: string
+    priority?: $Enums.TaskPriority
+    status?: $Enums.TaskStatusNew
+    dueDate: Date | string
+    position?: number
+    assignedToId: string
+    createdById: string
+    boardSectionId: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    history?: TaskHistoryUncheckedCreateNestedManyWithoutTaskInput
+  }
+
+  export type TaskCreateOrConnectWithoutEmbeddingInput = {
+    where: TaskWhereUniqueInput
+    create: XOR<TaskCreateWithoutEmbeddingInput, TaskUncheckedCreateWithoutEmbeddingInput>
+  }
+
+  export type TaskUpsertWithoutEmbeddingInput = {
+    update: XOR<TaskUpdateWithoutEmbeddingInput, TaskUncheckedUpdateWithoutEmbeddingInput>
+    create: XOR<TaskCreateWithoutEmbeddingInput, TaskUncheckedCreateWithoutEmbeddingInput>
+    where?: TaskWhereInput
+  }
+
+  export type TaskUpdateToOneWithWhereWithoutEmbeddingInput = {
+    where?: TaskWhereInput
+    data: XOR<TaskUpdateWithoutEmbeddingInput, TaskUncheckedUpdateWithoutEmbeddingInput>
+  }
+
+  export type TaskUpdateWithoutEmbeddingInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    priority?: EnumTaskPriorityFieldUpdateOperationsInput | $Enums.TaskPriority
+    status?: EnumTaskStatusNewFieldUpdateOperationsInput | $Enums.TaskStatusNew
+    dueDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    position?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    assignedTo?: UserUpdateOneRequiredWithoutAssignedTasksNestedInput
+    createdBy?: UserUpdateOneRequiredWithoutCreatedTasksNestedInput
+    boardSection?: BoardSectionUpdateOneRequiredWithoutTasksNestedInput
+    history?: TaskHistoryUpdateManyWithoutTaskNestedInput
+  }
+
+  export type TaskUncheckedUpdateWithoutEmbeddingInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    priority?: EnumTaskPriorityFieldUpdateOperationsInput | $Enums.TaskPriority
+    status?: EnumTaskStatusNewFieldUpdateOperationsInput | $Enums.TaskStatusNew
+    dueDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    position?: IntFieldUpdateOperationsInput | number
+    assignedToId?: StringFieldUpdateOperationsInput | string
+    createdById?: StringFieldUpdateOperationsInput | string
+    boardSectionId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    history?: TaskHistoryUncheckedUpdateManyWithoutTaskNestedInput
+  }
+
+  export type BoardCreateWithoutEmbeddingInput = {
+    id?: string
+    name: string
+    description?: string | null
+    createdBy: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    access?: BoardCreateaccessInput | string[]
+    boardSections?: BoardSectionCreateNestedManyWithoutBoardInput
+  }
+
+  export type BoardUncheckedCreateWithoutEmbeddingInput = {
+    id?: string
+    name: string
+    description?: string | null
+    createdBy: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    access?: BoardCreateaccessInput | string[]
+    boardSections?: BoardSectionUncheckedCreateNestedManyWithoutBoardInput
+  }
+
+  export type BoardCreateOrConnectWithoutEmbeddingInput = {
+    where: BoardWhereUniqueInput
+    create: XOR<BoardCreateWithoutEmbeddingInput, BoardUncheckedCreateWithoutEmbeddingInput>
+  }
+
+  export type BoardUpsertWithoutEmbeddingInput = {
+    update: XOR<BoardUpdateWithoutEmbeddingInput, BoardUncheckedUpdateWithoutEmbeddingInput>
+    create: XOR<BoardCreateWithoutEmbeddingInput, BoardUncheckedCreateWithoutEmbeddingInput>
+    where?: BoardWhereInput
+  }
+
+  export type BoardUpdateToOneWithWhereWithoutEmbeddingInput = {
+    where?: BoardWhereInput
+    data: XOR<BoardUpdateWithoutEmbeddingInput, BoardUncheckedUpdateWithoutEmbeddingInput>
+  }
+
+  export type BoardUpdateWithoutEmbeddingInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    access?: BoardUpdateaccessInput | string[]
+    boardSections?: BoardSectionUpdateManyWithoutBoardNestedInput
+  }
+
+  export type BoardUncheckedUpdateWithoutEmbeddingInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    access?: BoardUpdateaccessInput | string[]
+    boardSections?: BoardSectionUncheckedUpdateManyWithoutBoardNestedInput
+  }
+
+  export type AIMessageCreateWithoutConversationInput = {
+    id?: string
+    role: string
+    content: string
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type AIMessageUncheckedCreateWithoutConversationInput = {
+    id?: string
+    role: string
+    content: string
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type AIMessageCreateOrConnectWithoutConversationInput = {
+    where: AIMessageWhereUniqueInput
+    create: XOR<AIMessageCreateWithoutConversationInput, AIMessageUncheckedCreateWithoutConversationInput>
+  }
+
+  export type AIMessageCreateManyConversationInputEnvelope = {
+    data: AIMessageCreateManyConversationInput | AIMessageCreateManyConversationInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type UserCreateWithoutAiConversationsInput = {
+    id?: string
+    name?: string | null
+    email: string
+    emailVerified?: Date | string | null
+    emailVerificationToken?: string | null
+    emailTokenExpires?: Date | string | null
+    image?: string | null
+    password?: string | null
+    cid?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    role?: $Enums.UserRole
+    accounts?: AccountCreateNestedManyWithoutUserInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
+    assignedTasks?: TaskCreateNestedManyWithoutAssignedToInput
+    createdTasks?: TaskCreateNestedManyWithoutCreatedByInput
+  }
+
+  export type UserUncheckedCreateWithoutAiConversationsInput = {
+    id?: string
+    name?: string | null
+    email: string
+    emailVerified?: Date | string | null
+    emailVerificationToken?: string | null
+    emailTokenExpires?: Date | string | null
+    image?: string | null
+    password?: string | null
+    cid?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    role?: $Enums.UserRole
+    accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    assignedTasks?: TaskUncheckedCreateNestedManyWithoutAssignedToInput
+    createdTasks?: TaskUncheckedCreateNestedManyWithoutCreatedByInput
+  }
+
+  export type UserCreateOrConnectWithoutAiConversationsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutAiConversationsInput, UserUncheckedCreateWithoutAiConversationsInput>
+  }
+
+  export type AIMessageUpsertWithWhereUniqueWithoutConversationInput = {
+    where: AIMessageWhereUniqueInput
+    update: XOR<AIMessageUpdateWithoutConversationInput, AIMessageUncheckedUpdateWithoutConversationInput>
+    create: XOR<AIMessageCreateWithoutConversationInput, AIMessageUncheckedCreateWithoutConversationInput>
+  }
+
+  export type AIMessageUpdateWithWhereUniqueWithoutConversationInput = {
+    where: AIMessageWhereUniqueInput
+    data: XOR<AIMessageUpdateWithoutConversationInput, AIMessageUncheckedUpdateWithoutConversationInput>
+  }
+
+  export type AIMessageUpdateManyWithWhereWithoutConversationInput = {
+    where: AIMessageScalarWhereInput
+    data: XOR<AIMessageUpdateManyMutationInput, AIMessageUncheckedUpdateManyWithoutConversationInput>
+  }
+
+  export type AIMessageScalarWhereInput = {
+    AND?: AIMessageScalarWhereInput | AIMessageScalarWhereInput[]
+    OR?: AIMessageScalarWhereInput[]
+    NOT?: AIMessageScalarWhereInput | AIMessageScalarWhereInput[]
+    id?: StringFilter<"AIMessage"> | string
+    conversationId?: StringFilter<"AIMessage"> | string
+    role?: StringFilter<"AIMessage"> | string
+    content?: StringFilter<"AIMessage"> | string
+    metadata?: JsonNullableFilter<"AIMessage">
+    createdAt?: DateTimeFilter<"AIMessage"> | Date | string
+  }
+
+  export type UserUpsertWithoutAiConversationsInput = {
+    update: XOR<UserUpdateWithoutAiConversationsInput, UserUncheckedUpdateWithoutAiConversationsInput>
+    create: XOR<UserCreateWithoutAiConversationsInput, UserUncheckedCreateWithoutAiConversationsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutAiConversationsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutAiConversationsInput, UserUncheckedUpdateWithoutAiConversationsInput>
+  }
+
+  export type UserUpdateWithoutAiConversationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailTokenExpires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    cid?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    accounts?: AccountUpdateManyWithoutUserNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
+    assignedTasks?: TaskUpdateManyWithoutAssignedToNestedInput
+    createdTasks?: TaskUpdateManyWithoutCreatedByNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutAiConversationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    emailTokenExpires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    cid?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    assignedTasks?: TaskUncheckedUpdateManyWithoutAssignedToNestedInput
+    createdTasks?: TaskUncheckedUpdateManyWithoutCreatedByNestedInput
+  }
+
+  export type AIConversationCreateWithoutMessagesInput = {
+    id?: string
+    companyId: string
+    title?: string | null
+    context?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutAiConversationsInput
+  }
+
+  export type AIConversationUncheckedCreateWithoutMessagesInput = {
+    id?: string
+    userId: string
+    companyId: string
+    title?: string | null
+    context?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type AIConversationCreateOrConnectWithoutMessagesInput = {
+    where: AIConversationWhereUniqueInput
+    create: XOR<AIConversationCreateWithoutMessagesInput, AIConversationUncheckedCreateWithoutMessagesInput>
+  }
+
+  export type AIConversationUpsertWithoutMessagesInput = {
+    update: XOR<AIConversationUpdateWithoutMessagesInput, AIConversationUncheckedUpdateWithoutMessagesInput>
+    create: XOR<AIConversationCreateWithoutMessagesInput, AIConversationUncheckedCreateWithoutMessagesInput>
+    where?: AIConversationWhereInput
+  }
+
+  export type AIConversationUpdateToOneWithWhereWithoutMessagesInput = {
+    where?: AIConversationWhereInput
+    data: XOR<AIConversationUpdateWithoutMessagesInput, AIConversationUncheckedUpdateWithoutMessagesInput>
+  }
+
+  export type AIConversationUpdateWithoutMessagesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    context?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutAiConversationsNestedInput
+  }
+
+  export type AIConversationUncheckedUpdateWithoutMessagesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    context?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -14369,6 +20276,15 @@ export namespace Prisma {
     position?: number
     assignedToId: string
     boardSectionId: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type AIConversationCreateManyUserInput = {
+    id?: string
+    companyId: string
+    title?: string | null
+    context?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -14446,6 +20362,7 @@ export namespace Prisma {
     createdBy?: UserUpdateOneRequiredWithoutCreatedTasksNestedInput
     boardSection?: BoardSectionUpdateOneRequiredWithoutTasksNestedInput
     history?: TaskHistoryUpdateManyWithoutTaskNestedInput
+    embedding?: TaskEmbeddingUpdateOneWithoutTaskNestedInput
   }
 
   export type TaskUncheckedUpdateWithoutAssignedToInput = {
@@ -14461,6 +20378,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     history?: TaskHistoryUncheckedUpdateManyWithoutTaskNestedInput
+    embedding?: TaskEmbeddingUncheckedUpdateOneWithoutTaskNestedInput
   }
 
   export type TaskUncheckedUpdateManyWithoutAssignedToInput = {
@@ -14490,6 +20408,7 @@ export namespace Prisma {
     assignedTo?: UserUpdateOneRequiredWithoutAssignedTasksNestedInput
     boardSection?: BoardSectionUpdateOneRequiredWithoutTasksNestedInput
     history?: TaskHistoryUpdateManyWithoutTaskNestedInput
+    embedding?: TaskEmbeddingUpdateOneWithoutTaskNestedInput
   }
 
   export type TaskUncheckedUpdateWithoutCreatedByInput = {
@@ -14505,6 +20424,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     history?: TaskHistoryUncheckedUpdateManyWithoutTaskNestedInput
+    embedding?: TaskEmbeddingUncheckedUpdateOneWithoutTaskNestedInput
   }
 
   export type TaskUncheckedUpdateManyWithoutCreatedByInput = {
@@ -14517,6 +20437,35 @@ export namespace Prisma {
     position?: IntFieldUpdateOperationsInput | number
     assignedToId?: StringFieldUpdateOperationsInput | string
     boardSectionId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AIConversationUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    context?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    messages?: AIMessageUpdateManyWithoutConversationNestedInput
+  }
+
+  export type AIConversationUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    context?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    messages?: AIMessageUncheckedUpdateManyWithoutConversationNestedInput
+  }
+
+  export type AIConversationUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    companyId?: StringFieldUpdateOperationsInput | string
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    context?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -14610,6 +20559,7 @@ export namespace Prisma {
     assignedTo?: UserUpdateOneRequiredWithoutAssignedTasksNestedInput
     createdBy?: UserUpdateOneRequiredWithoutCreatedTasksNestedInput
     history?: TaskHistoryUpdateManyWithoutTaskNestedInput
+    embedding?: TaskEmbeddingUpdateOneWithoutTaskNestedInput
   }
 
   export type TaskUncheckedUpdateWithoutBoardSectionInput = {
@@ -14625,6 +20575,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     history?: TaskHistoryUncheckedUpdateManyWithoutTaskNestedInput
+    embedding?: TaskEmbeddingUncheckedUpdateOneWithoutTaskNestedInput
   }
 
   export type TaskUncheckedUpdateManyWithoutBoardSectionInput = {
@@ -14639,6 +20590,38 @@ export namespace Prisma {
     createdById?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AIMessageCreateManyConversationInput = {
+    id?: string
+    role: string
+    content: string
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type AIMessageUpdateWithoutConversationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AIMessageUncheckedUpdateWithoutConversationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AIMessageUncheckedUpdateManyWithoutConversationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    metadata?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 
