@@ -448,16 +448,23 @@ export class VectorSearchService {
       name: string;
       description: string;
       content: string;
-      metadata: any;
+      metadata: Record<string, unknown>;
       similarity: number;
     }>
   > {
     try {
       const embeddingVector = `[${queryEmbedding.join(",")}]`;
-      const results = await db.$queryRaw(
+      const results = await db.$queryRawTyped(
         findSimilarBoards(embeddingVector, limit)
       );
-      return results as any[];
+      return results.map(result => ({
+        boardId: result.board_id,
+        name: result.name,
+        description: result.description || '',
+        content: result.content,
+        metadata: result.metadata as Record<string, unknown>,
+        similarity: result.similarity || 0,
+      }));
     } catch (error) {
       console.error("Error finding similar boards with TypedSQL:", error);
       return [];
@@ -476,16 +483,23 @@ export class VectorSearchService {
       title: string;
       description: string;
       content: string;
-      metadata: any;
+      metadata: Record<string, unknown>;
       similarity: number;
     }>
   > {
     try {
       const embeddingVector = `[${queryEmbedding.join(",")}]`;
-      const results = await db.$queryRaw(
+      const results = await db.$queryRawTyped(
         findSimilarTasks(embeddingVector, limit)
       );
-      return results as any[];
+      return results.map(result => ({
+        taskId: result.task_id,
+        title: result.title,
+        description: result.description,
+        content: result.content,
+        metadata: result.metadata as Record<string, unknown>,
+        similarity: result.similarity || 0,
+      }));
     } catch (error) {
       console.error("Error finding similar tasks with TypedSQL:", error);
       return [];

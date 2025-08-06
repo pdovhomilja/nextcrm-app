@@ -75,7 +75,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _request: NextRequest
+) {
   try {
     const session = await auth();
     if (!session?.user) {
@@ -85,9 +88,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { searchParams } = new URL(request.url);
-    const _timeRange =
-      (searchParams.get("timeRange") as "hour" | "day" | "week") || "day";
+    // const { searchParams } = new URL(request.url);
+    // const _timeRange =
+    //   (searchParams.get("timeRange") as "hour" | "day" | "week") || "day";
 
     // Get security metrics (admin only) - temporarily commented out for build
     // if (session.user.role === 'ADMIN') {

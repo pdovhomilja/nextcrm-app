@@ -202,7 +202,7 @@ export class AISecurityService {
   async checkAIPermissions(
     userId: string,
     operation: string,
-    _resourceId?: string
+    _resourceId?: string // eslint-disable-line @typescript-eslint/no-unused-vars
   ): Promise<{ allowed: boolean; reason?: string }> {
     try {
       const user = await db.user.findUnique({
