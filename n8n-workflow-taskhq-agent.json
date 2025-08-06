@@ -1,0 +1,479 @@
+{
+  "name": "TaskHQ Agent Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "taskhq-agent",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "d5c5b2d4-8c0a-4f0c-9e6b-1a2b3c4d5e6f",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "model": {
+          "apiKey": "={{ $vars.OPENAI_API_KEY }}",
+          "baseURL": "",
+          "maxTokens": 2000,
+          "modelName": "gpt-4o",
+          "options": {},
+          "temperature": 0.3
+        },
+        "promptType": "define",
+        "text": "You are a TaskHQ Agent that helps users manage their tasks and boards efficiently. You have access to TaskHQ's comprehensive task management system through MCP tools.\n\n## Your Capabilities:\n- **Board Management**: Get board information, compare boards, and suggest optimizations\n- **Task Management**: Search tasks, create tasks, update tasks (limited by current MCP implementation)\n- **Vector Search**: Perform semantic search using AI embeddings to find relevant tasks and content\n- **Analytics**: Provide insights and statistics about task completion, team performance, and project metrics\n\n## Available MCP Tools:\n1. **health_check** - Check TaskHQ server connectivity\n2. **server_info** - Get server configuration and user context\n3. **get_board_info** - Comprehensive board information with statistics\n4. **compare_boards** - Compare performance metrics across multiple boards\n5. **suggest_board_optimizations** - AI-powered optimization recommendations\n6. **semantic_search_tasks** - Vector-based semantic search for tasks\n7. **hybrid_search** - Combined vector and keyword search\n8. **find_similar_tasks** - Find tasks similar to a given task\n9. **search_boards** - Search and filter accessible boards\n10. **get_embedding_status** - Check vector embedding availability\n11. **vector_search_health** - Verify vector search functionality\n\n## Instructions:\n1. Always start by checking server connectivity with health_check\n2. Use semantic search to find relevant information when users ask questions\n3. Provide actionable insights based on board analytics and comparisons\n4. When suggesting optimizations, be specific and include implementation steps\n5. Format responses clearly with bullet points, metrics, and recommendations\n6. If a task/board operation fails, suggest alternative approaches or direct the user to the web interface\n\nUser Query: {{ $json.body.message || $json.body.query || 'Hello, I need help with TaskHQ management' }}\n\nPlease help the user with their TaskHQ request using the available MCP tools.",
+        "hasOutputParser": false,
+        "options": {
+          "systemMessage": "You are an intelligent TaskHQ assistant with access to comprehensive task management tools. Always provide helpful, actionable responses."
+        },
+        "tools": [
+          {
+            "name": "mcp_client",
+            "description": "Access TaskHQ MCP server tools for task and board management"
+          }
+        ]
+      },
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "name": "TaskHQ Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.6,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $vars.TASKHQ_MCP_BASE_URL }}/sse",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 30000
+        },
+        "tools": [
+          {
+            "name": "health_check",
+            "description": "Check TaskHQ server health and connectivity",
+            "schema": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          },
+          {
+            "name": "server_info",
+            "description": "Get server configuration and capabilities",
+            "schema": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          },
+          {
+            "name": "get_board_info",
+            "description": "Get comprehensive information about a specific board",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "boardId": {
+                  "type": "string",
+                  "description": "The ID of the board to retrieve information for"
+                },
+                "includeTaskDetails": {
+                  "type": "boolean",
+                  "description": "Include detailed task information",
+                  "default": true
+                },
+                "includeTeamInfo": {
+                  "type": "boolean",
+                  "description": "Include team member information",
+                  "default": true
+                }
+              },
+              "required": ["boardId"]
+            }
+          },
+          {
+            "name": "compare_boards",
+            "description": "Compare performance and metrics between multiple boards",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "boardIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 2,
+                  "maxItems": 5,
+                  "description": "Array of board IDs to compare"
+                },
+                "timeRange": {
+                  "type": "string",
+                  "enum": ["week", "month", "quarter"],
+                  "default": "month",
+                  "description": "Time range for comparison"
+                },
+                "metrics": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": ["completion_rate", "task_count", "team_size", "avg_task_duration"]
+                  },
+                  "default": ["completion_rate", "task_count"],
+                  "description": "Metrics to compare"
+                }
+              },
+              "required": ["boardIds"]
+            }
+          },
+          {
+            "name": "suggest_board_optimizations",
+            "description": "Generate optimization suggestions for a board",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "boardId": {
+                  "type": "string",
+                  "description": "The ID of the board to analyze"
+                },
+                "focus": {
+                  "type": "string",
+                  "enum": ["performance", "team_balance", "workflow", "priorities"],
+                  "default": "performance",
+                  "description": "Optimization focus area"
+                }
+              },
+              "required": ["boardId"]
+            }
+          },
+          {
+            "name": "semantic_search_tasks",
+            "description": "Perform semantic search using vector embeddings",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "Search query for semantic matching"
+                },
+                "threshold": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "default": 0.7,
+                  "description": "Similarity threshold for results"
+                },
+                "limit": {
+                  "type": "number",
+                  "minimum": 1,
+                  "maximum": 50,
+                  "default": 10,
+                  "description": "Maximum number of results to return"
+                },
+                "filters": {
+                  "type": "object",
+                  "properties": {
+                    "boardIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Filter by specific board IDs"
+                    },
+                    "priority": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+                      },
+                      "description": "Filter by task priorities"
+                    },
+                    "status": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": ["NEW", "IN_PROGRESS", "COMPLETED", "CANCELLED", "ON_HOLD"]
+                      },
+                      "description": "Filter by task status"
+                    }
+                  }
+                }
+              },
+              "required": ["query"]
+            }
+          },
+          {
+            "name": "hybrid_search",
+            "description": "Perform hybrid search combining semantic and keyword matching",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "Search query"
+                },
+                "vectorWeight": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "default": 0.7,
+                  "description": "Weight for vector search results"
+                },
+                "keywordWeight": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "default": 0.3,
+                  "description": "Weight for keyword search results"
+                },
+                "limit": {
+                  "type": "number",
+                  "minimum": 1,
+                  "maximum": 20,
+                  "default": 10,
+                  "description": "Maximum number of results"
+                }
+              },
+              "required": ["query"]
+            }
+          },
+          {
+            "name": "find_similar_tasks",
+            "description": "Find tasks similar to a given task using vector similarity",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "taskId": {
+                  "type": "string",
+                  "description": "The ID of the reference task"
+                },
+                "limit": {
+                  "type": "number",
+                  "minimum": 1,
+                  "maximum": 20,
+                  "default": 5,
+                  "description": "Maximum number of similar tasks to return"
+                },
+                "threshold": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "default": 0.5,
+                  "description": "Similarity threshold"
+                }
+              },
+              "required": ["taskId"]
+            }
+          },
+          {
+            "name": "search_boards",
+            "description": "Search and filter boards accessible to the user",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "Search query for board names and descriptions"
+                },
+                "limit": {
+                  "type": "number",
+                  "minimum": 1,
+                  "maximum": 50,
+                  "default": 10,
+                  "description": "Maximum number of boards to return"
+                }
+              }
+            }
+          },
+          {
+            "name": "get_embedding_status",
+            "description": "Check the status of task and board embeddings",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "boardId": {
+                  "type": "string",
+                  "description": "Optional specific board ID to check"
+                }
+              }
+            }
+          },
+          {
+            "name": "vector_search_health",
+            "description": "Check vector search functionality and status",
+            "schema": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        ]
+      },
+      "id": "b2c3d4e5-f6a7-8901-bcde-f23456789012",
+      "name": "TaskHQ MCP Client",
+      "type": "@n8n/n8n-nodes-langchain.toolMcp",
+      "typeVersion": 1,
+      "position": [280, 480]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $('TaskHQ Agent').item(0).json.output }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "c3d4e5f6-a7b8-9012-cdef-345678901234",
+      "name": "Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "error_condition",
+              "leftValue": "={{ $('TaskHQ Agent').item(0).json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d4e5f6a7-b8c9-0123-defa-456789012345",
+      "name": "Error Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [520, 440]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "{\n  \"error\": \"TaskHQ Agent Error\",\n  \"message\": \"{{ $('TaskHQ Agent').item(0).json.error || 'An error occurred while processing your request' }}\",\n  \"timestamp\": \"{{ $now.toISO() }}\",\n  \"suggestions\": [\n    \"Check your TaskHQ server connectivity\",\n    \"Verify your authentication credentials\",\n    \"Try a simpler query or command\",\n    \"Contact support if the issue persists\"\n  ]\n}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "responseStatusCode": {
+            "values": {
+              "statusCode": 500
+            }
+          }
+        }
+      },
+      "id": "e5f6a7b8-c9d0-1234-efab-567890123456",
+      "name": "Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 500]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "TaskHQ Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TaskHQ Agent": {
+      "main": [
+        [
+          {
+            "node": "Error Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TaskHQ MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "TaskHQ Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Check": {
+      "main": [
+        [
+          {
+            "node": "Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "bf50c393-c94b-4bd9-a2cd-5a1c3d8fa0b5",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "taskhq-agent-workflow-v1"
+  },
+  "id": "taskhq-agent-workflow",
+  "tags": [
+    {
+      "id": "taskhq",
+      "name": "TaskHQ"
+    },
+    {
+      "id": "mcp",
+      "name": "MCP"
+    },
+    {
+      "id": "agent",
+      "name": "AI Agent"
+    }
+  ]
+}
