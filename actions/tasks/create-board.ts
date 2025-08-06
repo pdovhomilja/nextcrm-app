@@ -2,6 +2,7 @@
 
 import { auth } from "@/auth";
 import { getUserByEmail } from "@/actions/user";
+import { triggerBoardEmbeddingUpdate } from "@/lib/ai/embedding-triggers";
 
 import db from "@/lib/db";
 
@@ -25,6 +26,13 @@ export async function createBoard(board: any) {
         access: [user.id],
       },
     });
+
+    // Queue embedding generation (non-blocking)
+    if (newBoard.id) {
+      triggerBoardEmbeddingUpdate(newBoard.id).catch((error) => {
+        console.error("Failed to queue board embedding update:", error);
+      });
+    }
 
     return newBoard;
   } catch (error) {

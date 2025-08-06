@@ -3,6 +3,7 @@
 import db from "@/lib/db";
 import { auth } from "@/auth";
 import { getUserByEmail } from "../user";
+import { triggerTaskEmbeddingUpdate } from "@/lib/ai/embedding-triggers";
 import type { CreateTaskData } from "@/app/(app)/[cid]/tasks/_types";
 
 export async function createTask(task: CreateTaskData, boardSectionId: string) {
@@ -58,6 +59,13 @@ export async function createTask(task: CreateTaskData, boardSectionId: string) {
         },
       },
     });
+
+    // Queue embedding generation (non-blocking)
+    if (newTask.id) {
+      triggerTaskEmbeddingUpdate(newTask.id).catch((error) => {
+        console.error("Failed to queue embedding update:", error);
+      });
+    }
 
     return newTask;
   } catch (error) {
