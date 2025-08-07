@@ -40,7 +40,7 @@ const DocumentationPage = () => {
       <SiteHeader title="Documentation">
         <div className="flex items-center gap-2">
           <Badge variant="outline">AI-Powered</Badge>
-          <Badge variant="secondary">Phase 3</Badge>
+          <Badge variant="secondary">Phase 4</Badge>
         </div>
       </SiteHeader>
       <div className="flex flex-1 flex-col">
@@ -51,12 +51,13 @@ const DocumentationPage = () => {
           </div>
 
           <Tabs defaultValue="getting-started" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="getting-started">Getting Started</TabsTrigger>
               <TabsTrigger value="advanced-ai">Advanced AI</TabsTrigger>
               <TabsTrigger value="documents">Documents</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
               <TabsTrigger value="deployment">Deployment</TabsTrigger>
+              <TabsTrigger value="operations">Operations</TabsTrigger>
             </TabsList>
 
             {/* Getting Started Tab */}
@@ -1092,23 +1093,23 @@ const DocumentationPage = () => {
                     <div className="p-4 bg-gray-900 text-gray-100 rounded-lg font-mono text-sm overflow-x-auto">
                       <div className="space-y-1">
                         <div>{`# Update system packages`}</div>
-                        <div>sudo apt update && sudo apt upgrade -y</div>
+                        <div>{`sudo apt update && sudo apt upgrade -y`}</div>
                         <div></div>
                         <div>{`# Install Node.js (using NodeSource repository)`}</div>
-                        <div>curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -</div>
-                        <div>sudo apt-get install -y nodejs</div>
+                        <div>{`curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -`}</div>
+                        <div>{`sudo apt-get install -y nodejs`}</div>
                         <div></div>
                         <div>{`# Install PostgreSQL with pgvector`}</div>
-                        <div>sudo apt install postgresql postgresql-contrib</div>
-                        <div>sudo -u postgres psql -c &ldquo;CREATE EXTENSION IF NOT EXISTS vector;&rdquo;</div>
+                        <div>{`sudo apt install postgresql postgresql-contrib`}</div>
+                        <div>{`sudo -u postgres psql -c "CREATE EXTENSION IF NOT EXISTS vector;"`}</div>
                         <div></div>
                         <div>{`# Install Redis`}</div>
-                        <div>sudo apt install redis-server</div>
-                        <div>sudo systemctl enable redis-server</div>
-                        <div>sudo systemctl start redis-server</div>
+                        <div>{`sudo apt install redis-server`}</div>
+                        <div>{`sudo systemctl enable redis-server`}</div>
+                        <div>{`sudo systemctl start redis-server`}</div>
                         <div></div>
                         <div>{`# Install pnpm globally`}</div>
-                        <div>npm install -g pnpm</div>
+                        <div>{`npm install -g pnpm`}</div>
                       </div>
                     </div>
                   </div>
@@ -1118,17 +1119,17 @@ const DocumentationPage = () => {
                     <div className="p-4 bg-gray-900 text-gray-100 rounded-lg font-mono text-sm overflow-x-auto">
                       <div className="space-y-1">
                         <div>{`# Clone repository`}</div>
-                        <div>git clone https://github.com/your-org/taskhq.xmation.ai.git</div>
-                        <div>cd taskhq.xmation.ai</div>
+                        <div>{`git clone https://github.com/your-org/taskhq.xmation.ai.git`}</div>
+                        <div>{`cd taskhq.xmation.ai`}</div>
                         <div></div>
                         <div>{`# Install dependencies`}</div>
-                        <div>pnpm install</div>
+                        <div>{`pnpm install`}</div>
                         <div></div>
                         <div>{`# Generate Prisma client`}</div>
-                        <div>pnpm prisma generate</div>
+                        <div>{`pnpm prisma generate`}</div>
                         <div></div>
                         <div>{`# Run database migrations`}</div>
-                        <div>pnpm prisma db push</div>
+                        <div>{`pnpm prisma db push`}</div>
                       </div>
                     </div>
                   </div>
@@ -1446,6 +1447,508 @@ const DocumentationPage = () => {
                         <strong className="text-sm text-orange-600">Response Time:</strong>
                         <p className="text-xs text-muted-foreground">&lt;500ms for API requests</p>
                       </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+        </TabsContent>
+
+        {/* Operations Tab */}
+        <TabsContent value="operations" className="space-y-6">
+          <section className="space-y-4">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">Administrator Operations & Monitoring</h2>
+              <p className="text-muted-foreground">Comprehensive operational procedures for system monitoring, troubleshooting, and maintenance</p>
+            </div>
+
+            {/* System Monitoring */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Monitor className="h-5 w-5 text-blue-600" />
+                  System Monitoring & Health Checks
+                </CardTitle>
+                <CardDescription>AI service monitoring, health checks, and performance metrics</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium text-blue-600 mb-2">Health Check Endpoints</h4>
+                      <div className="space-y-2">
+                        <div className="p-3 bg-muted rounded font-mono text-sm">
+                          <strong>Application Health:</strong> GET /api/health
+                        </div>
+                        <div className="p-3 bg-muted rounded font-mono text-sm">
+                          <strong>AI Services Health:</strong> GET /api/health/ai
+                        </div>
+                        <div className="p-3 bg-muted rounded font-mono text-sm">
+                          <strong>MCP Servers Health:</strong> GET /api/health/mcp
+                        </div>
+                        <div className="p-3 bg-muted rounded font-mono text-sm">
+                          <strong>Database Health:</strong> GET /api/health/db
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-green-600 mb-2">Performance Thresholds</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          <Activity className="h-4 w-4 text-blue-500" />
+                          <span><strong>Response Time:</strong> 2 seconds max</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                          <span><strong>Error Rate:</strong> 5% max error rate</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Search className="h-4 w-4 text-purple-500" />
+                          <span><strong>Vector Search:</strong> 500ms max</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Brain className="h-4 w-4 text-indigo-500" />
+                          <span><strong>Embedding Generation:</strong> 3 seconds max</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium text-purple-600 mb-2">MCP Server Monitoring</h4>
+                      <div className="p-4 bg-gray-900 text-gray-100 rounded-lg font-mono text-xs overflow-x-auto">
+                        <div className="space-y-1">
+                          <div>{`// MCP server monitoring checks`}</div>
+                          <div>export const mcpMonitoringChecks = &#123;</div>
+                          <div>  connectivity: &#123;</div>
+                          <div>{`    frequency: "30s",`}</div>
+                          <div>{`    timeout: 5000,`}</div>
+                          <div>{`    retries: 3,`}</div>
+                          <div>  &#125;,</div>
+                          <div>  toolAvailability: &#123;</div>
+                          <div>{`    frequency: "60s",`}</div>
+                          <div>{`    criticalTools: ["create_task", "search_tasks"],`}</div>
+                          <div>  &#125;,</div>
+                          <div>  performance: &#123;</div>
+                          <div>{`    frequency: "120s",`}</div>
+                          <div>{`    thresholds: { responseTime: 1000 },`}</div>
+                          <div>  &#125;,</div>
+                          <div>&#125;;</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-orange-600 mb-2">Cost Monitoring</h4>
+                      <div className="space-y-2">
+                        <div className="p-3 border-l-4 border-green-500 bg-green-50 dark:bg-green-950">
+                          <p className="text-sm font-medium text-green-700 dark:text-green-300">Token Usage Tracking</p>
+                          <p className="text-xs text-green-600 dark:text-green-400">Real-time OpenAI API cost monitoring per user and company</p>
+                        </div>
+                        <div className="p-3 border-l-4 border-orange-500 bg-orange-50 dark:bg-orange-950">
+                          <p className="text-sm font-medium text-orange-700 dark:text-orange-300">Budget Alerts</p>
+                          <p className="text-xs text-orange-600 dark:text-orange-400">80% budget threshold warnings with automatic controls</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Troubleshooting Guide */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                  Troubleshooting & Issue Resolution
+                </CardTitle>
+                <CardDescription>Common problems, diagnostic procedures, and resolution steps</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="font-medium text-red-600 mb-3">AI Assistant Not Responding</h4>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <h5 className="text-sm font-medium">Symptoms</h5>
+                        <ul className="text-sm text-muted-foreground space-y-1">
+                          <li>• Chat interface shows loading state indefinitely</li>
+                          <li>• Error messages about AI service unavailability</li>
+                          <li>• Timeout errors in browser console</li>
+                        </ul>
+                      </div>
+                      <div className="space-y-2">
+                        <h5 className="text-sm font-medium">Diagnosis Steps</h5>
+                        <ol className="text-sm text-muted-foreground space-y-1">
+                          <li>1. Check AI service health endpoint</li>
+                          <li>2. Verify OpenAI API key validity and quota</li>
+                          <li>3. Check MCP server connectivity</li>
+                          <li>4. Review Redis connection status</li>
+                          <li>5. Examine application logs for errors</li>
+                        </ol>
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <h5 className="text-sm font-medium mb-2">Resolution Commands</h5>
+                      <div className="p-4 bg-gray-900 text-gray-100 rounded-lg font-mono text-sm overflow-x-auto">
+                        <div className="space-y-1">
+                          <div>{`# Check OpenAI API status`}</div>
+                          <div>{`curl -H "Authorization: Bearer $OPENAI_API_KEY" https://api.openai.com/v1/models`}</div>
+                          <div></div>
+                          <div>{`# Restart MCP servers`}</div>
+                          <div>{`sudo systemctl restart taskhq-mcp-*`}</div>
+                          <div></div>
+                          <div>{`# Clear Redis cache`}</div>
+                          <div>{`redis-cli FLUSHDB`}</div>
+                          <div></div>
+                          <div>{`# Check application logs`}</div>
+                          <div>{`tail -f /var/log/taskhq/application.log | grep -i "ai\|mcp"`}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h4 className="font-medium text-orange-600 mb-3">Vector Search Performance Issues</h4>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <h5 className="text-sm font-medium">Symptoms</h5>
+                        <ul className="text-sm text-muted-foreground space-y-1">
+                          <li>• Slow document search responses (&gt;5 seconds)</li>
+                          <li>• High CPU usage on database server</li>
+                          <li>• Vector similarity queries timing out</li>
+                        </ul>
+                      </div>
+                      <div className="space-y-2">
+                        <h5 className="text-sm font-medium">Database Optimization</h5>
+                        <div className="p-3 bg-muted rounded font-mono text-xs">
+                          <div className="space-y-1">
+                            <div>{`-- Rebuild vector indexes`}</div>
+                            <div>REINDEX INDEX CONCURRENTLY</div>
+                            <div>idx_task_embeddings_vector;</div>
+                            <div></div>
+                            <div>{`-- Update index parameters`}</div>
+                            <div>ALTER INDEX idx_task_embeddings_vector</div>
+                            <div>SET (lists = 200);</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h4 className="font-medium text-purple-600 mb-3">MCP Server Connection Failures</h4>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <h5 className="text-sm font-medium">Quick Diagnosis</h5>
+                        <div className="space-y-1 text-sm">
+                          <div className="p-2 bg-muted rounded font-mono">{`ps aux | grep mcp`}</div>
+                          <div className="p-2 bg-muted rounded font-mono">{`curl -v http://localhost:3000/api/mcp/tasks/sse`}</div>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <h5 className="text-sm font-medium">Resolution Actions</h5>
+                        <div className="space-y-1 text-sm">
+                          <div className="p-2 bg-muted rounded font-mono">{`sudo systemctl restart taskhq-mcp-tasks`}</div>
+                          <div className="p-2 bg-muted rounded font-mono">{`redis-cli DEL "mcp:clients:*"`}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Maintenance Procedures */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5 text-green-600" />
+                  Maintenance & Update Procedures
+                </CardTitle>
+                <CardDescription>Routine maintenance schedules and automated procedures</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium text-blue-600 mb-2">Maintenance Schedule</h4>
+                      <div className="space-y-3">
+                        <div className="p-3 border-l-4 border-green-500 bg-green-50 dark:bg-green-950">
+                          <h5 className="text-sm font-medium text-green-700 dark:text-green-300">Daily Tasks (Automated)</h5>
+                          <ul className="text-xs text-green-600 dark:text-green-400 mt-1 space-y-1">
+                            <li>• Log rotation and cleanup</li>
+                            <li>• Performance metric collection</li>
+                            <li>• Health checks verification</li>
+                            <li>• Cost tracking updates</li>
+                          </ul>
+                        </div>
+                        <div className="p-3 border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-950">
+                          <h5 className="text-sm font-medium text-blue-700 dark:text-blue-300">Weekly Tasks</h5>
+                          <ul className="text-xs text-blue-600 dark:text-blue-400 mt-1 space-y-1">
+                            <li>• Performance review and analysis</li>
+                            <li>• Error log analysis and categorization</li>
+                            <li>• Capacity planning assessment</li>
+                            <li>• Critical security updates</li>
+                          </ul>
+                        </div>
+                        <div className="p-3 border-l-4 border-purple-500 bg-purple-50 dark:bg-purple-950">
+                          <h5 className="text-sm font-medium text-purple-700 dark:text-purple-300">Monthly Tasks</h5>
+                          <ul className="text-xs text-purple-600 dark:text-purple-400 mt-1 space-y-1">
+                            <li>• Database maintenance (VACUUM, ANALYZE)</li>
+                            <li>• Backup verification and testing</li>
+                            <li>• Performance optimization review</li>
+                            <li>• Comprehensive cost analysis</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium text-orange-600 mb-2">Automated Scripts</h4>
+                      <div className="space-y-3">
+                        <div>
+                          <h5 className="text-sm font-medium mb-2">Daily Maintenance Script</h5>
+                          <div className="p-4 bg-gray-900 text-gray-100 rounded-lg font-mono text-xs overflow-x-auto">
+                            <div className="space-y-1">
+                              <div>{`#!/bin/bash`}</div>
+                              <div>{`# Daily maintenance automation`}</div>
+                              <div></div>
+                              <div>{`# Rotate logs`}</div>
+                              <div>logrotate /etc/logrotate.d/taskhq</div>
+                              <div></div>
+                              <div>{`# Collect metrics`}</div>
+                              <div>{`curl -s http://localhost:3000/api/metrics > "/var/metrics/taskhq/daily_$(date +%Y%m%d).metrics"`}</div>
+                              <div></div>
+                              <div>{`# Health check report`}</div>
+                              <div>{`curl -s http://localhost:3000/api/health/ai | jq . > "/var/metrics/taskhq/health_$(date +%Y%m%d).json"`}</div>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <h5 className="text-sm font-medium mb-2">Database Maintenance</h5>
+                          <div className="p-4 bg-gray-900 text-gray-100 rounded-lg font-mono text-xs overflow-x-auto">
+                            <div className="space-y-1">
+                              <div>{`# Weekly database maintenance`}</div>
+                              <div>{`psql -d taskhq -c "`}</div>
+                              <div>  ANALYZE tasks;</div>
+                              <div>  ANALYZE task_embeddings;</div>
+                              <div>  VACUUM (ANALYZE) ai_conversations;</div>
+                              <div>{`"`}</div>
+                              <div></div>
+                              <div>{`# Reindex vector embeddings`}</div>
+                              <div>{`psql -d taskhq -c "`}</div>
+                              <div>  REINDEX INDEX CONCURRENTLY idx_task_embeddings_vector;</div>
+                              <div>{`"`}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* System Updates */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <HardDrive className="h-5 w-5 text-indigo-600" />
+                  System Updates & Scaling
+                </CardTitle>
+                <CardDescription>Application updates, capacity planning, and scaling procedures</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium text-green-600 mb-2">Update Procedure</h4>
+                      <div className="p-4 bg-gray-900 text-gray-100 rounded-lg font-mono text-xs overflow-x-auto">
+                        <div className="space-y-1">
+                          <div>{`#!/bin/bash`}</div>
+                          <div>{`# Application update procedure`}</div>
+                          <div></div>
+                          <div>{`# Pre-update backup`}</div>
+                          <div>./backup.sh</div>
+                          <div></div>
+                          <div>{`# Stop services`}</div>
+                          <div>{`sudo systemctl stop taskhq`}</div>
+                          <div>{`sudo systemctl stop taskhq-mcp-*`}</div>
+                          <div></div>
+                          <div>{`# Update application code`}</div>
+                          <div>{`git fetch origin`}</div>
+                          <div>{`git checkout tags/v2.1.0`}</div>
+                          <div></div>
+                          <div>{`# Update dependencies`}</div>
+                          <div>{`pnpm install --frozen-lockfile`}</div>
+                          <div></div>
+                          <div>{`# Run migrations and build`}</div>
+                          <div>{`pnpm prisma generate`}</div>
+                          <div>{`pnpm prisma migrate deploy`}</div>
+                          <div>{`pnpm build`}</div>
+                          <div></div>
+                          <div>{`# Start services`}</div>
+                          <div>{`sudo systemctl start taskhq`}</div>
+                          <div>{`sudo systemctl start taskhq-mcp-*`}</div>
+                          <div></div>
+                          <div>{`# Verify deployment`}</div>
+                          <div>{`curl -f http://localhost:3000/api/health || ./rollback.sh`}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium text-purple-600 mb-2">Capacity Monitoring Thresholds</h4>
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="p-3 border rounded">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Monitor className="h-4 w-4 text-blue-500" />
+                              <span className="text-sm font-medium">CPU</span>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              <div>Warning: 70%</div>
+                              <div>Critical: 85%</div>
+                            </div>
+                          </div>
+                          <div className="p-3 border rounded">
+                            <div className="flex items-center gap-2 mb-1">
+                              <HardDrive className="h-4 w-4 text-green-500" />
+                              <span className="text-sm font-medium">Memory</span>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              <div>Warning: 75%</div>
+                              <div>Critical: 90%</div>
+                            </div>
+                          </div>
+                          <div className="p-3 border rounded">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Database className="h-4 w-4 text-orange-500" />
+                              <span className="text-sm font-medium">Storage</span>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              <div>Warning: 80%</div>
+                              <div>Critical: 95%</div>
+                            </div>
+                          </div>
+                          <div className="p-3 border rounded">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Brain className="h-4 w-4 text-purple-500" />
+                              <span className="text-sm font-medium">AI Queue</span>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              <div>Warning: 100 requests</div>
+                              <div>Critical: 500 requests</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-orange-600 mb-2">Scaling Procedures</h4>
+                      <div className="space-y-2">
+                        <div className="p-3 border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-950">
+                          <p className="text-sm font-medium text-blue-700 dark:text-blue-300">Horizontal Scaling</p>
+                          <p className="text-xs text-blue-600 dark:text-blue-400">Add application replicas using Docker Compose or Kubernetes</p>
+                        </div>
+                        <div className="p-3 border-l-4 border-green-500 bg-green-50 dark:bg-green-950">
+                          <p className="text-sm font-medium text-green-700 dark:text-green-300">Database Scaling</p>
+                          <p className="text-xs text-green-600 dark:text-green-400">PostgreSQL read replicas for analytics and reporting</p>
+                        </div>
+                        <div className="p-3 border-l-4 border-purple-500 bg-purple-50 dark:bg-purple-950">
+                          <p className="text-sm font-medium text-purple-700 dark:text-purple-300">Redis Clustering</p>
+                          <p className="text-xs text-purple-600 dark:text-purple-400">Redis cluster for high-availability MCP transport</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Operational Excellence */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-red-600" />
+                  Operational Excellence Metrics
+                </CardTitle>
+                <CardDescription>Key performance indicators and success metrics</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-red-600">Critical Response Metrics</h4>
+                    <div className="space-y-3">
+                      <div className="p-4 border rounded">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Activity className="h-5 w-5 text-red-500" />
+                          <span className="font-medium text-sm">Mean Time to Detection (MTTD)</span>
+                        </div>
+                        <div className="text-2xl font-bold text-red-600">&lt;5 minutes</div>
+                        <p className="text-xs text-muted-foreground">For critical system issues</p>
+                      </div>
+                      <div className="p-4 border rounded">
+                        <div className="flex items-center gap-2 mb-2">
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                          <span className="font-medium text-sm">Mean Time to Resolution (MTTR)</span>
+                        </div>
+                        <div className="text-2xl font-bold text-green-600">&lt;30 minutes</div>
+                        <p className="text-xs text-muted-foreground">For critical system issues</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-blue-600">Availability & Performance</h4>
+                    <div className="space-y-3">
+                      <div className="p-4 border rounded">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Server className="h-5 w-5 text-blue-500" />
+                          <span className="font-medium text-sm">System Availability</span>
+                        </div>
+                        <div className="text-2xl font-bold text-blue-600">&gt;99.9%</div>
+                        <p className="text-xs text-muted-foreground">Monthly uptime target</p>
+                      </div>
+                      <div className="p-4 border rounded">
+                        <div className="flex items-center gap-2 mb-2">
+                          <AlertTriangle className="h-5 w-5 text-orange-500" />
+                          <span className="font-medium text-sm">False Positive Rate</span>
+                        </div>
+                        <div className="text-2xl font-bold text-orange-600">&lt;10%</div>
+                        <p className="text-xs text-muted-foreground">For monitoring alerts</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  <h4 className="font-medium text-purple-600">Maintenance Efficiency Targets</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div className="text-center p-3 border rounded">
+                      <div className="text-lg font-bold text-purple-600">&lt;2 hours</div>
+                      <p className="text-xs text-muted-foreground">Monthly maintenance window</p>
+                    </div>
+                    <div className="text-center p-3 border rounded">
+                      <div className="text-lg font-bold text-green-600">&gt;95%</div>
+                      <p className="text-xs text-muted-foreground">Successful deployment rate</p>
+                    </div>
+                    <div className="text-center p-3 border rounded">
+                      <div className="text-lg font-bold text-blue-600">&lt;10 minutes</div>
+                      <p className="text-xs text-muted-foreground">Rollback time when needed</p>
+                    </div>
+                    <div className="text-center p-3 border rounded">
+                      <div className="text-lg font-bold text-orange-600">100%</div>
+                      <p className="text-xs text-muted-foreground">Backup integrity verification</p>
                     </div>
                   </div>
                 </div>
