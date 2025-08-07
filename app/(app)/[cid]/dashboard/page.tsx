@@ -1,7 +1,5 @@
 import { ChartAreaInteractive } from "./_components/chart-area-interactive";
 import { SectionCards } from "./_components/section-cards";
-import { SimpleSectionCards } from "./_components/simple-section-cards";
-import { DynamicSectionCards } from "./_components/dynamic-section-cards";
 import { EnhancedDynamicCards } from "./_components/enhanced-dynamic-cards";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset } from "@/components/ui/sidebar";
@@ -17,7 +15,7 @@ interface DashboardPageProps {
 }
 
 export default async function DashboardPage({ params }: DashboardPageProps) {
-  const { cid } = await params;
+  await params;
 
   // Fetch all metrics in parallel for better performance
   const [taskMetricsResult, boardMetricsResult, userMetricsResult] =
@@ -25,7 +23,6 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
 
   // Extract data from results, handling errors gracefully
   const taskMetrics = taskMetricsResult.data;
-  const boardMetrics = boardMetricsResult.data;
   const userMetrics = userMetricsResult.data;
 
   // Log any errors for debugging (in development)
@@ -54,16 +51,11 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
           <div className="space-y-4">
             <EnhancedDynamicCards
               taskMetrics={taskMetrics}
-              boardMetrics={boardMetrics}
-              userMetrics={userMetrics}
             />
           </div>
           {/* Chart Section */}
           <div className="px-4 lg:px-6">
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                📈 Charts & Analytics
-              </h2>
               <ChartAreaInteractive />
             </div>
           </div>

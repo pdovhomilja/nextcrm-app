@@ -11,20 +11,16 @@ import {
 } from "@/components/ui/card";
 
 import type { TaskMetricsData } from "@/actions/dashboard/get-task-metrics";
-import type { BoardMetricsData } from "@/actions/dashboard/get-board-metrics";
 import type { UserMetricsData } from "@/actions/dashboard/get-user-metrics";
 
 interface EnhancedDynamicCardsProps {
   taskMetrics?: TaskMetricsData;
-  boardMetrics?: BoardMetricsData;
   userMetrics?: UserMetricsData;
   isLoading?: boolean;
 }
 
 export function EnhancedDynamicCards({ 
-  taskMetrics, 
-  boardMetrics, 
-  userMetrics, 
+  taskMetrics,
   isLoading = false 
 }: EnhancedDynamicCardsProps) {
   // Helper function to format numbers
@@ -37,17 +33,11 @@ export function EnhancedDynamicCards({
     return num.toString();
   };
 
-  // Helper function to format percentage
-  const formatPercentage = (num: number) => {
-    const isPositive = num >= 0;
-    const formatted = `${isPositive ? '+' : ''}${num.toFixed(1)}%`;
-    return { formatted, isPositive };
-  };
 
   if (isLoading) {
     return (
-      <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-6">
-        {[...Array(6)].map((_, i) => (
+      <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
           <LoadingCard key={i} />
         ))}
       </div>
@@ -56,22 +46,6 @@ export function EnhancedDynamicCards({
 
   // Prepare card data
   const cards = [
-    // Total Tasks Card
-    {
-      title: "Total Tasks",
-      value: formatNumber(taskMetrics?.totalTasks || 0),
-      trend: taskMetrics ? formatPercentage(taskMetrics.trends.monthOverMonth) : null,
-      description: `${taskMetrics?.tasksByStatus.IN_PROGRESS || 0} in progress`,
-    },
-    
-    // Active Projects Card
-    {
-      title: "Active Projects",
-      value: formatNumber(boardMetrics?.activeBoardsCount || 0),
-      trend: boardMetrics ? formatPercentage(boardMetrics.trends.monthOverMonth) : null,
-      description: `${boardMetrics?.totalBoards || 0} total boards`,
-    },
-    
     // Overdue Tasks Card
     {
       title: "Overdue Tasks",
@@ -89,25 +63,25 @@ export function EnhancedDynamicCards({
       description: `${taskMetrics?.tasksByStatus.COMPLETED || 0} completed this month`,
     },
     
-    // Active Users Card
+    // AI Conversations Card - TODO: Add aiUsageStats to UserMetricsData
     {
-      title: "Active Users",
-      value: formatNumber(userMetrics?.activeUsersCount || 0),
-      trend: userMetrics ? formatPercentage(userMetrics.trends.activeUsersGrowth) : null,
-      description: `${userMetrics?.totalUsers || 0} total users`,
+      title: "AI Conversations",
+      value: "0", // formatNumber(userMetrics?.aiUsageStats?.totalConversations || 0),
+      trend: null,
+      description: "0 active AI users", // `${userMetrics?.aiUsageStats?.activeAIUsers || 0} active AI users`,
     },
     
-    // Team Productivity Card
+    // Documents Processed Card - TODO: Add documentStats to UserMetricsData
     {
-      title: "Team Productivity",
-      value: `${userMetrics?.userProductivity.avgCompletionRate || 0}%`,
-      trend: null, // We could add productivity trend here later
-      description: `${userMetrics?.userProductivity.avgTasksPerUser || 0} avg tasks/user`,
+      title: "Documents Processed", 
+      value: "0", // formatNumber(userMetrics?.documentStats?.totalDocuments || 0),
+      trend: null,
+      description: "0.0% success rate", // `${userMetrics?.documentStats?.averageProcessingSuccessRate?.toFixed(1) || '0.0'}% success rate`,
     },
   ];
 
   return (
-    <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-6">
+    <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
       {cards.map((card, index) => (
         <EnhancedSectionCard key={index} {...card} />
       ))}
