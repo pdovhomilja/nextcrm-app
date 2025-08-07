@@ -1,23 +1,125 @@
 import { ChartAreaInteractive } from "./_components/chart-area-interactive";
 import { SectionCards } from "./_components/section-cards";
+import { SimpleSectionCards } from "./_components/simple-section-cards";
+import { DynamicSectionCards } from "./_components/dynamic-section-cards";
+import { EnhancedDynamicCards } from "./_components/enhanced-dynamic-cards";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset } from "@/components/ui/sidebar";
 
-export default async function DashboardPage() {
+import { getTaskMetrics } from "@/actions/dashboard/get-task-metrics";
+import { getBoardMetrics } from "@/actions/dashboard/get-board-metrics";
+import { getUserMetrics } from "@/actions/dashboard/get-user-metrics";
+
+interface DashboardPageProps {
+  params: Promise<{
+    cid: string;
+  }>;
+}
+
+export default async function DashboardPage({ params }: DashboardPageProps) {
+  const { cid } = await params;
+
+  // Fetch all metrics in parallel for better performance
+  const [taskMetricsResult, boardMetricsResult, userMetricsResult] = await Promise.all([
+    getTaskMetrics(),
+    getBoardMetrics(), 
+    getUserMetrics(),
+  ]);
+
+  // Extract data from results, handling errors gracefully
+  const taskMetrics = taskMetricsResult.data;
+  const boardMetrics = boardMetricsResult.data;
+  const userMetrics = userMetricsResult.data;
+
+  // Log any errors for debugging (in development)
+  if (taskMetricsResult.error) {
+    console.error("Task metrics error:", taskMetricsResult.error);
+  }
+  if (boardMetricsResult.error) {
+    console.error("Board metrics error:", boardMetricsResult.error);
+  }
+  if (userMetricsResult.error) {
+    console.error("User metrics error:", userMetricsResult.error);
+  }
+
   return (
     <SidebarInset>
-      <SiteHeader title="Dashboard">
+      <SiteHeader title="Dashboard - All Card Systems">
         <div></div>
       </SiteHeader>
       <div className="flex flex-1 flex-col border-black">
-        <div className="@container/main flex flex-1 flex-col gap-2">
-          <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-            <SectionCards />
+        <div className="@container/main flex flex-1 flex-col gap-8 py-4 md:py-6">
+          
+          {/* Original Modular Cards (Main Branch) */}
+          <div className="space-y-4">
             <div className="px-4 lg:px-6">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                🎯 Original Modular Cards (Your Beloved System)
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                TaskMetricsCard, BoardMetricsCard, UserActivityCard components
+              </p>
+            </div>
+            <SectionCards />
+          </div>
+
+          {/* Simple Cards from Feature Branch */}
+          <div className="space-y-4">
+            <div className="px-4 lg:px-6">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                ✨ Simple Cards (From Feature Branch)
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Beautiful gradient cards with sample data
+              </p>
+            </div>
+            <SimpleSectionCards />
+          </div>
+
+          {/* Dynamic Cards (Original) */}
+          <div className="space-y-4">
+            <div className="px-4 lg:px-6">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                📊 Dynamic Cards (Main Branch)
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Real-time metrics with original styling
+              </p>
+            </div>
+            <DynamicSectionCards
+              taskMetrics={taskMetrics}
+              boardMetrics={boardMetrics}
+              userMetrics={userMetrics}
+            />
+          </div>
+
+          {/* Enhanced Dynamic Cards (Best of Both) */}
+          <div className="space-y-4">
+            <div className="px-4 lg:px-6">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                🚀 Enhanced Dynamic Cards (Best of Both Worlds)
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Real-time metrics with beautiful feature branch styling
+              </p>
+            </div>
+            <EnhancedDynamicCards
+              taskMetrics={taskMetrics}
+              boardMetrics={boardMetrics}
+              userMetrics={userMetrics}
+            />
+          </div>
+
+          {/* Chart Section */}
+          <div className="px-4 lg:px-6">
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                📈 Charts & Analytics
+              </h2>
               <ChartAreaInteractive />
             </div>
-            {/* <DataTable data={data} /> */}
           </div>
+
         </div>
       </div>
     </SidebarInset>
