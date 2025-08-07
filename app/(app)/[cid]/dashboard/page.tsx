@@ -1,8 +1,11 @@
+import { Suspense } from "react";
 import { ChartAreaInteractive } from "./_components/chart-area-interactive";
 import { SectionCards } from "./_components/section-cards";
 import { EnhancedDynamicCards } from "./_components/enhanced-dynamic-cards";
+import { DistributionChart } from "@/components/dashboard/charts/distribution-chart";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset } from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { getTaskMetrics } from "@/actions/dashboard/get-task-metrics";
 import { getBoardMetrics } from "@/actions/dashboard/get-board-metrics";
@@ -17,8 +20,10 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
   await params;
 
   // Fetch all metrics in parallel for better performance
-  const [taskMetricsResult, boardMetricsResult] =
-    await Promise.all([getTaskMetrics(), getBoardMetrics()]);
+  const [taskMetricsResult, boardMetricsResult] = await Promise.all([
+    getTaskMetrics(),
+    getBoardMetrics(),
+  ]);
 
   // Extract data from results, handling errors gracefully
   const taskMetrics = taskMetricsResult.data;
@@ -33,25 +38,62 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
 
   return (
     <SidebarInset>
-      <SiteHeader title="Dashboard - All Card Systems">
+      <SiteHeader title="Dashboard - Analytics Overview">
         <div></div>
       </SiteHeader>
-      <div className="flex flex-1 flex-col border-black">
+      <div className="flex flex-1 flex-col">
         <div className="@container/main flex flex-1 flex-col gap-8 py-4 md:py-6">
-          {/* Original Modular Cards (Main Branch) */}
-          <div className="space-y-4">
-            <SectionCards />
-          </div>
-          {/* Enhanced Dynamic Cards (Best of Both) */}
-          <div className="space-y-4">
-            <EnhancedDynamicCards
-              taskMetrics={taskMetrics}
-            />
-          </div>
-          {/* Chart Section */}
+          {/* Metrics Cards */}
+          <Suspense fallback={<Skeleton className="h-32 w-full" />}>
+            <div className="space-y-4">
+              <SectionCards />
+            </div>
+          </Suspense>
+
+          {/* Enhanced Dynamic Cards */}
+          <Suspense fallback={<Skeleton className="h-32 w-full" />}>
+            <div className="space-y-4">
+              <EnhancedDynamicCards taskMetrics={taskMetrics} />
+            </div>
+          </Suspense>
+
+          {/* Timeline Chart */}
+          <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
+            <div className="px-4 lg:px-6">
+              <div className="space-y-4">
+                <ChartAreaInteractive />
+              </div>
+            </div>
+          </Suspense>
+
+          {/* Distribution Charts */}
           <div className="px-4 lg:px-6">
             <div className="space-y-4">
-              <ChartAreaInteractive />
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
+                  <DistributionChart
+                    type="priority"
+                    title="Priority Distribution"
+                    className="w-full"
+                  />
+                </Suspense>
+
+                <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
+                  <DistributionChart
+                    type="status"
+                    title="Status Distribution"
+                    className="w-full"
+                  />
+                </Suspense>
+
+                <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
+                  <DistributionChart
+                    type="board"
+                    title="Board Workload"
+                    className="w-full"
+                  />
+                </Suspense>
+              </div>
             </div>
           </div>
         </div>
