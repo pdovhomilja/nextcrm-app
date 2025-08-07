@@ -5,211 +5,220 @@ import db from "@/lib/db"
 import { z } from "zod"
 
 const TaskMetricsSchema = z.object({
-  cid: z.string().min(1, "Company ID is required")
+  dateRange: z.enum(["7d", "30d", "90d", "all"]).optional().default("30d"),
+  boardId: z.string().optional(),
 })
 
-export interface TaskMetrics {
+export type TaskMetricsData = {
   totalTasks: number
   tasksByStatus: {
     NEW: number
     IN_PROGRESS: number
+    ON_HOLD: number
     COMPLETED: number
     CANCELLED: number
-    ON_HOLD: number
   }
-  overdueTasks: number
   tasksThisWeek: number
   tasksThisMonth: number
+  overdueTasks: number
   completionRate: number
-  avgCompletionTimeHours: number
-  priorityDistribution: {
-    LOW: number
-    MEDIUM: number
-    HIGH: number
-    CRITICAL: number
-  }
-  trendData: {
-    tasksCreated: number
-    tasksCompleted: number
-    percentChange: number
+  averageCompletionTime: number | null
+  trends: {
+    weekOverWeek: number
+    monthOverMonth: number
   }
 }
 
-export async function getTaskMetrics(cid: string): Promise<{ success: boolean; data?: TaskMetrics; error?: string }> {
+export async function getTaskMetrics(
+  input?: z.infer<typeof TaskMetricsSchema>
+): Promise<{ data?: TaskMetricsData; error?: string }> {
   try {
     // Session validation
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: 'Authentication required' }
+      return { error: 'Authentication required' }
+    }
+
+    const companyId = session.user.cid
+    if (!companyId) {
+      return { error: 'Company context required' }
     }
 
     // Input validation
-    const validatedData = TaskMetricsSchema.parse({ cid })
-    
-    // Company data isolation check
-    if (session.user.cid !== validatedData.cid) {
-      return { success: false, error: 'Unauthorized access to company data' }
-    }
+    const validatedInput = TaskMetricsSchema.parse(input || {})
+    const { dateRange, boardId } = validatedInput
 
-    // Get current date boundaries for filtering
+    // Calculate date range for filtering
     const now = new Date()
-    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()))
-    startOfWeek.setHours(0, 0, 0, 0)
-    
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0)
+    let dateFilter: Date | undefined
 
-    // Parallel database queries for better performance
-    const [
-      allTasks,
-      overdueTasks,
-      weeklyTasks,
-      monthlyTasks,
-      lastMonthTasks,
-      completedTasksWithDuration
-    ] = await Promise.all([
-      // Get all tasks for the company
-      db.task.findMany({
-        where: {
-          createdById: { in: await getUsersInCompany(cid) }
-        },
-        include: {
-          createdBy: true,
-          assignedTo: true
-        }
-      }),
-      
-      // Get overdue tasks
-      db.task.count({
-        where: {
-          createdById: { in: await getUsersInCompany(cid) },
-          dueDate: { lt: new Date() },
-          status: { notIn: ['COMPLETED', 'CANCELLED'] }
-        }
-      }),
-      
-      // Tasks created this week
-      db.task.count({
-        where: {
-          createdById: { in: await getUsersInCompany(cid) },
-          createdAt: { gte: startOfWeek }
-        }
-      }),
-      
-      // Tasks created this month
-      db.task.count({
-        where: {
-          createdById: { in: await getUsersInCompany(cid) },
-          createdAt: { gte: startOfMonth }
-        }
-      }),
-      
-      // Tasks created last month for trend comparison
-      db.task.count({
-        where: {
-          createdById: { in: await getUsersInCompany(cid) },
-          createdAt: { 
-            gte: lastMonth,
-            lte: endOfLastMonth
-          }
-        }
-      }),
-      
-      // Completed tasks with creation and completion times for duration calculation
-      db.task.findMany({
-        where: {
-          createdById: { in: await getUsersInCompany(cid) },
-          status: 'COMPLETED'
-        },
-        select: {
-          createdAt: true,
-          updatedAt: true
-        }
-      })
-    ])
-
-    // Helper function to get user IDs in company
-    async function getUsersInCompany(companyId: string): Promise<string[]> {
-      const users = await db.user.findMany({
-        where: { cid: companyId },
-        select: { id: true }
-      })
-      return users.map(user => user.id)
+    switch (dateRange) {
+      case "7d":
+        dateFilter = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+        break
+      case "30d":
+        dateFilter = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+        break
+      case "90d":
+        dateFilter = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+        break
+      default:
+        dateFilter = undefined
     }
 
-    // Calculate metrics
-    const totalTasks = allTasks.length
-    
-    // Tasks by status
-    const tasksByStatus = {
-      NEW: allTasks.filter(task => task.status === 'NEW').length,
-      IN_PROGRESS: allTasks.filter(task => task.status === 'IN_PROGRESS').length,
-      COMPLETED: allTasks.filter(task => task.status === 'COMPLETED').length,
-      CANCELLED: allTasks.filter(task => task.status === 'CANCELLED').length,
-      ON_HOLD: allTasks.filter(task => task.status === 'ON_HOLD').length,
+    // Base query filter with company isolation
+    const baseFilter = {
+      ...(boardId && { boardId }),
+      ...(dateFilter && { createdAt: { gte: dateFilter } }),
     }
 
-    // Priority distribution
-    const priorityDistribution = {
-      LOW: allTasks.filter(task => task.priority === 'LOW').length,
-      MEDIUM: allTasks.filter(task => task.priority === 'MEDIUM').length,
-      HIGH: allTasks.filter(task => task.priority === 'HIGH').length,
-      CRITICAL: allTasks.filter(task => task.priority === 'CRITICAL').length,
+    // Get all tasks count by status with company filtering
+    const tasksByStatus = await db.task.groupBy({
+      by: ["status"],
+      where: {
+        createdBy: { cid: companyId }, // Company isolation via user relationship
+        ...(boardId && { boardSection: { board: { id: boardId } } }),
+      },
+      _count: {
+        id: true,
+      },
+    })
+
+    // Transform status counts to expected format
+    const statusCounts = {
+      NEW: 0,
+      IN_PROGRESS: 0,
+      ON_HOLD: 0,
+      COMPLETED: 0,
+      CANCELLED: 0,
     }
 
-    // Completion rate (completed vs total)
-    const completedTasks = tasksByStatus.COMPLETED
-    const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0
+    tasksByStatus.forEach((item) => {
+      statusCounts[item.status as keyof typeof statusCounts] = item._count.id
+    })
 
-    // Average completion time in hours
-    const avgCompletionTimeHours = completedTasksWithDuration.length > 0 
-      ? completedTasksWithDuration.reduce((sum, task) => {
-          const hours = (task.updatedAt.getTime() - task.createdAt.getTime()) / (1000 * 60 * 60)
-          return sum + hours
-        }, 0) / completedTasksWithDuration.length
-      : 0
+    const totalTasks = Object.values(statusCounts).reduce(
+      (sum, count) => sum + count,
+      0
+    )
 
-    // Trend calculation (current month vs last month)
-    const percentChange = lastMonthTasks > 0 
-      ? ((monthlyTasks - lastMonthTasks) / lastMonthTasks) * 100 
-      : monthlyTasks > 0 ? 100 : 0
+    // Get tasks created this week
+    const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+    const tasksThisWeek = await db.task.count({
+      where: {
+        createdBy: { cid: companyId },
+        createdAt: { gte: weekStart },
+        ...(boardId && { boardSection: { board: { id: boardId } } }),
+      },
+    })
 
-    const metrics: TaskMetrics = {
+    // Get tasks created this month
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const tasksThisMonth = await db.task.count({
+      where: {
+        createdBy: { cid: companyId },
+        createdAt: { gte: monthStart },
+        ...(boardId && { boardSection: { board: { id: boardId } } }),
+      },
+    })
+
+    // Get overdue tasks
+    const overdueTasks = await db.task.count({
+      where: {
+        createdBy: { cid: companyId },
+        status: { notIn: ["COMPLETED", "CANCELLED"] },
+        dueDate: { lt: now },
+        ...(boardId && { boardSection: { board: { id: boardId } } }),
+      },
+    })
+
+    // Calculate completion rate
+    const completedTasks = statusCounts.COMPLETED
+    const completionRate =
+      totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0
+
+    // Calculate average completion time (for completed tasks)
+    const completedTasksWithTime = await db.task.findMany({
+      where: {
+        createdBy: { cid: companyId },
+        status: "COMPLETED",
+        ...(boardId && { boardSection: { board: { id: boardId } } }),
+        ...(dateFilter && { updatedAt: { gte: dateFilter } }),
+      },
+      select: {
+        createdAt: true,
+        updatedAt: true,
+      },
+    })
+
+    let averageCompletionTime: number | null = null
+    if (completedTasksWithTime.length > 0) {
+      const totalTime = completedTasksWithTime.reduce((sum, task) => {
+        return sum + (task.updatedAt.getTime() - task.createdAt.getTime())
+      }, 0)
+      averageCompletionTime = Math.round(
+        totalTime / completedTasksWithTime.length / (1000 * 60 * 60 * 24)
+      ) // Convert to days
+    }
+
+    // Calculate trends (week over week, month over month)
+    const lastWeekStart = new Date(
+      weekStart.getTime() - 7 * 24 * 60 * 60 * 1000
+    )
+    const tasksLastWeek = await db.task.count({
+      where: {
+        createdBy: { cid: companyId },
+        createdAt: { gte: lastWeekStart, lt: weekStart },
+        ...(boardId && { boardSection: { board: { id: boardId } } }),
+      },
+    })
+
+    const lastMonthStart = new Date(
+      monthStart.getFullYear(),
+      monthStart.getMonth() - 1,
+      1
+    )
+    const tasksLastMonth = await db.task.count({
+      where: {
+        createdBy: { cid: companyId },
+        createdAt: { gte: lastMonthStart, lt: monthStart },
+        ...(boardId && { boardSection: { board: { id: boardId } } }),
+      },
+    })
+
+    const weekOverWeek =
+      tasksLastWeek > 0
+        ? ((tasksThisWeek - tasksLastWeek) / tasksLastWeek) * 100
+        : 0
+    const monthOverMonth =
+      tasksLastMonth > 0
+        ? ((tasksThisMonth - tasksLastMonth) / tasksLastMonth) * 100
+        : 0
+
+    const result: TaskMetricsData = {
       totalTasks,
-      tasksByStatus,
+      tasksByStatus: statusCounts,
+      tasksThisWeek,
+      tasksThisMonth,
       overdueTasks,
-      tasksThisWeek: weeklyTasks,
-      tasksThisMonth: monthlyTasks,
-      completionRate,
-      avgCompletionTimeHours,
-      priorityDistribution,
-      trendData: {
-        tasksCreated: monthlyTasks,
-        tasksCompleted: tasksByStatus.COMPLETED,
-        percentChange
-      }
+      completionRate: Math.round(completionRate * 100) / 100, // Round to 2 decimal places
+      averageCompletionTime,
+      trends: {
+        weekOverWeek: Math.round(weekOverWeek * 100) / 100,
+        monthOverMonth: Math.round(monthOverMonth * 100) / 100,
+      },
     }
 
-    return { success: true, data: metrics }
+    return { data: result }
   } catch (error) {
     if (error instanceof z.ZodError) {
       return { 
-        success: false, 
         error: 'Validation failed', 
       }
     }
     
     console.error('Task metrics error:', error)
-    return { success: false, error: 'Failed to fetch task metrics' }
+    return { error: 'Failed to retrieve task metrics' }
   }
 }
 
-// Helper function to get users in company (avoiding duplication)
-async function getUsersInCompany(companyId: string): Promise<string[]> {
-  const users = await db.user.findMany({
-    where: { cid: companyId },
-    select: { id: true }
-  })
-  return users.map(user => user.id)
-}

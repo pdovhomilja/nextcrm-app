@@ -5,187 +5,307 @@ import db from "@/lib/db"
 import { z } from "zod"
 
 const BoardMetricsSchema = z.object({
-  cid: z.string().min(1, "Company ID is required")
+  dateRange: z.enum(["7d", "30d", "90d", "all"]).optional().default("30d"),
+  includeSections: z.boolean().optional().default(true),
 })
 
-export interface BoardMetrics {
+export type BoardMetricsData = {
   totalBoards: number
-  activeBoardsWithTasks: number
-  boardsCreatedThisMonth: number
+  activeBoardsCount: number
+  boardsWithTasks: number
   averageTasksPerBoard: number
-  mostActiveBoard: {
+  mostActiveBoards: Array<{
     id: string
-    name: string
+    title: string
     taskCount: number
-  } | null
-  boardUtilization: {
-    boardId: string
-    boardName: string
-    taskCount: number
-    completionRate: number
-  }[]
-  trendData: {
-    boardsCreated: number
-    percentChange: number
+    sectionCount: number
+    lastActivity: Date
+  }>
+  boardActivity: {
+    created: number
+    updated: number
+    archived: number
+  }
+  sectionDistribution: {
+    totalSections: number
+    averageSectionsPerBoard: number
+    sectionUtilization: number
+  }
+  trends: {
+    weekOverWeek: number
+    monthOverMonth: number
   }
 }
 
-export async function getBoardMetrics(cid: string): Promise<{ success: boolean; data?: BoardMetrics; error?: string }> {
+export async function getBoardMetrics(
+  input?: z.infer<typeof BoardMetricsSchema>
+): Promise<{ data?: BoardMetricsData; error?: string }> {
   try {
-    // Session validation
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: 'Authentication required' }
+      return { error: "Authentication required" }
     }
 
-    // Input validation
-    const validatedData = BoardMetricsSchema.parse({ cid })
-    
-    // Company data isolation check
-    if (session.user.cid !== validatedData.cid) {
-      return { success: false, error: 'Unauthorized access to company data' }
+    const companyId = session.user.cid
+    if (!companyId) {
+      return { error: "Company context required" }
     }
 
-    // Get company users for filtering
-    const companyUsers = await db.user.findMany({
-      where: { cid },
-      select: { id: true }
-    })
-    const userIds = companyUsers.map(user => user.id)
+    const validatedInput = BoardMetricsSchema.parse(input || {})
+    const { dateRange, includeSections } = validatedInput
 
-    if (userIds.length === 0) {
-      // No users in company, return empty metrics
-      const emptyMetrics: BoardMetrics = {
-        totalBoards: 0,
-        activeBoardsWithTasks: 0,
-        boardsCreatedThisMonth: 0,
-        averageTasksPerBoard: 0,
-        mostActiveBoard: null,
-        boardUtilization: [],
-        trendData: {
-          boardsCreated: 0,
-          percentChange: 0
-        }
-      }
-      return { success: true, data: emptyMetrics }
-    }
-
-    // Date boundaries for filtering
+    // Calculate date filter
     const now = new Date()
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0)
+    let dateFilter: Date | undefined
 
-    // Get all boards created by company users
-    const allBoards = await db.board.findMany({
+    switch (dateRange) {
+      case "7d":
+        dateFilter = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+        break
+      case "30d":
+        dateFilter = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+        break
+      case "90d":
+        dateFilter = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+        break
+      default:
+        dateFilter = undefined
+    }
+
+    // Get total boards accessible to user or in same company
+    const totalBoards = await db.board.count({
       where: {
-        createdBy: { in: userIds }
+        OR: [
+          { access: { has: session.user.id } }, // User has explicit access
+          { createdBy: session.user.id }, // User is creator
+        ],
+        ...(dateFilter && { createdAt: { gte: dateFilter } }),
+      },
+    })
+
+    // Get boards with tasks (active boards)
+    const boardsWithTasksQuery = await db.board.findMany({
+      where: {
+        OR: [
+          { access: { has: session.user.id } }, // User has explicit access
+          { createdBy: session.user.id }, // User is creator
+        ],
       },
       include: {
+        _count: {
+          select: {
+            boardSections: true,
+          },
+        },
         boardSections: {
           include: {
+            _count: {
+              select: {
+                tasks: true,
+              },
+            },
             tasks: {
-              include: {
-                createdBy: true
-              }
-            }
-          }
-        }
+              select: {
+                id: true,
+                updatedAt: true,
+              },
+              orderBy: {
+                updatedAt: "desc",
+              },
+              take: 1,
+            },
+          },
+        },
       },
-      orderBy: {
-        createdAt: 'desc'
-      }
     })
 
-    // Parallel queries for month-based metrics
-    const [
-      boardsThisMonth,
-      boardsLastMonth
-    ] = await Promise.all([
-      db.board.count({
-        where: {
-          createdBy: { in: userIds },
-          createdAt: { gte: startOfMonth }
-        }
-      }),
-      
-      db.board.count({
-        where: {
-          createdBy: { in: userIds },
-          createdAt: { 
-            gte: lastMonth,
-            lte: endOfLastMonth
-          }
+    const boardsWithTasks = boardsWithTasksQuery.filter(
+      (board) => board.boardSections.some(section => section._count.tasks > 0)
+    ).length
+
+    const activeBoardsCount = boardsWithTasksQuery.filter((board) => {
+      const lastActivity = board.boardSections.flatMap(section => section.tasks)[0]?.updatedAt
+      if (!lastActivity) return false
+      const daysSinceActivity =
+        (now.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24)
+      return daysSinceActivity <= 7 // Active in last 7 days
+    }).length
+
+    // Calculate average tasks per board
+    const totalTasksAcrossBoards = boardsWithTasksQuery.reduce(
+      (sum, board) => sum + board.boardSections.reduce((sectionSum, section) => sectionSum + section._count.tasks, 0),
+      0
+    )
+    const averageTasksPerBoard =
+      totalBoards > 0 ? Math.round(totalTasksAcrossBoards / totalBoards) : 0
+
+    // Get most active boards (top 5)
+    const mostActiveBoards = boardsWithTasksQuery
+      .map((board) => {
+        const taskCount = board.boardSections.reduce((sum, section) => sum + section._count.tasks, 0)
+        const lastActivity = board.boardSections.flatMap(section => section.tasks)[0]?.updatedAt || board.updatedAt
+        
+        return {
+          id: board.id,
+          title: board.name,
+          taskCount,
+          sectionCount: includeSections ? board._count.boardSections : 0,
+          lastActivity,
         }
       })
-    ])
+      .sort((a, b) => {
+        // Sort by task count first, then by last activity
+        if (a.taskCount !== b.taskCount) {
+          return b.taskCount - a.taskCount
+        }
+        return (
+          new Date(b.lastActivity).getTime() -
+          new Date(a.lastActivity).getTime()
+        )
+      })
+      .slice(0, 5)
 
-    // Calculate metrics
-    const totalBoards = allBoards.length
+    // Get board activity metrics
+    const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
 
-    // Calculate board utilization and find most active board
-    const boardUtilization = allBoards.map(board => {
-      const allTasks = board.boardSections.flatMap(section => section.tasks)
-      const completedTasks = allTasks.filter(task => task.status === 'COMPLETED')
-      const completionRate = allTasks.length > 0 ? (completedTasks.length / allTasks.length) * 100 : 0
-
-      return {
-        boardId: board.id,
-        boardName: board.name,
-        taskCount: allTasks.length,
-        completionRate
-      }
+    const boardsCreatedThisWeek = await db.board.count({
+      where: {
+        OR: [
+          { access: { has: session.user.id } },
+          { createdBy: session.user.id },
+        ],
+        createdAt: { gte: weekStart },
+      },
     })
 
-    // Boards with tasks
-    const activeBoardsWithTasks = boardUtilization.filter(board => board.taskCount > 0).length
+    const boardsUpdatedThisWeek = await db.board.count({
+      where: {
+        OR: [
+          { access: { has: session.user.id } },
+          { createdBy: session.user.id },
+        ],
+        updatedAt: { gte: weekStart },
+        createdAt: { lt: weekStart }, // Exclude newly created ones
+      },
+    })
 
-    // Average tasks per board
-    const totalTasks = boardUtilization.reduce((sum, board) => sum + board.taskCount, 0)
-    const averageTasksPerBoard = totalBoards > 0 ? totalTasks / totalBoards : 0
+    // Section distribution (if requested)
+    let sectionDistribution = {
+      totalSections: 0,
+      averageSectionsPerBoard: 0,
+      sectionUtilization: 0,
+    }
 
-    // Most active board
-    const mostActiveBoard = boardUtilization.length > 0 
-      ? boardUtilization.reduce((max, board) => 
-          board.taskCount > max.taskCount ? board : max
-        )
-      : null
+    if (includeSections) {
+      const totalSections = await db.boardSection.count({
+        where: {
+          board: {
+            OR: [
+              { access: { has: session.user.id } },
+              { createdBy: session.user.id },
+            ],
+          },
+        },
+      })
 
-    // Convert to expected format
-    const mostActiveBoardFormatted = mostActiveBoard ? {
-      id: mostActiveBoard.boardId,
-      name: mostActiveBoard.boardName,
-      taskCount: mostActiveBoard.taskCount
-    } : null
+      const sectionsWithTasks = await db.boardSection.count({
+        where: {
+          board: {
+            OR: [
+              { access: { has: session.user.id } },
+              { createdBy: session.user.id },
+            ],
+          },
+          tasks: {
+            some: {},
+          },
+        },
+      })
 
-    // Trend calculation (current month vs last month)
-    const percentChange = boardsLastMonth > 0 
-      ? ((boardsThisMonth - boardsLastMonth) / boardsLastMonth) * 100 
-      : boardsThisMonth > 0 ? 100 : 0
-
-    const metrics: BoardMetrics = {
-      totalBoards,
-      activeBoardsWithTasks,
-      boardsCreatedThisMonth: boardsThisMonth,
-      averageTasksPerBoard,
-      mostActiveBoard: mostActiveBoardFormatted,
-      boardUtilization,
-      trendData: {
-        boardsCreated: boardsThisMonth,
-        percentChange
+      sectionDistribution = {
+        totalSections,
+        averageSectionsPerBoard:
+          totalBoards > 0 ? Math.round(totalSections / totalBoards) : 0,
+        sectionUtilization:
+          totalSections > 0
+            ? Math.round((sectionsWithTasks / totalSections) * 100)
+            : 0,
       }
     }
 
-    return { success: true, data: metrics }
+    // Calculate trends
+    const lastWeekStart = new Date(
+      weekStart.getTime() - 7 * 24 * 60 * 60 * 1000
+    )
+    const boardsLastWeek = await db.board.count({
+      where: {
+        OR: [
+          { access: { has: session.user.id } },
+          { createdBy: session.user.id },
+        ],
+        createdAt: { gte: lastWeekStart, lt: weekStart },
+      },
+    })
+
+    const lastMonthStart = new Date(
+      monthStart.getFullYear(),
+      monthStart.getMonth() - 1,
+      1
+    )
+    const boardsLastMonth = await db.board.count({
+      where: {
+        OR: [
+          { access: { has: session.user.id } },
+          { createdBy: session.user.id },
+        ],
+        createdAt: { gte: lastMonthStart, lt: monthStart },
+      },
+    })
+
+    const boardsThisMonth = await db.board.count({
+      where: {
+        OR: [
+          { access: { has: session.user.id } },
+          { createdBy: session.user.id },
+        ],
+        createdAt: { gte: monthStart },
+      },
+    })
+
+    const weekOverWeek =
+      boardsLastWeek > 0
+        ? ((boardsCreatedThisWeek - boardsLastWeek) / boardsLastWeek) * 100
+        : 0
+    const monthOverMonth =
+      boardsLastMonth > 0
+        ? ((boardsThisMonth - boardsLastMonth) / boardsLastMonth) * 100
+        : 0
+
+    const result: BoardMetricsData = {
+      totalBoards,
+      activeBoardsCount,
+      boardsWithTasks,
+      averageTasksPerBoard,
+      mostActiveBoards,
+      boardActivity: {
+        created: boardsCreatedThisWeek,
+        updated: boardsUpdatedThisWeek,
+        archived: 0, // TODO: Implement if archived status is added
+      },
+      sectionDistribution,
+      trends: {
+        weekOverWeek: Math.round(weekOverWeek * 100) / 100,
+        monthOverMonth: Math.round(monthOverMonth * 100) / 100,
+      },
+    }
+
+    return { data: result }
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { 
-        success: false, 
-        error: 'Validation failed'
-      }
+      return { error: "Validation failed" }
     }
-    
-    console.error('Board metrics error:', error)
-    return { success: false, error: 'Failed to fetch board metrics' }
+    console.error("Board metrics error:", error)
+    return { error: "Failed to retrieve board metrics" }
   }
 }

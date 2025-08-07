@@ -10,14 +10,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-import type { TaskMetrics } from "@/actions/dashboard/get-task-metrics";
-import type { BoardMetrics } from "@/actions/dashboard/get-board-metrics";
-import type { UserMetrics } from "@/actions/dashboard/get-user-metrics";
+import type { TaskMetricsData } from "@/actions/dashboard/get-task-metrics";
+import type { BoardMetricsData } from "@/actions/dashboard/get-board-metrics";
+import type { UserMetricsData } from "@/actions/dashboard/get-user-metrics";
 
 interface DynamicSectionCardsProps {
-  taskMetrics?: TaskMetrics;
-  boardMetrics?: BoardMetrics;
-  userMetrics?: UserMetrics;
+  taskMetrics?: TaskMetricsData;
+  boardMetrics?: BoardMetricsData;
+  userMetrics?: UserMetricsData;
   isLoading?: boolean;
 }
 
@@ -60,15 +60,15 @@ export function DynamicSectionCards({
     {
       title: "Total Tasks",
       value: formatNumber(taskMetrics?.totalTasks || 0),
-      trend: taskMetrics ? formatPercentage(taskMetrics.trendData.percentChange) : null,
+      trend: taskMetrics ? formatPercentage(taskMetrics.trends.monthOverMonth) : null,
       description: `${taskMetrics?.tasksByStatus.IN_PROGRESS || 0} in progress`,
     },
     
     // Active Projects Card
     {
       title: "Active Projects",
-      value: formatNumber(boardMetrics?.activeBoardsWithTasks || 0),
-      trend: boardMetrics ? formatPercentage(boardMetrics.trendData.percentChange) : null,
+      value: formatNumber(boardMetrics?.activeBoardsCount || 0),
+      trend: boardMetrics ? formatPercentage(boardMetrics.trends.monthOverMonth) : null,
       description: `${boardMetrics?.totalBoards || 0} total boards`,
     },
     
@@ -77,7 +77,7 @@ export function DynamicSectionCards({
       title: "Overdue Tasks",
       value: formatNumber(taskMetrics?.overdueTasks || 0),
       trend: null, // Overdue doesn't have a meaningful trend
-      description: `${taskMetrics?.priorityDistribution.CRITICAL || 0} critical priority`,
+      description: `${taskMetrics?.overdueTasks || 0} tasks overdue`,
       isAlert: (taskMetrics?.overdueTasks || 0) > 0,
     },
     
@@ -91,18 +91,18 @@ export function DynamicSectionCards({
     
     // AI Conversations Card
     {
-      title: "AI Conversations",
-      value: formatNumber(userMetrics?.aiUsageStats.totalConversations || 0),
-      trend: null, // We could add growth trend here later
-      description: `${userMetrics?.aiUsageStats.activeAIUsers || 0} active users`,
+      title: "Active Users",
+      value: formatNumber(userMetrics?.activeUsersCount || 0),
+      trend: userMetrics ? formatPercentage(userMetrics.trends.activeUsersGrowth) : null,
+      description: `${userMetrics?.totalUsers || 0} total users`,
     },
     
-    // Document Processing Card
+    // Team Productivity Card
     {
-      title: "Documents Processed",
-      value: formatNumber(userMetrics?.documentStats.totalDocuments || 0),
-      trend: null, // We could add processing trend here later
-      description: `${userMetrics?.documentStats.averageProcessingSuccessRate.toFixed(1) || '0.0'}% success rate`,
+      title: "Team Productivity",
+      value: `${userMetrics?.userProductivity.avgCompletionRate || 0}%`,
+      trend: null, // We could add productivity trend here later
+      description: `${userMetrics?.userProductivity.avgTasksPerUser || 0} avg tasks/user`,
     },
   ];
 

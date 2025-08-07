@@ -5,239 +5,321 @@ import db from "@/lib/db"
 import { z } from "zod"
 
 const UserMetricsSchema = z.object({
-  cid: z.string().min(1, "Company ID is required")
+  dateRange: z.enum(["7d", "30d", "90d", "all"]).optional().default("30d"),
+  includeActivity: z.boolean().optional().default(true),
 })
 
-export interface UserMetrics {
+export type UserMetricsData = {
   totalUsers: number
-  activeUsers: number
-  userActivitySummary: {
-    userId: string
-    userName: string | null
-    email: string
-    tasksAssigned: number
-    tasksCompleted: number
-    tasksCreated: number
-    productivityScore: number
-    lastActive: Date | null
-  }[]
-  teamProductivity: {
-    totalTasksAssigned: number
-    totalTasksCompleted: number
-    averageCompletionRate: number
-    mostProductiveUser: {
+  activeUsersCount: number
+  newUsersThisMonth: number
+  userProductivity: {
+    avgTasksPerUser: number
+    avgCompletionRate: number
+    topPerformers: Array<{
       id: string
       name: string | null
       email: string
+      tasksCompleted: number
       completionRate: number
-    } | null
+    }>
   }
-  aiUsageStats: {
-    totalConversations: number
-    activeAIUsers: number
-    averageConversationsPerUser: number
+  activityBreakdown: {
+    daily: number[]
+    weekly: number[]
+    loginFrequency: {
+      daily: number
+      weekly: number
+      monthly: number
+    }
   }
-  documentStats: {
-    totalDocuments: number
-    documentsByUser: number
-    averageProcessingSuccessRate: number
+  roleDistribution: {
+    [key: string]: number
+  }
+  trends: {
+    activeUsersGrowth: number
+    productivityTrend: number
   }
 }
 
-export async function getUserMetrics(cid: string): Promise<{ success: boolean; data?: UserMetrics; error?: string }> {
+export async function getUserMetrics(
+  input?: z.infer<typeof UserMetricsSchema>
+): Promise<{ data?: UserMetricsData; error?: string }> {
   try {
-    // Session validation
     const session = await auth()
     if (!session?.user) {
-      return { success: false, error: 'Authentication required' }
+      return { error: "Authentication required" }
     }
 
-    // Input validation
-    const validatedData = UserMetricsSchema.parse({ cid })
-    
-    // Company data isolation check
-    if (session.user.cid !== validatedData.cid) {
-      return { success: false, error: 'Unauthorized access to company data' }
+    const companyId = session.user.cid
+    if (!companyId) {
+      return { error: "Company context required" }
     }
 
-    // Get all users in the company
-    const companyUsers = await db.user.findMany({
-      where: { cid },
+    const validatedInput = UserMetricsSchema.parse(input || {})
+    const { dateRange, includeActivity } = validatedInput
+
+    // Calculate date filter
+    const now = new Date()
+    let dateFilter: Date | undefined
+
+    switch (dateRange) {
+      case "7d":
+        dateFilter = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+        break
+      case "30d":
+        dateFilter = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+        break
+      case "90d":
+        dateFilter = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+        break
+      default:
+        dateFilter = undefined
+    }
+
+    // Get total users in company
+    const totalUsers = await db.user.count({
+      where: {
+        cid: companyId,
+      },
+    })
+
+    // Get users with recent activity (active users)
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+    const usersWithRecentActivity = await db.user.findMany({
+      where: {
+        cid: companyId,
+        OR: [
+          {
+            assignedTasks: {
+              some: {
+                updatedAt: { gte: weekAgo },
+              },
+            },
+          },
+          {
+            createdTasks: {
+              some: {
+                updatedAt: { gte: weekAgo },
+              },
+            },
+          },
+          {
+            updatedAt: { gte: weekAgo },
+          },
+        ],
+      },
+      select: {
+        id: true,
+        updatedAt: true,
+      },
+    })
+
+    const activeUsersCount = usersWithRecentActivity.length
+
+    // Get new users this month
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const newUsersThisMonth = await db.user.count({
+      where: {
+        cid: companyId,
+        createdAt: { gte: monthStart },
+      },
+    })
+
+    // Get user productivity data
+    const usersWithTaskData = await db.user.findMany({
+      where: {
+        cid: companyId,
+      },
       include: {
+        _count: {
+          select: {
+            assignedTasks: {
+              where: dateFilter
+                ? { createdAt: { gte: dateFilter } }
+                : undefined,
+            },
+          },
+        },
         assignedTasks: {
-          select: {
-            id: true,
-            status: true,
-            createdAt: true,
-            updatedAt: true
-          }
-        },
-        createdTasks: {
-          select: {
-            id: true,
-            status: true,
-            createdAt: true
-          }
-        },
-        aiConversations: {
-          select: {
-            id: true,
-            createdAt: true
-          }
-        },
-        documents: {
-          select: {
-            id: true,
-            confidence: true,
-            processedAt: true
-          }
-        },
-        securityAuditLogs: {
-          select: {
-            timestamp: true
+          where: {
+            status: "COMPLETED",
+            ...(dateFilter && { updatedAt: { gte: dateFilter } }),
           },
-          orderBy: {
-            timestamp: 'desc'
+          select: {
+            id: true,
+            updatedAt: true,
           },
-          take: 1
-        }
-      }
+        },
+      },
     })
 
-    const totalUsers = companyUsers.length
+    // Calculate productivity metrics
+    const totalAssignedTasks = usersWithTaskData.reduce(
+      (sum, user) => sum + user._count.assignedTasks,
+      0
+    )
+    const totalCompletedTasks = usersWithTaskData.reduce(
+      (sum, user) => sum + user.assignedTasks.length,
+      0
+    )
 
-    if (totalUsers === 0) {
-      const emptyMetrics: UserMetrics = {
-        totalUsers: 0,
-        activeUsers: 0,
-        userActivitySummary: [],
-        teamProductivity: {
-          totalTasksAssigned: 0,
-          totalTasksCompleted: 0,
-          averageCompletionRate: 0,
-          mostProductiveUser: null
-        },
-        aiUsageStats: {
-          totalConversations: 0,
-          activeAIUsers: 0,
-          averageConversationsPerUser: 0
-        },
-        documentStats: {
-          totalDocuments: 0,
-          documentsByUser: 0,
-          averageProcessingSuccessRate: 0
-        }
-      }
-      return { success: true, data: emptyMetrics }
-    }
-
-    // Calculate user activity summary
-    const userActivitySummary = companyUsers.map(user => {
-      const assignedTasks = user.assignedTasks.length
-      const completedTasks = user.assignedTasks.filter(task => task.status === 'COMPLETED').length
-      const createdTasks = user.createdTasks.length
-      
-      // Calculate productivity score (0-100 based on completion rate and activity)
-      const completionRate = assignedTasks > 0 ? (completedTasks / assignedTasks) * 100 : 0
-      const activityFactor = Math.min((assignedTasks + createdTasks) / 10, 1) // Max factor of 1 for 10+ tasks
-      const productivityScore = completionRate * activityFactor
-
-      // Get last activity from security audit logs
-      const lastActive = user.securityAuditLogs.length > 0 
-        ? user.securityAuditLogs[0].timestamp 
-        : null
-
-      return {
-        userId: user.id,
-        userName: user.name,
-        email: user.email,
-        tasksAssigned: assignedTasks,
-        tasksCompleted: completedTasks,
-        tasksCreated: createdTasks,
-        productivityScore: Math.round(productivityScore),
-        lastActive
-      }
-    })
-
-    // Calculate team productivity
-    const totalTasksAssigned = userActivitySummary.reduce((sum, user) => sum + user.tasksAssigned, 0)
-    const totalTasksCompleted = userActivitySummary.reduce((sum, user) => sum + user.tasksCompleted, 0)
-    const averageCompletionRate = totalTasksAssigned > 0 ? (totalTasksCompleted / totalTasksAssigned) * 100 : 0
-
-    // Find most productive user
-    const mostProductiveUser = userActivitySummary.length > 0
-      ? userActivitySummary.reduce((max, user) => {
-          const currentRate = user.tasksAssigned > 0 ? (user.tasksCompleted / user.tasksAssigned) * 100 : 0
-          const maxRate = max.tasksAssigned > 0 ? (max.tasksCompleted / max.tasksAssigned) * 100 : 0
-          return currentRate > maxRate ? user : max
-        })
-      : null
-
-    const mostProductiveUserFormatted = mostProductiveUser ? {
-      id: mostProductiveUser.userId,
-      name: mostProductiveUser.userName,
-      email: mostProductiveUser.email,
-      completionRate: mostProductiveUser.tasksAssigned > 0 
-        ? (mostProductiveUser.tasksCompleted / mostProductiveUser.tasksAssigned) * 100 
+    const avgTasksPerUser =
+      totalUsers > 0 ? Math.round(totalAssignedTasks / totalUsers) : 0
+    const avgCompletionRate =
+      totalAssignedTasks > 0
+        ? Math.round((totalCompletedTasks / totalAssignedTasks) * 100)
         : 0
-    } : null
 
-    // Calculate AI usage statistics
-    const totalConversations = companyUsers.reduce((sum, user) => sum + user.aiConversations.length, 0)
-    const activeAIUsers = companyUsers.filter(user => user.aiConversations.length > 0).length
-    const averageConversationsPerUser = totalUsers > 0 ? totalConversations / totalUsers : 0
+    // Get top performers (top 5)
+    const topPerformers = usersWithTaskData
+      .map((user) => {
+        const tasksCompleted = user.assignedTasks.length
+        const totalAssigned = user._count.assignedTasks
+        const completionRate =
+          totalAssigned > 0
+            ? Math.round((tasksCompleted / totalAssigned) * 100)
+            : 0
 
-    // Calculate document statistics
-    const totalDocuments = companyUsers.reduce((sum, user) => sum + user.documents.length, 0)
-    const documentsWithUsers = companyUsers.filter(user => user.documents.length > 0).length
-    
-    // Calculate processing success rate (confidence > 0.7 considered successful)
-    const allDocuments = companyUsers.flatMap(user => user.documents)
-    const successfulProcessing = allDocuments.filter(doc => doc.confidence > 0.7).length
-    const averageProcessingSuccessRate = totalDocuments > 0 
-      ? (successfulProcessing / totalDocuments) * 100 
-      : 0
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          tasksCompleted,
+          completionRate,
+        }
+      })
+      .filter((user) => user.tasksCompleted > 0) // Only include users with completed tasks
+      .sort((a, b) => {
+        // Sort by completion rate first, then by tasks completed
+        if (a.completionRate !== b.completionRate) {
+          return b.completionRate - a.completionRate
+        }
+        return b.tasksCompleted - a.tasksCompleted
+      })
+      .slice(0, 5)
 
-    // Determine active users (users with recent activity within last 30 days)
-    const thirtyDaysAgo = new Date()
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-    
-    const activeUsers = userActivitySummary.filter(user => 
-      user.lastActive && user.lastActive >= thirtyDaysAgo
-    ).length
-
-    const metrics: UserMetrics = {
-      totalUsers,
-      activeUsers,
-      userActivitySummary,
-      teamProductivity: {
-        totalTasksAssigned,
-        totalTasksCompleted,
-        averageCompletionRate,
-        mostProductiveUser: mostProductiveUserFormatted
+    // Activity breakdown (simplified version)
+    let activityBreakdown = {
+      daily: [] as number[],
+      weekly: [] as number[],
+      loginFrequency: {
+        daily: 0,
+        weekly: 0,
+        monthly: 0,
       },
-      aiUsageStats: {
-        totalConversations,
-        activeAIUsers,
-        averageConversationsPerUser
-      },
-      documentStats: {
-        totalDocuments,
-        documentsByUser: documentsWithUsers,
-        averageProcessingSuccessRate
+    }
+
+    if (includeActivity) {
+      // Daily login counts for last 7 days
+      const dailyLogins = []
+      for (let i = 6; i >= 0; i--) {
+        const dayStart = new Date(now.getTime() - i * 24 * 60 * 60 * 1000)
+        dayStart.setHours(0, 0, 0, 0)
+        const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000)
+
+        const loginCount = await db.user.count({
+          where: {
+            cid: companyId,
+            updatedAt: {
+              gte: dayStart,
+              lt: dayEnd,
+            },
+          },
+        })
+
+        dailyLogins.push(loginCount)
+      }
+
+      activityBreakdown.daily = dailyLogins
+
+      // Login frequency
+      const dailyLoginUsers = await db.user.count({
+        where: {
+          cid: companyId,
+          updatedAt: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) },
+        },
+      })
+
+      const weeklyLoginUsers = await db.user.count({
+        where: {
+          cid: companyId,
+          updatedAt: { gte: weekAgo },
+        },
+      })
+
+      const monthlyLoginUsers = await db.user.count({
+        where: {
+          cid: companyId,
+          updatedAt: { gte: monthStart },
+        },
+      })
+
+      activityBreakdown.loginFrequency = {
+        daily: dailyLoginUsers,
+        weekly: weeklyLoginUsers,
+        monthly: monthlyLoginUsers,
       }
     }
 
-    return { success: true, data: metrics }
+    // Role distribution
+    const roleDistribution = await db.user.groupBy({
+      by: ["role"],
+      where: {
+        cid: companyId,
+      },
+      _count: {
+        id: true,
+      },
+    })
+
+    const roleBreakdown: { [key: string]: number } = {}
+    roleDistribution.forEach((item) => {
+      roleBreakdown[item.role] = item._count.id
+    })
+
+    // Calculate trends
+    const lastMonth = new Date(
+      monthStart.getFullYear(),
+      monthStart.getMonth() - 1,
+      1
+    )
+    const activeUsersLastMonth = await db.user.count({
+      where: {
+        cid: companyId,
+        updatedAt: { gte: lastMonth, lt: monthStart },
+      },
+    })
+
+    const activeUsersGrowth =
+      activeUsersLastMonth > 0
+        ? ((activeUsersCount - activeUsersLastMonth) / activeUsersLastMonth) *
+          100
+        : 0
+
+    const result: UserMetricsData = {
+      totalUsers,
+      activeUsersCount,
+      newUsersThisMonth,
+      userProductivity: {
+        avgTasksPerUser,
+        avgCompletionRate,
+        topPerformers,
+      },
+      activityBreakdown,
+      roleDistribution: roleBreakdown,
+      trends: {
+        activeUsersGrowth: Math.round(activeUsersGrowth * 100) / 100,
+        productivityTrend: 0, // TODO: Calculate productivity trend
+      },
+    }
+
+    return { data: result }
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { 
-        success: false, 
-        error: 'Validation failed'
-      }
+      return { error: "Validation failed" }
     }
-    
-    console.error('User metrics error:', error)
-    return { success: false, error: 'Failed to fetch user metrics' }
+    console.error("User metrics error:", error)
+    return { error: "Failed to retrieve user metrics" }
   }
 }
