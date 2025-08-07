@@ -21,7 +21,17 @@ import {
   Search,
   Target,
   Activity,
-  Zap
+  Zap,
+  Server,
+  Database,
+  Shield,
+  Terminal,
+  HardDrive,
+  Monitor,
+  Lock,
+  Key,
+  AlertTriangle,
+  CheckSquare
 } from "lucide-react";
 
 const DocumentationPage = () => {
@@ -30,7 +40,7 @@ const DocumentationPage = () => {
       <SiteHeader title="Documentation">
         <div className="flex items-center gap-2">
           <Badge variant="outline">AI-Powered</Badge>
-          <Badge variant="secondary">Phase 2</Badge>
+          <Badge variant="secondary">Phase 3</Badge>
         </div>
       </SiteHeader>
       <div className="flex flex-1 flex-col">
@@ -41,11 +51,12 @@ const DocumentationPage = () => {
           </div>
 
           <Tabs defaultValue="getting-started" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="getting-started">Getting Started</TabsTrigger>
               <TabsTrigger value="advanced-ai">Advanced AI</TabsTrigger>
               <TabsTrigger value="documents">Documents</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
+              <TabsTrigger value="deployment">Deployment</TabsTrigger>
             </TabsList>
 
             {/* Getting Started Tab */}
@@ -979,6 +990,462 @@ const DocumentationPage = () => {
                         <li>• Enhanced team satisfaction scores</li>
                         <li>• Decreased bottleneck occurrence</li>
                       </ul>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+        </TabsContent>
+
+        {/* Deployment Tab */}
+        <TabsContent value="deployment" className="space-y-6">
+          <section className="space-y-4">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">Administrator Deployment & Configuration</h2>
+              <p className="text-muted-foreground">Comprehensive deployment and configuration guide for system administrators</p>
+            </div>
+
+            {/* System Requirements */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Server className="h-5 w-5 text-blue-600" />
+                  System Requirements
+                </CardTitle>
+                <CardDescription>Hardware and software requirements for optimal performance</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium text-green-600 mb-2">Minimum Requirements</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          <HardDrive className="h-4 w-4 text-gray-500" />
+                          <span><strong>CPU:</strong> 4 cores, 2.4GHz+ (Intel/AMD)</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Monitor className="h-4 w-4 text-gray-500" />
+                          <span><strong>RAM:</strong> 8GB minimum, 16GB recommended</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Database className="h-4 w-4 text-gray-500" />
+                          <span><strong>Storage:</strong> 50GB SSD minimum, 100GB+ recommended</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-blue-600 mb-2">Production Requirements</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          <HardDrive className="h-4 w-4 text-gray-500" />
+                          <span><strong>CPU:</strong> 8+ cores, 3.0GHz+ with good single-thread performance</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Monitor className="h-4 w-4 text-gray-500" />
+                          <span><strong>RAM:</strong> 32GB+ for optimal performance</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Database className="h-4 w-4 text-gray-500" />
+                          <span><strong>Storage:</strong> 200GB+ NVMe SSD with high IOPS</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium text-purple-600 mb-2">Software Dependencies</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="p-2 bg-muted rounded">
+                          <strong>Node.js:</strong> v18.x or v20.x (LTS versions)
+                        </div>
+                        <div className="p-2 bg-muted rounded">
+                          <strong>PostgreSQL:</strong> v14+ with pgvector extension
+                        </div>
+                        <div className="p-2 bg-muted rounded">
+                          <strong>Redis:</strong> v6.x+ for MCP SSE transport and caching
+                        </div>
+                        <div className="p-2 bg-muted rounded">
+                          <strong>SSL Certificate:</strong> Valid certificate for HTTPS
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Installation Procedures */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Terminal className="h-5 w-5 text-green-600" />
+                  Installation Procedures
+                </CardTitle>
+                <CardDescription>Step-by-step installation and setup guide</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium mb-2">1. System Preparation</h4>
+                    <div className="p-4 bg-gray-900 text-gray-100 rounded-lg font-mono text-sm overflow-x-auto">
+                      <div className="space-y-1">
+                        <div>{`# Update system packages`}</div>
+                        <div>sudo apt update && sudo apt upgrade -y</div>
+                        <div></div>
+                        <div>{`# Install Node.js (using NodeSource repository)`}</div>
+                        <div>curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -</div>
+                        <div>sudo apt-get install -y nodejs</div>
+                        <div></div>
+                        <div>{`# Install PostgreSQL with pgvector`}</div>
+                        <div>sudo apt install postgresql postgresql-contrib</div>
+                        <div>sudo -u postgres psql -c &ldquo;CREATE EXTENSION IF NOT EXISTS vector;&rdquo;</div>
+                        <div></div>
+                        <div>{`# Install Redis`}</div>
+                        <div>sudo apt install redis-server</div>
+                        <div>sudo systemctl enable redis-server</div>
+                        <div>sudo systemctl start redis-server</div>
+                        <div></div>
+                        <div>{`# Install pnpm globally`}</div>
+                        <div>npm install -g pnpm</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-medium mb-2">2. Application Setup</h4>
+                    <div className="p-4 bg-gray-900 text-gray-100 rounded-lg font-mono text-sm overflow-x-auto">
+                      <div className="space-y-1">
+                        <div>{`# Clone repository`}</div>
+                        <div>git clone https://github.com/your-org/taskhq.xmation.ai.git</div>
+                        <div>cd taskhq.xmation.ai</div>
+                        <div></div>
+                        <div>{`# Install dependencies`}</div>
+                        <div>pnpm install</div>
+                        <div></div>
+                        <div>{`# Generate Prisma client`}</div>
+                        <div>pnpm prisma generate</div>
+                        <div></div>
+                        <div>{`# Run database migrations`}</div>
+                        <div>pnpm prisma db push</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Environment Configuration */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5 text-orange-600" />
+                  Environment Configuration
+                </CardTitle>
+                <CardDescription>Critical environment variables and configuration settings</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-blue-600">Core Application Variables</h4>
+                    <div className="p-4 bg-gray-900 text-gray-100 rounded-lg font-mono text-xs overflow-x-auto">
+                      <div className="space-y-1">
+                        <div>{`# Database Configuration`}</div>
+                        <div>DATABASE_URL=&ldquo;postgresql://username:password@localhost:5432/taskhq&rdquo;</div>
+                        <div>DIRECT_URL=&ldquo;postgresql://username:password@localhost:5432/taskhq&rdquo;</div>
+                        <div></div>
+                        <div>{`# Authentication`}</div>
+                        <div>AUTH_SECRET=&ldquo;your-unique-auth-secret-here&rdquo;</div>
+                        <div>NEXTAUTH_URL=&ldquo;https://your-domain.com&rdquo;</div>
+                        <div></div>
+                        <div>{`# Email Configuration`}</div>
+                        <div>RESEND_API_KEY=&ldquo;re_your_resend_api_key&rdquo;</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-purple-600">AI and RAG Configuration</h4>
+                    <div className="p-4 bg-gray-900 text-gray-100 rounded-lg font-mono text-xs overflow-x-auto">
+                      <div className="space-y-1">
+                        <div>{`# OpenAI Configuration`}</div>
+                        <div>OPENAI_API_KEY=&ldquo;sk-your-openai-api-key&rdquo;</div>
+                        <div>AI_MODEL=&ldquo;gpt-4-turbo&rdquo;</div>
+                        <div>EMBEDDING_MODEL=&ldquo;text-embedding-ada-002&rdquo;</div>
+                        <div>EMBEDDING_DIMENSIONS=&ldquo;1536&rdquo;</div>
+                        <div></div>
+                        <div>{`# MCP Configuration`}</div>
+                        <div>REDIS_URL=&ldquo;redis://localhost:6379&rdquo;</div>
+                        <div>MCP_SSE_ENABLED=&ldquo;true&rdquo;</div>
+                        <div>MCP_MAX_DURATION=&ldquo;800&rdquo;</div>
+                        <div></div>
+                        <div>{`# Vector Database`}</div>
+                        <div>PGVECTOR_ENABLED=&ldquo;true&rdquo;</div>
+                        <div>SIMILARITY_THRESHOLD=&ldquo;0.7&rdquo;</div>
+                        <div></div>
+                        <div>{`# Rate Limiting`}</div>
+                        <div>AI_RATE_LIMIT_REQUESTS=&ldquo;100&rdquo;</div>
+                        <div>AI_RATE_LIMIT_WINDOW=&ldquo;3600&rdquo;</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Database Configuration */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Database className="h-5 w-5 text-green-600" />
+                  Database Configuration & Optimization
+                </CardTitle>
+                <CardDescription>PostgreSQL and pgvector setup for optimal RAG performance</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-green-600 mb-2">PostgreSQL Performance Tuning</h4>
+                    <div className="p-4 bg-gray-900 text-gray-100 rounded-lg font-mono text-xs overflow-x-auto">
+                      <div className="space-y-1">
+                        <div>{`-- postgresql.conf optimizations for RAG workloads`}</div>
+                        <div>{`shared_buffers = '2GB'                    -- 25% of total RAM`}</div>
+                        <div>{`effective_cache_size = '6GB'              -- 75% of total RAM`}</div>
+                        <div>{`maintenance_work_mem = '256MB'            -- For index creation`}</div>
+                        <div>{`work_mem = '64MB'                         -- Per connection work memory`}</div>
+                        <div>{`max_connections = 100                     -- Adjust based on expected load`}</div>
+                        <div>{`checkpoint_completion_target = 0.9        -- Smooth checkpoints`}</div>
+                        <div>{`wal_buffers = '16MB'                      -- Write-ahead log buffers`}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium text-blue-600 mb-2">pgvector Extension Setup</h4>
+                    <div className="p-4 bg-gray-900 text-gray-100 rounded-lg font-mono text-xs overflow-x-auto">
+                      <div className="space-y-1">
+                        <div>{`-- Enable pgvector extension`}</div>
+                        <div>CREATE EXTENSION IF NOT EXISTS vector;</div>
+                        <div></div>
+                        <div>{`-- Verify extension installation`}</div>
+                        <div>{`SELECT * FROM pg_extension WHERE extname = 'vector';`}</div>
+                        <div></div>
+                        <div>{`-- Test vector operations`}</div>
+                        <div>{`SELECT vector_dims('[1,2,3]'::vector);`}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium text-purple-600 mb-2">Performance Indexes</h4>
+                    <div className="p-4 bg-gray-900 text-gray-100 rounded-lg font-mono text-xs overflow-x-auto">
+                      <div className="space-y-1">
+                        <div>{`-- Indexes for TaskHQ core tables with company isolation`}</div>
+                        <div>CREATE INDEX CONCURRENTLY idx_tasks_company_id ON tasks(company_id);</div>
+                        <div>CREATE INDEX CONCURRENTLY idx_boards_company_id ON boards(company_id);</div>
+                        <div>CREATE INDEX CONCURRENTLY idx_users_company_id ON users(company_id);</div>
+                        <div></div>
+                        <div>{`-- Vector similarity search indexes`}</div>
+                        <div>CREATE INDEX CONCURRENTLY idx_task_embeddings_vector</div>
+                        <div>ON task_embeddings USING ivfflat (embedding vector_cosine_ops)</div>
+                        <div>WITH (lists = 100);</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Security Configuration */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-red-600" />
+                  Security & Compliance Configuration
+                </CardTitle>
+                <CardDescription>Authentication, encryption, and GDPR compliance setup</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium text-red-600 mb-2">Authentication Security</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-start gap-2">
+                          <Lock className="h-4 w-4 text-red-500 mt-1" />
+                          <div>
+                            <p className="text-sm font-medium">JWT Configuration</p>
+                            <p className="text-xs text-muted-foreground">Secure token handling with 24-hour expiry</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <Key className="h-4 w-4 text-orange-500 mt-1" />
+                          <div>
+                            <p className="text-sm font-medium">Session Security</p>
+                            <p className="text-xs text-muted-foreground">HTTPOnly cookies with SameSite protection</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <CheckSquare className="h-4 w-4 text-green-500 mt-1" />
+                          <div>
+                            <p className="text-sm font-medium">Role-Based Access</p>
+                            <p className="text-xs text-muted-foreground">USER, CONTRIBUTOR, EDITOR, ADMIN hierarchy</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium text-blue-600 mb-2">Data Protection</h4>
+                      <div className="space-y-2">
+                        <div className="p-3 border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-950">
+                          <p className="text-sm font-medium text-blue-700 dark:text-blue-300">Database Encryption</p>
+                          <p className="text-xs text-blue-600 dark:text-blue-400">TLS connections and sensitive column encryption</p>
+                        </div>
+                        <div className="p-3 border-l-4 border-green-500 bg-green-50 dark:bg-green-950">
+                          <p className="text-sm font-medium text-green-700 dark:text-green-300">Application Encryption</p>
+                          <p className="text-xs text-green-600 dark:text-green-400">AES-256-GCM for sensitive AI conversation data</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium text-purple-600 mb-2">Rate Limiting & Protection</h4>
+                      <div className="p-4 bg-gray-900 text-gray-100 rounded-lg font-mono text-xs overflow-x-auto">
+                        <div className="space-y-1">
+                          <div>{`// Advanced rate limiting configuration`}</div>
+                          <div>export const rateLimitConfig = &#123;</div>
+                          <div>  ai: &#123;</div>
+                          <div>{`    chat: { requests: 50, window: 3600 }, // 50 per hour`}</div>
+                          <div>{`    suggestions: { requests: 100, window: 3600 },`}</div>
+                          <div>{`    analysis: { requests: 20, window: 3600 },`}</div>
+                          <div>{`    documents: { requests: 25, window: 3600 },`}</div>
+                          <div>{`  },`}</div>
+                          <div>{`  api: {`}</div>
+                          <div>{`    general: { requests: 1000, window: 3600 },`}</div>
+                          <div>{`    auth: { requests: 10, window: 900 }, // 10 per 15 min`}</div>
+                          <div>  &#125;,</div>
+                          <div>&#125;;</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium text-orange-600 mb-2">GDPR Compliance</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm">
+                          <AlertTriangle className="h-4 w-4 text-orange-500" />
+                          <span>Automated data retention policies (2-year AI data cleanup)</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <CheckSquare className="h-4 w-4 text-green-500" />
+                          <span>Right to data export in machine-readable format</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <Lock className="h-4 w-4 text-blue-500" />
+                          <span>Right to be forgotten with secure data deletion</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <Shield className="h-4 w-4 text-purple-500" />
+                          <span>Data anonymization while preserving analytics</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Production Deployment */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Server className="h-5 w-5 text-indigo-600" />
+                  Production Deployment Checklist
+                </CardTitle>
+                <CardDescription>Essential validation steps before going live</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-green-600">Installation Validation</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <span className="text-sm">Complete installation tested on clean system</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <span className="text-sm">All dependencies installed and configured</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <span className="text-sm">Database migrations executed successfully</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <span className="text-sm">AI features operational after installation</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <span className="text-sm">Performance benchmarks met</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-red-600">Security Validation</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Shield className="h-4 w-4 text-red-500" />
+                        <span className="text-sm">Authentication system properly configured</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Lock className="h-4 w-4 text-orange-500" />
+                        <span className="text-sm">Data encryption working correctly</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                        <span className="text-sm">Rate limiting effective against abuse</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Monitor className="h-4 w-4 text-blue-500" />
+                        <span className="text-sm">Security audit logs functional</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CheckSquare className="h-4 w-4 text-green-500" />
+                        <span className="text-sm">GDPR compliance features operational</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  <h4 className="font-medium text-purple-600">Success Metrics</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <div className="p-3 border rounded">
+                        <strong className="text-sm text-blue-600">Installation Time:</strong>
+                        <p className="text-xs text-muted-foreground">&lt;2 hours for standard deployment</p>
+                      </div>
+                      <div className="p-3 border rounded">
+                        <strong className="text-sm text-green-600">Security Score:</strong>
+                        <p className="text-xs text-muted-foreground">&gt;95% on security assessment</p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="p-3 border rounded">
+                        <strong className="text-sm text-purple-600">Uptime Target:</strong>
+                        <p className="text-xs text-muted-foreground">&gt;99.9% availability</p>
+                      </div>
+                      <div className="p-3 border rounded">
+                        <strong className="text-sm text-orange-600">Response Time:</strong>
+                        <p className="text-xs text-muted-foreground">&lt;500ms for API requests</p>
+                      </div>
                     </div>
                   </div>
                 </div>
