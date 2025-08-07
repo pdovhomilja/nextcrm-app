@@ -6,8 +6,8 @@ import {
   IconFolder,
   IconHelp,
   IconInnerShadowTop,
-  IconSearch,
   IconSettings,
+  IconRobot,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/sidebar";
 import { User } from "@/lib/generated/prisma";
 import { useParams } from "next/navigation";
+import { NavSecondary } from "./nav-secondary";
 
 export function AppSidebar({
   user,
@@ -41,23 +42,23 @@ export function AppSidebar({
         url: `/${cid}/tasks`,
         icon: IconFolder,
       },
+      {
+        title: "AI Assistant",
+        url: `/${cid}/ai-assistant`,
+        icon: IconRobot,
+      },
     ],
 
     navSecondary: [
       {
         title: "Settings",
-        url: "#",
+        url: `/${cid}/settings`,
         icon: IconSettings,
       },
       {
         title: "Get Help",
-        url: "#",
+        url: `/${cid}/docs`,
         icon: IconHelp,
-      },
-      {
-        title: "Search",
-        url: "#",
-        icon: IconSearch,
       },
     ],
   };
@@ -81,7 +82,7 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        {/*  <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
+        <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user as User} />

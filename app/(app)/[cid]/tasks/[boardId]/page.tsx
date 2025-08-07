@@ -22,7 +22,9 @@ const BoardPage = async ({
   return (
     <TaskErrorBoundary>
       <SidebarInset>
-        <SiteHeader title={board.name} />
+        <SiteHeader title={board.name}>
+          <div className="flex items-center gap-2">{/* Nav buttons */}</div>
+        </SiteHeader>
         <div className="flex flex-1 flex-col border-black">
           <div className="@container/main flex flex-1 flex-col gap-2">
             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">

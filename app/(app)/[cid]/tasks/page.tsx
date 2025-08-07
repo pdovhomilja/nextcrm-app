@@ -35,14 +35,15 @@ const TaskPage = async () => {
 
   return (
     <SidebarInset>
-      <SiteHeader title="Project Management" />
+      <SiteHeader title="Project Management">
+        <div className="flex items-center gap-2">
+          <CreateBoardButton />
+        </div>
+      </SiteHeader>
       <div className="flex flex-1 flex-col border-black">
         <div className="@container/main flex flex-1 flex-col gap-2">
           <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
             <div className="flex flex-col gap-4 p-4">
-              <div className="flex justify-end">
-                <CreateBoardButton />
-              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {boards.map((board) => (
                   <Card key={board.id} className="p-4">

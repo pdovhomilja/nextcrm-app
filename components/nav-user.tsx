@@ -3,7 +3,6 @@
 import {
   IconCreditCard,
   IconDotsVertical,
-  IconLogout,
   IconNotification,
   IconUserCircle,
 } from "@tabler/icons-react";
@@ -25,6 +24,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { User } from "@/lib/generated/prisma";
+import { SignOutButton } from "./auth/sign-out-button";
 
 export function NavUser({ user }: { user: User }) {
   const { isMobile } = useSidebar();
@@ -88,8 +88,7 @@ export function NavUser({ user }: { user: User }) {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <IconLogout />
-              Log out
+              <SignOutButton />
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -1,12 +1,14 @@
-import { ChartAreaInteractive } from "@/components/chart-area-interactive";
-import { SectionCards } from "@/components/section-cards";
+import { ChartAreaInteractive } from "./_components/chart-area-interactive";
+import { SectionCards } from "./_components/section-cards";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset } from "@/components/ui/sidebar";
 
-export default function Page() {
+export default function DashboardPage() {
   return (
     <SidebarInset>
-      <SiteHeader title="Dashboard" />
+      <SiteHeader title="Dashboard">
+        <div></div>
+      </SiteHeader>
       <div className="flex flex-1 flex-col border-black">
         <div className="@container/main flex flex-1 flex-col gap-2">
           <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
