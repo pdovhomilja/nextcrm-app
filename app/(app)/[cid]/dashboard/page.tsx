@@ -3,6 +3,7 @@ import { ChartAreaInteractive } from "./_components/chart-area-interactive";
 import { SectionCards } from "./_components/section-cards";
 import { EnhancedDynamicCards } from "./_components/enhanced-dynamic-cards";
 import { DistributionChart } from "@/components/dashboard/charts/distribution-chart";
+import { TaskDataTable } from "@/components/dashboard/tables/task-data-table";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -95,6 +96,13 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                 </Suspense>
               </div>
             </div>
+          </div>
+
+          {/* Task Data Table */}
+          <div className="px-4 lg:px-6">
+            <Suspense fallback={<Skeleton className="h-[500px] w-full" />}>
+              <TaskDataTable className="w-full" />
+            </Suspense>
           </div>
         </div>
       </div>
