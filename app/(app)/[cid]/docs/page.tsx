@@ -40,7 +40,7 @@ const DocumentationPage = () => {
       <SiteHeader title="Documentation">
         <div className="flex items-center gap-2">
           <Badge variant="outline">AI-Powered</Badge>
-          <Badge variant="secondary">Phase 4</Badge>
+          <Badge variant="secondary">Phase 6</Badge>
         </div>
       </SiteHeader>
       <div className="flex flex-1 flex-col">
@@ -51,13 +51,15 @@ const DocumentationPage = () => {
           </div>
 
           <Tabs defaultValue="getting-started" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="grid w-full grid-cols-8">
               <TabsTrigger value="getting-started">Getting Started</TabsTrigger>
               <TabsTrigger value="advanced-ai">Advanced AI</TabsTrigger>
               <TabsTrigger value="documents">Documents</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
               <TabsTrigger value="deployment">Deployment</TabsTrigger>
               <TabsTrigger value="operations">Operations</TabsTrigger>
+              <TabsTrigger value="developer">Developer</TabsTrigger>
+              <TabsTrigger value="advanced">Advanced</TabsTrigger>
             </TabsList>
 
             {/* Getting Started Tab */}
@@ -1949,6 +1951,987 @@ const DocumentationPage = () => {
                     <div className="text-center p-3 border rounded">
                       <div className="text-lg font-bold text-orange-600">100%</div>
                       <p className="text-xs text-muted-foreground">Backup integrity verification</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+        </TabsContent>
+
+        {/* Developer Architecture Tab */}
+        <TabsContent value="developer" className="space-y-6">
+          <section className="space-y-4">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">Developer Architecture & Integration</h2>
+              <p className="text-muted-foreground">Comprehensive technical documentation for developers working with the TaskHQ RAG system</p>
+            </div>
+
+            {/* System Architecture Overview */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Code className="h-5 w-5 text-blue-600" />
+                  System Architecture Overview
+                </CardTitle>
+                <CardDescription>High-level architecture and component relationships</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <h4 className="font-medium text-blue-600">TaskHQ RAG System Architecture</h4>
+                  <div className="bg-muted/50 p-4 rounded-lg">
+                    <pre className="text-sm overflow-x-auto">
+{`graph TB
+    subgraph "Frontend Layer"
+        UI[React UI Components]
+        Chat[AI Chat Interface]
+        Suggest[Smart Suggestions]
+        Analytics[AI Analytics]
+    end
+
+    subgraph "API Layer"
+        NextAPI[Next.js API Routes]
+        Auth[Authentication]
+        RateLimit[Rate Limiting]
+    end
+
+    subgraph "AI Services Layer"
+        AgentOrch[Agent Orchestrator]
+        RAGProc[RAG Processor]
+        EmbedSvc[Embedding Service]
+        ConvMem[Conversation Memory]
+    end
+
+    subgraph "MCP Layer"
+        MCPPool[MCP Client Pool]
+        TaskMCP[Task MCP Server]
+        SearchMCP[Search MCP Server]
+        AnalyticsMCP[Analytics MCP Server]
+        BoardMCP[Board MCP Server]
+    end
+
+    subgraph "Data Layer"
+        PostgreSQL[(PostgreSQL + pgvector)]
+        Redis[(Redis Cache)]
+        OpenAI[OpenAI API]
+    end
+
+    UI --> NextAPI
+    Chat --> NextAPI
+    NextAPI --> AgentOrch
+    AgentOrch --> RAGProc
+    AgentOrch --> MCPPool
+    MCPPool --> TaskMCP
+    TaskMCP --> PostgreSQL
+    EmbedSvc --> OpenAI
+    ConvMem --> Redis`}
+                    </pre>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-green-600">Core Components</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-start gap-2">
+                        <Brain className="h-4 w-4 text-green-500 mt-0.5" />
+                        <div>
+                          <span className="font-medium text-sm">Agent Orchestrator</span>
+                          <p className="text-xs text-muted-foreground">Central AI agent coordination and routing</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Search className="h-4 w-4 text-blue-500 mt-0.5" />
+                        <div>
+                          <span className="font-medium text-sm">RAG Processor</span>
+                          <p className="text-xs text-muted-foreground">Retrieval-Augmented Generation pipeline</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Server className="h-4 w-4 text-purple-500 mt-0.5" />
+                        <div>
+                          <span className="font-medium text-sm">MCP Servers</span>
+                          <p className="text-xs text-muted-foreground">Standardized tool interface for AI agents</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-orange-600">Data Flow</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-start gap-2">
+                        <Target className="h-4 w-4 text-orange-500 mt-0.5" />
+                        <div>
+                          <span className="font-medium text-sm">Query Processing</span>
+                          <p className="text-xs text-muted-foreground">User query → AI processing → Tool execution</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Database className="h-4 w-4 text-blue-500 mt-0.5" />
+                        <div>
+                          <span className="font-medium text-sm">Vector Search</span>
+                          <p className="text-xs text-muted-foreground">Embedding generation → Similarity search → Context</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Activity className="h-4 w-4 text-green-500 mt-0.5" />
+                        <div>
+                          <span className="font-medium text-sm">Real-time Updates</span>
+                          <p className="text-xs text-muted-foreground">Streaming responses → UI updates → Memory</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Database Schema Architecture */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Database className="h-5 w-5 text-purple-600" />
+                  Database Schema Architecture
+                </CardTitle>
+                <CardDescription>AI-enhanced database schema with vector extensions</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <h4 className="font-medium text-purple-600">AI-Specific Tables</h4>
+                  <div className="bg-muted/50 p-4 rounded-lg">
+                    <pre className="text-sm overflow-x-auto">
+{`-- AI-specific tables
+CREATE TABLE task_embeddings (
+  id TEXT PRIMARY KEY,
+  task_id TEXT UNIQUE NOT NULL,
+  embedding VECTOR(1536),         -- OpenAI ada-002 dimensions
+  content TEXT NOT NULL,          -- Source content for embedding
+  metadata JSONB,                 -- Additional context
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
+);
+
+CREATE TABLE ai_conversations (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  company_id TEXT NOT NULL,
+  title TEXT,
+  context JSONB,                  -- Conversation context
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (company_id) REFERENCES companies(id)
+);
+
+CREATE TABLE ai_messages (
+  id TEXT PRIMARY KEY,
+  conversation_id TEXT NOT NULL,
+  role TEXT NOT NULL,             -- 'user' | 'assistant' | 'system'
+  content TEXT NOT NULL,
+  metadata JSONB,                 -- Tool calls, citations, etc.
+  created_at TIMESTAMP DEFAULT NOW(),
+  FOREIGN KEY (conversation_id) REFERENCES ai_conversations(id) ON DELETE CASCADE
+);`}
+                    </pre>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-green-600">Vector Indexes</h4>
+                    <div className="bg-muted/50 p-3 rounded">
+                      <pre className="text-xs">
+{`-- Vector indexes for performance
+CREATE INDEX CONCURRENTLY idx_task_embeddings_vector
+ON task_embeddings USING ivfflat (embedding vector_cosine_ops)
+WITH (lists = 100);
+
+CREATE INDEX CONCURRENTLY idx_document_embeddings_vector
+ON document_embeddings USING ivfflat (embedding vector_cosine_ops)
+WITH (lists = 100);`}
+                      </pre>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-blue-600">Performance Indexes</h4>
+                    <div className="bg-muted/50 p-3 rounded">
+                      <pre className="text-xs">
+{`-- Company isolation indexes
+CREATE INDEX CONCURRENTLY idx_tasks_company_created
+ON tasks(company_id, created_at DESC);
+
+CREATE INDEX CONCURRENTLY idx_ai_conversations_company_user
+ON ai_conversations(company_id, user_id, created_at DESC);
+
+-- Full-text search indexes
+CREATE INDEX CONCURRENTLY idx_tasks_content_search
+ON tasks USING gin(to_tsvector('english', title || ' ' || COALESCE(description, '')));`}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* API Reference */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Terminal className="h-5 w-5 text-green-600" />
+                  AI API Reference
+                </CardTitle>
+                <CardDescription>Complete API documentation with examples and integration patterns</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <h4 className="font-medium text-green-600">Core AI Endpoints</h4>
+                  
+                  <div className="space-y-4">
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant="outline">POST</Badge>
+                        <code className="text-sm">/api/ai/chat</code>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-3">Main conversational AI interface with streaming responses</p>
+                      <div className="bg-muted/50 p-3 rounded">
+                        <pre className="text-xs">
+{`// Request Interface
+interface ChatRequest {
+  messages: Array<{
+    role: 'user' | 'assistant' | 'system';
+    content: string;
+  }>;
+  boardId?: string;          // Current board context
+  taskId?: string;           // Current task context
+  useRAG?: boolean;          // Enable RAG processing (default: true)
+  stream?: boolean;          // Enable streaming (default: true)
+  temperature?: number;      // AI temperature (0-1)
+  maxTokens?: number;        // Response length limit
+}
+
+// Usage Example with Vercel AI SDK
+import { useChat } from 'ai/react';
+
+export function ChatInterface({ boardId }: { boardId?: string }) {
+  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+    api: '/api/ai/chat',
+    body: { boardId },
+    onError: (error) => console.error('Chat error:', error),
+  });
+
+  return (
+    <div>
+      {messages.map(message => (
+        <div key={message.id}>
+          <strong>{message.role}:</strong> {message.content}
+        </div>
+      ))}
+      <form onSubmit={handleSubmit}>
+        <input
+          value={input}
+          onChange={handleInputChange}
+          placeholder="Ask about your tasks..."
+        />
+        <button type="submit" disabled={isLoading}>Send</button>
+      </form>
+    </div>
+  );
+}`}
+                        </pre>
+                      </div>
+                    </div>
+
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant="outline">POST</Badge>
+                        <code className="text-sm">/api/ai/suggest</code>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-3">Generate contextual suggestions for tasks and workflows</p>
+                      <div className="bg-muted/50 p-3 rounded">
+                        <pre className="text-xs">
+{`// Request Interface
+interface SuggestRequest {
+  context: {
+    boardId?: string;
+    taskId?: string;
+    userId?: string;
+  };
+  type: 'task_creation' | 'priority_optimization' | 'assignment' | 'workflow';
+  limit?: number;            // Number of suggestions (default: 5)
+}
+
+// Response Interface
+interface SuggestResponse {
+  suggestions: Array<{
+    type: string;
+    title: string;
+    description: string;
+    reasoning: string;
+    confidence: number;       // 0-1 confidence score
+    action?: {
+      type: string;
+      parameters: Record<string, unknown>;
+    };
+  }>;
+  metadata: {
+    processingTime: number;
+    contextUsed: string[];
+    ragResults?: number;
+  };
+}`}
+                        </pre>
+                      </div>
+                    </div>
+
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant="outline">POST</Badge>
+                        <code className="text-sm">/api/ai/documents</code>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-3">Upload and process documents with AI analysis</p>
+                      <div className="bg-muted/50 p-3 rounded">
+                        <pre className="text-xs">
+{`// Request Interface (Multipart Form)
+interface DocumentRequest {
+  file: File;                // Document file
+  taskId?: string;           // Associate with task
+  boardId?: string;          // Associate with board
+  extractInsights?: boolean; // Enable AI insights (default: true)
+  generateSummary?: boolean; // Generate summary (default: true)
+}
+
+// Response Interface
+interface DocumentResponse {
+  documentId: string;
+  filename: string;
+  extractedText: string;
+  summary?: string;
+  insights?: Array<{
+    type: 'action_item' | 'risk' | 'opportunity' | 'decision';
+    content: string;
+    confidence: number;
+  }>;
+  embeddingId?: string;      // Vector embedding ID
+  processingTime: number;
+}`}
+                        </pre>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  <h4 className="font-medium text-blue-600">Server Actions Integration</h4>
+                  <div className="bg-muted/50 p-4 rounded-lg">
+                    <pre className="text-xs overflow-x-auto">
+{`// AI-enhanced server action
+"use server";
+
+import { auth } from "@/auth";
+import { agentOrchestrator } from "@/lib/ai/agent-orchestrator";
+import { revalidatePath } from "next/cache";
+
+export async function createTaskWithAI(formData: FormData) {
+  const session = await auth();
+  if (!session?.user) {
+    return { error: "Authentication required" };
+  }
+
+  const description = formData.get("description") as string;
+  const boardId = formData.get("boardId") as string;
+
+  try {
+    // Use AI to enhance task creation
+    const aiEnhancement = await agentOrchestrator.processQuery(
+      \`Enhance this task description and suggest priority: "\${description}"\`,
+      {
+        boardId,
+        userId: session.user.id,
+        companyId: session.user.companyId,
+      }
+    );
+
+    // Create task with AI enhancements
+    const task = await db.task.create({
+      data: {
+        title: aiEnhancement.suggestedTitle || description,
+        description: aiEnhancement.enhancedDescription || description,
+        priority: aiEnhancement.suggestedPriority || "MEDIUM",
+        boardId,
+        companyId: session.user.companyId,
+        createdBy: session.user.id,
+      },
+    });
+
+    // Trigger embedding generation
+    await triggerEmbeddingUpdate(task.id);
+
+    revalidatePath(\`/\${session.user.companyId}/tasks\`);
+    return { success: true, task, aiInsights: aiEnhancement.insights };
+  } catch (error) {
+    console.error("AI task creation error:", error);
+    return { error: "Failed to create task with AI assistance" };
+  }
+}`}
+                    </pre>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* MCP Development Guide */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-yellow-600" />
+                  MCP Server Development
+                </CardTitle>
+                <CardDescription>Development guide for creating custom MCP servers and tools</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <h4 className="font-medium text-yellow-600">Basic MCP Server Structure</h4>
+                  <div className="bg-muted/50 p-4 rounded-lg">
+                    <pre className="text-xs overflow-x-auto">
+{`// /app/api/mcp/custom/[transport]/route.ts
+import { createMcpHandler } from "@vercel/mcp-adapter";
+import { z } from "zod";
+import { auth } from "@/auth";
+import db from "@/lib/db";
+
+const handler = createMcpHandler(
+  async (server) => {
+    // Tool registration
+    server.tool(
+      "custom_tool_name",
+      "Description of what this tool does",
+      {
+        // Zod schema for parameter validation
+        parameter1: z.string().describe("Description of parameter1"),
+        parameter2: z.number().optional().describe("Optional parameter"),
+        parameter3: z.enum(["option1", "option2"]).describe("Enum parameter"),
+      },
+      async (params) => {
+        // Authentication check
+        const session = await auth();
+        if (!session?.user) {
+          throw new Error("Authentication required");
+        }
+
+        // Authorization check
+        if (!hasPermission(session.user, "REQUIRED_PERMISSION")) {
+          throw new Error("Insufficient permissions");
+        }
+
+        // Tool implementation
+        try {
+          const result = await implementToolLogic(params, session.user);
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(result, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          console.error(\`Custom tool error:\`, error);
+          throw new Error(\`Tool execution failed: \${error.message}\`);
+        }
+      }
+    );
+
+    // Add more tools as needed
+    server.tool("another_tool", /* ... */);
+  },
+  {
+    // Server capabilities
+    capabilities: {
+      tools: {
+        custom_tool_name: { description: "Custom tool for specific operations" },
+        another_tool: { description: "Another custom tool" },
+      },
+    },
+  },
+  {
+    // Server configuration
+    basePath: "",
+    verboseLogs: process.env.NODE_ENV === "development",
+    maxDuration: 800,
+  }
+);
+
+export { handler as GET, handler as POST, handler as DELETE };`}
+                    </pre>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  <h4 className="font-medium text-purple-600">Advanced Tool Patterns</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <h5 className="font-medium text-sm">Batch Operations Tool</h5>
+                      <div className="bg-muted/50 p-3 rounded">
+                        <pre className="text-xs">
+{`server.tool(
+  "batch_update_tasks",
+  "Update multiple tasks based on criteria",
+  {
+    criteria: z.object({
+      boardId: z.string(),
+      status: z.array(z.enum(["NEW", "IN_PROGRESS", "COMPLETED"])).optional(),
+      assigneeIds: z.array(z.string()).optional(),
+      tags: z.array(z.string()).optional(),
+    }),
+    updates: z.object({
+      priority: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).optional(),
+      status: z
+        .enum(["NEW", "IN_PROGRESS", "COMPLETED", "CANCELLED"])
+        .optional(),
+      assigneeIds: z.array(z.string()).optional(),
+    }),
+    dryRun: z.boolean().default(false),
+  },
+  async (params) => {
+    const session = await auth();
+    if (!session?.user) throw new Error("Authentication required");
+
+    // Build query based on criteria
+    const whereClause = {
+      boardId: params.criteria.boardId,
+      companyId: session.user.companyId,
+      ...(params.criteria.status && { status: { in: params.criteria.status } }),
+      ...(params.criteria.assigneeIds && {
+        assigneeIds: { hasSome: params.criteria.assigneeIds },
+      }),
+    };
+
+    if (params.dryRun) {
+      // Return what would be updated without making changes
+      const tasks = await db.task.findMany({ where: whereClause });
+      return {
+        content: [
+          {
+            type: "text",
+            text: \`Would update \${tasks.length} tasks\`,
+          },
+        ],
+      };
+    }
+
+    // Perform batch update
+    const result = await db.task.updateMany({
+      where: whereClause,
+      data: params.updates,
+    });
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: \`Successfully updated \${result.count} tasks\`,
+        },
+      ],
+    };
+  }
+);`}
+                        </pre>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <h5 className="font-medium text-sm">Analytics Tool</h5>
+                      <div className="bg-muted/50 p-3 rounded">
+                        <pre className="text-xs">
+{`server.tool(
+  "generate_project_report",
+  "Generate comprehensive project analytics report",
+  {
+    boardId: z.string(),
+    timeRange: z.enum(["week", "month", "quarter", "year"]).default("month"),
+    includeTeamMetrics: z.boolean().default(true),
+    includeTaskBreakdown: z.boolean().default(true),
+    format: z.enum(["json", "markdown", "csv"]).default("json"),
+  },
+  async (params) => {
+    const session = await auth();
+    if (!session?.user) throw new Error("Authentication required");
+
+    // Calculate date range
+    const endDate = new Date();
+    const startDate = new Date();
+
+    switch (params.timeRange) {
+      case "week":
+        startDate.setDate(endDate.getDate() - 7);
+        break;
+      case "month":
+        startDate.setMonth(endDate.getMonth() - 1);
+        break;
+      case "quarter":
+        startDate.setMonth(endDate.getMonth() - 3);
+        break;
+      case "year":
+        startDate.setFullYear(endDate.getFullYear() - 1);
+        break;
+    }
+
+    // Gather analytics data
+    const analytics = await gatherProjectAnalytics({
+      boardId: params.boardId,
+      companyId: session.user.companyId,
+      startDate,
+      endDate,
+      includeTeamMetrics: params.includeTeamMetrics,
+      includeTaskBreakdown: params.includeTaskBreakdown,
+    });
+
+    // Format based on requested format
+    let formattedReport: string;
+    switch (params.format) {
+      case "markdown":
+        formattedReport = formatReportAsMarkdown(analytics);
+        break;
+      case "csv":
+        formattedReport = formatReportAsCSV(analytics);
+        break;
+      default:
+        formattedReport = JSON.stringify(analytics, null, 2);
+    }
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: formattedReport,
+        },
+      ],
+    };
+  }
+);`}
+                        </pre>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  <h4 className="font-medium text-green-600">Tool Development Best Practices</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Shield className="h-4 w-4 text-green-500" />
+                        <span className="font-medium text-sm">Parameter Validation</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Use comprehensive Zod schemas for type safety and validation</p>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className="h-4 w-4 text-orange-500" />
+                        <span className="font-medium text-sm">Error Handling</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Implement proper error categorization and user-friendly messages</p>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4 text-blue-500" />
+                        <span className="font-medium text-sm">Performance</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Cache expensive operations and optimize database queries</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Testing Guide */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckSquare className="h-5 w-5 text-teal-600" />
+                  Testing Strategies
+                </CardTitle>
+                <CardDescription>Unit testing, integration testing, and MCP server testing patterns</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-teal-600">Unit Testing MCP Tools</h4>
+                    <div className="bg-muted/50 p-3 rounded">
+                      <pre className="text-xs">
+{`// tests/mcp/custom-tools.test.ts
+import { describe, it, expect, beforeEach } from "vitest";
+import {
+  createMockMCPServer,
+  createMockSession,
+} from "../helpers/mcp-test-utils";
+
+describe("Custom MCP Tools", () => {
+  let server: MockMCPServer;
+  let mockSession: MockSession;
+
+  beforeEach(() => {
+    server = createMockMCPServer();
+    mockSession = createMockSession({ role: "ADMIN" });
+  });
+
+  it("should create task with valid parameters", async () => {
+    const result = await server.executeTool(
+      "create_task",
+      {
+        title: "Test Task",
+        description: "Test Description",
+        boardId: "board-123",
+        priority: "HIGH",
+      },
+      mockSession
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.data.title).toBe("Test Task");
+    expect(result.data.priority).toBe("HIGH");
+  });
+
+  it("should reject invalid parameters", async () => {
+    await expect(
+      server.executeTool(
+        "create_task",
+        {
+          title: "", // Invalid empty title
+          boardId: "board-123",
+        },
+        mockSession
+      )
+    ).rejects.toThrow("Title is required");
+  });
+
+  it("should require authentication", async () => {
+    await expect(
+      server.executeTool(
+        "create_task",
+        {
+          title: "Test Task",
+          boardId: "board-123",
+        },
+        null
+      ) // No session
+    ).rejects.toThrow("Authentication required");
+  });
+});`}
+                      </pre>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-blue-600">Integration Testing</h4>
+                    <div className="bg-muted/50 p-3 rounded">
+                      <pre className="text-xs">
+{`// tests/integration/mcp-integration.test.ts
+import { describe, it, expect } from "vitest";
+import { MCPClient } from "../helpers/mcp-client";
+
+describe("MCP Integration", () => {
+  it("should connect to all MCP servers", async () => {
+    const client = new MCPClient();
+
+    const servers = ["tasks", "search", "analytics", "boards", "custom"];
+
+    for (const serverName of servers) {
+      const connection = await client.connect(serverName);
+      expect(connection.status).toBe("connected");
+
+      const tools = await connection.listTools();
+      expect(tools.length).toBeGreaterThan(0);
+
+      await connection.close();
+    }
+  });
+
+  it("should handle tool execution end-to-end", async () => {
+    const client = new MCPClient();
+    const connection = await client.connect("tasks");
+
+    const result = await connection.executeTool("search_tasks", {
+      query: "test",
+      limit: 5,
+    });
+
+    expect(result).toBeDefined();
+    expect(Array.isArray(result.tasks)).toBe(true);
+
+    await connection.close();
+  });
+});`}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  <h4 className="font-medium text-purple-600">Performance & Security Testing</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <HardDrive className="h-4 w-4 text-purple-500" />
+                        <span className="font-medium text-sm">Load Testing</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Test MCP servers under concurrent load and measure response times</p>
+                      <div className="text-xs text-muted-foreground">
+                        • Test concurrent tool executions<br/>
+                        • Measure memory usage patterns<br/>
+                        • Validate rate limiting behavior
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Lock className="h-4 w-4 text-orange-500" />
+                        <span className="font-medium text-sm">Security Testing</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Validate authentication, authorization, and data isolation</p>
+                      <div className="text-xs text-muted-foreground">
+                        • Test permission boundaries<br/>
+                        • Validate company data isolation<br/>
+                        • Check input sanitization
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Development Best Practices */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-indigo-600" />
+                  Development Best Practices
+                </CardTitle>
+                <CardDescription>Guidelines for maintaining code quality and system performance</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-indigo-600">Code Quality Standards</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-start gap-2">
+                        <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                        <div>
+                          <span className="font-medium text-sm">TypeScript Strict Mode</span>
+                          <p className="text-xs text-muted-foreground">No `any` types without justification</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                        <div>
+                          <span className="font-medium text-sm">Comprehensive Error Handling</span>
+                          <p className="text-xs text-muted-foreground">Try/catch blocks with proper error categorization</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                        <div>
+                          <span className="font-medium text-sm">Input Validation</span>
+                          <p className="text-xs text-muted-foreground">Zod schemas for all user inputs and API parameters</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                        <div>
+                          <span className="font-medium text-sm">Documentation</span>
+                          <p className="text-xs text-muted-foreground">JSDoc comments for complex functions and server actions</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-orange-600">Security Requirements</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-start gap-2">
+                        <Key className="h-4 w-4 text-orange-500 mt-0.5" />
+                        <div>
+                          <span className="font-medium text-sm">Authentication</span>
+                          <p className="text-xs text-muted-foreground">Every server action validates session using auth()</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Shield className="h-4 w-4 text-orange-500 mt-0.5" />
+                        <div>
+                          <span className="font-medium text-sm">Data Isolation</span>
+                          <p className="text-xs text-muted-foreground">Every database query filters by company ID (cid)</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Lock className="h-4 w-4 text-orange-500 mt-0.5" />
+                        <div>
+                          <span className="font-medium text-sm">AI Input Sanitization</span>
+                          <p className="text-xs text-muted-foreground">Validate and sanitize all AI inputs (max 4000 chars)</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Monitor className="h-4 w-4 text-orange-500 mt-0.5" />
+                        <div>
+                          <span className="font-medium text-sm">Rate Limiting</span>
+                          <p className="text-xs text-muted-foreground">Implement rate limiting for AI endpoints</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  <h4 className="font-medium text-blue-600">Performance Considerations</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-3 border rounded">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Database className="h-4 w-4 text-blue-500" />
+                        <span className="font-medium text-sm">Database Optimization</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground space-y-1">
+                        <p>• Add indexes for company ID queries</p>
+                        <p>• Use pagination for large data sets</p>
+                        <p>• Optimize vector similarity searches</p>
+                      </div>
+                    </div>
+                    <div className="p-3 border rounded">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Brain className="h-4 w-4 text-purple-500" />
+                        <span className="font-medium text-sm">AI Performance</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground space-y-1">
+                        <p>• Cache embedding results</p>
+                        <p>• Batch process embedding generation</p>
+                        <p>• Stream AI responses for better UX</p>
+                      </div>
+                    </div>
+                    <div className="p-3 border rounded">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Server className="h-4 w-4 text-green-500" />
+                        <span className="font-medium text-sm">MCP Performance</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground space-y-1">
+                        <p>• Use connection pooling</p>
+                        <p>• Implement health checks</p>
+                        <p>• Monitor tool execution times</p>
+                      </div>
                     </div>
                   </div>
                 </div>
