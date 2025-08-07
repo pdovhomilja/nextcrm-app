@@ -22,41 +22,38 @@ export const VerificationEmail = ({
 }: VerificationEmailProps) => (
   <Html>
     <Head />
-    <Preview>Verify your email address for DataHQ</Preview>
+    <Preview>Verify your email address for TaskHQ</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Welcome to DataHQ!</Heading>
-        
+        <Heading style={h1}>Welcome to TaskHQ!</Heading>
+
+        <Text style={text}>{name ? `Hi ${name},` : "Hi there,"}</Text>
+
         <Text style={text}>
-          {name ? `Hi ${name},` : "Hi there,"}
-        </Text>
-        
-        <Text style={text}>
-          Thank you for signing up for DataHQ. To complete your registration and 
-          access your dashboard, please verify your email address by clicking the 
-          button below.
+          Thank you for signing up for TaskHQ. To complete your registration and
+          access your dashboard, please verify your email address by clicking
+          the button below.
         </Text>
 
         <Button style={button} href={verificationUrl}>
           Verify Email Address
         </Button>
 
-        <Text style={text}>
-          Or copy and paste this URL into your browser:
-        </Text>
-        
+        <Text style={text}>Or copy and paste this URL into your browser:</Text>
+
         <Link href={verificationUrl} style={link}>
           {verificationUrl}
         </Link>
 
         <Text style={text}>
-          This verification link will expire in 24 hours. If you didn't create 
+          This verification link will expire in 24 hours. If you didn't create
           an account with DataHQ, you can safely ignore this email.
         </Text>
 
         <Text style={footer}>
-          Best regards,<br />
-          The DataHQ Team
+          Best regards,
+          <br />
+          The TaskHQ Team
         </Text>
       </Container>
     </Body>
