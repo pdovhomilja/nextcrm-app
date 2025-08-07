@@ -6,7 +6,6 @@ import { SidebarInset } from "@/components/ui/sidebar";
 
 import { getTaskMetrics } from "@/actions/dashboard/get-task-metrics";
 import { getBoardMetrics } from "@/actions/dashboard/get-board-metrics";
-import { getUserMetrics } from "@/actions/dashboard/get-user-metrics";
 
 interface DashboardPageProps {
   params: Promise<{
@@ -18,12 +17,11 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
   await params;
 
   // Fetch all metrics in parallel for better performance
-  const [taskMetricsResult, boardMetricsResult, userMetricsResult] =
-    await Promise.all([getTaskMetrics(), getBoardMetrics(), getUserMetrics()]);
+  const [taskMetricsResult, boardMetricsResult] =
+    await Promise.all([getTaskMetrics(), getBoardMetrics()]);
 
   // Extract data from results, handling errors gracefully
   const taskMetrics = taskMetricsResult.data;
-  const userMetrics = userMetricsResult.data;
 
   // Log any errors for debugging (in development)
   if (taskMetricsResult.error) {
@@ -31,9 +29,6 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
   }
   if (boardMetricsResult.error) {
     console.error("Board metrics error:", boardMetricsResult.error);
-  }
-  if (userMetricsResult.error) {
-    console.error("User metrics error:", userMetricsResult.error);
   }
 
   return (
