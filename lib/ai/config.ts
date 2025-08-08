@@ -7,10 +7,10 @@ export const aiConfig = {
   ),
 
   // Chat model for analysis - using gpt-4o for structured output support
-  chatModel: openai(process.env.AI_MODEL || "gpt-4o"),
+  chatModel: openai(process.env.AI_MODEL || "gpt-5"),
 
   // Structured output model - always use gpt-4o for generateObject calls
-  structuredOutputModel: openai(process.env.AI_STRUCTURED_MODEL || "gpt-4o"),
+  structuredOutputModel: openai(process.env.AI_STRUCTURED_MODEL || "gpt-5"),
 
   // Embedding settings
   embedding: {

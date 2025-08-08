@@ -1,4 +1,4 @@
-import { generateText, generateObject } from "ai";
+import { generateText, generateObject, tool, stepCountIs } from "ai";
 import { aiConfig } from "./config";
 import { simpleMCPClientPool } from "./simple-mcp-client";
 import { ragProcessor, RAGQuery } from "./rag-processor";
@@ -116,12 +116,20 @@ export abstract class BaseAIAgent {
       switch (decision.action) {
         case "use_tools":
           // Check if any tools are actually available
-          const availableTools = (decision.toolsToUse || []).filter(toolName => this.mcpTools[toolName]);
-          
+          const availableTools = (decision.toolsToUse || []).filter(
+            (toolName) => this.mcpTools[toolName]
+          );
+
           if (availableTools.length === 0) {
             // No tools available, fall back to direct response
-            console.log("No MCP tools available, falling back to direct response");
-            response = await this.generateDirectResponse(query, context, conversationHistory);
+            console.log(
+              "No MCP tools available, falling back to direct response"
+            );
+            response = await this.generateDirectResponse(
+              query,
+              context,
+              conversationHistory
+            );
           } else {
             const toolResult = await this.orchestrateTools(
               query,
@@ -129,13 +137,21 @@ export abstract class BaseAIAgent {
               decision.toolsToUse || []
             );
             toolResults = toolResult.results;
-            
+
             // Check if any tools actually succeeded
-            const successfulResults = toolResult.results.filter(r => r.success);
+            const successfulResults = toolResult.results.filter(
+              (r) => r.success
+            );
             if (successfulResults.length === 0) {
               // All tools failed, fall back to direct response
-              console.log("All MCP tools failed, falling back to direct response");
-              response = await this.generateDirectResponse(query, context, conversationHistory);
+              console.log(
+                "All MCP tools failed, falling back to direct response"
+              );
+              response = await this.generateDirectResponse(
+                query,
+                context,
+                conversationHistory
+              );
             } else {
               response = await this.synthesizeToolResponse(
                 query,
@@ -229,14 +245,26 @@ export abstract class BaseAIAgent {
   ): Promise<AgentDecision> {
     const mcpToolCount = Object.keys(this.mcpTools).length;
     const queryLower = query.toLowerCase();
-    const isSearchQuery = queryLower.includes('search') || queryLower.includes('find') || queryLower.includes('look for') || 
-                         queryLower.includes('is there') || queryLower.includes('do we have') || queryLower.includes('show me') ||
-                         queryLower.includes('list') || queryLower.includes('get');
-    
-    const isUpdateQuery = queryLower.includes('mark') || queryLower.includes('make') || queryLower.includes('set') ||
-                         queryLower.includes('complete') || queryLower.includes('finish') || queryLower.includes('update') ||
-                         (queryLower.includes('task') && (queryLower.includes('done') || queryLower.includes('completed')));
-    
+    const isSearchQuery =
+      queryLower.includes("search") ||
+      queryLower.includes("find") ||
+      queryLower.includes("look for") ||
+      queryLower.includes("is there") ||
+      queryLower.includes("do we have") ||
+      queryLower.includes("show me") ||
+      queryLower.includes("list") ||
+      queryLower.includes("get");
+
+    const isUpdateQuery =
+      queryLower.includes("mark") ||
+      queryLower.includes("make") ||
+      queryLower.includes("set") ||
+      queryLower.includes("complete") ||
+      queryLower.includes("finish") ||
+      queryLower.includes("update") ||
+      (queryLower.includes("task") &&
+        (queryLower.includes("done") || queryLower.includes("completed")));
+
     const decisionPrompt = `As a ${this.role} agent, analyze this query and decide the best approach.
 
 Query: "${query}"
@@ -294,7 +322,7 @@ Response strategies:
             "analytical",
           ]),
         }),
-        temperature: 0.3,
+        // temperature not supported on some models like gpt-5
       });
 
       return result.object;
@@ -320,104 +348,156 @@ Response strategies:
     toolNames: string[]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<{ results: any[]; summary: string }> {
-    console.log(`Orchestrating tools: ${toolNames.join(", ")}`);
+    console.log(
+      `Orchestrating tools via AI SDK agent: ${toolNames.join(", ")}`
+    );
 
+    // Build AI SDK tool wrappers that delegate to MCP via simpleMCPClientPool
+    const availableToolNames = toolNames.filter((n) => this.mcpTools[n]);
+    if (availableToolNames.length === 0) {
+      return { results: [], summary: "No tools available" };
+    }
+
+    const toolSchemasByMethod: Record<string, z.ZodTypeAny> = {
+      create_task: z.object({
+        title: z.string(),
+        description: z.string().optional(),
+        boardSectionId: z.string().optional(),
+        userId: z.string().optional(),
+        companyId: z.string().optional(),
+      }),
+      search_tasks: z.object({
+        searchTerm: z.string(),
+        boardId: z.string().optional(),
+        limit: z.number().int().positive().max(50).optional(),
+        userId: z.string().optional(),
+        companyId: z.string().optional(),
+      }),
+      contextual_search: z.object({
+        searchTerm: z.string(),
+        boardId: z.string().optional(),
+        limit: z.number().int().positive().max(50).optional(),
+        userId: z.string().optional(),
+        companyId: z.string().optional(),
+      }),
+      semantic_search: z.object({
+        searchTerm: z.string(),
+        boardId: z.string().optional(),
+        limit: z.number().int().positive().max(50).optional(),
+        userId: z.string().optional(),
+        companyId: z.string().optional(),
+      }),
+      get_tasks: z.object({
+        boardId: z.string().optional(),
+        limit: z.number().int().positive().max(100).optional(),
+        userId: z.string().optional(),
+        companyId: z.string().optional(),
+      }),
+      update_task: z.object({
+        taskId: z.string().optional(),
+        status: z.string().optional(),
+        title: z.string().optional(),
+        description: z.string().optional(),
+        userId: z.string().optional(),
+        companyId: z.string().optional(),
+      }),
+      project_health: z.object({
+        boardId: z.string().optional(),
+        userId: z.string().optional(),
+        companyId: z.string().optional(),
+      }),
+      task_analytics: z.object({
+        boardId: z.string().optional(),
+        userId: z.string().optional(),
+        companyId: z.string().optional(),
+      }),
+      // Fallback: accept arbitrary parameters
+      __fallback: z.object({}).passthrough(),
+    };
+
+    const toolsRegistry: Record<string, any> = {} as Record<string, any>;
+    for (const fullToolName of availableToolNames) {
+      const [serverName, ...methodParts] = fullToolName.split("_");
+      if (!serverName || methodParts.length === 0) continue;
+      const method = methodParts.join("_");
+
+      const schema =
+        toolSchemasByMethod[method] || toolSchemasByMethod.__fallback;
+      toolsRegistry[fullToolName] = tool({
+        description: `Execute MCP tool ${fullToolName}. Provide explicit, concrete parameters. Prefer using titles for searching; use IDs only when available in context.`,
+        inputSchema: schema,
+        execute: async (input: any) => {
+          const params = {
+            ...input,
+            // Ensure identity context always propagates
+            userId: input.userId || context.userId,
+            companyId: input.companyId || context.companyId,
+          } as Record<string, unknown>;
+
+          const mcpResult = await simpleMCPClientPool.callTool(
+            serverName,
+            method,
+            params,
+            context.userId
+          );
+
+          if (mcpResult.error) {
+            throw new Error(mcpResult.error.message || "MCP tool error");
+          }
+          // Return raw MCP result so downstream synthesis can parse nested content
+          return mcpResult.result;
+        },
+      });
+    }
+
+    const agentSystemPrompt = `You are a ${this.role} agent. Use the provided tools to fulfill the user's request.
+CRITICAL:
+- Call search tools to look up tasks by title when the exact ID isn't provided.
+- For completion requests, first search for the task, then update it using its taskId.
+- Provide minimal, correct tool inputs. Do not invent IDs.
+- When you have sufficient information, stop calling tools and answer.`;
+
+    // Collect all tool call results from each step
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const results: any[] = [];
+    const collected: any[] = [];
+    const { steps } = await generateText({
+      model: aiConfig.chatModel,
+      tools: toolsRegistry,
+      stopWhen: stepCountIs(8),
+      system: agentSystemPrompt,
+      prompt: `Context: ${JSON.stringify({
+        userId: context.userId,
+        companyId: context.companyId,
+        boardId: context.boardId,
+        taskId: context.taskId,
+        conversationId: context.conversationId,
+      })}\n\nUser query: ${query}`,
+      // temperature not supported on some models like gpt-5
+    });
 
-    // Check for task completion workflow
-    const hasSearchAndUpdate = toolNames.includes('tasks_search_tasks') && toolNames.includes('tasks_update_task');
-    const isCompletionQuery = query.toLowerCase().includes('done') || query.toLowerCase().includes('complete') || 
-                             query.toLowerCase().includes('mark') || query.toLowerCase().includes('finish');
-
-    if (hasSearchAndUpdate && isCompletionQuery) {
-      // Sequential workflow: search first, then update with found task ID
-      try {
-        console.log('Executing sequential search-then-update workflow');
-        
-        // Step 1: Search for the task
-        const searchResult = await this.executeTool('tasks_search_tasks', query, context);
-        results.push({
-          toolName: 'tasks_search_tasks',
-          result: searchResult,
-          success: true,
+    for (const step of steps as any[]) {
+      const calls = (step as any).toolCalls || [];
+      const results = (step as any).toolResults || [];
+      for (let i = 0; i < Math.max(calls.length, results.length); i++) {
+        const call = calls[i];
+        const res = results[i];
+        if (!call && !res) continue;
+        const name = (call?.toolName ||
+          call?.name ||
+          res?.toolName ||
+          "unknown") as string;
+        collected.push({
+          toolName: name,
+          // Wrap to match downstream expectation: result.result.content[0].text
+          result: { result: (res as any)?.result ?? res },
+          success: !(res && (res as { error?: unknown }).error),
         });
-
-        // Step 2: If task found, update it
-        if (searchResult.executed && searchResult.result?.content?.[0]?.text) {
-          const searchData = JSON.parse(searchResult.result.content[0].text);
-          
-          if (searchData.tasks && searchData.tasks.length > 0) {
-            const foundTask = searchData.tasks[0];
-            console.log(`Found task for completion: ${foundTask.id} (${foundTask.title})`);
-            
-            // Update the task to completed status
-            const updateResult = await this.executeTool('tasks_update_task', query, {
-              ...context,
-              taskId: foundTask.id
-            });
-            
-            results.push({
-              toolName: 'tasks_update_task',
-              result: updateResult,
-              success: updateResult.executed,
-            });
-          } else {
-            console.log('No tasks found to complete');
-            results.push({
-              toolName: 'tasks_update_task',
-              result: { executed: false, error: 'No matching tasks found to complete' },
-              success: false,
-            });
-          }
-        } else {
-          console.log('Search tool failed, cannot proceed with update');
-          results.push({
-            toolName: 'tasks_update_task',
-            result: { executed: false, error: 'Search failed, cannot find task to update' },
-            success: false,
-          });
-        }
-
-      } catch (error) {
-        console.error('Sequential workflow failed:', error);
-        results.push({
-          toolName: 'tasks_update_task',
-          result: { executed: false, error: error instanceof Error ? error.message : 'Sequential workflow failed' },
-          success: false,
-        });
-      }
-    } else {
-      // Normal parallel execution for other workflows
-      for (const toolName of toolNames) {
-        try {
-          const tool = this.mcpTools[toolName];
-          if (!tool) {
-            console.warn(`Tool not available: ${toolName}`);
-            continue;
-          }
-
-          const result = await this.executeTool(toolName, query, context);
-          results.push({
-            toolName,
-            result,
-            success: true,
-          });
-        } catch (error) {
-          console.error(`Tool execution failed: ${toolName}`, error);
-          results.push({
-            toolName,
-            error: error instanceof Error ? error.message : "Unknown error",
-            success: false,
-          });
-        }
       }
     }
 
-    const successCount = results.filter((r) => r.success).length;
-    const summary = `Executed ${toolNames.length} tools, ${successCount} succeeded`;
-
-    return { results, summary };
+    const successCount = collected.filter((r) => r.success).length;
+    const summary = `Executed ${collected.length} tool calls, ${successCount} succeeded`;
+    return { results: collected, summary };
   }
 
   /**
@@ -431,17 +511,17 @@ Response strategies:
   ): Promise<any> {
     try {
       // Parse the full tool name (e.g., "tasks_create_task" -> server: "tasks", method: "create_task")
-      const toolParts = toolName.split('_');
+      const toolParts = toolName.split("_");
       if (toolParts.length < 2) {
         throw new Error(`Invalid tool name format: ${toolName}`);
       }
-      
+
       const serverName = toolParts[0];
-      const method = toolParts.slice(1).join('_');
-      
+      const method = toolParts.slice(1).join("_");
+
       // Prepare parameters based on the query and context
       const params = this.prepareToolParams(method, query, context);
-      
+
       // Execute the tool via simplified MCP client
       const result = await simpleMCPClientPool.callTool(
         serverName,
@@ -449,11 +529,11 @@ Response strategies:
         params,
         context.userId // Pass user ID for authentication
       );
-      
+
       if (result.error) {
         throw new Error(`MCP tool error: ${result.error.message}`);
       }
-      
+
       return {
         toolName,
         serverName,
@@ -469,7 +549,7 @@ Response strategies:
       return {
         toolName,
         executed: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
         timestamp: new Date(),
         context: context,
         query: query.substring(0, 100),
@@ -489,25 +569,27 @@ Response strategies:
     const baseParams = {
       userId: context.userId,
       companyId: context.companyId,
-      query: query
+      query: query,
     };
 
     // Add context-specific parameters based on method
     switch (method) {
-      case 'create_task':
+      case "create_task":
         return {
           ...baseParams,
           title: query,
           description: `Task created from AI query: ${query}`,
-          boardSectionId: context.boardId ? `${context.boardId}_section_1` : undefined
+          boardSectionId: context.boardId
+            ? `${context.boardId}_section_1`
+            : undefined,
         };
-      
-      case 'search_tasks':
-      case 'semantic_search':
-      case 'contextual_search':
+
+      case "search_tasks":
+      case "semantic_search":
+      case "contextual_search":
         // Extract meaningful search terms from conversational queries
         let searchTerm = query;
-        
+
         // Remove common question patterns to extract the core search term
         const patterns = [
           /is there (?:a |an )?(?:task |item |work )?(?:called |named |titled |with title )?['""]([^'""\?]+)['""]?\??/i,
@@ -519,7 +601,7 @@ Response strategies:
           /(?:find|search|show|get)\s+(?:task\s+|item\s+)?['""]([^'"]+)['""](?:\s+task)?/i,
           /(?:task\s+)?['""]([^'"]+)['""](?:\s+task)?/i,
         ];
-        
+
         for (const pattern of patterns) {
           const match = query.match(pattern);
           if (match && match[1]) {
@@ -527,31 +609,33 @@ Response strategies:
             break;
           }
         }
-        
-        console.log(`Extracted search term: "${searchTerm}" from query: "${query}"`);
-        
+
+        console.log(
+          `Extracted search term: "${searchTerm}" from query: "${query}"`
+        );
+
         return {
           ...baseParams,
           boardId: context.boardId,
           searchTerm: searchTerm,
-          limit: 10
+          limit: 10,
         };
-      
-      case 'get_tasks':
+
+      case "get_tasks":
         return {
           ...baseParams,
           boardId: context.boardId,
-          limit: 20
+          limit: 20,
         };
-      
-      case 'update_task':
+
+      case "update_task":
         // Extract task completion/update requests
         const updatePatterns = [
           /(?:mark|make|set) (?:this |the )?(?:task )?(?:as )?(?:done|completed|finished|complete)/i,
           /(?:complete|finish) (?:this |the )?(?:task)?/i,
-          /task (?:is |should be )?(?:done|completed|finished)/i
+          /task (?:is |should be )?(?:done|completed|finished)/i,
         ];
-        
+
         let isCompletionRequest = false;
         for (const pattern of updatePatterns) {
           if (query.match(pattern)) {
@@ -559,7 +643,7 @@ Response strategies:
             break;
           }
         }
-        
+
         // If it's a completion request but no specific taskId, we need to search for the task first
         if (isCompletionRequest && !context.taskId) {
           // Extract task reference from completion queries like "make 'test tsd' task done"
@@ -571,49 +655,53 @@ Response strategies:
             /[\"']([^\"']+)[\"']\s+(?:task|item)?\s+(?:done|completed|finished|complete)/i,
             /(?:task |item )(?:called |named |titled )?[\"']?([^\"'\\?]+)[\"']?/i,
           ];
-          
+
           for (const pattern of taskRefPatterns) {
             const match = query.match(pattern);
             if (match && match[1]) {
-              console.log(`Extracted task reference for completion: "${match[1]}" from query: "${query}"`);
+              console.log(
+                `Extracted task reference for completion: "${match[1]}" from query: "${query}"`
+              );
               // Return search parameters to find the task first
               return {
                 ...baseParams,
                 searchTerm: match[1].trim(),
                 limit: 5,
                 // Signal this is for task completion
-                _forCompletion: true
+                _forCompletion: true,
               };
             }
           }
-          
-          console.log(`No task reference found in completion query: "${query}"`);
+
+          console.log(
+            `No task reference found in completion query: "${query}"`
+          );
         }
-        
+
         // If we have a taskId (from sequential workflow), use it for direct update
         if (context.taskId) {
           return {
             ...baseParams,
             taskId: context.taskId,
-            status: isCompletionRequest ? 'COMPLETED' : undefined
+            status: isCompletionRequest ? "COMPLETED" : undefined,
           };
         }
-        
+
         return {
           ...baseParams,
-          status: isCompletionRequest ? 'COMPLETED' : undefined
+          status: isCompletionRequest ? "COMPLETED" : undefined,
         };
-      
-      case 'get_boards':
+
+      case "get_boards":
         return baseParams;
-      
-      case 'project_health':
-      case 'task_analytics':
+
+      case "project_health":
+      case "task_analytics":
         return {
           ...baseParams,
-          boardId: context.boardId
+          boardId: context.boardId,
         };
-      
+
       default:
         return baseParams;
     }
@@ -694,7 +782,7 @@ Provide helpful, accurate responses based on your knowledge of project managemen
           content: query,
         },
       ],
-      temperature: 0.7,
+      // temperature not supported on some models like gpt-5
     });
 
     return response.text;
@@ -710,33 +798,43 @@ Provide helpful, accurate responses based on your knowledge of project managemen
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _context: AgentContext
   ): Promise<string> {
-    console.log('Synthesizing tool response for query:', query);
-    console.log('Tool execution summary:', toolResult.summary);
-    console.log('Tool results raw:', JSON.stringify(toolResult.results, null, 2));
-    
+    console.log("Synthesizing tool response for query:", query);
+    console.log("Tool execution summary:", toolResult.summary);
+    console.log(
+      "Tool results raw:",
+      JSON.stringify(toolResult.results, null, 2)
+    );
+
     // Extract successful results and parse the nested JSON content
-    const successfulResults = toolResult.results.filter(r => r.success && r.result?.result);
-    
+    const successfulResults = toolResult.results.filter(
+      (r) => r.success && r.result?.result
+    );
+
     // Parse the nested JSON content from MCP responses
-    const parsedResults = successfulResults.map(result => {
+    const parsedResults = successfulResults.map((result) => {
       try {
         // The actual data is nested in result.result.content[0].text as JSON string
         if (result.result?.result?.content?.[0]?.text) {
-          const parsedContent = JSON.parse(result.result.result.content[0].text);
-          console.log('Parsed MCP content:', parsedContent);
+          const parsedContent = JSON.parse(
+            result.result.result.content[0].text
+          );
+          console.log("Parsed MCP content:", parsedContent);
           return {
             ...result,
-            parsedContent
+            parsedContent,
           };
         }
         return result;
       } catch (error) {
-        console.error('Failed to parse MCP result content:', error);
+        console.error("Failed to parse MCP result content:", error);
         return result;
       }
     });
-    
-    console.log('Parsed results for synthesis:', JSON.stringify(parsedResults, null, 2));
+
+    console.log(
+      "Parsed results for synthesis:",
+      JSON.stringify(parsedResults, null, 2)
+    );
 
     const synthesisPrompt = `Based on the tool execution results, provide a comprehensive response to the user's query.
 
@@ -761,10 +859,10 @@ If you see "foundTasks" with a number > 0 in the parsed content, those are real 
 If you see a "tasks" array in the parsed content, those are the actual task details.
 Do not say "no results found" if the parsed content shows tasks were actually found.`,
       prompt: synthesisPrompt,
-      temperature: 0.6,
+      // temperature not supported on some models like gpt-5
     });
 
-    console.log('Synthesized response:', response.text);
+    console.log("Synthesized response:", response.text);
     return response.text;
   }
 
@@ -785,7 +883,7 @@ This query needs clarification to provide the best help. Generate a helpful clar
       system:
         "You are helpful at asking clarifying questions to better understand user needs.",
       prompt: clarificationPrompt,
-      temperature: 0.6,
+      // temperature not supported on some models like gpt-5
     });
 
     return response.text;
