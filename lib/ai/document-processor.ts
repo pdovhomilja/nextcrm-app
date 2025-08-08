@@ -256,7 +256,7 @@ export class DocumentProcessor {
   }> {
     try {
       const analysisResult = await generateObject({
-        model: aiConfig.chatModel,
+        model: aiConfig.structuredOutputModel,
         system: `You are a document analysis expert. Analyze the provided document content and generate:
 1. A concise summary (2-3 sentences)
 2. Key insights relevant to project management

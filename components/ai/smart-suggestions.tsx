@@ -13,6 +13,12 @@ import {
   Target,
   Zap,
   CheckCircle,
+  MessageCircle,
+  MessageSquare,
+  Heart,
+  Laptop,
+  GraduationCap,
+  TrendingUp,
 } from "lucide-react";
 
 interface SmartSuggestionsProps {
@@ -25,7 +31,7 @@ interface SmartSuggestionsProps {
 
 interface Suggestion {
   id: string;
-  type: "task" | "assignment" | "priority" | "deadline" | "optimization";
+  type: "task" | "assignment" | "priority" | "deadline" | "optimization" | "communication" | "feedback" | "wellness" | "technology" | "skill" | "continuous_improvement";
   title: string;
   description: string;
   reasoning: string;
@@ -46,6 +52,12 @@ const typeIcons = {
   priority: Zap,
   deadline: Clock,
   optimization: RefreshCw,
+  communication: MessageCircle,
+  feedback: MessageSquare,
+  wellness: Heart,
+  technology: Laptop,
+  skill: GraduationCap,
+  continuous_improvement: TrendingUp,
 };
 
 const impactColors = {

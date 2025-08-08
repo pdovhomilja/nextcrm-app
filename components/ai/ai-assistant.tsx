@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +13,14 @@ import {
   User,
   Settings,
   Minimize2,
+  ChevronDown,
 } from "lucide-react";
+
+interface Message {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+}
 
 interface AIAssistantProps {
   boardId?: string;
@@ -31,30 +38,61 @@ export function AIAssistant({ boardId, taskId, className }: AIAssistantProps) {
   const [isMinimized, setIsMinimized] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
-  type Message = {
-    id: string;
-    role: "user" | "assistant";
-    content: string;
-  };
+  const welcomeMessage = useMemo(
+    () =>
+      `Hello! I'm your AI project management assistant. I can help you with:
 
-  const [input, setInput] = useState("");
+🔍 Project Analysis — Health checks, bottleneck identification
+📋 Task Recommendations — Prioritization and assignment suggestions
+📊 Progress Tracking — Milestone monitoring and forecasts
+⚡ Resource Optimization — Workload balancing and efficiency
+
+${boardId ? `I can see you're working on a specific board. ` : ""}${
+        taskId ? `I notice you have a task selected. ` : ""
+      }How can I help you today?`,
+    [boardId, taskId]
+  );
+
+  // Temporary simplified state management until AI SDK is properly configured
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
       role: "assistant",
-      content: `Hello! I'm your AI project management assistant. I can help you with:
-
-🔍 **Project Analysis** - Health checks, bottleneck identification
-📋 **Task Recommendations** - Prioritization and assignment suggestions  
-📊 **Progress Tracking** - Milestone monitoring and forecasts
-⚡ **Resource Optimization** - Workload balancing and efficiency
-
-${boardId ? `I can see you're working on a specific board. ` : ""}${taskId ? `I notice you have a task selected. ` : ""}How can I help you today?`,
+      content: welcomeMessage,
     },
   ]);
+  const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  // Auto-scroll to bottom when messages change
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    // Use setTimeout to ensure the DOM has updated before scrolling
+    const timer = setTimeout(scrollToBottom, 100);
+    return () => clearTimeout(timer);
+  }, [messages]);
+
+  // Handle scroll detection for scroll-to-bottom button
+  const handleScroll = () => {
+    const container = messagesContainerRef.current;
+    if (container) {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+      setShowScrollButton(!isNearBottom);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
@@ -63,6 +101,7 @@ ${boardId ? `I can see you're working on a specific board. ` : ""}${taskId ? `I 
       role: "user",
       content: input,
     };
+
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
@@ -88,26 +127,33 @@ ${boardId ? `I can see you're working on a specific board. ` : ""}${taskId ? `I 
           role: "assistant",
           content:
             data.response ||
-            "I apologize, but I could not generate a response.",
+            "I'm here to help with your project management needs.",
         };
         setMessages((prev) => [...prev, assistantMessage]);
       }
     } catch (error) {
-      console.error("Chat error:", error);
-      const errorMessage: Message = {
-        id: `error-${Date.now()}`,
-        role: "assistant",
-        content: "Sorry, I encountered an error. Please try again.",
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+      console.error("AI Chat error:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const clearChat = () => {
-    setMessages([]);
+  const stop = () => {
+    setIsLoading(false);
   };
+
+  const clearChat = useCallback(() => {
+    // Reset to the initial welcome message
+    setMessages([
+      {
+        id: `welcome-${Date.now()}`,
+        role: "assistant",
+        content: welcomeMessage,
+      } as Message,
+    ]);
+    setInput("");
+    stop();
+  }, [welcomeMessage]);
 
   if (isMinimized) {
     return (
@@ -213,8 +259,12 @@ ${boardId ? `I can see you're working on a specific board. ` : ""}${taskId ? `I 
         )}
       </CardHeader>
 
-      <CardContent className="flex-1 flex flex-col p-0">
-        <div className="flex-1 p-4 overflow-y-auto">
+      <CardContent className="flex-1 min-h-0 flex flex-col p-0">
+        <div
+          ref={messagesContainerRef}
+          onScroll={handleScroll}
+          className="flex-1 min-h-0 p-4 overflow-y-auto overscroll-contain scroll-smooth relative"
+        >
           <div className="space-y-4">
             {messages.map((message) => (
               <div
@@ -262,14 +312,29 @@ ${boardId ? `I can see you're working on a specific board. ` : ""}${taskId ? `I 
                 <span className="text-sm">AI is thinking...</span>
               </div>
             )}
+
+            {/* Invisible div for auto-scrolling */}
+            <div ref={messagesEndRef} />
           </div>
+
+          {/* Scroll to bottom button */}
+          {showScrollButton && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={scrollToBottom}
+              className="absolute bottom-4 right-4 rounded-full w-8 h-8 p-0 shadow-lg"
+            >
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          )}
         </div>
 
         <div className="border-t p-4">
-          <form onSubmit={onSubmit} className="flex gap-2">
+          <form onSubmit={handleSubmit} className="flex gap-2">
             <Input
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={handleInputChange}
               placeholder="Ask about your project..."
               disabled={isLoading}
               className="flex-1"

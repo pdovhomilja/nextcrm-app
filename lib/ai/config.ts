@@ -6,8 +6,11 @@ export const aiConfig = {
     process.env.EMBEDDING_MODEL || "text-embedding-ada-002"
   ),
 
-  // Chat model for analysis
-  chatModel: openai(process.env.AI_MODEL || "gpt-4-turbo"),
+  // Chat model for analysis - using gpt-4o for structured output support
+  chatModel: openai(process.env.AI_MODEL || "gpt-4o"),
+
+  // Structured output model - always use gpt-4o for generateObject calls
+  structuredOutputModel: openai(process.env.AI_STRUCTURED_MODEL || "gpt-4o"),
 
   // Embedding settings
   embedding: {

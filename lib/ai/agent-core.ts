@@ -1,6 +1,6 @@
 import { generateText, generateObject } from "ai";
 import { aiConfig } from "./config";
-import { mcpClientPool } from "./mcp-client-pool";
+import { simpleMCPClientPool } from "./simple-mcp-client";
 import { ragProcessor, RAGQuery } from "./rag-processor";
 import { z } from "zod";
 
@@ -65,8 +65,8 @@ export abstract class BaseAIAgent {
     console.log(`Initializing ${this.role} agent...`);
 
     try {
-      await mcpClientPool.initialize();
-      this.mcpTools = await mcpClientPool.getTools();
+      await simpleMCPClientPool.initialize();
+      this.mcpTools = await simpleMCPClientPool.getTools();
       console.log(
         `${this.role} agent initialized with ${Object.keys(this.mcpTools).length} tools`
       );
@@ -115,17 +115,35 @@ export abstract class BaseAIAgent {
       // Step 2: Execute decision
       switch (decision.action) {
         case "use_tools":
-          const toolResult = await this.orchestrateTools(
-            query,
-            context,
-            decision.toolsToUse || []
-          );
-          toolResults = toolResult.results;
-          response = await this.synthesizeToolResponse(
-            query,
-            toolResult,
-            context
-          );
+          // Check if any tools are actually available
+          const availableTools = (decision.toolsToUse || []).filter(toolName => this.mcpTools[toolName]);
+          
+          if (availableTools.length === 0) {
+            // No tools available, fall back to direct response
+            console.log("No MCP tools available, falling back to direct response");
+            response = await this.generateDirectResponse(query, context, conversationHistory);
+          } else {
+            const toolResult = await this.orchestrateTools(
+              query,
+              context,
+              decision.toolsToUse || []
+            );
+            toolResults = toolResult.results;
+            
+            // Check if any tools actually succeeded
+            const successfulResults = toolResult.results.filter(r => r.success);
+            if (successfulResults.length === 0) {
+              // All tools failed, fall back to direct response
+              console.log("All MCP tools failed, falling back to direct response");
+              response = await this.generateDirectResponse(query, context, conversationHistory);
+            } else {
+              response = await this.synthesizeToolResponse(
+                query,
+                toolResult,
+                context
+              );
+            }
+          }
           break;
 
         case "respond":
@@ -209,11 +227,14 @@ export abstract class BaseAIAgent {
     context: AgentContext,
     history: AgentMessage[]
   ): Promise<AgentDecision> {
+    const mcpToolCount = Object.keys(this.mcpTools).length;
     const decisionPrompt = `As a ${this.role} agent, analyze this query and decide the best approach.
 
 Query: "${query}"
 Available capabilities: ${this.capabilities.join(", ")}
-Available MCP tools: ${Object.keys(this.mcpTools).slice(0, 10).join(", ")}${Object.keys(this.mcpTools).length > 10 ? "..." : ""}
+Available MCP tools: ${mcpToolCount > 0 ? Object.keys(this.mcpTools).slice(0, 10).join(", ") : "NONE - tools are not available"}${Object.keys(this.mcpTools).length > 10 ? "..." : ""}
+
+${mcpToolCount === 0 ? "IMPORTANT: Since no MCP tools are available, you should choose 'respond' action instead of 'use_tools'." : ""}
 
 Conversation context: ${history
       .slice(-3)
@@ -224,7 +245,7 @@ Choose the best action and strategy for handling this query.`;
 
     try {
       const result = await generateObject({
-        model: aiConfig.chatModel,
+        model: aiConfig.structuredOutputModel,
         system: `You are a decision-making system for an AI project management agent.
         
 Your role is to analyze queries and choose the optimal response strategy:
@@ -320,7 +341,7 @@ Response strategies:
   }
 
   /**
-   * Execute a specific MCP tool (placeholder implementation)
+   * Execute a specific MCP tool using the simplified MCP client
    */
   protected async executeTool(
     toolName: string,
@@ -328,15 +349,108 @@ Response strategies:
     context: AgentContext
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<any> {
-    // This would be implemented based on the specific MCP tool interface
-    // For now, return a placeholder
-    return {
-      toolName,
-      executed: true,
-      timestamp: new Date(),
-      context: context,
-      query: query.substring(0, 100), // Truncated for brevity
+    try {
+      // Parse the full tool name (e.g., "tasks_create_task" -> server: "tasks", method: "create_task")
+      const toolParts = toolName.split('_');
+      if (toolParts.length < 2) {
+        throw new Error(`Invalid tool name format: ${toolName}`);
+      }
+      
+      const serverName = toolParts[0];
+      const method = toolParts.slice(1).join('_');
+      
+      // Prepare parameters based on the query and context
+      const params = this.prepareToolParams(method, query, context);
+      
+      // Execute the tool via simplified MCP client
+      const result = await simpleMCPClientPool.callTool(
+        serverName,
+        method,
+        params,
+        context.userId // Pass user ID for authentication
+      );
+      
+      if (result.error) {
+        throw new Error(`MCP tool error: ${result.error.message}`);
+      }
+      
+      return {
+        toolName,
+        serverName,
+        method,
+        executed: true,
+        result: result.result,
+        timestamp: new Date(),
+        context: context,
+        query: query.substring(0, 100),
+      };
+    } catch (error) {
+      console.error(`Tool execution failed for ${toolName}:`, error);
+      return {
+        toolName,
+        executed: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date(),
+        context: context,
+        query: query.substring(0, 100),
+      };
+    }
+  }
+
+  /**
+   * Prepare tool parameters based on method and context
+   */
+  protected prepareToolParams(
+    method: string,
+    query: string,
+    context: AgentContext
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): Record<string, any> {
+    const baseParams = {
+      userId: context.userId,
+      companyId: context.companyId,
+      query: query
     };
+
+    // Add context-specific parameters based on method
+    switch (method) {
+      case 'create_task':
+        return {
+          ...baseParams,
+          title: query,
+          description: `Task created from AI query: ${query}`,
+          boardSectionId: context.boardId ? `${context.boardId}_section_1` : undefined
+        };
+      
+      case 'search_tasks':
+      case 'semantic_search':
+      case 'contextual_search':
+        return {
+          ...baseParams,
+          boardId: context.boardId,
+          limit: 10
+        };
+      
+      case 'get_tasks':
+        return {
+          ...baseParams,
+          boardId: context.boardId,
+          limit: 20
+        };
+      
+      case 'get_boards':
+        return baseParams;
+      
+      case 'project_health':
+      case 'task_analytics':
+        return {
+          ...baseParams,
+          boardId: context.boardId
+        };
+      
+      default:
+        return baseParams;
+    }
   }
 
   /**

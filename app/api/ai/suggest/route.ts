@@ -16,6 +16,12 @@ const suggestionSchema = z.object({
           "priority",
           "deadline",
           "optimization",
+          "communication",
+          "feedback",
+          "wellness",
+          "technology",
+          "skill",
+          "continuous_improvement",
         ]),
         title: z.string(),
         description: z.string(),
@@ -37,7 +43,7 @@ const suggestionSchema = z.object({
   summary: z.string(),
   contextAnalysis: z.object({
     boardHealth: z.number().min(0).max(100).optional(),
-    workloadBalance: z.number().min(0).max(1).optional(),
+    workloadBalance: z.number().min(0).max(100).optional(), // Allow 0-100 for percentage
     urgentItems: z.number().optional(),
   }),
 });
@@ -97,12 +103,18 @@ export async function POST(request: NextRequest) {
 
     // Generate structured suggestions
     const result = await generateObject({
-      model: openai("gpt-4-turbo"),
+      model: openai("gpt-4o"),
       system: `You are a project management expert that provides actionable suggestions based on current project data and AI agent analysis.
 
 Agent Analysis: ${agentSuggestions}
 
-Generate specific, actionable suggestions that users can implement immediately.`,
+Generate specific, actionable suggestions that users can implement immediately.
+
+IMPORTANT: For contextAnalysis values:
+- boardHealth: 0-100 (percentage)
+- workloadBalance: 0-100 (percentage) 
+- urgentItems: integer count
+- confidence: 0-1 (decimal between 0 and 1)`,
       prompt: `Based on the agent analysis and project context, generate ${suggestionType} suggestions for:
 ${boardId ? `Board: ${boardId}` : ""}
 ${taskId ? `Task: ${taskId}` : ""}
@@ -144,7 +156,7 @@ export async function GET(request: NextRequest) {
 
     // Get quick suggestions for the user's current context
     const quickSuggestions = await generateObject({
-      model: openai("gpt-4-turbo"),
+      model: openai("gpt-4o"),
       system:
         "Generate quick project management suggestions for the user's current context.",
       prompt: `Generate 3 quick suggestions for project management improvement:

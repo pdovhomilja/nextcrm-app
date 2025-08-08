@@ -43,7 +43,7 @@ export class MCPClientPool {
   }
 
   /**
-   * Initialize all MCP server connections
+   * Initialize MCP server configurations (without connecting)
    */
   async initialize(): Promise<void> {
     if (this.isInitialized) {
@@ -51,7 +51,14 @@ export class MCPClientPool {
       return;
     }
 
-    console.log("Initializing MCP Client Pool...");
+    // Check if MCP tools are enabled
+    if (process.env.MCP_TOOLS_ENABLED !== "true") {
+      console.log("MCP tools are disabled - skipping initialization");
+      this.isInitialized = true;
+      return;
+    }
+
+    console.log("Initializing MCP Client Pool configuration...");
 
     const serverConfigs = [
       {
@@ -76,7 +83,7 @@ export class MCPClientPool {
       },
     ];
 
-    // Initialize server configs
+    // Initialize server configs without connecting
     for (const config of serverConfigs) {
       this.servers.set(config.name, {
         ...config,
@@ -86,22 +93,34 @@ export class MCPClientPool {
       });
     }
 
-    // Connect to all servers
-    await this.connectToAllServers();
-
-    // Start health monitoring
-    this.startHealthMonitoring();
-
     this.isInitialized = true;
-    console.log("MCP Client Pool initialized successfully");
+    console.log("MCP Client Pool configuration initialized (connections will be made on-demand with authentication)");
+  }
+
+  /**
+   * Initialize connections with authentication context
+   */
+  async initializeConnections(authHeaders?: Record<string, string>): Promise<void> {
+    if (!this.isInitialized) {
+      console.log("MCP Client Pool not initialized - initializing configuration first");
+      await this.initialize();
+    }
+
+    console.log("Initializing MCP connections with authentication context...");
+    await this.connectToAllServers(authHeaders);
+    
+    // Start health monitoring only after successful initialization
+    this.startHealthMonitoring();
+    
+    console.log("MCP Client Pool connections initialized");
   }
 
   /**
    * Connect to all configured MCP servers
    */
-  private async connectToAllServers(): Promise<void> {
+  private async connectToAllServers(authHeaders?: Record<string, string>): Promise<void> {
     const connectionPromises = Array.from(this.servers.keys()).map(
-      (serverName) => this.connectToServer(serverName)
+      (serverName) => this.connectToServer(serverName, 1)
     );
 
     const results = await Promise.allSettled(connectionPromises);
@@ -123,7 +142,7 @@ export class MCPClientPool {
    */
   private async connectToServer(
     serverName: string,
-    attempt = 1
+    attempt = 1,
   ): Promise<boolean> {
     const server = this.servers.get(serverName);
     if (!server) {
@@ -176,6 +195,19 @@ export class MCPClientPool {
         `Connection attempt ${attempt} failed for ${serverName}:`,
         error
       );
+
+      // Check if it's a 404 error (endpoint doesn't exist)
+      const errorObj = error as Error & { code?: number; event?: { code?: number } };
+      const is404Error = errorObj.code === 404 || 
+                         errorObj.event?.code === 404 ||
+                         errorObj.message?.includes('404') ||
+                         errorObj.message?.includes('Non-200 status code (404)');
+
+      if (is404Error) {
+        console.log(`MCP server ${serverName} endpoint not available (404) - skipping retries`);
+        this.updateServerHealth(serverName, "unhealthy");
+        return false;
+      }
 
       if (attempt < this.config.maxRetries) {
         console.log(
@@ -262,12 +294,19 @@ export class MCPClientPool {
   }
 
   /**
-   * Get all available tools from all servers
+   * Get all available tools from all servers (returns empty if no connections)
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async getTools(serverName?: string): Promise<Record<string, any>> {
     if (!this.isInitialized) {
-      await this.initialize();
+      console.log("MCP Client Pool not initialized - returning empty tools");
+      return {};
+    }
+
+    // Return tools only if connections are established and healthy
+    if (this.clients.size === 0) {
+      console.log("No MCP connections established - tools will be available after authentication");
+      return {};
     }
 
     if (serverName) {

@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
 
     // Stream the analysis as it's generated
     const result = await streamObject({
-      model: openai("gpt-4-turbo"),
+      model: openai("gpt-4o"),
       system: `You are a project analytics expert providing real-time insights and analysis.
 
 Generate comprehensive project analysis with actionable insights and recommendations.

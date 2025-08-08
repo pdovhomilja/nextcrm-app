@@ -66,7 +66,7 @@ Respond with the category name and confidence (0-1).`;
 
     try {
       const result = await generateObject({
-        model: aiConfig.chatModel,
+        model: aiConfig.structuredOutputModel,
         system:
           "You are a query classification expert. Analyze queries and categorize them accurately.",
         prompt: classificationPrompt,
@@ -209,7 +209,7 @@ Respond with the category name and confidence (0-1).`;
 
     try {
       const result = await generateObject({
-        model: aiConfig.chatModel,
+        model: aiConfig.structuredOutputModel,
         system: `You are an AI assistant that suggests actionable next steps for project management queries.
         
 Based on the query type "${contextType}" and the context provided, suggest 1-3 specific actions that would be helpful.`,

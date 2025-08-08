@@ -132,7 +132,7 @@ export class ConversationMemoryService {
         .join("\n");
 
       const summary = await generateObject({
-        model: aiConfig.chatModel,
+        model: aiConfig.structuredOutputModel,
         system: `Analyze this conversation and extract:
 1. Key topics discussed
 2. Action items or decisions made

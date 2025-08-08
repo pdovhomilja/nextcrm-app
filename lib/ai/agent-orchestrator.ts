@@ -73,7 +73,7 @@ Select the primary agent and any supporting agents that would be helpful.`;
 
     try {
       const result = await generateObject({
-        model: aiConfig.chatModel,
+        model: aiConfig.structuredOutputModel,
         system:
           "You are an expert at routing queries to the most appropriate AI agents based on their capabilities.",
         prompt: selectionPrompt,
@@ -334,7 +334,7 @@ ${agentResults
 Synthesize these agent responses into a cohesive, comprehensive answer that addresses the user's query. Highlight complementary insights and resolve any conflicts between agent responses.`;
 
       const coordinatedResponse = await generateObject({
-        model: aiConfig.chatModel,
+        model: aiConfig.structuredOutputModel,
         system:
           "You are an expert at synthesizing insights from multiple AI agents into coherent, comprehensive responses.",
         prompt: coordinationPrompt,

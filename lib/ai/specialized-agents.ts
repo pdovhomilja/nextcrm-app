@@ -48,7 +48,7 @@ export class ProjectAnalyzerAgent extends BaseAIAgent {
 
       // Generate structured analysis
       const analysisResult = await generateObject({
-        model: aiConfig.chatModel,
+        model: aiConfig.structuredOutputModel,
         system: `You are a project health analysis expert. Analyze the provided data and generate comprehensive insights.`,
         prompt: `Analyze this project data and provide health assessment:
         
@@ -166,7 +166,7 @@ export class TaskRecommenderAgent extends BaseAIAgent {
 
       // Generate recommendations
       const recommendationResult = await generateObject({
-        model: aiConfig.chatModel,
+        model: aiConfig.structuredOutputModel,
         system: `You are a task recommendation expert. Analyze user workload and project needs to suggest optimal task assignments and priorities.`,
         prompt: `Based on this user's current workload, generate task recommendations:
 
@@ -289,7 +289,7 @@ export class ProgressTrackerAgent extends BaseAIAgent {
 
       // Generate progress analysis
       const progressResult = await generateObject({
-        model: aiConfig.chatModel,
+        model: aiConfig.structuredOutputModel,
         system: `You are a project progress tracking expert. Analyze project data to provide progress insights and forecasts.`,
         prompt: `Analyze this project progress data:
 
@@ -404,7 +404,7 @@ export class ResourceOptimizerAgent extends BaseAIAgent {
 
       // Generate optimization recommendations
       const optimizationResult = await generateObject({
-        model: aiConfig.chatModel,
+        model: aiConfig.structuredOutputModel,
         system: `You are a resource optimization expert. Analyze team workloads and suggest optimal resource allocation.`,
         prompt: `Optimize team resources based on this data:
 
