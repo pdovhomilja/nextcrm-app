@@ -228,6 +228,15 @@ export abstract class BaseAIAgent {
     history: AgentMessage[]
   ): Promise<AgentDecision> {
     const mcpToolCount = Object.keys(this.mcpTools).length;
+    const queryLower = query.toLowerCase();
+    const isSearchQuery = queryLower.includes('search') || queryLower.includes('find') || queryLower.includes('look for') || 
+                         queryLower.includes('is there') || queryLower.includes('do we have') || queryLower.includes('show me') ||
+                         queryLower.includes('list') || queryLower.includes('get');
+    
+    const isUpdateQuery = queryLower.includes('mark') || queryLower.includes('make') || queryLower.includes('set') ||
+                         queryLower.includes('complete') || queryLower.includes('finish') || queryLower.includes('update') ||
+                         (queryLower.includes('task') && (queryLower.includes('done') || queryLower.includes('completed')));
+    
     const decisionPrompt = `As a ${this.role} agent, analyze this query and decide the best approach.
 
 Query: "${query}"
@@ -235,6 +244,10 @@ Available capabilities: ${this.capabilities.join(", ")}
 Available MCP tools: ${mcpToolCount > 0 ? Object.keys(this.mcpTools).slice(0, 10).join(", ") : "NONE - tools are not available"}${Object.keys(this.mcpTools).length > 10 ? "..." : ""}
 
 ${mcpToolCount === 0 ? "IMPORTANT: Since no MCP tools are available, you should choose 'respond' action instead of 'use_tools'." : ""}
+
+${isSearchQuery && mcpToolCount > 0 ? "IMPORTANT: This appears to be a search/lookup query. You should use 'use_tools' action with search tools like 'tasks_search_tasks' to find specific information." : ""}
+
+${isUpdateQuery && mcpToolCount > 0 ? "IMPORTANT: This appears to be a task update/completion request. You should use 'use_tools' action. If no specific task ID is available, first search for the task using 'tasks_search_tasks', then update it using 'tasks_update_task'." : ""}
 
 Conversation context: ${history
       .slice(-3)
@@ -254,10 +267,14 @@ Your role is to analyze queries and choose the optimal response strategy:
 - request_clarification: Ask for more specific information
 - escalate: Human assistance needed
 
+IMPORTANT: For queries asking about specific tasks, searching, finding, or looking up information (like "is there a task", "find task", "show me tasks"), you should choose "use_tools" action and specify tools like "tasks_search_tasks" to search the actual database.
+
+IMPORTANT: For task completion/update queries (like "mark task as done", "complete this task", "make task done"), you should choose "use_tools" action. If no specific task ID is provided, first use "tasks_search_tasks" to find the task, then "tasks_update_task" to update its status.
+
 Response strategies:
 - direct: Simple knowledge-based response
 - rag_enhanced: Use retrieved context from documents
-- tool_orchestrated: Coordinate multiple tools
+- tool_orchestrated: Coordinate multiple tools (USE THIS for search queries)
 - analytical: Deep analysis with structured insights`,
         prompt: decisionPrompt,
         schema: z.object({
@@ -425,9 +442,32 @@ Response strategies:
       case 'search_tasks':
       case 'semantic_search':
       case 'contextual_search':
+        // Extract meaningful search terms from conversational queries
+        let searchTerm = query;
+        
+        // Remove common question patterns to extract the core search term
+        const patterns = [
+          /is there (?:a |an )?(?:task |item |work )?(?:called |named |titled |with title )?['""]?([^'""\?]+)['""]?\??/i,
+          /find (?:a |the )?(?:task |item |work )?(?:called |named |titled |with title )?['""]?([^'""\?]+)['""]?\??/i,
+          /show me (?:a |the )?(?:task |item |work )?(?:called |named |titled |with title )?['""]?([^'""\?]+)['""]?\??/i,
+          /do we have (?:a |an )?(?:task |item |work )?(?:called |named |titled |with title )?['""]?([^'""\?]+)['""]?\??/i,
+          /search for (?:a |the )?(?:task |item |work )?(?:called |named |titled |with title )?['""]?([^'""\?]+)['""]?\??/i
+        ];
+        
+        for (const pattern of patterns) {
+          const match = query.match(pattern);
+          if (match && match[1]) {
+            searchTerm = match[1].trim();
+            break;
+          }
+        }
+        
+        console.log(`Extracted search term: "${searchTerm}" from query: "${query}"`);
+        
         return {
           ...baseParams,
           boardId: context.boardId,
+          searchTerm: searchTerm,
           limit: 10
         };
       
@@ -436,6 +476,51 @@ Response strategies:
           ...baseParams,
           boardId: context.boardId,
           limit: 20
+        };
+      
+      case 'update_task':
+        // Extract task completion/update requests
+        const updatePatterns = [
+          /(?:mark|make|set) (?:this |the )?(?:task )?(?:as )?(?:done|completed|finished|complete)/i,
+          /(?:complete|finish) (?:this |the )?(?:task)?/i,
+          /task (?:is |should be )?(?:done|completed|finished)/i
+        ];
+        
+        let isCompletionRequest = false;
+        for (const pattern of updatePatterns) {
+          if (query.match(pattern)) {
+            isCompletionRequest = true;
+            break;
+          }
+        }
+        
+        // If it's a completion request but no specific taskId, we need to search for the task first
+        if (isCompletionRequest && !context.taskId) {
+          // Extract task reference from query
+          const taskRefPatterns = [
+            /(?:task |item )(?:called |named |titled )?['\"\"]?([^'\"\"\\?]+)['\"\"]?/i,
+            /['\"\"]([^'\"\"]+)['\"\"](?= task| item)/i
+          ];
+          
+          for (const pattern of taskRefPatterns) {
+            const match = query.match(pattern);
+            if (match && match[1]) {
+              // Return search parameters to find the task first
+              return {
+                ...baseParams,
+                searchTerm: match[1].trim(),
+                limit: 5,
+                // Signal this is for task completion
+                _forCompletion: true
+              };
+            }
+          }
+        }
+        
+        return {
+          ...baseParams,
+          taskId: context.taskId,
+          status: isCompletionRequest ? 'COMPLETED' : undefined
         };
       
       case 'get_boards':
@@ -544,23 +629,61 @@ Provide helpful, accurate responses based on your knowledge of project managemen
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _context: AgentContext
   ): Promise<string> {
+    console.log('Synthesizing tool response for query:', query);
+    console.log('Tool execution summary:', toolResult.summary);
+    console.log('Tool results raw:', JSON.stringify(toolResult.results, null, 2));
+    
+    // Extract successful results and parse the nested JSON content
+    const successfulResults = toolResult.results.filter(r => r.success && r.result?.result);
+    
+    // Parse the nested JSON content from MCP responses
+    const parsedResults = successfulResults.map(result => {
+      try {
+        // The actual data is nested in result.result.content[0].text as JSON string
+        if (result.result?.result?.content?.[0]?.text) {
+          const parsedContent = JSON.parse(result.result.result.content[0].text);
+          console.log('Parsed MCP content:', parsedContent);
+          return {
+            ...result,
+            parsedContent
+          };
+        }
+        return result;
+      } catch (error) {
+        console.error('Failed to parse MCP result content:', error);
+        return result;
+      }
+    });
+    
+    console.log('Parsed results for synthesis:', JSON.stringify(parsedResults, null, 2));
+
     const synthesisPrompt = `Based on the tool execution results, provide a comprehensive response to the user's query.
 
 Original query: "${query}"
 Tool execution summary: ${toolResult.summary}
 
-Tool results:
-${JSON.stringify(toolResult.results, null, 2)}
+Parsed tool results with actual data:
+${JSON.stringify(parsedResults, null, 2)}
 
-Synthesize this information into a clear, helpful response for the user.`;
+IMPORTANT: Look for the "parsedContent" field in each result which contains the actual data from the MCP tools. 
+If you see tasks data with foundTasks > 0, that means tasks were found successfully.
+Focus on the actual task information in the parsed content, not just the tool execution metadata.
+
+Synthesize this information into a clear, helpful response for the user. If tasks were found, list them clearly with their details.`;
 
     const response = await generateText({
       model: aiConfig.chatModel,
-      system: `You are a ${this.role} assistant that synthesizes information from various tools to provide comprehensive responses.`,
+      system: `You are a ${this.role} assistant that synthesizes information from various tools to provide comprehensive responses.
+
+CRITICAL: When interpreting MCP tool results, always look for the "parsedContent" field which contains the actual data.
+If you see "foundTasks" with a number > 0 in the parsed content, those are real tasks that were found.
+If you see a "tasks" array in the parsed content, those are the actual task details.
+Do not say "no results found" if the parsed content shows tasks were actually found.`,
       prompt: synthesisPrompt,
       temperature: 0.6,
     });
 
+    console.log('Synthesized response:', response.text);
     return response.text;
   }
 
