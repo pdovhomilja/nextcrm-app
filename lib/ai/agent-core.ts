@@ -510,11 +510,14 @@ Response strategies:
         
         // Remove common question patterns to extract the core search term
         const patterns = [
-          /is there (?:a |an )?(?:task |item |work )?(?:called |named |titled |with title )?['""]?([^'""\?]+)['""]?\??/i,
-          /find (?:a |the )?(?:task |item |work )?(?:called |named |titled |with title )?['""]?([^'""\?]+)['""]?\??/i,
-          /show me (?:a |the )?(?:task |item |work )?(?:called |named |titled |with title )?['""]?([^'""\?]+)['""]?\??/i,
-          /do we have (?:a |an )?(?:task |item |work )?(?:called |named |titled |with title )?['""]?([^'""\?]+)['""]?\??/i,
-          /search for (?:a |the )?(?:task |item |work )?(?:called |named |titled |with title )?['""]?([^'""\?]+)['""]?\??/i
+          /is there (?:a |an )?(?:task |item |work )?(?:called |named |titled |with title )?['""]([^'""\?]+)['""]?\??/i,
+          /find (?:a |the |task )?(?:task |item |work )?(?:called |named |titled |with title )?['""]([^'""\?]+)['""]?\??/i,
+          /show me (?:a |the )?(?:task |item |work )?(?:called |named |titled |with title )?['""]([^'""\?]+)['""]?\??/i,
+          /do we have (?:a |an )?(?:task |item |work )?(?:called |named |titled |with title )?['""]([^'""\?]+)['""]?\??/i,
+          /search for (?:a |the )?(?:task |item |work )?(?:called |named |titled |with title )?['""]([^'""\?]+)['""]?\??/i,
+          // Pattern for queries with quoted text - must have quotes
+          /(?:find|search|show|get)\s+(?:task\s+|item\s+)?['""]([^'"]+)['""](?:\s+task)?/i,
+          /(?:task\s+)?['""]([^'"]+)['""](?:\s+task)?/i,
         ];
         
         for (const pattern of patterns) {
@@ -561,10 +564,12 @@ Response strategies:
         if (isCompletionRequest && !context.taskId) {
           // Extract task reference from completion queries like "make 'test tsd' task done"
           const taskRefPatterns = [
-            /(?:mark|make|set|complete|finish)\s+['\"\"]([^'\"\"]+)['\"\"](?:\s+(?:task|item))?(?:\s+(?:as\s+)?(?:done|completed|finished|complete))?/i,
-            /(?:mark|make|set|complete|finish)\s+(?:the\s+)?(?:task\s+)?['\"\"]([^'\"\"]+)['\"\"](?:\s+(?:as\s+)?(?:done|completed|finished|complete))?/i,
-            /(?:task\s+)?['\"\"]([^'\"\"]+)['\"\"](?:\s+(?:task|item))?\s+(?:done|completed|finished|complete)/i,
-            /(?:task |item )(?:called |named |titled )?['\"\"]?([^'\"\"\\?]+)['\"\"]?/i,
+            /(?:mark|make|set|complete|finish)\s+[\"']([^\"']+)[\"'](?:\s+(?:task|item))?(?:\s+(?:as\s+)?(?:done|completed|finished|complete))?/i,
+            /(?:mark|make|set|complete|finish)\s+(?:the\s+)?(?:task\s+)?[\"']([^\"']+)[\"'](?:\s+(?:as\s+)?(?:done|completed|finished|complete))?/i,
+            /(?:task\s+)?[\"']([^\"']+)[\"'](?:\s+(?:task|item))?\s+(?:done|completed|finished|complete)/i,
+            /(?:mark|make|set|complete|finish)\s+(?:this\s+)?(?:task\s+)?(?:called\s+|named\s+|titled\s+)?[\"']([^\"']+)[\"']/i,
+            /[\"']([^\"']+)[\"']\s+(?:task|item)?\s+(?:done|completed|finished|complete)/i,
+            /(?:task |item )(?:called |named |titled )?[\"']?([^\"'\\?]+)[\"']?/i,
           ];
           
           for (const pattern of taskRefPatterns) {
