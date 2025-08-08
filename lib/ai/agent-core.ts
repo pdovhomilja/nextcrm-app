@@ -325,29 +325,92 @@ Response strategies:
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const results: any[] = [];
 
-    for (const toolName of toolNames) {
-      try {
-        const tool = this.mcpTools[toolName];
-        if (!tool) {
-          console.warn(`Tool not available: ${toolName}`);
-          continue;
-        }
+    // Check for task completion workflow
+    const hasSearchAndUpdate = toolNames.includes('tasks_search_tasks') && toolNames.includes('tasks_update_task');
+    const isCompletionQuery = query.toLowerCase().includes('done') || query.toLowerCase().includes('complete') || 
+                             query.toLowerCase().includes('mark') || query.toLowerCase().includes('finish');
 
-        // This would need to be implemented based on the specific MCP SDK
-        // For now, we'll simulate tool execution
-        const result = await this.executeTool(toolName, query, context);
+    if (hasSearchAndUpdate && isCompletionQuery) {
+      // Sequential workflow: search first, then update with found task ID
+      try {
+        console.log('Executing sequential search-then-update workflow');
+        
+        // Step 1: Search for the task
+        const searchResult = await this.executeTool('tasks_search_tasks', query, context);
         results.push({
-          toolName,
-          result,
+          toolName: 'tasks_search_tasks',
+          result: searchResult,
           success: true,
         });
+
+        // Step 2: If task found, update it
+        if (searchResult.executed && searchResult.result?.content?.[0]?.text) {
+          const searchData = JSON.parse(searchResult.result.content[0].text);
+          
+          if (searchData.tasks && searchData.tasks.length > 0) {
+            const foundTask = searchData.tasks[0];
+            console.log(`Found task for completion: ${foundTask.id} (${foundTask.title})`);
+            
+            // Update the task to completed status
+            const updateResult = await this.executeTool('tasks_update_task', query, {
+              ...context,
+              taskId: foundTask.id
+            });
+            
+            results.push({
+              toolName: 'tasks_update_task',
+              result: updateResult,
+              success: updateResult.executed,
+            });
+          } else {
+            console.log('No tasks found to complete');
+            results.push({
+              toolName: 'tasks_update_task',
+              result: { executed: false, error: 'No matching tasks found to complete' },
+              success: false,
+            });
+          }
+        } else {
+          console.log('Search tool failed, cannot proceed with update');
+          results.push({
+            toolName: 'tasks_update_task',
+            result: { executed: false, error: 'Search failed, cannot find task to update' },
+            success: false,
+          });
+        }
+
       } catch (error) {
-        console.error(`Tool execution failed: ${toolName}`, error);
+        console.error('Sequential workflow failed:', error);
         results.push({
-          toolName,
-          error: error instanceof Error ? error.message : "Unknown error",
+          toolName: 'tasks_update_task',
+          result: { executed: false, error: error instanceof Error ? error.message : 'Sequential workflow failed' },
           success: false,
         });
+      }
+    } else {
+      // Normal parallel execution for other workflows
+      for (const toolName of toolNames) {
+        try {
+          const tool = this.mcpTools[toolName];
+          if (!tool) {
+            console.warn(`Tool not available: ${toolName}`);
+            continue;
+          }
+
+          const result = await this.executeTool(toolName, query, context);
+          results.push({
+            toolName,
+            result,
+            success: true,
+          });
+        } catch (error) {
+          console.error(`Tool execution failed: ${toolName}`, error);
+          results.push({
+            toolName,
+            error: error instanceof Error ? error.message : "Unknown error",
+            success: false,
+          });
+        }
       }
     }
 
@@ -496,15 +559,18 @@ Response strategies:
         
         // If it's a completion request but no specific taskId, we need to search for the task first
         if (isCompletionRequest && !context.taskId) {
-          // Extract task reference from query
+          // Extract task reference from completion queries like "make 'test tsd' task done"
           const taskRefPatterns = [
+            /(?:mark|make|set|complete|finish)\s+['\"\"]([^'\"\"]+)['\"\"](?:\s+(?:task|item))?(?:\s+(?:as\s+)?(?:done|completed|finished|complete))?/i,
+            /(?:mark|make|set|complete|finish)\s+(?:the\s+)?(?:task\s+)?['\"\"]([^'\"\"]+)['\"\"](?:\s+(?:as\s+)?(?:done|completed|finished|complete))?/i,
+            /(?:task\s+)?['\"\"]([^'\"\"]+)['\"\"](?:\s+(?:task|item))?\s+(?:done|completed|finished|complete)/i,
             /(?:task |item )(?:called |named |titled )?['\"\"]?([^'\"\"\\?]+)['\"\"]?/i,
-            /['\"\"]([^'\"\"]+)['\"\"](?= task| item)/i
           ];
           
           for (const pattern of taskRefPatterns) {
             const match = query.match(pattern);
             if (match && match[1]) {
+              console.log(`Extracted task reference for completion: "${match[1]}" from query: "${query}"`);
               // Return search parameters to find the task first
               return {
                 ...baseParams,
@@ -515,11 +581,21 @@ Response strategies:
               };
             }
           }
+          
+          console.log(`No task reference found in completion query: "${query}"`);
+        }
+        
+        // If we have a taskId (from sequential workflow), use it for direct update
+        if (context.taskId) {
+          return {
+            ...baseParams,
+            taskId: context.taskId,
+            status: isCompletionRequest ? 'COMPLETED' : undefined
+          };
         }
         
         return {
           ...baseParams,
-          taskId: context.taskId,
           status: isCompletionRequest ? 'COMPLETED' : undefined
         };
       
