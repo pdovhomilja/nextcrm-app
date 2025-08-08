@@ -11,22 +11,18 @@ const AIAssistantPage = () => {
       <SiteHeader title="AI Assistant">
         <div className="flex items-center gap-2">{/* Nav buttons */}</div>
       </SiteHeader>
-      <div className="flex flex-1 flex-col border-black">
-        <div className="@container/main flex flex-1 flex-col gap-2">
-          <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-            <div className="flex flex-col gap-4 p-4">
-              <div className="flex justify-end">{/* Nav buttons */}</div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="md:col-span-2">
-                  <ProjectInsights
-                    boardId="default"
-                    analysisType="comprehensive"
-                  />
-                </div>
-                <div>
-                  <SmartSuggestions suggestionType="general" autoRefresh />
-                </div>
-              </div>
+      <div className="flex-1">
+        <div className="p-4 md:p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              <ProjectInsights boardId="default" analysisType="comprehensive" />
+            </div>
+            <div className="lg:col-span-1">
+              <SmartSuggestions
+                suggestionType="general"
+                autoRefresh
+                className="shadow-sm"
+              />
             </div>
           </div>
         </div>

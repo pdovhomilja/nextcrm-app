@@ -31,7 +31,18 @@ interface SmartSuggestionsProps {
 
 interface Suggestion {
   id: string;
-  type: "task" | "assignment" | "priority" | "deadline" | "optimization" | "communication" | "feedback" | "wellness" | "technology" | "skill" | "continuous_improvement";
+  type:
+    | "task"
+    | "assignment"
+    | "priority"
+    | "deadline"
+    | "optimization"
+    | "communication"
+    | "feedback"
+    | "wellness"
+    | "technology"
+    | "skill"
+    | "continuous_improvement";
   title: string;
   description: string;
   reasoning: string;
@@ -200,8 +211,10 @@ export function SmartSuggestions({
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="mb-1">
                     <h4 className="font-medium text-sm">{suggestion.title}</h4>
+                  </div>
+                  <div className="flex items-center gap-2 mb-2">
                     <Badge
                       variant="secondary"
                       className={`text-xs ${impactColors[suggestion.impact]}`}
