@@ -7,7 +7,7 @@ import CreateTaskButton from "./create-task-button";
 import TaskActions from "./task-actions";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { User2, X } from "lucide-react";
+import { GripVertical, User2, X } from "lucide-react";
 import CreateBoardSectionButton from "./create-board-section";
 import {
   DndContext,
@@ -18,6 +18,7 @@ import {
   KeyboardSensor,
   PointerSensor,
   TouchSensor,
+  useDroppable,
   useSensor,
   useSensors,
   closestCorners,
@@ -29,6 +30,7 @@ import {
   arrayMove,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
+// Modifiers like autoScroll are not available in our current version; skipping for now
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { updateSectionPositions } from "@/actions/tasks/update-section-position";
@@ -79,18 +81,30 @@ function SortableSection({
     <Card
       ref={setNodeRef}
       style={style}
-      className={`max-w-md min-w-[300px] transition-all duration-200 ${
+      className={`max-w-md min-w-[300px] will-change-transform transform-gpu transition-[transform,opacity] duration-200 ease-out ${
         isOver ? "ring-4 ring-blue-500/40 bg-blue-50" : ""
       }`}
       {...attributes}
     >
-      <CardHeader {...listeners}>
-        <CardTitle
-          className={"cursor-grab flex items-center justify-between p-2 gap-2"}
-        >
-          {section.name}
+      <CardHeader>
+        <CardTitle className={"flex items-center justify-between p-2 gap-2"}>
+          <span className="flex items-center gap-2">
+            <span
+              {...listeners}
+              {...attributes}
+              role="button"
+              tabIndex={0}
+              aria-roledescription="Draggable section"
+              aria-label={`Drag handle for section ${section.name}`}
+              className="cursor-grab active:cursor-grabbing inline-flex"
+            >
+              <GripVertical className="h-4 w-4 text-muted-foreground" />
+            </span>
+            <span>{section.name}</span>
+          </span>
           <X
             className="w-4 h-4"
+            aria-label="Delete section"
             onClick={async () => {
               const res = await deleteBoardSection(section.id, boardId);
               if (res.message) {
@@ -108,11 +122,13 @@ function SortableSection({
         />
       </CardHeader>
       <CardContent className={"flex flex-col min-h-[120px] p-4"}>
+        {/* Invisible droppable container for cross-section target */}
+        <SectionTasksDroppableContainer sectionId={section.id} />
         <SortableContext
           items={section.tasks.map((t) => t.id)}
           strategy={verticalListSortingStrategy}
         >
-          <div className="space-y-3">
+          <div className="space-y-3 select-none">
             {section.tasks.map((task) => (
               <SortableTask key={task.id} task={task} />
             ))}
@@ -127,6 +143,10 @@ function SortableSection({
       </CardContent>
     </Card>
   );
+}
+function SectionTasksDroppableContainer({ sectionId }: { sectionId: string }) {
+  const { setNodeRef } = useDroppable({ id: `section-container-${sectionId}` });
+  return <div ref={setNodeRef} className="h-2" />;
 }
 
 function SortableTask({ task }: { task: Task }) {
@@ -148,9 +168,26 @@ function SortableTask({ task }: { task: Task }) {
   if (!task) return null;
 
   return (
-    <Card ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <CardHeader className="flex flex-row justify-between cursor-grab">
-        <CardTitle>{task.title}</CardTitle>
+    <Card
+      ref={setNodeRef}
+      style={style}
+      className="will-change-transform transform-gpu transition-[transform,opacity] duration-150 ease-out"
+    >
+      <CardHeader className="flex flex-row justify-between items-center">
+        <div className="flex items-center gap-2">
+          <span
+            {...listeners}
+            {...attributes}
+            role="button"
+            tabIndex={0}
+            aria-roledescription="Draggable task"
+            aria-label={`Drag handle for task ${task.title}`}
+            className="cursor-grab active:cursor-grabbing inline-flex"
+          >
+            <GripVertical className="h-4 w-4 text-muted-foreground" />
+          </span>
+          <CardTitle>{task.title}</CardTitle>
+        </div>
         <TaskActions task={task} />
       </CardHeader>
       <CardContent className="flex flex-col justify-between space-y-2">
@@ -206,6 +243,11 @@ const isSectionId = (id: string, sections: BoardSection[]) => {
   return sections.some((section) => section.id === id);
 };
 
+function parseSectionContainerOverId(overId: string): string | null {
+  const match = overId.match(/^section-container-(.+)$/);
+  return match ? match[1] : null;
+}
+
 // No custom collision detection; rely on closestCorners for simplicity and accuracy
 
 export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
@@ -253,9 +295,16 @@ export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
   );
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(TouchSensor),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+      keyboardCodes: {
+        start: ["Enter"],
+        cancel: ["Escape"],
+        end: ["Enter"],
+      },
+    })
   );
 
   const handleDragStart = useCallback(
@@ -295,6 +344,8 @@ export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
       let targetSection: BoardSection | undefined;
       let insertionIndex: number;
 
+      const containerSectionId = parseSectionContainerOverId(overId);
+
       if (isTaskId(overId, sections)) {
         // Dropping on a task - insert before that task
         targetSection = sections.find((s) =>
@@ -307,11 +358,22 @@ export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
         } else {
           return;
         }
+      } else if (
+        containerSectionId &&
+        isSectionId(containerSectionId, sections)
+      ) {
+        // Dropping on the section's container top area
+        targetSection = sections.find((s) => s.id === containerSectionId);
+        if (targetSection) {
+          insertionIndex = 0;
+        } else {
+          return;
+        }
       } else if (isSectionId(overId, sections)) {
-        // Dropping on a section container - append to end
+        // Dropping on a section container - insert at top
         targetSection = sections.find((s) => s.id === overId);
         if (targetSection) {
-          insertionIndex = targetSection.tasks.length;
+          insertionIndex = 0;
         } else {
           return;
         }
@@ -437,6 +499,8 @@ export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
       let originalTargetSection: BoardSection | undefined;
       let finalInsertionIndex: number;
 
+      const containerSectionIdEnd = parseSectionContainerOverId(overId);
+
       if (isTaskId(overId, originalSections)) {
         // Dropped on a task - insert before that task
         originalTargetSection = originalSections.find((s) =>
@@ -449,11 +513,24 @@ export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
         } else {
           return;
         }
+      } else if (
+        containerSectionIdEnd &&
+        isSectionId(containerSectionIdEnd, originalSections)
+      ) {
+        // Dropped on the section's container top area
+        originalTargetSection = originalSections.find(
+          (s) => s.id === containerSectionIdEnd
+        );
+        if (originalTargetSection) {
+          finalInsertionIndex = 0;
+        } else {
+          return;
+        }
       } else if (isSectionId(overId, originalSections)) {
-        // Dropped on a section container - append to end
+        // Dropped on a section container - insert at top
         originalTargetSection = originalSections.find((s) => s.id === overId);
         if (originalTargetSection) {
-          finalInsertionIndex = originalTargetSection.tasks.length;
+          finalInsertionIndex = 0;
         } else {
           return;
         }
@@ -566,7 +643,7 @@ export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex flex-row gap-2  overflow-x-auto">
+        <div className="flex flex-row gap-2 overflow-x-auto overscroll-x-contain">
           <SortableContext
             items={sections.map((s) => s.id)}
             strategy={horizontalListSortingStrategy}
