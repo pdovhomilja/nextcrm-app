@@ -10,6 +10,7 @@ export interface Task {
   description: string;
   status: string;
   priority: string;
+  dueDate: Date;
   position: number;
   createdAt: Date;
   updatedAt: Date;
@@ -48,5 +49,10 @@ export interface SectionPosition {
 }
 
 // Prisma enums
-export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-export type TaskStatus = 'NEW' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'ON_HOLD';
+export type TaskPriority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+export type TaskStatus =
+  | "NEW"
+  | "IN_PROGRESS"
+  | "COMPLETED"
+  | "CANCELLED"
+  | "ON_HOLD";

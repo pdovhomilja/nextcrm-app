@@ -39,7 +39,7 @@ import {
 } from "@/actions/tasks/update-task-position";
 import { useRouter } from "next/navigation";
 import type { Task, BoardSection, Board } from "../../_types";
-import { deleteBoardSection } from "@/actions/tasks/delete-board-sectin";
+import { deleteBoardSection } from "@/actions/tasks/delete-board-section";
 import { toast } from "sonner";
 
 interface DndBoardProps {
@@ -229,11 +229,13 @@ function SortableTask({ task }: { task: Task }) {
     opacity: isDragging ? 0.5 : 1,
   };
 
+  if (!task) return null;
+
   return (
     <Card ref={setNodeRef} style={style} {...attributes} {...listeners}>
       <CardHeader className="flex flex-row justify-between cursor-grab">
         <CardTitle>{task.title}</CardTitle>
-        <TaskActions taskId={task.id} taskName={task.title} />
+        <TaskActions task={task} />
       </CardHeader>
       <CardContent className="flex flex-col justify-between space-y-2">
         <p>{task.description}</p>

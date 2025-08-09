@@ -21,7 +21,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { createTask } from "@/actions/tasks/create-task";
-import type { Task, CreateTaskData } from "../../_types";
+import type { CreateTaskData, Task } from "../../_types";
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),

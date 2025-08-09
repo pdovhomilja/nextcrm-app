@@ -55,6 +55,7 @@
     "pgvector": "^0.2.1",
     "prettier": "^3.6.2",
     "react": "19.1.0",
+    "react-day-picker": "^9.8.1",
     "react-dom": "19.1.0",
     "react-email": "^4.2.5",
     "react-hook-form": "^7.62.0",
