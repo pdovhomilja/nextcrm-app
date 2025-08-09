@@ -99,11 +99,6 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
           </div>
 
           {/* Task Data Table */}
-          <div className="px-4 lg:px-6">
-            <Suspense fallback={<Skeleton className="h-[500px] w-full" />}>
-              <TaskDataTable className="w-full" />
-            </Suspense>
-          </div>
         </div>
       </div>
     </SidebarInset>
