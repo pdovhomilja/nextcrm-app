@@ -5,7 +5,7 @@ import { CardContent } from "@/components/ui/card";
 import React, { useState, useEffect } from "react";
 import CreateTaskButton from "./create-task-button";
 import TaskActions from "./task-actions";
-import { formatDistanceToNowStrict } from "date-fns";
+import { format, formatDistanceToNowStrict } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { User2, X } from "lucide-react";
 import CreateBoardSectionButton from "./create-board-section";
@@ -243,13 +243,26 @@ function SortableTask({ task }: { task: Task }) {
           <User2 size={16} />
           <p>{task.assignedTo.name || "Unassigned"}</p>
         </div>
-        <div className="flex flex-row gap-2">
+        <div className="flex flex-row gap-2 flex-wrap">
           <Badge variant="outline" className="text-xs text-muted-foreground">
             Status: {task.status}
           </Badge>
           <Badge variant="outline" className="text-xs text-muted-foreground">
             Priority: {task.priority}
           </Badge>
+          {task.dueDate && (
+            <Badge
+              variant="outline"
+              className={`text-xs ${
+                new Date(task.dueDate) < new Date(new Date().setHours(0, 0, 0, 0))
+                  ? "border-red-300 text-red-600"
+                  : "text-muted-foreground"
+              }`}
+              title={format(task.dueDate, "PPP")}
+            >
+              Due: {format(task.dueDate, "MMM d")}
+            </Badge>
+          )}
         </div>
       </CardContent>
       <CardFooter className="flex flex-row justify-between">

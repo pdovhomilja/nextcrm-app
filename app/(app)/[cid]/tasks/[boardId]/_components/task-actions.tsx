@@ -2,14 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { format } from "date-fns";
 import { MoreHorizontalIcon, PencilIcon, TrashIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { deleteTask } from "@/actions/tasks/delete-task";
@@ -59,12 +52,14 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { editTask, type EditTaskInput } from "@/actions/tasks/edit-task";
 import type { Task } from "../../_types";
+import { Textarea } from "@/components/ui/textarea";
 
 const TaskActions = ({ task }: { task: Task }) => {
   const router = useRouter();
   const [onDelete, setOnDelete] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [month, setMonth] = useState<Date | undefined>(new Date());
+  const [isDuePopoverOpen, setIsDuePopoverOpen] = useState(false);
 
   const formSchema = z.object({
     title: z.string().min(1, "Title is required"),
@@ -101,6 +96,7 @@ const TaskActions = ({ task }: { task: Task }) => {
       });
       // Align the visible month with the current due date (or today)
       setMonth(task.dueDate ?? new Date());
+      setIsDuePopoverOpen(false);
     }
   }, [isEditOpen, task, form]);
 
@@ -204,7 +200,7 @@ const TaskActions = ({ task }: { task: Task }) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <Input {...field} placeholder="Description" />
+                        <Textarea {...field} placeholder="Description" rows={4} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -215,35 +211,68 @@ const TaskActions = ({ task }: { task: Task }) => {
                   name="dueDate"
                   render={({ field }) => (
                     <FormItem>
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Due date</CardTitle>
-                          <CardDescription>Select when this task is due</CardDescription>
-                          <CardAction>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                const today = new Date();
-                                setMonth(today);
-                                field.onChange(today);
-                              }}
-                            >
-                              Today
-                            </Button>
-                          </CardAction>
-                        </CardHeader>
-                        <CardContent>
-                          <Calendar
-                            mode="single"
-                            month={month}
-                            onMonthChange={setMonth}
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            className="bg-transparent p-0"
-                          />
-                        </CardContent>
-                      </Card>
+                      <div className="space-y-2">
+                        <div className="relative inline-block">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setIsDuePopoverOpen((v) => !v)}
+                            className="min-w-40 justify-between"
+                          >
+                            {field.value ? format(field.value, "PPP") : "Pick a due date"}
+                            <span className="ml-2 text-muted-foreground">▾</span>
+                          </Button>
+                          {isDuePopoverOpen && (
+                            <div className="absolute z-50 mt-2 rounded-md border bg-popover p-2 shadow-md">
+                              <div className="flex items-center justify-between px-2 pb-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    const today = new Date();
+                                    today.setHours(0, 0, 0, 0);
+                                    setMonth(today);
+                                    field.onChange(today);
+                                  }}
+                                >
+                                  Today
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => field.onChange(undefined)}
+                                >
+                                  Clear
+                                </Button>
+                              </div>
+                              <Calendar
+                                mode="single"
+                                month={month}
+                                onMonthChange={setMonth}
+                                selected={field.value}
+                                onSelect={(d?: Date) => {
+                                  if (d) {
+                                    // Prevent selecting past dates
+                                    const startOfToday = new Date();
+                                    startOfToday.setHours(0, 0, 0, 0);
+                                    if (d < startOfToday) return;
+                                  }
+                                  field.onChange(d);
+                                  setIsDuePopoverOpen(false);
+                                }}
+                                disabled={{
+                                  before: (() => {
+                                    const t = new Date();
+                                    t.setHours(0, 0, 0, 0);
+                                    return t;
+                                  })(),
+                                }}
+                                className="bg-transparent p-0"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
