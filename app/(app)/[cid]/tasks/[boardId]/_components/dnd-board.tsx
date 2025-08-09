@@ -441,7 +441,10 @@ export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
       // Check if it's a section being dragged
       if (isSectionId(activeId, sections)) {
         const activeSectionIndex = sections.findIndex((s) => s.id === activeId);
-        const overSectionIndex = sections.findIndex((s) => s.id === overId);
+        const normalizedOverId = parseSectionContainerOverId(overId) ?? overId;
+        const overSectionIndex = sections.findIndex(
+          (s) => s.id === normalizedOverId
+        );
 
         if (activeSectionIndex !== overSectionIndex) {
           const newSections = arrayMove(
