@@ -36,6 +36,6 @@ export async function createBoard(board: any) {
 
     return newBoard;
   } catch (error) {
-    return { error: "Failed to create board" };
+    throw new Error("Failed to create board");
   }
 }

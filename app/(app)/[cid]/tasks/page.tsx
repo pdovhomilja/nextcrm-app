@@ -46,7 +46,7 @@ const TaskPage = async ({
       <SiteHeader title="Project Management">
         <Search />
         <div className="flex items-center gap-2">
-          <CreateBoardButton />
+          <CreateBoardButton user={user} />
         </div>
       </SiteHeader>
       <div className="flex flex-1 flex-col border-black">

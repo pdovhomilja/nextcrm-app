@@ -23,13 +23,15 @@ import { z } from "zod";
 
 import { useRouter } from "next/navigation";
 import { createBoard } from "@/actions/tasks/create-board";
+import { User } from "@/lib/generated/prisma";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1),
 });
 
-const CreateBoardButton = () => {
+const CreateBoardButton = ({ user }: { user: User }) => {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
 
@@ -42,10 +44,20 @@ const CreateBoardButton = () => {
   });
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    await createBoard(data);
-    setIsOpen(false);
-    form.reset();
-    router.refresh();
+    try {
+      const result = await createBoard(data);
+      if ("error" in result) {
+        toast.error(result.error);
+        return;
+      }
+      router.push(`/${user.cid}/tasks/${result.id}`);
+    } catch (error) {
+      toast.error("Failed to create board");
+    } finally {
+      setIsOpen(false);
+      form.reset();
+      router.refresh();
+    }
   };
 
   return (
