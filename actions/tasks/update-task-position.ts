@@ -144,3 +144,75 @@ export async function moveTaskToTopOfSection(
 
 // Keep the old function for backward compatibility
 export const moveTaskBetweenSections = moveTaskToTopOfSection;
+
+// New precise move with explicit target index within the target section
+export async function moveTaskBetweenSectionsAtPosition(
+  taskId: string,
+  sourceSectionId: string,
+  targetSectionId: string,
+  targetPosition: number
+) {
+  try {
+    await db.$transaction(async (tx) => {
+      const [sourceSection, targetSection] = await Promise.all([
+        tx.boardSection.findUnique({ where: { id: sourceSectionId } }),
+        tx.boardSection.findUnique({ where: { id: targetSectionId } }),
+      ]);
+
+      if (!sourceSection)
+        throw new Error(`Source section not found: ${sourceSectionId}`);
+      if (!targetSection)
+        throw new Error(`Target section not found: ${targetSectionId}`);
+
+      const taskToMove = await tx.task.findUnique({ where: { id: taskId } });
+      if (!taskToMove) throw new Error("Task not found");
+
+      const targetTasks = await tx.task.findMany({
+        where: { boardSectionId: targetSectionId },
+        orderBy: { position: "asc" },
+      });
+
+      // Clamp target index to valid range
+      const clampedIndex = Math.max(
+        0,
+        Math.min(targetTasks.length, targetPosition)
+      );
+
+      // Shift target tasks at and after the insertion point
+      await Promise.all(
+        targetTasks
+          .filter((t) => t.position >= clampedIndex)
+          .map((t) =>
+            tx.task.update({
+              where: { id: t.id },
+              data: { position: t.position + 1 },
+            })
+          )
+      );
+
+      // Move the task
+      await tx.task.update({
+        where: { id: taskId },
+        data: { boardSectionId: targetSectionId, position: clampedIndex },
+      });
+
+      // Reindex source section tasks to remove gaps
+      if (sourceSectionId !== targetSectionId) {
+        const sourceTasks = await tx.task.findMany({
+          where: { boardSectionId: sourceSectionId },
+          orderBy: { position: "asc" },
+        });
+
+        await Promise.all(
+          sourceTasks.map((t, index) =>
+            tx.task.update({ where: { id: t.id }, data: { position: index } })
+          )
+        );
+      }
+    });
+  } catch (error) {
+    throw new Error(
+      `Failed to move task between sections: ${error instanceof Error ? error.message : "Unknown error"}`
+    );
+  }
+}

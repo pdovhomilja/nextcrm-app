@@ -3,7 +3,7 @@ import { ChartAreaInteractive } from "./_components/chart-area-interactive";
 import { SectionCards } from "./_components/section-cards";
 import { EnhancedDynamicCards } from "./_components/enhanced-dynamic-cards";
 import { DistributionChart } from "@/components/dashboard/charts/distribution-chart";
-import { TaskDataTable } from "@/components/dashboard/tables/task-data-table";
+
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";

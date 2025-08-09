@@ -1,7 +1,7 @@
 import React from "react";
 import { SidebarInset } from "@/components/ui/sidebar";
 import { SiteHeader } from "@/components/site-header";
-import { getTasks } from "@/actions/tasks/get-tasks";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import { Suspense } from "react";
 import { TaskDataTable } from "@/components/dashboard/tables/task-data-table";
