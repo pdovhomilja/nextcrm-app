@@ -8,6 +8,7 @@ import {
   IconInnerShadowTop,
   IconSettings,
   IconRobot,
+  IconList,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -41,6 +42,11 @@ export function AppSidebar({
         title: "Tasks",
         url: `/${cid}/tasks`,
         icon: IconFolder,
+      },
+      {
+        title: "Tasks List",
+        url: `/${cid}/tasks-list`,
+        icon: IconList,
       },
       {
         title: "AI Assistant",

@@ -7,7 +7,7 @@ import CreateTaskButton from "./create-task-button";
 import TaskActions from "./task-actions";
 import { formatDistanceToNowStrict } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { User2 } from "lucide-react";
+import { User2, X } from "lucide-react";
 import CreateBoardSectionButton from "./create-board-section";
 import {
   DndContext,
@@ -39,6 +39,8 @@ import {
 } from "@/actions/tasks/update-task-position";
 import { useRouter } from "next/navigation";
 import type { Task, BoardSection, Board } from "../../_types";
+import { deleteBoardSection } from "@/actions/tasks/delete-board-sectin";
+import { toast } from "sonner";
 
 interface DndBoardProps {
   initialSections: BoardSection[];
@@ -99,10 +101,12 @@ function SortableSection({
   section,
   onTaskCreated,
   activeId,
+  boardId,
 }: {
   section: BoardSection;
   onTaskCreated?: (newTask: Task, sectionId: string) => Promise<void>;
   activeId?: string | null;
+  boardId: string;
 }) {
   const {
     attributes,
@@ -147,7 +151,7 @@ function SortableSection({
         className={`${showDropIndicator ? "bg-blue-100" : ""}`}
       >
         <CardTitle
-          className={`cursor-grab flex items-center gap-2 ${
+          className={`cursor-grab flex items-center justify-between p-2 gap-2 ${
             showDropIndicator ? "text-blue-700" : ""
           }`}
         >
@@ -161,7 +165,18 @@ function SortableSection({
             <span className="text-xs text-blue-500 opacity-70">
               (Drop zone)
             </span>
-          )}
+          )}{" "}
+          <X
+            className="w-4 h-4"
+            onClick={async () => {
+              const res = await deleteBoardSection(section.id, boardId);
+              if (res.message) {
+                toast.error(res.message);
+              } else {
+                toast.success("Board section deleted successfully");
+              }
+            }}
+          />
         </CardTitle>
         <CreateTaskButton
           boardSectionId={section.id}
@@ -379,10 +394,7 @@ const customCollisionDetection: CollisionDetection = (args) => {
   return [];
 };
 
-export default function DndBoard({
-  initialSections,
-  boardId,
-}: DndBoardProps) {
+export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
   const [sections, setSections] = useState(initialSections);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [sectionsAtDragStart, setSectionsAtDragStart] = useState<
@@ -758,6 +770,7 @@ export default function DndBoard({
                 section={section}
                 onTaskCreated={handleTaskCreated}
                 activeId={activeId}
+                boardId={boardId}
               />
             ))}
           </SortableContext>

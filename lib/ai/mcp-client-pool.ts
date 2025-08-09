@@ -100,14 +100,14 @@ export class MCPClientPool {
   /**
    * Initialize connections with authentication context
    */
-  async initializeConnections(authHeaders?: Record<string, string>): Promise<void> {
+  async initializeConnections(): Promise<void> {
     if (!this.isInitialized) {
       console.log("MCP Client Pool not initialized - initializing configuration first");
       await this.initialize();
     }
 
     console.log("Initializing MCP connections with authentication context...");
-    await this.connectToAllServers(authHeaders);
+    await this.connectToAllServers();
     
     // Start health monitoring only after successful initialization
     this.startHealthMonitoring();
@@ -118,7 +118,7 @@ export class MCPClientPool {
   /**
    * Connect to all configured MCP servers
    */
-  private async connectToAllServers(authHeaders?: Record<string, string>): Promise<void> {
+  private async connectToAllServers(): Promise<void> {
     const connectionPromises = Array.from(this.servers.keys()).map(
       (serverName) => this.connectToServer(serverName, 1)
     );

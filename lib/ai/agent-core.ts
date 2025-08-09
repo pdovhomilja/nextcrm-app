@@ -415,6 +415,7 @@ Response strategies:
       __fallback: z.object({}).passthrough(),
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const toolsRegistry: Record<string, any> = {} as Record<string, any>;
     for (const fullToolName of availableToolNames) {
       const [serverName, ...methodParts] = fullToolName.split("_");
@@ -423,15 +424,17 @@ Response strategies:
 
       const schema =
         toolSchemasByMethod[method] || toolSchemasByMethod.__fallback;
-      toolsRegistry[fullToolName] = tool({
+      const toolConfig = {
         description: `Execute MCP tool ${fullToolName}. Provide explicit, concrete parameters. Prefer using titles for searching; use IDs only when available in context.`,
-        inputSchema: schema,
+        parameters: schema,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         execute: async (input: any) => {
+          const inputRecord = input as Record<string, unknown>;
           const params = {
-            ...input,
+            ...inputRecord,
             // Ensure identity context always propagates
-            userId: input.userId || context.userId,
-            companyId: input.companyId || context.companyId,
+            userId: inputRecord.userId || context.userId,
+            companyId: inputRecord.companyId || context.companyId,
           } as Record<string, unknown>;
 
           const mcpResult = await simpleMCPClientPool.callTool(
@@ -447,7 +450,9 @@ Response strategies:
           // Return raw MCP result so downstream synthesis can parse nested content
           return mcpResult.result;
         },
-      });
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      toolsRegistry[fullToolName] = tool(toolConfig as any);
     }
 
     const agentSystemPrompt = `You are a ${this.role} agent. Use the provided tools to fulfill the user's request.
@@ -475,21 +480,21 @@ CRITICAL:
       // temperature not supported on some models like gpt-5
     });
 
-    for (const step of steps as any[]) {
-      const calls = (step as any).toolCalls || [];
-      const results = (step as any).toolResults || [];
+    for (const step of steps as unknown[]) {
+      const calls = (step as { toolCalls?: unknown[] }).toolCalls || [];
+      const results = (step as { toolResults?: unknown[] }).toolResults || [];
       for (let i = 0; i < Math.max(calls.length, results.length); i++) {
         const call = calls[i];
         const res = results[i];
         if (!call && !res) continue;
-        const name = (call?.toolName ||
-          call?.name ||
-          res?.toolName ||
+        const name = ((call as { toolName?: string; name?: string })?.toolName ||
+          (call as { toolName?: string; name?: string })?.name ||
+          (res as { toolName?: string })?.toolName ||
           "unknown") as string;
         collected.push({
           toolName: name,
           // Wrap to match downstream expectation: result.result.content[0].text
-          result: { result: (res as any)?.result ?? res },
+          result: { result: (res as { result?: unknown })?.result ?? res },
           success: !(res && (res as { error?: unknown }).error),
         });
       }

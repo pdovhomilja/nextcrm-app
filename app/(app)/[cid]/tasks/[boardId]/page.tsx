@@ -23,7 +23,13 @@ const BoardPage = async ({
     <TaskErrorBoundary>
       <SidebarInset>
         <SiteHeader title={board.name}>
-          <div className="flex items-center gap-2">{/* Nav buttons */}</div>
+          <div className="flex items-center gap-2">
+            {" "}
+            {/*         <CreateBoardSectionButton
+              boardId={boardId}
+              onSectionCreated={handleSectionCreated}
+            /> */}
+          </div>
         </SiteHeader>
         <div className="flex flex-1 flex-col border-black">
           <div className="@container/main flex flex-1 flex-col gap-2">
