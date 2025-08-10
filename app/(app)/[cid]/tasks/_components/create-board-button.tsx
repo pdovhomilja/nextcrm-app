@@ -51,7 +51,7 @@ const CreateBoardButton = ({ user }: { user: User }) => {
         return;
       }
       router.push(`/${user.cid}/tasks/${result.id}`);
-    } catch (error) {
+    } catch {
       toast.error("Failed to create board");
     } finally {
       setIsOpen(false);
