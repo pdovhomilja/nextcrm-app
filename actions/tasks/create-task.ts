@@ -40,7 +40,9 @@ export async function createTask(task: CreateTaskData, boardSectionId: string) {
       data: {
         title: task.title,
         description: task.description,
-        dueDate: new Date(),
+        dueDate: task.dueDate ? new Date(task.dueDate) : new Date(),
+        priority: task.priority ?? undefined,
+        status: task.status ?? undefined,
         position: lastTask ? lastTask.position + 1 : 0,
         assignedToId: user.id,
         createdById: user.id,

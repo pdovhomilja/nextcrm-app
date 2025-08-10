@@ -36,6 +36,9 @@ export interface Board {
 export interface CreateTaskData {
   title: string;
   description: string;
+  priority?: TaskPriority;
+  status?: TaskStatus;
+  dueDate?: Date;
 }
 
 export interface TaskPosition {

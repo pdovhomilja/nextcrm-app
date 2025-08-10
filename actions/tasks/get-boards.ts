@@ -1,3 +1,5 @@
+"use server";
+
 import db from "@/lib/db";
 
 export async function getBoards(userId: string, query?: string) {
