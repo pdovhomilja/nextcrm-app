@@ -39,7 +39,7 @@ export function AppSidebar({
         icon: IconDashboard,
       },
       {
-        title: "Tasks",
+        title: "Boards",
         url: `/${cid}/tasks`,
         icon: IconFolder,
       },

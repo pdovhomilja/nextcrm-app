@@ -43,7 +43,7 @@ const TaskPage = async ({
 
   return (
     <SidebarInset>
-      <SiteHeader title="Project Management">
+      <SiteHeader title="Boards">
         <Search />
         <div className="flex items-center gap-2">
           <CreateBoardButton user={user} />

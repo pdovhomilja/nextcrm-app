@@ -3,7 +3,12 @@
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import { MoreHorizontalIcon, PencilIcon, TrashIcon } from "lucide-react";
+import {
+  CheckIcon,
+  MoreHorizontalIcon,
+  PencilIcon,
+  TrashIcon,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { deleteTask } from "@/actions/tasks/delete-task";
 
@@ -53,6 +58,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { editTask, type EditTaskInput } from "@/actions/tasks/edit-task";
 import type { Task } from "../../_types";
 import { Textarea } from "@/components/ui/textarea";
+import { markDone } from "@/actions/tasks/mark-done";
 
 const TaskActions = ({ task }: { task: Task }) => {
   const router = useRouter();
@@ -167,6 +173,10 @@ const TaskActions = ({ task }: { task: Task }) => {
             <PencilIcon className="mr-2 h-4 w-4" />
             Edit Task
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => markDone(task.id)}>
+            <CheckIcon className="mr-2 h-4 w-4" />
+            Mark as Done
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -200,7 +210,11 @@ const TaskActions = ({ task }: { task: Task }) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <Textarea {...field} placeholder="Description" rows={4} />
+                        <Textarea
+                          {...field}
+                          placeholder="Description"
+                          rows={4}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -219,8 +233,12 @@ const TaskActions = ({ task }: { task: Task }) => {
                             onClick={() => setIsDuePopoverOpen((v) => !v)}
                             className="min-w-40 justify-between"
                           >
-                            {field.value ? format(field.value, "PPP") : "Pick a due date"}
-                            <span className="ml-2 text-muted-foreground">▾</span>
+                            {field.value
+                              ? format(field.value, "PPP")
+                              : "Pick a due date"}
+                            <span className="ml-2 text-muted-foreground">
+                              ▾
+                            </span>
                           </Button>
                           {isDuePopoverOpen && (
                             <div className="absolute z-50 mt-2 rounded-md border bg-popover p-2 shadow-md">

@@ -1,5 +1,6 @@
 "use server";
 
+import { triggerTaskEmbeddingUpdate } from "@/lib/ai/embedding-triggers";
 import db from "@/lib/db";
 
 export type EditTaskInput = {
@@ -18,9 +19,14 @@ export const editTask = async (taskId: string, data: EditTaskInput) => {
       typeof data.dueDate === "string" ? new Date(data.dueDate) : data.dueDate,
   };
 
-  await db.task.update({
+  const updatedTask = await db.task.update({
     where: { id: taskId },
     data: normalized as any,
+  });
+
+  // I need to update task embbedings here
+  triggerTaskEmbeddingUpdate(updatedTask.id).catch((error) => {
+    console.error("Failed to queue embedding update:", error);
   });
 
   return { message: "Task updated successfully" };

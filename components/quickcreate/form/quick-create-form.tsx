@@ -53,7 +53,7 @@ type FormValues = z.infer<typeof formSchema>;
 const QuickCreateForm = () => {
   const { data: session } = useSession();
   const user = session?.user;
-  console.log("User:", user);
+  //console.log("User:", user);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [boards, setBoards] = useState<Board[]>([]);
@@ -157,7 +157,10 @@ const QuickCreateForm = () => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-4">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-4 p-4 h-full overflow-y-auto py-5"
+      >
         <FormField
           control={form.control}
           name="boardId"
