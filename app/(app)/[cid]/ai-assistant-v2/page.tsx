@@ -235,6 +235,15 @@ const AIAssistantV2Page = () => {
     <SidebarInset>
       <SiteHeader title="AI Assistant">
         <div className="flex items-center gap-2">
+          <Button
+            variant="default"
+            className="text-xs"
+            onClick={() => {
+              window.location.reload();
+            }}
+          >
+            Restart conversation
+          </Button>
           <Badge variant="outline" className="gap-1.5">
             <Sparkles className="h-3 w-3" />
             Enhanced v2
@@ -257,6 +266,29 @@ const AIAssistantV2Page = () => {
                   I&apos;m here to help you with your tasks and questions. Start
                   a conversation below!
                 </p>
+                <div className="text-xs font-bold flex flex-col gap-2 mt-4">
+                  Chat templates:
+                  <div className="flex flex-row gap-2">
+                    <Button
+                      variant="default"
+                      className="text-xs max-w-1/6"
+                      onClick={() => {
+                        sendMessage({ text: "What can I do today?" });
+                      }}
+                    >
+                      What can I do today?
+                    </Button>
+                    <Button
+                      variant="default"
+                      className="text-xs max-w-3/6"
+                      onClick={() => {
+                        sendMessage({ text: "What are most critical tasks?" });
+                      }}
+                    >
+                      What are most critical tasks?
+                    </Button>
+                  </div>
+                </div>
               </div>
             )}
 
