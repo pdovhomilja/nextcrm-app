@@ -14,7 +14,13 @@ import {
 import React from "react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Form, FormField, FormItem } from "@/components/ui/form";
+import {
+  Form,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form";
 import { FormControl } from "@/components/ui/form";
 import { FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
@@ -25,10 +31,12 @@ import { useRouter } from "next/navigation";
 import { createBoard } from "@/actions/tasks/create-board";
 import { User } from "@/lib/generated/prisma";
 import { toast } from "sonner";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const formSchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1),
+  withTemplate: z.boolean(),
 });
 
 const CreateBoardButton = ({ user }: { user: User }) => {
@@ -40,6 +48,7 @@ const CreateBoardButton = ({ user }: { user: User }) => {
     defaultValues: {
       name: "",
       description: "",
+      withTemplate: false,
     },
   });
 
@@ -96,6 +105,30 @@ const CreateBoardButton = ({ user }: { user: User }) => {
                     <FormMessage />
                   </FormItem>
                 )}
+              />
+
+              <FormField
+                control={form.control}
+                name="withTemplate"
+                render={({ field }) => {
+                  return (
+                    <FormItem className="flex flex-row items-center gap-2">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={(checked) => {
+                            return checked
+                              ? field.onChange(true)
+                              : field.onChange(false);
+                          }}
+                        />
+                      </FormControl>
+                      <FormLabel className="text-sm font-normal">
+                        With template
+                      </FormLabel>
+                    </FormItem>
+                  );
+                }}
               />
             </form>
           </Form>

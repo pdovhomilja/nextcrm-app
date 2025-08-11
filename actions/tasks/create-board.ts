@@ -6,7 +6,11 @@ import { triggerBoardEmbeddingUpdate } from "@/lib/ai/embedding-triggers";
 
 import db from "@/lib/db";
 
-export async function createBoard(board: any) {
+export async function createBoard(board: {
+  name: string;
+  description?: string;
+  withTemplate?: boolean;
+}) {
   const session = await auth();
 
   if (!session?.user?.email) {
@@ -26,6 +30,27 @@ export async function createBoard(board: any) {
         access: [user.id],
       },
     });
+
+    if (board.withTemplate) {
+      await db.boardSection.create({
+        data: {
+          name: "Backlog",
+          boardId: newBoard.id,
+        },
+      });
+      await db.boardSection.create({
+        data: {
+          name: "In Progress",
+          boardId: newBoard.id,
+        },
+      });
+      await db.boardSection.create({
+        data: {
+          name: "Done",
+          boardId: newBoard.id,
+        },
+      });
+    }
 
     // Queue embedding generation (non-blocking)
     if (newBoard.id) {

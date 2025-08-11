@@ -271,7 +271,7 @@ const AIAssistantV2Page = () => {
                   <div className="flex flex-row gap-2">
                     <Button
                       variant="default"
-                      className="text-xs max-w-1/6"
+                      className="text-xs max-w-3/6"
                       onClick={() => {
                         sendMessage({ text: "What can I do today?" });
                       }}
