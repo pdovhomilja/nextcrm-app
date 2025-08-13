@@ -14,9 +14,50 @@ export const getTask = async (taskId: string) => {
   }
 
   const task = await db.task.findUnique({
-    where: {
-      id: taskId,
+    where: { id: taskId },
+    include: {
+      assignedTo: {
+        select: { id: true, name: true, email: true, image: true },
+      },
+      createdBy: { select: { id: true, name: true, email: true, image: true } },
+      boardSection: {
+        select: {
+          id: true,
+          name: true,
+          position: true,
+          board: { select: { id: true, name: true, description: true } },
+        },
+      },
+      history: {
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          description: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      },
+      documents: {
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          filename: true,
+          mimeType: true,
+          size: true,
+          summary: true,
+          keyInsights: true,
+          confidence: true,
+          uploadedBy: true,
+          processedAt: true,
+          createdAt: true,
+        },
+      },
     },
   });
+
+  if (!task) {
+    throw new Error("Task not found");
+  }
+
   return task;
 };

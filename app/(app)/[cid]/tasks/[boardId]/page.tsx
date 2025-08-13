@@ -5,6 +5,7 @@ import DndBoard from "./_components/dnd-board";
 import TaskErrorBoundary from "../_components/error-boundary";
 import { SidebarInset } from "@/components/ui/sidebar";
 import { SiteHeader } from "@/components/site-header";
+import type { BoardSection } from "../_types";
 
 const BoardPage = async ({
   params,
@@ -12,7 +13,7 @@ const BoardPage = async ({
   params: Promise<{ boardId: string }>;
 }) => {
   const { boardId } = await params;
-  const boardSections = await getBoardSections(boardId);
+  const boardSections: BoardSection[] = await getBoardSections(boardId);
   const board = await getBoard(boardId);
 
   if (!board) {

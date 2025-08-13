@@ -1,6 +1,7 @@
 // Shared types for Task module components
 
 export interface TaskUser {
+  id: string;
   name: string | null;
 }
 
@@ -10,12 +11,15 @@ export interface Task {
   description: string;
   status: string;
   priority: string;
-  dueDate: Date;
+  dueDate: Date | null;
   position: number;
   createdAt: Date;
   updatedAt: Date;
   assignedTo: TaskUser;
   createdBy: TaskUser;
+  documents: TaskDocument[];
+  boardSection?: TaskBoardSection | null;
+  history?: TaskHistory[];
 }
 
 export interface BoardSection {
@@ -33,12 +37,48 @@ export interface Board {
   updatedAt: Date;
 }
 
+export interface BoardSummary {
+  id: string;
+  name: string;
+  description?: string | null;
+}
+
+export interface TaskBoardSection {
+  id: string;
+  name: string;
+  position: number;
+  board?: BoardSummary | null;
+}
+
+export interface TaskDocument {
+  id: string;
+  filename: string;
+  mimeType: string;
+  size: number;
+  summary?: string | null;
+  keyInsights?: string[] | null;
+  confidence?: number | null;
+  uploadedBy: string;
+  taskId?: string | null;
+  boardId?: string | null;
+  processedAt?: Date | null;
+  createdAt: Date;
+  updatedAt?: Date;
+}
+
+export interface TaskHistory {
+  id: string;
+  description: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface CreateTaskData {
   title: string;
   description: string;
   priority?: TaskPriority;
   status?: TaskStatus;
-  dueDate?: Date;
+  dueDate?: Date | null;
 }
 
 export interface TaskPosition {

@@ -1,12 +1,24 @@
-"use client"
+"use client";
 
-import { useEffect, useState, useCallback } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useEffect, useState, useCallback } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -14,8 +26,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+} from "@/components/ui/table";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   ChevronLeft,
   ChevronRight,
@@ -23,36 +35,54 @@ import {
   ArrowUpDown,
   AlertTriangle,
   Folder,
-} from "lucide-react"
-import { getTaskTableData, type TaskTableData, type TaskTableRow } from "@/actions/dashboard/get-task-table-data"
-import { cn } from "@/lib/utils"
-
+} from "lucide-react";
+import {
+  getTaskTableData,
+  type TaskTableData,
+  type TaskTableRow,
+} from "@/actions/dashboard/get-task-table-data";
+import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { User } from "@/lib/generated/prisma";
 interface TaskDataTableProps {
-  boardId?: string
-  className?: string
+  boardId?: string;
+  className?: string;
+  user: User;
 }
 
-export function TaskDataTable({ boardId, className }: TaskDataTableProps) {
-  const [data, setData] = useState<TaskTableData | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState<string | "all">("all")
-  const [priorityFilter, setPriorityFilter] = useState<string | "all">("all")
-  const [dueDateFilter, setDueDateFilter] = useState<string | "all">("all")
-  const [sortBy, setSortBy] = useState<"title" | "status" | "priority" | "dueDate" | "createdAt" | "updatedAt">("updatedAt")
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
-  const [currentPage, setCurrentPage] = useState(1)
+export function TaskDataTable({
+  boardId,
+  className,
+  user,
+}: TaskDataTableProps) {
+  const [data, setData] = useState<TaskTableData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string | "all">("all");
+  const [priorityFilter, setPriorityFilter] = useState<string | "all">("all");
+  const [dueDateFilter, setDueDateFilter] = useState<string | "all">("all");
+  const [sortBy, setSortBy] = useState<
+    "title" | "status" | "priority" | "dueDate" | "createdAt" | "updatedAt"
+  >("updatedAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const fetchData = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
       const filters: {
         page: number;
         pageSize: number;
-        sortBy: "title" | "status" | "priority" | "dueDate" | "createdAt" | "updatedAt";
+        sortBy:
+          | "title"
+          | "status"
+          | "priority"
+          | "dueDate"
+          | "createdAt"
+          | "updatedAt";
         sortOrder: "asc" | "desc";
         boardId?: string;
         search?: string;
@@ -65,100 +95,142 @@ export function TaskDataTable({ boardId, className }: TaskDataTableProps) {
         sortBy,
         sortOrder,
         ...(boardId && { boardId }),
-      }
+      };
 
       if (searchQuery.trim()) {
-        filters.search = searchQuery.trim()
+        filters.search = searchQuery.trim();
       }
 
       if (statusFilter !== "all") {
-        filters.status = statusFilter as "NEW" | "IN_PROGRESS" | "ON_HOLD" | "COMPLETED" | "CANCELLED"
+        filters.status = statusFilter as
+          | "NEW"
+          | "IN_PROGRESS"
+          | "ON_HOLD"
+          | "COMPLETED"
+          | "CANCELLED";
       }
 
       if (priorityFilter !== "all") {
-        filters.priority = priorityFilter as "LOW" | "MEDIUM" | "HIGH" | "CRITICAL"
+        filters.priority = priorityFilter as
+          | "LOW"
+          | "MEDIUM"
+          | "HIGH"
+          | "CRITICAL";
       }
 
       if (dueDateFilter !== "all") {
-        filters.dueDateFilter = dueDateFilter as "overdue" | "today" | "week" | "month"
+        filters.dueDateFilter = dueDateFilter as
+          | "overdue"
+          | "today"
+          | "week"
+          | "month";
       }
 
-      const result = await getTaskTableData(filters)
+      const result = await getTaskTableData(filters);
 
       if (result.error) {
-        setError(result.error)
+        setError(result.error);
       } else if (result.data) {
-        setData(result.data)
+        setData(result.data);
       }
     } catch (err) {
-      console.error('Failed to fetch task table data:', err)
-      setError('Failed to load task data')
+      console.error("Failed to fetch task table data:", err);
+      setError("Failed to load task data");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [currentPage, searchQuery, statusFilter, priorityFilter, dueDateFilter, sortBy, sortOrder, boardId])
+  }, [
+    currentPage,
+    searchQuery,
+    statusFilter,
+    priorityFilter,
+    dueDateFilter,
+    sortBy,
+    sortOrder,
+    boardId,
+  ]);
 
   useEffect(() => {
-    fetchData()
-  }, [fetchData])
+    fetchData();
+  }, [fetchData]);
 
-  const handleSort = (column: "title" | "status" | "priority" | "dueDate" | "createdAt" | "updatedAt") => {
+  const handleSort = (
+    column:
+      | "title"
+      | "status"
+      | "priority"
+      | "dueDate"
+      | "createdAt"
+      | "updatedAt"
+  ) => {
     if (sortBy === column) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
-      setSortBy(column)
-      setSortOrder('asc')
+      setSortBy(column);
+      setSortOrder("asc");
     }
-    setCurrentPage(1)
-  }
+    setCurrentPage(1);
+  };
 
   const handleSearch = (value: string) => {
-    setSearchQuery(value)
-    setCurrentPage(1)
-  }
+    setSearchQuery(value);
+    setCurrentPage(1);
+  };
 
-  const getStatusBadgeVariant = (status: TaskTableRow['status']) => {
+  const getStatusBadgeVariant = (status: TaskTableRow["status"]) => {
     switch (status) {
-      case 'NEW':
-        return 'secondary'
-      case 'IN_PROGRESS':
-        return 'default'
-      case 'ON_HOLD':
-        return 'outline'
-      case 'COMPLETED':
-        return 'secondary'
-      case 'CANCELLED':
-        return 'destructive'
+      case "NEW":
+        return "secondary";
+      case "IN_PROGRESS":
+        return "default";
+      case "ON_HOLD":
+        return "outline";
+      case "COMPLETED":
+        return "secondary";
+      case "CANCELLED":
+        return "destructive";
       default:
-        return 'outline'
+        return "outline";
     }
-  }
+  };
 
-  const getPriorityColor = (priority: TaskTableRow['priority']) => {
+  const getPriorityColor = (priority: TaskTableRow["priority"]) => {
     switch (priority) {
-      case 'LOW':
-        return 'text-green-600'
-      case 'MEDIUM':
-        return 'text-yellow-600'
-      case 'HIGH':
-        return 'text-orange-600'
-      case 'CRITICAL':
-        return 'text-red-600'
+      case "LOW":
+        return "text-green-600";
+      case "MEDIUM":
+        return "text-yellow-600";
+      case "HIGH":
+        return "text-orange-600";
+      case "CRITICAL":
+        return "text-red-600";
       default:
-        return 'text-gray-600'
+        return "text-gray-600";
     }
-  }
+  };
 
   const formatDate = (date: Date | null) => {
-    if (!date) return '-'
-    return new Date(date).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    })
-  }
+    if (!date) return "-";
+    return new Date(date).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
 
-  const SortableHeader = ({ column, children }: { column: "title" | "status" | "priority" | "dueDate" | "createdAt" | "updatedAt"; children: React.ReactNode }) => (
+  const SortableHeader = ({
+    column,
+    children,
+  }: {
+    column:
+      | "title"
+      | "status"
+      | "priority"
+      | "dueDate"
+      | "createdAt"
+      | "updatedAt";
+    children: React.ReactNode;
+  }) => (
     <TableHead
       className="cursor-pointer hover:bg-muted/50 select-none"
       onClick={() => handleSort(column)}
@@ -168,7 +240,7 @@ export function TaskDataTable({ boardId, className }: TaskDataTableProps) {
         <ArrowUpDown className="h-3 w-3" />
       </div>
     </TableHead>
-  )
+  );
 
   if (error) {
     return (
@@ -180,7 +252,7 @@ export function TaskDataTable({ boardId, className }: TaskDataTableProps) {
           <div className="text-sm text-red-600">{error}</div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -256,11 +328,12 @@ export function TaskDataTable({ boardId, className }: TaskDataTableProps) {
         {/* Summary Stats */}
         {data && (
           <div className="flex flex-wrap gap-2 text-sm">
-            <Badge variant="outline">
-              Total: {data.summary.totalTasks}
-            </Badge>
+            <Badge variant="outline">Total: {data.summary.totalTasks}</Badge>
             <Badge variant="secondary">
-              Active: {data.summary.statusCounts.NEW + data.summary.statusCounts.IN_PROGRESS + data.summary.statusCounts.ON_HOLD}
+              Active:{" "}
+              {data.summary.statusCounts.NEW +
+                data.summary.statusCounts.IN_PROGRESS +
+                data.summary.statusCounts.ON_HOLD}
             </Badge>
             <Badge variant="outline">
               Completed: {data.summary.statusCounts.COMPLETED}
@@ -291,21 +364,44 @@ export function TaskDataTable({ boardId, className }: TaskDataTableProps) {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, index) => (
                   <TableRow key={index}>
-                    <TableCell><Skeleton className="h-4 w-48" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-8 w-8 rounded-full" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-48" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-6 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-8 w-8 rounded-full" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
                   </TableRow>
                 ))
               ) : data && data.tasks.length > 0 ? (
                 data.tasks.map((task) => (
-                  <TableRow key={task.id} className={cn(task.isOverdue && "bg-red-50 dark:bg-red-950/20")}>
+                  <TableRow
+                    key={task.id}
+                    className={cn(
+                      task.isOverdue && "bg-red-50 dark:bg-red-950/20"
+                    )}
+                  >
                     <TableCell className="max-w-xs">
                       <div className="space-y-1">
-                        <div className="font-medium truncate">{task.title}</div>
+                        <div className="font-medium truncate">
+                          <Link href={`/${user.cid}/tasks-list/${task.id}`}>
+                            {task.title}
+                          </Link>
+                        </div>
                         {task.description && (
                           <div className="text-sm text-muted-foreground truncate">
                             {task.description}
@@ -315,12 +411,19 @@ export function TaskDataTable({ boardId, className }: TaskDataTableProps) {
                     </TableCell>
                     <TableCell>
                       <Badge variant={getStatusBadgeVariant(task.status)}>
-                        {task.status.replace('_', ' ')}
+                        {task.status.replace("_", " ")}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className={cn("flex items-center gap-1", getPriorityColor(task.priority))}>
-                        {task.priority === 'CRITICAL' && <AlertTriangle className="h-3 w-3" />}
+                      <div
+                        className={cn(
+                          "flex items-center gap-1",
+                          getPriorityColor(task.priority)
+                        )}
+                      >
+                        {task.priority === "CRITICAL" && (
+                          <AlertTriangle className="h-3 w-3" />
+                        )}
                         <span className="text-sm">{task.priority}</span>
                       </div>
                     </TableCell>
@@ -329,7 +432,8 @@ export function TaskDataTable({ boardId, className }: TaskDataTableProps) {
                         <div className="flex items-center gap-2">
                           <Avatar className="h-6 w-6">
                             <AvatarFallback className="text-xs">
-                              {task.assignedTo.name?.charAt(0) || task.assignedTo.email.charAt(0)}
+                              {task.assignedTo.name?.charAt(0) ||
+                                task.assignedTo.email.charAt(0)}
                             </AvatarFallback>
                           </Avatar>
                           <span className="text-sm truncate max-w-24">
@@ -337,12 +441,16 @@ export function TaskDataTable({ boardId, className }: TaskDataTableProps) {
                           </span>
                         </div>
                       ) : (
-                        <span className="text-muted-foreground text-sm">Unassigned</span>
+                        <span className="text-muted-foreground text-sm">
+                          Unassigned
+                        </span>
                       )}
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        <div className="text-sm font-medium truncate max-w-32">{task.board.name}</div>
+                        <div className="text-sm font-medium truncate max-w-32">
+                          {task.board.name}
+                        </div>
                         {task.section && (
                           <div className="text-xs text-muted-foreground truncate">
                             {task.section.name}
@@ -351,7 +459,12 @@ export function TaskDataTable({ boardId, className }: TaskDataTableProps) {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className={cn("text-sm", task.isOverdue && "text-red-600 font-medium")}>
+                      <div
+                        className={cn(
+                          "text-sm",
+                          task.isOverdue && "text-red-600 font-medium"
+                        )}
+                      >
                         {formatDate(task.dueDate)}
                         {task.isOverdue && (
                           <div className="text-xs text-red-600">Overdue</div>
@@ -367,7 +480,10 @@ export function TaskDataTable({ boardId, className }: TaskDataTableProps) {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell
+                    colSpan={7}
+                    className="text-center py-8 text-muted-foreground"
+                  >
                     No tasks found matching your filters
                   </TableCell>
                 </TableRow>
@@ -380,8 +496,8 @@ export function TaskDataTable({ boardId, className }: TaskDataTableProps) {
         {data && data.pagination.totalPages > 1 && (
           <div className="flex items-center justify-between">
             <div className="text-sm text-muted-foreground">
-              Page {data.pagination.page} of {data.pagination.totalPages}
-              ({data.pagination.total} total tasks)
+              Page {data.pagination.page} of {data.pagination.totalPages}(
+              {data.pagination.total} total tasks)
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -407,5 +523,5 @@ export function TaskDataTable({ boardId, className }: TaskDataTableProps) {
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

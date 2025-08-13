@@ -8,6 +8,11 @@ export async function getUserById(userId: string) {
       id: userId,
     },
   });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
   return user;
 }
 
@@ -19,6 +24,10 @@ export async function getUserByEmail(email: string) {
     },
   });
 
+  if (!user) {
+    throw new Error("User not found");
+  }
+
   return user;
 }
 
@@ -28,5 +37,10 @@ export async function getAdmins() {
       role: "ADMIN",
     },
   });
+
+  if (!admins) {
+    throw new Error("Admins not found");
+  }
+
   return admins;
 }

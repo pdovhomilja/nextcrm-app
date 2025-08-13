@@ -9,6 +9,7 @@ export type EditTaskInput = {
   status?: "NEW" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED" | "ON_HOLD";
   priority?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   dueDate?: Date | string | null;
+  assignedToId?: string;
 };
 
 export const editTask = async (taskId: string, data: EditTaskInput) => {

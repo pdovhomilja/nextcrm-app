@@ -5,8 +5,20 @@ import { SiteHeader } from "@/components/site-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Suspense } from "react";
 import { TaskDataTable } from "@/components/dashboard/tables/task-data-table";
+import { auth } from "@/auth";
+import { getUserById } from "@/actions/user";
+import { redirect } from "next/navigation";
+import { User } from "@/lib/generated/prisma";
 
 const TasksListPage = async () => {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    redirect("/auth/signin");
+  }
+
+  const user: User = await getUserById(session.user.id);
+
   return (
     <SidebarInset>
       <SiteHeader title="Tasks List">
@@ -19,7 +31,7 @@ const TasksListPage = async () => {
               <div className="flex justify-end">{/* Nav buttons */}</div>
               <div className="px-4 lg:px-6">
                 <Suspense fallback={<Skeleton className="h-[500px] w-full" />}>
-                  <TaskDataTable className="w-full" />
+                  <TaskDataTable className="w-full" user={user} />
                 </Suspense>
               </div>
             </div>

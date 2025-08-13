@@ -34,7 +34,7 @@ import type {
 } from "@/app/(app)/[cid]/tasks/_types";
 import { useSession } from "next-auth/react";
 import { Board } from "@/lib/generated/prisma";
-import { BoardSection } from "@/lib/generated/prisma";
+import type { BoardSection as UIBoardSection } from "@/app/(app)/[cid]/tasks/_types";
 import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -57,7 +57,7 @@ const QuickCreateForm = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [boards, setBoards] = useState<Board[]>([]);
-  const [boardSections, setBoardSections] = useState<BoardSection[]>([]);
+  const [boardSections, setBoardSections] = useState<UIBoardSection[]>([]);
   const [month, setMonth] = useState<Date | undefined>(new Date());
   const [isDuePopoverOpen, setIsDuePopoverOpen] = useState(false);
 

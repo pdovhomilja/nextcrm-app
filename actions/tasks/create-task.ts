@@ -4,9 +4,12 @@ import db from "@/lib/db";
 import { auth } from "@/auth";
 import { getUserByEmail } from "../user";
 import { triggerTaskEmbeddingUpdate } from "@/lib/ai/embedding-triggers";
-import type { CreateTaskData } from "@/app/(app)/[cid]/tasks/_types";
+import type { CreateTaskData, Task } from "@/app/(app)/[cid]/tasks/_types";
 
-export async function createTask(task: CreateTaskData, boardSectionId: string) {
+export async function createTask(
+  task: CreateTaskData,
+  boardSectionId: string
+): Promise<Task> {
   try {
     const session = await auth();
     if (!session?.user?.email) {
@@ -49,16 +52,8 @@ export async function createTask(task: CreateTaskData, boardSectionId: string) {
         boardSectionId: boardSectionId,
       },
       include: {
-        assignedTo: {
-          select: {
-            name: true,
-          },
-        },
-        createdBy: {
-          select: {
-            name: true,
-          },
-        },
+        assignedTo: { select: { id: true, name: true } },
+        createdBy: { select: { id: true, name: true } },
       },
     });
 
@@ -69,7 +64,28 @@ export async function createTask(task: CreateTaskData, boardSectionId: string) {
       });
     }
 
-    return newTask;
+    const taskForClient: Task = {
+      id: newTask.id,
+      title: newTask.title,
+      description: newTask.description,
+      status: newTask.status as unknown as string,
+      priority: newTask.priority as unknown as string,
+      dueDate: newTask.dueDate,
+      position: newTask.position,
+      createdAt: newTask.createdAt,
+      updatedAt: newTask.updatedAt,
+      assignedTo: {
+        id: newTask.assignedTo?.id ?? user.id,
+        name: newTask.assignedTo?.name ?? null,
+      },
+      createdBy: {
+        id: newTask.createdBy?.id ?? user.id,
+        name: newTask.createdBy?.name ?? null,
+      },
+      documents: [],
+    };
+
+    return taskForClient;
   } catch (error) {
     throw new Error(
       `Failed to create task: ${error instanceof Error ? error.message : "Unknown error"}`

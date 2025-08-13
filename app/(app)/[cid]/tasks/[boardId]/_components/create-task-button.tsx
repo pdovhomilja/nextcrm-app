@@ -50,7 +50,7 @@ const CreateTaskButton = ({
 
     // Call the callback to update the parent component's state
     if (onTaskCreated && newTask) {
-      await onTaskCreated(newTask as Task, boardSectionId);
+      await onTaskCreated(newTask, boardSectionId);
     }
 
     setIsOpen(false);
