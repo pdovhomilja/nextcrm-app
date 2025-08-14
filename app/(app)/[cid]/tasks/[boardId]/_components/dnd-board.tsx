@@ -100,7 +100,9 @@ function SortableSection({
             >
               <GripVertical className="h-4 w-4 text-muted-foreground" />
             </span>
-            <span>{section.name}</span>
+            <span>
+              {section.name}({section.tasks.length})
+            </span>
           </span>
           <X
             className="w-4 h-4"
@@ -116,6 +118,8 @@ function SortableSection({
             }}
           />
         </CardTitle>
+
+        {/* <span>{section.id}</span> */}
         <CreateTaskButton
           boardSectionId={section.id}
           onTaskCreated={onTaskCreated}

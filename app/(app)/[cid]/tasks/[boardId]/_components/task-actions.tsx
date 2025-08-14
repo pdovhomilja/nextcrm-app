@@ -66,6 +66,7 @@ const TaskActions = ({ task }: { task: Task }) => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [month, setMonth] = useState<Date | undefined>(new Date());
   const [isDuePopoverOpen, setIsDuePopoverOpen] = useState(false);
+  const [isMarkingDone, setIsMarkingDone] = useState(false);
 
   const formSchema = z.object({
     title: z.string().min(1, "Title is required"),
@@ -173,7 +174,26 @@ const TaskActions = ({ task }: { task: Task }) => {
             <PencilIcon className="mr-2 h-4 w-4" />
             Edit Task
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => markDone(task.id)}>
+          <DropdownMenuItem
+            disabled={isMarkingDone}
+            onSelect={async () => {
+              if (isMarkingDone) return;
+              try {
+                setIsMarkingDone(true);
+                await markDone(task.id);
+                router.refresh();
+                toast.success("Task marked as done");
+              } catch (error) {
+                toast.error(
+                  error instanceof Error
+                    ? error.message
+                    : "Failed to mark task as done"
+                );
+              } finally {
+                setIsMarkingDone(false);
+              }
+            }}
+          >
             <CheckIcon className="mr-2 h-4 w-4" />
             Mark as Done
           </DropdownMenuItem>

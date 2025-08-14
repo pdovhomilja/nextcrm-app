@@ -29,31 +29,44 @@ export const markDone = async (taskId: string) => {
     },
   });
 
-  const lastBoardSection = await db.board.findMany({
+  console.log("Actual board section:", actualBoardSection?.id);
+
+  // Prefer a semantic "Done" column if it exists; otherwise fall back to the right-most (highest position)
+  const doneSection = await db.boardSection.findFirst({
     where: {
-      id: actualBoardSection?.boardId,
-    },
-    include: {
-      boardSections: {
-        orderBy: {
-          position: "desc",
-        },
-        take: 1,
-      },
+      boardId: actualBoardSection?.boardId,
+      name: { equals: "Done", mode: "insensitive" },
     },
   });
 
-  //console.log("Last board section:", lastBoardSection);
+  const rightMostSection = await db.boardSection.findFirst({
+    where: { boardId: actualBoardSection?.boardId },
+    orderBy: { position: "desc" },
+  });
 
-  //console.log("Actual board section:", actualBoardSection);
+  if (!doneSection && !rightMostSection) {
+    throw new Error("Destination board section not found");
+  }
 
-  await db.task.update({
+  const destinationSectionId = (doneSection ?? rightMostSection)!.id;
+  console.log("Destination board section:", destinationSectionId);
+
+  // Place the task at the end of the destination section for predictable ordering
+  const lastTaskInDestination = await db.task.findFirst({
+    where: { boardSectionId: destinationSectionId },
+    orderBy: { position: "desc" },
+  });
+
+  const res = await db.task.update({
     where: { id: taskId },
     data: {
       status: "COMPLETED",
-      boardSectionId: lastBoardSection[0].boardSections[0].id,
+      boardSectionId: destinationSectionId,
+      position: (lastTaskInDestination?.position ?? -1) + 1,
     },
   });
+
+  console.log("Res:", res);
 
   revalidatePath(`/${session.user.cid}/tasks/${actualBoardSection?.boardId}`);
 

@@ -7,6 +7,8 @@ import { SidebarInset } from "@/components/ui/sidebar";
 import { SiteHeader } from "@/components/site-header";
 import type { BoardSection } from "../_types";
 
+export const dynamic = "force-dynamic";
+
 const BoardPage = async ({
   params,
 }: {

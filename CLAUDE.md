@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**TaskHQ (taskhq.xmation.ai)** is a Next.js 15.4.4 application built as a task and project management platform. It features a comprehensive authentication system, kanban-style task boards with drag-and-drop functionality, and company-based access control. The project uses TypeScript, App Router architecture, Prisma ORM with PostgreSQL, Next-Auth v5, and shadcn/ui components with task management capabilities.
+**TaskHQ (taskhq.xmation.ai)** is a Next.js 15.4.4 application built as an AI-powered task and project management platform with advanced document processing capabilities. It features a comprehensive authentication system, kanban-style task boards with drag-and-drop functionality, AI assistant integration, vector embeddings for semantic search, document processing with OCR, MCP (Model Context Protocol) integration, comprehensive dashboard analytics, and company-based access control. The project uses TypeScript, App Router architecture, Prisma ORM with PostgreSQL (with pgvector extension), Next-Auth v5, AI SDK with OpenAI integration, and shadcn/ui components with enhanced task management and analytics capabilities.
 
 ## Development Commands
 
@@ -15,9 +15,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `pnpm lint` - Run ESLint for code linting
 
 ### Database Management
-- `npx prisma generate` - Generate Prisma client after schema changes
+- `npx prisma generate` - Generate Prisma client after schema changes (includes typed SQL)
 - `npx prisma db push` - Push schema changes to database
 - `npx prisma studio` - Open Prisma Studio for database inspection
+- `npx prisma migrate dev` - Create and apply new database migrations
+
+### Testing
+- `pnpm test` - Run test suite (Jest/Vitest)
+- `pnpm test:integration` - Run integration tests for AI system
+
+### AI & Document Processing
+- Automatic embedding generation on task/board creation
+- Document processing supports: PDF, DOCX, CSV, XLSX, images (OCR)
+- Vector similarity search with pgvector extension
 
 
 ## Architecture & Key Technologies
@@ -27,11 +37,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **React 19.1.0** with TypeScript (ES2017 target)
 - **Tailwind CSS v4** with PostCSS and CSS variables support
 - **shadcn/ui** components (New York style, neutral base color, CSS variables)
-- **Lucide React** icons
+- **Lucide React** icons and **@tabler/icons-react** for additional icons
 - **Geist font family** (sans and mono variants from Google Fonts)
-- **React Query/TanStack Query** for data fetching
+- **React Query/TanStack Query** for data fetching and **React Table** for data tables
 - **@dnd-kit** for drag-and-drop functionality in kanban boards
-- **@tabler/icons-react** for additional icons
+- **Recharts** for dashboard analytics and data visualization
+- **React Hook Form** with Zod validation and **@hookform/resolvers**
+- **next-themes** for dark/light mode toggle
+- **Sonner** for toast notifications
+- **date-fns** for date manipulation and **React Day Picker** for calendar components
+- **nuqs** for URL state management
+- **use-debounce** for performance optimization
+- **Vaul** for drawer components
 
 ### Authentication System
 - **Next-Auth v5 (beta.29)** with Prisma adapter
@@ -46,19 +63,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Open registration**: Email verification required for all users
 
 ### Database & ORM
-- **Prisma ORM** with PostgreSQL database
+- **Prisma ORM** with PostgreSQL database and **pgvector extension** for vector embeddings
 - **Custom Prisma client path**: `lib/generated/prisma/`
 - **Auto-generated CUIDs** for all primary keys
+- **Typed SQL** support with custom queries for vector similarity search
+- **Redis** for caching and session management
 - **Database Models**:
   - `User` - with email verification, password hashing, company ID, role-based access
   - `Account` - OAuth account linking
   - `Session` - Next-Auth sessions
   - `VerificationToken` - Email verification tokens
-  - `Task` - Task management with priorities, status, assignments, and due dates
-  - `Board` - Project boards with access control
+  - `Task` - Task management with priorities, status, assignments, due dates, and document associations
+  - `Board` - Project boards with access control and document associations
   - `BoardSection` - Kanban columns/sections within boards
   - `TaskHistory` - Task change tracking and audit logs
-- **Indexed fields** for optimized queries
+  - `TaskEmbedding` - Vector embeddings for semantic task search (1536 dimensions)
+  - `BoardEmbedding` - Vector embeddings for semantic board search (1536 dimensions)
+  - `AIConversation` - AI chat conversations with context and summaries
+  - `AIMessage` - Individual messages in AI conversations
+  - `Document` - Document processing with OCR, text extraction, and AI insights
+  - `DocumentEmbedding` - Vector embeddings for document content search
+  - `ConversationSummary` - AI conversation summaries, key topics, and memory
+  - `SecurityAuditLog` - Security audit trails and monitoring
+- **Indexed fields** for optimized queries including vector similarity search
 - **Prisma Accelerate** extension support
 
 ### Server Actions Architecture
@@ -68,10 +95,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - `authenticateUser()` - Login with credentials
   - `signOutUser()` - Logout functionality
 - **Task management actions**:
-  - Board CRUD operations (create, read, update, delete)
+  - Board CRUD operations (create, read, update, delete, edit)
   - Task CRUD operations with assignments and status updates
   - Board section management for kanban columns
   - Drag-and-drop position updates for tasks and sections
+  - Task completion and marking as done
+- **Dashboard analytics actions**:
+  - Board metrics and statistics
+  - Task metrics and distribution data
+  - User activity metrics
+  - Chart data generation (timeline, distribution)
+  - Task table data with filtering and pagination
 - **Form Integration** with Next.js 15 server actions
 
 ### Email System
@@ -79,6 +113,30 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **React Email** components for email templates
 - **Email verification flow** with token generation
 - **Custom from address**: `TaskHQ <pavel@endorphinit.com>`
+
+### AI & Machine Learning Stack
+- **AI SDK (@ai-sdk/openai, @ai-sdk/react)** for OpenAI integration and React hooks
+- **OpenAI GPT-4o-mini** for chat completions and text generation
+- **OpenAI text-embedding-3-small** for vector embeddings (1536 dimensions)
+- **pgvector** PostgreSQL extension for vector similarity search
+- **Model Context Protocol (@modelcontextprotocol/sdk, @vercel/mcp-adapter)** for AI agent orchestration
+
+### Document Processing Stack
+- **Tesseract.js** for OCR (Optical Character Recognition) on images
+- **pdf-parse** for PDF text extraction
+- **mammoth** for Word document (.docx) processing
+- **papaparse** for CSV parsing and processing
+- **xlsx** for Excel spreadsheet processing
+
+### AI & Machine Learning Features
+- **AI Assistant v2**: Advanced chat interface with tool calling and context awareness
+- **Vector Embeddings**: OpenAI embeddings for semantic search (1536 dimensions)
+- **RAG (Retrieval Augmented Generation)**: Context-aware AI responses using document and task embeddings
+- **Document Processing**: OCR with Tesseract.js, PDF parsing, Word document processing (.docx)
+- **MCP Integration**: Model Context Protocol for AI agent orchestration
+- **Conversation Memory**: AI conversation summaries with key topics and action items
+- **Semantic Search**: Vector similarity search across tasks, boards, and documents
+- **AI Monitoring**: Performance metrics and security audit logs
 
 ### Task Management Features
 - **Kanban Board System**: Drag-and-drop task management across board sections
@@ -88,6 +146,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Task Assignment**: Multi-user task assignment with creator/assignee tracking
 - **Board Access Control**: Permission-based board access with user arrays
 - **Task History**: Complete audit trail of task changes and updates
+- **Task Detail View**: Comprehensive task pages with activity, files, and descriptions
+- **Document Attachments**: Link documents to tasks and boards with AI-powered insights
+
+### Dashboard & Analytics Features
+- **Interactive Charts**: Task timeline, distribution, and status analytics using Recharts
+- **Metrics Cards**: Board metrics, task metrics, and user activity summaries
+- **Data Tables**: Advanced task tables with filtering, sorting, and pagination
+- **Real-time Updates**: Dynamic data refresh and responsive design
 
 ### File Structure
 ```
@@ -96,20 +162,46 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │   ├── user.ts                # User management actions
 │   ├── users/                 # User-related actions
 │   │   └── get-users.tsx     # User retrieval functions
+│   ├── dashboard/             # Dashboard analytics actions
+│   │   ├── charts/            # Chart data generation
+│   │   │   ├── get-distribution-data.ts
+│   │   │   └── get-task-timeline-data.ts
+│   │   ├── get-board-metrics.ts
+│   │   ├── get-dashboard-overview.ts
+│   │   ├── get-task-metrics.ts
+│   │   ├── get-task-table-data.ts
+│   │   └── get-user-metrics.ts
 │   └── tasks/                 # Task management actions
 │       ├── create-board.ts    # Board creation
 │       ├── create-board-section.ts # Board section management
 │       ├── create-task.ts     # Task creation
 │       ├── delete-board.ts    # Board deletion
+│       ├── delete-board-section.ts # Board section deletion
 │       ├── delete-task.ts     # Task deletion
+│       ├── edit-board.ts      # Board editing
+│       ├── edit-task.ts       # Task editing
 │       ├── get-board.ts       # Board retrieval
 │       ├── get-boards.ts      # Multiple boards retrieval
 │       ├── get-board-sections.ts # Board sections retrieval
+│       ├── get-task.ts        # Single task retrieval
+│       ├── get-tasks.ts       # Multiple tasks retrieval
+│       ├── mark-done.ts       # Task completion
 │       ├── update-section-position.ts # Section drag-and-drop
 │       └── update-task-position.ts # Task drag-and-drop
 ├── app/                       # Next.js App Router
 │   ├── (app)/[cid]/          # Company-specific protected routes
-│   │   ├── dashboard/        # Dashboard pages
+│   │   ├── ai-assistant/     # AI Assistant v1 page
+│   │   ├── ai-assistant-v2/  # Enhanced AI Assistant v2 page
+│   │   ├── dashboard/        # Dashboard with analytics and charts
+│   │   │   ├── _components/  # Dashboard-specific components
+│   │   │   │   ├── chart-area-interactive.tsx
+│   │   │   │   ├── dynamic-section-cards.tsx
+│   │   │   │   ├── enhanced-dynamic-cards.tsx
+│   │   │   │   ├── section-cards.tsx
+│   │   │   │   └── simple-section-cards.tsx
+│   │   │   └── page.tsx      # Dashboard overview
+│   │   ├── docs/             # Documentation pages
+│   │   ├── settings/         # User settings pages
 │   │   ├── tasks/            # Task management interface
 │   │   │   ├── [boardId]/    # Individual board views
 │   │   │   │   ├── _components/ # Board-specific components
@@ -121,27 +213,116 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │   │   │   ├── _components/  # Task management components
 │   │   │   │   ├── board-actions.tsx
 │   │   │   │   ├── create-board-button.tsx
-│   │   │   │   └── error-boundary.tsx
+│   │   │   │   ├── error-boundary.tsx
+│   │   │   │   └── search.tsx
 │   │   │   ├── _types/       # Task-related TypeScript types
 │   │   │   │   └── index.ts
+│   │   │   ├── search-params.ts # URL state management
 │   │   │   └── page.tsx      # Task boards overview
+│   │   ├── tasks-list/       # Detailed task views
+│   │   │   ├── [taskId]/     # Individual task detail pages
+│   │   │   │   ├── _components/ # Task detail components
+│   │   │   │   │   ├── task-activity.tsx
+│   │   │   │   │   ├── task-description.tsx
+│   │   │   │   │   ├── task-detail-header.tsx
+│   │   │   │   │   ├── task-files.tsx
+│   │   │   │   │   └── task-side-rail.tsx
+│   │   │   │   └── page.tsx  # Task detail page
+│   │   │   └── page.tsx      # Task list overview
 │   │   └── layout.tsx        # Company layout
 │   ├── auth/signin/          # Authentication pages
 │   ├── api/                  # API routes
+│   │   ├── ai/               # AI-related API endpoints
+│   │   │   ├── agents/       # AI agents and specialized tools
+│   │   │   │   ├── metrics/  # Metrics agent
+│   │   │   │   └── route.ts  # Main agents endpoint
+│   │   │   ├── analyze/      # Document analysis
+│   │   │   ├── chat/         # AI chat endpoints (v1 & v2)
+│   │   │   ├── chat-v2/      # Enhanced chat with tool calling
+│   │   │   ├── documents/    # Document processing
+│   │   │   ├── embeddings/   # Vector embeddings generation
+│   │   │   ├── metrics/      # AI metrics and monitoring
+│   │   │   ├── privacy/      # Privacy and security
+│   │   │   ├── suggest/      # AI suggestions (v1 & v2)
+│   │   │   └── telemetry/    # AI telemetry and monitoring
 │   │   ├── auth/[...nextauth]/ # Next-Auth configuration
+│   │   ├── health/           # Health check endpoints
+│   │   │   ├── ai/           # AI system health
+│   │   │   └── mcp/          # MCP system health
+│   │   ├── mcp/              # Model Context Protocol endpoints
+│   │   │   ├── [transport]/  # MCP transport layer
+│   │   │   ├── analytics/    # MCP analytics
+│   │   │   ├── boards/       # MCP board operations
+│   │   │   ├── search/       # MCP search capabilities
+│   │   │   └── tasks/        # MCP task operations
 │   │   ├── register/         # Registration endpoint
 │   │   └── verify-email/     # Email verification endpoint
 │   ├── globals.css           # Global Tailwind styles
 │   ├── layout.tsx            # Root layout with SessionProvider
 │   └── page.tsx              # Landing page
 ├── components/               # React components
+│   ├── ai/                   # AI-related components
+│   │   ├── ai-assistant.tsx  # AI Assistant v1 component
+│   │   ├── ai-assistant-v2.ts # AI Assistant v2 logic
+│   │   ├── project-insights.tsx # AI project insights
+│   │   └── smart-suggestions.tsx # AI smart suggestions
+│   ├── app-sidebar.tsx       # Main application sidebar
 │   ├── auth/                 # Authentication components
 │   │   └── sign-out-button.tsx
-│   └── ui/                   # shadcn/ui components
+│   ├── calendar-10.tsx       # Calendar component
+│   ├── dashboard/            # Dashboard components
+│   │   ├── charts/           # Chart components
+│   │   │   ├── distribution-chart.tsx
+│   │   │   └── task-timeline-chart.tsx
+│   │   ├── metrics/          # Metrics components
+│   │   │   ├── board-metrics-card.tsx
+│   │   │   ├── task-metrics-card.tsx
+│   │   │   └── user-activity-card.tsx
+│   │   └── tables/           # Data table components
+│   │       └── task-data-table.tsx
+│   ├── data-table.tsx        # Generic data table component
+│   ├── nav-documents.tsx     # Document navigation
+│   ├── nav-main.tsx          # Main navigation
+│   ├── nav-secondary.tsx     # Secondary navigation
+│   ├── nav-user.tsx          # User navigation
+│   ├── quickcreate/          # Quick create functionality
+│   │   └── form/
+│   │       └── quick-create-form.tsx
+│   ├── site-header.tsx       # Site header component
+│   ├── theme-provider.tsx    # Theme context provider
+│   ├── theme-toggle.tsx      # Dark/light mode toggle
+│   └── ui/                   # shadcn/ui components (extensive collection)
 ├── emails/                   # React Email templates
 │   └── verification-email.tsx
 ├── lib/                      # Utility libraries
+│   ├── ai/                   # AI and ML utilities
+│   │   ├── __tests__/        # AI system tests
+│   │   │   └── agent-system.test.ts
+│   │   ├── agent-core.ts     # Core AI agent functionality
+│   │   ├── agent-orchestrator.ts # AI agent orchestration
+│   │   ├── config.ts         # AI configuration
+│   │   ├── context-assembly.ts # Context assembly for AI
+│   │   ├── conversation-memory.ts # AI conversation memory
+│   │   ├── data-extraction.ts # AI data extraction
+│   │   ├── document-processor.ts # Document processing with AI
+│   │   ├── embedding-service.ts # Vector embedding generation
+│   │   ├── embedding-storage.ts # Vector embedding storage
+│   │   ├── embedding-triggers.ts # Embedding generation triggers
+│   │   ├── mcp-auth.ts       # MCP authentication
+│   │   ├── mcp-client-pool.ts # MCP client management
+│   │   ├── mcp-middleware.ts # MCP middleware
+│   │   ├── monitoring.ts     # AI system monitoring
+│   │   ├── rag-processor.ts  # RAG processing logic
+│   │   ├── simple-mcp-client.ts # Simple MCP client
+│   │   ├── specialized-agents.ts # Specialized AI agents
+│   │   └── vector-search.ts  # Vector similarity search
+│   ├── dashboard/            # Dashboard utilities
+│   │   └── chart-utils.ts    # Chart utility functions
 │   ├── generated/prisma/     # Generated Prisma client
+│   ├── monitoring/           # Monitoring utilities
+│   │   └── ai-metrics.ts     # AI metrics collection
+│   ├── security/             # Security utilities
+│   │   └── ai-security.ts    # AI security measures
 │   ├── db.ts                 # Database connection
 │   ├── email-verification.ts # Email verification logic
 │   ├── send-verification-email.ts # Email sending
@@ -279,6 +460,9 @@ enum TaskStatusNew {
 # Database
 DATABASE_URL="postgresql://username:password@localhost:5432/taskhq"
 
+# Redis (for caching and sessions)
+REDIS_URL="redis://localhost:6379"
+
 # NextAuth.js
 AUTH_SECRET="your-secret-here"  # JWT signing secret
 NEXTAUTH_URL="http://localhost:3000"
@@ -286,11 +470,23 @@ NEXTAUTH_URL="http://localhost:3000"
 # Email (Resend)
 RESEND_API_KEY="your-resend-api-key"
 
+# AI & OpenAI Integration
+OPENAI_API_KEY="your-openai-api-key"
+AI_MODEL="gpt-4o-mini"  # Default AI model
+EMBEDDING_MODEL="text-embedding-3-small"  # Default embedding model
+
 # OAuth Providers (Optional)
 GOOGLE_CLIENT_ID=""
 GOOGLE_CLIENT_SECRET=""
 GITHUB_CLIENT_ID=""
 GITHUB_CLIENT_SECRET=""
+
+# MCP (Model Context Protocol) - Optional
+MCP_SERVER_URL=""
+MCP_AUTH_TOKEN=""
+
+# Document Processing - Optional
+TESSERACT_WORKER_LOAD_TIME="2000"  # OCR processing timeout
 ```
 
 ## Configuration Files
