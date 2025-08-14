@@ -543,3 +543,101 @@ TESSERACT_WORKER_LOAD_TIME="2000"  # OCR processing timeout
 - **Task Operations**: Server actions for CRUD operations with position management
 - **Drag-and-Drop**: @dnd-kit integration for kanban board interactions
 - **Error Boundaries**: Component-level error handling for task management
+
+# CRITICAL DATABASE PROTECTION RULES
+⚠️ **PRODUCTION DATA PROTECTION - HIGHEST PRIORITY** ⚠️
+
+This system contains LIVE PRODUCTION DATA that must be protected at all costs.
+
+## ABSOLUTE RULES for Database Schema Modifications:
+
+### ✅ SAFE Database Operations (ALWAYS use these):
+- `CREATE INDEX CONCURRENTLY` - Creates indexes without locking tables
+- `ALTER TABLE ... ADD COLUMN ... DEFAULT ...` - Adds new columns with defaults (non-breaking)
+- `CREATE TABLE IF NOT EXISTS` - Creates new tables only if they don't exist
+- `ALTER TABLE ... ALTER COLUMN ... SET DEFAULT` - Changes column defaults (safe)
+- `UPDATE` statements with `WHERE` clauses - Modifies data safely
+- `INSERT INTO ... ON CONFLICT DO NOTHING` - Safe inserts that don't overwrite
+
+### ❌ FORBIDDEN Database Operations (NEVER use these):
+- `DROP TABLE` - Deletes entire tables and all data
+- `DROP COLUMN` - Removes columns and all their data  
+- `TRUNCATE` - Empties tables completely
+- `DELETE FROM table_name` without WHERE clause - Deletes all rows
+- `ALTER TABLE ... ALTER COLUMN ... TYPE` - Can cause data loss during type conversion
+- `CREATE INDEX` without CONCURRENTLY - Locks tables during creation
+
+### 📋 MANDATORY Process for ALL Database Changes:
+
+1. **ALWAYS backup production data first**:
+   ```bash
+   pg_dump $DATABASE_URL > backup_$(date +%Y%m%d_%H%M%S).sql
+   ```
+
+2. **Test migrations locally first**:
+   ```bash
+   # Create copy of production schema
+   npx prisma db pull
+   npx prisma generate
+   # Test your changes locally
+   ```
+
+3. **Use only additive changes**:
+   - Add new tables ✅
+   - Add new columns with defaults ✅  
+   - Add new indexes CONCURRENTLY ✅
+   - Never remove or modify existing data structures ❌
+
+4. **Validate data integrity after changes**:
+   ```sql
+   -- Check row counts match expectations
+   SELECT COUNT(*) FROM "Task";
+   SELECT COUNT(*) FROM "User";
+   SELECT COUNT(*) FROM "Board";
+   ```
+
+### 🔄 Safe Migration Pattern:
+```sql
+-- Example of SAFE migration
+BEGIN;
+
+-- Add new column safely
+ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "embedding_id" TEXT DEFAULT NULL;
+
+-- Create new table safely  
+CREATE TABLE IF NOT EXISTS "TaskEmbedding" (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+  task_id TEXT REFERENCES "Task"(id) ON DELETE CASCADE,
+  embedding VECTOR(1536),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Add index safely (use CONCURRENTLY outside transaction)
+COMMIT;
+
+-- Add index with CONCURRENTLY (must be outside transaction)
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_task_embeddings_vector 
+ON "TaskEmbedding" USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+```
+
+### 🚨 Emergency Rollback Plan:
+Always have a rollback strategy before making ANY database changes:
+```sql
+-- Example rollback commands (prepare these BEFORE making changes)
+-- DROP INDEX IF EXISTS idx_new_feature;
+-- ALTER TABLE "Task" DROP COLUMN IF EXISTS "new_column";
+```
+
+### 📝 Documentation Requirements:
+Every database change MUST be documented with:
+- **Purpose**: Why the change is needed
+- **Impact**: Which tables/columns are affected  
+- **Safety**: Why the change preserves existing data
+- **Rollback**: How to undo the change if needed
+- **Testing**: How the change was validated
+
+## ENFORCEMENT:
+- Any suggestion to drop, truncate, or destructively modify production tables will be REJECTED
+- All database modifications must follow the SAFE patterns above
+- Production data integrity is more important than any feature or optimization
+- When in doubt, choose the most conservative approach

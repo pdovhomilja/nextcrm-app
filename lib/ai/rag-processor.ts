@@ -320,8 +320,7 @@ Generate actionable suggestions that would help address this query.`,
    */
   async *streamResponse(ragQuery: RAGQuery): AsyncGenerator<{
     type: "context" | "response" | "sources" | "actions" | "complete";
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    data: any;
+    data: unknown;
   }> {
     const startTime = Date.now();
 

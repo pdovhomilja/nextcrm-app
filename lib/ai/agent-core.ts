@@ -1,4 +1,5 @@
 import { generateText, generateObject, tool, stepCountIs } from "ai";
+import type { Tool } from "ai";
 import { aiConfig } from "./config";
 import { simpleMCPClientPool } from "./simple-mcp-client";
 import { ragProcessor, RAGQuery } from "./rag-processor";
@@ -10,8 +11,7 @@ export interface AgentContext {
   boardId?: string;
   taskId?: string;
   conversationId?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  sessionData?: Record<string, any>;
+  sessionData?: Record<string, unknown>;
 }
 
 export interface AgentMessage {
@@ -22,14 +22,23 @@ export interface AgentMessage {
   metadata?: {
     toolCalls?: Array<{
       toolName: string;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      parameters: any;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      result: any;
+      parameters: Record<string, unknown>;
+      result: unknown;
     }>;
     ragContext?: string;
     confidence?: number;
   };
+}
+
+export interface AgentProcessingMetadata {
+  processingTime?: number;
+  strategy?: AgentDecision["responseStrategy"];
+  confidence?: number;
+  agentRole?: string;
+  ragContext?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  sources?: any;
+  error?: string;
 }
 
 export interface AgentDecision {
@@ -49,8 +58,7 @@ export abstract class BaseAIAgent {
   protected role: string;
   protected capabilities: string[];
   protected conversationHistory: Map<string, AgentMessage[]> = new Map();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected mcpTools: Record<string, any> = {};
+  protected mcpTools: Record<string, unknown> = {};
 
   constructor(agentId: string, role: string, capabilities: string[]) {
     this.agentId = agentId;
@@ -86,10 +94,8 @@ export abstract class BaseAIAgent {
   ): Promise<{
     response: string;
     decision: AgentDecision;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    toolResults?: any[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    metadata: Record<string, any>;
+    toolResults?: Array<{ success?: boolean; result?: unknown }>;
+    metadata: AgentProcessingMetadata;
   }> {
     const startTime = Date.now();
 
@@ -102,10 +108,8 @@ export abstract class BaseAIAgent {
       );
 
       let response: string;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let toolResults: any[] = [];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const metadata: Record<string, any> = {
+      let toolResults: Array<{ success?: boolean; result?: unknown }> = [];
+      const metadata: AgentProcessingMetadata = {
         processingTime: 0,
         strategy: decision.responseStrategy,
         confidence: decision.confidence,
@@ -346,8 +350,10 @@ Response strategies:
     query: string,
     context: AgentContext,
     toolNames: string[]
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): Promise<{ results: any[]; summary: string }> {
+  ): Promise<{
+    results: Array<{ success?: boolean; result?: unknown; toolName?: string }>;
+    summary: string;
+  }> {
     console.log(
       `Orchestrating tools via AI SDK agent: ${toolNames.join(", ")}`
     );
@@ -360,16 +366,30 @@ Response strategies:
 
     const toolSchemasByMethod: Record<string, z.ZodTypeAny> = {
       create_task: z.object({
-        title: z.string(),
+        title: z.string().min(1, "Title is required"),
         description: z.string().optional(),
-        boardSectionId: z.string().optional(),
+        boardSectionId: z.string().min(1, "Board section ID is required"),
+        priority: z
+          .enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"])
+          .default("MEDIUM"),
+        assigneeIds: z.array(z.string()).optional(),
+        dueDate: z.string().optional(),
         userId: z.string().optional(),
         companyId: z.string().optional(),
       }),
       search_tasks: z.object({
-        searchTerm: z.string(),
+        searchTerm: z.string().optional(),
         boardId: z.string().optional(),
-        limit: z.number().int().positive().max(50).optional(),
+        status: z
+          .array(
+            z.enum(["NEW", "IN_PROGRESS", "COMPLETED", "CANCELLED", "ON_HOLD"])
+          )
+          .optional(),
+        priority: z
+          .array(z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]))
+          .optional(),
+        assigneeIds: z.array(z.string()).optional(),
+        limit: z.number().int().positive().max(50).default(10),
         userId: z.string().optional(),
         companyId: z.string().optional(),
       }),
@@ -394,10 +414,15 @@ Response strategies:
         companyId: z.string().optional(),
       }),
       update_task: z.object({
-        taskId: z.string().optional(),
-        status: z.string().optional(),
+        taskId: z.string().min(1, "Task ID is required"),
         title: z.string().optional(),
         description: z.string().optional(),
+        priority: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).optional(),
+        status: z
+          .enum(["NEW", "IN_PROGRESS", "COMPLETED", "CANCELLED", "ON_HOLD"])
+          .optional(),
+        assignedToId: z.string().optional(),
+        dueDate: z.string().optional(),
         userId: z.string().optional(),
         companyId: z.string().optional(),
       }),
@@ -415,8 +440,10 @@ Response strategies:
       __fallback: z.object({}).passthrough(),
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const toolsRegistry: Record<string, any> = {} as Record<string, any>;
+    const toolsRegistry: Record<string, Tool<unknown, unknown>> = {} as Record<
+      string,
+      Tool<unknown, unknown>
+    >;
     for (const fullToolName of availableToolNames) {
       const [serverName, ...methodParts] = fullToolName.split("_");
       if (!serverName || methodParts.length === 0) continue;
@@ -424,15 +451,13 @@ Response strategies:
 
       const schema =
         toolSchemasByMethod[method] || toolSchemasByMethod.__fallback;
-      const toolConfig = {
+      const builtTool = tool({
         description: `Execute MCP tool ${fullToolName}. Provide explicit, concrete parameters. Prefer using titles for searching; use IDs only when available in context.`,
-        parameters: schema,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        execute: async (input: any) => {
+        inputSchema: schema,
+        async execute(input) {
           const inputRecord = input as Record<string, unknown>;
           const params = {
             ...inputRecord,
-            // Ensure identity context always propagates
             userId: inputRecord.userId || context.userId,
             companyId: inputRecord.companyId || context.companyId,
           } as Record<string, unknown>;
@@ -447,12 +472,10 @@ Response strategies:
           if (mcpResult.error) {
             throw new Error(mcpResult.error.message || "MCP tool error");
           }
-          // Return raw MCP result so downstream synthesis can parse nested content
-          return mcpResult.result;
+          return mcpResult.result as unknown;
         },
-      };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      toolsRegistry[fullToolName] = tool(toolConfig as any);
+      });
+      toolsRegistry[fullToolName] = builtTool;
     }
 
     const agentSystemPrompt = `You are a ${this.role} agent. Use the provided tools to fulfill the user's request.
@@ -463,8 +486,11 @@ CRITICAL:
 - When you have sufficient information, stop calling tools and answer.`;
 
     // Collect all tool call results from each step
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const collected: any[] = [];
+    const collected: Array<{
+      success?: boolean;
+      result?: unknown;
+      toolName?: string;
+    }> = [];
     const { steps } = await generateText({
       model: aiConfig.chatModel,
       tools: toolsRegistry,
@@ -487,7 +513,8 @@ CRITICAL:
         const call = calls[i];
         const res = results[i];
         if (!call && !res) continue;
-        const name = ((call as { toolName?: string; name?: string })?.toolName ||
+        const name = ((call as { toolName?: string; name?: string })
+          ?.toolName ||
           (call as { toolName?: string; name?: string })?.name ||
           (res as { toolName?: string })?.toolName ||
           "unknown") as string;
@@ -512,8 +539,17 @@ CRITICAL:
     toolName: string,
     query: string,
     context: AgentContext
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): Promise<any> {
+  ): Promise<{
+    toolName: string;
+    serverName?: string;
+    method?: string;
+    executed: boolean;
+    result?: unknown;
+    error?: string;
+    timestamp: Date;
+    context: AgentContext;
+    query: string;
+  }> {
     try {
       // Parse the full tool name (e.g., "tasks_create_task" -> server: "tasks", method: "create_task")
       const toolParts = toolName.split("_");
@@ -569,8 +605,7 @@ CRITICAL:
     method: string,
     query: string,
     context: AgentContext
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): Record<string, any> {
+  ): Record<string, unknown> {
     const baseParams = {
       userId: context.userId,
       companyId: context.companyId,
