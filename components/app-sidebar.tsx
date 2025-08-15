@@ -58,6 +58,11 @@ export function AppSidebar({
         url: `/${cid}/ai-assistant-v2`,
         icon: IconRobot,
       },
+      {
+        title: "Suggestions",
+        url: `/${cid}/suggestions`,
+        icon: IconList,
+      },
     ],
 
     navSecondary: [

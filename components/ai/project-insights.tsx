@@ -139,7 +139,7 @@ export function ProjectInsights({
       });
 
       if (response.ok) {
-        // For now, set mock data until the streaming API is working
+        //TODO: For now, set mock data until the streaming API is working
         setObject({
           overview: {
             summary:

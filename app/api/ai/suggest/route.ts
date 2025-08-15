@@ -1,9 +1,10 @@
 import { generateObject } from "ai";
-import { openai } from "@ai-sdk/openai";
+
 import { auth } from "@/auth";
 import { AgentFactory } from "@/lib/ai/specialized-agents";
 import { z } from "zod";
 import { NextRequest } from "next/server";
+import { aiConfig } from "@/lib/ai/config";
 
 const suggestionSchema = z.object({
   suggestions: z
@@ -103,7 +104,7 @@ export async function POST(request: NextRequest) {
 
     // Generate structured suggestions
     const result = await generateObject({
-      model: openai("gpt-4o"),
+      model: aiConfig.structuredOutputModel,
       system: `You are a project management expert that provides actionable suggestions based on current project data and AI agent analysis.
 
 Agent Analysis: ${agentSuggestions}
@@ -122,7 +123,6 @@ ${userContext ? `Additional context: ${userContext}` : ""}
 
 Focus on practical, implementable suggestions with clear reasoning.`,
       schema: suggestionSchema,
-      temperature: 0.6,
     });
 
     return Response.json({
@@ -156,7 +156,7 @@ export async function GET(request: NextRequest) {
 
     // Get quick suggestions for the user's current context
     const quickSuggestions = await generateObject({
-      model: openai("gpt-4o"),
+      model: aiConfig.structuredOutputModel,
       system:
         "Generate quick project management suggestions for the user's current context.",
       prompt: `Generate 3 quick suggestions for project management improvement:
@@ -173,7 +173,6 @@ User: ${session.user.name || session.user.email}`,
           )
           .length(3),
       }),
-      temperature: 0.7,
     });
 
     return Response.json({

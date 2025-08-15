@@ -5,6 +5,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import {
   CheckIcon,
+  EyeIcon,
   MoreHorizontalIcon,
   PencilIcon,
   TrashIcon,
@@ -59,8 +60,10 @@ import { editTask, type EditTaskInput } from "@/actions/tasks/edit-task";
 import type { Task } from "../../_types";
 import { Textarea } from "@/components/ui/textarea";
 import { markDone } from "@/actions/tasks/mark-done";
+import { useParams } from "next/navigation";
 
 const TaskActions = ({ task }: { task: Task }) => {
+  const { cid } = useParams();
   const router = useRouter();
   const [onDelete, setOnDelete] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -166,6 +169,14 @@ const TaskActions = ({ task }: { task: Task }) => {
           <MoreHorizontalIcon size={16} />
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" side="bottom">
+          <DropdownMenuItem
+            onClick={() => {
+              router.push(`/${cid}/tasks-list/${task.id}`);
+            }}
+          >
+            <EyeIcon className="mr-2 h-4 w-4" />
+            View Task Details
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setOnDelete(true)}>
             <TrashIcon className="mr-2 h-4 w-4" />
             Delete Task
