@@ -12,16 +12,19 @@ import {
 
 import type { TaskMetricsData } from "@/actions/dashboard/get-task-metrics";
 import type { UserMetricsData } from "@/actions/dashboard/get-user-metrics";
+import Link from "next/link";
 
 interface EnhancedDynamicCardsProps {
   taskMetrics?: TaskMetricsData;
   userMetrics?: UserMetricsData;
   isLoading?: boolean;
+  cid: string;
 }
 
-export function EnhancedDynamicCards({ 
+export function EnhancedDynamicCards({
   taskMetrics,
-  isLoading = false 
+  isLoading = false,
+  cid,
 }: EnhancedDynamicCardsProps) {
   // Helper function to format numbers
   const formatNumber = (num: number) => {
@@ -32,7 +35,6 @@ export function EnhancedDynamicCards({
     }
     return num.toString();
   };
-
 
   if (isLoading) {
     return (
@@ -53,16 +55,17 @@ export function EnhancedDynamicCards({
       trend: null, // Overdue doesn't have a meaningful trend
       description: `${taskMetrics?.overdueTasks || 0} tasks overdue`,
       isAlert: (taskMetrics?.overdueTasks || 0) > 0,
+      link: `/${cid}/tasks-list?dueDate=overdue`,
     },
-    
+
     // Team Productivity Card
     {
       title: "Completion Rate",
-      value: `${taskMetrics?.completionRate.toFixed(1) || '0.0'}%`,
+      value: `${taskMetrics?.completionRate.toFixed(1) || "0.0"}%`,
       trend: null, // We could add weekly trend here later
       description: `${taskMetrics?.tasksByStatus.COMPLETED || 0} completed this month`,
     },
-    
+
     // AI Conversations Card - TODO: Add aiUsageStats to UserMetricsData
     {
       title: "AI Conversations",
@@ -70,10 +73,10 @@ export function EnhancedDynamicCards({
       trend: null,
       description: "0 active AI users", // `${userMetrics?.aiUsageStats?.activeAIUsers || 0} active AI users`,
     },
-    
+
     // Documents Processed Card - TODO: Add documentStats to UserMetricsData
     {
-      title: "Documents Processed", 
+      title: "Documents Processed",
       value: "0", // formatNumber(userMetrics?.documentStats?.totalDocuments || 0),
       trend: null,
       description: "0.0% success rate", // `${userMetrics?.documentStats?.averageProcessingSuccessRate?.toFixed(1) || '0.0'}% success rate`,
@@ -95,6 +98,7 @@ interface EnhancedSectionCardProps {
   trend?: { formatted: string; isPositive: boolean } | null;
   description: string;
   isAlert?: boolean;
+  link?: string;
 }
 
 const EnhancedSectionCard = ({
@@ -103,47 +107,57 @@ const EnhancedSectionCard = ({
   trend,
   description,
   isAlert = false,
+  link,
 }: EnhancedSectionCardProps) => {
   return (
-    <Card className={`@container/card ${isAlert ? 'border-red-200' : ''}`}>
-      <CardHeader>
-        <CardDescription className={isAlert ? 'text-red-600' : ''}>
-          {title}
-        </CardDescription>
-        <CardTitle className={`text-2xl font-semibold tabular-nums @[250px]/card:text-3xl ${
-          isAlert ? 'text-red-700' : ''
-        }`}>
-          {value}
-        </CardTitle>
-        <CardAction>
-          {trend && (
-            <Badge variant="outline" className={
-              trend.isPositive 
-                ? "text-green-700 border-green-200 bg-green-50" 
-                : "text-red-700 border-red-200 bg-red-50"
-            }>
-              {trend.isPositive ? <IconTrendingUp /> : <IconTrendingDown />}
-              {trend.formatted}
-            </Badge>
-          )}
-        </CardAction>
-      </CardHeader>
-      <CardFooter className="flex-col items-start gap-1.5 text-sm">
-        {trend && (
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            {trend.formatted}
-            {trend.isPositive ? (
-              <IconTrendingUp className="size-4 text-green-600" />
-            ) : (
-              <IconTrendingDown className="size-4 text-red-600" />
+    <Link href={link || "#"}>
+      <Card className={`@container/card ${isAlert ? "border-red-200" : ""}`}>
+        <CardHeader>
+          <CardDescription className={isAlert ? "text-red-600" : ""}>
+            {title}
+          </CardDescription>
+          <CardTitle
+            className={`text-2xl font-semibold tabular-nums @[250px]/card:text-3xl ${
+              isAlert ? "text-red-700" : ""
+            }`}
+          >
+            {value}
+          </CardTitle>
+          <CardAction>
+            {trend && (
+              <Badge
+                variant="outline"
+                className={
+                  trend.isPositive
+                    ? "text-green-700 border-green-200 bg-green-50"
+                    : "text-red-700 border-red-200 bg-red-50"
+                }
+              >
+                {trend.isPositive ? <IconTrendingUp /> : <IconTrendingDown />}
+                {trend.formatted}
+              </Badge>
             )}
+          </CardAction>
+        </CardHeader>
+        <CardFooter className="flex-col items-start gap-1.5 text-sm">
+          {trend && (
+            <div className="line-clamp-1 flex gap-2 font-medium">
+              {trend.formatted}
+              {trend.isPositive ? (
+                <IconTrendingUp className="size-4 text-green-600" />
+              ) : (
+                <IconTrendingDown className="size-4 text-red-600" />
+              )}
+            </div>
+          )}
+          <div
+            className={`text-muted-foreground ${isAlert ? "text-red-500" : ""}`}
+          >
+            {description}
           </div>
-        )}
-        <div className={`text-muted-foreground ${isAlert ? 'text-red-500' : ''}`}>
-          {description}
-        </div>
-      </CardFooter>
-    </Card>
+        </CardFooter>
+      </Card>
+    </Link>
   );
 };
 

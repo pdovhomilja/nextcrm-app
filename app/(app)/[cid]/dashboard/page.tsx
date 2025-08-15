@@ -18,7 +18,7 @@ interface DashboardPageProps {
 }
 
 export default async function DashboardPage({ params }: DashboardPageProps) {
-  await params;
+  const { cid } = await params;
 
   // Fetch all metrics in parallel for better performance
   const [taskMetricsResult, boardMetricsResult] = await Promise.all([
@@ -54,7 +54,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
           {/* Enhanced Dynamic Cards */}
           <Suspense fallback={<Skeleton className="h-32 w-full" />}>
             <div className="space-y-4">
-              <EnhancedDynamicCards taskMetrics={taskMetrics} />
+              <EnhancedDynamicCards taskMetrics={taskMetrics} cid={cid} />
             </div>
           </Suspense>
 
