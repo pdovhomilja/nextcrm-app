@@ -25,6 +25,7 @@ import {
 import { User } from "@/lib/generated/prisma";
 import { useParams } from "next/navigation";
 import { NavSecondary } from "./nav-secondary";
+import packageJson from "../package.json";
 
 export function AppSidebar({
   user,
@@ -102,6 +103,12 @@ export function AppSidebar({
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user as User} />
+        <span className="text-xs text-muted-foreground ml-auto">
+          {/* get version from package.json */}
+          <span className="text-xs text-muted-foreground ml-auto">
+            v{packageJson.version}
+          </span>
+        </span>
       </SidebarFooter>
     </Sidebar>
   );
