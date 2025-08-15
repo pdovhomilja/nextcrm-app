@@ -13,6 +13,11 @@
 # testing
 /coverage
 
+#claude
+.claude/
+.DS_Store
+settings.local.json
+
 # next.js
 /.next/
 /out/
