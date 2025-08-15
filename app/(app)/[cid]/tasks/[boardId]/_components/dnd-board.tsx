@@ -194,8 +194,8 @@ function SortableTask({ task }: { task: Task }) {
         </div>
         <TaskActions task={task} />
       </CardHeader>
-      <CardContent className="flex flex-col justify-between space-y-2">
-        <p>{task.description}</p>
+      <CardContent className="flex flex-col justify-between space-y-2 overflow-hidden text-xs mx-2">
+        <p className="truncate">{task.description}</p>
         <div className="flex flex-row gap-2 items-center text-xs text-muted-foreground">
           <User2 size={16} />
           <p>{task.assignedTo.name || "Unassigned"}</p>
