@@ -130,10 +130,6 @@ export async function getTaskTableData(
       ];
     }
 
-    if (status) {
-      where.status = status;
-    }
-
     if (priority) {
       where.priority = priority;
     }
@@ -156,7 +152,13 @@ export async function getTaskTableData(
       switch (dueDateFilter) {
         case "overdue":
           where.dueDate = { lt: now };
-          where.status = { notIn: ["COMPLETED", "CANCELLED"] };
+          // For overdue filter, always exclude COMPLETED and CANCELLED tasks
+          // regardless of status filter
+          if (status && !["COMPLETED", "CANCELLED"].includes(status)) {
+            where.status = status;
+          } else {
+            where.status = { notIn: ["COMPLETED", "CANCELLED"] };
+          }
           break;
         case "today":
           const startOfDay = new Date(
@@ -166,17 +168,34 @@ export async function getTaskTableData(
           );
           const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
           where.dueDate = { gte: startOfDay, lt: endOfDay };
+          // Apply status filter for other due date filters
+          if (status) {
+            where.status = status;
+          }
           break;
         case "week":
           const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
           where.dueDate = { gte: now, lte: weekFromNow };
+          // Apply status filter for other due date filters
+          if (status) {
+            where.status = status;
+          }
           break;
         case "month":
           const monthFromNow = new Date(
             now.getTime() + 30 * 24 * 60 * 60 * 1000
           );
           where.dueDate = { gte: now, lte: monthFromNow };
+          // Apply status filter for other due date filters
+          if (status) {
+            where.status = status;
+          }
           break;
+      }
+    } else {
+      // Apply status filter only when there's no due date filter or it's not overdue
+      if (status) {
+        where.status = status;
       }
     }
 
