@@ -285,7 +285,9 @@ function TaskTable({ data, user }: { data: TaskTableData; user: User }) {
                 <TableCell>
                   <div className="space-y-1">
                     <div className="text-sm font-medium truncate max-w-32">
-                      {task.board.name}
+                      <Link href={`/${user.cid}/tasks/${task.board.id}`}>
+                        {task.board.name}
+                      </Link>
                     </div>
                     {task.section && (
                       <div className="text-xs text-muted-foreground truncate">
