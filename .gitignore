@@ -22,6 +22,9 @@ settings.local.json
 /.next/
 /out/
 
+#claude
+.mcp.json
+
 # production
 /build
 

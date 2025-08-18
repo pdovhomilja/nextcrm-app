@@ -16,12 +16,15 @@ import { editTask, type EditTaskInput } from "@/actions/tasks/edit-task";
 import { toast } from "sonner";
 import { CheckIcon, MoreHorizontalIcon } from "lucide-react";
 import { Task } from "../../../tasks/_types";
+import { useRouter } from "next/navigation";
+import { markDone } from "@/actions/tasks/mark-done";
 
 interface TaskDetailHeaderProps {
   task: Task;
 }
 
 export default function TaskDetailHeader({ task }: TaskDetailHeaderProps) {
+  const router = useRouter();
   const [title, setTitle] = useState(task.title);
   const [isSaving, setIsSaving] = useState(false);
   const [isDueOpen, setIsDueOpen] = useState(false);
@@ -36,6 +39,20 @@ export default function TaskDetailHeader({ task }: TaskDetailHeaderProps) {
       toast.success("Saved");
     } catch {
       toast.error("Failed to save");
+    } finally {
+      router.refresh();
+      setIsSaving(false);
+    }
+  }
+
+  async function markAsDone() {
+    setIsSaving(true);
+    try {
+      await markDone(task.id);
+      toast.success("Task marked as done");
+      router.refresh();
+    } catch {
+      toast.error("Failed to mark task as done");
     } finally {
       setIsSaving(false);
     }
@@ -121,9 +138,7 @@ export default function TaskDetailHeader({ task }: TaskDetailHeaderProps) {
             <MoreHorizontalIcon size={16} />
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56" side="bottom">
-            <DropdownMenuItem
-              onClick={() => saveInline({ status: "COMPLETED" })}
-            >
+            <DropdownMenuItem onClick={markAsDone}>
               <CheckIcon className="mr-2 h-4 w-4" />
               Mark as Done
             </DropdownMenuItem>
