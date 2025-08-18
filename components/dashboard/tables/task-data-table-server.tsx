@@ -139,9 +139,11 @@ async function TaskDataTableContent({
             Completed: {data.summary.statusCounts.COMPLETED}
           </Badge>
           {data.summary.overdueTasks > 0 && (
-            <Badge variant="destructive">
-              Overdue: {data.summary.overdueTasks}
-            </Badge>
+            <Link href={`/${user.cid}/tasks-list?dueDate=overdue`}>
+              <Badge variant="destructive">
+                Overdue: {data.summary.overdueTasks}
+              </Badge>
+            </Link>
           )}
         </div>
 
