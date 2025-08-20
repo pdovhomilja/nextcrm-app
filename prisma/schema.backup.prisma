@@ -56,7 +56,7 @@ model User {
   emailTokenExpires       DateTime? @map("email_token_expires")
   image                   String?
   password                String?
-  cid                     String?   @default(cuid()) @map("company_id") // DEPRECATED: To be removed after migration
+  // cid                     String?   @default(cuid()) @map("company_id") // DEPRECATED: To be removed in future migration
   createdAt               DateTime  @default(now()) @map("created_at")
   updatedAt               DateTime  @updatedAt @map("updated_at")
   role                    UserRole  @default(USER)
@@ -64,7 +64,7 @@ model User {
   accounts Account[]
   sessions Session[]
 
-  // Multi-tenancy relation (will be populated during migration)
+  // Multi-tenancy relation
   memberships           CompanyMembership[]
 
   assignedTasks         Task[]                 @relation("AssignedTasks")
@@ -74,7 +74,6 @@ model User {
   securityAuditLogs     SecurityAuditLog[]
 
   @@map("users")
-  @@index([cid])
   @@index([emailVerificationToken])
 }
 
@@ -174,9 +173,9 @@ model Board {
   updatedAt     DateTime       @updatedAt
   access        String[]
   
-  // Multi-tenancy fields (nullable initially for migration)
-  companyId     String?
-  company       Company?       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  // Multi-tenancy fields
+  companyId     String
+  company       Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
   
   boardSections BoardSection[]
   embedding     BoardEmbedding?

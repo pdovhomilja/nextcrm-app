@@ -25,6 +25,8 @@ import {
 import { User } from "@/lib/generated/prisma";
 import { useParams } from "next/navigation";
 import { NavSecondary } from "./nav-secondary";
+import { CompanySwitcherCompact } from "@/components/company-switcher";
+import { useActiveCompany } from "@/components/company-provider";
 import packageJson from "../package.json";
 
 export function AppSidebar({
@@ -32,36 +34,41 @@ export function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar> & { user: User | null }) {
   const { cid } = useParams();
+  const { activeCompanyId } = useActiveCompany();
+  
+  // Use activeCompanyId from context if available, fallback to URL params
+  const companyId = activeCompanyId || cid;
+  
   const data = {
     navMain: [
       {
         title: "Dashboard",
-        url: `/${cid}/dashboard`,
+        url: `/${companyId}/dashboard`,
         icon: IconDashboard,
       },
       {
         title: "Boards",
-        url: `/${cid}/tasks`,
+        url: `/${companyId}/tasks`,
         icon: IconFolder,
       },
       {
         title: "Tasks List",
-        url: `/${cid}/tasks-list`,
+        url: `/${companyId}/tasks-list`,
         icon: IconList,
       },
       {
         title: "AI Assistant",
-        url: `/${cid}/ai-assistant`,
+        url: `/${companyId}/ai-assistant`,
         icon: IconRobot,
       },
       {
         title: "AI Assistant V2",
-        url: `/${cid}/ai-assistant-v2`,
+        url: `/${companyId}/ai-assistant-v2`,
         icon: IconRobot,
       },
       {
         title: "Suggestions",
-        url: `/${cid}/suggestions`,
+        url: `/${companyId}/suggestions`,
         icon: IconList,
       },
     ],
@@ -69,12 +76,12 @@ export function AppSidebar({
     navSecondary: [
       {
         title: "Settings",
-        url: `/${cid}/settings`,
+        url: `/${companyId}/settings`,
         icon: IconSettings,
       },
       {
         title: "Get Help",
-        url: `/${cid}/docs`,
+        url: `/${companyId}/docs`,
         icon: IconHelp,
       },
     ],
@@ -96,6 +103,9 @@ export function AppSidebar({
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+        <div className="px-2 py-1 flex justify-center">
+          <CompanySwitcherCompact />
+        </div>
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />

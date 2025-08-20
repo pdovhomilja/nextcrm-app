@@ -6,6 +6,19 @@ declare module "next-auth" {
     user: {
       id: string
       cid?: string | null
+      activeCompanyId?: string | null
+      memberships?: Array<{
+        companyId: string
+        userId: string
+        role: 'MEMBER' | 'ADMIN' | 'OWNER'
+        createdAt: Date
+        company: {
+          id: string
+          name: string
+          createdAt: Date
+          updatedAt: Date
+        }
+      }>
     } & DefaultSession["user"]
   }
 
@@ -17,5 +30,7 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
   interface JWT extends DefaultJWT {
     cid?: string | null
+    activeCompanyId?: string | null
+    memberships?: any[]
   }
 }

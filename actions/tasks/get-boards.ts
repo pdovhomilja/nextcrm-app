@@ -1,21 +1,39 @@
 "use server";
 
 import db from "@/lib/db";
+import { auth } from "@/auth";
 
 export async function getBoards(userId: string, query?: string) {
+  const session = await auth();
+  
+  // Get user's active company ID for multi-tenant isolation
+  const companyId = session?.user?.activeCompanyId || session?.user?.cid;
+  
+  if (!companyId) {
+    throw new Error("No active company found");
+  }
+
   const boards = await db.board.findMany({
     where: {
-      access: {
-        has: userId,
-      },
-      ...(query
-        ? {
-            OR: [
-              { name: { contains: query, mode: "insensitive" } },
-              { description: { contains: query, mode: "insensitive" } },
-            ],
-          }
-        : {}),
+      AND: [
+        {
+          access: {
+            has: userId,
+          },
+        },
+        {
+          // Multi-tenant isolation: only show boards from user's company
+          companyId: companyId,
+        },
+        ...(query
+          ? [{
+              OR: [
+                { name: { contains: query, mode: "insensitive" as const } },
+                { description: { contains: query, mode: "insensitive" as const } },
+              ],
+            }]
+          : []),
+      ],
     },
     orderBy: {
       createdAt: "asc",

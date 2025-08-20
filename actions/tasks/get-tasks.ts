@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { getUserByEmail } from "../user";
+import { getCurrentCompanyId } from "@/lib/auth-utils";
 import db from "@/lib/db";
 
 export const getTasks = async () => {
@@ -13,10 +14,27 @@ export const getTasks = async () => {
     throw new Error("User not found");
   }
 
+  // Get current company ID for multi-tenant isolation
+  const companyId = await getCurrentCompanyId();
+
+  // Get tasks from boards that belong to the user's company
   const tasks = await db.task.findMany({
     where: {
-      createdBy: { cid: user.cid },
+      boardSection: {
+        board: {
+          companyId: companyId, // Multi-tenant isolation
+        }
+      }
     },
+    include: {
+      assignedTo: true,
+      createdBy: true,
+      boardSection: {
+        include: {
+          board: true
+        }
+      }
+    }
   });
   return tasks;
 };

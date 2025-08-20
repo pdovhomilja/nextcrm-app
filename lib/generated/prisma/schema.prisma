@@ -56,13 +56,16 @@ model User {
   emailTokenExpires      DateTime? @map("email_token_expires")
   image                  String?
   password               String?
-  cid                    String?   @default(cuid()) @map("company_id")
+  cid                    String?   @default(cuid()) @map("company_id") // DEPRECATED: To be removed after migration
   createdAt              DateTime  @default(now()) @map("created_at")
   updatedAt              DateTime  @updatedAt @map("updated_at")
   role                   UserRole  @default(USER)
 
   accounts Account[]
   sessions Session[]
+
+  // Multi-tenancy relation (will be populated during migration)
+  memberships CompanyMembership[]
 
   assignedTasks     Task[]             @relation("AssignedTasks")
   createdTasks      Task[]             @relation("CreatedTasks")
@@ -81,6 +84,40 @@ enum UserRole {
   EDITOR
   MEDIA
   ADMIN
+}
+
+// Multi-tenancy enums and models
+enum CompanyRole {
+  MEMBER
+  ADMIN
+  OWNER
+}
+
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relational Fields
+  memberships CompanyMembership[]
+  boards      Board[]
+
+  @@map("companies")
+}
+
+model CompanyMembership {
+  companyId String
+  userId    String
+  role      CompanyRole @default(MEMBER)
+  createdAt DateTime    @default(now())
+
+  // Relations
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([companyId, userId])
+  @@map("company_memberships")
 }
 
 model VerificationToken {
@@ -130,16 +167,23 @@ model Task {
 }
 
 model Board {
-  id            String          @id @default(cuid())
-  name          String
-  description   String?
-  createdBy     String
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  access        String[]
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  access      String[]
+
+  // Multi-tenancy fields (nullable initially for migration)
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
   boardSections BoardSection[]
   embedding     BoardEmbedding?
   documents     Document[]
+
+  @@index([companyId])
 }
 
 model BoardSection {

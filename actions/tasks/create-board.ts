@@ -21,6 +21,13 @@ export async function createBoard(board: {
   if (!user) {
     return { error: "User not found" };
   }
+  // Get user's active company ID for multi-tenant isolation
+  const companyId = session?.user?.activeCompanyId || session?.user?.cid;
+  
+  if (!companyId) {
+    return { error: "No active company found" };
+  }
+
   try {
     const newBoard = await db.board.create({
       data: {
@@ -28,6 +35,7 @@ export async function createBoard(board: {
         description: board.description,
         createdBy: user.id,
         access: [user.id],
+        companyId: companyId, // Multi-tenant isolation
       },
     });
 

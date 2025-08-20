@@ -100,6 +100,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.cid = user.cid;
+        
+        // Fetch user's company memberships for multi-tenancy
+        const memberships = await prisma.companyMembership.findMany({
+          where: { userId: user.id },
+          include: { company: true },
+          orderBy: { createdAt: 'asc' } // First membership as default
+        });
+        
+        token.memberships = memberships;
+        token.activeCompanyId = memberships[0]?.companyId || user.cid || null;
       }
       return token;
     },
@@ -107,6 +117,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (token) {
         session.user.id = token.sub!;
         session.user.cid = token.cid as string | null;
+        session.user.memberships = token.memberships as any[];
+        session.user.activeCompanyId = token.activeCompanyId as string | null;
       }
       return session;
     },
