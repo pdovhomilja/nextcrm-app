@@ -64,23 +64,6 @@ export function TaskTableFilters({
     })
   );
 
-  // Sorting
-  const [sortBy, setSortBy] = useQueryState(
-    "sortBy",
-    parseAsString.withDefault("updatedAt").withOptions({
-      shallow: false,
-      startTransition,
-    })
-  );
-
-  const [sortOrder, setSortOrder] = useQueryState(
-    "sortOrder",
-    parseAsString.withDefault("desc").withOptions({
-      shallow: false,
-      startTransition,
-    })
-  );
-
   // Pagination
   const [page, setPage] = useQueryState(
     "page",

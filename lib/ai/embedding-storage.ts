@@ -84,11 +84,11 @@ export class EmbeddingStorageService {
   /**
    * Generate and store embedding for a single task
    */
-  async processTaskEmbedding(taskId: string): Promise<boolean> {
+  async processTaskEmbedding(taskId: string, companyId?: string): Promise<boolean> {
     try {
-      const taskDoc = await dataExtractionService.extractTaskData(taskId);
+      const taskDoc = await dataExtractionService.extractTaskData(taskId, companyId);
       if (!taskDoc) {
-        console.error(`Task ${taskId} not found`);
+        console.error(`Task ${taskId} not found or access denied`);
         return false;
       }
 
@@ -114,11 +114,11 @@ export class EmbeddingStorageService {
   /**
    * Generate and store embedding for a single board
    */
-  async processBoardEmbedding(boardId: string): Promise<boolean> {
+  async processBoardEmbedding(boardId: string, companyId?: string): Promise<boolean> {
     try {
-      const boardDoc = await dataExtractionService.extractBoardData(boardId);
+      const boardDoc = await dataExtractionService.extractBoardData(boardId, companyId);
       if (!boardDoc) {
-        console.error(`Board ${boardId} not found`);
+        console.error(`Board ${boardId} not found or access denied`);
         return false;
       }
 
@@ -146,6 +146,7 @@ export class EmbeddingStorageService {
    */
   async batchProcessTaskEmbeddings(
     taskIds: string[],
+    companyId: string,
     batchSize = 10
   ): Promise<{ success: number; failed: number; errors: string[] }> {
     let success = 0;
@@ -161,7 +162,7 @@ export class EmbeddingStorageService {
 
       // Process batch in parallel
       const results = await Promise.allSettled(
-        batch.map((taskId) => this.processTaskEmbedding(taskId))
+        batch.map((taskId) => this.processTaskEmbedding(taskId, companyId))
       );
 
       results.forEach((result, index) => {
@@ -191,6 +192,7 @@ export class EmbeddingStorageService {
    */
   async batchProcessBoardEmbeddings(
     boardIds: string[],
+    companyId: string,
     batchSize = 5
   ): Promise<{ success: number; failed: number; errors: string[] }> {
     let success = 0;
@@ -206,7 +208,7 @@ export class EmbeddingStorageService {
 
       // Process batch in parallel
       const results = await Promise.allSettled(
-        batch.map((boardId) => this.processBoardEmbedding(boardId))
+        batch.map((boardId) => this.processBoardEmbedding(boardId, companyId))
       );
 
       results.forEach((result, index) => {
@@ -258,8 +260,8 @@ export class EmbeddingStorageService {
 
     // Process tasks and boards in parallel
     const [taskResults, boardResults] = await Promise.all([
-      this.batchProcessTaskEmbeddings(taskIds),
-      this.batchProcessBoardEmbeddings(boardIds),
+      this.batchProcessTaskEmbeddings(taskIds, companyId),
+      this.batchProcessBoardEmbeddings(boardIds, companyId),
     ]);
 
     const endTime = Date.now();

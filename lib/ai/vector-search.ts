@@ -1,9 +1,5 @@
 import db from "@/lib/db";
 import { embeddingService } from "./embedding-service";
-import {
-  findSimilarBoards,
-  findSimilarTasks,
-} from "@/lib/generated/prisma/sql";
 
 export interface VectorSearchQuery {
   query: string;
@@ -437,10 +433,11 @@ export class VectorSearchService {
   }
 
   /**
-   * Find similar boards using TypedSQL (Prisma 6.13.0+ approach)
+   * Find similar boards using raw SQL with company filtering
    */
   async findSimilarBoardsTyped(
     queryEmbedding: number[],
+    companyId: string,
     limit = 10
   ): Promise<
     Array<{
@@ -454,10 +451,29 @@ export class VectorSearchService {
   > {
     try {
       const embeddingVector = `[${queryEmbedding.join(",")}]`;
-      const results = await db.$queryRawTyped(
-        findSimilarBoards(embeddingVector, limit)
+      // Use raw SQL with proper company filtering
+      const results = await db.$queryRawUnsafe(
+        `
+        SELECT 
+          be.board_id,
+          b.name,
+          b.description,
+          be.content,
+          be.metadata,
+          1 - (be.embedding <=> $1::vector) AS similarity
+        FROM board_embeddings be
+        JOIN "Board" b ON be.board_id = b.id
+        JOIN "User" u ON u.id = ANY(b.access)
+        WHERE u.cid = $2
+        ORDER BY be.embedding <=> $1::vector
+        LIMIT $3
+        `,
+        embeddingVector, 
+        companyId, 
+        limit
       );
-      return results.map(result => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (results as any[]).map(result => ({
         boardId: result.board_id,
         name: result.name,
         description: result.description || '',
@@ -466,16 +482,17 @@ export class VectorSearchService {
         similarity: result.similarity || 0,
       }));
     } catch (error) {
-      console.error("Error finding similar boards with TypedSQL:", error);
+      console.error("Error finding similar boards with company filtering:", error);
       return [];
     }
   }
 
   /**
-   * Find similar tasks using TypedSQL (Prisma 6.13.0+ approach)
+   * Find similar tasks using raw SQL with company filtering
    */
   async findSimilarTasksTyped(
     queryEmbedding: number[],
+    companyId: string,
     limit = 10
   ): Promise<
     Array<{
@@ -489,10 +506,29 @@ export class VectorSearchService {
   > {
     try {
       const embeddingVector = `[${queryEmbedding.join(",")}]`;
-      const results = await db.$queryRawTyped(
-        findSimilarTasks(embeddingVector, limit)
+      // Use raw SQL with proper company filtering
+      const results = await db.$queryRawUnsafe(
+        `
+        SELECT 
+          te.task_id,
+          t.title,
+          t.description,
+          te.content,
+          te.metadata,
+          1 - (te.embedding <=> $1::vector) AS similarity
+        FROM task_embeddings te
+        JOIN "Task" t ON te.task_id = t.id
+        JOIN "User" u ON t.assigned_to_id = u.id
+        WHERE u.cid = $2
+        ORDER BY te.embedding <=> $1::vector
+        LIMIT $3
+        `,
+        embeddingVector, 
+        companyId, 
+        limit
       );
-      return results.map(result => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (results as any[]).map(result => ({
         taskId: result.task_id,
         title: result.title,
         description: result.description,
@@ -501,7 +537,7 @@ export class VectorSearchService {
         similarity: result.similarity || 0,
       }));
     } catch (error) {
-      console.error("Error finding similar tasks with TypedSQL:", error);
+      console.error("Error finding similar tasks with company filtering:", error);
       return [];
     }
   }

@@ -37,5 +37,6 @@ export async function deleteBoard(boardId: string) {
     },
   });
 
+  console.log("Board deleted successfully");
   return { message: "Board deleted successfully" };
 }

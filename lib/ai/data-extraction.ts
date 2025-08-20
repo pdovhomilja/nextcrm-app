@@ -49,9 +49,21 @@ export class DataExtractionService {
   /**
    * Extract and format task data for embedding
    */
-  async extractTaskData(taskId: string): Promise<TaskDocument | null> {
-    const task = await db.task.findUnique({
-      where: { id: taskId },
+  async extractTaskData(taskId: string, companyId?: string): Promise<TaskDocument | null> {
+    let whereClause: { id: string; assignedTo?: { cid: string } } = { id: taskId };
+    
+    // Add company filtering if companyId is provided
+    if (companyId) {
+      whereClause = {
+        id: taskId,
+        assignedTo: {
+          cid: companyId // Ensure task's assignee belongs to the company
+        }
+      };
+    }
+
+    const task = await db.task.findFirst({
+      where: whereClause,
       include: {
         assignedTo: true,
         createdBy: true,
@@ -129,9 +141,28 @@ export class DataExtractionService {
   /**
    * Extract and format board data for embedding
    */
-  async extractBoardData(boardId: string): Promise<BoardDocument | null> {
-    const board = await db.board.findUnique({
-      where: { id: boardId },
+  async extractBoardData(boardId: string, companyId?: string): Promise<BoardDocument | null> {
+    let whereClause: { id: string; access?: { hasSome: string[] } } = { id: boardId };
+    
+    // Add company filtering if companyId is provided
+    if (companyId) {
+      // First get users from the company
+      const companyUsers = await db.user.findMany({
+        where: { cid: companyId },
+        select: { id: true },
+      });
+      const userIds = companyUsers.map((user) => user.id);
+      
+      whereClause = {
+        id: boardId,
+        access: {
+          hasSome: userIds // Board must have at least one company user in access
+        }
+      };
+    }
+
+    const board = await db.board.findFirst({
+      where: whereClause,
       include: {
         boardSections: {
           include: {
@@ -217,9 +248,9 @@ export class DataExtractionService {
 
     const content = contentParts.filter(Boolean).join("\n");
 
-    // Get company ID from first user found
-    const companyId =
-      allTasks.length > 0 ? allTasks[0].assignedTo.cid || "" : "";
+    // Get company ID from first user found or use the provided companyId
+    const extractedCompanyId =
+      companyId || (allTasks.length > 0 ? allTasks[0].assignedTo.cid || "" : "");
 
     return {
       id: board.id,
@@ -237,7 +268,7 @@ export class DataExtractionService {
         statusDistribution,
         createdAt: board.createdAt,
         updatedAt: board.updatedAt,
-        companyId,
+        companyId: extractedCompanyId,
       },
     };
   }
@@ -275,7 +306,7 @@ export class DataExtractionService {
     const taskDocuments: TaskDocument[] = [];
 
     for (const task of tasks) {
-      const doc = await this.extractTaskData(task.id);
+      const doc = await this.extractTaskData(task.id, companyId);
       if (doc) {
         taskDocuments.push(doc);
       }
@@ -308,7 +339,7 @@ export class DataExtractionService {
     const boardDocuments: BoardDocument[] = [];
 
     for (const board of boards) {
-      const doc = await this.extractBoardData(board.id);
+      const doc = await this.extractBoardData(board.id, companyId);
       if (doc) {
         boardDocuments.push(doc);
       }

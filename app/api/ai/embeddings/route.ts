@@ -88,9 +88,17 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        // Verify user has access to these tasks (simplified check)
+        const companyId = session.user.cid;
+        if (!companyId) {
+          return NextResponse.json(
+            { error: "Company context required" },
+            { status: 400 }
+          );
+        }
+
+        // Verify user has access to these tasks by filtering with companyId
         const taskResults =
-          await embeddingStorageService.batchProcessTaskEmbeddings(taskIds);
+          await embeddingStorageService.batchProcessTaskEmbeddings(taskIds, companyId);
 
         return NextResponse.json({
           success: true,
@@ -102,14 +110,22 @@ export async function POST(request: NextRequest) {
       case "process_single_task": {
         const { taskId } = validatedRequest;
 
+        const companyId = session.user.cid;
+        if (!companyId) {
+          return NextResponse.json(
+            { error: "Company context required" },
+            { status: 400 }
+          );
+        }
+
         const success =
-          await embeddingStorageService.processTaskEmbedding(taskId);
+          await embeddingStorageService.processTaskEmbedding(taskId, companyId);
 
         return NextResponse.json({
           success,
           message: success
             ? "Task embedding processed"
-            : "Failed to process task embedding",
+            : "Task not found or access denied",
         });
       }
 
@@ -123,8 +139,16 @@ export async function POST(request: NextRequest) {
           );
         }
 
+        const companyId = session.user.cid;
+        if (!companyId) {
+          return NextResponse.json(
+            { error: "Company context required" },
+            { status: 400 }
+          );
+        }
+
         const boardResults =
-          await embeddingStorageService.batchProcessBoardEmbeddings(boardIds);
+          await embeddingStorageService.batchProcessBoardEmbeddings(boardIds, companyId);
 
         return NextResponse.json({
           success: true,
@@ -246,9 +270,26 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const companyId = session.user.cid;
+    if (!companyId) {
+      return NextResponse.json(
+        { error: "Company context required" },
+        { status: 400 }
+      );
+    }
+
     const { taskId, boardId } = await request.json();
 
     if (taskId) {
+      // First verify the task belongs to the user's company
+      const taskDoc = await dataExtractionService.extractTaskData(taskId, companyId);
+      if (!taskDoc) {
+        return NextResponse.json(
+          { error: "Task not found or access denied" },
+          { status: 403 }
+        );
+      }
+
       await embeddingStorageService.deleteTaskEmbedding(taskId);
       return NextResponse.json({
         success: true,
@@ -257,6 +298,15 @@ export async function DELETE(request: NextRequest) {
     }
 
     if (boardId) {
+      // First verify the board belongs to the user's company
+      const boardDoc = await dataExtractionService.extractBoardData(boardId, companyId);
+      if (!boardDoc) {
+        return NextResponse.json(
+          { error: "Board not found or access denied" },
+          { status: 403 }
+        );
+      }
+
       await embeddingStorageService.deleteBoardEmbedding(boardId);
       return NextResponse.json({
         success: true,
