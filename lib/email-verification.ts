@@ -1,17 +1,18 @@
 import { randomBytes } from "crypto";
 import { PrismaClient } from "@/lib/generated/prisma";
+import db from "./db";
 
-const prisma = new PrismaClient();
-
-export async function generateEmailVerificationToken(email: string): Promise<string> {
+export async function generateEmailVerificationToken(
+  email: string
+): Promise<string> {
   // Generate a secure random token
   const token = randomBytes(32).toString("hex");
-  
+
   // Set expiration to 24 hours from now
   const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
   // Update user with verification token
-  await prisma.user.update({
+  await db.user.update({
     where: { email },
     data: {
       emailVerificationToken: token,
@@ -22,9 +23,11 @@ export async function generateEmailVerificationToken(email: string): Promise<str
   return token;
 }
 
-export async function verifyEmailToken(token: string): Promise<{ success: boolean; email?: string }> {
+export async function verifyEmailToken(
+  token: string
+): Promise<{ success: boolean; email?: string }> {
   try {
-    const user = await prisma.user.findUnique({
+    const user = await db.user.findUnique({
       where: { emailVerificationToken: token },
     });
 
@@ -38,7 +41,7 @@ export async function verifyEmailToken(token: string): Promise<{ success: boolea
     }
 
     // Mark email as verified and clear verification token
-    await prisma.user.update({
+    await db.user.update({
       where: { id: user.id },
       data: {
         emailVerified: new Date(),

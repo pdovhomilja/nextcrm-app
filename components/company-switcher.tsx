@@ -101,7 +101,11 @@ export function CompanySwitcher() {
         >
           <div className="flex items-center overflow-hidden space-x-2">
             <Building2 className="h-4 w-4" />
-            <span className="truncate">{activeCompany.company.name}</span>
+            <span className="truncate">
+              {activeCompany.company.name.length > 20
+                ? activeCompany.company.name.slice(0, 20) + "..."
+                : activeCompany.company.name}
+            </span>
           </div>
           <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -122,7 +126,9 @@ export function CompanySwitcher() {
                     <div className="flex items-center space-x-2">
                       <Building2 className="h-4 w-4" />
                       <span className="truncate">
-                        {membership.company.name}
+                        {membership.company.name.length > 20
+                          ? membership.company.name.slice(0, 15) + "..."
+                          : membership.company.name}
                       </span>
                     </div>
                     <div className="flex items-center space-x-1">

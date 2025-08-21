@@ -46,7 +46,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
         <div className="@container/main flex flex-1 flex-col gap-8 py-4 md:py-6">
           {/* Metrics Cards */}
           <Suspense fallback={<Skeleton className="h-32 w-full" />}>
-            <div className="space-y-4">
+            <div className="space-y-4 px-4 lg:px-6">
               <SectionCards />
             </div>
           </Suspense>

@@ -1,155 +1,259 @@
-"use client"
+"use client";
 
-import { useState, useTransition } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
-import { 
-  Building2, 
-  Users, 
-  UserPlus, 
-  Shield, 
-  Crown, 
+import { useState, useTransition } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Building2,
+  Users,
+  UserPlus,
+  Shield,
+  Crown,
   MoreHorizontal,
   Mail,
   Calendar,
-  Trash2
-} from "lucide-react"
-import { toast } from "sonner"
-import { inviteUserToCompany, removeUserFromCompany, updateUserRole } from "@/actions/company-actions"
-import { useRouter } from "next/navigation"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+  Trash2,
+  Pencil,
+} from "lucide-react";
+import { toast } from "sonner";
+import {
+  inviteUserToCompany,
+  removeUserFromCompany,
+  updateCompanyName,
+  updateUserRole,
+} from "@/actions/company-actions";
+import { useRouter } from "next/navigation";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type CompanyMembership = {
-  companyId: string
-  userId: string
-  role: 'MEMBER' | 'ADMIN' | 'OWNER'
-  createdAt: Date
+  companyId: string;
+  userId: string;
+  role: "MEMBER" | "ADMIN" | "OWNER";
+  createdAt: Date;
   user: {
-    id: string
-    name: string | null
-    email: string
-    image: string | null
-    createdAt: Date
-  }
-}
+    id: string;
+    name: string | null;
+    email: string;
+    image: string | null;
+    createdAt: Date;
+  };
+};
 
 type Company = {
-  id: string
-  name: string
-  createdAt: Date
-  updatedAt: Date
-  memberships: CompanyMembership[]
+  id: string;
+  name: string;
+  createdAt: Date;
+  updatedAt: Date;
+  memberships: CompanyMembership[];
   _count: {
-    boards: number
-    memberships: number
-  }
-}
+    boards: number;
+    memberships: number;
+  };
+};
 
 interface CompanySettingsContentProps {
-  company: Company
-  userRole: 'MEMBER' | 'ADMIN' | 'OWNER'
-  currentUserId: string
+  company: Company;
+  userRole: "MEMBER" | "ADMIN" | "OWNER";
+  currentUserId: string;
 }
 
-export function CompanySettingsContent({ company, userRole, currentUserId }: CompanySettingsContentProps) {
-  const router = useRouter()
-  const [isPending, startTransition] = useTransition()
-  const [inviteEmail, setInviteEmail] = useState("")
-  const [inviteRole, setInviteRole] = useState<'MEMBER' | 'ADMIN'>('MEMBER')
-  const [showInviteDialog, setShowInviteDialog] = useState(false)
+export function CompanySettingsContent({
+  company,
+  userRole,
+  currentUserId,
+}: CompanySettingsContentProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<"MEMBER" | "ADMIN">("MEMBER");
+  const [showInviteDialog, setShowInviteDialog] = useState(false);
 
-  const canManageUsers = ['ADMIN', 'OWNER'].includes(userRole)
-  const canChangeRoles = userRole === 'OWNER'
+  const canManageUsers = ["ADMIN", "OWNER"].includes(userRole);
+  const canChangeRoles = userRole === "OWNER";
 
-  const getRoleBadge = (role: 'MEMBER' | 'ADMIN' | 'OWNER') => {
+  const getRoleBadge = (role: "MEMBER" | "ADMIN" | "OWNER") => {
     const config = {
-      OWNER: { icon: Crown, variant: "default" as const, color: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300" },
-      ADMIN: { icon: Shield, variant: "secondary" as const, color: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300" },
-      MEMBER: { icon: Users, variant: "outline" as const, color: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300" }
-    }
-    
-    const { icon: Icon, color } = config[role]
+      OWNER: {
+        icon: Crown,
+        variant: "default" as const,
+        color: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
+      },
+      ADMIN: {
+        icon: Shield,
+        variant: "secondary" as const,
+        color:
+          "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
+      },
+      MEMBER: {
+        icon: Users,
+        variant: "outline" as const,
+        color: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
+      },
+    };
+
+    const { icon: Icon, color } = config[role];
     return (
       <Badge variant="secondary" className={`text-xs ${color}`}>
         <Icon className="h-3 w-3 mr-1" />
         {role}
       </Badge>
-    )
-  }
+    );
+  };
 
   const handleInviteUser = async () => {
-    if (!inviteEmail.trim()) return
+    if (!inviteEmail.trim()) return;
 
     startTransition(async () => {
       try {
-        const result = await inviteUserToCompany(company.id, inviteEmail.trim(), inviteRole)
+        const result = await inviteUserToCompany(
+          company.id,
+          inviteEmail.trim(),
+          inviteRole
+        );
         if (result.success) {
-          toast.success(`User ${inviteEmail} invited successfully!`)
-          setInviteEmail("")
-          setShowInviteDialog(false)
-          router.refresh()
+          toast.success(`User ${inviteEmail} invited successfully!`);
+          setInviteEmail("");
+          setShowInviteDialog(false);
+          router.refresh();
         } else {
-          toast.error(result.error || "Failed to invite user")
+          toast.error(result.error || "Failed to invite user");
         }
       } catch (error) {
-        toast.error("Failed to invite user")
+        toast.error("Failed to invite user");
       }
-    })
-  }
+    });
+  };
 
   const handleRemoveUser = async (userId: string, userEmail: string) => {
     startTransition(async () => {
       try {
-        const result = await removeUserFromCompany(company.id, userId)
+        const result = await removeUserFromCompany(company.id, userId);
         if (result.success) {
-          toast.success(`User ${userEmail} removed successfully`)
-          router.refresh()
+          toast.success(`User ${userEmail} removed successfully`);
+          router.refresh();
         } else {
-          toast.error(result.error || "Failed to remove user")
+          toast.error(result.error || "Failed to remove user");
         }
       } catch (error) {
-        toast.error("Failed to remove user")
+        toast.error("Failed to remove user");
       }
-    })
-  }
+    });
+  };
 
-  const handleChangeRole = async (userId: string, newRole: 'MEMBER' | 'ADMIN' | 'OWNER') => {
+  const handleChangeRole = async (
+    userId: string,
+    newRole: "MEMBER" | "ADMIN" | "OWNER"
+  ) => {
     startTransition(async () => {
       try {
-        const result = await updateUserRole(company.id, userId, newRole)
+        const result = await updateUserRole(company.id, userId, newRole);
         if (result.success) {
-          toast.success(`User role updated to ${newRole}`)
-          router.refresh()
+          toast.success(`User role updated to ${newRole}`);
+          router.refresh();
         } else {
-          toast.error(result.error || "Failed to update user role")
+          toast.error(result.error || "Failed to update user role");
         }
       } catch (error) {
-        toast.error("Failed to update user role")
+        toast.error("Failed to update user role");
       }
-    })
-  }
+    });
+  };
+
+  const handleChangeCompanyName = async (newName: string) => {
+    startTransition(async () => {
+      try {
+        const result = await updateCompanyName(company.id, newName);
+        if (result.success) {
+          toast.success("Company name updated successfully");
+          router.refresh();
+        } else {
+          toast.error(result.error || "Failed to update company name");
+        }
+      } catch {
+        toast.error("Failed to update company name");
+      }
+    });
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4 lg:px-6">
       {/* Company Overview */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center space-x-3">
+        <CardHeader className="flex items-center justify-between">
+          <div className="flex items-center space-x-3 w-full ">
             <Building2 className="h-6 w-6" />
             <div>
               <CardTitle className="text-xl">{company.name}</CardTitle>
               <CardDescription>
-                {company._count.memberships} members • {company._count.boards} boards
+                {company._count.memberships} members • {company._count.boards}{" "}
+                boards
               </CardDescription>
             </div>
+            {/*     <div>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Edit Company Name</DialogTitle>
+                  </DialogHeader>
+                  <DialogDescription>
+                    Change the name of your company
+                  </DialogDescription>
+                  <Input
+                    type="text"
+                    value={company.name}
+                    onChange={(e) => handleChangeCompanyName(e.target.value)}
+                  />
+                </DialogContent>
+              </Dialog>
+            </div> */}
           </div>
         </CardHeader>
         <CardContent>
@@ -184,7 +288,10 @@ export function CompanySettingsContent({ company, userRole, currentUserId }: Com
               </div>
             </div>
             {canManageUsers && (
-              <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
+              <Dialog
+                open={showInviteDialog}
+                onOpenChange={setShowInviteDialog}
+              >
                 <DialogTrigger asChild>
                   <Button size="sm">
                     <UserPlus className="h-4 w-4 mr-2" />
@@ -211,7 +318,12 @@ export function CompanySettingsContent({ company, userRole, currentUserId }: Com
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="role">Role</Label>
-                      <Select value={inviteRole} onValueChange={(value: 'MEMBER' | 'ADMIN') => setInviteRole(value)}>
+                      <Select
+                        value={inviteRole}
+                        onValueChange={(value: "MEMBER" | "ADMIN") =>
+                          setInviteRole(value)
+                        }
+                      >
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -223,14 +335,14 @@ export function CompanySettingsContent({ company, userRole, currentUserId }: Com
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       onClick={() => setShowInviteDialog(false)}
                       disabled={isPending}
                     >
                       Cancel
                     </Button>
-                    <Button 
+                    <Button
                       onClick={handleInviteUser}
                       disabled={!inviteEmail.trim() || isPending}
                     >
@@ -245,19 +357,25 @@ export function CompanySettingsContent({ company, userRole, currentUserId }: Com
         <CardContent>
           <div className="space-y-4">
             {company.memberships.map((membership) => (
-              <div key={membership.userId} className="flex items-center justify-between p-3 border rounded-lg">
+              <div
+                key={membership.userId}
+                className="flex items-center justify-between p-3 border rounded-lg"
+              >
                 <div className="flex items-center space-x-3">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={membership.user.image || ""} />
                     <AvatarFallback>
-                      {membership.user.name?.charAt(0) || membership.user.email.charAt(0)}
+                      {membership.user.name?.charAt(0) ||
+                        membership.user.email.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
                   <div>
                     <p className="font-medium">
                       {membership.user.name || "Unnamed User"}
                       {membership.userId === currentUserId && (
-                        <span className="text-muted-foreground text-sm ml-2">(You)</span>
+                        <span className="text-muted-foreground text-sm ml-2">
+                          (You)
+                        </span>
                       )}
                     </p>
                     <p className="text-sm text-muted-foreground flex items-center">
@@ -266,10 +384,10 @@ export function CompanySettingsContent({ company, userRole, currentUserId }: Com
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   {getRoleBadge(membership.role)}
-                  
+
                   <div className="flex items-center text-xs text-muted-foreground">
                     <Calendar className="h-3 w-3 mr-1" />
                     {new Date(membership.createdAt).toLocaleDateString()}
@@ -283,20 +401,24 @@ export function CompanySettingsContent({ company, userRole, currentUserId }: Com
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        {canChangeRoles && membership.role !== 'OWNER' && (
+                        {canChangeRoles && membership.role !== "OWNER" && (
                           <>
-                            {membership.role !== 'ADMIN' && (
-                              <DropdownMenuItem 
-                                onClick={() => handleChangeRole(membership.userId, 'ADMIN')}
+                            {membership.role !== "ADMIN" && (
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleChangeRole(membership.userId, "ADMIN")
+                                }
                                 disabled={isPending}
                               >
                                 <Shield className="h-4 w-4 mr-2" />
                                 Make Admin
                               </DropdownMenuItem>
                             )}
-                            {membership.role === 'ADMIN' && (
-                              <DropdownMenuItem 
-                                onClick={() => handleChangeRole(membership.userId, 'MEMBER')}
+                            {membership.role === "ADMIN" && (
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleChangeRole(membership.userId, "MEMBER")
+                                }
                                 disabled={isPending}
                               >
                                 <Users className="h-4 w-4 mr-2" />
@@ -308,7 +430,7 @@ export function CompanySettingsContent({ company, userRole, currentUserId }: Com
                         )}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               onSelect={(e) => e.preventDefault()}
                               className="text-destructive"
                             >
@@ -318,16 +440,25 @@ export function CompanySettingsContent({ company, userRole, currentUserId }: Com
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Remove Team Member</AlertDialogTitle>
+                              <AlertDialogTitle>
+                                Remove Team Member
+                              </AlertDialogTitle>
                               <AlertDialogDescription>
-                                Are you sure you want to remove {membership.user.name || membership.user.email} from {company.name}? 
-                                This action cannot be undone.
+                                Are you sure you want to remove{" "}
+                                {membership.user.name || membership.user.email}{" "}
+                                from {company.name}? This action cannot be
+                                undone.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
                               <AlertDialogAction
-                                onClick={() => handleRemoveUser(membership.userId, membership.user.email)}
+                                onClick={() =>
+                                  handleRemoveUser(
+                                    membership.userId,
+                                    membership.user.email
+                                  )
+                                }
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                 disabled={isPending}
                               >
@@ -350,9 +481,7 @@ export function CompanySettingsContent({ company, userRole, currentUserId }: Com
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Role Permissions</CardTitle>
-          <CardDescription>
-            Understanding what each role can do
-          </CardDescription>
+          <CardDescription>Understanding what each role can do</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -361,7 +490,8 @@ export function CompanySettingsContent({ company, userRole, currentUserId }: Com
               <div>
                 <p className="font-medium">Owner</p>
                 <p className="text-sm text-muted-foreground">
-                  Full access to company settings, can manage all members and change roles
+                  Full access to company settings, can manage all members and
+                  change roles
                 </p>
               </div>
             </div>
@@ -379,7 +509,8 @@ export function CompanySettingsContent({ company, userRole, currentUserId }: Com
               <div>
                 <p className="font-medium">Member</p>
                 <p className="text-sm text-muted-foreground">
-                  Can view and edit boards they have access to, create and manage tasks
+                  Can view and edit boards they have access to, create and
+                  manage tasks
                 </p>
               </div>
             </div>
@@ -387,5 +518,5 @@ export function CompanySettingsContent({ company, userRole, currentUserId }: Com
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
