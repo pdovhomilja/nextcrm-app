@@ -68,7 +68,7 @@ export const markDone = async (taskId: string) => {
 
   console.log("Res:", res);
 
-  revalidatePath(`/${session.user.cid}/tasks/${actualBoardSection?.boardId}`);
+  revalidatePath(`/${session.user.activeCompanyId}/tasks/${actualBoardSection?.boardId}`);
 
   //TODO: I need to update task embbedings here
 };

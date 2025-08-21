@@ -26,6 +26,7 @@ import { createBoard } from "@/actions/tasks/create-board";
 import { User } from "@/lib/generated/prisma";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useSession } from "next-auth/react";
 
 const formSchema = z.object({
   name: z.string().min(1),
@@ -36,6 +37,7 @@ const formSchema = z.object({
 const CreateBoardButton = ({ user }: { user: User }) => {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
+  const { data: session } = useSession();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -53,7 +55,7 @@ const CreateBoardButton = ({ user }: { user: User }) => {
         toast.error(result.error);
         return;
       }
-      router.push(`/${user.cid}/tasks/${result.id}`);
+      router.push(`/${session?.user?.activeCompanyId}/tasks/${result.id}`);
     } catch {
       toast.error("Failed to create board");
     } finally {

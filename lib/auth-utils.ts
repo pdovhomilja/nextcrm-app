@@ -8,7 +8,7 @@ export async function getCurrentCompanyId() {
     throw new Error("Not authenticated")
   }
 
-  const companyId = session.user.activeCompanyId || session.user.cid
+  const companyId = session.user.activeCompanyId
   
   if (!companyId) {
     throw new Error("No active company found")
@@ -25,7 +25,7 @@ export async function getCurrentUserWithCompany() {
     throw new Error("Not authenticated")
   }
 
-  const companyId = session.user.activeCompanyId || session.user.cid
+  const companyId = session.user.activeCompanyId
   
   if (!companyId) {
     throw new Error("No active company found")
@@ -45,7 +45,7 @@ export async function validateCompanyAccess(companyIdFromRoute: string) {
     throw new Error("Not authenticated")
   }
 
-  const userCompanyId = session.user.activeCompanyId || session.user.cid
+  const userCompanyId = session.user.activeCompanyId
   
   if (!userCompanyId || userCompanyId !== companyIdFromRoute) {
     throw new Error("Access denied to company")

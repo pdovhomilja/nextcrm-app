@@ -64,8 +64,8 @@ export async function switchActiveCompany(companyId: string) {
       return { success: false, error: "Access denied to company" }
     }
 
-    // In a real implementation, you would update the JWT token here
-    // For now, we'll use a redirect with the new company ID
+    // We'll redirect and let the frontend handle the session update
+    // The middleware and client-side code should handle company switching
     redirect(`/${companyId}/dashboard`)
     
   } catch (error) {

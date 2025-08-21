@@ -39,7 +39,7 @@ export async function getTaskMetrics(
       return { error: 'Authentication required' }
     }
 
-    const companyId = session.user.cid
+    const companyId = session.user.activeCompanyId
     if (!companyId) {
       return { error: 'Company context required' }
     }
@@ -76,7 +76,11 @@ export async function getTaskMetrics(
     const tasksByStatus = await db.task.groupBy({
       by: ["status"],
       where: {
-        createdBy: { cid: companyId }, // Company isolation via user relationship
+        createdBy: { 
+          memberships: { 
+            some: { companyId: companyId } 
+          } 
+        }, // Company isolation via user relationship
         ...(boardId && { boardSection: { board: { id: boardId } } }),
       },
       _count: {
@@ -106,7 +110,11 @@ export async function getTaskMetrics(
     const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
     const tasksThisWeek = await db.task.count({
       where: {
-        createdBy: { cid: companyId },
+        createdBy: { 
+          memberships: { 
+            some: { companyId: companyId } 
+          } 
+        },
         createdAt: { gte: weekStart },
         ...(boardId && { boardSection: { board: { id: boardId } } }),
       },
@@ -116,7 +124,11 @@ export async function getTaskMetrics(
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
     const tasksThisMonth = await db.task.count({
       where: {
-        createdBy: { cid: companyId },
+        createdBy: { 
+          memberships: { 
+            some: { companyId: companyId } 
+          } 
+        },
         createdAt: { gte: monthStart },
         ...(boardId && { boardSection: { board: { id: boardId } } }),
       },
@@ -125,7 +137,11 @@ export async function getTaskMetrics(
     // Get overdue tasks
     const overdueTasks = await db.task.count({
       where: {
-        createdBy: { cid: companyId },
+        createdBy: { 
+          memberships: { 
+            some: { companyId: companyId } 
+          } 
+        },
         status: { notIn: ["COMPLETED", "CANCELLED"] },
         dueDate: { lt: now },
         ...(boardId && { boardSection: { board: { id: boardId } } }),
@@ -140,7 +156,11 @@ export async function getTaskMetrics(
     // Calculate average completion time (for completed tasks)
     const completedTasksWithTime = await db.task.findMany({
       where: {
-        createdBy: { cid: companyId },
+        createdBy: { 
+          memberships: { 
+            some: { companyId: companyId } 
+          } 
+        },
         status: "COMPLETED",
         ...(boardId && { boardSection: { board: { id: boardId } } }),
         ...(dateFilter && { updatedAt: { gte: dateFilter } }),
@@ -167,7 +187,11 @@ export async function getTaskMetrics(
     )
     const tasksLastWeek = await db.task.count({
       where: {
-        createdBy: { cid: companyId },
+        createdBy: { 
+          memberships: { 
+            some: { companyId: companyId } 
+          } 
+        },
         createdAt: { gte: lastWeekStart, lt: weekStart },
         ...(boardId && { boardSection: { board: { id: boardId } } }),
       },
@@ -180,7 +204,11 @@ export async function getTaskMetrics(
     )
     const tasksLastMonth = await db.task.count({
       where: {
-        createdBy: { cid: companyId },
+        createdBy: { 
+          memberships: { 
+            some: { companyId: companyId } 
+          } 
+        },
         createdAt: { gte: lastMonthStart, lt: monthStart },
         ...(boardId && { boardSection: { board: { id: boardId } } }),
       },

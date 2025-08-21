@@ -304,7 +304,7 @@ const handler = createMcpHandler(async (server) => {
         });
 
         const result = {
-          companyId: session.user.cid,
+          companyId: session.user.activeCompanyId,
           boardId: params.boardId || "all",
           timeRange: params.timeRange,
           analysisDate: now.toISOString(),

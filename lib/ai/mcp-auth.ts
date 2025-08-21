@@ -113,7 +113,7 @@ export class MCPAuthService {
         success: true,
         context: {
           userId: user.id,
-          companyId: user.cid || '',
+          companyId: session.user.activeCompanyId || '',
           email: user.email,
           name: user.name,
           role: user.role
@@ -211,7 +211,7 @@ export class MCPAuthService {
         success: true,
         context: {
           userId: user.id,
-          companyId: user.cid || '',
+          companyId: user.memberships[0]?.companyId || '',
           email: user.email,
           name: user.name,
           role: user.role
@@ -444,8 +444,13 @@ export class MCPAuthService {
           id: true,
           email: true,
           name: true,
-          cid: true,
-          role: true
+          role: true,
+          memberships: {
+            select: {
+              companyId: true,
+              role: true
+            }
+          }
         }
       });
       return user;

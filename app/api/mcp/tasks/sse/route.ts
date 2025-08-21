@@ -89,8 +89,8 @@ tasksRouter.register('search_tasks', async (params, context: MCPAuthContext) => 
         // Company filtering - user must be assignedTo or createdBy
         {
           OR: [
-            { assignedTo: { cid: context.companyId } },
-            { createdBy: { cid: context.companyId } }
+            { assignedTo: { memberships: { some: { companyId: context.companyId } } } },
+            { createdBy: { memberships: { some: { companyId: context.companyId } } } }
           ]
         }
       ]
@@ -209,8 +209,8 @@ tasksRouter.register('get_tasks', async (params, context: MCPAuthContext) => {
 
     // Always filter by user's company through assignedTo or createdBy
     whereClause.OR = [
-      { assignedTo: { cid: context.companyId } },
-      { createdBy: { cid: context.companyId } }
+      { assignedTo: { memberships: { some: { companyId: context.companyId } } } },
+      { createdBy: { memberships: { some: { companyId: context.companyId } } } }
     ];
 
     if (boardSectionId) {
@@ -328,8 +328,8 @@ tasksRouter.register('update_task', async (params, context: MCPAuthContext) => {
       where: {
         id: taskId,
         OR: [
-          { assignedTo: { cid: context.companyId } },
-          { createdBy: { cid: context.companyId } }
+          { assignedTo: { memberships: { some: { companyId: context.companyId } } } },
+          { createdBy: { memberships: { some: { companyId: context.companyId } } } }
         ]
       },
       include: {

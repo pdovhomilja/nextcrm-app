@@ -7,7 +7,14 @@ export default async function Home() {
   if (!session) {
     redirect("/auth/signin");
   } else {
-    redirect(`/${session?.user?.cid}/dashboard`);
+    const activeCompanyId = session?.user?.activeCompanyId;
+    if (!activeCompanyId) {
+      // If user has no active company, something went wrong
+      // Let them sign in again to trigger company creation
+      redirect("/auth/signin?error=no_company");
+    } else {
+      redirect(`/${activeCompanyId}/dashboard`);
+    }
   }
 
   return null;

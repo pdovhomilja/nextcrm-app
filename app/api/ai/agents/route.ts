@@ -24,11 +24,17 @@ export async function POST(request: NextRequest) {
   try {
     // Validate session
     const session = await auth();
-    if (!session?.user?.cid) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }
       );
+    }
+
+    const activeCompanyId = session.user.activeCompanyId;
+    
+    if (!activeCompanyId) {
+      return NextResponse.json({ error: "No company context available" }, { status: 400 });
     }
 
     // Check email verification
@@ -47,7 +53,7 @@ export async function POST(request: NextRequest) {
     // Create agent context
     const agentContext = {
       userId: session.user.id,
-      companyId: session.user.cid,
+      companyId: activeCompanyId,
       boardId: validatedRequest.boardId,
       taskId: validatedRequest.taskId,
       conversationId: `conv-${session.user.id}-${Date.now()}`,
@@ -70,7 +76,7 @@ export async function POST(request: NextRequest) {
       metadata: {
         timestamp: new Date().toISOString(),
         userId: session.user.id,
-        companyId: session.user.cid,
+        companyId: activeCompanyId,
         processingTime: result.metadata.totalProcessingTime,
       },
     });

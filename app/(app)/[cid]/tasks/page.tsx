@@ -57,7 +57,7 @@ const TaskPage = async ({
                 {boards.map((board) => (
                   <Card key={board.id} className="p-4">
                     <CardHeader className="flex flex-row justify-between">
-                      <Link href={`/${user?.cid}/tasks/${board.id}`}>
+                      <Link href={`/${session.user.activeCompanyId}/tasks/${board.id}`}>
                         {" "}
                         <CardTitle>{board.name}</CardTitle>
                       </Link>

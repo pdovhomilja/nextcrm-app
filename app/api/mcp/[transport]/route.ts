@@ -47,7 +47,7 @@ const handler = createMcpHandler(
                   version: "1.0.0",
                   authenticated: !!session?.user,
                   userId: session?.user?.id || null,
-                  companyId: session?.user?.cid || null,
+                  companyId: session?.user?.activeCompanyId || null,
                   capabilities: ["health_check", "server_info"],
                   environment: {
                     nodeEnv: process.env.NODE_ENV,

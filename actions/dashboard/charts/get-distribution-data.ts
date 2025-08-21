@@ -54,7 +54,7 @@ export async function getDistributionData(
       return { error: "Authentication required" };
     }
 
-    const companyId = session.user.cid;
+    const companyId = session.user.activeCompanyId;
     if (!companyId) {
       return { error: "Company context required" };
     }
@@ -195,7 +195,12 @@ export async function getDistributionData(
           .map((g) => g.assignedToId)
           .filter(Boolean) as string[];
         const users = await db.user.findMany({
-          where: { id: { in: userIds }, cid: companyId },
+          where: { 
+            id: { in: userIds }, 
+            memberships: { 
+              some: { companyId: companyId } 
+            } 
+          },
           select: { id: true, name: true, email: true },
         });
 

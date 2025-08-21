@@ -13,8 +13,13 @@ export async function createBoardSection(boardId: string, name: string) {
     }
 
     const user = await getUserByEmail(session.user.email);
-    if (!user?.id || !user?.cid) {
-      throw new Error("User not found or missing company information");
+    if (!user?.id) {
+      throw new Error("User not found");
+    }
+
+    const activeCompanyId = session.user.activeCompanyId;
+    if (!activeCompanyId) {
+      throw new Error("No active company found");
     }
 
     if (!name.trim()) {
@@ -48,7 +53,7 @@ export async function createBoardSection(boardId: string, name: string) {
       },
     });
 
-    revalidatePath(`/${user.cid}/tasks/${boardId}`);
+    revalidatePath(`/${activeCompanyId}/tasks/${boardId}`);
     return newBoardSection;
   } catch (error) {
     throw new Error(

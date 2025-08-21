@@ -51,7 +51,7 @@ export async function getUserMetrics(
       return { error: "Authentication required" }
     }
 
-    const companyId = session.user.cid
+    const companyId = session.user.activeCompanyId
     if (!companyId) {
       return { error: "Company context required" }
     }
@@ -80,7 +80,11 @@ export async function getUserMetrics(
     // Get total users in company
     const totalUsers = await db.user.count({
       where: {
-        cid: companyId,
+        memberships: {
+          some: {
+            companyId: companyId,
+          }
+        }
       },
     })
 
@@ -88,7 +92,11 @@ export async function getUserMetrics(
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
     const usersWithRecentActivity = await db.user.findMany({
       where: {
-        cid: companyId,
+        memberships: {
+          some: {
+            companyId: companyId,
+          }
+        },
         OR: [
           {
             assignedTasks: {
@@ -121,7 +129,11 @@ export async function getUserMetrics(
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
     const newUsersThisMonth = await db.user.count({
       where: {
-        cid: companyId,
+        memberships: {
+          some: {
+            companyId: companyId,
+          }
+        },
         createdAt: { gte: monthStart },
       },
     })
@@ -129,7 +141,11 @@ export async function getUserMetrics(
     // Get user productivity data
     const usersWithTaskData = await db.user.findMany({
       where: {
-        cid: companyId,
+        memberships: {
+          some: {
+            companyId: companyId,
+          }
+        },
       },
       include: {
         _count: {
@@ -220,7 +236,11 @@ export async function getUserMetrics(
 
         const loginCount = await db.user.count({
           where: {
-            cid: companyId,
+            memberships: {
+          some: {
+            companyId: companyId,
+          }
+        },
             updatedAt: {
               gte: dayStart,
               lt: dayEnd,
@@ -236,21 +256,33 @@ export async function getUserMetrics(
       // Login frequency
       const dailyLoginUsers = await db.user.count({
         where: {
-          cid: companyId,
+          memberships: {
+          some: {
+            companyId: companyId,
+          }
+        },
           updatedAt: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) },
         },
       })
 
       const weeklyLoginUsers = await db.user.count({
         where: {
-          cid: companyId,
+          memberships: {
+          some: {
+            companyId: companyId,
+          }
+        },
           updatedAt: { gte: weekAgo },
         },
       })
 
       const monthlyLoginUsers = await db.user.count({
         where: {
-          cid: companyId,
+          memberships: {
+          some: {
+            companyId: companyId,
+          }
+        },
           updatedAt: { gte: monthStart },
         },
       })
@@ -266,7 +298,11 @@ export async function getUserMetrics(
     const roleDistribution = await db.user.groupBy({
       by: ["role"],
       where: {
-        cid: companyId,
+        memberships: {
+          some: {
+            companyId: companyId,
+          }
+        },
       },
       _count: {
         id: true,
@@ -286,7 +322,11 @@ export async function getUserMetrics(
     )
     const activeUsersLastMonth = await db.user.count({
       where: {
-        cid: companyId,
+        memberships: {
+          some: {
+            companyId: companyId,
+          }
+        },
         updatedAt: { gte: lastMonth, lt: monthStart },
       },
     })

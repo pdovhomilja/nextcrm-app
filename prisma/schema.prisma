@@ -56,7 +56,6 @@ model User {
   emailTokenExpires       DateTime? @map("email_token_expires")
   image                   String?
   password                String?
-  cid                     String?   @default(cuid()) @map("company_id") // DEPRECATED: To be removed after migration
   createdAt               DateTime  @default(now()) @map("created_at")
   updatedAt               DateTime  @updatedAt @map("updated_at")
   role                    UserRole  @default(USER)
@@ -74,7 +73,6 @@ model User {
   securityAuditLogs     SecurityAuditLog[]
 
   @@map("users")
-  @@index([cid])
   @@index([emailVerificationToken])
 }
 

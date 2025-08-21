@@ -46,7 +46,7 @@ export async function getBoardMetrics(
       return { error: "Authentication required" }
     }
 
-    const companyId = session.user.cid
+    const companyId = session.user.activeCompanyId
     if (!companyId) {
       return { error: "Company context required" }
     }

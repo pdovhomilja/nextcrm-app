@@ -63,9 +63,15 @@ export async function POST(request: NextRequest) {
       context: userContext,
     } = await request.json();
 
+    const activeCompanyId = session.user.activeCompanyId;
+    
+    if (!activeCompanyId) {
+      return new Response("No company context available", { status: 400 });
+    }
+
     const agentContext = {
       userId: session.user.id,
-      companyId: session.user.cid!,
+      companyId: activeCompanyId,
       boardId,
       taskId,
     };

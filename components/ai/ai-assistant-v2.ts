@@ -19,7 +19,8 @@ interface SimilarResult {
 }
 
 export const findRelevantContent = async (
-  userQuery: string
+  userQuery: string,
+  companyId: string
 ): Promise<SimilarResult[]> => {
   const queryEmbedding = await generateEmbedding(userQuery);
 
@@ -36,7 +37,11 @@ export const findRelevantContent = async (
     FROM task_embeddings te
     JOIN "Task" t ON t.id = te.task_id
     JOIN "BoardSection" bs ON bs.id = t."boardSectionId"
+    JOIN "Board" b ON b.id = bs."boardId"
+    JOIN "users" u ON u.id = t."assignedToId"
+    JOIN "company_memberships" cm ON cm."userId" = u.id
     WHERE 1 - (te.embedding <=> ${embeddingVector}::vector) > ${threshold}
+      AND cm."companyId" = ${companyId}
     ORDER BY te.embedding <=> ${embeddingVector}::vector
     LIMIT ${limit}
   `;

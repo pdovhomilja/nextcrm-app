@@ -207,7 +207,15 @@ export class AISecurityService {
     try {
       const user = await db.user.findUnique({
         where: { id: userId },
-        select: { role: true, cid: true },
+        select: { 
+          role: true,
+          memberships: {
+            select: {
+              companyId: true,
+              role: true
+            }
+          }
+        },
       });
 
       if (!user) {

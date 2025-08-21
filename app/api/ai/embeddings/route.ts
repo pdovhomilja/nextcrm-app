@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
         const { companyId } = validatedRequest;
 
         // Verify user has access to this company
-        if (session.user.cid !== companyId) {
+        if (session.user.activeCompanyId !== companyId) {
           return NextResponse.json(
             { error: "Access denied to company data" },
             { status: 403 }
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        const companyId = session.user.cid;
+        const companyId = session.user.activeCompanyId;
         if (!companyId) {
           return NextResponse.json(
             { error: "Company context required" },
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
       case "process_single_task": {
         const { taskId } = validatedRequest;
 
-        const companyId = session.user.cid;
+        const companyId = session.user.activeCompanyId;
         if (!companyId) {
           return NextResponse.json(
             { error: "Company context required" },
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        const companyId = session.user.cid;
+        const companyId = session.user.activeCompanyId;
         if (!companyId) {
           return NextResponse.json(
             { error: "Company context required" },
@@ -220,7 +220,7 @@ export async function GET(request: NextRequest) {
       }
 
       case "pending": {
-        const companyId = session.user.cid;
+        const companyId = session.user.activeCompanyId;
         if (!companyId) {
           return NextResponse.json(
             { error: "Company context required" },
@@ -270,7 +270,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const companyId = session.user.cid;
+    const companyId = session.user.activeCompanyId;
     if (!companyId) {
       return NextResponse.json(
         { error: "Company context required" },

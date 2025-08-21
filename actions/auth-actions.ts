@@ -55,7 +55,6 @@ export async function registerUser(formData: FormData) {
           id: true,
           email: true,
           name: true,
-          cid: true,
           createdAt: true,
         },
       });

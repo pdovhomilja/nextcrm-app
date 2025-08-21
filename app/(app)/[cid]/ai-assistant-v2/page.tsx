@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { useCompanyAccess } from "@/lib/hooks/use-company-access";
 
 interface AssistantToolResult {
   name: string;
@@ -85,12 +86,31 @@ function hasArrayOutput(
   return Array.isArray(part.output);
 }
 
-const AIAssistantV2Page = () => {
+interface AIAssistantV2PageProps {
+  params: Promise<{ cid: string }>;
+}
+
+const AIAssistantV2Page = ({ params }: AIAssistantV2PageProps) => {
+  const [cid, setCid] = React.useState<string | null>(null);
+  
+  // Resolve params since they're async in Next.js 15
+  React.useEffect(() => {
+    params.then((resolvedParams) => {
+      setCid(resolvedParams.cid);
+    });
+  }, [params]);
   const { data: session } = useSession();
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  // Company access validation
+  const { 
+    isAuthorized, 
+    isLoading: isValidatingAccess, 
+    error: accessError 
+  } = useCompanyAccess(cid || '', 'ai_query', undefined, 'search');
 
   const { messages, sendMessage } = useChat({
     transport: new DefaultChatTransport({
@@ -204,14 +224,14 @@ const AIAssistantV2Page = () => {
                     <div className="flex flex-row gap-1 py-2">
                       <Button variant="default" className="text-xs">
                         <Link
-                          href={`/${session?.user?.cid}/tasks/${message.boardId}`}
+                          href={`/${session?.user?.activeCompanyId}/tasks/${message.boardId}`}
                         >
                           Go to board detail
                         </Link>
                       </Button>
                       <Button variant="default" className="text-xs">
                         <Link
-                          href={`/${session?.user?.cid}/tasks-list/${message.taskId}`}
+                          href={`/${session?.user?.activeCompanyId}/tasks-list/${message.taskId}`}
                         >
                           Go to task detail
                         </Link>
@@ -230,6 +250,66 @@ const AIAssistantV2Page = () => {
       </Card>
     );
   };
+
+  // Handle params loading
+  if (!cid) {
+    return (
+      <SidebarInset>
+        <SiteHeader title="AI Assistant">
+          <div />
+        </SiteHeader>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      </SidebarInset>
+    );
+  }
+
+  // Handle access validation loading
+  if (isValidatingAccess) {
+    return (
+      <SidebarInset>
+        <SiteHeader title="AI Assistant">
+          <div />
+        </SiteHeader>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Validating access...</p>
+          </div>
+        </div>
+      </SidebarInset>
+    );
+  }
+
+  // Handle access denied
+  if (!isAuthorized) {
+    return (
+      <SidebarInset>
+        <SiteHeader title="AI Assistant">
+          <div />
+        </SiteHeader>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="text-red-500 text-6xl mb-4">⚠️</div>
+            <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
+            <p className="text-muted-foreground mb-4">
+              {accessError || 'You do not have permission to access the AI assistant for this company.'}
+            </p>
+            <Button
+              onClick={() => window.history.back()}
+              className="mr-2"
+            >
+              Go Back
+            </Button>
+          </div>
+        </div>
+      </SidebarInset>
+    );
+  }
 
   return (
     <SidebarInset>

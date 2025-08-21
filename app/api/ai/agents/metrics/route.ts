@@ -10,11 +10,17 @@ export async function GET() {
   try {
     // Validate session
     const session = await auth();
-    if (!session?.user) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }
       );
+    }
+
+    const activeCompanyId = session.user.activeCompanyId;
+    
+    if (!activeCompanyId) {
+      return NextResponse.json({ error: "No company context available" }, { status: 400 });
     }
 
     // Get comprehensive metrics
@@ -112,7 +118,7 @@ export async function GET() {
         timestamp: new Date().toISOString(),
         reportingPeriod: "all-time",
         userId: session.user.id,
-        companyId: session.user.cid,
+        companyId: activeCompanyId,
       },
     });
   } catch (error) {
@@ -157,7 +163,7 @@ export async function POST() {
       metadata: {
         timestamp: new Date().toISOString(),
         resetBy: session.user.id,
-        companyId: session.user.cid,
+        companyId: session.user.activeCompanyId,
       },
     });
   } catch (error) {

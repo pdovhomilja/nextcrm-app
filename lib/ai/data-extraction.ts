@@ -50,14 +50,14 @@ export class DataExtractionService {
    * Extract and format task data for embedding
    */
   async extractTaskData(taskId: string, companyId?: string): Promise<TaskDocument | null> {
-    let whereClause: { id: string; assignedTo?: { cid: string } } = { id: taskId };
+    let whereClause: { id: string; assignedTo?: { memberships: { some: { companyId: string } } } } = { id: taskId };
     
     // Add company filtering if companyId is provided
     if (companyId) {
       whereClause = {
         id: taskId,
         assignedTo: {
-          cid: companyId // Ensure task's assignee belongs to the company
+          memberships: { some: { companyId: companyId } } // Ensure task's assignee belongs to the company
         }
       };
     }
@@ -132,7 +132,7 @@ export class DataExtractionService {
         createdAt: task.createdAt,
         updatedAt: task.updatedAt,
         dueDate: task.dueDate,
-        companyId: task.assignedTo.cid || "",
+        companyId: companyId || "",
         tags: [], // Will be enhanced later
       },
     };
@@ -148,7 +148,7 @@ export class DataExtractionService {
     if (companyId) {
       // First get users from the company
       const companyUsers = await db.user.findMany({
-        where: { cid: companyId },
+        where: { memberships: { some: { companyId: companyId } } },
         select: { id: true },
       });
       const userIds = companyUsers.map((user) => user.id);
@@ -250,7 +250,7 @@ export class DataExtractionService {
 
     // Get company ID from first user found or use the provided companyId
     const extractedCompanyId =
-      companyId || (allTasks.length > 0 ? allTasks[0].assignedTo.cid || "" : "");
+      companyId || "";
 
     return {
       id: board.id,
@@ -283,7 +283,7 @@ export class DataExtractionService {
     const tasks = await db.task.findMany({
       where: {
         assignedTo: {
-          cid: companyId, // Filter by company ID
+          memberships: { some: { companyId: companyId } }, // Filter by company ID
         },
       },
       take: limit,
@@ -321,7 +321,11 @@ export class DataExtractionService {
   async extractCompanyBoardData(companyId: string): Promise<BoardDocument[]> {
     // Get users from the company to find boards they have access to
     const companyUsers = await db.user.findMany({
-      where: { cid: companyId },
+      where: { 
+        memberships: {
+          some: { companyId: companyId }
+        }
+      },
       select: { id: true },
     });
 
@@ -396,7 +400,7 @@ export class DataExtractionService {
   async getTasksNeedingEmbeddingUpdate(companyId: string): Promise<string[]> {
     const tasksWithoutEmbeddings = await db.task.findMany({
       where: {
-        assignedTo: { cid: companyId },
+        assignedTo: { memberships: { some: { companyId: companyId } } },
         embedding: null,
       },
       select: { id: true },
@@ -405,7 +409,7 @@ export class DataExtractionService {
     // Find tasks with outdated embeddings
     const tasksWithEmbeddings = await db.task.findMany({
       where: {
-        assignedTo: { cid: companyId },
+        assignedTo: { memberships: { some: { companyId: companyId } } },
         embedding: { isNot: null },
       },
       include: {
@@ -429,7 +433,11 @@ export class DataExtractionService {
   async getBoardsNeedingEmbeddingUpdate(companyId: string): Promise<string[]> {
     // Get company users first
     const companyUsers = await db.user.findMany({
-      where: { cid: companyId },
+      where: { 
+        memberships: {
+          some: { companyId: companyId }
+        }
+      },
       select: { id: true },
     });
 

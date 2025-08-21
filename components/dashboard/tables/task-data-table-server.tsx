@@ -28,6 +28,8 @@ import Link from "next/link";
 import { User } from "@/lib/generated/prisma";
 import { TaskTableFilters, SortableHeader } from "./task-table-filters";
 import { taskTableSearchParams } from "@/app/(app)/[cid]/tasks-list/search-params";
+import { auth } from "@/auth";
+import type { Session } from "next-auth";
 
 interface TaskDataTableServerProps {
   boardId?: string;
@@ -42,6 +44,7 @@ async function TaskDataTableContent({
   user,
   searchParams,
 }: Omit<TaskDataTableServerProps, "className">) {
+  const session = await auth();
   // Parse search params using nuqs server-side parsing
   const {
     search,
@@ -139,7 +142,7 @@ async function TaskDataTableContent({
             Completed: {data.summary.statusCounts.COMPLETED}
           </Badge>
           {data.summary.overdueTasks > 0 && (
-            <Link href={`/${user.cid}/tasks-list?dueDate=overdue`}>
+            <Link href={`/${session?.user?.activeCompanyId}/tasks-list?dueDate=overdue`}>
               <Badge variant="destructive">
                 Overdue: {data.summary.overdueTasks}
               </Badge>
@@ -156,7 +159,7 @@ async function TaskDataTableContent({
         />
 
         {/* Table */}
-        <TaskTable data={data} user={user} />
+        <TaskTable data={data} user={user} session={session} />
       </>
     );
   } catch (err) {
@@ -170,7 +173,7 @@ async function TaskDataTableContent({
 }
 
 // Server component for table rendering
-function TaskTable({ data, user }: { data: TaskTableData; user: User }) {
+function TaskTable({ data, user, session }: { data: TaskTableData; user: User; session: Session | null }) {
   const getStatusBadgeVariant = (status: TaskTableRow["status"]) => {
     switch (status) {
       case "NEW":
@@ -236,7 +239,7 @@ function TaskTable({ data, user }: { data: TaskTableData; user: User }) {
                 <TableCell className="max-w-xs">
                   <div className="space-y-1">
                     <div className="font-medium truncate">
-                      <Link href={`/${user.cid}/tasks-list/${task.id}`}>
+                      <Link href={`/${session?.user?.activeCompanyId}/tasks-list/${task.id}`}>
                         {task.title}
                       </Link>
                     </div>
@@ -287,7 +290,7 @@ function TaskTable({ data, user }: { data: TaskTableData; user: User }) {
                 <TableCell>
                   <div className="space-y-1">
                     <div className="text-sm font-medium truncate max-w-32">
-                      <Link href={`/${user.cid}/tasks/${task.board.id}`}>
+                      <Link href={`/${session?.user?.activeCompanyId}/tasks/${task.board.id}`}>
                         {task.board.name}
                       </Link>
                     </div>

@@ -13,8 +13,14 @@ export async function deleteBoardSection(sectionId: string, boardId: string) {
     }
 
     const user = await getUserByEmail(session.user.email);
-    if (!user?.id || !user?.cid) {
-      throw new Error("User not found or missing company information");
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const activeCompanyId = session.user.activeCompanyId;
+    if (!activeCompanyId) {
+      throw new Error("No active company found");
     }
 
     //check if board is empty
@@ -35,7 +41,7 @@ export async function deleteBoardSection(sectionId: string, boardId: string) {
         id: sectionId,
       },
     });
-    revalidatePath(`/${user.cid}/tasks/${boardId}`);
+    revalidatePath(`/${activeCompanyId}/tasks/${boardId}`);
     return { message: "Board section deleted successfully" };
   } catch (error) {
     throw new Error(

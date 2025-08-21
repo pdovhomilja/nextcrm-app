@@ -73,9 +73,15 @@ export async function POST(request: NextRequest) {
     const acceptHeader = request.headers.get("accept");
     const wantsStream = acceptHeader?.includes("text/stream");
 
+    const activeCompanyId = session.user.activeCompanyId;
+    
+    if (!activeCompanyId) {
+      return NextResponse.json({ error: "No company context available" }, { status: 400 });
+    }
+
     const context = {
       userId: session.user.id,
-      companyId: session.user.cid!,
+      companyId: activeCompanyId,
       boardId: validatedRequest.boardId,
       taskId: validatedRequest.taskId,
       conversationId: `conv-${session.user.id}-${Date.now()}`,
@@ -85,7 +91,7 @@ export async function POST(request: NextRequest) {
       // Return streaming response with agent integration
       const streamResult = await streamRAGResponse(
         lastUserMessage.content,
-        session.user.cid!,
+        activeCompanyId,
         session.user.id,
         validatedRequest.boardId,
         validatedRequest.taskId,
@@ -121,7 +127,7 @@ export async function POST(request: NextRequest) {
         // Use RAG processing
         const ragQuery = {
           query: lastUserMessage.content,
-          companyId: session.user.cid!,
+          companyId: activeCompanyId,
           userId: session.user.id,
           boardId: validatedRequest.boardId,
           taskId: validatedRequest.taskId,

@@ -101,7 +101,7 @@ export class VectorSearchService {
       let whereClause = `
         te.embedding IS NOT NULL 
         AND t."assignedToId" IN (
-          SELECT id FROM "User" WHERE cid = $2
+          SELECT "userId" FROM "company_memberships" WHERE "companyId" = $2
         )
       `;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -156,7 +156,7 @@ export class VectorSearchService {
           JOIN "Task" t ON te."taskId" = t.id
           JOIN "BoardSection" bs ON t."boardSectionId" = bs.id
           JOIN "Board" b ON bs."boardId" = b.id
-          JOIN "User" u ON t."assignedToId" = u.id
+          JOIN "users" u ON t."assignedToId" = u.id
           WHERE ${whereClause}
             AND (1 - (te.embedding <-> $1::vector)) >= $${paramIndex}
           ORDER BY similarity DESC
@@ -177,7 +177,7 @@ export class VectorSearchService {
         JOIN "Task" t ON s."taskId" = t.id
         JOIN "BoardSection" bs ON t."boardSectionId" = bs.id
         JOIN "Board" b ON bs."boardId" = b.id
-        JOIN "User" u ON t."assignedToId" = u.id
+        JOIN "users" u ON t."assignedToId" = u.id
         ORDER BY s.similarity DESC
       `,
         ...params,
@@ -303,8 +303,9 @@ export class VectorSearchService {
         FROM "Task" t
         JOIN "BoardSection" bs ON t."boardSectionId" = bs.id
         JOIN "Board" b ON bs."boardId" = b.id
-        JOIN "User" u ON t."assignedToId" = u.id
-        WHERE u.cid = $1
+        JOIN "users" u ON t."assignedToId" = u.id
+        JOIN "company_memberships" cm ON cm."userId" = u.id
+        WHERE cm."companyId" = $1
           AND (${searchConditions})
         ORDER BY similarity DESC
         LIMIT $${searchTerms.length + 3}
@@ -463,8 +464,7 @@ export class VectorSearchService {
           1 - (be.embedding <=> $1::vector) AS similarity
         FROM board_embeddings be
         JOIN "Board" b ON be.board_id = b.id
-        JOIN "User" u ON u.id = ANY(b.access)
-        WHERE u.cid = $2
+        WHERE b."companyId" = $2
         ORDER BY be.embedding <=> $1::vector
         LIMIT $3
         `,
@@ -518,8 +518,9 @@ export class VectorSearchService {
           1 - (te.embedding <=> $1::vector) AS similarity
         FROM task_embeddings te
         JOIN "Task" t ON te.task_id = t.id
-        JOIN "User" u ON t.assigned_to_id = u.id
-        WHERE u.cid = $2
+        JOIN "users" u ON t."assignedToId" = u.id
+        JOIN "company_memberships" cm ON cm."userId" = u.id
+        WHERE cm."companyId" = $2
         ORDER BY te.embedding <=> $1::vector
         LIMIT $3
         `,

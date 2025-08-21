@@ -7,7 +7,7 @@ export async function getBoards(userId: string, query?: string) {
   const session = await auth();
   
   // Get user's active company ID for multi-tenant isolation
-  const companyId = session?.user?.activeCompanyId || session?.user?.cid;
+  const companyId = session?.user?.activeCompanyId;
   
   if (!companyId) {
     throw new Error("No active company found");

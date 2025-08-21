@@ -52,7 +52,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           id: user.id,
           email: user.email,
           name: user.name,
-          cid: user.cid,
         };
       },
     }),
@@ -60,17 +59,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       async profile(profile) {
-        // Auto-assign CID for OAuth users if they don't have one
-        const existingUser = await prisma.user.findUnique({
-          where: { email: profile.email || "" },
-        });
-
         return {
           id: profile.sub,
           name: profile.name,
           email: profile.email,
           image: profile.picture,
-          cid: existingUser?.cid || null,
         };
       },
     }),
@@ -78,17 +71,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       clientId: process.env.GITHUB_CLIENT_ID,
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
       async profile(profile) {
-        // Auto-assign CID for OAuth users if they don't have one
-        const existingUser = await prisma.user.findUnique({
-          where: { email: profile.email || "" },
-        });
-
         return {
           id: profile.id.toString(),
           name: profile.name || profile.login,
           email: profile.email,
           image: profile.avatar_url,
-          cid: existingUser?.cid || null,
         };
       },
     }),
@@ -97,26 +84,69 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: "/auth/signin",
   },
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.cid = user.cid;
-        
-        // Fetch user's company memberships for multi-tenancy
+    async jwt({ token, user, trigger, session }) {
+      // Always fetch fresh memberships to ensure up-to-date data
+      if (token.sub) {
         const memberships = await prisma.companyMembership.findMany({
-          where: { userId: user.id },
+          where: { userId: token.sub },
           include: { company: true },
-          orderBy: { createdAt: 'asc' } // First membership as default
+          orderBy: { createdAt: 'asc' }
         });
         
         token.memberships = memberships;
-        token.activeCompanyId = memberships[0]?.companyId || user.cid || null;
+        
+        // If user has no company memberships, create a default company
+        if (memberships.length === 0) {
+          const user = await prisma.user.findUnique({
+            where: { id: token.sub },
+            select: { name: true, email: true }
+          });
+          
+          if (user) {
+            const companyName = user.name ? `${user.name}'s Company` : `${user.email.split('@')[0]}'s Company`;
+            const company = await prisma.company.create({
+              data: {
+                name: companyName,
+                memberships: {
+                  create: {
+                    userId: token.sub,
+                    role: 'OWNER'
+                  }
+                }
+              },
+              include: {
+                memberships: {
+                  include: { company: true }
+                }
+              }
+            });
+            
+            // Update token with new company membership
+            token.memberships = [company.memberships[0]];
+            token.activeCompanyId = company.id;
+          }
+        } else {
+          // Set default company if not set or if user lost access to current company
+          if (!token.activeCompanyId || !memberships.find(m => m.companyId === token.activeCompanyId)) {
+            token.activeCompanyId = memberships[0]?.companyId || null;
+          }
+        }
       }
+      
+      // Handle company switching via session update
+      if (trigger === "update" && session?.activeCompanyId) {
+        // Verify user has access to the requested company
+        const hasAccess = token.memberships?.find((m: any) => m.companyId === session.activeCompanyId);
+        if (hasAccess) {
+          token.activeCompanyId = session.activeCompanyId;
+        }
+      }
+      
       return token;
     },
     async session({ session, token }) {
       if (token) {
         session.user.id = token.sub!;
-        session.user.cid = token.cid as string | null;
         session.user.memberships = token.memberships as any[];
         session.user.activeCompanyId = token.activeCompanyId as string | null;
       }

@@ -5,7 +5,6 @@ declare module "next-auth" {
   interface Session {
     user: {
       id: string
-      cid?: string | null
       activeCompanyId?: string | null
       memberships?: Array<{
         companyId: string
@@ -23,13 +22,12 @@ declare module "next-auth" {
   }
 
   interface User extends DefaultUser {
-    cid?: string | null
+    // Multi-tenant user - company membership handled via CompanyMembership model
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT extends DefaultJWT {
-    cid?: string | null
     activeCompanyId?: string | null
     memberships?: any[]
   }

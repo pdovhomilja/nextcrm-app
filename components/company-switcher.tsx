@@ -1,10 +1,17 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Check, ChevronsUpDown, Plus, Settings, Building2, Users } from "lucide-react"
+import * as React from "react";
+import {
+  Check,
+  ChevronsUpDown,
+  Plus,
+  Settings,
+  Building2,
+  Users,
+} from "lucide-react";
 
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -13,68 +20,73 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from "@/components/ui/command"
+} from "@/components/ui/command";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useCompanySwitcher } from "./company-provider"
-import { createCompany } from "@/actions/company-actions"
-import { toast } from "sonner"
-import { useState } from "react"
+} from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useCompanySwitcher } from "./company-provider";
+import { createCompany } from "@/actions/company-actions";
+import { toast } from "sonner";
+import { useState } from "react";
 
 export function CompanySwitcher() {
-  const { memberships, activeCompanyId, switchCompany } = useCompanySwitcher()
-  const [open, setOpen] = useState(false)
-  const [isCreating, setIsCreating] = useState(false)
-  const [newCompanyName, setNewCompanyName] = useState("")
+  const { memberships, activeCompanyId, switchCompany } = useCompanySwitcher();
+  const [open, setOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [newCompanyName, setNewCompanyName] = useState("");
 
-  const activeCompany = memberships.find(m => m.companyId === activeCompanyId)
+  const activeCompany = memberships.find(
+    (m) => m.companyId === activeCompanyId
+  );
 
-  const handleSwitchCompany = (companyId: string) => {
-    switchCompany(companyId)
-    setOpen(false)
-  }
+  const handleSwitchCompany = async (companyId: string) => {
+    await switchCompany(companyId);
+    setOpen(false);
+  };
 
   const handleCreateCompany = async () => {
-    if (!newCompanyName.trim()) return
+    if (!newCompanyName.trim()) return;
 
-    setIsCreating(true)
+    setIsCreating(true);
     try {
-      const result = await createCompany(newCompanyName.trim())
+      const result = await createCompany(newCompanyName.trim());
       if (result.success && result.company) {
-        toast.success(`Company "${newCompanyName}" created successfully!`)
-        setNewCompanyName("")
-        switchCompany(result.company.id)
-        setOpen(false)
+        toast.success(`Company "${newCompanyName}" created successfully!`);
+        setNewCompanyName("");
+        switchCompany(result.company.id);
+        setOpen(false);
         // Refresh memberships will happen automatically via context
       } else {
-        toast.error(result.error || "Failed to create company")
+        toast.error(result.error || "Failed to create company");
       }
     } catch (error) {
-      toast.error("Failed to create company")
+      toast.error("Failed to create company");
     } finally {
-      setIsCreating(false)
+      setIsCreating(false);
     }
-  }
+  };
 
-  const getRoleBadgeColor = (role: 'MEMBER' | 'ADMIN' | 'OWNER') => {
+  const getRoleBadgeColor = (role: "MEMBER" | "ADMIN" | "OWNER") => {
     switch (role) {
-      case 'OWNER': return 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-      case 'ADMIN': return 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300'
-      default: return 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+      case "OWNER":
+        return "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300";
+      case "ADMIN":
+        return "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300";
+      default:
+        return "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300";
     }
-  }
+  };
 
   if (!activeCompany) {
     return (
       <div className="flex items-center space-x-2">
         <Skeleton className="h-8 w-[200px]" />
       </div>
-    )
+    );
   }
 
   return (
@@ -87,7 +99,7 @@ export function CompanySwitcher() {
           aria-label="Select a company"
           className="w-[200px] justify-between"
         >
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center overflow-hidden space-x-2">
             <Building2 className="h-4 w-4" />
             <span className="truncate">{activeCompany.company.name}</span>
           </div>
@@ -109,12 +121,17 @@ export function CompanySwitcher() {
                   <div className="flex items-center justify-between w-full">
                     <div className="flex items-center space-x-2">
                       <Building2 className="h-4 w-4" />
-                      <span className="truncate">{membership.company.name}</span>
+                      <span className="truncate">
+                        {membership.company.name}
+                      </span>
                     </div>
                     <div className="flex items-center space-x-1">
-                      <Badge 
-                        variant="secondary" 
-                        className={cn("text-xs", getRoleBadgeColor(membership.role))}
+                      <Badge
+                        variant="secondary"
+                        className={cn(
+                          "text-xs",
+                          getRoleBadgeColor(membership.role)
+                        )}
                       >
                         {membership.role}
                       </Badge>
@@ -137,8 +154,8 @@ export function CompanySwitcher() {
                     onChange={(e) => setNewCompanyName(e.target.value)}
                     className="flex-1 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleCreateCompany()
+                      if (e.key === "Enter") {
+                        handleCreateCompany();
                       }
                     }}
                   />
@@ -154,8 +171,8 @@ export function CompanySwitcher() {
               {activeCompany && (
                 <CommandItem
                   onSelect={() => {
-                    window.location.href = `/${activeCompanyId}/settings/company`
-                    setOpen(false)
+                    window.location.href = `/${activeCompanyId}/settings/company`;
+                    setOpen(false);
                   }}
                 >
                   <Settings className="h-4 w-4" />
@@ -167,18 +184,20 @@ export function CompanySwitcher() {
         </Command>
       </PopoverContent>
     </Popover>
-  )
+  );
 }
 
 // Compact version for mobile/sidebar
 export function CompanySwitcherCompact() {
-  const { memberships, activeCompanyId, switchCompany } = useCompanySwitcher()
-  const [open, setOpen] = useState(false)
+  const { memberships, activeCompanyId, switchCompany } = useCompanySwitcher();
+  const [open, setOpen] = useState(false);
 
-  const activeCompany = memberships.find(m => m.companyId === activeCompanyId)
+  const activeCompany = memberships.find(
+    (m) => m.companyId === activeCompanyId
+  );
 
   if (!activeCompany) {
-    return <Skeleton className="h-8 w-8" />
+    return <Skeleton className="h-8 w-8" />;
   }
 
   return (
@@ -198,15 +217,17 @@ export function CompanySwitcherCompact() {
                 <CommandItem
                   key={membership.companyId}
                   onSelect={() => {
-                    switchCompany(membership.companyId)
-                    setOpen(false)
+                    switchCompany(membership.companyId);
+                    setOpen(false);
                   }}
                   className="text-sm"
                 >
                   <div className="flex items-center justify-between w-full">
                     <div className="flex items-center space-x-2">
                       <Building2 className="h-4 w-4" />
-                      <span className="truncate">{membership.company.name}</span>
+                      <span className="truncate">
+                        {membership.company.name}
+                      </span>
                     </div>
                     {membership.companyId === activeCompanyId && (
                       <Check className="h-4 w-4" />
@@ -219,5 +240,5 @@ export function CompanySwitcherCompact() {
         </Command>
       </PopoverContent>
     </Popover>
-  )
+  );
 }

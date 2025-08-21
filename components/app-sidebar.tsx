@@ -25,7 +25,10 @@ import {
 import { User } from "@/lib/generated/prisma";
 import { useParams } from "next/navigation";
 import { NavSecondary } from "./nav-secondary";
-import { CompanySwitcherCompact } from "@/components/company-switcher";
+import {
+  CompanySwitcher,
+  CompanySwitcherCompact,
+} from "@/components/company-switcher";
 import { useActiveCompany } from "@/components/company-provider";
 import packageJson from "../package.json";
 
@@ -35,10 +38,10 @@ export function AppSidebar({
 }: React.ComponentProps<typeof Sidebar> & { user: User | null }) {
   const { cid } = useParams();
   const { activeCompanyId } = useActiveCompany();
-  
+
   // Use activeCompanyId from context if available, fallback to URL params
   const companyId = activeCompanyId || cid;
-  
+
   const data = {
     navMain: [
       {
@@ -102,10 +105,10 @@ export function AppSidebar({
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
+          <SidebarMenuItem>
+            <CompanySwitcher />
+          </SidebarMenuItem>
         </SidebarMenu>
-        <div className="px-2 py-1 flex justify-center">
-          <CompanySwitcherCompact />
-        </div>
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />

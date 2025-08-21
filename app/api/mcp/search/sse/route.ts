@@ -242,7 +242,7 @@ export async function POST(request: NextRequest) {
           if (includeContext && searchResults.length > 0) {
             const ragQuery = {
               query,
-              companyId: user.cid || '',
+              companyId: session.user.activeCompanyId || '',
               userId: user.id,
               boardId,
               contextType: 'general' as const,
@@ -590,7 +590,7 @@ export async function POST(request: NextRequest) {
           if (useRAG) {
             const ragQuery = {
               query,
-              companyId: user.cid || '',
+              companyId: session.user.activeCompanyId || '',
               userId: user.id,
               boardId,
               taskId,

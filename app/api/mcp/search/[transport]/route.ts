@@ -49,7 +49,7 @@ const handler = createMcpHandler(
 
         const searchQuery = {
           query: params.query,
-          companyId: session.user.cid!,
+          companyId: session.user.activeCompanyId!,
           userId: session.user.id,
           threshold: params.threshold,
           limit: params.limit,
@@ -130,14 +130,14 @@ const handler = createMcpHandler(
         }
 
         // Validate company context
-        const companyId = session.user.cid;
+        const companyId = session.user.activeCompanyId;
         if (!companyId) {
           throw new Error("Company context required");
         }
 
         const searchQuery = {
           query: params.query,
-          companyId: session.user.cid!,
+          companyId: session.user.activeCompanyId!,
           userId: session.user.id,
           limit: params.limit,
           filters: params.filters

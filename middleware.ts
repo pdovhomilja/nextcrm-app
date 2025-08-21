@@ -20,8 +20,8 @@ export function middleware(request: NextRequest) {
   const segments = pathname.split("/").filter(Boolean)
   const companyId = segments[0]
 
-  // If route doesn't follow /{cid}/... pattern, redirect to home
-  if (!companyId || segments.length < 2) {
+  // If route doesn't follow /{cid}/... pattern or companyId is undefined/null, redirect to home
+  if (!companyId || companyId === "undefined" || companyId === "null" || segments.length < 2) {
     return NextResponse.redirect(new URL("/", request.url))
   }
 

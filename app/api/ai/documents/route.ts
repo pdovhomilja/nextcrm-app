@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       const metadata = uploadSchema.parse(JSON.parse(metadataJson));
 
       // Verify company access
-      if (session.user.cid !== metadata.companyId) {
+      if (session.user.activeCompanyId !== metadata.companyId) {
         return NextResponse.json(
           { error: "Access denied to this company" },
           { status: 403 }
@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
 
       const { searchParams } = new URL(request.url);
       const action = searchParams.get("action");
-      const companyId = session.user.cid;
+      const companyId = session.user.activeCompanyId;
 
       if (!companyId) {
         return NextResponse.json(

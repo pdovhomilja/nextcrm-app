@@ -31,7 +31,7 @@ type CompanyContextType = {
   memberships: CompanyMembership[]
   
   // Actions
-  switchCompany: (companyId: string) => void
+  switchCompany: (companyId: string) => Promise<void>
   refreshMemberships: () => Promise<void>
   
   // Loading states
@@ -42,7 +42,7 @@ type CompanyContextType = {
 const CompanyContext = createContext<CompanyContextType | undefined>(undefined)
 
 export function CompanyProvider({ children }: { children: React.ReactNode }) {
-  const { data: session } = useSession()
+  const { data: session, update } = useSession()
   const [memberships, setMemberships] = useState<CompanyMembership[]>([])
   const [activeCompanyId, setActiveCompanyId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -63,7 +63,7 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
         setMemberships(result.memberships)
         
         // Set active company from session or first membership
-        const sessionActiveId = session.user.activeCompanyId || session.user.cid
+        const sessionActiveId = session.user.activeCompanyId
         const validCompanyId = result.memberships.find(m => 
           m.companyId === sessionActiveId
         )?.companyId || result.memberships[0]?.companyId
@@ -79,10 +79,16 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
   }
 
   // Switch active company
-  const switchCompany = (companyId: string) => {
+  const switchCompany = async (companyId: string) => {
     const hasAccess = memberships.some(m => m.companyId === companyId)
-    if (hasAccess) {
+    if (!hasAccess) return
+    
+    try {
       setActiveCompanyId(companyId)
+      
+      // Update the NextAuth session
+      await update({ activeCompanyId: companyId })
+      
       // Update URL to reflect new company
       const currentPath = window.location.pathname
       const pathSegments = currentPath.split('/').filter(Boolean)
@@ -92,7 +98,11 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
         pathSegments[0] = companyId
         const newPath = '/' + pathSegments.join('/')
         window.history.pushState({}, '', newPath)
+        // Force a page refresh to ensure all data updates
+        window.location.reload()
       }
+    } catch (error) {
+      console.error('Failed to switch company:', error)
     }
   }
 
