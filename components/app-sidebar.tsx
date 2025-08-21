@@ -59,21 +59,21 @@ export function AppSidebar({
         url: `/${companyId}/tasks-list`,
         icon: IconList,
       },
-      {
+      /*       {
         title: "AI Assistant",
         url: `/${companyId}/ai-assistant`,
         icon: IconRobot,
-      },
+      }, */
       {
         title: "AI Assistant V2",
         url: `/${companyId}/ai-assistant-v2`,
         icon: IconRobot,
       },
-      {
+      /*       {
         title: "Suggestions",
         url: `/${companyId}/suggestions`,
         icon: IconList,
-      },
+      }, */
     ],
 
     navSecondary: [
