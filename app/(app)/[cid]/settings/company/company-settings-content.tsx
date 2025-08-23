@@ -110,6 +110,8 @@ export function CompanySettingsContent({
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"MEMBER" | "ADMIN">("MEMBER");
   const [showInviteDialog, setShowInviteDialog] = useState(false);
+  const [editingCompanyName, setEditingCompanyName] = useState(company.name);
+  const [isNameDialogOpen, setIsNameDialogOpen] = useState(false);
 
   const canManageUsers = ["ADMIN", "OWNER"].includes(userRole);
   const canChangeRoles = userRole === "OWNER";
@@ -202,12 +204,23 @@ export function CompanySettingsContent({
     });
   };
 
-  const handleChangeCompanyName = async (newName: string) => {
+  const handleSaveCompanyName = async () => {
+    if (
+      !editingCompanyName.trim() ||
+      editingCompanyName.trim() === company.name
+    ) {
+      return;
+    }
+
     startTransition(async () => {
       try {
-        const result = await updateCompanyName(company.id, newName);
+        const result = await updateCompanyName(
+          company.id,
+          editingCompanyName.trim()
+        );
         if (result.success) {
           toast.success("Company name updated successfully");
+          setIsNameDialogOpen(false);
           router.refresh();
         } else {
           toast.error(result.error || "Failed to update company name");
@@ -232,28 +245,58 @@ export function CompanySettingsContent({
                 boards
               </CardDescription>
             </div>
-            {/*     <div>
-              <Dialog>
+            <div>
+              <Dialog
+                open={isNameDialogOpen}
+                onOpenChange={(open) => {
+                  setIsNameDialogOpen(open);
+                  if (!open) {
+                    setEditingCompanyName(company.name);
+                  }
+                }}
+              >
                 <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsNameDialogOpen(true)}
+                  >
                     <Pencil className="h-4 w-4" />
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Edit Company Name</DialogTitle>
+                    <DialogDescription>
+                      Change the name of your company
+                    </DialogDescription>
                   </DialogHeader>
-                  <DialogDescription>
-                    Change the name of your company
-                  </DialogDescription>
                   <Input
                     type="text"
-                    value={company.name}
-                    onChange={(e) => handleChangeCompanyName(e.target.value)}
+                    value={editingCompanyName}
+                    onChange={(e) => setEditingCompanyName(e.target.value)}
                   />
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsNameDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleSaveCompanyName}
+                      disabled={
+                        isPending ||
+                        !editingCompanyName.trim() ||
+                        editingCompanyName.trim() === company.name
+                      }
+                    >
+                      {isPending ? "Saving..." : "Save Changes"}
+                    </Button>
+                  </DialogFooter>
                 </DialogContent>
               </Dialog>
-            </div> */}
+            </div>
           </div>
         </CardHeader>
         <CardContent>
