@@ -92,25 +92,26 @@ interface AIAssistantV2PageProps {
 
 const AIAssistantV2Page = ({ params }: AIAssistantV2PageProps) => {
   const [cid, setCid] = React.useState<string | null>(null);
-  
+
   // Resolve params since they're async in Next.js 15
   React.useEffect(() => {
     params.then((resolvedParams) => {
       setCid(resolvedParams.cid);
     });
   }, [params]);
+
   const { data: session } = useSession();
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  
+
   // Company access validation
-  const { 
-    isAuthorized, 
-    isLoading: isValidatingAccess, 
-    error: accessError 
-  } = useCompanyAccess(cid || '', 'ai_query', undefined, 'search');
+  const {
+    isAuthorized,
+    isLoading: isValidatingAccess,
+    error: accessError,
+  } = useCompanyAccess(cid || "", "ai_query", undefined, "search");
 
   const { messages, sendMessage } = useChat({
     transport: new DefaultChatTransport({
@@ -297,12 +298,10 @@ const AIAssistantV2Page = ({ params }: AIAssistantV2PageProps) => {
             <div className="text-red-500 text-6xl mb-4">⚠️</div>
             <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
             <p className="text-muted-foreground mb-4">
-              {accessError || 'You do not have permission to access the AI assistant for this company.'}
+              {accessError ||
+                "You do not have permission to access the AI assistant for this company."}
             </p>
-            <Button
-              onClick={() => window.history.back()}
-              className="mr-2"
-            >
+            <Button onClick={() => window.history.back()} className="mr-2">
               Go Back
             </Button>
           </div>
@@ -324,10 +323,6 @@ const AIAssistantV2Page = ({ params }: AIAssistantV2PageProps) => {
           >
             Restart conversation
           </Button>
-          <Badge variant="outline" className="gap-1.5">
-            <Sparkles className="h-3 w-3" />
-            Enhanced v2
-          </Badge>
         </div>
       </SiteHeader>
 
@@ -362,7 +357,9 @@ const AIAssistantV2Page = ({ params }: AIAssistantV2PageProps) => {
                       variant="default"
                       className="text-xs max-w-3/6"
                       onClick={() => {
-                        sendMessage({ text: "What are most critical tasks?" });
+                        sendMessage({
+                          text: 'What are most critical tasks? Try to find tasks with status "CRITICAL" and due date in the next 3 days',
+                        });
                       }}
                     >
                       What are most critical tasks?

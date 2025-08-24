@@ -26,7 +26,7 @@ export const findRelevantContent = async (
 
   const embeddingVector = `[${queryEmbedding.join(",")}]`;
   const threshold = 0.5;
-  const limit = 4;
+  const limit = 5;
 
   const results = await db.$queryRaw<SimilarResult[]>`
     SELECT 
@@ -42,6 +42,7 @@ export const findRelevantContent = async (
     JOIN "company_memberships" cm ON cm."userId" = u.id
     WHERE 1 - (te.embedding <=> ${embeddingVector}::vector) > ${threshold}
       AND cm."companyId" = ${companyId}
+      AND t.status NOT IN ('COMPLETED', 'CANCELLED') AND t.status IS NOT NULL
     ORDER BY te.embedding <=> ${embeddingVector}::vector
     LIMIT ${limit}
   `;

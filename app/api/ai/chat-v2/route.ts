@@ -18,15 +18,19 @@ export const maxDuration = 30;
 export async function POST(req: Request) {
   // CRITICAL: Extract and validate user session for company context
   const session = await auth();
-  
+  //console.log("session", session);
+
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const activeCompanyId = session.user.activeCompanyId;
-  
+
   if (!activeCompanyId) {
-    return NextResponse.json({ error: "No company context available" }, { status: 400 });
+    return NextResponse.json(
+      { error: "No company context available" },
+      { status: 400 }
+    );
   }
 
   const { messages }: { messages: UIMessage[] } = await req.json();
@@ -58,15 +62,15 @@ export async function POST(req: Request) {
           const result = await withCompanyAccessValidation(
             session.user.id,
             activeCompanyId,
-            'ai_query',
-            'search',
+            "ai_query",
+            "search",
             () => findRelevantContent(question, activeCompanyId)
           );
-          
+
           if (!result.success) {
-            throw new Error(result.error || 'Access denied');
+            throw new Error(result.error || "Access denied");
           }
-          
+
           return result.data || [];
         },
       }),

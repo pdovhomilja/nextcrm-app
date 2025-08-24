@@ -21,7 +21,8 @@ export function SiteHeader({
         />
         <div className="flex items-center gap-2 w-full justify-between">
           <h1 className="text-base font-medium">{title}</h1>
-          <div>
+          <div className="flex items-center gap-2">
+            {children}
             <ModeToggle />
           </div>
         </div>
