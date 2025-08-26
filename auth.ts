@@ -4,6 +4,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import Google from "next-auth/providers/google";
 import GitHub from "next-auth/providers/github";
 import Credentials from "next-auth/providers/credentials";
+import Resend from "next-auth/providers/resend";
 import bcrypt from "bcryptjs";
 import db from "./lib/db";
 
@@ -13,6 +14,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     strategy: "jwt",
   },
   providers: [
+    Resend({
+      from: "pavel@xmation.ai",
+      normalizeIdentifier(identifier: string): string {
+        // Get the first two elements only,
+        // separated by `@` from user input.
+        const [local, ...domainParts] = identifier
+          .toLowerCase()
+          .trim()
+          .split("@");
+        // The part before "@" can contain a ","
+        // but we remove it on the domain part
+        const domain = domainParts.join("@").split(",")[0];
+        return `${local}@${domain}`;
+
+        // You can also throw an error, which will redirect the user
+        // to the sign-in page with error=EmailSignin in the URL
+        // if (identifier.split("@").length > 2) {
+        //   throw new Error("Only one email allowed")
+        // }
+      },
+    }),
     Credentials({
       credentials: {
         email: { label: "Email", type: "email" },

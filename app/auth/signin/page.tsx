@@ -13,6 +13,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { registerUser, authenticateUser } from "@/actions/auth-actions";
+import { signIn } from "@/auth";
+import Link from "next/link";
 
 function SignInForm() {
   const [error, setError] = useState("");
@@ -24,11 +26,13 @@ function SignInForm() {
   useEffect(() => {
     const verified = searchParams.get("verified");
     const errorParam = searchParams.get("error");
-    
+
     if (verified === "true") {
       setSuccess("Email verified successfully! You can now sign in.");
     } else if (errorParam === "invalid-token") {
-      setError("Invalid or expired verification token. Please try registering again.");
+      setError(
+        "Invalid or expired verification token. Please try registering again."
+      );
     } else if (errorParam === "missing-token") {
       setError("Verification token is missing.");
     }
@@ -119,8 +123,8 @@ function SignInForm() {
                   ? "Creating Account..."
                   : "Signing In..."
                 : isSignUp
-                ? "Create Account"
-                : "Sign In"}
+                  ? "Create Account"
+                  : "Sign In"}
             </Button>
           </form>
 
@@ -140,31 +144,24 @@ function SignInForm() {
             </button>
           </div>
 
-          {/*        <div className="relative">
+          <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-gray-50 px-2 text-muted-foreground">Or continue with</span>
+              <span className="bg-gray-50 px-2 text-muted-foreground">
+                Or continue with
+              </span>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => signIn("google", { callbackUrl: "/" })}
-            >
-              Continue with Google
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => signIn("github", { callbackUrl: "/" })}
-            >
-              Continue with GitHub
-            </Button>
-          </div> */}
+            <Link href="/auth/sign-in-magic-link">
+              <Button variant="default" className="w-full">
+                Magic Link
+              </Button>
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>
