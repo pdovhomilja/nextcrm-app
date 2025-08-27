@@ -19,7 +19,7 @@ import {
   RefreshCw,
   Zap,
 } from "lucide-react";
-import { z } from "zod";
+import { z } from 'zod/v3';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const analysisSchema = z.object({
@@ -65,7 +65,7 @@ const analysisSchema = z.object({
     z.object({
       priority: z.enum(["low", "medium", "high", "critical"]),
       action: z.string(),
-      reasoning: z.string(),
+      reasoningText: z.string(),
       expectedImpact: z.string(),
     })
   ),
@@ -180,7 +180,7 @@ export function ProjectInsights({
             {
               priority: "high" as const,
               action: "Address overdue tasks",
-              reasoning: "Five overdue tasks are blocking team progress.",
+              reasoningText: "Five overdue tasks are blocking team progress.",
               expectedImpact: "Should improve completion rate by 15%",
             },
           ],
@@ -272,7 +272,6 @@ export function ProjectInsights({
           </CardContent>
         )}
       </Card>
-
       {/* Tabs */}
       <div className="border-b">
         <div className="flex space-x-8">
@@ -295,7 +294,6 @@ export function ProjectInsights({
           })}
         </div>
       </div>
-
       {/* Tab Content */}
       <div className="space-y-4">
         {/* Insights Tab */}
@@ -511,7 +509,7 @@ export function ProjectInsights({
                       </Badge>
                     </div>
                     <p className="text-sm text-gray-700 mb-2">
-                      {rec.reasoning}
+                      {rec.reasoningText}
                     </p>
                     <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded">
                       <p className="text-sm text-green-800">

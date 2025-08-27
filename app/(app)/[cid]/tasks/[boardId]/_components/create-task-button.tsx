@@ -19,7 +19,7 @@ import { FormControl } from "@/components/ui/form";
 import { FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { z } from 'zod/v3';
 import { createTask } from "@/actions/tasks/create-task";
 import type { CreateTaskData, Task } from "../../_types";
 

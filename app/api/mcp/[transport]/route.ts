@@ -2,7 +2,8 @@ import { createMcpHandler } from "@vercel/mcp-adapter";
 import { auth } from "@/auth";
 
 const handler = createMcpHandler(
-  async (server) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async (server: any) => {
     // Health check tool
     server.tool(
       "health_check",

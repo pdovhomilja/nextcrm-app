@@ -1,8 +1,8 @@
 import { generateObject } from "ai";
 
 import { auth } from "@/auth";
-import { AgentFactory } from "@/lib/ai/specialized-agents";
-import { z } from "zod";
+import { agentOrchestrator } from "@/lib/ai/agent-orchestrator";
+import { z } from "zod/v3";
 import { NextRequest } from "next/server";
 import { aiConfig } from "@/lib/ai/config";
 
@@ -26,7 +26,7 @@ const suggestionSchema = z.object({
         ]),
         title: z.string(),
         description: z.string(),
-        reasoning: z.string(),
+        reasoningText: z.string(),
         confidence: z.number().min(0).max(1),
         impact: z.enum(["low", "medium", "high"]),
         actionable: z.boolean(),
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     } = await request.json();
 
     const activeCompanyId = session.user.activeCompanyId;
-    
+
     if (!activeCompanyId) {
       return new Response("No company context available", { status: 400 });
     }
@@ -76,33 +76,18 @@ export async function POST(request: NextRequest) {
       taskId,
     };
 
-    // Use appropriate agent based on suggestion type
-    let agentType: "analyzer" | "recommender" | "tracker" | "optimizer";
-
-    switch (suggestionType) {
-      case "optimization":
-        agentType = "optimizer";
-        break;
-      case "progress":
-        agentType = "tracker";
-        break;
-      case "analysis":
-        agentType = "analyzer";
-        break;
-      default:
-        agentType = "recommender";
-    }
-
-    // Get agent-powered suggestions
-    const agent = await AgentFactory.getAgent(agentType);
-
+    // Get agent-powered suggestions using the new orchestrator
     let agentSuggestions = "";
     try {
-      const agentResponse = await agent.processQuery(
-        `Generate actionable suggestions for ${suggestionType} improvement`,
-        agentContext
-      );
-      agentSuggestions = agentResponse.response;
+      const agentResponse = await agentOrchestrator.orchestrate({
+        query: `Generate actionable suggestions for ${suggestionType} improvement`,
+        context: {
+          ...agentContext,
+          conversationId: `suggest-${session.user.id}-${Date.now()}`,
+        },
+        history: [],
+      });
+      agentSuggestions = agentResponse.text;
     } catch (error) {
       console.error("Agent suggestion error:", error);
       agentSuggestions = "Unable to get agent recommendations";
@@ -135,7 +120,7 @@ Focus on practical, implementable suggestions with clear reasoning.`,
       success: true,
       data: result.object,
       meta: {
-        agentType,
+        suggestionType,
         timestamp: new Date().toISOString(),
         boardId,
         taskId,

@@ -1,7 +1,7 @@
 import { streamObject } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { auth } from "@/auth";
-import { z } from "zod";
+import { z } from 'zod/v3';
 import { NextRequest } from "next/server";
 
 const analysisSchema = z.object({
@@ -52,7 +52,7 @@ const analysisSchema = z.object({
       z.object({
         priority: z.enum(["low", "medium", "high", "critical"]),
         action: z.string(),
-        reasoning: z.string(),
+        reasoningText: z.string(),
         expectedImpact: z.string(),
       })
     )
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
     // const analyzer = await AgentFactory.getAgent("analyzer");
 
     // Stream the analysis as it's generated
-    const result = await streamObject({
+    const result = streamObject({
       model: openai("gpt-4o"),
       system: `You are a project analytics expert providing real-time insights and analysis.
 

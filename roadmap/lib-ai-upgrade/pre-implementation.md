@@ -168,4 +168,6 @@ The proposed modernization directly targets and eliminates numerous `if/else` an
 3.  **Phase 3: Update Specialized Agents**
     - Review and update the `specialized-agents.ts` to ensure their capabilities and prompts align with the new, simpler, and more powerful core architecture. Most of their logic should now be expressible in their system prompts and the tools they have access to.
 
+4.  **Note on Dependencies**: During implementation, it was discovered that toolkits must not directly import any singleton MCP client pool that the MCP server routes also use for registration. This creates a circular dependency and race condition in the Next.js App Router. The correct pattern is for toolkits to use a separate, simple MCP client (like `simpleMCPClientPool`) that makes direct `fetch` requests to the API endpoints, ensuring the client is fully decoupled from the server initialization process.
+
 This phased approach ensures a controlled migration, allowing us to validate each major architectural change before proceeding to the next.

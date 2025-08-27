@@ -1,24 +1,71 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { agentOrchestrator } from "@/lib/ai/agent-orchestrator";
-import { AgentFactory } from "@/lib/ai/specialized-agents";
+import { ModelMessage } from "ai";
 import { mcpClientPool } from "@/lib/ai/mcp-client-pool";
-import { z } from "zod";
+import { z } from "zod/v3";
+import { allToolkits } from "@/lib/ai/toolkits";
 
-// Schema for agent query requests
+// Schema for agent query requests, aligned with the new architecture
+const textPartSchema = z.object({
+  type: z.literal("text"),
+  text: z.string(),
+});
+
+const toolCallPartSchema = z.object({
+  type: z.literal("tool-call"),
+  toolCallId: z.string(),
+  toolName: z.string(),
+  args: z.record(z.any()),
+  input: z.record(z.any()),
+});
+
+const toolResultPartSchema = z.object({
+  type: z.literal("tool-result"),
+  toolName: z.string(),
+  toolCallId: z.string(),
+  output: z.any(),
+});
+
+const messageSchema = z.discriminatedUnion("role", [
+  z.object({
+    role: z.literal("user"),
+    content: z.string().or(z.array(textPartSchema)),
+  }),
+  z.object({
+    role: z.literal("assistant"),
+    content: z
+      .string()
+      .or(
+        z.array(textPartSchema.or(toolCallPartSchema).or(toolResultPartSchema))
+      ),
+  }),
+  z.object({
+    role: z.literal("system"),
+    content: z.string(),
+  }),
+  z.object({
+    role: z.literal("tool"),
+    toolInvocations: z.array(
+      z.object({
+        toolCallId: z.string(),
+        toolName: z.string(),
+        args: z.record(z.any()),
+        result: z.any().optional(),
+      })
+    ),
+  }),
+]);
+
 const agentQuerySchema = z.object({
   query: z.string().min(1, "Query is required").max(4000, "Query too long"),
-  agentType: z
-    .enum(["analyzer", "recommender", "tracker", "optimizer"])
-    .optional(),
+  history: z.array(messageSchema).optional().default([]),
   boardId: z.string().optional(),
   taskId: z.string().optional(),
-  multiAgentMode: z.boolean().default(false),
-  maxAgents: z.number().min(1).max(4).default(3),
 });
 
 /**
- * POST /api/ai/agents - Process query with AI agents
+ * POST /api/ai/agents - Process query with the new AI agent architecture
  */
 export async function POST(request: NextRequest) {
   try {
@@ -32,9 +79,12 @@ export async function POST(request: NextRequest) {
     }
 
     const activeCompanyId = session.user.activeCompanyId;
-    
+
     if (!activeCompanyId) {
-      return NextResponse.json({ error: "No company context available" }, { status: 400 });
+      return NextResponse.json(
+        { error: "No company context available" },
+        { status: 400 }
+      );
     }
 
     // Check email verification
@@ -57,18 +107,15 @@ export async function POST(request: NextRequest) {
       boardId: validatedRequest.boardId,
       taskId: validatedRequest.taskId,
       conversationId: `conv-${session.user.id}-${Date.now()}`,
+      sessionData: {},
     };
 
     // Process query with orchestrator
-    const orchestrationRequest = {
+    const result = await agentOrchestrator.orchestrate({
       query: validatedRequest.query,
+      history: validatedRequest.history as ModelMessage[],
       context: agentContext,
-      preferredAgent: validatedRequest.agentType,
-      multiAgentMode: validatedRequest.multiAgentMode,
-      maxAgents: validatedRequest.maxAgents,
-    };
-
-    const result = await agentOrchestrator.orchestrate(orchestrationRequest);
+    });
 
     return NextResponse.json({
       success: true,
@@ -77,7 +124,6 @@ export async function POST(request: NextRequest) {
         timestamp: new Date().toISOString(),
         userId: session.user.id,
         companyId: activeCompanyId,
-        processingTime: result.metadata.totalProcessingTime,
       },
     });
   } catch (error) {
@@ -101,56 +147,26 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * GET /api/ai/agents - Get agent status and capabilities
+ * GET /api/ai/agents - Get system status and capabilities
  */
 export async function GET() {
   try {
-    // Get all available agents
-    const availableAgents = AgentFactory.getAvailableAgents();
-
-    // Get agent status information
-    const agentStatuses = await Promise.all(
-      availableAgents.map(async (agentType) => {
-        try {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const agent = await AgentFactory.getAgent(agentType as any);
-          return {
-            type: agentType,
-            ...agent.getStatus(),
-            capabilities: agent.getCapabilities(),
-          };
-        } catch (error) {
-          console.error(`Failed to get status for agent ${agentType}:`, error);
-          return {
-            type: agentType,
-            agentId: agentType,
-            role: agentType,
-            isInitialized: false,
-            toolCount: 0,
-            activeConversations: 0,
-            capabilities: [],
-            error: error instanceof Error ? error.message : "Unknown error",
-          };
-        }
-      })
-    );
+    // Get all available toolkits
+    const availableToolkits = Object.keys(allToolkits);
 
     // Get MCP server status
     const mcpStatus = mcpClientPool.getServerStatus();
 
-    // Get performance metrics
-    const performanceMetrics = agentOrchestrator.getPerformanceMetrics();
-
     return NextResponse.json({
       success: true,
       data: {
-        agents: agentStatuses,
+        toolkits: availableToolkits.map((name) => ({
+          name,
+          status: "available",
+        })),
         mcpServers: mcpStatus,
-        performanceMetrics,
         systemHealth: {
-          totalAgents: availableAgents.length,
-          initializedAgents: agentStatuses.filter((a) => a.isInitialized)
-            .length,
+          totalToolkits: availableToolkits.length,
           healthyMcpServers: mcpStatus.filter((s) => s.status === "healthy")
             .length,
           totalMcpServers: mcpStatus.length,
@@ -158,7 +174,7 @@ export async function GET() {
       },
       metadata: {
         timestamp: new Date().toISOString(),
-        version: "4.0.0",
+        version: "5.0.0", // Reflects new agent architecture
       },
     });
   } catch (error) {

@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import db from "@/lib/db";
-import { z } from "zod";
+import { z } from 'zod/v3';
 
 const TaskTableFiltersSchema = z.object({
   page: z.number().min(1).default(1),

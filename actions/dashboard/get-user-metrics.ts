@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth"
 import db from "@/lib/db"
-import { z } from "zod"
+import { z } from 'zod/v3';
 
 const UserMetricsSchema = z.object({
   dateRange: z.enum(["7d", "30d", "90d", "all"]).optional().default("30d"),

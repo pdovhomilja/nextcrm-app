@@ -1,25 +1,51 @@
 import { createMcpHandler } from "@vercel/mcp-adapter";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { auth } from "@/auth";
 import db from "@/lib/db";
 import { Prisma } from "@/lib/generated/prisma";
 
+// Define schemas separately to help with type inference
+const createTaskSchema = {
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+  boardSectionId: z.string().min(1, "Board section ID is required"),
+  priority: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).default("MEDIUM"),
+  assigneeIds: z.array(z.string()).optional(),
+  dueDate: z.string().optional(), // ISO date string
+} as const;
+
+const searchTasksSchema = {
+  searchTerm: z.string().optional(),
+  boardId: z.string().optional(),
+  status: z
+    .array(z.enum(["NEW", "IN_PROGRESS", "COMPLETED", "CANCELLED", "ON_HOLD"]))
+    .optional(),
+  priority: z.array(z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"])).optional(),
+  assigneeIds: z.array(z.string()).optional(),
+  limit: z.number().min(1).max(50).default(10),
+} as const;
+
+const updateTaskSchema = {
+  taskId: z.string().min(1, "Task ID is required"),
+  title: z.string().optional(),
+  description: z.string().optional(),
+  priority: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).optional(),
+  status: z
+    .enum(["NEW", "IN_PROGRESS", "COMPLETED", "CANCELLED", "ON_HOLD"])
+    .optional(),
+  assignedToId: z.string().optional(),
+  dueDate: z.string().optional(), // ISO date string
+} as const;
+
 const handler = createMcpHandler(
-  async (server) => {
-    // Create task tool with proper schema
-    const createTaskParams = {
-      title: z.string().min(1, "Title is required"),
-      description: z.string().optional(),
-      boardSectionId: z.string().min(1, "Board section ID is required"),
-      priority: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).default("MEDIUM"),
-      assigneeIds: z.array(z.string()).optional(),
-      dueDate: z.string().optional(), // ISO date string
-    } as Record<string, import("zod").ZodTypeAny>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async (server: any) => {
     server.tool(
       "create_task",
       "Create a new task in the specified board section",
-      createTaskParams,
-      async (params) => {
+      createTaskSchema,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async (params: any) => {
         const session = await auth();
         if (!session?.user) {
           throw new Error("Unauthorized");
@@ -89,25 +115,12 @@ const handler = createMcpHandler(
     );
 
     // Search tasks tool with proper schema
-    const searchTasksParams = {
-      searchTerm: z.string().optional(),
-      boardId: z.string().optional(),
-      status: z
-        .array(
-          z.enum(["NEW", "IN_PROGRESS", "COMPLETED", "CANCELLED", "ON_HOLD"])
-        )
-        .optional(),
-      priority: z
-        .array(z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]))
-        .optional(),
-      assigneeIds: z.array(z.string()).optional(),
-      limit: z.number().min(1).max(50).default(10),
-    } as Record<string, import("zod").ZodTypeAny>;
     server.tool(
       "search_tasks",
       "Search and filter tasks with semantic and traditional search",
-      searchTasksParams,
-      async (params) => {
+      searchTasksSchema,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async (params: any) => {
         const session = await auth();
         if (!session?.user) {
           throw new Error("Unauthorized");
@@ -214,22 +227,12 @@ const handler = createMcpHandler(
     );
 
     // Update task tool with proper schema
-    const updateTaskParams = {
-      taskId: z.string().min(1, "Task ID is required"),
-      title: z.string().optional(),
-      description: z.string().optional(),
-      priority: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).optional(),
-      status: z
-        .enum(["NEW", "IN_PROGRESS", "COMPLETED", "CANCELLED", "ON_HOLD"])
-        .optional(),
-      assignedToId: z.string().optional(),
-      dueDate: z.string().optional(), // ISO date string
-    } as Record<string, import("zod").ZodTypeAny>;
     server.tool(
       "update_task",
       "Update an existing task",
-      updateTaskParams,
-      async (params) => {
+      updateTaskSchema,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async (params: any) => {
         const session = await auth();
         if (!session?.user) {
           throw new Error("Unauthorized");

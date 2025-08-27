@@ -45,7 +45,7 @@ interface Suggestion {
     | "continuous_improvement";
   title: string;
   description: string;
-  reasoning: string;
+  reasoningText: string;
   confidence: number;
   impact: "low" | "medium" | "high";
   actionable: boolean;
@@ -167,7 +167,6 @@ export function SmartSuggestions({
           </div>
         </div>
       </CardHeader>
-
       <CardContent className="space-y-4">
         {suggestions.length === 0 && !isLoading && (
           <div className="text-center py-8 text-gray-500">
@@ -236,7 +235,7 @@ export function SmartSuggestions({
                     <summary className="cursor-pointer hover:text-gray-700">
                       Why this suggestion?
                     </summary>
-                    <p className="mt-1 ml-4">{suggestion.reasoning}</p>
+                    <p className="mt-1 ml-4">{suggestion.reasoningText}</p>
                   </details>
 
                   {suggestion.metadata?.estimatedTime && (

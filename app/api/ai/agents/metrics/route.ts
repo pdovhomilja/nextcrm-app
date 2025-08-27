@@ -18,39 +18,25 @@ export async function GET() {
     }
 
     const activeCompanyId = session.user.activeCompanyId;
-    
+
     if (!activeCompanyId) {
-      return NextResponse.json({ error: "No company context available" }, { status: 400 });
+      return NextResponse.json(
+        { error: "No company context available" },
+        { status: 400 }
+      );
     }
 
     // Get comprehensive metrics
-    const performanceMetrics = agentOrchestrator.getPerformanceMetrics();
+    // TODO: Implement performance metrics in the new agent architecture
+    const performanceMetrics = {};
     const mcpStatus = mcpClientPool.getServerStatus();
 
     // Calculate system-wide metrics
-    const totalQueries = Object.values(performanceMetrics).reduce(
-      (sum, metrics) => sum + metrics.totalQueries,
-      0
-    );
-
-    const avgSystemProcessingTime =
-      Object.values(performanceMetrics).reduce(
-        (sum, metrics) =>
-          sum + metrics.avgProcessingTime * metrics.totalQueries,
-        0
-      ) / Math.max(totalQueries, 1);
-
-    const avgSystemConfidence =
-      Object.values(performanceMetrics).reduce(
-        (sum, metrics) => sum + metrics.avgConfidence * metrics.totalQueries,
-        0
-      ) / Math.max(totalQueries, 1);
-
-    const systemSuccessRate =
-      Object.values(performanceMetrics).reduce(
-        (sum, metrics) => sum + metrics.successRate * metrics.totalQueries,
-        0
-      ) / Math.max(totalQueries, 1);
+    // Using placeholder values until performance metrics are implemented
+    const totalQueries = 0;
+    const avgSystemProcessingTime = 0;
+    const avgSystemConfidence = 0;
+    const systemSuccessRate = 1;
 
     // Get health summary
     const healthySystems = mcpStatus.filter(
@@ -83,30 +69,9 @@ export async function GET() {
             ) / 100,
         })),
         insights: {
-          mostUsedAgent: Object.entries(performanceMetrics).reduce(
-            (best, [agent, metrics]) =>
-              metrics.totalQueries >
-              (performanceMetrics[best]?.totalQueries || 0)
-                ? agent
-                : best,
-            "none"
-          ),
-          fastestAgent: Object.entries(performanceMetrics).reduce(
-            (best, [agent, metrics]) =>
-              metrics.avgProcessingTime <
-              (performanceMetrics[best]?.avgProcessingTime || Infinity)
-                ? agent
-                : best,
-            "none"
-          ),
-          mostConfidentAgent: Object.entries(performanceMetrics).reduce(
-            (best, [agent, metrics]) =>
-              metrics.avgConfidence >
-              (performanceMetrics[best]?.avgConfidence || 0)
-                ? agent
-                : best,
-            "none"
-          ),
+          mostUsedAgent: "none",
+          fastestAgent: "none",
+          mostConfidentAgent: "none",
           systemRecommendations: generateSystemRecommendations(
             performanceMetrics,
             mcpStatus,
@@ -155,7 +120,8 @@ export async function POST() {
     // }
 
     // Reset metrics
-    agentOrchestrator.resetPerformanceMetrics();
+    // TODO: Implement metrics reset in the new agent architecture
+    console.log("Metrics reset requested - not implemented yet");
 
     return NextResponse.json({
       success: true,
@@ -176,14 +142,20 @@ export async function POST() {
   }
 }
 
+interface McpServerStatus {
+  name: string;
+  status: string;
+  description: string;
+  toolCount: number;
+  lastHealthCheck: Date;
+}
+
 /**
  * Generate system recommendations based on metrics
  */
 function generateSystemRecommendations(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  performanceMetrics: any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  mcpStatus: any[],
+  performanceMetrics: Record<string, unknown>,
+  mcpStatus: McpServerStatus[],
   systemHealth: number
 ): string[] {
   const recommendations: string[] = [];
@@ -203,46 +175,19 @@ function generateSystemRecommendations(
     );
   }
 
-  // Check agent performance
-  Object.entries(performanceMetrics).forEach(([agent, metrics]) => {
-    const typedMetrics = metrics as {
-      successRate: number;
-      avgProcessingTime: number;
-      avgConfidence: number;
-    };
-    if (typedMetrics.successRate < 0.9) {
-      recommendations.push(
-        `${agent} agent success rate below 90% - investigate error patterns`
-      );
-    }
+  // Check agent performance (TODO: implement when metrics are available)
+  // Object.entries(performanceMetrics).forEach(([agent, metrics]) => {
+  //   Performance analysis will be implemented with the new metrics system
+  // });
 
-    if (typedMetrics.avgProcessingTime > 10000) {
-      recommendations.push(
-        `${agent} agent processing time above 10s - optimize performance`
-      );
-    }
+  // Check for low usage (TODO: implement when metrics are available)
+  // const totalQueries = Object.values(performanceMetrics).reduce(...);
+  // For now, assume normal usage
 
-    if (typedMetrics.avgConfidence < 0.7) {
-      recommendations.push(
-        `${agent} agent confidence below 70% - review decision logic`
-      );
-    }
-  });
-
-  // Check for low usage
-  const totalQueries = Object.values(performanceMetrics).reduce(
-    (sum: number, metrics: unknown) => {
-      const typedMetrics = metrics as { totalQueries: number };
-      return sum + typedMetrics.totalQueries;
-    },
-    0
+  // Add generic recommendation about metrics
+  recommendations.push(
+    "Performance metrics system is being upgraded - detailed insights coming soon"
   );
-
-  if (totalQueries < 10) {
-    recommendations.push(
-      "Low agent usage detected - consider promoting AI features to users"
-    );
-  }
 
   return recommendations.length > 0
     ? recommendations

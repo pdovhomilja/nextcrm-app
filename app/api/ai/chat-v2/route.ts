@@ -7,7 +7,7 @@ import {
   UIMessage,
   tool,
 } from "ai";
-import { z } from "zod";
+import { z } from 'zod/v3';
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import { withCompanyAccessValidation } from "@/lib/security/company-access-validator";

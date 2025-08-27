@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { documentProcessor } from "@/lib/ai/document-processor";
 import { withAISecurity } from "@/lib/security/ai-security";
-import { z } from "zod";
+import { z } from 'zod/v3';
 
 const uploadSchema = z.object({
   filename: z.string(),

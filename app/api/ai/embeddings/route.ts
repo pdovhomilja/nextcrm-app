@@ -4,7 +4,7 @@ import { embeddingStorageService } from "@/lib/ai/embedding-storage";
 import { dataExtractionService } from "@/lib/ai/data-extraction";
 import { EmbeddingMonitor, PerformanceMonitor } from "@/lib/ai/monitoring";
 import { validateAIConfig } from "@/lib/ai/config";
-import { z } from "zod";
+import { z } from 'zod/v3';
 
 // Request validation schemas
 const ProcessCompanySchema = z.object({

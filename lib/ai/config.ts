@@ -9,6 +9,9 @@ export const aiConfig = {
   // Chat model for analysis - using gpt-4o for structured output support
   chatModel: openai(process.env.AI_MODEL || "gpt-5"),
 
+  // More powerful model for complex reasoning and multi-step tasks
+  powerfulChatModel: openai(process.env.AI_POWERFUL_MODEL || "gpt-4o"),
+
   // Structured output model - always use gpt-4o for generateObject calls
   structuredOutputModel: openai(process.env.AI_STRUCTURED_MODEL || "gpt-5"),
 

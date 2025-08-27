@@ -1,7 +1,7 @@
 import db from "@/lib/db";
 import { generateObject } from "ai";
 import { aiConfig } from "./config";
-import { z } from "zod";
+import { z } from 'zod/v3';
 
 export interface ConversationContext {
   userId: string;

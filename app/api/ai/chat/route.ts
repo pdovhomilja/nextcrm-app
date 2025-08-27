@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { ragProcessor } from "@/lib/ai/rag-processor";
 import { validateAIConfig } from "@/lib/ai/config";
-import { streamText } from "ai";
+import { streamText, ModelMessage } from "ai";
 import { aiConfig } from "@/lib/ai/config";
 import { agentOrchestrator } from "@/lib/ai/agent-orchestrator";
-import { z } from "zod";
+import { z } from "zod/v3";
 
 // Request validation schema
 const ChatRequestSchema = z.object({
@@ -28,7 +28,7 @@ const ChatRequestSchema = z.object({
   options: z
     .object({
       temperature: z.number().min(0).max(2).optional(),
-      maxTokens: z.number().min(1).max(4000).optional(),
+      maxOutputTokens: z.number().min(1).max(4000).optional(),
       includeSources: z.boolean().optional(),
     })
     .optional(),
@@ -74,9 +74,12 @@ export async function POST(request: NextRequest) {
     const wantsStream = acceptHeader?.includes("text/stream");
 
     const activeCompanyId = session.user.activeCompanyId;
-    
+
     if (!activeCompanyId) {
-      return NextResponse.json({ error: "No company context available" }, { status: 400 });
+      return NextResponse.json(
+        { error: "No company context available" },
+        { status: 400 }
+      );
     }
 
     const context = {
@@ -105,12 +108,19 @@ export async function POST(request: NextRequest) {
     } else {
       // Return complete response with agent orchestration
       if (validatedRequest.agentType || validatedRequest.multiAgent) {
+        // Convert messages to ModelMessage format for history
+        const history: ModelMessage[] = validatedRequest.messages.map(
+          (msg) => ({
+            role: msg.role as "user" | "assistant" | "system",
+            content: msg.content,
+          })
+        );
+
         // Use AI agent orchestration
         const orchestrationRequest = {
           query: lastUserMessage.content,
           context,
-          preferredAgent: validatedRequest.agentType,
-          multiAgentMode: validatedRequest.multiAgent,
+          history,
         };
 
         const agentResponse =
@@ -118,9 +128,9 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
           success: true,
-          response: agentResponse.primaryResponse,
-          agentResponses: agentResponse.agentResponses,
-          coordinatedInsights: agentResponse.coordinatedInsights,
+          response: agentResponse.text,
+          toolCalls: agentResponse.toolCalls,
+          toolResults: agentResponse.toolResults,
           metadata: agentResponse.metadata,
         });
       } else if (validatedRequest.useRAG) {
@@ -191,7 +201,7 @@ async function streamRAGResponse(
     | "recommendation",
   options?: {
     temperature?: number;
-    maxTokens?: number;
+    maxOutputTokens?: number;
     includeSources?: boolean;
   }
 ) {
@@ -212,8 +222,7 @@ async function streamRAGResponse(
       const orchestrationRequest = {
         query,
         context,
-        preferredAgent: agentType,
-        multiAgentMode: multiAgent,
+        history: [], // No previous history available in streaming context
       };
 
       const agentResponse =
@@ -221,16 +230,11 @@ async function streamRAGResponse(
 
       systemPrompt = `You are an intelligent project management assistant powered by specialized AI agents.
 
-Agent Analysis: ${agentResponse.agentResponses
-        .map(
-          (r) => `${r.agentRole}: ${r.response} (confidence: ${r.confidence})`
-        )
-        .join("\n")}
+Agent Analysis: ${agentResponse.text}
 
 Based on the agent insights above, provide a comprehensive response to the user's query.`;
 
-      contextInfo =
-        agentResponse.coordinatedInsights || agentResponse.primaryResponse;
+      contextInfo = agentResponse.text;
     } else if (useRAG) {
       // Use RAG processing for context (simplified for streaming)
       systemPrompt = `You are TaskHQ AI, an intelligent project management assistant with access to relevant project context.

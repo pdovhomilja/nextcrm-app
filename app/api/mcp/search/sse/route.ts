@@ -7,7 +7,7 @@ import { ragProcessor } from "@/lib/ai/rag-processor";
 import { embeddingStorageService } from "@/lib/ai/embedding-storage";
 import { embeddingService } from "@/lib/ai/embedding-service";
 import db from "@/lib/db";
-import { z } from "zod";
+import { z } from 'zod/v3';
 
 // MCP SSE Protocol Headers
 const SSE_HEADERS = {
@@ -57,7 +57,7 @@ const ContextualSearchSchema = z.object({
   taskId: z.string().optional(),
   contextType: z.enum(['general', 'task_specific', 'board_analysis', 'recommendation']).optional(),
   useRAG: z.boolean().optional().default(true),
-  maxTokens: z.number().min(100).max(16000).optional().default(8000),
+  maxOutputTokens: z.number().min(100).max(16000).optional().default(8000),
 });
 
 export async function GET(request: NextRequest) {
@@ -584,7 +584,7 @@ export async function POST(request: NextRequest) {
           break;
         }
 
-        const { query, boardId, taskId, contextType, useRAG, maxTokens } = validation.data;
+        const { query, boardId, taskId, contextType, useRAG, maxOutputTokens } = validation.data;
 
         try {
           if (useRAG) {
@@ -597,7 +597,7 @@ export async function POST(request: NextRequest) {
               contextType,
               options: {
                 includeContext: true,
-                maxTokens,
+                maxOutputTokens,
                 includeSources: true
               }
             };

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { validateCompanyAccess } from "@/lib/security/company-access-validator";
-import { z } from "zod";
+import { z } from 'zod/v3';
 
 // Request validation schema
 const ValidateAccessSchema = z.object({

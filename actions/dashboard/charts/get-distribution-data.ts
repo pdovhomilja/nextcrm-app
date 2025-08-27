@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import db from "@/lib/db";
-import { z } from "zod";
+import { z } from 'zod/v3';
 import {
   taskPriorityColors,
   taskStatusColors,

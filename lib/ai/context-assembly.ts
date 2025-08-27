@@ -11,7 +11,7 @@ export interface RAGContext {
     | "task_specific"
     | "board_analysis"
     | "recommendation";
-  maxTokens?: number;
+  maxOutputTokens?: number;
 }
 
 export interface AssembledContext {
@@ -33,7 +33,7 @@ export interface PromptTemplate {
   systemPrompt: string;
   contextTemplate: string;
   userQueryTemplate: string;
-  maxTokens: number;
+  maxOutputTokens: number;
   requiredContext: string[];
   optionalContext: string[];
 }
@@ -64,7 +64,7 @@ Always base your responses on the provided context and be specific about the dat
 - Status distribution: {statusBreakdown}
 - Average relevance score: {avgRelevance}`,
       userQueryTemplate: `Based on the above context, please help me with: {query}`,
-      maxTokens: 8000,
+      maxOutputTokens: 8000,
       requiredContext: ["tasks"],
       optionalContext: ["boards", "users", "history"],
     },
@@ -92,7 +92,7 @@ Be specific and actionable in your recommendations.`,
 - Context relevance: {avgRelevance}
 - Board context: {boardInfo}`,
       userQueryTemplate: `Regarding the task context above: {query}`,
-      maxTokens: 6000,
+      maxOutputTokens: 6000,
       requiredContext: ["task", "relatedTasks"],
       optionalContext: ["board", "assignee"],
     },
@@ -121,7 +121,7 @@ Provide data-driven insights with specific metrics when available.`,
 - Status distribution: {statusBreakdown}
 - Average task age: {avgTaskAge} days`,
       userQueryTemplate: `Based on the project analysis above: {query}`,
-      maxTokens: 10000,
+      maxOutputTokens: 10000,
       requiredContext: ["board", "tasks"],
       optionalContext: ["team", "metrics", "history"],
     },
@@ -147,7 +147,7 @@ Always provide specific, actionable recommendations with clear reasoning.`,
 - Data points analyzed: {dataPointCount}
 - Confidence level: {confidenceLevel}`,
       userQueryTemplate: `Please provide recommendations for: {query}`,
-      maxTokens: 8000,
+      maxOutputTokens: 8000,
       requiredContext: ["context"],
       optionalContext: ["metrics", "trends", "comparisons"],
     },
@@ -173,7 +173,7 @@ Provide root cause analysis and actionable solutions.`,
 - Problem scope: {problemScope}
 - Affected areas: {affectedAreas}`,
       userQueryTemplate: `Please help troubleshoot this issue: {query}`,
-      maxTokens: 7000,
+      maxOutputTokens: 7000,
       requiredContext: ["problem_context"],
       optionalContext: ["related_tasks", "metrics", "history"],
     },
@@ -338,7 +338,7 @@ Provide root cause analysis and actionable solutions.`,
       template.systemPrompt +
         template.userQueryTemplate.replace("{query}", query)
     );
-    const availableTokens = template.maxTokens - basePromptTokens - 500; // Buffer for response
+    const availableTokens = template.maxOutputTokens - basePromptTokens - 500; // Buffer for response
 
     let totalTokens = 0;
     const trimmedDocs: VectorSearchResult[] = [];

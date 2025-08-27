@@ -2,7 +2,7 @@ import { createTask } from "@/actions/tasks/create-task";
 import { getBoards } from "@/actions/tasks/get-boards";
 import { getBoardSections } from "@/actions/tasks/get-board-sections";
 import db from "@/lib/db";
-import { z } from "zod";
+import { z } from 'zod/v3';
 import { createMCPHandler, MCPMethodRouter } from "@/lib/ai/mcp-middleware";
 import { MCPAuthContext } from "@/lib/ai/mcp-auth";
 

@@ -19,7 +19,7 @@ import { FormControl } from "@/components/ui/form";
 import { FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { z } from 'zod/v3';
 
 import { useRouter } from "next/navigation";
 import { createBoard } from "@/actions/tasks/create-board";

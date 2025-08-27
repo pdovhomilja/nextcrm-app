@@ -5,7 +5,7 @@ import {
   RAGContext,
   AssembledContext,
 } from "./context-assembly";
-import { z } from "zod";
+import { z } from 'zod/v3';
 
 export interface RAGQuery {
   query: string;
@@ -20,7 +20,7 @@ export interface RAGQuery {
     | "recommendation";
   options?: {
     includeContext?: boolean;
-    maxTokens?: number;
+    maxOutputTokens?: number;
     temperature?: number;
     includeSources?: boolean;
   };
@@ -39,7 +39,7 @@ export interface RAGResponse {
   suggestedActions?: Array<{
     type: "task" | "assignment" | "priority" | "schedule";
     description: string;
-    reasoning: string;
+    reasoningText: string;
   }>;
   queryClassification: string;
   processingTime: number;
@@ -52,7 +52,7 @@ export class RAGProcessor {
   private async classifyQuery(query: string): Promise<{
     type: "general" | "task_specific" | "board_analysis" | "recommendation";
     confidence: number;
-    reasoning: string;
+    reasoningText: string;
   }> {
     const classificationPrompt = `Classify this project management query into one of these categories:
 - general: General questions about tasks, projects, or project management
@@ -78,7 +78,7 @@ Respond with the category name and confidence (0-1).`;
             "recommendation",
           ]),
           confidence: z.number().min(0).max(1),
-          reasoning: z.string(),
+          reasoningText: z.string(),
         }),
         temperature: 0.1, // Low temperature for consistent classification
       });
@@ -90,7 +90,7 @@ Respond with the category name and confidence (0-1).`;
       return {
         type: "general",
         confidence: 0.5,
-        reasoning: "Fallback classification due to processing error",
+        reasoningText: "Fallback classification due to processing error",
       };
     }
   }
@@ -116,7 +116,7 @@ Respond with the category name and confidence (0-1).`;
         boardId: ragQuery.boardId,
         taskId: ragQuery.taskId,
         contextType,
-        maxTokens: ragQuery.options?.maxTokens || 8000,
+        maxOutputTokens: ragQuery.options?.maxOutputTokens || 8000,
       };
 
       const assembledContext =
@@ -202,7 +202,7 @@ Respond with the category name and confidence (0-1).`;
     Array<{
       type: "task" | "assignment" | "priority" | "schedule";
       description: string;
-      reasoning: string;
+      reasoningText: string;
     }>
   > {
     if (contextDocs.length === 0) return [];
@@ -224,7 +224,7 @@ Generate actionable suggestions that would help address this query.`,
               z.object({
                 type: z.enum(["task", "assignment", "priority", "schedule"]),
                 description: z.string(),
-                reasoning: z.string(),
+                reasoningText: z.string(),
               })
             )
             .max(3),
@@ -338,7 +338,7 @@ Generate actionable suggestions that would help address this query.`,
         boardId: ragQuery.boardId,
         taskId: ragQuery.taskId,
         contextType,
-        maxTokens: ragQuery.options?.maxTokens || 8000,
+        maxOutputTokens: ragQuery.options?.maxOutputTokens || 8000,
       };
 
       const assembledContext =

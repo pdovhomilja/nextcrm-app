@@ -1,7 +1,7 @@
 import { generateObject } from "ai";
 import { aiConfig } from "./config";
 import db from "@/lib/db";
-import { z } from "zod";
+import { z } from 'zod/v3';
 // Dynamic import handled in method
 import * as mammoth from "mammoth";
 import * as XLSX from "xlsx";

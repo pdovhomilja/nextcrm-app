@@ -1,11 +1,12 @@
 import { createMcpHandler } from "@vercel/mcp-adapter";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { auth } from "@/auth";
 import { vectorSearchService } from "@/lib/ai/vector-search";
 import db from "@/lib/db";
 
 const handler = createMcpHandler(
-  async (server) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async (server: any) => {
     // Enhanced semantic search tool
     server.tool(
       "semantic_search_tasks",
@@ -41,7 +42,8 @@ const handler = createMcpHandler(
           })
           .optional(),
       },
-      async (params) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async (params: any) => {
         const session = await auth();
         if (!session?.user) {
           throw new Error("Unauthorized");
@@ -123,7 +125,8 @@ const handler = createMcpHandler(
           })
           .optional(),
       },
-      async (params) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async (params: any) => {
         const session = await auth();
         if (!session?.user) {
           throw new Error("Unauthorized");
@@ -194,7 +197,8 @@ const handler = createMcpHandler(
       {
         boardId: z.string().optional(),
       },
-      async (params) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async (params: any) => {
         const session = await auth();
         if (!session?.user) {
           throw new Error("Unauthorized");
@@ -300,7 +304,8 @@ const handler = createMcpHandler(
         query: z.string().optional(),
         limit: z.number().min(1).max(50).default(10),
       },
-      async (params) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async (params: any) => {
         const session = await auth();
         if (!session?.user) {
           throw new Error("Unauthorized");
@@ -380,7 +385,8 @@ const handler = createMcpHandler(
         limit: z.number().min(1).max(20).default(5),
         threshold: z.number().min(0).max(1).default(0.5),
       },
-      async (params) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async (params: any) => {
         const session = await auth();
         if (!session?.user) {
           throw new Error("Unauthorized");

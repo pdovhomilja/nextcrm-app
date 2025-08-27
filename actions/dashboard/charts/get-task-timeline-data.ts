@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import db from "@/lib/db";
-import { z } from "zod";
+import { z } from 'zod/v3';
 
 const TaskTimelineSchema = z.object({
   dateRange: z.enum(["7d", "30d", "90d", "1y"]).optional().default("30d"),

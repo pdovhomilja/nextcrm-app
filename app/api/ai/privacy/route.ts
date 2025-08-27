@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { aiSecurity } from "@/lib/security/ai-security";
-import { z } from "zod";
+import { z } from 'zod/v3';
 
 const privacyActionSchema = z.object({
   action: z.enum(["anonymize", "delete", "export"]),
