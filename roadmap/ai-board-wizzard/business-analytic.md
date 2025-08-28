@@ -1,17 +1,21 @@
 # AI Board Wizard: Business & Technical Analysis
 
-## 1. Executive Summary
+## 1\. Executive Summary
 
-This document outlines the business and technical analysis for a new feature: the **AI Board Wizard**. This feature is designed to empower users by automatically generating comprehensive project boards from a simple, high-level goal description. By leveraging a sophisticated AI agent, the wizard will create a structured board with relevant sections and actionable tasks, tailored to the user's specified role.
+This document outlines the business and technical analysis for a new feature: the **AI Board Wizard**. This feature is designed to empower users by automatically generating comprehensive project boards from a simple, high-level goal description. By leveraging our new, sophisticated, toolkit-based AI agent, the wizard will create a structured board with relevant sections and actionable tasks.
+
+The wizard's core innovation is a **conversational goal refinement process**. It engages the user in a brief, interactive dialog to transform their initial idea into a detailed, actionable project brief. Once the user approves this refined brief, the system takes over and handles the full board generation as a **robust, persistent, and asynchronous background job**. This ensures a high-quality result and a seamless user experience, with the ability to recover from failures.
 
 The primary benefits of this feature include:
 
-- **Enhanced Productivity**: Drastically reduces the time and effort required to set up new projects.
-- **Improved User Onboarding**: Provides new users with a powerful, guided starting point for their work.
-- **Showcasing AI Capabilities**: Differentiates our platform by integrating cutting-edge AI to solve practical user problems.
-- **Increased Engagement**: Encourages deeper engagement by providing users with a clear, actionable plan to achieve their goals.
+- **High-Quality Output**: The conversational refinement step ensures the AI has sufficient context, dramatically improving the relevance and quality of the generated board.
+- **Enhanced User Experience & Reliability**: Blends interactive collaboration with a resilient, non-blocking background processing system.
+- **Showcasing AI Collaboration**: Differentiates our platform by framing the AI as an intelligent partner that helps users think through their goals.
+- **Increased Engagement**: Encourages deeper engagement by giving users ownership over the AI's final output.
 
-## 2. Current State Analysis
+## 2\. Current State Analysis
+
+(No changes in this section)
 
 The main boards page, located at `app/(app)/[cid]/tasks/page.tsx`, currently displays a grid of existing project boards. Users can manually create a new board by clicking the "Create Board" button, which opens a simple form to enter a name and description.
 
@@ -20,85 +24,112 @@ While functional, this manual process has limitations:
 - It can be time-consuming and daunting for users setting up large or complex projects.
 - It requires users to already have a clear idea of how to structure their project, which can be a barrier for those looking for guidance.
 
-The project's existing codebase contains a robust AI agent infrastructure located in `lib/ai/`. This includes an `agent-orchestrator.ts` and `specialized-agents.ts`, which provide a solid foundation for building the new AI-powered wizard. This existing architecture will be leveraged to accelerate development.
+The project's AI agent infrastructure, located in `lib/ai/`, has recently been modernized to align with state-of-the-art agentic design patterns. This new foundation provides superior flexibility, composability, and performance, allowing us to implement the AI Board Wizard as a discrete, powerful new tool within this ecosystem.
 
-## 3. Proposed Feature: AI Board Wizard
+## 3\. Proposed Feature: AI Board Wizard
 
 ### 3.1. User Flow
 
+(No changes in this section)
+
 1.  **Initiation**: The user clicks a new "AI Board Wizard" button located in the header of the tasks page.
-2.  **Goal Definition**: A popover dialog appears, presenting the first step of the wizard. The user describes their goal in natural language (e.g., "Develop a go-to-market strategy for our new SaaS product").
-3.  **Contextualization**: In the second step, the user selects a role from a dropdown list (e.g., "Product Manager," "Marketing Lead," "Lead Engineer"). This context will allow the AI to generate a more relevant and tailored plan.
-4.  **Generation**: Upon submission, a loading indicator appears while the AI agent processes the request.
-5.  **Completion**: Once the board is generated, the user receives a success notification. The new board, populated with sections and tasks, appears in their list of boards. For an enhanced experience, the user can be automatically redirected to the newly created board.
+2.  **Conversational Goal Refinement (Interactive Loop)**:
+    a. A dialog appears with a chat-like interface. The user is prompted to describe their goal and select a role.
+    b. After the user submits their initial goal (e.g., "Launch our new SaaS product"), the AI assistant analyzes it and responds with a targeted, clarifying question to gather more details (e.g., "Understood. To help me create the best plan, could you tell me what the target audience for this SaaS product is?").
+    c. The user replies to the AI's question.
+    d. This interactive, conversational loop continues for a few turns until the AI determines it has a clear and detailed understanding of the user's objective.
+3.  **Final Brief Acceptance**:
+    a. The AI ends the conversation by presenting a concise, summarized "Project Brief" based on the dialogue.
+    b. The user reviews this final, AI-generated brief. They are then prompted to approve it by clicking an "Accept & Generate Board" button.
+4.  **Asynchronous Generation Trigger**: Upon user acceptance, the dialog closes, and an initial toast notification appears: "Thank you! Your new board is being generated. We'll notify you when it's ready."
+5.  **Background Processing**: An asynchronous background job is initiated, using the detailed, user-approved Project Brief to generate and persist the full board structure.
+6.  **Completion & Notification**: Once the background job is complete, a final toast notification appears: "Your board '[Board Name]' has been created successfully!" This notification will include a link that takes the user directly to the new board.
 
 ### 3.2. UI/UX Components
 
-The user interface will be built using the existing `shadcn/ui` component library to ensure visual consistency.
+(No changes in this section)
 
-- **AI Wizard Button**: A new button, placed next to the existing "Create Board" button in the `SiteHeader`.
-- **Wizard Dialog**: A multi-step form housed within a `Dialog` component. It will gracefully handle the steps and user input.
-- **Form Components**: The form will utilize `Input`, `Textarea`, and `Select` components for goal and role selection. State management will be handled by `react-hook-form`.
-- **Feedback**: A `Skeleton` loader or similar will indicate processing, and `Sonner` toasts will be used for success and error notifications.
+- **AI Wizard Button**: A new button in the `SiteHeader`.
+- **Wizard Dialog**: A `Dialog` component containing a conversational UI.
+- **Chat Interface**: Components for displaying the back-and-forth messages between the user and the AI, including a `Chat Input` for user replies.
+- **Final Acceptance View**: A dedicated UI element within the dialog to display the summarized Project Brief and the final "Accept & Generate Board" button.
+- **Feedback**: `Sonner` toasts for providing asynchronous feedback on the background generation process.
 
 ### 3.3. Backend & AI Integration
 
-The core of this feature is the new AI agent.
+The architecture will be split into two distinct phases: a synchronous, interactive phase for refinement, and an asynchronous, background phase for generation.
 
-- A new server action will be created to handle the form submission from the wizard.
-- This action will invoke the existing `AgentOrchestrator` with a new specialized agent, `boardWizardAgent`.
+1.  **Phase 1: Interactive Goal Refinement (Synchronous)**
+    - A new server action, `refine-goal-conversation`, will manage the chat turns. It will receive the current conversation history and return the AI's next response.
+    - This will leverage the `BaseAIAgent` with a system prompt that directs it to act as an expert project manager whose goal is to ask clarifying questions.
 
-**`boardWizardAgent` Details:**
+2.  **Phase 2: Asynchronous Board Generation**
+    - Once the user accepts the final brief, the client will call a separate server action, `create-board-from-ai`.
+    - **Persistence of Request**: This action will first create a new `AIGeneratedBoardRequest` record in the database, saving the user-approved `refinedPrompt` and setting the job `status` to `PENDING`.
+    - **Job Trigger**: It will then trigger the asynchronous background job, passing the `id` of the newly created `AIGeneratedBoardRequest` record.
+    - **Job Execution**: The background job will fetch the record, update its status to `PROCESSING`, run the `generateProjectBoard` tool, and finally update the status to `COMPLETED` or `FAILED` based on the outcome.
 
-- **Input**: `{ goal: string, role: string, userId: string, companyId: string }`
-- **Process**:
-  1.  **Prompt Engineering**: The agent will construct a detailed prompt for a large language model (LLM) like Gemini 1.5 Pro or Claude 3 Opus. The prompt will instruct the model to act as an expert project planner for the given `role` and generate a comprehensive project plan based on the `goal`.
-  2.  **Structured Output**: The prompt will enforce a strict JSON output schema to ensure reliable parsing. Example schema:
-      ```json
-      {
-        "boardName": "...",
-        "boardDescription": "...",
-        "sections": [
-          {
-            "name": "Phase 1: Research",
-            "tasks": [
-              { "name": "Competitor Analysis", "description": "..." },
-              { "name": "Market Segmentation", "description": "..." }
-            ]
-          }
-        ]
-      }
-      ```
-  3.  **Data Persistence**: After receiving and validating the JSON response from the LLM, the agent will use existing server actions (`createBoard`, `createBoardSection`, `createTask`) to create the corresponding records in the database.
-- **Output**: The agent will return the `id` of the newly created board.
-
-## 4. Technical Implementation Plan
+## 4\. Technical Implementation Plan
 
 - **Frontend**:
-  - `app/(app)/[cid]/tasks/_components/ai-board-wizard-button.tsx`: A new client component for the button that triggers the dialog.
-  - `app/(app)/[cid]/tasks/_components/ai-board-wizard-dialog.tsx`: The client component containing the multi-step form and logic for calling the server action.
+  - `app/(app)/[cid]/tasks/_components/ai-board-wizard-dialog.tsx`: A stateful client component that manages the conversational UI and triggers the final `create-board-from-ai` action.
 - **Backend**:
-  - `actions/tasks/create-board-from-ai.ts`: A new server action to orchestrate the process, from input validation to invoking the AI agent.
-- **AI**:
-  - `lib/ai/specialized-agents.ts`: The new `boardWizardAgent` will be defined here, containing the core logic for prompt generation, LLM interaction, and data persistence.
+  - `actions/tasks/refine-goal-conversation.ts` **(New File)**: A server action to handle the synchronous, back-and-forth chat logic.
+  - `actions/tasks/create-board-from-ai.ts`: This server action is now responsible for creating the `AIGeneratedBoardRequest` record in the database and then initiating the asynchronous background job.
+- **Database**:
+  - `prisma/schema.prisma`: The schema will be updated with the new `AIGeneratedBoardRequest` model and `AIGenerationStatus` enum to persist and track generation jobs.
 
-## 5. Data Model Impact
+## 5\. Data Model Impact
 
-No changes to the existing `Prisma` schema are required. The feature will utilize the existing `Board`, `BoardSection`, and `Task` tables.
+To support robust, retry-able background generation, a new model will be added to the `prisma/schema.prisma` file. This model will store the user-approved prompt and track the status of the generation job.
 
-## 6. Risks & Mitigations
+```prisma
+// in prisma/schema.prisma
 
-- **Risk**: AI-generated content may be generic or low-quality.
-  - **Mitigation**: Employ sophisticated prompt engineering techniques. Use a powerful, state-of-the-art LLM. Consider adding a "review" step where users can edit the generated plan before it's saved.
-- **Risk**: The AI generation process could be slow, leading to a poor user experience.
-  - **Mitigation**: Implement the generation as an asynchronous background job. Notify the user via toast or email when the board is ready. Use optimistic UI updates where appropriate.
-- **Risk**: High cost associated with frequent LLM API calls.
-  - **Mitigation**: Implement strict usage monitoring. Introduce rate limiting or tie the feature to specific premium subscription tiers to manage costs.
+model AIGeneratedBoardRequest {
+  id               String   @id @default(cuid())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-## 7. Success Metrics
+  status           AIGenerationStatus @default(PENDING)
+  refinedPrompt    String   @db.Text
+  role             String
 
-The success of the AI Board Wizard will be measured by:
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyId        String
+  company          Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-- **Feature Adoption Rate**: The percentage of new boards created using the wizard versus the manual method.
+  generatedBoardId String?  @unique
+  generatedBoard   Board?   @relation(fields: [generatedBoardId], references: [id], onDelete: SetNull)
+
+  failureReason    String?
+}
+
+enum AIGenerationStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+```
+
+## 6\. Risks & Mitigations
+
+- **Risk**: The conversational refinement process could be tedious or frustrating for the user.
+  - **Mitigation**: 1. Carefully engineer the AI's system prompt to be concise and ask only high-impact questions. 2. Limit the maximum number of clarification turns. 3. Provide a clear way for the user to bypass further questions and proceed with the information they've already provided.
+- **Risk**: The asynchronous generation job could fail silently.
+  - **Mitigation**: The new `AIGeneratedBoardRequest` model is the core of the mitigation strategy. By persisting the request and its status, we achieve:
+    1.  **Visibility**: The system has a clear record of all pending, processing, and failed jobs.
+    2.  **Retry-ability**: A failed job can be easily re-queued and run again, either automatically or manually by an administrator, using the stored `refinedPrompt`.
+    3.  **Reliable User Notification**: If a job fails, its status is updated to `FAILED`, and a user notification can be reliably triggered, informing them of the issue.
+- **Risk**: Without a final review of the *full board structure*, the generated board may still contain unexpected elements.
+  - **Mitigation**: The primary mitigation is to ensure that the generated board is easily and quickly editable or deletable by the user after creation.
+
+## 7\. Success Metrics
+
+- **Feature Adoption Rate**: The percentage of new boards created using the wizard.
+- **Refinement Funnel**: Metrics on the conversational step, such as the average number of turns and the percentage of users who complete the refinement process.
+- **Job Reliability**: The success/failure rate of the background generation jobs, tracked via the `AIGeneratedBoardRequest` status.
+- **Feature Satisfaction**: User feedback specifically on the quality of the AI's questions and the final generated board.
 - **User Engagement**: The task completion rate on boards that were generated by the AI.
-- **User Satisfaction**: Qualitative feedback gathered through in-app surveys or a simple rating mechanism.
