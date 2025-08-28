@@ -1,14 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  Check,
-  ChevronsUpDown,
-  Plus,
-  Settings,
-  Building2,
-  Users,
-} from "lucide-react";
+import { Check, ChevronsUpDown, Plus, Settings, Building2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -63,7 +56,7 @@ export function CompanySwitcher() {
       } else {
         toast.error(result.error || "Failed to create company");
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to create company");
     } finally {
       setIsCreating(false);

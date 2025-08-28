@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Button } from "@/components/ui/button";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +23,7 @@ export function TaskRowActions({ taskId, status }: TaskRowActionsProps) {
 
   const handleMarkDone = async () => {
     if (status === "COMPLETED") return;
-    
+
     setIsLoading(true);
     startTransition(async () => {
       try {
@@ -39,7 +39,7 @@ export function TaskRowActions({ taskId, status }: TaskRowActionsProps) {
   if (status === "COMPLETED") {
     return (
       <div className="flex items-center text-sm text-muted-foreground">
-        <Check className="h-4 w-4 mr-1" />
+        <Check className="h-4 w-4 mr-1 text-green-500" />
         Done
       </div>
     );

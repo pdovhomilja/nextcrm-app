@@ -163,7 +163,7 @@ export function CompanySettingsContent({
         } else {
           toast.error(result.error || "Failed to invite user");
         }
-      } catch (error) {
+      } catch {
         toast.error("Failed to invite user");
       }
     });
@@ -179,7 +179,7 @@ export function CompanySettingsContent({
         } else {
           toast.error(result.error || "Failed to remove user");
         }
-      } catch (error) {
+      } catch {
         toast.error("Failed to remove user");
       }
     });
@@ -198,7 +198,7 @@ export function CompanySettingsContent({
         } else {
           toast.error(result.error || "Failed to update user role");
         }
-      } catch (error) {
+      } catch {
         toast.error("Failed to update user role");
       }
     });

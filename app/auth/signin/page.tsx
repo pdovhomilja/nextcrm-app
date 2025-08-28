@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { registerUser, authenticateUser } from "@/actions/auth-actions";
-import { signIn } from "@/auth";
+
 import Link from "next/link";
 
 function SignInForm() {
@@ -70,7 +70,7 @@ function SignInForm() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">
-            Welcome to DataHQ
+            Welcome to TaskHQ
           </CardTitle>
           <CardDescription>
             {isSignUp

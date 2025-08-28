@@ -19,11 +19,11 @@ import { FormControl } from "@/components/ui/form";
 import { FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from 'zod/v3';
+import { z } from "zod/v3";
 
 import { useRouter } from "next/navigation";
 import { createBoard } from "@/actions/tasks/create-board";
-import { User } from "@/lib/generated/prisma";
+
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useSession } from "next-auth/react";
@@ -34,7 +34,7 @@ const formSchema = z.object({
   withTemplate: z.boolean(),
 });
 
-const CreateBoardButton = ({ user }: { user: User }) => {
+const CreateBoardButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const { data: session } = useSession();

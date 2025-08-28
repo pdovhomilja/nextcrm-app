@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { agentOrchestrator } from "@/lib/ai/agent-orchestrator";
+
 import { mcpClientPool } from "@/lib/ai/mcp-client-pool";
 
 /**

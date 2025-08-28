@@ -43,19 +43,14 @@ import {
 } from "@/actions/dashboard/get-task-table-data";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { User } from "@/lib/generated/prisma";
+
 import { useSession } from "next-auth/react";
 interface TaskDataTableProps {
   boardId?: string;
   className?: string;
-  user: User;
 }
 
-export function TaskDataTable({
-  boardId,
-  className,
-  user,
-}: TaskDataTableProps) {
+export function TaskDataTable({ boardId, className }: TaskDataTableProps) {
   const { data: session } = useSession();
   const [data, setData] = useState<TaskTableData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -400,7 +395,9 @@ export function TaskDataTable({
                     <TableCell className="max-w-xs">
                       <div className="space-y-1">
                         <div className="font-medium truncate">
-                          <Link href={`/${session?.user?.activeCompanyId}/tasks-list/${task.id}`}>
+                          <Link
+                            href={`/${session?.user?.activeCompanyId}/tasks-list/${task.id}`}
+                          >
                             {task.title}
                           </Link>
                         </div>

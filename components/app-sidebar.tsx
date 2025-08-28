@@ -25,10 +25,7 @@ import {
 import { User } from "@/lib/generated/prisma";
 import { useParams } from "next/navigation";
 import { NavSecondary } from "./nav-secondary";
-import {
-  CompanySwitcher,
-  CompanySwitcherCompact,
-} from "@/components/company-switcher";
+import { CompanySwitcher } from "@/components/company-switcher";
 import { useActiveCompany } from "@/components/company-provider";
 import packageJson from "../package.json";
 

@@ -178,7 +178,7 @@ async function TaskDataTableContent({
 // Server component for table rendering
 function TaskTable({
   data,
-  user,
+
   session,
 }: {
   data: TaskTableData;

@@ -46,7 +46,7 @@ const TaskPage = async ({
       <SiteHeader title="Boards">
         <Search />
         <div className="flex items-center gap-2">
-          <CreateBoardButton user={user} />
+          <CreateBoardButton />
         </div>
       </SiteHeader>
       <div className="flex flex-1 flex-col border-black">
@@ -57,7 +57,9 @@ const TaskPage = async ({
                 {boards.map((board) => (
                   <Card key={board.id} className="p-4">
                     <CardHeader className="flex flex-row justify-between">
-                      <Link href={`/${session.user.activeCompanyId}/tasks/${board.id}`}>
+                      <Link
+                        href={`/${session.user.activeCompanyId}/tasks/${board.id}`}
+                      >
                         {" "}
                         <CardTitle>{board.name}</CardTitle>
                       </Link>

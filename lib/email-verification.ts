@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import { PrismaClient } from "@/lib/generated/prisma";
+
 import db from "./db";
 
 export async function generateEmailVerificationToken(
