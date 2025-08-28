@@ -30,6 +30,7 @@ import { TaskTableFilters, SortableHeader } from "./task-table-filters";
 import { taskTableSearchParams } from "@/app/(app)/[cid]/tasks-list/search-params";
 import { auth } from "@/auth";
 import type { Session } from "next-auth";
+import { TaskRowActions } from "./task-list-actions";
 
 interface TaskDataTableServerProps {
   boardId?: string;
@@ -142,7 +143,9 @@ async function TaskDataTableContent({
             Completed: {data.summary.statusCounts.COMPLETED}
           </Badge>
           {data.summary.overdueTasks > 0 && (
-            <Link href={`/${session?.user?.activeCompanyId}/tasks-list?dueDate=overdue`}>
+            <Link
+              href={`/${session?.user?.activeCompanyId}/tasks-list?dueDate=overdue`}
+            >
               <Badge variant="destructive">
                 Overdue: {data.summary.overdueTasks}
               </Badge>
@@ -173,7 +176,15 @@ async function TaskDataTableContent({
 }
 
 // Server component for table rendering
-function TaskTable({ data, user, session }: { data: TaskTableData; user: User; session: Session | null }) {
+function TaskTable({
+  data,
+  user,
+  session,
+}: {
+  data: TaskTableData;
+  user: User;
+  session: Session | null;
+}) {
   const getStatusBadgeVariant = (status: TaskTableRow["status"]) => {
     switch (status) {
       case "NEW":
@@ -227,6 +238,7 @@ function TaskTable({ data, user, session }: { data: TaskTableData; user: User; s
             <TableHead>Board</TableHead>
             <SortableHeader column="dueDate">Due Date</SortableHeader>
             <SortableHeader column="updatedAt">Updated</SortableHeader>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -239,7 +251,9 @@ function TaskTable({ data, user, session }: { data: TaskTableData; user: User; s
                 <TableCell className="max-w-xs">
                   <div className="space-y-1">
                     <div className="font-medium truncate">
-                      <Link href={`/${session?.user?.activeCompanyId}/tasks-list/${task.id}`}>
+                      <Link
+                        href={`/${session?.user?.activeCompanyId}/tasks-list/${task.id}`}
+                      >
                         {task.title}
                       </Link>
                     </div>
@@ -290,7 +304,9 @@ function TaskTable({ data, user, session }: { data: TaskTableData; user: User; s
                 <TableCell>
                   <div className="space-y-1">
                     <div className="text-sm font-medium truncate max-w-32">
-                      <Link href={`/${session?.user?.activeCompanyId}/tasks/${task.board.id}`}>
+                      <Link
+                        href={`/${session?.user?.activeCompanyId}/tasks/${task.board.id}`}
+                      >
                         {task.board.name}
                       </Link>
                     </div>
@@ -319,12 +335,15 @@ function TaskTable({ data, user, session }: { data: TaskTableData; user: User; s
                     {formatDate(task.updatedAt)}
                   </div>
                 </TableCell>
+                <TableCell>
+                  <TaskRowActions taskId={task.id} status={task.status} />
+                </TableCell>
               </TableRow>
             ))
           ) : (
             <TableRow>
               <TableCell
-                colSpan={7}
+                colSpan={8}
                 className="text-center py-8 text-muted-foreground"
               >
                 No tasks found matching your filters

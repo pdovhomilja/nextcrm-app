@@ -148,12 +148,12 @@ export class VectorSearchService {
         `
         WITH similarity_scores AS (
           SELECT 
-            te."taskId",
+            te.task_id,
             te.content,
             te.metadata,
             1 - (te.embedding <-> $1::vector) AS similarity
-          FROM "task_embeddings" te
-          JOIN "Task" t ON te."taskId" = t.id
+          FROM task_embeddings te
+          JOIN "Task" t ON te.task_id = t.id
           JOIN "BoardSection" bs ON t."boardSectionId" = bs.id
           JOIN "Board" b ON bs."boardId" = b.id
           JOIN "users" u ON t."assignedToId" = u.id
@@ -174,7 +174,7 @@ export class VectorSearchService {
           bs.name as section_name,
           u.name as assigned_to_name
         FROM similarity_scores s
-        JOIN "Task" t ON s."taskId" = t.id
+        JOIN "Task" t ON s.task_id = t.id
         JOIN "BoardSection" bs ON t."boardSectionId" = bs.id
         JOIN "Board" b ON bs."boardId" = b.id
         JOIN "users" u ON t."assignedToId" = u.id
@@ -188,12 +188,12 @@ export class VectorSearchService {
       // Transform results
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (searchResults as any[]).map((row) => ({
-        id: row.taskId,
+        id: row.task_id,
         content: row.content,
         similarity: parseFloat(row.similarity),
         metadata: row.metadata,
         task: {
-          id: row.taskId,
+          id: row.task_id,
           title: row.title,
           description: row.description,
           priority: row.priority,
@@ -468,21 +468,24 @@ export class VectorSearchService {
         ORDER BY be.embedding <=> $1::vector
         LIMIT $3
         `,
-        embeddingVector, 
-        companyId, 
+        embeddingVector,
+        companyId,
         limit
       );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (results as any[]).map(result => ({
+      return (results as any[]).map((result) => ({
         boardId: result.board_id,
         name: result.name,
-        description: result.description || '',
+        description: result.description || "",
         content: result.content,
         metadata: result.metadata as Record<string, unknown>,
         similarity: result.similarity || 0,
       }));
     } catch (error) {
-      console.error("Error finding similar boards with company filtering:", error);
+      console.error(
+        "Error finding similar boards with company filtering:",
+        error
+      );
       return [];
     }
   }
@@ -524,12 +527,12 @@ export class VectorSearchService {
         ORDER BY te.embedding <=> $1::vector
         LIMIT $3
         `,
-        embeddingVector, 
-        companyId, 
+        embeddingVector,
+        companyId,
         limit
       );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (results as any[]).map(result => ({
+      return (results as any[]).map((result) => ({
         taskId: result.task_id,
         title: result.title,
         description: result.description,
@@ -538,7 +541,10 @@ export class VectorSearchService {
         similarity: result.similarity || 0,
       }));
     } catch (error) {
-      console.error("Error finding similar tasks with company filtering:", error);
+      console.error(
+        "Error finding similar tasks with company filtering:",
+        error
+      );
       return [];
     }
   }

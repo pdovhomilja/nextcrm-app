@@ -1,9 +1,10 @@
 import { z } from "zod/v3";
 import { tool } from "ai";
-import { simpleMCPClientPool } from "../simple-mcp-client";
 import { aiConfig } from "../config";
 import { generateObject } from "ai";
 import { AgentContext } from "../agent-core";
+import db from "@/lib/db";
+import { vectorSearchService } from "../vector-search";
 
 const taskRecommendationsSchema = z.object({
   userId: z
@@ -24,32 +25,57 @@ export const getTaskToolkit = (context: AgentContext) => ({
       const finalCriteria = criteria ?? ["priority", "skill_match", "workload"];
       console.log(`Generating task recommendations for user: ${userId}`);
       try {
-        // Step 1: Gather data.
-        const tasksResult = await simpleMCPClientPool.callTool(
-          "tasks",
-          "search_tasks",
-          { assigneeIds: [userId], ...context },
-          context.userId
-        );
-        const { userId: contextUserId, ...restOfContext } = context;
-        const similarTasksResult = await simpleMCPClientPool.callTool(
-          "search",
-          "find_similar_tasks",
-          { userId, ...restOfContext },
-          context.userId
-        );
+        // Step 1: Gather data directly from database
+        const userTasks = await db.task.findMany({
+          where: {
+            assignedToId: userId,
+            assignedTo: {
+              memberships: {
+                some: {
+                  companyId: context.companyId,
+                },
+              },
+            },
+          },
+          include: {
+            assignedTo: { select: { name: true, email: true } },
+            createdBy: { select: { name: true, email: true } },
+            boardSection: {
+              select: {
+                name: true,
+                board: { select: { name: true, id: true } },
+              },
+            },
+          },
+          orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
+          take: 20,
+        });
 
-        if (tasksResult.error || similarTasksResult.error) {
-          throw new Error(
-            `Failed to gather user task data. Error: ${
-              tasksResult.error?.message || similarTasksResult.error?.message
-            }`
-          );
-        }
+        // Get similar tasks using vector search
+        const similarTasks = await vectorSearchService.searchTasks({
+          query: "task recommendations workload analysis",
+          companyId: context.companyId,
+          userId: userId,
+          limit: 10,
+          threshold: 0.5,
+        });
 
         const combinedData = {
-          tasks: tasksResult.result,
-          similarTasks: similarTasksResult.result,
+          tasks: userTasks.map((task) => ({
+            id: task.id,
+            title: task.title,
+            description: task.description,
+            status: task.status,
+            priority: task.priority,
+            dueDate: task.dueDate,
+            assignedTo: task.assignedTo.name,
+            createdBy: task.createdBy.name,
+            boardSection: task.boardSection.name,
+            boardName: task.boardSection.board.name,
+            createdAt: task.createdAt,
+            updatedAt: task.updatedAt,
+          })),
+          similarTasks: similarTasks,
         };
 
         // Step 2: Generate recommendations.
@@ -61,7 +87,12 @@ export const getTaskToolkit = (context: AgentContext) => ({
 User data: ${JSON.stringify(combinedData, null, 2)}
 Criteria: ${finalCriteria.join(", ")}
 
-Generate specific, actionable recommendations for task management.`,
+Generate specific, actionable recommendations for task management.
+
+Guidelines for workloadAnalysis:
+- currentCapacity: Decimal representing workload (0.0 = no work, 1.0 = full capacity, >1.0 = overloaded, max 3.0)
+- recommendedTasks: Integer number of additional tasks to assign (0 or positive)
+- balanceScore: Decimal from 0.0 to 1.0 representing work-life balance (1.0 = perfect balance)`,
           schema: z.object({
             recommendations: z
               .array(
@@ -82,8 +113,8 @@ Generate specific, actionable recommendations for task management.`,
               )
               .max(5),
             workloadAnalysis: z.object({
-              currentCapacity: z.number().min(0).max(1),
-              recommendedTasks: z.number(),
+              currentCapacity: z.number().min(0).max(3), // Allow values > 1 for overload situations
+              recommendedTasks: z.number().min(0),
               balanceScore: z.number().min(0).max(1),
             }),
           }),

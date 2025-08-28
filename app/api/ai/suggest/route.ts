@@ -40,7 +40,7 @@ const suggestionSchema = z.object({
           .optional(),
       })
     )
-    .max(5),
+    .max(25),
   summary: z.string(),
   contextAnalysis: z.object({
     boardHealth: z.number().min(0).max(100).optional(),
