@@ -111,11 +111,13 @@ export async function POST(request: NextRequest) {
     };
 
     // Process query with orchestrator
-    const result = await agentOrchestrator.orchestrate({
-      query: validatedRequest.query,
-      history: validatedRequest.history as ModelMessage[],
-      context: agentContext,
-    });
+    const result = await agentOrchestrator.orchestrate(
+      validatedRequest.query,
+      validatedRequest.history as ModelMessage[],
+      undefined, // systemPromptOverride
+      undefined, // requiredToolkitsOverride
+      agentContext
+    );
 
     return NextResponse.json({
       success: true,

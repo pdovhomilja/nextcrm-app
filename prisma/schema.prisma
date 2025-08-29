@@ -1,14 +1,8 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider        = "prisma-client-js"
   output          = "../lib/generated/prisma"
-  binaryTargets   = ["native", "debian-openssl-3.0.x"]
   previewFeatures = ["postgresqlExtensions", "typedSql"]
+  binaryTargets   = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -23,15 +17,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String  @map("provider_account_id")
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@map("accounts")
@@ -48,58 +41,41 @@ model Session {
 }
 
 model User {
-  id                      String    @id @default(cuid())
-  name                    String?
-  email                   String    @unique
-  emailVerified           DateTime? @map("email_verified")
-  emailVerificationToken  String?   @unique @map("email_verification_token")
-  emailTokenExpires       DateTime? @map("email_token_expires")
-  image                   String?
-  password                String?
-  createdAt               DateTime  @default(now()) @map("created_at")
-  updatedAt               DateTime  @updatedAt @map("updated_at")
-  role                    UserRole  @default(USER)
-  
-  accounts Account[]
-  sessions Session[]
+  id                     String              @id @default(cuid())
+  name                   String?
+  email                  String              @unique
+  emailVerified          DateTime?           @map("email_verified")
+  emailVerificationToken String?             @unique @map("email_verification_token")
+  emailTokenExpires      DateTime?           @map("email_token_expires")
+  image                  String?
+  password               String?
+  company_id             String?
+  createdAt              DateTime            @default(now()) @map("created_at")
+  updatedAt              DateTime            @updatedAt @map("updated_at")
+  role                   UserRole            @default(USER)
+  assignedTasks          Task[]              @relation("AssignedTasks")
+  createdTasks           Task[]              @relation("CreatedTasks")
+  accounts               Account[]
+  aiConversations        AIConversation[]
+  memberships            CompanyMembership[]
+  documents              Document[]
+  securityAuditLogs      SecurityAuditLog[]
+  sessions               Session[]
+  aiGeneratedBoardRequests AIGeneratedBoardRequest[]
 
-  // Multi-tenancy relation (will be populated during migration)
-  memberships           CompanyMembership[]
-
-  assignedTasks         Task[]                 @relation("AssignedTasks")
-  createdTasks          Task[]                 @relation("CreatedTasks")
-  aiConversations       AIConversation[]
-  documents             Document[]
-  securityAuditLogs     SecurityAuditLog[]
-
-  @@map("users")
   @@index([emailVerificationToken])
-}
-
-enum UserRole {
-  USER
-  CONTRIBUTOR
-  EDITOR
-  MEDIA
-  ADMIN
-}
-
-// Multi-tenancy enums and models
-enum CompanyRole {
-  MEMBER
-  ADMIN
-  OWNER
+  @@index([company_id])
+  @@map("users")
 }
 
 model Company {
-  id        String   @id @default(cuid())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relational Fields
-  memberships CompanyMembership[]
+  id          String              @id @default(cuid())
+  name        String
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
   boards      Board[]
+  memberships CompanyMembership[]
+  aiGeneratedBoardRequests AIGeneratedBoardRequest[]
 
   @@map("companies")
 }
@@ -109,10 +85,8 @@ model CompanyMembership {
   userId    String
   role      CompanyRole @default(MEMBER)
   createdAt DateTime    @default(now())
-
-  // Relations
-  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company   Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([companyId, userId])
   @@map("company_memberships")
@@ -126,59 +100,42 @@ model VerificationToken {
   @@unique([identifier, token])
   @@map("verificationtokens")
 }
-// Task model
-enum TaskPriority {
-  LOW
-  MEDIUM
-  HIGH
-  CRITICAL
-}
-
-enum TaskStatusNew {
-  NEW
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-  ON_HOLD
-}
 
 model Task {
-  id              String         @id @default(cuid())
-  title           String
-  description     String
-  priority        TaskPriority   @default(MEDIUM)
-  status          TaskStatusNew  @default(NEW)
-  dueDate         DateTime
-  position        Int            @default(0)
-  assignedToId    String        
-  assignedTo      User           @relation("AssignedTasks", fields: [assignedToId], references: [id])
-  createdById     String         
-  createdBy       User           @relation("CreatedTasks", fields: [createdById], references: [id])
-  boardSectionId  String
-  boardSection    BoardSection   @relation(fields: [boardSectionId], references: [id])
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  history         TaskHistory[]
-  embedding       TaskEmbedding?
-  documents       Document[]
+  id             String         @id @default(cuid())
+  title          String
+  description    String
+  priority       TaskPriority   @default(MEDIUM)
+  status         TaskStatusNew  @default(NEW)
+  dueDate        DateTime
+  position       Int            @default(0)
+  assignedToId   String
+  createdById    String
+  boardSectionId String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  assignedTo     User           @relation("AssignedTasks", fields: [assignedToId], references: [id])
+  boardSection   BoardSection   @relation(fields: [boardSectionId], references: [id])
+  createdBy      User           @relation("CreatedTasks", fields: [createdById], references: [id])
+  history        TaskHistory[]
+  documents      Document[]
+  embedding      TaskEmbedding?
 }
 
 model Board {
-  id            String         @id @default(cuid())
+  id            String          @id @default(cuid())
   name          String
   description   String?
   createdBy     String
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
   access        String[]
-  
-  // Multi-tenancy fields (nullable initially for migration)
   companyId     String?
-  company       Company?       @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  
+  company       Company?        @relation(fields: [companyId], references: [id], onDelete: Cascade)
   boardSections BoardSection[]
   embedding     BoardEmbedding?
   documents     Document[]
+  aiGeneratedBoardRequest AIGeneratedBoardRequest?
 
   @@index([companyId])
 }
@@ -203,48 +160,43 @@ model TaskHistory {
   task        Task     @relation(fields: [taskId], references: [id])
 }
 
-// Vector Embeddings Models
 model TaskEmbedding {
-  id        String   @id @default(cuid())
-  taskId    String   @unique @map("task_id")
-  embedding Unsupported("vector(1536)")
-  content   String   // Original text that was embedded
-  metadata  Json     // Additional context (priority, status, etc.)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  id        String                @id @default(cuid())
+  taskId    String                @unique @map("task_id")
+  embedding Unsupported("vector")
+  content   String
+  metadata  Json
+  createdAt DateTime              @default(now()) @map("created_at")
+  updatedAt DateTime              @updatedAt @map("updated_at")
+  task      Task                  @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@map("task_embeddings")
 }
 
 model BoardEmbedding {
-  id        String   @id @default(cuid())
-  boardId   String   @unique @map("board_id")
-  embedding Unsupported("vector(1536)")
-  content   String   // Board name + description + context
-  metadata  Json     // Board info, team members, etc.
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  id        String                @id @default(cuid())
+  boardId   String                @unique @map("board_id")
+  embedding Unsupported("vector")
+  content   String
+  metadata  Json
+  createdAt DateTime              @default(now()) @map("created_at")
+  updatedAt DateTime              @updatedAt @map("updated_at")
+  board     Board                 @relation(fields: [boardId], references: [id], onDelete: Cascade)
 
   @@map("board_embeddings")
 }
 
-// AI Conversation Models
 model AIConversation {
-  id        String   @id @default(cuid())
+  id        String               @id @default(cuid())
   userId    String
   companyId String
   title     String?
+  context   Json?
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  user      User                 @relation(fields: [userId], references: [id])
   messages  AIMessage[]
   summary   ConversationSummary?
-  context   Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id])
 
   @@index([companyId])
   @@index([userId])
@@ -252,40 +204,37 @@ model AIConversation {
 }
 
 model AIMessage {
-  id             String @id @default(cuid())
+  id             String         @id @default(cuid())
   conversationId String
-  role           String // 'user' | 'assistant' | 'system'
+  role           String
   content        String
   metadata       Json?
-  createdAt      DateTime @default(now())
-
-  conversation AIConversation @relation(fields: [conversationId], references: [id])
+  createdAt      DateTime       @default(now())
+  conversation   AIConversation @relation(fields: [conversationId], references: [id])
 
   @@map("ai_messages")
 }
 
-// Document Processing Models
 model Document {
-  id            String   @id @default(cuid())
+  id            String              @id @default(cuid())
   filename      String
   mimeType      String
   size          Int
-  extractedText String   @db.Text
-  summary       String   @db.Text
+  extractedText String
+  summary       String
   keyInsights   String[]
   confidence    Float
   uploadedBy    String
   companyId     String
   taskId        String?
   boardId       String?
-  processedAt   DateTime @default(now())
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  user       User               @relation(fields: [uploadedBy], references: [id])
-  task       Task?              @relation(fields: [taskId], references: [id])
-  board      Board?             @relation(fields: [boardId], references: [id])
-  embeddings DocumentEmbedding[]
+  processedAt   DateTime            @default(now())
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  embeddings    DocumentEmbedding[]
+  board         Board?              @relation(fields: [boardId], references: [id])
+  task          Task?               @relation(fields: [taskId], references: [id])
+  user          User                @relation(fields: [uploadedBy], references: [id])
 
   @@index([companyId])
   @@index([uploadedBy])
@@ -295,38 +244,34 @@ model Document {
 }
 
 model DocumentEmbedding {
-  id         String                     @id @default(cuid())
+  id         String                @id @default(cuid())
   documentId String
-  embedding  Unsupported("vector(1536)")
+  embedding  Unsupported("vector")
   content    String
   metadata   Json?
-  createdAt  DateTime                   @default(now())
-  updatedAt  DateTime                   @updatedAt
-
-  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  createdAt  DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt
+  document   Document              @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
   @@map("document_embeddings")
 }
 
-// Conversation Memory Models
 model ConversationSummary {
-  id             String   @id @default(cuid())
-  conversationId String   @unique
-  summary        String   @db.Text
+  id             String         @id @default(cuid())
+  conversationId String         @unique
+  summary        String
   keyTopics      String[]
   actionItems    String[]
   preferences    Json?
-  sentiment      String   // 'positive' | 'neutral' | 'negative'
+  sentiment      String
   confidence     Float
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  conversation AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  conversation   AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@map("conversation_summaries")
 }
 
-// Security and Audit Models
 model SecurityAuditLog {
   id        String   @id @default(cuid())
   userId    String
@@ -336,14 +281,69 @@ model SecurityAuditLog {
   timestamp DateTime
   ipAddress String?
   userAgent String?
-  risk      String   // 'low' | 'medium' | 'high'
+  risk      String
   createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([action])
   @@index([risk])
   @@index([timestamp])
   @@map("security_audit_logs")
+}
+
+enum AIGenerationStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model AIGeneratedBoardRequest {
+  id               String   @id @default(cuid())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  status           AIGenerationStatus @default(PENDING)
+  refinedPrompt    String   @db.Text
+  role             String
+
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyId        String
+  company          Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  generatedBoardId String?  @unique
+  generatedBoard   Board?   @relation(fields: [generatedBoardId], references: [id], onDelete: SetNull)
+
+  failureReason    String?
+}
+
+enum UserRole {
+  USER
+  CONTRIBUTOR
+  EDITOR
+  MEDIA
+  ADMIN
+}
+
+enum CompanyRole {
+  MEMBER
+  ADMIN
+  OWNER
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TaskStatusNew {
+  NEW
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  ON_HOLD
 }

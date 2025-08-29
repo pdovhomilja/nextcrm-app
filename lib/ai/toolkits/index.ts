@@ -2,6 +2,7 @@ import { Tool } from "ai";
 import { getProjectToolkit } from "./project-toolkit";
 import { getTaskToolkit } from "./task-toolkit";
 import { getProgressToolkit } from "./progress-toolkit";
+import { getBoardWizardToolkit } from "./board-wizard-toolkit";
 import { AgentContext } from "../agent-core";
 
 // A mapping from the toolkit names used by the routing agent to the actual tool objects.
@@ -16,6 +17,7 @@ export const allToolkits: Record<
   // The router schema includes 'userDirectory', but we haven't created a toolkit for it.
   // We can add it here when it's created.
   userDirectory: () => ({}),
+  boardWizard: getBoardWizardToolkit,
 };
 
 /**

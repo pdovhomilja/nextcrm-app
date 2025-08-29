@@ -40,9 +40,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
-import { z } from 'zod/v3';
+import { z } from "zod/v3";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { editBoard } from "@/actions/tasks/edit-board";
+import { cn } from "@/lib/utils";
 
 const BoardActions = ({
   boardId,
@@ -55,6 +56,7 @@ const BoardActions = ({
 }) => {
   const router = useRouter();
   const [onDelete, setOnDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
 
   const formSchema = z.object({
@@ -81,6 +83,7 @@ const BoardActions = ({
   }, [isEditOpen, boardName, boardDescription, form]);
 
   const handleDelete = async () => {
+    setIsDeleting(true);
     try {
       await deleteBoard(boardId);
       setOnDelete(false);
@@ -88,6 +91,8 @@ const BoardActions = ({
       toast.success("Board deleted successfully");
     } catch {
       toast.error("Failed to delete board");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -124,8 +129,15 @@ const BoardActions = ({
             <DialogClose asChild>
               <Button variant="outline">Cancel</Button>
             </DialogClose>
-            <Button variant="destructive" onClick={handleDelete}>
-              Delete
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className={cn(
+                isDeleting && "opacity-50 cursor-not-allowed animate-pulse"
+              )}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -23,12 +23,12 @@ export const getProjectToolkit = (context: AgentContext) => ({
           { boardId, ...context },
           context.userId
         );
-        const { userId: contextUserId, ...restOfContext } = context;
+        const { userId, ...restOfContext } = context;
         const tasksDataPromise = simpleMCPClientPool.callTool(
           "search",
           "semantic_search_tasks",
           { boardId, ...restOfContext },
-          context.userId
+          userId
         );
 
         const [healthResult, tasksResult] = await Promise.all([

@@ -34,18 +34,23 @@ export class AgentOrchestrator {
    * This method replaces the previous multi-agent system with a new routing-based approach.
    */
   async orchestrate(
-    request: OrchestrationRequest
+    query: string,
+    history: ModelMessage[],
+    systemPromptOverride?: string,
+    requiredToolkitsOverride?: string[],
+    contextOverride?: AgentContext
   ): Promise<OrchestrationResponse> {
-    const { query, context, history } = request;
     const startTime = Date.now();
+    const context = contextOverride || { userId: "", companyId: "" }; // Use provided context or fallback to dummy
 
     try {
-      // 1. Classify the user's intent to determine the required tools and model.
-      const intent = await classifyAndRouteQuery(query, history);
+      // 1. Classify the user's intent (or skip if toolkits are overridden)
+      const intent = requiredToolkitsOverride
+        ? { requiredToolkits: requiredToolkitsOverride, complexity: "simple", domain: "general" } // Default values for complexity and domain
+        : await classifyAndRouteQuery(query, history);
       console.log("Classified Intent:", intent);
 
       // 2. Select tools based on the classified intent.
-      // This anticipates Phase 3, where specialized agents become toolkits.
       const requiredTools = getToolkits(intent.requiredToolkits, context);
 
       // 3. Dynamically select a model based on query complexity.
@@ -55,16 +60,15 @@ export class AgentOrchestrator {
           : aiConfig.chatModel || openai("gpt-4o-mini");
 
       // 4. Instantiate the core agent with the necessary tools and model.
-      // Note: The BaseAIAgent is now stateless and instantiated per request.
       const agent = new BaseAIAgent(
-        `agent-for-${context.conversationId}`,
+        `agent-for-${context.conversationId || "default"}`,
         intent.domain, // The agent's role is now the domain from the router
         requiredTools,
         model
       );
 
       // 5. Execute the query using the modernized agent core.
-      const result = await agent.processQuery(query, context, history);
+      const result = await agent.processQuery(query, context, history, systemPromptOverride);
 
       console.log(`Orchestration completed in ${Date.now() - startTime}ms`);
 

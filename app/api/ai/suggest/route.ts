@@ -79,14 +79,16 @@ export async function POST(request: NextRequest) {
     // Get agent-powered suggestions using the new orchestrator
     let agentSuggestions = "";
     try {
-      const agentResponse = await agentOrchestrator.orchestrate({
-        query: `Generate actionable suggestions for ${suggestionType} improvement`,
-        context: {
+      const agentResponse = await agentOrchestrator.orchestrate(
+        `Generate actionable suggestions for ${suggestionType} improvement`,
+        [],
+        undefined, // systemPromptOverride
+        undefined, // requiredToolkitsOverride
+        {
           ...agentContext,
           conversationId: `suggest-${session.user.id}-${Date.now()}`,
-        },
-        history: [],
-      });
+        }
+      );
       agentSuggestions = agentResponse.text;
     } catch (error) {
       console.error("Agent suggestion error:", error);

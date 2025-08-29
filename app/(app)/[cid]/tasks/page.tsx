@@ -12,6 +12,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import CreateBoardButton from "./_components/create-board-button";
+import { AiBoardWizardButton } from "./_components/ai-board-wizard-button";
+import { AiBoardStatusSheet } from "./_components/ai-board-status-sheet";
 import BoardActions from "./_components/board-actions";
 import { formatDistanceToNowStrict } from "date-fns";
 import Link from "next/link";
@@ -46,6 +48,7 @@ const TaskPage = async ({
       <SiteHeader title="Boards">
         <Search />
         <div className="flex items-center gap-2">
+          <AiBoardWizardButton />
           <CreateBoardButton />
         </div>
       </SiteHeader>
@@ -90,6 +93,8 @@ const TaskPage = async ({
           </div>
         </div>
       </div>
+      {/* AI Board Status Sheet - Fixed position trigger */}
+      <AiBoardStatusSheet />
     </SidebarInset>
   );
 };

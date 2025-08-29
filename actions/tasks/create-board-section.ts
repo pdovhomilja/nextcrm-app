@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { getUserByEmail } from "@/actions/user";
 
-export async function createBoardSection(boardId: string, name: string) {
+export async function createBoardSection(boardId: string, name: string, skipRevalidation = false) {
   try {
     const session = await auth();
     if (!session?.user?.email) {
@@ -53,7 +53,9 @@ export async function createBoardSection(boardId: string, name: string) {
       },
     });
 
-    revalidatePath(`/${activeCompanyId}/tasks/${boardId}`);
+    if (!skipRevalidation) {
+      revalidatePath(`/${activeCompanyId}/tasks/${boardId}`);
+    }
     return newBoardSection;
   } catch (error) {
     throw new Error(

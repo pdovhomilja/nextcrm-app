@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useEffect, useState } from "react"
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react"
 import { useSession } from "next-auth/react"
 import { getUserMemberships } from "@/actions/company-actions"
 
@@ -53,7 +53,7 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
   const userRole = memberships.find(m => m.companyId === activeCompanyId)?.role || null
 
   // Load user's company memberships
-  const refreshMemberships = async () => {
+  const refreshMemberships = useCallback(async () => {
     if (!session?.user?.id) return
 
     setIsLoadingMemberships(true)
@@ -76,7 +76,7 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
       setIsLoadingMemberships(false)
       setIsLoading(false)
     }
-  }
+  }, [session?.user?.id, session?.user?.activeCompanyId])
 
   // Switch active company
   const switchCompany = async (companyId: string) => {
@@ -115,7 +115,7 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
       setActiveCompanyId(null)
       setIsLoading(false)
     }
-  }, [session?.user?.id])
+  }, [session?.user?.id, refreshMemberships])
 
   const value: CompanyContextType = {
     activeCompany,

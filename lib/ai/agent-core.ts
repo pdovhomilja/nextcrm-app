@@ -76,7 +76,8 @@ export class BaseAIAgent {
   async processQuery(
     query: string,
     context: AgentContext,
-    history: ModelMessage[]
+    history: ModelMessage[],
+    systemPromptOverride?: string
   ) {
     console.log(
       `Processing query for agent ${this.agentId} with role ${this.role}`
@@ -84,15 +85,18 @@ export class BaseAIAgent {
     const startTime = Date.now();
     const availableTools = this.getAvailableTools();
 
-    const systemPrompt = `You are a helpful AI assistant named ${this.role}. 
+    const effectiveSystemPrompt = systemPromptOverride || `You are a helpful AI assistant named ${this.role}. 
                          Your role is to assist users by answering questions and using available tools to manage tasks, projects, and users. 
                          You can ask for clarification if a query is ambiguous.
                          The user context is: ${JSON.stringify(context)}`;
 
     try {
+      // Use a Promise to properly handle tool execution completion
+      let onFinishPromise: Promise<ToolResult[]> | null = null;
+
       const result = streamText({
         model: this.model,
-        system: systemPrompt,
+        system: effectiveSystemPrompt,
         messages: [
           ...history,
           {
@@ -102,76 +106,81 @@ export class BaseAIAgent {
         ],
         tools: availableTools,
         onFinish: async ({ toolCalls }) => {
-          if (!toolCalls || toolCalls.length === 0) {
-            return;
-          }
-
-          const toolResults: ToolResult[] = [];
-          for (const toolCall of toolCalls) {
-            const { toolName } = toolCall;
-            const args = (toolCall as { input: unknown }).input;
-            const tool = availableTools[toolName];
-
-            if (!tool || !tool.execute) {
-              // This should not happen if the LLM is behaving
-              console.warn(
-                `LLM tried to call non-existent tool or tool without execute method: ${toolName}`
-              );
-              continue;
+          // Create and store the promise for tool execution
+          onFinishPromise = (async () => {
+            if (!toolCalls || toolCalls.length === 0) {
+              console.log(`No tool calls to execute.`);
+              return [];
             }
 
-            try {
-              const toolCallOptions: ToolCallOptions = {
-                toolCallId: toolCall.toolCallId,
-                messages: [...history, { role: "user", content: query }],
-              };
-              const result = await tool.execute(args, toolCallOptions);
-              toolResults.push({
-                toolCallId: toolCall.toolCallId,
-                toolName,
-                args,
-                result,
-              });
-            } catch (error) {
-              console.error(`Error executing tool ${toolName}:`, error);
-              toolResults.push({
-                toolCallId: toolCall.toolCallId,
-                toolName,
-                args,
-                result: {
-                  error:
-                    error instanceof Error ? error.message : "Unknown error",
-                },
-              });
-            }
-          }
+            console.log(`Starting execution of ${toolCalls.length} tool calls.`);
+            const toolResults: ToolResult[] = [];
+            for (const toolCall of toolCalls) {
+              const { toolName } = toolCall;
+              const args = (toolCall as { input: unknown }).input;
+              const tool = availableTools[toolName];
 
-          // Here you would typically continue the conversation by sending the tool results
-          // back to the model. For this refactoring, we will return them directly.
-          // This part of the logic will need to be completed in the next phase.
+              if (!tool || !tool.execute) {
+                console.warn(
+                  `LLM tried to call non-existent tool or tool without execute method: ${toolName}`
+                );
+                continue;
+              }
+
+              try {
+                const toolCallOptions: ToolCallOptions = {
+                  toolCallId: toolCall.toolCallId,
+                  messages: [...history, { role: "user", content: query }],
+                };
+                const toolResult = await tool.execute(args, toolCallOptions);
+                toolResults.push({
+                  toolCallId: toolCall.toolCallId,
+                  toolName,
+                  args,
+                  result: toolResult,
+                });
+                console.log(`Tool ${toolName} executed successfully.`);
+              } catch (error) {
+                console.error(`Error executing tool ${toolName}:`, error);
+                toolResults.push({
+                  toolCallId: toolCall.toolCallId,
+                  toolName,
+                  args,
+                  result: {
+                    error:
+                      error instanceof Error ? error.message : "Unknown error",
+                  },
+                });
+              }
+            }
+
+            console.log(`Tool execution completed. Captured ${toolResults.length} tool results.`);
+            return toolResults;
+          })();
         },
       });
 
-      // We need to handle the case where onFinish produces tool results.
-      // This requires a more complex state management than a single return.
-      // For now, let's return the direct result of streamText and handle
-      // the full tool execution loop later.
+      // Wait for the stream to complete
+      const text = await result.text;
+      const finishReason = await result.finishReason;
+      const toolCalls = await result.toolCalls;
+
+      // Wait for tool execution to complete if it was triggered
+      const capturedToolResults = onFinishPromise ? await onFinishPromise : [];
 
       const processingTime = Date.now() - startTime;
       console.log(
-        `Query processed in ${
-          processingTime
-        }ms. Finish reason: ${result.finishReason}`
+        `Query processed in ${processingTime}ms. Finish reason: ${finishReason}. Tool results captured: ${capturedToolResults.length}`
       );
 
       return {
-        text: await result.text,
-        toolCalls: result.toolCalls,
-        toolResults: result.toolResults,
+        text,
+        toolCalls,
+        toolResults: capturedToolResults,
         metadata: {
           processingTime,
           agentRole: this.role,
-          finishReason: result.finishReason,
+          finishReason,
         },
       };
     } catch (error) {

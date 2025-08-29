@@ -117,14 +117,13 @@ export async function POST(request: NextRequest) {
         );
 
         // Use AI agent orchestration
-        const orchestrationRequest = {
-          query: lastUserMessage.content,
-          context,
+        const agentResponse = await agentOrchestrator.orchestrate(
+          lastUserMessage.content,
           history,
-        };
-
-        const agentResponse =
-          await agentOrchestrator.orchestrate(orchestrationRequest);
+          undefined, // systemPromptOverride
+          undefined, // requiredToolkitsOverride
+          context
+        );
 
         return NextResponse.json({
           success: true,
@@ -219,14 +218,13 @@ async function streamRAGResponse(
 
     if (agentType || multiAgent) {
       // Use AI agent orchestration for context
-      const orchestrationRequest = {
+      const agentResponse = await agentOrchestrator.orchestrate(
         query,
-        context,
-        history: [], // No previous history available in streaming context
-      };
-
-      const agentResponse =
-        await agentOrchestrator.orchestrate(orchestrationRequest);
+        [], // No previous history available in streaming context
+        undefined, // systemPromptOverride
+        undefined, // requiredToolkitsOverride
+        context
+      );
 
       systemPrompt = `You are an intelligent project management assistant powered by specialized AI agents.
 
