@@ -61,7 +61,7 @@ model User {
   documents              Document[]
   securityAuditLogs      SecurityAuditLog[]
   sessions               Session[]
-  aiGeneratedBoardRequests AIGeneratedBoardRequest[]
+  aiBoardRequests        AIGeneratedBoardRequest[] @relation("AIBoardRequests")
 
   @@index([emailVerificationToken])
   @@index([company_id])
@@ -75,7 +75,6 @@ model Company {
   updatedAt   DateTime            @updatedAt
   boards      Board[]
   memberships CompanyMembership[]
-  aiGeneratedBoardRequests AIGeneratedBoardRequest[]
 
   @@map("companies")
 }
@@ -135,7 +134,7 @@ model Board {
   boardSections BoardSection[]
   embedding     BoardEmbedding?
   documents     Document[]
-  aiGeneratedBoardRequest AIGeneratedBoardRequest?
+  aiRequests    AIGeneratedBoardRequest[] @relation("AIGeneratedBoard")
 
   @@index([companyId])
 }
@@ -292,31 +291,24 @@ model SecurityAuditLog {
   @@map("security_audit_logs")
 }
 
-enum AIGenerationStatus {
-  PENDING
-  PROCESSING
-  COMPLETED
-  FAILED
-}
-
 model AIGeneratedBoardRequest {
-  id               String   @id @default(cuid())
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id             String                     @id @default(cuid())
+  userId         String
+  companyId      String
+  refinedPrompt  String
+  role           String
+  status         AIBoardRequestStatus       @default(PENDING)
+  failureReason  String?
+  boardId        String?
+  createdAt      DateTime                   @default(now())
+  updatedAt      DateTime                   @updatedAt
+  user           User                       @relation("AIBoardRequests", fields: [userId], references: [id])
+  generatedBoard Board?                     @relation("AIGeneratedBoard", fields: [boardId], references: [id])
 
-  status           AIGenerationStatus @default(PENDING)
-  refinedPrompt    String   @db.Text
-  role             String
-
-  userId           String
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  companyId        String
-  company          Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-
-  generatedBoardId String?  @unique
-  generatedBoard   Board?   @relation(fields: [generatedBoardId], references: [id], onDelete: SetNull)
-
-  failureReason    String?
+  @@index([userId])
+  @@index([companyId])
+  @@index([status])
+  @@map("ai_generated_board_requests")
 }
 
 enum UserRole {
@@ -346,4 +338,11 @@ enum TaskStatusNew {
   COMPLETED
   CANCELLED
   ON_HOLD
+}
+
+enum AIBoardRequestStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
 }

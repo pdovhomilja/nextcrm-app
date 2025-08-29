@@ -91,7 +91,7 @@ export async function runBoardGenerationJob(payload: BoardGenerationJobPayload) 
       where: { id: boardRequestId },
       data: {
         status: 'COMPLETED',
-        generatedBoardId: boardId,
+        boardId: boardId,
       },
     });
 
