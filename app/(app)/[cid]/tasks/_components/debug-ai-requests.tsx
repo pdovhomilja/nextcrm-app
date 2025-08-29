@@ -33,32 +33,44 @@ export function DebugAiRequests() {
 
   const loadRequests = useCallback(async () => {
     setLoading(true);
-    const result = await getAiBoardRequests();
-    if (result.success) {
-      // Check for newly completed boards
-      const currentCompletedIds = new Set(
-        result.requests
-          .filter(req => req.status === 'COMPLETED' && req.generatedBoard)
-          .map(req => req.id)
-      );
+    try {
+      const result = await getAiBoardRequests();
       
-      // Find newly completed boards
-      const newlyCompleted = [...currentCompletedIds].filter(
-        id => !previousCompletedIds.has(id)
-      );
-      
-      // If there are newly completed boards, refresh the router to show new boards
-      if (newlyCompleted.length > 0) {
-        console.log(`Detected ${newlyCompleted.length} newly completed boards. Refreshing page...`);
-        router.refresh();
-        toast.success(`${newlyCompleted.length} new board${newlyCompleted.length > 1 ? 's' : ''} created successfully!`);
+      if (result.success) {
+        // Check for newly completed boards
+        const currentCompletedIds = new Set(
+          result.requests
+            .filter(req => req.status === 'COMPLETED' && req.generatedBoard)
+            .map(req => req.id)
+        );
+        
+        // Find newly completed boards
+        const newlyCompleted = [...currentCompletedIds].filter(
+          id => !previousCompletedIds.has(id)
+        );
+        
+        // If there are newly completed boards, refresh the router to show new boards
+        if (newlyCompleted.length > 0) {
+          console.log(`Detected ${newlyCompleted.length} newly completed boards. Refreshing page...`);
+          router.refresh();
+          toast.success(`${newlyCompleted.length} new board${newlyCompleted.length > 1 ? 's' : ''} created successfully!`);
+        }
+        
+        setPreviousCompletedIds(currentCompletedIds);
+        setRequests(result.requests);
+      } else {
+        console.error('Failed to load AI board requests:', result.error);
+        toast.error(result.error || 'Failed to load AI board requests');
+        setRequests([]); // Set empty array to show "No requests found"
       }
-      
-      setPreviousCompletedIds(currentCompletedIds);
-      setRequests(result.requests);
+    } catch (error) {
+      console.error('Error loading AI board requests:', error);
+      toast.error('Failed to load AI board requests');
+      setRequests([]); // Set empty array to show "No requests found"
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  }, [router, previousCompletedIds]);
+  }, [router]);
 
   const handleRetry = async (requestId: string) => {
     setRetryingIds(prev => new Set(prev).add(requestId));
