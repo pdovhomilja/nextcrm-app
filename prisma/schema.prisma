@@ -41,40 +41,62 @@ model Session {
 }
 
 model User {
-  id                     String              @id @default(cuid())
-  name                   String?
-  email                  String              @unique
-  emailVerified          DateTime?           @map("email_verified")
-  emailVerificationToken String?             @unique @map("email_verification_token")
-  emailTokenExpires      DateTime?           @map("email_token_expires")
-  image                  String?
-  password               String?
-  company_id             String?
-  createdAt              DateTime            @default(now()) @map("created_at")
-  updatedAt              DateTime            @updatedAt @map("updated_at")
-  role                   UserRole            @default(USER)
-  assignedTasks          Task[]              @relation("AssignedTasks")
-  createdTasks           Task[]              @relation("CreatedTasks")
-  accounts               Account[]
-  aiConversations        AIConversation[]
-  memberships            CompanyMembership[]
-  documents              Document[]
-  securityAuditLogs      SecurityAuditLog[]
-  sessions               Session[]
-  aiBoardRequests        AIGeneratedBoardRequest[] @relation("AIBoardRequests")
+  id                      String                           @id @default(cuid())
+  name                    String?
+  email                   String                           @unique
+  emailVerified           DateTime?                        @map("email_verified")
+  emailVerificationToken  String?                          @unique @map("email_verification_token")
+  emailTokenExpires       DateTime?                        @map("email_token_expires")
+  image                   String?
+  password                String?
+  company_id              String?
+  createdAt               DateTime                         @default(now()) @map("created_at")
+  updatedAt               DateTime                         @updatedAt @map("updated_at")
+  role                    UserRole                         @default(USER)
+  AIGeneratedBoardRequest public_AIGeneratedBoardRequest[]
+  assignedTasks           Task[]                           @relation("AssignedTasks")
+  createdTasks            Task[]                           @relation("CreatedTasks")
+  accounts                Account[]
+  aiConversations         AIConversation[]
+  aiBoardRequests         AIGeneratedBoardRequest[]        @relation("AIBoardRequests")
+  memberships             CompanyMembership[]
+  documents               Document[]
+  securityAuditLogs       SecurityAuditLog[]
+  sessions                Session[]
+  mailAccounts            UserMailAccount[]
 
   @@index([emailVerificationToken])
   @@index([company_id])
   @@map("users")
 }
 
+model UserMailAccount {
+  id                  String   @id @default(cuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email               String   @unique
+  imapHost            String
+  imapPort            Int
+  imapUser            String
+  smtpHost            String
+  smtpPort            Int      @default(587)
+  smtpSecure          Boolean  @default(false)
+  encryptedPassword   String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([userId])
+  @@map("user_mail_accounts")
+}
+
 model Company {
-  id          String              @id @default(cuid())
-  name        String
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
-  boards      Board[]
-  memberships CompanyMembership[]
+  id                      String                           @id @default(cuid())
+  name                    String
+  createdAt               DateTime                         @default(now())
+  updatedAt               DateTime                         @updatedAt
+  AIGeneratedBoardRequest public_AIGeneratedBoardRequest[]
+  boards                  Board[]
+  memberships             CompanyMembership[]
 
   @@map("companies")
 }
@@ -122,19 +144,20 @@ model Task {
 }
 
 model Board {
-  id            String          @id @default(cuid())
-  name          String
-  description   String?
-  createdBy     String
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  access        String[]
-  companyId     String?
-  company       Company?        @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  boardSections BoardSection[]
-  embedding     BoardEmbedding?
-  documents     Document[]
-  aiRequests    AIGeneratedBoardRequest[] @relation("AIGeneratedBoard")
+  id                      String                          @id @default(cuid())
+  name                    String
+  description             String?
+  createdBy               String
+  createdAt               DateTime                        @default(now())
+  updatedAt               DateTime                        @updatedAt
+  access                  String[]
+  companyId               String?
+  AIGeneratedBoardRequest public_AIGeneratedBoardRequest?
+  company                 Company?                        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  boardSections           BoardSection[]
+  aiRequests              AIGeneratedBoardRequest[]       @relation("AIGeneratedBoard")
+  embedding               BoardEmbedding?
+  documents               Document[]
 
   @@index([companyId])
 }
@@ -292,23 +315,41 @@ model SecurityAuditLog {
 }
 
 model AIGeneratedBoardRequest {
-  id             String                     @id @default(cuid())
+  id             String               @id @default(cuid())
   userId         String
   companyId      String
   refinedPrompt  String
   role           String
-  status         AIBoardRequestStatus       @default(PENDING)
+  status         AIBoardRequestStatus @default(PENDING)
   failureReason  String?
   boardId        String?
-  createdAt      DateTime                   @default(now())
-  updatedAt      DateTime                   @updatedAt
-  user           User                       @relation("AIBoardRequests", fields: [userId], references: [id])
-  generatedBoard Board?                     @relation("AIGeneratedBoard", fields: [boardId], references: [id])
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  generatedBoard Board?               @relation("AIGeneratedBoard", fields: [boardId], references: [id])
+  user           User                 @relation("AIBoardRequests", fields: [userId], references: [id])
 
   @@index([userId])
   @@index([companyId])
   @@index([status])
   @@map("ai_generated_board_requests")
+}
+
+model public_AIGeneratedBoardRequest {
+  id               String             @id
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime
+  status           AIGenerationStatus @default(PENDING)
+  refinedPrompt    String
+  role             String
+  userId           String
+  companyId        String
+  generatedBoardId String?            @unique
+  failureReason    String?
+  companies        Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  Board            Board?             @relation(fields: [generatedBoardId], references: [id])
+  users            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("AIGeneratedBoardRequest")
 }
 
 enum UserRole {
@@ -341,6 +382,13 @@ enum TaskStatusNew {
 }
 
 enum AIBoardRequestStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum AIGenerationStatus {
   PENDING
   PROCESSING
   COMPLETED
