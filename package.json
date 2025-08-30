@@ -1,6 +1,6 @@
 {
   "name": "taskhq.xmation.ai",
-  "version": "0.1.10-beta",
+  "version": "0.1.11-beta",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",

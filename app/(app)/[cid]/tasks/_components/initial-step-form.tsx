@@ -9,7 +9,7 @@ import { Sparkles } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
 
 interface WizardProps {
-  form: UseFormReturn<{ goal: string; role: string }>;
+  form: UseFormReturn<{ goal: string; role: string; language: string }>;
   isPending: boolean;
   handleInitialSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
 }
@@ -49,6 +49,29 @@ export function InitialStepForm({ wizard }: { wizard: WizardProps }) {
                   <SelectItem value="Marketing Specialist">Marketing Specialist</SelectItem>
                   <SelectItem value="Project Manager">Project Manager</SelectItem>
                   <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={wizard.form.control}
+          name="language"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Output Language</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select output language" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="English">English</SelectItem>
+                  <SelectItem value="Czech">Czech</SelectItem>
+                  <SelectItem value="German">German</SelectItem>
+                  <SelectItem value="Spanish">Spanish</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />

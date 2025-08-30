@@ -36,9 +36,20 @@ export async function runBoardGenerationJob(payload: BoardGenerationJobPayload) 
       throw new Error(`Board request ${boardRequestId} not found.`);
     }
 
-    // 3. Invoke the AI Agent Orchestrator with explicit toolkit override
+    // 3. Extract language from refined prompt if available
+    let language = 'English';
+    let cleanedPrompt = request.refinedPrompt;
+    
+    // Check if language is embedded in the prompt
+    const languageMatch = request.refinedPrompt.match(/\[LANGUAGE: ([^\]]+)\]/);
+    if (languageMatch) {
+      language = languageMatch[1];
+      cleanedPrompt = request.refinedPrompt.replace(/\n\n\[LANGUAGE: [^\]]+\]$/, '');
+    }
+    
+    // 4. Invoke the AI Agent Orchestrator with explicit toolkit override
     const orchestrator = new AgentOrchestrator();
-    const query = `Generate a comprehensive project board with sections and tasks based on this detailed brief: "${request.refinedPrompt}". Create organized board sections and populate them with relevant tasks.`;
+    const query = `Use the generateProjectBoard tool to create and persist a project board based on this approved brief. The role is "${request.role}" and the refined prompt is: "${cleanedPrompt}". You must call the generateProjectBoard tool with refinedPrompt="${cleanedPrompt}" and role="${request.role}" parameters to actually create the board in the database.`;
     
     // Create proper context for the agent
     const context = {
@@ -47,11 +58,14 @@ export async function runBoardGenerationJob(payload: BoardGenerationJobPayload) 
       conversationId: `board-generation-${boardRequestId}`
     };
     
+    // System prompt to force tool usage
+    const systemPrompt = `You are a project board generator. Your only job is to call the generateProjectBoard tool with the provided project brief and role. You must call the generateProjectBoard tool to create and persist the board. Do not ask questions or create briefs - just use the tool to generate the actual board. Generate all content in ${language}.`;
+    
     // Force the orchestrator to use the boardWizard toolkit by overriding the intent classification
     const result = await orchestrator.orchestrate(
       query, 
       [], // Pass empty history for this self-contained task
-      undefined, // No system prompt override
+      systemPrompt, // Override system prompt to force tool usage
       ['boardWizard'], // Explicitly require the boardWizard toolkit
       context // Pass the proper context
     );

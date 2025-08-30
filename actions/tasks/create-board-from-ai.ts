@@ -10,6 +10,7 @@ import { runBoardGenerationJob } from '@/lib/jobs/board-generation-job'; // We w
 const CreateBoardFromAiSchema = z.object({
   refinedPrompt: z.string().min(10, 'The project brief is too short.'),
   role: z.string(),
+  language: z.string().optional().default('English'),
 });
 
 export async function createBoardFromAi(values: z.infer<typeof CreateBoardFromAiSchema>) {
@@ -28,14 +29,17 @@ export async function createBoardFromAi(values: z.infer<typeof CreateBoardFromAi
     return { error: 'Invalid fields' };
   }
 
-  const { refinedPrompt, role } = validatedFields.data;
+  const { refinedPrompt, role, language } = validatedFields.data;
 
   // 1. Persist the request to the database
+  // Store language info in the refined prompt for now
+  const promptWithLanguage = `${refinedPrompt}\n\n[LANGUAGE: ${language}]`;
+  
   const boardRequest = await db.aIGeneratedBoardRequest.create({
     data: {
       userId: session.user.id,
       companyId,
-      refinedPrompt,
+      refinedPrompt: promptWithLanguage,
       role,
       status: 'PENDING',
     },

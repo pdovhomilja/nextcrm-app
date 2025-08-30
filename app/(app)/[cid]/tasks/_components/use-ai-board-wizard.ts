@@ -17,7 +17,7 @@ export function useAiBoardWizard({ onOpenChange }: { onOpenChange: (open: boolea
   const [finalBrief, setFinalBrief] = useState('');
   const [isPending, setIsPending] = useState(false);
 
-  const form = useForm({ defaultValues: { goal: '', role: '' } });
+  const form = useForm({ defaultValues: { goal: '', role: '', language: 'English' } });
 
   // Reset state when the dialog is closed
   useEffect(() => {
@@ -37,13 +37,13 @@ export function useAiBoardWizard({ onOpenChange }: { onOpenChange: (open: boolea
     }
   };
 
-  const handleInitialSubmit = async (data: { goal: string; role: string }) => {
+  const handleInitialSubmit = async (data: { goal: string; role: string; language: string }) => {
     setIsPending(true);
     const initialMessage: Message = { id: Date.now().toString(), role: 'user', content: `My goal is: "${data.goal}". My role is: "${data.role}".` };
     setMessages([initialMessage]);
     setStep('refining');
     try {
-      const response = await refineGoalConversation({ messages: [initialMessage] });
+      const response = await refineGoalConversation({ messages: [initialMessage], language: data.language });
       processAssistantResponse(response);
     } catch {
       toast.error('An error occurred during refinement.');
@@ -58,7 +58,7 @@ export function useAiBoardWizard({ onOpenChange }: { onOpenChange: (open: boolea
     const newMessages = [...messages, newUserMessage];
     setMessages(newMessages);
     try {
-      const response = await refineGoalConversation({ messages: newMessages });
+      const response = await refineGoalConversation({ messages: newMessages, language: form.getValues('language') });
       processAssistantResponse(response);
     } catch {
       toast.error('An error occurred during refinement.');
@@ -70,7 +70,7 @@ export function useAiBoardWizard({ onOpenChange }: { onOpenChange: (open: boolea
     setIsPending(true);
     toast.info('Board generation has started! We will notify you upon completion.');
     try {
-      await createBoardFromAi({ refinedPrompt: finalBrief, role: form.getValues('role') });
+      await createBoardFromAi({ refinedPrompt: finalBrief, role: form.getValues('role'), language: form.getValues('language') });
       onOpenChange(false); // Close dialog on success
     } catch {
       toast.error('Failed to start board generation.');
