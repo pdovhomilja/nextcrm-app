@@ -25,6 +25,8 @@ const formSchema = z.object({
   imapPort: z.string().min(1, { message: 'Port is required.' }),
   imapUser: z.string().min(1, { message: 'IMAP username is required.' }),
   password: z.string().min(1, { message: 'Password or App Password is required.' }),
+  smtpHost: z.string().min(1, { message: 'SMTP host is required.' }),
+  smtpPort: z.string().min(1, { message: 'Port is required.' }),
 });
 
 type MailAccountFormValues = z.infer<typeof formSchema>;
@@ -41,6 +43,8 @@ export const MailAccountForm = () => {
       imapPort: '993',
       imapUser: '',
       password: '',
+      smtpHost: '',
+      smtpPort: '587',
     },
   });
 
@@ -49,6 +53,7 @@ export const MailAccountForm = () => {
       const result = await saveUserMailAccount({
         ...values,
         imapPort: parseInt(values.imapPort, 10),
+        smtpPort: parseInt(values.smtpPort, 10),
       });
       if (result.error) {
         toast.error('Failed to add account', {
@@ -132,6 +137,33 @@ export const MailAccountForm = () => {
                 <FormDescription>
                   For services like Gmail, you may need to generate an App Password.
                 </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="smtpHost"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>SMTP Host</FormLabel>
+                <FormControl>
+                  <Input placeholder="smtp.example.com" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="smtpPort"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>SMTP Port</FormLabel>
+                <FormControl>
+                  <Input type="text" {...field} />
+                </FormControl>
+                <FormDescription>Usually 587 for TLS.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
