@@ -52,3 +52,6 @@ next-env.d.ts
 #prisma
 /lib/generated
 /db_backup
+.prisma_migrate_deploy
+prisma_migrate_deploy
+temp_diff.sql
