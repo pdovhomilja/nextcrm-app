@@ -9,6 +9,7 @@ import {
   IconSettings,
   IconRobot,
   IconList,
+  IconMail,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -65,6 +66,11 @@ export function AppSidebar({
         title: "AI Assistant V2",
         url: `/${companyId}/ai-assistant-v2`,
         icon: IconRobot,
+      },
+      {
+        title: "Mail",
+        url: `/${companyId}/mail`,
+        icon: IconMail,
       },
       /*       {
         title: "Suggestions",

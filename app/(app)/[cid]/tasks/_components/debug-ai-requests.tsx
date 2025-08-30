@@ -70,7 +70,7 @@ export function DebugAiRequests() {
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  }, [router, previousCompletedIds]);
 
   const handleRetry = async (requestId: string) => {
     setRetryingIds(prev => new Set(prev).add(requestId));

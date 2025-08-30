@@ -43,12 +43,8 @@ export function LoginFormMagicLink({
               </Button>
             </div>
           </form>
-          <div className="bg-muted relative hidden md:block">
-            <img
-              src="/images/logo.png"
-              alt="Image"
-              className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-            />
+          <div className="bg-muted relative hidden items-center justify-center md:flex">
+            <div className="h-20 w-20 bg-primary rounded-full"></div>
           </div>
         </CardContent>
       </Card>

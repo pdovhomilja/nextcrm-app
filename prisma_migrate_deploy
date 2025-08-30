@@ -1,0 +1,12 @@
+# scripts/deploy-prod.sh
+#!/bin/bash
+
+git status
+git add prisma/migrations/ prisma/schema.prisma
+git commit -m "feat: add new feature to schema"
+
+echo "🚀 Deploying migrations to production..."
+DATABASE_URL="postgresql://taskhq-xmation:T4skHQXm4t10n*@docker.softbase.cz:5433/taskhq-xmation?schema=public" pnpm prisma migrate deploy
+echo "✅ Checking migration status..."
+DATABASE_URL="postgresql://taskhq-xmation:T4skHQXm4t10n*@docker.softbase.cz:5433/taskhq-xmation?schema=public" pnmp prisma migrate status
+echo "🎉 Production deployment complete!"
