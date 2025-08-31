@@ -50,7 +50,12 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const QuickCreateForm = () => {
+interface EmailData {
+  subject?: string;
+  text?: string;
+}
+
+const QuickCreateForm = ({ emailData }: { emailData?: EmailData }) => {
   const { data: session } = useSession();
   const user = session?.user;
   //console.log("User:", user);
@@ -64,8 +69,8 @@ const QuickCreateForm = () => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: "",
-      description: "",
+      title: emailData?.subject ?? "",
+      description: emailData?.text ?? "",
       boardId: "",
       boardSectionId: "",
       status: "NEW",

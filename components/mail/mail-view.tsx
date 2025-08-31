@@ -7,6 +7,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { SafeHtmlRenderer } from "./safe-html-renderer";
 import { format } from "date-fns";
+import {
+  Sheet,
+  SheetTrigger,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "../ui/sheet";
+import { SidebarMenuButton } from "../ui/sidebar";
+import { IconCirclePlusFilled } from "@tabler/icons-react";
+
+import QuickCreateForm from "../quickcreate/form/quick-create-form";
 
 interface MailContent {
   id?: string;
@@ -17,6 +28,8 @@ interface MailContent {
   html?: string;
   text?: string;
   error?: string;
+  nextUid?: string;
+  previousUid?: string;
 }
 
 export const MailView = () => {
@@ -74,9 +87,29 @@ export const MailView = () => {
   }
 
   if (!data) return null;
+  console.log("mailUid", mailUid);
 
   return (
     <div className="p-4 text-xs">
+      <div className="flex justify-between pb-4">
+        <Sheet>
+          <SheetTrigger>
+            <SidebarMenuButton
+              tooltip="Quick Create"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear"
+            >
+              <IconCirclePlusFilled />
+              <span>Create Task from Email</span>
+            </SidebarMenuButton>
+          </SheetTrigger>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>Quick Create</SheetTitle>
+            </SheetHeader>
+            <QuickCreateForm emailData={data} />
+          </SheetContent>
+        </Sheet>
+      </div>
       <div className="flex items-center justify-between">
         <h2 className=" font-bold text-xs">{data.subject}</h2>
         <p className="text-xs text-muted-foreground">
