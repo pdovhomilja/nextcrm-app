@@ -22,32 +22,34 @@ This server action is the entry point for the asynchronous part of the flow. It 
 
     ```typescript
     // in actions/tasks/create-board-from-ai.ts
-    'use server';
+    "use server";
 
-    import { z } from 'zod';
-    import { auth } from '@/auth';
-    import { db } from '@/lib/db';
-    import { getCompanyId } from '@/lib/auth-utils';
-    import { runBoardGenerationJob } from '@/lib/jobs/board-generation-job'; // We will create this next
+    import { z } from "zod";
+    import { auth } from "@/auth";
+    import { db } from "@/lib/db";
+    import { getCompanyId } from "@/lib/auth-utils";
+    import { runBoardGenerationJob } from "@/lib/jobs/board-generation-job"; // We will create this next
 
     const CreateBoardFromAiSchema = z.object({
-      refinedPrompt: z.string().min(10, 'The project brief is too short.'),
+      refinedPrompt: z.string().min(10, "The project brief is too short."),
       role: z.string(),
     });
 
-    export async function createBoardFromAi(values: z.infer<typeof CreateBoardFromAiSchema>) {
+    export async function createBoardFromAi(
+      values: z.infer<typeof CreateBoardFromAiSchema>,
+    ) {
       const session = await auth();
       if (!session?.user?.id) {
-        return { error: 'Unauthorized' };
+        return { error: "Unauthorized" };
       }
       const companyId = await getCompanyId(session.user.id);
       if (!companyId) {
-        return { error: 'Company not found' };
+        return { error: "Company not found" };
       }
 
       const validatedFields = CreateBoardFromAiSchema.safeParse(values);
       if (!validatedFields.success) {
-        return { error: 'Invalid fields' };
+        return { error: "Invalid fields" };
       }
 
       const { refinedPrompt, role } = validatedFields.data;
@@ -59,7 +61,7 @@ This server action is the entry point for the asynchronous part of the flow. It 
           companyId,
           refinedPrompt,
           role,
-          status: 'PENDING',
+          status: "PENDING",
         },
       });
 
@@ -67,7 +69,10 @@ This server action is the entry point for the asynchronous part of the flow. It 
       // We do not `await` this call. The client gets an immediate response.
       runBoardGenerationJob({ boardRequestId: boardRequest.id });
 
-      return { success: 'Board generation has started! We will notify you upon completion.' };
+      return {
+        success:
+          "Board generation has started! We will notify you upon completion.",
+      };
     }
     ```
 
@@ -80,20 +85,22 @@ Here we define the actual work that happens in the background. For a Next.js app
 
     ```typescript
     // in lib/jobs/board-generation-job.ts
-    import { db } from '@/lib/db';
-    import { AgentOrchestrator } from '@/lib/ai/agent-orchestrator'; // Assuming this is your orchestrator entry point
+    import { db } from "@/lib/db";
+    import { AgentOrchestrator } from "@/lib/ai/agent-orchestrator"; // Assuming this is your orchestrator entry point
 
     interface BoardGenerationJobPayload {
       boardRequestId: string;
     }
 
-    export async function runBoardGenerationJob(payload: BoardGenerationJobPayload) {
+    export async function runBoardGenerationJob(
+      payload: BoardGenerationJobPayload,
+    ) {
       const { boardRequestId } = payload;
 
       // 1. Update job status to PROCESSING
       await db.aIGeneratedBoardRequest.update({
         where: { id: boardRequestId },
-        data: { status: 'PROCESSING' },
+        data: { status: "PROCESSING" },
       });
 
       try {
@@ -109,7 +116,7 @@ Here we define the actual work that happens in the background. For a Next.js app
         // 3. Invoke the AI Agent Orchestrator
         const orchestrator = new AgentOrchestrator();
         const query = `Using the boardWizard toolkit, generate a project board based on this brief: "${request.refinedPrompt}"`;
-        
+
         // The orchestrator should be configured to find and use the `generateProjectBoard` tool
         const result = await orchestrator.orchestrate(query, []); // Pass empty history for this self-contained task
 
@@ -120,22 +127,24 @@ Here we define the actual work that happens in the background. For a Next.js app
         await db.aIGeneratedBoardRequest.update({
           where: { id: boardRequestId },
           data: {
-            status: 'COMPLETED',
+            status: "COMPLETED",
             generatedBoardId: boardId,
           },
         });
 
         // 5. TODO: Trigger a user notification (e.g., via Pusher, Web Sockets, or other real-time service)
         console.log(`Job ${boardRequestId} completed successfully.`);
-
       } catch (error) {
         console.error(`Job ${boardRequestId} failed:`, error);
         // 6. Update job status to FAILED
         await db.aIGeneratedBoardRequest.update({
           where: { id: boardRequestId },
           data: {
-            status: 'FAILED',
-            failureReason: error instanceof Error ? error.message : 'An unknown error occurred',
+            status: "FAILED",
+            failureReason:
+              error instanceof Error
+                ? error.message
+                : "An unknown error occurred",
           },
         });
         // 7. TODO: Trigger a user notification about the failure
@@ -145,8 +154,8 @@ Here we define the actual work that happens in the background. For a Next.js app
 
 ## 3. Verification
 
--   Manually call the `createBoardFromAi` action from a test script or a temporary UI button.
--   Check the database to confirm that an `AIGeneratedBoardRequest` record is created with a `PENDING` status.
--   Observe the server logs to see the `runBoardGenerationJob` function execute.
--   After a few moments, check the database record again. Its status should have changed to `COMPLETED` (on success) or `FAILED` (on error).
--   If successful, a new board should exist in the `Board` table, and its ID should be linked in the `AIGeneratedBoardRequest` record.
+- Manually call the `createBoardFromAi` action from a test script or a temporary UI button.
+- Check the database to confirm that an `AIGeneratedBoardRequest` record is created with a `PENDING` status.
+- Observe the server logs to see the `runBoardGenerationJob` function execute.
+- After a few moments, check the database record again. Its status should have changed to `COMPLETED` (on success) or `FAILED` (on error).
+- If successful, a new board should exist in the `Board` table, and its ID should be linked in the `AIGeneratedBoardRequest` record.

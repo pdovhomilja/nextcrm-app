@@ -70,7 +70,7 @@ Instead of simply selecting an agent, we will implement the **`Routing`** patter
         domain: z.enum(["tasks", "projects", "users", "metrics"]),
         complexity: z.enum(["simple", "complex", "multi_step"]),
         requiredAgents: z.array(
-          z.enum(["analyzer", "recommender", "tracker", "optimizer"])
+          z.enum(["analyzer", "recommender", "tracker", "optimizer"]),
         ),
         reasoning: z.string(),
       });

@@ -8,7 +8,7 @@ import type { CreateTaskData, Task } from "@/app/(app)/[cid]/tasks/_types";
 
 export async function createTask(
   task: CreateTaskData,
-  boardSectionId: string
+  boardSectionId: string,
 ): Promise<Task> {
   try {
     const session = await auth();
@@ -88,7 +88,7 @@ export async function createTask(
     return taskForClient;
   } catch (error) {
     throw new Error(
-      `Failed to create task: ${error instanceof Error ? error.message : "Unknown error"}`
+      `Failed to create task: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
 }

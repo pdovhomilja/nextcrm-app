@@ -1,9 +1,11 @@
 # Phase 4: AI Agent Architecture
 
 ## Overview
+
 This phase creates the intelligent AI agent system that leverages MCP servers and RAG capabilities to provide sophisticated project management assistance. The agent will have specialized roles, decision-making capabilities, and tool orchestration.
 
 ## Prerequisites
+
 - Completed Phase 1: MCP Server Setup & Vector Database Integration
 - Completed Phase 2: Embedding Generation
 - Completed Phase 3: RAG Implementation
@@ -18,12 +20,14 @@ This phase creates the intelligent AI agent system that leverages MCP servers an
 **API Token Usage**: Medium
 
 #### Tasks:
+
 - [ ] Create MCP client connection pool
 - [ ] Implement connection health monitoring
 - [ ] Add tool discovery and caching
 - [ ] Create connection failover mechanisms
 
 #### MCP Client Pool Implementation:
+
 Create `/lib/ai/mcp-client-pool.ts`:
 
 ```typescript
@@ -126,8 +130,8 @@ export class MCPClientPool {
    * Connect to all configured MCP servers
    */
   private async connectToAllServers(): Promise<void> {
-    const connectionPromises = Array.from(this.servers.keys()).map(serverName =>
-      this.connectToServer(serverName)
+    const connectionPromises = Array.from(this.servers.keys()).map(
+      (serverName) => this.connectToServer(serverName),
     );
 
     const results = await Promise.allSettled(connectionPromises);
@@ -135,7 +139,10 @@ export class MCPClientPool {
     results.forEach((result, index) => {
       const serverName = Array.from(this.servers.keys())[index];
       if (result.status === "rejected") {
-        console.error(`Failed to connect to MCP server ${serverName}:`, result.reason);
+        console.error(
+          `Failed to connect to MCP server ${serverName}:`,
+          result.reason,
+        );
         this.updateServerHealth(serverName, "unhealthy");
       }
     });
@@ -144,7 +151,10 @@ export class MCPClientPool {
   /**
    * Connect to a specific MCP server with retry logic
    */
-  private async connectToServer(serverName: string, attempt = 1): Promise<boolean> {
+  private async connectToServer(
+    serverName: string,
+    attempt = 1,
+  ): Promise<boolean> {
     const server = this.servers.get(serverName);
     if (!server) {
       console.error(`Server configuration not found: ${serverName}`);
@@ -152,27 +162,35 @@ export class MCPClientPool {
     }
 
     try {
-      console.log(`Connecting to MCP server: ${serverName} (attempt ${attempt})`);
+      console.log(
+        `Connecting to MCP server: ${serverName} (attempt ${attempt})`,
+      );
 
       const transport = new SSEClientTransport(
-        new URL(server.url, process.env.NEXT_PUBLIC_APP_URL!)
+        new URL(server.url, process.env.NEXT_PUBLIC_APP_URL!),
       );
 
       // Set connection timeout
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Connection timeout")), this.config.connectionTimeout);
+        setTimeout(
+          () => reject(new Error("Connection timeout")),
+          this.config.connectionTimeout,
+        );
       });
 
       const clientPromise = experimental_createMCPClient({ transport });
-      const client = await Promise.race([clientPromise, timeoutPromise]) as any;
+      const client = (await Promise.race([
+        clientPromise,
+        timeoutPromise,
+      ])) as any;
 
       // Get available tools
       const tools = await client.tools();
-      
+
       // Store client and tools
       this.clients.set(serverName, client);
       server.tools = tools;
-      
+
       // Register tools with prefixed names
       Object.entries(tools).forEach(([toolName, tool]) => {
         this.tools.set(`${serverName}_${toolName}`, tool);
@@ -180,14 +198,21 @@ export class MCPClientPool {
 
       this.updateServerHealth(serverName, "healthy");
       console.log(`Successfully connected to MCP server: ${serverName}`);
-      
+
       return true;
     } catch (error) {
-      console.error(`Connection attempt ${attempt} failed for ${serverName}:`, error);
+      console.error(
+        `Connection attempt ${attempt} failed for ${serverName}:`,
+        error,
+      );
 
       if (attempt < this.config.maxRetries) {
-        console.log(`Retrying connection to ${serverName} in ${this.config.retryDelay}ms`);
-        await new Promise(resolve => setTimeout(resolve, this.config.retryDelay));
+        console.log(
+          `Retrying connection to ${serverName} in ${this.config.retryDelay}ms`,
+        );
+        await new Promise((resolve) =>
+          setTimeout(resolve, this.config.retryDelay),
+        );
         return this.connectToServer(serverName, attempt + 1);
       }
 
@@ -199,7 +224,10 @@ export class MCPClientPool {
   /**
    * Update server health status
    */
-  private updateServerHealth(serverName: string, status: "healthy" | "unhealthy"): void {
+  private updateServerHealth(
+    serverName: string,
+    status: "healthy" | "unhealthy",
+  ): void {
     const server = this.servers.get(serverName);
     if (server) {
       server.healthStatus = status;
@@ -224,8 +252,8 @@ export class MCPClientPool {
    * Perform health checks on all servers
    */
   private async performHealthChecks(): Promise<void> {
-    const healthPromises = Array.from(this.servers.keys()).map(serverName =>
-      this.checkServerHealth(serverName)
+    const healthPromises = Array.from(this.servers.keys()).map((serverName) =>
+      this.checkServerHealth(serverName),
     );
 
     await Promise.allSettled(healthPromises);
@@ -245,8 +273,8 @@ export class MCPClientPool {
       // Try to call a health check tool or list tools
       await Promise.race([
         client.tools(),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error("Health check timeout")), 5000)
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Health check timeout")), 5000),
         ),
       ]);
 
@@ -274,8 +302,9 @@ export class MCPClientPool {
       const server = this.servers.get(serverName);
       if (server && server.healthStatus === "healthy") {
         return Object.fromEntries(
-          Array.from(this.tools.entries())
-            .filter(([name]) => name.startsWith(`${serverName}_`))
+          Array.from(this.tools.entries()).filter(([name]) =>
+            name.startsWith(`${serverName}_`),
+          ),
         );
       }
       return {};
@@ -283,11 +312,11 @@ export class MCPClientPool {
 
     // Return tools only from healthy servers
     const healthyTools: Record<string, any> = {};
-    
+
     for (const [toolName, tool] of this.tools.entries()) {
       const serverName = toolName.split("_")[0];
       const server = this.servers.get(serverName);
-      
+
       if (server?.healthStatus === "healthy") {
         healthyTools[toolName] = tool;
       }
@@ -317,7 +346,7 @@ export class MCPClientPool {
     toolCount: number;
     lastHealthCheck: Date;
   }> {
-    return Array.from(this.servers.values()).map(server => ({
+    return Array.from(this.servers.values()).map((server) => ({
       name: server.name,
       status: server.healthStatus,
       description: server.description,
@@ -336,7 +365,7 @@ export class MCPClientPool {
       clearInterval(this.healthCheckInterval);
     }
 
-    const closePromises = Array.from(this.clients.values()).map(client => {
+    const closePromises = Array.from(this.clients.values()).map((client) => {
       try {
         return client.close?.();
       } catch (error) {
@@ -366,16 +395,20 @@ export class MCPClientPool {
       try {
         await existingClient.close();
       } catch (error) {
-        console.error(`Error closing existing connection to ${serverName}:`, error);
+        console.error(
+          `Error closing existing connection to ${serverName}:`,
+          error,
+        );
       }
       this.clients.delete(serverName);
     }
 
     // Remove old tools
-    const toolsToRemove = Array.from(this.tools.keys())
-      .filter(toolName => toolName.startsWith(`${serverName}_`));
-    
-    toolsToRemove.forEach(toolName => this.tools.delete(toolName));
+    const toolsToRemove = Array.from(this.tools.keys()).filter((toolName) =>
+      toolName.startsWith(`${serverName}_`),
+    );
+
+    toolsToRemove.forEach((toolName) => this.tools.delete(toolName));
 
     // Reconnect
     return await this.connectToServer(serverName);
@@ -391,12 +424,14 @@ export const mcpClientPool = MCPClientPool.getInstance();
 **API Token Usage**: Medium-High
 
 #### Tasks:
+
 - [ ] Create base AI agent class
 - [ ] Implement agent decision-making system
 - [ ] Add conversation memory management
 - [ ] Create agent role specialization
 
 #### Core AI Agent Implementation:
+
 Create `/lib/ai/agent-core.ts`:
 
 ```typescript
@@ -436,7 +471,11 @@ export interface AgentDecision {
   reasoning: string;
   confidence: number;
   toolsToUse?: string[];
-  responseStrategy: "direct" | "rag_enhanced" | "tool_orchestrated" | "analytical";
+  responseStrategy:
+    | "direct"
+    | "rag_enhanced"
+    | "tool_orchestrated"
+    | "analytical";
 }
 
 export abstract class BaseAIAgent {
@@ -457,11 +496,13 @@ export abstract class BaseAIAgent {
    */
   async initialize(): Promise<void> {
     console.log(`Initializing ${this.role} agent...`);
-    
+
     try {
       await mcpClientPool.initialize();
       this.mcpTools = await mcpClientPool.getTools();
-      console.log(`${this.role} agent initialized with ${Object.keys(this.mcpTools).length} tools`);
+      console.log(
+        `${this.role} agent initialized with ${Object.keys(this.mcpTools).length} tools`,
+      );
     } catch (error) {
       console.error(`Failed to initialize ${this.role} agent:`, error);
       throw error;
@@ -474,7 +515,7 @@ export abstract class BaseAIAgent {
   async processQuery(
     query: string,
     context: AgentContext,
-    conversationHistory: AgentMessage[] = []
+    conversationHistory: AgentMessage[] = [],
   ): Promise<{
     response: string;
     decision: AgentDecision;
@@ -485,7 +526,11 @@ export abstract class BaseAIAgent {
 
     try {
       // Step 1: Make decision about how to handle the query
-      const decision = await this.makeDecision(query, context, conversationHistory);
+      const decision = await this.makeDecision(
+        query,
+        context,
+        conversationHistory,
+      );
 
       let response: string;
       let toolResults: any[] = [];
@@ -502,10 +547,14 @@ export abstract class BaseAIAgent {
           const toolResult = await this.orchestrateTools(
             query,
             context,
-            decision.toolsToUse || []
+            decision.toolsToUse || [],
           );
           toolResults = toolResult.results;
-          response = await this.synthesizeToolResponse(query, toolResult, context);
+          response = await this.synthesizeToolResponse(
+            query,
+            toolResult,
+            context,
+          );
           break;
 
         case "respond":
@@ -515,7 +564,11 @@ export abstract class BaseAIAgent {
             metadata.ragContext = ragResult.contextSummary;
             metadata.sources = ragResult.sources;
           } else {
-            response = await this.generateDirectResponse(query, context, conversationHistory);
+            response = await this.generateDirectResponse(
+              query,
+              context,
+              conversationHistory,
+            );
           }
           break;
 
@@ -524,11 +577,13 @@ export abstract class BaseAIAgent {
           break;
 
         case "escalate":
-          response = "This query requires human assistance. I've flagged it for escalation to your team lead.";
+          response =
+            "This query requires human assistance. I've flagged it for escalation to your team lead.";
           break;
 
         default:
-          response = "I need to think about how to best help you with this request.";
+          response =
+            "I need to think about how to best help you with this request.";
       }
 
       // Step 3: Update conversation history
@@ -538,7 +593,11 @@ export abstract class BaseAIAgent {
         content: response,
         timestamp: new Date(),
         metadata: {
-          toolCalls: decision.toolsToUse?.map(tool => ({ toolName: tool, parameters: {}, result: {} })),
+          toolCalls: decision.toolsToUse?.map((tool) => ({
+            toolName: tool,
+            parameters: {},
+            result: {},
+          })),
           confidence: decision.confidence,
         },
       });
@@ -553,9 +612,10 @@ export abstract class BaseAIAgent {
       };
     } catch (error) {
       console.error(`${this.role} agent processing error:`, error);
-      
+
       return {
-        response: "I encountered an error while processing your request. Please try again or rephrase your question.",
+        response:
+          "I encountered an error while processing your request. Please try again or rephrase your question.",
         decision: {
           action: "respond",
           reasoning: "Error occurred during processing",
@@ -576,7 +636,7 @@ export abstract class BaseAIAgent {
   protected async makeDecision(
     query: string,
     context: AgentContext,
-    history: AgentMessage[]
+    history: AgentMessage[],
   ): Promise<AgentDecision> {
     const decisionPrompt = `As a ${this.role} agent, analyze this query and decide the best approach.
 
@@ -584,7 +644,10 @@ Query: "${query}"
 Available capabilities: ${this.capabilities.join(", ")}
 Available MCP tools: ${Object.keys(this.mcpTools).slice(0, 10).join(", ")}${Object.keys(this.mcpTools).length > 10 ? "..." : ""}
 
-Conversation context: ${history.slice(-3).map(m => `${m.role}: ${m.content}`).join("\n")}
+Conversation context: ${history
+      .slice(-3)
+      .map((m) => `${m.role}: ${m.content}`)
+      .join("\n")}
 
 Choose the best action and strategy for handling this query.`;
 
@@ -606,11 +669,21 @@ Response strategies:
 - analytical: Deep analysis with structured insights`,
         prompt: decisionPrompt,
         schema: z.object({
-          action: z.enum(["respond", "use_tools", "request_clarification", "escalate"]),
+          action: z.enum([
+            "respond",
+            "use_tools",
+            "request_clarification",
+            "escalate",
+          ]),
           reasoning: z.string(),
           confidence: z.number().min(0).max(1),
           toolsToUse: z.array(z.string()).optional(),
-          responseStrategy: z.enum(["direct", "rag_enhanced", "tool_orchestrated", "analytical"]),
+          responseStrategy: z.enum([
+            "direct",
+            "rag_enhanced",
+            "tool_orchestrated",
+            "analytical",
+          ]),
         }),
         temperature: 0.3,
       });
@@ -618,7 +691,7 @@ Response strategies:
       return result.object;
     } catch (error) {
       console.error("Decision making error:", error);
-      
+
       // Fallback decision
       return {
         action: "respond",
@@ -635,7 +708,7 @@ Response strategies:
   protected async orchestrateTools(
     query: string,
     context: AgentContext,
-    toolNames: string[]
+    toolNames: string[],
   ): Promise<{ results: any[]; summary: string }> {
     console.log(`Orchestrating tools: ${toolNames.join(", ")}`);
 
@@ -667,7 +740,7 @@ Response strategies:
       }
     }
 
-    const successCount = results.filter(r => r.success).length;
+    const successCount = results.filter((r) => r.success).length;
     const summary = `Executed ${toolNames.length} tools, ${successCount} succeeded`;
 
     return { results, summary };
@@ -676,7 +749,11 @@ Response strategies:
   /**
    * Execute a specific MCP tool (placeholder implementation)
    */
-  protected async executeTool(toolName: string, query: string, context: AgentContext): Promise<any> {
+  protected async executeTool(
+    toolName: string,
+    query: string,
+    context: AgentContext,
+  ): Promise<any> {
     // This would be implemented based on the specific MCP tool interface
     // For now, return a placeholder
     return {
@@ -707,21 +784,34 @@ Response strategies:
   /**
    * Determine RAG context type based on query
    */
-  protected determineContextType(query: string): "general" | "task_specific" | "board_analysis" | "recommendation" {
+  protected determineContextType(
+    query: string,
+  ): "general" | "task_specific" | "board_analysis" | "recommendation" {
     const queryLower = query.toLowerCase();
-    
-    if (queryLower.includes("recommend") || queryLower.includes("suggest") || queryLower.includes("should")) {
+
+    if (
+      queryLower.includes("recommend") ||
+      queryLower.includes("suggest") ||
+      queryLower.includes("should")
+    ) {
       return "recommendation";
     }
-    
-    if (queryLower.includes("analyze") || queryLower.includes("performance") || queryLower.includes("metrics")) {
+
+    if (
+      queryLower.includes("analyze") ||
+      queryLower.includes("performance") ||
+      queryLower.includes("metrics")
+    ) {
       return "board_analysis";
     }
-    
-    if (queryLower.includes("task") && (queryLower.includes("this") || queryLower.includes("current"))) {
+
+    if (
+      queryLower.includes("task") &&
+      (queryLower.includes("this") || queryLower.includes("current"))
+    ) {
       return "task_specific";
     }
-    
+
     return "general";
   }
 
@@ -731,7 +821,7 @@ Response strategies:
   protected async generateDirectResponse(
     query: string,
     context: AgentContext,
-    history: AgentMessage[]
+    history: AgentMessage[],
   ): Promise<string> {
     const response = await generateText({
       model: aiConfig.chatModel,
@@ -741,7 +831,7 @@ Your capabilities include: ${this.capabilities.join(", ")}
       
 Provide helpful, accurate responses based on your knowledge of project management best practices.`,
       messages: [
-        ...history.slice(-5).map(m => ({
+        ...history.slice(-5).map((m) => ({
           role: m.role as "user" | "assistant",
           content: m.content,
         })),
@@ -763,7 +853,7 @@ Provide helpful, accurate responses based on your knowledge of project managemen
   protected async synthesizeToolResponse(
     query: string,
     toolResult: { results: any[]; summary: string },
-    context: AgentContext
+    context: AgentContext,
   ): Promise<string> {
     const synthesisPrompt = `Based on the tool execution results, provide a comprehensive response to the user's query.
 
@@ -791,7 +881,7 @@ Synthesize this information into a clear, helpful response for the user.`;
    */
   protected async generateClarificationRequest(
     query: string,
-    context: AgentContext
+    context: AgentContext,
   ): Promise<string> {
     const clarificationPrompt = `The user asked: "${query}"
 
@@ -799,7 +889,8 @@ This query needs clarification to provide the best help. Generate a helpful clar
 
     const response = await generateText({
       model: aiConfig.chatModel,
-      system: "You are helpful at asking clarifying questions to better understand user needs.",
+      system:
+        "You are helpful at asking clarifying questions to better understand user needs.",
       prompt: clarificationPrompt,
       temperature: 0.6,
       maxTokens: 200,
@@ -811,7 +902,10 @@ This query needs clarification to provide the best help. Generate a helpful clar
   /**
    * Update conversation history
    */
-  protected updateConversationHistory(conversationId: string | undefined, message: AgentMessage): void {
+  protected updateConversationHistory(
+    conversationId: string | undefined,
+    message: AgentMessage,
+  ): void {
     if (!conversationId) return;
 
     const history = this.conversationHistory.get(conversationId) || [];
@@ -873,12 +967,14 @@ This query needs clarification to provide the best help. Generate a helpful clar
 **API Token Usage**: Medium
 
 #### Tasks:
+
 - [ ] Create Project Analyzer Agent
 - [ ] Implement Task Recommender Agent
 - [ ] Add Progress Tracker Agent
 - [ ] Create Resource Optimizer Agent
 
 #### Specialized Agents Implementation:
+
 Create `/lib/ai/specialized-agents.ts`:
 
 ```typescript
@@ -894,7 +990,7 @@ export class ProjectAnalyzerAgent extends BaseAIAgent {
   constructor() {
     super("project-analyzer", "Project Analyzer", [
       "project_health_analysis",
-      "bottleneck_identification", 
+      "bottleneck_identification",
       "performance_metrics",
       "trend_analysis",
       "risk_assessment",
@@ -904,7 +1000,10 @@ export class ProjectAnalyzerAgent extends BaseAIAgent {
   /**
    * Perform comprehensive project analysis
    */
-  async analyzeProjectHealth(boardId: string, context: AgentContext): Promise<{
+  async analyzeProjectHealth(
+    boardId: string,
+    context: AgentContext,
+  ): Promise<{
     healthScore: number;
     insights: Array<{
       category: string;
@@ -924,7 +1023,7 @@ export class ProjectAnalyzerAgent extends BaseAIAgent {
       const analyticsResult = await this.orchestrateTools(
         `Analyze project health for board ${boardId}`,
         { ...context, boardId },
-        ["analytics_analyze_project_health", "search_semantic_search_tasks"]
+        ["analytics_analyze_project_health", "search_semantic_search_tasks"],
       );
 
       // Generate structured analysis
@@ -944,7 +1043,7 @@ Provide detailed analysis with actionable insights.`,
               finding: z.string(),
               severity: z.enum(["low", "medium", "high", "critical"]),
               recommendation: z.string(),
-            })
+            }),
           ),
           metrics: z.object({
             completionRate: z.number().min(0).max(1),
@@ -969,17 +1068,25 @@ Provide detailed analysis with actionable insights.`,
   protected async makeDecision(
     query: string,
     context: AgentContext,
-    history: AgentMessage[]
+    history: AgentMessage[],
   ) {
     const queryLower = query.toLowerCase();
-    
+
     // Always use tools for analysis queries
-    if (queryLower.includes("analyze") || queryLower.includes("health") || queryLower.includes("performance")) {
+    if (
+      queryLower.includes("analyze") ||
+      queryLower.includes("health") ||
+      queryLower.includes("performance")
+    ) {
       return {
         action: "use_tools" as const,
-        reasoning: "Project analysis requires data gathering from analytics tools",
+        reasoning:
+          "Project analysis requires data gathering from analytics tools",
         confidence: 0.9,
-        toolsToUse: ["analytics_analyze_project_health", "search_semantic_search_tasks"],
+        toolsToUse: [
+          "analytics_analyze_project_health",
+          "search_semantic_search_tasks",
+        ],
         responseStrategy: "analytical" as const,
       };
     }
@@ -1008,10 +1115,14 @@ export class TaskRecommenderAgent extends BaseAIAgent {
   async generateTaskRecommendations(
     userId: string,
     context: AgentContext,
-    criteria: string[] = ["priority", "skill_match", "workload"]
+    criteria: string[] = ["priority", "skill_match", "workload"],
   ): Promise<{
     recommendations: Array<{
-      type: "create_task" | "reassign_task" | "adjust_priority" | "extend_deadline";
+      type:
+        | "create_task"
+        | "reassign_task"
+        | "adjust_priority"
+        | "extend_deadline";
       taskId?: string;
       title: string;
       description: string;
@@ -1030,7 +1141,7 @@ export class TaskRecommenderAgent extends BaseAIAgent {
       const userTasksResult = await this.orchestrateTools(
         `Get current tasks and workload for user ${userId}`,
         { ...context, taskId: userId },
-        ["tasks_search_tasks", "search_find_similar_tasks"]
+        ["tasks_search_tasks", "search_find_similar_tasks"],
       );
 
       // Generate recommendations
@@ -1044,17 +1155,24 @@ Criteria: ${criteria.join(", ")}
 
 Generate specific, actionable recommendations for task management.`,
         schema: z.object({
-          recommendations: z.array(
-            z.object({
-              type: z.enum(["create_task", "reassign_task", "adjust_priority", "extend_deadline"]),
-              taskId: z.string().optional(),
-              title: z.string(),
-              description: z.string(),
-              reasoning: z.string(),
-              confidence: z.number().min(0).max(1),
-              estimatedImpact: z.enum(["low", "medium", "high"]),
-            })
-          ).max(5),
+          recommendations: z
+            .array(
+              z.object({
+                type: z.enum([
+                  "create_task",
+                  "reassign_task",
+                  "adjust_priority",
+                  "extend_deadline",
+                ]),
+                taskId: z.string().optional(),
+                title: z.string(),
+                description: z.string(),
+                reasoning: z.string(),
+                confidence: z.number().min(0).max(1),
+                estimatedImpact: z.enum(["low", "medium", "high"]),
+              }),
+            )
+            .max(5),
           workloadAnalysis: z.object({
             currentCapacity: z.number().min(0).max(1),
             recommendedTasks: z.number(),
@@ -1077,14 +1195,19 @@ Generate specific, actionable recommendations for task management.`,
   protected async makeDecision(
     query: string,
     context: AgentContext,
-    history: AgentMessage[]
+    history: AgentMessage[],
   ) {
     const queryLower = query.toLowerCase();
-    
-    if (queryLower.includes("recommend") || queryLower.includes("suggest") || queryLower.includes("should")) {
+
+    if (
+      queryLower.includes("recommend") ||
+      queryLower.includes("suggest") ||
+      queryLower.includes("should")
+    ) {
       return {
         action: "use_tools" as const,
-        reasoning: "Recommendations require analysis of current tasks and workload",
+        reasoning:
+          "Recommendations require analysis of current tasks and workload",
         confidence: 0.85,
         toolsToUse: ["tasks_search_tasks", "search_find_similar_tasks"],
         responseStrategy: "tool_orchestrated" as const,
@@ -1102,7 +1225,7 @@ export class ProgressTrackerAgent extends BaseAIAgent {
   constructor() {
     super("progress-tracker", "Progress Tracker", [
       "milestone_tracking",
-      "deadline_monitoring", 
+      "deadline_monitoring",
       "velocity_calculation",
       "burndown_analysis",
       "completion_forecasting",
@@ -1115,7 +1238,7 @@ export class ProgressTrackerAgent extends BaseAIAgent {
   async trackProjectProgress(
     boardId: string,
     timeRange: "week" | "month" | "quarter",
-    context: AgentContext
+    context: AgentContext,
   ): Promise<{
     progressSummary: {
       completedTasks: number;
@@ -1141,7 +1264,7 @@ export class ProgressTrackerAgent extends BaseAIAgent {
       const progressData = await this.orchestrateTools(
         `Track progress for board ${boardId} over ${timeRange}`,
         { ...context, boardId },
-        ["analytics_analyze_project_health", "tasks_search_tasks"]
+        ["analytics_analyze_project_health", "tasks_search_tasks"],
       );
 
       // Generate progress analysis
@@ -1168,7 +1291,7 @@ Provide comprehensive progress tracking analysis.`,
               direction: z.enum(["up", "down", "stable"]),
               change: z.number(),
               significance: z.enum(["low", "medium", "high"]),
-            })
+            }),
           ),
           forecasts: z.object({
             estimatedCompletion: z.string(), // Will be converted to Date
@@ -1187,10 +1310,16 @@ Provide comprehensive progress tracking analysis.`,
         ...progressResult.object,
         forecasts: {
           ...progressResult.object.forecasts,
-          estimatedCompletion: new Date(progressResult.object.forecasts.estimatedCompletion),
+          estimatedCompletion: new Date(
+            progressResult.object.forecasts.estimatedCompletion,
+          ),
           confidenceInterval: {
-            min: new Date(progressResult.object.forecasts.confidenceInterval.min),
-            max: new Date(progressResult.object.forecasts.confidenceInterval.max),
+            min: new Date(
+              progressResult.object.forecasts.confidenceInterval.min,
+            ),
+            max: new Date(
+              progressResult.object.forecasts.confidenceInterval.max,
+            ),
           },
         },
       };
@@ -1223,7 +1352,7 @@ export class ResourceOptimizerAgent extends BaseAIAgent {
   async optimizeTeamResources(
     teamIds: string[],
     optimizationType: "workload" | "skills" | "deadlines",
-    context: AgentContext
+    context: AgentContext,
   ): Promise<{
     optimizations: Array<{
       userId: string;
@@ -1250,7 +1379,7 @@ export class ResourceOptimizerAgent extends BaseAIAgent {
       const teamData = await this.orchestrateTools(
         `Analyze team resource allocation for optimization type: ${optimizationType}`,
         context,
-        ["tasks_search_tasks", "analytics_analyze_project_health"]
+        ["tasks_search_tasks", "analytics_analyze_project_health"],
       );
 
       // Generate optimization recommendations
@@ -1278,9 +1407,9 @@ Provide specific resource optimization recommendations.`,
                   fromUser: z.string(),
                   toUser: z.string(),
                   reasoning: z.string(),
-                })
+                }),
               ),
-            })
+            }),
           ),
           teamMetrics: z.object({
             totalCapacity: z.number(),
@@ -1304,7 +1433,9 @@ Provide specific resource optimization recommendations.`,
 export class AgentFactory {
   private static agents: Map<string, BaseAIAgent> = new Map();
 
-  static async getAgent(agentType: "analyzer" | "recommender" | "tracker" | "optimizer"): Promise<BaseAIAgent> {
+  static async getAgent(
+    agentType: "analyzer" | "recommender" | "tracker" | "optimizer",
+  ): Promise<BaseAIAgent> {
     if (this.agents.has(agentType)) {
       return this.agents.get(agentType)!;
     }
@@ -1340,7 +1471,7 @@ export class AgentFactory {
 
   static async getAllAgents(): Promise<BaseAIAgent[]> {
     const agents = await Promise.all(
-      this.getAvailableAgents().map(type => this.getAgent(type as any))
+      this.getAvailableAgents().map((type) => this.getAgent(type as any)),
     );
     return agents;
   }
@@ -1353,12 +1484,14 @@ export class AgentFactory {
 **API Token Usage**: Medium
 
 #### Tasks:
+
 - [ ] Create agent orchestration service
 - [ ] Implement multi-agent coordination
 - [ ] Add agent selection logic
 - [ ] Create performance monitoring
 
 #### Agent Orchestration Implementation:
+
 Create `/lib/ai/agent-orchestrator.ts`:
 
 ```typescript
@@ -1394,12 +1527,15 @@ export interface OrchestrationResponse {
 
 export class AgentOrchestrator {
   private static instance: AgentOrchestrator;
-  private performanceMetrics: Map<string, {
-    totalQueries: number;
-    avgProcessingTime: number;
-    avgConfidence: number;
-    successRate: number;
-  }> = new Map();
+  private performanceMetrics: Map<
+    string,
+    {
+      totalQueries: number;
+      avgProcessingTime: number;
+      avgConfidence: number;
+      successRate: number;
+    }
+  > = new Map();
 
   static getInstance(): AgentOrchestrator {
     if (!AgentOrchestrator.instance) {
@@ -1411,7 +1547,10 @@ export class AgentOrchestrator {
   /**
    * Select the best agent(s) for a given query
    */
-  async selectAgents(query: string, context: AgentContext): Promise<{
+  async selectAgents(
+    query: string,
+    context: AgentContext,
+  ): Promise<{
     primaryAgent: string;
     supportingAgents?: string[];
     reasoning: string;
@@ -1432,11 +1571,19 @@ Select the primary agent and any supporting agents that would be helpful.`;
     try {
       const result = await generateObject({
         model: aiConfig.chatModel,
-        system: "You are an expert at routing queries to the most appropriate AI agents based on their capabilities.",
+        system:
+          "You are an expert at routing queries to the most appropriate AI agents based on their capabilities.",
         prompt: selectionPrompt,
         schema: z.object({
-          primaryAgent: z.enum(["analyzer", "recommender", "tracker", "optimizer"]),
-          supportingAgents: z.array(z.enum(["analyzer", "recommender", "tracker", "optimizer"])).optional(),
+          primaryAgent: z.enum([
+            "analyzer",
+            "recommender",
+            "tracker",
+            "optimizer",
+          ]),
+          supportingAgents: z
+            .array(z.enum(["analyzer", "recommender", "tracker", "optimizer"]))
+            .optional(),
           reasoning: z.string(),
         }),
         temperature: 0.2,
@@ -1445,24 +1592,39 @@ Select the primary agent and any supporting agents that would be helpful.`;
       return result.object;
     } catch (error) {
       console.error("Agent selection error:", error);
-      
+
       // Fallback selection based on keywords
       const queryLower = query.toLowerCase();
-      
+
       if (queryLower.includes("recommend") || queryLower.includes("suggest")) {
-        return { primaryAgent: "recommender", reasoning: "Fallback: Query contains recommendation keywords" };
+        return {
+          primaryAgent: "recommender",
+          reasoning: "Fallback: Query contains recommendation keywords",
+        };
       }
       if (queryLower.includes("analyze") || queryLower.includes("health")) {
-        return { primaryAgent: "analyzer", reasoning: "Fallback: Query contains analysis keywords" };
+        return {
+          primaryAgent: "analyzer",
+          reasoning: "Fallback: Query contains analysis keywords",
+        };
       }
       if (queryLower.includes("progress") || queryLower.includes("track")) {
-        return { primaryAgent: "tracker", reasoning: "Fallback: Query contains tracking keywords" };
+        return {
+          primaryAgent: "tracker",
+          reasoning: "Fallback: Query contains tracking keywords",
+        };
       }
       if (queryLower.includes("team") || queryLower.includes("resource")) {
-        return { primaryAgent: "optimizer", reasoning: "Fallback: Query contains resource keywords" };
+        return {
+          primaryAgent: "optimizer",
+          reasoning: "Fallback: Query contains resource keywords",
+        };
       }
-      
-      return { primaryAgent: "analyzer", reasoning: "Fallback: Default to analyzer" };
+
+      return {
+        primaryAgent: "analyzer",
+        reasoning: "Fallback: Default to analyzer",
+      };
     }
   }
 
@@ -1472,7 +1634,7 @@ Select the primary agent and any supporting agents that would be helpful.`;
   async processSingleAgent(
     query: string,
     context: AgentContext,
-    agentType: string
+    agentType: string,
   ): Promise<OrchestrationResponse> {
     const startTime = Date.now();
 
@@ -1495,7 +1657,8 @@ Select the primary agent and any supporting agents that would be helpful.`;
             agentRole: agent.getStatus().role,
             response: result.response,
             confidence: result.metadata.confidence || 0,
-            processingTime: result.metadata.processingTime || totalProcessingTime,
+            processingTime:
+              result.metadata.processingTime || totalProcessingTime,
           },
         ],
         metadata: {
@@ -1514,7 +1677,8 @@ Select the primary agent and any supporting agents that would be helpful.`;
       });
 
       return {
-        primaryResponse: "I encountered an error while processing your request. Please try again.",
+        primaryResponse:
+          "I encountered an error while processing your request. Please try again.",
         agentResponses: [],
         metadata: {
           agentsUsed: [],
@@ -1531,7 +1695,7 @@ Select the primary agent and any supporting agents that would be helpful.`;
   async processMultiAgent(
     query: string,
     context: AgentContext,
-    agentTypes: string[]
+    agentTypes: string[],
   ): Promise<OrchestrationResponse> {
     const startTime = Date.now();
 
@@ -1541,7 +1705,7 @@ Select the primary agent and any supporting agents that would be helpful.`;
         try {
           const agent = await AgentFactory.getAgent(agentType as any);
           const result = await agent.processQuery(query, context);
-          
+
           this.updatePerformanceMetrics(agentType, {
             processingTime: result.metadata.processingTime || 0,
             confidence: result.metadata.confidence || 0,
@@ -1558,7 +1722,7 @@ Select the primary agent and any supporting agents that would be helpful.`;
           };
         } catch (error) {
           console.error(`Multi-agent processing error (${agentType}):`, error);
-          
+
           this.updatePerformanceMetrics(agentType, {
             processingTime: 0,
             confidence: 0,
@@ -1577,11 +1741,12 @@ Select the primary agent and any supporting agents that would be helpful.`;
       });
 
       const agentResults = await Promise.all(agentPromises);
-      const successfulResults = agentResults.filter(r => r.success);
+      const successfulResults = agentResults.filter((r) => r.success);
 
       if (successfulResults.length === 0) {
         return {
-          primaryResponse: "I encountered errors with all agents. Please try again.",
+          primaryResponse:
+            "I encountered errors with all agents. Please try again.",
           agentResponses: [],
           metadata: {
             agentsUsed: [],
@@ -1594,19 +1759,19 @@ Select the primary agent and any supporting agents that would be helpful.`;
       // Coordinate insights from multiple agents
       const coordinatedInsights = await this.coordinateAgentInsights(
         query,
-        successfulResults
+        successfulResults,
       );
 
       // Select primary response (highest confidence)
       const primaryResult = successfulResults.reduce((best, current) =>
-        current.confidence > best.confidence ? current : best
+        current.confidence > best.confidence ? current : best,
       );
 
       const totalProcessingTime = Date.now() - startTime;
 
       return {
         primaryResponse: coordinatedInsights || primaryResult.response,
-        agentResponses: successfulResults.map(r => ({
+        agentResponses: successfulResults.map((r) => ({
           agentRole: r.agentRole,
           response: r.response,
           confidence: r.confidence,
@@ -1614,7 +1779,7 @@ Select the primary agent and any supporting agents that would be helpful.`;
         })),
         coordinatedInsights,
         metadata: {
-          agentsUsed: successfulResults.map(r => r.agentType),
+          agentsUsed: successfulResults.map((r) => r.agentType),
           totalProcessingTime,
           orchestrationStrategy: "multi-agent-collaborative",
         },
@@ -1623,7 +1788,8 @@ Select the primary agent and any supporting agents that would be helpful.`;
       console.error("Multi-agent orchestration error:", error);
 
       return {
-        primaryResponse: "I encountered an error during multi-agent processing. Please try again.",
+        primaryResponse:
+          "I encountered an error during multi-agent processing. Please try again.",
         agentResponses: [],
         metadata: {
           agentsUsed: [],
@@ -1644,7 +1810,7 @@ Select the primary agent and any supporting agents that would be helpful.`;
       agentRole: string;
       response: string;
       confidence: number;
-    }>
+    }>,
   ): Promise<string> {
     if (agentResults.length <= 1) {
       return agentResults[0]?.response || "";
@@ -1657,14 +1823,15 @@ Original query: "${originalQuery}"
 
 Agent responses:
 ${agentResults
-  .map(r => `${r.agentRole} (confidence: ${r.confidence}): ${r.response}`)
+  .map((r) => `${r.agentRole} (confidence: ${r.confidence}): ${r.response}`)
   .join("\n\n")}
 
 Synthesize these agent responses into a cohesive, comprehensive answer that addresses the user's query. Highlight complementary insights and resolve any conflicts between agent responses.`;
 
       const coordinatedResponse = await generateObject({
         model: aiConfig.chatModel,
-        system: "You are an expert at synthesizing insights from multiple AI agents into coherent, comprehensive responses.",
+        system:
+          "You are an expert at synthesizing insights from multiple AI agents into coherent, comprehensive responses.",
         prompt: coordinationPrompt,
         schema: z.object({
           synthesizedResponse: z.string(),
@@ -1677,12 +1844,12 @@ Synthesize these agent responses into a cohesive, comprehensive answer that addr
       return coordinatedResponse.object.synthesizedResponse;
     } catch (error) {
       console.error("Agent coordination error:", error);
-      
+
       // Fallback: return the highest confidence response
       const bestResponse = agentResults.reduce((best, current) =>
-        current.confidence > best.confidence ? current : best
+        current.confidence > best.confidence ? current : best,
       );
-      
+
       return bestResponse.response;
     }
   }
@@ -1690,12 +1857,20 @@ Synthesize these agent responses into a cohesive, comprehensive answer that addr
   /**
    * Main orchestration method
    */
-  async orchestrate(request: OrchestrationRequest): Promise<OrchestrationResponse> {
-    const { query, context, preferredAgent, multiAgentMode = false, maxAgents = 3 } = request;
+  async orchestrate(
+    request: OrchestrationRequest,
+  ): Promise<OrchestrationResponse> {
+    const {
+      query,
+      context,
+      preferredAgent,
+      multiAgentMode = false,
+      maxAgents = 3,
+    } = request;
 
     try {
       let agentSelection;
-      
+
       if (preferredAgent) {
         agentSelection = {
           primaryAgent: preferredAgent,
@@ -1711,16 +1886,21 @@ Synthesize these agent responses into a cohesive, comprehensive answer that addr
           agentSelection.primaryAgent,
           ...agentSelection.supportingAgents.slice(0, maxAgents - 1),
         ];
-        
+
         return await this.processMultiAgent(query, context, agentsToUse);
       } else {
-        return await this.processSingleAgent(query, context, agentSelection.primaryAgent);
+        return await this.processSingleAgent(
+          query,
+          context,
+          agentSelection.primaryAgent,
+        );
       }
     } catch (error) {
       console.error("Orchestration error:", error);
-      
+
       return {
-        primaryResponse: "I encountered an error while processing your request. Please try again or contact support.",
+        primaryResponse:
+          "I encountered an error while processing your request. Please try again or contact support.",
         agentResponses: [],
         metadata: {
           agentsUsed: [],
@@ -1736,7 +1916,7 @@ Synthesize these agent responses into a cohesive, comprehensive answer that addr
    */
   private updatePerformanceMetrics(
     agentType: string,
-    metrics: { processingTime: number; confidence: number; success: boolean }
+    metrics: { processingTime: number; confidence: number; success: boolean },
   ): void {
     const current = this.performanceMetrics.get(agentType) || {
       totalQueries: 0,
@@ -1746,11 +1926,16 @@ Synthesize these agent responses into a cohesive, comprehensive answer that addr
     };
 
     const newTotal = current.totalQueries + 1;
-    const newAvgProcessingTime = 
-      (current.avgProcessingTime * current.totalQueries + metrics.processingTime) / newTotal;
-    const newAvgConfidence = 
-      (current.avgConfidence * current.totalQueries + metrics.confidence) / newTotal;
-    const successCount = Math.floor(current.successRate * current.totalQueries) + (metrics.success ? 1 : 0);
+    const newAvgProcessingTime =
+      (current.avgProcessingTime * current.totalQueries +
+        metrics.processingTime) /
+      newTotal;
+    const newAvgConfidence =
+      (current.avgConfidence * current.totalQueries + metrics.confidence) /
+      newTotal;
+    const successCount =
+      Math.floor(current.successRate * current.totalQueries) +
+      (metrics.success ? 1 : 0);
     const newSuccessRate = successCount / newTotal;
 
     this.performanceMetrics.set(agentType, {
@@ -1764,18 +1949,21 @@ Synthesize these agent responses into a cohesive, comprehensive answer that addr
   /**
    * Get performance metrics for all agents
    */
-  getPerformanceMetrics(): Record<string, {
-    totalQueries: number;
-    avgProcessingTime: number;
-    avgConfidence: number;
-    successRate: number;
-  }> {
+  getPerformanceMetrics(): Record<
+    string,
+    {
+      totalQueries: number;
+      avgProcessingTime: number;
+      avgConfidence: number;
+      successRate: number;
+    }
+  > {
     const metrics: Record<string, any> = {};
-    
+
     for (const [agentType, data] of this.performanceMetrics.entries()) {
       metrics[agentType] = { ...data };
     }
-    
+
     return metrics;
   }
 
@@ -1798,6 +1986,7 @@ export const agentOrchestrator = AgentOrchestrator.getInstance();
 **API Token Usage**: Medium
 
 #### Tasks:
+
 - [ ] Create agent integration tests
 - [ ] Add orchestration performance tests
 - [ ] Implement agent capability validation
@@ -1837,7 +2026,7 @@ describe("AI Agent System Integration", () => {
     test("should select appropriate agent for analysis queries", async () => {
       const selection = await agentOrchestrator.selectAgents(
         "How is my project performing?",
-        { userId: "test", companyId: "test" }
+        { userId: "test", companyId: "test" },
       );
 
       expect(selection.primaryAgent).toBe("analyzer");
@@ -1847,7 +2036,7 @@ describe("AI Agent System Integration", () => {
       const response = await agentOrchestrator.processSingleAgent(
         "What tasks should I prioritize?",
         { userId: "test", companyId: "test" },
-        "recommender"
+        "recommender",
       );
 
       expect(response.primaryResponse).toBeTruthy();
@@ -1859,19 +2048,21 @@ describe("AI Agent System Integration", () => {
       const response = await agentOrchestrator.processMultiAgent(
         "How is my project doing and what should I focus on next?",
         { userId: "test", companyId: "test" },
-        ["analyzer", "recommender"]
+        ["analyzer", "recommender"],
       );
 
       expect(response.primaryResponse).toBeTruthy();
       expect(response.agentResponses.length).toBeGreaterThan(0);
-      expect(response.metadata.orchestrationStrategy).toBe("multi-agent-collaborative");
+      expect(response.metadata.orchestrationStrategy).toBe(
+        "multi-agent-collaborative",
+      );
     });
 
     test("should handle orchestration errors gracefully", async () => {
       const response = await agentOrchestrator.processSingleAgent(
         "test query",
         { userId: "", companyId: "" }, // Invalid context
-        "analyzer"
+        "analyzer",
       );
 
       expect(response.primaryResponse).toBeTruthy();
@@ -1884,7 +2075,7 @@ describe("AI Agent System Integration", () => {
       await agentOrchestrator.processSingleAgent(
         "Test query for metrics",
         { userId: "test", companyId: "test" },
-        "tracker"
+        "tracker",
       );
 
       const metrics = agentOrchestrator.getPerformanceMetrics();
@@ -1909,6 +2100,7 @@ describe("AI Agent System Integration", () => {
 ## Next Steps
 
 After completing Phase 4:
+
 1. Proceed to Phase 5: API & Interface Layer
 2. Set up production monitoring for agent performance
 3. Configure agent scaling and load balancing
@@ -1917,12 +2109,14 @@ After completing Phase 4:
 ## Troubleshooting
 
 ### Common Issues:
+
 - **MCP connection failures**: Check server health and retry mechanisms
 - **Agent initialization timeout**: Verify MCP tools are accessible
 - **Multi-agent coordination conflicts**: Review response synthesis logic
 - **Memory leaks**: Monitor conversation history cleanup
 
 ### Debug Commands:
+
 ```bash
 # Test agent orchestration
 curl -X POST http://localhost:3000/api/ai/agents \

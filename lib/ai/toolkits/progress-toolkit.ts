@@ -32,12 +32,12 @@ export const getProgressToolkit = (context: AgentContext) => ({
             timeRange,
             ...context,
           },
-          context.userId
+          context.userId,
         );
 
         if (progressData.error) {
           throw new Error(
-            `Failed to gather progress data. Error: ${progressData.error.message}`
+            `Failed to gather progress data. Error: ${progressData.error.message}`,
           );
         }
 
@@ -65,7 +65,7 @@ Provide comprehensive progress tracking analysis.`,
                 direction: z.enum(["up", "down", "stable"]),
                 change: z.number(),
                 significance: z.enum(["low", "medium", "high"]),
-              })
+              }),
             ),
             forecasts: z.object({
               estimatedCompletion: z.string().describe("ISO 8601 date string"),

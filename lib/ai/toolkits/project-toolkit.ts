@@ -21,14 +21,14 @@ export const getProjectToolkit = (context: AgentContext) => ({
           "analytics",
           "analyze_project_health",
           { boardId, ...context },
-          context.userId
+          context.userId,
         );
         const { userId, ...restOfContext } = context;
         const tasksDataPromise = simpleMCPClientPool.callTool(
           "search",
           "semantic_search_tasks",
           { boardId, ...restOfContext },
-          userId
+          userId,
         );
 
         const [healthResult, tasksResult] = await Promise.all([
@@ -38,7 +38,7 @@ export const getProjectToolkit = (context: AgentContext) => ({
 
         if (healthResult.error || tasksResult.error) {
           throw new Error(
-            `Failed to gather project data. Health Error: ${healthResult.error?.message}, Tasks Error: ${tasksResult.error?.message}`
+            `Failed to gather project data. Health Error: ${healthResult.error?.message}, Tasks Error: ${tasksResult.error?.message}`,
           );
         }
 
@@ -60,7 +60,7 @@ export const getProjectToolkit = (context: AgentContext) => ({
                 finding: z.string(),
                 severity: z.enum(["low", "medium", "high", "critical"]),
                 recommendation: z.string(),
-              })
+              }),
             ),
             metrics: z.object({
               completionRate: z.number().min(0).max(1),

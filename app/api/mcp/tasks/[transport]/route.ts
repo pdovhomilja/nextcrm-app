@@ -101,17 +101,17 @@ const handler = createMcpHandler(
                     message: `Task "${task.title}" created successfully`,
                   },
                   null,
-                  2
+                  2,
                 ),
               },
             ],
           };
         } catch (error) {
           throw new Error(
-            `Failed to create task: ${error instanceof Error ? error.message : "Unknown error"}`
+            `Failed to create task: ${error instanceof Error ? error.message : "Unknown error"}`,
           );
         }
-      }
+      },
     );
 
     // Search tasks tool with proper schema
@@ -213,17 +213,17 @@ const handler = createMcpHandler(
                     message: `Found ${tasks.length} tasks matching criteria`,
                   },
                   null,
-                  2
+                  2,
                 ),
               },
             ],
           };
         } catch (error) {
           throw new Error(
-            `Failed to search tasks: ${error instanceof Error ? error.message : "Unknown error"}`
+            `Failed to search tasks: ${error instanceof Error ? error.message : "Unknown error"}`,
           );
         }
-      }
+      },
     );
 
     // Update task tool with proper schema
@@ -286,17 +286,17 @@ const handler = createMcpHandler(
                     message: `Task "${task.title}" updated successfully`,
                   },
                   null,
-                  2
+                  2,
                 ),
               },
             ],
           };
         } catch (error) {
           throw new Error(
-            `Failed to update task: ${error instanceof Error ? error.message : "Unknown error"}`
+            `Failed to update task: ${error instanceof Error ? error.message : "Unknown error"}`,
           );
         }
-      }
+      },
     );
   },
   {
@@ -316,7 +316,7 @@ const handler = createMcpHandler(
     basePath: "",
     verboseLogs: process.env.MCP_VERBOSE_LOGS === "true",
     maxDuration: parseInt(process.env.MCP_MAX_DURATION || "800"),
-  }
+  },
 );
 
 export { handler as GET, handler as POST, handler as DELETE };

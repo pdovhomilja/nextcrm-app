@@ -1,8 +1,14 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import React from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface AccountSwitcherProps {
   accounts: {
@@ -15,19 +21,19 @@ export const AccountSwitcher = ({ accounts }: AccountSwitcherProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const selectedAccount = searchParams.get('account');
+  const selectedAccount = searchParams.get("account");
 
   const handleValueChange = (value: string) => {
     const params = new URLSearchParams(searchParams);
-    params.set('account', value);
-    params.delete('folder'); // Reset folder when account changes
-    params.delete('email'); // Reset email when account changes
+    params.set("account", value);
+    params.delete("folder"); // Reset folder when account changes
+    params.delete("email"); // Reset email when account changes
     router.push(`${pathname}?${params.toString()}`);
   };
 
   return (
-    <Select onValueChange={handleValueChange} value={selectedAccount || ''}>
-      <SelectTrigger className="w-full">
+    <Select onValueChange={handleValueChange} value={selectedAccount || ""}>
+      <SelectTrigger className="w-full text-xs">
         <SelectValue placeholder="Select an account" />
       </SelectTrigger>
       <SelectContent>

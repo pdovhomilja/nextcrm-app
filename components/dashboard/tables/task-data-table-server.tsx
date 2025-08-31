@@ -273,7 +273,7 @@ function TaskTable({
                   <div
                     className={cn(
                       "flex items-center gap-1",
-                      getPriorityColor(task.priority)
+                      getPriorityColor(task.priority),
                     )}
                   >
                     {task.priority === "CRITICAL" && (
@@ -321,7 +321,7 @@ function TaskTable({
                   <div
                     className={cn(
                       "text-sm",
-                      task.isOverdue && "text-red-600 font-medium"
+                      task.isOverdue && "text-red-600 font-medium",
                     )}
                   >
                     {formatDate(task.dueDate)}

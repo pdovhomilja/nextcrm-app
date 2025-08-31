@@ -83,7 +83,7 @@ const handler = createMcpHandler(
             },
           ],
         };
-      }
+      },
     );
 
     server.tool(
@@ -94,7 +94,7 @@ const handler = createMcpHandler(
         boardId: z.string().optional(),
         status: z
           .array(
-            z.enum(["NEW", "IN_PROGRESS", "COMPLETED", "CANCELLED", "ON_HOLD"])
+            z.enum(["NEW", "IN_PROGRESS", "COMPLETED", "CANCELLED", "ON_HOLD"]),
           )
           .optional(),
         priority: z
@@ -121,7 +121,7 @@ const handler = createMcpHandler(
             },
           ],
         };
-      }
+      },
     );
 
     server.tool(
@@ -137,7 +137,7 @@ const handler = createMcpHandler(
 
         const analysis = await analyzeProjectHealth(
           params.boardId,
-          params.timeRange
+          params.timeRange,
         );
 
         return {
@@ -148,7 +148,7 @@ const handler = createMcpHandler(
             },
           ],
         };
-      }
+      },
     );
   },
   {
@@ -164,7 +164,7 @@ const handler = createMcpHandler(
     basePath: "",
     verboseLogs: true,
     maxDuration: 800, // Pro/Enterprise accounts
-  }
+  },
 );
 
 export { handler as GET, handler as POST, handler as DELETE };
@@ -437,7 +437,7 @@ export class MCPProjectManagerAgent {
 
     for (const server of servers) {
       const transport = new SSEClientTransport(
-        new URL(server.url, process.env.NEXT_PUBLIC_APP_URL!)
+        new URL(server.url, process.env.NEXT_PUBLIC_APP_URL!),
       );
 
       const client = await experimental_createMCPClient({ transport });
@@ -458,7 +458,7 @@ export class MCPProjectManagerAgent {
       boardId?: string;
       userId: string;
       companyId: string;
-    }
+    },
   ) {
     // Get all available tools from MCP servers
     const allTools = Object.fromEntries(this.tools);
@@ -509,7 +509,7 @@ export class MCPProjectManagerAgent {
             type: z.string(),
             description: z.string(),
             priority: z.enum(["low", "medium", "high"]),
-          })
+          }),
         ),
         bottlenecks: z.array(z.string()),
       }),
@@ -561,7 +561,7 @@ export class ProjectManagerAgent {
         return await this.generateTaskRecommendations(
           userId,
           boardId,
-          criteria
+          criteria,
         );
       },
     }),
@@ -592,7 +592,7 @@ export class ProjectManagerAgent {
   async processQuery(
     query: string,
     context: RAGContext,
-    conversationHistory: AIMessage[]
+    conversationHistory: AIMessage[],
   ) {
     const retrievedDocs = await this.retrieveRelevantDocs(query, context);
 
@@ -618,7 +618,7 @@ export class ProjectManagerAgent {
             type: z.enum(["task", "assignment", "priority", "schedule"]),
             action: z.string(),
             reasoning: z.string(),
-          })
+          }),
         ),
         citations: z.array(z.string()),
       }),
@@ -720,7 +720,7 @@ class MCPClientPool {
     for (const server of servers) {
       try {
         const transport = new SSEClientTransport(
-          new URL(server.url, process.env.NEXT_PUBLIC_APP_URL!)
+          new URL(server.url, process.env.NEXT_PUBLIC_APP_URL!),
         );
 
         const client = await experimental_createMCPClient({ transport });
@@ -734,7 +734,7 @@ class MCPClientPool {
       } catch (error) {
         console.error(
           `Failed to initialize MCP client for ${server.name}:`,
-          error
+          error,
         );
       }
     }
@@ -816,7 +816,7 @@ export async function POST(req: Request) {
           reasoning: z.string(),
           confidence: z.number().min(0).max(1),
           impact: z.enum(["low", "medium", "high"]),
-        })
+        }),
       ),
       summary: z.string(),
     }),
@@ -849,7 +849,7 @@ export async function POST(req: Request) {
             finding: z.string(),
             severity: z.enum(["low", "medium", "high", "critical"]),
             recommendation: z.string(),
-          })
+          }),
         ),
         metrics: z.object({
           completionRate: z.number(),
@@ -1275,7 +1275,7 @@ export const aiConfig = {
 
   // Embedding model for vector generation
   embeddingModel: openai.embedding(
-    process.env.EMBEDDING_MODEL || "text-embedding-ada-002"
+    process.env.EMBEDDING_MODEL || "text-embedding-ada-002",
   ),
 
   // Analysis model for structured outputs

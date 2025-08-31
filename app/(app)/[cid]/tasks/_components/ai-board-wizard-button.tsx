@@ -1,10 +1,10 @@
 // in app/(app)/[cid]/tasks/_components/ai-board-wizard-button.tsx
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Sparkles } from 'lucide-react';
-import { AiBoardWizardDialog } from './ai-board-wizard-dialog';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Sparkles } from "lucide-react";
+import { AiBoardWizardDialog } from "./ai-board-wizard-dialog";
 
 export function AiBoardWizardButton() {
   const [isOpen, setIsOpen] = useState(false);

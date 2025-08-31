@@ -67,21 +67,21 @@ const handler = createMcpHandler(
           const daysBack =
             timeRangeMap[params.timeRange as keyof typeof timeRangeMap];
           const startDate = new Date(
-            now.getTime() - daysBack * 24 * 60 * 60 * 1000
+            now.getTime() - daysBack * 24 * 60 * 60 * 1000,
           );
 
           // Get all tasks from board sections and filter by time range
           const allTasks = board.boardSections.flatMap(
-            (section) => section.tasks
+            (section) => section.tasks,
           );
           const recentTasks = allTasks.filter(
-            (task) => new Date(task.createdAt) >= startDate
+            (task) => new Date(task.createdAt) >= startDate,
           );
 
           // Calculate metrics
           const totalTasks = recentTasks.length;
           const completedTasks = recentTasks.filter(
-            (task) => task.status === "COMPLETED"
+            (task) => task.status === "COMPLETED",
           ).length;
           const completionRate =
             totalTasks > 0 ? completedTasks / totalTasks : 0;
@@ -89,7 +89,7 @@ const handler = createMcpHandler(
           // Calculate average task duration for completed tasks
           const completedTasksWithDuration = recentTasks.filter(
             (task) =>
-              task.status === "COMPLETED" && task.updatedAt && task.createdAt
+              task.status === "COMPLETED" && task.updatedAt && task.createdAt,
           );
 
           const avgTaskDuration =
@@ -109,8 +109,10 @@ const handler = createMcpHandler(
             ? {
                 totalMembers: Array.from(
                   new Set(
-                    recentTasks.map((task) => task.assignedToId).filter(Boolean)
-                  )
+                    recentTasks
+                      .map((task) => task.assignedToId)
+                      .filter(Boolean),
+                  ),
                 ).length,
                 tasksPerMember: recentTasks.reduce(
                   (acc, task) => {
@@ -120,7 +122,7 @@ const handler = createMcpHandler(
                     }
                     return acc;
                   },
-                  {} as Record<string, number>
+                  {} as Record<string, number>,
                 ),
                 memberWorkload: recentTasks.reduce(
                   (acc, task) => {
@@ -139,7 +141,7 @@ const handler = createMcpHandler(
                     }
                     return acc;
                   },
-                  {} as Record<string, { assigned: number; completed: number }>
+                  {} as Record<string, { assigned: number; completed: number }>,
                 ),
               }
             : null;
@@ -147,7 +149,7 @@ const handler = createMcpHandler(
           // Identify bottlenecks
           const bottlenecks = [];
           const inProgressTasks = recentTasks.filter(
-            (task) => task.status === "IN_PROGRESS"
+            (task) => task.status === "IN_PROGRESS",
           );
           const avgInProgressDuration =
             inProgressTasks.reduce((sum, task) => {
@@ -206,10 +208,10 @@ const handler = createMcpHandler(
           throw new Error(
             `Analytics analysis failed: ${
               error instanceof Error ? error.message : "Unknown error"
-            }`
+            }`,
           );
         }
-      }
+      },
     );
 
     // Team performance analysis tool
@@ -235,7 +237,7 @@ const handler = createMcpHandler(
           const daysBack =
             timeRangeMap[params.timeRange as keyof typeof timeRangeMap];
           const startDate = new Date(
-            now.getTime() - daysBack * 24 * 60 * 60 * 1000
+            now.getTime() - daysBack * 24 * 60 * 60 * 1000,
           );
 
           // Get tasks for analysis
@@ -304,7 +306,7 @@ const handler = createMcpHandler(
                 tasksByPriority: Record<string, number>;
                 tasksByStatus: Record<string, number>;
               }
-            >
+            >,
           );
 
           // Calculate completion rates and averages
@@ -312,7 +314,7 @@ const handler = createMcpHandler(
             member.completionRate =
               member.totalTasks > 0
                 ? Math.round(
-                    (member.completedTasks / member.totalTasks) * 100
+                    (member.completedTasks / member.totalTasks) * 100,
                   ) / 100
                 : 0;
           });
@@ -330,7 +332,7 @@ const handler = createMcpHandler(
               avgTeamCompletionRate:
                 Object.values(teamPerformance).reduce(
                   (sum: number, member) => sum + member.completionRate,
-                  0
+                  0,
                 ) / Math.max(Object.keys(teamPerformance).length, 1),
             },
             memberPerformance: params.includeIndividualMetrics
@@ -352,10 +354,10 @@ const handler = createMcpHandler(
           throw new Error(
             `Team performance analysis failed: ${
               error instanceof Error ? error.message : "Unknown error"
-            }`
+            }`,
           );
         }
-      }
+      },
     );
 
     interface TeamMember {
@@ -368,7 +370,7 @@ const handler = createMcpHandler(
     function generateTeamInsights(
       teamPerformance: Record<string, TeamMember>,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      tasks: any[]
+      tasks: any[],
     ): string[] {
       const insights = [];
       const members = Object.values(teamPerformance);
@@ -379,10 +381,10 @@ const handler = createMcpHandler(
 
       // Find top performer
       const topPerformer = members.reduce((best, current) =>
-        current.completionRate > best.completionRate ? current : best
+        current.completionRate > best.completionRate ? current : best,
       );
       insights.push(
-        `Top performer: ${topPerformer.userName} (${Math.round(topPerformer.completionRate * 100)}% completion rate)`
+        `Top performer: ${topPerformer.userName} (${Math.round(topPerformer.completionRate * 100)}% completion rate)`,
       );
 
       // Check for workload imbalance
@@ -392,7 +394,7 @@ const handler = createMcpHandler(
 
       if (maxTasks > minTasks * 2) {
         insights.push(
-          "Workload imbalance detected - consider redistributing tasks"
+          "Workload imbalance detected - consider redistributing tasks",
         );
       }
 
@@ -400,23 +402,23 @@ const handler = createMcpHandler(
       const lowPerformers = members.filter((m) => m.completionRate < 0.7);
       if (lowPerformers.length > 0) {
         insights.push(
-          `${lowPerformers.length} team members have completion rates below 70%`
+          `${lowPerformers.length} team members have completion rates below 70%`,
         );
       }
 
       // Priority distribution insights
       const highPriorityTasks = tasks.filter(
-        (t) => t.priority === "HIGH" || t.priority === "CRITICAL"
+        (t) => t.priority === "HIGH" || t.priority === "CRITICAL",
       );
       if (highPriorityTasks.length > tasks.length * 0.3) {
         insights.push(
-          "High percentage of high-priority tasks - review priority assignments"
+          "High percentage of high-priority tasks - review priority assignments",
         );
       }
 
       return insights;
     }
-  }
+  },
 );
 
 export { handler as GET, handler as POST };

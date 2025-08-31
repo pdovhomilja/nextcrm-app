@@ -62,7 +62,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const isPasswordValid = await bcrypt.compare(
           credentials.password as string,
-          user.password
+          user.password,
         );
 
         if (!isPasswordValid) {
@@ -163,7 +163,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (trigger === "update" && session?.activeCompanyId) {
         // Verify user has access to the requested company
         const hasAccess = token.memberships?.find(
-          (m: any) => m.companyId === session.activeCompanyId
+          (m: any) => m.companyId === session.activeCompanyId,
         );
         if (hasAccess) {
           token.activeCompanyId = session.activeCompanyId;

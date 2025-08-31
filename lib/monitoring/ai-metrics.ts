@@ -64,13 +64,13 @@ export class AIMetricsCollector {
       tokens?: number;
       cost?: number;
       errorMessage?: string;
-    }
+    },
   ): void {
     const [operation] = operationId.split("-");
     const operationMetrics = this.metrics.get(operation) || [];
 
     const metric = operationMetrics.find((m) =>
-      operationId.includes(`${m.operation}-${Math.floor(m.startTime)}`)
+      operationId.includes(`${m.operation}-${Math.floor(m.startTime)}`),
     );
 
     if (metric) {
@@ -89,7 +89,7 @@ export class AIMetricsCollector {
    */
   private updateAggregatedMetrics(
     operation: string,
-    metric: AIPerformanceMetric
+    metric: AIPerformanceMetric,
   ): void {
     const current = this.aggregatedMetrics.get(operation) || {
       requestCount: 0,
@@ -141,7 +141,7 @@ export class AIMetricsCollector {
    */
   getRecentPerformance(
     operation: string,
-    minutes: number = 30
+    minutes: number = 30,
   ): {
     requestsPerMinute: number;
     averageResponseTime: number;
@@ -152,7 +152,7 @@ export class AIMetricsCollector {
     const cutoffTime = performance.now() - minutes * 60 * 1000;
 
     const recentMetrics = operationMetrics.filter(
-      (m) => m.startTime >= cutoffTime
+      (m) => m.startTime >= cutoffTime,
     );
 
     if (recentMetrics.length === 0) {
@@ -240,7 +240,7 @@ export const aiMetrics = AIMetricsCollector.getInstance();
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function withAIMetrics<T extends (...args: any[]) => Promise<any>>(
   operation: string,
-  fn: T
+  fn: T,
 ): T {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (async (...args: any[]) => {

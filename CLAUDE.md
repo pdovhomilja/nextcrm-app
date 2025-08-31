@@ -9,30 +9,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Development Commands
 
 ### Core Development
+
 - `pnpm dev` - Start development server with Turbopack (http://localhost:3000)
 - `pnpm build` - Build the application for production
 - `pnpm start` - Start production server
 - `pnpm lint` - Run ESLint for code linting
 
 ### Database Management
+
 - `npx prisma generate` - Generate Prisma client after schema changes (includes typed SQL)
 - `npx prisma db push` - Push schema changes to database
 - `npx prisma studio` - Open Prisma Studio for database inspection
 - `npx prisma migrate dev` - Create and apply new database migrations
 
 ### Testing
+
 - `pnpm test` - Run test suite (Jest/Vitest)
 - `pnpm test:integration` - Run integration tests for AI system
 
 ### AI & Document Processing
+
 - Automatic embedding generation on task/board creation
 - Document processing supports: PDF, DOCX, CSV, XLSX, images (OCR)
 - Vector similarity search with pgvector extension
 
-
 ## Architecture & Key Technologies
 
 ### Frontend Stack
+
 - **Next.js 15.4.4** with App Router (`app/` directory structure)
 - **React 19.1.0** with TypeScript (ES2017 target)
 - **Tailwind CSS v4** with PostCSS and CSS variables support
@@ -51,6 +55,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Vaul** for drawer components
 
 ### Authentication System
+
 - **Next-Auth v5 (beta.29)** with Prisma adapter
 - **Server Actions** architecture for auth operations
 - **Multi-provider support**:
@@ -63,6 +68,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Open registration**: Email verification required for all users
 
 ### Database & ORM
+
 - **Prisma ORM** with PostgreSQL database and **pgvector extension** for vector embeddings
 - **Custom Prisma client path**: `lib/generated/prisma/`
 - **Auto-generated CUIDs** for all primary keys
@@ -89,6 +95,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Prisma Accelerate** extension support
 
 ### Server Actions Architecture
+
 - **Location**: `/actions` folder with `"use server"` directives
 - **Authentication actions**:
   - `registerUser()` - User registration with email verification
@@ -109,12 +116,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Form Integration** with Next.js 15 server actions
 
 ### Email System
+
 - **Resend** for transactional emails
 - **React Email** components for email templates
 - **Email verification flow** with token generation
 - **Custom from address**: `TaskHQ <pavel@endorphinit.com>`
 
 ### AI & Machine Learning Stack
+
 - **AI SDK (@ai-sdk/openai, @ai-sdk/react)** for OpenAI integration and React hooks
 - **OpenAI GPT-4o-mini** for chat completions and text generation
 - **OpenAI text-embedding-3-small** for vector embeddings (1536 dimensions)
@@ -122,6 +131,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Model Context Protocol (@modelcontextprotocol/sdk, @vercel/mcp-adapter)** for AI agent orchestration
 
 ### Document Processing Stack
+
 - **Tesseract.js** for OCR (Optical Character Recognition) on images
 - **pdf-parse** for PDF text extraction
 - **mammoth** for Word document (.docx) processing
@@ -129,6 +139,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **xlsx** for Excel spreadsheet processing
 
 ### AI & Machine Learning Features
+
 - **AI Assistant v2**: Advanced chat interface with tool calling and context awareness
 - **Vector Embeddings**: OpenAI embeddings for semantic search (1536 dimensions)
 - **RAG (Retrieval Augmented Generation)**: Context-aware AI responses using document and task embeddings
@@ -139,6 +150,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **AI Monitoring**: Performance metrics and security audit logs
 
 ### Task Management Features
+
 - **Kanban Board System**: Drag-and-drop task management across board sections
 - **Task Priorities**: LOW, MEDIUM, HIGH, CRITICAL priority levels
 - **Task Status**: NEW, IN_PROGRESS, COMPLETED, CANCELLED, ON_HOLD
@@ -150,12 +162,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Document Attachments**: Link documents to tasks and boards with AI-powered insights
 
 ### Dashboard & Analytics Features
+
 - **Interactive Charts**: Task timeline, distribution, and status analytics using Recharts
 - **Metrics Cards**: Board metrics, task metrics, and user activity summaries
 - **Data Tables**: Advanced task tables with filtering, sorting, and pagination
 - **Real-time Updates**: Dynamic data refresh and responsive design
 
 ### File Structure
+
 ```
 ├── actions/                    # Server actions (Next.js 15)
 │   ├── auth-actions.ts        # Authentication server actions
@@ -339,6 +353,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Authentication Flow
 
 ### Registration Process
+
 1. **Open Registration**: Any valid email address accepted
 2. **User Creation**: Prisma auto-generates CUID for user and company ID
 3. **Password Hashing**: bcrypt with 12 rounds
@@ -347,12 +362,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 6. **Role Assignment**: Default USER role assigned, upgradeable to higher roles
 
 ### Sign-in Process
+
 1. **Credentials Validation**: Server action validates email/password
 2. **Email Verification Check**: Must be verified to sign in
 3. **Session Creation**: Next-Auth JWT tokens with custom `cid` field
 4. **Route Access**: Redirects to company-specific routes (`/[cid]/dashboard` or `/[cid]/tasks`)
 
 ### Company Access Control
+
 - Each user gets unique `cid` (company ID) auto-generated by Prisma
 - Routes protected by `[cid]` dynamic segments
 - JWT tokens include company ID for session-based access control
@@ -361,6 +378,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Database Schema Details
 
 ### User Model
+
 ```prisma
 model User {
   id                      String    @id @default(cuid())
@@ -375,12 +393,12 @@ model User {
   role                    UserRole  @default(USER)
   createdAt               DateTime  @default(now()) @map("created_at")
   updatedAt               DateTime  @updatedAt @map("updated_at")
-  
+
   accounts Account[]
   sessions Session[]
   assignedTasks Task[] @relation("AssignedTasks")
   createdTasks  Task[] @relation("CreatedTasks")
-  
+
   @@index([cid])
   @@index([emailVerificationToken])
 }
@@ -395,6 +413,7 @@ enum UserRole {
 ```
 
 ### Task Management Models
+
 ```prisma
 model Task {
   id              String         @id @default(cuid())
@@ -404,9 +423,9 @@ model Task {
   status          TaskStatusNew  @default(NEW)
   dueDate         DateTime
   position        Int            @default(0)
-  assignedToId    String        
+  assignedToId    String
   assignedTo      User           @relation("AssignedTasks", fields: [assignedToId], references: [id])
-  createdById     String         
+  createdById     String
   createdBy       User           @relation("CreatedTasks", fields: [createdById], references: [id])
   boardSectionId  String
   boardSection    BoardSection   @relation(fields: [boardSectionId], references: [id])
@@ -456,6 +475,7 @@ enum TaskStatusNew {
 ## Environment Variables
 
 ### Required Variables (see `.env.example`)
+
 ```env
 # Database
 DATABASE_URL="postgresql://username:password@localhost:5432/taskhq"
@@ -492,6 +512,7 @@ TESSERACT_WORKER_LOAD_TIME="2000"  # OCR processing timeout
 ## Configuration Files
 
 ### TypeScript Configuration
+
 - **Target**: ES2017
 - **Module Resolution**: bundler
 - **Path Mapping**: `@/*` → `./`
@@ -499,10 +520,12 @@ TESSERACT_WORKER_LOAD_TIME="2000"  # OCR processing timeout
 - **Strict Mode**: enabled
 
 ### ESLint Configuration
+
 - **Extends**: next/core-web-vitals, next/typescript
 - **Ignores**: Generated files (`lib/generated/**`, `prisma/generated/**`)
 
 ### shadcn/ui Configuration
+
 - **Style**: New York
 - **Base Color**: neutral
 - **CSS Variables**: enabled
@@ -510,6 +533,7 @@ TESSERACT_WORKER_LOAD_TIME="2000"  # OCR processing timeout
 - **Component Aliases**: Configured for `@/components`, `@/lib`, etc.
 
 ### Tailwind CSS
+
 - **Version**: v4 with PostCSS plugin
 - **CSS Location**: `app/globals.css`
 - **Font Variables**: Geist Sans and Mono
@@ -517,6 +541,7 @@ TESSERACT_WORKER_LOAD_TIME="2000"  # OCR processing timeout
 ## Development Guidelines
 
 ### Code Organization
+
 - **Server Actions**: Use `"use server"` directive, handle form data and task operations
 - **Authentication**: Always check email verification status
 - **Database**: Use generated Prisma client from `@/lib/generated/prisma`
@@ -526,6 +551,7 @@ TESSERACT_WORKER_LOAD_TIME="2000"  # OCR processing timeout
 - **State Management**: React Query for server state, local state for UI interactions
 
 ### Security Considerations
+
 - **Password Security**: bcrypt with 12 rounds
 - **Email Verification**: Required before login
 - **Open Registration**: All verified email addresses accepted
@@ -535,6 +561,7 @@ TESSERACT_WORKER_LOAD_TIME="2000"  # OCR processing timeout
 - **Role-based Authorization**: USER, CONTRIBUTOR, EDITOR, MEDIA, ADMIN hierarchy
 
 ### Common Patterns
+
 - **Error Handling**: Return objects with `success`/`error` properties
 - **Form Actions**: Use server actions with FormData
 - **Database Queries**: Use Prisma client with proper error handling
@@ -545,6 +572,7 @@ TESSERACT_WORKER_LOAD_TIME="2000"  # OCR processing timeout
 - **Error Boundaries**: Component-level error handling for task management
 
 # CRITICAL DATABASE PROTECTION RULES
+
 ⚠️ **PRODUCTION DATA PROTECTION - HIGHEST PRIORITY** ⚠️
 
 This system contains LIVE PRODUCTION DATA that must be protected at all costs.
@@ -552,6 +580,7 @@ This system contains LIVE PRODUCTION DATA that must be protected at all costs.
 ## ABSOLUTE RULES for Database Schema Modifications:
 
 ### ✅ SAFE Database Operations (ALWAYS use these):
+
 - `CREATE INDEX CONCURRENTLY` - Creates indexes without locking tables
 - `ALTER TABLE ... ADD COLUMN ... DEFAULT ...` - Adds new columns with defaults (non-breaking)
 - `CREATE TABLE IF NOT EXISTS` - Creates new tables only if they don't exist
@@ -560,8 +589,9 @@ This system contains LIVE PRODUCTION DATA that must be protected at all costs.
 - `INSERT INTO ... ON CONFLICT DO NOTHING` - Safe inserts that don't overwrite
 
 ### ❌ FORBIDDEN Database Operations (NEVER use these):
+
 - `DROP TABLE` - Deletes entire tables and all data
-- `DROP COLUMN` - Removes columns and all their data  
+- `DROP COLUMN` - Removes columns and all their data
 - `TRUNCATE` - Empties tables completely
 - `DELETE FROM table_name` without WHERE clause - Deletes all rows
 - `ALTER TABLE ... ALTER COLUMN ... TYPE` - Can cause data loss during type conversion
@@ -570,11 +600,13 @@ This system contains LIVE PRODUCTION DATA that must be protected at all costs.
 ### 📋 MANDATORY Process for ALL Database Changes:
 
 1. **ALWAYS backup production data first**:
+
    ```bash
    pg_dump $DATABASE_URL > backup_$(date +%Y%m%d_%H%M%S).sql
    ```
 
 2. **Test migrations locally first**:
+
    ```bash
    # Create copy of production schema
    npx prisma db pull
@@ -584,7 +616,7 @@ This system contains LIVE PRODUCTION DATA that must be protected at all costs.
 
 3. **Use only additive changes**:
    - Add new tables ✅
-   - Add new columns with defaults ✅  
+   - Add new columns with defaults ✅
    - Add new indexes CONCURRENTLY ✅
    - Never remove or modify existing data structures ❌
 
@@ -597,6 +629,7 @@ This system contains LIVE PRODUCTION DATA that must be protected at all costs.
    ```
 
 ### 🔄 Safe Migration Pattern:
+
 ```sql
 -- Example of SAFE migration
 BEGIN;
@@ -604,7 +637,7 @@ BEGIN;
 -- Add new column safely
 ALTER TABLE "Task" ADD COLUMN IF NOT EXISTS "embedding_id" TEXT DEFAULT NULL;
 
--- Create new table safely  
+-- Create new table safely
 CREATE TABLE IF NOT EXISTS "TaskEmbedding" (
   id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
   task_id TEXT REFERENCES "Task"(id) ON DELETE CASCADE,
@@ -616,12 +649,14 @@ CREATE TABLE IF NOT EXISTS "TaskEmbedding" (
 COMMIT;
 
 -- Add index with CONCURRENTLY (must be outside transaction)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_task_embeddings_vector 
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_task_embeddings_vector
 ON "TaskEmbedding" USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
 ```
 
 ### 🚨 Emergency Rollback Plan:
+
 Always have a rollback strategy before making ANY database changes:
+
 ```sql
 -- Example rollback commands (prepare these BEFORE making changes)
 -- DROP INDEX IF EXISTS idx_new_feature;
@@ -629,14 +664,17 @@ Always have a rollback strategy before making ANY database changes:
 ```
 
 ### 📝 Documentation Requirements:
+
 Every database change MUST be documented with:
+
 - **Purpose**: Why the change is needed
-- **Impact**: Which tables/columns are affected  
+- **Impact**: Which tables/columns are affected
 - **Safety**: Why the change preserves existing data
 - **Rollback**: How to undo the change if needed
 - **Testing**: How the change was validated
 
 ## ENFORCEMENT:
+
 - Any suggestion to drop, truncate, or destructively modify production tables will be REJECTED
 - All database modifications must follow the SAFE patterns above
 - Production data integrity is more important than any feature or optimization

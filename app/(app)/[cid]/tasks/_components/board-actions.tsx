@@ -134,7 +134,7 @@ const BoardActions = ({
               onClick={handleDelete}
               disabled={isDeleting}
               className={cn(
-                isDeleting && "opacity-50 cursor-not-allowed animate-pulse"
+                isDeleting && "opacity-50 cursor-not-allowed animate-pulse",
               )}
             >
               {isDeleting ? "Deleting..." : "Delete"}

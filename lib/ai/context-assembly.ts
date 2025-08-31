@@ -190,7 +190,7 @@ Provide root cause analysis and actionable solutions.`,
    * Retrieve relevant context based on query
    */
   private async retrieveRelevantContext(
-    ragContext: RAGContext
+    ragContext: RAGContext,
   ): Promise<VectorSearchResult[]> {
     const searchQuery = {
       query: ragContext.query,
@@ -332,11 +332,11 @@ Provide root cause analysis and actionable solutions.`,
   private trimContextToFit(
     documents: VectorSearchResult[],
     template: PromptTemplate,
-    query: string
+    query: string,
   ): { documents: VectorSearchResult[]; estimatedTokens: number } {
     const basePromptTokens = this.estimateTokenCount(
       template.systemPrompt +
-        template.userQueryTemplate.replace("{query}", query)
+        template.userQueryTemplate.replace("{query}", query),
     );
     const availableTokens = template.maxOutputTokens - basePromptTokens - 500; // Buffer for response
 
@@ -387,7 +387,7 @@ Description: ${doc.task.description || "No description"}`;
     const { documents, estimatedTokens } = this.trimContextToFit(
       allDocuments,
       template,
-      ragContext.query
+      ragContext.query,
     );
 
     // Build context summary
@@ -418,7 +418,7 @@ Description: ${doc.task.description || "No description"}`;
     // Build user prompt
     const userPrompt = template.userQueryTemplate.replace(
       "{query}",
-      ragContext.query
+      ragContext.query,
     );
 
     // Calculate relevance score

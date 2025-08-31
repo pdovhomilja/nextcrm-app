@@ -1,4 +1,3 @@
-
 import { describe, test, expect } from "@jest/globals";
 import { AgentOrchestrator } from "@/lib/ai/agent-orchestrator";
 import { ModelMessage } from "ai";
@@ -19,7 +18,8 @@ describe("AI Board Wizard Integration Test", () => {
       },
       {
         role: "user",
-        content: "I want a menu page, a contact page, and an online ordering system.",
+        content:
+          "I want a menu page, a contact page, and an online ordering system.",
       },
     ];
 
@@ -29,7 +29,7 @@ describe("AI Board Wizard Integration Test", () => {
       query,
       history,
       systemPrompt,
-      ["boardWizard"]
+      ["boardWizard"],
     );
 
     expect(result.toolCalls).toBeDefined();

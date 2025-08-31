@@ -38,7 +38,7 @@ const suggestionSchema = z.object({
             estimatedTime: z.string().optional(),
           })
           .optional(),
-      })
+      }),
     )
     .max(25),
   summary: z.string(),
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
         {
           ...agentContext,
           conversationId: `suggest-${session.user.id}-${Date.now()}`,
-        }
+        },
       );
       agentSuggestions = agentResponse.text;
     } catch (error) {
@@ -132,7 +132,7 @@ Focus on practical, implementable suggestions with clear reasoning.`,
     console.error("Suggestions API error:", error);
     return Response.json(
       { success: false, error: "Failed to generate suggestions" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -162,7 +162,7 @@ User: ${session.user.name || session.user.email}`,
               title: z.string(),
               description: z.string(),
               type: z.enum(["task", "priority", "organization"]),
-            })
+            }),
           )
           .length(3),
       }),
@@ -176,7 +176,7 @@ User: ${session.user.name || session.user.email}`,
     console.error("Quick suggestions error:", error);
     return Response.json(
       { success: false, error: "Failed to get suggestions" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

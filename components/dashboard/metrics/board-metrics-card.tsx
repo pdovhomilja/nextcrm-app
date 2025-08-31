@@ -1,57 +1,72 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { getBoardMetrics, type BoardMetricsData } from "@/actions/dashboard/get-board-metrics"
-import { Folder, TrendingUp, TrendingDown, Minus } from "lucide-react"
+import { useEffect, useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  getBoardMetrics,
+  type BoardMetricsData,
+} from "@/actions/dashboard/get-board-metrics";
+import { Folder, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 interface BoardMetricsCardProps {
-  dateRange?: '7d' | '30d' | '90d' | 'all'
-  className?: string
+  dateRange?: "7d" | "30d" | "90d" | "all";
+  className?: string;
 }
 
-export function BoardMetricsCard({ dateRange = '30d', className }: BoardMetricsCardProps) {
-  const [data, setData] = useState<BoardMetricsData | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+export function BoardMetricsCard({
+  dateRange = "30d",
+  className,
+}: BoardMetricsCardProps) {
+  const [data, setData] = useState<BoardMetricsData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function fetchMetrics() {
-      setIsLoading(true)
-      setError(null)
+      setIsLoading(true);
+      setError(null);
 
       try {
-        const result = await getBoardMetrics({ dateRange, includeSections: true })
+        const result = await getBoardMetrics({
+          dateRange,
+          includeSections: true,
+        });
 
         if (result.error) {
-          setError(result.error)
+          setError(result.error);
         } else if (result.data) {
-          setData(result.data)
+          setData(result.data);
         }
       } catch (err) {
-        console.error('Failed to fetch board metrics:', err)
-        setError('Failed to load board metrics')
+        console.error("Failed to fetch board metrics:", err);
+        setError("Failed to load board metrics");
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
     }
 
-    fetchMetrics()
-  }, [dateRange])
+    fetchMetrics();
+  }, [dateRange]);
 
   const getTrendIcon = (trend: number) => {
-    if (trend > 0) return <TrendingUp className="h-4 w-4 text-green-600" />
-    if (trend < 0) return <TrendingDown className="h-4 w-4 text-red-600" />
-    return <Minus className="h-4 w-4 text-gray-400" />
-  }
+    if (trend > 0) return <TrendingUp className="h-4 w-4 text-green-600" />;
+    if (trend < 0) return <TrendingDown className="h-4 w-4 text-red-600" />;
+    return <Minus className="h-4 w-4 text-gray-400" />;
+  };
 
   const getTrendColor = (trend: number) => {
-    if (trend > 0) return "text-green-600"
-    if (trend < 0) return "text-red-600"
-    return "text-gray-400"
-  }
+    if (trend > 0) return "text-green-600";
+    if (trend < 0) return "text-red-600";
+    return "text-gray-400";
+  };
 
   if (error) {
     return (
@@ -66,7 +81,7 @@ export function BoardMetricsCard({ dateRange = '30d', className }: BoardMetricsC
           <div className="text-sm text-red-600">{error}</div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (isLoading || !data) {
@@ -84,7 +99,7 @@ export function BoardMetricsCard({ dateRange = '30d', className }: BoardMetricsC
           <Skeleton className="h-6 w-20" />
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -95,15 +110,19 @@ export function BoardMetricsCard({ dateRange = '30d', className }: BoardMetricsC
           Active Projects
         </CardTitle>
         <CardDescription>
-          {dateRange === 'all' ? 'All time' : `Last ${dateRange}`}
+          {dateRange === "all" ? "All time" : `Last ${dateRange}`}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
           {/* Main metric */}
           <div className="flex items-baseline gap-2">
-            <div className="text-2xl font-bold">{data.totalBoards.toLocaleString()}</div>
-            <div className={`flex items-center gap-1 text-sm ${getTrendColor(data.trends.monthOverMonth)}`}>
+            <div className="text-2xl font-bold">
+              {data.totalBoards.toLocaleString()}
+            </div>
+            <div
+              className={`flex items-center gap-1 text-sm ${getTrendColor(data.trends.monthOverMonth)}`}
+            >
               {getTrendIcon(data.trends.monthOverMonth)}
               <span>{Math.abs(data.trends.monthOverMonth).toFixed(1)}%</span>
             </div>
@@ -128,11 +147,14 @@ export function BoardMetricsCard({ dateRange = '30d', className }: BoardMetricsC
           <div className="text-xs text-muted-foreground space-y-1">
             <div>Avg. tasks/board: {data.averageTasksPerBoard}</div>
             {data.sectionDistribution.averageSectionsPerBoard > 0 && (
-              <div>Avg. sections/board: {data.sectionDistribution.averageSectionsPerBoard}</div>
+              <div>
+                Avg. sections/board:{" "}
+                {data.sectionDistribution.averageSectionsPerBoard}
+              </div>
             )}
           </div>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

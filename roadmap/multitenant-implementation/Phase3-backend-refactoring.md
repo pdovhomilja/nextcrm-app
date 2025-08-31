@@ -99,7 +99,7 @@ export async function middleware(request: NextRequest) {
       // Redirect to the correct URL for their active session.
       const newPathname = request.nextUrl.pathname.replace(
         urlCompanyId,
-        sessionCompanyId as string
+        sessionCompanyId as string,
       );
       return NextResponse.redirect(new URL(newPathname, request.url));
     }

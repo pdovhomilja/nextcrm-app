@@ -5,10 +5,10 @@ import { auth } from "@/auth";
 
 export async function getBoards(userId: string, query?: string) {
   const session = await auth();
-  
+
   // Get user's active company ID for multi-tenant isolation
   const companyId = session?.user?.activeCompanyId;
-  
+
   if (!companyId) {
     throw new Error("No active company found");
   }
@@ -26,12 +26,19 @@ export async function getBoards(userId: string, query?: string) {
           companyId: companyId,
         },
         ...(query
-          ? [{
-              OR: [
-                { name: { contains: query, mode: "insensitive" as const } },
-                { description: { contains: query, mode: "insensitive" as const } },
-              ],
-            }]
+          ? [
+              {
+                OR: [
+                  { name: { contains: query, mode: "insensitive" as const } },
+                  {
+                    description: {
+                      contains: query,
+                      mode: "insensitive" as const,
+                    },
+                  },
+                ],
+              },
+            ]
           : []),
       ],
     },

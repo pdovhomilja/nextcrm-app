@@ -13,7 +13,7 @@ export class EmbeddingStorageService {
     embedding: number[],
     content: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    metadata: Record<string, any>
+    metadata: Record<string, any>,
   ): Promise<void> {
     try {
       // Use raw SQL for vector operations until Prisma vector support is stable
@@ -31,11 +31,11 @@ export class EmbeddingStorageService {
       `;
 
       console.log(
-        `Successfully stored embedding for task ${taskId}, content: ${content.substring(0, 50)}...`
+        `Successfully stored embedding for task ${taskId}, content: ${content.substring(0, 50)}...`,
       );
       console.log(
         `Embedding dimensions: ${embedding.length}, metadata:`,
-        metadata
+        metadata,
       );
     } catch (error) {
       console.error(`Failed to store task embedding for ${taskId}:`, error);
@@ -51,7 +51,7 @@ export class EmbeddingStorageService {
     embedding: number[],
     content: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    metadata: Record<string, any>
+    metadata: Record<string, any>,
   ): Promise<void> {
     try {
       // Use raw SQL for vector operations until Prisma vector support is stable
@@ -69,11 +69,11 @@ export class EmbeddingStorageService {
       `;
 
       console.log(
-        `Successfully stored embedding for board ${boardId}, content: ${content.substring(0, 50)}...`
+        `Successfully stored embedding for board ${boardId}, content: ${content.substring(0, 50)}...`,
       );
       console.log(
         `Embedding dimensions: ${embedding.length}, metadata:`,
-        metadata
+        metadata,
       );
     } catch (error) {
       console.error(`Failed to store board embedding for ${boardId}:`, error);
@@ -84,23 +84,29 @@ export class EmbeddingStorageService {
   /**
    * Generate and store embedding for a single task
    */
-  async processTaskEmbedding(taskId: string, companyId?: string): Promise<boolean> {
+  async processTaskEmbedding(
+    taskId: string,
+    companyId?: string,
+  ): Promise<boolean> {
     try {
-      const taskDoc = await dataExtractionService.extractTaskData(taskId, companyId);
+      const taskDoc = await dataExtractionService.extractTaskData(
+        taskId,
+        companyId,
+      );
       if (!taskDoc) {
         console.error(`Task ${taskId} not found or access denied`);
         return false;
       }
 
       const embedding = await embeddingService.generateEmbedding(
-        taskDoc.content
+        taskDoc.content,
       );
 
       await this.storeTaskEmbedding(
         taskId,
         embedding,
         taskDoc.content,
-        taskDoc.metadata
+        taskDoc.metadata,
       );
 
       console.log(`Successfully processed task embedding: ${taskId}`);
@@ -114,23 +120,29 @@ export class EmbeddingStorageService {
   /**
    * Generate and store embedding for a single board
    */
-  async processBoardEmbedding(boardId: string, companyId?: string): Promise<boolean> {
+  async processBoardEmbedding(
+    boardId: string,
+    companyId?: string,
+  ): Promise<boolean> {
     try {
-      const boardDoc = await dataExtractionService.extractBoardData(boardId, companyId);
+      const boardDoc = await dataExtractionService.extractBoardData(
+        boardId,
+        companyId,
+      );
       if (!boardDoc) {
         console.error(`Board ${boardId} not found or access denied`);
         return false;
       }
 
       const embedding = await embeddingService.generateEmbedding(
-        boardDoc.content
+        boardDoc.content,
       );
 
       await this.storeBoardEmbedding(
         boardId,
         embedding,
         boardDoc.content,
-        boardDoc.metadata
+        boardDoc.metadata,
       );
 
       console.log(`Successfully processed board embedding: ${boardId}`);
@@ -147,7 +159,7 @@ export class EmbeddingStorageService {
   async batchProcessTaskEmbeddings(
     taskIds: string[],
     companyId: string,
-    batchSize = 10
+    batchSize = 10,
   ): Promise<{ success: number; failed: number; errors: string[] }> {
     let success = 0;
     let failed = 0;
@@ -157,12 +169,12 @@ export class EmbeddingStorageService {
       const batch = taskIds.slice(i, i + batchSize);
 
       console.log(
-        `Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(taskIds.length / batchSize)}`
+        `Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(taskIds.length / batchSize)}`,
       );
 
       // Process batch in parallel
       const results = await Promise.allSettled(
-        batch.map((taskId) => this.processTaskEmbedding(taskId, companyId))
+        batch.map((taskId) => this.processTaskEmbedding(taskId, companyId)),
       );
 
       results.forEach((result, index) => {
@@ -193,7 +205,7 @@ export class EmbeddingStorageService {
   async batchProcessBoardEmbeddings(
     boardIds: string[],
     companyId: string,
-    batchSize = 5
+    batchSize = 5,
   ): Promise<{ success: number; failed: number; errors: string[] }> {
     let success = 0;
     let failed = 0;
@@ -203,12 +215,12 @@ export class EmbeddingStorageService {
       const batch = boardIds.slice(i, i + batchSize);
 
       console.log(
-        `Processing board batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(boardIds.length / batchSize)}`
+        `Processing board batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(boardIds.length / batchSize)}`,
       );
 
       // Process batch in parallel
       const results = await Promise.allSettled(
-        batch.map((boardId) => this.processBoardEmbedding(boardId, companyId))
+        batch.map((boardId) => this.processBoardEmbedding(boardId, companyId)),
       );
 
       results.forEach((result, index) => {
@@ -390,17 +402,17 @@ export class EmbeddingStorageService {
       if (stats.totalTaskEmbeddings === 0 && stats.totalBoardEmbeddings === 0) {
         issues.push("No embeddings found in database");
         recommendations.push(
-          "Run initial embedding generation for your company data"
+          "Run initial embedding generation for your company data",
         );
       }
 
       // Check for old embeddings
       if (stats.avgEmbeddingAge > 7) {
         issues.push(
-          `Average embedding age is ${stats.avgEmbeddingAge.toFixed(1)} days`
+          `Average embedding age is ${stats.avgEmbeddingAge.toFixed(1)} days`,
         );
         recommendations.push(
-          "Consider running embedding updates for recent changes"
+          "Consider running embedding updates for recent changes",
         );
       }
 
@@ -412,10 +424,10 @@ export class EmbeddingStorageService {
       }
     } catch (error) {
       issues.push(
-        `Database connectivity issue: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Database connectivity issue: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
       recommendations.push(
-        "Check database connection and pgvector installation"
+        "Check database connection and pgvector installation",
       );
     }
 

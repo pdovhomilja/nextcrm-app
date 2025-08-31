@@ -22,7 +22,7 @@ interface TaskSideRailProps {
 export default function TaskSideRail({ task, users }: TaskSideRailProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [assigneeId, setAssigneeId] = useState<string | undefined>(
-    task.assignedTo.id ?? undefined
+    task.assignedTo.id ?? undefined,
   );
 
   async function onChangeAssignee(id: string) {

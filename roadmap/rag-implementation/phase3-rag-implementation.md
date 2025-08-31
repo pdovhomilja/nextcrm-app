@@ -1,9 +1,11 @@
 # Phase 3: RAG Implementation
 
 ## Overview
+
 This phase implements the core Retrieval-Augmented Generation system, including semantic search, context assembly, and the foundation for intelligent query processing. It builds on the MCP servers and embeddings from Phases 1 and 2.
 
 ## Prerequisites
+
 - Completed Phase 1: MCP Server Setup & Vector Database Integration
 - Completed Phase 2: Embedding Generation
 - Vector embeddings stored in PostgreSQL
@@ -17,12 +19,14 @@ This phase implements the core Retrieval-Augmented Generation system, including 
 **API Token Usage**: Medium
 
 #### Tasks:
+
 - [ ] Implement vector similarity search functions
 - [ ] Create query preprocessing utilities
 - [ ] Add similarity threshold management
 - [ ] Optimize PostgreSQL vector queries
 
 #### Vector Search Service:
+
 Create `/lib/ai/vector-search.ts`:
 
 ```typescript
@@ -84,12 +88,12 @@ export class VectorSearchService {
 
     // Expand common abbreviations
     const expansions: Record<string, string> = {
-      "ui": "user interface",
-      "ux": "user experience",
-      "api": "application programming interface",
-      "db": "database",
-      "bug": "error issue problem",
-      "feat": "feature enhancement",
+      ui: "user interface",
+      ux: "user experience",
+      api: "application programming interface",
+      db: "database",
+      bug: "error issue problem",
+      feat: "feature enhancement",
     };
 
     let expanded = cleaned;
@@ -104,8 +108,16 @@ export class VectorSearchService {
   /**
    * Perform semantic search on task embeddings
    */
-  async searchTasks(searchQuery: VectorSearchQuery): Promise<VectorSearchResult[]> {
-    const { query, companyId, userId, threshold = this.defaultThreshold, limit = this.defaultLimit } = searchQuery;
+  async searchTasks(
+    searchQuery: VectorSearchQuery,
+  ): Promise<VectorSearchResult[]> {
+    const {
+      query,
+      companyId,
+      userId,
+      threshold = this.defaultThreshold,
+      limit = this.defaultLimit,
+    } = searchQuery;
 
     if (!query.trim()) {
       return [];
@@ -114,7 +126,8 @@ export class VectorSearchService {
     try {
       // Generate query embedding
       const processedQuery = this.preprocessQuery(query);
-      const queryEmbedding = await embeddingService.generateEmbedding(processedQuery);
+      const queryEmbedding =
+        await embeddingService.generateEmbedding(processedQuery);
       const embeddingVector = `[${queryEmbedding.join(",")}]`;
 
       // Build WHERE clause for filters
@@ -153,12 +166,16 @@ export class VectorSearchService {
 
       if (searchQuery.filters?.dateRange) {
         whereClause += ` AND t."createdAt" BETWEEN $${paramIndex} AND $${paramIndex + 1}`;
-        params.push(searchQuery.filters.dateRange.start, searchQuery.filters.dateRange.end);
+        params.push(
+          searchQuery.filters.dateRange.start,
+          searchQuery.filters.dateRange.end,
+        );
         paramIndex += 2;
       }
 
       // Perform vector similarity search
-      const searchResults = await db.$queryRawUnsafe(`
+      const searchResults = await db.$queryRawUnsafe(
+        `
         WITH similarity_scores AS (
           SELECT 
             te."taskId",
@@ -192,10 +209,14 @@ export class VectorSearchService {
         JOIN "Board" b ON bs."boardId" = b.id
         JOIN "User" u ON t."assignedToId" = u.id
         ORDER BY s.similarity DESC
-      `, ...params, threshold, limit);
+      `,
+        ...params,
+        threshold,
+        limit,
+      );
 
       // Transform results
-      return (searchResults as any[]).map(row => ({
+      return (searchResults as any[]).map((row) => ({
         id: row.taskId,
         content: row.content,
         similarity: parseFloat(row.similarity),
@@ -225,7 +246,7 @@ export class VectorSearchService {
   async hybridSearch(
     searchQuery: VectorSearchQuery,
     vectorWeight = 0.7,
-    keywordWeight = 0.3
+    keywordWeight = 0.3,
   ): Promise<VectorSearchResult[]> {
     const { query, limit = this.defaultLimit } = searchQuery;
 
@@ -244,7 +265,7 @@ export class VectorSearchService {
         vectorResults,
         keywordResults,
         vectorWeight,
-        keywordWeight
+        keywordWeight,
       );
 
       // Return top results
@@ -258,24 +279,30 @@ export class VectorSearchService {
   /**
    * Perform keyword-based search for hybrid functionality
    */
-  private async keywordSearch(searchQuery: VectorSearchQuery): Promise<VectorSearchResult[]> {
+  private async keywordSearch(
+    searchQuery: VectorSearchQuery,
+  ): Promise<VectorSearchResult[]> {
     const { query, companyId, limit = this.defaultLimit } = searchQuery;
 
     const searchTerms = query
       .toLowerCase()
       .split(/\s+/)
-      .filter(term => term.length > 2)
-      .map(term => `%${term}%`);
+      .filter((term) => term.length > 2)
+      .map((term) => `%${term}%`);
 
     if (searchTerms.length === 0) return [];
 
     try {
       // Build search conditions for each term
       const searchConditions = searchTerms
-        .map((_, index) => `(t.title ILIKE $${index + 2} OR t.description ILIKE $${index + 2})`)
+        .map(
+          (_, index) =>
+            `(t.title ILIKE $${index + 2} OR t.description ILIKE $${index + 2})`,
+        )
         .join(" AND ");
 
-      const keywordResults = await db.$queryRawUnsafe(`
+      const keywordResults = await db.$queryRawUnsafe(
+        `
         SELECT 
           t.id as "taskId",
           CONCAT(t.title, ' ', t.description) as content,
@@ -302,9 +329,14 @@ export class VectorSearchService {
           AND (${searchConditions})
         ORDER BY similarity DESC
         LIMIT $${searchTerms.length + 3}
-      `, companyId, ...searchTerms, searchTerms, limit);
+      `,
+        companyId,
+        ...searchTerms,
+        searchTerms,
+        limit,
+      );
 
-      return (keywordResults as any[]).map(row => ({
+      return (keywordResults as any[]).map((row) => ({
         id: row.taskId,
         content: row.content,
         similarity: parseFloat(row.similarity),
@@ -335,12 +367,12 @@ export class VectorSearchService {
     vectorResults: VectorSearchResult[],
     keywordResults: VectorSearchResult[],
     vectorWeight: number,
-    keywordWeight: number
+    keywordWeight: number,
   ): VectorSearchResult[] {
     const resultMap = new Map<string, VectorSearchResult>();
 
     // Add vector results
-    vectorResults.forEach(result => {
+    vectorResults.forEach((result) => {
       resultMap.set(result.id, {
         ...result,
         similarity: result.similarity * vectorWeight,
@@ -348,7 +380,7 @@ export class VectorSearchService {
     });
 
     // Add or combine keyword results
-    keywordResults.forEach(result => {
+    keywordResults.forEach((result) => {
       const existing = resultMap.get(result.id);
       if (existing) {
         // Combine scores
@@ -362,14 +394,18 @@ export class VectorSearchService {
     });
 
     // Sort by combined score
-    return Array.from(resultMap.values())
-      .sort((a, b) => b.similarity - a.similarity);
+    return Array.from(resultMap.values()).sort(
+      (a, b) => b.similarity - a.similarity,
+    );
   }
 
   /**
    * Get similar tasks for recommendation
    */
-  async findSimilarTasks(taskId: string, limit = 5): Promise<VectorSearchResult[]> {
+  async findSimilarTasks(
+    taskId: string,
+    limit = 5,
+  ): Promise<VectorSearchResult[]> {
     try {
       const taskEmbedding = await db.taskEmbedding.findUnique({
         where: { taskId },
@@ -387,7 +423,8 @@ export class VectorSearchService {
       }
 
       // Find similar tasks
-      const similarTasks = await db.$queryRawUnsafe(`
+      const similarTasks = await db.$queryRawUnsafe(
+        `
         SELECT 
           te."taskId",
           te.content,
@@ -412,9 +449,14 @@ export class VectorSearchService {
           AND 1 - (te.embedding <-> $1) > 0.5
         ORDER BY similarity DESC
         LIMIT $4
-      `, taskEmbedding.embedding, taskId, taskEmbedding.task.assignedTo.cid, limit);
+      `,
+        taskEmbedding.embedding,
+        taskId,
+        taskEmbedding.task.assignedTo.cid,
+        limit,
+      );
 
-      return (similarTasks as any[]).map(row => ({
+      return (similarTasks as any[]).map((row) => ({
         id: row.taskId,
         content: row.content,
         similarity: parseFloat(row.similarity),
@@ -448,6 +490,7 @@ export const vectorSearchService = new VectorSearchService();
 **API Token Usage**: Medium
 
 #### Tasks:
+
 - [ ] Update Vector Search MCP server with real vector search
 - [ ] Add hybrid search tools
 - [ ] Implement similarity-based recommendations
@@ -477,16 +520,32 @@ const handler = createMcpHandler(
         query: z.string().min(1, "Query is required"),
         threshold: z.number().min(0).max(1).default(0.7),
         limit: z.number().min(1).max(50).default(10),
-        filters: z.object({
-          boardIds: z.array(z.string()).optional(),
-          priority: z.array(z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"])).optional(),
-          status: z.array(z.enum(["NEW", "IN_PROGRESS", "COMPLETED", "CANCELLED", "ON_HOLD"])).optional(),
-          assigneeIds: z.array(z.string()).optional(),
-          dateRange: z.object({
-            start: z.string(),
-            end: z.string(),
-          }).optional(),
-        }).optional(),
+        filters: z
+          .object({
+            boardIds: z.array(z.string()).optional(),
+            priority: z
+              .array(z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]))
+              .optional(),
+            status: z
+              .array(
+                z.enum([
+                  "NEW",
+                  "IN_PROGRESS",
+                  "COMPLETED",
+                  "CANCELLED",
+                  "ON_HOLD",
+                ]),
+              )
+              .optional(),
+            assigneeIds: z.array(z.string()).optional(),
+            dateRange: z
+              .object({
+                start: z.string(),
+                end: z.string(),
+              })
+              .optional(),
+          })
+          .optional(),
       },
       async (params) => {
         const session = await auth();
@@ -500,13 +559,17 @@ const handler = createMcpHandler(
           userId: session.user.id,
           threshold: params.threshold,
           limit: params.limit,
-          filters: params.filters ? {
-            ...params.filters,
-            dateRange: params.filters.dateRange ? {
-              start: new Date(params.filters.dateRange.start),
-              end: new Date(params.filters.dateRange.end),
-            } : undefined,
-          } : undefined,
+          filters: params.filters
+            ? {
+                ...params.filters,
+                dateRange: params.filters.dateRange
+                  ? {
+                      start: new Date(params.filters.dateRange.start),
+                      end: new Date(params.filters.dateRange.end),
+                    }
+                  : undefined,
+              }
+            : undefined,
         };
 
         const results = await vectorSearchService.searchTasks(searchQuery);
@@ -515,22 +578,26 @@ const handler = createMcpHandler(
           content: [
             {
               type: "text",
-              text: JSON.stringify({
-                success: true,
-                query: params.query,
-                results: results.map(result => ({
-                  ...result,
-                  similarity: Math.round(result.similarity * 100) / 100, // Round to 2 decimals
-                })),
-                resultCount: results.length,
-                searchType: "semantic-vector",
-                threshold: params.threshold,
-                message: `Found ${results.length} semantically similar tasks`,
-              }, null, 2),
+              text: JSON.stringify(
+                {
+                  success: true,
+                  query: params.query,
+                  results: results.map((result) => ({
+                    ...result,
+                    similarity: Math.round(result.similarity * 100) / 100, // Round to 2 decimals
+                  })),
+                  resultCount: results.length,
+                  searchType: "semantic-vector",
+                  threshold: params.threshold,
+                  message: `Found ${results.length} semantically similar tasks`,
+                },
+                null,
+                2,
+              ),
             },
           ],
         };
-      }
+      },
     );
 
     // Hybrid search tool
@@ -543,12 +610,26 @@ const handler = createMcpHandler(
         keywordWeight: z.number().min(0).max(1).default(0.3),
         threshold: z.number().min(0).max(1).default(0.6),
         limit: z.number().min(1).max(50).default(15),
-        filters: z.object({
-          boardIds: z.array(z.string()).optional(),
-          priority: z.array(z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"])).optional(),
-          status: z.array(z.enum(["NEW", "IN_PROGRESS", "COMPLETED", "CANCELLED", "ON_HOLD"])).optional(),
-          assigneeIds: z.array(z.string()).optional(),
-        }).optional(),
+        filters: z
+          .object({
+            boardIds: z.array(z.string()).optional(),
+            priority: z
+              .array(z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]))
+              .optional(),
+            status: z
+              .array(
+                z.enum([
+                  "NEW",
+                  "IN_PROGRESS",
+                  "COMPLETED",
+                  "CANCELLED",
+                  "ON_HOLD",
+                ]),
+              )
+              .optional(),
+            assigneeIds: z.array(z.string()).optional(),
+          })
+          .optional(),
       },
       async (params) => {
         const session = await auth();
@@ -568,32 +649,36 @@ const handler = createMcpHandler(
         const results = await vectorSearchService.hybridSearch(
           searchQuery,
           params.vectorWeight,
-          params.keywordWeight
+          params.keywordWeight,
         );
 
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify({
-                success: true,
-                query: params.query,
-                searchWeights: {
-                  vector: params.vectorWeight,
-                  keyword: params.keywordWeight,
+              text: JSON.stringify(
+                {
+                  success: true,
+                  query: params.query,
+                  searchWeights: {
+                    vector: params.vectorWeight,
+                    keyword: params.keywordWeight,
+                  },
+                  results: results.map((result) => ({
+                    ...result,
+                    similarity: Math.round(result.similarity * 100) / 100,
+                  })),
+                  resultCount: results.length,
+                  searchType: "hybrid",
+                  message: `Found ${results.length} relevant tasks using hybrid search`,
                 },
-                results: results.map(result => ({
-                  ...result,
-                  similarity: Math.round(result.similarity * 100) / 100,
-                })),
-                resultCount: results.length,
-                searchType: "hybrid",
-                message: `Found ${results.length} relevant tasks using hybrid search`,
-              }, null, 2),
+                null,
+                2,
+              ),
             },
           ],
         };
-      }
+      },
     );
 
     // Find similar tasks tool
@@ -613,32 +698,38 @@ const handler = createMcpHandler(
 
         const results = await vectorSearchService.findSimilarTasks(
           params.taskId,
-          params.limit
+          params.limit,
         );
 
         // Filter by threshold
-        const filteredResults = results.filter(result => result.similarity >= params.threshold);
+        const filteredResults = results.filter(
+          (result) => result.similarity >= params.threshold,
+        );
 
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify({
-                success: true,
-                sourceTaskId: params.taskId,
-                results: filteredResults.map(result => ({
-                  ...result,
-                  similarity: Math.round(result.similarity * 100) / 100,
-                })),
-                resultCount: filteredResults.length,
-                searchType: "similarity-based",
-                threshold: params.threshold,
-                message: `Found ${filteredResults.length} similar tasks`,
-              }, null, 2),
+              text: JSON.stringify(
+                {
+                  success: true,
+                  sourceTaskId: params.taskId,
+                  results: filteredResults.map((result) => ({
+                    ...result,
+                    similarity: Math.round(result.similarity * 100) / 100,
+                  })),
+                  resultCount: filteredResults.length,
+                  searchType: "similarity-based",
+                  threshold: params.threshold,
+                  message: `Found ${filteredResults.length} similar tasks`,
+                },
+                null,
+                2,
+              ),
             },
           ],
         };
-      }
+      },
     );
 
     // Search analytics tool
@@ -670,25 +761,35 @@ const handler = createMcpHandler(
           content: [
             {
               type: "text",
-              text: JSON.stringify({
-                success: true,
-                analytics,
-                message: "Search analytics retrieved (placeholder data)",
-                note: "Full analytics implementation pending search logging infrastructure",
-              }, null, 2),
+              text: JSON.stringify(
+                {
+                  success: true,
+                  analytics,
+                  message: "Search analytics retrieved (placeholder data)",
+                  note: "Full analytics implementation pending search logging infrastructure",
+                },
+                null,
+                2,
+              ),
             },
           ],
         };
-      }
+      },
     );
   },
   {
     capabilities: {
       tools: {
         semantic_search_tasks: { description: "Vector-based semantic search" },
-        hybrid_search_tasks: { description: "Combined vector and keyword search" },
-        find_similar_tasks: { description: "Find similar tasks by vector similarity" },
-        search_analytics: { description: "Search patterns and quality analytics" },
+        hybrid_search_tasks: {
+          description: "Combined vector and keyword search",
+        },
+        find_similar_tasks: {
+          description: "Find similar tasks by vector similarity",
+        },
+        search_analytics: {
+          description: "Search patterns and quality analytics",
+        },
       },
     },
   },
@@ -696,7 +797,7 @@ const handler = createMcpHandler(
     basePath: "",
     verboseLogs: process.env.MCP_VERBOSE_LOGS === "true",
     maxDuration: parseInt(process.env.MCP_MAX_DURATION || "800"),
-  }
+  },
 );
 
 export { handler as GET, handler as POST, handler as DELETE };
@@ -708,12 +809,14 @@ export { handler as GET, handler as POST, handler as DELETE };
 **API Token Usage**: Medium-High
 
 #### Tasks:
+
 - [ ] Create context assembly service
 - [ ] Design prompt templates for different query types
 - [ ] Implement context window management
 - [ ] Add relevance scoring and ranking
 
 #### Context Assembly Service:
+
 Create `/lib/ai/context-assembly.ts`:
 
 ```typescript
@@ -726,7 +829,11 @@ export interface RAGContext {
   userId: string;
   boardId?: string;
   taskId?: string;
-  contextType: "general" | "task_specific" | "board_analysis" | "recommendation";
+  contextType:
+    | "general"
+    | "task_specific"
+    | "board_analysis"
+    | "recommendation";
   maxTokens?: number;
 }
 
@@ -740,7 +847,12 @@ export interface AssembledContext {
 }
 
 export interface PromptTemplate {
-  type: "general" | "task_specific" | "board_analysis" | "recommendation" | "troubleshooting";
+  type:
+    | "general"
+    | "task_specific"
+    | "board_analysis"
+    | "recommendation"
+    | "troubleshooting";
   systemPrompt: string;
   contextTemplate: string;
   userQueryTemplate: string;
@@ -779,7 +891,7 @@ Always base your responses on the provided context and be specific about the dat
       requiredContext: ["tasks"],
       optionalContext: ["boards", "users", "history"],
     },
-    
+
     task_specific: {
       type: "task_specific",
       systemPrompt: `You are a task management expert helping with specific task analysis and recommendations.
@@ -901,7 +1013,7 @@ Provide root cause analysis and actionable solutions.`,
    * Retrieve relevant context based on query
    */
   private async retrieveRelevantContext(
-    ragContext: RAGContext
+    ragContext: RAGContext,
   ): Promise<VectorSearchResult[]> {
     const searchQuery = {
       query: ragContext.query,
@@ -909,7 +1021,9 @@ Provide root cause analysis and actionable solutions.`,
       userId: ragContext.userId,
       threshold: 0.6,
       limit: 20,
-      filters: ragContext.boardId ? { boardIds: [ragContext.boardId] } : undefined,
+      filters: ragContext.boardId
+        ? { boardIds: [ragContext.boardId] }
+        : undefined,
     };
 
     try {
@@ -927,10 +1041,12 @@ Provide root cause analysis and actionable solutions.`,
    */
   private calculateContextRelevance(documents: VectorSearchResult[]): number {
     if (documents.length === 0) return 0;
-    
-    const avgSimilarity = documents.reduce((sum, doc) => sum + doc.similarity, 0) / documents.length;
+
+    const avgSimilarity =
+      documents.reduce((sum, doc) => sum + doc.similarity, 0) /
+      documents.length;
     const diversityBonus = Math.min(documents.length / 10, 0.1); // Bonus for diverse results
-    
+
     return Math.min(avgSimilarity + diversityBonus, 1);
   }
 
@@ -948,26 +1064,32 @@ Provide root cause analysis and actionable solutions.`,
     const statusCounts: Record<string, number> = {};
     const boards = new Set<string>();
 
-    documents.forEach(doc => {
+    documents.forEach((doc) => {
       if (doc.task) {
-        priorityCounts[doc.task.priority] = (priorityCounts[doc.task.priority] || 0) + 1;
-        statusCounts[doc.task.status] = (statusCounts[doc.task.status] || 0) + 1;
+        priorityCounts[doc.task.priority] =
+          (priorityCounts[doc.task.priority] || 0) + 1;
+        statusCounts[doc.task.status] =
+          (statusCounts[doc.task.status] || 0) + 1;
         boards.add(doc.task.boardName);
       }
     });
 
-    const avgRelevance = documents.length > 0 
-      ? (documents.reduce((sum, doc) => sum + doc.similarity, 0) / documents.length)
-      : 0;
+    const avgRelevance =
+      documents.length > 0
+        ? documents.reduce((sum, doc) => sum + doc.similarity, 0) /
+          documents.length
+        : 0;
 
     return {
       taskCount: documents.length,
-      priorityBreakdown: Object.entries(priorityCounts)
-        .map(([priority, count]) => `${priority}: ${count}`)
-        .join(", ") || "None",
-      statusBreakdown: Object.entries(statusCounts)
-        .map(([status, count]) => `${status}: ${count}`)
-        .join(", ") || "None",
+      priorityBreakdown:
+        Object.entries(priorityCounts)
+          .map(([priority, count]) => `${priority}: ${count}`)
+          .join(", ") || "None",
+      statusBreakdown:
+        Object.entries(statusCounts)
+          .map(([status, count]) => `${status}: ${count}`)
+          .join(", ") || "None",
       avgRelevance: (avgRelevance * 100).toFixed(1) + "%",
       boardInfo: Array.from(boards).join(", ") || "No boards",
     };
@@ -985,7 +1107,8 @@ Provide root cause analysis and actionable solutions.`,
       .slice(0, 10) // Limit to top 10 most relevant
       .map((doc, index) => {
         const task = doc.task;
-        if (!task) return `${index + 1}. ${doc.content} (Relevance: ${(doc.similarity * 100).toFixed(1)}%)`;
+        if (!task)
+          return `${index + 1}. ${doc.content} (Relevance: ${(doc.similarity * 100).toFixed(1)}%)`;
 
         return `${index + 1}. **${task.title}** [${task.priority}] [${task.status}]
    Board: ${task.boardName} → ${task.sectionName}
@@ -1004,9 +1127,12 @@ Provide root cause analysis and actionable solutions.`,
   private trimContextToFit(
     documents: VectorSearchResult[],
     template: PromptTemplate,
-    query: string
+    query: string,
   ): { documents: VectorSearchResult[]; estimatedTokens: number } {
-    const basePromptTokens = this.estimateTokenCount(template.systemPrompt + template.userQueryTemplate.replace("{query}", query));
+    const basePromptTokens = this.estimateTokenCount(
+      template.systemPrompt +
+        template.userQueryTemplate.replace("{query}", query),
+    );
     const availableTokens = template.maxTokens - basePromptTokens - 500; // Buffer for response
 
     let totalTokens = 0;
@@ -1014,7 +1140,7 @@ Provide root cause analysis and actionable solutions.`,
 
     for (const doc of documents) {
       const docTokens = this.estimateTokenCount(this.formatSingleDocument(doc));
-      
+
       if (totalTokens + docTokens <= availableTokens) {
         trimmedDocs.push(doc);
         totalTokens += docTokens;
@@ -1045,20 +1171,26 @@ Description: ${doc.task.description || "No description"}`;
    * Assemble complete context for RAG query
    */
   async assembleContext(ragContext: RAGContext): Promise<AssembledContext> {
-    const template = this.promptTemplates[ragContext.contextType] || this.promptTemplates.general;
-    
+    const template =
+      this.promptTemplates[ragContext.contextType] ||
+      this.promptTemplates.general;
+
     // Retrieve relevant documents
     const allDocuments = await this.retrieveRelevantContext(ragContext);
-    
+
     // Trim to fit token limits
-    const { documents, estimatedTokens } = this.trimContextToFit(allDocuments, template, ragContext.query);
-    
+    const { documents, estimatedTokens } = this.trimContextToFit(
+      allDocuments,
+      template,
+      ragContext.query,
+    );
+
     // Build context summary
     const summary = this.buildContextSummary(documents);
-    
+
     // Format context documents
     const formattedContext = this.formatContextDocuments(documents);
-    
+
     // Build complete context template
     const contextTemplate = template.contextTemplate
       .replace("{context}", formattedContext)
@@ -1069,7 +1201,10 @@ Description: ${doc.task.description || "No description"}`;
       .replace("{boardInfo}", summary.boardInfo);
 
     // Build user prompt
-    const userPrompt = template.userQueryTemplate.replace("{query}", ragContext.query);
+    const userPrompt = template.userQueryTemplate.replace(
+      "{query}",
+      ragContext.query,
+    );
 
     // Calculate relevance score
     const relevanceScore = this.calculateContextRelevance(documents);
@@ -1111,18 +1246,24 @@ export const contextAssemblyService = new ContextAssemblyService();
 **API Token Usage**: Medium
 
 #### Tasks:
+
 - [ ] Create RAG query processing service
 - [ ] Implement query classification
 - [ ] Add response post-processing
 - [ ] Create query optimization utilities
 
 #### RAG Processing Service:
+
 Create `/lib/ai/rag-processor.ts`:
 
 ```typescript
 import { generateText, generateObject } from "ai";
 import { aiConfig } from "./config";
-import { contextAssemblyService, RAGContext, AssembledContext } from "./context-assembly";
+import {
+  contextAssemblyService,
+  RAGContext,
+  AssembledContext,
+} from "./context-assembly";
 import { z } from "zod";
 
 export interface RAGQuery {
@@ -1131,7 +1272,11 @@ export interface RAGQuery {
   userId: string;
   boardId?: string;
   taskId?: string;
-  contextType?: "general" | "task_specific" | "board_analysis" | "recommendation";
+  contextType?:
+    | "general"
+    | "task_specific"
+    | "board_analysis"
+    | "recommendation";
   options?: {
     includeContext?: boolean;
     maxTokens?: number;
@@ -1181,10 +1326,16 @@ Respond with the category name and confidence (0-1).`;
     try {
       const result = await generateObject({
         model: aiConfig.chatModel,
-        system: "You are a query classification expert. Analyze queries and categorize them accurately.",
+        system:
+          "You are a query classification expert. Analyze queries and categorize them accurately.",
         prompt: classificationPrompt,
         schema: z.object({
-          type: z.enum(["general", "task_specific", "board_analysis", "recommendation"]),
+          type: z.enum([
+            "general",
+            "task_specific",
+            "board_analysis",
+            "recommendation",
+          ]),
           confidence: z.number().min(0).max(1),
           reasoning: z.string(),
         }),
@@ -1227,7 +1378,8 @@ Respond with the category name and confidence (0-1).`;
         maxTokens: ragQuery.options?.maxTokens || 8000,
       };
 
-      const assembledContext = await contextAssemblyService.assembleContext(ragContext);
+      const assembledContext =
+        await contextAssemblyService.assembleContext(ragContext);
 
       // Step 4: Generate response
       const response = await this.generateResponse(assembledContext, ragQuery);
@@ -1235,7 +1387,7 @@ Respond with the category name and confidence (0-1).`;
       // Step 5: Extract sources
       const sources = assembledContext.contextDocuments
         .slice(0, 5) // Top 5 sources
-        .map(doc => ({
+        .map((doc) => ({
           taskId: doc.id,
           title: doc.task?.title || "Unknown task",
           relevance: Math.round(doc.similarity * 100) / 100,
@@ -1246,7 +1398,7 @@ Respond with the category name and confidence (0-1).`;
       const suggestedActions = await this.generateSuggestedActions(
         ragQuery.query,
         assembledContext.contextDocuments,
-        contextType
+        contextType,
       );
 
       const processingTime = Date.now() - startTime;
@@ -1262,11 +1414,12 @@ Respond with the category name and confidence (0-1).`;
       };
     } catch (error) {
       console.error("RAG processing error:", error);
-      
+
       const processingTime = Date.now() - startTime;
-      
+
       return {
-        response: "I apologize, but I encountered an error while processing your query. Please try rephrasing your question or contact support if the issue persists.",
+        response:
+          "I apologize, but I encountered an error while processing your query. Please try rephrasing your question or contact support if the issue persists.",
         confidence: 0,
         sources: [],
         contextSummary: "Error occurred during context retrieval",
@@ -1282,7 +1435,7 @@ Respond with the category name and confidence (0-1).`;
    */
   private async generateResponse(
     context: AssembledContext,
-    ragQuery: RAGQuery
+    ragQuery: RAGQuery,
   ) {
     const options = ragQuery.options || {};
 
@@ -1301,12 +1454,14 @@ Respond with the category name and confidence (0-1).`;
   private async generateSuggestedActions(
     query: string,
     contextDocs: any[],
-    contextType: string
-  ): Promise<Array<{
-    type: "task" | "assignment" | "priority" | "schedule";
-    description: string;
-    reasoning: string;
-  }>> {
+    contextType: string,
+  ): Promise<
+    Array<{
+      type: "task" | "assignment" | "priority" | "schedule";
+      description: string;
+      reasoning: string;
+    }>
+  > {
     if (contextDocs.length === 0) return [];
 
     try {
@@ -1321,13 +1476,15 @@ Available context: ${contextDocs.length} relevant tasks found.
 
 Generate actionable suggestions that would help address this query.`,
         schema: z.object({
-          suggestions: z.array(
-            z.object({
-              type: z.enum(["task", "assignment", "priority", "schedule"]),
-              description: z.string(),
-              reasoning: z.string(),
-            })
-          ).max(3),
+          suggestions: z
+            .array(
+              z.object({
+                type: z.enum(["task", "assignment", "priority", "schedule"]),
+                description: z.string(),
+                reasoning: z.string(),
+              }),
+            )
+            .max(3),
         }),
         temperature: 0.6,
       });
@@ -1350,13 +1507,13 @@ Generate actionable suggestions that would help address this query.`,
     for (let i = 0; i < queries.length; i += batchSize) {
       const batch = queries.slice(i, i + batchSize);
       const batchResults = await Promise.all(
-        batch.map(query => this.processQuery(query))
+        batch.map((query) => this.processQuery(query)),
       );
       results.push(...batchResults);
 
       // Small delay between batches to manage API rate limits
       if (i + batchSize < queries.length) {
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
     }
 
@@ -1393,6 +1550,7 @@ export const ragProcessor = new RAGProcessor();
 **API Token Usage**: Medium
 
 #### Tasks:
+
 - [ ] Create RAG response quality tests
 - [ ] Implement search accuracy validation
 - [ ] Add performance benchmarking
@@ -1504,6 +1662,7 @@ describe("Context Assembly Tests", () => {
 ## Next Steps
 
 After completing Phase 3:
+
 1. Proceed to Phase 4: AI Agent Architecture
 2. Set up production monitoring for RAG performance
 3. Implement user feedback collection for response quality
@@ -1512,12 +1671,14 @@ After completing Phase 3:
 ## Troubleshooting
 
 ### Common Issues:
+
 - **Vector search errors**: Check pgvector installation and embedding format
 - **Context assembly timeout**: Reduce maxTokens or limit document count
 - **Poor relevance scores**: Adjust similarity thresholds and search parameters
 - **Token limit exceeded**: Implement better context trimming logic
 
 ### Debug Commands:
+
 ```bash
 # Test vector search directly
 curl -X POST http://localhost:3000/api/mcp/search/sse \

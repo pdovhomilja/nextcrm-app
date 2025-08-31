@@ -1,75 +1,75 @@
-"use server"
+"use server";
 
-import { auth } from "@/auth"
-import db from "@/lib/db"
-import { z } from 'zod/v3';
+import { auth } from "@/auth";
+import db from "@/lib/db";
+import { z } from "zod/v3";
 
 const BoardMetricsSchema = z.object({
   dateRange: z.enum(["7d", "30d", "90d", "all"]).optional().default("30d"),
   includeSections: z.boolean().optional().default(true),
-})
+});
 
 export type BoardMetricsData = {
-  totalBoards: number
-  activeBoardsCount: number
-  boardsWithTasks: number
-  averageTasksPerBoard: number
+  totalBoards: number;
+  activeBoardsCount: number;
+  boardsWithTasks: number;
+  averageTasksPerBoard: number;
   mostActiveBoards: Array<{
-    id: string
-    title: string
-    taskCount: number
-    sectionCount: number
-    lastActivity: Date
-  }>
+    id: string;
+    title: string;
+    taskCount: number;
+    sectionCount: number;
+    lastActivity: Date;
+  }>;
   boardActivity: {
-    created: number
-    updated: number
-    archived: number
-  }
+    created: number;
+    updated: number;
+    archived: number;
+  };
   sectionDistribution: {
-    totalSections: number
-    averageSectionsPerBoard: number
-    sectionUtilization: number
-  }
+    totalSections: number;
+    averageSectionsPerBoard: number;
+    sectionUtilization: number;
+  };
   trends: {
-    weekOverWeek: number
-    monthOverMonth: number
-  }
-}
+    weekOverWeek: number;
+    monthOverMonth: number;
+  };
+};
 
 export async function getBoardMetrics(
-  input?: z.infer<typeof BoardMetricsSchema>
+  input?: z.infer<typeof BoardMetricsSchema>,
 ): Promise<{ data?: BoardMetricsData; error?: string }> {
   try {
-    const session = await auth()
+    const session = await auth();
     if (!session?.user) {
-      return { error: "Authentication required" }
+      return { error: "Authentication required" };
     }
 
-    const companyId = session.user.activeCompanyId
+    const companyId = session.user.activeCompanyId;
     if (!companyId) {
-      return { error: "Company context required" }
+      return { error: "Company context required" };
     }
 
-    const validatedInput = BoardMetricsSchema.parse(input || {})
-    const { dateRange, includeSections } = validatedInput
+    const validatedInput = BoardMetricsSchema.parse(input || {});
+    const { dateRange, includeSections } = validatedInput;
 
     // Calculate date filter
-    const now = new Date()
-    let dateFilter: Date | undefined
+    const now = new Date();
+    let dateFilter: Date | undefined;
 
     switch (dateRange) {
       case "7d":
-        dateFilter = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-        break
+        dateFilter = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
       case "30d":
-        dateFilter = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-        break
+        dateFilter = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
       case "90d":
-        dateFilter = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
-        break
+        dateFilter = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+        break;
       default:
-        dateFilter = undefined
+        dateFilter = undefined;
     }
 
     // Get total boards accessible to user or in same company
@@ -81,7 +81,7 @@ export async function getBoardMetrics(
         ],
         ...(dateFilter && { createdAt: { gte: dateFilter } }),
       },
-    })
+    });
 
     // Get boards with tasks (active boards)
     const boardsWithTasksQuery = await db.board.findMany({
@@ -117,57 +117,69 @@ export async function getBoardMetrics(
           },
         },
       },
-    })
+    });
 
-    const boardsWithTasks = boardsWithTasksQuery.filter(
-      (board) => board.boardSections.some(section => section._count.tasks > 0)
-    ).length
+    const boardsWithTasks = boardsWithTasksQuery.filter((board) =>
+      board.boardSections.some((section) => section._count.tasks > 0),
+    ).length;
 
     const activeBoardsCount = boardsWithTasksQuery.filter((board) => {
-      const lastActivity = board.boardSections.flatMap(section => section.tasks)[0]?.updatedAt
-      if (!lastActivity) return false
+      const lastActivity = board.boardSections.flatMap(
+        (section) => section.tasks,
+      )[0]?.updatedAt;
+      if (!lastActivity) return false;
       const daysSinceActivity =
-        (now.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24)
-      return daysSinceActivity <= 7 // Active in last 7 days
-    }).length
+        (now.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24);
+      return daysSinceActivity <= 7; // Active in last 7 days
+    }).length;
 
     // Calculate average tasks per board
     const totalTasksAcrossBoards = boardsWithTasksQuery.reduce(
-      (sum, board) => sum + board.boardSections.reduce((sectionSum, section) => sectionSum + section._count.tasks, 0),
-      0
-    )
+      (sum, board) =>
+        sum +
+        board.boardSections.reduce(
+          (sectionSum, section) => sectionSum + section._count.tasks,
+          0,
+        ),
+      0,
+    );
     const averageTasksPerBoard =
-      totalBoards > 0 ? Math.round(totalTasksAcrossBoards / totalBoards) : 0
+      totalBoards > 0 ? Math.round(totalTasksAcrossBoards / totalBoards) : 0;
 
     // Get most active boards (top 5)
     const mostActiveBoards = boardsWithTasksQuery
       .map((board) => {
-        const taskCount = board.boardSections.reduce((sum, section) => sum + section._count.tasks, 0)
-        const lastActivity = board.boardSections.flatMap(section => section.tasks)[0]?.updatedAt || board.updatedAt
-        
+        const taskCount = board.boardSections.reduce(
+          (sum, section) => sum + section._count.tasks,
+          0,
+        );
+        const lastActivity =
+          board.boardSections.flatMap((section) => section.tasks)[0]
+            ?.updatedAt || board.updatedAt;
+
         return {
           id: board.id,
           title: board.name,
           taskCount,
           sectionCount: includeSections ? board._count.boardSections : 0,
           lastActivity,
-        }
+        };
       })
       .sort((a, b) => {
         // Sort by task count first, then by last activity
         if (a.taskCount !== b.taskCount) {
-          return b.taskCount - a.taskCount
+          return b.taskCount - a.taskCount;
         }
         return (
           new Date(b.lastActivity).getTime() -
           new Date(a.lastActivity).getTime()
-        )
+        );
       })
-      .slice(0, 5)
+      .slice(0, 5);
 
     // Get board activity metrics
-    const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
     const boardsCreatedThisWeek = await db.board.count({
       where: {
@@ -177,7 +189,7 @@ export async function getBoardMetrics(
         ],
         createdAt: { gte: weekStart },
       },
-    })
+    });
 
     const boardsUpdatedThisWeek = await db.board.count({
       where: {
@@ -188,14 +200,14 @@ export async function getBoardMetrics(
         updatedAt: { gte: weekStart },
         createdAt: { lt: weekStart }, // Exclude newly created ones
       },
-    })
+    });
 
     // Section distribution (if requested)
     let sectionDistribution = {
       totalSections: 0,
       averageSectionsPerBoard: 0,
       sectionUtilization: 0,
-    }
+    };
 
     if (includeSections) {
       const totalSections = await db.boardSection.count({
@@ -207,7 +219,7 @@ export async function getBoardMetrics(
             ],
           },
         },
-      })
+      });
 
       const sectionsWithTasks = await db.boardSection.count({
         where: {
@@ -221,7 +233,7 @@ export async function getBoardMetrics(
             some: {},
           },
         },
-      })
+      });
 
       sectionDistribution = {
         totalSections,
@@ -231,13 +243,13 @@ export async function getBoardMetrics(
           totalSections > 0
             ? Math.round((sectionsWithTasks / totalSections) * 100)
             : 0,
-      }
+      };
     }
 
     // Calculate trends
     const lastWeekStart = new Date(
-      weekStart.getTime() - 7 * 24 * 60 * 60 * 1000
-    )
+      weekStart.getTime() - 7 * 24 * 60 * 60 * 1000,
+    );
     const boardsLastWeek = await db.board.count({
       where: {
         OR: [
@@ -246,13 +258,13 @@ export async function getBoardMetrics(
         ],
         createdAt: { gte: lastWeekStart, lt: weekStart },
       },
-    })
+    });
 
     const lastMonthStart = new Date(
       monthStart.getFullYear(),
       monthStart.getMonth() - 1,
-      1
-    )
+      1,
+    );
     const boardsLastMonth = await db.board.count({
       where: {
         OR: [
@@ -261,7 +273,7 @@ export async function getBoardMetrics(
         ],
         createdAt: { gte: lastMonthStart, lt: monthStart },
       },
-    })
+    });
 
     const boardsThisMonth = await db.board.count({
       where: {
@@ -271,16 +283,16 @@ export async function getBoardMetrics(
         ],
         createdAt: { gte: monthStart },
       },
-    })
+    });
 
     const weekOverWeek =
       boardsLastWeek > 0
         ? ((boardsCreatedThisWeek - boardsLastWeek) / boardsLastWeek) * 100
-        : 0
+        : 0;
     const monthOverMonth =
       boardsLastMonth > 0
         ? ((boardsThisMonth - boardsLastMonth) / boardsLastMonth) * 100
-        : 0
+        : 0;
 
     const result: BoardMetricsData = {
       totalBoards,
@@ -298,14 +310,14 @@ export async function getBoardMetrics(
         weekOverWeek: Math.round(weekOverWeek * 100) / 100,
         monthOverMonth: Math.round(monthOverMonth * 100) / 100,
       },
-    }
+    };
 
-    return { data: result }
+    return { data: result };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { error: "Validation failed" }
+      return { error: "Validation failed" };
     }
-    console.error("Board metrics error:", error)
-    return { error: "Failed to retrieve board metrics" }
+    console.error("Board metrics error:", error);
+    return { error: "Failed to retrieve board metrics" };
   }
 }

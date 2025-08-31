@@ -32,18 +32,23 @@ async function getImapConnection(accountId: string): Promise<Imap | null> {
 
   return new Promise((resolve, reject) => {
     imap.once("ready", () => {
-      console.log('[IMAP] Connection successful');
+      console.log("[IMAP] Connection successful");
       resolve(imap);
     });
     imap.once("error", (err: Error) => {
-      console.error('[IMAP] Connection Error:', err);
+      console.error("[IMAP] Connection Error:", err);
       reject(err);
     });
     imap.connect();
   });
 }
 
-export async function sendMail(accountId: string, to: string, subject: string, body: string) {
+export async function sendMail(
+  accountId: string,
+  to: string,
+  subject: string,
+  body: string,
+) {
   let imap: Imap | null = null;
   try {
     const session = await auth();
@@ -77,7 +82,7 @@ export async function sendMail(accountId: string, to: string, subject: string, b
     if (!imap) return { error: "Could not connect to IMAP server" };
 
     await new Promise<void>((resolve, reject) => {
-      imap!.append(rawEmail, { mailbox: 'Sent' }, (err) => {
+      imap!.append(rawEmail, { mailbox: "Sent" }, (err) => {
         if (err) return reject(err);
         resolve();
       });

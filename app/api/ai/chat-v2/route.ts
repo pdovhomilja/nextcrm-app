@@ -7,7 +7,7 @@ import {
   UIMessage,
   tool,
 } from "ai";
-import { z } from 'zod/v3';
+import { z } from "zod/v3";
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import { withCompanyAccessValidation } from "@/lib/security/company-access-validator";
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
   if (!activeCompanyId) {
     return NextResponse.json(
       { error: "No company context available" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -64,7 +64,7 @@ export async function POST(req: Request) {
             activeCompanyId,
             "ai_query",
             "search",
-            () => findRelevantContent(question, activeCompanyId)
+            () => findRelevantContent(question, activeCompanyId),
           );
 
           if (!result.success) {

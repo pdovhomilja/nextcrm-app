@@ -45,7 +45,7 @@ export async function deleteBoardSection(sectionId: string, boardId: string) {
     return { message: "Board section deleted successfully" };
   } catch (error) {
     throw new Error(
-      `Failed to delete board section: ${error instanceof Error ? error.message : "Unknown error"}`
+      `Failed to delete board section: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
 }

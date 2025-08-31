@@ -95,7 +95,7 @@ class PerformanceMonitor {
   async measureQuery<T>(
     queryName: string,
     queryFn: () => Promise<T>,
-    context?: { userId?: string; companyId?: string }
+    context?: { userId?: string; companyId?: string },
   ): Promise<T> {
     const startTime = performance.now();
 
@@ -116,7 +116,7 @@ class PerformanceMonitor {
       // Log slow queries (> 1 second)
       if (executionTime > 1000) {
         console.warn(
-          `Slow query detected: ${queryName} took ${executionTime.toFixed(2)}ms`
+          `Slow query detected: ${queryName} took ${executionTime.toFixed(2)}ms`,
         );
       }
 
@@ -125,7 +125,7 @@ class PerformanceMonitor {
       const executionTime = performance.now() - startTime;
       console.error(
         `Query failed: ${queryName} after ${executionTime.toFixed(2)}ms`,
-        error
+        error,
       );
       throw error;
     }
@@ -171,14 +171,14 @@ export function measurePerformance(queryName: string) {
   return function (
     target: any,
     propertyKey: string,
-    descriptor: PropertyDescriptor
+    descriptor: PropertyDescriptor,
   ) {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: any[]) {
       return performanceMonitor.measureQuery(
         `${target.constructor.name}.${propertyKey}`,
-        () => originalMethod.apply(this, args)
+        () => originalMethod.apply(this, args),
       );
     };
 
@@ -195,7 +195,7 @@ Update `actions/dashboard/get-task-metrics.ts` with performance monitoring:
 import { performanceMonitor } from "@/lib/dashboard/performance-monitor";
 
 export async function getTaskMetrics(
-  input?: z.infer<typeof TaskMetricsSchema>
+  input?: z.infer<typeof TaskMetricsSchema>,
 ): Promise<{ data?: TaskMetricsData; error?: string }> {
   try {
     const session = await auth();
@@ -221,7 +221,7 @@ export async function getTaskMetrics(
               where: { companyId },
               _count: { id: true },
             }),
-          { userId: session.user.id, companyId }
+          { userId: session.user.id, companyId },
         ),
 
         performanceMonitor.measureQuery(
@@ -233,7 +233,7 @@ export async function getTaskMetrics(
                 createdAt: { gte: weekStart },
               },
             }),
-          { userId: session.user.id, companyId }
+          { userId: session.user.id, companyId },
         ),
 
         // ... other optimized queries
@@ -266,17 +266,17 @@ export async function GET() {
     const healthChecks = await Promise.all([
       // Test task count query
       performanceMonitor.measureQuery("health-check-task-count", () =>
-        db.task.count({ where: { companyId: "test" } })
+        db.task.count({ where: { companyId: "test" } }),
       ),
 
       // Test user count query
       performanceMonitor.measureQuery("health-check-user-count", () =>
-        db.user.count({ where: { cid: "test" } })
+        db.user.count({ where: { cid: "test" } }),
       ),
 
       // Test board count query
       performanceMonitor.measureQuery("health-check-board-count", () =>
-        db.board.count({ where: { companyId: "test" } })
+        db.board.count({ where: { companyId: "test" } }),
       ),
     ]);
 
@@ -309,7 +309,7 @@ export async function GET() {
         },
         timestamp: new Date().toISOString(),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -387,7 +387,7 @@ export const dashboardCache = new DashboardCache();
 export async function cachedQuery<T>(
   cacheKey: string,
   queryFn: () => Promise<T>,
-  ttl?: number
+  ttl?: number,
 ): Promise<T> {
   // Try to get from cache first
   const cached = dashboardCache.get<T>(cacheKey);
@@ -409,7 +409,7 @@ Example optimization for task metrics:
 
 ```typescript
 export async function getTaskMetrics(
-  input?: z.infer<typeof TaskMetricsSchema>
+  input?: z.infer<typeof TaskMetricsSchema>,
 ): Promise<{ data?: TaskMetricsData; error?: string }> {
   try {
     const session = await auth();
@@ -445,7 +445,7 @@ export async function getTaskMetrics(
                 where: { companyId },
                 _count: { id: true },
               }),
-            { userId: session.user.id, companyId }
+            { userId: session.user.id, companyId },
           ),
           // ... other queries
         ]);
@@ -453,7 +453,7 @@ export async function getTaskMetrics(
         // Process and return data
         return processTaskMetrics(statusCounts /* other data */);
       },
-      2 * 60 * 1000 // 2 minutes TTL
+      2 * 60 * 1000, // 2 minutes TTL
     );
 
     return { data: result };

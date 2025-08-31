@@ -153,7 +153,7 @@ export function CompanySettingsContent({
         const result = await inviteUserToCompany(
           company.id,
           inviteEmail.trim(),
-          inviteRole
+          inviteRole,
         );
         if (result.success) {
           toast.success(`User ${inviteEmail} invited successfully!`);
@@ -187,7 +187,7 @@ export function CompanySettingsContent({
 
   const handleChangeRole = async (
     userId: string,
-    newRole: "MEMBER" | "ADMIN" | "OWNER"
+    newRole: "MEMBER" | "ADMIN" | "OWNER",
   ) => {
     startTransition(async () => {
       try {
@@ -216,7 +216,7 @@ export function CompanySettingsContent({
       try {
         const result = await updateCompanyName(
           company.id,
-          editingCompanyName.trim()
+          editingCompanyName.trim(),
         );
         if (result.success) {
           toast.success("Company name updated successfully");
@@ -499,7 +499,7 @@ export function CompanySettingsContent({
                                 onClick={() =>
                                   handleRemoveUser(
                                     membership.userId,
-                                    membership.user.email
+                                    membership.user.email,
                                   )
                                 }
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"

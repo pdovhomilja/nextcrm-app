@@ -32,23 +32,22 @@ async function getImapConnection(accountId: string): Promise<Imap | null> {
 
   return new Promise((resolve, reject) => {
     imap.once("ready", () => {
-      console.log('[IMAP] Connection successful');
+      console.log("[IMAP] Connection successful");
       resolve(imap);
     });
     imap.once("error", (err: Error) => {
-      console.error('[IMAP] Connection Error:', err);
+      console.error("[IMAP] Connection Error:", err);
       reject(err);
     });
     imap.connect();
   });
 }
 
-
 function processBoxes(boxes: Imap.MailBoxes): string[] {
   const folderNames: string[] = [];
 
   function recurse(boxes: Imap.MailBoxes, path: string) {
-    Object.keys(boxes).forEach(name => {
+    Object.keys(boxes).forEach((name) => {
       console.log(`Folder: ${name}, Attribs: ${boxes[name].attribs}`);
       const currentPath = path ? `${path}/${name}` : name;
       folderNames.push(currentPath);
@@ -58,7 +57,7 @@ function processBoxes(boxes: Imap.MailBoxes): string[] {
     });
   }
 
-  recurse(boxes, '');
+  recurse(boxes, "");
   return folderNames;
 }
 
@@ -72,32 +71,36 @@ export async function getMailFolders(accountId: string) {
     const boxes = await new Promise<Imap.MailBoxes>((resolve, reject) => {
       imap!.getBoxes((err, boxes) => {
         if (err) return reject(err);
-        console.log('[MAIL ACTION] Raw boxes:', JSON.stringify(boxes, null, 2));
+        //console.log('[MAIL ACTION] Raw boxes:', JSON.stringify(boxes, null, 2));
         resolve(boxes);
       });
     });
     const folderNames = processBoxes(boxes);
-    
-    console.log('[MAIL ACTION] Fetched and processed folder names:', folderNames);
+
+    console.log(
+      "[MAIL ACTION] Fetched and processed folder names:",
+      folderNames,
+    );
     return { boxes: folderNames };
   } catch (error: any) {
-    console.error('[MAIL ACTION] Error in getMailFolders:', error);
+    console.error("[MAIL ACTION] Error in getMailFolders:", error);
     return { error: error.message };
   } finally {
     if (imap) {
-      console.log('[IMAP] Closing connection.');
+      console.log("[IMAP] Closing connection.");
       imap.end();
     }
   }
 }
 
-
 export async function getMailList(
   accountId: string,
   folderName: string,
-  page: number = 1
+  page: number = 1,
 ) {
-  console.log(`[MAIL ACTION] getMailList called for account: ${accountId}, folder: ${folderName}, page: ${page}`);
+  console.log(
+    `[MAIL ACTION] getMailList called for account: ${accountId}, folder: ${folderName}, page: ${page}`,
+  );
   let imap: Imap | null = null;
   const emailsPerPage = 25;
 
@@ -112,7 +115,9 @@ export async function getMailList(
       });
     });
     const totalMessages = box.messages.total;
-    console.log(`[MAIL ACTION] Opened box "${folderName}", total messages: ${totalMessages}`);
+    console.log(
+      `[MAIL ACTION] Opened box "${folderName}", total messages: ${totalMessages}`,
+    );
     if (totalMessages === 0) {
       imap?.end();
       return { emails: [], total: 0 };
@@ -145,8 +150,10 @@ export async function getMailList(
       });
       f.once("error", reject);
       f.once("end", () => {
-        console.log(`[MAIL ACTION] Fetched ${fetchedMessages.length} messages.`);
-        resolve(fetchedMessages.reverse())
+        console.log(
+          `[MAIL ACTION] Fetched ${fetchedMessages.length} messages.`,
+        );
+        resolve(fetchedMessages.reverse());
       });
     });
 
@@ -160,7 +167,7 @@ export async function getMailList(
           from: parsed.from?.text,
           date: parsed.date,
         };
-      })
+      }),
     );
     console.log(`[MAIL ACTION] Parsed ${emails.length} emails.`);
 
@@ -175,9 +182,11 @@ export async function getMailList(
 export async function getMailContent(
   accountId: string,
   folderName: string,
-  mailUid: string
+  mailUid: string,
 ) {
-  console.log(`[MAIL ACTION] getMailContent called for account: ${accountId}, uid: ${mailUid}`);
+  console.log(
+    `[MAIL ACTION] getMailContent called for account: ${accountId}, uid: ${mailUid}`,
+  );
   let imap: Imap | null = null;
   try {
     imap = await getImapConnection(accountId);
@@ -207,17 +216,23 @@ export async function getMailContent(
         });
         f.once("error", reject);
         f.once("end", () => resolve({ headers, body }));
-      }
+      },
     );
 
     const parsed = await simpleParser(message.body);
-    console.log(`[MAIL ACTION] Parsed content for email subject: ${parsed.subject}`);
+    console.log(
+      `[MAIL ACTION] Parsed content for email subject: ${parsed.subject}`,
+    );
 
     return {
       id: parsed.messageId,
       subject: parsed.subject,
-      from: Array.isArray(parsed.from) ? parsed.from.map(f => f.text).join(', ') : parsed.from?.text,
-      to: Array.isArray(parsed.to) ? parsed.to.map(t => t.text).join(', ') : parsed.to?.text,
+      from: Array.isArray(parsed.from)
+        ? parsed.from.map((f) => f.text).join(", ")
+        : parsed.from?.text,
+      to: Array.isArray(parsed.to)
+        ? parsed.to.map((t) => t.text).join(", ")
+        : parsed.to?.text,
       date: parsed.date,
       html: parsed.html || parsed.textAsHtml,
       text: parsed.text,

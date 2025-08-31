@@ -1,19 +1,19 @@
-'use server';
+"use server";
 
-import { auth } from '@/auth';
-import db from '@/lib/db';
-import { getCurrentCompanyId } from '@/lib/auth-utils';
-import { runBoardGenerationJob } from '@/lib/jobs/board-generation-job';
+import { auth } from "@/auth";
+import db from "@/lib/db";
+import { getCurrentCompanyId } from "@/lib/auth-utils";
+import { runBoardGenerationJob } from "@/lib/jobs/board-generation-job";
 
 export async function retryBoardGeneration(requestId: string) {
   const session = await auth();
   if (!session?.user?.id) {
-    return { error: 'Unauthorized' };
+    return { error: "Unauthorized" };
   }
 
   const companyId = await getCurrentCompanyId();
   if (!companyId) {
-    return { error: 'Company not found' };
+    return { error: "Company not found" };
   }
 
   try {
@@ -27,14 +27,14 @@ export async function retryBoardGeneration(requestId: string) {
     });
 
     if (!request) {
-      return { error: 'Board generation request not found' };
+      return { error: "Board generation request not found" };
     }
 
     // Reset the request status to PENDING
     await db.aIGeneratedBoardRequest.update({
       where: { id: requestId },
       data: {
-        status: 'PENDING',
+        status: "PENDING",
         failureReason: null, // Clear previous failure reason
       },
     });
@@ -42,9 +42,9 @@ export async function retryBoardGeneration(requestId: string) {
     // Trigger the background job again
     runBoardGenerationJob({ boardRequestId: requestId });
 
-    return { success: 'Board generation has been restarted!' };
+    return { success: "Board generation has been restarted!" };
   } catch (error) {
-    console.error('Error retrying board generation:', error);
-    return { error: 'Failed to retry board generation' };
+    console.error("Error retrying board generation:", error);
+    return { error: "Failed to retry board generation" };
   }
 }

@@ -77,7 +77,7 @@ export class VectorSearchService {
    * Perform semantic search on task embeddings
    */
   async searchTasks(
-    searchQuery: VectorSearchQuery
+    searchQuery: VectorSearchQuery,
   ): Promise<VectorSearchResult[]> {
     const {
       query,
@@ -138,7 +138,7 @@ export class VectorSearchService {
         }`;
         params.push(
           searchQuery.filters.dateRange.start,
-          searchQuery.filters.dateRange.end
+          searchQuery.filters.dateRange.end,
         );
         paramIndex += 2;
       }
@@ -182,7 +182,7 @@ export class VectorSearchService {
       `,
         ...params,
         threshold,
-        limit
+        limit,
       );
 
       // Transform results
@@ -210,7 +210,7 @@ export class VectorSearchService {
       throw new Error(
         `Vector search failed: ${
           error instanceof Error ? error.message : "Unknown error"
-        }`
+        }`,
       );
     }
   }
@@ -221,7 +221,7 @@ export class VectorSearchService {
   async hybridSearch(
     searchQuery: VectorSearchQuery,
     vectorWeight = 0.7,
-    keywordWeight = 0.3
+    keywordWeight = 0.3,
   ): Promise<VectorSearchResult[]> {
     const { limit = this.defaultLimit } = searchQuery;
 
@@ -240,7 +240,7 @@ export class VectorSearchService {
         vectorResults,
         keywordResults,
         vectorWeight,
-        keywordWeight
+        keywordWeight,
       );
 
       // Return top results
@@ -250,7 +250,7 @@ export class VectorSearchService {
       throw new Error(
         `Hybrid search failed: ${
           error instanceof Error ? error.message : "Unknown error"
-        }`
+        }`,
       );
     }
   }
@@ -259,7 +259,7 @@ export class VectorSearchService {
    * Perform keyword-based search for hybrid functionality
    */
   private async keywordSearch(
-    searchQuery: VectorSearchQuery
+    searchQuery: VectorSearchQuery,
   ): Promise<VectorSearchResult[]> {
     const { query, companyId, limit = this.defaultLimit } = searchQuery;
 
@@ -276,7 +276,7 @@ export class VectorSearchService {
       const searchConditions = searchTerms
         .map(
           (_, index) =>
-            `(t.title ILIKE $${index + 2} OR t.description ILIKE $${index + 2})`
+            `(t.title ILIKE $${index + 2} OR t.description ILIKE $${index + 2})`,
         )
         .join(" AND ");
 
@@ -313,7 +313,7 @@ export class VectorSearchService {
         companyId,
         ...searchTerms,
         searchTerms,
-        limit
+        limit,
       );
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -348,7 +348,7 @@ export class VectorSearchService {
     vectorResults: VectorSearchResult[],
     keywordResults: VectorSearchResult[],
     vectorWeight: number,
-    keywordWeight: number
+    keywordWeight: number,
   ): VectorSearchResult[] {
     const resultMap = new Map<string, VectorSearchResult>();
 
@@ -376,7 +376,7 @@ export class VectorSearchService {
 
     // Sort by combined score
     return Array.from(resultMap.values()).sort(
-      (a, b) => b.similarity - a.similarity
+      (a, b) => b.similarity - a.similarity,
     );
   }
 
@@ -385,7 +385,7 @@ export class VectorSearchService {
    */
   async findSimilarTasks(
     taskId: string,
-    limit = 5
+    limit = 5,
   ): Promise<VectorSearchResult[]> {
     try {
       // Temporarily disabled due to Prisma vector field compatibility issues
@@ -399,7 +399,7 @@ export class VectorSearchService {
       throw new Error(
         `Similar tasks search failed: ${
           error instanceof Error ? error.message : "Unknown error"
-        }`
+        }`,
       );
     }
   }
@@ -439,7 +439,7 @@ export class VectorSearchService {
   async findSimilarBoardsTyped(
     queryEmbedding: number[],
     companyId: string,
-    limit = 10
+    limit = 10,
   ): Promise<
     Array<{
       boardId: string;
@@ -470,7 +470,7 @@ export class VectorSearchService {
         `,
         embeddingVector,
         companyId,
-        limit
+        limit,
       );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (results as any[]).map((result) => ({
@@ -484,7 +484,7 @@ export class VectorSearchService {
     } catch (error) {
       console.error(
         "Error finding similar boards with company filtering:",
-        error
+        error,
       );
       return [];
     }
@@ -496,7 +496,7 @@ export class VectorSearchService {
   async findSimilarTasksTyped(
     queryEmbedding: number[],
     companyId: string,
-    limit = 10
+    limit = 10,
   ): Promise<
     Array<{
       taskId: string;
@@ -529,7 +529,7 @@ export class VectorSearchService {
         `,
         embeddingVector,
         companyId,
-        limit
+        limit,
       );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (results as any[]).map((result) => ({
@@ -543,7 +543,7 @@ export class VectorSearchService {
     } catch (error) {
       console.error(
         "Error finding similar tasks with company filtering:",
-        error
+        error,
       );
       return [];
     }

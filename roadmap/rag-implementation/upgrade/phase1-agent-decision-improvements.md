@@ -13,6 +13,7 @@ Replace hardcoded keyword matching in `makeDecision` function with LLM-based int
 **File**: `/lib/ai/agent-core.ts` (lines 248-266)
 
 **Issue**: Primitive keyword matching approach
+
 ```typescript
 // ❌ CURRENT: Inflexible hardcoded patterns
 const isSearchQuery =
@@ -29,6 +30,7 @@ const isUpdateQuery =
 ```
 
 **Limitations**:
+
 - Cannot handle natural language variations
 - Language-dependent (English only)
 - Maintenance overhead for new patterns
@@ -42,6 +44,7 @@ const isUpdateQuery =
 **File**: `/lib/ai/agent-core.ts`
 
 **Create new method**:
+
 ```typescript
 /**
  * LLM-based decision making using GPT-5 intent classification
@@ -65,10 +68,10 @@ Classify the intent and recommend the optimal action strategy.`;
     const intentResult = await generateObject({
       model: aiConfig.structuredOutputModel, // GPT-5 for reasoning
       system: `You are an expert at understanding user intent in project management contexts.
-      
+
 Analyze the query and classify it into one of these action types:
 - "search_query": User wants to find, search, or retrieve information about tasks/boards
-- "update_query": User wants to modify, complete, or change task/board status  
+- "update_query": User wants to modify, complete, or change task/board status
 - "create_query": User wants to create new tasks, boards, or items
 - "analysis_query": User wants insights, analytics, or performance analysis
 - "general_query": General questions that don't require specific tools
@@ -86,7 +89,7 @@ Consider natural language variations, context, and user intent rather than just 
     });
 
     const classification = intentResult.object;
-    
+
     // Map intent to action with intelligent tool selection
     let toolsToUse: string[] = [];
     if (classification.recommendedAction === "use_tools" && mcpToolCount > 0) {
@@ -120,7 +123,7 @@ Consider natural language variations, context, and user intent rather than just 
 
   } catch (error) {
     console.error("LLM-based decision making error:", error);
-    
+
     // Fallback decision with improved logic
     return {
       action: mcpToolCount > 0 ? "use_tools" : "respond",
@@ -153,6 +156,7 @@ protected async makeDecision(
 ### Task 3: Remove Hardcoded Logic
 
 **Delete the following from makeDecision function**:
+
 - `isSearchQuery` variable and logic (lines 248-256)
 - `isUpdateQuery` variable and logic (lines 258-266)
 - All hardcoded keyword matching arrays
@@ -161,33 +165,38 @@ protected async makeDecision(
 ### Task 4: Add Enhanced Logging
 
 **Add decision logging system**:
+
 ```typescript
 // Add to processQuery method after decision is made
-console.log(`Agent Decision: ${decision.action} (${decision.confidence * 100}% confidence)`, {
-  reasoning: decision.reasoning,
-  toolsToUse: decision.toolsToUse,
-  responseStrategy: decision.responseStrategy,
-  query: query.substring(0, 100) + (query.length > 100 ? "..." : "")
-});
+console.log(
+  `Agent Decision: ${decision.action} (${decision.confidence * 100}% confidence)`,
+  {
+    reasoning: decision.reasoning,
+    toolsToUse: decision.toolsToUse,
+    responseStrategy: decision.responseStrategy,
+    query: query.substring(0, 100) + (query.length > 100 ? "..." : ""),
+  },
+);
 ```
 
 ### Task 5: Error Handling Enhancement
 
 **Improve error handling in makeLLMBasedDecision**:
+
 ```typescript
 } catch (error) {
   console.error("LLM-based decision making error:", error);
-  
+
   // Log detailed error information
   console.error("Query that caused error:", query);
   console.error("Available tools:", Object.keys(this.mcpTools).length);
   console.error("Context:", { userId: context.userId, boardId: context.boardId });
-  
+
   // Enhanced fallback decision based on simple heuristics
-  const hasSearchTerms = query.toLowerCase().includes("find") || 
+  const hasSearchTerms = query.toLowerCase().includes("find") ||
                          query.toLowerCase().includes("search") ||
                          query.toLowerCase().includes("show");
-  
+
   return {
     action: mcpToolCount > 0 && hasSearchTerms ? "use_tools" : "respond",
     reasoning: `Fallback decision due to LLM error: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -203,18 +212,20 @@ console.log(`Agent Decision: ${decision.action} (${decision.confidence * 100}% c
 ### Test Cases
 
 **1. Natural Language Queries**:
+
 ```typescript
 const testQueries = [
   "Can you find tasks related to authentication?",
   "Show me all high priority tasks",
   "Mark the user registration task as completed",
-  "Create a new task for API documentation", 
+  "Create a new task for API documentation",
   "How is our project performing this month?",
-  "I need help understanding the codebase"
+  "I need help understanding the codebase",
 ];
 ```
 
 **2. Edge Cases**:
+
 - Empty queries
 - Very long queries
 - Queries in different languages
@@ -222,6 +233,7 @@ const testQueries = [
 - Queries with typos
 
 **3. Integration Tests**:
+
 - Test with real MCP tools
 - Verify tool selection accuracy
 - Check fallback behavior when LLM fails
@@ -232,38 +244,36 @@ const testQueries = [
 **Create test file**: `/lib/ai/__tests__/agent-decision-making.test.ts`
 
 ```typescript
-import { BaseAIAgent } from '../agent-core';
-import { AgentContext } from '../agent-core';
+import { BaseAIAgent } from "../agent-core";
+import { AgentContext } from "../agent-core";
 
-describe('LLM-Based Decision Making', () => {
+describe("LLM-Based Decision Making", () => {
   let agent: BaseAIAgent;
-  
+
   beforeEach(() => {
-    agent = new TestAgent('test', 'test-agent', ['search', 'create', 'update']);
+    agent = new TestAgent("test", "test-agent", ["search", "create", "update"]);
   });
 
-  test('should classify search queries correctly', async () => {
+  test("should classify search queries correctly", async () => {
     const decision = await agent.makeDecision(
       "Find all tasks assigned to John",
       mockContext,
-      []
+      [],
     );
-    
+
     expect(decision.action).toBe("use_tools");
     expect(decision.toolsToUse).toContain("tasks_search_tasks");
     expect(decision.confidence).toBeGreaterThan(0.7);
   });
 
-  test('should handle fallback when LLM fails', async () => {
+  test("should handle fallback when LLM fails", async () => {
     // Mock LLM failure
-    jest.spyOn(aiConfig, 'structuredOutputModel').mockRejectedValue(new Error("API Error"));
-    
-    const decision = await agent.makeDecision(
-      "Find tasks",
-      mockContext,
-      []
-    );
-    
+    jest
+      .spyOn(aiConfig, "structuredOutputModel")
+      .mockRejectedValue(new Error("API Error"));
+
+    const decision = await agent.makeDecision("Find tasks", mockContext, []);
+
     expect(decision.action).toBe("use_tools");
     expect(decision.confidence).toBeLessThan(0.5);
     expect(decision.reasoning).toContain("Fallback");
@@ -274,12 +284,14 @@ describe('LLM-Based Decision Making', () => {
 ## 📊 **Success Metrics**
 
 ### Quantitative Metrics
+
 - **Accuracy**: >85% correct intent classification
 - **Response Time**: <2 seconds for decision making
 - **Confidence**: Average confidence >75%
 - **Tool Selection**: >90% appropriate tool selection
 
 ### Qualitative Metrics
+
 - **Natural Language**: Handles conversational queries correctly
 - **Context Awareness**: Uses conversation history appropriately
 - **Multi-language**: Basic support for non-English queries
@@ -290,7 +302,7 @@ describe('LLM-Based Decision Making', () => {
 - [ ] **LLM-based decision function created and tested**
 - [ ] **Hardcoded keyword matching completely removed**
 - [ ] **Enhanced error handling implemented**
-- [ ] **Comprehensive logging system added** 
+- [ ] **Comprehensive logging system added**
 - [ ] **Unit tests cover all major scenarios**
 - [ ] **Integration tests pass with real MCP tools**
 - [ ] **Performance monitoring shows acceptable latency**
@@ -301,7 +313,7 @@ describe('LLM-Based Decision Making', () => {
 ## 🎯 **Expected Improvements**
 
 1. **Accuracy**: 20-30% improvement in intent classification
-2. **User Experience**: Better handling of natural language queries  
+2. **User Experience**: Better handling of natural language queries
 3. **Maintenance**: No more manual keyword pattern updates
 4. **Scalability**: Automatic adaptation to new query types
 5. **Internationalization**: Natural multi-language support
@@ -310,9 +322,10 @@ describe('LLM-Based Decision Making', () => {
 ## 📈 **Performance Monitoring**
 
 After deployment, monitor:
+
 - Decision making latency
 - Classification accuracy rate
-- Fallback frequency  
+- Fallback frequency
 - Tool selection success rate
 - User satisfaction with query handling
 

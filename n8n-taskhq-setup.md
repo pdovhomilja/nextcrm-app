@@ -1,11 +1,13 @@
 # TaskHQ n8n Agent Workflow Setup Guide
 
 ## Overview
+
 This guide helps you set up an n8n workflow with an AI agent that connects to your TaskHQ MCP server for intelligent task and project management automation.
 
 ## Prerequisites
 
 ### 1. n8n Installation
+
 ```bash
 # Option 1: npm (global installation)
 npm install n8n -g
@@ -18,19 +20,24 @@ docker run -it --rm --name n8n -p 5678:5678 -v ~/.n8n:/home/node/.n8n n8nio/n8n
 ```
 
 ### 2. Required n8n Community Packages
+
 Install these community packages in n8n:
+
 - `n8n-nodes-mcp-client` (by Nerding.io) - for MCP server connection
 - `@n8n/n8n-nodes-langchain` (official) - for AI agent functionality
 
 To install:
+
 1. Go to n8n Settings → Community Nodes
 2. Search for and install the packages above
 3. Set environment variable: `N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE=true`
 
 ### 3. TaskHQ Server Configuration
+
 Ensure your TaskHQ server is running with MCP endpoints enabled:
 
 #### Environment Variables (.env.local)
+
 ```bash
 # MCP Configuration
 MCP_TOOLS_ENABLED="true"
@@ -53,11 +60,13 @@ NEXT_PUBLIC_APP_URL="https://your-taskhq-domain.com"
 ## Setup Instructions
 
 ### Step 1: Import the Workflow
+
 1. Open n8n in your browser (default: http://localhost:5678)
 2. Click "Import from file" or use the + button
 3. Import the `n8n-workflow-taskhq-agent.json` file
 
 ### Step 2: Configure Environment Variables in n8n
+
 Add these environment variables in n8n Settings → Environment Variables:
 
 ```bash
@@ -69,14 +78,16 @@ TASKHQ_MCP_BASE_URL=https://your-taskhq-domain.com/api/mcp
 ```
 
 ### Step 3: Configure TaskHQ MCP Client Node
+
 1. Open the "TaskHQ MCP Client" node in the workflow
 2. Set the URL to: `{{ $vars.TASKHQ_MCP_BASE_URL }}/sse`
 3. Configure authentication:
-   - Choose "HTTP Header Auth" 
+   - Choose "HTTP Header Auth"
    - Header Name: `Authorization`
    - Header Value: `Bearer YOUR_TASKHQ_API_TOKEN`
 
 ### Step 4: Test the Setup
+
 1. Activate the workflow
 2. Get the webhook URL from the "Webhook Trigger" node
 3. Send a test request:
@@ -92,22 +103,26 @@ curl -X POST "https://your-n8n-instance.com/webhook/taskhq-agent" \
 ## Available MCP Tools & Capabilities
 
 ### 🔧 Server Management
+
 - **health_check**: Check server connectivity and status
 - **server_info**: Get configuration and user context
 - **vector_search_health**: Verify AI search functionality
 
 ### 📋 Board Management
+
 - **search_boards**: Find and filter accessible boards
 - **get_board_info**: Comprehensive board analytics with task statistics
 - **compare_boards**: Compare performance metrics across multiple boards
 - **suggest_board_optimizations**: AI-powered optimization recommendations
 
 ### 🔍 Task Search & Discovery
+
 - **semantic_search_tasks**: AI-powered vector search for tasks
 - **hybrid_search**: Combined semantic and keyword search
 - **find_similar_tasks**: Find related tasks using AI similarity
 
 ### 📊 Analytics & Insights
+
 - **get_embedding_status**: Check AI embedding coverage
 - Board completion rates, team performance, priority distribution
 - Task duration analytics and workload balance insights
@@ -115,6 +130,7 @@ curl -X POST "https://your-n8n-instance.com/webhook/taskhq-agent" \
 ## Example Interactions
 
 ### 1. Health Check & Setup Verification
+
 ```json
 {
   "message": "Check if TaskHQ is healthy and show server info"
@@ -122,6 +138,7 @@ curl -X POST "https://your-n8n-instance.com/webhook/taskhq-agent" \
 ```
 
 ### 2. Board Analysis
+
 ```json
 {
   "message": "Analyze board performance for board ID 'clx1y2z3a4b5c6d7e8f9' and suggest optimizations"
@@ -129,6 +146,7 @@ curl -X POST "https://your-n8n-instance.com/webhook/taskhq-agent" \
 ```
 
 ### 3. Semantic Task Search
+
 ```json
 {
   "message": "Find all tasks related to 'user authentication' and 'login issues' with high priority"
@@ -136,6 +154,7 @@ curl -X POST "https://your-n8n-instance.com/webhook/taskhq-agent" \
 ```
 
 ### 4. Board Comparison
+
 ```json
 {
   "message": "Compare completion rates between boards 'board1-id' and 'board2-id' for the last month"
@@ -145,6 +164,7 @@ curl -X POST "https://your-n8n-instance.com/webhook/taskhq-agent" \
 ## Advanced Configuration
 
 ### Custom Authentication
+
 For production use, implement proper authentication:
 
 ```javascript
@@ -157,13 +177,17 @@ For production use, implement proper authentication:
 ```
 
 ### Rate Limiting & Error Handling
+
 The workflow includes:
+
 - Built-in error handling with user-friendly error responses
 - Timeout configuration (30 seconds default)
 - Automatic retry logic for failed MCP calls
 
 ### Webhook Security
+
 Add webhook authentication:
+
 1. Go to Webhook Trigger node settings
 2. Enable "Authentication"
 3. Choose "Header Auth" and set a secret token
@@ -171,12 +195,15 @@ Add webhook authentication:
 ## Monitoring & Logging
 
 ### Enable Verbose Logging
+
 Set in TaskHQ `.env.local`:
+
 ```bash
 MCP_VERBOSE_LOGS="true"
 ```
 
 ### n8n Execution Monitoring
+
 - Check n8n execution history for detailed logs
 - Monitor MCP server responses in TaskHQ logs
 - Use TaskHQ's `/api/health/mcp` endpoint for health monitoring
@@ -208,6 +235,7 @@ MCP_VERBOSE_LOGS="true"
 ### Debug Commands
 
 Test MCP endpoints directly:
+
 ```bash
 # Health check
 curl "https://your-taskhq-domain.com/api/mcp/health"
@@ -224,8 +252,9 @@ curl "https://your-taskhq-domain.com/api/mcp/search/sse" \
 ## Production Deployment
 
 ### Docker Compose Example
+
 ```yaml
-version: '3.8'
+version: "3.8"
 services:
   n8n:
     image: n8nio/n8n
@@ -243,6 +272,7 @@ volumes:
 ```
 
 ### Security Considerations
+
 - Use HTTPS for all MCP connections
 - Implement proper API key management
 - Set up webhook authentication

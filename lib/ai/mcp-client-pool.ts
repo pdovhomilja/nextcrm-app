@@ -94,7 +94,9 @@ export class MCPClientPool {
     }
 
     this.isInitialized = true;
-    console.log("MCP Client Pool configuration initialized (connections will be made on-demand with authentication)");
+    console.log(
+      "MCP Client Pool configuration initialized (connections will be made on-demand with authentication)",
+    );
   }
 
   /**
@@ -102,16 +104,18 @@ export class MCPClientPool {
    */
   async initializeConnections(): Promise<void> {
     if (!this.isInitialized) {
-      console.log("MCP Client Pool not initialized - initializing configuration first");
+      console.log(
+        "MCP Client Pool not initialized - initializing configuration first",
+      );
       await this.initialize();
     }
 
     console.log("Initializing MCP connections with authentication context...");
     await this.connectToAllServers();
-    
+
     // Start health monitoring only after successful initialization
     this.startHealthMonitoring();
-    
+
     console.log("MCP Client Pool connections initialized");
   }
 
@@ -120,7 +124,7 @@ export class MCPClientPool {
    */
   private async connectToAllServers(): Promise<void> {
     const connectionPromises = Array.from(this.servers.keys()).map(
-      (serverName) => this.connectToServer(serverName, 1)
+      (serverName) => this.connectToServer(serverName, 1),
     );
 
     const results = await Promise.allSettled(connectionPromises);
@@ -130,7 +134,7 @@ export class MCPClientPool {
       if (result.status === "rejected") {
         console.error(
           `Failed to connect to MCP server ${serverName}:`,
-          result.reason
+          result.reason,
         );
         this.updateServerHealth(serverName, "unhealthy");
       }
@@ -152,18 +156,18 @@ export class MCPClientPool {
 
     try {
       console.log(
-        `Connecting to MCP server: ${serverName} (attempt ${attempt})`
+        `Connecting to MCP server: ${serverName} (attempt ${attempt})`,
       );
 
       const transport = new SSEClientTransport(
-        new URL(server.url, process.env.NEXT_PUBLIC_APP_URL!)
+        new URL(server.url, process.env.NEXT_PUBLIC_APP_URL!),
       );
 
       // Set connection timeout
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(
           () => reject(new Error("Connection timeout")),
-          this.config.connectionTimeout
+          this.config.connectionTimeout,
         );
       });
 
@@ -193,28 +197,34 @@ export class MCPClientPool {
     } catch (error) {
       console.error(
         `Connection attempt ${attempt} failed for ${serverName}:`,
-        error
+        error,
       );
 
       // Check if it's a 404 error (endpoint doesn't exist)
-      const errorObj = error as Error & { code?: number; event?: { code?: number } };
-      const is404Error = errorObj.code === 404 || 
-                         errorObj.event?.code === 404 ||
-                         errorObj.message?.includes('404') ||
-                         errorObj.message?.includes('Non-200 status code (404)');
+      const errorObj = error as Error & {
+        code?: number;
+        event?: { code?: number };
+      };
+      const is404Error =
+        errorObj.code === 404 ||
+        errorObj.event?.code === 404 ||
+        errorObj.message?.includes("404") ||
+        errorObj.message?.includes("Non-200 status code (404)");
 
       if (is404Error) {
-        console.log(`MCP server ${serverName} endpoint not available (404) - skipping retries`);
+        console.log(
+          `MCP server ${serverName} endpoint not available (404) - skipping retries`,
+        );
         this.updateServerHealth(serverName, "unhealthy");
         return false;
       }
 
       if (attempt < this.config.maxRetries) {
         console.log(
-          `Retrying connection to ${serverName} in ${this.config.retryDelay}ms`
+          `Retrying connection to ${serverName} in ${this.config.retryDelay}ms`,
         );
         await new Promise((resolve) =>
-          setTimeout(resolve, this.config.retryDelay)
+          setTimeout(resolve, this.config.retryDelay),
         );
         return this.connectToServer(serverName, attempt + 1);
       }
@@ -229,7 +239,7 @@ export class MCPClientPool {
    */
   private updateServerHealth(
     serverName: string,
-    status: "healthy" | "unhealthy"
+    status: "healthy" | "unhealthy",
   ): void {
     const server = this.servers.get(serverName);
     if (server) {
@@ -256,7 +266,7 @@ export class MCPClientPool {
    */
   private async performHealthChecks(): Promise<void> {
     const healthPromises = Array.from(this.servers.keys()).map((serverName) =>
-      this.checkServerHealth(serverName)
+      this.checkServerHealth(serverName),
     );
 
     await Promise.allSettled(healthPromises);
@@ -277,7 +287,7 @@ export class MCPClientPool {
       await Promise.race([
         client.tools(),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Health check timeout")), 5000)
+          setTimeout(() => reject(new Error("Health check timeout")), 5000),
         ),
       ]);
 
@@ -305,7 +315,9 @@ export class MCPClientPool {
 
     // Return tools only if connections are established and healthy
     if (this.clients.size === 0) {
-      console.log("No MCP connections established - tools will be available after authentication");
+      console.log(
+        "No MCP connections established - tools will be available after authentication",
+      );
       return {};
     }
 
@@ -314,8 +326,8 @@ export class MCPClientPool {
       if (server && server.healthStatus === "healthy") {
         return Object.fromEntries(
           Array.from(this.tools.entries()).filter(([name]) =>
-            name.startsWith(`${serverName}_`)
-          )
+            name.startsWith(`${serverName}_`),
+          ),
         );
       }
       return {};
@@ -409,7 +421,7 @@ export class MCPClientPool {
       } catch (error) {
         console.error(
           `Error closing existing connection to ${serverName}:`,
-          error
+          error,
         );
       }
       this.clients.delete(serverName);
@@ -417,7 +429,7 @@ export class MCPClientPool {
 
     // Remove old tools
     const toolsToRemove = Array.from(this.tools.keys()).filter((toolName) =>
-      toolName.startsWith(`${serverName}_`)
+      toolName.startsWith(`${serverName}_`),
     );
 
     toolsToRemove.forEach((toolName) => this.tools.delete(toolName));

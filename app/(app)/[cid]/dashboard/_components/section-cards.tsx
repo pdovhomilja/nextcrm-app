@@ -1,6 +1,6 @@
-import { TaskMetricsCard } from "@/components/dashboard/metrics/task-metrics-card"
-import { BoardMetricsCard } from "@/components/dashboard/metrics/board-metrics-card"
-import { UserActivityCard } from "@/components/dashboard/metrics/user-activity-card"
+import { TaskMetricsCard } from "@/components/dashboard/metrics/task-metrics-card";
+import { BoardMetricsCard } from "@/components/dashboard/metrics/board-metrics-card";
+import { UserActivityCard } from "@/components/dashboard/metrics/user-activity-card";
 
 export function SectionCards() {
   return (
@@ -9,5 +9,5 @@ export function SectionCards() {
       <BoardMetricsCard className="w-full" />
       <UserActivityCard className="w-full" />
     </div>
-  )
+  );
 }

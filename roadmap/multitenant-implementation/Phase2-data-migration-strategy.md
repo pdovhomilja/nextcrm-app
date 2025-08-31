@@ -137,7 +137,7 @@ for (const board of boards) {
   } else {
     // Handle orphaned boards if necessary (e.g., assign to a default company or log an error).
     console.warn(
-      `Could not find company for board ${board.id} created by user ${board.createdBy.id}`
+      `Could not find company for board ${board.id} created by user ${board.createdBy.id}`,
     );
   }
 }

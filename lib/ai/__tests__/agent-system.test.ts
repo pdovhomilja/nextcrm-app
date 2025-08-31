@@ -29,7 +29,7 @@ describe("AI Agent System Integration", () => {
     test("should select appropriate agent for analysis queries", async () => {
       const selection = await agentOrchestrator.selectAgents(
         "How is my project performing?",
-        { userId: "test", companyId: "test" }
+        { userId: "test", companyId: "test" },
       );
 
       expect(selection.primaryAgent).toBe("analyzer");
@@ -39,7 +39,7 @@ describe("AI Agent System Integration", () => {
       const response = await agentOrchestrator.processSingleAgent(
         "What tasks should I prioritize?",
         { userId: "test", companyId: "test" },
-        "recommender"
+        "recommender",
       );
 
       expect(response.primaryResponse).toBeTruthy();
@@ -51,13 +51,13 @@ describe("AI Agent System Integration", () => {
       const response = await agentOrchestrator.processMultiAgent(
         "How is my project doing and what should I focus on next?",
         { userId: "test", companyId: "test" },
-        ["analyzer", "recommender"]
+        ["analyzer", "recommender"],
       );
 
       expect(response.primaryResponse).toBeTruthy();
       expect(response.agentResponses.length).toBeGreaterThan(0);
       expect(response.metadata.orchestrationStrategy).toBe(
-        "multi-agent-collaborative"
+        "multi-agent-collaborative",
       );
     });
 
@@ -65,7 +65,7 @@ describe("AI Agent System Integration", () => {
       const response = await agentOrchestrator.processSingleAgent(
         "test query",
         { userId: "", companyId: "" }, // Invalid context
-        "analyzer"
+        "analyzer",
       );
 
       expect(response.primaryResponse).toBeTruthy();
@@ -78,7 +78,7 @@ describe("AI Agent System Integration", () => {
       await agentOrchestrator.processSingleAgent(
         "Test query for metrics",
         { userId: "test", companyId: "test" },
-        "tracker"
+        "tracker",
       );
 
       const metrics = agentOrchestrator.getPerformanceMetrics();

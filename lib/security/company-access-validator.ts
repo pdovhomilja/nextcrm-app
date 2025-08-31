@@ -21,9 +21,9 @@ interface AccessValidationResult {
 export async function validateCompanyAccess(
   userId: string,
   companyId: string,
-  resourceType: 'task' | 'board' | 'document' | 'ai_query',
+  resourceType: "task" | "board" | "document" | "ai_query",
   resourceId?: string,
-  action: string = 'read'
+  action: string = "read",
 ): Promise<AccessValidationResult> {
   try {
     // Check if user is a member of the company
@@ -35,13 +35,13 @@ export async function validateCompanyAccess(
     });
 
     const isAuthorized = !!membership;
-    
+
     // Create audit log entry
     const auditLog = {
       userId,
       companyId,
       resourceType,
-      resourceId: resourceId || 'N/A',
+      resourceId: resourceId || "N/A",
       action,
       authorized: isAuthorized,
       timestamp: new Date(),
@@ -55,20 +55,20 @@ export async function validateCompanyAccess(
           action: `${action}_${resourceType}`,
           resource: resourceType,
           details: {
-            userAgent: 'AI_ASSISTANT_V2',
-            ipAddress: 'SERVER_SIDE',
+            userAgent: "AI_ASSISTANT_V2",
+            ipAddress: "SERVER_SIDE",
             timestamp: auditLog.timestamp.toISOString(),
             companyId,
             resourceId: resourceId || null,
             authorized: isAuthorized,
           },
           timestamp: auditLog.timestamp,
-          risk: isAuthorized ? 'low' : 'high',
+          risk: isAuthorized ? "low" : "high",
           createdAt: auditLog.timestamp,
         },
       });
     } catch (auditError) {
-      console.error('Failed to create audit log:', auditError);
+      console.error("Failed to create audit log:", auditError);
       // Don't fail the validation if audit logging fails
     }
 
@@ -84,16 +84,15 @@ export async function validateCompanyAccess(
       isAuthorized: true,
       auditLog,
     };
-
   } catch (error) {
-    console.error('Company access validation error:', error);
-    
+    console.error("Company access validation error:", error);
+
     // Create error audit log
     const errorAuditLog = {
       userId,
       companyId,
       resourceType,
-      resourceId: resourceId || 'N/A',
+      resourceId: resourceId || "N/A",
       action,
       authorized: false,
       timestamp: new Date(),
@@ -101,7 +100,7 @@ export async function validateCompanyAccess(
 
     return {
       isAuthorized: false,
-      error: 'Access validation failed due to system error',
+      error: "Access validation failed due to system error",
       auditLog: errorAuditLog,
     };
   }
@@ -113,14 +112,20 @@ export async function validateCompanyAccess(
 export async function withCompanyAccessValidation<T>(
   userId: string,
   companyId: string,
-  resourceType: 'task' | 'board' | 'document' | 'ai_query',
+  resourceType: "task" | "board" | "document" | "ai_query",
   action: string,
-  operation: () => Promise<T>
+  operation: () => Promise<T>,
 ): Promise<{ success: boolean; data?: T; error?: string }> {
-  const validation = await validateCompanyAccess(userId, companyId, resourceType, undefined, action);
-  
+  const validation = await validateCompanyAccess(
+    userId,
+    companyId,
+    resourceType,
+    undefined,
+    action,
+  );
+
   if (!validation.isAuthorized) {
-    console.warn('SECURITY VIOLATION ATTEMPT:', {
+    console.warn("SECURITY VIOLATION ATTEMPT:", {
       userId,
       companyId,
       resourceType,
@@ -128,10 +133,10 @@ export async function withCompanyAccessValidation<T>(
       error: validation.error,
       timestamp: new Date().toISOString(),
     });
-    
+
     return {
       success: false,
-      error: validation.error || 'Access denied',
+      error: validation.error || "Access denied",
     };
   }
 
@@ -142,10 +147,10 @@ export async function withCompanyAccessValidation<T>(
       data: result,
     };
   } catch (error) {
-    console.error('Operation failed after access validation:', error);
+    console.error("Operation failed after access validation:", error);
     return {
       success: false,
-      error: 'Operation failed',
+      error: "Operation failed",
     };
   }
 }

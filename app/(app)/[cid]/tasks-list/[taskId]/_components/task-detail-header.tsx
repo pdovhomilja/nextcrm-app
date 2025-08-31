@@ -29,7 +29,7 @@ export default function TaskDetailHeader({ task }: TaskDetailHeaderProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isDueOpen, setIsDueOpen] = useState(false);
   const [dueMonth, setDueMonth] = useState<Date | undefined>(
-    task.dueDate ? new Date(task.dueDate) : new Date()
+    task.dueDate ? new Date(task.dueDate) : new Date(),
   );
 
   async function saveInline(changes: EditTaskInput) {

@@ -85,7 +85,7 @@ server.tool(
       },
     });
     // Returns structured success response
-  }
+  },
 );
 
 // ✅ FIXED: search_tasks with proper schema
@@ -97,7 +97,7 @@ server.tool(
     boardId: z.string().optional(),
     status: z
       .array(
-        z.enum(["NEW", "IN_PROGRESS", "COMPLETED", "CANCELLED", "ON_HOLD"])
+        z.enum(["NEW", "IN_PROGRESS", "COMPLETED", "CANCELLED", "ON_HOLD"]),
       )
       .optional(),
     priority: z.array(z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"])).optional(),
@@ -106,7 +106,7 @@ server.tool(
   },
   async (params) => {
     // Real database query implementation
-  }
+  },
 );
 
 // ✅ FIXED: update_task with proper schema
@@ -126,7 +126,7 @@ server.tool(
   },
   async (params) => {
     // Real database update implementation
-  }
+  },
 );
 ```
 
@@ -324,7 +324,7 @@ export const aiConfig = {
 
   // Embedding model (unchanged)
   embeddingModel: openai.embedding(
-    process.env.EMBEDDING_MODEL || "text-embedding-ada-002"
+    process.env.EMBEDDING_MODEL || "text-embedding-ada-002",
   ),
 
   // Model selection based on context

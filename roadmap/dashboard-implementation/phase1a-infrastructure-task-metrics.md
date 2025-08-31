@@ -68,7 +68,7 @@ export type TaskMetricsData = {
 };
 
 export async function getTaskMetrics(
-  input?: z.infer<typeof TaskMetricsSchema>
+  input?: z.infer<typeof TaskMetricsSchema>,
 ): Promise<{ data?: TaskMetricsData; error?: string }> {
   try {
     // Session validation (TaskHQ pattern)
@@ -139,7 +139,7 @@ export async function getTaskMetrics(
 
     const totalTasks = Object.values(statusCounts).reduce(
       (sum, count) => sum + count,
-      0
+      0,
     );
 
     // Get tasks created this week
@@ -199,13 +199,13 @@ export async function getTaskMetrics(
         return sum;
       }, 0);
       averageCompletionTime = Math.round(
-        totalTime / completedTasksWithTime.length / (1000 * 60 * 60 * 24)
+        totalTime / completedTasksWithTime.length / (1000 * 60 * 60 * 24),
       ); // Convert to days
     }
 
     // Calculate trends (week over week, month over month)
     const lastWeekStart = new Date(
-      weekStart.getTime() - 7 * 24 * 60 * 60 * 1000
+      weekStart.getTime() - 7 * 24 * 60 * 60 * 1000,
     );
     const tasksLastWeek = await db.task.count({
       where: {
@@ -218,7 +218,7 @@ export async function getTaskMetrics(
     const lastMonthStart = new Date(
       monthStart.getFullYear(),
       monthStart.getMonth() - 1,
-      1
+      1,
     );
     const tasksLastMonth = await db.task.count({
       where: {

@@ -29,6 +29,7 @@ The `mcp-handler` is a Vercel adapter for the Model Context Protocol (MCP). It's
 #### Create an MCP Server in Next.js
 
 1.  **Install the package:**
+
     ```bash
     npm install mcp-handler
     ```
@@ -36,9 +37,9 @@ The `mcp-handler` is a Vercel adapter for the Model Context Protocol (MCP). It's
 2.  **Create an API route** (e.g., `app/api/mcp/route.ts`):
 
     ```typescript
-    import { createMcpHandler } from 'mcp-handler';
-    import { vercelMcpAdapter } from 'mcp-handler/vercel-adapter';
-    import { z } from 'zod';
+    import { createMcpHandler } from "mcp-handler";
+    import { vercelMcpAdapter } from "mcp-handler/vercel-adapter";
+    import { z } from "zod";
 
     const handler = createMcpHandler({
       adapter: vercelMcpAdapter,
@@ -46,12 +47,12 @@ The `mcp-handler` is a Vercel adapter for the Model Context Protocol (MCP). It's
       // authorize: async ({ req }) => { /* ... */ },
       tools: {
         getWeather: {
-          description: 'Get the weather for a location',
+          description: "Get the weather for a location",
           parameters: z.object({
             location: z.string(),
           }),
           run: async function* ({ location }) {
-            yield { status: 'running' };
+            yield { status: "running" };
             // Your tool logic here
             return { temp: Math.random() * 100 };
           },
@@ -69,27 +70,27 @@ The Vercel AI SDK provides patterns for building AI agents.
 
 #### Agent Patterns
 
--   **Sequential Processing (Chains):** For tasks with a defined order.
--   **Routing:** The model chooses the next step.
--   **Parallel Processing:** For independent tasks.
--   **Orchestrator-Worker:** A main model coordinates specialized models.
--   **Evaluator-Optimizer:** For quality control and feedback.
--   **Multi-Step Tool Usage:** Iteratively use tools to solve problems.
+- **Sequential Processing (Chains):** For tasks with a defined order.
+- **Routing:** The model chooses the next step.
+- **Parallel Processing:** For independent tasks.
+- **Orchestrator-Worker:** A main model coordinates specialized models.
+- **Evaluator-Optimizer:** For quality control and feedback.
+- **Multi-Step Tool Usage:** Iteratively use tools to solve problems.
 
 #### Use the AI SDK with an Agent
 
 ```typescript
-import { streamText } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { streamText } from "ai";
+import { openai } from "@ai-sdk/openai";
 
 async function myAgent(prompt: string) {
   const result = await streamText({
-    model: openai('gpt-4-turbo'),
+    model: openai("gpt-4-turbo"),
     prompt,
     // Corresponds to tools in the MCP handler
     tools: {
       // ...
-    }
+    },
   });
 
   return result.toAIStream();

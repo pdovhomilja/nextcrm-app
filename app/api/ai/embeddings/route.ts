@@ -4,7 +4,7 @@ import { embeddingStorageService } from "@/lib/ai/embedding-storage";
 import { dataExtractionService } from "@/lib/ai/data-extraction";
 import { EmbeddingMonitor, PerformanceMonitor } from "@/lib/ai/monitoring";
 import { validateAIConfig } from "@/lib/ai/config";
-import { z } from 'zod/v3';
+import { z } from "zod/v3";
 
 // Request validation schemas
 const ProcessCompanySchema = z.object({
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
           error: "AI configuration invalid",
           details: configValidation.errors,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
         if (session.user.activeCompanyId !== companyId) {
           return NextResponse.json(
             { error: "Access denied to company data" },
-            { status: 403 }
+            { status: 403 },
           );
         }
 
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
         if (taskIds.length === 0) {
           return NextResponse.json(
             { error: "No task IDs provided" },
-            { status: 400 }
+            { status: 400 },
           );
         }
 
@@ -92,13 +92,16 @@ export async function POST(request: NextRequest) {
         if (!companyId) {
           return NextResponse.json(
             { error: "Company context required" },
-            { status: 400 }
+            { status: 400 },
           );
         }
 
         // Verify user has access to these tasks by filtering with companyId
         const taskResults =
-          await embeddingStorageService.batchProcessTaskEmbeddings(taskIds, companyId);
+          await embeddingStorageService.batchProcessTaskEmbeddings(
+            taskIds,
+            companyId,
+          );
 
         return NextResponse.json({
           success: true,
@@ -114,12 +117,14 @@ export async function POST(request: NextRequest) {
         if (!companyId) {
           return NextResponse.json(
             { error: "Company context required" },
-            { status: 400 }
+            { status: 400 },
           );
         }
 
-        const success =
-          await embeddingStorageService.processTaskEmbedding(taskId, companyId);
+        const success = await embeddingStorageService.processTaskEmbedding(
+          taskId,
+          companyId,
+        );
 
         return NextResponse.json({
           success,
@@ -135,7 +140,7 @@ export async function POST(request: NextRequest) {
         if (boardIds.length === 0) {
           return NextResponse.json(
             { error: "No board IDs provided" },
-            { status: 400 }
+            { status: 400 },
           );
         }
 
@@ -143,12 +148,15 @@ export async function POST(request: NextRequest) {
         if (!companyId) {
           return NextResponse.json(
             { error: "Company context required" },
-            { status: 400 }
+            { status: 400 },
           );
         }
 
         const boardResults =
-          await embeddingStorageService.batchProcessBoardEmbeddings(boardIds, companyId);
+          await embeddingStorageService.batchProcessBoardEmbeddings(
+            boardIds,
+            companyId,
+          );
 
         return NextResponse.json({
           success: true,
@@ -166,13 +174,13 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Invalid request format", details: error.issues },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -215,7 +223,7 @@ export async function GET(request: NextRequest) {
           },
           {
             status: healthStatus.healthy ? 200 : 503,
-          }
+          },
         );
       }
 
@@ -224,7 +232,7 @@ export async function GET(request: NextRequest) {
         if (!companyId) {
           return NextResponse.json(
             { error: "Company context required" },
-            { status: 400 }
+            { status: 400 },
           );
         }
 
@@ -258,7 +266,7 @@ export async function GET(request: NextRequest) {
     console.error("Embedding stats error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -274,7 +282,7 @@ export async function DELETE(request: NextRequest) {
     if (!companyId) {
       return NextResponse.json(
         { error: "Company context required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -282,11 +290,14 @@ export async function DELETE(request: NextRequest) {
 
     if (taskId) {
       // First verify the task belongs to the user's company
-      const taskDoc = await dataExtractionService.extractTaskData(taskId, companyId);
+      const taskDoc = await dataExtractionService.extractTaskData(
+        taskId,
+        companyId,
+      );
       if (!taskDoc) {
         return NextResponse.json(
           { error: "Task not found or access denied" },
-          { status: 403 }
+          { status: 403 },
         );
       }
 
@@ -299,11 +310,14 @@ export async function DELETE(request: NextRequest) {
 
     if (boardId) {
       // First verify the board belongs to the user's company
-      const boardDoc = await dataExtractionService.extractBoardData(boardId, companyId);
+      const boardDoc = await dataExtractionService.extractBoardData(
+        boardId,
+        companyId,
+      );
       if (!boardDoc) {
         return NextResponse.json(
           { error: "Board not found or access denied" },
-          { status: 403 }
+          { status: 403 },
         );
       }
 
@@ -316,13 +330,13 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json(
       { error: "Task ID or Board ID required" },
-      { status: 400 }
+      { status: 400 },
     );
   } catch (error) {
     console.error("Embedding deletion error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

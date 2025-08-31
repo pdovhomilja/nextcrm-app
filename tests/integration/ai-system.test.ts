@@ -207,7 +207,7 @@ describe("AI System Integration Tests", () => {
     test("should check rate limits", async () => {
       const rateLimitResult = await testContext.aiSecurity.checkRateLimit(
         "test-user",
-        "ai-chat"
+        "ai-chat",
       );
 
       expect(rateLimitResult.allowed).toBe(true);
@@ -218,7 +218,7 @@ describe("AI System Integration Tests", () => {
     test("should check permissions", async () => {
       const permissionResult = await testContext.aiSecurity.checkAIPermissions(
         "test-user",
-        "ai-chat"
+        "ai-chat",
       );
 
       expect(permissionResult.allowed).toBe(true);
@@ -245,7 +245,7 @@ describe("AI System Integration Tests", () => {
     test("should provide recent performance data", async () => {
       const recentPerformance = testContext.aiMetrics.getRecentPerformance(
         "ai-chat",
-        30
+        30,
       );
 
       expect(recentPerformance.requestsPerMinute).toBeGreaterThanOrEqual(0);
@@ -330,7 +330,7 @@ describe("AI System Integration Tests", () => {
             userId: "test-user",
             companyId: "test-company",
           },
-        })
+        }),
       );
 
       const startTime = Date.now();

@@ -20,6 +20,7 @@ As a developer, I need the backend infrastructure to securely store and manage u
 
 1.  **Modify Schema:** Open `prisma/schema.prisma`.
 2.  **Add Model:** Add the `UserMailAccount` model. Insert it after the `User` model (around line 71). Ensure the relation to the `User` model is correctly established.
+
     ```prisma
     model UserMailAccount {
       id                  String   @id @default(cuid())
@@ -37,12 +38,13 @@ As a developer, I need the backend infrastructure to securely store and manage u
       @@map("user_mail_accounts")
     }
     ```
+
 3.  **Update User Model:** Add the corresponding relation field to the `User` model (around line 65, after `sessions Session[]`).
     ```prisma
     model User {
       // ... existing fields (id through sessions)
       mailAccounts        UserMailAccount[]
-      
+
       @@index([emailVerificationToken])
       @@index([company_id])
       @@map("users")

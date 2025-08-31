@@ -82,7 +82,7 @@ export class PerformanceMonitor {
   static trackOperation(
     operation: string,
     duration: number,
-    success: boolean
+    success: boolean,
   ): void {
     this.operations.push({
       operation,
@@ -148,7 +148,7 @@ export class PerformanceMonitor {
 
     const totalDuration = this.operations.reduce(
       (sum, op) => sum + op.duration,
-      0
+      0,
     );
     const successes = this.operations.filter((op) => op.success).length;
 
@@ -166,7 +166,7 @@ export class PerformanceMonitor {
             avgDuration: parseFloat(value.avgDuration.toFixed(2)),
             successRate: parseFloat(value.successRate.toFixed(4)),
           },
-        ])
+        ]),
       ),
     };
   }
@@ -179,7 +179,7 @@ export class PerformanceMonitor {
 // Utility function to track embedding operations
 export async function trackEmbeddingOperation<T>(
   operation: string,
-  fn: () => Promise<T>
+  fn: () => Promise<T>,
 ): Promise<T> {
   const start = Date.now();
   let success = false;

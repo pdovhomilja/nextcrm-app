@@ -1,4 +1,3 @@
-
 # Phase 2: Implement Advanced Routing (`agent-orchestrator.ts`)
 
 **Objective:** Replace the brittle, keyword-driven `selectAgents` function in `agent-orchestrator.ts` with a sophisticated, LLM-powered **`Routing`** agent. This new router will classify user intent into a rich, structured object, providing better context for downstream processing.
@@ -29,12 +28,12 @@ export const IntentSchema = z.object({
     "analytical_question",  // Requires analysis or insight (e.g., 'which project is behind schedule?')
     "general_conversation", // Chitchat or questions not related to data
   ]).describe('The overall category of the user's query.'),
-  
+
   domain: z.enum(["tasks", "projects", "users", "metrics", "general"]).describe('The primary data domain the query pertains to.'),
-  
+
   complexity: z.enum(["simple", "complex", "multi_step"]).describe('The estimated complexity of the query.'),
-  
-  requiredToolkits: z.array(z.enum(["taskManager", "projectAnalyzer", "userDirectory", "reporting"])) 
+
+  requiredToolkits: z.array(z.enum(["taskManager", "projectAnalyzer", "userDirectory", "reporting"]))
     .describe('A list of specialized toolkits needed to fulfill the request.'),
 
   reasoning: z.string().describe('A brief explanation of why these classifications were chosen.'),
@@ -52,26 +51,31 @@ This new function will replace `selectAgents`. It takes the user query and retur
 
 ```typescript
 // in lib/ai/routing/router.ts
-import { generateObject } from 'ai';
-import { createOpenAI } from '@ai-sdk/openai';
-import { IntentSchema } from './schema';
-import type { CoreMessage } from 'ai';
+import { generateObject } from "ai";
+import { createOpenAI } from "@ai-sdk/openai";
+import { IntentSchema } from "./schema";
+import type { CoreMessage } from "ai";
 
-const openai = createOpenAI({ /* ... credentials ... */ });
+const openai = createOpenAI({
+  /* ... credentials ... */
+});
 
-export async function classifyAndRouteQuery(query: string, history: CoreMessage[]) {
-    const systemPrompt = `You are an expert query router. Your job is to analyze the user's query and classify it according to the provided schema. 
+export async function classifyAndRouteQuery(
+  query: string,
+  history: CoreMessage[],
+) {
+  const systemPrompt = `You are an expert query router. Your job is to analyze the user's query and classify it according to the provided schema. 
     Select the most appropriate toolkits required to answer the query.`;
 
-    const { object: intent } = await generateObject({
-        model: openai('gpt-4o-mini'), // Use a fast model for routing
-        schema: IntentSchema,
-        prompt: `User query: "${query}"`,
-        system: systemPrompt,
-        messages: history,
-    });
+  const { object: intent } = await generateObject({
+    model: openai("gpt-4o-mini"), // Use a fast model for routing
+    schema: IntentSchema,
+    prompt: `User query: "${query}"`,
+    system: systemPrompt,
+    messages: history,
+  });
 
-    return intent;
+  return intent;
 }
 ```
 
@@ -113,18 +117,18 @@ async orchestrate(query: string, history: CoreMessage[]) {
 
 ## 3. Key Architectural Changes
 
--   **Before:** A brittle, keyword-based function (`selectAgents`) that returns a simple agent name.
--   **After:** A robust, LLM-based function (`classifyAndRouteQuery`) that returns a rich, structured `Intent` object.
--   **Before:** Routing logic is mixed with orchestration logic.
--   **After:** Routing is a distinct, self-contained step at the beginning of the orchestration process.
+- **Before:** A brittle, keyword-based function (`selectAgents`) that returns a simple agent name.
+- **After:** A robust, LLM-based function (`classifyAndRouteQuery`) that returns a rich, structured `Intent` object.
+- **Before:** Routing logic is mixed with orchestration logic.
+- **After:** Routing is a distinct, self-contained step at the beginning of the orchestration process.
 
 ## 4. Verification Strategy
 
 1.  **Unit Testing for `classifyAndRouteQuery`:**
-    -   Create a test file `router.test.ts`.
-    -   Mock the `generateObject` function.
-    -   **Test Case 1 (Data Mutation):** Input: "Create a new task to fix the login bug." Assert that `queryType` is `data_mutation`, `domain` is `tasks`, and `requiredToolkits` includes `taskManager`.
-    -   **Test Case 2 (Analytical Question):** Input: "Why is the marketing project delayed?" Assert that `queryType` is `analytical_question`, `domain` is `projects`, and `requiredToolkits` includes `projectAnalyzer`.
-    -   **Test Case 3 (General Conversation):** Input: "Hello, how are you?" Assert that `queryType` is `general_conversation` and `domain` is `general`.
+    - Create a test file `router.test.ts`.
+    - Mock the `generateObject` function.
+    - **Test Case 1 (Data Mutation):** Input: "Create a new task to fix the login bug." Assert that `queryType` is `data_mutation`, `domain` is `tasks`, and `requiredToolkits` includes `taskManager`.
+    - **Test Case 2 (Analytical Question):** Input: "Why is the marketing project delayed?" Assert that `queryType` is `analytical_question`, `domain` is `projects`, and `requiredToolkits` includes `projectAnalyzer`.
+    - **Test Case 3 (General Conversation):** Input: "Hello, how are you?" Assert that `queryType` is `general_conversation` and `domain` is `general`.
 2.  **Integration Testing:**
-    -   Write a test for the `orchestrate` function that provides a query and asserts that `classifyAndRouteQuery` is called first, and its output is then used to configure the `BaseAIAgent` instance.
+    - Write a test for the `orchestrate` function that provides a query and asserts that `classifyAndRouteQuery` is called first, and its output is then used to configure the `BaseAIAgent` instance.

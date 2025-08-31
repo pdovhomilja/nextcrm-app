@@ -20,7 +20,7 @@ interface SimilarResult {
 
 export const findRelevantContent = async (
   userQuery: string,
-  companyId: string
+  companyId: string,
 ): Promise<SimilarResult[]> => {
   const queryEmbedding = await generateEmbedding(userQuery);
 

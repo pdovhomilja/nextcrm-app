@@ -31,7 +31,7 @@ function SignInForm() {
       setSuccess("Email verified successfully! You can now sign in.");
     } else if (errorParam === "invalid-token") {
       setError(
-        "Invalid or expired verification token. Please try registering again."
+        "Invalid or expired verification token. Please try registering again.",
       );
     } else if (errorParam === "missing-token") {
       setError("Verification token is missing.");

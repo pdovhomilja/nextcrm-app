@@ -60,7 +60,7 @@ export class BaseAIAgent {
     role: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     tools: Record<string, Tool<any, any>> = {},
-    model: LanguageModel = aiConfig.chatModel
+    model: LanguageModel = aiConfig.chatModel,
   ) {
     this.agentId = agentId;
     this.role = role;
@@ -77,15 +77,17 @@ export class BaseAIAgent {
     query: string,
     context: AgentContext,
     history: ModelMessage[],
-    systemPromptOverride?: string
+    systemPromptOverride?: string,
   ) {
     console.log(
-      `Processing query for agent ${this.agentId} with role ${this.role}`
+      `Processing query for agent ${this.agentId} with role ${this.role}`,
     );
     const startTime = Date.now();
     const availableTools = this.getAvailableTools();
 
-    const effectiveSystemPrompt = systemPromptOverride || `You are a helpful AI assistant named ${this.role}. 
+    const effectiveSystemPrompt =
+      systemPromptOverride ||
+      `You are a helpful AI assistant named ${this.role}. 
                          Your role is to assist users by answering questions and using available tools to manage tasks, projects, and users. 
                          You can ask for clarification if a query is ambiguous.
                          The user context is: ${JSON.stringify(context)}`;
@@ -113,7 +115,9 @@ export class BaseAIAgent {
               return [];
             }
 
-            console.log(`Starting execution of ${toolCalls.length} tool calls.`);
+            console.log(
+              `Starting execution of ${toolCalls.length} tool calls.`,
+            );
             const toolResults: ToolResult[] = [];
             for (const toolCall of toolCalls) {
               const { toolName } = toolCall;
@@ -122,7 +126,7 @@ export class BaseAIAgent {
 
               if (!tool || !tool.execute) {
                 console.warn(
-                  `LLM tried to call non-existent tool or tool without execute method: ${toolName}`
+                  `LLM tried to call non-existent tool or tool without execute method: ${toolName}`,
                 );
                 continue;
               }
@@ -154,7 +158,9 @@ export class BaseAIAgent {
               }
             }
 
-            console.log(`Tool execution completed. Captured ${toolResults.length} tool results.`);
+            console.log(
+              `Tool execution completed. Captured ${toolResults.length} tool results.`,
+            );
             return toolResults;
           })();
         },
@@ -170,7 +176,7 @@ export class BaseAIAgent {
 
       const processingTime = Date.now() - startTime;
       console.log(
-        `Query processed in ${processingTime}ms. Finish reason: ${finishReason}. Tool results captured: ${capturedToolResults.length}`
+        `Query processed in ${processingTime}ms. Finish reason: ${finishReason}. Tool results captured: ${capturedToolResults.length}`,
       );
 
       return {
@@ -217,7 +223,7 @@ export class BaseAIAgent {
    */
   updateConversationHistory(
     conversationId: string,
-    message: ModelMessage
+    message: ModelMessage,
   ): void {
     if (!conversationId) return;
 

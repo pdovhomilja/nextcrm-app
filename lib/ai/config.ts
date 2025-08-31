@@ -3,7 +3,7 @@ import { openai } from "@ai-sdk/openai";
 export const aiConfig = {
   // Embedding model configuration
   embeddingModel: openai.embedding(
-    process.env.EMBEDDING_MODEL || "text-embedding-ada-002"
+    process.env.EMBEDDING_MODEL || "text-embedding-ada-002",
   ),
 
   // Chat model for analysis - using gpt-4o for structured output support

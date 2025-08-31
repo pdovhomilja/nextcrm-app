@@ -21,11 +21,11 @@ interface DynamicSectionCardsProps {
   isLoading?: boolean;
 }
 
-export function DynamicSectionCards({ 
-  taskMetrics, 
-  boardMetrics, 
-  userMetrics, 
-  isLoading = false 
+export function DynamicSectionCards({
+  taskMetrics,
+  boardMetrics,
+  userMetrics,
+  isLoading = false,
 }: DynamicSectionCardsProps) {
   // Helper function to format numbers
   const formatNumber = (num: number) => {
@@ -40,7 +40,7 @@ export function DynamicSectionCards({
   // Helper function to format percentage
   const formatPercentage = (num: number) => {
     const isPositive = num >= 0;
-    const formatted = `${isPositive ? '+' : ''}${num.toFixed(1)}%`;
+    const formatted = `${isPositive ? "+" : ""}${num.toFixed(1)}%`;
     return { formatted, isPositive };
   };
 
@@ -60,18 +60,22 @@ export function DynamicSectionCards({
     {
       title: "Total Tasks",
       value: formatNumber(taskMetrics?.totalTasks || 0),
-      trend: taskMetrics ? formatPercentage(taskMetrics.trends.monthOverMonth) : null,
+      trend: taskMetrics
+        ? formatPercentage(taskMetrics.trends.monthOverMonth)
+        : null,
       description: `${taskMetrics?.tasksByStatus.IN_PROGRESS || 0} in progress`,
     },
-    
+
     // Active Projects Card
     {
       title: "Active Projects",
       value: formatNumber(boardMetrics?.activeBoardsCount || 0),
-      trend: boardMetrics ? formatPercentage(boardMetrics.trends.monthOverMonth) : null,
+      trend: boardMetrics
+        ? formatPercentage(boardMetrics.trends.monthOverMonth)
+        : null,
       description: `${boardMetrics?.totalBoards || 0} total boards`,
     },
-    
+
     // Overdue Tasks Card
     {
       title: "Overdue Tasks",
@@ -80,23 +84,25 @@ export function DynamicSectionCards({
       description: `${taskMetrics?.overdueTasks || 0} tasks overdue`,
       isAlert: (taskMetrics?.overdueTasks || 0) > 0,
     },
-    
+
     // Team Productivity Card
     {
       title: "Completion Rate",
-      value: `${taskMetrics?.completionRate.toFixed(1) || '0.0'}%`,
+      value: `${taskMetrics?.completionRate.toFixed(1) || "0.0"}%`,
       trend: null, // We could add weekly trend here later
       description: `${taskMetrics?.tasksByStatus.COMPLETED || 0} completed this month`,
     },
-    
+
     // AI Conversations Card
     {
       title: "Active Users",
       value: formatNumber(userMetrics?.activeUsersCount || 0),
-      trend: userMetrics ? formatPercentage(userMetrics.trends.activeUsersGrowth) : null,
+      trend: userMetrics
+        ? formatPercentage(userMetrics.trends.activeUsersGrowth)
+        : null,
       description: `${userMetrics?.totalUsers || 0} total users`,
     },
-    
+
     // Team Productivity Card
     {
       title: "Team Productivity",
@@ -131,23 +137,28 @@ const SectionCard = ({
   isAlert = false,
 }: SectionCardProps) => {
   return (
-    <Card className={`@container/card ${isAlert ? 'border-red-200' : ''}`}>
+    <Card className={`@container/card ${isAlert ? "border-red-200" : ""}`}>
       <CardHeader>
-        <CardDescription className={isAlert ? 'text-red-600' : ''}>
+        <CardDescription className={isAlert ? "text-red-600" : ""}>
           {title}
         </CardDescription>
-        <CardTitle className={`text-2xl font-semibold tabular-nums @[250px]/card:text-3xl ${
-          isAlert ? 'text-red-700' : ''
-        }`}>
+        <CardTitle
+          className={`text-2xl font-semibold tabular-nums @[250px]/card:text-3xl ${
+            isAlert ? "text-red-700" : ""
+          }`}
+        >
           {value}
         </CardTitle>
         <CardAction>
           {trend && (
-            <Badge variant="outline" className={
-              trend.isPositive 
-                ? "text-green-700 border-green-200 bg-green-50" 
-                : "text-red-700 border-red-200 bg-red-50"
-            }>
+            <Badge
+              variant="outline"
+              className={
+                trend.isPositive
+                  ? "text-green-700 border-green-200 bg-green-50"
+                  : "text-red-700 border-red-200 bg-red-50"
+              }
+            >
               {trend.isPositive ? <IconTrendingUp /> : <IconTrendingDown />}
               {trend.formatted}
             </Badge>
@@ -165,7 +176,9 @@ const SectionCard = ({
             )}
           </div>
         )}
-        <div className={`text-muted-foreground ${isAlert ? 'text-red-500' : ''}`}>
+        <div
+          className={`text-muted-foreground ${isAlert ? "text-red-500" : ""}`}
+        >
           {description}
         </div>
       </CardFooter>

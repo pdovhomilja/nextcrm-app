@@ -109,7 +109,7 @@ Guidelines for workloadAnalysis:
                   reasoningText: z.string(),
                   confidence: z.number().min(0).max(1),
                   estimatedImpact: z.enum(["low", "medium", "high"]),
-                })
+                }),
               )
               .max(5),
             workloadAnalysis: z.object({

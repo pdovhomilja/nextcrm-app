@@ -158,7 +158,7 @@ export function TaskDataTable({ boardId, className }: TaskDataTableProps) {
       | "priority"
       | "dueDate"
       | "createdAt"
-      | "updatedAt"
+      | "updatedAt",
   ) => {
     if (sortBy === column) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
@@ -389,7 +389,7 @@ export function TaskDataTable({ boardId, className }: TaskDataTableProps) {
                   <TableRow
                     key={task.id}
                     className={cn(
-                      task.isOverdue && "bg-red-50 dark:bg-red-950/20"
+                      task.isOverdue && "bg-red-50 dark:bg-red-950/20",
                     )}
                   >
                     <TableCell className="max-w-xs">
@@ -417,7 +417,7 @@ export function TaskDataTable({ boardId, className }: TaskDataTableProps) {
                       <div
                         className={cn(
                           "flex items-center gap-1",
-                          getPriorityColor(task.priority)
+                          getPriorityColor(task.priority),
                         )}
                       >
                         {task.priority === "CRITICAL" && (
@@ -461,7 +461,7 @@ export function TaskDataTable({ boardId, className }: TaskDataTableProps) {
                       <div
                         className={cn(
                           "text-sm",
-                          task.isOverdue && "text-red-600 font-medium"
+                          task.isOverdue && "text-red-600 font-medium",
                         )}
                       >
                         {formatDate(task.dueDate)}

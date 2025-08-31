@@ -26,7 +26,7 @@ export default function TaskFiles({ task, companyId }: TaskFilesProps) {
         size: file.size,
         companyId,
         taskId: task.id,
-      })
+      }),
     );
 
     try {

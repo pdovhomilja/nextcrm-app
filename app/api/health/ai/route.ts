@@ -110,7 +110,7 @@ export async function GET() {
     const recentPerformance = aiMetrics.getRecentPerformance("chat", 30);
 
     const highErrorRate = Object.values(allMetrics).some(
-      (m) => m.errorRate > 0.1
+      (m) => m.errorRate > 0.1,
     );
     const slowResponse = recentPerformance.averageResponseTime > 5000; // 5 seconds
 
@@ -127,11 +127,11 @@ export async function GET() {
         recentPerformance,
         totalRequests: Object.values(allMetrics).reduce(
           (sum, m) => sum + m.requestCount,
-          0
+          0,
         ),
         totalCost: Object.values(allMetrics).reduce(
           (sum, m) => sum + m.totalCost,
-          0
+          0,
         ),
       },
       responseTime: Date.now() - metricsStartTime,
@@ -182,6 +182,6 @@ export async function GET() {
         unhealthy: unhealthyCount,
       },
     },
-    { status: responseCode }
+    { status: responseCode },
   );
 }

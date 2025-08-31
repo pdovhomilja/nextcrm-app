@@ -5,7 +5,7 @@ import {
   RAGContext,
   AssembledContext,
 } from "./context-assembly";
-import { z } from 'zod/v3';
+import { z } from "zod/v3";
 
 export interface RAGQuery {
   query: string;
@@ -139,7 +139,7 @@ Respond with the category name and confidence (0-1).`;
       const suggestedActions = await this.generateSuggestedActions(
         ragQuery.query,
         assembledContext.contextDocuments,
-        contextType
+        contextType,
       );
 
       const processingTime = Date.now() - startTime;
@@ -176,7 +176,7 @@ Respond with the category name and confidence (0-1).`;
    */
   private async generateResponse(
     context: AssembledContext,
-    ragQuery: RAGQuery
+    ragQuery: RAGQuery,
   ) {
     const options = ragQuery.options || {};
 
@@ -197,7 +197,7 @@ Respond with the category name and confidence (0-1).`;
       task?: { title: string; status: string; priority: string };
       similarity: number;
     }>,
-    contextType: string
+    contextType: string,
   ): Promise<
     Array<{
       type: "task" | "assignment" | "priority" | "schedule";
@@ -225,7 +225,7 @@ Generate actionable suggestions that would help address this query.`,
                 type: z.enum(["task", "assignment", "priority", "schedule"]),
                 description: z.string(),
                 reasoningText: z.string(),
-              })
+              }),
             )
             .max(3),
         }),
@@ -250,7 +250,7 @@ Generate actionable suggestions that would help address this query.`,
     for (let i = 0; i < queries.length; i += batchSize) {
       const batch = queries.slice(i, i + batchSize);
       const batchResults = await Promise.all(
-        batch.map((query) => this.processQuery(query))
+        batch.map((query) => this.processQuery(query)),
       );
       results.push(...batchResults);
 
@@ -374,7 +374,7 @@ Generate actionable suggestions that would help address this query.`,
       const suggestedActions = await this.generateSuggestedActions(
         ragQuery.query,
         assembledContext.contextDocuments,
-        contextType
+        contextType,
       );
 
       yield { type: "actions", data: suggestedActions };

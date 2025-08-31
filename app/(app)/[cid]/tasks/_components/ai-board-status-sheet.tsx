@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { ChevronLeft } from 'lucide-react';
+import { useState } from "react";
+import { ChevronLeft } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -9,9 +9,9 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { DebugAiRequests } from './debug-ai-requests';
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { DebugAiRequests } from "./debug-ai-requests";
 
 export function AiBoardStatusSheet() {
   const [open, setOpen] = useState(false);
@@ -28,7 +28,10 @@ export function AiBoardStatusSheet() {
           <span className="sr-only">Open AI Board Status</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-full sm:w-[600px] overflow-y-auto">
+      <SheetContent
+        side="right"
+        className="w-full sm:w-[600px] overflow-y-auto"
+      >
         <SheetHeader>
           <SheetTitle>AI Board Generation</SheetTitle>
           <SheetDescription>

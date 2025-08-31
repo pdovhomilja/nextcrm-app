@@ -7,7 +7,7 @@ const openai = createOpenAI();
 
 export async function classifyAndRouteQuery(
   query: string,
-  history: ModelMessage[]
+  history: ModelMessage[],
 ) {
   const systemPrompt = `You are an expert query router. Your job is to analyze the user's query and classify it according to the provided schema. 
     Select the most appropriate toolkits required to answer the query.`;

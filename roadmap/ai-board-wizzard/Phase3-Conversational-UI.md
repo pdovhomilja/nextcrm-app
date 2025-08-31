@@ -19,12 +19,12 @@ This is the entry point for the user.
 
     ```tsx
     // in app/(app)/[cid]/tasks/_components/ai-board-wizard-button.tsx
-    'use client';
+    "use client";
 
-    import { useState } from 'react';
-    import { Button } from '@/components/ui/button';
-    import { Sparkles } from 'lucide-react';
-    import { AiBoardWizardDialog } from './ai-board-wizard-dialog';
+    import { useState } from "react";
+    import { Button } from "@/components/ui/button";
+    import { Sparkles } from "lucide-react";
+    import { AiBoardWizardDialog } from "./ai-board-wizard-dialog";
 
     export function AiBoardWizardButton() {
       const [isOpen, setIsOpen] = useState(false);
@@ -52,10 +52,16 @@ This component will orchestrate the entire frontend experience.
 
     ```tsx
     // in app/(app)/[cid]/tasks/_components/ai-board-wizard-dialog.tsx
-    'use client';
+    "use client";
 
-    import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-    import { useAiBoardWizard } from './use-ai-board-wizard';
+    import {
+      Dialog,
+      DialogContent,
+      DialogHeader,
+      DialogTitle,
+      DialogDescription,
+    } from "@/components/ui/dialog";
+    import { useAiBoardWizard } from "./use-ai-board-wizard";
 
     export function AiBoardWizardDialog({ isOpen, onOpenChange }) {
       const wizard = useAiBoardWizard({ onOpenChange });
@@ -69,11 +75,14 @@ This component will orchestrate the entire frontend experience.
                 Let's create a detailed project plan from your idea.
               </DialogDescription>
             </DialogHeader>
-            
-            {wizard.step === 'initial' && <InitialStepForm wizard={wizard} />}
-            {wizard.step === 'refining' && <RefinementChatInterface wizard={wizard} />}
-            {wizard.step === 'final_brief' && <FinalBriefView wizard={wizard} />}
 
+            {wizard.step === "initial" && <InitialStepForm wizard={wizard} />}
+            {wizard.step === "refining" && (
+              <RefinementChatInterface wizard={wizard} />
+            )}
+            {wizard.step === "final_brief" && (
+              <FinalBriefView wizard={wizard} />
+            )}
           </DialogContent>
         </Dialog>
       );
@@ -89,87 +98,118 @@ Separating the logic into a custom hook keeps the UI component clean. This is th
 
     ```typescript
     // in app/(app)/[cid]/tasks/_components/use-ai-board-wizard.ts
-    import { useState, useEffect } from 'react';
-    import { useForm } from 'react-hook-form';
-    import { refineGoalConversation, RefinementResult } from '@/actions/tasks/refine-goal-conversation';
-    import { createBoardFromAi } from '@/actions/tasks/create-board-from-ai';
-    import { toast } from 'sonner';
+    import { useState, useEffect } from "react";
+    import { useForm } from "react-hook-form";
+    import {
+      refineGoalConversation,
+      RefinementResult,
+    } from "@/actions/tasks/refine-goal-conversation";
+    import { createBoardFromAi } from "@/actions/tasks/create-board-from-ai";
+    import { toast } from "sonner";
 
     interface Message {
       id: string;
-      role: 'user' | 'assistant';
+      role: "user" | "assistant";
       content: string;
     }
 
     export function useAiBoardWizard({ onOpenChange }) {
-      const [step, setStep] = useState('initial');
+      const [step, setStep] = useState("initial");
       const [messages, setMessages] = useState<Message[]>([]);
-      const [finalBrief, setFinalBrief] = useState('');
+      const [finalBrief, setFinalBrief] = useState("");
       const [isPending, setIsPending] = useState(false);
 
-      const form = useForm({ defaultValues: { goal: '', role: '' } });
+      const form = useForm({ defaultValues: { goal: "", role: "" } });
 
       // Reset state when the dialog is closed
       useEffect(() => {
         if (!onOpenChange) {
-          setStep('initial');
+          setStep("initial");
           setMessages([]);
-          setFinalBrief('');
+          setFinalBrief("");
           form.reset();
         }
       }, [onOpenChange, form]);
 
       const processAssistantResponse = (response: RefinementResult) => {
-        setMessages((prev) => [...prev, { id: Date.now().toString(), role: 'assistant', content: response.content }]);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now().toString(),
+            role: "assistant",
+            content: response.content,
+          },
+        ]);
         if (response.isFinalBrief) {
           setFinalBrief(response.content);
-          setStep('final_brief');
+          setStep("final_brief");
         }
       };
 
       const handleInitialSubmit = async (data) => {
         setIsPending(true);
-        const initialMessage: Message = { id: Date.now().toString(), role: 'user', content: `My goal is: "${data.goal}". My role is: "${data.role}".` };
+        const initialMessage: Message = {
+          id: Date.now().toString(),
+          role: "user",
+          content: `My goal is: "${data.goal}". My role is: "${data.role}".`,
+        };
         setMessages([initialMessage]);
-        setStep('refining');
+        setStep("refining");
         try {
-          const response = await refineGoalConversation({ messages: [initialMessage] });
+          const response = await refineGoalConversation({
+            messages: [initialMessage],
+          });
           processAssistantResponse(response);
         } catch (e) {
-          toast.error('An error occurred during refinement.');
-          setStep('initial');
+          toast.error("An error occurred during refinement.");
+          setStep("initial");
         }
         setIsPending(false);
       };
 
       const handleSendMessage = async (messageContent: string) => {
         setIsPending(true);
-        const newUserMessage: Message = { id: Date.now().toString(), role: 'user', content: messageContent };
+        const newUserMessage: Message = {
+          id: Date.now().toString(),
+          role: "user",
+          content: messageContent,
+        };
         const newMessages = [...messages, newUserMessage];
         setMessages(newMessages);
         try {
-          const response = await refineGoalConversation({ messages: newMessages });
+          const response = await refineGoalConversation({
+            messages: newMessages,
+          });
           processAssistantResponse(response);
         } catch (e) {
-          toast.error('An error occurred during refinement.');
+          toast.error("An error occurred during refinement.");
         }
         setIsPending(false);
       };
 
       const handleAcceptBrief = async () => {
         setIsPending(true);
-        toast.info('Board generation has started! We will notify you upon completion.');
+        toast.info(
+          "Board generation has started! We will notify you upon completion.",
+        );
         try {
-          await createBoardFromAi({ refinedPrompt: finalBrief, role: form.getValues('role') });
+          await createBoardFromAi({
+            refinedPrompt: finalBrief,
+            role: form.getValues("role"),
+          });
           onOpenChange(false); // Close dialog on success
         } catch (e) {
-          toast.error('Failed to start board generation.');
+          toast.error("Failed to start board generation.");
         }
         setIsPending(false);
       };
 
       return {
-        step, messages, finalBrief, isPending, form,
+        step,
+        messages,
+        finalBrief,
+        isPending,
+        form,
         handleInitialSubmit: form.handleSubmit(handleInitialSubmit),
         handleSendMessage,
         handleAcceptBrief,
@@ -183,18 +223,18 @@ Create the components for each step of the wizard, which will be rendered inside
 
 1.  **`InitialStepForm`**: A simple form with `Input` (for goal) and `Select` (for role) using `react-hook-form` and `shadcn/ui` components. On submit, it calls the `handleInitialSubmit` function passed in its props.
 2.  **`RefinementChatInterface`**: This component will:
-    -   Render the `messages` array in a scrollable view.
-    -   Display a `ChatInput` component for the user to type replies, which calls `handleSendMessage` on submit.
-    -   Show a loading indicator (e.g., a spinner) when `isPending` is true.
+    - Render the `messages` array in a scrollable view.
+    - Display a `ChatInput` component for the user to type replies, which calls `handleSendMessage` on submit.
+    - Show a loading indicator (e.g., a spinner) when `isPending` is true.
 3.  **`FinalBriefView`**: This component will:
-    -   Display the `finalBrief` text in a formatted block (e.g., inside a `Card` or `blockquote`).
-    -   Show the "Accept & Generate Board" button, which calls `handleAcceptBrief` on click. This button should be disabled when `isPending` is true.
+    - Display the `finalBrief` text in a formatted block (e.g., inside a `Card` or `blockquote`).
+    - Show the "Accept & Generate Board" button, which calls `handleAcceptBrief` on click. This button should be disabled when `isPending` is true.
 
 ## 3. Verification
 
--   Confirm the "AI Board Wizard" button appears and opens the dialog.
--   Test the initial form submission. The UI should transition to the 'refining' step and display the first assistant message.
--   Test the back-and-forth chat flow, ensuring user and assistant messages appear correctly.
--   Verify the UI transitions to the 'final_brief' step when the AI proposes the brief.
--   Test the final "Accept & Generate Board" button and confirm that the correct toast message appears and the dialog closes.
--   Ensure all loading states (`isPending`) are handled gracefully, disabling forms and buttons as needed.
+- Confirm the "AI Board Wizard" button appears and opens the dialog.
+- Test the initial form submission. The UI should transition to the 'refining' step and display the first assistant message.
+- Test the back-and-forth chat flow, ensuring user and assistant messages appear correctly.
+- Verify the UI transitions to the 'final_brief' step when the AI proposes the brief.
+- Test the final "Accept & Generate Board" button and confirm that the correct toast message appears and the dialog closes.
+- Ensure all loading states (`isPending`) are handled gracefully, disabling forms and buttons as needed.

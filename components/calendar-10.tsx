@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Card,
   CardAction,
@@ -11,13 +11,13 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 
 export default function Calendar10() {
   const [date, setDate] = React.useState<Date | undefined>(
-    new Date(2025, 5, 12)
-  )
-  const [month, setMonth] = React.useState<Date | undefined>(new Date())
+    new Date(2025, 5, 12),
+  );
+  const [month, setMonth] = React.useState<Date | undefined>(new Date());
 
   return (
     <Card>
@@ -29,8 +29,8 @@ export default function Calendar10() {
             size="sm"
             variant="outline"
             onClick={() => {
-              setMonth(new Date())
-              setDate(new Date())
+              setMonth(new Date());
+              setDate(new Date());
             }}
           >
             Today
@@ -48,5 +48,5 @@ export default function Calendar10() {
         />
       </CardContent>
     </Card>
-  )
+  );
 }

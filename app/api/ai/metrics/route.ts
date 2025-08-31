@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
       if (!session?.user) {
         return NextResponse.json(
           { error: "Authentication required" },
-          { status: 401 }
+          { status: 401 },
         );
       }
 
@@ -60,11 +60,11 @@ export async function GET(request: NextRequest) {
           totalOperations: Object.keys(allMetrics).length,
           totalRequests: Object.values(allMetrics).reduce(
             (sum, m) => sum + m.requestCount,
-            0
+            0,
           ),
           totalCost: Object.values(allMetrics).reduce(
             (sum, m) => sum + m.totalCost,
-            0
+            0,
           ),
           averageErrorRate:
             Object.values(allMetrics).reduce((sum, m) => sum + m.errorRate, 0) /
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
       console.error("Metrics API error:", error);
       return NextResponse.json(
         { error: "Failed to retrieve metrics" },
-        { status: 500 }
+        { status: 500 },
       );
     }
   });
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
       if (!session?.user) {
         return NextResponse.json(
           { error: "Authentication required" },
-          { status: 401 }
+          { status: 401 },
         );
       }
 
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
         default:
           return NextResponse.json(
             { error: "Invalid action" },
-            { status: 400 }
+            { status: 400 },
           );
       }
     } catch (error) {

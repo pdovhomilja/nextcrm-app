@@ -13,7 +13,7 @@ type EditBoardInput = {
 
 export async function editBoard(
   boardId: string,
-  data: EditBoardInput
+  data: EditBoardInput,
 ): Promise<Board | { error: string }> {
   const session = await auth();
 

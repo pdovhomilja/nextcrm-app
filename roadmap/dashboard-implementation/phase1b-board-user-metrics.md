@@ -62,7 +62,7 @@ export type BoardMetricsData = {
 };
 
 export async function getBoardMetrics(
-  input?: z.infer<typeof BoardMetricsSchema>
+  input?: z.infer<typeof BoardMetricsSchema>,
 ): Promise<{ data?: BoardMetricsData; error?: string }> {
   try {
     const session = await auth();
@@ -136,7 +136,7 @@ export async function getBoardMetrics(
     });
 
     const boardsWithTasks = boardsWithTasksQuery.filter(
-      (board) => board._count.tasks > 0
+      (board) => board._count.tasks > 0,
     ).length;
     const activeBoardsCount = boardsWithTasksQuery.filter((board) => {
       const lastActivity = board.tasks[0]?.updatedAt;
@@ -149,7 +149,7 @@ export async function getBoardMetrics(
     // Calculate average tasks per board
     const totalTasksAcrossBoards = boardsWithTasksQuery.reduce(
       (sum, board) => sum + board._count.tasks,
-      0
+      0,
     );
     const averageTasksPerBoard =
       totalBoards > 0 ? Math.round(totalTasksAcrossBoards / totalBoards) : 0;
@@ -234,7 +234,7 @@ export async function getBoardMetrics(
 
     // Calculate trends
     const lastWeekStart = new Date(
-      weekStart.getTime() - 7 * 24 * 60 * 60 * 1000
+      weekStart.getTime() - 7 * 24 * 60 * 60 * 1000,
     );
     const boardsLastWeek = await db.board.count({
       where: {
@@ -246,7 +246,7 @@ export async function getBoardMetrics(
     const lastMonthStart = new Date(
       monthStart.getFullYear(),
       monthStart.getMonth() - 1,
-      1
+      1,
     );
     const boardsLastMonth = await db.board.count({
       where: {
@@ -350,7 +350,7 @@ export type UserMetricsData = {
 };
 
 export async function getUserMetrics(
-  input?: z.infer<typeof UserMetricsSchema>
+  input?: z.infer<typeof UserMetricsSchema>,
 ): Promise<{ data?: UserMetricsData; error?: string }> {
   try {
     const session = await auth();
@@ -464,11 +464,11 @@ export async function getUserMetrics(
     // Calculate productivity metrics
     const totalAssignedTasks = usersWithTaskData.reduce(
       (sum, user) => sum + user._count.assignedTasks,
-      0
+      0,
     );
     const totalCompletedTasks = usersWithTaskData.reduce(
       (sum, user) => sum + user.assignedTasks.length,
-      0
+      0,
     );
 
     const avgTasksPerUser =
@@ -589,7 +589,7 @@ export async function getUserMetrics(
     const lastMonth = new Date(
       monthStart.getFullYear(),
       monthStart.getMonth() - 1,
-      1
+      1,
     );
     const activeUsersLastMonth = await db.user.count({
       where: {
@@ -978,7 +978,7 @@ export type DashboardOverviewData = {
 };
 
 export async function getDashboardOverview(
-  dateRange: "7d" | "30d" | "90d" | "all" = "30d"
+  dateRange: "7d" | "30d" | "90d" | "all" = "30d",
 ): Promise<{
   data?: DashboardOverviewData;
   error?: string;

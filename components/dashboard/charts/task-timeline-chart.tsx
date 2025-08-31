@@ -1,11 +1,17 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Badge } from "@/components/ui/badge"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { TrendingUp, TrendingDown, Minus, BarChart3 } from "lucide-react"
+import { useEffect, useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { TrendingUp, TrendingDown, Minus, BarChart3 } from "lucide-react";
 import {
   Area,
   AreaChart,
@@ -18,33 +24,44 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from "recharts"
-import { getTaskTimelineData, type TaskTimelineData } from "@/actions/dashboard/charts/get-task-timeline-data"
+} from "recharts";
+import {
+  getTaskTimelineData,
+  type TaskTimelineData,
+} from "@/actions/dashboard/charts/get-task-timeline-data";
 
 interface TaskTimelineChartProps {
-  boardId?: string
-  className?: string
+  boardId?: string;
+  className?: string;
 }
 
-type ChartType = 'area' | 'line' | 'bar'
-type DateRange = '7d' | '30d' | '90d' | '1y'
+type ChartType = "area" | "line" | "bar";
+type DateRange = "7d" | "30d" | "90d" | "1y";
 
-export function TaskTimelineChart({ boardId, className }: TaskTimelineChartProps) {
-  const [data, setData] = useState<TaskTimelineData | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [chartType, setChartType] = useState<ChartType>('area')
-  const [dateRange, setDateRange] = useState<DateRange>('30d')
+export function TaskTimelineChart({
+  boardId,
+  className,
+}: TaskTimelineChartProps) {
+  const [data, setData] = useState<TaskTimelineData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [chartType, setChartType] = useState<ChartType>("area");
+  const [dateRange, setDateRange] = useState<DateRange>("30d");
 
   useEffect(() => {
     async function fetchData() {
-      setIsLoading(true)
-      setError(null)
+      setIsLoading(true);
+      setError(null);
 
       try {
-        const granularity = dateRange === '7d' ? 'day' :
-                          dateRange === '30d' ? 'day' :
-                          dateRange === '90d' ? 'week' : 'month'
+        const granularity =
+          dateRange === "7d"
+            ? "day"
+            : dateRange === "30d"
+              ? "day"
+              : dateRange === "90d"
+                ? "week"
+                : "month";
 
         const result = await getTaskTimelineData({
           dateRange,
@@ -52,65 +69,65 @@ export function TaskTimelineChart({ boardId, className }: TaskTimelineChartProps
           granularity,
           includeCompleted: true,
           includeCreated: true,
-        })
+        });
 
         if (result.error) {
-          setError(result.error)
+          setError(result.error);
         } else if (result.data) {
-          setData(result.data)
+          setData(result.data);
         }
       } catch (err) {
-        console.error('Failed to fetch task timeline data:', err)
-        setError('Failed to load chart data')
+        console.error("Failed to fetch task timeline data:", err);
+        setError("Failed to load chart data");
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
     }
 
-    fetchData()
-  }, [dateRange, boardId])
+    fetchData();
+  }, [dateRange, boardId]);
 
   const getTrendIcon = (trend: number) => {
-    if (trend > 0) return <TrendingUp className="h-4 w-4 text-green-600" />
-    if (trend < 0) return <TrendingDown className="h-4 w-4 text-red-600" />
-    return <Minus className="h-4 w-4 text-gray-400" />
-  }
+    if (trend > 0) return <TrendingUp className="h-4 w-4 text-green-600" />;
+    if (trend < 0) return <TrendingDown className="h-4 w-4 text-red-600" />;
+    return <Minus className="h-4 w-4 text-gray-400" />;
+  };
 
   const getTrendColor = (trend: number) => {
-    if (trend > 0) return "text-green-600"
-    if (trend < 0) return "text-red-600"
-    return "text-gray-400"
-  }
+    if (trend > 0) return "text-green-600";
+    if (trend < 0) return "text-red-600";
+    return "text-gray-400";
+  };
 
   const formatDate = (dateStr: string) => {
-    if (dateStr.includes('Week of')) {
-      return dateStr.replace('Week of ', '')
+    if (dateStr.includes("Week of")) {
+      return dateStr.replace("Week of ", "");
     }
-    if (dateRange === '1y') {
-      return dateStr
+    if (dateRange === "1y") {
+      return dateStr;
     }
-    const date = new Date(dateStr)
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    })
-  }
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+  };
 
   const renderChart = () => {
-    if (!data) return null
+    if (!data) return null;
 
-    const chartData = data.data.map(point => ({
+    const chartData = data.data.map((point) => ({
       ...point,
       dateFormatted: formatDate(point.date),
-    }))
+    }));
 
     const commonProps = {
       data: chartData,
       margin: { top: 10, right: 10, bottom: 0, left: 0 },
-    }
+    };
 
     switch (chartType) {
-      case 'area':
+      case "area":
         return (
           <AreaChart {...commonProps}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -136,16 +153,20 @@ export function TaskTimelineChart({ boardId, className }: TaskTimelineChartProps
                             {label}
                           </span>
                           {payload.map((entry, index) => (
-                            <span key={index} className="font-bold" style={{ color: entry.color }}>
+                            <span
+                              key={index}
+                              className="font-bold"
+                              style={{ color: entry.color }}
+                            >
                               {entry.name}: {entry.value}
                             </span>
                           ))}
                         </div>
                       </div>
                     </div>
-                  )
+                  );
                 }
-                return null
+                return null;
               }}
             />
             <Area
@@ -165,9 +186,9 @@ export function TaskTimelineChart({ boardId, className }: TaskTimelineChartProps
               fillOpacity={0.8}
             />
           </AreaChart>
-        )
+        );
 
-      case 'line':
+      case "line":
         return (
           <LineChart {...commonProps}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -193,16 +214,20 @@ export function TaskTimelineChart({ boardId, className }: TaskTimelineChartProps
                             {label}
                           </span>
                           {payload.map((entry, index) => (
-                            <span key={index} className="font-bold" style={{ color: entry.color }}>
+                            <span
+                              key={index}
+                              className="font-bold"
+                              style={{ color: entry.color }}
+                            >
                               {entry.name}: {entry.value}
                             </span>
                           ))}
                         </div>
                       </div>
                     </div>
-                  )
+                  );
                 }
-                return null
+                return null;
               }}
             />
             <Line
@@ -220,9 +245,9 @@ export function TaskTimelineChart({ boardId, className }: TaskTimelineChartProps
               dot={{ r: 3 }}
             />
           </LineChart>
-        )
+        );
 
-      case 'bar':
+      case "bar":
         return (
           <BarChart {...commonProps}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -248,27 +273,31 @@ export function TaskTimelineChart({ boardId, className }: TaskTimelineChartProps
                             {label}
                           </span>
                           {payload.map((entry, index) => (
-                            <span key={index} className="font-bold" style={{ color: entry.color }}>
+                            <span
+                              key={index}
+                              className="font-bold"
+                              style={{ color: entry.color }}
+                            >
                               {entry.name}: {entry.value}
                             </span>
                           ))}
                         </div>
                       </div>
                     </div>
-                  )
+                  );
                 }
-                return null
+                return null;
               }}
             />
             <Bar dataKey="created" fill={data.chartConfig.created.color} />
             <Bar dataKey="completed" fill={data.chartConfig.completed.color} />
           </BarChart>
-        )
+        );
 
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   if (error) {
     return (
@@ -283,7 +312,7 @@ export function TaskTimelineChart({ boardId, className }: TaskTimelineChartProps
           <div className="text-sm text-red-600">{error}</div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -299,7 +328,9 @@ export function TaskTimelineChart({ boardId, className }: TaskTimelineChartProps
             <ToggleGroup
               type="single"
               value={chartType}
-              onValueChange={(value) => value && setChartType(value as ChartType)}
+              onValueChange={(value) =>
+                value && setChartType(value as ChartType)
+              }
               size="sm"
             >
               <ToggleGroupItem value="area" aria-label="Area chart">
@@ -351,9 +382,13 @@ export function TaskTimelineChart({ boardId, className }: TaskTimelineChartProps
                 <Badge variant="secondary">
                   Created: {data.summary.totalCreated}
                 </Badge>
-                <div className={`flex items-center gap-1 ${getTrendColor(data.summary.trends.createdTrend)}`}>
+                <div
+                  className={`flex items-center gap-1 ${getTrendColor(data.summary.trends.createdTrend)}`}
+                >
                   {getTrendIcon(data.summary.trends.createdTrend)}
-                  <span className="text-xs">{Math.abs(data.summary.trends.createdTrend).toFixed(1)}%</span>
+                  <span className="text-xs">
+                    {Math.abs(data.summary.trends.createdTrend).toFixed(1)}%
+                  </span>
                 </div>
               </div>
 
@@ -361,9 +396,13 @@ export function TaskTimelineChart({ boardId, className }: TaskTimelineChartProps
                 <Badge variant="outline">
                   Completed: {data.summary.totalCompleted}
                 </Badge>
-                <div className={`flex items-center gap-1 ${getTrendColor(data.summary.trends.completedTrend)}`}>
+                <div
+                  className={`flex items-center gap-1 ${getTrendColor(data.summary.trends.completedTrend)}`}
+                >
                   {getTrendIcon(data.summary.trends.completedTrend)}
-                  <span className="text-xs">{Math.abs(data.summary.trends.completedTrend).toFixed(1)}%</span>
+                  <span className="text-xs">
+                    {Math.abs(data.summary.trends.completedTrend).toFixed(1)}%
+                  </span>
                 </div>
               </div>
 
@@ -400,5 +439,5 @@ export function TaskTimelineChart({ boardId, className }: TaskTimelineChartProps
         ) : null}
       </CardContent>
     </Card>
-  )
+  );
 }

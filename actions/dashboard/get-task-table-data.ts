@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import db from "@/lib/db";
-import { z } from 'zod/v3';
+import { z } from "zod/v3";
 
 const TaskTableFiltersSchema = z.object({
   page: z.number().min(1).default(1),
@@ -84,7 +84,7 @@ export type TaskTableData = {
 };
 
 export async function getTaskTableData(
-  input?: Partial<z.infer<typeof TaskTableFiltersSchema>>
+  input?: Partial<z.infer<typeof TaskTableFiltersSchema>>,
 ): Promise<{ data?: TaskTableData; error?: string }> {
   try {
     const session = await auth();
@@ -164,7 +164,7 @@ export async function getTaskTableData(
           const startOfDay = new Date(
             now.getFullYear(),
             now.getMonth(),
-            now.getDate()
+            now.getDate(),
           );
           const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
           where.dueDate = { gte: startOfDay, lt: endOfDay };
@@ -183,7 +183,7 @@ export async function getTaskTableData(
           break;
         case "month":
           const monthFromNow = new Date(
-            now.getTime() + 30 * 24 * 60 * 60 * 1000
+            now.getTime() + 30 * 24 * 60 * 60 * 1000,
           );
           where.dueDate = { gte: now, lte: monthFromNow };
           // Apply status filter for other due date filters
@@ -351,7 +351,7 @@ export async function getTaskTableData(
         ON_HOLD: 0,
         COMPLETED: 0,
         CANCELLED: 0,
-      }
+      },
     );
 
     // Transform priority counts
@@ -366,7 +366,7 @@ export async function getTaskTableData(
         MEDIUM: 0,
         HIGH: 0,
         CRITICAL: 0,
-      }
+      },
     );
 
     const result: TaskTableData = {

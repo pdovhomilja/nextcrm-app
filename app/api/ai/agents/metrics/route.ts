@@ -13,7 +13,7 @@ export async function GET() {
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Authentication required" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -22,7 +22,7 @@ export async function GET() {
     if (!activeCompanyId) {
       return NextResponse.json(
         { error: "No company context available" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -40,7 +40,7 @@ export async function GET() {
 
     // Get health summary
     const healthySystems = mcpStatus.filter(
-      (s) => s.status === "healthy"
+      (s) => s.status === "healthy",
     ).length;
     const systemHealth = healthySystems / Math.max(mcpStatus.length, 1);
 
@@ -65,7 +65,7 @@ export async function GET() {
             Math.round(
               ((Date.now() - server.lastHealthCheck.getTime()) /
                 (1000 * 60 * 60)) *
-                100
+                100,
             ) / 100,
         })),
         insights: {
@@ -75,7 +75,7 @@ export async function GET() {
           systemRecommendations: generateSystemRecommendations(
             performanceMetrics,
             mcpStatus,
-            systemHealth
+            systemHealth,
           ),
         },
       },
@@ -91,7 +91,7 @@ export async function GET() {
 
     return NextResponse.json(
       { error: "Failed to get agent metrics" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -106,7 +106,7 @@ export async function POST() {
     if (!session?.user) {
       return NextResponse.json(
         { error: "Authentication required" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -137,7 +137,7 @@ export async function POST() {
 
     return NextResponse.json(
       { error: "Failed to reset metrics" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -156,14 +156,14 @@ interface McpServerStatus {
 function generateSystemRecommendations(
   performanceMetrics: Record<string, unknown>,
   mcpStatus: McpServerStatus[],
-  systemHealth: number
+  systemHealth: number,
 ): string[] {
   const recommendations: string[] = [];
 
   // Check system health
   if (systemHealth < 0.8) {
     recommendations.push(
-      "System health below 80% - check MCP server connections"
+      "System health below 80% - check MCP server connections",
     );
   }
 
@@ -171,7 +171,7 @@ function generateSystemRecommendations(
   const unhealthyServers = mcpStatus.filter((s) => s.status !== "healthy");
   if (unhealthyServers.length > 0) {
     recommendations.push(
-      `${unhealthyServers.length} MCP servers need attention: ${unhealthyServers.map((s) => s.name).join(", ")}`
+      `${unhealthyServers.length} MCP servers need attention: ${unhealthyServers.map((s) => s.name).join(", ")}`,
     );
   }
 
@@ -186,7 +186,7 @@ function generateSystemRecommendations(
 
   // Add generic recommendation about metrics
   recommendations.push(
-    "Performance metrics system is being upgraded - detailed insights coming soon"
+    "Performance metrics system is being upgraded - detailed insights coming soon",
   );
 
   return recommendations.length > 0

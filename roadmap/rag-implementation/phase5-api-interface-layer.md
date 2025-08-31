@@ -1,9 +1,11 @@
 # Phase 5: API & Interface Layer
 
 ## Overview
+
 This phase creates the user-facing API endpoints and React components that provide seamless access to the AI-powered project management capabilities. It integrates MCP servers, RAG processing, and AI agents with modern UI patterns using Vercel AI SDK React hooks.
 
 ## Prerequisites
+
 - Completed Phase 1-4: Full AI infrastructure operational
 - MCP servers running and healthy
 - AI agents initialized and functional
@@ -17,12 +19,14 @@ This phase creates the user-facing API endpoints and React components that provi
 **API Token Usage**: Medium
 
 #### Tasks:
+
 - [ ] Create streaming chat API with MCP integration
 - [ ] Implement suggestions API with agent orchestration
 - [ ] Add real-time analysis API with streaming
 - [ ] Create agent management endpoints
 
 #### Streaming Chat API:
+
 Create `/app/api/ai/chat/route.ts`:
 
 ```typescript
@@ -40,13 +44,13 @@ export async function POST(request: NextRequest) {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    const { 
-      messages, 
-      boardId, 
-      taskId, 
-      agentType, 
+    const {
+      messages,
+      boardId,
+      taskId,
+      agentType,
       useRAG = true,
-      multiAgent = false 
+      multiAgent = false,
     } = await request.json();
 
     const lastMessage = messages[messages.length - 1];
@@ -73,18 +77,21 @@ export async function POST(request: NextRequest) {
         multiAgentMode: multiAgent,
       };
 
-      const agentResponse = await agentOrchestrator.orchestrate(orchestrationRequest);
-      
+      const agentResponse =
+        await agentOrchestrator.orchestrate(orchestrationRequest);
+
       systemPrompt = `You are an intelligent project management assistant powered by specialized AI agents.
 
-Agent Analysis: ${agentResponse.agentResponses.map(r => 
-  `${r.agentRole}: ${r.response} (confidence: ${r.confidence})`
-).join('\n')}
+Agent Analysis: ${agentResponse.agentResponses
+        .map(
+          (r) => `${r.agentRole}: ${r.response} (confidence: ${r.confidence})`,
+        )
+        .join("\n")}
 
 Based on the agent insights above, provide a comprehensive response to the user's query.`;
 
-      contextInfo = agentResponse.coordinatedInsights || agentResponse.primaryResponse;
-
+      contextInfo =
+        agentResponse.coordinatedInsights || agentResponse.primaryResponse;
     } else if (useRAG) {
       // Use RAG processing
       const ragQuery = {
@@ -102,14 +109,16 @@ Based on the agent insights above, provide a comprehensive response to the user'
 Context Summary: ${ragResponse.contextSummary}
 
 Relevant Information:
-${ragResponse.sources.map(source => 
-  `- ${source.title} (relevance: ${source.relevance}) from ${source.boardName}`
-).join('\n')}
+${ragResponse.sources
+  .map(
+    (source) =>
+      `- ${source.title} (relevance: ${source.relevance}) from ${source.boardName}`,
+  )
+  .join("\n")}
 
 Based on the context above, provide helpful responses to project management queries.`;
 
       contextInfo = ragResponse.contextSummary;
-
     } else {
       // Direct chat without special context
       systemPrompt = `You are a helpful project management assistant. You help users with task management, project planning, and team coordination.
@@ -125,9 +134,9 @@ Provide clear, actionable advice based on project management best practices.`;
         ...messages.slice(0, -1), // Previous conversation
         {
           role: "user",
-          content: contextInfo ? 
-            `Context: ${contextInfo}\n\nQuery: ${userQuery}` : 
-            userQuery,
+          content: contextInfo
+            ? `Context: ${contextInfo}\n\nQuery: ${userQuery}`
+            : userQuery,
         },
       ],
       temperature: 0.7,
@@ -135,18 +144,18 @@ Provide clear, actionable advice based on project management best practices.`;
     });
 
     return result.toAIStreamResponse();
-
   } catch (error) {
     console.error("Chat API error:", error);
-    return new Response(
-      JSON.stringify({ error: "Internal server error" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
 ```
 
 #### Suggestions API:
+
 Create `/app/api/ai/suggest/route.ts`:
 
 ```typescript
@@ -158,24 +167,34 @@ import { z } from "zod";
 import { NextRequest } from "next/server";
 
 const suggestionSchema = z.object({
-  suggestions: z.array(
-    z.object({
-      id: z.string(),
-      type: z.enum(["task", "assignment", "priority", "deadline", "optimization"]),
-      title: z.string(),
-      description: z.string(),
-      reasoning: z.string(),
-      confidence: z.number().min(0).max(1),
-      impact: z.enum(["low", "medium", "high"]),
-      actionable: z.boolean(),
-      metadata: z.object({
-        boardId: z.string().optional(),
-        taskId: z.string().optional(),
-        userId: z.string().optional(),
-        estimatedTime: z.string().optional(),
-      }).optional(),
-    })
-  ).max(5),
+  suggestions: z
+    .array(
+      z.object({
+        id: z.string(),
+        type: z.enum([
+          "task",
+          "assignment",
+          "priority",
+          "deadline",
+          "optimization",
+        ]),
+        title: z.string(),
+        description: z.string(),
+        reasoning: z.string(),
+        confidence: z.number().min(0).max(1),
+        impact: z.enum(["low", "medium", "high"]),
+        actionable: z.boolean(),
+        metadata: z
+          .object({
+            boardId: z.string().optional(),
+            taskId: z.string().optional(),
+            userId: z.string().optional(),
+            estimatedTime: z.string().optional(),
+          })
+          .optional(),
+      }),
+    )
+    .max(5),
   summary: z.string(),
   contextAnalysis: z.object({
     boardHealth: z.number().min(0).max(100).optional(),
@@ -191,11 +210,11 @@ export async function POST(request: NextRequest) {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    const { 
-      boardId, 
+    const {
+      boardId,
       taskId,
       suggestionType = "general",
-      context: userContext 
+      context: userContext,
     } = await request.json();
 
     const agentContext = {
@@ -207,7 +226,7 @@ export async function POST(request: NextRequest) {
 
     // Use appropriate agent based on suggestion type
     let agentType: "analyzer" | "recommender" | "tracker" | "optimizer";
-    
+
     switch (suggestionType) {
       case "optimization":
         agentType = "optimizer";
@@ -224,12 +243,12 @@ export async function POST(request: NextRequest) {
 
     // Get agent-powered suggestions
     const agent = await AgentFactory.getAgent(agentType);
-    
+
     let agentSuggestions = "";
     try {
       const agentResponse = await agent.processQuery(
         `Generate actionable suggestions for ${suggestionType} improvement`,
-        agentContext
+        agentContext,
       );
       agentSuggestions = agentResponse.response;
     } catch (error) {
@@ -265,12 +284,11 @@ Focus on practical, implementable suggestions with clear reasoning.`,
         taskId,
       },
     });
-
   } catch (error) {
     console.error("Suggestions API error:", error);
     return Response.json(
       { success: false, error: "Failed to generate suggestions" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -288,18 +306,21 @@ export async function GET(request: NextRequest) {
     // Get quick suggestions for the user's current context
     const quickSuggestions = await generateObject({
       model: openai("gpt-4-turbo"),
-      system: "Generate quick project management suggestions for the user's current context.",
+      system:
+        "Generate quick project management suggestions for the user's current context.",
       prompt: `Generate 3 quick suggestions for project management improvement:
 ${boardId ? `Board context: ${boardId}` : "General context"}
 User: ${session.user.name || session.user.email}`,
       schema: z.object({
-        suggestions: z.array(
-          z.object({
-            title: z.string(),
-            description: z.string(),
-            type: z.enum(["task", "priority", "organization"]),
-          })
-        ).length(3),
+        suggestions: z
+          .array(
+            z.object({
+              title: z.string(),
+              description: z.string(),
+              type: z.enum(["task", "priority", "organization"]),
+            }),
+          )
+          .length(3),
       }),
       temperature: 0.7,
     });
@@ -308,18 +329,18 @@ User: ${session.user.name || session.user.email}`,
       success: true,
       data: quickSuggestions.object,
     });
-
   } catch (error) {
     console.error("Quick suggestions error:", error);
     return Response.json(
       { success: false, error: "Failed to get suggestions" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 ```
 
 #### Real-time Analysis API:
+
 Create `/app/api/ai/analyze/route.ts`:
 
 ```typescript
@@ -337,16 +358,24 @@ const analysisSchema = z.object({
     status: z.enum(["excellent", "good", "fair", "poor", "critical"]),
     lastAnalyzed: z.string(),
   }),
-  insights: z.array(
-    z.object({
-      category: z.enum(["performance", "workload", "timeline", "quality", "resources"]),
-      title: z.string(),
-      finding: z.string(),
-      severity: z.enum(["info", "low", "medium", "high", "critical"]),
-      recommendation: z.string(),
-      confidence: z.number().min(0).max(1),
-    })
-  ).max(8),
+  insights: z
+    .array(
+      z.object({
+        category: z.enum([
+          "performance",
+          "workload",
+          "timeline",
+          "quality",
+          "resources",
+        ]),
+        title: z.string(),
+        finding: z.string(),
+        severity: z.enum(["info", "low", "medium", "high", "critical"]),
+        recommendation: z.string(),
+        confidence: z.number().min(0).max(1),
+      }),
+    )
+    .max(8),
   metrics: z.object({
     completionRate: z.number().min(0).max(1),
     averageTaskDuration: z.number(),
@@ -355,22 +384,26 @@ const analysisSchema = z.object({
     upcomingDeadlines: z.number(),
     overdueTasks: z.number(),
   }),
-  trends: z.array(
-    z.object({
-      metric: z.string(),
-      direction: z.enum(["improving", "stable", "declining"]),
-      change: z.number(),
-      timeframe: z.string(),
-    })
-  ).max(5),
-  recommendations: z.array(
-    z.object({
-      priority: z.enum(["low", "medium", "high", "critical"]),
-      action: z.string(),
-      reasoning: z.string(),
-      expectedImpact: z.string(),
-    })
-  ).max(6),
+  trends: z
+    .array(
+      z.object({
+        metric: z.string(),
+        direction: z.enum(["improving", "stable", "declining"]),
+        change: z.number(),
+        timeframe: z.string(),
+      }),
+    )
+    .max(5),
+  recommendations: z
+    .array(
+      z.object({
+        priority: z.enum(["low", "medium", "high", "critical"]),
+        action: z.string(),
+        reasoning: z.string(),
+        expectedImpact: z.string(),
+      }),
+    )
+    .max(6),
 });
 
 export async function POST(request: NextRequest) {
@@ -380,10 +413,10 @@ export async function POST(request: NextRequest) {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    const { 
-      boardId, 
+    const {
+      boardId,
       analysisType = "comprehensive",
-      timeRange = "month" 
+      timeRange = "month",
     } = await request.json();
 
     const agentContext = {
@@ -394,7 +427,7 @@ export async function POST(request: NextRequest) {
 
     // Get analysis from specialized agent
     const analyzer = await AgentFactory.getAgent("analyzer");
-    
+
     // Stream the analysis as it's generated
     const result = await streamObject({
       model: openai("gpt-4-turbo"),
@@ -422,13 +455,12 @@ Focus on data-driven insights with specific metrics where possible.`,
     });
 
     return result.toTextStreamResponse();
-
   } catch (error) {
     console.error("Analysis API error:", error);
-    return new Response(
-      JSON.stringify({ error: "Analysis failed" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: "Analysis failed" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
 
@@ -444,7 +476,7 @@ export async function GET(request: NextRequest) {
 
     // Get quick analysis summary
     const analyzer = await AgentFactory.getAgent("analyzer");
-    
+
     const quickAnalysis = {
       healthScore: 75, // This would come from actual analysis
       status: "good" as const,
@@ -453,7 +485,8 @@ export async function GET(request: NextRequest) {
         overdueTasks: 3,
         teamEfficiency: 0.82,
       },
-      topInsight: "Team velocity is improving but there are 3 overdue high-priority tasks requiring attention.",
+      topInsight:
+        "Team velocity is improving but there are 3 overdue high-priority tasks requiring attention.",
       lastUpdated: new Date().toISOString(),
     };
 
@@ -461,12 +494,11 @@ export async function GET(request: NextRequest) {
       success: true,
       data: quickAnalysis,
     });
-
   } catch (error) {
     console.error("Quick analysis error:", error);
     return Response.json(
       { success: false, error: "Analysis unavailable" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -478,12 +510,14 @@ export async function GET(request: NextRequest) {
 **API Token Usage**: Low-Medium
 
 #### Tasks:
+
 - [ ] Create AI chat component with streaming
 - [ ] Build smart suggestions widget
 - [ ] Implement real-time project insights panel
 - [ ] Add AI-powered task creation form
 
 #### AI Chat Component:
+
 Create `/components/ai/ai-assistant.tsx`:
 
 ```typescript
@@ -496,11 +530,11 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { 
-  MessageCircle, 
-  Send, 
-  Loader2, 
-  Bot, 
+import {
+  MessageCircle,
+  Send,
+  Loader2,
+  Bot,
   User,
   Settings,
   Minimize2,
@@ -514,11 +548,11 @@ interface AIAssistantProps {
   className?: string;
 }
 
-export function AIAssistant({ 
-  boardId, 
-  taskId, 
+export function AIAssistant({
+  boardId,
+  taskId,
   initialMode = 'chat',
-  className 
+  className
 }: AIAssistantProps) {
   const [mode, setMode] = useState<'single' | 'multi'>('single');
   const [agentType, setAgentType] = useState<'analyzer' | 'recommender' | 'tracker' | 'optimizer'>('recommender');
@@ -542,7 +576,7 @@ export function AIAssistant({
         content: `Hello! I'm your AI project management assistant. I can help you with:
 
 🔍 **Project Analysis** - Health checks, bottleneck identification
-📋 **Task Recommendations** - Prioritization and assignment suggestions  
+📋 **Task Recommendations** - Prioritization and assignment suggestions
 📊 **Progress Tracking** - Milestone monitoring and forecasts
 ⚡ **Resource Optimization** - Workload balancing and efficiency
 
@@ -740,6 +774,7 @@ ${boardId ? `I can see you're working on a specific board. ` : ''}${taskId ? `I 
 ```
 
 #### Smart Suggestions Component:
+
 Create `/components/ai/smart-suggestions.tsx`:
 
 ```typescript
@@ -750,9 +785,9 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Lightbulb, 
-  RefreshCw, 
+import {
+  Lightbulb,
+  RefreshCw,
   ChevronRight,
   Clock,
   User,
@@ -1005,12 +1040,14 @@ export function SmartSuggestions({
 **API Token Usage**: Medium
 
 #### Tasks:
+
 - [ ] Create real-time insights panel with streaming
 - [ ] Implement interactive metrics dashboard
 - [ ] Add trend visualization components
 - [ ] Create actionable recommendations widget
 
 #### Project Insights Component:
+
 Create `/components/ai/project-insights.tsx`:
 
 ```typescript
@@ -1376,7 +1413,7 @@ export function ProjectInsights({
             const TrendIcon = trendIcons[trend.direction];
             const trendColor = trend.direction === 'improving' ? 'text-green-600' :
                               trend.direction === 'declining' ? 'text-red-600' : 'text-gray-600';
-            
+
             return (
               <Card key={index}>
                 <CardContent className="pt-6">
@@ -1459,12 +1496,14 @@ export function ProjectInsights({
 **API Token Usage**: Low
 
 #### Tasks:
+
 - [ ] Create component integration examples
 - [ ] Add error boundary handling
 - [ ] Implement loading states and fallbacks
 - [ ] Create usage documentation
 
 #### Integration Example:
+
 Create `/app/(app)/[cid]/tasks/[boardId]/page.tsx` enhancement:
 
 ```typescript
@@ -1480,17 +1519,17 @@ export default function BoardPage({ params }: { params: { cid: string; boardId: 
   return (
     <div className="container mx-auto p-6">
       {/* Existing board content */}
-      
+
       {/* AI Enhancement Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
         <div className="lg:col-span-2">
-          <ProjectInsights 
+          <ProjectInsights
             boardId={params.boardId}
             analysisType="comprehensive"
           />
         </div>
         <div>
-          <SmartSuggestions 
+          <SmartSuggestions
             boardId={params.boardId}
             suggestionType="general"
             autoRefresh={true}
@@ -1499,7 +1538,7 @@ export default function BoardPage({ params }: { params: { cid: string; boardId: 
       </div>
 
       {/* Floating AI Assistant */}
-      <AIAssistant 
+      <AIAssistant
         boardId={params.boardId}
         initialMode="chat"
       />
@@ -1522,6 +1561,7 @@ export default function BoardPage({ params }: { params: { cid: string; boardId: 
 ## Next Steps
 
 After completing Phase 5:
+
 1. Proceed to Phase 6: Advanced Features & Production
 2. Conduct user testing with AI-enhanced interface
 3. Optimize API response times and component performance
@@ -1530,12 +1570,14 @@ After completing Phase 5:
 ## Troubleshooting
 
 ### Common Issues:
+
 - **Streaming interruption**: Check network stability and API timeout settings
 - **Component state sync**: Ensure proper cleanup of AI hooks
 - **Performance degradation**: Monitor component re-renders and API calls
 - **UI layout issues**: Test responsive behavior with dynamic content
 
 ### Debug Commands:
+
 ```bash
 # Test API endpoints directly
 curl -X POST http://localhost:3000/api/ai/chat \

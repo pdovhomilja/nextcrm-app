@@ -1,15 +1,15 @@
 // in app/(app)/[cid]/tasks/_components/refinement-chat-interface.tsx
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Sparkles, Send } from 'lucide-react';
+import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Sparkles, Send } from "lucide-react";
 
 interface Message {
   id: string;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
 }
 
@@ -20,7 +20,7 @@ interface WizardProps {
 }
 
 export function RefinementChatInterface({ wizard }: { wizard: WizardProps }) {
-  const [currentMessage, setCurrentMessage] = useState('');
+  const [currentMessage, setCurrentMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -34,12 +34,12 @@ export function RefinementChatInterface({ wizard }: { wizard: WizardProps }) {
   const handleSend = () => {
     if (currentMessage.trim() && !wizard.isPending) {
       wizard.handleSendMessage(currentMessage);
-      setCurrentMessage('');
+      setCurrentMessage("");
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
@@ -50,13 +50,20 @@ export function RefinementChatInterface({ wizard }: { wizard: WizardProps }) {
       <ScrollArea className="flex-1 p-4 border rounded-md mb-4 min-h-[350px] max-h-[55vh]">
         <div className="space-y-4">
           {wizard.messages.map((msg) => (
-            <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[85%] p-3 rounded-lg shadow-sm ${
-                msg.role === 'user' 
-                  ? 'bg-blue-500 text-white ml-2' 
-                  : 'bg-gray-100 text-gray-900 mr-2'
-              }`}>
-                <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+            <div
+              key={msg.id}
+              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+            >
+              <div
+                className={`max-w-[85%] p-3 rounded-lg shadow-sm ${
+                  msg.role === "user"
+                    ? "bg-blue-500 text-white ml-2"
+                    : "bg-gray-100 text-gray-900 mr-2"
+                }`}
+              >
+                <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                  {msg.content}
+                </p>
               </div>
             </div>
           ))}
@@ -83,7 +90,10 @@ export function RefinementChatInterface({ wizard }: { wizard: WizardProps }) {
             disabled={wizard.isPending}
             className="flex-1"
           />
-          <Button onClick={handleSend} disabled={wizard.isPending || !currentMessage.trim()}>
+          <Button
+            onClick={handleSend}
+            disabled={wizard.isPending || !currentMessage.trim()}
+          >
             <Send className="h-4 w-4" />
           </Button>
         </div>

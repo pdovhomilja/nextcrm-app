@@ -34,7 +34,7 @@ export function TaskTableFilters({
       shallow: false,
       startTransition,
       clearOnDefault: true,
-    })
+    }),
   );
 
   const [status, setStatus] = useQueryState(
@@ -43,7 +43,7 @@ export function TaskTableFilters({
       shallow: false,
       startTransition,
       clearOnDefault: true,
-    })
+    }),
   );
 
   const [priority, setPriority] = useQueryState(
@@ -52,7 +52,7 @@ export function TaskTableFilters({
       shallow: false,
       startTransition,
       clearOnDefault: true,
-    })
+    }),
   );
 
   const [dueDate, setDueDate] = useQueryState(
@@ -61,7 +61,7 @@ export function TaskTableFilters({
       shallow: false,
       startTransition,
       clearOnDefault: true,
-    })
+    }),
   );
 
   // Pagination
@@ -70,7 +70,7 @@ export function TaskTableFilters({
     parseAsInteger.withDefault(1).withOptions({
       shallow: false,
       startTransition,
-    })
+    }),
   );
 
   const [pageSize, setPageSize] = useQueryState(
@@ -78,7 +78,7 @@ export function TaskTableFilters({
     parseAsInteger.withDefault(10).withOptions({
       shallow: false,
       startTransition,
-    })
+    }),
   );
 
   const handleSearch = (value: string) => {
@@ -247,7 +247,7 @@ export function useSortHandler() {
     parseAsString.withDefault("updatedAt").withOptions({
       shallow: false,
       startTransition,
-    })
+    }),
   );
 
   const [sortOrder, setSortOrder] = useQueryState(
@@ -255,7 +255,7 @@ export function useSortHandler() {
     parseAsString.withDefault("desc").withOptions({
       shallow: false,
       startTransition,
-    })
+    }),
   );
 
   const [page, setPage] = useQueryState(
@@ -263,7 +263,7 @@ export function useSortHandler() {
     parseAsInteger.withDefault(1).withOptions({
       shallow: false,
       startTransition,
-    })
+    }),
   );
 
   const handleSort = (
@@ -273,7 +273,7 @@ export function useSortHandler() {
       | "priority"
       | "dueDate"
       | "createdAt"
-      | "updatedAt"
+      | "updatedAt",
   ) => {
     if (sortBy === column) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");

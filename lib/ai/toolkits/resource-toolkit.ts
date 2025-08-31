@@ -22,8 +22,8 @@ export const getResourceToolkit = (context: AgentContext) => ({
     }) => {
       console.log(
         `Optimizing resources for teams: ${teamIds.join(
-          ", "
-        )} with type: ${optimizationType}`
+          ", ",
+        )} with type: ${optimizationType}`,
       );
       try {
         // Step 1: Gather data.
@@ -31,12 +31,12 @@ export const getResourceToolkit = (context: AgentContext) => ({
           "tasks",
           "search_tasks",
           { assigneeIds: teamIds, ...context },
-          context.userId
+          context.userId,
         );
 
         if (teamData.error) {
           throw new Error(
-            `Failed to gather team data. Error: ${teamData.error.message}`
+            `Failed to gather team data. Error: ${teamData.error.message}`,
           );
         }
 
@@ -65,9 +65,9 @@ Provide specific resource optimization recommendations.`,
                     fromUser: z.string(),
                     toUser: z.string(),
                     reasoningText: z.string(),
-                  })
+                  }),
                 ),
-              })
+              }),
             ),
             teamMetrics: z.object({
               totalCapacity: z.number(),

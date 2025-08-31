@@ -33,7 +33,7 @@ export function CompanySwitcher() {
   const [newCompanyName, setNewCompanyName] = useState("");
 
   const activeCompany = memberships.find(
-    (m) => m.companyId === activeCompanyId
+    (m) => m.companyId === activeCompanyId,
   );
 
   const handleSwitchCompany = async (companyId: string) => {
@@ -129,7 +129,7 @@ export function CompanySwitcher() {
                         variant="secondary"
                         className={cn(
                           "text-xs",
-                          getRoleBadgeColor(membership.role)
+                          getRoleBadgeColor(membership.role),
                         )}
                       >
                         {membership.role}
@@ -192,7 +192,7 @@ export function CompanySwitcherCompact() {
   const [open, setOpen] = useState(false);
 
   const activeCompany = memberships.find(
-    (m) => m.companyId === activeCompanyId
+    (m) => m.companyId === activeCompanyId,
   );
 
   if (!activeCompany) {

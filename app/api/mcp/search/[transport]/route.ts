@@ -29,7 +29,7 @@ const handler = createMcpHandler(
                   "COMPLETED",
                   "CANCELLED",
                   "ON_HOLD",
-                ])
+                ]),
               )
               .optional(),
             assigneeIds: z.array(z.string()).optional(),
@@ -88,12 +88,12 @@ const handler = createMcpHandler(
                   message: `Found ${results.length} semantically similar tasks`,
                 },
                 null,
-                2
+                2,
               ),
             },
           ],
         };
-      }
+      },
     );
 
     // Hybrid search tool (combines vector + keyword search)
@@ -119,7 +119,7 @@ const handler = createMcpHandler(
                   "COMPLETED",
                   "CANCELLED",
                   "ON_HOLD",
-                ])
+                ]),
               )
               .optional(),
           })
@@ -157,7 +157,7 @@ const handler = createMcpHandler(
         const results = await vectorSearchService.hybridSearch(
           searchQuery,
           params.vectorWeight,
-          params.keywordWeight
+          params.keywordWeight,
         );
 
         return {
@@ -182,12 +182,12 @@ const handler = createMcpHandler(
                   message: `Found ${results.length} relevant tasks using hybrid search`,
                 },
                 null,
-                2
+                2,
               ),
             },
           ],
         };
-      }
+      },
     );
 
     // Get embedding status tool
@@ -255,7 +255,7 @@ const handler = createMcpHandler(
                     embeddingCoverage:
                       availableTasks > 0
                         ? ((taskEmbeddingCount / availableTasks) * 100).toFixed(
-                            1
+                            1,
                           ) + "%"
                         : "0%",
                   },
@@ -264,7 +264,7 @@ const handler = createMcpHandler(
                     embeddingModel:
                       process.env.EMBEDDING_MODEL || "text-embedding-ada-002",
                     dimensions: parseInt(
-                      process.env.EMBEDDING_DIMENSIONS || "1536"
+                      process.env.EMBEDDING_DIMENSIONS || "1536",
                     ),
                   },
                   status:
@@ -288,12 +288,12 @@ const handler = createMcpHandler(
                         ],
                 },
                 null,
-                2
+                2,
               ),
             },
           ],
         };
-      }
+      },
     );
 
     // Search boards tool
@@ -357,7 +357,7 @@ const handler = createMcpHandler(
                     sectionsCount: board.boardSections.length,
                     totalTasks: board.boardSections.reduce(
                       (sum, section) => sum + section._count.tasks,
-                      0
+                      0,
                     ),
                     sections: board.boardSections.map((section) => ({
                       id: section.id,
@@ -368,12 +368,12 @@ const handler = createMcpHandler(
                   resultCount: boards.length,
                 },
                 null,
-                2
+                2,
               ),
             },
           ],
         };
-      }
+      },
     );
 
     // Find similar tasks tool
@@ -394,12 +394,12 @@ const handler = createMcpHandler(
 
         const results = await vectorSearchService.findSimilarTasks(
           params.taskId,
-          params.limit
+          params.limit,
         );
 
         // Filter by threshold
         const filteredResults = results.filter(
-          (result) => result.similarity >= params.threshold
+          (result) => result.similarity >= params.threshold,
         );
 
         return {
@@ -420,12 +420,12 @@ const handler = createMcpHandler(
                   message: `Found ${filteredResults.length} similar tasks`,
                 },
                 null,
-                2
+                2,
               ),
             },
           ],
         };
-      }
+      },
     );
 
     // Vector search health check tool
@@ -460,12 +460,12 @@ const handler = createMcpHandler(
                       ],
                 },
                 null,
-                2
+                2,
               ),
             },
           ],
         };
-      }
+      },
     );
   },
   {
@@ -486,7 +486,7 @@ const handler = createMcpHandler(
     basePath: "",
     verboseLogs: process.env.MCP_VERBOSE_LOGS === "true",
     maxDuration: parseInt(process.env.MCP_MAX_DURATION || "800"),
-  }
+  },
 );
 
 export { handler as GET, handler as POST, handler as DELETE };

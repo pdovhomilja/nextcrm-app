@@ -201,7 +201,7 @@ const handler = createMcpHandler(
             },
           ],
         };
-      }
+      },
     );
   },
   {
@@ -215,7 +215,7 @@ const handler = createMcpHandler(
     basePath: "",
     verboseLogs: process.env.MCP_VERBOSE_LOGS === "true",
     maxDuration: parseInt(process.env.MCP_MAX_DURATION || "800"),
-  }
+  },
 );
 
 export { handler as GET, handler as POST, handler as DELETE };
@@ -316,12 +316,12 @@ const handler = createMcpHandler(
                   message: `Task "${task.title}" created successfully`,
                 },
                 null,
-                2
+                2,
               ),
             },
           ],
         };
-      }
+      },
     );
 
     // Search tasks tool
@@ -333,7 +333,7 @@ const handler = createMcpHandler(
         boardId: z.string().optional(),
         status: z
           .array(
-            z.enum(["NEW", "IN_PROGRESS", "COMPLETED", "CANCELLED", "ON_HOLD"])
+            z.enum(["NEW", "IN_PROGRESS", "COMPLETED", "CANCELLED", "ON_HOLD"]),
           )
           .optional(),
         priority: z
@@ -427,12 +427,12 @@ const handler = createMcpHandler(
                   },
                 },
                 null,
-                2
+                2,
               ),
             },
           ],
         };
-      }
+      },
     );
 
     // Update task tool
@@ -501,12 +501,12 @@ const handler = createMcpHandler(
                   message: `Task "${task.title}" updated successfully`,
                 },
                 null,
-                2
+                2,
               ),
             },
           ],
         };
-      }
+      },
     );
   },
   {
@@ -522,7 +522,7 @@ const handler = createMcpHandler(
     basePath: "",
     verboseLogs: process.env.MCP_VERBOSE_LOGS === "true",
     maxDuration: parseInt(process.env.MCP_MAX_DURATION || "800"),
-  }
+  },
 );
 
 export { handler as GET, handler as POST, handler as DELETE };
@@ -617,12 +617,12 @@ const handler = createMcpHandler(
                     "Search completed (using text-based search until embeddings are implemented)",
                 },
                 null,
-                2
+                2,
               ),
             },
           ],
         };
-      }
+      },
     );
 
     // Hybrid search tool (combines vector + keyword search)
@@ -648,7 +648,7 @@ const handler = createMcpHandler(
                   "COMPLETED",
                   "CANCELLED",
                   "ON_HOLD",
-                ])
+                ]),
               )
               .optional(),
           })
@@ -731,12 +731,12 @@ const handler = createMcpHandler(
                     "Hybrid search completed (vector component will be implemented in Phase 2)",
                 },
                 null,
-                2
+                2,
               ),
             },
           ],
         };
-      }
+      },
     );
 
     // Get embedding status tool
@@ -792,12 +792,12 @@ const handler = createMcpHandler(
                       : "No embeddings found. Run embedding generation first.",
                 },
                 null,
-                2
+                2,
               ),
             },
           ],
         };
-      }
+      },
     );
   },
   {
@@ -815,7 +815,7 @@ const handler = createMcpHandler(
     basePath: "",
     verboseLogs: process.env.MCP_VERBOSE_LOGS === "true",
     maxDuration: parseInt(process.env.MCP_MAX_DURATION || "800"),
-  }
+  },
 );
 
 export { handler as GET, handler as POST, handler as DELETE };
@@ -863,7 +863,7 @@ export async function GET() {
     const redis = await import("redis").then((r) =>
       r.createClient({
         url: process.env.REDIS_URL,
-      })
+      }),
     );
     await redis.connect();
     await redis.ping();
@@ -891,7 +891,7 @@ export async function GET() {
             id: 1,
             method: "tools/list",
           }),
-        }
+        },
       );
       healthChecks.mcpServers[endpoint.name] = response.ok;
     } catch (error) {
@@ -913,7 +913,7 @@ export async function GET() {
     },
     {
       status: allHealthy ? 200 : 503,
-    }
+    },
   );
 }
 ```

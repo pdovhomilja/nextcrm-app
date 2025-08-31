@@ -1,12 +1,25 @@
 // in app/(app)/[cid]/tasks/_components/initial-step-form.tsx
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sparkles } from 'lucide-react';
-import { UseFormReturn } from 'react-hook-form';
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Sparkles } from "lucide-react";
+import { UseFormReturn } from "react-hook-form";
 
 interface WizardProps {
   form: UseFormReturn<{ goal: string; role: string; language: string }>;
@@ -25,7 +38,10 @@ export function InitialStepForm({ wizard }: { wizard: WizardProps }) {
             <FormItem>
               <FormLabel>Your Project Goal</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Launch a new marketing campaign" {...field} />
+                <Input
+                  placeholder="e.g., Launch a new marketing campaign"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -44,10 +60,18 @@ export function InitialStepForm({ wizard }: { wizard: WizardProps }) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="Product Manager">Product Manager</SelectItem>
-                  <SelectItem value="Software Engineer">Software Engineer</SelectItem>
-                  <SelectItem value="Marketing Specialist">Marketing Specialist</SelectItem>
-                  <SelectItem value="Project Manager">Project Manager</SelectItem>
+                  <SelectItem value="Product Manager">
+                    Product Manager
+                  </SelectItem>
+                  <SelectItem value="Software Engineer">
+                    Software Engineer
+                  </SelectItem>
+                  <SelectItem value="Marketing Specialist">
+                    Marketing Specialist
+                  </SelectItem>
+                  <SelectItem value="Project Manager">
+                    Project Manager
+                  </SelectItem>
                   <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>
@@ -79,7 +103,7 @@ export function InitialStepForm({ wizard }: { wizard: WizardProps }) {
           )}
         />
         <Button type="submit" className="w-full" disabled={wizard.isPending}>
-          {wizard.isPending ? 'Thinking...' : 'Start Refinement'}
+          {wizard.isPending ? "Thinking..." : "Start Refinement"}
           <Sparkles className="ml-2 h-4 w-4" />
         </Button>
       </form>

@@ -50,7 +50,7 @@ export function AIAssistant({ boardId, taskId, className }: AIAssistantProps) {
 ${boardId ? `I can see you're working on a specific board. ` : ""}${
         taskId ? `I notice you have a task selected. ` : ""
       }How can I help you today?`,
-    [boardId, taskId]
+    [boardId, taskId],
   );
 
   // Temporary simplified state management until AI SDK is properly configured

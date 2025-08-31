@@ -9,7 +9,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function sendVerificationEmail(
   email: string,
-  name?: string
+  name?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // Generate verification token

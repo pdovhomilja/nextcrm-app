@@ -38,7 +38,7 @@ export class AgentOrchestrator {
     history: ModelMessage[],
     systemPromptOverride?: string,
     requiredToolkitsOverride?: string[],
-    contextOverride?: AgentContext
+    contextOverride?: AgentContext,
   ): Promise<OrchestrationResponse> {
     const startTime = Date.now();
     const context = contextOverride || { userId: "", companyId: "" }; // Use provided context or fallback to dummy
@@ -46,7 +46,11 @@ export class AgentOrchestrator {
     try {
       // 1. Classify the user's intent (or skip if toolkits are overridden)
       const intent = requiredToolkitsOverride
-        ? { requiredToolkits: requiredToolkitsOverride, complexity: "simple", domain: "general" } // Default values for complexity and domain
+        ? {
+            requiredToolkits: requiredToolkitsOverride,
+            complexity: "simple",
+            domain: "general",
+          } // Default values for complexity and domain
         : await classifyAndRouteQuery(query, history);
       console.log("Classified Intent:", intent);
 
@@ -64,11 +68,16 @@ export class AgentOrchestrator {
         `agent-for-${context.conversationId || "default"}`,
         intent.domain, // The agent's role is now the domain from the router
         requiredTools,
-        model
+        model,
       );
 
       // 5. Execute the query using the modernized agent core.
-      const result = await agent.processQuery(query, context, history, systemPromptOverride);
+      const result = await agent.processQuery(
+        query,
+        context,
+        history,
+        systemPromptOverride,
+      );
 
       console.log(`Orchestration completed in ${Date.now() - startTime}ms`);
 

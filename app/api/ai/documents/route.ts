@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { documentProcessor } from "@/lib/ai/document-processor";
 import { withAISecurity } from "@/lib/security/ai-security";
-import { z } from 'zod/v3';
+import { z } from "zod/v3";
 
 const uploadSchema = z.object({
   filename: z.string(),
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
       if (!session?.user) {
         return NextResponse.json(
           { error: "Authentication required" },
-          { status: 401 }
+          { status: 401 },
         );
       }
 
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       if (!file || !metadataJson) {
         return NextResponse.json(
           { error: "File and metadata are required" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       if (session.user.activeCompanyId !== metadata.companyId) {
         return NextResponse.json(
           { error: "Access denied to this company" },
-          { status: 403 }
+          { status: 403 },
         );
       }
 
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       if (!result.success) {
         return NextResponse.json(
           { error: "Document processing failed" },
-          { status: 500 }
+          { status: 500 },
         );
       }
 
@@ -79,13 +79,13 @@ export async function POST(request: NextRequest) {
       if (error instanceof z.ZodError) {
         return NextResponse.json(
           { error: "Invalid metadata", details: error.issues },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
       return NextResponse.json(
         { error: "Document processing failed" },
-        { status: 500 }
+        { status: 500 },
       );
     }
   });
@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
       if (!session?.user) {
         return NextResponse.json(
           { error: "Authentication required" },
-          { status: 401 }
+          { status: 401 },
         );
       }
 
@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
       if (!companyId) {
         return NextResponse.json(
           { error: "Company context required" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -123,14 +123,14 @@ export async function GET(request: NextRequest) {
           if (!query) {
             return NextResponse.json(
               { error: "Query parameter required" },
-              { status: 400 }
+              { status: 400 },
             );
           }
 
           const results = await documentProcessor.searchDocuments(
             query,
             companyId,
-            { boardId, taskId, limit }
+            { boardId, taskId, limit },
           );
 
           return NextResponse.json({ results });
@@ -144,7 +144,7 @@ export async function GET(request: NextRequest) {
         default:
           return NextResponse.json(
             { error: "Invalid action" },
-            { status: 400 }
+            { status: 400 },
           );
       }
     } catch (error) {

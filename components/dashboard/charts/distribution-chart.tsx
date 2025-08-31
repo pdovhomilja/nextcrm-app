@@ -1,11 +1,17 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Badge } from "@/components/ui/badge"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { PieChart } from "lucide-react"
+import { useEffect, useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { PieChart } from "lucide-react";
 import {
   PieChart as RechartsPieChart,
   Pie,
@@ -17,30 +23,38 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-} from "recharts"
-import { getDistributionData, type DistributionData } from "@/actions/dashboard/charts/get-distribution-data"
+} from "recharts";
+import {
+  getDistributionData,
+  type DistributionData,
+} from "@/actions/dashboard/charts/get-distribution-data";
 
 interface DistributionChartProps {
-  type: 'priority' | 'status' | 'board' | 'user'
-  title: string
-  boardId?: string
-  className?: string
+  type: "priority" | "status" | "board" | "user";
+  title: string;
+  boardId?: string;
+  className?: string;
 }
 
-type ChartType = 'pie' | 'donut' | 'bar'
-type DateRange = '7d' | '30d' | '90d' | 'all'
+type ChartType = "pie" | "donut" | "bar";
+type DateRange = "7d" | "30d" | "90d" | "all";
 
-export function DistributionChart({ type, title, boardId, className }: DistributionChartProps) {
-  const [data, setData] = useState<DistributionData | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [chartType, setChartType] = useState<ChartType>('donut')
-  const [dateRange, setDateRange] = useState<DateRange>('30d')
+export function DistributionChart({
+  type,
+  title,
+  boardId,
+  className,
+}: DistributionChartProps) {
+  const [data, setData] = useState<DistributionData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [chartType, setChartType] = useState<ChartType>("donut");
+  const [dateRange, setDateRange] = useState<DateRange>("30d");
 
   useEffect(() => {
     async function fetchData() {
-      setIsLoading(true)
-      setError(null)
+      setIsLoading(true);
+      setError(null);
 
       try {
         const result = await getDistributionData({
@@ -48,26 +62,26 @@ export function DistributionChart({ type, title, boardId, className }: Distribut
           dateRange,
           boardId,
           includeCompleted: true,
-        })
+        });
 
         if (result.error) {
-          setError(result.error)
+          setError(result.error);
         } else if (result.data) {
-          setData(result.data)
+          setData(result.data);
         }
       } catch (err) {
-        console.error('Failed to fetch distribution data:', err)
-        setError('Failed to load chart data')
+        console.error("Failed to fetch distribution data:", err);
+        setError("Failed to load chart data");
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
     }
 
-    fetchData()
-  }, [type, dateRange, boardId])
+    fetchData();
+  }, [type, dateRange, boardId]);
 
   const renderPieChart = (innerRadius = 0) => {
-    if (!data) return null
+    if (!data) return null;
 
     return (
       <RechartsPieChart>
@@ -87,7 +101,7 @@ export function DistributionChart({ type, title, boardId, className }: Distribut
         <Tooltip
           content={({ active, payload }) => {
             if (active && payload && payload.length) {
-              const data = payload[0].payload
+              const data = payload[0].payload;
               return (
                 <div className="rounded-lg border bg-background p-2 shadow-sm">
                   <div className="flex items-center gap-2">
@@ -101,20 +115,23 @@ export function DistributionChart({ type, title, boardId, className }: Distribut
                     {data.value} tasks ({data.percentage}%)
                   </div>
                 </div>
-              )
+              );
             }
-            return null
+            return null;
           }}
         />
       </RechartsPieChart>
-    )
-  }
+    );
+  };
 
   const renderBarChart = () => {
-    if (!data) return null
+    if (!data) return null;
 
     return (
-      <BarChart data={data.data} margin={{ top: 10, right: 10, bottom: 0, left: 0 }}>
+      <BarChart
+        data={data.data}
+        margin={{ top: 10, right: 10, bottom: 0, left: 0 }}
+      >
         <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
         <XAxis
           dataKey="name"
@@ -133,7 +150,7 @@ export function DistributionChart({ type, title, boardId, className }: Distribut
         <Tooltip
           content={({ active, payload, label }) => {
             if (active && payload && payload.length) {
-              const data = payload[0].payload
+              const data = payload[0].payload;
               return (
                 <div className="rounded-lg border bg-background p-2 shadow-sm">
                   <div className="font-medium">{label}</div>
@@ -141,9 +158,9 @@ export function DistributionChart({ type, title, boardId, className }: Distribut
                     {data.value} tasks ({data.percentage}%)
                   </div>
                 </div>
-              )
+              );
             }
-            return null
+            return null;
           }}
         />
         <Bar dataKey="value">
@@ -152,21 +169,21 @@ export function DistributionChart({ type, title, boardId, className }: Distribut
           ))}
         </Bar>
       </BarChart>
-    )
-  }
+    );
+  };
 
   const renderChart = () => {
     switch (chartType) {
-      case 'pie':
-        return renderPieChart(0)
-      case 'donut':
-        return renderPieChart(40)
-      case 'bar':
-        return renderBarChart()
+      case "pie":
+        return renderPieChart(0);
+      case "donut":
+        return renderPieChart(40);
+      case "bar":
+        return renderBarChart();
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   if (error) {
     return (
@@ -181,7 +198,7 @@ export function DistributionChart({ type, title, boardId, className }: Distribut
           <div className="text-sm text-red-600">{error}</div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -197,7 +214,9 @@ export function DistributionChart({ type, title, boardId, className }: Distribut
             <ToggleGroup
               type="single"
               value={chartType}
-              onValueChange={(value) => value && setChartType(value as ChartType)}
+              onValueChange={(value) =>
+                value && setChartType(value as ChartType)
+              }
               size="sm"
             >
               <ToggleGroupItem value="donut" aria-label="Donut chart">
@@ -214,9 +233,7 @@ export function DistributionChart({ type, title, boardId, className }: Distribut
         </div>
 
         <div className="flex items-center justify-between">
-          <CardDescription>
-            Distribution breakdown
-          </CardDescription>
+          <CardDescription>Distribution breakdown</CardDescription>
           {/* Date range toggle */}
           <ToggleGroup
             type="single"
@@ -245,11 +262,10 @@ export function DistributionChart({ type, title, boardId, className }: Distribut
           <div className="space-y-4">
             {/* Summary metrics */}
             <div className="flex flex-wrap gap-2 text-sm">
-              <Badge variant="secondary">
-                Total: {data.total}
-              </Badge>
+              <Badge variant="secondary">Total: {data.total}</Badge>
               <Badge variant="outline">
-                Most: {data.summary.mostCommon.name} ({data.summary.mostCommon.percentage}%)
+                Most: {data.summary.mostCommon.name} (
+                {data.summary.mostCommon.percentage}%)
               </Badge>
               <Badge variant="outline" className="capitalize">
                 {data.summary.distribution}
@@ -264,7 +280,7 @@ export function DistributionChart({ type, title, boardId, className }: Distribut
             </div>
 
             {/* Legend for pie/donut charts */}
-            {(chartType === 'pie' || chartType === 'donut') && (
+            {(chartType === "pie" || chartType === "donut") && (
               <div className="grid grid-cols-2 gap-2 text-sm">
                 {data.data.slice(0, 6).map((item, index) => (
                   <div key={index} className="flex items-center gap-2">
@@ -289,5 +305,5 @@ export function DistributionChart({ type, title, boardId, className }: Distribut
         ) : null}
       </CardContent>
     </Card>
-  )
+  );
 }

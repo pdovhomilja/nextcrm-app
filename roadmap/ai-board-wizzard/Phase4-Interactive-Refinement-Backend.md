@@ -3,6 +3,7 @@
 **Objective:** Create the server action to power the live, back-and-forth conversational goal refinement between the user and the AI.
 
 **Prerequisites:**
+
 - [Phase 1: Data Model and Core Generation Tool](Phase1-Data-Model-and-Generation-Tool.md) (for AI toolkit concepts)
 - [Phase 3: Conversational UI Implementation](Phase3-Conversational-UI.md) (for frontend context)
 
@@ -21,14 +22,19 @@ We need a way for the AI to signal that the conversation is over and it's ready 
 
     ```typescript
     // in lib/ai/toolkits/board-wizard-toolkit.ts
-    import { z } from 'zod';
+    import { z } from "zod";
     // ... other imports
 
     export const boardWizardToolkit = {
       proposeFinalBrief: {
-        description: 'Call this function when you have gathered enough information from the user to form a clear, actionable project brief. This signals the end of the conversation.',
+        description:
+          "Call this function when you have gathered enough information from the user to form a clear, actionable project brief. This signals the end of the conversation.",
         parameters: z.object({
-          brief: z.string().describe('The final, summarized project brief, written in the second person as a confirmation to the user (e.g., "Okay, so you want to build a mobile app for...").'),
+          brief: z
+            .string()
+            .describe(
+              'The final, summarized project brief, written in the second person as a confirmation to the user (e.g., "Okay, so you want to build a mobile app for...").',
+            ),
         }),
         execute: async ({ brief }) => {
           // This tool is a signal. It simply returns the brief.
@@ -51,17 +57,19 @@ This is the core server action that will be called by the UI on each turn of the
 
     ```typescript
     // in actions/tasks/refine-goal-conversation.ts
-    'use server';
+    "use server";
 
-    import { z } from 'zod';
-    import { AgentOrchestrator } from '@/lib/ai/agent-orchestrator';
-    import { CoreMessage } from 'ai';
+    import { z } from "zod";
+    import { AgentOrchestrator } from "@/lib/ai/agent-orchestrator";
+    import { CoreMessage } from "ai";
 
     const RefineGoalSchema = z.object({
-      messages: z.array(z.object({
-        role: z.enum(['user', 'assistant']),
-        content: z.string(),
-      })),
+      messages: z.array(
+        z.object({
+          role: z.enum(["user", "assistant"]),
+          content: z.string(),
+        }),
+      ),
     });
 
     // This is the expected return shape
@@ -70,10 +78,12 @@ This is the core server action that will be called by the UI on each turn of the
       content: string;
     }
 
-    export async function refineGoalConversation(values: z.infer<typeof RefineGoalSchema>): Promise<RefinementResult> {
+    export async function refineGoalConversation(
+      values: z.infer<typeof RefineGoalSchema>,
+    ): Promise<RefinementResult> {
       const validatedFields = RefineGoalSchema.safeParse(values);
       if (!validatedFields.success) {
-        throw new Error('Invalid input: Invalid message format.');
+        throw new Error("Invalid input: Invalid message format.");
       }
 
       const { messages } = validatedFields.data;
@@ -90,13 +100,17 @@ This is the core server action that will be called by the UI on each turn of the
         messages[messages.length - 1].content, // Pass the latest user message as the "query"
         messages as CoreMessage[], // Pass the full history
         systemPrompt, // Override the default system prompt
-        ['boardWizard'] // Ensure the boardWizard toolkit is available
+        ["boardWizard"], // Ensure the boardWizard toolkit is available
       );
 
       // 3. Process the result
-      if (result.toolCalls?.some(tool => tool.toolName === 'proposeFinalBrief')) {
+      if (
+        result.toolCalls?.some((tool) => tool.toolName === "proposeFinalBrief")
+      ) {
         // The AI has proposed a final brief
-        const finalBrief = result.toolCalls.find(tool => tool.toolName === 'proposeFinalBrief').result.brief;
+        const finalBrief = result.toolCalls.find(
+          (tool) => tool.toolName === "proposeFinalBrief",
+        ).result.brief;
         return {
           isFinalBrief: true,
           content: finalBrief,
@@ -120,14 +134,14 @@ The `orchestrate` method in `agent-orchestrator.ts` may need to be updated to ac
 ```typescript
 // in agent-orchestrator.ts
 async orchestrate(
-    query: string, 
+    query: string,
     history: CoreMessage[],
     systemPromptOverride?: string,
     requiredToolkitsOverride?: string[]
 ) {
     // 1. Classify the intent (or skip if toolkits are overridden)
-    const intent = requiredToolkitsOverride 
-        ? { requiredToolkits: requiredToolkitsOverride } 
+    const intent = requiredToolkitsOverride
+        ? { requiredToolkits: requiredToolkitsOverride }
         : await classifyAndRouteQuery(query, history);
 
     // 2. Select tools based on intent
@@ -148,8 +162,8 @@ async orchestrate(
 
 ## 3. Verification
 
--   Using a tool like Postman or a simple test script, call the `refineGoalConversation` action with a sample message history.
--   **Test Case 1 (Clarification):** Send an initial goal. Verify the response has `isFinalBrief: false` and `content` contains a question.
--   **Test Case 2 (Final Brief):** Send a history of 2-3 turns. Verify the AI eventually responds with `isFinalBrief: true` and that the `content` is the summarized project brief.
--   Check the server logs to ensure the correct system prompt is being used and the `proposeFinalBrief` tool is being called as expected.
--   Integrate with the frontend from Phase 3 and test the end-to-end conversational flow in the UI.
+- Using a tool like Postman or a simple test script, call the `refineGoalConversation` action with a sample message history.
+- **Test Case 1 (Clarification):** Send an initial goal. Verify the response has `isFinalBrief: false` and `content` contains a question.
+- **Test Case 2 (Final Brief):** Send a history of 2-3 turns. Verify the AI eventually responds with `isFinalBrief: true` and that the `content` is the summarized project brief.
+- Check the server logs to ensure the correct system prompt is being used and the `proposeFinalBrief` tool is being called as expected.
+- Integrate with the frontend from Phase 3 and test the end-to-end conversational flow in the UI.

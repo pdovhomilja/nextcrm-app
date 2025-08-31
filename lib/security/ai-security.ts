@@ -47,7 +47,7 @@ export class AISecurityService {
   async checkRateLimit(
     userId: string,
     operation: string,
-    request?: NextRequest
+    request?: NextRequest,
   ): Promise<{
     allowed: boolean;
     remaining: number;
@@ -146,7 +146,7 @@ export class AISecurityService {
    */
   validateAIInput(
     input: string,
-    maxLength: number = 4000
+    maxLength: number = 4000,
   ): {
     isValid: boolean;
     sanitized: string;
@@ -202,19 +202,19 @@ export class AISecurityService {
   async checkAIPermissions(
     userId: string,
     operation: string,
-    _resourceId?: string // eslint-disable-line @typescript-eslint/no-unused-vars
+    _resourceId?: string, // eslint-disable-line @typescript-eslint/no-unused-vars
   ): Promise<{ allowed: boolean; reason?: string }> {
     try {
       const user = await db.user.findUnique({
         where: { id: userId },
-        select: { 
+        select: {
           role: true,
           memberships: {
             select: {
               companyId: true,
-              role: true
-            }
-          }
+              role: true,
+            },
+          },
         },
       });
 
@@ -369,7 +369,7 @@ export class AISecurityService {
    * Get security metrics
    */
   async getSecurityMetrics(
-    timeRange: "hour" | "day" | "week" = "day"
+    timeRange: "hour" | "day" | "week" = "day",
   ): Promise<{
     totalEvents: number;
     highRiskEvents: number;
@@ -395,7 +395,7 @@ export class AISecurityService {
           acc[event.action] = (acc[event.action] || 0) + 1;
           return acc;
         },
-        {} as Record<string, number>
+        {} as Record<string, number>,
       );
 
       const topActions = Object.entries(actionCounts)
@@ -407,7 +407,7 @@ export class AISecurityService {
         totalEvents: events.length,
         highRiskEvents: events.filter((e) => e.risk === "high").length,
         rateLimitViolations: events.filter(
-          (e) => e.action === "RATE_LIMIT_EXCEEDED"
+          (e) => e.action === "RATE_LIMIT_EXCEEDED",
         ).length,
         topActions,
       };
@@ -429,7 +429,7 @@ export const aiSecurity = AISecurityService.getInstance();
 export async function withAISecurity(
   request: NextRequest,
   operation: string,
-  handler: () => Promise<Response>
+  handler: () => Promise<Response>,
 ): Promise<Response> {
   try {
     const session = await auth();
@@ -441,7 +441,7 @@ export async function withAISecurity(
     const rateLimitResult = await aiSecurity.checkRateLimit(
       session.user.id,
       operation,
-      request
+      request,
     );
 
     if (!rateLimitResult.allowed) {
@@ -456,20 +456,20 @@ export async function withAISecurity(
             "Content-Type": "application/json",
             "X-RateLimit-Remaining": rateLimitResult.remaining.toString(),
             "X-RateLimit-Reset": new Date(
-              rateLimitResult.resetTime
+              rateLimitResult.resetTime,
             ).toISOString(),
             ...(rateLimitResult.retryAfter && {
               "Retry-After": rateLimitResult.retryAfter.toString(),
             }),
           },
-        }
+        },
       );
     }
 
     // Check permissions
     const permissionResult = await aiSecurity.checkAIPermissions(
       session.user.id,
-      operation
+      operation,
     );
 
     if (!permissionResult.allowed) {
@@ -492,7 +492,7 @@ export async function withAISecurity(
           error: "Insufficient permissions",
           reason: permissionResult.reason,
         }),
-        { status: 403, headers: { "Content-Type": "application/json" } }
+        { status: 403, headers: { "Content-Type": "application/json" } },
       );
     }
 

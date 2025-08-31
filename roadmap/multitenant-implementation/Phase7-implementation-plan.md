@@ -3,13 +3,14 @@
 **Document Version:** 1.0  
 **Date:** August 21, 2025  
 **Status:** CRITICAL - IMMEDIATE ACTION REQUIRED  
-**Security Risk Level:** HIGH - Data Leakage Between Tenants  
+**Security Risk Level:** HIGH - Data Leakage Between Tenants
 
 ## Executive Summary
 
 This document provides a comprehensive, step-by-step implementation plan to address the critical security vulnerability in the AI Assistant v2 feature that is causing data leaks between tenants. The vulnerability allows users from one company to see tasks and boards belonging to another company, representing a severe breach of multi-tenant data isolation.
 
 **Impact Assessment:**
+
 - **Security**: Complete breach of tenant data isolation
 - **Compliance**: Potential GDPR/SOC2/HIPAA violations
 - **Business**: Risk of customer data exposure and loss of trust
@@ -50,12 +51,12 @@ const results = await db.$queryRaw<SimilarResult[]>`
 
 ### 2.1 Implementation Phases
 
-| Phase | Description | Duration | Risk Level |
-|-------|-------------|----------|------------|
-| **Phase A** | Emergency Backend Security Fix | 2-4 hours | HIGH |
-| **Phase B** | Frontend Alignment | 1-2 hours | MEDIUM |
-| **Phase C** | Comprehensive Testing | 2-3 hours | MEDIUM |
-| **Phase D** | Production Deployment | 1 hour | HIGH |
+| Phase       | Description                    | Duration  | Risk Level |
+| ----------- | ------------------------------ | --------- | ---------- |
+| **Phase A** | Emergency Backend Security Fix | 2-4 hours | HIGH       |
+| **Phase B** | Frontend Alignment             | 1-2 hours | MEDIUM     |
+| **Phase C** | Comprehensive Testing          | 2-3 hours | MEDIUM     |
+| **Phase D** | Production Deployment          | 1 hour    | HIGH       |
 
 ### 2.2 Success Criteria
 
@@ -88,7 +89,7 @@ export async function POST(req: Request) {
   // Extract company ID from URL headers (set by middleware)
   const headersList = headers();
   const companyId = headersList.get("x-company-id");
-  
+
   if (!companyId) {
     return new Response("Company context required", { status: 400 });
   }
@@ -114,7 +115,7 @@ export async function POST(req: Request) {
         inputSchema: z.object({
           question: z.string().describe("the users question"),
         }),
-        execute: async ({ question }) => 
+        execute: async ({ question }) =>
           findRelevantContent(question, companyId), // PASS COMPANY ID
       }),
     },
@@ -124,7 +125,10 @@ export async function POST(req: Request) {
 }
 
 // NEW FUNCTION REQUIRED
-async function validateCompanyAccess(userId: string, companyId: string): Promise<boolean> {
+async function validateCompanyAccess(
+  userId: string,
+  companyId: string,
+): Promise<boolean> {
   const membership = await prisma.companyMembership.findUnique({
     where: {
       companyId_userId: {
@@ -147,7 +151,7 @@ async function validateCompanyAccess(userId: string, companyId: string): Promise
 // CRITICAL SECURITY FIX
 export const findRelevantContent = async (
   userQuery: string,
-  companyId: string  // NEW REQUIRED PARAMETER
+  companyId: string, // NEW REQUIRED PARAMETER
 ): Promise<SimilarResult[]> => {
   const queryEmbedding = await generateEmbedding(userQuery);
 
@@ -173,7 +177,9 @@ export const findRelevantContent = async (
   `;
 
   // Security audit logging
-  console.log(`AI Query executed for company: ${companyId}, results: ${results.length}`);
+  console.log(
+    `AI Query executed for company: ${companyId}, results: ${results.length}`,
+  );
 
   return results;
 };
@@ -187,8 +193,8 @@ export const findRelevantContent = async (
 import db from "@/lib/db";
 
 export async function validateCompanyAccess(
-  userId: string, 
-  companyId: string
+  userId: string,
+  companyId: string,
 ): Promise<boolean> {
   try {
     const membership = await db.companyMembership.findUnique({
@@ -199,7 +205,7 @@ export async function validateCompanyAccess(
         },
       },
     });
-    
+
     // Log security access attempts
     await db.securityAuditLog.create({
       data: {
@@ -213,7 +219,7 @@ export async function validateCompanyAccess(
         },
       },
     });
-    
+
     return !!membership;
   } catch (error) {
     console.error("Company access validation error:", error);
@@ -223,7 +229,7 @@ export async function validateCompanyAccess(
 
 export async function getActiveCompanyId(
   userId: string,
-  requestedCompanyId?: string
+  requestedCompanyId?: string,
 ): Promise<string | null> {
   // If a specific company is requested, validate access
   if (requestedCompanyId) {
@@ -234,7 +240,7 @@ export async function getActiveCompanyId(
   // Otherwise, get user's primary company
   const membership = await db.companyMembership.findFirst({
     where: { userId },
-    orderBy: { createdAt: 'asc' },
+    orderBy: { createdAt: "asc" },
   });
 
   return membership?.companyId || null;
@@ -258,13 +264,13 @@ interface PageProps {
 const AIAssistantV2Page = ({ params }: PageProps) => {
   const { cid: companyId } = params; // Use URL parameter
   const { data: session } = useSession();
-  
+
   // ... rest of component logic
 
   // FIX LINK GENERATION (Lines 206-218)
   const renderToolCall = (part: ToolPart) => {
     // ... existing logic
-    
+
     return (
       <Card className={/* existing styles */}>
         {/* ... existing content */}
@@ -331,20 +337,20 @@ const AIAssistantV2Page = ({ params }: PageProps) => {
   useEffect(() => {
     const validateAccess = async () => {
       if (status === "loading" || !session?.user?.id) return;
-      
+
       try {
         const response = await fetch(`/api/company/validate-access`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             companyId,
-            userId: session.user.id 
+            userId: session.user.id
           }),
         });
-        
+
         const { hasAccess } = await response.json();
         setHasCompanyAccess(hasAccess);
-        
+
         if (!hasAccess) {
           // Redirect to user's default company or dashboard
           window.location.href = `/${session.user.activeCompanyId}/dashboard`;
@@ -418,7 +424,7 @@ export async function POST(req: Request) {
     }
 
     const hasAccess = await validateCompanyAccess(session.user.id, companyId);
-    
+
     return Response.json({ hasAccess });
   } catch (error) {
     console.error("Company access validation API error:", error);
@@ -443,15 +449,22 @@ describe("AI Assistant Multi-Tenancy Security", () => {
 
   beforeEach(async () => {
     // Setup test data with two companies and users
-    ({ company1User, company2User, company1Id, company2Id } = await setupTestData());
+    ({ company1User, company2User, company1Id, company2Id } =
+      await setupTestData());
   });
 
   it("should prevent cross-tenant AI data access", async () => {
     // Create task in company1
-    const task1 = await createTestTask(company1Id, "Company 1 confidential task");
-    
-    // Create task in company2  
-    const task2 = await createTestTask(company2Id, "Company 2 confidential task");
+    const task1 = await createTestTask(
+      company1Id,
+      "Company 1 confidential task",
+    );
+
+    // Create task in company2
+    const task2 = await createTestTask(
+      company2Id,
+      "Company 2 confidential task",
+    );
 
     // User from company1 queries AI
     const response = await testClient
@@ -459,10 +472,12 @@ describe("AI Assistant Multi-Tenancy Security", () => {
       .set("x-company-id", company1Id)
       .auth(company1User.token)
       .send({
-        messages: [{ 
-          role: "user", 
-          content: "Show me all confidential tasks" 
-        }]
+        messages: [
+          {
+            role: "user",
+            content: "Show me all confidential tasks",
+          },
+        ],
       });
 
     // Should only return company1 tasks
@@ -475,7 +490,7 @@ describe("AI Assistant Multi-Tenancy Security", () => {
       .post("/api/ai/chat-v2")
       .auth(company1User.token) // No x-company-id header
       .send({
-        messages: [{ role: "user", content: "test" }]
+        messages: [{ role: "user", content: "test" }],
       });
 
     expect(response.status).toBe(400);
@@ -488,7 +503,7 @@ describe("AI Assistant Multi-Tenancy Security", () => {
       .set("x-company-id", company2Id)
       .auth(company1User.token) // Company1 user trying to access Company2
       .send({
-        messages: [{ role: "user", content: "test" }]
+        messages: [{ role: "user", content: "test" }],
       });
 
     expect(response.status).toBe(403);
@@ -536,10 +551,10 @@ describe("AI Assistant v2 Integration Tests", () => {
 
     // Mock AI response with task results
     const mockResponse = {
-      output: [{ 
-        name: "Test Task", 
-        boardId: "board1", 
-        taskId: "task1" 
+      output: [{
+        name: "Test Task",
+        boardId: "board1",
+        taskId: "task1"
       }]
     };
 
@@ -565,12 +580,12 @@ import { findRelevantContent } from "@/components/ai/ai-assistant-v2";
 describe("AI Query Performance", () => {
   it("should maintain query performance under 500ms", async () => {
     const startTime = performance.now();
-    
+
     const results = await findRelevantContent(
       "test query for performance",
-      "test-company-id"
+      "test-company-id",
     );
-    
+
     const endTime = performance.now();
     const duration = endTime - startTime;
 
@@ -583,12 +598,12 @@ describe("AI Query Performance", () => {
     await createLargeTestDataset(1000);
 
     const startTime = performance.now();
-    
+
     const results = await findRelevantContent(
       "performance test query",
-      "test-company-id"
+      "test-company-id",
     );
-    
+
     const endTime = performance.now();
     const duration = endTime - startTime;
 
@@ -625,7 +640,7 @@ describe("AI Query Performance", () => {
    - Run security validation tests
    - Enable for 5% of traffic first
    - Monitor security logs for violations
-   - Gradually increase traffic: 5% ’ 25% ’ 50% ’ 100%
+   - Gradually increase traffic: 5% ï¿½ 25% ï¿½ 50% ï¿½ 100%
 
 ### 6.3 Production Validation Script
 
@@ -641,9 +656,9 @@ async function validateProductionSecurity() {
 
   // 1. Verify all boards have companyId
   const unassignedBoards = await prisma.board.count({
-    where: { companyId: null }
+    where: { companyId: null },
   });
-  
+
   if (unassignedBoards > 0) {
     throw new Error(`L Found ${unassignedBoards} boards without companyId`);
   }
@@ -659,7 +674,9 @@ async function validateProductionSecurity() {
   for (const company of testCompanies) {
     const results = await testAIQuerySecurity(company.id);
     if (!results.secure) {
-      throw new Error(`L Security violation detected for company ${company.id}`);
+      throw new Error(
+        `L Security violation detected for company ${company.id}`,
+      );
     }
   }
   console.log(" AI queries properly scoped to companies");
@@ -667,12 +684,16 @@ async function validateProductionSecurity() {
   // 4. Check performance
   const performanceResults = await testAIQueryPerformance();
   if (performanceResults.avgResponseTime > 500) {
-    console.warn(`  Query performance slower than expected: ${performanceResults.avgResponseTime}ms`);
+    console.warn(
+      `ï¿½ Query performance slower than expected: ${performanceResults.avgResponseTime}ms`,
+    );
   } else {
-    console.log(` Query performance acceptable: ${performanceResults.avgResponseTime}ms`);
+    console.log(
+      ` Query performance acceptable: ${performanceResults.avgResponseTime}ms`,
+    );
   }
 
-  console.log("<‰ Production security validation completed successfully!");
+  console.log("<ï¿½ Production security validation completed successfully!");
 }
 
 // Execute validation
@@ -689,26 +710,26 @@ export const securityAlerts = {
   // Alert if AI query returns 0 results (possible over-filtering)
   aiQueryNoResults: {
     threshold: 10, // queries per minute
-    action: "investigate"
+    action: "investigate",
   },
-  
+
   // Alert if user attempts cross-company access
   unauthorizedCompanyAccess: {
     threshold: 1, // immediate alert
-    action: "block_and_notify"
+    action: "block_and_notify",
   },
-  
+
   // Alert if query response time exceeds threshold
   aiQuerySlowResponse: {
     threshold: 1000, // ms
-    action: "performance_investigation"
+    action: "performance_investigation",
   },
-  
+
   // Alert if embedding query lacks company filter
   unscopedEmbeddingQuery: {
     threshold: 0, // zero tolerance
-    action: "immediate_block"
-  }
+    action: "immediate_block",
+  },
 };
 ```
 
@@ -716,12 +737,12 @@ export const securityAlerts = {
 
 ### 7.1 Risk Assessment Matrix
 
-| Risk | Probability | Impact | Mitigation |
-|------|-------------|--------|------------|
-| **Data Leakage Continues** | Low | Critical | Immediate rollback + hotfix |
-| **Performance Degradation** | Medium | High | Query optimization + caching |
-| **User Access Blocked** | Medium | Medium | Access validation bypass |
-| **AI Functionality Broken** | Low | High | Feature flag disable |
+| Risk                        | Probability | Impact   | Mitigation                   |
+| --------------------------- | ----------- | -------- | ---------------------------- |
+| **Data Leakage Continues**  | Low         | Critical | Immediate rollback + hotfix  |
+| **Performance Degradation** | Medium      | High     | Query optimization + caching |
+| **User Access Blocked**     | Medium      | Medium   | Access validation bypass     |
+| **AI Functionality Broken** | Low         | High     | Feature flag disable         |
 
 ### 7.2 Rollback Procedures
 
@@ -764,14 +785,16 @@ tail -f /var/log/security-audit.log
 ### 8.1 Security Validation
 
 **Must Pass Requirements:**
+
 - [ ] Zero cross-tenant data access in AI queries
 - [ ] All security tests pass (100% success rate)
 - [ ] Security audit logs show no violations
 - [ ] Company access validation works correctly
 
-### 8.2 Functional Validation  
+### 8.2 Functional Validation
 
 **Must Pass Requirements:**
+
 - [ ] AI Assistant v2 responds correctly to user queries
 - [ ] Generated links use proper company context
 - [ ] User experience remains unchanged
@@ -780,6 +803,7 @@ tail -f /var/log/security-audit.log
 ### 8.3 Performance Validation
 
 **Must Meet Benchmarks:**
+
 - [ ] AI query response time < 500ms (95th percentile)
 - [ ] Database query performance impact < 10%
 - [ ] Memory usage increase < 20%
@@ -788,6 +812,7 @@ tail -f /var/log/security-audit.log
 ### 8.4 Compliance Validation
 
 **Must Satisfy Requirements:**
+
 - [ ] GDPR compliance maintained (data isolation)
 - [ ] SOC2 controls implemented (access logging)
 - [ ] Audit trail complete (all security events logged)
@@ -821,6 +846,7 @@ tail -f /var/log/security-audit.log
 This implementation plan addresses the critical security vulnerability in the AI Assistant v2 feature through a systematic, phased approach that prioritizes security while maintaining functionality. The plan includes comprehensive testing, monitoring, and rollback procedures to ensure safe deployment to production.
 
 **Key Success Factors:**
+
 - Immediate action on critical security vulnerability
 - Comprehensive testing before production deployment
 - Robust monitoring and alerting systems
@@ -828,6 +854,7 @@ This implementation plan addresses the critical security vulnerability in the AI
 - Post-implementation validation and improvements
 
 **Timeline Commitment:**
+
 - **Total Implementation Time**: 6-9 hours
 - **Critical Security Fix**: Within 4 hours
 - **Production Deployment**: Within 8 hours

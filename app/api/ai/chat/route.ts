@@ -13,7 +13,7 @@ const ChatRequestSchema = z.object({
     z.object({
       role: z.enum(["user", "assistant", "system"]),
       content: z.string(),
-    })
+    }),
   ),
   boardId: z.string().optional(),
   taskId: z.string().optional(),
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
           error: "AI configuration invalid",
           details: configValidation.errors,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -58,14 +58,14 @@ export async function POST(request: NextRequest) {
 
     // Get the last user message
     const userMessages = validatedRequest.messages.filter(
-      (msg) => msg.role === "user"
+      (msg) => msg.role === "user",
     );
     const lastUserMessage = userMessages[userMessages.length - 1];
 
     if (!lastUserMessage) {
       return NextResponse.json(
         { error: "No user message found" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     if (!activeCompanyId) {
       return NextResponse.json(
         { error: "No company context available" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
         validatedRequest.useRAG,
         validatedRequest.multiAgent,
         validatedRequest.contextType,
-        validatedRequest.options
+        validatedRequest.options,
       );
       return streamResult.toTextStreamResponse();
     } else {
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
           (msg) => ({
             role: msg.role as "user" | "assistant" | "system",
             content: msg.content,
-          })
+          }),
         );
 
         // Use AI agent orchestration
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
           history,
           undefined, // systemPromptOverride
           undefined, // requiredToolkitsOverride
-          context
+          context,
         );
 
         return NextResponse.json({
@@ -172,13 +172,13 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Invalid request format", details: error.issues },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -202,7 +202,7 @@ async function streamRAGResponse(
     temperature?: number;
     maxOutputTokens?: number;
     includeSources?: boolean;
-  }
+  },
 ) {
   const context = {
     userId,
@@ -223,7 +223,7 @@ async function streamRAGResponse(
         [], // No previous history available in streaming context
         undefined, // systemPromptOverride
         undefined, // requiredToolkitsOverride
-        context
+        context,
       );
 
       systemPrompt = `You are an intelligent project management assistant powered by specialized AI agents.
@@ -330,7 +330,7 @@ export async function GET(request: NextRequest) {
     console.error("Chat API GET error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

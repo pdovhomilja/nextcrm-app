@@ -1,7 +1,7 @@
 import { streamObject } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { auth } from "@/auth";
-import { z } from 'zod/v3';
+import { z } from "zod/v3";
 import { NextRequest } from "next/server";
 
 const analysisSchema = z.object({
@@ -26,7 +26,7 @@ const analysisSchema = z.object({
         severity: z.enum(["info", "low", "medium", "high", "critical"]),
         recommendation: z.string(),
         confidence: z.number().min(0).max(1),
-      })
+      }),
     )
     .max(8),
   metrics: z.object({
@@ -44,7 +44,7 @@ const analysisSchema = z.object({
         direction: z.enum(["improving", "stable", "declining"]),
         change: z.number(),
         timeframe: z.string(),
-      })
+      }),
     )
     .max(5),
   recommendations: z
@@ -54,7 +54,7 @@ const analysisSchema = z.object({
         action: z.string(),
         reasoningText: z.string(),
         expectedImpact: z.string(),
-      })
+      }),
     )
     .max(6),
 });
@@ -148,7 +148,7 @@ export async function GET(_request: NextRequest) {
     console.error("Quick analysis error:", error);
     return Response.json(
       { success: false, error: "Analysis unavailable" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

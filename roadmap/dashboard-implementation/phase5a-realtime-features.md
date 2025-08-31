@@ -188,8 +188,8 @@ export function RealtimeTaskTable({ socket }: { socket: Socket | null }) {
         prev.map((task) =>
           task.id === taskData.id
             ? { ...task, ...taskData, isUpdated: true }
-            : task
-        )
+            : task,
+        ),
       );
 
       // Show visual indicator for updated row

@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { saveUserMailAccount } from '@/actions/mail/account-actions';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { saveUserMailAccount } from "@/actions/mail/account-actions";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -15,18 +15,20 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 const formSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email address.' }),
-  imapHost: z.string().min(1, { message: 'IMAP host is required.' }),
-  imapPort: z.string().min(1, { message: 'Port is required.' }),
-  imapUser: z.string().min(1, { message: 'IMAP username is required.' }),
-  password: z.string().min(1, { message: 'Password or App Password is required.' }),
-  smtpHost: z.string().min(1, { message: 'SMTP host is required.' }),
-  smtpPort: z.string().min(1, { message: 'Port is required.' }),
+  email: z.string().email({ message: "Please enter a valid email address." }),
+  imapHost: z.string().min(1, { message: "IMAP host is required." }),
+  imapPort: z.string().min(1, { message: "Port is required." }),
+  imapUser: z.string().min(1, { message: "IMAP username is required." }),
+  password: z
+    .string()
+    .min(1, { message: "Password or App Password is required." }),
+  smtpHost: z.string().min(1, { message: "SMTP host is required." }),
+  smtpPort: z.string().min(1, { message: "Port is required." }),
 });
 
 type MailAccountFormValues = z.infer<typeof formSchema>;
@@ -38,13 +40,13 @@ export const MailAccountForm = () => {
   const form = useForm<MailAccountFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
-      imapHost: '',
-      imapPort: '993',
-      imapUser: '',
-      password: '',
-      smtpHost: '',
-      smtpPort: '587',
+      email: "",
+      imapHost: "",
+      imapPort: "993",
+      imapUser: "",
+      password: "",
+      smtpHost: "",
+      smtpPort: "587",
     },
   });
 
@@ -56,11 +58,13 @@ export const MailAccountForm = () => {
         smtpPort: parseInt(values.smtpPort, 10),
       });
       if (result.error) {
-        toast.error('Failed to add account', {
-          description: result.details ? JSON.stringify(result.details) : 'Please check the form fields.',
+        toast.error("Failed to add account", {
+          description: result.details
+            ? JSON.stringify(result.details)
+            : "Please check the form fields.",
         });
       } else {
-        toast.success('Mail account added successfully');
+        toast.success("Mail account added successfully");
         form.reset();
         router.refresh();
       }
@@ -93,7 +97,9 @@ export const MailAccountForm = () => {
                 <FormControl>
                   <Input placeholder="me@example.com" {...field} />
                 </FormControl>
-                <FormDescription>Usually the same as your email address.</FormDescription>
+                <FormDescription>
+                  Usually the same as your email address.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -135,7 +141,8 @@ export const MailAccountForm = () => {
                   <Input type="password" {...field} />
                 </FormControl>
                 <FormDescription>
-                  For services like Gmail, you may need to generate an App Password.
+                  For services like Gmail, you may need to generate an App
+                  Password.
                 </FormDescription>
                 <FormMessage />
               </FormItem>

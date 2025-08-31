@@ -1,58 +1,58 @@
-import { auth } from "@/auth"
+import { auth } from "@/auth";
 
 // Helper to get current user's active company ID
 export async function getCurrentCompanyId() {
-  const session = await auth()
-  
+  const session = await auth();
+
   if (!session?.user) {
-    throw new Error("Not authenticated")
+    throw new Error("Not authenticated");
   }
 
-  const companyId = session.user.activeCompanyId
-  
+  const companyId = session.user.activeCompanyId;
+
   if (!companyId) {
-    throw new Error("No active company found")
+    throw new Error("No active company found");
   }
 
-  return companyId
+  return companyId;
 }
 
 // Helper to get current user session with company validation
 export async function getCurrentUserWithCompany() {
-  const session = await auth()
-  
+  const session = await auth();
+
   if (!session?.user) {
-    throw new Error("Not authenticated")
+    throw new Error("Not authenticated");
   }
 
-  const companyId = session.user.activeCompanyId
-  
+  const companyId = session.user.activeCompanyId;
+
   if (!companyId) {
-    throw new Error("No active company found")
+    throw new Error("No active company found");
   }
 
   return {
     user: session.user,
-    companyId
-  }
+    companyId,
+  };
 }
 
 // Helper to validate company access from route params
 export async function validateCompanyAccess(companyIdFromRoute: string) {
-  const session = await auth()
-  
+  const session = await auth();
+
   if (!session?.user) {
-    throw new Error("Not authenticated")
+    throw new Error("Not authenticated");
   }
 
-  const userCompanyId = session.user.activeCompanyId
-  
+  const userCompanyId = session.user.activeCompanyId;
+
   if (!userCompanyId || userCompanyId !== companyIdFromRoute) {
-    throw new Error("Access denied to company")
+    throw new Error("Access denied to company");
   }
 
   return {
     user: session.user,
-    companyId: userCompanyId
-  }
+    companyId: userCompanyId,
+  };
 }

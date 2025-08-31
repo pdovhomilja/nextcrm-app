@@ -141,17 +141,17 @@ export async function GET() {
   // Add recommendations based on failed services
   if (!healthChecks.database) {
     statusInfo.recommendations.push(
-      "Check database connection and ensure PostgreSQL is running"
+      "Check database connection and ensure PostgreSQL is running",
     );
   }
   if (!healthChecks.authentication) {
     statusInfo.recommendations.push(
-      "Verify AUTH_SECRET and authentication configuration"
+      "Verify AUTH_SECRET and authentication configuration",
     );
   }
   if (healthChecks.redis === false) {
     statusInfo.recommendations.push(
-      "Check Redis connection for MCP SSE transport"
+      "Check Redis connection for MCP SSE transport",
     );
   }
   if (
@@ -159,7 +159,7 @@ export async function GET() {
     process.env.PGVECTOR_ENABLED === "true"
   ) {
     statusInfo.recommendations.push(
-      "Install pgvector extension: CREATE EXTENSION IF NOT EXISTS vector;"
+      "Install pgvector extension: CREATE EXTENSION IF NOT EXISTS vector;",
     );
   }
 
@@ -169,7 +169,7 @@ export async function GET() {
 
   if (failedMcpServers.length > 0) {
     statusInfo.recommendations.push(
-      `MCP servers not responding: ${failedMcpServers.join(", ")}`
+      `MCP servers not responding: ${failedMcpServers.join(", ")}`,
     );
   }
 

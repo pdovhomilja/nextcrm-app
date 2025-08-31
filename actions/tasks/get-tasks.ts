@@ -23,18 +23,18 @@ export const getTasks = async () => {
       boardSection: {
         board: {
           companyId: companyId, // Multi-tenant isolation
-        }
-      }
+        },
+      },
     },
     include: {
       assignedTo: true,
       createdBy: true,
       boardSection: {
         include: {
-          board: true
-        }
-      }
-    }
+          board: true,
+        },
+      },
+    },
   });
   return tasks;
 };

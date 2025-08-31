@@ -49,16 +49,22 @@ export class DataExtractionService {
   /**
    * Extract and format task data for embedding
    */
-  async extractTaskData(taskId: string, companyId?: string): Promise<TaskDocument | null> {
-    let whereClause: { id: string; assignedTo?: { memberships: { some: { companyId: string } } } } = { id: taskId };
-    
+  async extractTaskData(
+    taskId: string,
+    companyId?: string,
+  ): Promise<TaskDocument | null> {
+    let whereClause: {
+      id: string;
+      assignedTo?: { memberships: { some: { companyId: string } } };
+    } = { id: taskId };
+
     // Add company filtering if companyId is provided
     if (companyId) {
       whereClause = {
         id: taskId,
         assignedTo: {
-          memberships: { some: { companyId: companyId } } // Ensure task's assignee belongs to the company
-        }
+          memberships: { some: { companyId: companyId } }, // Ensure task's assignee belongs to the company
+        },
       };
     }
 
@@ -141,9 +147,14 @@ export class DataExtractionService {
   /**
    * Extract and format board data for embedding
    */
-  async extractBoardData(boardId: string, companyId?: string): Promise<BoardDocument | null> {
-    let whereClause: { id: string; access?: { hasSome: string[] } } = { id: boardId };
-    
+  async extractBoardData(
+    boardId: string,
+    companyId?: string,
+  ): Promise<BoardDocument | null> {
+    let whereClause: { id: string; access?: { hasSome: string[] } } = {
+      id: boardId,
+    };
+
     // Add company filtering if companyId is provided
     if (companyId) {
       // First get users from the company
@@ -152,12 +163,12 @@ export class DataExtractionService {
         select: { id: true },
       });
       const userIds = companyUsers.map((user) => user.id);
-      
+
       whereClause = {
         id: boardId,
         access: {
-          hasSome: userIds // Board must have at least one company user in access
-        }
+          hasSome: userIds, // Board must have at least one company user in access
+        },
       };
     }
 
@@ -186,7 +197,7 @@ export class DataExtractionService {
 
     const allTasks = board.boardSections.flatMap((section) => section.tasks);
     const completedTasks = allTasks.filter(
-      (task) => task.status === "COMPLETED"
+      (task) => task.status === "COMPLETED",
     );
 
     // Calculate metrics
@@ -210,7 +221,7 @@ export class DataExtractionService {
         acc[task.priority] = (acc[task.priority] || 0) + 1;
         return acc;
       },
-      {} as Record<TaskPriority, number>
+      {} as Record<TaskPriority, number>,
     );
 
     // Status distribution
@@ -219,7 +230,7 @@ export class DataExtractionService {
         acc[task.status] = (acc[task.status] || 0) + 1;
         return acc;
       },
-      {} as Record<TaskStatusNew, number>
+      {} as Record<TaskStatusNew, number>,
     );
 
     // Get unique team members
@@ -249,8 +260,7 @@ export class DataExtractionService {
     const content = contentParts.filter(Boolean).join("\n");
 
     // Get company ID from first user found or use the provided companyId
-    const extractedCompanyId =
-      companyId || "";
+    const extractedCompanyId = companyId || "";
 
     return {
       id: board.id,
@@ -278,7 +288,7 @@ export class DataExtractionService {
    */
   async extractCompanyTaskData(
     companyId: string,
-    limit = 100
+    limit = 100,
   ): Promise<TaskDocument[]> {
     const tasks = await db.task.findMany({
       where: {
@@ -321,10 +331,10 @@ export class DataExtractionService {
   async extractCompanyBoardData(companyId: string): Promise<BoardDocument[]> {
     // Get users from the company to find boards they have access to
     const companyUsers = await db.user.findMany({
-      where: { 
+      where: {
         memberships: {
-          some: { companyId: companyId }
-        }
+          some: { companyId: companyId },
+        },
       },
       select: { id: true },
     });
@@ -418,7 +428,7 @@ export class DataExtractionService {
     });
 
     const tasksWithOutdatedEmbeddings = tasksWithEmbeddings.filter(
-      (task) => task.embedding && task.updatedAt > task.embedding.updatedAt
+      (task) => task.embedding && task.updatedAt > task.embedding.updatedAt,
     );
 
     return [
@@ -433,10 +443,10 @@ export class DataExtractionService {
   async getBoardsNeedingEmbeddingUpdate(companyId: string): Promise<string[]> {
     // Get company users first
     const companyUsers = await db.user.findMany({
-      where: { 
+      where: {
         memberships: {
-          some: { companyId: companyId }
-        }
+          some: { companyId: companyId },
+        },
       },
       select: { id: true },
     });
@@ -463,7 +473,7 @@ export class DataExtractionService {
     });
 
     const boardsWithOutdatedEmbeddings = boardsWithEmbeddings.filter(
-      (board) => board.embedding && board.updatedAt > board.embedding.updatedAt
+      (board) => board.embedding && board.updatedAt > board.embedding.updatedAt,
     );
 
     return [

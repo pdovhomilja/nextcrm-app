@@ -119,7 +119,12 @@
                   "type": "array",
                   "items": {
                     "type": "string",
-                    "enum": ["completion_rate", "task_count", "team_size", "avg_task_duration"]
+                    "enum": [
+                      "completion_rate",
+                      "task_count",
+                      "team_size",
+                      "avg_task_duration"
+                    ]
                   },
                   "default": ["completion_rate", "task_count"],
                   "description": "Metrics to compare"
@@ -140,7 +145,12 @@
                 },
                 "focus": {
                   "type": "string",
-                  "enum": ["performance", "team_balance", "workflow", "priorities"],
+                  "enum": [
+                    "performance",
+                    "team_balance",
+                    "workflow",
+                    "priorities"
+                  ],
                   "default": "performance",
                   "description": "Optimization focus area"
                 }
@@ -194,7 +204,13 @@
                       "type": "array",
                       "items": {
                         "type": "string",
-                        "enum": ["NEW", "IN_PROGRESS", "COMPLETED", "CANCELLED", "ON_HOLD"]
+                        "enum": [
+                          "NEW",
+                          "IN_PROGRESS",
+                          "COMPLETED",
+                          "CANCELLED",
+                          "ON_HOLD"
+                        ]
                       },
                       "description": "Filter by task status"
                     }

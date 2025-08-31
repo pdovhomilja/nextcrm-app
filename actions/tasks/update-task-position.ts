@@ -15,7 +15,7 @@ export async function updateTaskPosition(taskId: string, newPosition: number) {
     });
   } catch (error) {
     throw new Error(
-      `Failed to update task position: ${error instanceof Error ? error.message : "Unknown error"}`
+      `Failed to update task position: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
 }
@@ -29,12 +29,12 @@ export async function updateTaskPositions(updates: TaskPosition[]) {
         db.task.update({
           where: { id: update.id },
           data: { position: update.position },
-        })
-      )
+        }),
+      ),
     );
   } catch (error) {
     throw new Error(
-      `Failed to update task positions: ${error instanceof Error ? error.message : "Unknown error"}`
+      `Failed to update task positions: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
 }
@@ -42,7 +42,7 @@ export async function updateTaskPositions(updates: TaskPosition[]) {
 export async function moveTaskToTopOfSection(
   taskId: string,
   sourceSectionId: string,
-  targetSectionId: string
+  targetSectionId: string,
 ) {
   console.log("🚀 Server: moveTaskToTopOfSection called:", {
     taskId,
@@ -92,8 +92,8 @@ export async function moveTaskToTopOfSection(
           tx.task.update({
             where: { id: task.id },
             data: { position: task.position + 1 },
-          })
-        )
+          }),
+        ),
       );
 
       // Move task to target section at position 0 (top)
@@ -124,8 +124,8 @@ export async function moveTaskToTopOfSection(
             tx.task.update({
               where: { id: task.id },
               data: { position: index },
-            })
-          )
+            }),
+          ),
         );
       }
 
@@ -137,7 +137,7 @@ export async function moveTaskToTopOfSection(
   } catch (error) {
     console.error("❌ Server: Failed to move task to top of section:", error);
     throw new Error(
-      `Failed to move task to top of section: ${error instanceof Error ? error.message : "Unknown error"}`
+      `Failed to move task to top of section: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
 }
@@ -150,7 +150,7 @@ export async function moveTaskBetweenSectionsAtPosition(
   taskId: string,
   sourceSectionId: string,
   targetSectionId: string,
-  targetPosition: number
+  targetPosition: number,
 ) {
   try {
     await db.$transaction(async (tx) => {
@@ -175,7 +175,7 @@ export async function moveTaskBetweenSectionsAtPosition(
       // Clamp target index to valid range
       const clampedIndex = Math.max(
         0,
-        Math.min(targetTasks.length, targetPosition)
+        Math.min(targetTasks.length, targetPosition),
       );
 
       // Shift target tasks at and after the insertion point
@@ -186,8 +186,8 @@ export async function moveTaskBetweenSectionsAtPosition(
             tx.task.update({
               where: { id: t.id },
               data: { position: t.position + 1 },
-            })
-          )
+            }),
+          ),
       );
 
       // Move the task
@@ -205,14 +205,14 @@ export async function moveTaskBetweenSectionsAtPosition(
 
         await Promise.all(
           sourceTasks.map((t, index) =>
-            tx.task.update({ where: { id: t.id }, data: { position: index } })
-          )
+            tx.task.update({ where: { id: t.id }, data: { position: index } }),
+          ),
         );
       }
     });
   } catch (error) {
     throw new Error(
-      `Failed to move task between sections: ${error instanceof Error ? error.message : "Unknown error"}`
+      `Failed to move task between sections: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
 }

@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import db from "@/lib/db";
-import { z } from 'zod/v3';
+import { z } from "zod/v3";
 import {
   taskPriorityColors,
   taskStatusColors,
@@ -46,7 +46,7 @@ export type DistributionData = {
 };
 
 export async function getDistributionData(
-  input: z.infer<typeof DistributionDataSchema>
+  input: z.infer<typeof DistributionDataSchema>,
 ): Promise<{ data?: DistributionData; error?: string }> {
   try {
     const session = await auth();
@@ -148,23 +148,25 @@ export async function getDistributionData(
             boardSection: {
               include: {
                 board: {
-                  select: { id: true, name: true }
-                }
-              }
-            }
+                  select: { id: true, name: true },
+                },
+              },
+            },
           },
         });
 
         // Group by board and count tasks
-        const boardTaskCounts: { [boardId: string]: { count: number; name: string } } = {};
-        
+        const boardTaskCounts: {
+          [boardId: string]: { count: number; name: string };
+        } = {};
+
         tasksWithBoards.forEach((task) => {
           const board = task.boardSection.board;
           if (board) {
             if (!boardTaskCounts[board.id]) {
               boardTaskCounts[board.id] = {
                 count: 0,
-                name: board.name
+                name: board.name,
               };
             }
             boardTaskCounts[board.id].count += 1;
@@ -195,11 +197,11 @@ export async function getDistributionData(
           .map((g) => g.assignedToId)
           .filter(Boolean) as string[];
         const users = await db.user.findMany({
-          where: { 
-            id: { in: userIds }, 
-            memberships: { 
-              some: { companyId: companyId } 
-            } 
+          where: {
+            id: { in: userIds },
+            memberships: {
+              some: { companyId: companyId },
+            },
           },
           select: { id: true, name: true, email: true },
         });
@@ -222,11 +224,11 @@ export async function getDistributionData(
     // Calculate total and percentages
     const total = Object.values(groupedData).reduce(
       (sum, count) => sum + count,
-      0
+      0,
     );
 
     const distributionData: DistributionDataPoint[] = Object.entries(
-      groupedData
+      groupedData,
     )
       .map(([name, value]) => ({
         name,

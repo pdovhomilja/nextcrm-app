@@ -154,19 +154,19 @@ export interface RAGProcessor {
   // Retrieval operations
   retrieveRelevantDocs(
     query: string,
-    filters?: SearchFilters
+    filters?: SearchFilters,
   ): Promise<RetrievedDocument[]>;
 
   // Context assembly
   assembleContext(
     docs: RetrievedDocument[],
-    query: string
+    query: string,
   ): Promise<AssembledContext>;
 
   // Response generation
   generateResponse(
     context: AssembledContext,
-    query: string
+    query: string,
   ): Promise<GeneratedResponse>;
 }
 ```
@@ -670,7 +670,7 @@ export async function createTaskWithAI(formData: FormData) {
         boardId,
         userId: session.user.id,
         companyId: session.user.companyId,
-      }
+      },
     );
 
     // Create task with AI enhancements
@@ -709,7 +709,7 @@ export function useRealtimeAISuggestions(boardId: string) {
 
   useEffect(() => {
     const eventSource = new EventSource(
-      `/api/ai/suggest/stream?boardId=${boardId}`
+      `/api/ai/suggest/stream?boardId=${boardId}`,
     );
 
     eventSource.onmessage = (event) => {
@@ -894,7 +894,7 @@ server.tool(
     if (result.count > 0) {
       const updatedTasks = await db.task.findMany({ where: whereClause });
       await Promise.all(
-        updatedTasks.map((task) => triggerEmbeddingUpdate(task.id))
+        updatedTasks.map((task) => triggerEmbeddingUpdate(task.id)),
       );
     }
 
@@ -906,7 +906,7 @@ server.tool(
         },
       ],
     };
-  }
+  },
 );
 ```
 
@@ -977,7 +977,7 @@ server.tool(
         },
       ],
     };
-  }
+  },
 );
 ```
 
@@ -1001,7 +1001,7 @@ const createTaskSchema = z.object({
     .optional()
     .refine(
       (date) => !date || new Date(date) > new Date(),
-      "Due date must be in the future"
+      "Due date must be in the future",
     ),
 });
 ```
@@ -1011,7 +1011,7 @@ const createTaskSchema = z.object({
 ```typescript
 async function safeToolExecution<T>(
   operation: () => Promise<T>,
-  context: { toolName: string; userId: string; params: unknown }
+  context: { toolName: string; userId: string; params: unknown },
 ): Promise<T> {
   try {
     return await operation();
@@ -1023,13 +1023,13 @@ async function safeToolExecution<T>(
         error: error.message,
         params: context.params,
         stack: error.stack,
-      }
+      },
     );
 
     // Categorize and handle different error types
     if (error instanceof z.ZodError) {
       throw new Error(
-        `Invalid parameters: ${error.errors.map((e) => e.message).join(", ")}`
+        `Invalid parameters: ${error.errors.map((e) => e.message).join(", ")}`,
       );
     }
 
@@ -1093,7 +1093,7 @@ server.tool(
         },
       ],
     };
-  }
+  },
 );
 ```
 
@@ -1127,7 +1127,7 @@ describe("Custom MCP Tools", () => {
         boardId: "board-123",
         priority: "HIGH",
       },
-      mockSession
+      mockSession,
     );
 
     expect(result.success).toBe(true);
@@ -1143,8 +1143,8 @@ describe("Custom MCP Tools", () => {
           title: "", // Invalid empty title
           boardId: "board-123",
         },
-        mockSession
-      )
+        mockSession,
+      ),
     ).rejects.toThrow("Title is required");
   });
 
@@ -1156,8 +1156,8 @@ describe("Custom MCP Tools", () => {
           title: "Test Task",
           boardId: "board-123",
         },
-        null
-      ) // No session
+        null,
+      ), // No session
     ).rejects.toThrow("Authentication required");
   });
 });

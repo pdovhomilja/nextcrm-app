@@ -23,7 +23,7 @@ export async function createBoard(board: {
   }
   // Get user's active company ID for multi-tenant isolation
   const companyId = session?.user?.activeCompanyId;
-  
+
   if (!companyId) {
     return { error: "No active company found" };
   }

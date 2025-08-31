@@ -1,7 +1,7 @@
 import db from "@/lib/db";
 import { generateObject } from "ai";
 import { aiConfig } from "./config";
-import { z } from 'zod/v3';
+import { z } from "zod/v3";
 
 export interface ConversationContext {
   userId: string;
@@ -50,7 +50,7 @@ export class ConversationMemoryService {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       metadata?: Record<string, any>;
     },
-    context: ConversationContext
+    context: ConversationContext,
   ): Promise<string> {
     try {
       const conversation = await this.getOrCreateConversation(context);
@@ -115,7 +115,7 @@ export class ConversationMemoryService {
    * Update conversation summary with AI analysis
    */
   private async updateConversationSummary(
-    conversationId: string
+    conversationId: string,
   ): Promise<void> {
     try {
       const messages = await db.aIMessage.findMany({
@@ -259,7 +259,7 @@ Focus on project management context and user behavior patterns.`,
    */
   async getConversationContext(
     userId: string,
-    sessionId?: string
+    sessionId?: string,
   ): Promise<{
     recentTopics: string[];
     actionItems: string[];
@@ -373,11 +373,11 @@ Focus on project management context and user behavior patterns.`,
         acc[item as string] = (acc[item as string] || 0) + 1;
         return acc;
       },
-      {} as Record<string, number>
+      {} as Record<string, number>,
     );
 
     return Object.entries(counts).reduce((a, b) =>
-      counts[a[0]] > counts[b[0]] ? a : b
+      counts[a[0]] > counts[b[0]] ? a : b,
     )[0] as T;
   }
 
@@ -387,7 +387,7 @@ Focus on project management context and user behavior patterns.`,
         acc[item] = (acc[item] || 0) + 1;
         return acc;
       },
-      {} as Record<string, number>
+      {} as Record<string, number>,
     );
 
     return Object.entries(counts)

@@ -4,7 +4,7 @@ import db from "@/lib/db";
 import type { BoardSection, Task } from "@/app/(app)/[cid]/tasks/_types";
 
 export async function getBoardSections(
-  boardId: string
+  boardId: string,
 ): Promise<BoardSection[]> {
   const boardSections = await db.boardSection.findMany({
     where: {
@@ -50,7 +50,7 @@ export async function getBoardSections(
           name: t.createdBy?.name ?? null,
         },
         documents: [],
-      })
+      }),
     ),
   }));
 

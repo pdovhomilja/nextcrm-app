@@ -27,7 +27,7 @@ const handler = createMcpHandler(
             },
           ],
         };
-      }
+      },
     );
 
     // Server info tool
@@ -57,12 +57,12 @@ const handler = createMcpHandler(
                   },
                 },
                 null,
-                2
+                2,
               ),
             },
           ],
         };
-      }
+      },
     );
   },
   {
@@ -77,7 +77,7 @@ const handler = createMcpHandler(
     basePath: "",
     verboseLogs: process.env.MCP_VERBOSE_LOGS === "true",
     maxDuration: parseInt(process.env.MCP_MAX_DURATION || "800"),
-  }
+  },
 );
 
 export { handler as GET, handler as POST, handler as DELETE };

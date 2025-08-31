@@ -18,7 +18,7 @@ const boardPlanSchema = z.object({
       name: z
         .string()
         .describe(
-          'The name of a section or phase (e.g., "Phase 1: Research").'
+          'The name of a section or phase (e.g., "Phase 1: Research").',
         ),
       tasks: z.array(
         z.object({
@@ -26,9 +26,9 @@ const boardPlanSchema = z.object({
             .string()
             .describe("The title of a specific, actionable task."),
           description: z.string().describe("A short description for the task."),
-        })
+        }),
       ),
-    })
+    }),
   ),
 });
 
@@ -40,7 +40,7 @@ export const getBoardWizardToolkit = (context: AgentContext) => ({
       brief: z
         .string()
         .describe(
-          'The final, summarized project brief, written in the second person as a confirmation to the user (e.g., "Okay, so you want to build a mobile app for...").'
+          'The final, summarized project brief, written in the second person as a confirmation to the user (e.g., "Okay, so you want to build a mobile app for...").',
         ),
     }),
     execute: async ({ brief }) => {
@@ -66,7 +66,7 @@ export const getBoardWizardToolkit = (context: AgentContext) => ({
         "Context userId:",
         context.userId,
         "companyId:",
-        context.companyId
+        context.companyId,
       );
 
       try {
@@ -95,7 +95,7 @@ Project Brief: ${refinedPrompt}`,
         });
         console.log(
           "Generated board plan:",
-          JSON.stringify(boardPlan, null, 2)
+          JSON.stringify(boardPlan, null, 2),
         );
 
         // 2. Persist the generated plan to the database
@@ -109,7 +109,7 @@ Project Brief: ${refinedPrompt}`,
         if (!board || "error" in board) {
           throw new Error(
             "Failed to create board: " +
-              (board && "error" in board ? board.error : "Unknown error")
+              (board && "error" in board ? board.error : "Unknown error"),
           );
         }
 
@@ -120,7 +120,7 @@ Project Brief: ${refinedPrompt}`,
           const boardSection = await createBoardSection(
             board.id,
             section.name,
-            true
+            true,
           );
 
           if (!boardSection || !boardSection.id) {
@@ -129,7 +129,7 @@ Project Brief: ${refinedPrompt}`,
           }
 
           console.log(
-            `Creating ${section.tasks.length} tasks for section: ${section.name}`
+            `Creating ${section.tasks.length} tasks for section: ${section.name}`,
           );
           for (const task of section.tasks) {
             await createTask(
@@ -139,13 +139,13 @@ Project Brief: ${refinedPrompt}`,
                 priority: "MEDIUM", // Default priority
                 status: "NEW", // Default status
               },
-              boardSection.id
+              boardSection.id,
             );
           }
         }
 
         console.log(
-          `Board "${board.name}" created successfully with ID: ${board.id}`
+          `Board "${board.name}" created successfully with ID: ${board.id}`,
         );
         return { boardId: board.id, boardName: board.name };
       } catch (error) {

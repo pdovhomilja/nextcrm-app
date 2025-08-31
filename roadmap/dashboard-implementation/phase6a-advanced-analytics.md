@@ -24,7 +24,7 @@
 export class PredictiveAnalytics {
   async predictTaskCompletion(
     companyId: string,
-    taskId: string
+    taskId: string,
   ): Promise<{
     estimatedCompletionDate: Date;
     confidenceScore: number;

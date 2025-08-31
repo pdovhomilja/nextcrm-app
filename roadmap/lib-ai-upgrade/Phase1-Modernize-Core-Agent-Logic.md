@@ -1,4 +1,3 @@
-
 # Phase 1: Modernize Core Agent Logic (`agent-core.ts`)
 
 **Objective:** Refactor the `BaseAIAgent` class in `agent-core.ts` to replace the rigid, multi-step decision-making process with a modern, single-loop agentic architecture using the Vercel AI SDK's `generateText` or `streamText` functions.
@@ -70,20 +69,21 @@ All agent capabilities must be exposed as discrete, Zod-defined tools.
 
 ```typescript
 // in lib/ai/tools/common-tools.ts
-import { z } from 'zod';
+import { z } from "zod";
 
 export const commonTools = {
-    request_clarification: {
-        description: 'Ask the user a clarifying question when their request is ambiguous or incomplete.',
-        parameters: z.object({
-            question: z.string().describe('The specific question to ask the user.'),
-        }),
-        execute: async ({ question }) => {
-            // This tool might not perform an action but serves as a signal
-            // for the agent to respond with the question.
-            return { was_clarification_requested: true, question };
-        }
-    }
+  request_clarification: {
+    description:
+      "Ask the user a clarifying question when their request is ambiguous or incomplete.",
+    parameters: z.object({
+      question: z.string().describe("The specific question to ask the user."),
+    }),
+    execute: async ({ question }) => {
+      // This tool might not perform an action but serves as a signal
+      // for the agent to respond with the question.
+      return { was_clarification_requested: true, question };
+    },
+  },
 };
 ```
 
@@ -91,20 +91,23 @@ export const commonTools = {
 
 ```typescript
 // in lib/ai/tools/rag-tools.ts
-import { z } from 'zod';
+import { z } from "zod";
 
 export const ragTools = {
-    rag_search: {
-        description: 'Search the knowledge base for relevant documents and context to answer a user query.',
-        parameters: z.object({
-            searchText: z.string().describe('The text to search for in the knowledge base.'),
-        }),
-        execute: async ({ searchText }) => {
-            // ... logic to call the embedding search service
-            const results = await embeddingSearchService.search(searchText);
-            return { results };
-        }
-    }
+  rag_search: {
+    description:
+      "Search the knowledge base for relevant documents and context to answer a user query.",
+    parameters: z.object({
+      searchText: z
+        .string()
+        .describe("The text to search for in the knowledge base."),
+    }),
+    execute: async ({ searchText }) => {
+      // ... logic to call the embedding search service
+      const results = await embeddingSearchService.search(searchText);
+      return { results };
+    },
+  },
 };
 ```
 
@@ -123,22 +126,24 @@ private getAvailableTools() {
 
 ## 3. Key Architectural Changes
 
--   **Before:** A rigid, multi-step process (`makeDecision` -> `switch` -> `orchestrateTools`) that separates the decision from the action.
--   **After:** A single, iterative agentic loop (`streamText` or `generateText`) where the LLM decides at each step whether to call a tool or generate a text response.
--   **Before:** Manual, keyword-based logic (`determineContextType`, `prepareToolParams`).
--   **After:** LLM-driven parameter generation based on Zod schemas, eliminating manual data extraction.
+- **Before:** A rigid, multi-step process (`makeDecision` -> `switch` -> `orchestrateTools`) that separates the decision from the action.
+- **After:** A single, iterative agentic loop (`streamText` or `generateText`) where the LLM decides at each step whether to call a tool or generate a text response.
+- **Before:** Manual, keyword-based logic (`determineContextType`, `prepareToolParams`).
+- **After:** LLM-driven parameter generation based on Zod schemas, eliminating manual data extraction.
 
 ## 4. Verification Strategy
 
 1.  **Unit Testing:** Create a test file for `agent-core.ts`.
 2.  **Mock the AI SDK:** Use a library like `vitest` or `jest` to mock the `streamText` function.
 3.  **Test Case 1 (Simple Response):**
-    -   **Input:** A simple query like "Hello".
-    -   **Mock:** Configure the mocked `streamText` to return a simple text response without tool calls.
-    -   **Assert:** Verify that `processQuery` returns the expected text and an empty `toolCalls` array.
+    - **Input:** A simple query like "Hello".
+    - **Mock:** Configure the mocked `streamText` to return a simple text response without tool calls.
+    - **Assert:** Verify that `processQuery` returns the expected text and an empty `toolCalls` array.
 4.  **Test Case 2 (Tool Use):**
-    -   **Input:** A query requiring a tool, like "Search for project alpha".
-    -   **Mock:** Configure the mocked `streamText` to return a `toolCalls` array containing a call to `rag_search` with the parameter `{ searchText: 'project alpha' }`.
-    -   **Assert:** Verify that `processQuery` correctly identifies the tool call and its parameters.
+    - **Input:** A query requiring a tool, like "Search for project alpha".
+    - **Mock:** Configure the mocked `streamText` to return a `toolCalls` array containing a call to `rag_search` with the parameter `{ searchText: 'project alpha' }`.
+    - **Assert:** Verify that `processQuery` correctly identifies the tool call and its parameters.
+
+```
 
 ```

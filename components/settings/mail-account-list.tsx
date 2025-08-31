@@ -1,8 +1,13 @@
-import React from 'react';
-import { getUserMailAccounts } from '@/actions/mail/account-actions';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { RemoveAccountButton } from './remove-account-button';
+import React from "react";
+import { getUserMailAccounts } from "@/actions/mail/account-actions";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { RemoveAccountButton } from "./remove-account-button";
 
 export const MailAccountList = async () => {
   const { accounts, error } = await getUserMailAccounts();
@@ -17,7 +22,11 @@ export const MailAccountList = async () => {
   }
 
   if (!accounts || accounts.length === 0) {
-    return <p className="text-sm text-muted-foreground">No mail accounts have been added yet.</p>;
+    return (
+      <p className="text-sm text-muted-foreground">
+        No mail accounts have been added yet.
+      </p>
+    );
   }
 
   return (

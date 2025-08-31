@@ -23,7 +23,7 @@ const compareBoardsSchema = {
         "task_count",
         "team_size",
         "avg_task_duration",
-      ])
+      ]),
     )
     .default(["completion_rate", "task_count"]),
 } as const;
@@ -79,16 +79,16 @@ const handler = createMcpHandler(
 
           // Get all tasks from board sections
           const allTasks = board.boardSections.flatMap(
-            (section) => section.tasks
+            (section) => section.tasks,
           );
 
           // Calculate board statistics
           const totalTasks = allTasks.length;
           const completedTasks = allTasks.filter(
-            (task) => task.status === "COMPLETED"
+            (task) => task.status === "COMPLETED",
           ).length;
           const inProgressTasks = allTasks.filter(
-            (task) => task.status === "IN_PROGRESS"
+            (task) => task.status === "IN_PROGRESS",
           ).length;
           const completionRate =
             totalTasks > 0 ? completedTasks / totalTasks : 0;
@@ -99,7 +99,7 @@ const handler = createMcpHandler(
               acc[task.priority] = (acc[task.priority] || 0) + 1;
               return acc;
             },
-            {} as Record<string, number>
+            {} as Record<string, number>,
           );
 
           // Team distribution - temporarily disabled due to missing relation
@@ -162,10 +162,10 @@ const handler = createMcpHandler(
           throw new Error(
             `Board info retrieval failed: ${
               error instanceof Error ? error.message : "Unknown error"
-            }`
+            }`,
           );
         }
-      }
+      },
     );
 
     // Board comparison tool
@@ -191,7 +191,7 @@ const handler = createMcpHandler(
           const daysBack =
             timeRangeMap[params.timeRange as keyof typeof timeRangeMap];
           const startDate = new Date(
-            now.getTime() - daysBack * 24 * 60 * 60 * 1000
+            now.getTime() - daysBack * 24 * 60 * 60 * 1000,
           );
 
           // Get boards data
@@ -225,11 +225,11 @@ const handler = createMcpHandler(
           // Calculate metrics for each board
           const boardComparisons = boards.map((board) => {
             const allBoardTasks = board.boardSections.flatMap(
-              (section) => section.tasks
+              (section) => section.tasks,
             );
             const totalTasks = allBoardTasks.length;
             const completedTasks = allBoardTasks.filter(
-              (task) => task.status === "COMPLETED"
+              (task) => task.status === "COMPLETED",
             ).length;
             const completionRate =
               totalTasks > 0 ? completedTasks / totalTasks : 0;
@@ -237,14 +237,14 @@ const handler = createMcpHandler(
             // Team size (unique assignees)
             const teamSize = Array.from(
               new Set(
-                allBoardTasks.map((task) => task.assignedToId).filter(Boolean)
-              )
+                allBoardTasks.map((task) => task.assignedToId).filter(Boolean),
+              ),
             ).length;
 
             // Average task duration for completed tasks
             const completedTasksWithDuration = allBoardTasks.filter(
               (task) =>
-                task.status === "COMPLETED" && task.updatedAt && task.createdAt
+                task.status === "COMPLETED" && task.updatedAt && task.createdAt,
             );
 
             const avgTaskDuration =
@@ -278,18 +278,18 @@ const handler = createMcpHandler(
             const values = boardComparisons.map(
               (b) =>
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (b.metrics as any)[metric]
+                (b.metrics as any)[metric],
             );
             const maxValue = Math.max(...values);
             const minValue = Math.min(...values);
 
             const bestBoard = boardComparisons.find(
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (b) => (b.metrics as any)[metric] === maxValue
+              (b) => (b.metrics as any)[metric] === maxValue,
             );
             const worstBoard = boardComparisons.find(
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (b) => (b.metrics as any)[metric] === minValue
+              (b) => (b.metrics as any)[metric] === minValue,
             );
 
             comparison[metric] = {
@@ -310,7 +310,7 @@ const handler = createMcpHandler(
             insights: generateComparisonInsights(
               boardComparisons,
               comparison,
-              params.metrics
+              params.metrics,
             ),
           };
 
@@ -327,10 +327,10 @@ const handler = createMcpHandler(
           throw new Error(
             `Board comparison failed: ${
               error instanceof Error ? error.message : "Unknown error"
-            }`
+            }`,
           );
         }
-      }
+      },
     );
 
     // Board optimization suggestions tool
@@ -372,7 +372,7 @@ const handler = createMcpHandler(
 
           const suggestions = generateOptimizationSuggestions(
             board,
-            params.focus
+            params.focus,
           );
 
           const result = {
@@ -391,8 +391,8 @@ const handler = createMcpHandler(
                   board.boardSections
                     .flatMap((s) => s.tasks)
                     .map((t) => t.assignedToId)
-                    .filter(Boolean)
-                )
+                    .filter(Boolean),
+                ),
               ).length,
             },
             suggestions,
@@ -418,10 +418,10 @@ const handler = createMcpHandler(
           throw new Error(
             `Board optimization analysis failed: ${
               error instanceof Error ? error.message : "Unknown error"
-            }`
+            }`,
           );
         }
-      }
+      },
     );
 
     interface BoardComparison {
@@ -434,7 +434,7 @@ const handler = createMcpHandler(
       boardComparisons: BoardComparison[],
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       comparison: any,
-      metrics: string[]
+      metrics: string[],
     ): string[] {
       const insights = [];
 
@@ -442,20 +442,20 @@ const handler = createMcpHandler(
         const data = comparison[metric];
         if (data.best.board !== data.worst.board) {
           insights.push(
-            `${metric}: ${data.best.board} leads with ${data.best.value}, while ${data.worst.board} has ${data.worst.value}`
+            `${metric}: ${data.best.board} leads with ${data.best.value}, while ${data.worst.board} has ${data.worst.value}`,
           );
         }
       });
 
       // Overall performance insight
       const avgCompletionRates = boardComparisons.map(
-        (b) => b.metrics.completion_rate
+        (b) => b.metrics.completion_rate,
       );
       const overallAvg =
         avgCompletionRates.reduce((sum, rate) => sum + rate, 0) /
         avgCompletionRates.length;
       insights.push(
-        `Average completion rate across all boards: ${Math.round(overallAvg * 100)}%`
+        `Average completion rate across all boards: ${Math.round(overallAvg * 100)}%`,
       );
 
       return insights;
@@ -471,17 +471,17 @@ const handler = createMcpHandler(
     function generateOptimizationSuggestions(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       board: any,
-      focus: string
+      focus: string,
     ): OptimizationSuggestion[] {
       const suggestions = [];
       const allTasks = board.boardSections.flatMap(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (s: any) => s.tasks
+        (s: any) => s.tasks,
       );
       const totalTasks = allTasks.length;
       const completedTasks = allTasks.filter(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (t: any) => t.status === "COMPLETED"
+        (t: any) => t.status === "COMPLETED",
       ).length;
       const completionRate = totalTasks > 0 ? completedTasks / totalTasks : 0;
 
@@ -499,7 +499,7 @@ const handler = createMcpHandler(
 
           const inProgressTasks = allTasks.filter(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (t: any) => t.status === "IN_PROGRESS"
+            (t: any) => t.status === "IN_PROGRESS",
           );
           if (inProgressTasks.length > totalTasks * 0.4) {
             suggestions.push({
@@ -521,7 +521,7 @@ const handler = createMcpHandler(
               }
               return acc;
             },
-            {}
+            {},
           );
 
           const taskCounts = Object.values(tasksByMember) as number[];
@@ -545,7 +545,7 @@ const handler = createMcpHandler(
           // Check for bottlenecks in sections
           const sectionsWithTasks = board.boardSections.filter(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (s: any) => s.tasks.length > 0
+            (s: any) => s.tasks.length > 0,
           );
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           sectionsWithTasks.forEach((section: any) => {
@@ -571,7 +571,7 @@ const handler = createMcpHandler(
               acc[task.priority] = (acc[task.priority] || 0) + 1;
               return acc;
             },
-            {}
+            {},
           );
 
           const highPriorityTasks =
@@ -602,7 +602,7 @@ const handler = createMcpHandler(
 
       return suggestions;
     }
-  }
+  },
 );
 
 export { handler as GET, handler as POST };

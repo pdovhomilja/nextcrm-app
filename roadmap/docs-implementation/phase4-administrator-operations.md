@@ -238,7 +238,7 @@ export class CostMonitor {
     inputTokens: number,
     outputTokens: number,
     userId: string,
-    companyId: string
+    companyId: string,
   ) {
     const modelCost = this.MODEL_COSTS[model];
     if (!modelCost) return;

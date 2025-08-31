@@ -123,7 +123,7 @@ enum AIGenerationStatus {
     1.  **Visibility**: The system has a clear record of all pending, processing, and failed jobs.
     2.  **Retry-ability**: A failed job can be easily re-queued and run again, either automatically or manually by an administrator, using the stored `refinedPrompt`.
     3.  **Reliable User Notification**: If a job fails, its status is updated to `FAILED`, and a user notification can be reliably triggered, informing them of the issue.
-- **Risk**: Without a final review of the *full board structure*, the generated board may still contain unexpected elements.
+- **Risk**: Without a final review of the _full board structure_, the generated board may still contain unexpected elements.
   - **Mitigation**: The primary mitigation is to ensure that the generated board is easily and quickly editable or deletable by the user after creation.
 
 ## 7\. Success Metrics

@@ -79,7 +79,7 @@ export const taskPriorityColors: ChartColorConfig = {
  */
 export function formatChartDate(
   date: Date,
-  granularity: "day" | "week" | "month"
+  granularity: "day" | "week" | "month",
 ): string {
   switch (granularity) {
     case "day":
@@ -104,7 +104,7 @@ export function formatChartDate(
  */
 export function calculatePercentageChange(
   current: number,
-  previous: number
+  previous: number,
 ): number {
   if (previous === 0) return current > 0 ? 100 : 0;
   return ((current - previous) / previous) * 100;
@@ -141,7 +141,7 @@ export function calculateTrend(data: number[]): {
 export function generateDateIntervals(
   startDate: Date,
   endDate: Date,
-  granularity: "day" | "week" | "month"
+  granularity: "day" | "week" | "month",
 ): { start: Date; end: Date; label: string }[] {
   const intervals: { start: Date; end: Date; label: string }[] = [];
   const current = new Date(startDate);

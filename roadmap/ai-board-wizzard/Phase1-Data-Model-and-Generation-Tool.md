@@ -5,6 +5,7 @@
 ## 1. Rationale
 
 Before any frontend or complex backend logic is written, we need two things:
+
 1.  A way to persist and track the state of an AI generation request.
 2.  A core AI-powered function that can take a detailed prompt and produce a board.
 
@@ -51,7 +52,8 @@ The first step is to create the database model that will store the generation re
       failureReason    String?
     }
     ```
-    *Note: Ensure the relations to `User`, `Company`, and `Board` are correctly defined based on your existing schema.*
+
+    _Note: Ensure the relations to `User`, `Company`, and `Board` are correctly defined based on your existing schema._
 
 ### Step 2.2: Apply Database Migration
 
@@ -104,7 +106,7 @@ Now, we'll create the specialized AI tool for generating the board.
         }),
         execute: async ({ refinedPrompt, role, userId, companyId }) => {
           console.log('Executing generateProjectBoard tool...');
-          
+
           // 1. Call the LLM to get the structured board plan
           const openai = createOpenAI({ apiKey: process.env.OPENAI_API_KEY });
           const { object: boardPlan } = await generateObject({
@@ -150,7 +152,7 @@ Now, we'll create the specialized AI tool for generating the board.
               });
             }
           }
-          
+
           console.log(`Board "${board.name}" created successfully.`);
           return { boardId: board.id, boardName: board.name };
         },
@@ -167,25 +169,25 @@ Make the `AgentOrchestrator` aware of this new tool.
 
     ```typescript
     // in lib/ai/toolkits/index.ts
-    import { projectToolkit } from './project-toolkit';
-    import { taskToolkit } from './task-toolkit';
-    import { boardWizardToolkit } from './board-wizard-toolkit'; // <-- Import
+    import { projectToolkit } from "./project-toolkit";
+    import { taskToolkit } from "./task-toolkit";
+    import { boardWizardToolkit } from "./board-wizard-toolkit"; // <-- Import
     // ... import other toolkits
 
     const allToolkits = {
-        projectAnalyzer: projectToolkit,
-        taskManager: taskToolkit,
-        boardWizard: boardWizardToolkit, // <-- Add to registry
-        // ...
+      projectAnalyzer: projectToolkit,
+      taskManager: taskToolkit,
+      boardWizard: boardWizardToolkit, // <-- Add to registry
+      // ...
     };
 
     export function getToolkits(names: (keyof typeof allToolkits)[]) {
-        // ... existing implementation
+      // ... existing implementation
     }
     ```
 
 ## 3. Verification
 
--   Confirm that the database migration was successful and the new table exists.
--   Review the `board-wizard-toolkit.ts` file to ensure it correctly calls the LLM and the existing data creation actions.
--   Ensure the toolkit is correctly registered and discoverable by the `AgentOrchestrator`.
+- Confirm that the database migration was successful and the new table exists.
+- Review the `board-wizard-toolkit.ts` file to ensure it correctly calls the LLM and the existing data creation actions.
+- Ensure the toolkit is correctly registered and discoverable by the `AgentOrchestrator`.

@@ -40,9 +40,7 @@ export default function RootLayout({
         >
           <NuqsAdapter>
             <SessionProvider>
-              <CompanyProvider>
-                {children}
-              </CompanyProvider>
+              <CompanyProvider>{children}</CompanyProvider>
             </SessionProvider>
           </NuqsAdapter>
         </ThemeProvider>

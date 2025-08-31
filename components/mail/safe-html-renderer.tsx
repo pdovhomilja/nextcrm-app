@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React from 'react';
-import DOMPurify from 'dompurify';
+import React from "react";
+import DOMPurify from "dompurify";
 
 interface SafeHtmlRendererProps {
   html: string;
@@ -9,7 +9,7 @@ interface SafeHtmlRendererProps {
 
 export const SafeHtmlRenderer = ({ html }: SafeHtmlRendererProps) => {
   // Check if running in a browser environment before using DOMPurify
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     return null;
   }
 

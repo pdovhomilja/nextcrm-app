@@ -90,25 +90,41 @@
       {
         "name": "Project Health Report",
         "query": "Generate a comprehensive health report for all my active projects",
-        "expected_tools": ["search_boards", "get_board_info", "vector_search_health"],
+        "expected_tools": [
+          "search_boards",
+          "get_board_info",
+          "vector_search_health"
+        ],
         "description": "Multi-step analysis combining board search, individual analysis, and system health"
       },
       {
         "name": "Task Bottleneck Analysis",
         "query": "Find bottlenecks in my workflow and suggest improvements for board 'clx1y2z3a4b5c6d7e8f9'",
-        "expected_tools": ["get_board_info", "suggest_board_optimizations", "semantic_search_tasks"],
+        "expected_tools": [
+          "get_board_info",
+          "suggest_board_optimizations",
+          "semantic_search_tasks"
+        ],
         "description": "Workflow analysis with optimization suggestions and related task discovery"
       },
       {
         "name": "Sprint Planning Assistant",
         "query": "Help me plan the next sprint by analyzing current progress and finding related tasks",
-        "expected_tools": ["compare_boards", "semantic_search_tasks", "get_board_info"],
+        "expected_tools": [
+          "compare_boards",
+          "semantic_search_tasks",
+          "get_board_info"
+        ],
         "description": "Sprint planning using board comparison, task search, and performance metrics"
       },
       {
         "name": "Team Productivity Analysis",
         "query": "Analyze team productivity across all boards and identify optimization opportunities",
-        "expected_tools": ["search_boards", "compare_boards", "suggest_board_optimizations"],
+        "expected_tools": [
+          "search_boards",
+          "compare_boards",
+          "suggest_board_optimizations"
+        ],
         "description": "Comprehensive team analysis with multi-board comparison and optimization"
       }
     ],
@@ -116,7 +132,11 @@
       {
         "name": "Connection Test",
         "query": "Test all TaskHQ connections and verify system status",
-        "expected_tools": ["health_check", "server_info", "vector_search_health"],
+        "expected_tools": [
+          "health_check",
+          "server_info",
+          "vector_search_health"
+        ],
         "description": "Complete system health verification"
       },
       {
@@ -195,7 +215,7 @@
     },
     {
       "step": "Configure environment variables",
-      "status": "pending", 
+      "status": "pending",
       "validation": "OPENAI_API_KEY and TASKHQ_MCP_BASE_URL are set"
     },
     {
@@ -209,7 +229,7 @@
       "validation": "health_check tool returns server status"
     },
     {
-      "step": "Test AI agent functionality", 
+      "step": "Test AI agent functionality",
       "status": "pending",
       "validation": "Agent processes queries and calls MCP tools"
     },

@@ -70,7 +70,7 @@ export type DistributionData = {
 };
 
 export async function getDistributionData(
-  input: z.infer<typeof DistributionDataSchema>
+  input: z.infer<typeof DistributionDataSchema>,
 ): Promise<{ data?: DistributionData; error?: string }> {
   try {
     const session = await auth();
@@ -205,11 +205,11 @@ export async function getDistributionData(
     // Calculate total and percentages
     const total = Object.values(groupedData).reduce(
       (sum, count) => sum + count,
-      0
+      0,
     );
 
     const distributionData: DistributionDataPoint[] = Object.entries(
-      groupedData
+      groupedData,
     )
       .map(([name, value]) => ({
         name,

@@ -1,32 +1,34 @@
 // in actions/tasks/create-board-from-ai.ts
-'use server';
+"use server";
 
-import { z } from 'zod';
-import { auth } from '@/auth';
-import db from '@/lib/db';
-import { getCurrentCompanyId } from '@/lib/auth-utils';
-import { runBoardGenerationJob } from '@/lib/jobs/board-generation-job'; // We will create this next
+import { z } from "zod";
+import { auth } from "@/auth";
+import db from "@/lib/db";
+import { getCurrentCompanyId } from "@/lib/auth-utils";
+import { runBoardGenerationJob } from "@/lib/jobs/board-generation-job"; // We will create this next
 
 const CreateBoardFromAiSchema = z.object({
-  refinedPrompt: z.string().min(10, 'The project brief is too short.'),
+  refinedPrompt: z.string().min(10, "The project brief is too short."),
   role: z.string(),
-  language: z.string().optional().default('English'),
+  language: z.string().optional().default("English"),
 });
 
-export async function createBoardFromAi(values: z.infer<typeof CreateBoardFromAiSchema>) {
+export async function createBoardFromAi(
+  values: z.infer<typeof CreateBoardFromAiSchema>,
+) {
   const session = await auth();
   if (!session?.user?.id) {
-    return { error: 'Unauthorized' };
+    return { error: "Unauthorized" };
   }
 
   const companyId = await getCurrentCompanyId();
   if (!companyId) {
-    return { error: 'Company not found' };
+    return { error: "Company not found" };
   }
 
   const validatedFields = CreateBoardFromAiSchema.safeParse(values);
   if (!validatedFields.success) {
-    return { error: 'Invalid fields' };
+    return { error: "Invalid fields" };
   }
 
   const { refinedPrompt, role, language } = validatedFields.data;
@@ -34,14 +36,14 @@ export async function createBoardFromAi(values: z.infer<typeof CreateBoardFromAi
   // 1. Persist the request to the database
   // Store language info in the refined prompt for now
   const promptWithLanguage = `${refinedPrompt}\n\n[LANGUAGE: ${language}]`;
-  
+
   const boardRequest = await db.aIGeneratedBoardRequest.create({
     data: {
       userId: session.user.id,
       companyId,
       refinedPrompt: promptWithLanguage,
       role,
-      status: 'PENDING',
+      status: "PENDING",
     },
   });
 
@@ -49,5 +51,8 @@ export async function createBoardFromAi(values: z.infer<typeof CreateBoardFromAi
   // We do not `await` this call. The client gets an immediate response.
   runBoardGenerationJob({ boardRequestId: boardRequest.id });
 
-  return { success: 'Board generation has started! We will notify you upon completion.' };
+  return {
+    success:
+      "Board generation has started! We will notify you upon completion.",
+  };
 }

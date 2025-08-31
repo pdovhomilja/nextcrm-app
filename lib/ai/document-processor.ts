@@ -1,7 +1,7 @@
 import { generateObject } from "ai";
 import { aiConfig } from "./config";
 import db from "@/lib/db";
-import { z } from 'zod/v3';
+import { z } from "zod/v3";
 // Dynamic import handled in method
 import * as mammoth from "mammoth";
 import * as XLSX from "xlsx";
@@ -46,7 +46,7 @@ export class DocumentProcessor {
    */
   async processDocument(
     fileBuffer: Buffer,
-    metadata: DocumentMetadata
+    metadata: DocumentMetadata,
   ): Promise<DocumentProcessingResult> {
     const startTime = Date.now();
 
@@ -248,7 +248,7 @@ export class DocumentProcessor {
    */
   private async analyzeDocumentContent(
     text: string,
-    metadata: DocumentMetadata
+    metadata: DocumentMetadata,
   ): Promise<{
     summary: string;
     keyInsights: string[];
@@ -312,7 +312,7 @@ Focus on insights relevant to:
       taskId?: string;
       limit?: number;
       threshold?: number;
-    } = {}
+    } = {},
   ): Promise<
     Array<{
       documentId: string;
@@ -326,7 +326,7 @@ Focus on insights relevant to:
 
     try {
       console.log(
-        "Document vector search temporarily disabled, using text search"
+        "Document vector search temporarily disabled, using text search",
       );
 
       // Fallback to basic text search
@@ -390,7 +390,7 @@ Focus on insights relevant to:
             acc[item.mimeType] = item._count.mimeType;
             return acc;
           },
-          {} as Record<string, number>
+          {} as Record<string, number>,
         ),
         avgProcessingTime: 0, // Would need to track this separately
         successRate: stats._avg.confidence || 0,

@@ -1,30 +1,32 @@
-import { auth } from "@/auth"
-import { getCompanyDetails, hasCompanyAccess } from "@/actions/company-actions"
-import { redirect } from "next/navigation"
-import { CompanySettingsContent } from "./company-settings-content"
+import { auth } from "@/auth";
+import { getCompanyDetails, hasCompanyAccess } from "@/actions/company-actions";
+import { redirect } from "next/navigation";
+import { CompanySettingsContent } from "./company-settings-content";
 
 interface CompanySettingsPageProps {
-  params: Promise<{ cid: string }>
+  params: Promise<{ cid: string }>;
 }
 
-export default async function CompanySettingsPage({ params }: CompanySettingsPageProps) {
-  const { cid } = await params
-  const session = await auth()
+export default async function CompanySettingsPage({
+  params,
+}: CompanySettingsPageProps) {
+  const { cid } = await params;
+  const session = await auth();
 
   if (!session?.user) {
-    redirect("/auth/signin")
+    redirect("/auth/signin");
   }
 
   // Verify user has access to this company
-  const hasAccess = await hasCompanyAccess(cid, 'MEMBER')
+  const hasAccess = await hasCompanyAccess(cid, "MEMBER");
   if (!hasAccess) {
-    redirect("/")
+    redirect("/");
   }
 
   // Get company details with members
-  const result = await getCompanyDetails(cid)
+  const result = await getCompanyDetails(cid);
   if (!result.success || !result.company) {
-    redirect("/")
+    redirect("/");
   }
 
   return (
@@ -42,17 +44,17 @@ export default async function CompanySettingsPage({ params }: CompanySettingsPag
         currentUserId={session.user.id}
       />
     </div>
-  )
+  );
 }
 
 export async function generateMetadata({ params }: CompanySettingsPageProps) {
-  const { cid } = await params
-  
-  const result = await getCompanyDetails(cid)
-  const companyName = result.success ? result.company?.name : "Company"
+  const { cid } = await params;
+
+  const result = await getCompanyDetails(cid);
+  const companyName = result.success ? result.company?.name : "Company";
 
   return {
     title: `${companyName} - Settings`,
     description: `Manage ${companyName} team members and settings`,
-  }
+  };
 }

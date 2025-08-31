@@ -3,7 +3,7 @@ import { randomBytes } from "crypto";
 import db from "./db";
 
 export async function generateEmailVerificationToken(
-  email: string
+  email: string,
 ): Promise<string> {
   // Generate a secure random token
   const token = randomBytes(32).toString("hex");
@@ -24,7 +24,7 @@ export async function generateEmailVerificationToken(
 }
 
 export async function verifyEmailToken(
-  token: string
+  token: string,
 ): Promise<{ success: boolean; email?: string }> {
   try {
     const user = await db.user.findUnique({

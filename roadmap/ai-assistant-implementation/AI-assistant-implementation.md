@@ -59,7 +59,7 @@ Out-of-scope: New ML models; non-OpenAI provider abstraction; full-blown E2E Cyp
   - Add explicit input parsing and detailed error responses.
   - Ensure auth + `cid` filtering before tool execution.
 
-  4.2 Vector DB readiness
+    4.2 Vector DB readiness
 
 - Enable pgvector and ensure matching Prisma schema.
 - Commands:
@@ -120,7 +120,7 @@ Acceptance tests should assert 401 without session, 403 wrong `cid`, 429 when li
   - `SmartSuggestions` → `/api/ai/suggest`
   - `ProjectInsights` → `/api/ai/analyze`
 
-  7.2 Minimal wiring example
+    7.2 Minimal wiring example
 
 ```tsx
 // app/(app)/[cid]/ai-assistant/page.tsx (excerpt)

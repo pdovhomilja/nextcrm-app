@@ -64,7 +64,7 @@ function isToolPart(part: {
 }
 
 function isGetInformationToolPart(
-  part: ToolPart
+  part: ToolPart,
 ): part is UIGetInformationToolPart {
   return part.type === "tool-getInformation";
 }
@@ -79,7 +79,7 @@ function isTextPart(part: unknown): part is UITextPart {
 }
 
 function hasArrayOutput(
-  part: ToolPart
+  part: ToolPart,
 ): part is
   | UIGetInformationToolPart
   | (UIGenericToolPart & { output: unknown[] }) {
@@ -132,7 +132,7 @@ const AIAssistantV2Page = ({ params }: AIAssistantV2PageProps) => {
     if (lastMessage && lastMessage.role === "assistant") {
       // Check if message has any tool calls that are still in progress
       const hasActiveToolCalls = lastMessage.parts.some(
-        (part) => isToolPart(part) && part.state !== "output-available"
+        (part) => isToolPart(part) && part.state !== "output-available",
       );
       // If message just appeared or has active tool calls, show loading
       if (hasActiveToolCalls) {
@@ -187,7 +187,7 @@ const AIAssistantV2Page = ({ params }: AIAssistantV2PageProps) => {
           "mt-2 p-3 border",
           isInProgress
             ? "border-blue-200 bg-blue-50/50 dark:bg-blue-950/20"
-            : "border-green-200 bg-green-50/50 dark:bg-green-950/20"
+            : "border-green-200 bg-green-50/50 dark:bg-green-950/20",
         )}
       >
         <div className="flex items-center gap-2 mb-2">
@@ -239,7 +239,7 @@ const AIAssistantV2Page = ({ params }: AIAssistantV2PageProps) => {
                       </Button>
                     </div>
                   </div>
-                )
+                ),
               )
             ) : (
               <pre className="text-xs bg-white/50 dark:bg-black/20 p-2 rounded-md mt-1 overflow-x-auto">
@@ -375,7 +375,7 @@ const AIAssistantV2Page = ({ params }: AIAssistantV2PageProps) => {
                 key={message.id}
                 className={cn(
                   "flex gap-3 animate-in fade-in-0 slide-in-from-bottom-2 duration-300",
-                  message.role === "user" ? "justify-end" : "justify-start"
+                  message.role === "user" ? "justify-end" : "justify-start",
                 )}
                 style={{ animationDelay: `${index * 50}ms` }}
               >
@@ -390,7 +390,7 @@ const AIAssistantV2Page = ({ params }: AIAssistantV2PageProps) => {
                 <div
                   className={cn(
                     "flex flex-col gap-1 max-w-[75%]",
-                    message.role === "user" && "items-end"
+                    message.role === "user" && "items-end",
                   )}
                 >
                   <div
@@ -398,7 +398,7 @@ const AIAssistantV2Page = ({ params }: AIAssistantV2PageProps) => {
                       "rounded-2xl px-4 py-2.5 shadow-sm",
                       message.role === "user"
                         ? "bg-primary text-primary-foreground"
-                        : "bg-muted"
+                        : "bg-muted",
                     )}
                   >
                     {message.parts.map((part, partIndex) => (

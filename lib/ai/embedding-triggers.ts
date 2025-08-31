@@ -42,7 +42,7 @@ export class EmbeddingTriggerService {
       while (this.updateQueue.size > 0) {
         const items = Array.from(this.updateQueue).slice(
           0,
-          aiConfig.embedding.batchSize
+          aiConfig.embedding.batchSize,
         );
 
         // Clear processed items from queue
@@ -93,7 +93,7 @@ export class EmbeddingTriggerService {
     } catch (error) {
       console.error(
         `Immediate embedding update failed for task ${taskId}:`,
-        error
+        error,
       );
       return false;
     }
@@ -108,7 +108,7 @@ export class EmbeddingTriggerService {
     } catch (error) {
       console.error(
         `Immediate embedding update failed for board ${boardId}:`,
-        error
+        error,
       );
       return false;
     }
@@ -170,7 +170,7 @@ export const embeddingTriggerService = new EmbeddingTriggerService();
 // Utility functions for integration with existing server actions
 export async function triggerTaskEmbeddingUpdate(
   taskId: string,
-  immediate = false
+  immediate = false,
 ): Promise<void> {
   if (!aiConfig.features.enabled) {
     console.log("AI features disabled, skipping embedding update");
@@ -186,14 +186,14 @@ export async function triggerTaskEmbeddingUpdate(
   } catch (error) {
     console.error(
       `Failed to trigger task embedding update for ${taskId}:`,
-      error
+      error,
     );
   }
 }
 
 export async function triggerBoardEmbeddingUpdate(
   boardId: string,
-  immediate = false
+  immediate = false,
 ): Promise<void> {
   if (!aiConfig.features.enabled) {
     console.log("AI features disabled, skipping embedding update");
@@ -209,13 +209,13 @@ export async function triggerBoardEmbeddingUpdate(
   } catch (error) {
     console.error(
       `Failed to trigger board embedding update for ${boardId}:`,
-      error
+      error,
     );
   }
 }
 
 export async function triggerTaskEmbeddingDeletion(
-  taskId: string
+  taskId: string,
 ): Promise<void> {
   if (!aiConfig.features.enabled) {
     return;
@@ -226,13 +226,13 @@ export async function triggerTaskEmbeddingDeletion(
   } catch (error) {
     console.error(
       `Failed to trigger task embedding deletion for ${taskId}:`,
-      error
+      error,
     );
   }
 }
 
 export async function triggerBoardEmbeddingDeletion(
-  boardId: string
+  boardId: string,
 ): Promise<void> {
   if (!aiConfig.features.enabled) {
     return;
@@ -243,7 +243,7 @@ export async function triggerBoardEmbeddingDeletion(
   } catch (error) {
     console.error(
       `Failed to trigger board embedding deletion for ${boardId}:`,
-      error
+      error,
     );
   }
 }

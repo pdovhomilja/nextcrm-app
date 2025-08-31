@@ -109,8 +109,8 @@ export class BackgroundRefresh {
     const commonRanges = ["7d", "30d", "90d"];
     await Promise.all(
       commonRanges.map((range) =>
-        getTaskMetrics({ dateRange: range, companyId })
-      )
+        getTaskMetrics({ dateRange: range, companyId }),
+      ),
     );
   }
 }

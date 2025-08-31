@@ -1,18 +1,27 @@
 // in app/(app)/[cid]/tasks/_components/ai-board-wizard-dialog.tsx
-'use client';
+"use client";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { useAiBoardWizard } from './use-ai-board-wizard';
-import { InitialStepForm } from './initial-step-form';
-import { RefinementChatInterface } from './refinement-chat-interface';
-import { FinalBriefView } from './final-brief-view';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { useAiBoardWizard } from "./use-ai-board-wizard";
+import { InitialStepForm } from "./initial-step-form";
+import { RefinementChatInterface } from "./refinement-chat-interface";
+import { FinalBriefView } from "./final-brief-view";
 
 interface AiBoardWizardDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function AiBoardWizardDialog({ isOpen, onOpenChange }: AiBoardWizardDialogProps) {
+export function AiBoardWizardDialog({
+  isOpen,
+  onOpenChange,
+}: AiBoardWizardDialogProps) {
   const wizard = useAiBoardWizard({ onOpenChange });
 
   return (
@@ -24,11 +33,12 @@ export function AiBoardWizardDialog({ isOpen, onOpenChange }: AiBoardWizardDialo
             Let&apos;s create a detailed project plan from your idea.
           </DialogDescription>
         </DialogHeader>
-        
-        {wizard.step === 'initial' && <InitialStepForm wizard={wizard} />}
-        {wizard.step === 'refining' && <RefinementChatInterface wizard={wizard} />}
-        {wizard.step === 'final_brief' && <FinalBriefView wizard={wizard} />}
 
+        {wizard.step === "initial" && <InitialStepForm wizard={wizard} />}
+        {wizard.step === "refining" && (
+          <RefinementChatInterface wizard={wizard} />
+        )}
+        {wizard.step === "final_brief" && <FinalBriefView wizard={wizard} />}
       </DialogContent>
     </Dialog>
   );

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { aiSecurity } from "@/lib/security/ai-security";
-import { z } from 'zod/v3';
+import { z } from "zod/v3";
 
 const privacyActionSchema = z.object({
   action: z.enum(["anonymize", "delete", "export"]),
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     if (!session?.user) {
       return NextResponse.json(
         { error: "Authentication required" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     if (targetUserId !== session.user.id) {
       return NextResponse.json(
         { error: "Can only manage your own data" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -64,27 +64,27 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Invalid request", details: error.issues },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     return NextResponse.json(
       { error: "Privacy action failed" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function GET(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _request: NextRequest
+  _request: NextRequest,
 ) {
   try {
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json(
         { error: "Authentication required" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -116,7 +116,7 @@ export async function GET(
     console.error("Privacy info error:", error);
     return NextResponse.json(
       { error: "Failed to retrieve privacy information" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

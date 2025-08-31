@@ -1,5 +1,5 @@
 import { tool } from "ai";
-import { z } from 'zod/v3';
+import { z } from "zod/v3";
 import { ragProcessor, RAGQuery } from "../rag-processor"; // Assuming rag-processor exports these
 
 export const ragTools = {

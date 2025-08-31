@@ -104,7 +104,7 @@ export async function createCompany(name: string) {
 export async function inviteUserToCompany(
   companyId: string,
   email: string,
-  role: "MEMBER" | "ADMIN" = "MEMBER"
+  role: "MEMBER" | "ADMIN" = "MEMBER",
 ) {
   const session = await auth();
 
@@ -232,7 +232,7 @@ export async function removeUserFromCompany(companyId: string, userId: string) {
 export async function updateUserRole(
   companyId: string,
   userId: string,
-  newRole: "MEMBER" | "ADMIN" | "OWNER"
+  newRole: "MEMBER" | "ADMIN" | "OWNER",
 ) {
   const session = await auth();
 
@@ -344,7 +344,7 @@ export async function getCompanyDetails(companyId: string) {
 // Helper function to check if user has access to company
 export async function hasCompanyAccess(
   companyId: string,
-  requiredRole?: "MEMBER" | "ADMIN" | "OWNER"
+  requiredRole?: "MEMBER" | "ADMIN" | "OWNER",
 ) {
   const session = await auth();
 

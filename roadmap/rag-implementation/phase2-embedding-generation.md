@@ -1,9 +1,11 @@
 # Phase 2: Embedding Generation
 
 ## Overview
+
 This phase implements the embedding generation system using Vercel AI SDK, creates the data extraction pipeline, and establishes real-time synchronization between task data and vector embeddings.
 
 ## Prerequisites
+
 - Completed Phase 1: MCP Server Setup & Vector Database Integration
 - pgvector-enabled PostgreSQL database
 - OpenAI API access configured
@@ -17,12 +19,14 @@ This phase implements the embedding generation system using Vercel AI SDK, creat
 **API Token Usage**: Low
 
 #### Tasks:
+
 - [ ] Create AI configuration module
 - [ ] Set up Vercel AI SDK embedding service
 - [ ] Implement cost optimization utilities
 - [ ] Create embedding queue system
 
 #### AI Configuration Setup:
+
 Create `/lib/ai/config.ts`:
 
 ```typescript
@@ -31,7 +35,7 @@ import { openai } from "@ai-sdk/openai";
 export const aiConfig = {
   // Embedding model configuration
   embeddingModel: openai.embedding(
-    process.env.EMBEDDING_MODEL || "text-embedding-ada-002"
+    process.env.EMBEDDING_MODEL || "text-embedding-ada-002",
   ),
 
   // Chat model for analysis
@@ -64,6 +68,7 @@ export const EMBEDDING_CACHE_TTL = 24 * 60 * 60; // 24 hours in seconds
 ```
 
 #### Base Embedding Service:
+
 Create `/lib/ai/embedding-service.ts`:
 
 ```typescript
@@ -74,7 +79,8 @@ import { createHash } from "crypto";
 
 export class EmbeddingService {
   private static instance: EmbeddingService;
-  private cache: Map<string, { embedding: number[]; timestamp: number }> = new Map();
+  private cache: Map<string, { embedding: number[]; timestamp: number }> =
+    new Map();
 
   static getInstance(): EmbeddingService {
     if (!EmbeddingService.instance) {
@@ -87,7 +93,9 @@ export class EmbeddingService {
    * Generate content hash for caching and deduplication
    */
   private generateContentHash(content: string): string {
-    return createHash("sha256").update(content.trim().toLowerCase()).digest("hex");
+    return createHash("sha256")
+      .update(content.trim().toLowerCase())
+      .digest("hex");
   }
 
   /**
@@ -98,9 +106,10 @@ export class EmbeddingService {
 
     const cached = this.cache.get(contentHash);
     if (cached) {
-      const isExpired = 
-        Date.now() - cached.timestamp > aiConfig.optimization.cacheExpiryHours * 60 * 60 * 1000;
-      
+      const isExpired =
+        Date.now() - cached.timestamp >
+        aiConfig.optimization.cacheExpiryHours * 60 * 60 * 1000;
+
       if (!isExpired) {
         return cached.embedding;
       } else {
@@ -131,9 +140,10 @@ export class EmbeddingService {
     }
 
     // Truncate content if too long
-    const truncatedContent = content.length > aiConfig.optimization.maxContentLength
-      ? content.substring(0, aiConfig.optimization.maxContentLength)
-      : content;
+    const truncatedContent =
+      content.length > aiConfig.optimization.maxContentLength
+        ? content.substring(0, aiConfig.optimization.maxContentLength)
+        : content;
 
     const contentHash = this.generateContentHash(truncatedContent);
 
@@ -172,9 +182,10 @@ export class EmbeddingService {
         continue;
       }
 
-      const truncated = content.length > aiConfig.optimization.maxContentLength
-        ? content.substring(0, aiConfig.optimization.maxContentLength)
-        : content;
+      const truncated =
+        content.length > aiConfig.optimization.maxContentLength
+          ? content.substring(0, aiConfig.optimization.maxContentLength)
+          : content;
 
       const hash = this.generateContentHash(truncated);
       const cached = this.getCachedEmbedding(hash);
@@ -185,7 +196,8 @@ export class EmbeddingService {
     }
 
     // Find items that need new embeddings
-    const needEmbedding: { index: number; content: string; hash: string }[] = [];
+    const needEmbedding: { index: number; content: string; hash: string }[] =
+      [];
     cachedResults.forEach((cached, index) => {
       if (cached === null) {
         needEmbedding.push({
@@ -201,7 +213,7 @@ export class EmbeddingService {
     if (needEmbedding.length > 0) {
       const { embeddings } = await embedMany({
         model: aiConfig.embeddingModel,
-        values: needEmbedding.map(item => item.content),
+        values: needEmbedding.map((item) => item.content),
       });
       newEmbeddings = embeddings;
 
@@ -254,12 +266,14 @@ export const embeddingService = EmbeddingService.getInstance();
 **API Token Usage**: Medium
 
 #### Tasks:
+
 - [ ] Create task data extraction utilities
 - [ ] Implement board context extraction
 - [ ] Add metadata compilation functions
 - [ ] Create data transformation pipeline
 
 #### Task Data Extraction:
+
 Create `/lib/ai/data-extraction.ts`:
 
 ```typescript
@@ -357,7 +371,7 @@ export class DataExtractionService {
     // Add recent history context
     if (task.history.length > 0) {
       const historyContext = task.history
-        .map(h => `${h.action}: ${h.details}`)
+        .map((h) => `${h.action}: ${h.details}`)
         .join("; ");
       contentParts.push(`Recent activity: ${historyContext}`);
     }
@@ -414,36 +428,49 @@ export class DataExtractionService {
 
     if (!board) return null;
 
-    const allTasks = board.boardSections.flatMap(section => section.tasks);
-    const completedTasks = allTasks.filter(task => task.status === "COMPLETED");
-    
+    const allTasks = board.boardSections.flatMap((section) => section.tasks);
+    const completedTasks = allTasks.filter(
+      (task) => task.status === "COMPLETED",
+    );
+
     // Calculate metrics
-    const completionRate = allTasks.length > 0 ? completedTasks.length / allTasks.length : 0;
-    
-    const avgTaskDuration = completedTasks.length > 0
-      ? completedTasks.reduce((sum, task) => {
-          const duration = task.updatedAt.getTime() - task.createdAt.getTime();
-          return sum + duration;
-        }, 0) / completedTasks.length / (1000 * 60 * 60 * 24) // Convert to days
-      : 0;
+    const completionRate =
+      allTasks.length > 0 ? completedTasks.length / allTasks.length : 0;
+
+    const avgTaskDuration =
+      completedTasks.length > 0
+        ? completedTasks.reduce((sum, task) => {
+            const duration =
+              task.updatedAt.getTime() - task.createdAt.getTime();
+            return sum + duration;
+          }, 0) /
+          completedTasks.length /
+          (1000 * 60 * 60 * 24) // Convert to days
+        : 0;
 
     // Priority distribution
-    const priorityDistribution = allTasks.reduce((acc, task) => {
-      acc[task.priority] = (acc[task.priority] || 0) + 1;
-      return acc;
-    }, {} as Record<TaskPriority, number>);
+    const priorityDistribution = allTasks.reduce(
+      (acc, task) => {
+        acc[task.priority] = (acc[task.priority] || 0) + 1;
+        return acc;
+      },
+      {} as Record<TaskPriority, number>,
+    );
 
     // Status distribution
-    const statusDistribution = allTasks.reduce((acc, task) => {
-      acc[task.status] = (acc[task.status] || 0) + 1;
-      return acc;
-    }, {} as Record<TaskStatusNew, number>);
+    const statusDistribution = allTasks.reduce(
+      (acc, task) => {
+        acc[task.status] = (acc[task.status] || 0) + 1;
+        return acc;
+      },
+      {} as Record<TaskStatusNew, number>,
+    );
 
     // Get unique team members
     const teamMembers = [
       ...new Set([
-        ...allTasks.map(task => task.assignedTo.id),
-        ...allTasks.map(task => task.createdBy.id),
+        ...allTasks.map((task) => task.assignedTo.id),
+        ...allTasks.map((task) => task.createdBy.id),
       ]),
     ];
 
@@ -451,7 +478,7 @@ export class DataExtractionService {
     const contentParts = [
       `Board: ${board.name}`,
       board.description ? `Description: ${board.description}` : "",
-      `Sections: ${board.boardSections.map(s => s.name).join(", ")}`,
+      `Sections: ${board.boardSections.map((s) => s.name).join(", ")}`,
       `Total tasks: ${allTasks.length}`,
       `Completion rate: ${Math.round(completionRate * 100)}%`,
       `Team size: ${teamMembers.length} members`,
@@ -489,7 +516,10 @@ export class DataExtractionService {
   /**
    * Batch extract task data for a company
    */
-  async extractCompanyTaskData(companyId: string, limit = 100): Promise<TaskDocument[]> {
+  async extractCompanyTaskData(
+    companyId: string,
+    limit = 100,
+  ): Promise<TaskDocument[]> {
     const tasks = await db.task.findMany({
       where: {
         assignedTo: {
@@ -596,8 +626,8 @@ export class DataExtractionService {
     });
 
     return [
-      ...tasksWithoutEmbeddings.map(t => t.id),
-      ...tasksWithOutdatedEmbeddings.map(t => t.id),
+      ...tasksWithoutEmbeddings.map((t) => t.id),
+      ...tasksWithOutdatedEmbeddings.map((t) => t.id),
     ];
   }
 }
@@ -611,18 +641,24 @@ export const dataExtractionService = new DataExtractionService();
 **API Token Usage**: Low-Medium
 
 #### Tasks:
+
 - [ ] Create embedding storage service
 - [ ] Implement batch processing utilities
 - [ ] Add embedding update triggers
 - [ ] Create embedding validation functions
 
 #### Embedding Storage Service:
+
 Create `/lib/ai/embedding-storage.ts`:
 
 ```typescript
 import db from "@/lib/db";
 import { embeddingService } from "./embedding-service";
-import { dataExtractionService, TaskDocument, BoardDocument } from "./data-extraction";
+import {
+  dataExtractionService,
+  TaskDocument,
+  BoardDocument,
+} from "./data-extraction";
 import { Prisma } from "@prisma/client";
 
 export class EmbeddingStorageService {
@@ -633,7 +669,7 @@ export class EmbeddingStorageService {
     taskId: string,
     embedding: number[],
     content: string,
-    metadata: any
+    metadata: any,
   ): Promise<void> {
     try {
       await db.taskEmbedding.upsert({
@@ -664,7 +700,7 @@ export class EmbeddingStorageService {
     boardId: string,
     embedding: number[],
     content: string,
-    metadata: any
+    metadata: any,
   ): Promise<void> {
     try {
       await db.boardEmbedding.upsert({
@@ -699,13 +735,15 @@ export class EmbeddingStorageService {
         return false;
       }
 
-      const embedding = await embeddingService.generateEmbedding(taskDoc.content);
-      
+      const embedding = await embeddingService.generateEmbedding(
+        taskDoc.content,
+      );
+
       await this.storeTaskEmbedding(
         taskId,
         embedding,
         taskDoc.content,
-        taskDoc.metadata
+        taskDoc.metadata,
       );
 
       return true;
@@ -726,13 +764,15 @@ export class EmbeddingStorageService {
         return false;
       }
 
-      const embedding = await embeddingService.generateEmbedding(boardDoc.content);
-      
+      const embedding = await embeddingService.generateEmbedding(
+        boardDoc.content,
+      );
+
       await this.storeBoardEmbedding(
         boardId,
         embedding,
         boardDoc.content,
-        boardDoc.metadata
+        boardDoc.metadata,
       );
 
       return true;
@@ -747,19 +787,21 @@ export class EmbeddingStorageService {
    */
   async batchProcessTaskEmbeddings(
     taskIds: string[],
-    batchSize = 10
+    batchSize = 10,
   ): Promise<{ success: number; failed: number }> {
     let success = 0;
     let failed = 0;
 
     for (let i = 0; i < taskIds.length; i += batchSize) {
       const batch = taskIds.slice(i, i + batchSize);
-      
-      console.log(`Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(taskIds.length / batchSize)}`);
+
+      console.log(
+        `Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(taskIds.length / batchSize)}`,
+      );
 
       // Process batch in parallel
       const results = await Promise.allSettled(
-        batch.map(taskId => this.processTaskEmbedding(taskId))
+        batch.map((taskId) => this.processTaskEmbedding(taskId)),
       );
 
       results.forEach((result, index) => {
@@ -773,7 +815,7 @@ export class EmbeddingStorageService {
 
       // Small delay between batches to avoid rate limits
       if (i + batchSize < taskIds.length) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     }
 
@@ -790,7 +832,8 @@ export class EmbeddingStorageService {
     console.log(`Starting embedding processing for company ${companyId}`);
 
     // Get tasks needing embedding updates
-    const taskIds = await dataExtractionService.getTasksNeedingEmbeddingUpdate(companyId);
+    const taskIds =
+      await dataExtractionService.getTasksNeedingEmbeddingUpdate(companyId);
     console.log(`Found ${taskIds.length} tasks needing embedding updates`);
 
     const taskResults = await this.batchProcessTaskEmbeddings(taskIds);
@@ -836,7 +879,10 @@ export class EmbeddingStorageService {
       });
     } catch (error) {
       // Ignore if embedding doesn't exist
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
         return;
       }
       throw error;
@@ -853,7 +899,10 @@ export class EmbeddingStorageService {
       });
     } catch (error) {
       // Ignore if embedding doesn't exist
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
         return;
       }
       throw error;
@@ -882,7 +931,7 @@ export class EmbeddingStorageService {
 
     const now = new Date();
     const avgCreatedAt = taskStats._avg.createdAt;
-    const avgEmbeddingAge = avgCreatedAt 
+    const avgEmbeddingAge = avgCreatedAt
       ? (now.getTime() - avgCreatedAt.getTime()) / (1000 * 60 * 60 * 24) // Days
       : 0;
 
@@ -905,12 +954,14 @@ export const embeddingStorageService = new EmbeddingStorageService();
 **API Token Usage**: Medium
 
 #### Tasks:
+
 - [ ] Create embedding update triggers
 - [ ] Implement async embedding queue
 - [ ] Add error handling and retry logic
 - [ ] Integrate with existing server actions
 
 #### Update Existing Server Actions:
+
 Create `/lib/ai/embedding-triggers.ts`:
 
 ```typescript
@@ -926,7 +977,7 @@ export class EmbeddingTriggerService {
    */
   async queueTaskEmbeddingUpdate(taskId: string): Promise<void> {
     this.updateQueue.add(taskId);
-    
+
     // Process queue if not already processing
     if (!this.processing) {
       this.processQueue();
@@ -938,25 +989,28 @@ export class EmbeddingTriggerService {
    */
   private async processQueue(): Promise<void> {
     if (this.processing) return;
-    
+
     this.processing = true;
 
     try {
       while (this.updateQueue.size > 0) {
-        const taskIds = Array.from(this.updateQueue).slice(0, aiConfig.embedding.batchSize);
-        
+        const taskIds = Array.from(this.updateQueue).slice(
+          0,
+          aiConfig.embedding.batchSize,
+        );
+
         // Clear processed items from queue
-        taskIds.forEach(id => this.updateQueue.delete(id));
+        taskIds.forEach((id) => this.updateQueue.delete(id));
 
         // Process in parallel with limited concurrency
         await Promise.allSettled(
-          taskIds.map(taskId => 
-            embeddingStorageService.processTaskEmbedding(taskId)
-          )
+          taskIds.map((taskId) =>
+            embeddingStorageService.processTaskEmbedding(taskId),
+          ),
         );
 
         // Small delay to respect rate limits
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     } catch (error) {
       console.error("Error processing embedding queue:", error);
@@ -972,7 +1026,10 @@ export class EmbeddingTriggerService {
     try {
       return await embeddingStorageService.processTaskEmbedding(taskId);
     } catch (error) {
-      console.error(`Immediate embedding update failed for task ${taskId}:`, error);
+      console.error(
+        `Immediate embedding update failed for task ${taskId}:`,
+        error,
+      );
       return false;
     }
   }
@@ -992,7 +1049,10 @@ export class EmbeddingTriggerService {
 export const embeddingTriggerService = new EmbeddingTriggerService();
 
 // Utility functions for integration with existing server actions
-export async function triggerTaskEmbeddingUpdate(taskId: string, immediate = false): Promise<void> {
+export async function triggerTaskEmbeddingUpdate(
+  taskId: string,
+  immediate = false,
+): Promise<void> {
   if (immediate) {
     await embeddingTriggerService.immediateTaskEmbeddingUpdate(taskId);
   } else {
@@ -1000,7 +1060,9 @@ export async function triggerTaskEmbeddingUpdate(taskId: string, immediate = fal
   }
 }
 
-export async function triggerTaskEmbeddingDeletion(taskId: string): Promise<void> {
+export async function triggerTaskEmbeddingDeletion(
+  taskId: string,
+): Promise<void> {
   await embeddingTriggerService.handleTaskDeletion(taskId);
 }
 ```
@@ -1014,7 +1076,7 @@ import { triggerTaskEmbeddingUpdate } from "@/lib/ai/embedding-triggers";
 // After successful task creation, add:
 if (task.id) {
   // Queue embedding generation (non-blocking)
-  triggerTaskEmbeddingUpdate(task.id).catch(error => {
+  triggerTaskEmbeddingUpdate(task.id).catch((error) => {
     console.error("Failed to queue embedding update:", error);
   });
 }
@@ -1026,6 +1088,7 @@ if (task.id) {
 **API Token Usage**: Low-Medium
 
 #### Tasks:
+
 - [ ] Create embedding management endpoints
 - [ ] Add batch processing endpoints
 - [ ] Implement embedding health checks
@@ -1051,10 +1114,14 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case "process_company":
         if (!companyId) {
-          return NextResponse.json({ error: "Company ID required" }, { status: 400 });
+          return NextResponse.json(
+            { error: "Company ID required" },
+            { status: 400 },
+          );
         }
-        
-        const results = await embeddingStorageService.processCompanyEmbeddings(companyId);
+
+        const results =
+          await embeddingStorageService.processCompanyEmbeddings(companyId);
         return NextResponse.json({
           success: true,
           results,
@@ -1063,10 +1130,14 @@ export async function POST(request: NextRequest) {
 
       case "process_tasks":
         if (!taskIds || !Array.isArray(taskIds)) {
-          return NextResponse.json({ error: "Task IDs array required" }, { status: 400 });
+          return NextResponse.json(
+            { error: "Task IDs array required" },
+            { status: 400 },
+          );
         }
 
-        const taskResults = await embeddingStorageService.batchProcessTaskEmbeddings(taskIds);
+        const taskResults =
+          await embeddingStorageService.batchProcessTaskEmbeddings(taskIds);
         return NextResponse.json({
           success: true,
           results: taskResults,
@@ -1076,13 +1147,19 @@ export async function POST(request: NextRequest) {
       case "process_single_task":
         const { taskId } = await request.json();
         if (!taskId) {
-          return NextResponse.json({ error: "Task ID required" }, { status: 400 });
+          return NextResponse.json(
+            { error: "Task ID required" },
+            { status: 400 },
+          );
         }
 
-        const success = await embeddingStorageService.processTaskEmbedding(taskId);
+        const success =
+          await embeddingStorageService.processTaskEmbedding(taskId);
         return NextResponse.json({
           success,
-          message: success ? "Task embedding processed" : "Failed to process task embedding",
+          message: success
+            ? "Task embedding processed"
+            : "Failed to process task embedding",
         });
 
       default:
@@ -1092,7 +1169,7 @@ export async function POST(request: NextRequest) {
     console.error("Embedding API error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -1105,7 +1182,7 @@ export async function GET(request: NextRequest) {
     }
 
     const stats = await embeddingStorageService.getEmbeddingStats();
-    
+
     return NextResponse.json({
       success: true,
       stats,
@@ -1114,7 +1191,7 @@ export async function GET(request: NextRequest) {
     console.error("Embedding stats error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -1128,6 +1205,7 @@ export async function GET(request: NextRequest) {
 **API Token Usage**: Low-Medium
 
 #### Tasks:
+
 - [ ] Create embedding generation tests
 - [ ] Add performance monitoring
 - [ ] Implement cost tracking
@@ -1141,8 +1219,9 @@ import { dataExtractionService } from "../data-extraction";
 
 describe("EmbeddingService", () => {
   test("should generate embedding for text", async () => {
-    const embedding = await embeddingService.generateEmbedding("Test task content");
-    
+    const embedding =
+      await embeddingService.generateEmbedding("Test task content");
+
     expect(embedding).toHaveLength(1536); // OpenAI ada-002 dimensions
     expect(embedding[0]).toBeTypeOf("number");
   });
@@ -1153,7 +1232,7 @@ describe("EmbeddingService", () => {
 
   test("should use cache for duplicate content", async () => {
     const content = "Duplicate test content";
-    
+
     const start1 = Date.now();
     const embedding1 = await embeddingService.generateEmbedding(content);
     const time1 = Date.now() - start1;
@@ -1169,6 +1248,7 @@ describe("EmbeddingService", () => {
 ```
 
 #### Create monitoring utilities:
+
 Create `/lib/ai/monitoring.ts`:
 
 ```typescript
@@ -1222,6 +1302,7 @@ export class EmbeddingMonitor {
 ## Next Steps
 
 After completing Phase 2:
+
 1. Proceed to Phase 3: RAG Implementation
 2. Set up production monitoring for embedding generation
 3. Configure cost alerts and limits
@@ -1230,12 +1311,14 @@ After completing Phase 2:
 ## Troubleshooting
 
 ### Common Issues:
+
 - **OpenAI API rate limits**: Implement proper batching and delays
 - **Vector storage errors**: Check pgvector installation and data types
 - **Memory issues**: Process large datasets in smaller batches
 - **Embedding consistency**: Ensure content preprocessing is deterministic
 
 ### Debug Commands:
+
 ```bash
 # Test embedding generation
 curl -X POST http://localhost:3000/api/ai/embeddings \

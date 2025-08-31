@@ -92,7 +92,7 @@ export class EmbeddingService {
     } catch (error) {
       console.error("Failed to generate embedding:", error);
       throw new Error(
-        `Embedding generation failed: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Embedding generation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }
@@ -159,7 +159,7 @@ export class EmbeddingService {
       } catch (error) {
         console.error("Failed to generate batch embeddings:", error);
         throw new Error(
-          `Batch embedding generation failed: ${error instanceof Error ? error.message : "Unknown error"}`
+          `Batch embedding generation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
         );
       }
     }

@@ -37,7 +37,7 @@ const messageSchema = z.discriminatedUnion("role", [
     content: z
       .string()
       .or(
-        z.array(textPartSchema.or(toolCallPartSchema).or(toolResultPartSchema))
+        z.array(textPartSchema.or(toolCallPartSchema).or(toolResultPartSchema)),
       ),
   }),
   z.object({
@@ -52,7 +52,7 @@ const messageSchema = z.discriminatedUnion("role", [
         toolName: z.string(),
         args: z.record(z.any()),
         result: z.any().optional(),
-      })
+      }),
     ),
   }),
 ]);
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Authentication required" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     if (!activeCompanyId) {
       return NextResponse.json(
         { error: "No company context available" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
       validatedRequest.history as ModelMessage[],
       undefined, // systemPromptOverride
       undefined, // requiredToolkitsOverride
-      agentContext
+      agentContext,
     );
 
     return NextResponse.json({
@@ -137,13 +137,13 @@ export async function POST(request: NextRequest) {
           error: "Validation failed",
           details: error.issues,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     return NextResponse.json(
       { error: "Agent processing failed" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -184,7 +184,7 @@ export async function GET() {
 
     return NextResponse.json(
       { error: "Failed to get agent status" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

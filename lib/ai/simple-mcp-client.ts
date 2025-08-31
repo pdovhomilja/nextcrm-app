@@ -69,26 +69,34 @@ export class SimpleMCPClientPool {
         url: "/api/mcp/tasks/sse",
         description: "Task management operations",
         tools: {
-          create_task: { description: "Create a new task in the specified board section" },
+          create_task: {
+            description: "Create a new task in the specified board section",
+          },
           search_tasks: { description: "Search and filter tasks" },
           update_task: { description: "Update an existing task" },
           get_tasks: { description: "Get tasks for a board or section" },
           delete_task: { description: "Delete a task" },
           get_boards: { description: "Get all boards for the current user" },
           get_board_sections: { description: "Get sections within a board" },
-        }
+        },
       },
       {
         name: "search",
         url: "/api/mcp/search/sse",
         description: "Vector and semantic search",
         tools: {
-          semantic_search: { description: "Perform semantic search across tasks" },
+          semantic_search: {
+            description: "Perform semantic search across tasks",
+          },
           vector_search: { description: "Vector-based similarity search" },
           keyword_search: { description: "Traditional keyword-based search" },
-          search_history: { description: "Search through conversation history" },
-          contextual_search: { description: "Context-aware search with RAG integration" },
-        }
+          search_history: {
+            description: "Search through conversation history",
+          },
+          contextual_search: {
+            description: "Context-aware search with RAG integration",
+          },
+        },
       },
       {
         name: "analytics",
@@ -100,7 +108,7 @@ export class SimpleMCPClientPool {
           team_productivity: { description: "Analyze team productivity" },
           bottleneck_analysis: { description: "Identify workflow bottlenecks" },
           progress_forecasting: { description: "Forecast project completion" },
-        }
+        },
       },
       {
         name: "boards",
@@ -111,9 +119,11 @@ export class SimpleMCPClientPool {
           update_board: { description: "Update board details" },
           delete_board: { description: "Delete a project board" },
           get_boards: { description: "Get all boards for the user" },
-          create_board_section: { description: "Create a new section in a board" },
+          create_board_section: {
+            description: "Create a new section in a board",
+          },
           board_permissions: { description: "Manage board access permissions" },
-        }
+        },
       },
     ];
 
@@ -130,7 +140,9 @@ export class SimpleMCPClientPool {
     }
 
     this.isInitialized = true;
-    console.log(`Simple MCP Client Pool initialized with ${this.servers.size} servers`);
+    console.log(
+      `Simple MCP Client Pool initialized with ${this.servers.size} servers`,
+    );
   }
 
   /**
@@ -141,7 +153,7 @@ export class SimpleMCPClientPool {
     method: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     params: Record<string, any> = {},
-    userId?: string
+    userId?: string,
   ): Promise<MCPResponse> {
     const server = this.servers.get(serverName);
     if (!server) {
@@ -150,8 +162,8 @@ export class SimpleMCPClientPool {
         id: Date.now(),
         error: {
           code: -32000,
-          message: `Server '${serverName}' not found`
-        }
+          message: `Server '${serverName}' not found`,
+        },
       };
     }
 
@@ -159,48 +171,49 @@ export class SimpleMCPClientPool {
     const payload: MCPToolCall = {
       method,
       params,
-      id: requestId
+      id: requestId,
     };
 
     try {
       // Get authentication headers - userId is required for proper authentication
       if (!userId) {
-        console.error('MCP tool call missing userId for authentication');
+        console.error("MCP tool call missing userId for authentication");
         return {
           jsonrpc: "2.0",
           id: requestId,
           error: {
             code: -32001,
-            message: "Authentication required - no userId provided"
-          }
+            message: "Authentication required - no userId provided",
+          },
         };
       }
 
       const authHeaders = await mcpAuthService.getMCPAuthHeaders(userId);
-      
+
       console.log(`MCP tool call: ${serverName}.${method} for user ${userId}`);
-      
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+      const baseUrl =
+        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
       const response = await fetch(`${baseUrl}${server.url}`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          ...authHeaders
+          "Content-Type": "application/json",
+          ...authHeaders,
         },
         body: JSON.stringify({
-          jsonrpc: '2.0',
-          ...payload
-        })
+          jsonrpc: "2.0",
+          ...payload,
+        }),
       });
 
-      const result = await response.json() as MCPResponse;
-      
+      const result = (await response.json()) as MCPResponse;
+
       console.log(`MCP Response for ${serverName}.${method}:`, {
         status: response.status,
         result: result,
-        hasError: !!result.error
+        hasError: !!result.error,
       });
-      
+
       // Update server health based on response
       if (response.ok) {
         this.updateServerHealth(serverName, "healthy");
@@ -212,15 +225,15 @@ export class SimpleMCPClientPool {
     } catch (error) {
       console.error(`MCP call failed for ${serverName}.${method}:`, error);
       this.updateServerHealth(serverName, "unhealthy");
-      
+
       return {
         jsonrpc: "2.0",
         id: requestId,
         error: {
           code: -32603,
           message: "Internal error",
-          data: error instanceof Error ? error.message : 'Unknown error'
-        }
+          data: error instanceof Error ? error.message : "Unknown error",
+        },
       };
     }
   }
@@ -258,7 +271,7 @@ export class SimpleMCPClientPool {
           ...tool,
           serverName,
           toolName,
-          fullName: `${serverName}_${toolName}`
+          fullName: `${serverName}_${toolName}`,
         };
       });
     }
@@ -271,7 +284,7 @@ export class SimpleMCPClientPool {
    */
   private updateServerHealth(
     serverName: string,
-    status: "healthy" | "unhealthy"
+    status: "healthy" | "unhealthy",
   ): void {
     const server = this.servers.get(serverName);
     if (server) {
@@ -334,7 +347,7 @@ export class SimpleMCPClientPool {
       healthy: healthyServers > 0,
       serverCount,
       healthyServers,
-      issues
+      issues,
     };
   }
 }

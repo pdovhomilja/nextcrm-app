@@ -1,7 +1,7 @@
-import React from 'react';
-import { MailAccountForm } from './mail-account-form';
-import { MailAccountList } from './mail-account-list';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React from "react";
+import { MailAccountForm } from "./mail-account-form";
+import { MailAccountList } from "./mail-account-list";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const MailSettings = () => {
   return (

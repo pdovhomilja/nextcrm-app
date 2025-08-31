@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
-import React from 'react';
+import { useState, useEffect, useCallback } from "react";
+import { useSession } from "next-auth/react";
+import React from "react";
 
 interface CompanyAccessValidation {
   isAuthorized: boolean;
@@ -11,9 +11,9 @@ interface CompanyAccessValidation {
 
 export function useCompanyAccess(
   companyId: string,
-  resourceType: 'task' | 'board' | 'document' | 'ai_query',
+  resourceType: "task" | "board" | "document" | "ai_query",
   resourceId?: string,
-  action: string = 'read'
+  action: string = "read",
 ): CompanyAccessValidation {
   const { data: session, status } = useSession();
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -22,15 +22,15 @@ export function useCompanyAccess(
 
   const validateAccess = useCallback(async () => {
     // Don't validate if session is still loading
-    if (status === 'loading') {
+    if (status === "loading") {
       return;
     }
 
     // If no session, deny access
-    if (status === 'unauthenticated' || !session?.user?.id) {
+    if (status === "unauthenticated" || !session?.user?.id) {
       setIsAuthorized(false);
       setIsLoading(false);
-      setError('User not authenticated');
+      setError("User not authenticated");
       return;
     }
 
@@ -45,14 +45,14 @@ export function useCompanyAccess(
       });
 
       if (resourceId) {
-        params.append('resourceId', resourceId);
+        params.append("resourceId", resourceId);
       }
 
       const response = await fetch(`/api/company/validate-access?${params}`, {
-        method: 'GET',
-        credentials: 'include',
+        method: "GET",
+        credentials: "include",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
 
@@ -63,12 +63,12 @@ export function useCompanyAccess(
         setError(data.error);
       } else {
         setIsAuthorized(false);
-        setError(data.error || 'Access validation failed');
+        setError(data.error || "Access validation failed");
       }
     } catch (err) {
-      console.error('Company access validation error:', err);
+      console.error("Company access validation error:", err);
       setIsAuthorized(false);
-      setError('Failed to validate access');
+      setError("Failed to validate access");
     } finally {
       setIsLoading(false);
     }
@@ -95,18 +95,18 @@ export function useCompanyAccess(
 // Higher-order component for protecting components with company access
 export function withCompanyAccess<P extends object>(
   WrappedComponent: React.ComponentType<P>,
-  resourceType: 'task' | 'board' | 'document' | 'ai_query',
-  action: string = 'read'
+  resourceType: "task" | "board" | "document" | "ai_query",
+  action: string = "read",
 ) {
   return function CompanyAccessWrapper(
-    props: P & { params: { cid: string }; resourceId?: string }
+    props: P & { params: { cid: string }; resourceId?: string },
   ) {
     const { params, resourceId, ...otherProps } = props;
     const { isAuthorized, isLoading, error } = useCompanyAccess(
       params.cid,
       resourceType,
       resourceId,
-      action
+      action,
     );
 
     if (isLoading) {
@@ -127,7 +127,7 @@ export function withCompanyAccess<P extends object>(
             <div className="text-red-500 text-6xl mb-4">⚠️</div>
             <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
             <p className="text-muted-foreground mb-4">
-              {error || 'You do not have permission to access this resource.'}
+              {error || "You do not have permission to access this resource."}
             </p>
             <button
               onClick={() => window.history.back()}

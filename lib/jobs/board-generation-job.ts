@@ -1,6 +1,6 @@
 // in lib/jobs/board-generation-job.ts
-import db from '@/lib/db';
-import { AgentOrchestrator } from '@/lib/ai/agent-orchestrator'; // Assuming this is your orchestrator entry point
+import db from "@/lib/db";
+import { AgentOrchestrator } from "@/lib/ai/agent-orchestrator"; // Assuming this is your orchestrator entry point
 
 interface BoardGenerationJobPayload {
   boardRequestId: string;
@@ -17,13 +17,15 @@ interface ToolResult {
   };
 }
 
-export async function runBoardGenerationJob(payload: BoardGenerationJobPayload) {
+export async function runBoardGenerationJob(
+  payload: BoardGenerationJobPayload,
+) {
   const { boardRequestId } = payload;
 
   // 1. Update job status to PROCESSING
   await db.aIGeneratedBoardRequest.update({
     where: { id: boardRequestId },
-    data: { status: 'PROCESSING' },
+    data: { status: "PROCESSING" },
   });
 
   try {
@@ -37,74 +39,94 @@ export async function runBoardGenerationJob(payload: BoardGenerationJobPayload) 
     }
 
     // 3. Extract language from refined prompt if available
-    let language = 'English';
+    let language = "English";
     let cleanedPrompt = request.refinedPrompt;
-    
+
     // Check if language is embedded in the prompt
     const languageMatch = request.refinedPrompt.match(/\[LANGUAGE: ([^\]]+)\]/);
     if (languageMatch) {
       language = languageMatch[1];
-      cleanedPrompt = request.refinedPrompt.replace(/\n\n\[LANGUAGE: [^\]]+\]$/, '');
+      cleanedPrompt = request.refinedPrompt.replace(
+        /\n\n\[LANGUAGE: [^\]]+\]$/,
+        "",
+      );
     }
-    
+
     // 4. Invoke the AI Agent Orchestrator with explicit toolkit override
     const orchestrator = new AgentOrchestrator();
     const query = `Use the generateProjectBoard tool to create and persist a project board based on this approved brief. The role is "${request.role}" and the refined prompt is: "${cleanedPrompt}". You must call the generateProjectBoard tool with refinedPrompt="${cleanedPrompt}" and role="${request.role}" parameters to actually create the board in the database.`;
-    
+
     // Create proper context for the agent
     const context = {
       userId: request.userId,
       companyId: request.companyId,
-      conversationId: `board-generation-${boardRequestId}`
+      conversationId: `board-generation-${boardRequestId}`,
     };
-    
+
     // System prompt to force tool usage
     const systemPrompt = `You are a project board generator. Your only job is to call the generateProjectBoard tool with the provided project brief and role. You must call the generateProjectBoard tool to create and persist the board. Do not ask questions or create briefs - just use the tool to generate the actual board. Generate all content in ${language}.`;
-    
+
     // Force the orchestrator to use the boardWizard toolkit by overriding the intent classification
     const result = await orchestrator.orchestrate(
-      query, 
+      query,
       [], // Pass empty history for this self-contained task
       systemPrompt, // Override system prompt to force tool usage
-      ['boardWizard'], // Explicitly require the boardWizard toolkit
-      context // Pass the proper context
+      ["boardWizard"], // Explicitly require the boardWizard toolkit
+      context, // Pass the proper context
     );
 
     // Extract result from the tool call
-    console.log(`Job ${boardRequestId}: Full orchestration result:`, JSON.stringify(result, null, 2));
-    
-    const toolCalls = await result.toolCalls || [];
-    const toolResults = await result.toolResults || [];
-    
-    console.log(`Job ${boardRequestId}: Tool calls received:`, toolCalls.map(t => t.toolName));
+    console.log(
+      `Job ${boardRequestId}: Full orchestration result:`,
+      JSON.stringify(result, null, 2),
+    );
+
+    const toolCalls = (await result.toolCalls) || [];
+    const toolResults = (await result.toolResults) || [];
+
+    console.log(
+      `Job ${boardRequestId}: Tool calls received:`,
+      toolCalls.map((t) => t.toolName),
+    );
     console.log(`Job ${boardRequestId}: Tool results received:`, toolResults);
-    
+
     // Look for the tool result in toolResults array (where the actual output is stored)
-    const boardGenerationResult = (toolResults as ToolResult[]).find((result) => result.toolName === 'generateProjectBoard');
-    
+    const boardGenerationResult = (toolResults as ToolResult[]).find(
+      (result) => result.toolName === "generateProjectBoard",
+    );
+
     if (!boardGenerationResult) {
-      console.error(`Job ${boardRequestId}: Board generation tool result not found. Available results:`, (toolResults as ToolResult[]).map((r) => r.toolName));
-      throw new Error('Board generation tool result not found');
+      console.error(
+        `Job ${boardRequestId}: Board generation tool result not found. Available results:`,
+        (toolResults as ToolResult[]).map((r) => r.toolName),
+      );
+      throw new Error("Board generation tool result not found");
     }
-    
-    console.log(`Job ${boardRequestId}: Found tool result:`, JSON.stringify(boardGenerationResult, null, 2));
-    
+
+    console.log(
+      `Job ${boardRequestId}: Found tool result:`,
+      JSON.stringify(boardGenerationResult, null, 2),
+    );
+
     // Extract the actual result from the result property (not output)
     const toolResult = boardGenerationResult.result;
     console.log(`Job ${boardRequestId}: Extracted result:`, toolResult);
-    
+
     if (!toolResult?.boardId) {
-      console.error(`Job ${boardRequestId}: No boardId found in tool result:`, toolResult);
-      throw new Error('Board generation tool did not return a valid boardId');
+      console.error(
+        `Job ${boardRequestId}: No boardId found in tool result:`,
+        toolResult,
+      );
+      throw new Error("Board generation tool did not return a valid boardId");
     }
-    
+
     const { boardId } = toolResult;
 
     // 4. Update job status to COMPLETED
     await db.aIGeneratedBoardRequest.update({
       where: { id: boardRequestId },
       data: {
-        status: 'COMPLETED',
+        status: "COMPLETED",
         boardId: boardId,
       },
     });
@@ -113,15 +135,15 @@ export async function runBoardGenerationJob(payload: BoardGenerationJobPayload) 
     // Note: revalidatePath removed from here as it can't be called during background job execution
     // The client-side auto-reload and router.refresh() will handle the UI updates
     console.log(`Job ${boardRequestId} completed successfully.`);
-
   } catch (error) {
     console.error(`Job ${boardRequestId} failed:`, error);
     // 6. Update job status to FAILED
     await db.aIGeneratedBoardRequest.update({
       where: { id: boardRequestId },
       data: {
-        status: 'FAILED',
-        failureReason: error instanceof Error ? error.message : 'An unknown error occurred',
+        status: "FAILED",
+        failureReason:
+          error instanceof Error ? error.message : "An unknown error occurred",
       },
     });
     // 7. TODO: Trigger a user notification about the failure

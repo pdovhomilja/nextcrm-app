@@ -19,7 +19,7 @@ import {
   RefreshCw,
   Zap,
 } from "lucide-react";
-import { z } from 'zod/v3';
+import { z } from "zod/v3";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const analysisSchema = z.object({
@@ -43,7 +43,7 @@ const analysisSchema = z.object({
       severity: z.enum(["info", "low", "medium", "high", "critical"]),
       recommendation: z.string(),
       confidence: z.number().min(0).max(1),
-    })
+    }),
   ),
   metrics: z.object({
     completionRate: z.number().min(0).max(1),
@@ -59,7 +59,7 @@ const analysisSchema = z.object({
       direction: z.enum(["improving", "stable", "declining"]),
       change: z.number(),
       timeframe: z.string(),
-    })
+    }),
   ),
   recommendations: z.array(
     z.object({
@@ -67,7 +67,7 @@ const analysisSchema = z.object({
       action: z.string(),
       reasoningText: z.string(),
       expectedImpact: z.string(),
-    })
+    }),
   ),
 });
 
@@ -120,7 +120,7 @@ export function ProjectInsights({
 
   // Temporary static data until streaming is properly implemented
   const [object, setObject] = useState<z.infer<typeof analysisSchema> | null>(
-    null
+    null,
   );
   const [isLoading, setIsLoading] = useState(false);
 

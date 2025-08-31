@@ -15,17 +15,6 @@ export async function registerUser(formData: FormData) {
     return { error: "Email and password are required" };
   }
 
-  //check if user email has specific domain
-  if (
-    !email.endsWith("@endorphinit.com") &&
-    !email.endsWith("@dovhomilja.cz")
-  ) {
-    return {
-      error:
-        "Email must end with @endorphinit.com or @dovhomilja.cz. Please contact support if you need access.",
-    };
-  }
-
   try {
     // Check if user already exists
     const existingUser = await db.user.findUnique({

@@ -5,7 +5,7 @@ import type { SectionPosition } from "@/app/(app)/[cid]/tasks/_types";
 
 export async function updateSectionPosition(
   sectionId: string,
-  newPosition: number
+  newPosition: number,
 ) {
   try {
     await db.boardSection.update({
@@ -18,7 +18,7 @@ export async function updateSectionPosition(
     });
   } catch (error) {
     throw new Error(
-      `Failed to update section position: ${error instanceof Error ? error.message : "Unknown error"}`
+      `Failed to update section position: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
 }
@@ -32,12 +32,12 @@ export async function updateSectionPositions(updates: SectionPosition[]) {
         db.boardSection.update({
           where: { id: update.id },
           data: { position: update.position },
-        })
-      )
+        }),
+      ),
     );
   } catch (error) {
     throw new Error(
-      `Failed to update section positions: ${error instanceof Error ? error.message : "Unknown error"}`
+      `Failed to update section positions: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
 }

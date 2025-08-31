@@ -7,6 +7,7 @@
 ## 🎯 **Immediate Issue to Resolve**
 
 **Current Error**:
+
 ```bash
 Task Recommender agent processing error: Error [AI_APICallError]: Invalid schema for function 'tasks_search_tasks': schema must be a JSON Schema of 'type: "object"', got 'type: "None"'.
     at async TaskRecommenderAgent.orchestrateTools (lib/ai/agent-core.ts:477:22)
@@ -24,10 +25,11 @@ Task Recommender agent processing error: Error [AI_APICallError]: Invalid schema
 **Problem**: Missing `search_find_similar_tasks` schema in `toolSchemasByMethod`
 
 **Fix Required**:
+
 ```typescript
 const toolSchemasByMethod: Record<string, z.ZodTypeAny> = {
   // ... existing schemas
-  
+
   // ✅ ADD MISSING SCHEMA:
   find_similar_tasks: z.object({
     searchTerm: z.string().min(1, "Search term is required"),
@@ -36,7 +38,7 @@ const toolSchemasByMethod: Record<string, z.ZodTypeAny> = {
     userId: z.string().optional(),
     companyId: z.string().optional(),
   }),
-  
+
   // ✅ VERIFY EXISTING SCHEMAS MATCH MCP SERVERS EXACTLY
 };
 ```
@@ -44,6 +46,7 @@ const toolSchemasByMethod: Record<string, z.ZodTypeAny> = {
 ### 2. Verify Tool Name Mapping
 
 **Check**: Ensure tool names in agent-core match MCP server tool names exactly
+
 - `tasks_search_tasks` ✓
 - `search_find_similar_tasks` ❌ (missing)
 - `tasks_get_tasks` ✓
@@ -55,16 +58,22 @@ const toolSchemasByMethod: Record<string, z.ZodTypeAny> = {
 **Location**: `agent-core.ts:477` (orchestrateTools method)
 
 **Add**:
+
 ```typescript
 // Before generateText call
 const availableToolNames = toolNames.filter((n) => this.mcpTools[n]);
 if (availableToolNames.length === 0) {
-  console.warn(`No MCP tools available for requested tools: ${toolNames.join(", ")}`);
-  return { results: [], summary: "No tools available - falling back to direct response" };
+  console.warn(
+    `No MCP tools available for requested tools: ${toolNames.join(", ")}`,
+  );
+  return {
+    results: [],
+    summary: "No tools available - falling back to direct response",
+  };
 }
 
 // Validate schemas exist for all tools
-const missingSchemas = availableToolNames.filter(name => {
+const missingSchemas = availableToolNames.filter((name) => {
   const [, ...methodParts] = name.split("_");
   const method = methodParts.join("_");
   return !toolSchemasByMethod[method] && !toolSchemasByMethod.__fallback;
@@ -79,6 +88,7 @@ if (missingSchemas.length > 0) {
 ## ✅ **Validation Steps**
 
 1. **Test the specific failing endpoint**:
+
    ```bash
    curl -X POST http://localhost:3000/api/ai/suggest \
    -H "Content-Type: application/json" \
@@ -96,6 +106,7 @@ if (missingSchemas.length > 0) {
 ## 🔧 **Implementation Steps**
 
 ### Step 1: Identify Missing Schemas (5 minutes)
+
 ```bash
 # Search for tool usage in codebase
 grep -r "search_find_similar_tasks" app/api/
@@ -103,18 +114,21 @@ grep -r "find_similar_tasks" lib/ai/
 ```
 
 ### Step 2: Add Missing Schema (10 minutes)
+
 - Open `/lib/ai/agent-core.ts`
 - Navigate to `toolSchemasByMethod` (around line 361)
 - Add missing schema for `find_similar_tasks`
 - Verify all other schemas match MCP server implementations
 
 ### Step 3: Test Fix (15 minutes)
+
 - Start development server: `pnpm dev`
 - Test failing endpoint
 - Verify error is resolved
 - Test related functionality
 
 ### Step 4: Deploy Fix (30 minutes)
+
 - Commit changes
 - Deploy to production
 - Monitor logs for resolution
@@ -129,6 +143,7 @@ grep -r "find_similar_tasks" lib/ai/
 ## 🚨 **Rollback Plan**
 
 If issues occur:
+
 1. Revert changes to `agent-core.ts`
 2. Redeploy previous version
 3. Monitor for stability return

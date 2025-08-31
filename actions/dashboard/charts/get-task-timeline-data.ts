@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import db from "@/lib/db";
-import { z } from 'zod/v3';
+import { z } from "zod/v3";
 
 const TaskTimelineSchema = z.object({
   dateRange: z.enum(["7d", "30d", "90d", "1y"]).optional().default("30d"),
@@ -53,7 +53,7 @@ export type TaskTimelineData = {
 };
 
 export async function getTaskTimelineData(
-  input?: z.infer<typeof TaskTimelineSchema>
+  input?: z.infer<typeof TaskTimelineSchema>,
 ): Promise<{ data?: TaskTimelineData; error?: string }> {
   try {
     const session = await auth();
@@ -143,17 +143,17 @@ export async function getTaskTimelineData(
       switch (intervalUnit) {
         case "day":
           intervalStart = new Date(
-            startDate.getTime() + i * 24 * 60 * 60 * 1000
+            startDate.getTime() + i * 24 * 60 * 60 * 1000,
           );
           intervalEnd = new Date(intervalStart.getTime() + 24 * 60 * 60 * 1000);
           label = intervalStart.toISOString().split("T")[0]; // YYYY-MM-DD
           break;
         case "week":
           intervalStart = new Date(
-            startDate.getTime() + i * 7 * 24 * 60 * 60 * 1000
+            startDate.getTime() + i * 7 * 24 * 60 * 60 * 1000,
           );
           intervalEnd = new Date(
-            intervalStart.getTime() + 7 * 24 * 60 * 60 * 1000
+            intervalStart.getTime() + 7 * 24 * 60 * 60 * 1000,
           );
           label = `Week of ${intervalStart.toISOString().split("T")[0]}`;
           break;
@@ -161,12 +161,12 @@ export async function getTaskTimelineData(
           intervalStart = new Date(
             startDate.getFullYear(),
             startDate.getMonth() + i,
-            1
+            1,
           );
           intervalEnd = new Date(
             startDate.getFullYear(),
             startDate.getMonth() + i + 1,
-            1
+            1,
           );
           label = intervalStart.toLocaleDateString("en-US", {
             year: "numeric",
@@ -229,7 +229,7 @@ export async function getTaskTimelineData(
               },
             },
           }),
-        ]
+        ],
       );
 
       cumulativeCreated += createdCount;
@@ -258,19 +258,19 @@ export async function getTaskTimelineData(
 
     const firstHalfCreated = firstHalf.reduce(
       (sum, point) => sum + point.created,
-      0
+      0,
     );
     const secondHalfCreated = secondHalf.reduce(
       (sum, point) => sum + point.created,
-      0
+      0,
     );
     const firstHalfCompleted = firstHalf.reduce(
       (sum, point) => sum + point.completed,
-      0
+      0,
     );
     const secondHalfCompleted = secondHalf.reduce(
       (sum, point) => sum + point.completed,
-      0
+      0,
     );
 
     const createdTrend =

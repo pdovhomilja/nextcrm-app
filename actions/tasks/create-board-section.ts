@@ -5,7 +5,11 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { getUserByEmail } from "@/actions/user";
 
-export async function createBoardSection(boardId: string, name: string, skipRevalidation = false) {
+export async function createBoardSection(
+  boardId: string,
+  name: string,
+  skipRevalidation = false,
+) {
   try {
     const session = await auth();
     if (!session?.user?.email) {
@@ -59,7 +63,7 @@ export async function createBoardSection(boardId: string, name: string, skipReva
     return newBoardSection;
   } catch (error) {
     throw new Error(
-      `Failed to create board section: ${error instanceof Error ? error.message : "Unknown error"}`
+      `Failed to create board section: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
 }
