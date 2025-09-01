@@ -29,6 +29,8 @@ const formSchema = z.object({
     .min(1, { message: "Password or App Password is required." }),
   smtpHost: z.string().min(1, { message: "SMTP host is required." }),
   smtpPort: z.string().min(1, { message: "Port is required." }),
+  smtpUser: z.string().min(1, { message: "SMTP username is required." }),
+  smtpPassword: z.string().min(1, { message: "SMTP password is required." }),
 });
 
 type MailAccountFormValues = z.infer<typeof formSchema>;
@@ -47,6 +49,8 @@ export const MailAccountForm = () => {
       password: "",
       smtpHost: "",
       smtpPort: "587",
+      smtpUser: "",
+      smtpPassword: "",
     },
   });
 
@@ -171,6 +175,38 @@ export const MailAccountForm = () => {
                   <Input type="text" {...field} />
                 </FormControl>
                 <FormDescription>Usually 587 for TLS.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="smtpUser"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>SMTP Username</FormLabel>
+                <FormControl>
+                  <Input type="text" {...field} />
+                </FormControl>
+                <FormDescription>
+                  Username for SMTP authentication.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="smtpPassword"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>SMTP Password</FormLabel>
+                <FormControl>
+                  <Input type="text" {...field} />
+                </FormControl>
+                <FormDescription>
+                  Password for SMTP authentication. (Will be encrypted)
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}

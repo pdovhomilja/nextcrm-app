@@ -5,6 +5,7 @@ import mailcomposer from "mailcomposer";
 import { auth } from "@/auth";
 import db from "@/lib/db";
 import { decrypt } from "@/lib/security/encryption";
+import { sendMailWithResend } from "./resend-smtp";
 
 async function getImapConnection(accountId: string): Promise<Imap | null> {
   console.log(`[IMAP] Attempting to connect for account: ${accountId}`);
@@ -43,17 +44,51 @@ async function getImapConnection(accountId: string): Promise<Imap | null> {
   });
 }
 
+// Unified function that handles both Resend and regular SMTP
+export async function sendEmailUnified(
+  accountId: string,
+  to: string,
+  subject: string,
+  body: string
+) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    // Fetch the mail account
+    const userMailAccount = await db.userMailAccount.findUnique({
+      where: { id: accountId, userId: session.user.id },
+    });
+
+    if (!userMailAccount) {
+      return { success: false, error: "Mail account not found" };
+    }
+
+    // Determine which service to use based on SMTP host
+    if (userMailAccount.smtpHost === "smtp.resend.com") {
+      return await sendMailWithResend(accountId, to, subject, body);
+    } else {
+      // Use regular IMAP/SMTP
+      return await sendMail(accountId, to, subject, body);
+    }
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
 export async function sendMail(
   accountId: string,
   to: string,
   subject: string,
-  body: string,
+  body: string
 ) {
   let imap: Imap | null = null;
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return { error: "Unauthorized" };
+      return { success: false, error: "Unauthorized" };
     }
 
     const account = await db.userMailAccount.findUnique({
@@ -61,8 +96,10 @@ export async function sendMail(
     });
 
     if (!account) {
-      return { error: "Mail account not found" };
+      return { success: false, error: "Mail account not found" };
     }
+
+    //const smtpPassword = decrypt(account.smtpPassword!);
 
     const mail = mailcomposer({
       from: account.email,
@@ -79,7 +116,8 @@ export async function sendMail(
     });
 
     imap = await getImapConnection(accountId);
-    if (!imap) return { error: "Could not connect to IMAP server" };
+    if (!imap)
+      return { success: false, error: "Could not connect to IMAP server" };
 
     await new Promise<void>((resolve, reject) => {
       imap!.append(rawEmail, { mailbox: "Sent" }, (err) => {
@@ -90,7 +128,7 @@ export async function sendMail(
 
     return { success: true };
   } catch (error: any) {
-    return { error: error.message };
+    return { success: false, error: error.message };
   } finally {
     imap?.end();
   }

@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { sendMail } from "@/actions/mail/send-actions";
+import { sendEmailUnified } from "@/actions/mail/send-actions";
 import { toast } from "sonner";
 import {
   Sheet,
@@ -32,21 +32,33 @@ export const MailCompose = ({
       toast.error("No account selected");
       return;
     }
+
+    if (!to.trim()) {
+      toast.error("Please enter a recipient");
+      return;
+    }
+
+    if (!subject.trim()) {
+      toast.error("Please enter a subject");
+      return;
+    }
+
     try {
-      const result = await sendMail(accountId, to, subject, body);
-      console.log("result", result);
+      const result = await sendEmailUnified(accountId, to, subject, body);
+      //console.log("Send email result:", result);
+
       if (result.success) {
         toast.success("Email sent successfully");
+        setTo("");
+        setSubject("");
+        setBody("");
+        setOpen(false);
       } else {
-        toast.error("Failed to send email");
+        toast.error(result.error || "Failed to send email");
       }
-    } catch {
+    } catch (error) {
+      console.error("Error sending email:", error);
       toast.error("Failed to send email");
-    } finally {
-      setTo("");
-      setSubject("");
-      setBody("");
-      setOpen(false);
     }
   };
 

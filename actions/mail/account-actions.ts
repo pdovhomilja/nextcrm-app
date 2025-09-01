@@ -13,6 +13,8 @@ const mailAccountSchema = z.object({
   password: z.string().min(1),
   smtpHost: z.string().min(1),
   smtpPort: z.number().int(),
+  smtpUser: z.string().min(1),
+  smtpPassword: z.string().min(1),
 });
 
 export async function saveUserMailAccount(data: unknown) {
@@ -26,15 +28,17 @@ export async function saveUserMailAccount(data: unknown) {
     return { error: "Invalid data", details: validatedData.error.flatten() };
   }
 
-  const { password, ...restOfData } = validatedData.data;
+  const { password, smtpPassword, ...restOfData } = validatedData.data;
 
   try {
     const encryptedPassword = encrypt(password);
+    const encryptedSmtpPassword = encrypt(smtpPassword);
 
     await db.userMailAccount.create({
       data: {
         ...restOfData,
         encryptedPassword,
+        smtpPassword: encryptedSmtpPassword,
         userId: session.user.id,
       },
     });

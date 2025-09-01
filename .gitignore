@@ -41,6 +41,7 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env
 .env.local
+.env.production
 
 # vercel
 .vercel
@@ -52,6 +53,9 @@ next-env.d.ts
 #prisma
 /lib/generated
 /db_backup
-.prisma_migrate_deploy
-prisma_migrate_deploy
-temp_diff.sql
+prisma-deploy.sh
+prisma-db-backup.sh
+prisma-db-backup-secure.sh
+prisma-db-deploy-dev.sh
+prisma-db-deploy-prod.sh
+prisma-db-deploy-prod-improved.sh

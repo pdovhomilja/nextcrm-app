@@ -80,6 +80,8 @@ model UserMailAccount {
   imapUser            String
   smtpHost            String
   smtpPort            Int      @default(587)
+  smtpUser            String?
+  smtpPassword        String?
   smtpSecure          Boolean  @default(false)
   encryptedPassword   String
   createdAt           DateTime @default(now())
