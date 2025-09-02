@@ -80,11 +80,12 @@ export type TaskTableData = {
       CRITICAL: number;
     };
     overdueTasks: number;
+    todayTasks: number;
   };
 };
 
 export async function getTaskTableData(
-  input?: Partial<z.infer<typeof TaskTableFiltersSchema>>,
+  input?: Partial<z.infer<typeof TaskTableFiltersSchema>>
 ): Promise<{ data?: TaskTableData; error?: string }> {
   try {
     const session = await auth();
@@ -164,7 +165,7 @@ export async function getTaskTableData(
           const startOfDay = new Date(
             now.getFullYear(),
             now.getMonth(),
-            now.getDate(),
+            now.getDate()
           );
           const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
           where.dueDate = { gte: startOfDay, lt: endOfDay };
@@ -183,7 +184,7 @@ export async function getTaskTableData(
           break;
         case "month":
           const monthFromNow = new Date(
-            now.getTime() + 30 * 24 * 60 * 60 * 1000,
+            now.getTime() + 30 * 24 * 60 * 60 * 1000
           );
           where.dueDate = { gte: now, lte: monthFromNow };
           // Apply status filter for other due date filters
@@ -225,92 +226,115 @@ export async function getTaskTableData(
     }
 
     // Execute queries in parallel
-    const [tasks, totalCount, statusCounts, priorityCounts, overdueCount] =
-      await Promise.all([
-        // Main task query with pagination
-        db.task.findMany({
-          where,
-          orderBy,
-          skip: (page - 1) * pageSize,
-          take: pageSize,
-          include: {
-            assignedTo: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-              },
-            },
-            createdBy: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-              },
-            },
-            boardSection: {
-              select: {
-                id: true,
-                name: true,
-                board: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
-              },
+    const [
+      tasks,
+      totalCount,
+      statusCounts,
+      priorityCounts,
+      overdueCount,
+      todayCount,
+    ] = await Promise.all([
+      // Main task query with pagination
+      db.task.findMany({
+        where,
+        orderBy,
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        include: {
+          assignedTo: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
             },
           },
-        }),
-
-        // Total count for pagination
-        db.task.count({ where }),
-
-        // Status counts for summary
-        db.task.groupBy({
-          by: ["status"],
-          where: {
-            boardSection: {
+          createdBy: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          boardSection: {
+            select: {
+              id: true,
+              name: true,
               board: {
-                access: {
-                  has: session.user.id,
+                select: {
+                  id: true,
+                  name: true,
                 },
               },
             },
           },
-          _count: { id: true },
-        }),
+        },
+      }),
 
-        // Priority counts for summary
-        db.task.groupBy({
-          by: ["priority"],
-          where: {
-            boardSection: {
-              board: {
-                access: {
-                  has: session.user.id,
-                },
-              },
-            },
-          },
-          _count: { id: true },
-        }),
+      // Total count for pagination
+      db.task.count({ where }),
 
-        // Overdue count
-        db.task.count({
-          where: {
-            boardSection: {
-              board: {
-                access: {
-                  has: session.user.id,
-                },
+      // Status counts for summary
+      db.task.groupBy({
+        by: ["status"],
+        where: {
+          boardSection: {
+            board: {
+              access: {
+                has: session.user.id,
               },
             },
-            dueDate: { lt: new Date() },
-            status: { notIn: ["COMPLETED", "CANCELLED"] },
           },
-        }),
-      ]);
+        },
+        _count: { id: true },
+      }),
+
+      // Priority counts for summary
+      db.task.groupBy({
+        by: ["priority"],
+        where: {
+          boardSection: {
+            board: {
+              access: {
+                has: session.user.id,
+              },
+            },
+          },
+        },
+        _count: { id: true },
+      }),
+
+      // Overdue count
+      db.task.count({
+        where: {
+          boardSection: {
+            board: {
+              access: {
+                has: session.user.id,
+              },
+            },
+          },
+          dueDate: { lt: new Date() },
+          status: { notIn: ["COMPLETED", "CANCELLED"] },
+        },
+      }),
+
+      // Today count
+      db.task.count({
+        where: {
+          boardSection: {
+            board: {
+              access: {
+                has: session.user.id,
+              },
+            },
+          },
+          dueDate: {
+            gte: new Date(new Date().setHours(0, 0, 0, 0)),
+            lt: new Date(new Date().setHours(23, 59, 59, 999)),
+          },
+        },
+      }),
+    ]);
 
     // Transform tasks data
     const now = new Date();
@@ -351,7 +375,7 @@ export async function getTaskTableData(
         ON_HOLD: 0,
         COMPLETED: 0,
         CANCELLED: 0,
-      },
+      }
     );
 
     // Transform priority counts
@@ -366,7 +390,7 @@ export async function getTaskTableData(
         MEDIUM: 0,
         HIGH: 0,
         CRITICAL: 0,
-      },
+      }
     );
 
     const result: TaskTableData = {
@@ -385,6 +409,7 @@ export async function getTaskTableData(
         statusCounts: statusCountsMap,
         priorityCounts: priorityCountsMap,
         overdueTasks: overdueCount,
+        todayTasks: todayCount,
       },
     };
 

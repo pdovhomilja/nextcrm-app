@@ -142,6 +142,13 @@ async function TaskDataTableContent({
           <Badge variant="outline">
             Completed: {data.summary.statusCounts.COMPLETED}
           </Badge>
+          {data.summary.todayTasks > 0 && (
+            <Link
+              href={`/${session?.user?.activeCompanyId}/tasks-list?dueDate=today`}
+            >
+              <Badge variant="default">Today: {data.summary.todayTasks}</Badge>
+            </Link>
+          )}
           {data.summary.overdueTasks > 0 && (
             <Link
               href={`/${session?.user?.activeCompanyId}/tasks-list?dueDate=overdue`}
@@ -273,7 +280,7 @@ function TaskTable({
                   <div
                     className={cn(
                       "flex items-center gap-1",
-                      getPriorityColor(task.priority),
+                      getPriorityColor(task.priority)
                     )}
                   >
                     {task.priority === "CRITICAL" && (
@@ -321,7 +328,7 @@ function TaskTable({
                   <div
                     className={cn(
                       "text-sm",
-                      task.isOverdue && "text-red-600 font-medium",
+                      task.isOverdue && "text-red-600 font-medium"
                     )}
                   >
                     {formatDate(task.dueDate)}
