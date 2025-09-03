@@ -23,7 +23,7 @@ export async function validateCompanyAccess(
   companyId: string,
   resourceType: "task" | "board" | "document" | "ai_query",
   resourceId?: string,
-  action: string = "read",
+  action: string = "read"
 ): Promise<AccessValidationResult> {
   try {
     // Check if user is a member of the company
@@ -114,14 +114,14 @@ export async function withCompanyAccessValidation<T>(
   companyId: string,
   resourceType: "task" | "board" | "document" | "ai_query",
   action: string,
-  operation: () => Promise<T>,
+  operation: () => Promise<T>
 ): Promise<{ success: boolean; data?: T; error?: string }> {
   const validation = await validateCompanyAccess(
     userId,
     companyId,
     resourceType,
     undefined,
-    action,
+    action
   );
 
   if (!validation.isAuthorized) {

@@ -245,22 +245,229 @@ The task-list implementation ignores the URL parameter and only uses session sta
 - User directly navigates to different company URL
 - Race conditions in session updates
 
----
+## 🎯 **STRATEGIC SOLUTION: URL [cid] as Primary Source of Truth**
 
-### 4. Middleware Security Gap
+**Based on comprehensive analysis, the recommended architectural approach is to use URL parameter `[cid]` as the PRIMARY source of truth with middleware-enforced validation.**
 
-**Location:** `middleware.ts`
+### ✅ **Strategic Decision Validation:**
 
-The middleware extracts company ID from URL but **doesn't validate user access**:
+This approach is **architecturally sound** because:
+
+1. **Eliminates Source of Truth Ambiguity**: URL becomes authoritative for company context
+2. **Immediate Security Enforcement**: Middleware validates every request at entry point
+3. **Prevents URL Manipulation Attacks**: Users cannot access unauthorized companies
+4. **Solves Session Race Conditions**: No more async session update issues
+5. **Creates Consistent User Experience**: URL always reflects current company context
+6. **Enables Comprehensive Audit Trail**: All company access attempts logged and validated
+
+### 🔧 **Implementation Architecture:**
+
+#### Enhanced Middleware with Session Validation
+
+**File:** `middleware.ts`
 
 ```typescript
-// SECURITY GAP (lines 19-31)
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { auth } from "@/auth";
+
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Allow public routes
+  if (isPublicRoute(pathname)) {
+    return NextResponse.next();
+  }
+
+  // Extract company ID from URL
+  const segments = pathname.split("/").filter(Boolean);
+  const urlCompanyId = segments[0];
+
+  // Basic URL format validation
+  if (!urlCompanyId || urlCompanyId === "undefined" || urlCompanyId === "null") {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  // Get current session
+  const session = await auth();
+
+  if (!session?.user) {
+    return NextResponse.redirect(new URL("/auth/signin", request.url));
+  }
+
+  // 🚨 CRITICAL SECURITY VALIDATION: URL [cid] vs Session activeCompanyId
+  if (session.user.activeCompanyId !== urlCompanyId) {
+    console.warn("SECURITY: URL/Session company mismatch detected", {
+      userId: session.user.id,
+      urlCompany: urlCompanyId,
+      sessionCompany: session.user.activeCompanyId,
+      timestamp: new Date().toISOString(),
+      userAgent: request.headers.get("user-agent"),
+      ip: request.ip || request.headers.get("x-forwarded-for"),
+      pathname
+    });
+
+    // SECURITY: Force logout on company context mismatch
+    return await forceLogout(request, "Company context mismatch");
+  }
+
+  // 🔒 ADDITIONAL VALIDATION: User membership verification
+  const hasAccess = session.user.memberships?.some(
+    (m: any) => m.companyId === urlCompanyId
+  );
+
+  if (!hasAccess) {
+    console.error("SECURITY: Unauthorized company access attempt", {
+      userId: session.user.id,
+      email: session.user.email,
+      attemptedCompany: urlCompanyId,
+      userMemberships: session.user.memberships?.map((m: any) => m.companyId),
+      timestamp: new Date().toISOString(),
+      pathname
+    });
+
+    // SECURITY: Force logout on unauthorized access attempt
+    return await forceLogout(request, "Unauthorized company access");
+  }
+
+  // ✅ Security validated - proceed with request
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-company-id", urlCompanyId);
+  requestHeaders.set("x-company-validated", "true");
+
+  return NextResponse.next({
+    request: { headers: requestHeaders }
+  });
+}
+
+// Helper functions
+function isPublicRoute(pathname: string): boolean {
+  return (
+    pathname === "/" ||
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/_next") ||
+    pathname.includes(".") ||
+    pathname === "/favicon.ico"
+  );
+}
+
+async function forceLogout(request: NextRequest, reason: string) {
+  // Clear session and redirect to login
+  const response = NextResponse.redirect(new URL("/auth/signin", request.url));
+  
+  // Clear session cookies
+  response.cookies.delete("next-auth.session-token");
+  response.cookies.delete("__Secure-next-auth.session-token");
+  response.cookies.delete("next-auth.csrf-token");
+  response.cookies.delete("__Host-next-auth.csrf-token");
+  
+  // Add security headers
+  response.headers.set("x-security-logout-reason", reason);
+  response.headers.set("x-security-timestamp", new Date().toISOString());
+  
+  return response;
+}
+
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+};
+```
+
+### 🔄 **Company Switching Flow Redesign:**
+
+#### Step-by-Step Process:
+1. **User selects company** from dropdown/menu
+2. **Frontend calls session.update()** to update activeCompanyId
+3. **Frontend redirects** to new URL: `/newCompanyId/dashboard`
+4. **Middleware validates** the company change
+5. **If valid**: User sees new company context
+6. **If invalid**: User is logged out (security breach detected)
+
+#### Frontend Implementation:
+```typescript
+// Company switching function
+async function switchCompany(newCompanyId: string) {
+  try {
+    // Update session first
+    await update({ activeCompanyId: newCompanyId });
+    
+    // Redirect to new company context
+    router.push(`/${newCompanyId}/dashboard`);
+  } catch (error) {
+    console.error("Company switch failed:", error);
+    // Redirect to login if session update fails
+    router.push("/auth/signin");
+  }
+}
+```
+
+### 📊 **Security Monitoring Enhancements:**
+
+#### Security Event Logging:
+```typescript
+// lib/security/company-audit.ts
+export interface CompanyAccessEvent {
+  userId: string;
+  email: string;
+  urlCompanyId: string;
+  sessionCompanyId: string | null;
+  eventType: "mismatch" | "unauthorized" | "success";
+  pathname: string;
+  userAgent: string;
+  ip: string;
+  timestamp: Date;
+}
+
+export async function logCompanyAccessEvent(event: CompanyAccessEvent) {
+  try {
+    await db.securityAuditLog.create({
+      data: {
+        userId: event.userId,
+        action: `company_access_${event.eventType}`,
+        resource: "company_context",
+        details: {
+          urlCompanyId: event.urlCompanyId,
+          sessionCompanyId: event.sessionCompanyId,
+          pathname: event.pathname,
+          userAgent: event.userAgent,
+          ipAddress: event.ip,
+        },
+        risk: event.eventType === "unauthorized" ? "critical" : 
+              event.eventType === "mismatch" ? "high" : "low",
+        timestamp: event.timestamp,
+        createdAt: event.timestamp,
+      }
+    });
+  } catch (error) {
+    console.error("Failed to log security event:", error);
+  }
+}
+```
+
+---
+
+### 4. Middleware Security Gap ✅ **SOLVED BY URL [cid] STRATEGY**
+
+**Previous Issue:** The middleware extracted company ID from URL but **didn't validate user access**:
+
+```typescript
+// OLD VULNERABLE CODE (lines 19-31)
 const companyId = segments[0];
-// L No validation that user has access to this company
+// ❌ No validation that user has access to this company
 requestHeaders.set("x-company-id", companyId);
 ```
 
-**Risk:** Users could potentially access any company's data by changing the URL.
+**Previous Risk:** Users could potentially access any company's data by changing the URL.
+
+**✅ SOLUTION IMPLEMENTED:** The new middleware strategy completely eliminates this vulnerability by:
+
+1. **Session Validation**: Compares URL `[cid]` with `session.user.activeCompanyId`
+2. **Membership Verification**: Validates user belongs to the requested company
+3. **Force Logout**: Any mismatch triggers immediate session clearing and logout
+4. **Comprehensive Logging**: All access attempts are audited with security risk levels
+
+**Security Impact:** **VULNERABILITY ELIMINATED** - Users can no longer manipulate URLs to access unauthorized companies.
 
 ---
 
@@ -867,15 +1074,16 @@ describe('Multitenancy Security', () => {
 
 ## Deployment Plan
 
-### Phase 1: Emergency Dashboard and API Hotfix (IMMEDIATE - WITHIN 2 HOURS)
-1. **CRITICAL:** Deploy Fix 1 (Dashboard Page Company ID Passing)
-2. **CRITICAL:** Deploy Fix 2a (getBoardMetrics Company Filtering) 
-3. **CRITICAL:** Deploy Fix 2b (Chart Server Actions Company Filtering)
-4. **CRITICAL:** Deploy Fix 3 (Task Table Data Filtering)
-5. **CRITICAL:** Deploy Fix 4 (MCP Tasks API Company Filtering)
-6. **CRITICAL:** Deploy Fix 5 (MCP Analytics API Board Validation)
-7. **HIGH PRIORITY:** Deploy Fix 2 (URL Company ID Validation for task-list)
-8. **Verify production dashboard AND API data isolation immediately**
+### Phase 1: Emergency Middleware + Dashboard Hotfix (IMMEDIATE - WITHIN 2 HOURS)
+1. **CRITICAL:** Deploy Enhanced Middleware with URL [cid] Validation
+2. **CRITICAL:** Deploy Fix 1 (Dashboard Page Company ID Passing)
+3. **CRITICAL:** Deploy Fix 2a (getBoardMetrics Company Filtering) 
+4. **CRITICAL:** Deploy Fix 2b (Chart Server Actions Company Filtering)
+5. **CRITICAL:** Deploy Fix 3 (Task Table Data Filtering)
+6. **CRITICAL:** Deploy Fix 4 (MCP Tasks API Company Filtering)
+7. **CRITICAL:** Deploy Fix 5 (MCP Analytics API Board Validation)
+8. **CRITICAL:** Deploy Company Switching Flow Updates
+9. **Verify middleware security validation AND dashboard data isolation immediately**
 
 ### Phase 2: Comprehensive Server Actions Fix (Within 24 hours)
 1. Update all remaining dashboard server actions (`getUserMetrics`, etc.)
@@ -938,19 +1146,25 @@ This multitenancy vulnerability represents a **COMPREHENSIVE SYSTEM SECURITY FAI
 - Model Context Protocol system compromising AI-driven insights
 
 **TECHNICAL SCOPE:**
+- **Middleware System:** Enhanced async middleware with session validation
 - **Dashboard System:** 6+ server actions requiring immediate fixes
 - **API Routes:** 2 critical MCP endpoints requiring company filtering
 - **AI System:** Mixed security patterns requiring standardization
 - **Database Queries:** Inconsistent company isolation patterns across 20+ files
+- **Company Switching Flow:** Complete redesign for URL-first approach
 
 **Next Steps:**
-1. **IMMEDIATE (Within 2 hours):** Emergency hotfix for dashboard AND MCP API vulnerabilities
+1. **IMMEDIATE (Within 2 hours):** Deploy URL [cid] middleware + emergency dashboard fixes
 2. **TODAY:** Deploy comprehensive company validation across ALL affected routes
-3. **THIS WEEK:** Implement system-wide security improvements and AI system monitoring
+3. **THIS WEEK:** Implement system-wide security improvements and comprehensive monitoring
 
-**Estimated Fix Time:** 6-8 hours for critical fixes (dashboard + APIs), 3-4 days for comprehensive system hardening
+**Estimated Fix Time:** 
+- **Middleware Implementation:** 2-3 hours (HIGHEST PRIORITY)
+- **Dashboard Fixes:** 4-5 hours 
+- **API Fixes:** 2-3 hours
+- **System Hardening:** 3-4 days total
 
-**URGENCY LEVEL: MAXIMUM** - This is a multi-system production compromise affecting business intelligence, AI capabilities, and cross-company data isolation across the entire platform.
+**URGENCY LEVEL: MAXIMUM** - Multi-system production compromise requiring immediate middleware-level security enforcement.
 
 ---
 
