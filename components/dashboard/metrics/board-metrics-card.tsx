@@ -17,11 +17,13 @@ import {
 import { Folder, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 interface BoardMetricsCardProps {
+  companyId: string;
   dateRange?: "7d" | "30d" | "90d" | "all";
   className?: string;
 }
 
 export function BoardMetricsCard({
+  companyId,
   dateRange = "30d",
   className,
 }: BoardMetricsCardProps) {
@@ -38,6 +40,7 @@ export function BoardMetricsCard({
         const result = await getBoardMetrics({
           dateRange,
           includeSections: true,
+          companyId,
         });
 
         if (result.error) {
@@ -54,7 +57,7 @@ export function BoardMetricsCard({
     }
 
     fetchMetrics();
-  }, [dateRange]);
+  }, [dateRange, companyId]);
 
   const getTrendIcon = (trend: number) => {
     if (trend > 0) return <TrendingUp className="h-4 w-4 text-green-600" />;

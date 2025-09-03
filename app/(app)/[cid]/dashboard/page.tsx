@@ -22,8 +22,8 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
 
   // Fetch all metrics in parallel for better performance
   const [taskMetricsResult, boardMetricsResult] = await Promise.all([
-    getTaskMetrics(),
-    getBoardMetrics(),
+    getTaskMetrics({ companyId: cid, dateRange: "30d" }),
+    getBoardMetrics({ companyId: cid, dateRange: "30d", includeSections: true }),
   ]);
 
   // Extract data from results, handling errors gracefully
@@ -47,7 +47,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
           {/* Metrics Cards */}
           <Suspense fallback={<Skeleton className="h-32 w-full" />}>
             <div className="space-y-4 px-4 lg:px-6">
-              <SectionCards />
+              <SectionCards companyId={cid} />
             </div>
           </Suspense>
 
@@ -62,7 +62,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
           <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
             <div className="px-4 lg:px-6">
               <div className="space-y-4">
-                <ChartAreaInteractive />
+                <ChartAreaInteractive companyId={cid} />
               </div>
             </div>
           </Suspense>
@@ -76,6 +76,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                     type="priority"
                     title="Priority Distribution"
                     className="w-full"
+                    companyId={cid}
                   />
                 </Suspense>
 
@@ -84,6 +85,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                     type="status"
                     title="Status Distribution"
                     className="w-full"
+                    companyId={cid}
                   />
                 </Suspense>
 
@@ -92,6 +94,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
                     type="board"
                     title="Board Workload"
                     className="w-full"
+                    companyId={cid}
                   />
                 </Suspense>
               </div>

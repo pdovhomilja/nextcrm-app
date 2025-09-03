@@ -32,6 +32,7 @@ import {
 interface DistributionChartProps {
   type: "priority" | "status" | "board" | "user";
   title: string;
+  companyId: string;
   boardId?: string;
   className?: string;
 }
@@ -42,6 +43,7 @@ type DateRange = "7d" | "30d" | "90d" | "all";
 export function DistributionChart({
   type,
   title,
+  companyId,
   boardId,
   className,
 }: DistributionChartProps) {
@@ -62,6 +64,7 @@ export function DistributionChart({
           dateRange,
           boardId,
           includeCompleted: true,
+          companyId,
         });
 
         if (result.error) {
@@ -78,7 +81,7 @@ export function DistributionChart({
     }
 
     fetchData();
-  }, [type, dateRange, boardId]);
+  }, [type, dateRange, boardId, companyId]);
 
   const renderPieChart = (innerRadius = 0) => {
     if (!data) return null;

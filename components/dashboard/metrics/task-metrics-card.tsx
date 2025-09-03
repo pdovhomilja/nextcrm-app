@@ -17,12 +17,14 @@ import {
 import { ClipboardList, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 interface TaskMetricsCardProps {
+  companyId: string;
   boardId?: string;
   dateRange?: "7d" | "30d" | "90d" | "all";
   className?: string;
 }
 
 export function TaskMetricsCard({
+  companyId,
   boardId,
   dateRange = "30d",
   className,
@@ -37,7 +39,7 @@ export function TaskMetricsCard({
       setError(null);
 
       try {
-        const result = await getTaskMetrics({ dateRange, boardId });
+        const result = await getTaskMetrics({ dateRange, boardId, companyId });
 
         if (result.error) {
           setError(result.error);
@@ -53,7 +55,7 @@ export function TaskMetricsCard({
     }
 
     fetchMetrics();
-  }, [dateRange, boardId]);
+  }, [dateRange, boardId, companyId]);
 
   const getTrendIcon = (trend: number) => {
     if (trend > 0) return <TrendingUp className="h-4 w-4 text-green-600" />;

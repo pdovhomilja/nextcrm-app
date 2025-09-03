@@ -37,6 +37,7 @@ interface TaskDataTableServerProps {
   className?: string;
   user: User;
   searchParams: Record<string, string | string[] | undefined>;
+  companyId?: string;
 }
 
 // Server component for data fetching
@@ -44,6 +45,7 @@ async function TaskDataTableContent({
   boardId,
   user,
   searchParams,
+  companyId,
 }: Omit<TaskDataTableServerProps, "className">) {
   const session = await auth();
   // Parse search params using nuqs server-side parsing
@@ -75,6 +77,7 @@ async function TaskDataTableContent({
       status?: "NEW" | "IN_PROGRESS" | "ON_HOLD" | "COMPLETED" | "CANCELLED";
       priority?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
       dueDateFilter?: "overdue" | "today" | "week" | "month";
+      companyId?: string;
     } = {
       page,
       pageSize,
@@ -106,6 +109,19 @@ async function TaskDataTableContent({
 
     if (dueDate !== "all") {
       filters.dueDateFilter = dueDate as "overdue" | "today" | "week" | "month";
+    }
+
+    // Add companyId to filters - required for security validation
+    if (companyId) {
+      filters.companyId = companyId;
+    } else if (session?.user?.activeCompanyId) {
+      filters.companyId = session.user.activeCompanyId;
+    } else {
+      return (
+        <div className="text-sm text-red-600 p-4 text-center">
+          Company context required - please refresh the page
+        </div>
+      );
     }
 
     const result = await getTaskTableData(filters);
@@ -369,6 +385,7 @@ export function TaskDataTableServer({
   className,
   user,
   searchParams,
+  companyId,
 }: TaskDataTableServerProps) {
   return (
     <Card className={className}>
@@ -421,6 +438,7 @@ export function TaskDataTableServer({
             boardId={boardId}
             user={user}
             searchParams={searchParams}
+            companyId={companyId}
           />
         </Suspense>
       </CardContent>

@@ -3,10 +3,12 @@
 import { auth } from "@/auth";
 import db from "@/lib/db";
 import { z } from "zod/v3";
+import { withCompanyAccessValidation } from "@/lib/security/company-access-validator";
 
 const BoardMetricsSchema = z.object({
   dateRange: z.enum(["7d", "30d", "90d", "all"]).optional().default("30d"),
   includeSections: z.boolean().optional().default(true),
+  companyId: z.string(),
 });
 
 export type BoardMetricsData = {
@@ -38,86 +40,100 @@ export type BoardMetricsData = {
 };
 
 export async function getBoardMetrics(
-  input?: z.infer<typeof BoardMetricsSchema>,
-): Promise<{ data?: BoardMetricsData; error?: string }> {
+  input: z.infer<typeof BoardMetricsSchema>,
+): Promise<{ success: boolean; data?: BoardMetricsData; error?: string }> {
   try {
     const session = await auth();
-    if (!session?.user) {
-      return { error: "Authentication required" };
+    if (!session?.user?.id) {
+      throw new Error("Unauthorized");
     }
 
-    const companyId = session.user.activeCompanyId;
-    if (!companyId) {
-      return { error: "Company context required" };
+    const validatedInput = BoardMetricsSchema.parse(input);
+    const { dateRange, includeSections, companyId } = validatedInput;
+    
+    // 🚨 CRITICAL: URL company ID must take precedence over session
+    const targetCompanyId = companyId;
+    
+    if (!targetCompanyId) {
+      throw new Error("Company context required - companyId must be provided");
     }
+    
+    console.log("🎯 ENFORCED companyId:", targetCompanyId, "from URL, ignoring session");
 
-    const validatedInput = BoardMetricsSchema.parse(input || {});
-    const { dateRange, includeSections } = validatedInput;
+    // 🔒 SECURITY-FIRST WRAPPER: Automatic company validation + audit logging
+    return withCompanyAccessValidation(
+      session.user.id,
+      targetCompanyId,
+      "board",  // Resource type
+      "metrics", // Action
+      async () => {
 
-    // Calculate date filter
-    const now = new Date();
-    let dateFilter: Date | undefined;
+        // ✅ SIMPLIFIED QUERIES - Security handled by wrapper
+        const now = new Date();
+        let dateFilter: Date | undefined;
 
-    switch (dateRange) {
-      case "7d":
-        dateFilter = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case "30d":
-        dateFilter = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
-      case "90d":
-        dateFilter = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-        break;
-      default:
-        dateFilter = undefined;
-    }
+        switch (dateRange) {
+          case "7d":
+            dateFilter = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            break;
+          case "30d":
+            dateFilter = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            break;
+          case "90d":
+            dateFilter = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+            break;
+          default:
+            dateFilter = undefined;
+        }
 
-    // Get total boards accessible to user or in same company
-    const totalBoards = await db.board.count({
-      where: {
-        OR: [
-          { access: { has: session.user.id } }, // User has explicit access
-          { createdBy: session.user.id }, // User is creator
-        ],
-        ...(dateFilter && { createdAt: { gte: dateFilter } }),
-      },
-    });
-
-    // Get boards with tasks (active boards)
-    const boardsWithTasksQuery = await db.board.findMany({
-      where: {
-        OR: [
-          { access: { has: session.user.id } }, // User has explicit access
-          { createdBy: session.user.id }, // User is creator
-        ],
-      },
-      include: {
-        _count: {
-          select: {
-            boardSections: true,
+        // Get total boards WITH EXPLICIT COMPANY FILTERING
+        const totalBoards = await db.board.count({
+          where: {
+            companyId: targetCompanyId, // 🔒 CRITICAL: Filter by company
+            OR: [
+              { access: { has: session.user.id } }, // User has explicit access
+              { createdBy: session.user.id }, // User is creator
+            ],
+            ...(dateFilter && { createdAt: { gte: dateFilter } }),
           },
-        },
-        boardSections: {
+        });
+
+        // Get boards with tasks WITH EXPLICIT COMPANY FILTERING
+        const boardsWithTasksQuery = await db.board.findMany({
+          where: {
+            companyId: targetCompanyId, // 🔒 CRITICAL: Filter by company
+            OR: [
+              { access: { has: session.user.id } }, // User has explicit access
+              { createdBy: session.user.id }, // User is creator
+            ],
+          },
           include: {
             _count: {
               select: {
-                tasks: true,
+                boardSections: true,
               },
             },
-            tasks: {
-              select: {
-                id: true,
-                updatedAt: true,
+            boardSections: {
+              include: {
+                _count: {
+                  select: {
+                    tasks: true,
+                  },
+                },
+                tasks: {
+                  select: {
+                    id: true,
+                    updatedAt: true,
+                  },
+                  orderBy: {
+                    updatedAt: "desc",
+                  },
+                  take: 1,
+                },
               },
-              orderBy: {
-                updatedAt: "desc",
-              },
-              take: 1,
             },
           },
-        },
-      },
-    });
+        });
 
     const boardsWithTasks = boardsWithTasksQuery.filter((board) =>
       board.boardSections.some((section) => section._count.tasks > 0),
@@ -183,6 +199,7 @@ export async function getBoardMetrics(
 
     const boardsCreatedThisWeek = await db.board.count({
       where: {
+        companyId: targetCompanyId, // 🔒 CRITICAL: Filter by company
         OR: [
           { access: { has: session.user.id } },
           { createdBy: session.user.id },
@@ -193,6 +210,7 @@ export async function getBoardMetrics(
 
     const boardsUpdatedThisWeek = await db.board.count({
       where: {
+        companyId: targetCompanyId, // 🔒 CRITICAL: Filter by company
         OR: [
           { access: { has: session.user.id } },
           { createdBy: session.user.id },
@@ -213,6 +231,7 @@ export async function getBoardMetrics(
       const totalSections = await db.boardSection.count({
         where: {
           board: {
+            companyId: targetCompanyId, // 🔒 CRITICAL: Filter by company
             OR: [
               { access: { has: session.user.id } },
               { createdBy: session.user.id },
@@ -224,6 +243,7 @@ export async function getBoardMetrics(
       const sectionsWithTasks = await db.boardSection.count({
         where: {
           board: {
+            companyId: targetCompanyId, // 🔒 CRITICAL: Filter by company
             OR: [
               { access: { has: session.user.id } },
               { createdBy: session.user.id },
@@ -252,6 +272,7 @@ export async function getBoardMetrics(
     );
     const boardsLastWeek = await db.board.count({
       where: {
+        companyId: targetCompanyId, // 🔒 CRITICAL: Filter by company
         OR: [
           { access: { has: session.user.id } },
           { createdBy: session.user.id },
@@ -267,6 +288,7 @@ export async function getBoardMetrics(
     );
     const boardsLastMonth = await db.board.count({
       where: {
+        companyId: targetCompanyId, // 🔒 CRITICAL: Filter by company
         OR: [
           { access: { has: session.user.id } },
           { createdBy: session.user.id },
@@ -277,6 +299,7 @@ export async function getBoardMetrics(
 
     const boardsThisMonth = await db.board.count({
       where: {
+        companyId: targetCompanyId, // 🔒 CRITICAL: Filter by company
         OR: [
           { access: { has: session.user.id } },
           { createdBy: session.user.id },
@@ -294,30 +317,32 @@ export async function getBoardMetrics(
         ? ((boardsThisMonth - boardsLastMonth) / boardsLastMonth) * 100
         : 0;
 
-    const result: BoardMetricsData = {
-      totalBoards,
-      activeBoardsCount,
-      boardsWithTasks,
-      averageTasksPerBoard,
-      mostActiveBoards,
-      boardActivity: {
-        created: boardsCreatedThisWeek,
-        updated: boardsUpdatedThisWeek,
-        archived: 0, // TODO: Implement if archived status is added
-      },
-      sectionDistribution,
-      trends: {
-        weekOverWeek: Math.round(weekOverWeek * 100) / 100,
-        monthOverMonth: Math.round(monthOverMonth * 100) / 100,
-      },
-    };
+        const result: BoardMetricsData = {
+          totalBoards,
+          activeBoardsCount,
+          boardsWithTasks,
+          averageTasksPerBoard,
+          mostActiveBoards,
+          boardActivity: {
+            created: boardsCreatedThisWeek,
+            updated: boardsUpdatedThisWeek,
+            archived: 0, // TODO: Implement if archived status is added
+          },
+          sectionDistribution,
+          trends: {
+            weekOverWeek: Math.round(weekOverWeek * 100) / 100,
+            monthOverMonth: Math.round(monthOverMonth * 100) / 100,
+          },
+        };
 
-    return { data: result };
+        return result;
+      }
+    );
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { error: "Validation failed" };
+      return { success: false, error: "Validation failed" };
     }
     console.error("Board metrics error:", error);
-    return { error: "Failed to retrieve board metrics" };
+    return { success: false, error: "Failed to retrieve board metrics" };
   }
 }

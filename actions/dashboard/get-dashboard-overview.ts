@@ -12,6 +12,7 @@ export type DashboardOverviewData = {
 };
 
 export async function getDashboardOverview(
+  companyId: string,
   dateRange: "7d" | "30d" | "90d" | "all" = "30d",
 ): Promise<{
   data?: DashboardOverviewData;
@@ -25,9 +26,9 @@ export async function getDashboardOverview(
 
     // Execute all metrics in parallel for better performance
     const [taskResult, boardResult, userResult] = await Promise.all([
-      getTaskMetrics({ dateRange }),
-      getBoardMetrics({ dateRange, includeSections: true }),
-      getUserMetrics({ dateRange, includeActivity: true }),
+      getTaskMetrics({ companyId, dateRange }),
+      getBoardMetrics({ companyId, dateRange, includeSections: true }),
+      getUserMetrics({ companyId, dateRange, includeActivity: true }),
     ]);
 
     // Check for errors

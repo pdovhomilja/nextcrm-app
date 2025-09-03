@@ -18,11 +18,13 @@ import {
 import { Users, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 interface UserActivityCardProps {
+  companyId: string;
   dateRange?: "7d" | "30d" | "90d" | "all";
   className?: string;
 }
 
 export function UserActivityCard({
+  companyId,
   dateRange = "30d",
   className,
 }: UserActivityCardProps) {
@@ -39,6 +41,7 @@ export function UserActivityCard({
         const result = await getUserMetrics({
           dateRange,
           includeActivity: true,
+          companyId,
         });
 
         if (result.error) {
@@ -55,7 +58,7 @@ export function UserActivityCard({
     }
 
     fetchMetrics();
-  }, [dateRange]);
+  }, [dateRange, companyId]);
 
   const getTrendIcon = (trend: number) => {
     if (trend > 0) return <TrendingUp className="h-4 w-4 text-green-600" />;

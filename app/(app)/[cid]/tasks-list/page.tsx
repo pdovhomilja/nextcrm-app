@@ -9,14 +9,25 @@ import { User } from "@/lib/generated/prisma";
 
 interface TasksListPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
+  params: Promise<{ cid: string }>;
 }
 
-const TasksListPage = async ({ searchParams }: TasksListPageProps) => {
+const TasksListPage = async ({ searchParams, params }: TasksListPageProps) => {
   const resolvedSearchParams = await searchParams;
+  const { cid } = await params;
   const session = await auth();
 
   if (!session?.user?.id) {
     redirect("/auth/signin");
+  }
+
+  // CRITICAL: Validate user has access to the requested company
+  const hasAccess = session.user.memberships?.some(
+    (m: { companyId: string; userId: string; role: "MEMBER" | "ADMIN" | "OWNER" }) => m.companyId === cid
+  );
+  
+  if (!hasAccess) {
+    redirect("/"); // Redirect if no access
   }
 
   const user: User = await getUserById(session.user.id);
@@ -36,6 +47,7 @@ const TasksListPage = async ({ searchParams }: TasksListPageProps) => {
                   className="w-full"
                   user={user}
                   searchParams={resolvedSearchParams}
+                  companyId={cid}
                 />
               </div>
             </div>

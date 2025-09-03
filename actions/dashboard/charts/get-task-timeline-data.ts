@@ -3,6 +3,7 @@
 import { auth } from "@/auth";
 import db from "@/lib/db";
 import { z } from "zod/v3";
+import { withCompanyAccessValidation } from "@/lib/security/company-access-validator";
 
 const TaskTimelineSchema = z.object({
   dateRange: z.enum(["7d", "30d", "90d", "1y"]).optional().default("30d"),
@@ -10,6 +11,7 @@ const TaskTimelineSchema = z.object({
   granularity: z.enum(["day", "week", "month"]).optional().default("day"),
   includeCompleted: z.boolean().optional().default(true),
   includeCreated: z.boolean().optional().default(true),
+  companyId: z.string(),
 });
 
 export type TaskTimelineDataPoint = {
@@ -54,16 +56,11 @@ export type TaskTimelineData = {
 
 export async function getTaskTimelineData(
   input?: z.infer<typeof TaskTimelineSchema>,
-): Promise<{ data?: TaskTimelineData; error?: string }> {
+): Promise<{ success: boolean; data?: TaskTimelineData; error?: string }> {
   try {
     const session = await auth();
-    if (!session?.user) {
-      return { error: "Authentication required" };
-    }
-
-    const companyId = session.user.activeCompanyId;
-    if (!companyId) {
-      return { error: "Company context required" };
+    if (!session?.user?.id) {
+      throw new Error("Unauthorized");
     }
 
     const validatedInput = TaskTimelineSchema.parse(input || {});
@@ -73,13 +70,31 @@ export async function getTaskTimelineData(
       granularity,
       includeCompleted,
       includeCreated,
+      companyId,
     } = validatedInput;
+    
+    // 🚨 CRITICAL: URL company ID must take precedence over session
+    const targetCompanyId = companyId;
+    
+    if (!targetCompanyId) {
+      throw new Error("Company context required - companyId must be provided");
+    }
+    
+    console.log("🎯 ENFORCED companyId:", targetCompanyId, "from URL, ignoring session");
 
-    // Calculate date range and intervals
-    const now = new Date();
-    let startDate: Date;
-    let intervalCount: number;
-    let intervalUnit: "day" | "week" | "month";
+    // 🔒 SECURITY-FIRST WRAPPER: Automatic company validation + audit logging
+    return withCompanyAccessValidation(
+      session.user.id,
+      targetCompanyId,
+      "task",  // Resource type for chart data
+      "chart_data", // Action
+      async () => {
+
+        // Calculate date range and intervals
+        const now = new Date();
+        let startDate: Date;
+        let intervalCount: number;
+        let intervalUnit: "day" | "week" | "month";
 
     switch (dateRange) {
       case "7d":
@@ -116,21 +131,18 @@ export async function getTaskTimelineData(
         intervalUnit = "day";
     }
 
-    // Base filter for tasks - need to find tasks through board sections
-    const baseFilter = {
-      boardSection: {
-        board: {
-          access: {
-            has: session.user.id, // Check if user has access to the board
+        // Base filter for tasks WITH EXPLICIT COMPANY FILTERING
+        const baseFilter = {
+          boardSection: {
+            board: {
+              companyId: targetCompanyId, // 🔒 CRITICAL: Filter by company
+              access: {
+                has: session.user.id, // User has access to the board
+              },
+              ...(boardId && { id: boardId }), // If boardId provided, filter by it too
+            },
           },
-        },
-      },
-      ...(boardId && {
-        boardSection: {
-          boardId,
-        },
-      }),
-    };
+        };
 
     // Generate date intervals
     const intervals: { start: Date; end: Date; label: string }[] = [];
@@ -328,12 +340,14 @@ export async function getTaskTimelineData(
       },
     };
 
-    return { data: result };
+        return result;
+      }
+    );
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { error: "Invalid input parameters" };
+      return { success: false, error: "Invalid input parameters" };
     }
     console.error("Task timeline data error:", error);
-    return { error: "Failed to retrieve task timeline data" };
+    return { success: false, error: "Failed to retrieve task timeline data" };
   }
 }

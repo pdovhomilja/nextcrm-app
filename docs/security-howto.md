@@ -6,7 +6,7 @@
 
 ---
 
-## <¯ Overview
+## <ï¿½ Overview
 
 This guide establishes the **Security-First Wrapper Pattern** as the foundation for all TaskHQ development. Every new feature, API endpoint, server action, and component MUST follow these patterns to ensure comprehensive company isolation and audit compliance.
 
@@ -27,9 +27,142 @@ This guide establishes the **Security-First Wrapper Pattern** as the foundation 
 - Validate company access for every operation
 - Log all access attempts with risk assessment
 
+### 4. Critical Database Filtering Rule
+- **Security wrapper validates access but does NOT filter database queries**
+- **EVERY database query MUST include explicit company filtering**
+- **NEVER assume wrapper handles data isolation automatically**
+
 ---
 
-## =€ Security-First Wrapper Pattern
+## âš ï¸ CRITICAL: Database Query Security
+
+### The Security Wrapper Limitation
+
+**ðŸš¨ CRITICAL SECURITY ISSUE:** The Security-First Wrapper Pattern validates that users have access to a company, but **it does NOT automatically filter database queries by company**. 
+
+**âŒ This is WRONG and creates data leakage:**
+
+```typescript
+return withCompanyAccessValidation(
+  session.user.id,
+  targetCompanyId,
+  "task",
+  "metrics",
+  async () => {
+    // ðŸš¨ SECURITY VULNERABILITY: No company filtering!
+    const metrics = await db.task.groupBy({
+      where: {
+        boardSection: {
+          board: {
+            access: { has: session.user.id },
+            // Missing: companyId filter!
+          },
+        },
+      },
+      by: ['status'],
+      _count: { _all: true },
+    });
+    
+    // This will return tasks from ALL companies user has access to!
+    return { success: true, data: metrics };
+  }
+);
+```
+
+**âœ… This is CORRECT with explicit company filtering:**
+
+```typescript
+return withCompanyAccessValidation(
+  session.user.id,
+  targetCompanyId,
+  "task",
+  "metrics", 
+  async () => {
+    // âœ… EXPLICIT COMPANY FILTERING REQUIRED
+    const metrics = await db.task.groupBy({
+      where: {
+        boardSection: {
+          board: {
+            companyId: targetCompanyId, // ðŸ”’ CRITICAL: Filter by company
+            access: { has: session.user.id },
+          },
+        },
+      },
+      by: ['status'],
+      _count: { _all: true },
+    });
+    
+    // Now returns only tasks from the specified company
+    return { success: true, data: metrics };
+  }
+);
+```
+
+### Why This Happens
+
+1. **Security wrapper validates access only** - checks if user belongs to company
+2. **Database queries are separate** - must explicitly filter by `companyId`  
+3. **Board access arrays are insufficient** - user might have access to boards in multiple companies
+4. **Multi-tenancy requires explicit filtering** - every query must isolate by company
+
+### Database Query Patterns That Require Company Filtering
+
+**Tasks through Board Sections:**
+```typescript
+// âœ… CORRECT
+const tasks = await db.task.findMany({
+  where: {
+    boardSection: {
+      board: {
+        companyId: targetCompanyId, // ðŸ”’ CRITICAL: Filter by company
+        access: { has: session.user.id },
+      },
+    },
+  },
+});
+```
+
+**Direct Board Queries:**
+```typescript
+// âœ… CORRECT  
+const boards = await db.board.findMany({
+  where: {
+    companyId: targetCompanyId, // ðŸ”’ CRITICAL: Filter by company
+    OR: [
+      { access: { has: session.user.id } },
+      { createdBy: session.user.id },
+    ],
+  },
+});
+```
+
+**User Queries by Company:**
+```typescript
+// âœ… CORRECT
+const users = await db.user.findMany({
+  where: {
+    company_id: targetCompanyId, // ðŸ”’ CRITICAL: Filter by company
+    id: { in: userIds },
+  },
+});
+```
+
+**Board-Specific Queries with Company Override:**
+```typescript
+// âœ… CORRECT - When filtering by specific boardId, still include company
+if (boardId) {
+  where.boardSection = {
+    board: {
+      id: boardId,
+      companyId: targetCompanyId, // ðŸ”’ CRITICAL: Company filter even with boardId
+    },
+  };
+}
+```
+
+---
+
+## =ï¿½ Security-First Wrapper Pattern
 
 ### Core Functions
 
@@ -68,7 +201,7 @@ import {
 
 ---
 
-## =Ë Implementation Patterns
+## =ï¿½ Implementation Patterns
 
 ### 1. Server Actions Pattern
 
@@ -103,7 +236,7 @@ export async function getTaskMetrics({ companyId }: { companyId?: string } = {})
           boardSection: {
             board: {
               access: { has: session.user.id },
-              // No manual company filtering needed!
+              companyId: targetCompanyId, // ðŸ”’ CRITICAL: Filter by company
             },
           },
         },
@@ -216,7 +349,7 @@ server.tool(
             boardSection: {
               board: {
                 access: { has: session.user.id },
-                // No manual company filtering needed!
+                companyId: targetCompanyId, // ðŸ”’ CRITICAL: Filter by company
               },
             },
           },
@@ -268,7 +401,7 @@ export async function POST(request: NextRequest) {
 
 ---
 
-## =á Layout-Level Security
+## =ï¿½ Layout-Level Security
 
 ### Company Context Validation
 
@@ -295,7 +428,7 @@ export default async function CompanyLayout({
     redirect("/auth/signin");
   }
 
-  // =¨ CRITICAL: URL [cid] vs Session activeCompanyId validation
+  // =ï¿½ CRITICAL: URL [cid] vs Session activeCompanyId validation
   if (session.user.activeCompanyId !== cid) {
     console.warn("SECURITY: Company context mismatch detected", {
       userId: session.user.id,
@@ -332,7 +465,7 @@ export default async function CompanyLayout({
 
 ---
 
-## =Ê Audit Logging & Compliance
+## =ï¿½ Audit Logging & Compliance
 
 ### Automatic Audit Trail
 
@@ -418,7 +551,7 @@ describe("Task API Security", () => {
 
 ---
 
-## ¡ Performance Considerations
+## ï¿½ Performance Considerations
 
 ### Database Query Optimization
 
@@ -431,7 +564,7 @@ const tasks = await db.task.findMany({
     boardSection: {
       board: {
         access: { has: session.user.id },
-        // Company isolation handled by wrapper
+        companyId: targetCompanyId, // ðŸ”’ CRITICAL: Filter by company
       },
     },
   },
@@ -461,18 +594,21 @@ const tasks = await db.task.findMany({
 
 ---
 
-## =¨ Security Checklist
+## =ï¿½ Security Checklist
 
 ### For Every New Feature
 
 - [ ] Uses `withCompanyAccessValidation()` or `validateCompanyAccess()`
 - [ ] Specifies correct resource type (`task`, `board`, `document`, `ai_query`)
 - [ ] Specifies appropriate action type (`create`, `update`, `access`, etc.)
+- [ ] **ðŸ”’ CRITICAL: ALL database queries include `companyId: targetCompanyId` filtering**
+- [ ] **ðŸ”’ CRITICAL: Never assumes security wrapper filters database queries automatically**
+- [ ] **ðŸ”’ CRITICAL: Board-specific queries still include company filtering**
 - [ ] No custom company validation logic
 - [ ] No manual audit logging
 - [ ] Passes company ID from URL `[cid]` parameter
 - [ ] Handles security errors gracefully
-- [ ] Tests company isolation scenarios
+- [ ] Tests company isolation scenarios with real data from multiple companies
 
 ### For API Routes
 
@@ -490,7 +626,7 @@ const tasks = await db.task.findMany({
 
 ---
 
-## <¯ Resource Type Guidelines
+## <ï¿½ Resource Type Guidelines
 
 ### When to Use Each Resource Type
 
@@ -598,7 +734,7 @@ export async function uploadDocument(formData: FormData) {
 
 ---
 
-## =È Migration Guide
+## =ï¿½ Migration Guide
 
 ### Updating Existing Code
 
@@ -676,7 +812,7 @@ export async function getTasks({ companyId }: { companyId?: string } = {}) {
 
 ---
 
-## <‰ Success Criteria
+## <ï¿½ Success Criteria
 
 ### Security Implementation is Complete When:
 
@@ -690,19 +826,22 @@ export async function getTasks({ companyId }: { companyId?: string } = {}) {
 
 ---
 
-##   Critical Reminders
+## ï¿½ Critical Reminders
 
-1. **NEVER bypass the Security-First Wrapper Pattern**
-2. **ALWAYS validate company access for every operation**
-3. **NEVER create custom company validation logic**
-4. **ALWAYS use appropriate resource types and actions**
-5. **NEVER skip audit logging**
-6. **ALWAYS test company isolation scenarios**
-7. **NEVER expose sensitive company data across tenants**
+1. **ðŸ”’ ALWAYS add `companyId: targetCompanyId` to ALL database queries**
+2. **ðŸ”’ NEVER assume security wrapper filters database queries automatically**
+3. **ðŸ”’ ALWAYS filter by company even when using specific boardId/taskId**
+4. **NEVER bypass the Security-First Wrapper Pattern**
+5. **ALWAYS validate company access for every operation**
+6. **NEVER create custom company validation logic**
+7. **ALWAYS use appropriate resource types and actions**
+8. **NEVER skip audit logging**
+9. **ALWAYS test company isolation scenarios with real multi-company data**
+10. **NEVER expose sensitive company data across tenants**
 
 ---
 
-## =Þ Support & Questions
+## =ï¿½ Support & Questions
 
 For security implementation questions:
 

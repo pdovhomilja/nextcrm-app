@@ -31,6 +31,7 @@ import {
 } from "@/actions/dashboard/charts/get-task-timeline-data";
 
 interface TaskTimelineChartProps {
+  companyId: string;
   boardId?: string;
   className?: string;
 }
@@ -39,6 +40,7 @@ type ChartType = "area" | "line" | "bar";
 type DateRange = "7d" | "30d" | "90d" | "1y";
 
 export function TaskTimelineChart({
+  companyId,
   boardId,
   className,
 }: TaskTimelineChartProps) {
@@ -69,6 +71,7 @@ export function TaskTimelineChart({
           granularity,
           includeCompleted: true,
           includeCreated: true,
+          companyId,
         });
 
         if (result.error) {
@@ -85,7 +88,7 @@ export function TaskTimelineChart({
     }
 
     fetchData();
-  }, [dateRange, boardId]);
+  }, [dateRange, boardId, companyId]);
 
   const getTrendIcon = (trend: number) => {
     if (trend > 0) return <TrendingUp className="h-4 w-4 text-green-600" />;
