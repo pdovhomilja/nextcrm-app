@@ -109,32 +109,35 @@ export async function getTaskTableData(
       dueDateFilter,
       companyId,
     } = filters;
-    
+
     // 🚨 CRITICAL: URL company ID must take precedence over session
     const targetCompanyId = companyId;
-    
+
     if (!targetCompanyId) {
       throw new Error("Company context required - companyId must be provided");
     }
-    
-    console.log("🎯 ENFORCED companyId:", targetCompanyId, "from URL, ignoring session");
+
+    console.log(
+      "🎯 ENFORCED companyId:",
+      targetCompanyId,
+      "from URL, ignoring session"
+    );
 
     // 🔒 SECURITY-FIRST WRAPPER: Automatic company validation + audit logging
     return withCompanyAccessValidation(
       session.user.id,
       targetCompanyId,
-      "task",  // Resource type
+      "task", // Resource type
       "table_data", // Action
       async () => {
-
         // WHERE CLAUSE WITH EXPLICIT COMPANY FILTERING
         const where: any = {
           boardSection: {
             board: {
               companyId: targetCompanyId, // 🔒 CRITICAL: Filter by company
-              access: {
+              /*   access: {
                 has: session.user.id,
-              },
+              }, */
             },
           },
         };
@@ -184,7 +187,9 @@ export async function getTaskTableData(
                 now.getMonth(),
                 now.getDate()
               );
-              const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
+              const endOfDay = new Date(
+                startOfDay.getTime() + 24 * 60 * 60 * 1000
+              );
               where.dueDate = { gte: startOfDay, lt: endOfDay };
               // Apply status filter for other due date filters
               if (status) {
@@ -192,7 +197,9 @@ export async function getTaskTableData(
               }
               break;
             case "week":
-              const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+              const weekFromNow = new Date(
+                now.getTime() + 7 * 24 * 60 * 60 * 1000
+              );
               where.dueDate = { gte: now, lte: weekFromNow };
               // Apply status filter for other due date filters
               if (status) {
@@ -297,9 +304,9 @@ export async function getTaskTableData(
               boardSection: {
                 board: {
                   companyId: targetCompanyId, // 🔒 CRITICAL: Filter by company
-                  access: {
+                  /*     access: {
                     has: session.user.id,
-                  },
+                  }, */
                 },
               },
             },
@@ -313,9 +320,9 @@ export async function getTaskTableData(
               boardSection: {
                 board: {
                   companyId: targetCompanyId, // 🔒 CRITICAL: Filter by company
-                  access: {
+                  /*    access: {
                     has: session.user.id,
-                  },
+                  }, */
                 },
               },
             },
@@ -328,9 +335,9 @@ export async function getTaskTableData(
               boardSection: {
                 board: {
                   companyId: targetCompanyId, // 🔒 CRITICAL: Filter by company
-                  access: {
+                  /*  access: {
                     has: session.user.id,
-                  },
+                  }, */
                 },
               },
               dueDate: { lt: new Date() },
@@ -344,9 +351,9 @@ export async function getTaskTableData(
               boardSection: {
                 board: {
                   companyId: targetCompanyId, // 🔒 CRITICAL: Filter by company
-                  access: {
+                  /*  access: {
                     has: session.user.id,
-                  },
+                  }, */
                 },
               },
               dueDate: {
@@ -402,8 +409,9 @@ export async function getTaskTableData(
         // Transform priority counts
         const priorityCountsMap = priorityCounts.reduce(
           (acc, item) => {
-            acc[item.priority as keyof TaskTableData["summary"]["priorityCounts"]] =
-              item._count.id;
+            acc[
+              item.priority as keyof TaskTableData["summary"]["priorityCounts"]
+            ] = item._count.id;
             return acc;
           },
           {

@@ -25,8 +25,10 @@ import type { SearchParams } from "nuqs/server";
 
 const TaskPage = async ({
   searchParams,
+  params,
 }: {
   searchParams: Promise<SearchParams>;
+  params: Promise<{ cid: string }>;
 }) => {
   const session = await auth();
 
@@ -40,8 +42,11 @@ const TaskPage = async ({
     throw new Error("User not found");
   }
 
+  //console.log("Search params:", searchParams);
+  const { cid } = await params;
+  console.log("Cid:", cid);
   const { q } = await tasksSearchParams.parse(searchParams);
-  const boards = await getBoards(user.id, q || undefined);
+  const boards = await getBoards(user.id, q || undefined, cid);
 
   return (
     <SidebarInset>
