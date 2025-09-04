@@ -18,7 +18,7 @@ import TaskSideRail from "./_components/task-side-rail";
 import TaskFiles from "./_components/task-files";
 import TaskActivity from "./_components/task-activity";
 import TaskDescription from "./_components/task-description";
-import { getUsers } from "@/actions/users/get-users";
+import { getUsersByCompanyMembership } from "@/actions/users/get-users";
 
 const TaskDetailPage = async ({
   params,
@@ -27,7 +27,7 @@ const TaskDetailPage = async ({
 }) => {
   const { cid, taskId } = await params;
 
-  const [task, users] = await Promise.all([getTask(taskId), getUsers()]);
+  const [task, users] = await Promise.all([getTask(taskId), getUsersByCompanyMembership(cid)]);
 
   return (
     <SidebarInset>
