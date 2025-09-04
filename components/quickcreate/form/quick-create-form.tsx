@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { z } from "zod/v3";
 import {
   Form,
@@ -37,6 +37,7 @@ import { Board } from "@/lib/generated/prisma";
 import type { BoardSection as UIBoardSection } from "@/app/(app)/[cid]/tasks/_types";
 import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -65,6 +66,7 @@ const QuickCreateForm = ({ emailData }: { emailData?: EmailData }) => {
   const [boardSections, setBoardSections] = useState<UIBoardSection[]>([]);
   const [month, setMonth] = useState<Date | undefined>(new Date());
   const [isDuePopoverOpen, setIsDuePopoverOpen] = useState(false);
+  const [boardSearchQuery, setBoardSearchQuery] = useState("");
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -81,13 +83,21 @@ const QuickCreateForm = ({ emailData }: { emailData?: EmailData }) => {
 
   const selectedBoardId = form.watch("boardId");
 
+  // Filter boards based on search query
+  const filteredBoards = useMemo(() => {
+    if (!boardSearchQuery.trim()) return boards;
+    return boards.filter((board) =>
+      board.name.toLowerCase().includes(boardSearchQuery.toLowerCase())
+    );
+  }, [boards, boardSearchQuery]);
+
   useEffect(() => {
     if (!user?.id) return;
 
     let isCancelled = false;
     setIsLoading(true);
 
-    getBoards(user.id)
+    getBoards(user.id, undefined, user.activeCompanyId!)
       .then((fetchedBoards) => {
         if (isCancelled) return;
         setBoards(fetchedBoards);
@@ -157,7 +167,56 @@ const QuickCreateForm = ({ emailData }: { emailData?: EmailData }) => {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="space-y-4 p-4 h-full overflow-y-auto py-5">
+        {/* Board selection skeleton */}
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-12" /> {/* Label */}
+          <Skeleton className="h-10 w-full" /> {/* Select trigger */}
+        </div>
+
+        {/* Board section skeleton */}
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-20" /> {/* Label */}
+          <Skeleton className="h-10 w-full" /> {/* Select trigger */}
+        </div>
+
+        {/* Title input skeleton */}
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-8" /> {/* Label */}
+          <Skeleton className="h-10 w-full" /> {/* Input */}
+        </div>
+
+        {/* Description textarea skeleton */}
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-16" /> {/* Label */}
+          <Skeleton className="h-20 w-full" /> {/* Textarea */}
+        </div>
+
+        {/* Due date skeleton */}
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-16" /> {/* Label */}
+          <Skeleton className="h-10 w-40" /> {/* Due date button */}
+        </div>
+
+        {/* Status and Priority skeleton grid */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-10" /> {/* Status label */}
+            <Skeleton className="h-10 w-full" /> {/* Status select */}
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-12" /> {/* Priority label */}
+            <Skeleton className="h-10 w-full" /> {/* Priority select */}
+          </div>
+        </div>
+
+        {/* Submit button skeleton */}
+        <div className="flex justify-end">
+          <Skeleton className="h-10 w-24" /> {/* Submit button */}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -177,20 +236,42 @@ const QuickCreateForm = ({ emailData }: { emailData?: EmailData }) => {
                   onValueChange={(value) => {
                     field.onChange(value);
                     form.setValue("boardSectionId", "");
+                    setBoardSearchQuery(""); // Clear search when selection is made
                   }}
                   value={field.value}
+                  onOpenChange={(open) => {
+                    if (!open) {
+                      setBoardSearchQuery(""); // Clear search when dropdown closes
+                    }
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder={"Select a board"} />
                   </SelectTrigger>
                   <SelectContent>
+                    <div className="p-2">
+                      <Input
+                        placeholder="Search boards..."
+                        value={boardSearchQuery}
+                        onChange={(e) => setBoardSearchQuery(e.target.value)}
+                        className="h-8"
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => e.stopPropagation()}
+                      />
+                    </div>
                     <SelectGroup>
                       <SelectLabel>Boards</SelectLabel>
-                      {(boards ?? []).map((b) => (
-                        <SelectItem key={b.id} value={b.id}>
-                          {b.name}
-                        </SelectItem>
-                      ))}
+                      {filteredBoards.length > 0 ? (
+                        filteredBoards.map((b) => (
+                          <SelectItem key={b.id} value={b.id}>
+                            {b.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <div className="px-2 py-1 text-sm text-muted-foreground">
+                          No boards found
+                        </div>
+                      )}
                     </SelectGroup>
                   </SelectContent>
                 </Select>

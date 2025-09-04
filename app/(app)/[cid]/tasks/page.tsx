@@ -44,7 +44,7 @@ const TaskPage = async ({
 
   //console.log("Search params:", searchParams);
   const { cid } = await params;
-  console.log("Cid:", cid);
+  //console.log("Cid:", cid);
   const { q } = await tasksSearchParams.parse(searchParams);
   const boards = await getBoards(user.id, q || undefined, cid);
 
