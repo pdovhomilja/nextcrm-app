@@ -10,7 +10,7 @@ import {
   PencilIcon,
   TrashIcon,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { deleteTask } from "@/actions/tasks/delete-task";
 
 import {
@@ -71,6 +71,13 @@ const TaskActions = ({ task }: { task: Task }) => {
   const [isDuePopoverOpen, setIsDuePopoverOpen] = useState(false);
   const [isMarkingDone, setIsMarkingDone] = useState(false);
 
+  // Memoize expensive date calculations
+  const startOfToday = useMemo(() => {
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }, []);
+
   const formSchema = z.object({
     title: z.string().min(1, "Title is required"),
     description: z.string().optional(),
@@ -92,10 +99,11 @@ const TaskActions = ({ task }: { task: Task }) => {
 
   useEffect(() => {
     if (isEditOpen) {
-      form.reset({
+      // Batch state updates to prevent multiple renders
+      const resetData = {
         title: task.title,
         description: task.description,
-        dueDate: task.dueDate ?? new Date(),
+        dueDate: task.dueDate ?? startOfToday,
         status: task.status as
           | "NEW"
           | "IN_PROGRESS"
@@ -103,14 +111,20 @@ const TaskActions = ({ task }: { task: Task }) => {
           | "CANCELLED"
           | "ON_HOLD",
         priority: task.priority as "LOW" | "MEDIUM" | "HIGH" | "CRITICAL",
-      });
-      // Align the visible month with the current due date (or today)
-      setMonth(task.dueDate ?? new Date());
-      setIsDuePopoverOpen(false);
+      };
+      
+      // Use setTimeout to ensure smooth transition and prevent conflicts
+      const timeoutId = setTimeout(() => {
+        form.reset(resetData);
+        setMonth(task.dueDate ?? startOfToday);
+        setIsDuePopoverOpen(false);
+      }, 0);
+      
+      return () => clearTimeout(timeoutId);
     }
-  }, [isEditOpen, task, form]);
+  }, [isEditOpen, task, form, startOfToday]);
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     try {
       await deleteTask(task.id);
       setOnDelete(false);
@@ -119,9 +133,9 @@ const TaskActions = ({ task }: { task: Task }) => {
     } catch {
       toast.error("Failed to delete task");
     }
-  };
+  }, [task.id, router]);
 
-  const onSubmit = async (data: FormValues) => {
+  const onSubmit = useCallback(async (data: FormValues) => {
     try {
       const payload: EditTaskInput = {
         title: data.title,
@@ -137,7 +151,7 @@ const TaskActions = ({ task }: { task: Task }) => {
     } catch {
       toast.error("Failed to update task");
     }
-  };
+  }, [task.id, router]);
 
   if (onDelete) {
     return (
@@ -181,7 +195,12 @@ const TaskActions = ({ task }: { task: Task }) => {
             <TrashIcon className="mr-2 h-4 w-4" />
             Delete Task
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setIsEditOpen(true)}>
+          <DropdownMenuItem 
+            onClick={() => {
+              // Add small delay to let dropdown close completely before opening sheet
+              setTimeout(() => setIsEditOpen(true), 100);
+            }}
+          >
             <PencilIcon className="mr-2 h-4 w-4" />
             Edit Task
           </DropdownMenuItem>
@@ -198,7 +217,7 @@ const TaskActions = ({ task }: { task: Task }) => {
                 toast.error(
                   error instanceof Error
                     ? error.message
-                    : "Failed to mark task as done",
+                    : "Failed to mark task as done"
                 );
               } finally {
                 setIsMarkingDone(false);
@@ -278,10 +297,8 @@ const TaskActions = ({ task }: { task: Task }) => {
                                   size="sm"
                                   variant="outline"
                                   onClick={() => {
-                                    const today = new Date();
-                                    today.setHours(0, 0, 0, 0);
-                                    setMonth(today);
-                                    field.onChange(today);
+                                    setMonth(startOfToday);
+                                    field.onChange(startOfToday);
                                   }}
                                 >
                                   Today
@@ -300,21 +317,15 @@ const TaskActions = ({ task }: { task: Task }) => {
                                 onMonthChange={setMonth}
                                 selected={field.value}
                                 onSelect={(d?: Date) => {
-                                  if (d) {
+                                  if (d && d < startOfToday) {
                                     // Prevent selecting past dates
-                                    const startOfToday = new Date();
-                                    startOfToday.setHours(0, 0, 0, 0);
-                                    if (d < startOfToday) return;
+                                    return;
                                   }
                                   field.onChange(d);
                                   setIsDuePopoverOpen(false);
                                 }}
                                 disabled={{
-                                  before: (() => {
-                                    const t = new Date();
-                                    t.setHours(0, 0, 0, 0);
-                                    return t;
-                                  })(),
+                                  before: startOfToday,
                                 }}
                                 className="bg-transparent p-0"
                               />
