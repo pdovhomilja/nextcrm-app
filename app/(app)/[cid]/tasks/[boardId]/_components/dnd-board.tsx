@@ -42,6 +42,11 @@ import { useRouter } from "next/navigation";
 import type { Task, BoardSection, Board } from "../../_types";
 import { deleteBoardSection } from "@/actions/tasks/delete-board-section";
 import { toast } from "sonner";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 interface DndBoardProps {
   initialSections: BoardSection[];
@@ -195,7 +200,14 @@ function SortableTask({ task }: { task: Task }) {
         <TaskActions task={task} />
       </CardHeader>
       <CardContent className="flex flex-col justify-between space-y-2 overflow-hidden text-xs mx-2">
-        <p className="truncate">{task.description}</p>
+        <p className="truncate">
+          <HoverCard>
+            <HoverCardTrigger>{task.description}</HoverCardTrigger>
+            <HoverCardContent className="text-xs">
+              {task.description}
+            </HoverCardContent>
+          </HoverCard>
+        </p>
         <div className="flex flex-row gap-2 items-center text-xs text-muted-foreground">
           <User2 size={16} />
           <p>{task.assignedTo.name || "Unassigned"}</p>
@@ -239,7 +251,7 @@ const MemoSortableSection = React.memo(SortableSection);
 
 const isTaskId = (id: string, sections: BoardSection[]) => {
   return sections.some((section) =>
-    section.tasks.some((task) => task.id === id),
+    section.tasks.some((task) => task.id === id)
   );
 };
 
@@ -277,11 +289,11 @@ export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
   const handleSectionDeleted = useCallback(
     (sectionId: string) => {
       setSections((prev: BoardSection[]) =>
-        prev.filter((s) => s.id !== sectionId),
+        prev.filter((s) => s.id !== sectionId)
       );
       router.refresh();
     },
-    [router],
+    [router]
   );
 
   const handleTaskCreated = useCallback(
@@ -291,11 +303,11 @@ export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
         prev.map((section) =>
           section.id === sectionId
             ? { ...section, tasks: [...section.tasks, newTask] }
-            : section,
-        ),
+            : section
+        )
       );
     },
-    [],
+    []
   );
 
   const sensors = useSensors(
@@ -308,7 +320,7 @@ export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
         cancel: ["Escape"],
         end: ["Enter"],
       },
-    }),
+    })
   );
 
   const handleDragStart = useCallback(
@@ -319,7 +331,7 @@ export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
       // Store the current sections state for accurate position calculations
       setSectionsAtDragStart([...sections]);
     },
-    [sections],
+    [sections]
   );
 
   const handleDragOver = useCallback(
@@ -340,7 +352,7 @@ export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
 
       // Find the section that contains the task being dragged
       const activeSection = sections.find((s) =>
-        s.tasks.some((t) => t.id === activeId),
+        s.tasks.some((t) => t.id === activeId)
       );
       if (!activeSection) return;
 
@@ -353,11 +365,11 @@ export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
       if (isTaskId(overId, sections)) {
         // Dropping on a task - insert before that task
         targetSection = sections.find((s) =>
-          s.tasks.some((t) => t.id === overId),
+          s.tasks.some((t) => t.id === overId)
         );
         if (targetSection) {
           insertionIndex = targetSection.tasks.findIndex(
-            (t) => t.id === overId,
+            (t) => t.id === overId
           );
         } else {
           return;
@@ -394,7 +406,7 @@ export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
       if (activeSection.id === targetSection.id) {
         // Same section reordering
         const currentIndex = activeSection.tasks.findIndex(
-          (t) => t.id === activeId,
+          (t) => t.id === activeId
         );
         if (currentIndex === -1) return;
 
@@ -408,7 +420,7 @@ export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
           newTargetTasks = arrayMove(
             activeSection.tasks,
             currentIndex,
-            adjustedInsertionIndex,
+            adjustedInsertionIndex
           );
         }
       } else {
@@ -419,11 +431,11 @@ export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
       // Update the sections state (only for same-section reorder)
       setSections((prev) =>
         prev.map((s) =>
-          s.id === activeSection.id ? { ...s, tasks: newTargetTasks } : s,
-        ),
+          s.id === activeSection.id ? { ...s, tasks: newTargetTasks } : s
+        )
       );
     },
-    [sections],
+    [sections]
   );
 
   const handleDragEnd = useCallback(
@@ -447,14 +459,14 @@ export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
         const activeSectionIndex = sections.findIndex((s) => s.id === activeId);
         const normalizedOverId = parseSectionContainerOverId(overId) ?? overId;
         const overSectionIndex = sections.findIndex(
-          (s) => s.id === normalizedOverId,
+          (s) => s.id === normalizedOverId
         );
 
         if (activeSectionIndex !== overSectionIndex) {
           const newSections = arrayMove(
             sections,
             activeSectionIndex,
-            overSectionIndex,
+            overSectionIndex
           );
           setSections(newSections);
 
@@ -463,7 +475,7 @@ export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
             (section: BoardSection, index: number) => ({
               id: section.id,
               position: index,
-            }),
+            })
           );
 
           try {
@@ -497,7 +509,7 @@ export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
       }
 
       const originalActiveSection = originalSections.find((s) =>
-        s.tasks.some((t) => t.id === activeId),
+        s.tasks.some((t) => t.id === activeId)
       );
       if (!originalActiveSection) {
         return;
@@ -511,11 +523,11 @@ export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
       if (isTaskId(overId, originalSections)) {
         // Dropped on a task - insert before that task
         originalTargetSection = originalSections.find((s) =>
-          s.tasks.some((t) => t.id === overId),
+          s.tasks.some((t) => t.id === overId)
         );
         if (originalTargetSection) {
           finalInsertionIndex = originalTargetSection.tasks.findIndex(
-            (t) => t.id === overId,
+            (t) => t.id === overId
           );
         } else {
           return;
@@ -526,7 +538,7 @@ export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
       ) {
         // Dropped on the section's container top area
         originalTargetSection = originalSections.find(
-          (s) => s.id === containerSectionIdEnd,
+          (s) => s.id === containerSectionIdEnd
         );
         if (originalTargetSection) {
           finalInsertionIndex = 0;
@@ -555,14 +567,14 @@ export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
         if (originalActiveSection.id === originalTargetSection.id) {
           // Same section reorder - persist current order of that section
           const currentSection = sections.find(
-            (s) => s.id === originalActiveSection.id,
+            (s) => s.id === originalActiveSection.id
           );
           if (currentSection) {
             const taskUpdates = currentSection.tasks.map(
               (task: Task, index: number) => ({
                 id: task.id,
                 position: index,
-              }),
+              })
             );
             await updateTaskPositions(taskUpdates);
           }
@@ -578,14 +590,14 @@ export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
             if (!source || !target) return prev;
             // Remove from source
             const removedIndex = source.tasks.findIndex(
-              (t) => t.id === activeId,
+              (t) => t.id === activeId
             );
             if (removedIndex !== -1) {
               const [removed] = source.tasks.splice(removedIndex, 1);
               // Insert into target at finalInsertionIndex (clamped)
               const insertIndex = Math.max(
                 0,
-                Math.min(target.tasks.length, finalInsertionIndex),
+                Math.min(target.tasks.length, finalInsertionIndex)
               );
               target.tasks.splice(insertIndex, 0, removed);
             }
@@ -596,7 +608,7 @@ export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
             activeId,
             originalActiveSection.id,
             originalTargetSection.id,
-            finalInsertionIndex,
+            finalInsertionIndex
           );
         }
       } catch (error) {
@@ -611,7 +623,7 @@ export default function DndBoard({ initialSections, boardId }: DndBoardProps) {
         setIsLoading(false);
       }
     },
-    [sections, sectionsAtDragStart, router],
+    [sections, sectionsAtDragStart, router]
   );
 
   return (
