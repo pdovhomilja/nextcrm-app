@@ -21,6 +21,8 @@ async function getImapConnection(accountId: string): Promise<Imap | null> {
     throw new Error("Mail account not found");
   }
 
+  //console.log("Password:", decrypt(account.encryptedPassword));
+
   const imap = new Imap({
     user: account.imapUser,
     password: decrypt(account.encryptedPassword),
@@ -79,7 +81,7 @@ export async function getMailFolders(accountId: string) {
 
     console.log(
       "[MAIL ACTION] Fetched and processed folder names:",
-      folderNames,
+      folderNames
     );
     return { boxes: folderNames };
   } catch (error: any) {
@@ -96,10 +98,10 @@ export async function getMailFolders(accountId: string) {
 export async function getMailList(
   accountId: string,
   folderName: string,
-  page: number = 1,
+  page: number = 1
 ) {
   console.log(
-    `[MAIL ACTION] getMailList called for account: ${accountId}, folder: ${folderName}, page: ${page}`,
+    `[MAIL ACTION] getMailList called for account: ${accountId}, folder: ${folderName}, page: ${page}`
   );
   let imap: Imap | null = null;
   const emailsPerPage = 25;
@@ -116,7 +118,7 @@ export async function getMailList(
     });
     const totalMessages = box.messages.total;
     console.log(
-      `[MAIL ACTION] Opened box "${folderName}", total messages: ${totalMessages}`,
+      `[MAIL ACTION] Opened box "${folderName}", total messages: ${totalMessages}`
     );
     if (totalMessages === 0) {
       imap?.end();
@@ -151,7 +153,7 @@ export async function getMailList(
       f.once("error", reject);
       f.once("end", () => {
         console.log(
-          `[MAIL ACTION] Fetched ${fetchedMessages.length} messages.`,
+          `[MAIL ACTION] Fetched ${fetchedMessages.length} messages.`
         );
         resolve(fetchedMessages.reverse());
       });
@@ -167,7 +169,7 @@ export async function getMailList(
           from: parsed.from?.text,
           date: parsed.date,
         };
-      }),
+      })
     );
     console.log(`[MAIL ACTION] Parsed ${emails.length} emails.`);
 
@@ -182,10 +184,10 @@ export async function getMailList(
 export async function getMailContent(
   accountId: string,
   folderName: string,
-  mailUid: string,
+  mailUid: string
 ) {
   console.log(
-    `[MAIL ACTION] getMailContent called for account: ${accountId}, uid: ${mailUid}`,
+    `[MAIL ACTION] getMailContent called for account: ${accountId}, uid: ${mailUid}`
   );
   let imap: Imap | null = null;
   try {
@@ -216,12 +218,12 @@ export async function getMailContent(
         });
         f.once("error", reject);
         f.once("end", () => resolve({ headers, body }));
-      },
+      }
     );
 
     const parsed = await simpleParser(message.body);
     console.log(
-      `[MAIL ACTION] Parsed content for email subject: ${parsed.subject}`,
+      `[MAIL ACTION] Parsed content for email subject: ${parsed.subject}`
     );
 
     return {
