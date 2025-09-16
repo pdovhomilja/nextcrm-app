@@ -31,6 +31,11 @@ import { taskTableSearchParams } from "@/app/(app)/[cid]/tasks-list/search-param
 import { auth } from "@/auth";
 import type { Session } from "next-auth";
 import { TaskRowActions } from "./task-list-actions";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 interface TaskDataTableServerProps {
   boardId?: string;
@@ -282,7 +287,14 @@ function TaskTable({
                     </div>
                     {task.description && (
                       <div className="text-sm text-muted-foreground truncate">
-                        {task.description}
+                        <HoverCard>
+                          <HoverCardTrigger>
+                            {task.description}
+                          </HoverCardTrigger>
+                          <HoverCardContent className="text-xs">
+                            {task.description}
+                          </HoverCardContent>
+                        </HoverCard>
                       </div>
                     )}
                   </div>

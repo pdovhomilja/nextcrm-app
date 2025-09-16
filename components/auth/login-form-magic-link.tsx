@@ -33,7 +33,7 @@ export function LoginFormMagicLink({
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="ales@bankaroku.cz"
+                  placeholder="pavel@taskhq.app"
                   required
                 />
               </div>
