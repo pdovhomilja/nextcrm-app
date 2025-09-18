@@ -76,7 +76,7 @@ export function DebugAiRequests() {
     } finally {
       setLoading(false);
     }
-  }, [router, previousCompletedIds]);
+  }, [router]);
 
   const handleRetry = async (requestId: string) => {
     setRetryingIds((prev) => new Set(prev).add(requestId));
@@ -111,7 +111,7 @@ export function DebugAiRequests() {
 
     // Cleanup interval on component unmount
     return () => clearInterval(intervalId);
-  }, [loadRequests]);
+  }, []); // Remove loadRequests dependency to prevent infinite loop
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -125,6 +125,21 @@ export function DebugAiRequests() {
         return "bg-red-500";
       default:
         return "bg-gray-500";
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "PENDING":
+        return "Queued";
+      case "PROCESSING":
+        return "Generating...";
+      case "COMPLETED":
+        return "Completed";
+      case "FAILED":
+        return "Failed";
+      default:
+        return status;
     }
   };
 
@@ -151,61 +166,87 @@ export function DebugAiRequests() {
       </CardHeader>
       <CardContent className="space-y-4">
         {loading ? (
-          <p>Loading...</p>
+          <div className="flex items-center gap-2 justify-center py-6">
+            <RefreshCw className="h-4 w-4 animate-spin" />
+            <p className="text-muted-foreground">Loading AI board requests...</p>
+          </div>
         ) : requests.length === 0 ? (
-          <p>No AI board requests found.</p>
+          <div className="text-center py-6 text-muted-foreground">
+            <p>No AI board requests found.</p>
+            <p className="text-sm mt-1">
+              Create a board with AI assistance to see requests here.
+            </p>
+          </div>
         ) : (
-          requests.map((request) => (
-            <div key={request.id} className="border rounded-lg p-4 space-y-2">
-              <div className="flex items-center justify-between">
+          <>
+            {requests.some(req => req.status === "PROCESSING" || req.status === "PENDING") && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
                 <div className="flex items-center gap-2">
-                  <Badge className={getStatusColor(request.status)}>
-                    {request.status}
-                  </Badge>
-                  {request.status === "FAILED" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRetry(request.id)}
-                      disabled={retryingIds.has(request.id)}
-                    >
-                      <RotateCcw className="h-3 w-3 mr-1" />
-                      {retryingIds.has(request.id) ? "Retrying..." : "Continue"}
-                    </Button>
-                  )}
+                  <RefreshCw className="h-4 w-4 animate-spin text-blue-600" />
+                  <p className="text-sm font-medium text-blue-800">
+                    AI board generation in progress...
+                  </p>
                 </div>
-                <span className="text-sm text-gray-500">
-                  {new Date(request.createdAt).toLocaleString()}
-                </span>
+                <p className="text-xs text-blue-600 mt-1">
+                  This process may take 1-3 minutes. The page will refresh automatically when complete.
+                </p>
               </div>
+            )}
+            {requests.map((request) => (
+              <div key={request.id} className="border rounded-lg p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Badge className={getStatusColor(request.status)}>
+                      {request.status === "PROCESSING" && (
+                        <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                      )}
+                      {getStatusLabel(request.status)}
+                    </Badge>
+                    {request.status === "FAILED" && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRetry(request.id)}
+                        disabled={retryingIds.has(request.id)}
+                      >
+                        <RotateCcw className="h-3 w-3 mr-1" />
+                        {retryingIds.has(request.id) ? "Retrying..." : "Continue"}
+                      </Button>
+                    )}
+                  </div>
+                  <span className="text-sm text-gray-500">
+                    {new Date(request.createdAt).toLocaleString()}
+                  </span>
+                </div>
 
-              <p className="text-sm">
-                <strong>Role:</strong> {request.role}
-              </p>
-
-              {request.generatedBoard && (
-                <p className="text-sm text-green-600">
-                  <strong>Generated Board:</strong>{" "}
-                  {request.generatedBoard.name}
+                <p className="text-sm">
+                  <strong>Role:</strong> {request.role}
                 </p>
-              )}
 
-              {request.failureReason && (
-                <p className="text-sm text-red-600">
-                  <strong>Error:</strong> {request.failureReason}
-                </p>
-              )}
+                {request.generatedBoard && (
+                  <p className="text-sm text-green-600">
+                    <strong>Generated Board:</strong>{" "}
+                    {request.generatedBoard.name}
+                  </p>
+                )}
 
-              <details className="text-sm">
-                <summary className="cursor-pointer text-gray-600 hover:text-gray-800">
-                  View Brief
-                </summary>
-                <p className="mt-2 whitespace-pre-wrap text-xs bg-gray-50 p-2 rounded">
-                  {request.refinedPrompt}
-                </p>
-              </details>
-            </div>
-          ))
+                {request.failureReason && (
+                  <p className="text-sm text-red-600">
+                    <strong>Error:</strong> {request.failureReason}
+                  </p>
+                )}
+
+                <details className="text-sm ">
+                  <summary className="cursor-pointer text-gray-600 hover:text-gray-800">
+                    View Brief
+                  </summary>
+                  <p className="mt-2 whitespace-pre-wrap text-xs text-muted-foreground  p-2 rounded">
+                    {request.refinedPrompt}
+                  </p>
+                </details>
+              </div>
+            ))}
+          </>
         )}
       </CardContent>
     </Card>

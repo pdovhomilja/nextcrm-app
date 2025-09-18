@@ -29,13 +29,18 @@ export async function runBoardGenerationJob(
   });
 
   try {
-    // 2. Fetch the request details
+    // 2. Fetch the request details and check status
     const request = await db.aIGeneratedBoardRequest.findUnique({
       where: { id: boardRequestId },
     });
 
     if (!request) {
       throw new Error(`Board request ${boardRequestId} not found.`);
+    }
+
+    if (request.status !== "PROCESSING") {
+      console.log(`Request ${boardRequestId} already ${request.status}, skipping`);
+      return;
     }
 
     // 3. Extract language from refined prompt if available

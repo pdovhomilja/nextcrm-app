@@ -53,9 +53,5 @@ next-env.d.ts
 #prisma
 /lib/generated
 /db_backup
-prisma-deploy.sh
-prisma-db-backup.sh
-prisma-db-backup-secure.sh
-prisma-db-deploy-dev.sh
-prisma-db-deploy-prod.sh
-prisma-db-deploy-prod-improved.sh
+/db_scripts
+

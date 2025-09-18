@@ -38,7 +38,7 @@ export function AiBoardStatusSheet() {
             Monitor the status of your AI-generated project boards
           </SheetDescription>
         </SheetHeader>
-        <div className="mt-6">
+        <div className="mt-6 mx-2">
           <DebugAiRequests />
         </div>
       </SheetContent>
