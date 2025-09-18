@@ -47,7 +47,7 @@ export const VerificationEmail = ({
 
         <Text style={text}>
           This verification link will expire in 24 hours. If you didn't create
-          an account with DataHQ, you can safely ignore this email.
+          an account with TaskHQ, you can safely ignore this email.
         </Text>
 
         <Text style={footer}>

@@ -18,9 +18,9 @@ export async function sendVerificationEmail(
 
     // Send email using Resend
     const { data, error } = await resend.emails.send({
-      from: "DataHQ <pavel@endorphinit.com>", // Replace with your verified domain
+      from: process.env.RESEND_FROM!, // Replace with your verified domain
       to: [email],
-      subject: "Verify your email address for DataHQ",
+      subject: "Verify your email address for TaskHQ",
       react: VerificationEmail({ name, verificationUrl }),
     });
 
