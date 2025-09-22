@@ -1,0 +1,3 @@
+# Spec Summary (Lite)
+
+Implement bulk due date update functionality that allows users to update due dates for active tasks (excluding COMPLETED and CANCELLED) within a specific board while preserving relative time differences. Users select a reference task and new due date, and all active tasks receive proportionally adjusted due dates maintaining their relative gaps with confirmation dialog and task history logging.

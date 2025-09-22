@@ -33,6 +33,8 @@ export interface Board {
   id: string;
   name: string;
   description?: string | null;
+  createdBy: string;
+  access: string[];
   createdAt: Date;
   updatedAt: Date;
 }

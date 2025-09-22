@@ -2,6 +2,7 @@ import { getBoardSections } from "@/actions/tasks/get-board-sections";
 import React from "react";
 import { getBoard } from "@/actions/tasks/get-board";
 import DndBoard from "./_components/dnd-board";
+import BulkDueDateButton from "./_components/bulk-due-date-button";
 import TaskErrorBoundary from "../_components/error-boundary";
 import { SidebarInset } from "@/components/ui/sidebar";
 import { SiteHeader } from "@/components/site-header";
@@ -27,7 +28,7 @@ const BoardPage = async ({
       <SidebarInset>
         <SiteHeader title={board.name}>
           <div className="flex items-center gap-2">
-            {" "}
+            <BulkDueDateButton board={board} />
             {/*         <CreateBoardSectionButton
               boardId={boardId}
               onSectionCreated={handleSectionCreated}

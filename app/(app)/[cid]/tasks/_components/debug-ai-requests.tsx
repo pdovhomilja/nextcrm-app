@@ -76,7 +76,7 @@ export function DebugAiRequests() {
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  }, [router, previousCompletedIds]);
 
   const handleRetry = async (requestId: string) => {
     setRetryingIds((prev) => new Set(prev).add(requestId));
@@ -111,7 +111,7 @@ export function DebugAiRequests() {
 
     // Cleanup interval on component unmount
     return () => clearInterval(intervalId);
-  }, []); // Remove loadRequests dependency to prevent infinite loop
+  }, [loadRequests]);
 
   const getStatusColor = (status: string) => {
     switch (status) {

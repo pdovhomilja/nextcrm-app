@@ -112,7 +112,7 @@ const QuickCreateForm = ({ emailData }: { emailData?: EmailData }) => {
     return () => {
       isCancelled = true;
     };
-  }, [user?.id, form]);
+  }, [user?.id, user?.activeCompanyId, form]);
 
   useEffect(() => {
     if (!selectedBoardId) {
