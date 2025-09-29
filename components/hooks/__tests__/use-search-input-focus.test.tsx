@@ -1,3 +1,4 @@
+import React from 'react';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { fireEvent } from '@testing-library/dom';
 import { useSearchInputFocus } from '../use-search-input-focus';
@@ -50,7 +51,7 @@ describe('useSearchInputFocus', () => {
 
       act(() => {
         // Set the ref to our mock input
-        (result.current.inputRef as any).current = mockInput;
+        (result.current.inputRef as React.MutableRefObject<HTMLInputElement | null>).current = mockInput;
       });
 
       act(() => {
@@ -74,7 +75,7 @@ describe('useSearchInputFocus', () => {
       mockInput.value = 'test';
 
       act(() => {
-        (result.current.inputRef as any).current = mockInput;
+        (result.current.inputRef as React.MutableRefObject<HTMLInputElement | null>).current = mockInput;
       });
 
       act(() => {
@@ -102,7 +103,7 @@ describe('useSearchInputFocus', () => {
       mockInput.setSelectionRange = mockSetSelectionRange;
 
       act(() => {
-        (result.current.inputRef as any).current = mockInput;
+        (result.current.inputRef as React.MutableRefObject<HTMLInputElement | null>).current = mockInput;
       });
 
       act(() => {
@@ -125,7 +126,7 @@ describe('useSearchInputFocus', () => {
       mockInput.setSelectionRange = mockSetSelectionRange;
 
       act(() => {
-        (result.current.inputRef as any).current = mockInput;
+        (result.current.inputRef as React.MutableRefObject<HTMLInputElement | null>).current = mockInput;
       });
 
       act(() => {
@@ -176,7 +177,7 @@ describe('useSearchInputFocus', () => {
       mockInput.setSelectionRange = mockSetSelectionRange;
 
       act(() => {
-        (result.current.inputRef as any).current = mockInput;
+        (result.current.inputRef as React.MutableRefObject<HTMLInputElement | null>).current = mockInput;
       });
 
       // Simulate rapid typing
@@ -210,7 +211,7 @@ describe('useSearchInputFocus', () => {
       mockInput.setSelectionRange = mockSetSelectionRange;
 
       act(() => {
-        (result.current.inputRef as any).current = mockInput;
+        (result.current.inputRef as React.MutableRefObject<HTMLInputElement | null>).current = mockInput;
       });
 
       act(() => {
@@ -236,7 +237,7 @@ describe('useSearchInputFocus', () => {
       mockInput.setSelectionRange = mockSetSelectionRange;
 
       act(() => {
-        (result.current.inputRef as any).current = mockInput;
+        (result.current.inputRef as React.MutableRefObject<HTMLInputElement | null>).current = mockInput;
       });
 
       act(() => {
@@ -261,7 +262,7 @@ describe('useSearchInputFocus', () => {
       mockInput.setSelectionRange = mockSetSelectionRange;
 
       act(() => {
-        (result.current.inputRef as any).current = mockInput;
+        (result.current.inputRef as React.MutableRefObject<HTMLInputElement | null>).current = mockInput;
       });
 
       act(() => {
@@ -287,7 +288,7 @@ describe('useSearchInputFocus', () => {
       mockInput.setSelectionRange = mockSetSelectionRange;
 
       act(() => {
-        (result.current.inputRef as any).current = mockInput;
+        (result.current.inputRef as React.MutableRefObject<HTMLInputElement | null>).current = mockInput;
       });
 
       // Simulate external blur
@@ -314,7 +315,7 @@ describe('useSearchInputFocus', () => {
       mockInput.setSelectionRange = mockSetSelectionRange;
 
       act(() => {
-        (result.current.inputRef as any).current = mockInput;
+        (result.current.inputRef as React.MutableRefObject<HTMLInputElement | null>).current = mockInput;
       });
 
       // Type and cause re-renders

@@ -2,6 +2,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { jest } from '@jest/globals';
 import QuickCreateForm from '../form/quick-create-form';
 import { useSession } from 'next-auth/react';
+import { getBoards } from '@/actions/tasks/get-boards';
+import { getBoardSections } from '@/actions/tasks/get-board-sections';
 
 // Mock next-auth
 jest.mock('next-auth/react', () => ({
@@ -41,10 +43,8 @@ describe('Search State Management Integration', () => {
   beforeEach(() => {
     (useSession as jest.Mock).mockReturnValue({ data: mockSession });
 
-    const { getBoards } = require('@/actions/tasks/get-boards');
     (getBoards as jest.Mock).mockResolvedValue(mockBoards);
 
-    const { getBoardSections } = require('@/actions/tasks/get-board-sections');
     (getBoardSections as jest.Mock).mockResolvedValue([]);
   });
 

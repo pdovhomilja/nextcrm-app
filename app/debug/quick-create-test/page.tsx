@@ -24,7 +24,7 @@ export default function QuickCreateTestPage() {
             <li>1. <strong>Click the Quick Create button</strong> in the sidebar (or test the form above)</li>
             <li>2. <strong>Open the Board dropdown</strong> by clicking on it</li>
             <li>3. <strong>Click in the search input field</strong></li>
-            <li>4. <strong>Type continuously</strong> (e.g., "Project Alpha")</li>
+            <li>4. <strong>Type continuously</strong> (e.g., &quot;Project Alpha&quot;)</li>
             <li>5. <strong>Verify</strong>: You should be able to type without clicking after each character</li>
             <li>6. <strong>Test filtering</strong>: Verify that boards filter as you type</li>
             <li>7. <strong>Test selection</strong>: Click on a board to select it</li>

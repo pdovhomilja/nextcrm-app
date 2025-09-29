@@ -1,8 +1,11 @@
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { jest } from '@jest/globals';
 import QuickCreateForm from '../form/quick-create-form';
 import { useSession } from 'next-auth/react';
+import { getBoards } from '@/actions/tasks/get-boards';
+import { getBoardSections } from '@/actions/tasks/get-board-sections';
+import { createTask } from '@/actions/tasks/create-task';
 
 // Mock next-auth
 jest.mock('next-auth/react', () => ({
@@ -53,13 +56,10 @@ describe('Complete Search Workflow E2E Tests', () => {
 
     (useSession as jest.Mock).mockReturnValue({ data: mockSession });
 
-    const { getBoards } = require('@/actions/tasks/get-boards');
     (getBoards as jest.Mock).mockResolvedValue(mockBoards);
 
-    const { getBoardSections } = require('@/actions/tasks/get-board-sections');
     (getBoardSections as jest.Mock).mockResolvedValue(mockBoardSections);
 
-    const { createTask } = require('@/actions/tasks/create-task');
     (createTask as jest.Mock).mockResolvedValue({ success: true });
   });
 
@@ -120,7 +120,6 @@ describe('Complete Search Workflow E2E Tests', () => {
 
       // Step 9: Verify task creation was called
       await waitFor(() => {
-        const { createTask } = require('@/actions/tasks/create-task');
         expect(createTask).toHaveBeenCalledWith(
           expect.objectContaining({
             title: 'Test Task from Search',

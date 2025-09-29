@@ -3,6 +3,9 @@ import userEvent from '@testing-library/user-event';
 import { jest } from '@jest/globals';
 import QuickCreateForm from '../form/quick-create-form';
 import { useSession } from 'next-auth/react';
+import { getBoards } from '@/actions/tasks/get-boards';
+import { getBoardSections } from '@/actions/tasks/get-board-sections';
+import { createTask } from '@/actions/tasks/create-task';
 
 // Mock next-auth
 jest.mock('next-auth/react', () => ({
@@ -52,17 +55,14 @@ describe('Comprehensive Edge Cases and UX Validation', () => {
 
     (useSession as jest.Mock).mockReturnValue({ data: mockSession });
 
-    const { getBoards } = require('@/actions/tasks/get-boards');
     (getBoards as jest.Mock).mockResolvedValue(mockBoards);
 
-    const { getBoardSections } = require('@/actions/tasks/get-board-sections');
     (getBoardSections as jest.Mock).mockResolvedValue([
       { id: '1-1', name: 'Backlog', position: 0, boardId: '1' },
       { id: '1-2', name: 'In Progress', position: 1, boardId: '1' },
       { id: '1-3', name: 'Done', position: 2, boardId: '1' },
     ]);
 
-    const { createTask } = require('@/actions/tasks/create-task');
     (createTask as jest.Mock).mockResolvedValue({ success: true });
   });
 
@@ -316,7 +316,6 @@ describe('Comprehensive Edge Cases and UX Validation', () => {
 
       // Verify task creation was attempted
       await waitFor(() => {
-        const { createTask } = require('@/actions/tasks/create-task');
         expect(createTask).toHaveBeenCalled();
       });
     });
@@ -485,7 +484,6 @@ describe('Comprehensive Edge Cases and UX Validation', () => {
 
       // Verify successful creation
       await waitFor(() => {
-        const { createTask } = require('@/actions/tasks/create-task');
         expect(createTask).toHaveBeenCalledWith(
           expect.objectContaining({
             title: 'Urgent bug fix needed',
