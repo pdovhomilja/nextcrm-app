@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
+import { useSearchInputFocus } from "@/components/hooks/use-search-input-focus";
 import { z } from "zod/v3";
 import {
   Form,
@@ -66,7 +67,13 @@ const QuickCreateForm = ({ emailData }: { emailData?: EmailData }) => {
   const [boardSections, setBoardSections] = useState<UIBoardSection[]>([]);
   const [month, setMonth] = useState<Date | undefined>(new Date());
   const [isDuePopoverOpen, setIsDuePopoverOpen] = useState(false);
-  const [boardSearchQuery, setBoardSearchQuery] = useState("");
+  // Use focus management hook for board search
+  const {
+    inputRef: boardSearchInputRef,
+    searchQuery: boardSearchQuery,
+    handleInputChange: handleBoardSearchChange,
+    clearSearch: clearBoardSearch
+  } = useSearchInputFocus();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -236,12 +243,12 @@ const QuickCreateForm = ({ emailData }: { emailData?: EmailData }) => {
                   onValueChange={(value) => {
                     field.onChange(value);
                     form.setValue("boardSectionId", "");
-                    setBoardSearchQuery(""); // Clear search when selection is made
+                    clearBoardSearch(); // Clear search when selection is made
                   }}
                   value={field.value}
                   onOpenChange={(open) => {
                     if (!open) {
-                      setBoardSearchQuery(""); // Clear search when dropdown closes
+                      clearBoardSearch(); // Clear search when dropdown closes
                     }
                   }}
                 >
@@ -251,9 +258,10 @@ const QuickCreateForm = ({ emailData }: { emailData?: EmailData }) => {
                   <SelectContent>
                     <div className="p-2">
                       <Input
+                        ref={boardSearchInputRef}
                         placeholder="Search boards..."
                         value={boardSearchQuery}
-                        onChange={(e) => setBoardSearchQuery(e.target.value)}
+                        onChange={handleBoardSearchChange}
                         className="h-8"
                         onClick={(e) => e.stopPropagation()}
                         onKeyDown={(e) => e.stopPropagation()}
