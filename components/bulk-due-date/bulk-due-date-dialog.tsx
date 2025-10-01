@@ -40,6 +40,7 @@ import {
   getBoardTasksForReference,
 } from "@/actions/tasks/update-active-tasks-due-date";
 import { validateTaskDate } from "@/lib/utils/date-calculations";
+import { useRouter } from "next/navigation";
 
 // Form validation schema
 const bulkDueDateSchema = z.object({
@@ -67,6 +68,8 @@ export function BulkDueDateDialog({
   isOpen,
   onOpenChange,
 }: BulkDueDateDialogProps) {
+  const router = useRouter();
+  
   const [activeTaskCount, setActiveTaskCount] = useState<number | null>(null);
   const [taskCountError, setTaskCountError] = useState<string | null>(null);
   const [isLoadingTaskCount, setIsLoadingTaskCount] = useState(false);
@@ -198,6 +201,7 @@ export function BulkDueDateDialog({
       console.error("Error updating tasks:", error);
       toast.error("An unexpected error occurred");
     } finally {
+      router.refresh();
       setIsSubmitting(false);
     }
   };
