@@ -50,6 +50,7 @@ export async function PUT(req: Request, props: { params: Promise<{ taskId: strin
     const sectionId = await prismadb.sections.findFirst({
       where: {
         board: board,
+        organizationId: session.user?.organizationId,
       },
       orderBy: {
         position: "asc",

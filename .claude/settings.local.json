@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Bash(pnpm list --depth=0)",
+      "Bash(test:*)",
+      "Bash(sed:*)",
+      "Bash(pnpm add:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(wc:*)",
+      "Bash(/tmp/page_backup.tsx)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(git checkout:*)",
+      "Bash(rg:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

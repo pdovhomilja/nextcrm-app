@@ -12,6 +12,10 @@ export async function PUT(req: Request, props: { params: Promise<{ opportunityId
     return new NextResponse("Unauthenticated", { status: 401 });
   }
 
+  if (!session.user.organizationId) {
+    return new NextResponse("User organization not found", { status: 401 });
+  }
+
   if (!params.opportunityId) {
     return new NextResponse("Opportunity ID is required", { status: 400 });
   }
@@ -21,6 +25,20 @@ export async function PUT(req: Request, props: { params: Promise<{ opportunityId
   const { destination } = body;
 
   try {
+    // Verify the opportunity belongs to the user's organization
+    const existingOpportunity = await prismadb.crm_Opportunities.findFirst({
+      where: {
+        id: params.opportunityId,
+        organizationId: session.user.organizationId,
+      },
+    });
+
+    if (!existingOpportunity) {
+      return new NextResponse("Opportunity not found or unauthorized", {
+        status: 404,
+      });
+    }
+
     await prismadb.crm_Opportunities.update({
       where: {
         id: params.opportunityId,
@@ -31,6 +49,9 @@ export async function PUT(req: Request, props: { params: Promise<{ opportunityId
     });
 
     const data = await prismadb.crm_Opportunities.findMany({
+      where: {
+        organizationId: session.user.organizationId,
+      },
       include: {
         assigned_to_user: {
           select: {
@@ -60,11 +81,29 @@ export async function DELETE(req: Request, props: { params: Promise<{ opportunit
     return new NextResponse("Unauthenticated", { status: 401 });
   }
 
+  if (!session.user.organizationId) {
+    return new NextResponse("User organization not found", { status: 401 });
+  }
+
   if (!params.opportunityId) {
     return new NextResponse("Opportunity ID is required", { status: 400 });
   }
 
   try {
+    // Verify the opportunity belongs to the user's organization
+    const existingOpportunity = await prismadb.crm_Opportunities.findFirst({
+      where: {
+        id: params.opportunityId,
+        organizationId: session.user.organizationId,
+      },
+    });
+
+    if (!existingOpportunity) {
+      return new NextResponse("Opportunity not found or unauthorized", {
+        status: 404,
+      });
+    }
+
     await prismadb.crm_Opportunities.delete({
       where: {
         id: params.opportunityId,

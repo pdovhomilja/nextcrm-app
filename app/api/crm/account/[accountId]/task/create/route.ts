@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { canCreateTask } from "@/lib/quota-enforcement";
 
 import NewTaskFromCRMEmail from "@/emails/NewTaskFromCRM";
 import NewTaskFromCRMToWatchersEmail from "@/emails/NewTaskFromCRMToWatchers";
@@ -27,6 +28,23 @@ export async function POST(req: Request) {
   }
 
   try {
+    if (!session.user.organizationId) {
+      return new NextResponse("User organization not found", { status: 401 });
+    }
+
+    // Check quota before creating task
+    const quotaCheck = await canCreateTask(session.user.organizationId);
+    if (!quotaCheck.allowed) {
+      return NextResponse.json(
+        {
+          error: quotaCheck.reason || "Task limit reached",
+          requiresUpgrade: true,
+          code: "QUOTA_EXCEEDED",
+        },
+        { status: 403 }
+      );
+    }
+
     const task = await prismadb.crm_Accounts_Tasks.create({
       data: {
         v: 0,

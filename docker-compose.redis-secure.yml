@@ -1,0 +1,75 @@
+# Docker Compose for Redis Rate Limiting with Authentication
+# Secure setup with password authentication
+#
+# Usage:
+#   docker-compose -f docker-compose.redis-secure.yml up -d
+#   docker-compose -f docker-compose.redis-secure.yml down
+
+version: '3.8'
+
+services:
+  redis-ratelimit-secure:
+    image: redis:7-alpine
+    container_name: nextcrm-redis-ratelimit-secure
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD:-changeme123}
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1
+      --loglevel warning
+      --appendonly yes
+      --appendfsync everysec
+    volumes:
+      - redis-ratelimit-data-secure:/data
+    environment:
+      - REDIS_REPLICATION_MODE=master
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-changeme123}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-changeme123}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - nextcrm-network-secure
+
+  # Redis Commander with authentication
+  redis-commander-secure:
+    image: rediscommander/redis-commander:latest
+    container_name: nextcrm-redis-commander-secure
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_HOSTS=local:redis-ratelimit-secure:6379:0:${REDIS_PASSWORD:-changeme123}
+      - HTTP_USER=admin
+      - HTTP_PASSWORD=${REDIS_COMMANDER_PASSWORD:-admin123}
+    depends_on:
+      - redis-ratelimit-secure
+    restart: unless-stopped
+    networks:
+      - nextcrm-network-secure
+    profiles:
+      - admin
+
+volumes:
+  redis-ratelimit-data-secure:
+    driver: local
+
+networks:
+  nextcrm-network-secure:
+    driver: bridge
+
+# Environment Variables Required:
+# REDIS_PASSWORD=your-secure-password
+# REDIS_COMMANDER_PASSWORD=your-admin-password
+#
+# Create .env file with:
+# REDIS_PASSWORD=your-secure-password
+# REDIS_COMMANDER_PASSWORD=your-admin-password
+#
+# Then run:
+# docker-compose -f docker-compose.redis-secure.yml up -d

@@ -14,6 +14,10 @@ export async function GET(request: Request, props: { params: Promise<{ invoiceId
     return NextResponse.json({ status: 401, body: { error: "Unauthorized" } });
   }
 
+  if (!session.user.organizationId) {
+    return NextResponse.json({ status: 401, body: { error: "User organization not found" } });
+  }
+
   const { invoiceId } = params;
 
   if (!invoiceId) {
@@ -26,6 +30,7 @@ export async function GET(request: Request, props: { params: Promise<{ invoiceId
   const invoice = await prismadb.invoices.findFirst({
     where: {
       id: invoiceId,
+      organizationId: session.user.organizationId,
     },
   });
 
@@ -47,6 +52,10 @@ export async function DELETE(request: Request, props: { params: Promise<{ invoic
     return NextResponse.json({ status: 401, body: { error: "Unauthorized" } });
   }
 
+  if (!session.user.organizationId) {
+    return NextResponse.json({ status: 401, body: { error: "User organization not found" } });
+  }
+
   const { invoiceId } = params;
 
   if (!invoiceId) {
@@ -59,6 +68,7 @@ export async function DELETE(request: Request, props: { params: Promise<{ invoic
   const invoiceData = await prismadb.invoices.findFirst({
     where: {
       id: invoiceId,
+      organizationId: session.user.organizationId,
     },
   });
 

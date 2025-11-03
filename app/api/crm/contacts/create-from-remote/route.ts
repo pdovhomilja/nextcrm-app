@@ -1,5 +1,6 @@
 import { prismadb } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { canCreateContact } from "@/lib/quota-enforcement";
 
 export async function POST(req: Request) {
   const apiKey = req.headers.get("NEXTCRM_TOKEN");
@@ -20,17 +21,41 @@ export async function POST(req: Request) {
 
   console.log(body, "body");
 
-  const { name, surname, email, phone, company, message, tag } = body;
-  if (!name || !surname || !email || !phone || !company || !message || !tag) {
+  const { name, surname, email, phone, company, message, tag, organizationId } =
+    body;
+  if (
+    !name ||
+    !surname ||
+    !email ||
+    !phone ||
+    !company ||
+    !message ||
+    !tag ||
+    !organizationId
+  ) {
     return NextResponse.json(
-      { error: "Missing required fields" },
+      { error: "Missing required fields (including organizationId)" },
       { status: 400 }
     );
   }
 
   try {
+    // Check quota before creating contact
+    const quotaCheck = await canCreateContact(organizationId);
+    if (!quotaCheck.allowed) {
+      return NextResponse.json(
+        {
+          error: quotaCheck.reason || "Contact limit reached",
+          requiresUpgrade: true,
+          code: "QUOTA_EXCEEDED",
+        },
+        { status: 403 }
+      );
+    }
+
     await prismadb.crm_Contacts.create({
       data: {
+        organizationId,
         first_name: name,
         last_name: surname,
         email,

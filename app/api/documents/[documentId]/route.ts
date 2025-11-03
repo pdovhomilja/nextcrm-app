@@ -12,6 +12,10 @@ export async function DELETE(req: Request, props: { params: Promise<{ documentId
     return new NextResponse("Unauthenticated", { status: 401 });
   }
 
+  if (!session.user.organizationId) {
+    return new NextResponse("User organization not found", { status: 401 });
+  }
+
   try {
     if (!params.documentId)
       return new NextResponse("Document ID not found", { status: 404 });
@@ -19,6 +23,7 @@ export async function DELETE(req: Request, props: { params: Promise<{ documentId
     const document = await prismadb.documents.findMany({
       where: {
         id: params.documentId,
+        organizationId: session.user.organizationId,
       },
     });
 

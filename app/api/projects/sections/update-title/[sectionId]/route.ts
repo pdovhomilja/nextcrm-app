@@ -9,11 +9,28 @@ export async function PUT(req: Request, props: { params: Promise<{ sectionId: st
   if (!session) {
     return new NextResponse("Unauthenticated", { status: 401 });
   }
+
+  if (!session.user?.organizationId) {
+    return new NextResponse("User organization not found", { status: 401 });
+  }
+
   const body = await req.json();
   const { sectionId } = params;
   const { newTitle } = body;
 
   try {
+    // Verify section belongs to the user's organization
+    const section = await prismadb.sections.findFirst({
+      where: {
+        id: sectionId,
+        organizationId: session.user.organizationId,
+      },
+    });
+
+    if (!section) {
+      return new NextResponse("Section not found or unauthorized", { status: 404 });
+    }
+
     await prismadb.sections.update({
       where: {
         id: sectionId,

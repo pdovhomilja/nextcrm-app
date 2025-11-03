@@ -1,7 +1,20 @@
+"use server";
+
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 
 export const getOpportunities = async () => {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.organizationId) {
+    throw new Error("Unauthorized: No organization context");
+  }
+
   const data = await prismadb.crm_Opportunities.findMany({
+    where: {
+      organizationId: session.user.organizationId,
+    },
     include: {
       assigned_to_user: {
         select: {
@@ -16,7 +29,16 @@ export const getOpportunities = async () => {
 
 //Get opportunities by month for chart
 export const getOpportunitiesByMonth = async () => {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.organizationId) {
+    throw new Error("Unauthorized: No organization context");
+  }
+
   const opportunities = await prismadb.crm_Opportunities.findMany({
+    where: {
+      organizationId: session.user.organizationId,
+    },
     select: {
       created_on: true,
     },
@@ -49,7 +71,16 @@ export const getOpportunitiesByMonth = async () => {
 
 //Get opportunities by sales_stage name for chart
 export const getOpportunitiesByStage = async () => {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.organizationId) {
+    throw new Error("Unauthorized: No organization context");
+  }
+
   const opportunities = await prismadb.crm_Opportunities.findMany({
+    where: {
+      organizationId: session.user.organizationId,
+    },
     select: {
       assigned_sales_stage: {
         select: {

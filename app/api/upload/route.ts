@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import axios from "axios";
 import { getRossumToken } from "@/lib/get-rossum-token";
+import { canUploadFile } from "@/lib/quota-enforcement";
 
 const FormData = require("form-data");
 
@@ -20,13 +21,31 @@ export async function POST(request: NextRequest) {
   const file: File | null = data.get("file") as unknown as File;
 
   if (!file) {
-    console.log("Error - no file found");
+    console.error("[UPLOAD_API] No file found in request");
     return NextResponse.json({ success: false });
   }
-  console.log("FIle from UPLOAD API:", file);
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
-  console.log("Buffer:", buffer);
+
+  // Check storage quota before uploading
+  if (!session.user.organizationId) {
+    return NextResponse.json("User organization not found", { status: 401 });
+  }
+
+  const quotaCheck = await canUploadFile(
+    session.user.organizationId,
+    buffer.length
+  );
+  if (!quotaCheck.allowed) {
+    return NextResponse.json(
+      {
+        error: quotaCheck.reason || "Storage limit reached",
+        requiresUpgrade: true,
+        code: "QUOTA_EXCEEDED",
+      },
+      { status: 403 }
+    );
+  }
 
   //Rossum integration
   const rossumURL = process.env.ROSSUM_API_URL;
@@ -37,15 +56,11 @@ export async function POST(request: NextRequest) {
   const form = new FormData();
   form.append("content", buffer, file.name);
 
-  console.log("FORM DATA:", form);
-
   const uploadInvoiceToRossum = await axios.post(queueUploadUrl, form, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
-
-  console.log("Response", uploadInvoiceToRossum.data);
 
   const rossumTask = await axios.get(uploadInvoiceToRossum.data.url, {
     headers: {
@@ -53,15 +68,11 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  console.log("Rossum task: ", rossumTask.data);
-
   const rossumUploadData = await axios.get(rossumTask.data.content.upload, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
-
-  console.log("Rossum upload data: ", rossumUploadData.data);
 
   const rossumDocument = await axios.get(rossumUploadData.data.documents[0], {
     headers: {
@@ -73,12 +84,7 @@ export async function POST(request: NextRequest) {
     throw new Error("Could not get Rossum document");
   }
 
-  console.log("Rossum document: ", rossumDocument.data);
-
   const invoiceFileName = "invoices/" + new Date().getTime() + "-" + file.name;
-  console.log("Invoice File Name:", invoiceFileName);
-
-  console.log("UPloading to S3(Digital Ocean)...", invoiceFileName);
   try {
     const bucketParams = {
       Bucket: process.env.DO_BUCKET,
@@ -91,20 +97,15 @@ export async function POST(request: NextRequest) {
 
     await s3Client.send(new PutObjectCommand(bucketParams));
   } catch (err) {
-    console.log("Error - uploading to S3(Digital Ocean)", err);
+    console.error("[UPLOAD_API] Error uploading to S3:", err);
   }
-
-  console.log("Creating Item in DB...");
   try {
     //S3 bucket url for the invoice
     const url = `https://${process.env.DO_BUCKET}.${process.env.DO_REGION}.digitaloceanspaces.com/${invoiceFileName}`;
-    console.log("URL in Digital Ocean:", url);
 
     const rossumAnnotationId = rossumDocument.data.annotations[0]
       .split("/")
       .pop();
-
-    console.log("Annotation ID:", rossumAnnotationId);
     //Save the data to the database
 
     await prismadb.invoices.create({
@@ -129,7 +130,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.log("Error - storing data to DB", error);
+    console.error("[UPLOAD_API] Error storing invoice data:", error);
     return NextResponse.json({ success: false });
   }
 }

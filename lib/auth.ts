@@ -48,7 +48,6 @@ export const authOptions: NextAuthOptions = {
       },
 
       async authorize(credentials) {
-        // console.log(credentials, "credentials");
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Email or password is missing");
         }
@@ -75,7 +74,6 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Password is incorrect");
         }
 
-        //console.log(user, "user");
         return user;
       },
     }),
@@ -118,9 +116,11 @@ export const authOptions: NextAuthOptions = {
           session.user.userLanguage = newUser.userLanguage;
           session.user.userStatus = newUser.userStatus;
           session.user.lastLoginAt = newUser.lastLoginAt;
+          session.user.organizationId = newUser.organizationId;
           return session;
         } catch (error) {
-          return console.log(error);
+          console.error("[AUTH_SESSION]", error);
+          return session;
         }
       } else {
         await prismadb.users.update({
@@ -141,9 +141,9 @@ export const authOptions: NextAuthOptions = {
         session.user.userLanguage = user.userLanguage;
         session.user.userStatus = user.userStatus;
         session.user.lastLoginAt = user.lastLoginAt;
+        session.user.organizationId = user.organizationId;
       }
 
-      //console.log(session, "session");
       return session;
     },
   },

@@ -12,6 +12,10 @@ export async function DELETE(req: Request) {
     return new NextResponse("Unauthenticated", { status: 401 });
   }
 
+  if (!session.user?.organizationId) {
+    return new NextResponse("User organization not found", { status: 401 });
+  }
+
   if (!id) {
     return new NextResponse("Missing section ID ", { status: 400 });
   }
@@ -19,7 +23,23 @@ export async function DELETE(req: Request) {
   console.log(id, "id");
 
   try {
-    const tasks = await prismadb.tasks.findMany({});
+    // Verify section belongs to the user's organization
+    const section = await prismadb.sections.findFirst({
+      where: {
+        id: id,
+        organizationId: session.user.organizationId,
+      },
+    });
+
+    if (!section) {
+      return new NextResponse("Section not found or unauthorized", { status: 404 });
+    }
+
+    const tasks = await prismadb.tasks.findMany({
+      where: {
+        organizationId: session.user.organizationId,
+      },
+    });
 
     for (const task of tasks) {
       if (task.section === id) {

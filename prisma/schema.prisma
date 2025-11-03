@@ -10,9 +10,118 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Multi-tenancy enums
+enum OrganizationPlan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+enum OrganizationStatus {
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+}
+
+enum OrganizationRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+// Subscription Status Enum
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+  TRIALING
+  UNPAID
+}
+
+// Payment Status Enum
+enum PaymentStatus {
+  SUCCEEDED
+  PENDING
+  FAILED
+  CANCELED
+  REFUNDED
+}
+
+// Invitation Status Enum
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  CANCELLED
+}
+
+// Organizations Model - Core multi-tenancy entity
+model Organizations {
+  id                String                @id @default(auto()) @map("_id") @db.ObjectId
+  v                 Int                   @default(0) @map("__v")
+  name              String
+  slug              String                @unique
+  plan              OrganizationPlan      @default(FREE)
+  status            OrganizationStatus    @default(ACTIVE)
+  createdAt         DateTime              @default(now()) @db.Date
+  updatedAt         DateTime?             @updatedAt @db.Date
+  ownerId           String                @db.ObjectId
+  settings          Json?                 @default("{}")
+  stripeCustomerId  String?               @unique
+  deleteScheduledAt DateTime?             @db.Date
+
+  // Relations
+  owner             Users                     @relation(name: "owned_organizations", fields: [ownerId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  users             Users[]                   @relation(name: "user_organizations")
+  invitations       OrganizationInvitations[]
+  crm_accounts      crm_Accounts[]
+  crm_leads         crm_Leads[]
+  crm_contacts      crm_Contacts[]
+  crm_opportunities crm_Opportunities[]
+  crm_contracts     crm_Contracts[]
+  invoices          Invoices[]
+  documents         Documents[]
+  tasks             Tasks[]
+  boards            Boards[]
+  sections          Sections[]
+  subscriptions     Subscriptions[]
+  paymentHistory    PaymentHistory[]
+  crm_accounts_tasks crm_Accounts_Tasks[]
+  usage             OrganizationUsage?
+  auditLogs         AuditLog[]
+  dataExports       DataExport[]
+}
+
+// Organization Invitations Model
+model OrganizationInvitations {
+  id             String           @id @default(auto()) @map("_id") @db.ObjectId
+  v              Int              @default(0) @map("__v")
+  organizationId String           @db.ObjectId
+  email          String
+  role           OrganizationRole @default(MEMBER)
+  token          String           @unique
+  status         InvitationStatus @default(PENDING)
+  invitedBy      String           @db.ObjectId
+  expiresAt      DateTime
+  createdAt      DateTime         @default(now()) @db.Date
+  updatedAt      DateTime?        @updatedAt @db.Date
+
+  // Relations
+  organization   Organizations    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedByUser  Users            @relation(name: "invited_by", fields: [invitedBy], references: [id], onDelete: NoAction)
+
+  @@index([organizationId])
+  @@index([email])
+  @@index([token])
+}
+
 model crm_Accounts {
   id                   String               @id @default(auto()) @map("_id") @db.ObjectId
   v                    Int                  @map("__v")
+  organizationId       String               @db.ObjectId
   createdAt            DateTime             @default(now()) @db.Date
   createdBy            String?              @db.ObjectId
   updatedAt            DateTime?            @updatedAt @db.Date
@@ -42,6 +151,9 @@ model crm_Accounts {
   type                 String?              @default("Customer")
   vat                  String?
   website              String?
+
+  // Relations
+  organization         Organizations        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   invoices             Invoices[]
   documentsIDs         String[]             @db.ObjectId
   assigned_documents   Documents[]          @relation(fields: [documentsIDs], references: [id])
@@ -60,6 +172,7 @@ model crm_Leads {
   id String @id @default(auto()) @map("_id") @db.ObjectId
   v  Int    @default(0) @map("__v")
 
+  organizationId     String        @db.ObjectId
   createdAt          DateTime?     @default(now()) @db.Date
   createdBy          String?       @db.ObjectId
   updatedAt          DateTime?     @updatedAt @db.Date
@@ -77,6 +190,9 @@ model crm_Leads {
   status             String?       @default("NEW")
   type               String?       @default("DEMO")
   assigned_to        String?       @db.ObjectId
+
+  // Relations
+  organization       Organizations @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   assigned_to_user   Users?        @relation(fields: [assigned_to], references: [id])
   accountsIDs        String?       @db.ObjectId
   assigned_accounts  crm_Accounts? @relation(fields: [accountsIDs], references: [id])
@@ -98,6 +214,7 @@ enum crm_Lead_Type {
 model crm_Opportunities {
   id                   String                          @id @default(auto()) @map("_id") @db.ObjectId
   v                    Int                             @default(0) @map("__v")
+  organizationId       String                          @db.ObjectId
   account              String?                         @db.ObjectId
   assigned_to          String?                         @db.ObjectId
   budget               Int                             @default(0)
@@ -120,6 +237,9 @@ model crm_Opportunities {
   sales_stage          String?                         @db.ObjectId
   type                 String?                         @db.ObjectId
   status               crm_Opportunity_Status?         @default(ACTIVE)
+
+  // Relations
+  organization         Organizations                   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   assigned_type        crm_Opportunities_Type?         @relation(fields: [type], references: [id])
   assigned_sales_stage crm_Opportunities_Sales_Stages? @relation(name: "assinged_sales_stage", fields: [sales_stage], references: [id])
   assigned_to_user     Users?                          @relation(name: "assigned_to_user_relation", fields: [assigned_to], references: [id])
@@ -168,6 +288,7 @@ model crm_Opportunities_Type {
 model crm_Contacts {
   id                     String              @id @default(auto()) @map("_id") @db.ObjectId
   v                      Int                 @default(0) @map("__v")
+  organizationId         String              @db.ObjectId
   account                String?             @db.ObjectId
   assigned_to            String?             @db.ObjectId
   birthday               String?
@@ -199,6 +320,9 @@ model crm_Contacts {
   type                   String?             @default("Customer")
   tags                   String[]
   notes                  String[]
+
+  // Relations
+  organization           Organizations       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   assigned_to_user       Users?              @relation(name: "assigned_contacts", fields: [assigned_to], references: [id])
   crate_by_user          Users?              @relation(name: "created_contacts", fields: [created_by], references: [id])
   opportunitiesIDs       String[]            @db.ObjectId
@@ -219,6 +343,7 @@ enum crm_Contact_Type {
 model crm_Contracts {
   id                  String               @id @default(auto()) @map("_id") @db.ObjectId
   v                   Int                  @map("__v")
+  organizationId      String               @db.ObjectId
   title               String
   value               Int
   startDate           DateTime?            @default(now()) @db.Date
@@ -235,6 +360,9 @@ model crm_Contracts {
   updatedBy           String?              @db.ObjectId
   status              crm_Contracts_Status @default(NOTSTARTED)
   type                String?
+
+  // Relations
+  organization        Organizations        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   assigned_account    crm_Accounts?        @relation(fields: [account], references: [id])
   assigned_to_user    Users?               @relation(fields: [assigned_to], references: [id])
 }
@@ -248,6 +376,7 @@ enum crm_Contracts_Status {
 model Boards {
   id                String    @id @default(auto()) @map("_id") @db.ObjectId
   v                 Int       @map("__v")
+  organizationId    String    @db.ObjectId
   description       String
   favourite         Boolean?
   favouritePosition Int?
@@ -264,8 +393,11 @@ model Boards {
 
   //Create watechers field for board. It will be array of users
   watchers       String[] @db.ObjectId
-  assigned_user  Users?   @relation(name: "assigned_user", fields: [user], references: [id])
-  watchers_users Users[]  @relation(name: "watching_users", fields: [watchers], references: [id])
+
+  // Relations
+  organization   Organizations @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  assigned_user  Users?        @relation(name: "assigned_user", fields: [user], references: [id])
+  watchers_users Users[]        @relation(name: "watching_users", fields: [watchers], references: [id])
 }
 
 model Employees {
@@ -325,6 +457,7 @@ model MyAccount {
 model Invoices {
   id                            String          @id @default(auto()) @map("_id") @db.ObjectId
   v                             Int?            @map("__v")
+  organizationId                String          @db.ObjectId
   date_created                  DateTime        @default(now()) @db.Date
   last_updated                  DateTime        @updatedAt
   last_updated_by               String?         @db.ObjectId
@@ -388,6 +521,9 @@ model Invoices {
   assigned_user_id              String?         @db.ObjectId
   assigned_account_id           String?         @db.ObjectId
   visibility                    Boolean         @default(true)
+
+  // Relations
+  organization                  Organizations   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   invoice_states                invoice_States? @relation(fields: [invoice_state_id], references: [id])
   users                         Users?          @relation(fields: [assigned_user_id], references: [id])
   accounts                      crm_Accounts?   @relation(fields: [assigned_account_id], references: [id])
@@ -404,6 +540,7 @@ model invoice_States {
 model Documents {
   id                     String              @id @default(auto()) @map("_id") @db.ObjectId
   v                      Int?                @map("__v")
+  organizationId         String              @db.ObjectId
   date_created           DateTime?           @default(now()) @db.Date
   createdAt              DateTime?           @default(now()) @db.Date
   last_updated           DateTime?           @updatedAt
@@ -430,6 +567,9 @@ model Documents {
   crm_accounts_tasksIDs  String[]            @db.ObjectId
   leadsIDs               String[]            @db.ObjectId
   accountsIDs            String[]            @db.ObjectId
+
+  // Relations
+  organization           Organizations       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   invoices               Invoices[]          @relation(fields: [invoiceIDs], references: [id])
   opportunities          crm_Opportunities[] @relation(fields: [opportunityIDs], references: [id])
   contacts               crm_Contacts[]      @relation(fields: [contactsIDs], references: [id])
@@ -459,12 +599,19 @@ model Documents_Types {
 }
 
 model Sections {
-  id       String  @id @default(auto()) @map("_id") @db.ObjectId
-  v        Int     @map("__v")
-  board    String  @db.ObjectId
-  title    String
-  position Int?
-  tasks    Tasks[]
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
+  v              Int            @map("__v")
+  organizationId String         @db.ObjectId
+  board          String         @db.ObjectId
+  title          String
+  position       Int?
+  tasks          Tasks[]
+
+  // Relations
+  organization   Organizations  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([board])
 }
 
 model crm_Industry_Type {
@@ -483,6 +630,7 @@ model modulStatus {
 model Tasks {
   id               String          @id @default(auto()) @map("_id") @db.ObjectId
   v                Int             @map("__v")
+  organizationId   String          @db.ObjectId
   content          String?
   createdAt        DateTime?       @default(now()) @db.Date
   createdBy        String?         @db.ObjectId
@@ -498,6 +646,9 @@ model Tasks {
   likes            Int?            @default(0)
   user             String?         @db.ObjectId
   documentIDs      String[]        @db.ObjectId
+
+  // Relations
+  organization     Organizations   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   comments         tasksComments[]
   documents        Documents[]     @relation(fields: [documentIDs], references: [id])
   assigned_user    Users?          @relation(fields: [user], references: [id])
@@ -509,6 +660,7 @@ model Tasks {
 model crm_Accounts_Tasks {
   id            String          @id @default(auto()) @map("_id") @db.ObjectId
   v             Int             @map("__v")
+  organizationId String          @db.ObjectId
   content       String?
   createdAt     DateTime?       @default(now()) @db.Date
   createdBy     String?         @db.ObjectId
@@ -522,6 +674,9 @@ model crm_Accounts_Tasks {
   user          String?         @db.ObjectId
   comments      tasksComments[]
   documents     Documents[]
+
+  // Relations
+  organization  Organizations   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   assigned_user Users?          @relation(fields: [user], references: [id])
   //CRM assigments
   account       String?         @db.ObjectId
@@ -579,26 +734,38 @@ model Users {
   username             String?
   userStatus           ActiveStatus          @default(PENDING)
   userLanguage         Language              @default(en)
+
+  // Multi-tenancy fields
+  organizationId       String?               @db.ObjectId
+  organization_role    OrganizationRole      @default(MEMBER)
+
+  // Relations
+  organization         Organizations?            @relation(name: "user_organizations", fields: [organizationId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  owned_organizations  Organizations[]           @relation(name: "owned_organizations")
+  sent_invitations     OrganizationInvitations[] @relation(name: "invited_by")
   tasksComment         tasksComments[]
-  created_by_documents Documents[]           @relation(name: "created_by_user")
-  assigned_documents   Documents[]           @relation(name: "assigned_to_user")
+  created_by_documents Documents[]               @relation(name: "created_by_user")
+  assigned_documents   Documents[]               @relation(name: "assigned_to_user")
   tasks                Tasks[]
   crm_accounts_tasks   crm_Accounts_Tasks[]
   accounts             crm_Accounts[]
   leads                crm_Leads[]
-  created_by_user      crm_Opportunities[]   @relation(name: "created_by_user_relation")
-  assigned_opportunity crm_Opportunities[]   @relation(name: "assigned_to_user_relation")
-  assigned_contacts    crm_Contacts[]        @relation(name: "assigned_contacts")
-  crated_contacts      crm_Contacts[]        @relation(name: "created_contacts")
+  created_by_user      crm_Opportunities[]       @relation(name: "created_by_user_relation")
+  assigned_opportunity crm_Opportunities[]       @relation(name: "assigned_to_user_relation")
+  assigned_contacts    crm_Contacts[]            @relation(name: "assigned_contacts")
+  crated_contacts      crm_Contacts[]            @relation(name: "created_contacts")
   notion_account       secondBrain_notions[]
   openAi_key           openAi_keys[]
   assigned_invoices    Invoices[]
   assigned_contracts   crm_Contracts[]
-  boards               Boards[]              @relation(name: "assigned_user")
-  watching_boardsIDs   String[]              @db.ObjectId
-  watching_boards      Boards[]              @relation(name: "watching_users", fields: [watching_boardsIDs], references: [id])
-  watching_accountsIDs String[]              @db.ObjectId
-  watching_accounts    crm_Accounts[]        @relation(name: "watching_accounts", fields: [watching_accountsIDs], references: [id])
+  boards               Boards[]                  @relation(name: "assigned_user")
+  watching_boardsIDs   String[]                  @db.ObjectId
+  watching_boards      Boards[]                  @relation(name: "watching_users", fields: [watching_boardsIDs], references: [id])
+  watching_accountsIDs String[]                  @db.ObjectId
+  watching_accounts    crm_Accounts[]            @relation(name: "watching_accounts", fields: [watching_accountsIDs], references: [id])
+  auditLogs            AuditLog[]
+  sessions             UserSession[]
+  dataExports          DataExport[]
 }
 
 enum Language {
@@ -658,4 +825,167 @@ model gpt_models {
 enum gptStatus {
   ACTIVE
   INACTIVE
+}
+
+model Subscriptions {
+  id                     String              @id @default(auto()) @map("_id") @db.ObjectId
+  v                      Int                 @default(0) @map("__v")
+  organizationId         String              @db.ObjectId
+  stripeCustomerId       String
+  stripeSubscriptionId   String              @unique
+  stripePriceId          String
+  status                 SubscriptionStatus  @default(ACTIVE)
+  currentPeriodStart     DateTime            @db.Date
+  currentPeriodEnd       DateTime            @db.Date
+  cancelAtPeriodEnd      Boolean             @default(false)
+  canceledAt             DateTime?           @db.Date
+  trialStart             DateTime?           @db.Date
+  trialEnd               DateTime?           @db.Date
+  createdAt              DateTime            @default(now()) @db.Date
+  updatedAt              DateTime?           @updatedAt @db.Date
+
+  // Relations
+  organization           Organizations       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model PaymentHistory {
+  id                     String              @id @default(auto()) @map("_id") @db.ObjectId
+  v                      Int                 @default(0) @map("__v")
+  organizationId         String              @db.ObjectId
+  stripePaymentIntentId  String              @unique
+  stripeInvoiceId        String?
+  amount                 Int
+  currency               String              @default("usd")
+  status                 PaymentStatus       @default(PENDING)
+  description            String?
+  receiptUrl             String?
+  createdAt              DateTime            @default(now()) @db.Date
+
+  // Relations
+  organization           Organizations       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+// Organization Usage Tracking Model
+model OrganizationUsage {
+  id                     String              @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId         String              @unique @db.ObjectId
+  usersCount             Int                 @default(0)
+  contactsCount          Int                 @default(0)
+  storageBytes           Int                 @default(0)
+  projectsCount          Int                 @default(0)
+  documentsCount         Int                 @default(0)
+  accountsCount          Int                 @default(0)
+  leadsCount             Int                 @default(0)
+  opportunitiesCount     Int                 @default(0)
+  tasksCount             Int                 @default(0)
+  lastCalculatedAt       DateTime?           @updatedAt @db.Date
+  createdAt              DateTime            @default(now()) @db.Date
+  updatedAt              DateTime?           @updatedAt @db.Date
+
+  // Relations
+  organization           Organizations       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+// Audit Actions Enum
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  VIEW
+  EXPORT
+  LOGIN
+  LOGOUT
+  INVITE
+  REMOVE
+  ROLE_CHANGE
+  SETTINGS_CHANGE
+  SUBSCRIPTION_CHANGE
+  PAYMENT
+}
+
+// Audit Log Model for Security and Compliance
+model AuditLog {
+  id                     String              @id @default(auto()) @map("_id") @db.ObjectId
+  v                      Int                 @default(0) @map("__v")
+  organizationId         String              @db.ObjectId
+  userId                 String?             @db.ObjectId
+  action                 AuditAction
+  resource               String
+  resourceId             String?
+  changes                Json?
+  ipAddress              String?
+  userAgent              String?
+  createdAt              DateTime            @default(now()) @db.Date
+
+  // Relations
+  organization           Organizations       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user                   Users?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([action])
+  @@index([resource])
+}
+
+// Session Model for Enhanced Security
+model UserSession {
+  id                     String              @id @default(auto()) @map("_id") @db.ObjectId
+  v                      Int                 @default(0) @map("__v")
+  userId                 String              @db.ObjectId
+  token                  String              @unique
+  ipAddress              String?
+  userAgent              String?
+  device                 String?
+  location               String?
+  isActive               Boolean             @default(true)
+  lastActivityAt         DateTime            @default(now()) @db.Date
+  createdAt              DateTime            @default(now()) @db.Date
+  expiresAt              DateTime            @db.Date
+
+  // Relations
+  user                   Users               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([isActive])
+}
+
+// Organization Deletion Status Enum
+enum OrganizationDeletionStatus {
+  ACTIVE
+  SCHEDULED_FOR_DELETION
+  DELETED
+}
+
+// Data Export Model
+model DataExport {
+  id                     String              @id @default(auto()) @map("_id") @db.ObjectId
+  v                      Int                 @default(0) @map("__v")
+  organizationId         String              @db.ObjectId
+  userId                 String              @db.ObjectId
+  status                 ExportStatus        @default(PENDING)
+  fileUrl                String?
+  expiresAt              DateTime?           @db.Date
+  createdAt              DateTime            @default(now()) @db.Date
+  completedAt            DateTime?           @db.Date
+
+  // Relations
+  organization           Organizations       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user                   Users               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([status])
+}
+
+// Export Status Enum
+enum ExportStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  EXPIRED
 }

@@ -24,6 +24,7 @@ export async function getAiReport(session: any, boardId: string) {
   const boardData = await prismadb.sections.findMany({
     where: {
       board: boardId,
+      organizationId: session.user?.organizationId,
     },
     include: {
       tasks: {

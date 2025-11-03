@@ -13,11 +13,29 @@ export async function DELETE(req: Request, props: { params: Promise<{ contactId:
     return new NextResponse("Unauthenticated", { status: 401 });
   }
 
+  if (!session.user.organizationId) {
+    return new NextResponse("User organization not found", { status: 401 });
+  }
+
   if (!params.contactId) {
     return new NextResponse("contact ID is required", { status: 400 });
   }
 
   try {
+    // Verify the contact belongs to the user's organization
+    const existingContact = await prismadb.crm_Contacts.findFirst({
+      where: {
+        id: params.contactId,
+        organizationId: session.user.organizationId,
+      },
+    });
+
+    if (!existingContact) {
+      return new NextResponse("Contact not found or unauthorized", {
+        status: 404,
+      });
+    }
+
     await prismadb.crm_Contacts.delete({
       where: {
         id: params.contactId,

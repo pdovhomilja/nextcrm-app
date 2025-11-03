@@ -3,6 +3,7 @@ import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import sendEmail from "@/lib/sendmail";
+import { canCreateOpportunity } from "@/lib/quota-enforcement";
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
@@ -35,8 +36,28 @@ export async function POST(req: Request) {
 
     //console.log(req.body, "req.body");
 
+    if (!session.user.organizationId) {
+      return new NextResponse("User organization not found", { status: 401 });
+    }
+
+    // Check quota before creating opportunity
+    const quotaCheck = await canCreateOpportunity(
+      session.user.organizationId
+    );
+    if (!quotaCheck.allowed) {
+      return NextResponse.json(
+        {
+          error: quotaCheck.reason || "Opportunity limit reached",
+          requiresUpgrade: true,
+          code: "QUOTA_EXCEEDED",
+        },
+        { status: 403 }
+      );
+    }
+
     const newOpportunity = await prismadb.crm_Opportunities.create({
       data: {
+        organizationId: session.user.organizationId,
         account: account,
         assigned_to: assigned_to,
         budget: Number(budget),
@@ -120,6 +141,24 @@ export async function PUT(req: Request) {
 
     //console.log(req.body, "req.body");
 
+    if (!session.user.organizationId) {
+      return new NextResponse("User organization not found", { status: 401 });
+    }
+
+    // Verify the opportunity belongs to the user's organization
+    const existingOpportunity = await prismadb.crm_Opportunities.findFirst({
+      where: {
+        id,
+        organizationId: session.user.organizationId,
+      },
+    });
+
+    if (!existingOpportunity) {
+      return new NextResponse("Opportunity not found or unauthorized", {
+        status: 404,
+      });
+    }
+
     const updatedOpportunity = await prismadb.crm_Opportunities.update({
       where: { id },
       data: {
@@ -179,10 +218,26 @@ export async function GET(req: Request) {
     return new NextResponse("Unauthenticated", { status: 401 });
   }
 
+  if (!session.user.organizationId) {
+    return new NextResponse("User organization not found", { status: 401 });
+  }
+
   try {
-    const users = await prismadb.users.findMany({});
-    const accounts = await prismadb.crm_Accounts.findMany({});
-    const contacts = await prismadb.crm_Contacts.findMany({});
+    const users = await prismadb.users.findMany({
+      where: {
+        organizationId: session.user.organizationId,
+      },
+    });
+    const accounts = await prismadb.crm_Accounts.findMany({
+      where: {
+        organizationId: session.user.organizationId,
+      },
+    });
+    const contacts = await prismadb.crm_Contacts.findMany({
+      where: {
+        organizationId: session.user.organizationId,
+      },
+    });
     const saleTypes = await prismadb.crm_Opportunities_Type.findMany({});
     const saleStages = await prismadb.crm_Opportunities_Sales_Stages.findMany(
       {}

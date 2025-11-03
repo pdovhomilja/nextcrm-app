@@ -10,6 +10,10 @@ export async function POST(req: Request, props: { params: Promise<{ projectId: s
     return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
   }
 
+  if (!session.user.organizationId) {
+    return NextResponse.json({ error: "User organization not found" }, { status: 401 });
+  }
+
   if (!params.projectId) {
     return new NextResponse("Missing project ID", { status: 400 });
   }
@@ -17,6 +21,18 @@ export async function POST(req: Request, props: { params: Promise<{ projectId: s
   const boardId = params.projectId;
 
   try {
+    // Verify the board belongs to the user's organization
+    const existingBoard = await prismadb.boards.findFirst({
+      where: {
+        id: boardId,
+        organizationId: session.user.organizationId,
+      },
+    });
+
+    if (!existingBoard) {
+      return NextResponse.json({ error: "Board not found or unauthorized" }, { status: 404 });
+    }
+
     await prismadb.boards.update({
       where: {
         id: boardId,

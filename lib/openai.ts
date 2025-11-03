@@ -23,14 +23,11 @@ export async function openAiHelper(userId: string) {
 
   if (!apiKey) {
     if (!process.env.OPENAI_API_KEY) {
-      console.log("No API key found in the environment");
+      console.warn("[OPENAI] No API key found in environment or database");
       return null;
-      //throw new Error("OPEN_AI_API_KEY is not defined in the environment");
     }
     apiKey = process.env.OPENAI_API_KEY;
   }
-
-  //console.log(apiKey, "apiKey");
   const openai = new OpenAI({
     apiKey: apiKey,
   });

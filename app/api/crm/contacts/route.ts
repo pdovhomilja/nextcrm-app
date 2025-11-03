@@ -3,6 +3,7 @@ import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import sendEmail from "@/lib/sendmail";
+import { canCreateContact } from "@/lib/quota-enforcement";
 
 //Create route
 export async function POST(req: Request) {
@@ -43,9 +44,27 @@ export async function POST(req: Request) {
       type,
     } = body;
 
+    if (!session.user.organizationId) {
+      return new NextResponse("User organization not found", { status: 401 });
+    }
+
+    // Check quota before creating contact
+    const quotaCheck = await canCreateContact(session.user.organizationId);
+    if (!quotaCheck.allowed) {
+      return new NextResponse(
+        JSON.stringify({
+          error: quotaCheck.reason || "Contact limit reached",
+          requiresUpgrade: true,
+          code: "QUOTA_EXCEEDED",
+        }),
+        { status: 403, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     const newContact = await prismadb.crm_Contacts.create({
       data: {
         v: 0,
+        organizationId: session.user.organizationId,
         createdBy: userId,
         updatedBy: userId,
         ...(assigned_account !== null && assigned_account !== undefined
@@ -156,6 +175,24 @@ export async function PUT(req: Request) {
     } = body;
 
     console.log(assigned_account, "assigned_account");
+
+    if (!session.user.organizationId) {
+      return new NextResponse("User organization not found", { status: 401 });
+    }
+
+    // Verify the contact belongs to the user's organization
+    const existingContact = await prismadb.crm_Contacts.findFirst({
+      where: {
+        id,
+        organizationId: session.user.organizationId,
+      },
+    });
+
+    if (!existingContact) {
+      return new NextResponse("Contact not found or unauthorized", {
+        status: 404,
+      });
+    }
 
     const newContact = await prismadb.crm_Contacts.update({
       where: {

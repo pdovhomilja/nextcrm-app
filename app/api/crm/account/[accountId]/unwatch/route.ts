@@ -10,6 +10,10 @@ export async function POST(req: Request, props: { params: Promise<{ accountId: s
     return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
   }
 
+  if (!session.user.organizationId) {
+    return NextResponse.json({ error: "User organization not found" }, { status: 401 });
+  }
+
   if (!params.accountId) {
     return new NextResponse("Missing account ID", { status: 400 });
   }
@@ -17,6 +21,18 @@ export async function POST(req: Request, props: { params: Promise<{ accountId: s
   const accountId = params.accountId;
 
   try {
+    // Verify the account belongs to the user's organization
+    const existingAccount = await prismadb.crm_Accounts.findFirst({
+      where: {
+        id: accountId,
+        organizationId: session.user.organizationId,
+      },
+    });
+
+    if (!existingAccount) {
+      return NextResponse.json({ error: "Account not found or unauthorized" }, { status: 404 });
+    }
+
     await prismadb.crm_Accounts.update({
       where: {
         id: accountId,

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { canCreateTask } from "@/lib/quota-enforcement";
 
 import NewTaskFromCRMEmail from "@/emails/NewTaskFromCRM";
 import NewTaskFromProject from "@/emails/NewTaskFromProject";
@@ -9,7 +10,7 @@ import resendHelper from "@/lib/resend";
 
 //Create new task in project route
 /*
-TODO: there is second route for creating task in board, but it is the same as this one. Consider merging them (/api/projects/tasks/create-task/[boardId]). 
+TODO: there is second route for creating task in board, but it is the same as this one. Consider merging them (/api/projects/tasks/create-task/[boardId]).
 */
 export async function POST(req: Request) {
   /*
@@ -38,10 +39,28 @@ export async function POST(req: Request) {
   }
 
   try {
+    if (!session.user.organizationId) {
+      return new NextResponse("User organization not found", { status: 401 });
+    }
+
+    // Check quota before creating task
+    const quotaCheck = await canCreateTask(session.user.organizationId);
+    if (!quotaCheck.allowed) {
+      return NextResponse.json(
+        {
+          error: quotaCheck.reason || "Task limit reached",
+          requiresUpgrade: true,
+          code: "QUOTA_EXCEEDED",
+        },
+        { status: 403 }
+      );
+    }
+
     //Get first section from board where position is smallest
     const sectionId = await prismadb.sections.findFirst({
       where: {
         board: board,
+        organizationId: session.user?.organizationId,
       },
       orderBy: {
         position: "asc",

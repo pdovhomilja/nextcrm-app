@@ -21,6 +21,8 @@ import NotionsBox from "./components/dasboard/notions";
 import LoadingBox from "./components/dasboard/loading-box";
 import StorageQuota from "./components/dasboard/storage-quota";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DashboardUsageWarningWrapper } from "@/components/dashboard-usage-warning-wrapper";
+import { DashboardUsageWarningWrapper } from "@/components/dashboard-usage-warning-wrapper";
 
 import {
   getTasksCount,
@@ -80,6 +82,10 @@ const DashboardPage = async () => {
   );
 
   return (
+    <>
+      {session?.user?.organizationId && (
+        <DashboardUsageWarningWrapper organizationId={session.user.organizationId} />
+      )}
     <Container
       title={dict.DashboardPage.containerTitle}
       description={
@@ -224,6 +230,7 @@ const DashboardPage = async () => {
         )}
       </div>
     </Container>
+    </>
   );
 };
 

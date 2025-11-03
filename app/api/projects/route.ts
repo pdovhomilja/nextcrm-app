@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { canCreateProject } from "@/lib/quota-enforcement";
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
@@ -20,12 +21,34 @@ export async function POST(req: Request) {
     return new NextResponse("Missing project description", { status: 400 });
   }
 
+  if (!session.user.organizationId) {
+    return new NextResponse("User organization not found", { status: 401 });
+  }
+
   try {
-    const boardsCount = await prismadb.boards.count();
+    // Check quota before creating project
+    const quotaCheck = await canCreateProject(session.user.organizationId);
+    if (!quotaCheck.allowed) {
+      return NextResponse.json(
+        {
+          error: quotaCheck.reason || "Project limit reached",
+          requiresUpgrade: true,
+          code: "QUOTA_EXCEEDED",
+        },
+        { status: 403 }
+      );
+    }
+
+    const boardsCount = await prismadb.boards.count({
+      where: {
+        organizationId: session.user.organizationId,
+      },
+    });
 
     const newBoard = await prismadb.boards.create({
       data: {
         v: 0,
+        organizationId: session.user.organizationId,
         user: session.user.id,
         title: title,
         description: description,
@@ -39,6 +62,7 @@ export async function POST(req: Request) {
     await prismadb.sections.create({
       data: {
         v: 0,
+        organizationId: session.user.organizationId,
         board: newBoard.id,
         title: "Backlog",
         position: 0,
@@ -69,7 +93,23 @@ export async function PUT(req: Request) {
     return new NextResponse("Missing project description", { status: 400 });
   }
 
+  if (!session.user.organizationId) {
+    return new NextResponse("User organization not found", { status: 401 });
+  }
+
   try {
+    // Verify the board belongs to the user's organization
+    const existingBoard = await prismadb.boards.findFirst({
+      where: {
+        id,
+        organizationId: session.user.organizationId,
+      },
+    });
+
+    if (!existingBoard) {
+      return new NextResponse("Board not found or unauthorized", { status: 404 });
+    }
+
     await prismadb.boards.update({
       where: {
         id,
