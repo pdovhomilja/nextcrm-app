@@ -24,6 +24,7 @@ export function PendingInvitations() {
 
   useEffect(() => {
     loadInvitations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadInvitations = async () => {

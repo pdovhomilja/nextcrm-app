@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
 //Update task API endpoint
-export async function PUT(req: Request) {
+async function handlePUT(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const body = await req.json();
   console.log(body, "body");
@@ -40,7 +41,7 @@ export async function PUT(req: Request) {
 }
 
 //Delete task API endpoint
-export async function DELETE(req: Request) {
+async function handleDELETE(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const body = await req.json();
   console.log(body, "body");
@@ -118,3 +119,7 @@ export async function DELETE(req: Request) {
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const PUT = rateLimited(handlePUT);
+export const DELETE = rateLimited(handleDELETE);

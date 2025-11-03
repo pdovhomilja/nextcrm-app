@@ -7,8 +7,9 @@ import {
 } from "@aws-sdk/client-s3";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { withRateLimit } from "@/middleware/with-rate-limit";
 
-export async function GET(request: NextRequest, props: { params: Promise<{ bucketId: string }> }) {
+async function handleGET(request: NextRequest, props: { params: Promise<{ bucketId: string }> }) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
 
@@ -29,3 +30,6 @@ export async function GET(request: NextRequest, props: { params: Promise<{ bucke
 
   return NextResponse.json({ files: data, success: true }, { status: 200 });
 }
+
+// Apply rate limiting to all endpoints
+export const GET = withRateLimit(handleGET);

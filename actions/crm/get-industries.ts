@@ -7,14 +7,11 @@ import { prismadb } from "@/lib/prisma";
 export const getIndustries = async () => {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user?.organizationId) {
-    throw new Error("Unauthorized: No organization context");
+  if (!session?.user?.email) {
+    throw new Error("Unauthorized");
   }
 
-  const data = await prismadb.crm_Industry_Type.findMany({
-    where: {
-      organizationId: session.user.organizationId,
-    },
-  });
+  // Industry types are shared reference data across all organizations
+  const data = await prismadb.crm_Industry_Type.findMany();
   return data;
 };

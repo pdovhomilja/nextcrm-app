@@ -89,8 +89,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    if (!admin[0] || !admin[0].organizationId) {
+      throw new Error("Admin user or organization not found");
+    }
+
     await prismadb.invoices.create({
       data: {
+        organizationId: admin[0].organizationId,
         last_updated_by: admin[0].id,
         date_due: new Date(),
         description: "Incoming invoice",

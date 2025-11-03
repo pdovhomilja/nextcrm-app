@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { acceptInvitation } from "@/actions/organization/accept-invitation";
@@ -11,9 +11,9 @@ import { getRoleDisplayName } from "@/lib/permissions";
 import { prismadb } from "@/lib/prisma";
 
 interface AcceptInvitationPageProps {
-  params: {
+  params: Promise<{
     token: string;
-  };
+  }>;
 }
 
 interface InvitationInfo {
@@ -24,8 +24,9 @@ interface InvitationInfo {
 }
 
 export default function AcceptInvitationPage({
-  params: { token },
+  params,
 }: AcceptInvitationPageProps) {
+  const { token } = use(params);
   const router = useRouter();
   const { data: session, status } = useSession();
   const [loading, setLoading] = useState(true);
@@ -141,7 +142,7 @@ export default function AcceptInvitationPage({
                   This is a one-time token that expires in 7 days
                 </li>
                 <li>
-                  Once accepted, you'll be added to the organization
+                  Once accepted, you&apos;ll be added to the organization
                 </li>
                 <li>
                   Your role and permissions will be set by the organization owner

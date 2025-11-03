@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -7,9 +7,10 @@ import { canCreateTask } from "@/lib/quota-enforcement";
 import NewTaskFromCRMEmail from "@/emails/NewTaskFromCRM";
 import NewTaskFromCRMToWatchersEmail from "@/emails/NewTaskFromCRMToWatchers";
 import resendHelper from "@/lib/resend";
+import { withRateLimit } from "@/middleware/with-rate-limit";
 
 //Create new task from CRM in project route
-export async function POST(req: Request) {
+async function handlePOST(req: NextRequest) {
   /*
   Resend.com function init - this is a helper function that will be used to send emails
   */
@@ -48,6 +49,7 @@ export async function POST(req: Request) {
     const task = await prismadb.crm_Accounts_Tasks.create({
       data: {
         v: 0,
+        organizationId: session.user.organizationId,
         priority: priority,
         title: title,
         content,
@@ -145,3 +147,6 @@ export async function POST(req: Request) {
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const POST = withRateLimit(handlePOST);

@@ -74,6 +74,7 @@ export async function POST(req: Request) {
 async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
   const customerId = subscription.customer as string;
   const priceId = subscription.items.data[0]?.price.id;
+  const sub = subscription as any; // Type assertion for Stripe properties
 
   const organization = await prismadb.organizations.findFirst({
     where: { stripeCustomerId: customerId },
@@ -95,22 +96,22 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
         stripeSubscriptionId: subscription.id,
         stripePriceId: priceId,
         status: mapStripeStatus(subscription.status),
-        currentPeriodStart: new Date(subscription.current_period_start * 1000),
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-        cancelAtPeriodEnd: subscription.cancel_at_period_end,
-        canceledAt: subscription.canceled_at ? new Date(subscription.canceled_at * 1000) : null,
-        trialStart: subscription.trial_start ? new Date(subscription.trial_start * 1000) : null,
-        trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+        currentPeriodStart: new Date(sub.current_period_start * 1000),
+        currentPeriodEnd: new Date(sub.current_period_end * 1000),
+        cancelAtPeriodEnd: sub.cancel_at_period_end,
+        canceledAt: sub.canceled_at ? new Date(sub.canceled_at * 1000) : null,
+        trialStart: sub.trial_start ? new Date(sub.trial_start * 1000) : null,
+        trialEnd: sub.trial_end ? new Date(sub.trial_end * 1000) : null,
       },
       update: {
         stripePriceId: priceId,
         status: mapStripeStatus(subscription.status),
-        currentPeriodStart: new Date(subscription.current_period_start * 1000),
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-        cancelAtPeriodEnd: subscription.cancel_at_period_end,
-        canceledAt: subscription.canceled_at ? new Date(subscription.canceled_at * 1000) : null,
-        trialStart: subscription.trial_start ? new Date(subscription.trial_start * 1000) : null,
-        trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+        currentPeriodStart: new Date(sub.current_period_start * 1000),
+        currentPeriodEnd: new Date(sub.current_period_end * 1000),
+        cancelAtPeriodEnd: sub.cancel_at_period_end,
+        canceledAt: sub.canceled_at ? new Date(sub.canceled_at * 1000) : null,
+        trialStart: sub.trial_start ? new Date(sub.trial_start * 1000) : null,
+        trialEnd: sub.trial_end ? new Date(sub.trial_end * 1000) : null,
       },
     }),
     prismadb.organizations.update({
@@ -153,8 +154,9 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 }
 
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
+  const inv = invoice as any; // Type assertion for Stripe properties
   const customerId = invoice.customer as string;
-  const paymentIntentId = invoice.payment_intent as string;
+  const paymentIntentId = inv.payment_intent as string;
 
   if (!paymentIntentId) {
     console.log("[STRIPE_WEBHOOK] No payment intent for invoice");
@@ -193,8 +195,9 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
 }
 
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
+  const inv = invoice as any; // Type assertion for Stripe properties
   const customerId = invoice.customer as string;
-  const paymentIntentId = invoice.payment_intent as string;
+  const paymentIntentId = inv.payment_intent as string;
 
   if (!paymentIntentId) {
     console.log("[STRIPE_WEBHOOK] No payment intent for failed invoice");

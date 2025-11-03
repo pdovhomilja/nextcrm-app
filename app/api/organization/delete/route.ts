@@ -3,16 +3,17 @@
  * Soft delete with 30-day retention period
  */
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { logAuditEvent } from "@/lib/audit-logger";
 import crypto from "crypto";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
 const DELETION_RETENTION_DAYS = 30;
 
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -138,7 +139,7 @@ export async function POST(request: Request) {
 }
 
 // Cancel scheduled deletion
-export async function DELETE(request: Request) {
+async function handleDELETE(request: Request) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -214,7 +215,7 @@ export async function DELETE(request: Request) {
 }
 
 // Get deletion status
-export async function GET() {
+async function handleGET() {
   try {
     const session = await getServerSession(authOptions);
 
@@ -243,6 +244,14 @@ export async function GET() {
       );
     }
 
+    // Only OWNER can view deletion status
+    if (user.organization_role !== "OWNER") {
+      return NextResponse.json(
+        { error: "Only organization owners can view deletion status" },
+        { status: 403 }
+      );
+    }
+
     const isScheduledForDeletion = !!user.organization.deleteScheduledAt;
     const daysRemaining = user.organization.deleteScheduledAt
       ? Math.ceil(
@@ -268,3 +277,8 @@ export async function GET() {
     );
   }
 }
+
+// Apply rate limiting to all endpoints
+export const GET = rateLimited(handleGET);
+export const POST = rateLimited(handlePOST);
+export const DELETE = rateLimited(handleDELETE);

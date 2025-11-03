@@ -1,9 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
-export async function PUT(req: Request) {
+async function handlePUT(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const body = await req.json();
 
@@ -85,3 +86,6 @@ export async function PUT(req: Request) {
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const PUT = rateLimited(handlePUT);

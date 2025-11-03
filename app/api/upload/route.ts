@@ -7,10 +7,11 @@ import { authOptions } from "@/lib/auth";
 import axios from "axios";
 import { getRossumToken } from "@/lib/get-rossum-token";
 import { canUploadFile } from "@/lib/quota-enforcement";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
 const FormData = require("form-data");
 
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -110,6 +111,7 @@ export async function POST(request: NextRequest) {
 
     await prismadb.invoices.create({
       data: {
+        organizationId: session.user.organizationId!,
         last_updated_by: session.user.id,
         date_due: new Date(),
         description: "Incoming invoice",
@@ -134,3 +136,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const POST = rateLimited(handlePOST);

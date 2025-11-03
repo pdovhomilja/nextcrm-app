@@ -1,8 +1,9 @@
 import { prismadb } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { canCreateContact } from "@/lib/quota-enforcement";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
-export async function POST(req: Request) {
+async function handlePOST(req: NextRequest) {
   const apiKey = req.headers.get("NEXTCRM_TOKEN");
 
   // Get API key from headers
@@ -74,3 +75,6 @@ export async function POST(req: Request) {
     );
   }
 }
+
+// Apply rate limiting to all endpoints
+export const POST = rateLimited(handlePOST);

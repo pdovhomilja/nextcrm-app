@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -7,12 +7,13 @@ import { canCreateTask } from "@/lib/quota-enforcement";
 import NewTaskFromCRMEmail from "@/emails/NewTaskFromCRM";
 import NewTaskFromProject from "@/emails/NewTaskFromProject";
 import resendHelper from "@/lib/resend";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
 //Create new task in project route
 /*
 TODO: there is second route for creating task in board, but it is the same as this one. Consider merging them (/api/projects/tasks/create-task/[boardId]).
 */
-export async function POST(req: Request) {
+async function handlePOST(req: NextRequest) {
   /*
   Resend.com function init - this is a helper function that will be used to send emails
   */
@@ -43,8 +44,10 @@ export async function POST(req: Request) {
       return new NextResponse("User organization not found", { status: 401 });
     }
 
+    const organizationId = session.user.organizationId;
+
     // Check quota before creating task
-    const quotaCheck = await canCreateTask(session.user.organizationId);
+    const quotaCheck = await canCreateTask(organizationId);
     if (!quotaCheck.allowed) {
       return NextResponse.json(
         {
@@ -60,7 +63,7 @@ export async function POST(req: Request) {
     const sectionId = await prismadb.sections.findFirst({
       where: {
         board: board,
-        organizationId: session.user?.organizationId,
+        organizationId: organizationId,
       },
       orderBy: {
         position: "asc",
@@ -86,6 +89,7 @@ export async function POST(req: Request) {
     const task = await prismadb.tasks.create({
       data: {
         v: 0,
+        organizationId: organizationId,
         priority: priority,
         title: title,
         content: contentUpdated,
@@ -154,3 +158,6 @@ export async function POST(req: Request) {
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const POST = rateLimited(handlePOST);

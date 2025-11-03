@@ -1,14 +1,15 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { canManageMembers } from "@/lib/permissions";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
 /**
  * GET /api/organization/invitations
  * Get all pending invitations for the organization
  */
-export async function GET(req: Request) {
+async function handleGET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -60,7 +61,7 @@ export async function GET(req: Request) {
  * DELETE /api/organization/invitations
  * Cancel a pending invitation (bulk delete)
  */
-export async function DELETE(req: Request) {
+async function handleDELETE(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -116,3 +117,7 @@ export async function DELETE(req: Request) {
     return new NextResponse("Internal error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const GET = rateLimited(handleGET);
+export const DELETE = rateLimited(handleDELETE);

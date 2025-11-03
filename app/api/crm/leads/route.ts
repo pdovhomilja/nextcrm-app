@@ -1,12 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import sendEmail from "@/lib/sendmail";
 import { canCreateLead } from "@/lib/quota-enforcement";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
 //Create a new lead route
-export async function POST(req: Request) {
+async function handlePOST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return new NextResponse("Unauthenticated", { status: 401 });
@@ -109,7 +110,7 @@ export async function POST(req: Request) {
 }
 
 //UPdate a lead route
-export async function PUT(req: Request) {
+async function handlePUT(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return new NextResponse("Unauthenticated", { status: 401 });
@@ -211,3 +212,7 @@ export async function PUT(req: Request) {
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const POST = rateLimited(handlePOST);
+export const PUT = rateLimited(handlePUT);

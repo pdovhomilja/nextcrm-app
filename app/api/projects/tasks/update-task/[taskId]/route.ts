@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -6,12 +6,13 @@ import { authOptions } from "@/lib/auth";
 import NewTaskFromProject from "@/emails/NewTaskFromProject";
 import resendHelper from "@/lib/resend";
 import UpdatedTaskFromProject from "@/emails/UpdatedTaskFromProject";
+import { withRateLimit } from "@/middleware/with-rate-limit";
 
 //Create new task in project route
 /*
 TODO: there is second route for creating task in board, but it is the same as this one. Consider merging them (/api/projects/tasks/create-task/[boardId]). 
 */
-export async function PUT(req: Request, props: { params: Promise<{ taskId: string }> }) {
+async function handlePUT(req: NextRequest, props: { params: Promise<{ taskId: string }> }) {
   const params = await props.params;
   /*
   Resend.com function init - this is a helper function that will be used to send emails
@@ -41,6 +42,12 @@ export async function PUT(req: Request, props: { params: Promise<{ taskId: strin
     return new NextResponse("Unauthenticated", { status: 401 });
   }
 
+  if (!session.user?.organizationId) {
+    return new NextResponse("User organization not found", { status: 401 });
+  }
+
+  const organizationId = session.user.organizationId;
+
   if (!title || !user || !priority || !content) {
     return new NextResponse("Missing one of the task data ", { status: 400 });
   }
@@ -50,7 +57,7 @@ export async function PUT(req: Request, props: { params: Promise<{ taskId: strin
     const sectionId = await prismadb.sections.findFirst({
       where: {
         board: board,
-        organizationId: session.user?.organizationId,
+        organizationId: organizationId,
       },
       orderBy: {
         position: "asc",
@@ -144,3 +151,6 @@ export async function PUT(req: Request, props: { params: Promise<{ taskId: strin
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const PUT = withRateLimit(handlePUT);

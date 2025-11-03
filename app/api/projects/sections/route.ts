@@ -1,9 +1,10 @@
 import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
-export async function DELETE(req: Request) {
+async function handleDELETE(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const body = await req.json();
   const { id } = body;
@@ -16,6 +17,8 @@ export async function DELETE(req: Request) {
     return new NextResponse("User organization not found", { status: 401 });
   }
 
+  const organizationId = session.user.organizationId;
+
   if (!id) {
     return new NextResponse("Missing section ID ", { status: 400 });
   }
@@ -27,7 +30,7 @@ export async function DELETE(req: Request) {
     const section = await prismadb.sections.findFirst({
       where: {
         id: id,
-        organizationId: session.user.organizationId,
+        organizationId: organizationId,
       },
     });
 
@@ -37,7 +40,7 @@ export async function DELETE(req: Request) {
 
     const tasks = await prismadb.tasks.findMany({
       where: {
-        organizationId: session.user.organizationId,
+        organizationId: organizationId,
       },
     });
 
@@ -63,3 +66,6 @@ export async function DELETE(req: Request) {
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const DELETE = rateLimited(handleDELETE);

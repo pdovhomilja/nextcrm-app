@@ -1,10 +1,11 @@
 import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/middleware/with-rate-limit";
 
 //Route to unlink contact from opportunity
-export async function PUT(req: Request, props: { params: Promise<{ contactId: string }> }) {
+async function handlePUT(req: NextRequest, props: { params: Promise<{ contactId: string }> }) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -49,3 +50,6 @@ export async function PUT(req: Request, props: { params: Promise<{ contactId: st
   }
   return NextResponse.json("Hello World", { status: 200 });
 }
+
+// Apply rate limiting to all endpoints
+export const PUT = withRateLimit(handlePUT);

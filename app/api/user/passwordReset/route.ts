@@ -1,6 +1,6 @@
 "use server";
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 
 import { generateRandomPassword } from "@/lib/utils";
@@ -8,8 +8,9 @@ import { generateRandomPassword } from "@/lib/utils";
 import { hash } from "bcryptjs";
 import PasswordResetEmail from "@/emails/PasswordReset";
 import resendHelper from "@/lib/resend";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
-export async function POST(req: Request) {
+async function handlePOST(req: NextRequest) {
   /*
   Resend.com function init - this is a helper function that will be used to send emails
   */
@@ -77,3 +78,6 @@ export async function POST(req: Request) {
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+
+// Apply rate limiting: 5 password reset attempts per hour
+export const POST = rateLimited(handlePOST);

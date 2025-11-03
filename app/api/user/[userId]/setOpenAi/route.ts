@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { set } from "zod";
+import { withRateLimit } from "@/middleware/with-rate-limit";
 
-export async function POST(req: Request, props: { params: Promise<{ userId: string }> }) {
+async function handlePOST(req: NextRequest, props: { params: Promise<{ userId: string }> }) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
 
@@ -49,6 +50,7 @@ export async function POST(req: Request, props: { params: Promise<{ userId: stri
         });
       } catch (error) {
         console.log(error);
+        return new NextResponse("Failed to update OpenAI key", { status: 500 });
       }
     } else {
       const setOpenAiKey = await prismadb.openAi_keys.create({
@@ -69,3 +71,6 @@ export async function POST(req: Request, props: { params: Promise<{ userId: stri
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const POST = withRateLimit(handlePOST);

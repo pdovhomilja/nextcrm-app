@@ -1,11 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { canCreateAccount } from "@/lib/quota-enforcement";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
 //Create new account route
-export async function POST(req: Request) {
+async function handlePOST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return new NextResponse("Unauthenticated", { status: 401 });
@@ -95,7 +96,7 @@ export async function POST(req: Request) {
 }
 
 //Update account route
-export async function PUT(req: Request) {
+async function handlePUT(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return new NextResponse("Unauthenticated", { status: 401 });
@@ -188,7 +189,7 @@ export async function PUT(req: Request) {
 }
 
 //GET all accounts route
-export async function GET(req: Request) {
+async function handleGET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return new NextResponse("Unauthenticated", { status: 401 });
@@ -211,3 +212,8 @@ export async function GET(req: Request) {
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all CRM account endpoints
+export const POST = rateLimited(handlePOST);
+export const PUT = rateLimited(handlePUT);
+export const GET = rateLimited(handleGET);

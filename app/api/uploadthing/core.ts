@@ -8,8 +8,9 @@ const f = createUploadthing();
 const auth = async (req: Request) => {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
-  if (!userId) return false;
-  return { id: userId };
+  const organizationId = session?.user?.organizationId;
+  if (!userId || !organizationId) return false;
+  return { id: userId, organizationId };
 };
 
 // FileRouter for your app, can contain multiple FileRoutes
@@ -27,7 +28,7 @@ export const ourFileRouter = {
       if (!user) throw new Error("Unauthorized");
 
       // Whatever is returned here is accessible in onUploadComplete as `metadata`
-      return { userId: user.id };
+      return { userId: user.id, organizationId: user.organizationId };
     })
     .onUploadComplete(async ({ metadata, file }) => {
       // This code RUNS ON YOUR SERVER after upload
@@ -35,6 +36,7 @@ export const ourFileRouter = {
       await prismadb.documents.create({
         data: {
           v: 0,
+          organizationId: metadata.organizationId,
           document_name: file.name,
           description: "new document",
           document_file_url: file.url,
@@ -62,7 +64,7 @@ export const ourFileRouter = {
       if (!user) throw new Error("Unauthorized");
 
       // Whatever is returned here is accessible in onUploadComplete as `metadata`
-      return { userId: user.id };
+      return { userId: user.id, organizationId: user.organizationId };
     })
     .onUploadComplete(async ({ metadata, file }) => {}),
 
@@ -77,7 +79,7 @@ export const ourFileRouter = {
       if (!user) throw new Error("Unauthorized");
 
       // Whatever is returned here is accessible in onUploadComplete as `metadata`
-      return { userId: user.id };
+      return { userId: user.id, organizationId: user.organizationId };
     })
     .onUploadComplete(async ({ metadata, file }) => {
       // This code RUNS ON YOUR SERVER after upload
@@ -87,6 +89,7 @@ export const ourFileRouter = {
       await prismadb.documents.create({
         data: {
           v: 0,
+          organizationId: metadata.organizationId,
           document_name: file.name,
           description: "new document",
           document_file_url: file.url,
@@ -110,7 +113,7 @@ export const ourFileRouter = {
       if (!user) throw new Error("Unauthorized");
 
       // Whatever is returned here is accessible in onUploadComplete as `metadata`
-      return { userId: user.id };
+      return { userId: user.id, organizationId: user.organizationId };
     })
     .onUploadComplete(async ({ metadata, file }) => {
       // This code RUNS ON YOUR SERVER after upload
@@ -120,6 +123,7 @@ export const ourFileRouter = {
       await prismadb.documents.create({
         data: {
           v: 0,
+          organizationId: metadata.organizationId,
           document_name: file.name,
           description: "new document",
           document_file_url: file.url,

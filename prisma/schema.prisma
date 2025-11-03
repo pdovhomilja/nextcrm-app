@@ -115,7 +115,6 @@ model OrganizationInvitations {
 
   @@index([organizationId])
   @@index([email])
-  @@index([token])
 }
 
 model crm_Accounts {
@@ -884,8 +883,6 @@ model OrganizationUsage {
 
   // Relations
   organization           Organizations       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  @@index([organizationId])
 }
 
 // Audit Actions Enum
@@ -903,6 +900,8 @@ enum AuditAction {
   SETTINGS_CHANGE
   SUBSCRIPTION_CHANGE
   PAYMENT
+  PERMISSION_DENIED
+  RATE_LIMIT_EXCEEDED
 }
 
 // Audit Log Model for Security and Compliance
@@ -949,7 +948,6 @@ model UserSession {
   user                   Users               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([token])
   @@index([isActive])
 }
 

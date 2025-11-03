@@ -19,6 +19,8 @@ declare module "next-auth" {
       isAdmin: boolean;
       userLanguage: string;
       userStatus: string;
+      organizationId?: string | null;
+      organization_role?: string | null;
     };
   }
 }

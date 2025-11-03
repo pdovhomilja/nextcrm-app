@@ -3,13 +3,14 @@
  * Query and export audit logs for compliance
  */
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { AuditAction } from "@prisma/client";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
-export async function GET(request: Request) {
+async function handleGET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -168,7 +169,7 @@ export async function GET(request: Request) {
 /**
  * Get audit log statistics
  */
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -276,3 +277,7 @@ export async function POST(request: Request) {
     );
   }
 }
+
+// Apply rate limiting to all endpoints
+export const GET = rateLimited(handleGET);
+export const POST = rateLimited(handlePOST);

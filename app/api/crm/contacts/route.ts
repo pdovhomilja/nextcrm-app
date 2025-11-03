@@ -1,12 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import sendEmail from "@/lib/sendmail";
 import { canCreateContact } from "@/lib/quota-enforcement";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
 //Create route
-export async function POST(req: Request) {
+async function handlePOST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return new NextResponse("Unauthenticated", { status: 401 });
@@ -48,8 +49,10 @@ export async function POST(req: Request) {
       return new NextResponse("User organization not found", { status: 401 });
     }
 
+    const organizationId = session.user.organizationId;
+
     // Check quota before creating contact
-    const quotaCheck = await canCreateContact(session.user.organizationId);
+    const quotaCheck = await canCreateContact(organizationId);
     if (!quotaCheck.allowed) {
       return new NextResponse(
         JSON.stringify({
@@ -64,7 +67,7 @@ export async function POST(req: Request) {
     const newContact = await prismadb.crm_Contacts.create({
       data: {
         v: 0,
-        organizationId: session.user.organizationId,
+        organizationId: organizationId,
         createdBy: userId,
         updatedBy: userId,
         ...(assigned_account !== null && assigned_account !== undefined
@@ -99,7 +102,7 @@ export async function POST(req: Request) {
         social_youtube,
         social_tiktok,
         type,
-      },
+      } as any,
     });
 
     if (assigned_to !== userId) {
@@ -135,7 +138,7 @@ export async function POST(req: Request) {
 }
 
 //Update route
-export async function PUT(req: Request) {
+async function handlePUT(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return new NextResponse("Unauthenticated", { status: 401 });
@@ -268,3 +271,7 @@ export async function PUT(req: Request) {
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const POST = rateLimited(handlePOST);
+export const PUT = rateLimited(handlePUT);

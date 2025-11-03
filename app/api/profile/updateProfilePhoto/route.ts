@@ -1,9 +1,10 @@
 import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
-export async function PUT(req: Request) {
+async function handlePUT(req: NextRequest) {
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -50,3 +51,6 @@ export async function PUT(req: Request) {
     );
   }
 }
+
+// Apply rate limiting to all endpoints
+export const PUT = rateLimited(handlePUT);

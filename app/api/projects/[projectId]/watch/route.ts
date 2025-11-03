@@ -1,9 +1,10 @@
 import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/middleware/with-rate-limit";
 
-export async function POST(req: Request, props: { params: Promise<{ projectId: string }> }) {
+async function handlePOST(req: NextRequest, props: { params: Promise<{ projectId: string }> }) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -51,5 +52,9 @@ export async function POST(req: Request, props: { params: Promise<{ projectId: s
     return NextResponse.json({ message: "Board watched" }, { status: 200 });
   } catch (error) {
     console.log(error);
+    return new NextResponse("Internal error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const POST = withRateLimit(handlePOST);

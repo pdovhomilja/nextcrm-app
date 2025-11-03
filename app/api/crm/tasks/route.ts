@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
 //Delete task API endpoint - for CRM tasks
-export async function DELETE(req: Request) {
+async function handleDELETE(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const body = await req.json();
   console.log(body, "body");
@@ -18,12 +19,24 @@ export async function DELETE(req: Request) {
     return new NextResponse("Missing board id", { status: 400 });
   }
 
+  if (!session.user?.organizationId) {
+    return new NextResponse("User organization not found", { status: 401 });
+  }
+
+  const organizationId = session.user.organizationId;
+
   try {
-    const currentTask = await prismadb.crm_Accounts_Tasks.findUnique({
+    // Verify the task belongs to the user's organization
+    const currentTask = await prismadb.crm_Accounts_Tasks.findFirst({
       where: {
         id,
+        organizationId: organizationId,
       },
     });
+
+    if (!currentTask) {
+      return new NextResponse("Task not found or unauthorized", { status: 404 });
+    }
 
     await prismadb.tasksComments.deleteMany({
       where: {
@@ -47,3 +60,6 @@ export async function DELETE(req: Request) {
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const DELETE = rateLimited(handleDELETE);

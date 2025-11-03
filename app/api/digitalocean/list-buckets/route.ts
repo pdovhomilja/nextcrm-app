@@ -3,8 +3,9 @@ import { s3Client } from "@/lib/digital-ocean-s3";
 import { ListBucketsCommand } from "@aws-sdk/client-s3";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
-export async function GET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -16,3 +17,6 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({ buckets, success: true }, { status: 200 });
 }
+
+// Apply rate limiting to all endpoints
+export const GET = rateLimited(handleGET);

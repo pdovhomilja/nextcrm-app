@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import Imap from "imap";
 import { simpleParser, ParsedMail } from "mailparser";
 import { Readable } from "stream";
 import axios from "axios";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
 const imapConfig: Imap.Config = {
   user: process.env.IMAP_USER!,
@@ -12,7 +13,7 @@ const imapConfig: Imap.Config = {
   tls: true,
 };
 
-export async function GET() {
+async function handleGET() {
   try {
     console.log("Starting email check...");
     const imap = new Imap(imapConfig);
@@ -163,3 +164,6 @@ async function sendAttachmentToAPI(attachment: any) {
     throw error;
   }
 }
+
+// Apply rate limiting to all endpoints
+export const GET = rateLimited(handleGET);

@@ -2,9 +2,10 @@ import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { utapi } from "@/lib/server/uploadthings";
 import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/middleware/with-rate-limit";
 
-export async function DELETE(req: Request, props: { params: Promise<{ documentId: string }> }) {
+async function handleDELETE(req: NextRequest, props: { params: Promise<{ documentId: string }> }) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
 
@@ -53,3 +54,6 @@ export async function DELETE(req: Request, props: { params: Promise<{ documentId
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const DELETE = withRateLimit(handleDELETE);

@@ -1,8 +1,9 @@
 import { prismadb } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { canCreateLead } from "@/lib/quota-enforcement";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
-export async function POST(req: Request) {
+async function handlePOST(req: NextRequest) {
   if (req.headers.get("content-type") !== "application/json") {
     return NextResponse.json(
       { message: "Invalid content-type" },
@@ -96,3 +97,6 @@ export async function POST(req: Request) {
     }
   }
 }
+
+// Apply rate limiting to all endpoints
+export const POST = rateLimited(handlePOST);

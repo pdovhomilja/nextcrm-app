@@ -1,9 +1,10 @@
 import { authOptions } from "@/lib/auth";
 import resendHelper from "@/lib/resend";
 import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
-export async function POST(req: Request) {
+async function handlePOST(req: NextRequest) {
   /*
   Resend.com function init - this is a helper function that will be used to send emails
   */
@@ -37,3 +38,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Initial error" }, { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const POST = rateLimited(handlePOST);

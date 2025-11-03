@@ -1,9 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { withRateLimit } from "@/middleware/with-rate-limit";
 
-export async function PUT(req: Request, props: { params: Promise<{ sectionId: string }> }) {
+async function handlePUT(req: NextRequest, props: { params: Promise<{ sectionId: string }> }) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -14,6 +15,8 @@ export async function PUT(req: Request, props: { params: Promise<{ sectionId: st
     return new NextResponse("User organization not found", { status: 401 });
   }
 
+  const organizationId = session.user.organizationId;
+
   const body = await req.json();
   const { sectionId } = params;
   const { newTitle } = body;
@@ -23,7 +26,7 @@ export async function PUT(req: Request, props: { params: Promise<{ sectionId: st
     const section = await prismadb.sections.findFirst({
       where: {
         id: sectionId,
-        organizationId: session.user.organizationId,
+        organizationId: organizationId,
       },
     });
 
@@ -49,3 +52,6 @@ export async function PUT(req: Request, props: { params: Promise<{ sectionId: st
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const PUT = withRateLimit(handlePUT);

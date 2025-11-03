@@ -3,16 +3,17 @@
  * Exports all organization data as JSON
  */
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { logExport } from "@/lib/audit-logger";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
 const RATE_LIMIT_HOURS = 1;
 const RATE_LIMIT_MS = RATE_LIMIT_HOURS * 60 * 60 * 1000;
 
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -207,7 +208,7 @@ export async function POST(request: Request) {
 }
 
 // Get export history
-export async function GET() {
+async function handleGET() {
   try {
     const session = await getServerSession(authOptions);
 
@@ -284,3 +285,7 @@ export async function GET() {
     );
   }
 }
+
+// Apply rate limiting to all endpoints
+export const GET = rateLimited(handleGET);
+export const POST = rateLimited(handlePOST);

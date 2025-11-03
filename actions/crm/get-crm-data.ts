@@ -42,26 +42,15 @@ export const getAllCrmData = async () => {
       organizationId: session.user.organizationId,
     },
   });
-  const saleTypes = await prismadb.crm_Opportunities_Type.findMany({
-    where: {
-      organizationId: session.user.organizationId,
-    },
-  });
+  // Shared reference data - no organizationId filter
+  const saleTypes = await prismadb.crm_Opportunities_Type.findMany({});
   const saleStages = await prismadb.crm_Opportunities_Sales_Stages.findMany({
-    where: {
-      organizationId: session.user.organizationId,
+    orderBy: {
+      probability: "asc",
     },
   });
-  const campaigns = await prismadb.crm_campaigns.findMany({
-    where: {
-      organizationId: session.user.organizationId,
-    },
-  });
-  const industries = await prismadb.crm_Industry_Type.findMany({
-    where: {
-      organizationId: session.user.organizationId,
-    },
-  });
+  const campaigns = await prismadb.crm_campaigns.findMany({});
+  const industries = await prismadb.crm_Industry_Type.findMany({});
 
   const data = {
     users,

@@ -2,12 +2,14 @@ import { authOptions } from "@/lib/auth";
 import { openAiHelper } from "@/lib/openai";
 import { OpenAIStream, StreamingTextResponse } from "ai";
 import { getServerSession } from "next-auth";
+import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
 // IMPORTANT! Set the runtime to edge
 //export const runtime = "edge";
 
-export async function POST(req: Request) {
+async function handlePOST(req: NextRequest): Promise<Response> {
   // Extract the `prompt` from the body of the request
   const session = await getServerSession(authOptions);
 
@@ -18,9 +20,7 @@ export async function POST(req: Request) {
   const openai = await openAiHelper(session.user.id);
 
   if (!openai) {
-    const errorResponse = new Response("No openai key found", { status: 500 });
-    const stream = OpenAIStream(errorResponse);
-    return new StreamingTextResponse(stream);
+    return new Response("No openai key found", { status: 500 });
   }
 
   //console.log(session, "session");
@@ -41,3 +41,6 @@ export async function POST(req: Request) {
   // Respond with the stream
   return new StreamingTextResponse(stream);
 }
+
+// Apply rate limiting to all endpoints
+export const POST = rateLimited(handlePOST);

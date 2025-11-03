@@ -3,12 +3,13 @@
  * System-wide statistics and monitoring for system administrators
  */
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
-export async function GET() {
+async function handleGET() {
   try {
     const session = await getServerSession(authOptions);
 
@@ -246,3 +247,6 @@ function calculateHealthScore(metrics: {
 
   return Math.round(score);
 }
+
+// Apply rate limiting to all endpoints
+export const GET = rateLimited(handleGET);

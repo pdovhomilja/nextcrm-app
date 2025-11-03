@@ -1,13 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
 /**
  * GET /api/organization/members
  * Get all members of the organization
  */
-export async function GET(req: Request) {
+async function handleGET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -47,3 +48,6 @@ export async function GET(req: Request) {
     return new NextResponse("Internal error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const GET = rateLimited(handleGET);

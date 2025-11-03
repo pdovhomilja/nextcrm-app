@@ -21,10 +21,16 @@ export async function getAiReport(session: any, boardId: string) {
 
   if (!user) return { message: "No user found" };
 
+  if (!session.user?.organizationId) {
+    return { message: "User organization not found" };
+  }
+
+  const organizationId = session.user.organizationId;
+
   const boardData = await prismadb.sections.findMany({
     where: {
       board: boardId,
-      organizationId: session.user?.organizationId,
+      organizationId: organizationId,
     },
     include: {
       tasks: {

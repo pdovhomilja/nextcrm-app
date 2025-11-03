@@ -9,9 +9,10 @@ import { getRossumToken } from "@/lib/get-rossum-token";
 import { prismadb } from "@/lib/prisma";
 import { PutObjectAclCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/middleware/with-rate-limit";
 
-export async function GET(req: Request, props: { params: Promise<{ annotationId: string }> }) {
+async function handleGET(req: NextRequest, props: { params: Promise<{ annotationId: string }> }) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -346,3 +347,6 @@ export async function GET(req: Request, props: { params: Promise<{ annotationId:
 
   return NextResponse.json({ message: "Hello, world!", data }, { status: 200 });
 }
+
+// Apply rate limiting to all endpoints
+export const GET = withRateLimit(handleGET);
