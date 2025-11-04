@@ -50,3 +50,5 @@ next-env.d.ts
 .kiro/steering/byterover-rules.md
 .qoder/rules/byterover-rules.md
 .augment/rules/byterover-rules.md
+# Claude Code local settings
+.claude/settings.local.json
