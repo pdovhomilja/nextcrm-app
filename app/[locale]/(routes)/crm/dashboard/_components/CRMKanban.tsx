@@ -27,7 +27,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 
 import { NewOpportunityForm } from "../../opportunities/components/NewOpportunityForm";
-import { set } from "cypress/types/lodash";
+
 import { setInactiveOpportunity } from "@/actions/crm/opportunity/dashboard/set-inactive";
 import {
   HoverCard,
