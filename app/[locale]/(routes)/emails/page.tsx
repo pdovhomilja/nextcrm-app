@@ -13,7 +13,7 @@ const EmailRoute = async () => {
   const session = await getServerSession(authOptions);
 
   if (!session) {
-    redirect("/");
+    return redirect("/");
   }
   //Get user language
   const lang = session.user.userLanguage;
