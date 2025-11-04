@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate &&  prisma db push && prisma db seed && cross-env GOOGLE_ID=your-google-client-id.apps.googleusercontent.com GOOGLE_SECRET=your-google-client-secret DO_ENDPOINT=https://nyc3.digitaloceanspaces.com DO_REGION=nyc3 DO_ACCESS_KEY_ID=your-digitalocean-access-key-id DO_ACCESS_KEY_SECRET=your-digitalocean-secret-access-key next build",
+    "build": "prisma generate &&  prisma db push && prisma db seed && next build",
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
