@@ -10,7 +10,7 @@ const UserCRMDashboard = async () => {
   const session = await getServerSession(authOptions);
 
   if (!session) {
-    redirect("/auth/signin");
+    return redirect("/");
   }
 
   const task = await getUserCRMTasks(session.user.id);
