@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate &&  prisma db push && prisma db seed && cross-env GOOGLE_ID=your-google-client-id.apps.googleusercontent.com GOOGLE_SECRET=your-google-client-secret DO_ENDPOINT=https://nyc3.digitaloceanspaces.com DO_REGION=nyc3 DO_ACCESS_KEY_ID=your-digitalocean-access-key-id DO_ACCESS_KEY_SECRET=your-digitalocean-secret-access-key next build",
+    "build": "prisma generate && cross-env GOOGLE_ID=your-google-client-id.apps.googleusercontent.com GOOGLE_SECRET=your-google-client-secret DO_ENDPOINT=https://nyc3.digitaloceanspaces.com DO_REGION=nyc3 DO_ACCESS_KEY_ID=your-digitalocean-access-key-id DO_ACCESS_KEY_SECRET=your-digitalocean-secret-access-key next build",
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
@@ -12,7 +12,8 @@
     "test:coverage": "jest --coverage",
     "test:unit": "jest tests/unit",
     "test:integration": "jest tests/integration",
-    "test:ci": "jest --ci --coverage --maxWorkers=2"
+    "test:ci": "jest --ci --coverage --maxWorkers=2",
+    "deploy:staging": "pnpm vercel --prod"
   },
   "prisma": {
     "seed": "ts-node ./prisma/seeds/seed.ts"
@@ -131,7 +132,8 @@
     "prisma": "^5.22.0",
     "ts-jest": "^29.4.5",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vercel": "^48.8.2"
   },
   "pnpm": {
     "overrides": {
