@@ -115,7 +115,6 @@ model OrganizationInvitations {
 
   @@index([organizationId])
   @@index([email])
-  @@index([token])
 }
 
 model crm_Accounts {
@@ -738,6 +737,9 @@ model Users {
   // Multi-tenancy fields
   organizationId       String?               @db.ObjectId
   organization_role    OrganizationRole      @default(MEMBER)
+  failedLoginAttempts  Int                   @default(0)
+  lockoutUntil         DateTime?
+  passwordHistory      String[]
 
   // Relations
   organization         Organizations?            @relation(name: "user_organizations", fields: [organizationId], references: [id], onUpdate: NoAction, onDelete: NoAction)
@@ -846,6 +848,8 @@ model Subscriptions {
 
   // Relations
   organization           Organizations       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
 }
 
 model PaymentHistory {
@@ -884,8 +888,6 @@ model OrganizationUsage {
 
   // Relations
   organization           Organizations       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  @@index([organizationId])
 }
 
 // Audit Actions Enum
@@ -949,7 +951,6 @@ model UserSession {
   user                   Users               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([token])
   @@index([isActive])
 }
 

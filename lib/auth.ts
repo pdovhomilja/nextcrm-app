@@ -1,5 +1,6 @@
 import { prismadb } from "@/lib/prisma";
 import { NextAuthOptions } from "next-auth";
+import { loginRateLimit } from "@/lib/rate-limit";
 import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -26,6 +27,7 @@ export const authOptions: NextAuthOptions = {
   //adapter: PrismaAdapter(prismadb),
   session: {
     strategy: "jwt",
+    maxAge: 30 * 60, // 30 minutes
   },
 
   providers: [
@@ -47,7 +49,12 @@ export const authOptions: NextAuthOptions = {
         password: { label: "password", type: "password" },
       },
 
-      async authorize(credentials) {
+      async authorize(credentials, req) {
+        const ip = req.headers["x-forwarded-for"] || req.headers["x-real-ip"] || req.connection.remoteAddress;
+        const { success } = await loginRateLimit.limit(ip);
+        if (!success) {
+            throw new Error("Too many login attempts.");
+        }
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Email or password is missing");
         }
@@ -57,6 +64,10 @@ export const authOptions: NextAuthOptions = {
             email: credentials.email,
           },
         });
+
+        if (user?.lockoutUntil && user.lockoutUntil > new Date()) {
+          throw new Error("Account is locked. Please try again later.");
+        }
 
         //clear white space from password
         const trimmedPassword = credentials.password.trim();
@@ -71,8 +82,25 @@ export const authOptions: NextAuthOptions = {
         );
 
         if (!isCorrectPassword) {
+          const failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
+          let lockoutUntil = null;
+
+          if (failedLoginAttempts >= 5) {
+            lockoutUntil = new Date(Date.now() + 30 * 60 * 1000); // Lock for 30 minutes
+          }
+
+          await prismadb.users.update({
+            where: { id: user.id },
+            data: { failedLoginAttempts, lockoutUntil },
+          });
+
           throw new Error("Password is incorrect");
         }
+
+        await prismadb.users.update({
+            where: { id: user.id },
+            data: { failedLoginAttempts: 0, lockoutUntil: null },
+        });
 
         return user;
       },
@@ -148,3 +176,18 @@ export const authOptions: NextAuthOptions = {
     },
   },
 };
+
+import { getServerSession } from "next-auth";
+
+export async function getLoggedInUser() {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) return null;
+
+    const user = await prismadb.users.findUnique({
+        where: {
+            email: session.user.email,
+        },
+    });
+
+    return user;
+}
