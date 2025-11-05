@@ -1,62 +1,62 @@
-FROM node:20-slim AS deps
-RUN corepack enable && \
-    rm -f /usr/local/bin/pnpm && \
-    rm -f /usr/local/bin/pnpx && \
-    npm install -g pnpm
+# Dockerfile for NextCRM
 
-WORKDIR /app
-COPY package*.json ./
-COPY pnpm-lock.yaml ./
-COPY .env .env.local ./
-RUN pnpm install
+# 1. Builder Stage
+FROM node:20-slim AS builder
 
-FROM node:20-slim AS build_image
+# Set working directory
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-#COPY --from=deps /app/package-lock.json ./
-COPY --from=deps /app/pnpm-lock.yaml ./
+
+# Install pnpm
+RUN npm install -g pnpm
+
+# Copy dependency definition files
+COPY package.json pnpm-lock.yaml ./
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy the rest of the application source code
 COPY . .
 
-# Install OpenSSL
-RUN apt-get update -y && \
-    apt-get install -y openssl libssl-dev && \
-    npm install -g pnpm && \
-    pnpm prisma generate && \
-    pnpm prisma db push && \
-    pnpm prisma db seed && \
-    pnpm run build
+# Generate Prisma client and build the Next.js application
+RUN pnpm vercel-build
 
+# 2. Production Stage
 FROM node:20-slim AS production
-ENV NODE_ENV production
 
+# Set working directory
+WORKDIR /app
+
+# Set production environment
+ENV NODE_ENV=production
+
+# Create a non-root user for security
 RUN addgroup --system nodejs && \
     adduser --system --ingroup nodejs nextjs
 
-RUN apt-get update -y && \
-    apt-get install -y openssl libssl-dev 
+# Copy standalone output
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
-WORKDIR /app
-#COPY --from=build_image --chown=nextjs:nodejs /app/package.json /app/package-lock.json ./
-COPY --from=build_image --chown=nextjs:nodejs /app/package.json ./
-COPY --from=build_image --chown=nextjs:nodejs /app/pnpm-lock.yaml ./
-COPY --from=build_image --chown=nextjs:nodejs /app/node_modules ./node_modules
-COPY --from=build_image --chown=nextjs:nodejs /app/public ./public
-COPY --from=build_image --chown=nextjs:nodejs /app/.next ./.next
-COPY --from=build_image --chown=nextjs:nodejs /app/.env ./.env
-COPY --from=build_image --chown=nextjs:nodejs /app/.env.local ./.env.local
+# Copy the entrypoint script
+COPY --chown=nextjs:nodejs docker-entrypoint.sh .
 
-# Switch to root to install pnpm
-USER root
+# Set permissions for the entrypoint script
+RUN chmod +x docker-entrypoint.sh
 
-# Install pnpm globally
-RUN npm install -g pnpm
+# Change ownership of the app directory to the non-root user
+RUN chown -R nextjs:nodejs /app
 
-# Switch back to nextjs user
+# Switch to the non-root user
 USER nextjs
+
+# Expose the application port
 EXPOSE 3000
 
-# Check if pnpm is installed
-RUN pnpm --version || echo "pnpm not found"
+# Set the entrypoint
+ENTRYPOINT ["./docker-entrypoint.sh"]
 
-# Use npx to run pnpm
-CMD [ "npx", "pnpm", "start" ]
+# Start the server
+CMD ["node", "server.js"]

@@ -37,6 +37,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# logs
+next.log
+
 backup
 
 # typescript

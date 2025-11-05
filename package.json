@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "prisma generate &&  prisma db push && prisma db seed && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "vercel-build": "prisma generate && next build",
+    "prisma-prod": "prisma db push && prisma db seed"
   },
   "prisma": {
     "seed": "ts-node ./prisma/seeds/seed.ts"
@@ -15,7 +17,6 @@
     "@aws-sdk/client-s3": "^3.689.0",
     "@aws-sdk/s3-request-presigner": "^3.689.0",
     "@aws-sdk/signature-v4-crt": "^3.687.0",
-    "ioredis": "^5.4.1",
     "@hookform/resolvers": "^3.9.1",
     "@next-auth/prisma-adapter": "^1.0.7",
     "@notionhq/client": "^2.2.15",
@@ -102,7 +103,6 @@
     "@types/bcrypt": "^5.0.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/imap": "^0.8.42",
-    "@types/ioredis": "^5.0.0",
     "@types/mailparser": "^3.4.5",
     "@types/node": "^22.9.0",
     "@types/nodemailer": "^6.4.16",
