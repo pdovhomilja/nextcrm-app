@@ -7,20 +7,6 @@ import bcrypt from "bcrypt";
 import { newUserNotify } from "./new-user-notify";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 
-function getGoogleCredentials(): { clientId: string; clientSecret: string } {
-  const clientId = process.env.GOOGLE_ID;
-  const clientSecret = process.env.GOOGLE_SECRET;
-  if (!clientId || clientId.length === 0) {
-    throw new Error("Missing GOOGLE_ID");
-  }
-
-  if (!clientSecret || clientSecret.length === 0) {
-    throw new Error("Missing GOOGLE_SECRET");
-  }
-
-  return { clientId, clientSecret };
-}
-
 export const authOptions: NextAuthOptions = {
   secret: process.env.JWT_SECRET,
   //adapter: PrismaAdapter(prismadb),
@@ -29,17 +15,6 @@ export const authOptions: NextAuthOptions = {
   },
 
   providers: [
-    GoogleProvider({
-      clientId: getGoogleCredentials().clientId,
-      clientSecret: getGoogleCredentials().clientSecret,
-    }),
-
-    GitHubProvider({
-      name: "github",
-      clientId: process.env.GITHUB_ID!,
-      clientSecret: process.env.GITHUB_SECRET!,
-    }),
-
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -73,6 +48,49 @@ export const authOptions: NextAuthOptions = {
         if (!isCorrectPassword) {
           throw new Error("Password is incorrect");
         }
+
+        return user;
+      },
+    }),
+    CredentialsProvider({
+      name: "customer-credentials",
+      credentials: {
+        email: { label: "email", type: "text" },
+        password: { label: "password", type: "password" },
+      },
+
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email or password is missing");
+        }
+
+        const customer = await prismadb.customer_portal_users.findFirst({
+          where: {
+            email: credentials.email,
+          },
+        });
+
+        //clear white space from password
+        const trimmedPassword = credentials.password.trim();
+
+        if (!customer || !customer?.password_hash) {
+          throw new Error("Customer not found, please register first");
+        }
+
+        const isCorrectPassword = await bcrypt.compare(
+          trimmedPassword,
+          customer.password_hash
+        );
+
+        if (!isCorrectPassword) {
+          throw new Error("Password is incorrect");
+        }
+
+        const user = {
+          id: customer.id,
+          name: customer.email,
+          email: customer.email,
+        };
 
         return user;
       },

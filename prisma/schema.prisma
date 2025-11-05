@@ -115,7 +115,6 @@ model OrganizationInvitations {
 
   @@index([organizationId])
   @@index([email])
-  @@index([token])
 }
 
 model crm_Accounts {
@@ -884,8 +883,6 @@ model OrganizationUsage {
 
   // Relations
   organization           Organizations       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  @@index([organizationId])
 }
 
 // Audit Actions Enum
@@ -949,7 +946,6 @@ model UserSession {
   user                   Users               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([token])
   @@index([isActive])
 }
 
@@ -988,4 +984,90 @@ enum ExportStatus {
   COMPLETED
   FAILED
   EXPIRED
+}
+
+model customers {
+  id                   String                  @id @default(auto()) @map("_id") @db.ObjectId
+  name                 String
+  email                String?                 @unique
+  phone                String?
+  address              String?
+  city                 String?
+  zip                  String?
+  country              String?
+  createdAt            DateTime                @default(now()) @db.Date
+  updatedAt            DateTime                @updatedAt @db.Date
+  customer_portal_user customer_portal_users?
+  vehicles             vehicles[]
+}
+
+model customer_portal_users {
+  id                  String    @id @default(auto()) @map("_id") @db.ObjectId
+  customer_id         String    @unique @db.ObjectId
+  email               String    @unique
+  password_hash       String
+  phone_number        String?
+  verification_status String?
+  two_factor_enabled  Boolean   @default(false)
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
+  customer            customers @relation(fields: [customer_id], references: [id])
+  vehicles            customer_portal_vehicles[]
+  service_history     customer_portal_service_history[]
+}
+
+model vehicles {
+  id                   String @id @default(auto()) @map("_id") @db.ObjectId
+  registration_number  String @unique
+  make                 String
+  model                String
+  year                 Int
+  vin                  String? @unique
+  color                String?
+  odometer             Int?
+  engine_type          String?
+  transmission         String?
+  notes                String?
+  photo_url            String?
+  customer_id          String @db.ObjectId
+  customer             customers @relation(fields: [customer_id], references: [id])
+  jobs                 jobs[]
+  portal_vehicles      customer_portal_vehicles[]
+}
+
+model jobs {
+  id                     String    @id @default(auto()) @map("_id") @db.ObjectId
+  job_type               String
+  odometer               Int
+  customer_complaint     String
+  priority               String
+  estimated_completion   DateTime?
+  technician_id          String?   @db.ObjectId
+  workshop_bay           String?
+  scheduled_start        DateTime?
+  vehicle_id             String    @db.ObjectId
+  vehicle                vehicles  @relation(fields: [vehicle_id], references: [id])
+  service_history_entry  customer_portal_service_history?
+}
+
+model customer_portal_vehicles {
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  portal_user_id String    @db.ObjectId
+  vehicle_id     String    @db.ObjectId
+  is_primary     Boolean   @default(false)
+  notes          String?
+  permissions    Json?
+  portal_user    customer_portal_users @relation(fields: [portal_user_id], references: [id])
+  vehicle        vehicles              @relation(fields: [vehicle_id], references: [id])
+}
+
+model customer_portal_service_history {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  portal_user_id String  @db.ObjectId
+  job_id       String    @unique @db.ObjectId
+  viewed_at    DateTime?
+  shared_with  Json?
+  access_token String?
+  portal_user  customer_portal_users @relation(fields: [portal_user_id], references: [id])
+  job          jobs                  @relation(fields: [job_id], references: [id])
 }

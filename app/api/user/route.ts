@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { hash } from "bcryptjs";
+import { hash } from "bcrypt";
 import { newUserNotify } from "@/lib/new-user-notify";
 
 export async function POST(req: Request) {
