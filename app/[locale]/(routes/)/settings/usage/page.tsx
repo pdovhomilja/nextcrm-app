@@ -163,7 +163,7 @@ export default function UsagePage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Usage & Limits</h1>
         <p className="text-muted-foreground mt-1">
-          Monitor your organization's resource usage and plan limits.
+          Monitor your organization&apos;s resource usage and plan limits.
         </p>
       </div>
 
@@ -173,7 +173,7 @@ export default function UsagePage() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Current Plan</CardTitle>
-              <CardDescription>Your organization's subscription tier</CardDescription>
+              <CardDescription>Your organization&apos;s subscription tier</CardDescription>
             </div>
             <Badge variant="outline" className="text-lg px-3 py-1">
               {planName}

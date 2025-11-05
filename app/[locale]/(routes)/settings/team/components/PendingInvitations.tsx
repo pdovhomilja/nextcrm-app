@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getInvitations, PendingInvitation } from "@/actions/organization/get-invitations";
 import {
   Table,
@@ -22,11 +22,7 @@ export function PendingInvitations() {
   const [cancelling, setCancelling] = useState<string | null>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadInvitations();
-  }, []);
-
-  const loadInvitations = async () => {
+  const loadInvitations = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getInvitations();
@@ -40,7 +36,11 @@ export function PendingInvitations() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    loadInvitations();
+  }, [loadInvitations]);
 
   const handleCancelInvitation = async (invitationId: string) => {
     try {

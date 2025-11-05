@@ -1,0 +1,17 @@
+
+> nextcrm-app@0.0.3-beta dev /app
+> next dev
+
+ ⚠ Port 3000 is in use, trying 3001 instead.
+ ⚠ Port 3001 is in use, trying 3002 instead.
+ ⚠ Port 3002 is in use, trying 3003 instead.
+ ⚠ Port 3003 is in use, trying 3004 instead.
+ ⚠ Port 3004 is in use, trying 3005 instead.
+ ⚠ Port 3005 is in use, trying 3006 instead.
+   ▲ Next.js 15.2.4
+   - Local:        http://localhost:3006
+   - Network:      http://192.168.0.2:3006
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 3.5s

@@ -141,7 +141,7 @@ export default function AcceptInvitationPage({
                   This is a one-time token that expires in 7 days
                 </li>
                 <li>
-                  Once accepted, you'll be added to the organization
+                  Once accepted, you&apos;ll be added to the organization
                 </li>
                 <li>
                   Your role and permissions will be set by the organization owner

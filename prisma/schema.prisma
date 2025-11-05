@@ -93,6 +93,17 @@ model Organizations {
   usage             OrganizationUsage?
   auditLogs         AuditLog[]
   dataExports       DataExport[]
+
+  // AWMS Relations
+  awms_customers    awms_customers[]
+  awms_customer_segments awms_customer_segments[]
+  awms_vehicles     awms_vehicles[]
+  awms_service_types awms_service_types[]
+  awms_service_jobs awms_service_jobs[]
+  awms_quotes       awms_quotes[]
+  awms_invoices     awms_invoices[]
+  awms_payments     awms_payments[]
+  awms_appointments awms_appointments[]
 }
 
 // Organization Invitations Model
@@ -115,7 +126,6 @@ model OrganizationInvitations {
 
   @@index([organizationId])
   @@index([email])
-  @@index([token])
 }
 
 model crm_Accounts {
@@ -529,6 +539,7 @@ model Invoices {
   accounts                      crm_Accounts?   @relation(fields: [assigned_account_id], references: [id])
   connected_documents           String[]        @db.ObjectId
   documents                     Documents[]     @relation(fields: [connected_documents], references: [id])
+  awms_vehicle_service_history awms_vehicle_service_history[]
 }
 
 model invoice_States {
@@ -766,6 +777,23 @@ model Users {
   auditLogs            AuditLog[]
   sessions             UserSession[]
   dataExports          DataExport[]
+
+  // AWMS Relations
+  awms_customers_created     awms_customers[]                    @relation("awms_customers_created_by")
+  awms_customers_updated     awms_customers[]                    @relation("awms_customers_updated_by")
+  awms_communication_history awms_customer_communication_history[]
+  awms_notes_assigned        awms_customer_notes[]               @relation("awms_notes_assigned_to")
+  awms_notes_created         awms_customer_notes[]               @relation("awms_notes_created_by")
+  awms_vehicles_created      awms_vehicles[]                     @relation("awms_vehicles_created_by")
+  awms_vehicle_service_history awms_vehicle_service_history[]
+  awms_vehicle_recalls       awms_vehicle_recalls[]
+  awms_service_jobs_assigned awms_service_jobs[]
+  awms_service_jobs_qc       awms_service_jobs[]                 @relation("quality_checker")
+  awms_service_parts_used    awms_service_parts_used[]
+  awms_service_timesheets    awms_service_timesheets[]
+  awms_appointments          awms_appointments[]
+  awms_appointment_slots     awms_appointment_slots[]
+  awms_technician_availability awms_technician_availability[]
 }
 
 enum Language {
@@ -884,8 +912,6 @@ model OrganizationUsage {
 
   // Relations
   organization           Organizations       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  @@index([organizationId])
 }
 
 // Audit Actions Enum
@@ -949,7 +975,6 @@ model UserSession {
   user                   Users               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([token])
   @@index([isActive])
 }
 
@@ -988,4 +1013,765 @@ enum ExportStatus {
   COMPLETED
   FAILED
   EXPIRED
+}
+
+// AWMS CRM Module Enums
+enum awms_CustomerContactPreference {
+  EMAIL
+  SMS
+  PHONE
+  MAIL
+}
+
+enum awms_CustomerStatus {
+  NEW
+  ACTIVE
+  INACTIVE
+  DORMANT
+  AT_RISK
+  VIP
+  LOST
+}
+
+enum awms_CustomerLifecycleStage {
+  PROSPECT
+  CUSTOMER
+  REGULAR
+  LOYAL
+  LOST
+}
+
+enum awms_CommunicationType {
+  EMAIL
+  SMS
+  CALL
+  IN_PERSON
+  CHAT
+  REVIEW
+}
+
+enum awms_CommunicationDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum awms_Sentiment {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+}
+
+enum awms_NoteType {
+  FOLLOW_UP
+  ISSUE
+  REMINDER
+  GENERAL
+}
+
+enum awms_NotePriority {
+  HIGH
+  NORMAL
+  LOW
+}
+
+// AWMS CRM Module Models
+model awms_customers {
+  id                            String                            @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId                String                            @db.ObjectId
+  customer_number               String                            @unique
+  first_name                    String
+  last_name                     String
+  email                         String
+  phone_primary                 String?
+  phone_mobile                  String?
+  date_of_birth                 DateTime?                         @db.Date
+  gender                        String?
+  address_line1                 String?
+  address_line2                 String?
+  suburb                        String?
+  state                         String?
+  postcode                      String?
+  country                       String?
+  contact_preference            awms_CustomerContactPreference    @default(EMAIL)
+  communication_opted_in        Boolean                           @default(true)
+  status                        awms_CustomerStatus               @default(NEW)
+  lifecycle_stage               awms_CustomerLifecycleStage       @default(PROSPECT)
+  lifetime_value                Float                             @default(0)
+  total_spent                   Float                             @default(0)
+  service_count                 Int                               @default(0)
+  last_service_date             DateTime?                         @db.Date
+  last_contact_date             DateTime?                         @db.Date
+  average_service_interval_days Int?
+  loyalty_member_id             String?
+  notes                         String?
+  createdAt                     DateTime                          @default(now()) @db.Date
+  updatedAt                     DateTime                          @updatedAt @db.Date
+  created_by_id                 String                            @db.ObjectId
+  updated_by_id                 String?                           @db.ObjectId
+
+  // Relations
+  organization                  Organizations                     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  created_by                    Users                             @relation(name: "awms_customers_created_by", fields: [created_by_id], references: [id], onDelete: NoAction)
+  updated_by                    Users?                            @relation(name: "awms_customers_updated_by", fields: [updated_by_id], references: [id], onDelete: NoAction)
+  segmentation                  awms_customer_segmentation[]
+  communication_history         awms_customer_communication_history[]
+  customer_notes                awms_customer_notes[]
+  vehicles                      awms_vehicles[]
+  service_jobs                  awms_service_jobs[]
+  quotes                        awms_quotes[]
+  invoices                      awms_invoices[]
+  accounts_receivable           awms_accounts_receivable[]
+  appointments                  awms_appointments[]
+
+  @@unique([organizationId, email])
+  @@index([organizationId])
+}
+
+model awms_customer_segmentation {
+  id              String                    @id @default(auto()) @map("_id") @db.ObjectId
+  customer_id     String                    @db.ObjectId
+  segment_id      String                    @db.ObjectId
+  assigned_date   DateTime                  @default(now()) @db.Date
+  auto_assigned   Boolean                   @default(true)
+  updatedAt       DateTime                  @updatedAt @db.Date
+
+  // Relations
+  customer        awms_customers            @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+  segment         awms_customer_segments    @relation(fields: [segment_id], references: [id], onDelete: Cascade)
+
+  @@index([customer_id])
+  @@index([segment_id])
+}
+
+model awms_customer_communication_history {
+  id                String                      @id @default(auto()) @map("_id") @db.ObjectId
+  customer_id       String                      @db.ObjectId
+  type              awms_CommunicationType
+  direction         awms_CommunicationDirection
+  subject           String?
+  summary           String?
+  content           String?
+  communication_date DateTime                   @default(now()) @db.Date
+  recipient_email   String?
+  recipient_phone   String?
+  sender_id         String?                     @db.ObjectId
+  engagement_status String?
+  sentiment         awms_Sentiment?
+  attachment_urls   String[]
+  external_id       String?
+  createdAt         DateTime                    @default(now()) @db.Date
+  updatedAt         DateTime                    @updatedAt @db.Date
+
+  // Relations
+  customer          awms_customers              @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+  sender            Users?                      @relation(fields: [sender_id], references: [id], onDelete: SetNull)
+
+  @@index([customer_id])
+}
+
+model awms_customer_notes {
+  id              String            @id @default(auto()) @map("_id") @db.ObjectId
+  customer_id     String            @db.ObjectId
+  note_type       awms_NoteType     @default(GENERAL)
+  priority        awms_NotePriority @default(NORMAL)
+  content         String
+  assigned_to_id  String?           @db.ObjectId
+  reminder_date   DateTime?         @db.Date
+  createdAt       DateTime          @default(now()) @db.Date
+  created_by_id   String            @db.ObjectId
+
+  // Relations
+  customer        awms_customers    @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+  assigned_to     Users?            @relation(name: "awms_notes_assigned_to", fields: [assigned_to_id], references: [id], onDelete: SetNull)
+  created_by      Users             @relation(name: "awms_notes_created_by", fields: [created_by_id], references: [id], onDelete: NoAction)
+
+  @@index([customer_id])
+}
+
+model awms_customer_segments {
+  id            String                        @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId String                       @db.ObjectId
+  segment_name  String
+  criteria_json String?
+  member_count  Int                           @default(0)
+  is_active     Boolean                       @default(true)
+  createdAt     DateTime                      @default(now()) @db.Date
+  updatedAt     DateTime                      @updatedAt @db.Date
+
+  // Relations
+  organization  Organizations                 @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customers     awms_customer_segmentation[]
+
+  @@index([organizationId])
+}
+
+// AWMS Vehicles Module Enums
+enum awms_VehicleStatus {
+  ACTIVE
+  ARCHIVED
+  SOLD
+}
+
+enum awms_ServiceType {
+  OIL_CHANGE
+  INSPECTION
+  BRAKES
+  TIRES
+  ENGINE
+  OTHER
+}
+
+enum awms_RecallSafetyLevel {
+  MINOR
+  MAJOR
+  CRITICAL
+}
+
+enum awms_RecallRepairStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+}
+
+// AWMS Vehicles Module Models
+model awms_vehicles {
+  id                      String                        @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId          String                        @db.ObjectId
+  customer_id             String                        @db.ObjectId
+  vehicle_number          String
+  registration_number     String                        @unique
+  registration_expiry_date DateTime?                    @db.Date
+  vin                     String?
+  make                    String?
+  model                   String?
+  year                    Int?
+  color                   String?
+  body_type               String?
+  transmission            String?
+  drivetrain              String?
+  fuel_type               String?
+  engine_size_cc          Int?
+  horsepower              Int?
+  torque                  Int?
+  curb_weight             Int?
+  fuel_tank_capacity      Int?
+  cargo_capacity          Int?
+  passenger_capacity      Int?
+  service_capacity_liters Int?
+  current_odometer_km     Int?
+  last_service_date       DateTime?                     @db.Date
+  next_service_due_date   DateTime?                     @db.Date
+  last_odometer_reading   Int?
+  is_primary_vehicle      Boolean                       @default(false)
+  status                  awms_VehicleStatus            @default(ACTIVE)
+  purchased_date          DateTime?                     @db.Date
+  warranty_expiry_date    DateTime?                     @db.Date
+  notes                   String?
+  createdAt               DateTime                      @default(now()) @db.Date
+  updatedAt               DateTime                      @updatedAt @db.Date
+  created_by_id           String                        @db.ObjectId
+
+  // Relations
+  organization            Organizations                 @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customer                awms_customers                @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+  created_by              Users                         @relation(name: "awms_vehicles_created_by", fields: [created_by_id], references: [id], onDelete: NoAction)
+  service_history         awms_vehicle_service_history[]
+  recalls                 awms_vehicle_recalls[]
+  maintenance_schedule    awms_vehicle_maintenance_schedule[]
+  service_jobs            awms_service_jobs[]
+  quotes                  awms_quotes[]
+  appointments            awms_appointments[]
+
+  @@unique([organizationId, customer_id, vehicle_number])
+  @@index([organizationId])
+  @@index([customer_id])
+}
+
+model awms_vehicle_service_history {
+  id                    String            @id @default(auto()) @map("_id") @db.ObjectId
+  vehicle_id            String            @db.ObjectId
+  service_date          DateTime          @db.Date
+  service_type          awms_ServiceType
+  odometer_km_at_service Int
+  labor_hours           Float?
+  labor_cost            Float?
+  parts_cost            Float?
+  total_cost            Float
+  technician_id         String?           @db.ObjectId
+  technician_notes      String?
+  customer_notes        String?
+  invoice_id            String?           @db.ObjectId
+  is_warranty_work      Boolean           @default(false)
+  updatedAt             DateTime          @updatedAt @db.Date
+
+  // Relations
+  vehicle               awms_vehicles     @relation(fields: [vehicle_id], references: [id], onDelete: Cascade)
+  technician            Users?            @relation(fields: [technician_id], references: [id], onDelete: SetNull)
+  invoice               Invoices?         @relation(fields: [invoice_id], references: [id], onDelete: SetNull)
+
+  @@index([vehicle_id])
+}
+
+// AWMS Finance Module Enums
+enum awms_QuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+enum awms_LineItemType {
+  LABOR
+  PARTS
+  FEE
+}
+
+enum awms_InvoiceStatus {
+  DRAFT
+  SENT
+  PARTIAL
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum awms_TaxCode {
+  STANDARD
+  GST_FREE
+}
+
+enum awms_PaymentMethod {
+  CARD
+  TRANSFER
+  DIRECT_DEBIT
+  CASH
+  CHECK
+}
+
+enum awms_PaymentStatus {
+  PENDING
+  PROCESSED
+  FAILED
+  REFUNDED
+}
+
+enum awms_ARStatus {
+  CURRENT
+  OVERDUE_30
+  OVERDUE_60
+  OVERDUE_90
+}
+
+// AWMS Bookings Module Enums
+enum awms_AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  NO_SHOW
+  CANCELLED
+}
+
+enum awms_SlotStatus {
+  AVAILABLE
+  BLOCKED
+  APPOINTMENT
+}
+
+// AWMS Finance Module Models
+model awms_quotes {
+  id                   String           @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId       String           @db.ObjectId
+  quote_number         String           @unique
+  customer_id          String           @db.ObjectId
+  vehicle_id           String           @db.ObjectId
+  quote_date           DateTime         @default(now()) @db.Date
+  expiration_date      DateTime?        @db.Date
+  status               awms_QuoteStatus @default(DRAFT)
+  subtotal             Float
+  discount_amount      Float?
+  discount_percentage  Float?
+  tax_amount           Float
+  total_amount         Float
+  notes                String?
+  createdAt            DateTime         @default(now()) @db.Date
+  updatedAt            DateTime         @updatedAt @db.Date
+
+  // Relations
+  organization         Organizations    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customer             awms_customers   @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+  vehicle              awms_vehicles    @relation(fields: [vehicle_id], references: [id], onDelete: Cascade)
+  line_items           awms_quote_line_items[]
+  invoice              awms_invoices[]
+
+  @@index([organizationId])
+  @@index([customer_id])
+  @@index([vehicle_id])
+}
+
+model awms_quote_line_items {
+  id             String            @id @default(auto()) @map("_id") @db.ObjectId
+  quote_id       String            @db.ObjectId
+  line_item_type awms_LineItemType
+  description    String
+  quantity       Float
+  unit_price     Float
+  total_price    Float
+  sequence_order Int?
+  notes          String?
+
+  // Relations
+  quote          awms_quotes       @relation(fields: [quote_id], references: [id], onDelete: Cascade)
+
+  @@index([quote_id])
+}
+
+model awms_invoices {
+  id                  String             @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId      String             @db.ObjectId
+  invoice_number      String             @unique
+  customer_id         String             @db.ObjectId
+  quote_id            String?            @db.ObjectId
+  job_id              String?            @db.ObjectId
+  invoice_date        DateTime           @default(now()) @db.Date
+  due_date            DateTime?          @db.Date
+  subtotal            Float
+  discount_amount     Float?
+  tax_amount          Float
+  total_amount        Float
+  paid_amount         Float              @default(0)
+  status              awms_InvoiceStatus @default(DRAFT)
+  payment_terms       String?
+  notes               String?
+  createdAt           DateTime           @default(now()) @db.Date
+  updatedAt           DateTime           @updatedAt @db.Date
+
+  // Relations
+  organization        Organizations      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customer            awms_customers     @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+  quote               awms_quotes?       @relation(fields: [quote_id], references: [id], onDelete: SetNull)
+  job                 awms_service_jobs? @relation(fields: [job_id], references: [id], onDelete: SetNull)
+  line_items          awms_invoice_line_items[]
+  payments            awms_payments[]
+  accounts_receivable awms_accounts_receivable[]
+
+  @@index([organizationId])
+  @@index([customer_id])
+}
+
+model awms_invoice_line_items {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  invoice_id     String       @db.ObjectId
+  description    String
+  quantity       Float
+  unit_price     Float
+  total_price    Float
+  tax_code       awms_TaxCode @default(STANDARD)
+  sequence_order Int?
+
+  // Relations
+  invoice        awms_invoices @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+
+  @@index([invoice_id])
+}
+
+model awms_payments {
+  id             String           @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId String           @db.ObjectId
+  invoice_id     String           @db.ObjectId
+  payment_method awms_PaymentMethod
+  payment_date   DateTime         @default(now()) @db.Date
+  amount         Float
+  reference      String?
+  status         awms_PaymentStatus @default(PENDING)
+  receipt_number String?
+  notes          String?
+  createdAt      DateTime         @default(now()) @db.Date
+  processed_at   DateTime?        @db.Date
+
+  // Relations
+  organization   Organizations    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invoice        awms_invoices    @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([invoice_id])
+}
+
+model awms_accounts_receivable {
+  id                 String       @id @default(auto()) @map("_id") @db.ObjectId
+  invoice_id         String       @db.ObjectId
+  customer_id        String       @db.ObjectId
+  original_amount    Float
+  paid_amount        Float
+  outstanding_amount Float
+  days_overdue       Int
+  status             awms_ARStatus
+  last_payment_date  DateTime?    @db.Date
+  last_follow_up_date DateTime?   @db.Date
+
+  // Relations
+  invoice            awms_invoices @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+  customer           awms_customers @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+
+  @@index([invoice_id])
+  @@index([customer_id])
+}
+
+// AWMS Bookings Module Models
+model awms_appointments {
+  id                     String                 @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId         String                 @db.ObjectId
+  customer_id            String                 @db.ObjectId
+  vehicle_id             String                 @db.ObjectId
+  appointment_number     String?
+  appointment_date_time  DateTime
+  duration_minutes       Int
+  service_type_id        String                 @db.ObjectId
+  assigned_technician_id String?                @db.ObjectId
+  status                 awms_AppointmentStatus @default(SCHEDULED)
+  customer_comments      String?
+  special_requests       String?
+  reminder_sent          Boolean                @default(false)
+  reminder_sent_date     DateTime?              @db.Date
+  createdAt              DateTime               @default(now()) @db.Date
+  updatedAt              DateTime               @updatedAt @db.Date
+  cancelled_at           DateTime?              @db.Date
+
+  // Relations
+  organization           Organizations          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customer               awms_customers         @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+  vehicle                awms_vehicles          @relation(fields: [vehicle_id], references: [id], onDelete: Cascade)
+  service_type           awms_service_types     @relation(fields: [service_type_id], references: [id], onDelete: NoAction)
+  assigned_technician    Users?                 @relation(fields: [assigned_technician_id], references: [id], onDelete: SetNull)
+  slot                   awms_appointment_slots?
+
+  @@index([organizationId])
+  @@index([customer_id])
+  @@index([vehicle_id])
+}
+
+model awms_appointment_slots {
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  technician_id String          @db.ObjectId
+  date          DateTime        @db.Date
+  start_time    DateTime
+  end_time      DateTime
+  slot_status   awms_SlotStatus @default(AVAILABLE)
+  appointment_id String?         @db.ObjectId @unique
+
+  // Relations
+  technician    Users           @relation(fields: [technician_id], references: [id], onDelete: Cascade)
+  appointment   awms_appointments? @relation(fields: [appointment_id], references: [id], onDelete: SetNull)
+
+  @@index([technician_id])
+}
+
+model awms_technician_availability {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  technician_id String   @db.ObjectId
+  day_of_week   Int
+  start_time    String
+  end_time      String
+  is_active     Boolean  @default(true)
+  updatedAt     DateTime @updatedAt @db.Date
+
+  // Relations
+  technician    Users    @relation(fields: [technician_id], references: [id], onDelete: Cascade)
+
+  @@index([technician_id])
+}
+
+// AWMS Service Module Enums
+enum awms_SkillLevel {
+  BASIC
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum awms_JobPriority {
+  ROUTINE
+  URGENT
+  EMERGENCY
+}
+
+enum awms_JobStatus {
+  NEW
+  IN_PROGRESS
+  PENDING_APPROVAL
+  COMPLETE
+  CLOSED
+}
+
+enum awms_QCStatus {
+  PENDING
+  PASSED
+  FAILED
+}
+
+enum awms_JobDetailStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETE
+}
+
+// AWMS Service Module Models
+model awms_service_types {
+  id                   String            @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId       String            @db.ObjectId
+  category_id          String?           @db.ObjectId
+  service_name         String
+  description          String?
+  standard_labor_rate  Float
+  standard_duration_hours Float
+  required_skill_level awms_SkillLevel   @default(BASIC)
+  parts_list           Json?
+  is_warranty_eligible Boolean           @default(false)
+  createdAt            DateTime          @default(now()) @db.Date
+  updatedAt            DateTime          @updatedAt @db.Date
+
+  // Relations
+  organization         Organizations     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  jobs                 awms_service_jobs[]
+  appointments         awms_appointments[]
+
+  @@index([organizationId])
+}
+
+model awms_service_jobs {
+  id                      String             @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId          String             @db.ObjectId
+  job_number              String             @unique
+  customer_id             String             @db.ObjectId
+  vehicle_id              String             @db.ObjectId
+  appointment_id          String?            @db.ObjectId
+  service_type_id         String             @db.ObjectId
+  priority                awms_JobPriority   @default(ROUTINE)
+  status                  awms_JobStatus     @default(NEW)
+  assigned_technician_id  String?            @db.ObjectId
+  assigned_date           DateTime?          @db.Date
+  estimated_hours         Float?
+  actual_hours            Float?
+  estimated_cost          Float?
+  actual_cost             Float?
+  customer_concerns       String?
+  technician_notes        String?
+  additional_issues_found Boolean            @default(false)
+  quality_check_status    awms_QCStatus      @default(PENDING)
+  quality_checker_id      String?            @db.ObjectId
+  quality_notes           String?
+  createdAt               DateTime           @default(now()) @db.Date
+  started_at              DateTime?          @db.Date
+  completed_at            DateTime?          @db.Date
+  updatedAt               DateTime           @updatedAt @db.Date
+
+  // Relations
+  organization            Organizations      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customer                awms_customers     @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+  vehicle                 awms_vehicles      @relation(fields: [vehicle_id], references: [id], onDelete: Cascade)
+  service_type            awms_service_types @relation(fields: [service_type_id], references: [id], onDelete: NoAction)
+  assigned_technician     Users?             @relation(fields: [assigned_technician_id], references: [id], onDelete: SetNull)
+  quality_checker         Users?             @relation(name: "quality_checker", fields: [quality_checker_id], references: [id], onDelete: SetNull)
+  details                 awms_service_job_details[]
+  parts_used              awms_service_parts_used[]
+  timesheets              awms_service_timesheets[]
+  invoices                awms_invoices[]
+
+  @@index([organizationId])
+  @@index([customer_id])
+  @@index([vehicle_id])
+}
+
+model awms_service_job_details {
+  id             String               @id @default(auto()) @map("_id") @db.ObjectId
+  service_job_id String               @db.ObjectId
+  line_item_id   String
+  description    String
+  quantity       Float
+  unit_price     Float
+  total_price    Float
+  status         awms_JobDetailStatus @default(PLANNED)
+  updatedAt      DateTime             @updatedAt @db.Date
+
+  // Relations
+  service_job    awms_service_jobs    @relation(fields: [service_job_id], references: [id], onDelete: Cascade)
+
+  @@index([service_job_id])
+}
+
+model awms_service_parts_used {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  service_job_id String   @db.ObjectId
+  part_id       String
+  quantity_used Int
+  unit_cost     Float
+  total_cost    Float
+  serial_number String?
+  logged_at     DateTime  @default(now()) @db.Date
+  logged_by_id  String    @db.ObjectId
+
+  // Relations
+  service_job   awms_service_jobs @relation(fields: [service_job_id], references: [id], onDelete: Cascade)
+  logged_by     Users             @relation(fields: [logged_by_id], references: [id], onDelete: NoAction)
+
+  @@index([service_job_id])
+}
+
+model awms_service_timesheets {
+  id                     String    @id @default(auto()) @map("_id") @db.ObjectId
+  service_job_id         String    @db.ObjectId
+  technician_id          String    @db.ObjectId
+  start_time             DateTime
+  end_time               DateTime?
+  break_duration_minutes Int?
+  billable_hours         Float?
+  task_description       String?
+  createdAt              DateTime  @default(now()) @db.Date
+
+  // Relations
+  service_job            awms_service_jobs @relation(fields: [service_job_id], references: [id], onDelete: Cascade)
+  technician             Users             @relation(fields: [technician_id], references: [id], onDelete: NoAction)
+
+  @@index([service_job_id])
+}
+
+model awms_vehicle_recalls {
+  id                 String                 @id @default(auto()) @map("_id") @db.ObjectId
+  vehicle_id         String                 @db.ObjectId
+  recall_number      String
+  recall_date        DateTime               @db.Date
+  description        String
+  safety_level       awms_RecallSafetyLevel
+  manufacturer       String
+  repair_status      awms_RecallRepairStatus @default(OPEN)
+  repair_date        DateTime?              @db.Date
+  repair_notes       String?
+  technician_id      String?                @db.ObjectId
+  external_recall_id String?
+  updatedAt          DateTime               @updatedAt @db.Date
+
+  // Relations
+  vehicle            awms_vehicles          @relation(fields: [vehicle_id], references: [id], onDelete: Cascade)
+  technician         Users?                 @relation(fields: [technician_id], references: [id], onDelete: SetNull)
+
+  @@index([vehicle_id])
+}
+
+model awms_vehicle_maintenance_schedule {
+  id                       String    @id @default(auto()) @map("_id") @db.ObjectId
+  vehicle_id               String    @db.ObjectId
+  service_type             String
+  interval_months          Int?
+  interval_km              Int?
+  last_performed_date      DateTime? @db.Date
+  next_due_date            DateTime? @db.Date
+  estimated_cost           Float?
+  estimated_duration_hours Float?
+  last_performed_odometer  Int?
+  notes                    String?
+
+  // Relations
+  vehicle                  awms_vehicles @relation(fields: [vehicle_id], references: [id], onDelete: Cascade)
+
+  @@index([vehicle_id])
 }
