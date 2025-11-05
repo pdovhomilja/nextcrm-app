@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "prisma generate &&  prisma db push && prisma db seed && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:e2e": "cypress run",
+    "cypress:open": "cypress open"
   },
   "prisma": {
     "seed": "ts-node ./prisma/seeds/seed.ts"
