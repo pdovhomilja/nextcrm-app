@@ -898,9 +898,6 @@ model google_Accounts {
   updated_at        DateTime @updatedAt @db.Date
 
   assigned_user     Users?   @relation(fields: [user_id], references: [id], onDelete: Cascade)
-
-  @@index([google_id])
-  @@index([google_email])
 }
 
 enum subscription_Tier {
@@ -962,7 +959,7 @@ model Tenants {
   features              String[]                 // Enabled features for this tenant
   is_active             Boolean                  @default(true)
   is_verified           Boolean                  @default(false)
-  owner_id              String?                  @db.ObjectId
+  owner_id              String?                  @unique @db.ObjectId
   created_at            DateTime                 @default(now()) @db.Date
   updated_at            DateTime                 @updatedAt @db.Date
   subscription_plan     subscription_Plans?      @relation(fields: [subscription_plan_id], references: [id])
@@ -990,8 +987,6 @@ model TenantSettings {
   updated_at            DateTime         @updatedAt @db.Date
 
   tenant                Tenants          @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
-
-  @@index([tenant_id])
 }
 
 model TenantMembers {
@@ -1028,7 +1023,6 @@ model TenantApiKeys {
   tenant       Tenants  @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
 
   @@index([tenant_id])
-  @@index([key_hash])
 }
 
 // ========== VECTOR DATABASE & AI MODELS ==========
@@ -1041,7 +1035,7 @@ model vector_Documents {
   content             String
   content_type        String           // invoice, contact, document, chat, etc.
   content_id          String?          // Reference to original document
-  embedding           Float[]          @db.Vector(1536) // OpenAI embeddings (1536 dims)
+  embedding           Json             // OpenAI embeddings array (1536 dims) stored as JSON
   metadata            Json?
   similarity_score    Float?           // Last calculated similarity
   created_by          String?          @db.ObjectId
@@ -1103,8 +1097,6 @@ model elasticsearch_Indices {
   last_sync           DateTime?
   created_at          DateTime         @default(now()) @db.Date
   updated_at          DateTime         @updatedAt @db.Date
-
-  @@index([tenant_id])
 }
 
 model analytics_Events {
