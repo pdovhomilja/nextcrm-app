@@ -743,7 +743,6 @@ model xero_Invoices {
   created_at          DateTime      @default(now()) @db.Date
   updated_at          DateTime      @updatedAt @db.Date
 
-  @@index([xero_invoice_id])
   @@index([local_invoice_id])
 }
 
@@ -759,8 +758,6 @@ model xero_Contacts {
   sync_status       String?  @default("synced")
   created_at        DateTime @default(now()) @db.Date
   updated_at        DateTime @updatedAt @db.Date
-
-  @@index([xero_contact_id])
 }
 
 // MYOB Integration Models
@@ -775,8 +772,6 @@ model myob_Invoices {
   sync_status       String?  @default("synced")
   created_at        DateTime @default(now()) @db.Date
   updated_at        DateTime @updatedAt @db.Date
-
-  @@index([myob_invoice_uid])
 }
 
 // QuickBooks Integration Models
@@ -791,8 +786,6 @@ model quickbooks_Invoices {
   sync_status         String?  @default("synced")
   created_at          DateTime @default(now()) @db.Date
   updated_at          DateTime @updatedAt @db.Date
-
-  @@index([quickbooks_id])
 }
 
 // BillionMail Integration Models
@@ -805,8 +798,6 @@ model billionmail_Campaigns {
   recipients_count    Int?
   created_at          DateTime @default(now()) @db.Date
   updated_at          DateTime @updatedAt @db.Date
-
-  @@index([billionmail_id])
 }
 
 // Mautic Integration Models
@@ -819,8 +810,6 @@ model mautic_Campaigns {
   contacts_count    Int?
   created_at        DateTime @default(now()) @db.Date
   updated_at        DateTime @updatedAt @db.Date
-
-  @@index([mautic_id])
 }
 
 // Stripe Integration Models
@@ -835,8 +824,6 @@ model stripe_Payments {
   payment_method    String?
   created_at        DateTime @default(now()) @db.Date
   updated_at        DateTime @updatedAt @db.Date
-
-  @@index([stripe_payment_id])
 }
 
 model stripe_Subscriptions {
@@ -852,8 +839,6 @@ model stripe_Subscriptions {
   next_billing_date     DateTime?
   created_at            DateTime @default(now()) @db.Date
   updated_at            DateTime @updatedAt @db.Date
-
-  @@index([stripe_subscription_id])
 }
 
 // PayPal Integration Models
@@ -868,8 +853,6 @@ model paypal_Payments {
   payer_email       String?
   created_at        DateTime @default(now()) @db.Date
   updated_at        DateTime @updatedAt @db.Date
-
-  @@index([paypal_payment_id])
 }
 
 model paypal_Subscriptions {
@@ -885,6 +868,4 @@ model paypal_Subscriptions {
   next_billing_date     DateTime?
   created_at            DateTime @default(now()) @db.Date
   updated_at            DateTime @updatedAt @db.Date
-
-  @@index([paypal_subscription_id])
 }
