@@ -9,6 +9,9 @@
     "lint": "next lint",
     "test": "jest --config jest.config.js",
     "test:uat": "jest --config jest.uat.config.js",
+    "test:uat:extended": "ts-node __tests__/uat/uat-test-suite-extended.ts",
+    "test:uat:performance": "ts-node __tests__/uat/performance-testing.ts",
+    "test:uat:stress": "STRESS_TEST=true ts-node __tests__/uat/performance-testing.ts",
     "test:uat:generate-data": "ts-node __tests__/uat/test-data-generator.ts generate",
     "test:uat:generate-accounts": "ts-node __tests__/uat/test-data-generator.ts accounts",
     "test:uat:clear": "ts-node __tests__/uat/test-data-generator.ts clear"
