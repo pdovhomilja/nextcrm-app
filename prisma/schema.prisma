@@ -565,40 +565,41 @@ enum ActiveStatus {
 }
 
 model Users {
-  id                   String                @id @default(auto()) @map("_id") @db.ObjectId
-  v                    Int                   @default(0) @map("__v")
+  id                   String                       @id @default(auto()) @map("_id") @db.ObjectId
+  v                    Int                          @default(0) @map("__v")
   account_name         String?
   avatar               String?
-  email                String                @unique
-  is_account_admin     Boolean               @default(false)
-  is_admin             Boolean               @default(false)
-  created_on           DateTime              @default(now()) @db.Date
-  lastLoginAt          DateTime?             @db.Date
+  email                String                       @unique
+  is_account_admin     Boolean                      @default(false)
+  is_admin             Boolean                      @default(false)
+  created_on           DateTime                     @default(now()) @db.Date
+  lastLoginAt          DateTime?                    @db.Date
   name                 String?
   password             String?
   username             String?
-  userStatus           ActiveStatus          @default(PENDING)
-  userLanguage         Language              @default(en)
+  userStatus           ActiveStatus                 @default(PENDING)
+  userLanguage         Language                     @default(en)
   tasksComment         tasksComments[]
-  created_by_documents Documents[]           @relation(name: "created_by_user")
-  assigned_documents   Documents[]           @relation(name: "assigned_to_user")
+  created_by_documents Documents[]                  @relation(name: "created_by_user")
+  assigned_documents   Documents[]                  @relation(name: "assigned_to_user")
   tasks                Tasks[]
   crm_accounts_tasks   crm_Accounts_Tasks[]
   accounts             crm_Accounts[]
   leads                crm_Leads[]
-  created_by_user      crm_Opportunities[]   @relation(name: "created_by_user_relation")
-  assigned_opportunity crm_Opportunities[]   @relation(name: "assigned_to_user_relation")
-  assigned_contacts    crm_Contacts[]        @relation(name: "assigned_contacts")
-  crated_contacts      crm_Contacts[]        @relation(name: "created_contacts")
+  created_by_user      crm_Opportunities[]          @relation(name: "created_by_user_relation")
+  assigned_opportunity crm_Opportunities[]          @relation(name: "assigned_to_user_relation")
+  assigned_contacts    crm_Contacts[]               @relation(name: "assigned_contacts")
+  crated_contacts      crm_Contacts[]               @relation(name: "created_contacts")
   notion_account       secondBrain_notions[]
   openAi_key           openAi_keys[]
   assigned_invoices    Invoices[]
   assigned_contracts   crm_Contracts[]
-  boards               Boards[]              @relation(name: "assigned_user")
-  watching_boardsIDs   String[]              @db.ObjectId
-  watching_boards      Boards[]              @relation(name: "watching_users", fields: [watching_boardsIDs], references: [id])
-  watching_accountsIDs String[]              @db.ObjectId
-  watching_accounts    crm_Accounts[]        @relation(name: "watching_accounts", fields: [watching_accountsIDs], references: [id])
+  boards               Boards[]                     @relation(name: "assigned_user")
+  watching_boardsIDs   String[]                     @db.ObjectId
+  watching_boards      Boards[]                     @relation(name: "watching_users", fields: [watching_boardsIDs], references: [id])
+  watching_accountsIDs String[]                     @db.ObjectId
+  watching_accounts    crm_Accounts[]               @relation(name: "watching_accounts", fields: [watching_accountsIDs], references: [id])
+  integration_creds    integrations_Credentials[]
 }
 
 enum Language {
@@ -658,4 +659,232 @@ model gpt_models {
 enum gptStatus {
   ACTIVE
   INACTIVE
+}
+
+// ========== INTEGRATION MODELS ==========
+
+model integrations_Credentials {
+  id                String                         @id @default(auto()) @map("_id") @db.ObjectId
+  v                 Int                            @default(0) @map("__v")
+  user_id           String                         @db.ObjectId
+  integration_type  integration_Type
+  integration_name  String
+  access_token      String?
+  refresh_token     String?
+  token_expires_at  DateTime?
+  api_key           String?
+  api_secret        String?
+  custom_data       Json?
+  is_active         Boolean                        @default(true)
+  created_at        DateTime                       @default(now()) @db.Date
+  updated_at        DateTime                       @updatedAt @db.Date
+  last_synced_at    DateTime?
+  sync_status       integration_Sync_Status        @default(IDLE)
+  sync_error        String?
+  assigned_user     Users?                         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([integration_type])
+}
+
+enum integration_Type {
+  XERO
+  MYOB
+  QUICKBOOKS
+  BILLIONMAIL
+  MAUTIC
+  STRIPE
+  PAYPAL
+}
+
+enum integration_Sync_Status {
+  IDLE
+  SYNCING
+  SUCCESS
+  ERROR
+}
+
+model integrations_Sync_Logs {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  v                 Int      @default(0) @map("__v")
+  integration_type  String
+  sync_type         String   // 'invoices', 'contacts', 'products', 'payments', etc.
+  status            String   // 'success', 'failed', 'partial'
+  total_records     Int      @default(0)
+  synced_records    Int      @default(0)
+  failed_records    Int      @default(0)
+  error_message     String?
+  duration_ms       Int?
+  created_at        DateTime @default(now()) @db.Date
+  completed_at      DateTime?
+
+  @@index([integration_type])
+  @@index([created_at])
+}
+
+// Xero Integration Models
+model xero_Invoices {
+  id                  String        @id @default(auto()) @map("_id") @db.ObjectId
+  v                   Int           @default(0) @map("__v")
+  xero_invoice_id     String        @unique
+  local_invoice_id    String?       @db.ObjectId
+  invoice_number      String?
+  contact_name        String?
+  description         String?
+  amount              Float?
+  tax_amount          Float?
+  currency            String?
+  status              String?       // DRAFT, SUBMITTED, AUTHORISED, PAID, etc.
+  invoice_date        DateTime?     @db.Date
+  due_date            DateTime?     @db.Date
+  xero_created_at     DateTime?     @db.Date
+  last_synced_at      DateTime?     @db.Date
+  sync_status         String?       @default("synced")
+  created_at          DateTime      @default(now()) @db.Date
+  updated_at          DateTime      @updatedAt @db.Date
+
+  @@index([xero_invoice_id])
+  @@index([local_invoice_id])
+}
+
+model xero_Contacts {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  v                 Int      @default(0) @map("__v")
+  xero_contact_id   String   @unique
+  local_contact_id  String?  @db.ObjectId
+  name              String?
+  email             String?
+  phone             String?
+  tax_number        String?
+  sync_status       String?  @default("synced")
+  created_at        DateTime @default(now()) @db.Date
+  updated_at        DateTime @updatedAt @db.Date
+
+  @@index([xero_contact_id])
+}
+
+// MYOB Integration Models
+model myob_Invoices {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  v                 Int      @default(0) @map("__v")
+  myob_invoice_uid  String   @unique
+  local_invoice_id  String?  @db.ObjectId
+  invoice_number    String?
+  amount            Float?
+  status            String?
+  sync_status       String?  @default("synced")
+  created_at        DateTime @default(now()) @db.Date
+  updated_at        DateTime @updatedAt @db.Date
+
+  @@index([myob_invoice_uid])
+}
+
+// QuickBooks Integration Models
+model quickbooks_Invoices {
+  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
+  v                   Int      @default(0) @map("__v")
+  quickbooks_id       String   @unique
+  local_invoice_id    String?  @db.ObjectId
+  invoice_number      String?
+  amount              Float?
+  status              String?
+  sync_status         String?  @default("synced")
+  created_at          DateTime @default(now()) @db.Date
+  updated_at          DateTime @updatedAt @db.Date
+
+  @@index([quickbooks_id])
+}
+
+// BillionMail Integration Models
+model billionmail_Campaigns {
+  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
+  v                   Int      @default(0) @map("__v")
+  billionmail_id      String   @unique
+  campaign_name       String?
+  status              String?
+  recipients_count    Int?
+  created_at          DateTime @default(now()) @db.Date
+  updated_at          DateTime @updatedAt @db.Date
+
+  @@index([billionmail_id])
+}
+
+// Mautic Integration Models
+model mautic_Campaigns {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  v                 Int      @default(0) @map("__v")
+  mautic_id         String   @unique
+  campaign_name     String?
+  status            String?
+  contacts_count    Int?
+  created_at        DateTime @default(now()) @db.Date
+  updated_at        DateTime @updatedAt @db.Date
+
+  @@index([mautic_id])
+}
+
+// Stripe Integration Models
+model stripe_Payments {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  v                 Int      @default(0) @map("__v")
+  stripe_payment_id String   @unique
+  local_invoice_id  String?  @db.ObjectId
+  amount            Float?
+  currency          String?
+  status            String?  // succeeded, pending, failed
+  payment_method    String?
+  created_at        DateTime @default(now()) @db.Date
+  updated_at        DateTime @updatedAt @db.Date
+
+  @@index([stripe_payment_id])
+}
+
+model stripe_Subscriptions {
+  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
+  v                     Int      @default(0) @map("__v")
+  stripe_subscription_id String  @unique
+  customer_id           String?  @db.ObjectId
+  status                String?  // active, past_due, cancelled, etc.
+  plan_id               String?
+  amount                Float?
+  currency              String?
+  billing_cycle_anchor  DateTime?
+  next_billing_date     DateTime?
+  created_at            DateTime @default(now()) @db.Date
+  updated_at            DateTime @updatedAt @db.Date
+
+  @@index([stripe_subscription_id])
+}
+
+// PayPal Integration Models
+model paypal_Payments {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  v                 Int      @default(0) @map("__v")
+  paypal_payment_id String   @unique
+  local_invoice_id  String?  @db.ObjectId
+  amount            Float?
+  currency          String?
+  status            String?  // COMPLETED, PENDING, FAILED
+  payer_email       String?
+  created_at        DateTime @default(now()) @db.Date
+  updated_at        DateTime @updatedAt @db.Date
+
+  @@index([paypal_payment_id])
+}
+
+model paypal_Subscriptions {
+  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
+  v                     Int      @default(0) @map("__v")
+  paypal_subscription_id String  @unique
+  customer_id           String?  @db.ObjectId
+  status                String?  // ACTIVE, SUSPENDED, CANCELLED
+  plan_id               String?
+  amount                Float?
+  currency              String?
+  billing_start_date    DateTime?
+  next_billing_date     DateTime?
+  created_at            DateTime @default(now()) @db.Date
+  updated_at            DateTime @updatedAt @db.Date
+
+  @@index([paypal_subscription_id])
 }
