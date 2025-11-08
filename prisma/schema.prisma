@@ -579,6 +579,12 @@ model Users {
   username             String?
   userStatus           ActiveStatus                 @default(PENDING)
   userLanguage         Language                     @default(en)
+  metadata             Json?                        // Additional user data
+  // Multi-tenant and OAuth relations
+  google_account       google_Accounts?
+  owned_tenant         Tenants?                     @relation("tenant_owner")
+  tenant_memberships   TenantMembers[]
+  // Existing relations
   tasksComment         tasksComments[]
   created_by_documents Documents[]                  @relation(name: "created_by_user")
   assigned_documents   Documents[]                  @relation(name: "assigned_to_user")
@@ -868,4 +874,322 @@ model paypal_Subscriptions {
   next_billing_date     DateTime?
   created_at            DateTime @default(now()) @db.Date
   updated_at            DateTime @updatedAt @db.Date
+}
+
+// ========== GOOGLE AUTH & MULTI-TENANT MODELS ==========
+
+model google_Accounts {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  v                 Int      @default(0) @map("__v")
+  user_id           String   @unique @db.ObjectId
+  google_id         String   @unique
+  google_email      String   @unique
+  name              String?
+  picture           String?
+  verified_email    Boolean  @default(false)
+  given_name        String?
+  family_name       String?
+  locale            String?  @default("en")
+  access_token      String?
+  refresh_token     String?
+  token_expires_at  DateTime?
+  is_active         Boolean  @default(true)
+  created_at        DateTime @default(now()) @db.Date
+  updated_at        DateTime @updatedAt @db.Date
+
+  assigned_user     Users?   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([google_id])
+  @@index([google_email])
+}
+
+enum subscription_Tier {
+  FREE
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum domain_Type {
+  SUBDOMAIN     // company.app.nextcrm.com
+  CUSTOM_DOMAIN // company.com
+}
+
+model subscription_Plans {
+  id                  String                @id @default(auto()) @map("_id") @db.ObjectId
+  v                   Int                   @default(0) @map("__v")
+  name                String                @unique
+  tier                subscription_Tier
+  price_monthly       Float?
+  price_annual        Float?
+  max_users           Int                   @default(1)
+  max_contacts        Int                   @default(100)
+  max_storage_gb      Int                   @default(5)
+  features            String[]              // List of feature flags
+  api_rate_limit      Int                   @default(1000) // per hour
+  allow_custom_domain Boolean               @default(false)
+  allow_webhook       Boolean               @default(false)
+  allow_api_access    Boolean               @default(false)
+  allow_integrations  Int                   @default(0)
+  support_level       String?               @default("email") // email, chat, phone
+  description         String?
+  is_active           Boolean               @default(true)
+  created_at          DateTime              @default(now()) @db.Date
+  updated_at          DateTime              @updatedAt @db.Date
+
+  tenants             Tenants[]
+}
+
+model Tenants {
+  id                    String                   @id @default(auto()) @map("_id") @db.ObjectId
+  v                     Int                      @default(0) @map("__v")
+  company_name          String
+  slug                  String                   @unique
+  subdomain             String?                  @unique // e.g., "company" for company.app.nextcrm.com
+  custom_domain         String?                  @unique // e.g., company.com
+  domain_type           domain_Type              @default(SUBDOMAIN)
+  favicon_url           String?
+  logo_url              String?
+  description           String?
+  subscription_tier     subscription_Tier        @default(FREE)
+  subscription_plan_id  String?                  @db.ObjectId
+  subscription_status   String?                  @default("active") // active, cancelled, expired
+  subscription_started  DateTime?
+  subscription_ends     DateTime?
+  max_users             Int?
+  current_users         Int                      @default(0)
+  storage_used_gb       Float                    @default(0)
+  features              String[]                 // Enabled features for this tenant
+  is_active             Boolean                  @default(true)
+  is_verified           Boolean                  @default(false)
+  owner_id              String?                  @db.ObjectId
+  created_at            DateTime                 @default(now()) @db.Date
+  updated_at            DateTime                 @updatedAt @db.Date
+  subscription_plan     subscription_Plans?      @relation(fields: [subscription_plan_id], references: [id])
+  owner                 Users?                   @relation("tenant_owner", fields: [owner_id], references: [id])
+  settings              TenantSettings?
+  api_keys              TenantApiKeys[]
+  members               TenantMembers[]
+  vector_docs           vector_Documents[]
+}
+
+model TenantSettings {
+  id                    String           @id @default(auto()) @map("_id") @db.ObjectId
+  v                     Int              @default(0) @map("__v")
+  tenant_id             String           @unique @db.ObjectId
+  theme                 String?          @default("light") // light, dark, auto
+  language              String?          @default("en")
+  timezone              String?          @default("UTC")
+  enable_redis          Boolean          @default(true)
+  enable_vectordb       Boolean          @default(true)
+  enable_elasticsearch  Boolean          @default(false)
+  enable_ai_features    Boolean          @default(false)
+  retention_days        Int?             @default(90)
+  metadata              Json?
+  created_at            DateTime         @default(now()) @db.Date
+  updated_at            DateTime         @updatedAt @db.Date
+
+  tenant                Tenants          @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id])
+}
+
+model TenantMembers {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  v           Int      @default(0) @map("__v")
+  tenant_id   String   @db.ObjectId
+  user_id     String   @db.ObjectId
+  role        String   @default("member") // owner, admin, member
+  joined_at   DateTime @default(now()) @db.Date
+  updated_at  DateTime @updatedAt @db.Date
+
+  tenant      Tenants  @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  user        Users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([tenant_id, user_id])
+  @@index([tenant_id])
+  @@index([user_id])
+}
+
+model TenantApiKeys {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  v            Int      @default(0) @map("__v")
+  tenant_id    String   @db.ObjectId
+  key_prefix   String   // First 8 chars shown in UI
+  key_hash     String   @unique // Hashed API key for storage
+  name         String
+  permissions  String[]
+  rate_limit   Int      @default(1000) // per hour
+  is_active    Boolean  @default(true)
+  last_used    DateTime?
+  created_at   DateTime @default(now()) @db.Date
+  expires_at   DateTime?
+
+  tenant       Tenants  @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id])
+  @@index([key_hash])
+}
+
+// ========== VECTOR DATABASE & AI MODELS ==========
+
+model vector_Documents {
+  id                  String           @id @default(auto()) @map("_id") @db.ObjectId
+  v                   Int              @default(0) @map("__v")
+  tenant_id           String           @db.ObjectId
+  title               String
+  content             String
+  content_type        String           // invoice, contact, document, chat, etc.
+  content_id          String?          // Reference to original document
+  embedding           Float[]          @db.Vector(1536) // OpenAI embeddings (1536 dims)
+  metadata            Json?
+  similarity_score    Float?           // Last calculated similarity
+  created_by          String?          @db.ObjectId
+  created_at          DateTime         @default(now()) @db.Date
+  updated_at          DateTime         @updatedAt @db.Date
+
+  tenant              Tenants          @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id])
+  @@index([content_type])
+  @@index([created_at])
+}
+
+model ai_Conversations {
+  id                  String           @id @default(auto()) @map("_id") @db.ObjectId
+  v                   Int              @default(0) @map("__v")
+  tenant_id           String           @db.ObjectId
+  user_id             String?          @db.ObjectId
+  title               String?
+  model               String           @default("gpt-4")
+  context             String?          // System prompt/context
+  temperature         Float            @default(0.7)
+  max_tokens          Int              @default(2000)
+  is_archived         Boolean          @default(false)
+  created_at          DateTime         @default(now()) @db.Date
+  updated_at          DateTime         @updatedAt @db.Date
+  messages            ai_Messages[]
+
+  @@index([tenant_id])
+  @@index([user_id])
+}
+
+model ai_Messages {
+  id                  String           @id @default(auto()) @map("_id") @db.ObjectId
+  v                   Int              @default(0) @map("__v")
+  conversation_id     String           @db.ObjectId
+  role                String           // user, assistant, system
+  content             String
+  tokens_used         Int?
+  created_at          DateTime         @default(now()) @db.Date
+
+  conversation        ai_Conversations @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+
+  @@index([conversation_id])
+  @@index([created_at])
+}
+
+// ========== ADVANCED FEATURES MODELS ==========
+
+model elasticsearch_Indices {
+  id                  String           @id @default(auto()) @map("_id") @db.ObjectId
+  v                   Int              @default(0) @map("__v")
+  tenant_id           String           @unique @db.ObjectId
+  index_name          String           @unique
+  doc_count           Int              @default(0)
+  size_bytes          Int              @default(0)
+  mapping_version     Int              @default(1)
+  is_active           Boolean          @default(true)
+  last_sync           DateTime?
+  created_at          DateTime         @default(now()) @db.Date
+  updated_at          DateTime         @updatedAt @db.Date
+
+  @@index([tenant_id])
+}
+
+model analytics_Events {
+  id                  String           @id @default(auto()) @map("_id") @db.ObjectId
+  v                   Int              @default(0) @map("__v")
+  tenant_id           String           @db.ObjectId
+  user_id             String?          @db.ObjectId
+  event_name          String
+  metadata            Json?            // Event properties and context
+  created_at          DateTime         @default(now()) @db.Date
+
+  @@index([tenant_id])
+  @@index([user_id])
+  @@index([event_name])
+  @@index([created_at])
+}
+
+model communication_Templates {
+  id                  String           @id @default(auto()) @map("_id") @db.ObjectId
+  v                   Int              @default(0) @map("__v")
+  tenant_id           String           @db.ObjectId
+  template_name       String
+  template_type       String           // TRANSACTIONAL, MARKETING
+  template_subject    String?
+  template_html       String
+  variables           String[]         // {{variable_name}}
+  is_default          Boolean          @default(false)
+  is_active           Boolean          @default(true)
+  created_at          DateTime         @default(now()) @db.Date
+  updated_at          DateTime         @updatedAt @db.Date
+
+  @@index([tenant_id])
+  @@index([template_type])
+}
+
+model communication_Logs {
+  id                  String           @id @default(auto()) @map("_id") @db.ObjectId
+  v                   Int              @default(0) @map("__v")
+  tenant_id           String           @db.ObjectId
+  communication_type  String           // SMS, VOICE, EMAIL, WHATSAPP
+  recipient           String
+  status              String           // SENT, FAILED, PENDING, DELIVERED
+  error_message       String?
+  metadata            Json?
+  created_at          DateTime         @default(now()) @db.Date
+
+  @@index([tenant_id])
+  @@index([communication_type])
+  @@index([status])
+  @@index([created_at])
+}
+
+model file_Storage {
+  id                  String           @id @default(auto()) @map("_id") @db.ObjectId
+  v                   Int              @default(0) @map("__v")
+  tenant_id           String           @db.ObjectId
+  user_id             String?          @db.ObjectId
+  file_name           String
+  s3_key              String           @unique // S3 key
+  mime_type           String           // MIME type
+  file_size           Int
+  s3_url              String?
+  cdn_url             String?          // CloudFront URL
+  is_public           Boolean          @default(false)
+  created_at          DateTime         @default(now()) @db.Date
+  expires_at          DateTime?
+
+  @@index([tenant_id])
+  @@index([user_id])
+  @@index([created_at])
+}
+
+model oauth_Providers {
+  id                  String           @id @default(auto()) @map("_id") @db.ObjectId
+  v                   Int              @default(0) @map("__v")
+  tenant_id           String?          @db.ObjectId
+  provider_name       String           // google, github, microsoft, etc.
+  client_id           String
+  client_secret       String
+  redirect_uri        String
+  is_active           Boolean          @default(true)
+  scopes              String[]
+  created_at          DateTime         @default(now()) @db.Date
+  updated_at          DateTime         @updatedAt @db.Date
+
+  @@unique([provider_name, tenant_id])
+  @@index([provider_name])
 }
