@@ -1325,3 +1325,274 @@ model SupportTicket {
   @@index([priority])
   @@index([createdAt])
 }
+
+// ============================================================================
+// PHASE 2 - Advanced Features: API Keys, Rate Limiting, Webhooks
+// ============================================================================
+
+// API Key Model for API authentication
+model APIKey {
+  id                String            @id @default(auto()) @map("_id") @db.ObjectId
+  tenantId          String            @db.ObjectId
+  name              String
+  keyHash           String            @unique
+  permissions       String[]
+  isActive          Boolean           @default(true)
+  expiresAt         DateTime?
+  lastUsedAt        DateTime?
+  createdAt         DateTime          @default(now()) @db.Date
+
+  @@index([tenantId])
+  @@index([keyHash])
+  @@index([isActive])
+}
+
+// Rate Limiting Log
+model RateLimitLog {
+  id                String            @id @default(auto()) @map("_id") @db.ObjectId
+  identifier        String
+  timestamp         DateTime          @default(now()) @db.Date
+
+  @@index([identifier])
+  @@index([timestamp])
+}
+
+// Webhook Subscription Model
+model WebhookSubscription {
+  id                String            @id @default(auto()) @map("_id") @db.ObjectId
+  tenantId          String            @db.ObjectId
+  url               String
+  events            String[]
+  secret            String
+  isActive          Boolean           @default(true)
+  failureCount      Int               @default(0)
+  lastTriggeredAt   DateTime?
+  createdAt         DateTime          @default(now()) @db.Date
+
+  // Relations
+  deliveries        WebhookDelivery[]
+
+  @@index([tenantId])
+  @@index([isActive])
+}
+
+// Webhook Event Log
+model WebhookEvent {
+  id                String            @id @default(auto()) @map("_id") @db.ObjectId
+  type              String
+  resource          String
+  resourceId        String
+  data              Json
+  timestamp         DateTime          @default(now()) @db.Date
+
+  // Relations
+  deliveries        WebhookDelivery[]
+
+  @@index([type])
+  @@index([resource])
+  @@index([timestamp])
+}
+
+// Webhook Delivery Log
+model WebhookDelivery {
+  id                String            @id @default(auto()) @map("_id") @db.ObjectId
+  subscriptionId    String            @db.ObjectId
+  eventId           String            @db.ObjectId
+  statusCode        Int?
+  errorMessage      String?
+  success           Boolean
+  deliveredAt       DateTime?
+  createdAt         DateTime          @default(now()) @db.Date
+
+  // Relations
+  subscription      WebhookSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  event             WebhookEvent      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionId])
+  @@index([eventId])
+  @@index([success])
+  @@index([createdAt])
+}
+
+// ============================================================================
+// PHASE 3 - Advanced Analytics & Reporting
+// ============================================================================
+
+// Custom Report Definition
+model CustomReport {
+  id                String            @id @default(auto()) @map("_id") @db.ObjectId
+  tenantId          String            @db.ObjectId
+  name              String
+  description       String?
+  type              String
+  metrics           String[]
+  filters           Json?
+  schedule          String?
+  isActive          Boolean           @default(true)
+  createdAt         DateTime          @default(now()) @db.Date
+  updatedAt         DateTime?         @updatedAt @db.Date
+
+  @@index([tenantId])
+  @@index([type])
+}
+
+// Report Execution History
+model ReportExecution {
+  id                String            @id @default(auto()) @map("_id") @db.ObjectId
+  reportId          String            @db.ObjectId
+  tenantId          String            @db.ObjectId
+  status            String
+  result            Json?
+  errorMessage      String?
+  executedAt        DateTime          @default(now()) @db.Date
+  completedAt       DateTime?
+
+  @@index([reportId])
+  @@index([tenantId])
+  @@index([status])
+}
+
+// Bulk Operation Tracking
+enum BulkOperationType {
+  CREATE
+  UPDATE
+  DELETE
+  EXPORT
+  IMPORT
+}
+
+model BulkOperation {
+  id                String            @id @default(auto()) @map("_id") @db.ObjectId
+  tenantId          String            @db.ObjectId
+  operationType     BulkOperationType
+  resourceType      String
+  totalRecords      Int
+  processedRecords  Int               @default(0)
+  failedRecords     Int               @default(0)
+  status            String
+  result            Json?
+  errorMessage      String?
+  startedAt         DateTime          @default(now()) @db.Date
+  completedAt       DateTime?
+
+  @@index([tenantId])
+  @@index([status])
+}
+
+// ============================================================================
+// PHASE 4 - Enterprise Features
+// ============================================================================
+
+// Multi-region Deployment Support
+model DeploymentRegion {
+  id                String            @id @default(auto()) @map("_id") @db.ObjectId
+  region            String            @unique
+  displayName       String
+  endpoint          String
+  status            String
+  latency           Int?
+  lastHealthCheck   DateTime?
+  createdAt         DateTime          @default(now()) @db.Date
+
+  @@index([status])
+}
+
+// Tenant Region Assignment
+model TenantRegionAssignment {
+  id                String            @id @default(auto()) @map("_id") @db.ObjectId
+  tenantId          String            @db.ObjectId
+  regionId          String            @db.ObjectId
+  isPrimary         Boolean           @default(false)
+  syncStatus        String            @default("SYNCED")
+  lastSyncedAt      DateTime?
+  createdAt         DateTime          @default(now()) @db.Date
+
+  @@unique([tenantId, regionId])
+  @@index([tenantId])
+}
+
+// Enterprise Team Structure
+model EnterpriseTeam {
+  id                String            @id @default(auto()) @map("_id") @db.ObjectId
+  tenantId          String            @db.ObjectId
+  name              String
+  description       String?
+  parentTeamId      String?           @db.ObjectId
+  isActive          Boolean           @default(true)
+  createdAt         DateTime          @default(now()) @db.Date
+
+  @@index([tenantId])
+  @@index([parentTeamId])
+}
+
+// Advanced RBAC - Custom Roles
+model CustomRole {
+  id                String            @id @default(auto()) @map("_id") @db.ObjectId
+  tenantId          String            @db.ObjectId
+  name              String
+  description       String?
+  permissions       String[]
+  isActive          Boolean           @default(true)
+  createdAt         DateTime          @default(now()) @db.Date
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+}
+
+// Feature Flag Management
+model FeatureFlag {
+  id                String            @id @default(auto()) @map("_id") @db.ObjectId
+  name              String            @unique
+  description       String?
+  isEnabled         Boolean           @default(false)
+  rolloutPercentage Int               @default(0)
+  targetTenants     String[]
+  createdAt         DateTime          @default(now()) @db.Date
+  updatedAt         DateTime?         @updatedAt @db.Date
+}
+
+// Cache Configuration
+model CachePolicy {
+  id                String            @id @default(auto()) @map("_id") @db.ObjectId
+  tenantId          String            @db.ObjectId
+  resource          String
+  ttlSeconds        Int               @default(300)
+  strategy          String
+  maxSize           Int?
+  isActive          Boolean           @default(true)
+  createdAt         DateTime          @default(now()) @db.Date
+
+  @@unique([tenantId, resource])
+  @@index([tenantId])
+}
+
+// API Rate Limit Configuration
+model RateLimitPolicy {
+  id                String            @id @default(auto()) @map("_id") @db.ObjectId
+  tenantId          String            @db.ObjectId
+  name              String
+  requestsPerMin    Int               @default(60)
+  requestsPerHour   Int               @default(1000)
+  requestsPerDay    Int               @default(10000)
+  isActive          Boolean           @default(true)
+  createdAt         DateTime          @default(now()) @db.Date
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+}
+
+// Service Level Agreement Tracking
+model SLAMetric {
+  id                String            @id @default(auto()) @map("_id") @db.ObjectId
+  tenantId          String            @db.ObjectId
+  month             String
+  uptime            Float
+  responseTime      Int
+  errorRate         Float
+  supportTickets    Int
+  avgResolutionTime Int
+  createdAt         DateTime          @default(now()) @db.Date
+
+  @@unique([tenantId, month])
+  @@index([tenantId])
+}
