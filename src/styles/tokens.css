@@ -1,0 +1,319 @@
+/**
+ * Design System Tokens
+ *
+ * Complete CSS custom properties for the Prisma Design System
+ * These tokens drive all colors, typography, spacing, and more
+ *
+ * Generated from DESIGN_TOKENS.md specification
+ */
+
+:root {
+  /* ============================================
+     COLORS - BACKGROUND
+     ============================================ */
+  --color-bg-primary: #0f1117;
+  --color-bg-secondary: #161b22;
+  --color-bg-tertiary: #21262d;
+  --color-bg-elevated: #30363d;
+
+  /* ============================================
+     COLORS - TEXT
+     ============================================ */
+  --color-text-primary: #e6edf3;
+  --color-text-secondary: #8b949e;
+  --color-text-tertiary: #6e7681;
+  --color-text-inverse: #0f1117;
+
+  /* ============================================
+     COLORS - ACCENT
+     ============================================ */
+  --color-accent-blue-primary: #00d9ff;
+  --color-accent-blue-deep: #0969da;
+  --color-accent-blue-bright: #1f6feb;
+
+  /* ============================================
+     COLORS - STATUS
+     ============================================ */
+  --color-status-success: #10b981;
+  --color-status-warning: #f59e0b;
+  --color-status-error: #ef4444;
+  --color-status-info: #3b82f6;
+
+  /* ============================================
+     COLORS - CHART/DATA
+     ============================================ */
+  --color-chart-series-1: #00d9ff;
+  --color-chart-series-2: #10b981;
+  --color-chart-series-3: #f59e0b;
+  --color-chart-series-4: #3b82f6;
+  --color-chart-series-5: #8b5cf6;
+  --color-chart-series-6: #ec4899;
+
+  /* ============================================
+     COLORS - NEUTRAL (EXTENDED)
+     ============================================ */
+  --color-neutral-50: #f9fafb;
+  --color-neutral-100: #f3f4f6;
+  --color-neutral-200: #e5e7eb;
+  --color-neutral-300: #d1d5db;
+  --color-neutral-400: #9ca3af;
+  --color-neutral-500: #6b7280;
+  --color-neutral-600: #4b5563;
+  --color-neutral-700: #374151;
+  --color-neutral-800: #1f2937;
+  --color-neutral-900: #111827;
+
+  /* ============================================
+     TYPOGRAPHY - FONT FAMILIES
+     ============================================ */
+  --font-family-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    'Helvetica Neue', Arial, sans-serif;
+  --font-family-mono: 'Courier New', Courier, monospace;
+
+  /* ============================================
+     TYPOGRAPHY - FONT SIZES
+     ============================================ */
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 20px;
+  --font-size-xl: 24px;
+  --font-size-2xl: 32px;
+  --font-size-3xl: 40px;
+  --font-size-4xl: 48px;
+
+  /* ============================================
+     TYPOGRAPHY - FONT WEIGHTS
+     ============================================ */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extra-bold: 800;
+
+  /* ============================================
+     TYPOGRAPHY - LINE HEIGHTS
+     ============================================ */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.4;
+  --line-height-relaxed: 1.5;
+  --line-height-loose: 1.75;
+
+  /* ============================================
+     TYPOGRAPHY - LETTER SPACING
+     ============================================ */
+  --letter-spacing-tight: -0.5px;
+  --letter-spacing-normal: 0px;
+  --letter-spacing-wide: 0.5px;
+  --letter-spacing-extra-wide: 1px;
+
+  /* ============================================
+     SPACING - BASE SCALE
+     ============================================ */
+  --spacing-0: 0px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-xxl: 32px;
+  --spacing-3xl: 48px;
+  --spacing-4xl: 64px;
+  --spacing-5xl: 80px;
+  --spacing-6xl: 96px;
+
+  /* ============================================
+     SHADOWS - ELEVATION
+     ============================================ */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.24);
+  --shadow-md: 0 3px 6px rgba(0, 0, 0, 0.16),
+    0 3px 6px rgba(0, 0, 0, 0.23);
+  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.19),
+    0 6px 6px rgba(0, 0, 0, 0.23);
+  --shadow-xl: 0 15px 25px rgba(0, 0, 0, 0.15),
+    0 5px 10px rgba(0, 0, 0, 0.05);
+
+  /* ============================================
+     SHADOWS - SPECIAL
+     ============================================ */
+  --shadow-focus: 0 0 0 3px rgba(0, 217, 255, 0.25);
+  --shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.25);
+
+  /* ============================================
+     BORDERS - RADIUS
+     ============================================ */
+  --radius-none: 0px;
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* ============================================
+     BORDERS - COLORS
+     ============================================ */
+  --border-primary: #30363d;
+  --border-secondary: #21262d;
+  --border-accent: #00d9ff;
+  --border-danger: #ef4444;
+  --border-success: #10b981;
+
+  /* ============================================
+     ANIMATIONS - EASING
+     ============================================ */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-linear: linear;
+
+  /* ============================================
+     ANIMATIONS - DURATIONS
+     ============================================ */
+  --duration-instant: 0ms;
+  --duration-fast: 100ms;
+  --duration-standard: 200ms;
+  --duration-slow: 300ms;
+  --duration-extra-slow: 500ms;
+
+  /* ============================================
+     ANIMATIONS - TRANSITIONS
+     ============================================ */
+  --transition-fast: all 100ms var(--ease-in-out);
+  --transition-standard: all 200ms var(--ease-in-out);
+  --transition-slow: all 300ms var(--ease-in-out);
+
+  /* ============================================
+     RESPONSIVE - BREAKPOINTS
+     ============================================ */
+  --breakpoint-xs: 0px;
+  --breakpoint-sm: 641px;
+  --breakpoint-md: 769px;
+  --breakpoint-lg: 1025px;
+  --breakpoint-xl: 1281px;
+  --breakpoint-2xl: 1537px;
+
+  /* ============================================
+     RESPONSIVE - CONTAINER WIDTHS
+     ============================================ */
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+  --container-2xl: 1536px;
+
+  /* ============================================
+     Z-INDEX
+     ============================================ */
+  --z-dropdown: 1000;
+  --z-sticky: 50;
+  --z-fixed: 100;
+  --z-modal-overlay: 200;
+  --z-modal: 201;
+  --z-popover: 1000;
+  --z-notification: 1050;
+
+  /* ============================================
+     COMPONENT-SPECIFIC
+     ============================================ */
+
+  /* Button Padding */
+  --button-padding-vertical: 0.5rem;
+  --button-padding-horizontal: 1rem;
+
+  /* Input Padding */
+  --input-padding-vertical: 0.5rem;
+  --input-padding-horizontal: 0.75rem;
+  --input-height: 36px;
+
+  /* Card Padding */
+  --card-padding: 1.5rem;
+
+  /* Modal Padding */
+  --modal-padding: 2rem;
+
+  /* Form Gap */
+  --form-gap: var(--spacing-lg);
+  --form-row-gap: var(--spacing-md);
+
+  /* Grid Gap */
+  --grid-gap: var(--spacing-lg);
+  --grid-gap-mobile: var(--spacing-md);
+}
+
+/* ============================================
+   REDUCED MOTION SUPPORT
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-standard: 0ms;
+    --duration-slow: 0ms;
+    --duration-extra-slow: 0ms;
+    --transition-fast: none;
+    --transition-standard: none;
+    --transition-slow: none;
+  }
+}
+
+/* ============================================
+   LIGHT MODE (ALTERNATE THEME)
+   ============================================ */
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --color-bg-primary: #ffffff;
+    --color-bg-secondary: #f6f8fa;
+    --color-bg-tertiary: #eaeef2;
+    --color-bg-elevated: #d0d7de;
+
+    --color-text-primary: #24292f;
+    --color-text-secondary: #57606a;
+    --color-text-tertiary: #8c959f;
+    --color-text-inverse: #ffffff;
+  }
+}
+
+/* ============================================
+   HIGH CONTRAST MODE
+   ============================================ */
+
+@media (prefers-contrast: more) {
+  :root {
+    /* Increase border widths */
+    --shadow-focus: 0 0 0 3px #00d9ff;
+
+    /* Stronger text contrast */
+    --color-text-tertiary: #6e7681;
+  }
+}
+
+/* ============================================
+   DARK MODE EXPLICIT (OPTIONAL)
+   ============================================ */
+
+[data-theme='dark'] {
+  --color-bg-primary: #0f1117;
+  --color-bg-secondary: #161b22;
+  --color-bg-tertiary: #21262d;
+  --color-bg-elevated: #30363d;
+
+  --color-text-primary: #e6edf3;
+  --color-text-secondary: #8b949e;
+  --color-text-tertiary: #6e7681;
+  --color-text-inverse: #0f1117;
+}
+
+[data-theme='light'] {
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f6f8fa;
+  --color-bg-tertiary: #eaeef2;
+  --color-bg-elevated: #d0d7de;
+
+  --color-text-primary: #24292f;
+  --color-text-secondary: #57606a;
+  --color-text-tertiary: #8c959f;
+  --color-text-inverse: #ffffff;
+}
