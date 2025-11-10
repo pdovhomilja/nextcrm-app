@@ -5,7 +5,7 @@ export class AdvancedAnalyticsService {
    * Generate custom report
    */
   static async generateCustomReport(
-    tenantId: string,
+    organizationId: string,
     reportId: string,
     options?: {
       startDate?: Date
@@ -16,7 +16,7 @@ export class AdvancedAnalyticsService {
       where: { id: reportId }
     })
 
-    if (!report || report.tenantId !== tenantId) {
+    if (!report || report.tenantId !== organizationId) {
       throw new Error('Report not found')
     }
 
@@ -28,13 +28,13 @@ export class AdvancedAnalyticsService {
 
     for (const metricType of report.metrics) {
       if (metricType === 'REVENUE') {
-        metrics.revenue = await this.calculateRevenue(tenantId, startDate, endDate)
+        metrics.revenue = await this.calculateRevenue(organizationId, startDate, endDate)
       } else if (metricType === 'USAGE') {
-        metrics.usage = await this.calculateUsage(tenantId, startDate, endDate)
+        metrics.usage = await this.calculateUsage(organizationId, startDate, endDate)
       } else if (metricType === 'USER_ACTIVITY') {
-        metrics.userActivity = await this.calculateUserActivity(tenantId, startDate, endDate)
+        metrics.userActivity = await this.calculateUserActivity(organizationId, startDate, endDate)
       } else if (metricType === 'CHURN') {
-        metrics.churn = await this.calculateChurn(tenantId, startDate, endDate)
+        metrics.churn = await this.calculateChurn(organizationId, startDate, endDate)
       }
     }
 
@@ -42,7 +42,7 @@ export class AdvancedAnalyticsService {
     const execution = await prismadb.reportExecution.create({
       data: {
         reportId,
-        tenantId,
+        tenantId: organizationId,
         status: 'COMPLETED',
         result: metrics,
         completedAt: new Date()
@@ -60,10 +60,10 @@ export class AdvancedAnalyticsService {
     }
   }
 
-  private static async calculateRevenue(tenantId: string, startDate: Date, endDate: Date) {
+  private static async calculateRevenue(organizationId: string, startDate: Date, endDate: Date) {
     const payments = await prismadb.paymentHistory.findMany({
       where: {
-        organizationId: tenantId,
+        organizationId: organizationId,
         createdAt: {
           gte: startDate,
           lte: endDate
@@ -82,10 +82,10 @@ export class AdvancedAnalyticsService {
     }
   }
 
-  private static async calculateUsage(tenantId: string, startDate: Date, endDate: Date) {
+  private static async calculateUsage(organizationId: string, startDate: Date, endDate: Date) {
     const metrics = await prismadb.usageMetric.findMany({
       where: {
-        tenantId,
+        tenantId: organizationId,
         date: {
           gte: startDate,
           lte: endDate
@@ -105,7 +105,7 @@ export class AdvancedAnalyticsService {
     }
   }
 
-  private static async calculateUserActivity(tenantId: string, startDate: Date, endDate: Date) {
+  private static async calculateUserActivity(organizationId: string, startDate: Date, endDate: Date) {
     const sessions = await prismadb.tenantSession.findMany({
       where: {
         createdAt: {
@@ -134,7 +134,7 @@ export class AdvancedAnalyticsService {
     }
   }
 
-  private static async calculateChurn(tenantId: string, startDate: Date, endDate: Date) {
+  private static async calculateChurn(organizationId: string, startDate: Date, endDate: Date) {
     const previousPeriod = {
       gte: new Date(startDate.getTime() - (endDate.getTime() - startDate.getTime())),
       lt: startDate
@@ -195,13 +195,13 @@ export class AdvancedAnalyticsService {
    * Export data to CSV
    */
   static async exportData(
-    tenantId: string,
+    organizationId: string,
     resourceType: string,
     options?: { startDate?: Date; endDate?: Date }
   ): Promise<string> {
     const bulkOp = await prismadb.bulkOperation.create({
       data: {
-        tenantId,
+        tenantId: organizationId,
         operationType: 'EXPORT',
         resourceType,
         totalRecords: 0,
@@ -214,12 +214,12 @@ export class AdvancedAnalyticsService {
 
       if (resourceType === 'USERS') {
         data = await prismadb.tenantUser.findMany({
-          where: { tenantId }
+          where: { tenantId: organizationId }
         })
       } else if (resourceType === 'USAGE_METRICS') {
         data = await prismadb.usageMetric.findMany({
           where: {
-            tenantId,
+            tenantId: organizationId,
             ...(options?.startDate && options?.endDate && {
               date: {
                 gte: options.startDate,

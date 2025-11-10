@@ -8,12 +8,12 @@ export async function GET(request: NextRequest) {
   try {
     const user = getAuthenticatedUser(request)
     requireUserType(user, 'tenant')
-    const tenantId = 'tenantId' in user ? user.tenantId : null
+    const organizationId = 'tenantId' in user ? user.tenantId : null
 
-    if (!tenantId) throw new Error('Tenant ID required')
+    if (!organizationId) throw new Error('Organization ID required')
 
     const subscription = await prismadb.subscriptions.findFirst({
-      where: { organizationId: tenantId }
+      where: { organizationId: organizationId }
     })
 
     if (!subscription) {
@@ -39,16 +39,16 @@ export async function POST(request: NextRequest) {
   try {
     const user = getAuthenticatedUser(request)
     requireUserType(user, 'tenant')
-    const tenantId = 'tenantId' in user ? user.tenantId : null
+    const organizationId = 'tenantId' in user ? user.tenantId : null
 
-    if (!tenantId) throw new Error('Tenant ID required')
+    if (!organizationId) throw new Error('Organization ID required')
 
     const body = await parseRequestBody(request)
     const { action, stripePriceId } = body
 
     if (action === 'update-plan') {
       const currentSubscription = await prismadb.subscriptions.findFirst({
-        where: { organizationId: tenantId }
+        where: { organizationId: organizationId }
       })
 
       if (!currentSubscription) {
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       return formatSuccessResponse({ subscription: updated })
     } else if (action === 'cancel') {
       const currentSubscription = await prismadb.subscriptions.findFirst({
-        where: { organizationId: tenantId }
+        where: { organizationId: organizationId }
       })
 
       if (!currentSubscription) {

@@ -11,7 +11,7 @@ export class StripeService {
    * Create Stripe customer
    */
   static async createCustomer(data: {
-    tenantId: string
+    organizationId: string
     email: string
     name: string
   }) {
@@ -19,13 +19,13 @@ export class StripeService {
       email: data.email,
       name: data.name,
       metadata: {
-        tenantId: data.tenantId
+        organizationId: data.organizationId
       }
     })
 
     // Save to database
-    await prismadb.tenant.update({
-      where: { id: data.tenantId },
+    await prismadb.organizations.update({
+      where: { id: data.organizationId },
       data: { stripeCustomerId: customer.id }
     })
 
@@ -36,20 +36,20 @@ export class StripeService {
    * Create subscription
    */
   static async createSubscription(data: {
-    tenantId: string
+    organizationId: string
     stripePriceId: string
     trialDays?: number
   }) {
-    const tenant = await prismadb.tenant.findUnique({
-      where: { id: data.tenantId }
+    const organization = await prismadb.organizations.findUnique({
+      where: { id: data.organizationId }
     })
 
-    if (!tenant || !tenant.stripeCustomerId) {
-      throw new Error('Tenant not found or not linked to Stripe')
+    if (!organization || !organization.stripeCustomerId) {
+      throw new Error('Organization not found or not linked to Stripe')
     }
 
     const subscription = await this.stripe.subscriptions.create({
-      customer: tenant.stripeCustomerId,
+      customer: organization.stripeCustomerId,
       items: [{ price: data.stripePriceId }],
       ...(data.trialDays && {
         trial_period_days: data.trialDays
@@ -59,11 +59,11 @@ export class StripeService {
     // Save to database
     const dbSubscription = await prismadb.subscriptions.create({
       data: {
-        tenantId: data.tenantId,
-        stripeCustomerId: tenant.stripeCustomerId,
+        organizationId: data.organizationId,
+        stripeCustomerId: organization.stripeCustomerId,
         stripeSubscriptionId: subscription.id,
         stripePriceId: data.stripePriceId,
-        status: 'TRIALING',
+        status: 'ACTIVE',
         currentPeriodStart: new Date(subscription.current_period_start * 1000),
         currentPeriodEnd: new Date(subscription.current_period_end * 1000),
         trialStart: subscription.trial_start ? new Date(subscription.trial_start * 1000) : undefined,
@@ -223,21 +223,21 @@ export class StripeService {
    * Create payment intent for custom amount
    */
   static async createPaymentIntent(data: {
-    tenantId: string
+    organizationId: string
     amount: number
     currency?: string
     description?: string
   }) {
-    const tenant = await prismadb.tenant.findUnique({
-      where: { id: data.tenantId }
+    const organization = await prismadb.organizations.findUnique({
+      where: { id: data.organizationId }
     })
 
-    if (!tenant || !tenant.stripeCustomerId) {
-      throw new Error('Tenant not found or not linked to Stripe')
+    if (!organization || !organization.stripeCustomerId) {
+      throw new Error('Organization not found or not linked to Stripe')
     }
 
     const paymentIntent = await this.stripe.paymentIntents.create({
-      customer: tenant.stripeCustomerId,
+      customer: organization.stripeCustomerId,
       amount: data.amount,
       currency: data.currency || 'aud',
       description: data.description
