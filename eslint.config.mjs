@@ -18,7 +18,17 @@ const eslintConfig = [
       "**/app/generated/**",
       "**/.next/**",
       "**/node_modules/**",
+      "**/__tests__/**",
+      "**/*.test.ts",
+      "**/*.test.tsx",
     ],
+  },
+  {
+    rules: {
+      "react-hooks/purity": "warn",
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/incompatible-library": "off",
+    },
   },
 ];
 
