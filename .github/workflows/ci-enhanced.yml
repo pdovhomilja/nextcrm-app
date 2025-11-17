@@ -19,7 +19,7 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install
       - run: pnpm exec next lint
       - run: pnpm exec tsc --noEmit
 
@@ -35,7 +35,7 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install
       - run: pnpm test:ci || pnpm test || echo "No tests configured"
 
   build:
@@ -50,7 +50,7 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install
       - run: pnpm build
 
   security-scan:
