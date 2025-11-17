@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "regions": ["iad1"],
+  "regions": [
+    "iad1"
+  ],
   "env": {
-    "NODE_VERSION": "20",
+    "NODE_VERSION": "20.11.0",
     "NEXT_TELEMETRY_DISABLED": "1"
   },
   "build": {
