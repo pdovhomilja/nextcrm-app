@@ -1,0 +1,64 @@
+{
+  "token_limits": {
+    "default": 150000,
+    "research_intensive": 170000,
+    "simple_fixes": 90000,
+    "documentation": 110000,
+    "api_implementation": 140000
+  },
+  "auto_compact": {
+    "enabled": true,
+    "warning_threshold_percent": 75,
+    "compact_threshold_percent": 85
+  },
+  "agents": {
+    "archon": {
+      "enabled": true,
+      "description": "Task management and project coordination"
+    },
+    "code-mode": {
+      "enabled": true,
+      "description": "IDE integration and real-time coding"
+    },
+    "nextjs-app-router-developer": {
+      "enabled": true,
+      "description": "Next.js App Router specialist"
+    },
+    "react-performance-optimization": {
+      "enabled": true,
+      "description": "React performance analysis"
+    },
+    "backend-architect": {
+      "enabled": false,
+      "description": "Microservice architecture (disabled for frontend focus)"
+    }
+  },
+  "file_search": {
+    "max_depth": 6,
+    "max_results": 25,
+    "enable_parallel_search": true,
+    "priority_directories": ["src/app", "src/components", "src/lib"]
+  },
+  "caching": {
+    "enabled": true,
+    "ttl_seconds": 3600,
+    "strategies": ["file_hash", "path_mtime"],
+    "cache_build_artifacts": false
+  },
+  "optimization": {
+    "compress_large_responses": true,
+    "response_size_threshold_kb": 50,
+    "batch_tool_calls": true,
+    "parallel_execution": true
+  },
+  "context_metadata": {
+    "project_name": "NextCRM",
+    "project_type": "nextjs",
+    "created_at": "2025-11-17",
+    "version": "1.0.0",
+    "optimization_level": "aggressive",
+    "pnpm": true,
+    "turbopack": false,
+    "app_router": true
+  }
+}

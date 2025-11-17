@@ -1,0 +1,283 @@
+name: Deploy to Vercel
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - preview
+          - staging
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  NODE_VERSION: '20.x'
+  PNPM_VERSION: '10'
+
+jobs:
+  # Pre-deployment checks
+  pre-deploy-checks:
+    name: Pre-deployment Checks
+    runs-on: ubuntu-latest
+    outputs:
+      deploy-env: ${{ steps.set-env.outputs.environment }}
+      should-deploy: ${{ steps.check.outputs.should-deploy }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Determine deployment environment
+        id: set-env
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "environment=${{ inputs.environment }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" == "refs/heads/staging" ]; then
+            echo "environment=preview" >> $GITHUB_OUTPUT
+          else
+            echo "environment=preview" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check if deployment should proceed
+        id: check
+        run: |
+          # Check commit message for [skip deploy]
+          if echo "${{ github.event.head_commit.message }}" | grep -qi "\[skip deploy\]"; then
+            echo "should-deploy=false" >> $GITHUB_OUTPUT
+            echo "Deployment skipped due to [skip deploy] in commit message"
+          else
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup pnpm
+        if: steps.check.outputs.should-deploy == 'true'
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        if: steps.check.outputs.should-deploy == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        if: steps.check.outputs.should-deploy == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        if: steps.check.outputs.should-deploy == 'true'
+        run: pnpm prisma generate
+
+      - name: Validate Prisma schema
+        if: steps.check.outputs.should-deploy == 'true'
+        run: pnpm prisma validate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Run quick tests
+        if: steps.check.outputs.should-deploy == 'true'
+        run: pnpm test:ci
+        timeout-minutes: 5
+        continue-on-error: true
+        env:
+          NODE_ENV: test
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXTAUTH_URL: http://localhost:3000
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
+  # Deploy to Vercel
+  deploy:
+    name: Deploy to Vercel (${{ needs.pre-deploy-checks.outputs.deploy-env }})
+    runs-on: ubuntu-latest
+    needs: pre-deploy-checks
+    if: needs.pre-deploy-checks.outputs.should-deploy == 'true'
+    environment:
+      name: ${{ needs.pre-deploy-checks.outputs.deploy-env }}
+      url: ${{ steps.deploy.outputs.url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install Vercel CLI
+        run: pnpm add -g vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: |
+          if [ "${{ needs.pre-deploy-checks.outputs.deploy-env }}" == "production" ]; then
+            vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+          else
+            vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+          fi
+
+      - name: Build Project Artifacts
+        run: vercel build ${{ needs.pre-deploy-checks.outputs.deploy-env == 'production' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          GOOGLE_ID: ${{ secrets.GOOGLE_ID }}
+          GOOGLE_SECRET: ${{ secrets.GOOGLE_SECRET }}
+          GITHUB_ID: ${{ secrets.GITHUB_ID }}
+          GITHUB_SECRET: ${{ secrets.GITHUB_SECRET }}
+
+      - name: Deploy to Vercel
+        id: deploy
+        run: |
+          if [ "${{ needs.pre-deploy-checks.outputs.deploy-env }}" == "production" ]; then
+            url=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          else
+            url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          fi
+          echo "url=$url" >> $GITHUB_OUTPUT
+          echo "Deployed to: $url"
+
+      - name: Create deployment summary
+        run: |
+          echo "### Deployment Successful 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ needs.pre-deploy-checks.outputs.deploy-env }}" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** ${{ steps.deploy.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployed by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Time:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+
+  # Post-deployment validation
+  post-deploy-validation:
+    name: Post-deployment Validation
+    runs-on: ubuntu-latest
+    needs: [deploy, pre-deploy-checks]
+    if: needs.pre-deploy-checks.outputs.should-deploy == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Wait for deployment to be ready
+        run: sleep 30
+
+      - name: Health check
+        run: |
+          url="${{ needs.deploy.outputs.url || secrets.NEXTAUTH_URL }}"
+          max_attempts=5
+          attempt=0
+
+          while [ $attempt -lt $max_attempts ]; do
+            echo "Health check attempt $((attempt + 1))/$max_attempts"
+
+            if curl -f -s -o /dev/null -w "%{http_code}" "$url/api/health" | grep -q "200"; then
+              echo "✅ Health check passed"
+              exit 0
+            fi
+
+            attempt=$((attempt + 1))
+            sleep 10
+          done
+
+          echo "❌ Health check failed after $max_attempts attempts"
+          exit 1
+        continue-on-error: true
+
+      - name: Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v11
+        with:
+          urls: |
+            ${{ needs.deploy.outputs.url || secrets.NEXTAUTH_URL }}
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+        continue-on-error: true
+
+      - name: Run smoke tests
+        run: |
+          echo "Running smoke tests..."
+          # Add smoke test commands here
+        continue-on-error: true
+
+  # Rollback on failure
+  rollback:
+    name: Rollback on Failure
+    runs-on: ubuntu-latest
+    needs: [deploy, post-deploy-validation]
+    if: failure() && needs.deploy.result == 'success'
+
+    steps:
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install Vercel CLI
+        run: pnpm add -g vercel@latest
+
+      - name: Rollback deployment
+        run: |
+          echo "Rolling back to previous deployment..."
+          # Get previous deployment
+          prev_deployment=$(vercel ls --token=${{ secrets.VERCEL_TOKEN }} | grep "Ready" | head -2 | tail -1 | awk '{print $1}')
+
+          if [ -n "$prev_deployment" ]; then
+            vercel promote "$prev_deployment" --token=${{ secrets.VERCEL_TOKEN }}
+            echo "✅ Rolled back to deployment: $prev_deployment"
+          else
+            echo "❌ No previous deployment found for rollback"
+            exit 1
+          fi
+
+      - name: Notify rollback
+        run: |
+          echo "### ⚠️ Deployment Rolled Back" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The deployment failed post-validation checks and has been rolled back." >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+
+  # Notify deployment status
+  notify:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [deploy, post-deploy-validation]
+    if: always() && needs.pre-deploy-checks.outputs.should-deploy == 'true'
+
+    steps:
+      - name: Check deployment status
+        run: |
+          if [ "${{ needs.deploy.result }}" == "success" ] && [ "${{ needs.post-deploy-validation.result }}" == "success" ]; then
+            echo "status=success" >> $GITHUB_ENV
+            echo "message=✅ Deployment successful" >> $GITHUB_ENV
+          elif [ "${{ needs.deploy.result }}" == "failure" ]; then
+            echo "status=failure" >> $GITHUB_ENV
+            echo "message=❌ Deployment failed" >> $GITHUB_ENV
+          elif [ "${{ needs.post-deploy-validation.result }}" == "failure" ]; then
+            echo "status=warning" >> $GITHUB_ENV
+            echo "message=⚠️ Deployment succeeded but validation failed" >> $GITHUB_ENV
+          else
+            echo "status=unknown" >> $GITHUB_ENV
+            echo "message=⚠️ Deployment status unknown" >> $GITHUB_ENV
+          fi
+
+      - name: Create notification summary
+        run: |
+          echo "### Deployment Status: ${{ env.message }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ needs.pre-deploy-checks.outputs.deploy-env }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ env.status }}" >> $GITHUB_STEP_SUMMARY

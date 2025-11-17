@@ -12,7 +12,13 @@
       "Bash(git remote:*)",
       "Bash(git push:*)",
       "Bash(git add:*)",
-      "Bash(.gitignore)"
+      "Bash(.gitignore)",
+      "Bash(\"C:\\Users\\npall\\.claude\\scripts\\init-project-context.bat\" . nextjs)",
+      "Bash(bash \"C:\\Users\\npall\\.claude\\scripts\\init-project-context.sh\" . nextjs)",
+      "Bash(cat:*)",
+      "Bash(git log:*)",
+      "Bash(done)",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []
