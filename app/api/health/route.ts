@@ -1,19 +1,24 @@
 /**
  * Health Check API
- * Monitors system health and external service availability
+ * Monitors system health including database, circuit breaker, and external services
+ * Response time target: <500ms
  */
 
 import { NextResponse } from "next/server";
-import { prismadb } from "@/lib/prisma";
+import { getDatabaseStatus } from "@/lib/prisma-optimized";
+import { dbCircuitBreaker } from "@/lib/db-circuit-breaker";
+import { isRedisHealthy } from "@/lib/rate-limit-redis";
 
 interface HealthCheckResult {
   status: "healthy" | "degraded" | "unhealthy";
   timestamp: string;
   checks: {
     database: CheckResult;
-    stripe: CheckResult;
+    circuitBreaker: CircuitBreakerCheck;
+    redis: CheckResult;
   };
   uptime: number;
+  responseTime: number;
   version: string;
 }
 
@@ -24,20 +29,29 @@ interface CheckResult {
   error?: string;
 }
 
+interface CircuitBreakerCheck extends CheckResult {
+  state?: "CLOSED" | "OPEN" | "HALF_OPEN";
+  failureCount?: number;
+  successCount?: number;
+  failureRate?: string;
+}
+
 /**
- * Check database connectivity
+ * Check database connectivity with circuit breaker status
  */
 async function checkDatabase(): Promise<CheckResult> {
   const startTime = Date.now();
 
   try {
-    // Simple query to check connection
-    await prismadb.users.count();
+    const dbStatus = await getDatabaseStatus();
 
     return {
-      status: "up",
+      status: dbStatus.connected ? "up" : "down",
       responseTime: Date.now() - startTime,
-      message: "Database connection successful",
+      message: dbStatus.connected
+        ? "Database connection successful"
+        : "Database connection failed",
+      error: dbStatus.error,
     };
   } catch (error) {
     return {
@@ -49,37 +63,42 @@ async function checkDatabase(): Promise<CheckResult> {
 }
 
 /**
- * Check Stripe API availability
+ * Check circuit breaker status
  */
-async function checkStripe(): Promise<CheckResult> {
-  const startTime = Date.now();
+function checkCircuitBreaker(): CircuitBreakerCheck {
+  const metrics = dbCircuitBreaker.getMetrics();
 
-  // Check if Stripe is configured
-  if (!process.env.STRIPE_SECRET_KEY) {
-    return {
-      status: "degraded",
-      message: "Stripe not configured",
-    };
+  let status: "up" | "down" | "degraded";
+  if (metrics.state === "CLOSED") {
+    status = "up";
+  } else if (metrics.state === "HALF_OPEN") {
+    status = "degraded";
+  } else {
+    status = "down";
   }
 
-  try {
-    const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+  return {
+    status,
+    state: metrics.state,
+    failureCount: metrics.failureCount,
+    successCount: metrics.successCount,
+    failureRate: metrics.failureRate,
+    message: `Circuit breaker is ${metrics.state}`,
+  };
+}
 
-    // Simple API call to check connectivity
-    await stripe.products.list({ limit: 1 });
+/**
+ * Check Redis connectivity
+ */
+function checkRedis(): CheckResult {
+  const isHealthy = isRedisHealthy();
 
-    return {
-      status: "up",
-      responseTime: Date.now() - startTime,
-      message: "Stripe API connection successful",
-    };
-  } catch (error) {
-    return {
-      status: "down",
-      responseTime: Date.now() - startTime,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
+  return {
+    status: isHealthy ? "up" : "degraded",
+    message: isHealthy
+      ? "Redis connection healthy"
+      : "Redis unavailable (fail-open mode)",
+  };
 }
 
 /**
@@ -87,61 +106,83 @@ async function checkStripe(): Promise<CheckResult> {
  */
 function determineOverallStatus(checks: {
   database: CheckResult;
-  stripe: CheckResult;
+  circuitBreaker: CircuitBreakerCheck;
+  redis: CheckResult;
 }): "healthy" | "degraded" | "unhealthy" {
   // Database is critical
   if (checks.database.status === "down") {
     return "unhealthy";
   }
 
-  // Stripe being down is degraded, not unhealthy
-  if (checks.stripe.status === "down") {
+  // Circuit breaker OPEN is unhealthy
+  if (checks.circuitBreaker.status === "down") {
+    return "unhealthy";
+  }
+
+  // Redis being down is degraded, not unhealthy (we fail-open)
+  if (
+    checks.redis.status === "down" ||
+    checks.redis.status === "degraded"
+  ) {
     return "degraded";
   }
 
-  // If any service is degraded
-  if (
-    checks.database.status === "degraded" ||
-    checks.stripe.status === "degraded"
-  ) {
+  // Circuit breaker HALF_OPEN is degraded
+  if (checks.circuitBreaker.status === "degraded") {
     return "degraded";
   }
 
   return "healthy";
 }
 
+/**
+ * GET /api/health
+ * Basic health check endpoint
+ * Target response time: <500ms
+ */
 export async function GET() {
-  const startTime = Date.now();
+  const requestStartTime = Date.now();
 
   try {
     // Run all health checks in parallel
-    const [databaseCheck, stripeCheck] = await Promise.all([
+    const [databaseCheck, circuitBreakerCheck, redisCheck] = await Promise.all([
       checkDatabase(),
-      checkStripe(),
+      Promise.resolve(checkCircuitBreaker()),
+      Promise.resolve(checkRedis()),
     ]);
 
     const checks = {
       database: databaseCheck,
-      stripe: stripeCheck,
+      circuitBreaker: circuitBreakerCheck,
+      redis: redisCheck,
     };
 
     const overallStatus = determineOverallStatus(checks);
+    const responseTime = Date.now() - requestStartTime;
 
     const healthCheck: HealthCheckResult = {
       status: overallStatus,
       timestamp: new Date().toISOString(),
       checks,
       uptime: process.uptime(),
-      version: process.env.npm_package_version || "unknown",
+      responseTime,
+      version: process.env.npm_package_version || "0.0.3-beta",
     };
 
+    // Log warning if response time exceeds target
+    if (responseTime > 500) {
+      console.warn(`[Health Check] Response time exceeded target: ${responseTime}ms > 500ms`);
+    }
+
     // Return appropriate status code
-    const statusCode = overallStatus === "healthy" ? 200 :
-                      overallStatus === "degraded" ? 200 : 503;
+    const statusCode =
+      overallStatus === "healthy" ? 200 : overallStatus === "degraded" ? 200 : 503;
 
     return NextResponse.json(healthCheck, { status: statusCode });
   } catch (error) {
     console.error("Health check error:", error);
+
+    const responseTime = Date.now() - requestStartTime;
 
     return NextResponse.json(
       {
@@ -149,6 +190,7 @@ export async function GET() {
         timestamp: new Date().toISOString(),
         error: error instanceof Error ? error.message : "Unknown error",
         uptime: process.uptime(),
+        responseTime,
       },
       { status: 503 }
     );
@@ -156,10 +198,15 @@ export async function GET() {
 }
 
 /**
- * Detailed health check for admins
+ * POST /api/health
+ * Detailed health check for admins (includes statistics)
  */
 export async function POST() {
+  const requestStartTime = Date.now();
+
   try {
+    const { prisma } = await import("@/lib/prisma-optimized");
+
     // Get detailed system statistics
     const [
       totalOrganizations,
@@ -168,31 +215,35 @@ export async function POST() {
       totalDocuments,
       activeSubscriptions,
     ] = await Promise.all([
-      prismadb.organizations.count(),
-      prismadb.users.count(),
-      prismadb.crm_Contacts.count(),
-      prismadb.documents.count(),
-      prismadb.subscriptions.count({
+      prisma.organizations.count(),
+      prisma.users.count(),
+      prisma.crm_Contacts.count(),
+      prisma.documents.count(),
+      prisma.subscriptions.count({
         where: { status: "ACTIVE" },
       }),
     ]);
 
-    const [databaseCheck, stripeCheck] = await Promise.all([
+    const [databaseCheck, circuitBreakerCheck, redisCheck] = await Promise.all([
       checkDatabase(),
-      checkStripe(),
+      Promise.resolve(checkCircuitBreaker()),
+      Promise.resolve(checkRedis()),
     ]);
 
     const checks = {
       database: databaseCheck,
-      stripe: stripeCheck,
+      circuitBreaker: circuitBreakerCheck,
+      redis: redisCheck,
     };
 
     const overallStatus = determineOverallStatus(checks);
+    const responseTime = Date.now() - requestStartTime;
 
     return NextResponse.json({
       status: overallStatus,
       timestamp: new Date().toISOString(),
       checks,
+      responseTime,
       statistics: {
         organizations: totalOrganizations,
         users: totalUsers,
@@ -218,6 +269,7 @@ export async function POST() {
       {
         status: "unhealthy",
         error: error instanceof Error ? error.message : "Unknown error",
+        responseTime: Date.now() - requestStartTime,
       },
       { status: 503 }
     );
