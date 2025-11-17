@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/select";
 import { TableHead } from "@/components/ui/table";
 import { Search, ChevronLeft, ChevronRight, ArrowUpDown } from "lucide-react";
-import { startTransition } from "react";
+import { startTransition, useState, useEffect } from "react";
+import { useDebouncedCallback } from "use-debounce";
 
 interface TaskTableFiltersProps {
   currentPage: number;
@@ -36,6 +37,14 @@ export function TaskTableFilters({
       clearOnDefault: true,
     }),
   );
+
+  // Local state for immediate input updates
+  const [searchInput, setSearchInput] = useState(search ?? "");
+
+  // Sync local state with URL state when URL changes externally
+  useEffect(() => {
+    setSearchInput(search ?? "");
+  }, [search]);
 
   const [status, setStatus] = useQueryState(
     "status",
@@ -81,12 +90,18 @@ export function TaskTableFilters({
     }),
   );
 
-  const handleSearch = (value: string) => {
+  // Debounced search handler - waits 500ms after user stops typing
+  const debouncedSearch = useDebouncedCallback((value: string) => {
     setSearch(value || null);
     // Reset to page 1 when searching
     if (page !== 1) {
       setPage(1);
     }
+  }, 500);
+
+  const handleSearchInput = (value: string) => {
+    setSearchInput(value);
+    debouncedSearch(value);
   };
 
   const handleStatusChange = (value: string) => {
@@ -131,8 +146,8 @@ export function TaskTableFilters({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search tasks..."
-              value={search ?? ""}
-              onChange={(e) => handleSearch(e.target.value)}
+              value={searchInput}
+              onChange={(e) => handleSearchInput(e.target.value)}
               className="pl-9"
             />
           </div>

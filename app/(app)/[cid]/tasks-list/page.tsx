@@ -1,7 +1,7 @@
 import React from "react";
 import { SidebarInset } from "@/components/ui/sidebar";
 import { SiteHeader } from "@/components/site-header";
-import { TaskDataTableServer } from "@/components/dashboard/tables/task-data-table-server";
+import { TaskTableWithSelectionV2 } from "@/components/dashboard/tables/task-table-with-selection-v2";
 import { auth } from "@/auth";
 import { getUserById } from "@/actions/user";
 import { redirect } from "next/navigation";
@@ -25,7 +25,7 @@ const TasksListPage = async ({ searchParams, params }: TasksListPageProps) => {
   const hasAccess = session.user.memberships?.some(
     (m: { companyId: string; userId: string; role: "MEMBER" | "ADMIN" | "OWNER" }) => m.companyId === cid
   );
-  
+
   if (!hasAccess) {
     redirect("/"); // Redirect if no access
   }
@@ -43,7 +43,7 @@ const TasksListPage = async ({ searchParams, params }: TasksListPageProps) => {
             <div className="flex flex-col gap-4 p-4">
               <div className="flex justify-end">{/* Nav buttons */}</div>
               <div className="px-4 lg:px-6">
-                <TaskDataTableServer
+                <TaskTableWithSelectionV2
                   className="w-full"
                   user={user}
                   searchParams={resolvedSearchParams}
