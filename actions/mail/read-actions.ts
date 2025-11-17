@@ -245,3 +245,133 @@ export async function getMailContent(
     imap?.end();
   }
 }
+
+/**
+ * Search emails by subject, from, and body content
+ * Note: Instead of using IMAP search (which has inconsistent syntax across servers),
+ * we fetch recent emails and filter server-side for reliability
+ */
+export async function searchMail(
+  accountId: string,
+  folderName: string,
+  searchQuery: string
+) {
+  console.log(
+    `[MAIL ACTION] searchMail called for account: ${accountId}, folder: ${folderName}, query: ${searchQuery}`
+  );
+  let imap: Imap | null = null;
+
+  try {
+    imap = await getImapConnection(accountId);
+    if (!imap) return { error: "Could not connect to IMAP server" };
+
+    const box = await new Promise<Imap.Box>((resolve, reject) => {
+      imap!.openBox(folderName, true, (err, box) => {
+        if (err) return reject(err);
+        resolve(box);
+      });
+    });
+
+    const totalMessages = box.messages.total;
+    console.log(
+      `[MAIL ACTION] Opened box "${folderName}", total messages: ${totalMessages}`
+    );
+
+    if (totalMessages === 0) {
+      imap?.end();
+      return { emails: [], total: 0 };
+    }
+
+    // Fetch recent emails (more reliable than IMAP search)
+    // We'll filter on the server side for better control
+    const maxEmailsToFetch = 100; // Limit for performance
+    const start = Math.max(1, totalMessages - maxEmailsToFetch + 1);
+    const fetchRange = `${start}:*`;
+
+    console.log(`[MAIL ACTION] Fetching range for search: ${fetchRange}`);
+
+    // Fetch the emails
+    const messages = await new Promise<any[]>((resolve, reject) => {
+      const f = imap!.fetch(fetchRange, {
+        bodies: "",
+        struct: true,
+      });
+      const fetchedMessages: any[] = [];
+
+      f.on("message", (msg) => {
+        let buffer = "";
+        let uid: string | undefined;
+
+        msg.on("body", (stream) => {
+          stream.on("data", (chunk) => {
+            buffer += chunk.toString("utf8");
+          });
+        });
+
+        msg.once("attributes", (attrs) => {
+          uid = attrs.uid;
+        });
+
+        msg.once("end", () => {
+          if (uid) {
+            fetchedMessages.push({ buffer, uid });
+          }
+        });
+      });
+
+      f.once("error", (err) => {
+        console.error("[MAIL ACTION] Fetch error:", err);
+        reject(err);
+      });
+
+      f.once("end", () => {
+        console.log(
+          `[MAIL ACTION] Fetched ${fetchedMessages.length} messages for filtering.`
+        );
+        resolve(fetchedMessages);
+      });
+    });
+
+    // Parse emails
+    const emails = await Promise.all(
+      messages.map(async ({ buffer, uid }) => {
+        const parsed = await simpleParser(buffer);
+        return {
+          id: parsed.messageId,
+          uid,
+          subject: parsed.subject,
+          from: parsed.from?.text,
+          date: parsed.date,
+          text: parsed.text,
+        };
+      })
+    );
+
+    // Additional filtering for body text (case-insensitive)
+    const query = searchQuery.toLowerCase();
+    const filteredEmails = emails.filter(
+      (email) =>
+        email.subject?.toLowerCase().includes(query) ||
+        email.from?.toLowerCase().includes(query) ||
+        email.text?.toLowerCase().includes(query)
+    );
+
+    console.log(
+      `[MAIL ACTION] After body text filtering: ${filteredEmails.length} emails match.`
+    );
+
+    // Sort by date (newest first)
+    filteredEmails.sort((a, b) => {
+      if (!a.date) return 1;
+      if (!b.date) return -1;
+      return b.date.getTime() - a.date.getTime();
+    });
+
+    return { emails: filteredEmails, total: filteredEmails.length };
+  } catch (error: any) {
+    console.error("[MAIL ACTION] Error in searchMail:", error);
+    return { error: error.message };
+  } finally {
+    imap?.end();
+  }
+}
