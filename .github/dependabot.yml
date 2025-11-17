@@ -1,68 +1,7 @@
-# Dependabot configuration for automated dependency updates
-# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
-
 version: 2
 updates:
-  # Enable version updates for npm dependencies
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "monday"
-      time: "09:00"
-    open-pull-requests-limit: 10
-    reviewers:
-      - "devops-team"
-    assignees:
-      - "devops-lead"
-    labels:
-      - "dependencies"
-      - "automated"
-    commit-message:
-      prefix: "chore"
-      include: "scope"
-    versioning-strategy: increase-if-necessary
-
-    # Group updates to reduce PR noise
-    groups:
-      production-dependencies:
-        patterns:
-          - "next"
-          - "react"
-          - "react-dom"
-          - "@prisma/client"
-          - "prisma"
-        update-types:
-          - "minor"
-          - "patch"
-
-      dev-dependencies:
-        patterns:
-          - "@types/*"
-          - "@testing-library/*"
-          - "eslint*"
-          - "jest"
-          - "cypress"
-        update-types:
-          - "minor"
-          - "patch"
-
-    # Ignore specific dependencies
-    ignore:
-      - dependency-name: "react"
-        versions: ["19.x"]  # Stay on React 19 RC for now
-      - dependency-name: "@types/react"
-        versions: ["19.x"]
-
-  # GitHub Actions workflow updates
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-    labels:
-      - "github-actions"
-      - "automated"
-    commit-message:
-      prefix: "ci"
+    open-pull-requests-limit: 5
