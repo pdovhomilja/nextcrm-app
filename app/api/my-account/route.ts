@@ -1,12 +1,13 @@
 import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
 //Endpoint: /api/my-account
 
 //Endpoint for adding my account data
-export async function POST(req: Request) {
+async function handlePOST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json(
@@ -95,7 +96,7 @@ export async function POST(req: Request) {
   return NextResponse.json({ message: "PUT" }, { status: 200 });
 }
 //Endpoint for updating my account
-export async function PUT(req: Request) {
+async function handlePUT(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json(
@@ -194,3 +195,7 @@ export async function PUT(req: Request) {
 
   return NextResponse.json({ message: "PUT" }, { status: 200 });
 }
+
+// Apply rate limiting to all endpoints
+export const POST = rateLimited(handlePOST);
+export const PUT = rateLimited(handlePUT);

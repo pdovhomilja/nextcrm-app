@@ -1,13 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 import NewTaskCommentEmail from "@/emails/NewTaskComment";
 import resendHelper from "@/lib/resend";
+import { withRateLimit } from "@/middleware/with-rate-limit";
 
-export async function POST(
-  req: Request,
+async function handlePOST(req: NextRequest,
   props: { params: Promise<{ taskId: string }> }
 ) {
   const params = await props.params;
@@ -23,6 +23,12 @@ export async function POST(
   if (!session) {
     return new NextResponse("Unauthenticated", { status: 401 });
   }
+
+  if (!session.user?.organizationId) {
+    return new NextResponse("User organization not found", { status: 401 });
+  }
+
+  const organizationId = session.user.organizationId;
 
   if (!taskId) {
     return new NextResponse("Missing taskId", { status: 400 });
@@ -48,8 +54,11 @@ export async function POST(
     }
 
     //TODO: this can be done in a single query if there will be boardID in task
-    const section = await prismadb.sections.findUnique({
-      where: { id: task.section },
+    const section = await prismadb.sections.findFirst({
+      where: {
+        id: task.section,
+        organizationId: organizationId,
+      },
     });
 
     //console.log(section, "section");
@@ -152,3 +161,6 @@ export async function POST(
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const POST = withRateLimit(handlePOST);

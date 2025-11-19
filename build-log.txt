@@ -1,0 +1,406 @@
+
+> nextcrm-app@0.0.3-beta build C:\Users\npall\nextcrm-app
+> prisma generate &&  prisma db push && prisma db seed && next build
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+
+✔ Generated Prisma Client (v5.22.0) to .\node_modules\.pnpm\@prisma+client@5.22.0_prisma@5.22.0\node_modules\@prisma\client in 620ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Need your database queries to be 1000x faster? Accelerate offers you that and more: https://pris.ly/tip-2-accelerate
+
+┌─────────────────────────────────────────────────────────┐
+│  Update available 5.22.0 -> 6.18.0                      │
+│                                                         │
+│  This is a major update - please follow the guide at    │
+│  https://pris.ly/d/major-version-upgrade                │
+│                                                         │
+│  Run the following to update                            │
+│    npm i --save-dev prisma@latest                       │
+│    npm i @prisma/client@latest                          │
+└─────────────────────────────────────────────────────────┘
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": MongoDB database "nextcrm" at "cluster0.06uri1j.mongodb.net"
+
+The database is already in sync with the Prisma schema.
+
+Running generate... (Use --skip-generate to skip the generators)
+[2K[1A[2K[GRunning generate... - Prisma Client
+[2K[1A[2K[G✔ Generated Prisma Client (v5.22.0) to .\node_modules\.pnpm\@prisma+client@5.22.
+0_prisma@5.22.0\node_modules\@prisma\client in 463ms
+
+Environment variables loaded from .env
+Running seed command `ts-node ./prisma/seeds/seed.ts` ...
+-------- Seeding DB --------
+Modules already seeded
+Opportunity Types already seeded
+Opportunity Sales Stages already seeded
+Campaigns already seeded
+Industry Types already seeded
+GPT Models already seeded
+-------- Seed DB completed --------
+
+The seed command has been executed.
+   ▲ Next.js 15.2.4
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+Browserslist: browsers data (caniuse-lite) is 13 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+
+Failed to compile.
+
+./app/[locale]/(routes)/settings/team/components/PendingInvitations.tsx
+27:6  Warning: React Hook useEffect has a missing dependency: 'loadInvitations'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/rate-limit-indicator.tsx
+163:13  Error: Do not use an `<a>` element to navigate to `/settings/billing/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+163:13  Error: Do not use an `<a>` element to navigate to `/settings/billing/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+163:13  Error: Do not use an `<a>` element to navigate to `/settings/billing/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+163:13  Error: Do not use an `<a>` element to navigate to `/settings/billing/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+163:13  Error: Do not use an `<a>` element to navigate to `/settings/billing/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+163:13  Error: Do not use an `<a>` element to navigate to `/settings/billing/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+163:13  Error: Do not use an `<a>` element to navigate to `/settings/billing/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+163:13  Error: Do not use an `<a>` element to navigate to `/settings/billing/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+163:13  Error: Do not use an `<a>` element to navigate to `/settings/billing/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+163:13  Error: Do not use an `<a>` element to navigate to `/settings/billing/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+163:13  Error: Do not use an `<a>` element to navigate to `/settings/billing/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+163:13  Error: Do not use an `<a>` element to navigate to `/settings/billing/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+163:13  Error: Do not use an `<a>` element to navigate to `/settings/billing/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+163:13  Error: Do not use an `<a>` element to navigate to `/settings/billing/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+163:13  Error: Do not use an `<a>` element to navigate to `/settings/billing/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+ ELIFECYCLE  Command failed with exit code 1.
+
+> nextcrm-app@0.0.3-beta build C:\Users\npall\nextcrm-app
+> prisma generate &&  prisma db push && prisma db seed && next build
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+
+✔ Generated Prisma Client (v5.22.0) to .\node_modules\.pnpm\@prisma+client@5.22.0_prisma@5.22.0\node_modules\@prisma\client in 487ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Want to react to database changes in your app as they happen? Discover how with Pulse: https://pris.ly/tip-1-pulse
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": MongoDB database "nextcrm" at "cluster0.06uri1j.mongodb.net"
+
+The database is already in sync with the Prisma schema.
+
+Running generate... (Use --skip-generate to skip the generators)
+[2K[1A[2K[GRunning generate... - Prisma Client
+[2K[1A[2K[G✔ Generated Prisma Client (v5.22.0) to .\node_modules\.pnpm\@prisma+client@5.22.
+0_prisma@5.22.0\node_modules\@prisma\client in 600ms
+
+Environment variables loaded from .env
+Running seed command `ts-node ./prisma/seeds/seed.ts` ...
+-------- Seeding DB --------
+Modules already seeded
+Opportunity Types already seeded
+Opportunity Sales Stages already seeded
+Campaigns already seeded
+Industry Types already seeded
+GPT Models already seeded
+-------- Seed DB completed --------
+
+The seed command has been executed.
+   ▲ Next.js 15.2.4
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+Browserslist: browsers data (caniuse-lite) is 13 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+Failed to compile.
+
+./tests/mocks/stripe.ts:8:14
+Type error: Type '{ id: string; object: "customer"; email: string; name: string; created: number; livemode: false; metadata: { organizationId: string; }; }' is missing the following properties from type 'Customer': balance, default_source, description, invoice_settings, shipping
+
+[0m [90m  6 |[39m [36mimport[39m [33mStripe[39m [36mfrom[39m [32m'stripe'[39m[0m
+[0m [90m  7 |[39m[0m
+[0m[31m[1m>[22m[39m[90m  8 |[39m [36mexport[39m [36mconst[39m mockStripeCustomer[33m:[39m [33mStripe[39m[33m.[39m[33mCustomer[39m [33m=[39m {[0m
+[0m [90m    |[39m              [31m[1m^[22m[39m[0m
+[0m [90m  9 |[39m   id[33m:[39m [32m'cus_test123'[39m[33m,[39m[0m
+[0m [90m 10 |[39m   object[33m:[39m [32m'customer'[39m[33m,[39m[0m
+[0m [90m 11 |[39m   email[33m:[39m [32m'test@example.com'[39m[33m,[39m[0m
+Next.js build worker exited with code: 1 and signal: null
+ ELIFECYCLE  Command failed with exit code 1.
+
+> nextcrm-app@0.0.3-beta build C:\Users\npall\nextcrm-app
+> prisma generate &&  prisma db push && prisma db seed && next build
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+
+✔ Generated Prisma Client (v5.22.0) to .\node_modules\.pnpm\@prisma+client@5.22.0_prisma@5.22.0\node_modules\@prisma\client in 449ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Want to turn off tips and other hints? https://pris.ly/tip-4-nohints
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": MongoDB database "nextcrm" at "cluster0.06uri1j.mongodb.net"
+
+The database is already in sync with the Prisma schema.
+
+Running generate... (Use --skip-generate to skip the generators)
+[2K[1A[2K[GRunning generate... - Prisma Client
+[2K[1A[2K[G✔ Generated Prisma Client (v5.22.0) to .\node_modules\.pnpm\@prisma+client@5.22.
+0_prisma@5.22.0\node_modules\@prisma\client in 344ms
+
+Environment variables loaded from .env
+Running seed command `ts-node ./prisma/seeds/seed.ts` ...
+-------- Seeding DB --------
+Modules already seeded
+Opportunity Types already seeded
+Opportunity Sales Stages already seeded
+Campaigns already seeded
+Industry Types already seeded
+GPT Models already seeded
+-------- Seed DB completed --------
+
+The seed command has been executed.
+   ▲ Next.js 15.2.4
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+Browserslist: browsers data (caniuse-lite) is 13 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+Failed to compile.
+
+./tests/mocks/stripe.ts:8:35
+Type error: Conversion of type '{ id: string; object: "customer"; email: string; name: string; created: number; livemode: false; metadata: { organizationId: string; }; }' to type 'Customer' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type '{ id: string; object: "customer"; email: string; name: string; created: number; livemode: false; metadata: { organizationId: string; }; }' is missing the following properties from type 'Customer': balance, default_source, description, invoice_settings, shipping
+
+[0m [90m  6 |[39m [36mimport[39m [33mStripe[39m [36mfrom[39m [32m'stripe'[39m[0m
+[0m [90m  7 |[39m[0m
+[0m[31m[1m>[22m[39m[90m  8 |[39m [36mexport[39m [36mconst[39m mockStripeCustomer [33m=[39m {[0m
+[0m [90m    |[39m                                   [31m[1m^[22m[39m[0m
+[0m [90m  9 |[39m   id[33m:[39m [32m'cus_test123'[39m[33m,[39m[0m
+[0m [90m 10 |[39m   object[33m:[39m [32m'customer'[39m[33m,[39m[0m
+[0m [90m 11 |[39m   email[33m:[39m [32m'test@example.com'[39m[33m,[39m[0m
+Next.js build worker exited with code: 1 and signal: null
+ ELIFECYCLE  Command failed with exit code 1.
+
+> nextcrm-app@0.0.3-beta build C:\Users\npall\nextcrm-app
+> prisma generate &&  prisma db push && prisma db seed && next build
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+
+✔ Generated Prisma Client (v5.22.0) to .\node_modules\.pnpm\@prisma+client@5.22.0_prisma@5.22.0\node_modules\@prisma\client in 368ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Want to react to database changes in your app as they happen? Discover how with Pulse: https://pris.ly/tip-1-pulse
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": MongoDB database "nextcrm" at "cluster0.06uri1j.mongodb.net"
+
+The database is already in sync with the Prisma schema.
+
+Running generate... (Use --skip-generate to skip the generators)
+[2K[1A[2K[GRunning generate... - Prisma Client
+[2K[1A[2K[G✔ Generated Prisma Client (v5.22.0) to .\node_modules\.pnpm\@prisma+client@5.22.
+0_prisma@5.22.0\node_modules\@prisma\client in 323ms
+
+Environment variables loaded from .env
+Running seed command `ts-node ./prisma/seeds/seed.ts` ...
+-------- Seeding DB --------
+Modules already seeded
+Opportunity Types already seeded
+Opportunity Sales Stages already seeded
+Campaigns already seeded
+Industry Types already seeded
+GPT Models already seeded
+-------- Seed DB completed --------
+
+The seed command has been executed.
+   ▲ Next.js 15.2.4
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+Browserslist: browsers data (caniuse-lite) is 13 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/51) ...
+   Generating static pages (12/51) 
+   Generating static pages (25/51) 
+   Generating static pages (38/51) 
+ ✓ Generating static pages (51/51)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                               Size  First Load JS
+┌ ○ /_not-found                                          990 B         102 kB
+├ ƒ /[locale]                                          10.1 kB         132 kB
+├ ƒ /[locale]/(routes/)/settings/usage                 4.25 kB         129 kB
+├ ƒ /[locale]/accept-invitation/[token]                3.71 kB         122 kB
+├ ƒ /[locale]/admin                                    3.36 kB         204 kB
+├ ƒ /[locale]/admin/modules                            5.53 kB         178 kB
+├ ƒ /[locale]/admin/users                              9.95 kB         268 kB
+├ ƒ /[locale]/crm                                      2.82 kB         322 kB
+├ ƒ /[locale]/crm/accounts                             3.35 kB         264 kB
+├ ƒ /[locale]/crm/accounts/[accountId]                 16.8 kB         327 kB
+├ ƒ /[locale]/crm/contacts                             1.99 kB         254 kB
+├ ƒ /[locale]/crm/contacts/[contactId]                 5.63 kB         299 kB
+├ ƒ /[locale]/crm/contracts                            3.87 kB         261 kB
+├ ƒ /[locale]/crm/contracts/[contractId]                 386 B         102 kB
+├ ƒ /[locale]/crm/dashboard                            5.99 kB         260 kB
+├ ƒ /[locale]/crm/dashboard/[userId]                     909 B         110 kB
+├ ƒ /[locale]/crm/leads                                3.59 kB         260 kB
+├ ƒ /[locale]/crm/leads/[leadId]                         914 B         113 kB
+├ ƒ /[locale]/crm/opportunities                           3 kB         283 kB
+├ ƒ /[locale]/crm/opportunities/[opportunityId]         2.2 kB         280 kB
+├ ƒ /[locale]/crm/tasks/viewtask/[taskId]              10.2 kB         256 kB
+├ ƒ /[locale]/databox                                    909 B         110 kB
+├ ƒ /[locale]/devmode                                  2.91 kB         143 kB
+├ ƒ /[locale]/documents                                1.42 kB         263 kB
+├ ƒ /[locale]/emails                                   25.6 kB         196 kB
+├ ƒ /[locale]/employees                                  909 B         110 kB
+├ ƒ /[locale]/fulltext-search                            848 B         124 kB
+├ ƒ /[locale]/fulltext-search/search                   1.27 kB         110 kB
+├ ƒ /[locale]/inactive                                 1.45 kB         113 kB
+├ ƒ /[locale]/invoice                                  7.61 kB         264 kB
+├ ƒ /[locale]/invoice/[userId]                         1.87 kB         240 kB
+├ ƒ /[locale]/invoice/annotation/[annotationId]          386 B         102 kB
+├ ƒ /[locale]/invoice/detail/[invoiceId]               1.72 kB         124 kB
+├ ƒ /[locale]/onboarding                               5.54 kB         175 kB
+├ ƒ /[locale]/openAi                                   7.62 kB         140 kB
+├ ƒ /[locale]/pending                                  1.46 kB         113 kB
+├ ƒ /[locale]/pricing                                  3.38 kB         142 kB
+├ ƒ /[locale]/profile                                  6.72 kB         184 kB
+├ ƒ /[locale]/projects                                 10.2 kB         277 kB
+├ ƒ /[locale]/projects/boards/[boardId]                 6.6 kB         289 kB
+├ ƒ /[locale]/projects/dashboard                       6.99 kB         242 kB
+├ ƒ /[locale]/projects/tasks                             186 B         242 kB
+├ ƒ /[locale]/projects/tasks/[userId]                    186 B         242 kB
+├ ƒ /[locale]/projects/tasks/viewtask/[taskId]         9.47 kB         283 kB
+├ ƒ /[locale]/register                                 3.79 kB         221 kB
+├ ƒ /[locale]/reports                                   116 kB         228 kB
+├ ƒ /[locale]/secondBrain                              12.3 kB         236 kB
+├ ƒ /[locale]/settings/billing                         4.12 kB         156 kB
+├ ƒ /[locale]/settings/organization                    5.36 kB         175 kB
+├ ƒ /[locale]/settings/team                            18.4 kB         184 kB
+├ ƒ /[locale]/sign-in                                  3.98 kB         190 kB
+├ ƒ /api/admin/activateModule/[moduleId]                 386 B         102 kB
+├ ƒ /api/admin/dashboard                                 386 B         102 kB
+├ ƒ /api/admin/deactivateModule/[moduleId]               386 B         102 kB
+├ ƒ /api/auth/[...nextauth]                              386 B         102 kB
+├ ƒ /api/billing/create-checkout-session                 386 B         102 kB
+├ ƒ /api/billing/create-portal-session                   386 B         102 kB
+├ ƒ /api/billing/subscription                            386 B         102 kB
+├ ƒ /api/crm/account                                     386 B         102 kB
+├ ƒ /api/crm/account/[accountId]                         386 B         102 kB
+├ ƒ /api/crm/account/[accountId]/task/create             386 B         102 kB
+├ ƒ /api/crm/account/[accountId]/unwatch                 386 B         102 kB
+├ ƒ /api/crm/account/[accountId]/watch                   386 B         102 kB
+├ ƒ /api/crm/contacts                                    386 B         102 kB
+├ ƒ /api/crm/contacts/[contactId]                        386 B         102 kB
+├ ƒ /api/crm/contacts/create-from-remote                 386 B         102 kB
+├ ƒ /api/crm/contacts/unlink-opportunity/[contactId]     386 B         102 kB
+├ ƒ /api/crm/industries                                  386 B         102 kB
+├ ƒ /api/crm/leads                                       386 B         102 kB
+├ ƒ /api/crm/leads/[leadId]                              386 B         102 kB
+├ ƒ /api/crm/leads/create-lead-from-web                  386 B         102 kB
+├ ƒ /api/crm/opportunity                                 386 B         102 kB
+├ ƒ /api/crm/opportunity/[opportunityId]                 386 B         102 kB
+├ ƒ /api/crm/tasks                                       386 B         102 kB
+├ ƒ /api/crm/tasks/addCommentToTask/[taskId]             386 B         102 kB
+├ ƒ /api/cron/calculate-usage                            386 B         102 kB
+├ ƒ /api/databox                                         386 B         102 kB
+├ ƒ /api/digitalocean/list-buckets                       386 B         102 kB
+├ ƒ /api/digitalocean/list-file-in-bucket/[bucketId]     386 B         102 kB
+├ ƒ /api/documents/[documentId]                          386 B         102 kB
+├ ƒ /api/feedback                                        386 B         102 kB
+├ ƒ /api/fulltext-search                                 386 B         102 kB
+├ ƒ /api/health                                          386 B         102 kB
+├ ƒ /api/invoice/[invoiceId]                             386 B         102 kB
+├ ƒ /api/invoice/get-invoice-from-email                  386 B         102 kB
+├ ƒ /api/invoice/money-s3-xml/[invoiceId]                386 B         102 kB
+├ ƒ /api/invoice/rossum/get-annotation/[annotationId]    386 B         102 kB
+├ ƒ /api/invoice/rossum/get-rossum-embedded-url          386 B         102 kB
+├ ƒ /api/invoice/rossum/get-rossum-token                 386 B         102 kB
+├ ƒ /api/invoice/send-by-email/[invoiceId]               386 B         102 kB
+├ ƒ /api/my-account                                      386 B         102 kB
+├ ƒ /api/og                                              386 B         102 kB
+├ ƒ /api/openai/completion                               386 B         102 kB
+├ ƒ /api/openai/create-chat-completion                   386 B         102 kB
+├ ƒ /api/organization                                    386 B         102 kB
+├ ƒ /api/organization/audit-logs                         386 B         102 kB
+├ ƒ /api/organization/delete                             386 B         102 kB
+├ ƒ /api/organization/export-data                        386 B         102 kB
+├ ƒ /api/organization/invitations                        386 B         102 kB
+├ ƒ /api/organization/members                            386 B         102 kB
+├ ƒ /api/organization/members/[userId]                   386 B         102 kB
+├ ƒ /api/organization/members/[userId]/role              386 B         102 kB
+├ ƒ /api/profile/updateProfilePhoto                      386 B         102 kB
+├ ƒ /api/projects                                        386 B         102 kB
+├ ƒ /api/projects/[projectId]                            386 B         102 kB
+├ ƒ /api/projects/[projectId]/unwatch                    386 B         102 kB
+├ ƒ /api/projects/[projectId]/watch                      386 B         102 kB
+├ ƒ /api/projects/sections                               386 B         102 kB
+├ ƒ /api/projects/sections/[boardId]                     386 B         102 kB
+├ ƒ /api/projects/sections/delete-section/[sectionId]    386 B         102 kB
+├ ƒ /api/projects/sections/update-title/[sectionId]      386 B         102 kB
+├ ƒ /api/projects/tasks                                  386 B         102 kB
+├ ƒ /api/projects/tasks/[documentId]/assign              386 B         102 kB
+├ ƒ /api/projects/tasks/[documentId]/disconnect          386 B         102 kB
+├ ƒ /api/projects/tasks/addCommentToTask/[taskId]        386 B         102 kB
+├ ƒ /api/projects/tasks/create-task                      386 B         102 kB
+├ ƒ /api/projects/tasks/create-task/[boardId]            386 B         102 kB
+├ ƒ /api/projects/tasks/mark-task-as-done/[taskId]       386 B         102 kB
+├ ƒ /api/projects/tasks/update-kanban-position           386 B         102 kB
+├ ƒ /api/projects/tasks/update-task/[taskId]             386 B         102 kB
+├ ƒ /api/rate-limit                                      386 B         102 kB
+├ ƒ /api/secondBrain/[notionId]                          386 B         102 kB
+├ ƒ /api/temp                                            386 B         102 kB
+├ ƒ /api/upload                                          386 B         102 kB
+├ ƒ /api/upload/cron                                     386 B         102 kB
+├ ƒ /api/uploadthing                                     386 B         102 kB
+├ ƒ /api/user                                            386 B         102 kB
+├ ƒ /api/user/[userId]                                   386 B         102 kB
+├ ƒ /api/user/[userId]/set-language                      386 B         102 kB
+├ ƒ /api/user/[userId]/setnewpass                        386 B         102 kB
+├ ƒ /api/user/[userId]/setnotiondb                       386 B         102 kB
+├ ƒ /api/user/[userId]/setOpenAi                         386 B         102 kB
+├ ƒ /api/user/[userId]/updateprofile                     386 B         102 kB
+├ ƒ /api/user/activate/[userId]                          386 B         102 kB
+├ ƒ /api/user/activateAdmin/[userId]                     386 B         102 kB
+├ ƒ /api/user/deactivate/[userId]                        386 B         102 kB
+├ ƒ /api/user/deactivateAdmin/[userId]                   386 B         102 kB
+├ ƒ /api/user/inviteuser                                 386 B         102 kB
+├ ƒ /api/user/passwordReset                              386 B         102 kB
+├ ƒ /api/webhooks/stripe                                 386 B         102 kB
+└ ○ /opengraph-image.png                                   0 B            0 B
++ First Load JS shared by all                           101 kB
+  ├ chunks/4388-8e0baef2c05a6caf.js                      46 kB
+  ├ chunks/47f6f149-4ec67664149d8d09.js                53.3 kB
+  └ other shared chunks (total)                        2.05 kB
+
+
+ƒ Middleware                                           48.4 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

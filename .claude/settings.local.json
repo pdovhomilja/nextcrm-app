@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell:*)",
+      "Bash(git commit:*)",
+      "Bash(git config:*)",
+      "Bash(if [ -f ~/.git-credentials ])",
+      "Bash(then cat ~/.git-credentials)",
+      "Bash(gh --version:*)",
+      "Bash(gh auth logout:*)",
+      "Bash(gh auth login:*)",
+      "Bash(git remote:*)",
+      "Bash(git push:*)",
+      "Bash(git add:*)",
+      "Bash(.gitignore)",
+      "Bash(\"C:\\Users\\npall\\.claude\\scripts\\init-project-context.bat\" . nextjs)",
+      "Bash(bash \"C:\\Users\\npall\\.claude\\scripts\\init-project-context.sh\" . nextjs)",
+      "Bash(cat:*)",
+      "Bash(git log:*)",
+      "Bash(done)",
+      "Bash(dir:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

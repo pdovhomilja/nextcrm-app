@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { data } from "cypress/types/jquery";
+
 import { ScrollArea } from "../ui/scroll-area";
 
 interface FormInputProps {

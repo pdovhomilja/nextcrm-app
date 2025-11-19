@@ -1,17 +1,20 @@
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
-export async function GET() {
+async function handleGET() {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ message: "unauthorized" }, { status: 401 });
   }
   try {
-    console.log("This endpoint works!");
     return NextResponse.json({ message: "ok" }, { status: 200 });
   } catch (error) {
-    console.log(error);
+    console.error("[DATABOX_HEALTH]", error);
     return NextResponse.json({ message: "error" }, { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const GET = rateLimited(handleGET);

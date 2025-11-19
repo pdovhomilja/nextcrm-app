@@ -1,9 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { withRateLimit } from "@/middleware/with-rate-limit";
 
-export async function POST(req: Request, props: { params: Promise<{ taskId: string }> }) {
+async function handlePOST(req: NextRequest, props: { params: Promise<{ taskId: string }> }) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
   const { taskId } = params;
@@ -33,3 +34,6 @@ export async function POST(req: Request, props: { params: Promise<{ taskId: stri
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const POST = withRateLimit(handlePOST);

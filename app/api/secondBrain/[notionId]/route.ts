@@ -1,11 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
 import { prismadb } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 import initNotionClient from "@/lib/notion";
+import { withRateLimit } from "@/middleware/with-rate-limit";
 
-export async function DELETE(req: Request, props: { params: Promise<{ notionId: string }> }) {
+async function handleDELETE(req: NextRequest, props: { params: Promise<{ notionId: string }> }) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
   const notion = await initNotionClient(session?.user?.id!);
@@ -64,3 +65,6 @@ async function fetchDatabases(notion: any, notionDb: string) {
   //console.log("Databases:", databases);
   return databases;
 }
+
+// Apply rate limiting to all endpoints
+export const DELETE = withRateLimit(handleDELETE);

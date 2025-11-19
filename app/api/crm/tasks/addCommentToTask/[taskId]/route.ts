@@ -1,12 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 import NewTaskCommentEmail from "@/emails/NewTaskComment";
 import resendHelper from "@/lib/resend";
+import { withRateLimit } from "@/middleware/with-rate-limit";
 
-export async function POST(req: Request, props: { params: Promise<{ taskId: string }> }) {
+async function handlePOST(req: NextRequest, props: { params: Promise<{ taskId: string }> }) {
   const params = await props.params;
   /*
   Resend.com function init - this is a helper function that will be used to send emails
@@ -29,13 +30,21 @@ export async function POST(req: Request, props: { params: Promise<{ taskId: stri
     return new NextResponse("Missing comment", { status: 400 });
   }
 
+  if (!session.user?.organizationId) {
+    return new NextResponse("User organization not found", { status: 401 });
+  }
+
   try {
-    const task = await prismadb.crm_Accounts_Tasks.findUnique({
-      where: { id: taskId },
+    // Verify the task belongs to the user's organization
+    const task = await prismadb.crm_Accounts_Tasks.findFirst({
+      where: {
+        id: taskId,
+        organizationId: session.user.organizationId,
+      },
     });
 
     if (!task) {
-      return new NextResponse("Task not found", { status: 404 });
+      return new NextResponse("Task not found or unauthorized", { status: 404 });
     }
 
     const newComment = await prismadb.tasksComments.create({
@@ -57,3 +66,6 @@ export async function POST(req: Request, props: { params: Promise<{ taskId: stri
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const POST = withRateLimit(handlePOST);

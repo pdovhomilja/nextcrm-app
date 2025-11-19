@@ -1,11 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import sendEmail from "@/lib/sendmail";
+import { canCreateLead } from "@/lib/quota-enforcement";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
 //Create a new lead route
-export async function POST(req: Request) {
+async function handlePOST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return new NextResponse("Unauthenticated", { status: 401 });
@@ -35,9 +37,27 @@ export async function POST(req: Request) {
 
     //console.log(req.body, "req.body");
 
+    if (!session.user.organizationId) {
+      return new NextResponse("User organization not found", { status: 401 });
+    }
+
+    // Check quota before creating lead
+    const quotaCheck = await canCreateLead(session.user.organizationId);
+    if (!quotaCheck.allowed) {
+      return NextResponse.json(
+        {
+          error: quotaCheck.reason || "Lead limit reached",
+          requiresUpgrade: true,
+          code: "QUOTA_EXCEEDED",
+        },
+        { status: 403 }
+      );
+    }
+
     const newLead = await prismadb.crm_Leads.create({
       data: {
         v: 1,
+        organizationId: session.user.organizationId,
         createdBy: userId,
         updatedBy: userId,
         firstName: first_name,
@@ -90,7 +110,7 @@ export async function POST(req: Request) {
 }
 
 //UPdate a lead route
-export async function PUT(req: Request) {
+async function handlePUT(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return new NextResponse("Unauthenticated", { status: 401 });
@@ -120,6 +140,22 @@ export async function PUT(req: Request) {
       status,
       type,
     } = body;
+
+    if (!session.user.organizationId) {
+      return new NextResponse("User organization not found", { status: 401 });
+    }
+
+    // Verify the lead belongs to the user's organization
+    const existingLead = await prismadb.crm_Leads.findFirst({
+      where: {
+        id,
+        organizationId: session.user.organizationId,
+      },
+    });
+
+    if (!existingLead) {
+      return new NextResponse("Lead not found or unauthorized", { status: 404 });
+    }
 
     const updatedLead = await prismadb.crm_Leads.update({
       where: {
@@ -176,3 +212,7 @@ export async function PUT(req: Request) {
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const POST = rateLimited(handlePOST);
+export const PUT = rateLimited(handlePUT);

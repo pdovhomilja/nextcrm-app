@@ -9,9 +9,10 @@ import { getRossumToken } from "@/lib/get-rossum-token";
 import { prismadb } from "@/lib/prisma";
 import { PutObjectAclCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/middleware/with-rate-limit";
 
-export async function GET(req: Request, props: { params: Promise<{ annotationId: string }> }) {
+async function handleGET(req: NextRequest, props: { params: Promise<{ annotationId: string }> }) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -36,8 +37,6 @@ export async function GET(req: Request, props: { params: Promise<{ annotationId:
     return NextResponse.json("No rossum token", { status: 400 });
   }
 
-  //console.log(annotationId, "annotationId");
-
   const data = await fetch(
     `${process.env.ROSSUM_API_URL}/queues/${queueId}/export/?format=json&id=${annotationId}`,
     {
@@ -47,11 +46,8 @@ export async function GET(req: Request, props: { params: Promise<{ annotationId:
   )
     .then((r) => r.json())
     .then((data) => {
-      //console.log(data);
       return data;
     });
-
-  //console.log(data.results[0].status, "data from get annotation route");
 
   if (data.results[0].status === "importing") {
     return NextResponse.json(
@@ -121,7 +117,6 @@ export async function GET(req: Request, props: { params: Promise<{ annotationId:
     );
     if (documentIdDataPoint) {
       basicInfoSectionData.document_id = documentIdDataPoint.value;
-      console.log("Document ID:", basicInfoSectionData.document_id);
     }
 
     const orderIdDataPoint = basicInfoSection.children.find(
@@ -129,7 +124,6 @@ export async function GET(req: Request, props: { params: Promise<{ annotationId:
     );
     if (orderIdDataPoint) {
       basicInfoSectionData.order_id = orderIdDataPoint.value;
-      console.log("Order ID:", basicInfoSectionData.order_id);
     }
 
     const documentTypeDataPoint = basicInfoSection.children.find(
@@ -137,16 +131,11 @@ export async function GET(req: Request, props: { params: Promise<{ annotationId:
     );
     if (documentTypeDataPoint) {
       basicInfoSectionData.document_type = documentTypeDataPoint.value;
-      console.log("Document Type:", basicInfoSection.document_type);
     }
 
     const dateIssueDataPoint = basicInfoSection.children.find(
       (datapoint: any) => datapoint.schema_id === "date_issue"
     );
-    if (dateIssueDataPoint) {
-      basicInfoSectionData.date_issue = dateIssueDataPoint.value;
-      console.log("Issue Date:", basicInfoSectionData.date_issue);
-    }
     if (dateIssueDataPoint) {
       const DateValue = dateIssueDataPoint.value;
       const dateComponents = DateValue.split("-").map(Number);
@@ -155,23 +144,17 @@ export async function GET(req: Request, props: { params: Promise<{ annotationId:
         const formattedDate = new Date(year, month - 1, day); // Note: Month is 0-based in JavaScript Date
 
         basicInfoSectionData.date_issue = formattedDate;
-        if (!isNaN(formattedDate.getTime())) {
-          console.log(formattedDate);
-        } else {
-          console.error("Invalid date components");
+        if (isNaN(formattedDate.getTime())) {
+          console.warn("[ANNOTATION] Invalid date components for issue date");
         }
       } else {
-        console.error("Invalid date format");
+        console.warn("[ANNOTATION] Invalid issue date format");
       }
     }
 
     const dueDateDataPoint = basicInfoSection.children.find(
       (datapoint: any) => datapoint.schema_id === "date_due"
     );
-    if (dueDateDataPoint) {
-      basicInfoSectionData.date_due = dueDateDataPoint.value;
-      console.log("Due Date:", basicInfoSectionData.date_due);
-    }
     if (dueDateDataPoint) {
       const DateValue = dueDateDataPoint.value;
       const dateComponents = DateValue.split("-").map(Number);
@@ -180,13 +163,11 @@ export async function GET(req: Request, props: { params: Promise<{ annotationId:
         const formattedDate = new Date(year, month - 1, day); // Note: Month is 0-based in JavaScript Date
 
         basicInfoSectionData.date_due = formattedDate;
-        if (!isNaN(formattedDate.getTime())) {
-          console.log(formattedDate);
-        } else {
-          console.error("Invalid date components");
+        if (isNaN(formattedDate.getTime())) {
+          console.warn("[ANNOTATION] Invalid date components for due date");
         }
       } else {
-        console.error("Invalid date format");
+        console.warn("[ANNOTATION] Invalid due date format");
       }
     }
 
@@ -195,7 +176,6 @@ export async function GET(req: Request, props: { params: Promise<{ annotationId:
     );
     if (languageDataPoint) {
       basicInfoSectionData.language = languageDataPoint.value;
-      console.log("Language:", basicInfoSectionData.language);
     }
 
     //Data from amounts section
@@ -204,7 +184,6 @@ export async function GET(req: Request, props: { params: Promise<{ annotationId:
     );
     if (amountTotalDataPoint) {
       amountSectionData.amount_total = amountTotalDataPoint.value;
-      console.log("Invoice Amount:", amountSectionData.amount_total);
     }
 
     const amountCurrencyDataPoint = amountsSection.children.find(
@@ -212,7 +191,6 @@ export async function GET(req: Request, props: { params: Promise<{ annotationId:
     );
     if (amountCurrencyDataPoint) {
       amountSectionData.currency = amountCurrencyDataPoint.value;
-      console.log("Invoice Currency:", amountSectionData.currency);
     }
     /*
     Data from payment info section
@@ -224,7 +202,6 @@ export async function GET(req: Request, props: { params: Promise<{ annotationId:
     );
     if (bankNameDataPoint) {
       paymentInfoSectionData.vendor_bank = bankNameDataPoint.value;
-      console.log("Vendor Bank:", paymentInfoSectionData.vendor_bank);
     }
 
     const accountNumberDataPoint = paymentInfoSection.children.find(
@@ -232,14 +209,12 @@ export async function GET(req: Request, props: { params: Promise<{ annotationId:
     );
     if (accountNumberDataPoint) {
       paymentInfoSectionData.account_num = accountNumberDataPoint.value;
-      console.log("Account Number:", paymentInfoSectionData.account_num);
     }
     const bankNumberDataPoint = paymentInfoSection.children.find(
       (datapoint: any) => datapoint.schema_id === "bank_num"
     );
     if (bankNumberDataPoint) {
       paymentInfoSectionData.bank_num = bankNumberDataPoint.value;
-      console.log("Bank Number:", paymentInfoSectionData.bank_num);
     }
 
     /*
@@ -252,7 +227,6 @@ export async function GET(req: Request, props: { params: Promise<{ annotationId:
     );
     if (vendorNameDataPoint) {
       vendorSectionData.sender_name = vendorNameDataPoint.value;
-      console.log("Vendor Name:", vendorSectionData.sender_name);
     }
 
     const vendorVATDataPoint = vendorSection.children.find(
@@ -260,7 +234,6 @@ export async function GET(req: Request, props: { params: Promise<{ annotationId:
     );
     if (vendorVATDataPoint) {
       vendorSectionData.sender_ic = vendorVATDataPoint.value;
-      console.log("Vendor VAT ID:", vendorSectionData.sender_ic);
     }
 
     const vendorTaxDataPoint = vendorSection.children.find(
@@ -268,7 +241,6 @@ export async function GET(req: Request, props: { params: Promise<{ annotationId:
     );
     if (vendorTaxDataPoint) {
       vendorSectionData.sender_vat_id = vendorTaxDataPoint.value;
-      console.log("Vendor Tax ID:", vendorSectionData.sender_vat_id);
     }
 
     const vendorEmailDataPoint = vendorSection.children.find(
@@ -276,7 +248,6 @@ export async function GET(req: Request, props: { params: Promise<{ annotationId:
     );
     if (vendorEmailDataPoint) {
       vendorSectionData.sender_email = vendorEmailDataPoint.value;
-      console.log("Vendor Email:", vendorSectionData.sender_email);
     }
 
     //TODO: Add recipient IC to vendor section and check if it is a recipient invoice or reject
@@ -286,7 +257,6 @@ export async function GET(req: Request, props: { params: Promise<{ annotationId:
     );
     if (vendorAddressStreetDataPoint) {
       vendorSectionData.vendor_street = vendorAddressStreetDataPoint.value;
-      console.log("Vendor Address Street:", vendorSectionData.vendor_street);
     }
 
     const vendorAddressCityDataPoint = vendorSection.children.find(
@@ -294,7 +264,6 @@ export async function GET(req: Request, props: { params: Promise<{ annotationId:
     );
     if (vendorAddressCityDataPoint) {
       vendorSectionData.vendor_city = vendorAddressCityDataPoint.value;
-      console.log("Vendor Address City:", vendorSectionData.vendor_city);
     }
 
     const vendorAddressZipDataPoint = vendorSection.children.find(
@@ -378,3 +347,6 @@ export async function GET(req: Request, props: { params: Promise<{ annotationId:
 
   return NextResponse.json({ message: "Hello, world!", data }, { status: 200 });
 }
+
+// Apply rate limiting to all endpoints
+export const GET = withRateLimit(handleGET);

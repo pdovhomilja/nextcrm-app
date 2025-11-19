@@ -1,15 +1,20 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
 import { prismadb } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
+import { withRateLimit } from "@/middleware/with-rate-limit";
 
-export async function PUT(req: Request, props: { params: Promise<{ opportunityId: string }> }) {
+async function handlePUT(req: NextRequest, props: { params: Promise<{ opportunityId: string }> }) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
 
   if (!session) {
     return new NextResponse("Unauthenticated", { status: 401 });
+  }
+
+  if (!session.user.organizationId) {
+    return new NextResponse("User organization not found", { status: 401 });
   }
 
   if (!params.opportunityId) {
@@ -21,6 +26,20 @@ export async function PUT(req: Request, props: { params: Promise<{ opportunityId
   const { destination } = body;
 
   try {
+    // Verify the opportunity belongs to the user's organization
+    const existingOpportunity = await prismadb.crm_Opportunities.findFirst({
+      where: {
+        id: params.opportunityId,
+        organizationId: session.user.organizationId,
+      },
+    });
+
+    if (!existingOpportunity) {
+      return new NextResponse("Opportunity not found or unauthorized", {
+        status: 404,
+      });
+    }
+
     await prismadb.crm_Opportunities.update({
       where: {
         id: params.opportunityId,
@@ -31,6 +50,9 @@ export async function PUT(req: Request, props: { params: Promise<{ opportunityId
     });
 
     const data = await prismadb.crm_Opportunities.findMany({
+      where: {
+        organizationId: session.user.organizationId,
+      },
       include: {
         assigned_to_user: {
           select: {
@@ -52,7 +74,7 @@ export async function PUT(req: Request, props: { params: Promise<{ opportunityId
   }
 }
 
-export async function DELETE(req: Request, props: { params: Promise<{ opportunityId: string }> }) {
+async function handleDELETE(req: NextRequest, props: { params: Promise<{ opportunityId: string }> }) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
 
@@ -60,11 +82,29 @@ export async function DELETE(req: Request, props: { params: Promise<{ opportunit
     return new NextResponse("Unauthenticated", { status: 401 });
   }
 
+  if (!session.user.organizationId) {
+    return new NextResponse("User organization not found", { status: 401 });
+  }
+
   if (!params.opportunityId) {
     return new NextResponse("Opportunity ID is required", { status: 400 });
   }
 
   try {
+    // Verify the opportunity belongs to the user's organization
+    const existingOpportunity = await prismadb.crm_Opportunities.findFirst({
+      where: {
+        id: params.opportunityId,
+        organizationId: session.user.organizationId,
+      },
+    });
+
+    if (!existingOpportunity) {
+      return new NextResponse("Opportunity not found or unauthorized", {
+        status: 404,
+      });
+    }
+
     await prismadb.crm_Opportunities.delete({
       where: {
         id: params.opportunityId,
@@ -80,3 +120,7 @@ export async function DELETE(req: Request, props: { params: Promise<{ opportunit
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const PUT = withRateLimit(handlePUT);
+export const DELETE = withRateLimit(handleDELETE);

@@ -8,6 +8,7 @@ import SideBar from "./components/SideBar";
 import Footer from "./components/Footer";
 import getAllCommits from "@/actions/github/get-repo-commits";
 import { Metadata } from "next";
+import { prismadb } from "@/lib/prisma";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -60,12 +61,26 @@ export default async function AppLayout({
     return redirect("/inactive");
   }
 
+  if (!user?.organizationId) {
+    return redirect("/onboarding");
+  }
+
+  const organization = await prismadb.organizations.findUnique({
+    where: {
+      id: user.organizationId,
+    },
+  });
+
+  if (!organization) {
+    return redirect("/onboarding");
+  }
+
   const build = await getAllCommits();
 
   //console.log(typeof build, "build");
   return (
     <div className="flex h-screen overflow-hidden">
-      <SideBar build={build} />
+      <SideBar build={build} organization={organization} />
       <div className="flex flex-col h-full w-full overflow-hidden">
         <Header
           id={session.user.id as string}

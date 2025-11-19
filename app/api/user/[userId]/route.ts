@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
 import { prismadb } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
+import { withRateLimit } from "@/middleware/with-rate-limit";
 
-export async function GET(req: Request, props: { params: Promise<{ userId: string }> }) {
+async function handleGET(req: NextRequest, props: { params: Promise<{ userId: string }> }) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
 
@@ -26,7 +27,7 @@ export async function GET(req: Request, props: { params: Promise<{ userId: strin
   }
 }
 
-export async function DELETE(req: Request, props: { params: Promise<{ userId: string }> }) {
+async function handleDELETE(req: NextRequest, props: { params: Promise<{ userId: string }> }) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
 
@@ -47,3 +48,7 @@ export async function DELETE(req: Request, props: { params: Promise<{ userId: st
     return NextResponse.json({ message: error }, { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const GET = withRateLimit(handleGET);
+export const DELETE = withRateLimit(handleDELETE);

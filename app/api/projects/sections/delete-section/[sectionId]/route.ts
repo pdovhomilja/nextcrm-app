@@ -1,20 +1,40 @@
 import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/middleware/with-rate-limit";
 
-export async function DELETE(req: Request, props: { params: Promise<{ sectionId: string }> }) {
+async function handleDELETE(req: NextRequest, props: { params: Promise<{ sectionId: string }> }) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) {
     return new NextResponse("Unauthenticated", { status: 401 });
   }
+
+  if (!session.user?.organizationId) {
+    return new NextResponse("User organization not found", { status: 401 });
+  }
+
+  const organizationId = session.user.organizationId;
+
   const { sectionId } = params;
   if (!sectionId) {
     return new NextResponse("Missing sectionId", { status: 400 });
   }
 
   try {
+    // Verify section belongs to the user's organization
+    const section = await prismadb.sections.findFirst({
+      where: {
+        id: sectionId,
+        organizationId: organizationId,
+      },
+    });
+
+    if (!section) {
+      return new NextResponse("Section not found or unauthorized", { status: 404 });
+    }
+
     const tasks = await prismadb.tasks.deleteMany({
       where: {
         section: sectionId,
@@ -33,3 +53,6 @@ export async function DELETE(req: Request, props: { params: Promise<{ sectionId:
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const DELETE = withRateLimit(handleDELETE);

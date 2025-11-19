@@ -1,9 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { withRateLimit } from "@/middleware/with-rate-limit";
 
-export async function POST(req: Request, props: { params: Promise<{ boardId: string }> }) {
+async function handlePOST(req: NextRequest, props: { params: Promise<{ boardId: string }> }) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
   const body = await req.json();
@@ -14,15 +15,34 @@ export async function POST(req: Request, props: { params: Promise<{ boardId: str
     return new NextResponse("Unauthenticated", { status: 401 });
   }
 
+  if (!session.user?.organizationId) {
+    return new NextResponse("User organization not found", { status: 401 });
+  }
+
+  const organizationId = session.user.organizationId;
+
   if (!title) {
     return new NextResponse("Missing one of the task data ", { status: 400 });
   }
 
   try {
+    // Verify board belongs to the user's organization
+    const board = await prismadb.boards.findFirst({
+      where: {
+        id: boardId,
+        organizationId: organizationId,
+      },
+    });
+
+    if (!board) {
+      return new NextResponse("Board not found or unauthorized", { status: 404 });
+    }
+
     console.log(boardId, "boardId");
     const sectionPosition = await prismadb.sections.count({
       where: {
         board: boardId,
+        organizationId: organizationId,
       },
     });
 
@@ -30,6 +50,7 @@ export async function POST(req: Request, props: { params: Promise<{ boardId: str
     const newSection = await prismadb.sections.create({
       data: {
         v: 0,
+        organizationId: organizationId,
         board: boardId,
         title: title,
         position: sectionPosition > 0 ? sectionPosition : 0,
@@ -42,3 +63,6 @@ export async function POST(req: Request, props: { params: Promise<{ boardId: str
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const POST = withRateLimit(handlePOST);

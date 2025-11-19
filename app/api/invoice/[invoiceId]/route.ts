@@ -3,15 +3,20 @@ import { s3Client } from "@/lib/digital-ocean-s3";
 import { prismadb } from "@/lib/prisma";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/middleware/with-rate-limit";
 
 //Get single invoice data
-export async function GET(request: Request, props: { params: Promise<{ invoiceId: string }> }) {
+async function handleGET(request: Request, props: { params: Promise<{ invoiceId: string }> }) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
 
   if (!session) {
     return NextResponse.json({ status: 401, body: { error: "Unauthorized" } });
+  }
+
+  if (!session.user.organizationId) {
+    return NextResponse.json({ status: 401, body: { error: "User organization not found" } });
   }
 
   const { invoiceId } = params;
@@ -26,6 +31,7 @@ export async function GET(request: Request, props: { params: Promise<{ invoiceId
   const invoice = await prismadb.invoices.findFirst({
     where: {
       id: invoiceId,
+      organizationId: session.user.organizationId,
     },
   });
 
@@ -40,11 +46,15 @@ export async function GET(request: Request, props: { params: Promise<{ invoiceId
 }
 
 //Delete single invoice by invoiceId
-export async function DELETE(request: Request, props: { params: Promise<{ invoiceId: string }> }) {
+async function handleDELETE(request: Request, props: { params: Promise<{ invoiceId: string }> }) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ status: 401, body: { error: "Unauthorized" } });
+  }
+
+  if (!session.user.organizationId) {
+    return NextResponse.json({ status: 401, body: { error: "User organization not found" } });
   }
 
   const { invoiceId } = params;
@@ -59,6 +69,7 @@ export async function DELETE(request: Request, props: { params: Promise<{ invoic
   const invoiceData = await prismadb.invoices.findFirst({
     where: {
       id: invoiceId,
+      organizationId: session.user.organizationId,
     },
   });
 
@@ -137,3 +148,7 @@ export async function DELETE(request: Request, props: { params: Promise<{ invoic
     });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const GET = withRateLimit(handleGET);
+export const DELETE = withRateLimit(handleDELETE);

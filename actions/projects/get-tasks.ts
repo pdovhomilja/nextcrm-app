@@ -1,13 +1,21 @@
+"use server";
+
 import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 
 export const getTasks = async () => {
   const session = await getServerSession(authOptions);
+
+  if (!session?.user?.organizationId) {
+    throw new Error("Unauthorized: No organization context");
+  }
+
   const userId = session?.user?.id;
 
   const boards = await prismadb.boards.findMany({
     where: {
+      organizationId: session.user.organizationId,
       OR: [
         {
           user: userId,
@@ -35,6 +43,7 @@ export const getTasks = async () => {
   //Filtering tasks by section and board
   const sections = await prismadb.sections.findMany({
     where: {
+      organizationId: session.user.organizationId,
       OR: boards.map((board: any) => {
         return {
           board: board.id,
@@ -45,6 +54,7 @@ export const getTasks = async () => {
 
   const data = await prismadb.tasks.findMany({
     where: {
+      organizationId: session.user.organizationId,
       OR: sections.map((section: any) => {
         return {
           section: section.id,
@@ -66,7 +76,16 @@ export const getTasks = async () => {
 
 //get tasks by month for chart
 export const getTasksByMonth = async () => {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.organizationId) {
+    throw new Error("Unauthorized: No organization context");
+  }
+
   const tasks = await prismadb.tasks.findMany({
+    where: {
+      organizationId: session.user.organizationId,
+    },
     select: {
       createdAt: true,
     },

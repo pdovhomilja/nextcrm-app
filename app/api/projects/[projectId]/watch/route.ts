@@ -1,13 +1,18 @@
 import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/middleware/with-rate-limit";
 
-export async function POST(req: Request, props: { params: Promise<{ projectId: string }> }) {
+async function handlePOST(req: NextRequest, props: { params: Promise<{ projectId: string }> }) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
+  }
+
+  if (!session.user.organizationId) {
+    return NextResponse.json({ error: "User organization not found" }, { status: 401 });
   }
 
   if (!params.projectId) {
@@ -20,6 +25,18 @@ export async function POST(req: Request, props: { params: Promise<{ projectId: s
   console.log(session.user.id, "session.user.id");
 
   try {
+    // Verify the board belongs to the user's organization
+    const existingBoard = await prismadb.boards.findFirst({
+      where: {
+        id: boardId,
+        organizationId: session.user.organizationId,
+      },
+    });
+
+    if (!existingBoard) {
+      return NextResponse.json({ error: "Board not found or unauthorized" }, { status: 404 });
+    }
+
     await prismadb.boards.update({
       where: {
         id: boardId,
@@ -35,5 +52,9 @@ export async function POST(req: Request, props: { params: Promise<{ projectId: s
     return NextResponse.json({ message: "Board watched" }, { status: 200 });
   } catch (error) {
     console.log(error);
+    return new NextResponse("Internal error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const POST = withRateLimit(handlePOST);

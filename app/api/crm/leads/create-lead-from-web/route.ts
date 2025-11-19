@@ -1,7 +1,9 @@
 import { prismadb } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { canCreateLead } from "@/lib/quota-enforcement";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
-export async function POST(req: Request) {
+async function handlePOST(req: NextRequest) {
   if (req.headers.get("content-type") !== "application/json") {
     return NextResponse.json(
       { message: "Invalid content-type" },
@@ -19,7 +21,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "No headers" }, { status: 400 });
   }
 
-  const { firstName, lastName, account, job, email, phone, lead_source } = body;
+  const {
+    firstName,
+    lastName,
+    account,
+    job,
+    email,
+    phone,
+    lead_source,
+    organizationId,
+  } = body;
 
   //Validate auth with token from .env.local
   const token = headers.get("authorization");
@@ -39,16 +50,30 @@ export async function POST(req: Request) {
     console.log("Unauthorized");
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   } else {
-    if (!lastName) {
+    if (!lastName || !organizationId) {
       return NextResponse.json(
-        { message: "Missing required fields" },
+        { message: "Missing required fields (including organizationId)" },
         { status: 400 }
       );
     }
     try {
+      // Check quota before creating lead
+      const quotaCheck = await canCreateLead(organizationId);
+      if (!quotaCheck.allowed) {
+        return NextResponse.json(
+          {
+            error: quotaCheck.reason || "Lead limit reached",
+            requiresUpgrade: true,
+            code: "QUOTA_EXCEEDED",
+          },
+          { status: 403 }
+        );
+      }
+
       await prismadb.crm_Leads.create({
         data: {
           v: 1,
+          organizationId,
           firstName,
           lastName,
           company: account,
@@ -72,3 +97,6 @@ export async function POST(req: Request) {
     }
   }
 }
+
+// Apply rate limiting to all endpoints
+export const POST = rateLimited(handlePOST);

@@ -1,11 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import sendEmail from "@/lib/sendmail";
+import { canCreateContact } from "@/lib/quota-enforcement";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
 //Create route
-export async function POST(req: Request) {
+async function handlePOST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return new NextResponse("Unauthenticated", { status: 401 });
@@ -43,9 +45,29 @@ export async function POST(req: Request) {
       type,
     } = body;
 
+    if (!session.user.organizationId) {
+      return new NextResponse("User organization not found", { status: 401 });
+    }
+
+    const organizationId = session.user.organizationId;
+
+    // Check quota before creating contact
+    const quotaCheck = await canCreateContact(organizationId);
+    if (!quotaCheck.allowed) {
+      return new NextResponse(
+        JSON.stringify({
+          error: quotaCheck.reason || "Contact limit reached",
+          requiresUpgrade: true,
+          code: "QUOTA_EXCEEDED",
+        }),
+        { status: 403, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     const newContact = await prismadb.crm_Contacts.create({
       data: {
         v: 0,
+        organizationId: organizationId,
         createdBy: userId,
         updatedBy: userId,
         ...(assigned_account !== null && assigned_account !== undefined
@@ -80,7 +102,7 @@ export async function POST(req: Request) {
         social_youtube,
         social_tiktok,
         type,
-      },
+      } as any,
     });
 
     if (assigned_to !== userId) {
@@ -116,7 +138,7 @@ export async function POST(req: Request) {
 }
 
 //Update route
-export async function PUT(req: Request) {
+async function handlePUT(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return new NextResponse("Unauthenticated", { status: 401 });
@@ -156,6 +178,24 @@ export async function PUT(req: Request) {
     } = body;
 
     console.log(assigned_account, "assigned_account");
+
+    if (!session.user.organizationId) {
+      return new NextResponse("User organization not found", { status: 401 });
+    }
+
+    // Verify the contact belongs to the user's organization
+    const existingContact = await prismadb.crm_Contacts.findFirst({
+      where: {
+        id,
+        organizationId: session.user.organizationId,
+      },
+    });
+
+    if (!existingContact) {
+      return new NextResponse("Contact not found or unauthorized", {
+        status: 404,
+      });
+    }
 
     const newContact = await prismadb.crm_Contacts.update({
       where: {
@@ -231,3 +271,7 @@ export async function PUT(req: Request) {
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const POST = rateLimited(handlePOST);
+export const PUT = rateLimited(handlePUT);

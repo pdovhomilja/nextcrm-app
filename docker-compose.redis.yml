@@ -1,0 +1,58 @@
+# Docker Compose for Redis Rate Limiting
+# Quick setup for development and testing
+#
+# Usage:
+#   docker-compose -f docker-compose.redis.yml up -d
+#   docker-compose -f docker-compose.redis.yml down
+
+version: '3.8'
+
+services:
+  redis-ratelimit:
+    image: redis:7-alpine
+    container_name: nextcrm-redis-ratelimit
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1
+      --loglevel warning
+    volumes:
+      - redis-ratelimit-data:/data
+    environment:
+      - REDIS_REPLICATION_MODE=master
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - nextcrm-network
+
+  # Redis Commander - Web UI for Redis (optional)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: nextcrm-redis-commander
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_HOSTS=local:redis-ratelimit:6379
+    depends_on:
+      - redis-ratelimit
+    restart: unless-stopped
+    networks:
+      - nextcrm-network
+    profiles:
+      - admin  # Only start with: docker-compose --profile admin up
+
+volumes:
+  redis-ratelimit-data:
+    driver: local
+
+networks:
+  nextcrm-network:
+    driver: bridge

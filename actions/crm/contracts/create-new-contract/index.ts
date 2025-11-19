@@ -29,6 +29,12 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     };
   }
 
+  if (!user.organizationId) {
+    return {
+      error: "User does not belong to an organization.",
+    };
+  }
+
   const {
     title,
     value,
@@ -52,6 +58,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     const result = await prismadb.crm_Contracts.create({
       data: {
         v: 0,
+        organizationId: user.organizationId,
         title,
         value: parseFloat(value),
         startDate,
@@ -60,8 +67,8 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         customerSignedDate,
         companySignedDate,
         description,
-        account: account || undefined,
-        assigned_to: assigned_to || undefined,
+        ...(account && { account }),
+        ...(assigned_to && { assigned_to }),
         createdBy: user.id,
       },
     });

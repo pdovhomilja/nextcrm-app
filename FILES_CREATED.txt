@@ -1,0 +1,269 @@
+PHASE 4: USAGE TRACKING & QUOTA ENFORCEMENT - FILES CREATED & MODIFIED
+=======================================================================
+
+NEW FILES CREATED (13 Total)
+============================
+
+SERVER ACTIONS (3 files):
+------------------------
+1. actions/usage/calculate-usage.ts
+   - calculateOrganizationUsage(organizationId)
+   - calculateAllOrganizationsUsage()
+   - Batch processing with error handling
+   
+2. actions/usage/get-usage.ts
+   - getOrganizationUsage(organizationId)
+   - getUsagePercentages(organizationId)
+   - Returns UsageWithLimits interface
+   
+3. actions/usage/check-quota.ts
+   - checkQuota(resource, organizationId, additionalUsage)
+   - checkMultipleQuotas(resources, organizationId)
+   - getResourcesAtRisk(organizationId)
+   - QuotaCheckResult interface
+
+LIBRARIES (2 files):
+-------------------
+4. lib/quota-enforcement.ts
+   - Helper functions for each resource:
+     * canCreateUser()
+     * canCreateContact()
+     * canCreateLead()
+     * canCreateAccount()
+     * canCreateOpportunity()
+     * canUploadFile()
+     * canCreateProject()
+     * canCreateDocument()
+     * canCreateTask()
+   - Utility functions:
+     * formatQuotaError()
+     * isResourceAtCritical()
+     * isResourceApproaching()
+
+5. lib/format-utils.ts
+   - formatBytes(bytes, decimals)
+   - formatNumber(num)
+   - formatPercentage(value, decimals)
+   - formatStorageSize(bytes)
+
+CRON JOBS (2 files):
+-------------------
+6. lib/cron/calculate-usage-job.ts
+   - runCalculateUsageJob()
+   - checkCalculateUsageJobHealth()
+   - Error handling and logging
+
+7. app/api/cron/calculate-usage/route.ts
+   - POST /api/cron/calculate-usage (requires CRON_SECRET)
+   - GET /api/cron/calculate-usage (health check)
+   - Bearer token authentication
+
+UI COMPONENTS (3 files):
+-----------------------
+8. components/usage-warning.tsx
+   - UsageWarning component
+   - Client component
+   - Compact mode (dashboard)
+   - Full mode (dedicated alert)
+   - Color-coded alerts
+   - Fetches via getResourcesAtRisk()
+
+9. components/dashboard-usage-warning-wrapper.tsx
+   - DashboardUsageWarningWrapper component
+   - Server component wrapper
+   - Bridges server/client components
+
+10. components/modals/quota-exceeded-modal.tsx
+    - QuotaExceededModal component
+    - Dialog for quota exceeded errors
+    - Props: isOpen, onClose, resourceType, current, limit, plan
+    - Shows resource description and upgrade CTA
+
+PAGES (1 file):
+---------------
+11. app/[locale]/(routes)/settings/usage/page.tsx
+    - Full usage dashboard page
+    - Server-side rendering with async/await
+    - Shows all 5 metrics with progress bars
+    - Plan info card
+    - Additional metrics section
+    - Upgrade CTAs
+
+DOCUMENTATION (2 files):
+-----------------------
+12. USAGE_QUOTA_IMPLEMENTATION.md
+    - Complete technical documentation
+    - Architecture overview
+    - File-by-file breakdown
+    - Usage calculation strategy
+    - Testing scenarios
+    - Performance considerations
+    - Security measures
+    - Future enhancements
+
+13. PHASE4_SUMMARY.md
+    - High-level overview
+    - Key features
+    - Deployment steps
+    - Integration points
+    - Performance metrics
+
+
+FILES MODIFIED (3 Total)
+=========================
+
+DATABASE SCHEMA:
+---------------
+1. prisma/schema.prisma
+   + Added OrganizationUsage model
+   + Fields:
+     - id (String, @id)
+     - organizationId (String, unique, @db.ObjectId)
+     - usersCount (Int, default: 0)
+     - contactsCount (Int, default: 0)
+     - storageBytes (Int, default: 0)
+     - projectsCount (Int, default: 0)
+     - documentsCount (Int, default: 0)
+     - accountsCount (Int, default: 0)
+     - leadsCount (Int, default: 0)
+     - opportunitiesCount (Int, default: 0)
+     - tasksCount (Int, default: 0)
+     - lastCalculatedAt (DateTime, @updatedAt)
+     - createdAt (DateTime)
+     - updatedAt (DateTime, @updatedAt)
+   + Relations:
+     - organization (Organizations, onDelete: Cascade)
+   + Index on organizationId
+   
+   + Added to Organizations model:
+     - usage (OrganizationUsage?)
+
+API ROUTES:
+----------
+2. app/api/crm/contacts/route.ts (POST handler)
+   + Added import: import { canCreateContact } from "@/lib/quota-enforcement";
+   + Added quota check before contact creation:
+     const quotaCheck = await canCreateContact(organizationId);
+     if (!quotaCheck.allowed) {
+       return 403 QUOTA_EXCEEDED response
+     }
+
+DASHBOARD:
+---------
+3. app/[locale]/(routes)/page.tsx
+   + Added import: import { DashboardUsageWarningWrapper } from "@/components/dashboard-usage-warning-wrapper";
+   + Wrapped return JSX in fragment (<>...</>)
+   + Added UsageWarning component:
+     {session?.user?.organizationId && (
+       <DashboardUsageWarningWrapper organizationId={session.user.organizationId} />
+     )}
+
+
+SUMMARY STATISTICS
+==================
+
+Total Files Created:  13
+Total Files Modified: 3
+Total Changes:        16 files affected
+
+Code Statistics:
+- Total new lines of code: ~2,150+
+- Database schema additions: +22 lines
+- API route modifications: +12 lines
+- Dashboard modifications: +4 lines
+- Largest file: usage page (200+ lines)
+
+Architecture Components:
+- Server Actions: 3 (calculation, retrieval, checking)
+- Libraries: 2 (enforcement, utilities)
+- Cron jobs: 2 (worker, API endpoint)
+- UI Components: 3 (warning, wrapper, modal)
+- Pages: 1 (usage dashboard)
+- Database: 1 model added
+- API routes: 1 modified
+
+Features:
+- Usage calculation: Daily batch processing
+- Quota enforcement: Soft limits (80%) + Hard limits (100%)
+- UI components: Dashboard warning + Full dashboard + Modal
+- Helper functions: 9 resource-specific checks
+- Utilities: 4 formatting functions
+- Cron jobs: Daily calculation + Health check
+
+
+HOW TO USE
+==========
+
+1. CALCULATE USAGE (Manual or Scheduled)
+   curl -X POST https://yourapp.com/api/cron/calculate-usage \
+     -H "Authorization: Bearer CRON_SECRET"
+
+2. CHECK QUOTA IN ANY ENDPOINT
+   const quotaCheck = await canCreateContact(organizationId);
+   if (!quotaCheck.allowed) {
+     return error response
+   }
+
+3. GET USAGE DATA
+   const usage = await getOrganizationUsage(organizationId);
+   const percentages = await getUsagePercentages(organizationId);
+
+4. GET RESOURCES AT RISK
+   const atRisk = await getResourcesAtRisk(organizationId);
+   // Returns { approaching: [], exceeded: [] }
+
+5. DISPLAY USAGE WARNING
+   <DashboardUsageWarningWrapper organizationId={organizationId} />
+
+6. SHOW USAGE DASHBOARD
+   Navigate to: /settings/usage
+
+
+DEPLOYMENT CHECKLIST
+====================
+
+Before Deployment:
+- [ ] Review all new files
+- [ ] Check quota implementation pattern
+- [ ] Verify environment variable setup (CRON_SECRET)
+- [ ] Test database migration
+
+Deployment:
+- [ ] Run Prisma migration
+- [ ] Set CRON_SECRET environment variable
+- [ ] Deploy code to production
+- [ ] Schedule daily cron job (GitHub Actions or external service)
+
+Post-Deployment:
+- [ ] Manually trigger first usage calculation
+- [ ] Verify OrganizationUsage table populated
+- [ ] Test quota checks in development
+- [ ] Monitor cron job execution
+- [ ] Verify dashboard warning shows
+
+
+QUICK REFERENCE
+===============
+
+Quota Check Pattern:
+  const quota = await canCreateContact(organizationId);
+  if (!quota.allowed) return { error, code: "QUOTA_EXCEEDED" };
+
+Usage Calculation:
+  await calculateOrganizationUsage(organizationId);
+
+Get Usage:
+  const usage = await getOrganizationUsage(organizationId);
+
+Format Utilities:
+  formatBytes(1073741824) → "1.00 GB"
+  formatNumber(10000) → "10,000"
+
+Environment Variables Required:
+  CRON_SECRET=your-secret-key (for cron endpoint)
+
+Routes Available:
+  GET  /api/cron/calculate-usage (health check)
+  POST /api/cron/calculate-usage (run calculation, requires CRON_SECRET)
+  GET  /settings/usage (usage dashboard page)
+

@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import React, { Suspense } from "react";
 import { cookies } from "next/headers";
 import { MailComponent } from "./components/mail";
@@ -12,12 +13,7 @@ const EmailRoute = async () => {
   const session = await getServerSession(authOptions);
 
   if (!session) {
-    return {
-      redirect: {
-        destination: "/",
-        permanent: false,
-      },
-    };
+    return redirect("/");
   }
   //Get user language
   const lang = session.user.userLanguage;

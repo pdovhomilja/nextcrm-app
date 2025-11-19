@@ -1,11 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
 import { prismadb } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
+import { withRateLimit } from "@/middleware/with-rate-limit";
 
 //Contact delete route
-export async function DELETE(req: Request, props: { params: Promise<{ contactId: string }> }) {
+async function handleDELETE(req: NextRequest, props: { params: Promise<{ contactId: string }> }) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
 
@@ -13,11 +14,29 @@ export async function DELETE(req: Request, props: { params: Promise<{ contactId:
     return new NextResponse("Unauthenticated", { status: 401 });
   }
 
+  if (!session.user.organizationId) {
+    return new NextResponse("User organization not found", { status: 401 });
+  }
+
   if (!params.contactId) {
     return new NextResponse("contact ID is required", { status: 400 });
   }
 
   try {
+    // Verify the contact belongs to the user's organization
+    const existingContact = await prismadb.crm_Contacts.findFirst({
+      where: {
+        id: params.contactId,
+        organizationId: session.user.organizationId,
+      },
+    });
+
+    if (!existingContact) {
+      return new NextResponse("Contact not found or unauthorized", {
+        status: 404,
+      });
+    }
+
     await prismadb.crm_Contacts.delete({
       where: {
         id: params.contactId,
@@ -30,3 +49,6 @@ export async function DELETE(req: Request, props: { params: Promise<{ contactId:
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const DELETE = withRateLimit(handleDELETE);

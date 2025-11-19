@@ -1,9 +1,10 @@
 import { authOptions } from "@/lib/auth";
 import { getRossumToken } from "@/lib/get-rossum-token";
 import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
-export async function POST(req: Request) {
+async function handlePOST(req: NextRequest) {
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -31,3 +32,6 @@ export async function POST(req: Request) {
     return NextResponse.json(error, { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const POST = rateLimited(handlePOST);

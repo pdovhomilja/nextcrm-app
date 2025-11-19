@@ -1,9 +1,18 @@
 import { prismadb } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export const getCrMTask = async (taskId: string) => {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.organizationId) {
+    throw new Error("Unauthorized: No organization context");
+  }
+
   const data = await prismadb.crm_Accounts_Tasks.findFirst({
     where: {
       id: taskId,
+      organizationId: session.user.organizationId,
     },
     include: {
       assigned_user: {

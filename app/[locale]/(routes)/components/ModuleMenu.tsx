@@ -16,14 +16,21 @@ import AdministrationMenu from "./menu-items/Administration";
 import DashboardMenu from "./menu-items/Dashboard";
 import EmailsModuleMenu from "./menu-items/Emails";
 import { cn } from "@/lib/utils";
+import { OrganizationSwitcher } from "@/components/organization-switcher";
 
 type Props = {
   modules: any;
   dict: any;
   build: number;
+  organization: {
+    id: string;
+    name: string;
+    slug: string;
+    plan: string;
+  };
 };
 
-const ModuleMenu = ({ modules, dict, build }: Props) => {
+const ModuleMenu = ({ modules, dict, build, organization }: Props) => {
   const [open, setOpen] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -60,6 +67,11 @@ const ModuleMenu = ({ modules, dict, build }: Props) => {
             {process.env.NEXT_PUBLIC_APP_NAME}
           </h1>
         </div>
+        {open && (
+          <div className="mt-4 mb-2">
+            <OrganizationSwitcher currentOrganization={organization} />
+          </div>
+        )}
         <div className="pt-6">
           <DashboardMenu open={open} title={dict.ModuleMenu.dashboard} />
           {modules.find(

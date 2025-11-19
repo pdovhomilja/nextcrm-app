@@ -1,12 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 import NewTaskFromProject from "@/emails/NewTaskFromProject";
 import resendHelper from "@/lib/resend";
+import { withRateLimit } from "@/middleware/with-rate-limit";
 
-export async function POST(req: Request, props: { params: Promise<{ boardId: string }> }) {
+async function handlePOST(req: NextRequest, props: { params: Promise<{ boardId: string }> }) {
   const params = await props.params;
   /*
   Resend.com function init - this is a helper function that will be used to send emails
@@ -20,6 +21,12 @@ export async function POST(req: Request, props: { params: Promise<{ boardId: str
   if (!session) {
     return new NextResponse("Unauthenticated", { status: 401 });
   }
+
+  if (!session.user?.organizationId) {
+    return new NextResponse("User organization not found", { status: 401 });
+  }
+
+  const organizationId = session.user.organizationId;
 
   /*  if (!boardId) {
     return new NextResponse("Missing board id", { status: 400 });
@@ -43,6 +50,7 @@ export async function POST(req: Request, props: { params: Promise<{ boardId: str
       await prismadb.tasks.create({
         data: {
           v: 0,
+          organizationId: organizationId,
           priority: "normal",
           title: "New task",
           content: "",
@@ -82,6 +90,7 @@ export async function POST(req: Request, props: { params: Promise<{ boardId: str
       const task = await prismadb.tasks.create({
         data: {
           v: 0,
+          organizationId: organizationId,
           priority: priority,
           title: title,
           content: content,
@@ -143,3 +152,6 @@ export async function POST(req: Request, props: { params: Promise<{ boardId: str
     }
   }
 }
+
+// Apply rate limiting to all endpoints
+export const POST = withRateLimit(handlePOST);

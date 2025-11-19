@@ -1,0 +1,3297 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "NextCRM API",
+    "description": "NextCRM is a comprehensive Customer Relationship Management system with multi-tenant architecture, subscription billing, and project management capabilities. This API provides programmatic access to all CRM features including accounts, contacts, leads, opportunities, invoices, projects, and document management.",
+    "version": "3.0.0-alpha",
+    "contact": {
+      "name": "NextCRM Support",
+      "url": "https://github.com/DrivenIdeaLab/nextcrm-app",
+      "email": "support@nextcrm.io"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.nextcrm.io/api",
+      "description": "Production API Server"
+    },
+    {
+      "url": "https://demo.nextcrm.io/api",
+      "description": "Demo API Server"
+    },
+    {
+      "url": "http://localhost:3000/api",
+      "description": "Local Development Server"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "User authentication and session management"
+    },
+    {
+      "name": "CRM - Accounts",
+      "description": "Company account management"
+    },
+    {
+      "name": "CRM - Leads",
+      "description": "Lead tracking and qualification"
+    },
+    {
+      "name": "CRM - Contacts",
+      "description": "Contact information management"
+    },
+    {
+      "name": "CRM - Opportunities",
+      "description": "Sales opportunity tracking"
+    },
+    {
+      "name": "CRM - Tasks",
+      "description": "Task management for CRM entities"
+    },
+    {
+      "name": "Projects",
+      "description": "Project boards and task management"
+    },
+    {
+      "name": "Invoices",
+      "description": "Invoice creation and management"
+    },
+    {
+      "name": "Documents",
+      "description": "Document storage and retrieval"
+    },
+    {
+      "name": "Organization",
+      "description": "Organization management and settings"
+    },
+    {
+      "name": "Billing",
+      "description": "Subscription and payment management"
+    },
+    {
+      "name": "Admin",
+      "description": "Administrative operations"
+    },
+    {
+      "name": "Users",
+      "description": "User account management"
+    }
+  ],
+  "paths": {
+    "/auth/session": {
+      "get": {
+        "summary": "Get current session",
+        "description": "Retrieve the current user session information including user details, organization, and permissions",
+        "tags": ["Authentication"],
+        "operationId": "getSession",
+        "responses": {
+          "200": {
+            "description": "Session information retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/crm/account": {
+      "get": {
+        "summary": "List all accounts",
+        "description": "Retrieve a list of all CRM accounts in the authenticated user's organization",
+        "tags": ["CRM - Accounts"],
+        "operationId": "listAccounts",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of accounts to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of accounts to skip for pagination",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of accounts retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Account"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          }
+        },
+        "x-rate-limit": {
+          "FREE": "100 requests per hour",
+          "PRO": "1000 requests per hour",
+          "ENTERPRISE": "10000 requests per hour"
+        }
+      },
+      "post": {
+        "summary": "Create a new account",
+        "description": "Create a new CRM account. Quota limits apply based on subscription plan.",
+        "tags": ["CRM - Accounts"],
+        "operationId": "createAccount",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Account created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "newAccount": {
+                      "$ref": "#/components/schemas/Account"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/QuotaExceeded"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "x-quota": {
+          "FREE": "10 accounts",
+          "PRO": "100 accounts",
+          "ENTERPRISE": "unlimited"
+        }
+      },
+      "put": {
+        "summary": "Update an existing account",
+        "description": "Update an existing CRM account. Only accounts belonging to the user's organization can be updated.",
+        "tags": ["CRM - Accounts"],
+        "operationId": "updateAccount",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Account updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "newAccount": {
+                      "$ref": "#/components/schemas/Account"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          }
+        }
+      }
+    },
+    "/crm/account/{accountId}": {
+      "get": {
+        "summary": "Get account by ID",
+        "description": "Retrieve a single CRM account by its ID",
+        "tags": ["CRM - Accounts"],
+        "operationId": "getAccountById",
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "description": "MongoDB ObjectId of the account",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{24}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Account retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an account",
+        "description": "Delete a CRM account and all associated data",
+        "tags": ["CRM - Accounts"],
+        "operationId": "deleteAccount",
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Account deleted successfully"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/crm/account/{accountId}/watch": {
+      "post": {
+        "summary": "Watch an account",
+        "description": "Add the current user to the account's watchers list to receive notifications",
+        "tags": ["CRM - Accounts"],
+        "operationId": "watchAccount",
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Account watched successfully"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/crm/account/{accountId}/unwatch": {
+      "post": {
+        "summary": "Unwatch an account",
+        "description": "Remove the current user from the account's watchers list",
+        "tags": ["CRM - Accounts"],
+        "operationId": "unwatchAccount",
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Account unwatched successfully"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/crm/leads": {
+      "post": {
+        "summary": "Create a new lead",
+        "description": "Create a new lead in the CRM system. Quota limits apply based on subscription plan.",
+        "tags": ["CRM - Leads"],
+        "operationId": "createLead",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeadCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Lead created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "newLead": {
+                      "$ref": "#/components/schemas/Lead"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/QuotaExceeded"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimitExceeded"
+          }
+        },
+        "x-quota": {
+          "FREE": "20 leads",
+          "PRO": "500 leads",
+          "ENTERPRISE": "unlimited"
+        }
+      },
+      "put": {
+        "summary": "Update an existing lead",
+        "description": "Update lead information. Sends notification email if assigned_to changes.",
+        "tags": ["CRM - Leads"],
+        "operationId": "updateLead",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeadUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Lead updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "updatedLead": {
+                      "$ref": "#/components/schemas/Lead"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/crm/leads/{leadId}": {
+      "get": {
+        "summary": "Get lead by ID",
+        "description": "Retrieve a single lead by its ID",
+        "tags": ["CRM - Leads"],
+        "operationId": "getLeadById",
+        "parameters": [
+          {
+            "name": "leadId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lead retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Lead"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a lead",
+        "description": "Delete a lead from the system",
+        "tags": ["CRM - Leads"],
+        "operationId": "deleteLead",
+        "parameters": [
+          {
+            "name": "leadId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lead deleted successfully"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/crm/contacts": {
+      "get": {
+        "summary": "List all contacts",
+        "description": "Retrieve a list of all CRM contacts in the organization",
+        "tags": ["CRM - Contacts"],
+        "operationId": "listContacts",
+        "responses": {
+          "200": {
+            "description": "List of contacts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Contact"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new contact",
+        "description": "Create a new contact in the CRM system",
+        "tags": ["CRM - Contacts"],
+        "operationId": "createContact",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Contact created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Contact"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/QuotaExceeded"
+          }
+        }
+      }
+    },
+    "/crm/contacts/{contactId}": {
+      "get": {
+        "summary": "Get contact by ID",
+        "description": "Retrieve a single contact by its ID",
+        "tags": ["CRM - Contacts"],
+        "operationId": "getContactById",
+        "parameters": [
+          {
+            "name": "contactId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contact retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Contact"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a contact",
+        "description": "Update contact information",
+        "tags": ["CRM - Contacts"],
+        "operationId": "updateContact",
+        "parameters": [
+          {
+            "name": "contactId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Contact updated successfully"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a contact",
+        "description": "Delete a contact from the system",
+        "tags": ["CRM - Contacts"],
+        "operationId": "deleteContact",
+        "parameters": [
+          {
+            "name": "contactId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contact deleted successfully"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/crm/opportunity": {
+      "get": {
+        "summary": "List all opportunities",
+        "description": "Retrieve a list of all sales opportunities",
+        "tags": ["CRM - Opportunities"],
+        "operationId": "listOpportunities",
+        "responses": {
+          "200": {
+            "description": "List of opportunities",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Opportunity"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new opportunity",
+        "description": "Create a new sales opportunity",
+        "tags": ["CRM - Opportunities"],
+        "operationId": "createOpportunity",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpportunityCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Opportunity created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Opportunity"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/QuotaExceeded"
+          }
+        }
+      }
+    },
+    "/crm/opportunity/{opportunityId}": {
+      "get": {
+        "summary": "Get opportunity by ID",
+        "description": "Retrieve a single opportunity by its ID",
+        "tags": ["CRM - Opportunities"],
+        "operationId": "getOpportunityById",
+        "parameters": [
+          {
+            "name": "opportunityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Opportunity retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Opportunity"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update an opportunity",
+        "description": "Update opportunity details",
+        "tags": ["CRM - Opportunities"],
+        "operationId": "updateOpportunity",
+        "parameters": [
+          {
+            "name": "opportunityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpportunityUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Opportunity updated successfully"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an opportunity",
+        "description": "Delete an opportunity from the system",
+        "tags": ["CRM - Opportunities"],
+        "operationId": "deleteOpportunity",
+        "parameters": [
+          {
+            "name": "opportunityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Opportunity deleted successfully"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/projects": {
+      "post": {
+        "summary": "Create a new project",
+        "description": "Create a new project board with an initial Backlog section",
+        "tags": ["Projects"],
+        "operationId": "createProject",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Project created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "newBoard": {
+                      "$ref": "#/components/schemas/Project"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/QuotaExceeded"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a project",
+        "description": "Update project details including title, description, and visibility",
+        "tags": ["Projects"],
+        "operationId": "updateProject",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Project updated successfully"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/projects/{projectId}": {
+      "get": {
+        "summary": "Get project by ID",
+        "description": "Retrieve a project with all its sections and tasks",
+        "tags": ["Projects"],
+        "operationId": "getProjectById",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a project",
+        "description": "Delete a project and all associated sections and tasks",
+        "tags": ["Projects"],
+        "operationId": "deleteProject",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project deleted successfully"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/projects/tasks/create-task": {
+      "post": {
+        "summary": "Create a new task",
+        "description": "Create a new task in a project section",
+        "tags": ["Projects"],
+        "operationId": "createTask",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Task created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/projects/tasks/update-task/{taskId}": {
+      "put": {
+        "summary": "Update a task",
+        "description": "Update task details",
+        "tags": ["Projects"],
+        "operationId": "updateTask",
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Task updated successfully"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/organization": {
+      "get": {
+        "summary": "Get organization details",
+        "description": "Retrieve the current user's organization information including owner and member list",
+        "tags": ["Organization"],
+        "operationId": "getOrganization",
+        "responses": {
+          "200": {
+            "description": "Organization details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Organization"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new organization",
+        "description": "Create a new organization. User must not already belong to an organization.",
+        "tags": ["Organization"],
+        "operationId": "createOrganization",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrganizationCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Organization created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Organization"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update organization",
+        "description": "Update organization details. Only organization owner or admin can update.",
+        "tags": ["Organization"],
+        "operationId": "updateOrganization",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrganizationUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Organization updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Organization"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/organization/members": {
+      "get": {
+        "summary": "List organization members",
+        "description": "Get a list of all members in the organization",
+        "tags": ["Organization"],
+        "operationId": "listOrganizationMembers",
+        "responses": {
+          "200": {
+            "description": "List of organization members",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/organization/members/{userId}/role": {
+      "put": {
+        "summary": "Update member role",
+        "description": "Update an organization member's role. Only accessible by organization owner.",
+        "tags": ["Organization"],
+        "operationId": "updateMemberRole",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["role"],
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": ["OWNER", "ADMIN", "MEMBER", "VIEWER"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Member role updated successfully"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/organization/invitations": {
+      "post": {
+        "summary": "Invite user to organization",
+        "description": "Send an invitation to join the organization. Only accessible by admin or owner.",
+        "tags": ["Organization"],
+        "operationId": "inviteUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "role"],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": ["ADMIN", "MEMBER", "VIEWER"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Invitation sent successfully"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/organization/audit-logs": {
+      "get": {
+        "summary": "Get audit logs",
+        "description": "Retrieve organization audit logs for compliance and security monitoring",
+        "tags": ["Organization"],
+        "operationId": "getAuditLogs",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Audit logs retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuditLog"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/billing/subscription": {
+      "get": {
+        "summary": "Get subscription details",
+        "description": "Retrieve organization subscription and payment history. Only accessible by organization owner.",
+        "tags": ["Billing"],
+        "operationId": "getSubscription",
+        "responses": {
+          "200": {
+            "description": "Subscription details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/OwnerOnly"
+          }
+        }
+      }
+    },
+    "/billing/create-checkout-session": {
+      "post": {
+        "summary": "Create Stripe checkout session",
+        "description": "Create a Stripe checkout session for subscription upgrade",
+        "tags": ["Billing"],
+        "operationId": "createCheckoutSession",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["priceId"],
+                "properties": {
+                  "priceId": {
+                    "type": "string",
+                    "description": "Stripe Price ID"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Checkout session created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sessionId": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/OwnerOnly"
+          }
+        }
+      }
+    },
+    "/billing/create-portal-session": {
+      "post": {
+        "summary": "Create Stripe customer portal session",
+        "description": "Create a Stripe customer portal session for subscription management",
+        "tags": ["Billing"],
+        "operationId": "createPortalSession",
+        "responses": {
+          "200": {
+            "description": "Portal session created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/OwnerOnly"
+          }
+        }
+      }
+    },
+    "/webhooks/stripe": {
+      "post": {
+        "summary": "Stripe webhook handler",
+        "description": "Handle Stripe webhook events for subscription and payment updates",
+        "tags": ["Billing"],
+        "operationId": "stripeWebhook",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Stripe webhook event payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook processed successfully"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        },
+        "security": []
+      }
+    },
+    "/admin/dashboard": {
+      "get": {
+        "summary": "Get admin dashboard data",
+        "description": "Retrieve system-wide statistics and metrics. Only accessible by system admins.",
+        "tags": ["Admin"],
+        "operationId": "getAdminDashboard",
+        "responses": {
+          "200": {
+            "description": "Dashboard data retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "totalUsers": {
+                      "type": "integer"
+                    },
+                    "totalOrganizations": {
+                      "type": "integer"
+                    },
+                    "totalAccounts": {
+                      "type": "integer"
+                    },
+                    "totalLeads": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/AdminOnly"
+          }
+        }
+      }
+    },
+    "/admin/activateModule/{moduleId}": {
+      "post": {
+        "summary": "Activate a system module",
+        "description": "Enable a system module. Only accessible by system admins.",
+        "tags": ["Admin"],
+        "operationId": "activateModule",
+        "parameters": [
+          {
+            "name": "moduleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Module activated successfully"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/AdminOnly"
+          }
+        }
+      }
+    },
+    "/admin/deactivateModule/{moduleId}": {
+      "post": {
+        "summary": "Deactivate a system module",
+        "description": "Disable a system module. Only accessible by system admins.",
+        "tags": ["Admin"],
+        "operationId": "deactivateModule",
+        "parameters": [
+          {
+            "name": "moduleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Module deactivated successfully"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/AdminOnly"
+          }
+        }
+      }
+    },
+    "/user/{userId}": {
+      "get": {
+        "summary": "Get user by ID",
+        "description": "Retrieve user information",
+        "tags": ["Users"],
+        "operationId": "getUserById",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/user/activate/{userId}": {
+      "put": {
+        "summary": "Activate a user",
+        "description": "Change user status to ACTIVE. Admin only.",
+        "tags": ["Users"],
+        "operationId": "activateUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User activated successfully"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/AdminOnly"
+          }
+        }
+      }
+    },
+    "/user/deactivate/{userId}": {
+      "put": {
+        "summary": "Deactivate a user",
+        "description": "Change user status to INACTIVE. Admin only.",
+        "tags": ["Users"],
+        "operationId": "deactivateUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User deactivated successfully"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/AdminOnly"
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health check",
+        "description": "API health check endpoint for monitoring and load balancers",
+        "tags": ["System"],
+        "operationId": "healthCheck",
+        "responses": {
+          "200": {
+            "description": "API is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/rate-limit": {
+      "get": {
+        "summary": "Check rate limit status",
+        "description": "Check the current rate limit status for the authenticated user or IP address",
+        "tags": ["System"],
+        "operationId": "checkRateLimit",
+        "responses": {
+          "200": {
+            "description": "Rate limit status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "remaining": {
+                      "type": "integer"
+                    },
+                    "resetTime": {
+                      "type": "integer",
+                      "description": "Unix timestamp"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token obtained from NextAuth authentication"
+      }
+    },
+    "schemas": {
+      "Session": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "User ID (MongoDB ObjectId)"
+              },
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "avatar": {
+                "type": "string",
+                "nullable": true
+              },
+              "isAdmin": {
+                "type": "boolean"
+              },
+              "userLanguage": {
+                "type": "string",
+                "enum": ["en", "de", "cz", "uk"]
+              },
+              "userStatus": {
+                "type": "string",
+                "enum": ["ACTIVE", "INACTIVE", "PENDING"]
+              },
+              "organizationId": {
+                "type": "string",
+                "nullable": true
+              },
+              "organization_role": {
+                "type": "string",
+                "enum": ["OWNER", "ADMIN", "MEMBER", "VIEWER"],
+                "nullable": true
+              }
+            }
+          },
+          "expires": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Account": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "organizationId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "office_phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "website": {
+            "type": "string",
+            "nullable": true
+          },
+          "fax": {
+            "type": "string",
+            "nullable": true
+          },
+          "company_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "vat": {
+            "type": "string",
+            "nullable": true
+          },
+          "billing_street": {
+            "type": "string",
+            "nullable": true
+          },
+          "billing_city": {
+            "type": "string",
+            "nullable": true
+          },
+          "billing_state": {
+            "type": "string",
+            "nullable": true
+          },
+          "billing_postal_code": {
+            "type": "string",
+            "nullable": true
+          },
+          "billing_country": {
+            "type": "string",
+            "nullable": true
+          },
+          "shipping_street": {
+            "type": "string",
+            "nullable": true
+          },
+          "shipping_city": {
+            "type": "string",
+            "nullable": true
+          },
+          "shipping_state": {
+            "type": "string",
+            "nullable": true
+          },
+          "shipping_postal_code": {
+            "type": "string",
+            "nullable": true
+          },
+          "shipping_country": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "assigned_to": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "default": "Active"
+          },
+          "annual_revenue": {
+            "type": "string",
+            "nullable": true
+          },
+          "member_of": {
+            "type": "string",
+            "nullable": true
+          },
+          "industry": {
+            "type": "string",
+            "nullable": true
+          },
+          "watchers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "updatedBy": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "organizationId", "name"]
+      },
+      "AccountCreateRequest": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "office_phone": {
+            "type": "string"
+          },
+          "website": {
+            "type": "string"
+          },
+          "fax": {
+            "type": "string"
+          },
+          "company_id": {
+            "type": "string"
+          },
+          "vat": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "billing_street": {
+            "type": "string"
+          },
+          "billing_postal_code": {
+            "type": "string"
+          },
+          "billing_city": {
+            "type": "string"
+          },
+          "billing_state": {
+            "type": "string"
+          },
+          "billing_country": {
+            "type": "string"
+          },
+          "shipping_street": {
+            "type": "string"
+          },
+          "shipping_postal_code": {
+            "type": "string"
+          },
+          "shipping_city": {
+            "type": "string"
+          },
+          "shipping_state": {
+            "type": "string"
+          },
+          "shipping_country": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "assigned_to": {
+            "type": "string"
+          },
+          "annual_revenue": {
+            "type": "string"
+          },
+          "member_of": {
+            "type": "string"
+          },
+          "industry": {
+            "type": "string"
+          }
+        }
+      },
+      "AccountUpdateRequest": {
+        "type": "object",
+        "required": ["id", "name"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "office_phone": {
+            "type": "string"
+          },
+          "website": {
+            "type": "string"
+          },
+          "fax": {
+            "type": "string"
+          },
+          "company_id": {
+            "type": "string"
+          },
+          "vat": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "billing_street": {
+            "type": "string"
+          },
+          "billing_postal_code": {
+            "type": "string"
+          },
+          "billing_city": {
+            "type": "string"
+          },
+          "billing_state": {
+            "type": "string"
+          },
+          "billing_country": {
+            "type": "string"
+          },
+          "shipping_street": {
+            "type": "string"
+          },
+          "shipping_postal_code": {
+            "type": "string"
+          },
+          "shipping_city": {
+            "type": "string"
+          },
+          "shipping_state": {
+            "type": "string"
+          },
+          "shipping_country": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "assigned_to": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "annual_revenue": {
+            "type": "string"
+          },
+          "member_of": {
+            "type": "string"
+          },
+          "industry": {
+            "type": "string"
+          }
+        }
+      },
+      "Lead": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "organizationId": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "company": {
+            "type": "string",
+            "nullable": true
+          },
+          "jobTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "lead_source": {
+            "type": "string",
+            "nullable": true
+          },
+          "refered_by": {
+            "type": "string",
+            "nullable": true
+          },
+          "campaign": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": ["NEW", "CONTACTED", "QUALIFIED", "LOST"],
+            "default": "NEW"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["DEMO"],
+            "default": "DEMO"
+          },
+          "assigned_to": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": ["id", "organizationId", "lastName"]
+      },
+      "LeadCreateRequest": {
+        "type": "object",
+        "required": ["last_name"],
+        "properties": {
+          "first_name": {
+            "type": "string"
+          },
+          "last_name": {
+            "type": "string"
+          },
+          "company": {
+            "type": "string"
+          },
+          "jobTitle": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "lead_source": {
+            "type": "string"
+          },
+          "refered_by": {
+            "type": "string"
+          },
+          "campaign": {
+            "type": "string"
+          },
+          "assigned_to": {
+            "type": "string"
+          },
+          "accountIDs": {
+            "type": "string"
+          }
+        }
+      },
+      "LeadUpdateRequest": {
+        "type": "object",
+        "required": ["id", "lastName"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "company": {
+            "type": "string"
+          },
+          "jobTitle": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "lead_source": {
+            "type": "string"
+          },
+          "refered_by": {
+            "type": "string"
+          },
+          "campaign": {
+            "type": "string"
+          },
+          "assigned_to": {
+            "type": "string"
+          },
+          "accountIDs": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["NEW", "CONTACTED", "QUALIFIED", "LOST"]
+          },
+          "type": {
+            "type": "string",
+            "enum": ["DEMO"]
+          }
+        }
+      },
+      "Contact": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "organizationId": {
+            "type": "string"
+          },
+          "first_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "last_name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "personal_email": {
+            "type": "string",
+            "nullable": true
+          },
+          "office_phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "mobile_phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "website": {
+            "type": "string",
+            "nullable": true
+          },
+          "position": {
+            "type": "string",
+            "nullable": true
+          },
+          "birthday": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "account": {
+            "type": "string",
+            "nullable": true
+          },
+          "assigned_to": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "boolean",
+            "default": true
+          },
+          "type": {
+            "type": "string",
+            "enum": ["Customer", "Partner", "Vendor", "Prospect"],
+            "default": "Customer"
+          },
+          "social_twitter": {
+            "type": "string",
+            "nullable": true
+          },
+          "social_facebook": {
+            "type": "string",
+            "nullable": true
+          },
+          "social_linkedin": {
+            "type": "string",
+            "nullable": true
+          },
+          "social_skype": {
+            "type": "string",
+            "nullable": true
+          },
+          "social_instagram": {
+            "type": "string",
+            "nullable": true
+          },
+          "social_youtube": {
+            "type": "string",
+            "nullable": true
+          },
+          "social_tiktok": {
+            "type": "string",
+            "nullable": true
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": ["id", "organizationId", "last_name"]
+      },
+      "ContactCreateRequest": {
+        "type": "object",
+        "required": ["last_name"],
+        "properties": {
+          "first_name": {
+            "type": "string"
+          },
+          "last_name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "personal_email": {
+            "type": "string",
+            "format": "email"
+          },
+          "office_phone": {
+            "type": "string"
+          },
+          "mobile_phone": {
+            "type": "string"
+          },
+          "website": {
+            "type": "string"
+          },
+          "position": {
+            "type": "string"
+          },
+          "birthday": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "account": {
+            "type": "string"
+          },
+          "assigned_to": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["Customer", "Partner", "Vendor", "Prospect"]
+          }
+        }
+      },
+      "ContactUpdateRequest": {
+        "type": "object",
+        "required": ["id", "last_name"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "first_name": {
+            "type": "string"
+          },
+          "last_name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "personal_email": {
+            "type": "string"
+          },
+          "office_phone": {
+            "type": "string"
+          },
+          "mobile_phone": {
+            "type": "string"
+          },
+          "website": {
+            "type": "string"
+          },
+          "position": {
+            "type": "string"
+          },
+          "birthday": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "account": {
+            "type": "string"
+          },
+          "assigned_to": {
+            "type": "string"
+          },
+          "status": {
+            "type": "boolean"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["Customer", "Partner", "Vendor", "Prospect"]
+          }
+        }
+      },
+      "Opportunity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "organizationId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "account": {
+            "type": "string",
+            "nullable": true
+          },
+          "contact": {
+            "type": "string",
+            "nullable": true
+          },
+          "assigned_to": {
+            "type": "string",
+            "nullable": true
+          },
+          "budget": {
+            "type": "integer",
+            "default": 0
+          },
+          "expected_revenue": {
+            "type": "integer",
+            "default": 0
+          },
+          "close_date": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "sales_stage": {
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": ["ACTIVE", "INACTIVE", "PENDING", "CLOSED"],
+            "default": "ACTIVE"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "next_step": {
+            "type": "string",
+            "nullable": true
+          },
+          "campaign": {
+            "type": "string",
+            "nullable": true
+          },
+          "currency": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "OpportunityCreateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "account": {
+            "type": "string"
+          },
+          "contact": {
+            "type": "string"
+          },
+          "assigned_to": {
+            "type": "string"
+          },
+          "budget": {
+            "type": "integer"
+          },
+          "expected_revenue": {
+            "type": "integer"
+          },
+          "close_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "sales_stage": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "next_step": {
+            "type": "string"
+          },
+          "campaign": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          }
+        }
+      },
+      "OpportunityUpdateRequest": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "account": {
+            "type": "string"
+          },
+          "contact": {
+            "type": "string"
+          },
+          "assigned_to": {
+            "type": "string"
+          },
+          "budget": {
+            "type": "integer"
+          },
+          "expected_revenue": {
+            "type": "integer"
+          },
+          "close_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "sales_stage": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["ACTIVE", "INACTIVE", "PENDING", "CLOSED"]
+          },
+          "description": {
+            "type": "string"
+          },
+          "next_step": {
+            "type": "string"
+          },
+          "campaign": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          }
+        }
+      },
+      "Project": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "organizationId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "visibility": {
+            "type": "string",
+            "nullable": true
+          },
+          "user": {
+            "type": "string"
+          },
+          "position": {
+            "type": "integer",
+            "nullable": true
+          },
+          "favourite": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "favouritePosition": {
+            "type": "integer",
+            "nullable": true
+          },
+          "icon": {
+            "type": "string",
+            "nullable": true
+          },
+          "sharedWith": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "watchers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "ProjectCreateRequest": {
+        "type": "object",
+        "required": ["title", "description"],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "visibility": {
+            "type": "string"
+          }
+        }
+      },
+      "ProjectUpdateRequest": {
+        "type": "object",
+        "required": ["id", "title", "description"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "visibility": {
+            "type": "string"
+          }
+        }
+      },
+      "Task": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "organizationId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string",
+            "nullable": true
+          },
+          "section": {
+            "type": "string",
+            "nullable": true
+          },
+          "position": {
+            "type": "integer"
+          },
+          "priority": {
+            "type": "string"
+          },
+          "dueDateAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "user": {
+            "type": "string",
+            "nullable": true
+          },
+          "taskStatus": {
+            "type": "string",
+            "enum": ["ACTIVE", "PENDING", "COMPLETE"],
+            "default": "ACTIVE"
+          },
+          "likes": {
+            "type": "integer",
+            "default": 0
+          },
+          "tags": {
+            "type": "object",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "TaskCreateRequest": {
+        "type": "object",
+        "required": ["title", "section", "position", "priority"],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "section": {
+            "type": "string"
+          },
+          "position": {
+            "type": "integer"
+          },
+          "priority": {
+            "type": "string"
+          },
+          "dueDateAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "user": {
+            "type": "string"
+          }
+        }
+      },
+      "TaskUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "section": {
+            "type": "string"
+          },
+          "position": {
+            "type": "integer"
+          },
+          "priority": {
+            "type": "string"
+          },
+          "dueDateAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "user": {
+            "type": "string"
+          },
+          "taskStatus": {
+            "type": "string",
+            "enum": ["ACTIVE", "PENDING", "COMPLETE"]
+          }
+        }
+      },
+      "Organization": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "plan": {
+            "type": "string",
+            "enum": ["FREE", "PRO", "ENTERPRISE"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["ACTIVE", "SUSPENDED", "CANCELLED"]
+          },
+          "ownerId": {
+            "type": "string"
+          },
+          "stripeCustomerId": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "owner": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              }
+            }
+          },
+          "users": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "OrganizationCreateRequest": {
+        "type": "object",
+        "required": ["name", "slug"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Organization name"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Unique URL-friendly identifier",
+            "pattern": "^[a-z0-9-]+$"
+          }
+        }
+      },
+      "OrganizationUpdateRequest": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatar": {
+            "type": "string",
+            "nullable": true
+          },
+          "username": {
+            "type": "string",
+            "nullable": true
+          },
+          "userStatus": {
+            "type": "string",
+            "enum": ["ACTIVE", "INACTIVE", "PENDING"]
+          },
+          "userLanguage": {
+            "type": "string",
+            "enum": ["en", "de", "cz", "uk"]
+          },
+          "is_admin": {
+            "type": "boolean"
+          },
+          "organizationId": {
+            "type": "string",
+            "nullable": true
+          },
+          "organization_role": {
+            "type": "string",
+            "enum": ["OWNER", "ADMIN", "MEMBER", "VIEWER"],
+            "nullable": true
+          },
+          "lastLoginAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "created_on": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SubscriptionDetails": {
+        "type": "object",
+        "properties": {
+          "organization": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "plan": {
+                "type": "string",
+                "enum": ["FREE", "PRO", "ENTERPRISE"]
+              },
+              "status": {
+                "type": "string",
+                "enum": ["ACTIVE", "SUSPENDED", "CANCELLED"]
+              },
+              "stripeCustomerId": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          },
+          "subscription": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "stripeSubscriptionId": {
+                "type": "string"
+              },
+              "stripePriceId": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": ["ACTIVE", "PAST_DUE", "CANCELED", "INCOMPLETE", "INCOMPLETE_EXPIRED", "TRIALING", "UNPAID"]
+              },
+              "currentPeriodStart": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "currentPeriodEnd": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "cancelAtPeriodEnd": {
+                "type": "boolean"
+              }
+            }
+          },
+          "paymentHistory": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "integer"
+                },
+                "currency": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": ["SUCCEEDED", "PENDING", "FAILED", "CANCELED", "REFUNDED"]
+                },
+                "description": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "receiptUrl": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        }
+      },
+      "AuditLog": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "organizationId": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string",
+            "nullable": true
+          },
+          "action": {
+            "type": "string",
+            "enum": ["CREATE", "UPDATE", "DELETE", "VIEW", "EXPORT", "LOGIN", "LOGOUT", "INVITE", "REMOVE", "ROLE_CHANGE", "SETTINGS_CHANGE", "SUBSCRIPTION_CHANGE", "PAYMENT", "PERMISSION_DENIED", "RATE_LIMIT_EXCEEDED"]
+          },
+          "resource": {
+            "type": "string"
+          },
+          "resourceId": {
+            "type": "string",
+            "nullable": true
+          },
+          "changes": {
+            "type": "object",
+            "nullable": true
+          },
+          "ipAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "userAgent": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object"
+          }
+        },
+        "required": ["error", "message"]
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Authentication required or session invalid",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "Unauthenticated",
+              "message": "Valid authentication token is required",
+              "code": "UNAUTHORIZED"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Insufficient permissions to access this resource",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "Forbidden",
+              "message": "You do not have permission to access this resource",
+              "code": "FORBIDDEN"
+            }
+          }
+        }
+      },
+      "AdminOnly": {
+        "description": "This endpoint is only accessible by system administrators",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "Forbidden",
+              "message": "Only system administrators can access this endpoint",
+              "code": "ADMIN_ONLY"
+            }
+          }
+        }
+      },
+      "OwnerOnly": {
+        "description": "This endpoint is only accessible by organization owners",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "Forbidden",
+              "message": "Only organization owners can view billing subscriptions",
+              "code": "OWNER_ONLY",
+              "requiredRole": "OWNER"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "The requested resource was not found or user does not have access",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "Not Found",
+              "message": "Account not found or unauthorized",
+              "code": "NOT_FOUND"
+            }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "Invalid request parameters or malformed request body",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "Bad Request",
+              "message": "Name and slug are required",
+              "code": "INVALID_REQUEST"
+            }
+          }
+        }
+      },
+      "QuotaExceeded": {
+        "description": "Organization quota limit reached for this resource type",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "Account limit reached",
+              "message": "Your organization has reached the maximum number of accounts for the FREE plan (10 accounts). Please upgrade to PRO for 100 accounts.",
+              "code": "QUOTA_EXCEEDED",
+              "requiresUpgrade": true,
+              "details": {
+                "currentPlan": "FREE",
+                "currentUsage": 10,
+                "limit": 10,
+                "upgradeUrl": "/billing"
+              }
+            }
+          }
+        }
+      },
+      "RateLimitExceeded": {
+        "description": "API rate limit exceeded for this organization or IP address",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "Too Many Requests",
+              "message": "Rate limit exceeded. Please try again in 3600 seconds.",
+              "code": "RATE_LIMIT_EXCEEDED",
+              "details": {
+                "limit": 100,
+                "remaining": 0,
+                "resetTime": 1705939200,
+                "retryAfter": 3600
+              }
+            }
+          }
+        },
+        "headers": {
+          "X-RateLimit-Limit": {
+            "description": "Total requests allowed in the current window",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Remaining": {
+            "description": "Requests remaining in the current window",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Reset": {
+            "description": "Unix timestamp when the rate limit window resets",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "Retry-After": {
+            "description": "Seconds to wait before retrying",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "An unexpected server error occurred",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "Internal Server Error",
+              "message": "An unexpected error occurred. Please try again later.",
+              "code": "INTERNAL_ERROR"
+            }
+          }
+        }
+      }
+    }
+  }
+}

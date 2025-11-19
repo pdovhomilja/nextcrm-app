@@ -3,9 +3,10 @@ import { prismadb } from "@/lib/prisma";
 import sendEmail from "@/lib/sendmail";
 import { fillXmlTemplate } from "@/lib/xml-generator";
 import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/middleware/with-rate-limit";
 
-export async function GET(req: Request, props: { params: Promise<{ invoiceId: string }> }) {
+async function handleGET(req: NextRequest, props: { params: Promise<{ invoiceId: string }> }) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -86,3 +87,6 @@ export async function GET(req: Request, props: { params: Promise<{ invoiceId: st
     { status: 400 }
   );
 }
+
+// Apply rate limiting to all endpoints
+export const GET = withRateLimit(handleGET);

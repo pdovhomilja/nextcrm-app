@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -8,8 +8,9 @@ import { hash } from "bcryptjs";
 
 import InviteUserEmail from "@/emails/InviteUser";
 import resendHelper from "@/lib/resend";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
-export async function POST(req: Request) {
+async function handlePOST(req: NextRequest) {
   /*
   Resend.com function init - this is a helper function that will be used to send emails
   */
@@ -108,10 +109,16 @@ export async function POST(req: Request) {
         return NextResponse.json(user, { status: 200 });
       } catch (err) {
         console.log(err);
+        return new NextResponse("Failed to send invitation email", { status: 500 });
       }
     }
+
+    return new NextResponse("User not created", { status: 500 });
   } catch (error) {
     console.log("[USERACTIVATE_POST]", error);
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const POST = rateLimited(handlePOST);

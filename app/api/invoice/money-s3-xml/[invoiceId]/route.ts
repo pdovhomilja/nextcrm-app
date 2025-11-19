@@ -4,11 +4,12 @@ import { prismadb } from "@/lib/prisma";
 import { fillXmlTemplate } from "@/lib/xml-generator";
 import { PutObjectAclCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/middleware/with-rate-limit";
 
 const fs = require("fs");
 
-export async function GET(req: Request, props: { params: Promise<{ invoiceId: string }> }) {
+async function handleGET(req: NextRequest, props: { params: Promise<{ invoiceId: string }> }) {
   const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -75,3 +76,6 @@ export async function GET(req: Request, props: { params: Promise<{ invoiceId: st
 
   return NextResponse.json({ xmlString, invoiceData }, { status: 200 });
 }
+
+// Apply rate limiting to all endpoints
+export const GET = withRateLimit(handleGET);

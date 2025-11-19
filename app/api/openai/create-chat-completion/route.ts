@@ -1,11 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 
 import { openAiHelper } from "@/lib/openai";
+import { rateLimited } from "@/middleware/with-rate-limit";
 
 export const maxDuration = 300;
 
-export async function POST(req: Request) {
+async function handlePOST(req: NextRequest) {
   const body = await req.json();
   const { prompt, userId } = body;
 
@@ -48,3 +49,6 @@ export async function POST(req: Request) {
     return new NextResponse("Initial error", { status: 500 });
   }
 }
+
+// Apply rate limiting to all endpoints
+export const POST = rateLimited(handlePOST);

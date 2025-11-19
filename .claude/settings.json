@@ -1,0 +1,54 @@
+{
+  "allowedTools": [
+    "Bash(npm:*)",
+    "Bash(pnpm:*)",
+    "Bash(node:*)",
+    "Bash(npx:*)",
+    "Bash(git:*)",
+    "Bash(ls:*)",
+    "Bash(mkdir:*)",
+    "Bash(cp:*)",
+    "Bash(find:*)",
+    "Bash(grep:*)",
+    "Bash(cat:*)",
+    "Bash(head:*)",
+    "Bash(tail:*)",
+    "Read(//c/Users/npall/**)",
+    "Write(//c/Users/npall/**)",
+    "Edit(//c/Users/npall/**)",
+    "Glob(*)",
+    "Grep(*)",
+    "WebFetch(*)",
+    "WebSearch(*)"
+  ],
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/.next/**",
+    "**/.git/**",
+    "**/.env*",
+    "**/dist/**",
+    "**/.coverage/**",
+    "**/build/**",
+    "**/.turbo/**",
+    "**/.DS_Store",
+    "**/.vscode/**",
+    "**/__pycache__/**",
+    "**/pnpm-lock.yaml",
+    "**/*.log",
+    "**/tmp/**"
+  ],
+  "disallowedTools": [
+    "Bash(rm:*)",
+    "Bash(mv:*)",
+    "Bash(chmod:*)",
+    "Bash(chown:*)",
+    "Bash(sudo:*)"
+  ],
+  "mcpServers": {
+    "archon": {
+      "type": "http",
+      "url": "http://192.168.0.200:8051/mcp",
+      "disabled": false
+    }
+  }
+}
