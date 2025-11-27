@@ -164,6 +164,9 @@ importers:
       pgvector:
         specifier: ^0.2.1
         version: 0.2.1
+      prisma:
+        specifier: ^6.15.0
+        version: 6.15.0(typescript@5.8.3)
       react:
         specifier: 19.1.0
         version: 19.1.0
@@ -255,9 +258,6 @@ importers:
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
-      prisma:
-        specifier: ^6.15.0
-        version: 6.15.0(typescript@5.8.3)
       tailwindcss:
         specifier: ^4.1.12
         version: 4.1.12
