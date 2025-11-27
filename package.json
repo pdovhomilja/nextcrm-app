@@ -79,7 +79,8 @@
     "zod": "^4.0.14",
     "typescript": "^5",
     "@tailwindcss/postcss": "^4.1.12",
-    "tailwindcss": "^4.1.12"
+    "tailwindcss": "^4.1.12",
+    "tw-animate-css": "^1.3.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -95,7 +96,6 @@
     "eslint": "^9.34.0",
     "eslint-config-next": "^15.5.2",
     "eslint-plugin-react-hooks": "^7.0.1",
-    "prettier": "^3.6.2",
-    "tw-animate-css": "^1.3.7"
+    "prettier": "^3.6.2"
   }
 }
