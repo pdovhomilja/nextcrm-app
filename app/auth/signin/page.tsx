@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect, Suspense } from "react";
+import { useState, useTransition, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,50 +17,54 @@ import { registerUser, authenticateUser } from "@/actions/auth-actions";
 import Link from "next/link";
 
 function SignInForm() {
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [formError, setFormError] = useState("");
+  const [formSuccess, setFormSuccess] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [isPending, startTransition] = useTransition();
   const searchParams = useSearchParams();
 
-  useEffect(() => {
+  // Derive URL-based messages from searchParams (not from effect)
+  const urlMessages = useMemo(() => {
     const verified = searchParams.get("verified");
     const errorParam = searchParams.get("error");
 
     if (verified === "true") {
-      setSuccess("Email verified successfully! You can now sign in.");
+      return { success: "Email verified successfully! You can now sign in.", error: "" };
     } else if (errorParam === "invalid-token") {
-      setError(
-        "Invalid or expired verification token. Please try registering again.",
-      );
+      return { success: "", error: "Invalid or expired verification token. Please try registering again." };
     } else if (errorParam === "missing-token") {
-      setError("Verification token is missing.");
+      return { success: "", error: "Verification token is missing." };
     }
+    return { success: "", error: "" };
   }, [searchParams]);
 
+  // Combined error and success (form state takes precedence over URL state)
+  const error = formError || urlMessages.error;
+  const success = formSuccess || urlMessages.success;
+
   const handleCredentialsSubmit = async (formData: FormData) => {
-    setError("");
-    setSuccess("");
+    setFormError("");
+    setFormSuccess("");
 
     startTransition(async () => {
       try {
         if (isSignUp) {
           const result = await registerUser(formData);
           if (result.error) {
-            setError(result.error);
+            setFormError(result.error);
           } else if (result.message) {
-            setSuccess(result.message);
+            setFormSuccess(result.message);
           }
           // Registration sends verification email, no auto sign-in
         } else {
           const result = await authenticateUser(formData);
           if (result?.error) {
-            setError(result.error);
+            setFormError(result.error);
           }
           // If successful, authenticateUser will redirect automatically
         }
       } catch {
-        setError("An unexpected error occurred");
+        setFormError("An unexpected error occurred");
       }
     });
   };
@@ -133,8 +137,8 @@ function SignInForm() {
               type="button"
               onClick={() => {
                 setIsSignUp(!isSignUp);
-                setError("");
-                setSuccess("");
+                setFormError("");
+                setFormSuccess("");
               }}
               className="text-sm text-blue-600 hover:underline"
             >

@@ -24,8 +24,16 @@ export function AiBoardWizardDialog({
 }: AiBoardWizardDialogProps) {
   const wizard = useAiBoardWizard({ onOpenChange });
 
+  // Handle dialog open/close and reset wizard state when closing
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      wizard.resetWizard();
+    }
+    onOpenChange(open);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
           <DialogTitle>AI Board Wizard</DialogTitle>

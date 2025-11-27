@@ -1,5 +1,5 @@
 // in app/(app)/[cid]/tasks/_components/use-ai-board-wizard.ts
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import {
   refineGoalConversation,
@@ -24,25 +24,26 @@ export function useAiBoardWizard({
   const [finalBrief, setFinalBrief] = useState("");
   const [isPending, setIsPending] = useState(false);
 
+  // Generate unique message IDs using crypto.randomUUID (pure, no side effects)
+  const generateMessageId = () => crypto.randomUUID();
+
   const form = useForm({
     defaultValues: { goal: "", role: "", language: "English" },
   });
 
-  // Reset state when the dialog is closed
-  useEffect(() => {
-    if (!onOpenChange) {
-      setStep("initial");
-      setMessages([]);
-      setFinalBrief("");
-      form.reset();
-    }
-  }, [onOpenChange, form]);
+  // Reset function to be called when dialog closes
+  const resetWizard = useCallback(() => {
+    setStep("initial");
+    setMessages([]);
+    setFinalBrief("");
+    form.reset();
+  }, [form]);
 
   const processAssistantResponse = (response: RefinementResult) => {
     setMessages((prev) => [
       ...prev,
       {
-        id: Date.now().toString(),
+        id: generateMessageId(),
         role: "assistant",
         content: response.content,
       },
@@ -60,7 +61,7 @@ export function useAiBoardWizard({
   }) => {
     setIsPending(true);
     const initialMessage: Message = {
-      id: Date.now().toString(),
+      id: generateMessageId(),
       role: "user",
       content: `My goal is: "${data.goal}". My role is: "${data.role}".`,
     };
@@ -82,7 +83,7 @@ export function useAiBoardWizard({
   const handleSendMessage = async (messageContent: string) => {
     setIsPending(true);
     const newUserMessage: Message = {
-      id: Date.now().toString(),
+      id: generateMessageId(),
       role: "user",
       content: messageContent,
     };
@@ -127,5 +128,6 @@ export function useAiBoardWizard({
     handleInitialSubmit: form.handleSubmit(handleInitialSubmit),
     handleSendMessage,
     handleAcceptBrief,
+    resetWizard,
   };
 }

@@ -33,38 +33,6 @@ export function TaskTableWithSelection({
   );
 
   /**
-   * Toggle selection for an individual task
-   */
-  const handleToggleSelection = (taskId: string) => {
-    setSelectedTaskIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(taskId)) {
-        next.delete(taskId);
-      } else {
-        next.add(taskId);
-      }
-      return next;
-    });
-  };
-
-  /**
-   * Toggle selection for all visible tasks on current page
-   */
-  const handleToggleAllSelection = (taskIds: string[], selected: boolean) => {
-    setSelectedTaskIds((prev) => {
-      const next = new Set(prev);
-      if (selected) {
-        // Add all task IDs
-        taskIds.forEach((id) => next.add(id));
-      } else {
-        // Remove all task IDs
-        taskIds.forEach((id) => next.delete(id));
-      }
-      return next;
-    });
-  };
-
-  /**
    * Clear all selections
    */
   const handleClearSelection = () => {

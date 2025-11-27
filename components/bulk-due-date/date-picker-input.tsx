@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { format, isValid } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
@@ -38,7 +38,7 @@ export function DatePickerInput({
   maxDate,
 }: DatePickerInputProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [internalError, setInternalError] = useState<string | null>(null);
+  const [selectionError, setSelectionError] = useState<string | null>(null);
 
   // Format the date for display
   const formattedDate = useMemo(() => {
@@ -53,36 +53,39 @@ export function DatePickerInput({
     }
   }, [value]);
 
-  // Validate date when it changes
-  useEffect(() => {
+  // Derive validation error from value (no useEffect needed)
+  const validationError = useMemo(() => {
     if (!value) {
-      setInternalError(null);
-      return;
+      return null;
     }
-
     const validation = validateTaskDate(value);
-    setInternalError(validation.isValid ? null : validation.error || null);
+    return validation.isValid ? null : validation.error || null;
   }, [value]);
+
+  // Combined internal error (validation takes precedence over selection error)
+  const internalError = validationError || selectionError;
 
   // Handle date selection
   const handleDateSelect = (selectedDate: Date | undefined) => {
     if (!selectedDate) {
       onChange?.(undefined);
+      setSelectionError(null);
       setIsOpen(false);
       return;
     }
 
     // Additional validation against min/max dates
     if (minDate && selectedDate < minDate) {
-      setInternalError("Date cannot be earlier than the minimum allowed date");
+      setSelectionError("Date cannot be earlier than the minimum allowed date");
       return;
     }
 
     if (maxDate && selectedDate > maxDate) {
-      setInternalError("Date cannot be later than the maximum allowed date");
+      setSelectionError("Date cannot be later than the maximum allowed date");
       return;
     }
 
+    setSelectionError(null);
     onChange?.(selectedDate);
     setIsOpen(false);
   };

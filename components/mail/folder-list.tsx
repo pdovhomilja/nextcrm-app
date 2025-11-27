@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { getMailFolders } from "@/actions/mail/read-actions";
+import { useMailFolders } from "@/lib/hooks/use-mail-queries";
 import { Nav } from "@/components/ui/nav";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -38,21 +38,7 @@ export const FolderList = ({ accountId }: FolderListProps) => {
   const searchParams = useSearchParams();
   const selectedFolder = searchParams.get("folder");
 
-  const [data, setData] = useState<{
-    folders: string[] | null;
-    error: string | null;
-  }>({ folders: null, error: null });
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchFolders = async () => {
-      setIsLoading(true);
-      const result = await getMailFolders(accountId);
-      setData({ folders: result.boxes || null, error: result.error || null });
-      setIsLoading(false);
-    };
-    fetchFolders();
-  }, [accountId]);
+  const { data, isLoading } = useMailFolders(accountId);
 
   const handleLinkClick = (folderName: string) => {
     const params = new URLSearchParams(searchParams);
@@ -71,7 +57,7 @@ export const FolderList = ({ accountId }: FolderListProps) => {
     );
   }
 
-  if (data.error) {
+  if (data?.error) {
     return (
       <div className="p-2">
         <Alert variant="destructive">
@@ -82,20 +68,20 @@ export const FolderList = ({ accountId }: FolderListProps) => {
     );
   }
 
-  const folderLinks = data.folders
-    ? data.folders.map((name) => {
-        const Icon = folderIcons[name] || File;
-        return {
-          title: name,
-          label: "",
-          icon: Icon,
-          variant: (selectedFolder === name ? "default" : "ghost") as
-            | "default"
-            | "ghost",
-          onClick: () => handleLinkClick(name),
-        };
-      })
-    : [];
+  const folders = data?.boxes || [];
+
+  const folderLinks = folders.map((name: string) => {
+    const Icon = folderIcons[name] || File;
+    return {
+      title: name,
+      label: "",
+      icon: Icon,
+      variant: (selectedFolder === name ? "default" : "ghost") as
+        | "default"
+        | "ghost",
+      onClick: () => handleLinkClick(name),
+    };
+  });
 
   return (
     <div className="p-2">

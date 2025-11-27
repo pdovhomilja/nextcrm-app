@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { getMailList, searchMail } from "@/actions/mail/read-actions";
+import { useMailList, useSearchMail } from "@/lib/hooks/use-mail-queries";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { format } from "date-fns";
@@ -26,39 +26,29 @@ export const MailList = () => {
   const folderName = searchParams.get("folder");
   const selectedEmail = searchParams.get("email");
 
-  const [data, setData] = useState<{
-    emails: Email[];
-    total: number;
-    error: string | null;
-  }>({ emails: [], total: 0, error: null });
-  const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery] = useDebounce(searchQuery, 500);
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
 
+  // Use cached queries
+  const mailListQuery = useMailList(accountId, folderName);
+  const searchMailQuery = useSearchMail(
+    accountId,
+    folderName,
+    debouncedSearchQuery
+  );
+
+  // Determine which query to use based on search state
+  const isSearching = debouncedSearchQuery.trim().length > 0;
+  const activeQuery = isSearching ? searchMailQuery : mailListQuery;
+
+  const { data, isLoading, isFetching, dataUpdatedAt } = activeQuery;
+
+  // Update current time every minute for "X minutes ago" display
   useEffect(() => {
-    if (accountId && folderName) {
-      const fetchEmails = async () => {
-        setIsLoading(true);
-        let result;
-
-        if (debouncedSearchQuery.trim()) {
-          // Perform search if there's a search query
-          result = await searchMail(accountId, folderName, debouncedSearchQuery);
-        } else {
-          // Otherwise, fetch regular mail list
-          result = await getMailList(accountId, folderName, 1);
-        }
-
-        setData({
-          emails: result.emails || [],
-          total: result.total || 0,
-          error: result.error || null,
-        });
-        setIsLoading(false);
-      };
-      fetchEmails();
-    }
-  }, [accountId, folderName, debouncedSearchQuery]);
+    const interval = setInterval(() => setCurrentTime(Date.now()), 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleEmailClick = (uid: string) => {
     const params = new URLSearchParams(searchParams);
@@ -78,6 +68,14 @@ export const MailList = () => {
     );
   }
 
+  const emails = data?.emails || [];
+  const queryError = data?.error || null;
+
+  // Calculate minutes since last update (using stored currentTime to avoid impure render)
+  const minutesAgo = dataUpdatedAt
+    ? Math.floor((currentTime - dataUpdatedAt) / 60000)
+    : 0;
+
   return (
     <div className="flex flex-col h-full">
       <MailSearch
@@ -85,6 +83,18 @@ export const MailList = () => {
         onChange={setSearchQuery}
         onClear={handleClearSearch}
       />
+
+      {/* Cache status indicator */}
+      {dataUpdatedAt && !isLoading && (
+        <div className="px-3 py-1 text-xs text-muted-foreground border-b flex items-center justify-between">
+          <span>
+            {minutesAgo === 0
+              ? "Updated just now"
+              : `Updated ${minutesAgo} min ago`}
+          </span>
+          {isFetching && <span className="text-primary">Refreshing...</span>}
+        </div>
+      )}
 
       {isLoading ? (
         <div className="p-2 space-y-2">
@@ -95,14 +105,14 @@ export const MailList = () => {
             </div>
           ))}
         </div>
-      ) : data.error ? (
+      ) : queryError ? (
         <div className="p-2">
           <Alert variant="destructive">
             <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{data.error}</AlertDescription>
+            <AlertDescription>{queryError}</AlertDescription>
           </Alert>
         </div>
-      ) : data.emails.length === 0 ? (
+      ) : emails.length === 0 ? (
         <div className="p-4 text-center text-muted-foreground">
           {debouncedSearchQuery.trim()
             ? `No emails found matching "${debouncedSearchQuery}"`
@@ -111,13 +121,13 @@ export const MailList = () => {
       ) : (
         <div className="flex-1 overflow-y-auto p-2 text-xs">
           <ul className="divide-y">
-            {data.emails.map((email) => (
+            {emails.map((email: Email) => (
               <li
-                key={email.id}
+                key={email.id || email.uid}
                 onClick={() => handleEmailClick(email.uid)}
                 className={cn(
                   "p-3 hover:bg-muted cursor-pointer",
-                  selectedEmail === email.uid && "bg-muted",
+                  selectedEmail === email.uid && "bg-muted"
                 )}
               >
                 <div className="flex justify-between">

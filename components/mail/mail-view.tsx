@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useSearchParams } from "next/navigation";
-import { getMailContent } from "@/actions/mail/read-actions";
+import { useMailContent } from "@/lib/hooks/use-mail-queries";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { SafeHtmlRenderer } from "./safe-html-renderer";
@@ -19,39 +19,13 @@ import { IconCirclePlusFilled } from "@tabler/icons-react";
 
 import QuickCreateForm from "../quickcreate/form/quick-create-form";
 
-interface MailContent {
-  id?: string;
-  subject?: string;
-  from?: string;
-  to?: string;
-  date?: Date;
-  html?: string;
-  text?: string;
-  error?: string;
-  nextUid?: string;
-  previousUid?: string;
-}
-
 export const MailView = () => {
   const searchParams = useSearchParams();
   const accountId = searchParams.get("account");
   const folderName = searchParams.get("folder");
   const mailUid = searchParams.get("email");
 
-  const [data, setData] = useState<MailContent | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (accountId && folderName && mailUid) {
-      const fetchContent = async () => {
-        setIsLoading(true);
-        const result = await getMailContent(accountId, folderName, mailUid);
-        setData(result);
-        setIsLoading(false);
-      };
-      fetchContent();
-    }
-  }, [accountId, folderName, mailUid]);
+  const { data, isLoading } = useMailContent(accountId, folderName, mailUid);
 
   if (!mailUid) {
     return (
@@ -87,7 +61,6 @@ export const MailView = () => {
   }
 
   if (!data) return null;
-  console.log("mailUid", mailUid);
 
   return (
     <div className="p-4 text-xs">

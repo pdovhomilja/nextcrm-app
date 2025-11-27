@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { TableHead } from "@/components/ui/table";
 import { Search, ChevronLeft, ChevronRight, ArrowUpDown } from "lucide-react";
-import { startTransition, useState, useEffect } from "react";
+import { startTransition, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
 interface TaskTableFiltersProps {
@@ -38,13 +38,9 @@ export function TaskTableFilters({
     }),
   );
 
-  // Local state for immediate input updates
+  // Local state for immediate input updates during typing
+  // Initialized from URL state; updates URL via debounced callback
   const [searchInput, setSearchInput] = useState(search ?? "");
-
-  // Sync local state with URL state when URL changes externally
-  useEffect(() => {
-    setSearchInput(search ?? "");
-  }, [search]);
 
   const [status, setStatus] = useQueryState(
     "status",

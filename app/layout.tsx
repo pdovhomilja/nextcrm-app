@@ -4,6 +4,7 @@ import { SessionProvider } from "next-auth/react";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { CompanyProvider } from "@/components/company-provider";
+import { QueryProvider } from "@/components/providers/query-provider";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -40,7 +41,9 @@ export default function RootLayout({
         >
           <NuqsAdapter>
             <SessionProvider>
-              <CompanyProvider>{children}</CompanyProvider>
+              <QueryProvider>
+                <CompanyProvider>{children}</CompanyProvider>
+              </QueryProvider>
             </SessionProvider>
           </NuqsAdapter>
         </ThemeProvider>
