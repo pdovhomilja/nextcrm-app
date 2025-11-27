@@ -76,7 +76,8 @@
     "use-debounce": "^10.0.6",
     "vaul": "^1.1.2",
     "xlsx": "^0.18.5",
-    "zod": "^4.0.14"
+    "zod": "^4.0.14",
+    "typescript": "^5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -95,7 +96,6 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "prettier": "^3.6.2",
     "tailwindcss": "^4.1.12",
-    "tw-animate-css": "^1.3.7",
-    "typescript": "^5"
+    "tw-animate-css": "^1.3.7"
   }
 }
