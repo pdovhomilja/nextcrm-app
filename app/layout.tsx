@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
+import { auth } from "@/auth";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { CompanyProvider } from "@/components/company-provider";
@@ -23,11 +24,13 @@ export const metadata: Metadata = {
   description: "Your headquarters for task management",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -40,7 +43,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <NuqsAdapter>
-            <SessionProvider>
+            <SessionProvider session={session}>
               <QueryProvider>
                 <CompanyProvider>{children}</CompanyProvider>
               </QueryProvider>

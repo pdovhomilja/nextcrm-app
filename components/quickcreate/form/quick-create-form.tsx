@@ -58,10 +58,10 @@ interface EmailData {
 }
 
 const QuickCreateForm = ({ emailData }: { emailData?: EmailData }) => {
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const user = session?.user;
   //console.log("User:", user);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [boards, setBoards] = useState<Board[]>([]);
   const [boardSections, setBoardSections] = useState<UIBoardSection[]>([]);
@@ -99,18 +99,24 @@ const QuickCreateForm = ({ emailData }: { emailData?: EmailData }) => {
   }, [boards, boardSearchQuery]);
 
   useEffect(() => {
-    if (!user?.id) return;
+    // Wait for session to be authenticated and user data to be available
+    if (sessionStatus !== "authenticated" || !user?.id || !user?.activeCompanyId) {
+      return;
+    }
 
     let isCancelled = false;
     setIsLoading(true);
 
-    getBoards(user.id, undefined, user.activeCompanyId!)
+    getBoards(user.id, undefined, user.activeCompanyId)
       .then((fetchedBoards) => {
         if (isCancelled) return;
         setBoards(fetchedBoards);
         if (fetchedBoards.length && !form.getValues("boardId")) {
           form.setValue("boardId", fetchedBoards[0].id);
         }
+      })
+      .catch((error) => {
+        console.error("Failed to fetch boards:", error);
       })
       .finally(() => {
         if (!isCancelled) setIsLoading(false);
@@ -119,7 +125,7 @@ const QuickCreateForm = ({ emailData }: { emailData?: EmailData }) => {
     return () => {
       isCancelled = true;
     };
-  }, [user?.id, user?.activeCompanyId, form]);
+  }, [sessionStatus, user?.id, user?.activeCompanyId, form]);
 
   useEffect(() => {
     if (!selectedBoardId) {
@@ -173,7 +179,8 @@ const QuickCreateForm = ({ emailData }: { emailData?: EmailData }) => {
     setIsSubmitting(false);
   };
 
-  if (isLoading) {
+  // Show loading state while session is loading or boards are being fetched
+  if (sessionStatus === "loading" || isLoading) {
     return (
       <div className="space-y-4 p-4 h-full overflow-y-auto py-5">
         {/* Board selection skeleton */}
@@ -222,6 +229,24 @@ const QuickCreateForm = ({ emailData }: { emailData?: EmailData }) => {
         <div className="flex justify-end">
           <Skeleton className="h-10 w-24" /> {/* Submit button */}
         </div>
+      </div>
+    );
+  }
+
+  // Show error state if session is not authenticated
+  if (sessionStatus === "unauthenticated") {
+    return (
+      <div className="p-4 text-center text-muted-foreground">
+        Please sign in to create tasks.
+      </div>
+    );
+  }
+
+  // Show error state if no active company
+  if (!user?.activeCompanyId) {
+    return (
+      <div className="p-4 text-center text-muted-foreground">
+        No active company found. Please select a company.
       </div>
     );
   }
