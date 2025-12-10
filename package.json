@@ -2,6 +2,10 @@
   "name": "nextcrm-app",
   "version": "0.0.3-beta",
   "private": true,
+  "engines": {
+    "node": ">=22.12.0",
+    "pnpm": ">=9.0.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate &&  prisma db push && prisma db seed && next build",
