@@ -1,4 +1,6 @@
 import { PrismaClient } from "@prisma/client";
+import { Pool } from "pg";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 declare global {
   var cachedPrisma: PrismaClient | undefined;
@@ -6,7 +8,12 @@ declare global {
 
 // Prisma Client configuration with connection pooling and lifecycle management
 const prismaClientSingleton = () => {
+  const connectionString = `${process.env.DATABASE_URL}`;
+  const pool = new Pool({ connectionString });
+  const adapter = new PrismaPg(pool);
+
   const client = new PrismaClient({
+    adapter,
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
 

@@ -44,13 +44,9 @@ async function main() {
   const mongoClient = new MongoClient(mongoUrl);
 
   // Initialize PostgreSQL client
-  const pgClient = new PrismaClientPG({
-    datasources: {
-      db: {
-        url: process.env.DATABASE_URL_POSTGRES || process.env.DATABASE_URL,
-      },
-    },
-  });
+  // Note: In Prisma 7, the database URL is configured via prisma.config.ts
+  // Set DATABASE_URL env var to point to PostgreSQL before running this script
+  const pgClient = new PrismaClientPG();
 
   try {
     // Connect to databases

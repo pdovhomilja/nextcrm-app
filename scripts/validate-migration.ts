@@ -54,21 +54,11 @@ async function runValidation(): Promise<void> {
   console.log('Phase 1: Initialization');
   console.log('  - Connecting to databases...');
 
-  const mongoDb = new PrismaClient({
-    datasources: {
-      db: {
-        url: process.env.DATABASE_URL_MONGODB || process.env.DATABASE_URL,
-      },
-    },
-  });
-
-  const postgresDb = new PrismaClient({
-    datasources: {
-      db: {
-        url: process.env.DATABASE_URL_POSTGRES || process.env.DATABASE_URL,
-      },
-    },
-  });
+  // Note: In Prisma 7, database URL is configured via prisma.config.ts
+  // For migration validation, set DATABASE_URL to point to PostgreSQL
+  // This script now validates the PostgreSQL database only
+  const mongoDb = new PrismaClient();
+  const postgresDb = new PrismaClient();
 
   try {
     // Test connections
