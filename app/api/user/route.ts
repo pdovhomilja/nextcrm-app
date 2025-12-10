@@ -10,12 +10,30 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { name, username, email, language, password, confirmPassword } = body;
 
+    console.log("[USERS_POST] Registration attempt:", {
+      name: name ? "provided" : "missing",
+      username: username ? "provided" : "missing",
+      email: email ? "provided" : "missing",
+      language: language ? `provided (${language})` : "missing",
+      password: password ? "provided" : "missing",
+      confirmPassword: confirmPassword ? "provided" : "missing",
+    });
+
     if (!name || !email || !language || !password || !confirmPassword) {
-      return new NextResponse("Unauthenticated", { status: 401 });
+      const missingFields = [];
+      if (!name) missingFields.push("name");
+      if (!email) missingFields.push("email");
+      if (!language) missingFields.push("language");
+      if (!password) missingFields.push("password");
+      if (!confirmPassword) missingFields.push("confirmPassword");
+
+      console.log("[USERS_POST] Missing required fields:", missingFields);
+      return new NextResponse(`Missing required fields: ${missingFields.join(", ")}`, { status: 400 });
     }
 
     if (password !== confirmPassword) {
-      return new NextResponse("Password does not match", { status: 401 });
+      console.log("[USERS_POST] Password mismatch");
+      return new NextResponse("Passwords do not match", { status: 400 });
     }
 
     const checkexisting = await prismadb.users.findFirst({
@@ -25,7 +43,8 @@ export async function POST(req: Request) {
     });
 
     if (checkexisting) {
-      return new NextResponse("User already exist", { status: 401 });
+      console.log("[USERS_POST] User already exists with email:", email);
+      return new NextResponse("User already exists", { status: 409 });
     }
 
     /*
@@ -33,7 +52,10 @@ export async function POST(req: Request) {
     */
 
     const isFirstUser = await prismadb.users.findMany({});
+    console.log("[USERS_POST] Existing users count:", isFirstUser.length);
+
     if (isFirstUser.length === 0) {
+      console.log("[USERS_POST] Creating first user (admin)...");
       //There is no user in the system, so create user with admin rights and set userStatus to ACTIVE
       const user = await prismadb.users.create({
         data: {
@@ -49,8 +71,10 @@ export async function POST(req: Request) {
           password: await hash(password, 12),
         },
       });
+      console.log("[USERS_POST] First user created successfully:", user.id);
       return NextResponse.json(user);
     } else {
+      console.log("[USERS_POST] Creating regular user...");
       //There is at least one user in the system, so create user with no admin rights and set userStatus to PENDING
       const user = await prismadb.users.create({
         data: {
@@ -69,6 +93,7 @@ export async function POST(req: Request) {
           password: await hash(password, 12),
         },
       });
+      console.log("[USERS_POST] User created successfully:", user.id, "Status:", user.userStatus);
 
       /*
       Function will send email to all admins about new user registration which is in PENDING state and need to be activated
@@ -78,8 +103,9 @@ export async function POST(req: Request) {
       return NextResponse.json(user);
     }
   } catch (error) {
-    console.log("[USERS_POST]", error);
-    return new NextResponse("Initial error", { status: 500 });
+    console.error("[USERS_POST] Error creating user:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    return new NextResponse(`Registration failed: ${errorMessage}`, { status: 500 });
   }
 }
 
