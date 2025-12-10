@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import {
   Card,
@@ -18,8 +18,10 @@ import { useRouter } from "next/navigation";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
+  SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 
@@ -27,15 +29,6 @@ const ContactsView = ({ data, crmData }: any) => {
   const router = useRouter();
 
   const [open, setOpen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) {
-    return null;
-  }
 
   const { users, accounts } = crmData;
 
@@ -53,18 +46,18 @@ const ContactsView = ({ data, crmData }: any) => {
             <CardDescription></CardDescription>
           </div>
           <div className="flex space-x-2">
-            <Sheet open={open} onOpenChange={() => setOpen(false)}>
-              <Button
-                className="m-2 cursor-pointer"
-                onClick={() => setOpen(true)}
-              >
-                +
-              </Button>
-              <SheetContent className="min-w-[1000px] space-y-2">
+            <Sheet open={open} onOpenChange={setOpen}>
+              <SheetTrigger asChild>
+                <Button size="sm">+</Button>
+              </SheetTrigger>
+              <SheetContent className="max-w-3xl overflow-y-auto">
                 <SheetHeader>
-                  <SheetTitle>Create new Account</SheetTitle>
+                  <SheetTitle>Create new Contact</SheetTitle>
+                  <SheetDescription>
+                    Add a new contact to your CRM system. Fill in the contact details and assign to an account.
+                  </SheetDescription>
                 </SheetHeader>
-                <div className="h-full overflow-y-auto">
+                <div className="mt-6 space-y-4">
                   <NewContactForm
                     users={users}
                     accounts={accounts}

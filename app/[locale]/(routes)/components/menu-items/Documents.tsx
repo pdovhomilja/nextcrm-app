@@ -1,28 +1,33 @@
-import { FileText } from "lucide-react";
-import Link from "next/link";
+import { FileText } from "lucide-react"
+import { NavItem } from "../nav-main"
 
-import { usePathname } from "next/navigation";
-import React from "react";
+/**
+ * Documents Module Menu Item - Task 2.6.5
+ *
+ * Converted from Link pattern to NavItem structure for sidebar integration.
+ * Used in app-sidebar.tsx with module filtering (name === "documents").
+ *
+ * References:
+ * - Previous: Simple Link component with FileText icon
+ * - ModuleMenu.tsx: lines 101-108
+ * - Route: /documents
+ */
 
-type Props = {
-  open: boolean;
-  title: string;
-};
+interface GetDocumentsMenuItemProps {
+  title: string
+}
 
-const DocumentsModuleMenu = ({ open, title }: Props) => {
-  const pathname = usePathname();
-  const isPath = pathname.includes("documents");
-  return (
-    <div className="flex flex-row items-center mx-auto p-2">
-      <Link
-        href={"/documents"}
-        className={`flex gap-2 p-2 ${isPath ? "text-muted-foreground" : null}`}
-      >
-        <FileText className="w-6" />
-        <span className={open ? "" : "hidden"}>{title}</span>
-      </Link>
-    </div>
-  );
-};
-
-export default DocumentsModuleMenu;
+/**
+ * Returns navigation item configuration for Documents module
+ * @param title - Localized title for the menu item
+ * @returns NavItem object compatible with NavMain component
+ */
+export default function getDocumentsMenuItem({
+  title,
+}: GetDocumentsMenuItemProps): NavItem {
+  return {
+    title,
+    url: "/documents",
+    icon: FileText,
+  }
+}

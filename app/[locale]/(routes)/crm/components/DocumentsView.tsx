@@ -13,23 +13,12 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useRouter } from "next/navigation";
 
-import { useEffect, useState } from "react";
-
 interface DocumentsViewProps {
   data: any;
 }
 
 const DocumentsView = ({ data }: DocumentsViewProps) => {
   const router = useRouter();
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) {
-    return null;
-  }
 
   return (
     <Card>

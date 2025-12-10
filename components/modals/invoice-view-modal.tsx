@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import ModalDocumentView from "../ui/modal-document-view";
 
@@ -15,15 +14,6 @@ const InvoiceViewModal = ({
   loading,
   document,
 }: AlertModalProps) => {
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) {
-    return null;
-  }
 
   if (document.invoice_file_mimeType !== "application/pdf") {
     return (

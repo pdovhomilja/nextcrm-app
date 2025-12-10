@@ -14,10 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-import { getDictionary } from "@/dictionaries";
-
 import Container from "./components/ui/Container";
-import NotionsBox from "./components/dasboard/notions";
 import LoadingBox from "./components/dasboard/loading-box";
 import StorageQuota from "./components/dasboard/storage-quota";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,6 +36,7 @@ import { getDocumentsCount } from "@/actions/dashboard/get-documents-count";
 import { getActiveUsersCount } from "@/actions/dashboard/get-active-users-count";
 import { getOpportunitiesCount } from "@/actions/dashboard/get-opportunities-count";
 import { getExpectedRevenue } from "@/actions/crm/opportunity/get-expected-revenue";
+import { getTranslations } from "next-intl/server";
 
 const DashboardPage = async () => {
   const session = await getServerSession(authOptions);
@@ -51,8 +49,7 @@ const DashboardPage = async () => {
   const lang = session?.user?.userLanguage;
 
   //Fetch translations from dictionary
-  const dict = await getDictionary(lang as "en" | "cz" | "de" | "uk"); //Fetch data for dashboard
-
+  const dict = await getTranslations("DashboardPage");
   const modules = await getModules();
   const leads = await getLeadsCount();
   const tasks = await getTasksCount();
@@ -75,13 +72,10 @@ const DashboardPage = async () => {
   const projectsModule = modules.find((module) => module.name === "projects");
   const documentsModule = modules.find((module) => module.name === "documents");
   const employeesModule = modules.find((module) => module.name === "employees");
-  const secondBrainModule = modules.find(
-    (module) => module.name === "secondBrain"
-  );
 
   return (
     <Container
-      title={dict.DashboardPage.containerTitle}
+      title={dict("containerTitle")}
       description={
         "Welcome to NextCRM cockpit, here you can see your company overview"
       }
@@ -91,7 +85,7 @@ const DashboardPage = async () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                {dict.DashboardPage.totalRevenue}
+                {dict("totalRevenue")}
               </CardTitle>
               <DollarSignIcon className="w-4 h-4 text-muted-foreground" />
             </CardHeader>
@@ -104,7 +98,7 @@ const DashboardPage = async () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                {dict.DashboardPage.expectedRevenue}
+                {dict("expectedRevenue")}
               </CardTitle>
               <DollarSignIcon className="w-4 h-4 text-muted-foreground" />
             </CardHeader>
@@ -124,7 +118,7 @@ const DashboardPage = async () => {
 
         <DashboardCard
           href="/admin/users"
-          title={dict.DashboardPage.activeUsers}
+          title={dict("activeUsers")}
           IconComponent={UserIcon}
           content={users}
         />
@@ -145,31 +139,31 @@ const DashboardPage = async () => {
             <>
               <DashboardCard
                 href="/crm/accounts"
-                title={dict.DashboardPage.accounts}
+                title={dict("accounts")}
                 IconComponent={LandmarkIcon}
                 content={accounts}
               />
               <DashboardCard
                 href="/crm/opportunities"
-                title={dict.DashboardPage.opportunities}
+                title={dict("opportunities")}
                 IconComponent={HeartHandshakeIcon}
                 content={opportunities}
               />
               <DashboardCard
                 href="/crm/contacts"
-                title={dict.DashboardPage.contacts}
+                title={dict("contacts")}
                 IconComponent={Contact}
                 content={contacts}
               />
               <DashboardCard
                 href="/crm/leads"
-                title={dict.DashboardPage.leads}
+                title={dict("leads")}
                 IconComponent={CoinsIcon}
                 content={leads}
               />
               <DashboardCard
                 href="/crm/contracts"
-                title={dict.ModuleMenu.crm.contracts}
+                title={dict("contracts")}
                 IconComponent={FilePenLine}
                 content={contracts}
               />
@@ -180,19 +174,19 @@ const DashboardPage = async () => {
           <>
             <DashboardCard
               href="/projects"
-              title={dict.DashboardPage.projects}
+              title={dict("projects")}
               IconComponent={CoinsIcon}
               content={projects}
             />
             <DashboardCard
               href="/projects/tasks"
-              title={dict.DashboardPage.tasks}
+              title={dict("tasks")}
               IconComponent={CoinsIcon}
               content={tasks}
             />
             <DashboardCard
               href={`/projects/tasks/${userId}`}
-              title={dict.DashboardPage.myTasks}
+              title={dict("myTasks")}
               IconComponent={CoinsIcon}
               content={usersTasks}
             />
@@ -201,7 +195,7 @@ const DashboardPage = async () => {
         {invoiceModule?.enabled && (
           <DashboardCard
             href="/invoice"
-            title={dict.DashboardPage.invoices}
+            title={dict("invoices")}
             IconComponent={CoinsIcon}
             content={invoices}
           />
@@ -209,19 +203,13 @@ const DashboardPage = async () => {
         {documentsModule?.enabled && (
           <DashboardCard
             href="/documents"
-            title={dict.DashboardPage.documents}
+            title={dict("documents")}
             IconComponent={CoinsIcon}
             content={documents}
           />
         )}
 
-        <StorageQuota actual={storage} title={dict.DashboardPage.storage} />
-
-        {secondBrainModule?.enabled && (
-          <Suspense fallback={<LoadingBox />}>
-            <NotionsBox />
-          </Suspense>
-        )}
+        <StorageQuota actual={storage} title={dict("storage")} />
       </div>
     </Container>
   );

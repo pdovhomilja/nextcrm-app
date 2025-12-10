@@ -14,6 +14,19 @@ export const getAccounts = async () => {
           last_name: true,
         },
       },
+      // Watchers relationship through AccountWatchers junction table
+      watchers: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatar: true,
+            },
+          },
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",

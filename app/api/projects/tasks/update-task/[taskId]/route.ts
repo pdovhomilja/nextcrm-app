@@ -27,7 +27,6 @@ export async function PUT(req: Request, props: { params: Promise<{ taskId: strin
     boardId,
     priority,
     content,
-    notionUrl,
     dueDateAt,
   } = body;
 
@@ -66,12 +65,6 @@ export async function PUT(req: Request, props: { params: Promise<{ taskId: strin
       },
     });
 
-    let contentUpdated = content;
-
-    if (notionUrl) {
-      contentUpdated = content + "\n\n" + notionUrl;
-    }
-
     const task = await prismadb.tasks.update({
       where: {
         id: taskId,
@@ -79,7 +72,7 @@ export async function PUT(req: Request, props: { params: Promise<{ taskId: strin
       data: {
         priority: priority,
         title: title,
-        content: contentUpdated,
+        content: content,
         updatedBy: user,
         dueDateAt: dueDateAt,
         user: user,

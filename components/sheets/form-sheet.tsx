@@ -34,16 +34,18 @@ const FormSheet = ({
   return (
     <Sheet>
       <SheetTrigger asChild ref={onClose}>
-        <Button className="mb-5 " size={"sm"}>
+        <Button className="mb-5" size={"sm"}>
           {trigger}
         </Button>
       </SheetTrigger>
-      <SheetContent side={position || "right"}>
+      <SheetContent side={position || "right"} className="max-w-3xl overflow-y-auto">
         <SheetHeader>
           <SheetTitle>{title}</SheetTitle>
           <SheetDescription>{description}</SheetDescription>
         </SheetHeader>
-        {children}
+        <div className="mt-6 space-y-4">
+          {children}
+        </div>
       </SheetContent>
     </Sheet>
   );

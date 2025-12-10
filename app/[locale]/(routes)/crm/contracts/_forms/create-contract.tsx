@@ -81,7 +81,7 @@ const CreateContractForm = ({
     <FormSheet
       trigger={"+"}
       title="Create new contract"
-      description=""
+      description="Create a new contract with specified terms, dates, and assigned users"
       onClose={closeRef}
     >
       <form action={onAction} className="space-y-4">
@@ -141,7 +141,7 @@ const CreateContractForm = ({
           {isLoading ? (
             <Loader2 className="h-6 w-6  animate-spin" />
           ) : (
-            "Vytvořit"
+            "Create"
           )}
         </FormSubmit>
       </form>

@@ -1,28 +1,33 @@
-import { FileCheck } from "lucide-react";
-import Link from "next/link";
+import { FileCheck } from "lucide-react"
+import { NavItem } from "../nav-main"
 
-import { usePathname } from "next/navigation";
-import React from "react";
+/**
+ * Invoices Module Menu Item - Task 2.6.3
+ *
+ * Converted from Link pattern to NavItem structure for sidebar integration.
+ * Used in app-sidebar.tsx with module filtering (name === "invoice").
+ *
+ * References:
+ * - Previous: Simple Link component with FileCheck icon
+ * - ModuleMenu.tsx: lines 91-95
+ * - Route: /invoice
+ */
 
-type Props = {
-  open: boolean;
-  title: string;
-};
+interface GetInvoicesMenuItemProps {
+  title: string
+}
 
-const InvoicesModuleMenu = ({ open, title }: Props) => {
-  const pathname = usePathname();
-  const isPath = pathname.includes("invoice");
-  return (
-    <div className="flex flex-row items-center mx-auto p-2">
-      <Link
-        href={"/invoice"}
-        className={`flex gap-2 p-2 ${isPath ? "text-muted-foreground" : null}`}
-      >
-        <FileCheck className="w-6" />
-        <span className={open ? "" : "hidden"}>{title}</span>
-      </Link>
-    </div>
-  );
-};
-
-export default InvoicesModuleMenu;
+/**
+ * Returns navigation item configuration for Invoices module
+ * @param title - Localized title for the menu item
+ * @returns NavItem object compatible with NavMain component
+ */
+export default function getInvoicesMenuItem({
+  title,
+}: GetInvoicesMenuItemProps): NavItem {
+  return {
+    title,
+    url: "/invoice",
+    icon: FileCheck,
+  }
+}

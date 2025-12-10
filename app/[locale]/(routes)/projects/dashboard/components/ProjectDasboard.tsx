@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -147,11 +148,16 @@ const ProjectDashboardCockpit = ({
                     <span>Chat</span>
                   </Badge>
                 </SheetTrigger>
-                <SheetContent className="cursor-pointer">
+                <SheetContent className="max-w-3xl overflow-y-auto">
                   <SheetHeader>
                     <SheetTitle>Team conversation</SheetTitle>
+                    <SheetDescription>
+                      Collaborate with your team on this task
+                    </SheetDescription>
                   </SheetHeader>
-                  <TeamConversations taskId={task.id} data={task.comments} />
+                  <div className="mt-6 space-y-4">
+                    <TeamConversations taskId={task.id} data={task.comments} />
+                  </div>
                 </SheetContent>
               </Sheet>
               <Badge
@@ -166,7 +172,7 @@ const ProjectDashboardCockpit = ({
               <FormSheet
                 trigger={"Edit"}
                 title="Update task"
-                description=""
+                description="Edit task details including title, description, due date, and priority"
                 onClose={closeRef}
               >
                 <UpdateTaskDialog
@@ -245,39 +251,52 @@ const ProjectDashboardCockpit = ({
 
               <Sheet>
                 <SheetTrigger asChild>
-                  <Badge variant={"outline"}>
+                  <Badge variant={"outline"} className="cursor-pointer">
                     <MessagesSquare className="w-4 h-4 mr-2" />
                     <span>Chat</span>
                   </Badge>
                 </SheetTrigger>
 
-                <SheetContent>
+                <SheetContent className="max-w-3xl overflow-y-auto">
                   <SheetHeader>
                     <SheetTitle>Team conversation</SheetTitle>
+                    <SheetDescription>
+                      Collaborate with your team on this task
+                    </SheetDescription>
                   </SheetHeader>
-                  <TeamConversations taskId={task.id} data={task.comments} />
+                  <div className="mt-6 space-y-4">
+                    <TeamConversations taskId={task.id} data={task.comments} />
+                  </div>
                 </SheetContent>
               </Sheet>
 
-              <Badge variant={"outline"} onClick={() => onDone(task.id)}>
+              <Badge variant={"outline"} onClick={() => onDone(task.id)} className="cursor-pointer">
                 <CheckSquare className="w-4 h-4 mr-2" />
                 <span>Mark as done</span>
               </Badge>
-              <Badge variant={"outline"} className="cursor-pointer">
-                <Pencil className="w-4 h-4 mr-2" />
-                <Sheet>
-                  <SheetTrigger>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Badge variant={"outline"} className="cursor-pointer">
+                    <Pencil className="w-4 h-4 mr-2" />
                     <span>Edit</span>
-                  </SheetTrigger>
-                  <SheetContent>
+                  </Badge>
+                </SheetTrigger>
+                <SheetContent className="max-w-3xl overflow-y-auto">
+                  <SheetHeader>
+                    <SheetTitle>Edit Task</SheetTitle>
+                    <SheetDescription>
+                      Update task details including title, description, due date, and priority
+                    </SheetDescription>
+                  </SheetHeader>
+                  <div className="mt-6 space-y-4">
                     <UpdateTaskDialog
                       users={users}
                       boards={boards}
                       initialData={task}
                     />
-                  </SheetContent>
-                </Sheet>
-              </Badge>
+                  </div>
+                </SheetContent>
+              </Sheet>
             </CardFooter>
           </Card>
         ))}

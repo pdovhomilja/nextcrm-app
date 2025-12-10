@@ -2,15 +2,28 @@
 
 import axios from "axios";
 import moment from "moment";
-import {
-  DragDropContext,
-  Droppable,
-  Draggable,
-  DropResult,
-} from "react-beautiful-dnd";
 import { useRouter } from "next/navigation";
-import { ChangeEvent, useEffect, useState } from "react";
+import React, { ChangeEvent, useEffect, useState } from "react";
 import { Check, EyeIcon, Pencil, PlusCircle, PlusIcon } from "lucide-react";
+
+import {
+  DndContext,
+  DragOverlay,
+  closestCorners,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragStartEvent,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 import {
   ChatBubbleIcon,
@@ -41,7 +54,14 @@ import { useToast } from "@/components/ui/use-toast";
 import AlertModal from "@/components/modals/alert-modal";
 import LoadingComponent from "@/components/LoadingComponent";
 import { DialogHeader } from "@/components/ui/dialog-document-view";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 import NewSectionForm from "../forms/NewSection";
 import UpdateTaskDialog from "../../../dialogs/UpdateTask";
@@ -53,6 +73,126 @@ const timeout = 1000;
 interface Task {
   id: string;
   section: string;
+  title?: string;
+  content?: string;
+  dueDateAt?: Date;
+  priority?: string;
+  taskStatus?: string;
+}
+
+// Draggable Task Item Component
+function TaskItem({ task, onDelete, onDone, onEdit, router }: any) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id });
+
+  const [currentTime] = React.useState(() => Date.now());
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="flex flex-col overflow-hidden items-start justify-center text-xs p-3 mb-2  rounded-md border  shadow-md cursor-grab active:cursor-grabbing"
+    >
+      <div className="flex flex-row justify-between mx-auto w-full py-1">
+        <h2 className="grow font-bold text-sm ">
+          {task.title === "" ? "Untitled" : task.title}
+        </h2>
+        <div className="ml-1">
+          {task?.dueDateAt &&
+            task.taskStatus != "COMPLETE" &&
+            task.dueDateAt < currentTime && (
+              <HoverCard>
+                <HoverCardTrigger>
+                  <ExclamationTriangleIcon className="w-4 h-4 text-red-500" />
+                </HoverCardTrigger>
+                <HoverCardContent>
+                  Attention! This task is overdue!
+                </HoverCardContent>
+              </HoverCard>
+            )}
+          {task.taskStatus === "COMPLETE" && (
+            <HoverCard>
+              <HoverCardTrigger>
+                <Check className="w-4 h-4 text-green-500" />
+              </HoverCardTrigger>
+              <HoverCardContent>This task is done!</HoverCardContent>
+            </HoverCard>
+          )}
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild className="w-[25px] ml-1 ">
+            <DotsHorizontalIcon className="w-4 h-4 text-slate-600 pl-2" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-[200px]">
+            <DropdownMenuItem
+              className="gap-2"
+              onClick={() => router.push(`/projects/tasks/viewtask/${task.id}`)}
+            >
+              <EyeIcon className="w-4 h-4 opacity-50" />
+              View
+            </DropdownMenuItem>
+            {task.taskStatus !== "COMPLETE" && (
+              <DropdownMenuItem className="gap-2" onClick={() => onEdit(task)}>
+                <Pencil className="w-4 h-4 opacity-50" />
+                Edit
+              </DropdownMenuItem>
+            )}
+            {task.taskStatus !== "COMPLETE" && (
+              <DropdownMenuItem
+                className="gap-2"
+                onClick={() => onDone(task.id)}
+              >
+                <Check className="w-4 h-4 opacity-50" />
+                Mark as done
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem className="gap-2" onClick={() => onDelete(task)}>
+              <TrashIcon className="w-4 h-4 opacity-50" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      <div className="py-1">
+        Due date: {moment(task.dueDateAt).format("YYYY-MM-DD")}
+      </div>
+      <div className="my-2">
+        <p
+          className={
+            task.priority === "normal"
+              ? `text-yellow-500`
+              : task.priority === "high"
+              ? `text-red-500`
+              : task.priority === "low"
+              ? `text-green-500`
+              : `text-slate-600`
+          }
+        >
+          Priorita: {task.priority}
+        </p>
+      </div>
+      <HoverCard>
+        <HoverCardTrigger className="line-clamp-2 mb-2">
+          {task.content}
+        </HoverCardTrigger>
+        <HoverCardContent>{task.content}</HoverCardContent>
+      </HoverCard>
+    </div>
+  );
 }
 
 const Kanban = (props: any) => {
@@ -61,6 +201,7 @@ const Kanban = (props: any) => {
   const users = props.users;
 
   const [data, setData]: any = useState([]);
+  const [activeTask, setActiveTask] = useState<Task | null>(null);
 
   const [sectionId, setSectionId] = useState(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -74,60 +215,119 @@ const Kanban = (props: any) => {
   const [isLoadingSection, setIsLoadingSection] = useState(false);
 
   const router = useRouter();
-
   const { toast } = useToast();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     setData(props.data);
     setIsLoading(false);
   }, [props.data]);
 
-  const onDragEnd = async ({ source, destination }: DropResult) => {
-    if (!destination) return;
-    console.log(source, "source - onDragEnd");
-    console.log(destination, "destination - onDragEnd");
-    const sourceColIndex = data.findIndex(
-      (e: any) => e.id === source.droppableId
-    );
-    const destinationColIndex = data.findIndex(
-      (e: any) => e.id === destination.droppableId
-    );
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    // Find the task being dragged
+    for (const section of data) {
+      const task = section.tasks.find((t: Task) => t.id === active.id);
+      if (task) {
+        setActiveTask(task);
+        break;
+      }
+    }
+  };
 
-    const sourceCol = data[sourceColIndex];
-    if (!sourceCol) return null;
-    const destinationCol = data[destinationColIndex];
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveTask(null);
 
-    const sourceSectionId = sourceCol.id;
-    const destinationSectionId = destinationCol.id;
+    if (!over) return;
 
-    const sourceTasks = [...sourceCol.tasks];
-    const destinationTasks = [...destinationCol.tasks];
+    const activeId = active.id as string;
+    const overId = over.id as string;
 
-    if (source.droppableId !== destination.droppableId) {
-      const [removed] = sourceTasks.splice(source.index, 1);
-      destinationTasks.splice(destination.index, 0, removed);
-      data[sourceColIndex].tasks = sourceTasks;
-      data[destinationColIndex].tasks = destinationTasks;
-    } else {
-      const [removed] = destinationTasks.splice(source.index, 1);
-      destinationTasks.splice(destination.index, 0, removed);
-      data[destinationColIndex].tasks = destinationTasks;
+    // Find source section and task
+    let sourceSectionIndex = -1;
+    let sourceTaskIndex = -1;
+    let sourceTask: Task | null = null;
+
+    for (let i = 0; i < data.length; i++) {
+      const taskIndex = data[i].tasks.findIndex((t: Task) => t.id === activeId);
+      if (taskIndex !== -1) {
+        sourceSectionIndex = i;
+        sourceTaskIndex = taskIndex;
+        sourceTask = data[i].tasks[taskIndex];
+        break;
+      }
     }
 
+    if (!sourceTask || sourceSectionIndex === -1) return;
+
+    // Check if overId is a section or a task
+    const destinationSectionIndex = data.findIndex(
+      (section: any) => section.id === overId
+    );
+
+    let targetSectionIndex = destinationSectionIndex;
+    let targetTaskIndex = 0;
+
+    if (destinationSectionIndex === -1) {
+      // overId is a task, find its section
+      for (let i = 0; i < data.length; i++) {
+        const taskIndex = data[i].tasks.findIndex((t: Task) => t.id === overId);
+        if (taskIndex !== -1) {
+          targetSectionIndex = i;
+          targetTaskIndex = taskIndex;
+          break;
+        }
+      }
+    }
+
+    if (targetSectionIndex === -1) return;
+
+    const newData = [...data];
+    const sourceSection = newData[sourceSectionIndex];
+    const targetSection = newData[targetSectionIndex];
+
+    // Remove task from source
+    const [movedTask] = sourceSection.tasks.splice(sourceTaskIndex, 1);
+
+    // Add task to target
+    if (sourceSectionIndex === targetSectionIndex) {
+      targetSection.tasks.splice(targetTaskIndex, 0, movedTask);
+    } else {
+      targetSection.tasks.splice(targetTaskIndex, 0, movedTask);
+    }
+
+    setData(newData);
+
     try {
-      setData(data);
       await axios.put(`/api/projects/tasks/update-kanban-position`, {
-        resourceList: sourceTasks,
-        destinationList: destinationTasks,
-        resourceSectionId: sourceSectionId,
-        destinationSectionId: destinationSectionId,
+        resourceList: sourceSection.tasks,
+        destinationList: targetSection.tasks,
+        resourceSectionId: sourceSection.id,
+        destinationSectionId: targetSection.id,
       });
       toast({
         title: "Task moved",
         description: "New task position saved in database",
       });
     } catch (err) {
-      alert(err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update task position",
+      });
+      // Revert on error
+      setData(props.data);
     }
   };
 
@@ -155,7 +355,6 @@ const Kanban = (props: any) => {
     }
   };
 
-  //Done
   const updateSectionTitle = async (
     e: ChangeEvent<HTMLInputElement>,
     sectionId: string
@@ -168,7 +367,6 @@ const Kanban = (props: any) => {
     setData(newData);
     timer = setTimeout(async () => {
       try {
-        //updateSection(sectionId, { title: newTitle });
         await axios.put(`/api/projects/sections/update-title/${sectionId}`, {
           newTitle,
         });
@@ -182,10 +380,7 @@ const Kanban = (props: any) => {
     }, timeout);
   };
 
-  //Done
   const createTask = async (sectionId: string) => {
-    //console.log(sectionId, "sectionId - createTask");
-    //const task = await addTask(boardId, sectionId);
     try {
       const task = await axios.post(
         `/api/projects/tasks/create-task/${boardId}`,
@@ -193,9 +388,7 @@ const Kanban = (props: any) => {
           section: sectionId,
         }
       );
-      //console.log(task, "task - createTask");
       const newData = [...data];
-      //console.log(newData, "newData - createTask");
       const index = newData.findIndex((e) => e.id === sectionId);
       newData[index].tasks.unshift(task);
       setData(newData);
@@ -272,9 +465,6 @@ const Kanban = (props: any) => {
 
   if (isLoading) return <LoadingComponent />;
 
-  //console.log(sectionId, "sectionId - Kanban");
-  //console.log(updateOpenSheet, "updateOpenSheet - Kanban");
-
   return (
     <>
       <AlertModal
@@ -290,7 +480,6 @@ const Kanban = (props: any) => {
         loading={isLoadingSection}
       />
       <div className="overflow-scroll flex flex-col space-y-2  ">
-        {/* Dialogs */}
         <Dialog
           open={sectionOpenDialog}
           onOpenChange={() => setSectionOpenDialog(false)}
@@ -308,241 +497,127 @@ const Kanban = (props: any) => {
             />
           </DialogContent>
         </Dialog>
-        {/* Dialogs end */}
-        {
-          //Sheets
-        }
+
         <Sheet
           open={updateOpenSheet}
           onOpenChange={() => setUpdateOpenSheet(false)}
         >
-          <SheetContent>
-            <UpdateTaskDialog
-              users={users}
-              boards={boards}
-              boardId={boardId}
-              initialData={selectedTask}
-              onDone={() => setUpdateOpenSheet(false)}
-            />
-            <div className="flex w-full justify-end pt-2">
-              <SheetTrigger asChild>
-                <Button variant={"destructive"}>Close</Button>
-              </SheetTrigger>
+          <SheetContent className="max-w-3xl overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>Update Task</SheetTitle>
+              <SheetDescription>
+                Edit task details including title, description, due date, priority, and assignments
+              </SheetDescription>
+            </SheetHeader>
+            <div className="mt-6 space-y-4">
+              <UpdateTaskDialog
+                users={users}
+                boards={boards}
+                boardId={boardId}
+                initialData={selectedTask}
+                onDone={() => setUpdateOpenSheet(false)}
+              />
             </div>
           </SheetContent>
         </Sheet>
-        {
-          //Sheets end
-        }
 
         <div className="p-2 text-xs">
           <p>{data?.length} Sections</p>
         </div>
-        <div className="flex">
-          <DragDropContext onDragEnd={onDragEnd}>
-            <div className="flex flex-row items-start  ">
-              {data?.map((section: any, index: any) => (
-                <div
-                  className="flex flex-col items-center justify-center  h-full w-80 "
-                  key={section.id}
-                >
-                  <Droppable key={section.id} droppableId={section.id}>
-                    {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className="flex flex-col  w-full h-full px-2 "
-                      >
-                        <div className="flex flex-col items-center justify-center py-2   ">
-                          <div className="flex flex-row items-center justify-between w-full border ">
-                            <input
-                              type="text"
-                              className="  pl-2  px-1 py-1 rounded-md m-2  "
-                              placeholder={section?.title}
-                              onChange={(e) =>
-                                updateSectionTitle(e, section.id)
-                              }
-                            />
-                            <div className="flex items-center justify-end pr-2">
-                              <span className="border rounded-full px-2 m-2">
-                                {section?.tasks?.length}
-                              </span>
 
-                              <TrashIcon
-                                className="w-4 h-4"
-                                onClick={() => {
-                                  setSectionId(section.id);
-                                  setOpenSectionAlert(true);
-                                }}
-                              />
-                            </div>
-                          </div>
-                          <div className="w-full">
-                            <div className="flex flex-row items-center justify-center space-x-5 py-2  w-full">
-                              <button
-                                className="w-80 border justify-center items-center flex flex-row "
-                                onClick={() => createTask(section.id)}
-                              >
-                                <PlusIcon className="w-6 h-6" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="">
-                          {section.tasks?.map((task: any, index: any) => (
-                            <Draggable
-                              key={task.id}
-                              draggableId={task.id}
-                              index={index}
-                            >
-                              {(provided: any, snapshot: any) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  cursor={
-                                    snapshot.isDragging ? "grabbing" : "grab"
-                                  }
-                                  className="flex flex-col overflow-hidden items-start justify-center text-xs p-3 mb-2  rounded-md border  shadow-md "
-                                  type="button"
-                                >
-                                  <div className="flex flex-row justify-between mx-auto w-full py-1">
-                                    {/*  <pre>{JSON.stringify(task, null, 2)}</pre> */}
-                                    <h2 className="grow font-bold text-sm ">
-                                      {task.title === ""
-                                        ? "Untitled"
-                                        : task.title}
-                                    </h2>
-                                    <div className="ml-1">
-                                      {task?.dueDateAt &&
-                                        task.taskStatus != "COMPLETE" &&
-                                        task.dueDateAt < Date.now() && (
-                                          <HoverCard>
-                                            <HoverCardTrigger>
-                                              <ExclamationTriangleIcon className="w-4 h-4 text-red-500" />
-                                            </HoverCardTrigger>
-                                            <HoverCardContent>
-                                              Attention! This task is overdue!
-                                            </HoverCardContent>
-                                          </HoverCard>
-                                        )}
-                                      {task.taskStatus === "COMPLETE" && (
-                                        <HoverCard>
-                                          <HoverCardTrigger>
-                                            <Check className="w-4 h-4 text-green-500" />
-                                          </HoverCardTrigger>
-                                          <HoverCardContent>
-                                            This task is done!
-                                          </HoverCardContent>
-                                        </HoverCard>
-                                      )}
-                                    </div>
-                                    <DropdownMenu>
-                                      <DropdownMenuTrigger
-                                        asChild
-                                        className="w-[25px] ml-1 "
-                                      >
-                                        <DotsHorizontalIcon className="w-4 h-4 text-slate-600 pl-2" />
-                                      </DropdownMenuTrigger>
-                                      <DropdownMenuContent className="w-[200px]">
-                                        <DropdownMenuItem
-                                          className="gap-2"
-                                          onClick={() =>
-                                            router.push(
-                                              `/projects/tasks/viewtask/${task.id}`
-                                            )
-                                          }
-                                        >
-                                          <EyeIcon className="w-4 h-4 opacity-50" />
-                                          View
-                                        </DropdownMenuItem>
-                                        {task.taskStatus !== "COMPLETE" && (
-                                          <DropdownMenuItem
-                                            className="gap-2"
-                                            onClick={() => {
-                                              setUpdateOpenSheet(true);
-                                              setSelectedTask(task);
-                                            }}
-                                          >
-                                            <Pencil className="w-4 h-4 opacity-50" />
-                                            Edit
-                                          </DropdownMenuItem>
-                                        )}
-                                        {task.taskStatus !== "COMPLETE" && (
-                                          <DropdownMenuItem
-                                            className="gap-2"
-                                            onClick={() => {
-                                              onDone(task.id);
-                                            }}
-                                          >
-                                            <Check className="w-4 h-4 opacity-50" />
-                                            Mark as done
-                                          </DropdownMenuItem>
-                                        )}
-                                        <DropdownMenuItem
-                                          className="gap-2"
-                                          onClick={() => {
-                                            setSelectedTask(task);
-                                            setOpen(true);
-                                          }}
-                                        >
-                                          <TrashIcon className="w-4 h-4 opacity-50" />
-                                          Delete
-                                        </DropdownMenuItem>
-                                      </DropdownMenuContent>
-                                    </DropdownMenu>
-                                  </div>
-                                  <div className="py-1">
-                                    Due date:{" "}
-                                    {moment(task.dueDateAt).format(
-                                      "YYYY-MM-DD"
-                                    )}
-                                  </div>
-                                  <div className="my-2">
-                                    <p
-                                      className={
-                                        task.priority === "normal"
-                                          ? `text-yellow-500`
-                                          : task.priority === "high"
-                                          ? `text-red-500`
-                                          : task.priority === "low"
-                                          ? `text-green-500`
-                                          : `text-slate-600`
-                                      }
-                                    >
-                                      Priorita: {task.priority}
-                                    </p>
-                                  </div>
-                                  <HoverCard>
-                                    <HoverCardTrigger className="line-clamp-2 mb-2">
-                                      {task.content}
-                                    </HoverCardTrigger>
-                                    <HoverCardContent>
-                                      {task.content}
-                                    </HoverCardContent>
-                                  </HoverCard>
-                                </div>
-                              )}
-                            </Draggable>
-                          ))}
-                          {provided.placeholder}
-                        </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCorners}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="flex flex-row items-start  ">
+            {data?.map((section: any) => (
+              <div
+                className="flex flex-col items-center justify-center  h-full w-80 "
+                key={section.id}
+              >
+                <div className="flex flex-col  w-full h-full px-2 ">
+                  <div className="flex flex-col items-center justify-center py-2   ">
+                    <div className="flex flex-row items-center justify-between w-full border ">
+                      <input
+                        type="text"
+                        className="  pl-2  px-1 py-1 rounded-md m-2  "
+                        placeholder={section?.title}
+                        onChange={(e) => updateSectionTitle(e, section.id)}
+                      />
+                      <div className="flex items-center justify-end pr-2">
+                        <span className="border rounded-full px-2 m-2">
+                          {section?.tasks?.length}
+                        </span>
+
+                        <TrashIcon
+                          className="w-4 h-4"
+                          onClick={() => {
+                            setSectionId(section.id);
+                            setOpenSectionAlert(true);
+                          }}
+                        />
                       </div>
-                    )}
-                  </Droppable>
+                    </div>
+                    <div className="w-full">
+                      <div className="flex flex-row items-center justify-center space-x-5 py-2  w-full">
+                        <button
+                          className="w-80 border justify-center items-center flex flex-row "
+                          onClick={() => createTask(section.id)}
+                        >
+                          <PlusIcon className="w-6 h-6" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <SortableContext
+                    items={section.tasks.map((t: Task) => t.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className="">
+                      {section.tasks?.map((task: any) => (
+                        <TaskItem
+                          key={task.id}
+                          task={task}
+                          onDelete={() => {
+                            setSelectedTask(task);
+                            setOpen(true);
+                          }}
+                          onDone={onDone}
+                          onEdit={() => {
+                            setUpdateOpenSheet(true);
+                            setSelectedTask(task);
+                          }}
+                          router={router}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
                 </div>
-              ))}
-            </div>
-            <div className="flex justify-center items-center pl-3 h-16">
-              <PlusCircle
-                className="w-8 h-8 text-slate-600 cursor-pointer"
-                onClick={() => {
-                  setSectionOpenDialog(true);
-                }}
-              />
-            </div>
-          </DragDropContext>
-        </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-center items-center pl-3 h-16">
+            <PlusCircle
+              className="w-8 h-8 text-slate-600 cursor-pointer"
+              onClick={() => {
+                setSectionOpenDialog(true);
+              }}
+            />
+          </div>
+
+          <DragOverlay>
+            {activeTask ? (
+              <div className="flex flex-col overflow-hidden items-start justify-center text-xs p-3 mb-2  rounded-md border  shadow-md opacity-80 bg-white">
+                <h2 className="font-bold text-sm">
+                  {activeTask.title === "" ? "Untitled" : activeTask.title}
+                </h2>
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       </div>
     </>
   );

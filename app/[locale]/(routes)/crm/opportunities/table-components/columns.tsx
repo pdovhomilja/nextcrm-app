@@ -109,7 +109,7 @@ export const columns: ColumnDef<Opportunity>[] = [
       return (
         <div>
           {row.original.budget
-            ? row.original.budget.toLocaleString("en-US", {
+            ? Number(row.original.budget).toLocaleString("en-US", {
                 style: "currency",
                 currency: "USD",
               })

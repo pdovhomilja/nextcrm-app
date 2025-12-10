@@ -1,6 +1,5 @@
 "use client";
 
-import LoadingComponent from "@/components/LoadingComponent";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,32 +10,12 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { TrashIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import React, { useEffect, useState } from "react";
-import { set, useForm } from "react-hook-form";
-import { z } from "zod";
 
 type Props = {
   boardId: string;
@@ -65,8 +44,6 @@ const DeleteProjectDialog = ({ boardId, boardName }: Props) => {
   const onDelete = async () => {
     setIsLoading(true);
     try {
-      //set timeout to simulate loading
-      //await new Promise((resolve) => setTimeout(resolve, 5000));
       await axios.delete(`/api/projects/${boardId}`);
       toast({
         title: "Success",
@@ -97,25 +74,23 @@ const DeleteProjectDialog = ({ boardId, boardName }: Props) => {
           </div>
         </Button>
       </DialogTrigger>
-      <DialogContent className="">
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="p-2">Delete project</DialogTitle>
-          <DialogDescription className="p-2">
+          <DialogTitle>Delete project</DialogTitle>
+          <DialogDescription>
             Are you sure you want to delete this project? You will not be able
             to recover it. All tasks will be deleted as well.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="space-x-2">
+        <DialogFooter>
           <Button
-            className="px-2"
-            variant="default"
+            variant="outline"
             onClick={() => setOpen(false)}
           >
             Cancel
           </Button>
-          <Button className="px-2" variant="destructive" onClick={onDelete}>
-            {isLoading && <span className="animate-pulse">Deleting ...</span>}
-            {!isLoading && <span>Delete</span>}
+          <Button variant="destructive" onClick={onDelete}>
+            {isLoading ? "Deleting..." : "Delete"}
           </Button>
         </DialogFooter>
       </DialogContent>

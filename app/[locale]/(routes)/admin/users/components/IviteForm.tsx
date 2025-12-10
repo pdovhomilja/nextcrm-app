@@ -32,7 +32,7 @@ const FormSchema = z.object({
   email: z.string().email(),
   language: z
     .string({
-      required_error: "Please select a user language.",
+      message: "Please select a user language.",
     })
     .min(2),
 });

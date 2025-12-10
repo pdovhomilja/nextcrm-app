@@ -6,7 +6,6 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTrigger,
   DialogTitle,
   DialogDescription,
   DialogFooter,
@@ -44,14 +43,11 @@ type Props = {
 };
 
 const NewTaskDialog = ({ users, boards }: Props) => {
-  //const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const { isOpen, setIsOpen } = useAppStore();
 
   const [isMounted, setIsMounted] = useState(false);
-
-  const { notionUrl } = useAppStore();
 
   const router = useRouter();
   const { toast } = useToast();
@@ -62,7 +58,6 @@ const NewTaskDialog = ({ users, boards }: Props) => {
     board: z.string().min(3).max(255),
     priority: z.string().min(3).max(10),
     content: z.string().min(3).max(500),
-    notionUrl: z.string().min(3).max(500),
   });
 
   type NewAccountFormValues = z.infer<typeof formSchema>;
@@ -72,9 +67,8 @@ const NewTaskDialog = ({ users, boards }: Props) => {
   });
 
   useEffect(() => {
-    form.setValue("notionUrl", notionUrl);
     setIsMounted(true);
-  }, [form, notionUrl]);
+  }, []);
 
   if (!isMounted) {
     return null;
@@ -101,158 +95,154 @@ const NewTaskDialog = ({ users, boards }: Props) => {
       setIsLoading(false);
       setIsOpen(false);
     }
-    setIsLoading(false);
-    setIsOpen(false);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      {/*       <DialogTrigger>
-        <Button className="px-2">Create task</Button>
-      </DialogTrigger> */}
-      <DialogContent className="">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle className="p-2">Create New Tas from Invoice</DialogTitle>
-          <DialogDescription className="p-2"></DialogDescription>
+          <DialogTitle>Create New Task from Invoice</DialogTitle>
+          <DialogDescription>
+            Fill out the form below to create a new task.
+          </DialogDescription>
         </DialogHeader>
         {isLoading ? (
           <LoadingComponent />
         ) : (
-          <div className="flex flex-col w-full ">
-            {/*     <pre>
-              <code>{JSON.stringify(form.getValues(), null, 2)}</code>
-            </pre> */}
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="h-full w-full space-y-3"
-              >
-                <div className="flex flex-col space-y-3">
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>New task name</FormLabel>
-                        <FormControl>
-                          <Input
-                            disabled={isLoading}
-                            placeholder="Enter task name"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="content"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Task description</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            disabled={isLoading}
-                            placeholder="Enter task description"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-4"
+            >
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>New task name</FormLabel>
+                      <FormControl>
+                        <Input
+                          disabled={isLoading}
+                          placeholder="Enter task name"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="content"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Task description</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          disabled={isLoading}
+                          placeholder="Enter task description"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <FormField
-                    control={form.control}
-                    name="user"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Assigned to</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select assigned user" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {users.map((user: any) => (
-                              <SelectItem key={user.id} value={user.id}>
-                                {user.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="board"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Choose project</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select tasks board" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {boards.map((board: any) => (
-                              <SelectItem key={board.id} value={board.id}>
-                                {board.title}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="priority"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Choose task priority</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select tasks priority" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="low">Low</SelectItem>
-                            <SelectItem value="medium">Medium</SelectItem>
-                            <SelectItem value="high">High</SelectItem>
-                            <SelectItem value="critical">Critical</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="flex w-full justify-end space-x-2 pt-2">
-                  <DialogTrigger asChild>
-                    <Button variant={"destructive"}>Cancel</Button>
-                  </DialogTrigger>
-                  <Button type="submit">Create</Button>
-                </div>
-              </form>
-            </Form>
-          </div>
+                <FormField
+                  control={form.control}
+                  name="user"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Assigned to</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select assigned user" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {users.map((user: any) => (
+                            <SelectItem key={user.id} value={user.id}>
+                              {user.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="board"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Choose project</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select tasks board" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {boards.map((board: any) => (
+                            <SelectItem key={board.id} value={board.id}>
+                              {board.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="priority"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Choose task priority</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select tasks priority" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                          <SelectItem value="critical">Critical</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit">Create</Button>
+              </DialogFooter>
+            </form>
+          </Form>
         )}
       </DialogContent>
     </Dialog>

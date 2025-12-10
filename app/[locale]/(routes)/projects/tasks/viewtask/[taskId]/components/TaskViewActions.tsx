@@ -9,7 +9,14 @@ import { getTaskDone } from "@/app/[locale]/(routes)/projects/actions/get-task-d
 import { Badge } from "@/components/ui/badge";
 import { CheckSquare, Pencil } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import UpdateTaskDialog from "@/app/[locale]/(routes)/projects/dialogs/UpdateTask";
 import { getActiveUsers } from "@/actions/get-users";
 import { useState } from "react";
@@ -83,17 +90,20 @@ const TaskViewActions = ({
         Edit
       </Badge>
       <Sheet open={openEdit} onOpenChange={() => setOpenEdit(false)}>
-        <SheetContent>
-          <UpdateTaskDialog
-            users={users}
-            boards={boards}
-            initialData={initialData}
-            onDone={() => setOpenEdit(false)}
-          />
-          <div className="flex pt-2 w-full justify-end">
-            <Button onClick={() => setOpenEdit(false)} variant={"destructive"}>
-              Close
-            </Button>
+        <SheetContent className="max-w-3xl overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Edit Task</SheetTitle>
+            <SheetDescription>
+              Update task details, due date, priority, status, and assigned users
+            </SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 space-y-4">
+            <UpdateTaskDialog
+              users={users}
+              boards={boards}
+              initialData={initialData}
+              onDone={() => setOpenEdit(false)}
+            />
           </div>
         </SheetContent>
       </Sheet>

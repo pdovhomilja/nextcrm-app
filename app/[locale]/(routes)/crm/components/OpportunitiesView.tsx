@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -13,8 +13,10 @@ import {
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
+  SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -22,6 +24,7 @@ import { Separator } from "@/components/ui/separator";
 import { columns } from "../opportunities/table-components/columns";
 import { NewOpportunityForm } from "../opportunities/components/NewOpportunityForm";
 import { OpportunitiesDataTable } from "../opportunities/table-components/data-table";
+
 const OpportunitiesView = ({
   data,
   crmData,
@@ -32,18 +35,9 @@ const OpportunitiesView = ({
   accountId?: string;
 }) => {
   const router = useRouter();
-  const [isMounted, setIsMounted] = useState(false);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) {
-    return null;
-  }
 
   const { users, accounts, contacts, saleTypes, saleStages, campaigns } =
     crmData;
@@ -63,18 +57,19 @@ const OpportunitiesView = ({
             <CardDescription></CardDescription>
           </div>
           <div className="flex space-x-2">
-            <Sheet open={open} onOpenChange={() => setOpen(false)}>
-              <Button
-                className="my-2 cursor-pointer"
-                onClick={() => setOpen(true)}
-              >
-                +
-              </Button>
-              <SheetContent className="min-w-[1000px] space-y-2">
+            <Sheet open={open} onOpenChange={setOpen}>
+              <SheetTrigger asChild>
+                <Button className="my-2 cursor-pointer">+</Button>
+              </SheetTrigger>
+              <SheetContent className="max-w-3xl overflow-y-auto">
                 <SheetHeader>
-                  <SheetTitle>Create new opportunity form</SheetTitle>
+                  <SheetTitle>Create new opportunity</SheetTitle>
+                  <SheetDescription>
+                    Create a new sales opportunity with account, contact, and
+                    deal information
+                  </SheetDescription>
                 </SheetHeader>
-                <div className="h-full overflow-y-auto">
+                <div className="mt-6 space-y-4">
                   <NewOpportunityForm
                     users={users}
                     accounts={accounts}

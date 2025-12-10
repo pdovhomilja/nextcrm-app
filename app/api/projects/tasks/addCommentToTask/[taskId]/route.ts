@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { junctionTableHelpers } from "@/lib/junction-helpers";
 
 import NewTaskCommentEmail from "@/emails/NewTaskComment";
 import resendHelper from "@/lib/resend";
@@ -56,17 +57,13 @@ export async function POST(
 
     if (section) {
       //If there is a section, it is task from Projects if there is no section it is task from CRM
-      //ADD USER TO WATCHERS - on Board
+      //ADD USER TO WATCHERS - on Board using BoardWatchers junction table
       await prismadb.boards.update({
         where: {
           id: section.board,
         },
         data: {
-          watchers_users: {
-            connect: {
-              id: session.user.id,
-            },
-          },
+          watchers: junctionTableHelpers.addWatcher(session.user.id),
         },
       });
 
@@ -79,36 +76,34 @@ export async function POST(
         },
       });
 
-      const emailRecipients = await prismadb.users.findMany({
+      // Find all users watching this board through BoardWatchers junction table
+      const boardWatchers = await prismadb.boardWatchers.findMany({
         where: {
-          //Send to all users watching the board except the user who created the comment
-          id: {
+          board_id: section.board,
+          // Exclude the user who created the comment
+          user_id: {
             not: session.user.id,
           },
-          watching_boardsIDs: {
-            has: section.board,
-          },
+        },
+        include: {
+          user: true,
         },
       });
+
+      const emailRecipients = boardWatchers.map(w => w.user);
 
       // Add the task creator to the email recipients
       if (task.createdBy) {
         const taskCreator = await prismadb.users.findUnique({
           where: { id: task.createdBy },
         });
-        if (taskCreator) {
+        if (taskCreator && taskCreator.id !== session.user.id) {
           emailRecipients.push(taskCreator); // Add the task creator to the recipients
         }
       }
 
       //Create notifications for every user watching the board except the user who created the comment
-      for (const userID of emailRecipients) {
-        const user = await prismadb.users.findUnique({
-          where: {
-            id: userID.id,
-          },
-        });
-
+      for (const user of emailRecipients) {
         //console.log("Comment send to user: ", user?.email);
 
         await resend.emails.send({

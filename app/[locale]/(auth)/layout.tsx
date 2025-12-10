@@ -1,8 +1,6 @@
-import axios from "axios";
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { createTranslator } from "next-intl";
 import { GithubIcon, Star } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import "@/app/[locale]/globals.css";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -14,26 +12,15 @@ type Props = {
   params: Promise<{ locale: string }>;
 };
 
-async function getLocales(locale: string) {
-  try {
-    return (await import(`@/locales/${locale}.json`)).default;
-  } catch (error) {
-    notFound();
-  }
-}
-
 export async function generateMetadata(props: Props) {
   const params = await props.params;
+  const { locale } = params;
 
-  const {
-    locale
-  } = params;
+  const t = await getTranslations({ locale, namespace: "RootLayout" });
 
-  const messages = await getLocales(locale);
-  const t = createTranslator({ locale, messages });
   return {
-    title: t("RootLayout.title"),
-    description: t("RootLayout.description"),
+    title: t("title"),
+    description: t("description"),
   };
 }
 

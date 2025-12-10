@@ -10,10 +10,9 @@ type Props = {
 
 const RossumCockpit = ({ invoiceData }: Props) => {
   const [rossumEmbbededUrl, setRossumEmbbededUrl]: any = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setIsLoading(true);
     axios
       .post("/api/invoice/rossum/get-rossum-embedded-url", invoiceData)
       .then((response) => {

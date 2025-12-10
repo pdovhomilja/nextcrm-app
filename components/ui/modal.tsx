@@ -1,11 +1,11 @@
 "use client";
 
-import { DialogTitle } from "@radix-ui/react-dialog";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
+  DialogTitle,
 } from "./dialog";
 
 interface ModalProps {
@@ -31,12 +31,12 @@ export default function Modal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onChange}>
-      <DialogContent>
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        <div>{children}</div>
+        <div className="mt-6">{children}</div>
       </DialogContent>
     </Dialog>
   );

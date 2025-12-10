@@ -1,75 +1,66 @@
-"use client";
-
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Coins } from "lucide-react";
+import { NavItem } from "../nav-main";
 
-import { usePathname, useRouter } from "next/navigation";
+/**
+ * CRM Module Menu Item - Task Group 2.3
+ *
+ * Converted from DropdownMenu pattern to collapsible sidebar group.
+ * Returns a NavItem object with sub-items for all CRM routes.
+ *
+ * @param localizations - Localized labels for CRM module items
+ * @returns NavItem object with collapsible sub-items for CRM navigation
+ */
 
 type Props = {
-  open: boolean;
-  localizations: any;
+  localizations: {
+    title: string;
+    accounts: string;
+    contacts: string;
+    leads: string;
+    opportunities: string;
+    contracts: string;
+  };
 };
 
-const CrmModuleMenu = ({ open, localizations }: Props) => {
-  const router = useRouter();
-  const pathname = usePathname();
-  const isPath = pathname.includes("crm");
-
-  return (
-    <div
-      className={`flex flex-row items-center mx-auto p-2 ${
-        isPath ? "text-muted-foreground" : null
-      }`}
-    >
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          className={
-            open
-              ? "w-full hover:bg-slate-700 hover:text-gray-200 hover:transition hover:duration-150 rounded-md mx-auto"
-              : ""
-          }
-        >
-          <div className="flex gap-2 p-2">
-            <Coins />
-            <span className={open ? "" : "hidden"}>{localizations.title}</span>
-          </div>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-[250px] ml-10">
-          <DropdownMenuItem onClick={() => router.push("/crm/dashboard")}>
-            Dashboard
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push("/crm/dashboard/user")}>
-            My Dashboard
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push("/crm")}>
-            Overview
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => router.push("/crm/accounts")}>
-            {localizations.accounts}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push("/crm/contacts")}>
-            {localizations.contacts}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push("/crm/leads")}>
-            {localizations.leads}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push("/crm/opportunities")}>
-            {localizations.opportunities}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push("/crm/contracts")}>
-            {localizations.contracts}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
-  );
+export const getCrmMenuItem = ({ localizations }: Props): NavItem => {
+  return {
+    title: localizations.title,
+    icon: Coins,
+    items: [
+      {
+        title: "Dashboard",
+        url: "/crm/dashboard",
+      },
+      {
+        title: "My Dashboard",
+        url: "/crm/dashboard/user",
+      },
+      {
+        title: "Overview",
+        url: "/crm",
+      },
+      {
+        title: localizations.accounts,
+        url: "/crm/accounts",
+      },
+      {
+        title: localizations.contacts,
+        url: "/crm/contacts",
+      },
+      {
+        title: localizations.leads,
+        url: "/crm/leads",
+      },
+      {
+        title: localizations.opportunities,
+        url: "/crm/opportunities",
+      },
+      {
+        title: localizations.contracts,
+        url: "/crm/contracts",
+      },
+    ],
+  };
 };
 
-export default CrmModuleMenu;
+export default getCrmMenuItem;

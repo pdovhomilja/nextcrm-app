@@ -1,28 +1,33 @@
-"use client";
-import { FileEdit } from "lucide-react";
-import Link from "next/link";
+import { FileEdit } from "lucide-react"
+import { NavItem } from "../nav-main"
 
-import { usePathname } from "next/navigation";
-import React from "react";
+/**
+ * Databox Module Menu Item - Task 2.6.6
+ *
+ * Converted from Link pattern to NavItem structure for sidebar integration.
+ * Used in app-sidebar.tsx with module filtering (name === "databox").
+ *
+ * References:
+ * - Previous: Simple Link component with FileEdit icon
+ * - ModuleMenu.tsx: lines 109-113
+ * - Route: /databox
+ */
 
-type Props = {
-  open: boolean;
-};
+interface GetDataboxMenuItemProps {
+  title?: string
+}
 
-const DataboxModuleMenu = ({ open }: Props) => {
-  const pathname = usePathname();
-  const isPath = pathname.includes("databox");
-  return (
-    <div className="flex flex-row items-center mx-auto p-2">
-      <Link
-        href={"/databox"}
-        className={`flex gap-2 p-2 ${isPath ? "text-muted-foreground" : null}`}
-      >
-        <FileEdit className="w-6" />
-        <span className={open ? "" : "hidden"}>Databox</span>
-      </Link>
-    </div>
-  );
-};
-
-export default DataboxModuleMenu;
+/**
+ * Returns navigation item configuration for Databox module
+ * @param title - Localized title for the menu item (defaults to "Databox")
+ * @returns NavItem object compatible with NavMain component
+ */
+export default function getDataboxMenuItem({
+  title = "Databox",
+}: GetDataboxMenuItemProps): NavItem {
+  return {
+    title,
+    url: "/databox",
+    icon: FileEdit,
+  }
+}

@@ -22,6 +22,7 @@ import {
   DialogTrigger,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -67,7 +68,7 @@ const NewSectionDialog = ({ boardId }: Props) => {
       await axios.post(`/api/projects/sections/${boardId}`, data);
       toast({
         title: "Success",
-        description: `New project: ${data.title}, created successfully`,
+        description: `New section: ${data.title}, created successfully`,
       });
     } catch (error: any) {
       toast({
@@ -90,50 +91,50 @@ const NewSectionDialog = ({ boardId }: Props) => {
       <DialogTrigger asChild>
         <Button className="px-2">Create new section</Button>
       </DialogTrigger>
-      <DialogContent className="">
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="p-2">Create new section</DialogTitle>
-          <DialogDescription className="p-2">
+          <DialogTitle>Create new section</DialogTitle>
+          <DialogDescription>
             Fill out the form below to create a new section to this project.
           </DialogDescription>
         </DialogHeader>
         {isLoading ? (
           <LoadingComponent />
         ) : (
-          <div className="flex w-full ">
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="h-full w-full space-y-3"
-              >
-                <div className="flex flex-col space-y-3">
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>New section name</FormLabel>
-                        <FormControl>
-                          <Input
-                            disabled={isLoading}
-                            placeholder="Enter section name"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="flex w-full justify-end space-x-2 pt-2">
-                  <DialogTrigger asChild>
-                    <Button variant={"destructive"}>Cancel</Button>
-                  </DialogTrigger>
-                  <Button type="submit">Create</Button>
-                </div>
-              </form>
-            </Form>
-          </div>
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-4"
+            >
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>New section name</FormLabel>
+                    <FormControl>
+                      <Input
+                        disabled={isLoading}
+                        placeholder="Enter section name"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit">Create</Button>
+              </DialogFooter>
+            </form>
+          </Form>
         )}
       </DialogContent>
     </Dialog>

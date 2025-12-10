@@ -1,5 +1,6 @@
 import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
+import { junctionTableHelpers } from "@/lib/junction-helpers";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
@@ -17,20 +18,18 @@ export async function POST(req: Request, props: { params: Promise<{ accountId: s
   const accountId = params.accountId;
 
   try {
+    // Add watcher using AccountWatchers junction table
     await prismadb.crm_Accounts.update({
       where: {
         id: accountId,
       },
       data: {
-        watching_users: {
-          connect: {
-            id: session.user.id,
-          },
-        },
+        watchers: junctionTableHelpers.addWatcher(session.user.id),
       },
     });
-    return NextResponse.json({ message: "Board watched" }, { status: 200 });
+    return NextResponse.json({ message: "Account watched" }, { status: 200 });
   } catch (error) {
     console.log(error);
+    return NextResponse.json({ error: "Failed to watch account" }, { status: 500 });
   }
 }

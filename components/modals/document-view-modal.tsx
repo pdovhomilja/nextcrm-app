@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import ModalDocumentView from "../ui/modal-document-view";
 import DocViewer, { DocViewerRenderers } from "react-doc-viewer";
@@ -20,15 +19,6 @@ const DocumentViewModal = ({
   loading,
   document,
 }: AlertModalProps) => {
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) {
-    return null;
-  }
 
   const imageTypes = [
     "application/png",

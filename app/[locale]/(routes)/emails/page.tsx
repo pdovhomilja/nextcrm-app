@@ -1,29 +1,22 @@
 import React, { Suspense } from "react";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { MailComponent } from "./components/mail";
 import { accounts, mails } from "@/app/[locale]/(routes)/emails/data";
 import Container from "../components/ui/Container";
 import SuspenseLoading from "@/components/loadings/suspense";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getDictionary } from "@/dictionaries";
+import { getTranslations } from "next-intl/server";
 
 const EmailRoute = async () => {
   const session = await getServerSession(authOptions);
 
   if (!session) {
-    return {
-      redirect: {
-        destination: "/",
-        permanent: false,
-      },
-    };
+    redirect("/");
   }
-  //Get user language
-  const lang = session.user.userLanguage;
 
-  //Fetch translations from dictionary
-  const dict = await getDictionary(lang as "en" | "cz" | "de");
+  const t = await getTranslations("ModuleMenu");
 
   const layout = (await cookies()).get("react-resizable-panels:layout");
   const collapsed = (await cookies()).get("react-resizable-panels:collapsed");
@@ -34,7 +27,7 @@ const EmailRoute = async () => {
 
   return (
     <Container
-      title={dict.ModuleMenu.emails}
+      title={t("emails")}
       description={
         "This module is in development. Now it is only frontend demo."
       }

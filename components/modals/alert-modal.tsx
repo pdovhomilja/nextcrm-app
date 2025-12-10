@@ -1,8 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-import Modal from "@/components/ui/modal";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
 import { Icons } from "../ui/icons";
@@ -12,6 +17,8 @@ interface AlertModalProps {
   onClose: () => void;
   onConfirm: () => void;
   loading: boolean;
+  title?: string;
+  description?: string;
 }
 
 const AlertModal = ({
@@ -19,33 +26,38 @@ const AlertModal = ({
   onClose,
   onConfirm,
   loading,
+  title = "Are you sure?",
+  description = "This action cannot be undone.",
 }: AlertModalProps) => {
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) {
-    return null;
-  }
+  const onChange = (open: boolean) => {
+    if (!open) {
+      onClose();
+    }
+  };
 
   return (
-    <Modal
-      title="Are you sure?"
-      description="This action cannot be undone."
-      isOpen={isOpen}
-      onClose={onClose}
-    >
-      <div className="pt-6 space-x-2 flex items-center justify-end w-full ">
-        <Button disabled={loading} variant={"outline"} onClick={onClose}>
-          Cancel
-        </Button>
-        <Button disabled={loading} variant={"destructive"} onClick={onConfirm}>
-          {loading ? <Icons.spinner className="animate-spin" /> : "Continue"}
-        </Button>
-      </div>
-    </Modal>
+    <Dialog open={isOpen} onOpenChange={onChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
+
+        <DialogFooter>
+          <Button
+            type="button"
+            disabled={loading}
+            variant="outline"
+            onClick={onClose}
+          >
+            Cancel
+          </Button>
+          <Button disabled={loading} variant="destructive" onClick={onConfirm}>
+            {loading ? <Icons.spinner className="animate-spin" /> : "Continue"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

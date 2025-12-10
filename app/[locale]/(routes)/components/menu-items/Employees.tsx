@@ -1,27 +1,33 @@
-import { Users } from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Users } from "lucide-react"
+import { NavItem } from "../nav-main"
 
-import React from "react";
+/**
+ * Employees Module Menu Item - Task 2.6.2
+ *
+ * Converted from Link pattern to NavItem structure for sidebar integration.
+ * Used in app-sidebar.tsx with module filtering (name === "employee").
+ *
+ * References:
+ * - Previous: Simple Link component with Users icon
+ * - ModuleMenu.tsx: lines 86-90
+ * - Route: /employees
+ */
 
-type Props = {
-  open: boolean;
-};
+interface GetEmployeesMenuItemProps {
+  title?: string
+}
 
-const EmployeesModuleMenu = ({ open }: Props) => {
-  const pathname = usePathname();
-  const isPath = pathname.includes("employees");
-  return (
-    <div className="flex flex-row items-center mx-auto p-2">
-      <Link
-        href={"/employees"}
-        className={`flex gap-2 p-2 ${isPath ? "text-muted-foreground" : null}`}
-      >
-        <Users className="w-6" />
-        <span className={open ? "" : "hidden"}>Employees</span>
-      </Link>
-    </div>
-  );
-};
-
-export default EmployeesModuleMenu;
+/**
+ * Returns navigation item configuration for Employees module
+ * @param title - Localized title for the menu item (defaults to "Employees")
+ * @returns NavItem object compatible with NavMain component
+ */
+export default function getEmployeesMenuItem({
+  title = "Employees",
+}: GetEmployeesMenuItemProps): NavItem {
+  return {
+    title,
+    url: "/employees",
+    icon: Users,
+  }
+}

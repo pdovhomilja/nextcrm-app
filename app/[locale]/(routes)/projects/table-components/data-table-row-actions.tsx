@@ -121,12 +121,16 @@ export function DataTableRowActions<TData>({
         loading={loading}
       />
       <Sheet open={editOpen} onOpenChange={() => setEditOpen(false)}>
-        <SheetContent>
+        <SheetContent className="max-w-3xl overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>Edit your project data</SheetTitle>
-            <SheetDescription></SheetDescription>
+            <SheetTitle>Edit Project</SheetTitle>
+            <SheetDescription>
+              Update project details including title, description, dates, and assigned users
+            </SheetDescription>
           </SheetHeader>
-          <UpdateProjectForm initialData={project} openEdit={setEditOpen} />
+          <div className="mt-6 space-y-4">
+            <UpdateProjectForm initialData={project} openEdit={setEditOpen} />
+          </div>
         </SheetContent>
       </Sheet>
       <DropdownMenu>

@@ -44,7 +44,7 @@ const UpdateProjectForm = ({ initialData, openEdit }: Props) => {
   const { toast } = useToast();
 
   const formSchema = z.object({
-    id: z.string().default(initialData.id),
+    id: z.string(),
     title: z.string().min(3).max(255),
     description: z.string().min(3).max(500),
     visibility: z.string().min(3).max(255),

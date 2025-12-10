@@ -1,28 +1,27 @@
 import { Home } from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { NavItem } from "../nav-main";
 
-import React from "react";
+/**
+ * Dashboard Menu Item - Task Group 2.2
+ *
+ * Converted from old ModuleMenu pattern to new sidebar item format.
+ * Returns a NavItem object compatible with NavMain component.
+ *
+ * @param title - Localized dashboard title (from dict.ModuleMenu.dashboard)
+ * @returns NavItem object for dashboard navigation
+ */
 
 type Props = {
-  open: boolean;
   title: string;
 };
 
-const DashboardMenu = ({ open, title }: Props) => {
-  const pathname = usePathname();
-  const isPath = pathname.includes("nevermind");
-  return (
-    <div className="flex flex-row items-center mx-auto p-2">
-      <Link
-        href={"/"}
-        className={`flex gap-2 p-2 ${isPath ? "text-muted-foreground" : null}`}
-      >
-        <Home className="w-6" />
-        <span className={open ? "" : "hidden"}>{title}</span>
-      </Link>
-    </div>
-  );
+export const getDashboardMenuItem = ({ title }: Props): NavItem => {
+  return {
+    title: title,
+    url: "/",
+    icon: Home,
+    // Active state will be detected by NavMain using pathname
+  };
 };
 
-export default DashboardMenu;
+export default getDashboardMenuItem;

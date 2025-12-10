@@ -24,7 +24,6 @@ export async function POST(req: Request) {
     board,
     priority,
     content,
-    notionUrl,
     account,
     dueDateAt,
   } = body;
@@ -58,18 +57,12 @@ export async function POST(req: Request) {
       },
     });
 
-    let contentUpdated = content;
-
-    if (notionUrl) {
-      contentUpdated = content + "\n\n" + notionUrl;
-    }
-
     const task = await prismadb.tasks.create({
       data: {
         v: 0,
         priority: priority,
         title: title,
-        content: contentUpdated,
+        content: content,
         dueDateAt: dueDateAt,
         section: sectionId.id,
         createdBy: session.user.id,

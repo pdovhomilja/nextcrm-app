@@ -10,8 +10,12 @@ export const opportunitySchema = z.object({
   next_step: z.string().nullable(),
   close_date: z.date(),
   status: z.string().nullable(),
-  budget: z.number().nullable(),
-  expected_revenue: z.number().nullable(),
+  budget: z.union([z.number(), z.bigint()]).nullable().transform((val) =>
+    typeof val === 'bigint' ? Number(val) : val
+  ),
+  expected_revenue: z.union([z.number(), z.bigint()]).nullable().transform((val) =>
+    typeof val === 'bigint' ? Number(val) : val
+  ),
   assigned_account: z.object({}).optional().nullable(),
   assigned_sales_stage: z.object({}).optional().nullable(),
   assigned_to_user: z.object({}).optional().nullable(),

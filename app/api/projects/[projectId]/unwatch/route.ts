@@ -2,6 +2,7 @@ import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
+import { junctionTableHelpers } from "@/lib/junction-helpers";
 
 export async function POST(req: Request, props: { params: Promise<{ projectId: string }> }) {
   const params = await props.params;
@@ -17,20 +18,18 @@ export async function POST(req: Request, props: { params: Promise<{ projectId: s
   const boardId = params.projectId;
 
   try {
+    // Remove watcher using BoardWatchers junction table with composite key
     await prismadb.boards.update({
       where: {
         id: boardId,
       },
       data: {
-        watchers_users: {
-          disconnect: {
-            id: session.user.id,
-          },
-        },
+        watchers: junctionTableHelpers.removeBoardWatcher(boardId, session.user.id),
       },
     });
-    return NextResponse.json({ message: "Board watched" }, { status: 200 });
+    return NextResponse.json({ message: "Board unwatched" }, { status: 200 });
   } catch (error) {
     console.log(error);
+    return new NextResponse("Failed to unwatch board", { status: 500 });
   }
 }
