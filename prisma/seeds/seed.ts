@@ -1,19 +1,31 @@
-//import { PrismaClient } from "@prisma/client";
-const { PrismaClient } = require("@prisma/client");
+import { PrismaClient, gptStatus } from "@prisma/client";
+import { Pool } from "pg";
+import { PrismaPg } from "@prisma/adapter-pg";
+import "dotenv/config";
+
 /*
 Seed data is used to populate the database with initial data.
 */
 //Menu Items
-const moduleData = require("../initial-data/system_Modules_Enabled.json");
+import moduleData from "../initial-data/system_Modules_Enabled.json";
 //GPT Models
-const gptModelsData = require("../initial-data/gpt_Models.json");
-//CRM
-const crmOpportunityTypeData = require("../initial-data/crm_Opportunities_Type.json");
-const crmOpportunitySaleStagesData = require("../initial-data/crm_Opportunities_Sales_Stages.json");
-const crmCampaignsData = require("../initial-data/crm_campaigns.json");
-const crmIndustryTypeData = require("../initial-data/crm_Industry_Type.json");
+import gptModelsDataRaw from "../initial-data/gpt_Models.json";
 
-const prisma = new PrismaClient();
+const gptModelsData = gptModelsDataRaw.map((item) => ({
+  ...item,
+  status: item.status as gptStatus,
+}));
+//CRM
+import crmOpportunityTypeData from "../initial-data/crm_Opportunities_Type.json";
+import crmOpportunitySaleStagesData from "../initial-data/crm_Opportunities_Sales_Stages.json";
+import crmCampaignsData from "../initial-data/crm_campaigns.json";
+import crmIndustryTypeData from "../initial-data/crm_Industry_Type.json";
+
+const connectionString = process.env.DATABASE_URL!;
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   // Your seeding logic here using Prisma Client
