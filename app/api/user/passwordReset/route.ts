@@ -1,3 +1,5 @@
+"use server";
+
 import { NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
 
@@ -52,9 +54,8 @@ export async function POST(req: Request) {
       });
     } else {
       const data = await resend.emails.send({
-        from: "NextCRM <info@nextcrm.io>",
+        from: process.env.EMAIL_FROM!,
         to: user.email,
-        //to: ["pavel@dovhomilja.cz"],
         subject: "NextCRM - Password reset",
         text: "", // Add this line to fix the types issue
         //react: DemoTemplate({ firstName: "John" }),
