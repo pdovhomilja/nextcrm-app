@@ -29,6 +29,9 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.2
         version: 3.2.2(react@19.1.0)
+      '@eslint/eslintrc':
+        specifier: ^3
+        version: 3.3.1
       '@hookform/resolvers':
         specifier: ^5.2.1
         version: 5.2.1(react-hook-form@7.62.0(react@19.1.0))
@@ -107,6 +110,30 @@ importers:
       '@tanstack/react-table':
         specifier: ^8.21.3
         version: 8.21.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@types/bcryptjs':
+        specifier: ^3.0.0
+        version: 3.0.0
+      '@types/dompurify':
+        specifier: ^3.2.0
+        version: 3.2.0
+      '@types/mailparser':
+        specifier: ^3.4.6
+        version: 3.4.6
+      '@types/node':
+        specifier: ^20
+        version: 20.19.9
+      '@types/node-imap':
+        specifier: ^0.9.3
+        version: 0.9.3
+      '@types/pdf-parse':
+        specifier: ^1.1.5
+        version: 1.1.5
+      '@types/react':
+        specifier: ^19
+        version: 19.1.8
+      '@types/react-dom':
+        specifier: ^19
+        version: 19.1.6(@types/react@19.1.8)
       '@vercel/mcp-adapter':
         specifier: ^1.0.0
         version: 1.0.0(@modelcontextprotocol/sdk@1.17.1)(next@15.4.10(@babel/core@7.28.3)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))
@@ -131,6 +158,15 @@ importers:
       dompurify:
         specifier: ^3.2.6
         version: 3.2.6
+      eslint:
+        specifier: ^9.34.0
+        version: 9.34.0(jiti@2.5.1)
+      eslint-config-next:
+        specifier: ^15.5.2
+        version: 15.5.2(eslint@9.34.0(jiti@2.5.1))(typescript@5.8.3)
+      eslint-plugin-react-hooks:
+        specifier: ^7.0.1
+        version: 7.0.1(eslint@9.34.0(jiti@2.5.1))
       lucide-react:
         specifier: ^0.526.0
         version: 0.526.0(react@19.1.0)
@@ -206,6 +242,9 @@ importers:
       tesseract.js:
         specifier: ^5.1.1
         version: 5.1.1
+      tw-animate-css:
+        specifier: ^1.3.7
+        version: 1.3.7
       typescript:
         specifier: ^5
         version: 5.8.3
@@ -222,51 +261,12 @@ importers:
         specifier: ^4.0.14
         version: 4.0.14
     devDependencies:
-      '@eslint/eslintrc':
-        specifier: ^3
-        version: 3.3.1
       '@jest/globals':
         specifier: ^30.1.1
         version: 30.1.1
-      '@types/bcryptjs':
-        specifier: ^3.0.0
-        version: 3.0.0
-      '@types/dompurify':
-        specifier: ^3.2.0
-        version: 3.2.0
-      '@types/mailparser':
-        specifier: ^3.4.6
-        version: 3.4.6
-      '@types/node':
-        specifier: ^20
-        version: 20.19.9
-      '@types/node-imap':
-        specifier: ^0.9.3
-        version: 0.9.3
-      '@types/pdf-parse':
-        specifier: ^1.1.5
-        version: 1.1.5
-      '@types/react':
-        specifier: ^19
-        version: 19.1.8
-      '@types/react-dom':
-        specifier: ^19
-        version: 19.1.6(@types/react@19.1.8)
-      eslint:
-        specifier: ^9.34.0
-        version: 9.34.0(jiti@2.5.1)
-      eslint-config-next:
-        specifier: ^15.5.2
-        version: 15.5.2(eslint@9.34.0(jiti@2.5.1))(typescript@5.8.3)
-      eslint-plugin-react-hooks:
-        specifier: ^7.0.1
-        version: 7.0.1(eslint@9.34.0(jiti@2.5.1))
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
-      tw-animate-css:
-        specifier: ^1.3.7
-        version: 1.3.7
 
 packages:
 

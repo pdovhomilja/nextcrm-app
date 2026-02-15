@@ -2,34 +2,21 @@
 
 import db from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { auth } from "@/auth";
-import { getUserByEmail } from "@/actions/user";
+import {
+  requireAuth,
+  verifyBoardAccess,
+} from "@/lib/security/company-access-validator";
 
 export async function deleteBoardSection(sectionId: string, boardId: string) {
+  const { userId, activeCompanyId } = await requireAuth();
+  await verifyBoardAccess(boardId, userId, activeCompanyId);
+
   try {
-    const session = await auth();
-    if (!session?.user?.email) {
-      throw new Error("User not authenticated");
-    }
-
-    const user = await getUserByEmail(session.user.email);
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    const activeCompanyId = session.user.activeCompanyId;
-    if (!activeCompanyId) {
-      throw new Error("No active company found");
-    }
-
-    //check if board is empty
-    const board = await db.task.findMany({
-      where: {
-        boardSectionId: sectionId,
-      },
+    // Check if board section is empty
+    const tasks = await db.task.findMany({
+      where: { boardSectionId: sectionId },
     });
-    if (board.length > 0) {
+    if (tasks.length > 0) {
       return {
         message:
           "Board section is not empty. Delete tasks first or move them to another section.",
@@ -37,9 +24,7 @@ export async function deleteBoardSection(sectionId: string, boardId: string) {
     }
 
     await db.boardSection.delete({
-      where: {
-        id: sectionId,
-      },
+      where: { id: sectionId },
     });
     revalidatePath(`/${activeCompanyId}/tasks/${boardId}`);
     return { message: "Board section deleted successfully" };
