@@ -113,15 +113,20 @@ export async function inviteUserToCompany(
   }
 
   try {
-    // Check if current user is admin/owner of the company
-    const currentMembership = await db.companyMembership.findUnique({
-      where: {
-        companyId_userId: {
-          companyId,
-          userId: session.user.id,
+    // Check permissions and find user to invite in parallel
+    const [currentMembership, userToInvite] = await Promise.all([
+      db.companyMembership.findUnique({
+        where: {
+          companyId_userId: {
+            companyId,
+            userId: session.user.id,
+          },
         },
-      },
-    });
+      }),
+      db.user.findUnique({
+        where: { email },
+      }),
+    ]);
 
     if (
       !currentMembership ||
@@ -129,11 +134,6 @@ export async function inviteUserToCompany(
     ) {
       return { success: false, error: "Insufficient permissions" };
     }
-
-    // Find the user to invite
-    const userToInvite = await db.user.findUnique({
-      where: { email },
-    });
 
     if (!userToInvite) {
       return { success: false, error: "User not found" };
@@ -287,48 +287,49 @@ export async function getCompanyDetails(companyId: string) {
   }
 
   try {
-    // Verify user has access to this company
-    const userMembership = await db.companyMembership.findUnique({
-      where: {
-        companyId_userId: {
-          companyId,
-          userId: session.user.id,
+    // Verify user access and fetch company details in parallel
+    const [userMembership, company] = await Promise.all([
+      db.companyMembership.findUnique({
+        where: {
+          companyId_userId: {
+            companyId,
+            userId: session.user.id,
+          },
         },
-      },
-    });
+      }),
+      db.company.findUnique({
+        where: { id: companyId },
+        include: {
+          memberships: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  image: true,
+                  createdAt: true,
+                },
+              },
+            },
+            orderBy: [
+              { role: "desc" }, // OWNER first, then ADMIN, then MEMBER
+              { createdAt: "asc" },
+            ],
+          },
+          _count: {
+            select: {
+              boards: true,
+              memberships: true,
+            },
+          },
+        },
+      }),
+    ]);
 
     if (!userMembership) {
       return { success: false, error: "Access denied" };
     }
-
-    const company = await db.company.findUnique({
-      where: { id: companyId },
-      include: {
-        memberships: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                image: true,
-                createdAt: true,
-              },
-            },
-          },
-          orderBy: [
-            { role: "desc" }, // OWNER first, then ADMIN, then MEMBER
-            { createdAt: "asc" },
-          ],
-        },
-        _count: {
-          select: {
-            boards: true,
-            memberships: true,
-          },
-        },
-      },
-    });
 
     if (!company) {
       return { success: false, error: "Company not found" };

@@ -1,12 +1,27 @@
 import { Suspense } from "react";
-import { ChartAreaInteractive } from "./_components/chart-area-interactive";
+import dynamic from "next/dynamic";
 import { SectionCards } from "./_components/section-cards";
 import { EnhancedDynamicCards } from "./_components/enhanced-dynamic-cards";
-import { DistributionChart } from "@/components/dashboard/charts/distribution-chart";
 
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
+
+const ChartAreaInteractive = dynamic(
+  () =>
+    import("./_components/chart-area-interactive").then((m) => ({
+      default: m.ChartAreaInteractive,
+    })),
+  { loading: () => <Skeleton className="h-[400px] w-full" /> },
+);
+
+const DistributionChart = dynamic(
+  () =>
+    import("@/components/dashboard/charts/distribution-chart").then((m) => ({
+      default: m.DistributionChart,
+    })),
+  { loading: () => <Skeleton className="h-[400px] w-full" /> },
+);
 
 import { getTaskMetrics } from "@/actions/dashboard/get-task-metrics";
 import { getBoardMetrics } from "@/actions/dashboard/get-board-metrics";

@@ -26,9 +26,8 @@ const MailPage = async ({
   params: Promise<{ cid: string }>;
   searchParams: Promise<{ account?: string }>;
 }) => {
-  const awaitedParams = await params;
-  const awaitedSearchParams = await searchParams;
-  const { accounts, error } = await getUserMailAccounts();
+  const [awaitedParams, awaitedSearchParams, { accounts, error }] =
+    await Promise.all([params, searchParams, getUserMailAccounts()]);
 
   if (error) {
     return (

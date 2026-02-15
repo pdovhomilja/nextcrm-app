@@ -55,3 +55,8 @@ next-env.d.ts
 /db_backup
 /db_scripts
 
+
+# skills
+.agents/
+.cursor/ 
+
