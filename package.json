@@ -83,11 +83,8 @@
     "use-debounce": "^10.0.6",
     "vaul": "^1.1.2",
     "xlsx": "^0.18.5",
-    "zod": "^4.0.14"
-  },
-  "devDependencies": {
+    "zod": "^4.0.14",
     "@eslint/eslintrc": "^3",
-    "@jest/globals": "^30.1.1",
     "@types/bcryptjs": "^3.0.0",
     "@types/dompurify": "^3.2.0",
     "@types/mailparser": "^3.4.6",
@@ -99,7 +96,10 @@
     "eslint": "^9.34.0",
     "eslint-config-next": "^15.5.2",
     "eslint-plugin-react-hooks": "^7.0.1",
-    "prettier": "^3.6.2",
     "tw-animate-css": "^1.3.7"
+  },
+  "devDependencies": {
+    "@jest/globals": "^30.1.1",
+    "prettier": "^3.6.2"
   }
 }
