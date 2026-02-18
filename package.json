@@ -12,7 +12,11 @@
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
     "migrate:mongo-to-postgres": "pnpm exec tsx scripts/migrate-mongo-to-postgres.ts",
-    "validate:migration": "pnpm exec tsx scripts/validate-migration.ts"
+    "validate:migration": "pnpm exec tsx scripts/validate-migration.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug"
   },
   "prisma": {
     "seed": "ts-node ./prisma/seeds/seed.ts"
@@ -109,6 +113,7 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@types/bcrypt": "^6.0.0",
     "@types/bcryptjs": "^3.0.0",
     "@types/imap": "^0.8.43",
@@ -118,7 +123,6 @@
     "@types/pg": "^8.16.0",
     "@types/react": "npm:types-react@19.0.0-rc.1",
     "@types/react-dom": "npm:types-react-dom@19.0.0-rc.1",
-    "cypress": "^15.10.0",
     "dotenv": "^17.3.1",
     "prisma": "^7.4.0",
     "shadcn": "^3.8.5",

@@ -1,7 +1,12 @@
 import { PrismaClient, gptStatus } from "@prisma/client";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
-import "dotenv/config";
+import dotenv from "dotenv";
+import path from "path";
+import bcrypt from "bcryptjs";
+
+// Load .env.local for test user credentials
+dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
 /*
 Seed data is used to populate the database with initial data.
@@ -99,6 +104,43 @@ async function main() {
     console.log("GPT Models seeded successfully");
   } else {
     console.log("GPT Models already seeded");
+  }
+
+  //Seed Test User for E2E Testing
+  const testUserEmail = process.env.TEST_USER_EMAIL || "test@nextcrm.app";
+  const testUserPassword =
+    process.env.TEST_USER_PASSWORD || "Som3Co0lP4ssw0rd123!";
+
+  const existingTestUser = await prisma.users.findUnique({
+    where: { email: testUserEmail },
+  });
+
+  const hashedPassword = await bcrypt.hash(testUserPassword, 10);
+
+  if (!existingTestUser) {
+    await prisma.users.create({
+      data: {
+        email: testUserEmail,
+        name: "Test User",
+        password: hashedPassword,
+        userStatus: "ACTIVE",
+        is_admin: true,
+        is_account_admin: true,
+      },
+    });
+    console.log(`Test user created: ${testUserEmail}`);
+  } else {
+    // Update password and status to ensure it matches env vars
+    await prisma.users.update({
+      where: { email: testUserEmail },
+      data: {
+        password: hashedPassword,
+        userStatus: "ACTIVE",
+        is_admin: true,
+        is_account_admin: true,
+      },
+    });
+    console.log(`Test user updated: ${testUserEmail}`);
   }
 
   console.log("-------- Seed DB completed --------");

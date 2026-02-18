@@ -84,7 +84,7 @@ You can try it here [demo.nextcrm.io](https://demo.nextcrm.io), login via Google
 5. ✅ PostgreSQL migration — migrated from MongoDB to PostgreSQL 17+
 6. 🔄 More AI powered features — daily summary of tasks and projects (extended OpenAI integration)
 7. 📋 Email campaigns management — integration with MailChimp and Listmonk
-8. 📋 Testing expansion — Jest + Cypress coverage (contributions welcome!)
+8. 📋 Testing expansion — Jest + Playwright coverage (contributions welcome!)
 9. 🔄 Fix all TypeScript `any` types — ongoing cleanup
 
 ## Emails
