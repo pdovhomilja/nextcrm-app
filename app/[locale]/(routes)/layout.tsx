@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -95,9 +96,12 @@ export default async function AppLayout({
     settings: dict("settings"),
   };
 
+  const cookieStore = await cookies();
+  const sidebarOpen = cookieStore.get("sidebar_state")?.value !== "false";
+
   //console.log(typeof build, "build");
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={sidebarOpen}>
       <AppSidebar
         modules={modules}
         dict={translations}
@@ -116,7 +120,11 @@ export default async function AppLayout({
           - Footer will appear at the bottom of the content, not fixed at viewport bottom
         */}
         <div className="flex flex-col flex-grow overflow-y-auto h-full">
-          <div className="flex-grow p-5">{children}</div>
+          <div className="flex-grow py-5">
+            <div className="max-w-screen-2xl mx-auto w-full px-4">
+              {children}
+            </div>
+          </div>
           <Footer />
         </div>
       </SidebarInset>
