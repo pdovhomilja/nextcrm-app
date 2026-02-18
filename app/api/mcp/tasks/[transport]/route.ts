@@ -457,7 +457,7 @@ const handler = createMcpHandler(
     },
   },
   {
-    basePath: "",
+    basePath: "/api/mcp/tasks",
     verboseLogs: process.env.MCP_VERBOSE_LOGS === "true",
     maxDuration: parseInt(process.env.MCP_MAX_DURATION || "800"),
   },

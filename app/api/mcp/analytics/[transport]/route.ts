@@ -413,6 +413,12 @@ const handler = createMcpHandler(
       return insights;
     }
   },
+  {},
+  {
+    basePath: "/api/mcp/analytics",
+    verboseLogs: process.env.MCP_VERBOSE_LOGS === "true",
+    maxDuration: parseInt(process.env.MCP_MAX_DURATION || "800"),
+  },
 );
 
 export { handler as GET, handler as POST };
