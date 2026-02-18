@@ -106,7 +106,7 @@ export const TABLE_SCHEMAS: Record<string, TableSchema> = {
       { field: 'updatedBy', referencedTable: 'Users' },
     ],
     fieldDefinitions: [
-      { name: 'status', type: 'Enum', enumValues: ['ACTIVE', 'INACTIVE', 'PENDING'] },
+      // status is String? in Prisma (not enum) — skip enum validation
       { name: 'createdAt', type: 'DateTime' },
       { name: 'updatedAt', type: 'DateTime' },
     ],
@@ -122,8 +122,9 @@ export const TABLE_SCHEMAS: Record<string, TableSchema> = {
       { field: 'updatedBy', referencedTable: 'Users' },
     ],
     fieldDefinitions: [
-      { name: 'status', type: 'Enum', enumValues: ['ACTIVE', 'INACTIVE', 'PENDING'] },
-      { name: 'type', type: 'Enum', enumValues: ['Customer', 'Partner', 'Vendor', 'Prospect'] },
+      // status is Boolean in Prisma (not enum string)
+      { name: 'status', type: 'Boolean' },
+      // type is String? in Prisma (not enum)
       { name: 'tags', type: 'Array' },
       { name: 'notes', type: 'Array' },
       { name: 'cratedAt', type: 'DateTime' },
@@ -140,8 +141,7 @@ export const TABLE_SCHEMAS: Record<string, TableSchema> = {
       { field: 'updatedBy', referencedTable: 'Users' },
     ],
     fieldDefinitions: [
-      { name: 'status', type: 'Enum', enumValues: ['NEW', 'CONTACTED', 'QUALIFIED', 'LOST'] },
-      { name: 'type', type: 'Enum', enumValues: ['DEMO'] },
+      // status and type are String? in Prisma (not strict enums)
       { name: 'createdAt', type: 'DateTime' },
     ],
   },
@@ -269,7 +269,7 @@ export const TABLE_SCHEMAS: Record<string, TableSchema> = {
       { field: 'last_updated_by', referencedTable: 'Users' },
     ],
     fieldDefinitions: [
-      { name: 'status', type: 'Enum', enumValues: ['ACTIVE', 'INACTIVE', 'PENDING'] },
+      // status is String? in Prisma (not enum)
       { name: 'favorite', type: 'Boolean' },
       { name: 'invoice_items', type: 'JSONB' },
       { name: 'date_created', type: 'DateTime' },

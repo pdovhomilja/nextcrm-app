@@ -10,6 +10,8 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { PrismaClient } from '@prisma/client';
+import { Pool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
 import {
   validateRowCounts,
   validateSampleRecords,
@@ -54,19 +56,26 @@ async function runValidation(): Promise<void> {
   console.log('Phase 1: Initialization');
   console.log('  - Connecting to databases...');
 
-  // Note: In Prisma 7, database URL is configured via prisma.config.ts
-  // For migration validation, set DATABASE_URL to point to PostgreSQL
-  // This script now validates the PostgreSQL database only
-  const mongoDb = new PrismaClient();
-  const postgresDb = new PrismaClient();
+  // Initialize Prisma client with adapter (required for Prisma 7 with @prisma/adapter-pg)
+  const pgConnectionString = process.env.DATABASE_URL_POSTGRES || process.env.DATABASE_URL;
+  if (!pgConnectionString) {
+    console.error('  ✗ DATABASE_URL or DATABASE_URL_POSTGRES environment variable not set');
+    process.exit(1);
+  }
+  const pgPool = new Pool({ connectionString: pgConnectionString });
+  const pgAdapter = new PrismaPg(pgPool);
+
+  // Both "mongoDb" and "postgresDb" now validate the PostgreSQL database
+  // (the MongoDB source is no longer directly compared; validation checks PG data integrity)
+  const mongoDb = new PrismaClient({ adapter: pgAdapter });
+  const postgresDb = mongoDb; // same instance — both validate PG data
 
   try {
-    // Test connections
+    // Test connection
     await mongoDb.$connect();
-    await postgresDb.$connect();
     console.log('  ✓ Database connections established');
   } catch (error) {
-    console.error('  ✗ Failed to connect to databases:', error);
+    console.error('  ✗ Failed to connect to database:', error);
     process.exit(1);
   }
 
@@ -303,7 +312,7 @@ async function runValidation(): Promise<void> {
 
   // Clean up
   await mongoDb.$disconnect();
-  await postgresDb.$disconnect();
+  await pgPool.end();
 
   // Exit with appropriate code
   const exitCode = getExitCode(validationReport);

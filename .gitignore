@@ -43,3 +43,6 @@ backup
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# migration logs (may contain secrets)
+migration-errors.log

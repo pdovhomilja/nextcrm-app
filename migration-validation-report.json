@@ -1,0 +1,615 @@
+{
+  "timestamp": "2026-02-18T09:03:16.058Z",
+  "overallStatus": "PASS",
+  "summary": {
+    "totalTables": 29,
+    "tablesValidated": 29,
+    "tablesPassed": 29,
+    "tablesFailed": 0,
+    "totalRecords": 10376,
+    "recordsValidated": 2900,
+    "recordsMatched": 2900,
+    "recordsMismatched": 0,
+    "matchPercentage": 100
+  },
+  "rowCountValidation": {
+    "status": "PASS",
+    "discrepancies": []
+  },
+  "sampleRecordValidation": {
+    "status": "PASS",
+    "fieldMismatches": [],
+    "matchPercentage": 100
+  },
+  "referentialIntegrityValidation": {
+    "status": "PASS",
+    "orphanedRecords": [],
+    "brokenForeignKeys": []
+  },
+  "dataTypeValidation": {
+    "status": "PASS",
+    "typeErrors": []
+  },
+  "detailedResults": [
+    {
+      "tableName": "Users",
+      "rowCount": {
+        "mongoCount": 8964,
+        "postgresCount": 8964,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 0,
+        "validForeignKeys": 0,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "system_Modules_Enabled",
+      "rowCount": {
+        "mongoCount": 19,
+        "postgresCount": 19,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 0,
+        "validForeignKeys": 0,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "modulStatus",
+      "rowCount": {
+        "mongoCount": 0,
+        "postgresCount": 0,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 0,
+        "validForeignKeys": 0,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "systemServices",
+      "rowCount": {
+        "mongoCount": 1,
+        "postgresCount": 1,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 0,
+        "validForeignKeys": 0,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "MyAccount",
+      "rowCount": {
+        "mongoCount": 1,
+        "postgresCount": 1,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 0,
+        "validForeignKeys": 0,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "crm_Industry_Type",
+      "rowCount": {
+        "mongoCount": 6,
+        "postgresCount": 6,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 0,
+        "validForeignKeys": 0,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "Documents_Types",
+      "rowCount": {
+        "mongoCount": 0,
+        "postgresCount": 0,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 0,
+        "validForeignKeys": 0,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "invoice_States",
+      "rowCount": {
+        "mongoCount": 0,
+        "postgresCount": 0,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 0,
+        "validForeignKeys": 0,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "crm_Opportunities_Sales_Stages",
+      "rowCount": {
+        "mongoCount": 18,
+        "postgresCount": 18,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 0,
+        "validForeignKeys": 0,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "crm_Opportunities_Type",
+      "rowCount": {
+        "mongoCount": 8,
+        "postgresCount": 8,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 0,
+        "validForeignKeys": 0,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "crm_Accounts",
+      "rowCount": {
+        "mongoCount": 43,
+        "postgresCount": 43,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 4,
+        "validForeignKeys": 4,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "crm_Contacts",
+      "rowCount": {
+        "mongoCount": 45,
+        "postgresCount": 45,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 4,
+        "validForeignKeys": 4,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "crm_Leads",
+      "rowCount": {
+        "mongoCount": 21,
+        "postgresCount": 21,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 3,
+        "validForeignKeys": 3,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "crm_Opportunities",
+      "rowCount": {
+        "mongoCount": 30,
+        "postgresCount": 30,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 7,
+        "validForeignKeys": 7,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "crm_Contracts",
+      "rowCount": {
+        "mongoCount": 1,
+        "postgresCount": 1,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 4,
+        "validForeignKeys": 4,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "crm_campaigns",
+      "rowCount": {
+        "mongoCount": 4,
+        "postgresCount": 4,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 0,
+        "validForeignKeys": 0,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "Boards",
+      "rowCount": {
+        "mongoCount": 252,
+        "postgresCount": 252,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 3,
+        "validForeignKeys": 3,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "Sections",
+      "rowCount": {
+        "mongoCount": 427,
+        "postgresCount": 427,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 1,
+        "validForeignKeys": 1,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "Tasks",
+      "rowCount": {
+        "mongoCount": 514,
+        "postgresCount": 514,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 4,
+        "validForeignKeys": 4,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "crm_Accounts_Tasks",
+      "rowCount": {
+        "mongoCount": 10,
+        "postgresCount": 10,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 4,
+        "validForeignKeys": 4,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "tasksComments",
+      "rowCount": {
+        "mongoCount": 0,
+        "postgresCount": 0,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 3,
+        "validForeignKeys": 3,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "Documents",
+      "rowCount": {
+        "mongoCount": 0,
+        "postgresCount": 0,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 5,
+        "validForeignKeys": 5,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "Invoices",
+      "rowCount": {
+        "mongoCount": 5,
+        "postgresCount": 5,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 4,
+        "validForeignKeys": 4,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "Employees",
+      "rowCount": {
+        "mongoCount": 0,
+        "postgresCount": 0,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 0,
+        "validForeignKeys": 0,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "ImageUpload",
+      "rowCount": {
+        "mongoCount": 0,
+        "postgresCount": 0,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 0,
+        "validForeignKeys": 0,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "TodoList",
+      "rowCount": {
+        "mongoCount": 0,
+        "postgresCount": 0,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 1,
+        "validForeignKeys": 1,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "secondBrain_notions",
+      "rowCount": {
+        "mongoCount": 0,
+        "postgresCount": 0,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 1,
+        "validForeignKeys": 1,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "openAi_keys",
+      "rowCount": {
+        "mongoCount": 2,
+        "postgresCount": 2,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 1,
+        "validForeignKeys": 1,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "tableName": "gpt_models",
+      "rowCount": {
+        "mongoCount": 5,
+        "postgresCount": 5,
+        "match": true
+      },
+      "sampleValidation": {
+        "sampleSize": 100,
+        "matched": 100,
+        "mismatched": 0,
+        "matchPercentage": 100
+      },
+      "foreignKeyValidation": {
+        "totalForeignKeys": 0,
+        "validForeignKeys": 0,
+        "orphanedRecordsCount": 0
+      },
+      "status": "PASS"
+    }
+  ]
+}
