@@ -1,8 +1,9 @@
 "use server";
 
+import { cache } from "react";
 import db from "@/lib/db";
 
-export async function getUserById(userId: string) {
+export const getUserById = cache(async (userId: string) => {
   const user = await db.user.findUnique({
     where: {
       id: userId,
@@ -14,10 +15,9 @@ export async function getUserById(userId: string) {
   }
 
   return user;
-}
+});
 
-export async function getUserByEmail(email: string) {
-  //console.log(email, "email from function");
+export const getUserByEmail = cache(async (email: string) => {
   const user = await db.user.findUnique({
     where: {
       email,
@@ -29,7 +29,7 @@ export async function getUserByEmail(email: string) {
   }
 
   return user;
-}
+});
 
 export async function getAdmins() {
   const admins = await db.user.findMany({

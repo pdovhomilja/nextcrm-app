@@ -16,15 +16,15 @@ export async function createTask(
       throw new Error("User not authenticated");
     }
 
-    const user = await getUserByEmail(session.user.email);
+    const [user, boardSection] = await Promise.all([
+      getUserByEmail(session.user.email),
+      db.boardSection.findUnique({
+        where: { id: boardSectionId },
+      }),
+    ]);
     if (!user?.id) {
       throw new Error("User not found");
     }
-
-    // Verify board section exists
-    const boardSection = await db.boardSection.findUnique({
-      where: { id: boardSectionId },
-    });
     if (!boardSection) {
       throw new Error("Board section not found");
     }

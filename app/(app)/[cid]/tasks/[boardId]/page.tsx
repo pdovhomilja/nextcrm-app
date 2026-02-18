@@ -1,12 +1,17 @@
 import { getBoardSections } from "@/actions/tasks/get-board-sections";
 import React from "react";
+import nextDynamic from "next/dynamic";
 import { getBoard } from "@/actions/tasks/get-board";
-import DndBoard from "./_components/dnd-board";
 import BulkDueDateButton from "./_components/bulk-due-date-button";
 import TaskErrorBoundary from "../_components/error-boundary";
 import { SidebarInset } from "@/components/ui/sidebar";
 import { SiteHeader } from "@/components/site-header";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { BoardSection } from "../_types";
+
+const DndBoard = nextDynamic(() => import("./_components/dnd-board"), {
+  loading: () => <Skeleton className="h-96 w-full rounded-lg" />,
+});
 
 export const dynamic = "force-dynamic";
 
@@ -16,8 +21,10 @@ const BoardPage = async ({
   params: Promise<{ boardId: string }>;
 }) => {
   const { boardId } = await params;
-  const boardSections: BoardSection[] = await getBoardSections(boardId);
-  const board = await getBoard(boardId);
+  const [boardSections, board] = await Promise.all([
+    getBoardSections(boardId) as Promise<BoardSection[]>,
+    getBoard(boardId),
+  ]);
 
   if (!board) {
     return <div>Board not found</div>;

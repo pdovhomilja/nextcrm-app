@@ -40,24 +40,26 @@ export async function createBoard(board: {
     });
 
     if (board.withTemplate) {
-      await db.boardSection.create({
-        data: {
-          name: "Backlog",
-          boardId: newBoard.id,
-        },
-      });
-      await db.boardSection.create({
-        data: {
-          name: "In Progress",
-          boardId: newBoard.id,
-        },
-      });
-      await db.boardSection.create({
-        data: {
-          name: "Done",
-          boardId: newBoard.id,
-        },
-      });
+      await Promise.all([
+        db.boardSection.create({
+          data: {
+            name: "Backlog",
+            boardId: newBoard.id,
+          },
+        }),
+        db.boardSection.create({
+          data: {
+            name: "In Progress",
+            boardId: newBoard.id,
+          },
+        }),
+        db.boardSection.create({
+          data: {
+            name: "Done",
+            boardId: newBoard.id,
+          },
+        }),
+      ]);
     }
 
     // Queue embedding generation (non-blocking)

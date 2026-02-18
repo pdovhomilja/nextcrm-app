@@ -245,49 +245,50 @@ export async function getUserMetrics(
         };
 
         if (includeActivity) {
-          // Daily login counts for last 7 days
-          const dailyLogins = [];
-          for (let i = 6; i >= 0; i--) {
-            const dayStart = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-            dayStart.setHours(0, 0, 0, 0);
-            const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+          // Daily login counts for last 7 days (parallelized)
+          const dailyLogins = await Promise.all(
+            Array.from({ length: 7 }, (_, idx) => {
+              const i = 6 - idx;
+              const dayStart = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+              dayStart.setHours(0, 0, 0, 0);
+              const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
 
-            const loginCount = await db.user.count({
-              where: {
-                company_id: targetCompanyId,
-                updatedAt: {
-                  gte: dayStart,
-                  lt: dayEnd,
+              return db.user.count({
+                where: {
+                  company_id: targetCompanyId,
+                  updatedAt: {
+                    gte: dayStart,
+                    lt: dayEnd,
+                  },
                 },
-              },
-            });
-
-            dailyLogins.push(loginCount);
-          }
+              });
+            }),
+          );
 
           activityBreakdown.daily = dailyLogins;
 
-          // Login frequency
-          const dailyLoginUsers = await db.user.count({
-            where: {
-              company_id: targetCompanyId,
-              updatedAt: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) },
-            },
-          });
-
-          const weeklyLoginUsers = await db.user.count({
-            where: {
-              company_id: targetCompanyId,
-              updatedAt: { gte: weekAgo },
-            },
-          });
-
-          const monthlyLoginUsers = await db.user.count({
-            where: {
-              company_id: targetCompanyId,
-              updatedAt: { gte: monthStart },
-            },
-          });
+          // Login frequency (parallelized)
+          const [dailyLoginUsers, weeklyLoginUsers, monthlyLoginUsers] =
+            await Promise.all([
+              db.user.count({
+                where: {
+                  company_id: targetCompanyId,
+                  updatedAt: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) },
+                },
+              }),
+              db.user.count({
+                where: {
+                  company_id: targetCompanyId,
+                  updatedAt: { gte: weekAgo },
+                },
+              }),
+              db.user.count({
+                where: {
+                  company_id: targetCompanyId,
+                  updatedAt: { gte: monthStart },
+                },
+              }),
+            ]);
 
           activityBreakdown.loginFrequency = {
             daily: dailyLoginUsers,
