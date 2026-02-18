@@ -3,6 +3,7 @@ import { getUserByEmail } from "@/actions/user";
 import { NextRequest } from "next/server";
 import { randomBytes, createHash } from "crypto";
 import db from "@/lib/db";
+import { validateApiToken } from "@/lib/security/api-token-service";
 
 export interface MCPAuthContext {
   userId: string;
@@ -240,7 +241,7 @@ export class MCPAuthService {
   }
 
   /**
-   * Strategy 3: Authenticate using API key (for future use)
+   * Strategy 3: Authenticate using API token (Bearer thq_...)
    */
   private async authenticateWithAPIKey(
     request: NextRequest,
@@ -259,15 +260,49 @@ export class MCPAuthService {
       };
     }
 
-    // TODO: Implement API key validation against database
-    // For now, return failure to fallback to other methods
-    return {
-      success: false,
-      error: {
-        code: -32001,
-        message: "API key authentication not yet implemented",
-      },
-    };
+    try {
+      const result = await validateApiToken(apiKey);
+
+      if (!result.valid || !result.userId || !result.companyId) {
+        return {
+          success: false,
+          error: {
+            code: -32001,
+            message: "Invalid or expired API token",
+          },
+        };
+      }
+
+      const user = await this.getUserById(result.userId);
+      if (!user) {
+        return {
+          success: false,
+          error: {
+            code: -32001,
+            message: "User associated with API token not found",
+          },
+        };
+      }
+
+      return {
+        success: true,
+        context: {
+          userId: user.id,
+          companyId: result.companyId,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        },
+      };
+    } catch {
+      return {
+        success: false,
+        error: {
+          code: -32003,
+          message: "API token authentication failed",
+        },
+      };
+    }
   }
 
   /**

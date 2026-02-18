@@ -1,7 +1,12 @@
 import { createMcpHandler } from "@vercel/mcp-adapter";
-import { auth } from "@/auth";
+import { getMcpUser } from "@/lib/ai/mcp-transport-auth";
 import db from "@/lib/db";
 import { z } from "zod/v3";
+import {
+  verifyBoardAccess,
+  verifyBoardDeleteAccess,
+  verifySectionAccess,
+} from "@/lib/security/company-access-validator";
 
 // Define schemas separately to help with type inference
 const getBoardInfoSchema = {
@@ -45,17 +50,14 @@ const handler = createMcpHandler(
       getBoardInfoSchema,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       async (params: any) => {
-        const session = await auth();
-        if (!session?.user) {
-          throw new Error("Unauthorized");
-        }
+        const mcpUser = await getMcpUser();
 
         try {
           const board = await db.board.findFirst({
             where: {
               id: params.boardId,
               access: {
-                has: session.user.id,
+                has: mcpUser.id,
               },
             },
             include: {
@@ -175,10 +177,7 @@ const handler = createMcpHandler(
       compareBoardsSchema,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       async (params: any) => {
-        const session = await auth();
-        if (!session?.user) {
-          throw new Error("Unauthorized");
-        }
+        const mcpUser = await getMcpUser();
 
         try {
           // Calculate time range
@@ -199,7 +198,7 @@ const handler = createMcpHandler(
             where: {
               id: { in: params.boardIds },
               access: {
-                has: session.user.id,
+                has: mcpUser.id,
               },
             },
             include: {
@@ -340,17 +339,14 @@ const handler = createMcpHandler(
       suggestOptimizationsSchema,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       async (params: any) => {
-        const session = await auth();
-        if (!session?.user) {
-          throw new Error("Unauthorized");
-        }
+        const mcpUser = await getMcpUser();
 
         try {
           const board = await db.board.findFirst({
             where: {
               id: params.boardId,
               access: {
-                has: session.user.id,
+                has: mcpUser.id,
               },
             },
             include: {
@@ -421,6 +417,326 @@ const handler = createMcpHandler(
             }`,
           );
         }
+      },
+    );
+
+    // ── CRUD tools ──
+
+    // List boards accessible to the user
+    server.tool(
+      "list_boards",
+      "List boards the authenticated user has access to",
+      {
+        query: z.string().optional(),
+        limit: z.number().min(1).max(50).default(20),
+      } as const,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async (params: any) => {
+        const mcpUser = await getMcpUser();
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const where: Record<string, any> = {
+          companyId: mcpUser.companyId,
+          access: { has: mcpUser.id },
+        };
+        if (params.query) {
+          where.OR = [
+            { name: { contains: params.query, mode: "insensitive" } },
+            { description: { contains: params.query, mode: "insensitive" } },
+          ];
+        }
+
+        const boards = await db.board.findMany({
+          where,
+          take: params.limit,
+          orderBy: { updatedAt: "desc" },
+          include: {
+            boardSections: {
+              include: { _count: { select: { tasks: true } } },
+              orderBy: { position: "asc" },
+            },
+          },
+        });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                success: true,
+                boards: boards.map((b) => ({
+                  id: b.id,
+                  name: b.name,
+                  description: b.description,
+                  createdAt: b.createdAt,
+                  updatedAt: b.updatedAt,
+                  sections: b.boardSections.map((s) => ({
+                    id: s.id,
+                    name: s.name,
+                    position: s.position,
+                    taskCount: s._count.tasks,
+                  })),
+                  totalTasks: b.boardSections.reduce(
+                    (sum, s) => sum + s._count.tasks,
+                    0,
+                  ),
+                })),
+                count: boards.length,
+              }, null, 2),
+            },
+          ],
+        };
+      },
+    );
+
+    // Create a board
+    server.tool(
+      "create_board",
+      "Create a new board with optional default sections",
+      {
+        name: z.string().min(1, "Board name is required"),
+        description: z.string().optional(),
+        withTemplate: z.boolean().default(true),
+      } as const,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async (params: any) => {
+        const mcpUser = await getMcpUser();
+
+        const board = await db.board.create({
+          data: {
+            name: params.name,
+            description: params.description || "",
+            createdBy: mcpUser.id,
+            companyId: mcpUser.companyId,
+            access: [mcpUser.id],
+            ...(params.withTemplate
+              ? {
+                  boardSections: {
+                    create: [
+                      { name: "To Do", position: 0 },
+                      { name: "In Progress", position: 1 },
+                      { name: "Done", position: 2 },
+                    ],
+                  },
+                }
+              : {}),
+          },
+          include: {
+            boardSections: { orderBy: { position: "asc" } },
+          },
+        });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                success: true,
+                board: {
+                  id: board.id,
+                  name: board.name,
+                  description: board.description,
+                  sections: board.boardSections.map((s) => ({
+                    id: s.id,
+                    name: s.name,
+                    position: s.position,
+                  })),
+                },
+                message: `Board "${board.name}" created successfully`,
+              }, null, 2),
+            },
+          ],
+        };
+      },
+    );
+
+    // Edit a board
+    server.tool(
+      "edit_board",
+      "Update board name and/or description",
+      {
+        boardId: z.string().min(1),
+        name: z.string().optional(),
+        description: z.string().optional(),
+      } as const,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async (params: any) => {
+        const mcpUser = await getMcpUser();
+        await verifyBoardAccess(params.boardId, mcpUser.id, mcpUser.companyId);
+
+        const board = await db.board.update({
+          where: { id: params.boardId },
+          data: {
+            ...(params.name !== undefined && { name: params.name }),
+            ...(params.description !== undefined && { description: params.description }),
+          },
+        });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                success: true,
+                board: { id: board.id, name: board.name, description: board.description },
+                message: `Board "${board.name}" updated`,
+              }, null, 2),
+            },
+          ],
+        };
+      },
+    );
+
+    // Delete a board
+    server.tool(
+      "delete_board",
+      "Delete a board (creator or company admin only)",
+      { boardId: z.string().min(1) } as const,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async (params: any) => {
+        const mcpUser = await getMcpUser();
+        await verifyBoardDeleteAccess(params.boardId, mcpUser.id, mcpUser.companyId);
+
+        // Delete sections and tasks in order
+        const sections = await db.boardSection.findMany({
+          where: { boardId: params.boardId },
+          select: { id: true },
+        });
+        const sectionIds = sections.map((s) => s.id);
+        await db.task.deleteMany({ where: { boardSectionId: { in: sectionIds } } });
+        await db.boardSection.deleteMany({ where: { boardId: params.boardId } });
+        await db.board.delete({ where: { id: params.boardId } });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                success: true,
+                message: `Board ${params.boardId} deleted`,
+              }),
+            },
+          ],
+        };
+      },
+    );
+
+    // List board sections
+    server.tool(
+      "list_board_sections",
+      "List sections of a board with task counts",
+      { boardId: z.string().min(1) } as const,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async (params: any) => {
+        const mcpUser = await getMcpUser();
+        await verifyBoardAccess(params.boardId, mcpUser.id, mcpUser.companyId);
+
+        const sections = await db.boardSection.findMany({
+          where: { boardId: params.boardId },
+          include: { _count: { select: { tasks: true } } },
+          orderBy: { position: "asc" },
+        });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                success: true,
+                boardId: params.boardId,
+                sections: sections.map((s) => ({
+                  id: s.id,
+                  name: s.name,
+                  position: s.position,
+                  taskCount: s._count.tasks,
+                })),
+              }, null, 2),
+            },
+          ],
+        };
+      },
+    );
+
+    // Create board section
+    server.tool(
+      "create_board_section",
+      "Add a new section (column) to a board",
+      {
+        boardId: z.string().min(1),
+        name: z.string().min(1, "Section name is required"),
+      } as const,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async (params: any) => {
+        const mcpUser = await getMcpUser();
+        await verifyBoardAccess(params.boardId, mcpUser.id, mcpUser.companyId);
+
+        const maxPos = await db.boardSection.aggregate({
+          where: { boardId: params.boardId },
+          _max: { position: true },
+        });
+
+        const section = await db.boardSection.create({
+          data: {
+            name: params.name,
+            boardId: params.boardId,
+            position: (maxPos._max.position ?? -1) + 1,
+          },
+        });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                success: true,
+                section: { id: section.id, name: section.name, position: section.position },
+                message: `Section "${section.name}" created`,
+              }, null, 2),
+            },
+          ],
+        };
+      },
+    );
+
+    // Delete board section (must be empty)
+    server.tool(
+      "delete_board_section",
+      "Delete an empty board section",
+      {
+        sectionId: z.string().min(1),
+        boardId: z.string().min(1),
+      } as const,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async (params: any) => {
+        const mcpUser = await getMcpUser();
+        const section = await verifySectionAccess(
+          params.sectionId,
+          mcpUser.id,
+          mcpUser.companyId,
+        );
+
+        const taskCount = await db.task.count({
+          where: { boardSectionId: section.id },
+        });
+        if (taskCount > 0) {
+          throw new Error(
+            `Cannot delete section "${section.name}" — it still contains ${taskCount} task(s). Move or delete them first.`,
+          );
+        }
+
+        await db.boardSection.delete({ where: { id: section.id } });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                success: true,
+                message: `Section "${section.name}" deleted`,
+              }),
+            },
+          ],
+        };
       },
     );
 
@@ -605,4 +921,4 @@ const handler = createMcpHandler(
   },
 );
 
-export { handler as GET, handler as POST };
+export { handler as GET, handler as POST, handler as DELETE };

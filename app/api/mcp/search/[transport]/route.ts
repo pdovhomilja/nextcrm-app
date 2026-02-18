@@ -1,6 +1,6 @@
 import { createMcpHandler } from "@vercel/mcp-adapter";
 import { z } from "zod/v3";
-import { auth } from "@/auth";
+import { getMcpUser } from "@/lib/ai/mcp-transport-auth";
 import { vectorSearchService } from "@/lib/ai/vector-search";
 import db from "@/lib/db";
 
@@ -44,15 +44,12 @@ const handler = createMcpHandler(
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       async (params: any) => {
-        const session = await auth();
-        if (!session?.user) {
-          throw new Error("Unauthorized");
-        }
+        const mcpUser = await getMcpUser();
 
         const searchQuery = {
           query: params.query,
-          companyId: session.user.activeCompanyId!,
-          userId: session.user.id,
+          companyId: mcpUser.companyId!,
+          userId: mcpUser.id,
           threshold: params.threshold,
           limit: params.limit,
           filters: params.filters
@@ -127,21 +124,18 @@ const handler = createMcpHandler(
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       async (params: any) => {
-        const session = await auth();
-        if (!session?.user) {
-          throw new Error("Unauthorized");
-        }
+        const mcpUser = await getMcpUser();
 
         // Validate company context
-        const companyId = session.user.activeCompanyId;
+        const companyId = mcpUser.companyId;
         if (!companyId) {
           throw new Error("Company context required");
         }
 
         const searchQuery = {
           query: params.query,
-          companyId: session.user.activeCompanyId!,
-          userId: session.user.id,
+          companyId: mcpUser.companyId!,
+          userId: mcpUser.id,
           limit: params.limit,
           filters: params.filters
             ? {
@@ -199,10 +193,7 @@ const handler = createMcpHandler(
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       async (params: any) => {
-        const session = await auth();
-        if (!session?.user) {
-          throw new Error("Unauthorized");
-        }
+        const mcpUser = await getMcpUser();
 
         const taskEmbeddingCount = await db.taskEmbedding.count();
         const boardEmbeddingCount = await db.boardEmbedding.count();
@@ -216,7 +207,7 @@ const handler = createMcpHandler(
                   boardId: params.boardId,
                   board: {
                     access: {
-                      has: session.user.id,
+                      has: mcpUser.id,
                     },
                   },
                 },
@@ -231,7 +222,7 @@ const handler = createMcpHandler(
             boardSection: {
               board: {
                 access: {
-                  has: session.user.id,
+                  has: mcpUser.id,
                 },
               },
             },
@@ -306,15 +297,12 @@ const handler = createMcpHandler(
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       async (params: any) => {
-        const session = await auth();
-        if (!session?.user) {
-          throw new Error("Unauthorized");
-        }
+        const mcpUser = await getMcpUser();
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const whereClause: Record<string, any> = {
           access: {
-            has: session.user.id,
+            has: mcpUser.id,
           },
         };
 
@@ -387,10 +375,7 @@ const handler = createMcpHandler(
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       async (params: any) => {
-        const session = await auth();
-        if (!session?.user) {
-          throw new Error("Unauthorized");
-        }
+        await getMcpUser(); // auth gate
 
         const results = await vectorSearchService.findSimilarTasks(
           params.taskId,
@@ -434,10 +419,7 @@ const handler = createMcpHandler(
       "Check vector search functionality and status",
       {},
       async () => {
-        const session = await auth();
-        if (!session?.user) {
-          throw new Error("Unauthorized");
-        }
+        await getMcpUser(); // auth gate
 
         const healthStatus = await vectorSearchService.healthCheck();
 
