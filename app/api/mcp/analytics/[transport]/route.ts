@@ -1,5 +1,5 @@
 import { createMcpHandler } from "@vercel/mcp-adapter";
-import { auth } from "@/auth";
+import { getMcpUser } from "@/lib/ai/mcp-transport-auth";
 import db from "@/lib/db";
 import { z } from "zod/v3";
 
@@ -26,10 +26,7 @@ const handler = createMcpHandler(
       analyticsSchema,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       async (params: any) => {
-        const session = await auth();
-        if (!session?.user) {
-          throw new Error("Unauthorized");
-        }
+        const mcpUser = await getMcpUser();
 
         try {
           // Get board with tasks and sections
@@ -37,7 +34,7 @@ const handler = createMcpHandler(
             where: {
               id: params.boardId,
               access: {
-                has: session.user.id,
+                has: mcpUser.id,
               },
             },
             include: {
@@ -221,10 +218,7 @@ const handler = createMcpHandler(
       teamPerformanceSchema,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       async (params: any) => {
-        const session = await auth();
-        if (!session?.user) {
-          throw new Error("Unauthorized");
-        }
+        const mcpUser = await getMcpUser();
 
         try {
           // Calculate time range
@@ -242,12 +236,12 @@ const handler = createMcpHandler(
 
           // Get tasks for analysis
           const whereClause = {
-            assignedTo: { id: session.user.id },
+            assignedTo: { id: mcpUser.id },
             createdAt: { gte: startDate },
             ...(params.boardId && {
               board: {
                 id: params.boardId,
-                access: { has: session.user.id },
+                access: { has: mcpUser.id },
               },
             }),
           };
@@ -320,7 +314,7 @@ const handler = createMcpHandler(
           });
 
           const result = {
-            companyId: session.user.activeCompanyId,
+            companyId: mcpUser.companyId,
             boardId: params.boardId || "all",
             timeRange: params.timeRange,
             analysisDate: now.toISOString(),

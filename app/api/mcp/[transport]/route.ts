@@ -1,5 +1,5 @@
 import { createMcpHandler } from "@vercel/mcp-adapter";
-import { auth } from "@/auth";
+import { getMcpUser } from "@/lib/ai/mcp-transport-auth";
 
 const handler = createMcpHandler(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -36,7 +36,15 @@ const handler = createMcpHandler(
       "Get server configuration and capabilities",
       {},
       async () => {
-        const session = await auth();
+        let userId: string | null = null;
+        let companyId: string | null = null;
+        try {
+          const mcpUser = await getMcpUser();
+          userId = mcpUser.id;
+          companyId = mcpUser.companyId;
+        } catch {
+          // unauthenticated — still return server info
+        }
 
         return {
           content: [
@@ -46,9 +54,9 @@ const handler = createMcpHandler(
                 {
                   serverName: "TaskHQ Base MCP Server",
                   version: "1.0.0",
-                  authenticated: !!session?.user,
-                  userId: session?.user?.id || null,
-                  companyId: session?.user?.activeCompanyId || null,
+                  authenticated: !!userId,
+                  userId,
+                  companyId,
                   capabilities: ["health_check", "server_info"],
                   environment: {
                     nodeEnv: process.env.NODE_ENV,

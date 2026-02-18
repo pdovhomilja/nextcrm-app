@@ -25,9 +25,12 @@ import {
 } from "@/components/ui/sidebar";
 import { User } from "@/lib/generated/prisma";
 import { SignOutButton } from "./auth/sign-out-button";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 
 export function NavUser({ user }: { user: User }) {
   const { isMobile } = useSidebar();
+  const { cid } = useParams();
 
   return (
     <SidebarMenu>
@@ -73,9 +76,11 @@ export function NavUser({ user }: { user: User }) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <IconUserCircle />
-                Account
+              <DropdownMenuItem asChild>
+                <Link href={`/${cid}/settings/account`}>
+                  <IconUserCircle />
+                  Account
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <IconCreditCard />

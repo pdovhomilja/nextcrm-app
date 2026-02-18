@@ -1,8 +1,9 @@
 import { createMcpHandler } from "@vercel/mcp-adapter";
 import { z } from "zod/v3";
-import { auth } from "@/auth";
+import { getMcpUser } from "@/lib/ai/mcp-transport-auth";
 import db from "@/lib/db";
 import { Prisma } from "@/lib/generated/prisma";
+import { verifyTaskAccess } from "@/lib/security/company-access-validator";
 
 // Define schemas separately to help with type inference
 const createTaskSchema = {
@@ -46,10 +47,7 @@ const handler = createMcpHandler(
       createTaskSchema,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       async (params: any) => {
-        const session = await auth();
-        if (!session?.user) {
-          throw new Error("Unauthorized");
-        }
+        const mcpUser = await getMcpUser();
 
         try {
           // ✅ SAFE: Using existing database structure, no schema modifications
@@ -60,8 +58,8 @@ const handler = createMcpHandler(
               boardSectionId: params.boardSectionId,
               priority: params.priority,
               status: "NEW",
-              createdById: session.user.id,
-              assignedToId: params.assigneeIds?.[0] || session.user.id,
+              createdById: mcpUser.id,
+              assignedToId: params.assigneeIds?.[0] || mcpUser.id,
               dueDate: params.dueDate
                 ? new Date(params.dueDate)
                 : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -121,10 +119,7 @@ const handler = createMcpHandler(
       searchTasksSchema,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       async (params: any) => {
-        const session = await auth();
-        if (!session?.user) {
-          throw new Error("Unauthorized");
-        }
+        const mcpUser = await getMcpUser();
 
         try {
           // ✅ SAFE: Using existing database structure for queries
@@ -132,7 +127,7 @@ const handler = createMcpHandler(
             boardSection: {
               board: {
                 access: {
-                  has: session.user.id,
+                  has: mcpUser.id,
                 },
               },
             },
@@ -233,13 +228,10 @@ const handler = createMcpHandler(
       updateTaskSchema,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       async (params: any) => {
-        const session = await auth();
-        if (!session?.user) {
-          throw new Error("Unauthorized");
-        }
+        const mcpUser = await getMcpUser();
 
         try {
-          // ✅ SAFE: Using existing database structure for updates
+          await verifyTaskAccess(params.taskId, mcpUser.id, mcpUser.companyId);
           const updateData: Prisma.TaskUpdateInput = {};
           if (params.title) updateData.title = params.title;
           if (params.description !== undefined)
@@ -298,6 +290,154 @@ const handler = createMcpHandler(
         }
       },
     );
+    // Get single task with full details
+    server.tool(
+      "get_task",
+      "Get a single task by ID with full details",
+      { taskId: z.string().min(1, "Task ID is required") } as const,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async (params: any) => {
+        const mcpUser = await getMcpUser();
+
+        const task = await verifyTaskAccess(
+          params.taskId,
+          mcpUser.id,
+          mcpUser.companyId,
+        );
+
+        const full = await db.task.findUnique({
+          where: { id: task.id },
+          include: {
+            assignedTo: { select: { id: true, name: true, email: true } },
+            createdBy: { select: { id: true, name: true, email: true } },
+            boardSection: { include: { board: { select: { id: true, name: true } } } },
+            history: { orderBy: { createdAt: "desc" }, take: 10 },
+          },
+        });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ success: true, task: full }, null, 2),
+            },
+          ],
+        };
+      },
+    );
+
+    // Delete a task
+    server.tool(
+      "delete_task",
+      "Delete a task (must have access to the task's board)",
+      { taskId: z.string().min(1, "Task ID is required") } as const,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async (params: any) => {
+        const mcpUser = await getMcpUser();
+
+        await verifyTaskAccess(params.taskId, mcpUser.id, mcpUser.companyId);
+
+        await db.task.delete({ where: { id: params.taskId } });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                success: true,
+                message: `Task ${params.taskId} deleted`,
+              }),
+            },
+          ],
+        };
+      },
+    );
+
+    // Mark task as done
+    server.tool(
+      "mark_task_done",
+      "Set task status to COMPLETED",
+      { taskId: z.string().min(1, "Task ID is required") } as const,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async (params: any) => {
+        const mcpUser = await getMcpUser();
+
+        await verifyTaskAccess(params.taskId, mcpUser.id, mcpUser.companyId);
+
+        const task = await db.task.update({
+          where: { id: params.taskId },
+          data: { status: "COMPLETED" },
+          include: {
+            boardSection: { include: { board: { select: { id: true, name: true } } } },
+          },
+        });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                success: true,
+                task: {
+                  id: task.id,
+                  title: task.title,
+                  status: task.status,
+                  boardName: task.boardSection.board.name,
+                  sectionName: task.boardSection.name,
+                },
+                message: `Task "${task.title}" marked as completed`,
+              }, null, 2),
+            },
+          ],
+        };
+      },
+    );
+
+    // Move task to a different section
+    server.tool(
+      "move_task",
+      "Move a task to a different board section (optionally set position)",
+      {
+        taskId: z.string().min(1, "Task ID is required"),
+        targetSectionId: z.string().min(1, "Target section ID is required"),
+        targetPosition: z.number().optional(),
+      } as const,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async (params: any) => {
+        const mcpUser = await getMcpUser();
+
+        await verifyTaskAccess(params.taskId, mcpUser.id, mcpUser.companyId);
+
+        const task = await db.task.update({
+          where: { id: params.taskId },
+          data: {
+            boardSectionId: params.targetSectionId,
+            position: params.targetPosition ?? 0,
+          },
+          include: {
+            boardSection: { include: { board: { select: { id: true, name: true } } } },
+          },
+        });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                success: true,
+                task: {
+                  id: task.id,
+                  title: task.title,
+                  sectionName: task.boardSection.name,
+                  position: task.position,
+                },
+                message: `Task "${task.title}" moved to "${task.boardSection.name}"`,
+              }, null, 2),
+            },
+          ],
+        };
+      },
+    );
   },
   {
     capabilities: {
@@ -309,6 +449,10 @@ const handler = createMcpHandler(
           description: "Search and filter tasks with multiple criteria",
         },
         update_task: { description: "Update existing task properties" },
+        get_task: { description: "Get a single task by ID with full details" },
+        delete_task: { description: "Delete a task" },
+        mark_task_done: { description: "Set task status to COMPLETED" },
+        move_task: { description: "Move a task to a different board section" },
       },
     },
   },
