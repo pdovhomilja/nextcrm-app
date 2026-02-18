@@ -20,6 +20,7 @@ Replace `<BASE>` with your TaskHQ deployment URL (e.g. `https://taskhq.xmation.a
 
 | Endpoint | Purpose |
 |----------|---------|
+| `<BASE>/api/mcp/mcp` | System tools, all task/board/search/analytics tools |
 | `<BASE>/api/mcp/tasks/mcp` | Task CRUD, search, move |
 | `<BASE>/api/mcp/boards/mcp` | Board CRUD, sections, analytics |
 | `<BASE>/api/mcp/search/mcp` | Vector / hybrid / similarity search |
@@ -37,6 +38,22 @@ All endpoints accept `POST` with JSON body following the MCP `tools/call` spec:
 }
 ```
 
+---
+
+## System Tools (`/api/mcp/mcp`)
+
+### health_check
+Check server health and feature flags. No parameters required.
+
+Returns: `status`, `timestamp`, `server`, and `features` (aiEnabled, mcpEnabled, pgvectorEnabled).
+
+### server_info
+Get server configuration, capabilities list, and authentication status. No parameters required.
+
+Returns: server version, authenticated user/company IDs, full list of available tool names, and environment info.
+
+---
+
 ## Tasks Tools (`/api/mcp/tasks/mcp`)
 
 ### create_task
@@ -48,7 +65,7 @@ Create a new task in a board section.
 | description | string | no | Task description |
 | boardSectionId | string | yes | Section to place the task in |
 | priority | LOW / MEDIUM / HIGH / CRITICAL | no | Default: MEDIUM |
-| assigneeIds | string[] | no | User IDs to assign |
+| assigneeIds | string[] | no | User IDs to assign (first ID is used) |
 | dueDate | string (ISO) | no | Default: 7 days from now |
 
 ### search_tasks
@@ -77,7 +94,7 @@ Update an existing task.
 | dueDate | string (ISO) | no | New due date |
 
 ### get_task
-Get full task details by ID.
+Get full task details by ID, including last 10 history entries.
 
 | Parameter | Type | Required |
 |-----------|------|----------|
@@ -104,7 +121,9 @@ Move a task to a different board section.
 |-----------|------|----------|-------------|
 | taskId | string | yes | Task ID |
 | targetSectionId | string | yes | Destination section |
-| targetPosition | number | no | Position in section |
+| targetPosition | number | no | Position in section (default: 0) |
+
+---
 
 ## Boards Tools (`/api/mcp/boards/mcp`)
 
@@ -135,7 +154,7 @@ Update board name/description.
 | description | string | no |
 
 ### delete_board
-Delete a board and all its sections/tasks.
+Delete a board and all its sections/tasks. Requires creator or company admin role.
 
 | Parameter | Type | Required |
 |-----------|------|----------|
@@ -157,7 +176,7 @@ Add a new section (column) to a board.
 | name | string | yes |
 
 ### delete_board_section
-Delete an empty section.
+Delete an empty section. Fails if the section still contains tasks.
 
 | Parameter | Type | Required |
 |-----------|------|----------|
@@ -167,84 +186,182 @@ Delete an empty section.
 ### get_board_info
 Comprehensive board info with stats, sections, and tasks.
 
-| Parameter | Type | Required |
-|-----------|------|----------|
-| boardId | string | yes |
-| includeTaskDetails | boolean | no |
-| includeTeamInfo | boolean | no |
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| boardId | string | yes | Board ID |
+| includeTaskDetails | boolean | no | Default: true — include task list per section |
+| includeTeamInfo | boolean | no | Default: true — include assignee info |
 
 ### compare_boards
 Compare metrics across multiple boards.
 
-| Parameter | Type | Required |
-|-----------|------|----------|
-| boardIds | string[] | yes (2-5) |
-| timeRange | week / month / quarter | no |
-| metrics | string[] | no |
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| boardIds | string[] | yes | 2–5 board IDs to compare |
+| timeRange | week / month / quarter | no | Default: month |
+| metrics | string[] | no | completion_rate, task_count, team_size, avg_task_duration. Default: completion_rate, task_count |
 
 ### suggest_board_optimizations
-AI-generated optimization suggestions.
+AI-generated optimization suggestions based on current board performance.
 
-| Parameter | Type | Required |
-|-----------|------|----------|
-| boardId | string | yes |
-| focus | performance / team_balance / workflow / priorities | no |
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| boardId | string | yes | Board ID |
+| focus | performance / team_balance / workflow / priorities | no | Default: performance |
+
+---
 
 ## Search Tools (`/api/mcp/search/mcp`)
 
 ### semantic_search_tasks
-Vector-based semantic search using embeddings.
+Vector-based semantic search using OpenAI embeddings (1536 dimensions). Returns tasks ranked by cosine similarity.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| query | string | yes | Natural-language search query |
+| threshold | number | no | Minimum similarity score 0–1. Default: 0.7 |
+| limit | number | no | Max results 1–50. Default: 10 |
+| filters | object | no | Optional filter object (see below) |
+| filters.boardIds | string[] | no | Restrict to specific boards |
+| filters.priority | string[] | no | LOW, MEDIUM, HIGH, CRITICAL |
+| filters.status | string[] | no | NEW, IN_PROGRESS, COMPLETED, CANCELLED, ON_HOLD |
+| filters.assigneeIds | string[] | no | Restrict to specific assignees |
+| filters.dateRange | object | no | `{ start: ISO string, end: ISO string }` |
 
 ### hybrid_search
-Combined vector + keyword search.
+Combined vector + keyword search. Blend semantic and exact-match relevance using configurable weights.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| query | string | yes | Search query |
+| vectorWeight | number | no | Weight for semantic results 0–1. Default: 0.7 |
+| keywordWeight | number | no | Weight for keyword results 0–1. Default: 0.3 |
+| limit | number | no | Max results 1–20. Default: 10 |
+| filters | object | no | Optional filter object (see below) |
+| filters.boardId | string | no | Restrict to a single board |
+| filters.priority | string[] | no | LOW, MEDIUM, HIGH, CRITICAL |
+| filters.status | string[] | no | NEW, IN_PROGRESS, COMPLETED, CANCELLED, ON_HOLD |
 
 ### find_similar_tasks
-Find tasks similar to a given task.
+Find tasks similar to a given task using vector similarity. Requires embeddings to be generated.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| taskId | string | yes | Source task ID |
+| limit | number | no | Max results 1–20. Default: 5 |
+| threshold | number | no | Minimum similarity score 0–1. Default: 0.5 |
 
 ### search_boards
-Search boards by name/description.
+Search boards by name/description using keyword matching.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| query | string | no | Search term for board name/description |
+| limit | number | no | Max results 1–50. Default: 10 |
+
+Returns board list with section counts and total task counts per board.
+
+### get_embedding_status
+Check how many task and board embeddings exist and whether vector search is ready.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| boardId | string | no | If provided, also counts embeddings for that specific board's tasks |
+
+Returns: totalTaskEmbeddings, totalBoardEmbeddings, embeddingCoverage %, vectorSearchCapability, status, and recommendations.
+
+### vector_search_health
+Check vector search system health. No parameters required.
+
+Returns: `healthy` boolean, pgvector connectivity status, and remediation recommendations if unhealthy.
+
+---
 
 ## Analytics Tools (`/api/mcp/analytics/mcp`)
 
 ### analyze_project_health
-Project health metrics for a board.
+Project health metrics and bottleneck detection for a board over a time window.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| boardId | string | yes | Board to analyze |
+| timeRange | week / month / quarter | no | Look-back window. Default: month |
+| includeTeamMetrics | boolean | no | Include per-member workload breakdown. Default: true |
+
+Returns: healthScore (0–100), completion rate, average task duration, in-progress count, bottleneck list, and team workload map (if enabled).
 
 ### analyze_team_performance
-Team workload and completion metrics.
+Team workload distribution and completion metrics across one or all boards.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| boardId | string | no | Scope to a single board (omit for all boards) |
+| timeRange | week / month / quarter | no | Look-back window. Default: month |
+| includeIndividualMetrics | boolean | no | Include per-member detail. Default: true |
+
+Returns: team overview (total members, tasks, average completion rate), per-member breakdown (tasksByPriority, tasksByStatus, completionRate), and AI-generated insights.
+
+---
 
 ## Example Workflow
 
 ```bash
-# 1. List all boards
-curl -X POST "$BASE/api/mcp/tasks/mcp" \
+# 1. Check server health
+curl -X POST "$BASE/api/mcp/mcp" \
+  -H "Authorization: Bearer thq_..." \
+  -H "Content-Type: application/json" \
+  -d '{"method":"tools/call","params":{"name":"health_check","arguments":{}}}'
+
+# 2. List all tools available on this server
+curl -X POST "$BASE/api/mcp/mcp" \
   -H "Authorization: Bearer thq_..." \
   -H "Content-Type: application/json" \
   -d '{"method":"tools/list","params":{}}'
 
-# 2. List boards
+# 3. List boards
 curl -X POST "$BASE/api/mcp/boards/mcp" \
   -H "Authorization: Bearer thq_..." \
   -H "Content-Type: application/json" \
   -d '{"method":"tools/call","params":{"name":"list_boards","arguments":{}}}'
 
-# 3. Create a board
+# 4. Create a board
 curl -X POST "$BASE/api/mcp/boards/mcp" \
   -H "Authorization: Bearer thq_..." \
   -H "Content-Type: application/json" \
   -d '{"method":"tools/call","params":{"name":"create_board","arguments":{"name":"Sprint 42"}}}'
 
-# 4. Create a task
+# 5. Create a task
 curl -X POST "$BASE/api/mcp/tasks/mcp" \
   -H "Authorization: Bearer thq_..." \
   -H "Content-Type: application/json" \
   -d '{"method":"tools/call","params":{"name":"create_task","arguments":{"title":"Fix login bug","boardSectionId":"<section-id>","priority":"HIGH"}}}'
 
-# 5. Mark task done
+# 6. Semantic search for tasks about authentication
+curl -X POST "$BASE/api/mcp/search/mcp" \
+  -H "Authorization: Bearer thq_..." \
+  -H "Content-Type: application/json" \
+  -d '{"method":"tools/call","params":{"name":"semantic_search_tasks","arguments":{"query":"authentication and login issues","threshold":0.6,"limit":5}}}'
+
+# 7. Check embedding status before using vector search
+curl -X POST "$BASE/api/mcp/search/mcp" \
+  -H "Authorization: Bearer thq_..." \
+  -H "Content-Type: application/json" \
+  -d '{"method":"tools/call","params":{"name":"get_embedding_status","arguments":{}}}'
+
+# 8. Analyze project health for a board
+curl -X POST "$BASE/api/mcp/analytics/mcp" \
+  -H "Authorization: Bearer thq_..." \
+  -H "Content-Type: application/json" \
+  -d '{"method":"tools/call","params":{"name":"analyze_project_health","arguments":{"boardId":"<board-id>","timeRange":"month","includeTeamMetrics":true}}}'
+
+# 9. Mark task done
 curl -X POST "$BASE/api/mcp/tasks/mcp" \
   -H "Authorization: Bearer thq_..." \
   -H "Content-Type: application/json" \
   -d '{"method":"tools/call","params":{"name":"mark_task_done","arguments":{"taskId":"<task-id>"}}}'
 ```
+
+---
 
 ## Token Generation
 
