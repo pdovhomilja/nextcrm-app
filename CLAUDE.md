@@ -57,8 +57,17 @@ pnpm prisma studio
 
 ### Testing
 ```bash
-# Run Cypress tests
-pnpm cypress open
+# Run Playwright tests (headless)
+pnpm test:e2e
+
+# Run Playwright tests with UI
+pnpm test:e2e:ui
+
+# Run Playwright tests in headed mode
+pnpm test:e2e:headed
+
+# Debug Playwright tests
+pnpm test:e2e:debug
 ```
 
 ## Architecture
@@ -124,7 +133,7 @@ pnpm cypress open
 - **File Storage**: UploadThing, AWS S3 (DigitalOcean Spaces)
 - **Email**: Resend + React Email
 - **AI**: OpenAI API, Rossum (invoice parsing)
-- **Testing**: Cypress
+- **Testing**: Playwright
 
 ### Authentication Flow
 
@@ -235,8 +244,9 @@ TypeScript path aliases configured in `tsconfig.json:22`:
 
 ### Testing Strategy
 
-- Cypress for E2E testing (tests in `/cypress/e2e`)
+- Playwright for E2E testing (tests in `/tests/e2e`)
 - Test coverage is limited (roadmap item #4)
+- Run tests: `pnpm test:e2e`
 
 ### Database Seeding
 

@@ -46,3 +46,16 @@ next-env.d.ts
 
 # migration logs (may contain secrets)
 migration-errors.log
+
+#Agents
+.claude/
+.agents/
+.cursor/
+.agent-os/
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+playwright/.auth/
+
