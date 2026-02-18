@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 import {
   Card,
   CardContent,
@@ -19,15 +17,6 @@ import { useRouter } from "next/navigation";
 
 const LeadsView = ({ data, crmData }: any) => {
   const router = useRouter();
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) {
-    return null;
-  }
 
   const { users, accounts } = crmData;
 

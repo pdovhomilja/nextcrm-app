@@ -26,32 +26,23 @@ export async function POST(req: Request, props: { params: Promise<{ documentId: 
     });
 
     if (task) {
+      // Delete junction table entry using composite key
+      await prismadb.documentsToTasks.delete({
+        where: {
+          document_id_task_id: {
+            document_id: documentId,
+            task_id: taskId,
+          },
+        },
+      });
+
+      // Update task metadata
       const updateTask = await prismadb.tasks.update({
         where: {
           id: taskId,
         },
         data: {
-          //Disconnect the document from the task
-          documents: {
-            disconnect: {
-              id: documentId,
-            },
-          },
           updatedBy: session.user.id,
-        },
-      });
-
-      const updatedDocument = await prismadb.documents.update({
-        where: {
-          id: documentId,
-        },
-        data: {
-          tasks: {
-            //Disconnect the task from the document
-            disconnect: {
-              id: taskId,
-            },
-          },
         },
       });
 
@@ -61,6 +52,6 @@ export async function POST(req: Request, props: { params: Promise<{ documentId: 
     }
   } catch (error) {
     console.log(error);
-    return NextResponse.json({ error: "Task not found" }, { status: 404 });
+    return NextResponse.json({ error: "Failed to disconnect document from task" }, { status: 500 });
   }
 }

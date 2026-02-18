@@ -33,6 +33,7 @@ yarn-error.log*
 # local env files
 .env*.local
 .env
+.env.test.coolify
 
 # vercel
 .vercel
@@ -42,3 +43,6 @@ backup
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# migration logs (may contain secrets)
+migration-errors.log

@@ -1,17 +1,27 @@
 "use client";
 
-import { Dialog, DialogContent } from "../ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from "../ui/dialog";
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   children?: React.ReactNode;
+  title?: string;
+  description?: string;
 }
 
 export default function UploadFileModal({
   isOpen,
   onClose,
   children,
+  title = "Upload File",
+  description = "Select a file to upload",
 }: ModalProps) {
   const onChange = (open: boolean) => {
     if (!open) {
@@ -21,8 +31,12 @@ export default function UploadFileModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onChange}>
-      <DialogContent>
-        <div className=" py-10">{children}</div>
+      <DialogContent className="max-w-3xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
+        <div className="mt-6">{children}</div>
       </DialogContent>
     </Dialog>
   );

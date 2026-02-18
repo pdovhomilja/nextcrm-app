@@ -27,16 +27,12 @@ export async function PUT(req: Request, props: { params: Promise<{ contactId: st
   }
 
   try {
-    await prismadb.crm_Contacts.update({
+    // Delete the junction table entry using composite primary key
+    await prismadb.contactsToOpportunities.delete({
       where: {
-        id: params.contactId,
-      },
-      //Disconnect opportunity ID from contacts opportunityIds array
-      data: {
-        assigned_opportunities: {
-          disconnect: {
-            id: opportunityId,
-          },
+        contact_id_opportunity_id: {
+          contact_id: params.contactId,
+          opportunity_id: opportunityId,
         },
       },
     });
@@ -47,5 +43,5 @@ export async function PUT(req: Request, props: { params: Promise<{ contactId: st
       { status: 500 }
     );
   }
-  return NextResponse.json("Hello World", { status: 200 });
+  return NextResponse.json("Contact unlinked from opportunity", { status: 200 });
 }

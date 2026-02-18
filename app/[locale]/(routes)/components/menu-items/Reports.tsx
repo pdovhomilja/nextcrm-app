@@ -1,28 +1,33 @@
-import { FileBarChart } from "lucide-react";
-import Link from "next/link";
+import { FileBarChart } from "lucide-react"
+import { NavItem } from "../nav-main"
 
-import { usePathname } from "next/navigation";
-import React from "react";
+/**
+ * Reports Module Menu Item - Task 2.6.4
+ *
+ * Converted from Link pattern to NavItem structure for sidebar integration.
+ * Used in app-sidebar.tsx with module filtering (name === "reports").
+ *
+ * References:
+ * - Previous: Simple Link component with FileBarChart icon
+ * - ModuleMenu.tsx: lines 96-100
+ * - Route: /reports
+ */
 
-type Props = {
-  open: boolean;
-  title: string;
-};
+interface GetReportsMenuItemProps {
+  title: string
+}
 
-const ReportsModuleMenu = ({ open, title }: Props) => {
-  const pathname = usePathname();
-  const isPath = pathname.includes("reports");
-  return (
-    <div className={`flex flex-row items-center mx-auto p-2`}>
-      <Link
-        href={"/reports"}
-        className={`flex gap-2 p-2 ${isPath ? "text-muted-foreground" : null}`}
-      >
-        <FileBarChart className={`w-6 `} />
-        <span className={open ? "" : "hidden"}>{title}</span>
-      </Link>
-    </div>
-  );
-};
-
-export default ReportsModuleMenu;
+/**
+ * Returns navigation item configuration for Reports module
+ * @param title - Localized title for the menu item
+ * @returns NavItem object compatible with NavMain component
+ */
+export default function getReportsMenuItem({
+  title,
+}: GetReportsMenuItemProps): NavItem {
+  return {
+    title,
+    url: "/reports",
+    icon: FileBarChart,
+  }
+}

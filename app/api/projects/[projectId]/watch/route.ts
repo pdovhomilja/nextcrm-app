@@ -2,6 +2,7 @@ import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
+import { junctionTableHelpers } from "@/lib/junction-helpers";
 
 export async function POST(req: Request, props: { params: Promise<{ projectId: string }> }) {
   const params = await props.params;
@@ -20,20 +21,18 @@ export async function POST(req: Request, props: { params: Promise<{ projectId: s
   console.log(session.user.id, "session.user.id");
 
   try {
+    // Add watcher using BoardWatchers junction table
     await prismadb.boards.update({
       where: {
         id: boardId,
       },
       data: {
-        watchers_users: {
-          connect: {
-            id: session.user.id,
-          },
-        },
+        watchers: junctionTableHelpers.addWatcher(session.user.id),
       },
     });
     return NextResponse.json({ message: "Board watched" }, { status: 200 });
   } catch (error) {
     console.log(error);
+    return new NextResponse("Failed to watch board", { status: 500 });
   }
 }

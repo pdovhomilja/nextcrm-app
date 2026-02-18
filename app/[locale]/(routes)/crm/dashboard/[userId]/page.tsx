@@ -1,5 +1,6 @@
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
 import React from "react";
 import Container from "../../../components/ui/Container";
 import { getAccountsTasks } from "@/actions/crm/account/get-tasks";
@@ -9,12 +10,7 @@ const UserCRMDashboard = async () => {
   const session = await getServerSession(authOptions);
 
   if (!session) {
-    return {
-      redirect: {
-        destination: "/auth/signin",
-        permanent: false,
-      },
-    };
+    redirect("/auth/signin");
   }
 
   const task = await getUserCRMTasks(session.user.id);

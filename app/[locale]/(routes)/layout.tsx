@@ -4,10 +4,14 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 import Header from "./components/Header";
-import SideBar from "./components/SideBar";
 import Footer from "./components/Footer";
 import getAllCommits from "@/actions/github/get-repo-commits";
+import { getModules } from "@/actions/get-modules";
+
 import { Metadata } from "next";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { AppSidebar } from "./components/app-sidebar";
+import { getTranslations } from "next-intl/server";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -37,6 +41,7 @@ export const metadata: Metadata = {
     ],
   },
 };
+
 export default async function AppLayout({
   children,
 }: {
@@ -62,21 +67,59 @@ export default async function AppLayout({
 
   const build = await getAllCommits();
 
+  // Fetch modules data for sidebar
+  const modules = await getModules();
+
+  // Get user language for localization
+  const lang = user?.userLanguage || "en";
+
+  // Fetch localization dictionary
+  const dict = await getTranslations("ModuleMenu");
+
+  // Extract translations as plain object for client component
+  const translations = {
+    dashboard: dict("dashboard"),
+    crm: {
+      title: dict("crm.title"),
+      accounts: dict("crm.accounts"),
+      opportunities: dict("crm.opportunities"),
+      contacts: dict("crm.contacts"),
+      leads: dict("crm.leads"),
+      contracts: dict("crm.contracts"),
+    },
+    projects: dict("projects"),
+    emails: dict("emails"),
+    invoices: dict("invoices"),
+    reports: dict("reports"),
+    documents: dict("documents"),
+    settings: dict("settings"),
+  };
+
   //console.log(typeof build, "build");
   return (
-    <div className="flex h-screen overflow-hidden">
-      <SideBar build={build} />
-      <div className="flex flex-col h-full w-full overflow-hidden">
+    <SidebarProvider>
+      <AppSidebar
+        modules={modules}
+        dict={translations}
+        build={build}
+        session={session}
+      />
+      <SidebarInset>
         <Header
           id={session.user.id as string}
-          name={session.user.name as string}
-          email={session.user.email as string}
-          avatar={session.user.image as string}
           lang={session.user.userLanguage as string}
         />
-        <div className="flex-grow overflow-y-auto h-full p-5">{children}</div>
-        <Footer />
-      </div>
-    </div>
+        {/*
+          Task Group 3.3: Footer Relocation
+          - Footer has been moved inside the scrollable content area
+          - This allows the footer to scroll with the page content
+          - Footer will appear at the bottom of the content, not fixed at viewport bottom
+        */}
+        <div className="flex flex-col flex-grow overflow-y-auto h-full">
+          <div className="flex-grow p-5">{children}</div>
+          <Footer />
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

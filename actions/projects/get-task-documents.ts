@@ -1,10 +1,13 @@
 import { prismadb } from "@/lib/prisma";
 
 export const getTaskDocuments = async (taskId: string) => {
+  // Query documents through DocumentsToTasks junction table
   const data = await prismadb.documents.findMany({
     where: {
-      tasksIDs: {
-        has: taskId,
+      tasks: {
+        some: {
+          task_id: taskId,
+        },
       },
     },
     include: {
@@ -20,14 +23,5 @@ export const getTaskDocuments = async (taskId: string) => {
       },
     },
   });
-  /*   const data = await prismadb.tasks.findMany({
-    where: {
-      documents: {
-        some: {
-          id: taskId,
-        },
-      },
-    },
-  }); */
   return data;
 };

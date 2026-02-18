@@ -64,7 +64,7 @@ export function UpdateOpportunityForm({
     id: z.string().min(5).max(30),
     name: z.string(),
     close_date: z.date({
-      required_error: "A expected close date is required.",
+      message: "A expected close date is required.",
     }),
     description: z.string(),
     type: z.string(),

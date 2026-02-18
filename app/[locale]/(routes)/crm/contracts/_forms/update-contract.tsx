@@ -99,7 +99,7 @@ const UpdateContractForm = ({
   return (
     <FormSheetNoTrigger
       title="Update contract"
-      description=""
+      description="Update contract details, dates, status, and assignments"
       open={onOpen}
       setOpen={setOpen}
     >

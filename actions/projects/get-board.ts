@@ -1,4 +1,5 @@
 import { prismadb } from "@/lib/prisma";
+import { junctionTableHelpers, extractWatcherUsers } from "@/lib/junction-helpers";
 
 export const getBoard = async (id: string) => {
   const board = await prismadb.boards.findFirst({
@@ -11,6 +12,8 @@ export const getBoard = async (id: string) => {
           name: true,
         },
       },
+      // Include watchers through BoardWatchers junction table
+      ...junctionTableHelpers.includeWatchersWithUsers(),
     },
   });
 

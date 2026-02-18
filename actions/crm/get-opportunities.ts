@@ -3,10 +3,40 @@ import { prismadb } from "@/lib/prisma";
 export const getOpportunities = async () => {
   const data = await prismadb.crm_Opportunities.findMany({
     include: {
+      // Include assigned user (uses "assigned_to_user_relation")
       assigned_to_user: {
         select: {
           avatar: true,
           name: true,
+        },
+      },
+      // Include created by user (uses "created_by_user_relation")
+      created_by_user: {
+        select: {
+          name: true,
+        },
+      },
+      // Include contacts through ContactsToOpportunities junction table
+      contacts: {
+        include: {
+          contact: {
+            select: {
+              id: true,
+              first_name: true,
+              last_name: true,
+            },
+          },
+        },
+      },
+      // Include documents through DocumentsToOpportunities junction table
+      documents: {
+        include: {
+          document: {
+            select: {
+              id: true,
+              document_name: true,
+            },
+          },
         },
       },
     },

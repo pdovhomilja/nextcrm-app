@@ -1,30 +1,29 @@
 import { Mail } from "lucide-react";
+import { NavItem } from "../nav-main";
 
-import Link from "next/link";
-
-import { usePathname } from "next/navigation";
-import React from "react";
+/**
+ * Emails Module Menu Item - Task Group 2.5
+ *
+ * Converted from simple Link component to navigation item object.
+ * Returns a NavItem object for Emails navigation.
+ *
+ * Emails module is a simple navigation item (not a collapsible group)
+ * pointing to the main emails page at /emails.
+ *
+ * @param title - Localized label for Emails module
+ * @returns NavItem object for Emails navigation
+ */
 
 type Props = {
-  open: boolean;
   title: string;
 };
 
-const EmailsModuleMenu = ({ open, title }: Props) => {
-  const pathname = usePathname();
-  const isPath = pathname.includes("emails");
-
-  return (
-    <div className="flex flex-row items-center mx-auto p-2">
-      <Link
-        href={"/emails"}
-        className={`flex gap-2 p-2 ${isPath ? "text-muted-foreground" : null}`}
-      >
-        <Mail className="w-6" />
-        <span className={open ? "" : "hidden"}>{title}</span>
-      </Link>
-    </div>
-  );
+export const getEmailsMenuItem = ({ title }: Props): NavItem => {
+  return {
+    title,
+    url: "/emails",
+    icon: Mail,
+  };
 };
 
-export default EmailsModuleMenu;
+export default getEmailsMenuItem;

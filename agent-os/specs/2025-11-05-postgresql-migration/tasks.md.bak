@@ -1,0 +1,1427 @@
+# Task Breakdown: PostgreSQL Migration
+
+## Overview
+**Total Tasks:** 54 tasks across 6 major phases
+**Timeline:** 8 weeks
+**Priority:** TOP PRIORITY for Phase 1 (Q1-Q2 2025)
+
+This task breakdown follows the dependency order required for a safe, zero-data-loss migration from MongoDB to PostgreSQL. Each phase builds on the previous phase, with comprehensive testing integrated throughout.
+
+---
+
+## Task List
+
+### Phase 1: Schema Design and Prisma Configuration
+
+#### Task Group 1.1: Core Schema Transformation
+**Dependencies:** None
+**Duration:** 3-4 days
+**Status:** COMPLETED
+
+- [x] 1.1.0 Complete PostgreSQL schema design
+  - [x] 1.1.1 Update datasource configuration
+    - Changed `provider = "mongodb"` to `provider = "postgresql"`
+    - Updated connection URL format documentation
+    - Verified Prisma client compatibility
+  - [x] 1.1.2 Replace all ObjectId types with UUID
+    - Found all `@db.ObjectId` references across 26 models
+    - Replaced with `@db.Uuid`
+    - Updated all `@default(auto())` to `@default(uuid())`
+    - Updated all foreign key field types from ObjectId to UUID
+  - [x] 1.1.3 Update model field attributes for PostgreSQL
+    - Removed MongoDB-specific attributes (`@map("_id")`)
+    - Updated DateTime field types (removed `@db.Date`)
+    - Verified enum definitions are compatible
+    - Updated MongoDB-specific validation rules
+  - [x] 1.1.4 Review and document schema changes
+    - Created comprehensive schema diff document at `agent-os/specs/2025-11-05-postgresql-migration/schema-diff.md`
+    - Documented all breaking changes
+    - Listed all field type transformations
+
+**Acceptance Criteria:**
+- [x] Prisma schema compiles without errors with PostgreSQL provider
+- [x] All 26 models have UUID primary keys
+- [x] All foreign key relationships use UUID types
+- [x] Schema passes Prisma validation (`npx prisma format` succeeded)
+
+---
+
+#### Task Group 1.2: Junction Tables Creation
+**Dependencies:** Task Group 1.1
+**Duration:** 2-3 days
+**Status:** COMPLETED
+
+- [x] 1.2.0 Create all junction table models
+  - [x] 1.2.1 Create Documents junction tables (7 tables)
+    - `DocumentsToInvoices` (document_id, invoice_id)
+    - `DocumentsToOpportunities` (document_id, opportunity_id)
+    - `DocumentsToContacts` (document_id, contact_id)
+    - `DocumentsToTasks` (document_id, task_id)
+    - `DocumentsToCrmAccountsTasks` (document_id, crm_accounts_task_id)
+    - `DocumentsToLeads` (document_id, lead_id)
+    - `DocumentsToAccounts` (document_id, account_id)
+    - Each with composite primary key and foreign key constraints
+  - [x] 1.2.2 Create Watchers junction tables (2 tables)
+    - `AccountWatchers` (account_id, user_id)
+    - `BoardWatchers` (board_id, user_id)
+    - Each with composite primary key and foreign key constraints
+  - [x] 1.2.3 Update related models to reference junction tables
+    - Removed array fields that are now normalized
+    - Added Prisma relation attributes
+    - Named relations explicitly to avoid conflicts
+  - [x] 1.2.4 Define indexes for all junction tables
+    - Composite primary key index (automatic via @@id)
+    - Index on first foreign key column
+    - Index on second foreign key column
+
+**Acceptance Criteria:**
+- [x] All 10 junction tables defined in Prisma schema (9 specified + 1 ContactsToOpportunities)
+- [x] Proper foreign key constraints with cascade deletes (onDelete: Cascade)
+- [x] Indexes defined for all foreign key columns
+- [x] Prisma schema validates successfully
+
+---
+
+#### Task Group 1.3: Array and JSONB Field Configuration
+**Dependencies:** Task Group 1.2
+**Duration:** 1-2 days
+**Status:** COMPLETED
+
+- [x] 1.3.0 Configure PostgreSQL-native array and JSONB fields
+  - [x] 1.3.1 Keep specific fields as PostgreSQL arrays
+    - `crm_Contacts.tags` - String array
+    - `crm_Contacts.notes` - Text array
+    - `Boards.sharedWith` - UUID array
+    - Verified array syntax is PostgreSQL-compatible
+  - [x] 1.3.2 Configure JSONB fields
+    - `Invoices.invoice_items` - JSONB with proper type annotation
+    - `Documents.tags` - JSONB
+    - `Tasks.tags` - JSONB
+    - `crm_Accounts_Tasks.tags` - JSONB
+    - Added `@db.JsonB` attribute where needed
+  - [x] 1.3.3 Document array and JSONB schema patterns
+    - Documented expected JSONB structure in schema-diff.md
+    - Listed migration transformation rules
+    - Documented which fields kept as arrays vs normalized
+
+**Acceptance Criteria:**
+- [x] Array fields use PostgreSQL array syntax
+- [x] JSONB fields properly annotated with @db.JsonB
+- [x] Schema compiles and validates
+- [x] Documentation of JSONB structures created in schema-diff.md
+
+---
+
+#### Task Group 1.4: Index Strategy Implementation
+**Dependencies:** Task Groups 1.1, 1.2, 1.3
+**Duration:** 2-3 days
+**Status:** COMPLETED
+
+- [x] 1.4.0 Define comprehensive index strategy
+  - [x] 1.4.1 Define Tier 1 indexes (Foreign Keys - automatic)
+    - Documented all foreign key columns that get automatic indexes
+    - Verified Prisma generates indexes for all foreign keys
+  - [x] 1.4.2 Define Tier 2 indexes (Common Filter Fields)
+    - Created indexes on `status` fields across all relevant tables
+    - Created indexes on `type` fields
+    - Created indexes on `createdAt` fields
+    - Created indexes on `updatedAt` fields (where applicable)
+    - Created indexes on owner/assigned fields
+    - Defined composite indexes for common query patterns:
+      - `crm_Opportunities`: (status, sales_stage)
+      - `Tasks`: (user, taskStatus)
+      - `crm_Accounts_Tasks`: (account, taskStatus)
+      - `Invoices`: (status, date_created)
+      - `crm_Contracts`: (startDate, endDate)
+      - `Boards`: (user, favourite)
+  - [x] 1.4.3 Define Tier 3 indexes (Full-Text Search)
+    - Documented GIN indexes needed for full-text search in schema-diff.md
+    - Note: Full-text search indexes require custom SQL migration (Prisma limitation)
+    - Specified tables needing FTS:
+      - `crm_Accounts.name`
+      - `crm_Contacts.first_name`, `crm_Contacts.last_name` (combined)
+      - `crm_Contacts.notes` (GIN on array)
+      - `crm_Leads` name fields
+      - `crm_Opportunities.name`, `crm_Opportunities.description`
+      - `Tasks.title`, `Tasks.content`
+      - `crm_Accounts_Tasks.title`, `crm_Accounts_Tasks.content`
+      - `Documents.document_name`, `Documents.description`
+      - `Invoices.invoice_number`, `Invoices.partner`, `Invoices.description`
+    - Documented GIN indexes for JSONB columns
+  - [x] 1.4.4 Define partial indexes for optimization
+    - Documented partial index strategy in schema-diff.md
+    - Note: Partial indexes require custom SQL migration (Prisma limitation)
+    - Example: `Users.userStatus WHERE userStatus = 'ACTIVE'`
+  - [x] 1.4.5 Document index maintenance strategy
+    - ANALYZE command usage documented
+    - VACUUM configuration documented
+    - Index monitoring queries provided in schema-diff.md
+
+**Acceptance Criteria:**
+- [x] Complete index strategy documented in schema-diff.md
+- [x] All basic indexes defined in Prisma schema
+- [x] Index rationale documented
+- [x] Monitoring queries prepared
+
+**Notes:**
+- Full-text search (GIN with to_tsvector) and partial indexes will require custom SQL in migration files (Prisma limitation)
+- Basic B-tree indexes are fully defined in schema
+- Advanced indexes documented for Phase 1.5
+
+---
+
+#### Task Group 1.5: Prisma Migration Files Creation
+**Dependencies:** Task Groups 1.1-1.4
+**Duration:** 1-2 days
+**Status:** PENDING
+
+- [ ] 1.5.0 Generate and review Prisma migration files
+  - [ ] 1.5.1 Generate initial PostgreSQL migration
+    - Run `npx prisma migrate dev --name init-postgresql`
+    - Review generated SQL for correctness
+    - Verify all tables, columns, and indexes included
+  - [ ] 1.5.2 Test migration on empty PostgreSQL database
+    - Create test PostgreSQL database
+    - Run `npx prisma migrate deploy`
+    - Verify schema created correctly
+    - Use Prisma Studio to inspect schema
+  - [ ] 1.5.3 Document migration workflow
+    - Document migration commands
+    - Document rollback procedures
+    - Document Prisma Studio usage
+
+**Acceptance Criteria:**
+- Prisma migration files generated successfully
+- Migration runs cleanly on test database
+- All tables, indexes, and constraints created
+- Migration workflow documented
+
+**Notes:**
+- Cannot run `npx prisma migrate` until DATABASE_URL points to a PostgreSQL database
+- Current .env has MongoDB URL
+- Need PostgreSQL database set up first
+- Schema is ready and validated
+
+---
+
+### Phase 2: Migration Script Development
+
+#### Task Group 2.1: Migration Script Foundation
+**Dependencies:** Phase 1 complete
+**Duration:** 3-4 days
+
+- [ ] 2.1.0 Build migration script core architecture
+  - [ ] 2.1.1 Create TypeScript project structure
+    - Create `/scripts/migrate-mongo-to-postgres.ts` main file
+    - Create `/scripts/migration/types.ts` for TypeScript interfaces
+    - Create `/scripts/migration/utils.ts` for helper functions
+    - Set up TypeScript strict mode configuration
+  - [ ] 2.1.2 Define core TypeScript interfaces
+    - `MigrationState` interface (checkpoint data structure)
+    - `MigrationConfig` interface (batch size, table order)
+    - `MigrationError` interface (error logging structure)
+    - `TableMigrationStats` interface (per-table metrics)
+    - `ObjectIdUuidMapping` type
+  - [ ] 2.1.3 Set up dual Prisma client connections
+    - Initialize Prisma client for MongoDB (source)
+    - Initialize Prisma client for PostgreSQL (target)
+    - Implement connection testing functions
+    - Implement graceful connection cleanup
+  - [ ] 2.1.4 Write 2-8 focused tests for core infrastructure
+    - Test dual database connections work
+    - Test TypeScript interfaces are correct
+    - Test helper utility functions
+    - Test error handling basics
+
+**Acceptance Criteria:**
+- TypeScript project compiles without errors
+- Dual Prisma connections work
+- Core interfaces defined and documented
+- 2-8 foundational tests pass
+
+---
+
+#### Task Group 2.2: ObjectId to UUID Mapping System
+**Dependencies:** Task Group 2.1
+**Duration:** 2-3 days
+
+- [ ] 2.2.0 Implement ObjectId → UUID mapping
+  - [ ] 2.2.1 Create mapping manager module
+    - `generateAndMapUuid(mongoId: string): string` - Generate new UUID
+    - `getUuidForMongoId(mongoId: string): string | undefined` - Retrieve existing UUID
+    - `bulkMapIds(mongoIds: string[]): Map<string, string>` - Batch mapping
+    - In-memory map structure: `Map<ObjectId, UUID>`
+  - [ ] 2.2.2 Implement foreign key transformation logic
+    - Function to transform single foreign key reference
+    - Function to transform array of foreign key references
+    - Function to handle null/optional foreign keys
+    - Function to validate foreign key exists before migration
+  - [ ] 2.2.3 Write 2-8 focused tests for UUID mapping
+    - Test UUID generation is consistent for same ObjectId
+    - Test different ObjectIds get different UUIDs
+    - Test foreign key transformation preserves relationships
+    - Test null/undefined foreign key handling
+
+**Acceptance Criteria:**
+- UUID mapping functions work correctly
+- Foreign key transformations preserve referential integrity
+- 2-8 UUID mapping tests pass
+- Code is type-safe with no 'any' types
+
+---
+
+#### Task Group 2.3: Progress Tracking System
+**Dependencies:** Task Group 2.1
+**Duration:** 2 days
+
+- [ ] 2.3.0 Build progress tracking system
+  - [ ] 2.3.1 Create progress tracker module (`/scripts/migration/progress-tracker.ts`)
+    - Overall migration progress (percentage across all tables)
+    - Per-table progress (current table, records processed/total)
+    - Records per second calculation
+    - Estimated time remaining calculation
+  - [ ] 2.3.2 Implement console output with progress bars
+    - Use `cli-progress` library for progress bars
+    - Use `chalk` library for colored output
+    - Display current table being migrated
+    - Display batch progress within table
+    - Display overall percentage completion
+    - Display ETA based on average speed
+  - [ ] 2.3.3 Write console output format
+    - Header with migration title
+    - Per-table progress section
+    - Overall progress section
+    - Summary section at completion
+
+**Acceptance Criteria:**
+- Progress displayed in real-time
+- Percentage completion accurate
+- ETA calculation reasonable
+- Console output is clear and informative
+
+---
+
+#### Task Group 2.4: Checkpoint and Resume System
+**Dependencies:** Task Group 2.1
+**Duration:** 3-4 days
+
+- [ ] 2.4.0 Implement checkpoint save/resume functionality
+  - [ ] 2.4.1 Create checkpoint manager module (`/scripts/migration/checkpoint-manager.ts`)
+    - `saveCheckpoint(state: MigrationState): Promise<void>`
+    - `loadCheckpoint(): Promise<MigrationState | null>`
+    - `deleteCheckpoint(): Promise<void>`
+    - Checkpoint file location: `./migration-checkpoint.json`
+  - [ ] 2.4.2 Define checkpoint data structure
+    - Version number (for format compatibility)
+    - Timestamp of checkpoint
+    - Current table being processed
+    - List of completed tables
+    - ObjectId → UUID mapping (entire mapping)
+    - Migrated record UUIDs per table
+    - Total records migrated count
+    - Total errors count
+  - [ ] 2.4.3 Implement graceful SIGINT (Ctrl+C) handling
+    - Register SIGINT handler
+    - Save checkpoint on interruption
+    - Display "Checkpoint saved, safe to exit" message
+    - Clean up database connections
+    - Exit gracefully
+  - [ ] 2.4.4 Implement resume logic
+    - Detect checkpoint file on startup
+    - Load checkpoint data
+    - Skip completed tables
+    - Resume from current table
+    - Skip already-migrated records
+    - Continue with same UUID mapping
+  - [ ] 2.4.5 Write 2-8 focused tests for checkpoint system
+    - Test checkpoint save and load
+    - Test resume skips completed tables
+    - Test resume continues from correct position
+    - Test UUID mapping persists across resume
+
+**Acceptance Criteria:**
+- Checkpoint saves correctly
+- Resume loads checkpoint and continues migration
+- Ctrl+C gracefully saves checkpoint
+- 2-8 checkpoint tests pass
+- No duplicate records created on resume
+
+---
+
+#### Task Group 2.5: Error Logging System
+**Dependencies:** Task Group 2.1
+**Duration:** 2 days
+
+- [ ] 2.5.0 Build comprehensive error logging
+  - [ ] 2.5.1 Create error logger module (`/scripts/migration/error-logger.ts`)
+    - `logError(table, mongoId, error, document): void`
+    - `generateErrorSummary(): ErrorSummary`
+    - Error log file: `./migration-errors.log`
+    - Structured error format with timestamp, table, ID, error, document
+  - [ ] 2.5.2 Implement error handling strategy
+    - Catch errors per record (not per batch)
+    - Log error with full context
+    - Continue processing remaining records
+    - Track error count per table
+    - Include original MongoDB document in log
+  - [ ] 2.5.3 Create error summary report
+    - Total errors
+    - Errors by table
+    - List of failed MongoDB ObjectIds
+    - Common error patterns
+
+**Acceptance Criteria:**
+- Errors logged with full context
+- Migration continues despite errors
+- Error log file is readable and parsable
+- Error summary provides actionable insights
+
+---
+
+#### Task Group 2.6: Data Transformation Logic
+**Dependencies:** Task Groups 2.1, 2.2
+**Duration:** 4-5 days
+
+- [ ] 2.6.0 Implement record transformation functions
+  - [ ] 2.6.1 Create base transformation utilities
+    - DateTime conversion (MongoDB Date → ISO 8601 string)
+    - Enum validation and transformation
+    - Null/undefined handling
+    - Boolean conversion
+  - [ ] 2.6.2 Build per-model transformation functions (26 models)
+    - CRM Core: Transform 8 models (Accounts, Contacts, Leads, Opportunities, Contracts, Campaigns, Sales Stages, Opportunity Types)
+    - Tasks: Transform 5 models (Tasks, CRM Tasks, Comments, Sections, Boards)
+    - Documents: Transform 4 models (Documents, Document Types, Invoices, Invoice States)
+    - System: Transform 5 models (Users, Modules, Status, Services, MyAccount)
+    - Other: Transform 4 models (Industry Types, SecondBrain, OpenAI Keys, Employees, ImageUpload, TodoList, GPT Models)
+    - Each transformation function:
+      - Takes MongoDB record as input
+      - Generates/retrieves UUID
+      - Transforms all foreign keys using UUID mapping
+      - Converts dates to ISO format
+      - Handles array field normalization (remove normalized fields)
+      - Transforms JSONB fields
+      - Returns PostgreSQL-compatible record
+  - [ ] 2.6.3 Create junction table population logic
+    - Extract array-based relationships from MongoDB records
+    - Build junction table records using UUID mapping
+    - Handle Documents relationships (7 junction tables)
+    - Handle Watchers relationships (2 junction tables)
+  - [ ] 2.6.4 Write 2-8 focused tests for transformations
+    - Test key model transformations (e.g., Accounts, Contacts, Opportunities)
+    - Test foreign key transformations
+    - Test date conversions
+    - Test JSONB transformations
+
+**Acceptance Criteria:**
+- All 26 models have transformation functions
+- Foreign keys correctly transformed using UUID mapping
+- Array fields properly normalized to junction tables
+- JSONB fields preserved correctly
+- 2-8 transformation tests pass
+
+---
+
+#### Task Group 2.7: Batch Processing and Transaction Logic
+**Dependencies:** Task Groups 2.1-2.6
+**Duration:** 3 days
+
+- [ ] 2.7.0 Implement batch processing with transactions
+  - [ ] 2.7.1 Create batch processing module
+    - Fixed batch size: 1000 records
+    - `migrateBatch<T>(records: T[], transformFn, tableName): Promise<void>`
+    - Query MongoDB in batches using cursor pagination
+    - Transform entire batch
+    - Insert entire batch in single transaction
+  - [ ] 2.7.2 Implement transaction safety
+    - Begin PostgreSQL transaction per batch
+    - Insert all records in batch
+    - Commit transaction on success
+    - Rollback transaction on any error
+    - Log errors and continue with next batch
+  - [ ] 2.7.3 Optimize batch insertion
+    - Use Prisma `createMany` for batch inserts
+    - Handle unique constraint violations gracefully
+    - Track successfully inserted records
+  - [ ] 2.7.4 Write 2-8 focused tests for batch processing
+    - Test batch insert succeeds
+    - Test transaction rollback on error
+    - Test batch continues after error in previous batch
+
+**Acceptance Criteria:**
+- Batch processing handles 1000 records efficiently
+- Transactions ensure atomicity per batch
+- Errors in one batch don't affect others
+- 2-8 batch processing tests pass
+
+---
+
+#### Task Group 2.8: Migration Orchestration
+**Dependencies:** Task Groups 2.1-2.7
+**Duration:** 3-4 days
+
+- [ ] 2.8.0 Build main migration orchestrator
+  - [ ] 2.8.1 Define table migration order (respecting dependencies)
+    - Phase 1: Independent lookup tables (7 tables)
+    - Phase 2: Core entity tables (5 tables)
+    - Phase 3: CRM core tables in dependency order (8 tables)
+    - Phase 4: Task and board tables (5 tables)
+    - Phase 5: Document and invoice tables (2 tables)
+    - Phase 6: Integration tables (2 tables)
+    - Phase 7: Junction tables (10 tables)
+  - [ ] 2.8.2 Implement main migration loop
+    - Initialize checkpoint (load or create new)
+    - Connect to both databases
+    - Validate PostgreSQL schema exists
+    - For each table in migration order:
+      - Skip if in checkpoint as completed
+      - Query total record count
+      - Process in batches
+      - Update progress after each batch
+      - Save checkpoint every 10 batches
+      - Mark table as completed when done
+    - Populate junction tables after entity tables
+    - Generate migration summary
+    - Delete checkpoint on success
+  - [ ] 2.8.3 Add pre-migration validation
+    - Verify PostgreSQL schema exists
+    - Verify all expected tables present
+    - Verify foreign key constraints defined
+    - Check PostgreSQL database is empty (or confirm overwrite)
+  - [ ] 2.8.4 Add post-migration summary
+    - Total records migrated
+    - Total errors
+    - Migration duration
+    - Records per second
+    - Success rate by table
+  - [ ] 2.8.5 Run 2-8 focused tests for full migration
+    - Test migration order is correct
+    - Test checkpoint saves during migration
+    - Test resume continues correctly
+    - Test migration completes successfully with sample data
+
+**Acceptance Criteria:**
+- Migration script completes sample dataset migration
+- Table order respects dependencies
+- Progress tracking displays correctly
+- Checkpoint/resume works
+- 2-8 orchestration tests pass
+
+---
+
+#### Task Group 2.9: Migration Script CLI and Documentation
+**Dependencies:** Task Group 2.8
+**Duration:** 1-2 days
+
+- [ ] 2.9.0 Create migration script CLI interface
+  - [ ] 2.9.1 Add package.json script
+    - `"migrate:mongo-to-postgres": "ts-node scripts/migrate-mongo-to-postgres.ts"`
+  - [ ] 2.9.2 Add CLI arguments support (optional)
+    - `--resume` flag (auto-detect checkpoint)
+    - `--clean` flag (delete checkpoint and restart)
+  - [ ] 2.9.3 Write migration script README
+    - Prerequisites (PostgreSQL installed, schema migrated)
+    - Usage instructions
+    - Checkpoint/resume behavior
+    - Error handling guidance
+    - Troubleshooting common issues
+
+**Acceptance Criteria:**
+- Migration runs via `npm run migrate:mongo-to-postgres`
+- CLI arguments work correctly
+- README documentation clear and complete
+
+---
+
+### Phase 3: Validation Script Development
+
+#### Task Group 3.1: Validation Script Foundation
+**Dependencies:** Phase 2 complete
+**Duration:** 2 days
+
+- [ ] 3.1.0 Create validation script architecture
+  - [ ] 3.1.1 Create TypeScript project structure
+    - Create `/scripts/validate-migration.ts` main file
+    - Create `/scripts/validation/types.ts` for interfaces
+    - Create `/scripts/validation/validators.ts` for validation logic
+    - Set up TypeScript strict mode
+  - [ ] 3.1.2 Define validation TypeScript interfaces
+    - `ValidationReport` interface (overall report structure)
+    - `TableValidationResult` interface (per-table results)
+    - `FieldMismatch` interface (field-level discrepancies)
+    - `IntegrityViolation` interface (broken foreign keys)
+  - [ ] 3.1.3 Set up dual database connections
+    - Connect to MongoDB (source)
+    - Connect to PostgreSQL (target)
+    - Load UUID mapping from checkpoint file
+  - [ ] 3.1.4 Write 2-8 focused tests for validation infrastructure
+    - Test dual connections work
+    - Test UUID mapping loads correctly
+    - Test validation report structure
+
+**Acceptance Criteria:**
+- Validation script project structure created
+- Dual database connections work
+- UUID mapping loads from checkpoint
+- 2-8 infrastructure tests pass
+
+---
+
+#### Task Group 3.2: Layer 1 - Row Count Validation
+**Dependencies:** Task Group 3.1
+**Duration:** 1 day
+
+- [ ] 3.2.0 Implement row count validation
+  - [ ] 3.2.1 Create row count validator module
+    - `validateRowCounts(tables: string[]): Promise<RowCountResult[]>`
+    - For each table:
+      - Query `COUNT(*)` from MongoDB
+      - Query `COUNT(*)` from PostgreSQL
+      - Compare counts
+      - Log discrepancy if mismatch
+  - [ ] 3.2.2 Add row count to validation report
+    - Include MongoDB count
+    - Include PostgreSQL count
+    - Mark as PASS or FAIL
+  - [ ] 3.2.3 Write 2-8 focused tests for row count validation
+    - Test matching counts pass
+    - Test mismatched counts fail
+    - Test empty tables handled correctly
+
+**Acceptance Criteria:**
+- Row count validation works for all 26 entity tables
+- Discrepancies logged clearly
+- 2-8 row count tests pass
+
+---
+
+#### Task Group 3.3: Layer 2 - Sample Record Validation
+**Dependencies:** Task Group 3.1
+**Duration:** 3-4 days
+
+- [ ] 3.3.0 Implement sample record validation
+  - [ ] 3.3.1 Create sample record validator module
+    - `validateSampleRecords(table: string, sampleSize: number): Promise<SampleValidationResult>`
+    - Query random sample (100 records) from MongoDB
+    - Get corresponding PostgreSQL records using UUID mapping
+    - Compare field-by-field for each record
+  - [ ] 3.3.2 Build field comparison logic
+    - Scalar field comparison (strings, numbers, booleans)
+    - DateTime comparison (within 1 second tolerance)
+    - Array comparison (order-agnostic for unordered arrays)
+    - JSONB deep equality comparison
+    - Enum value comparison
+  - [ ] 3.3.3 Calculate match percentage
+    - Track matched fields vs. total fields
+    - Calculate per-record match percentage
+    - Calculate overall match percentage for sample
+    - Mark as FAIL if match < 99%
+  - [ ] 3.3.4 Log field mismatches
+    - Table name
+    - MongoDB ObjectId
+    - PostgreSQL UUID
+    - Field name
+    - Expected value (MongoDB)
+    - Actual value (PostgreSQL)
+  - [ ] 3.3.5 Write 2-8 focused tests for sample validation
+    - Test identical records pass
+    - Test field mismatches detected
+    - Test date tolerance works
+    - Test JSONB comparison works
+
+**Acceptance Criteria:**
+- Sample validation compares 100 records per table
+- Field-level mismatches detected and logged
+- Match percentage calculated correctly
+- 2-8 sample validation tests pass
+
+---
+
+#### Task Group 3.4: Layer 3 - Referential Integrity Validation
+**Dependencies:** Task Group 3.1
+**Duration:** 2-3 days
+
+- [ ] 3.4.0 Implement referential integrity validation
+  - [ ] 3.4.1 Create referential integrity validator module
+    - `validateReferentialIntegrity(table: string): Promise<IntegrityResult>`
+    - For each table with foreign keys:
+      - Query all foreign key values from PostgreSQL
+      - Verify each foreign key exists in referenced table
+      - Log orphaned records (foreign key doesn't exist)
+  - [ ] 3.4.2 Validate junction table integrity
+    - For each junction table:
+      - Verify all IDs exist in both referenced tables
+      - Check bidirectional consistency
+      - Ensure no orphaned junction records
+  - [ ] 3.4.3 Mark validation as FAILED if integrity issues found
+  - [ ] 3.4.4 Write 2-8 focused tests for integrity validation
+    - Test valid foreign keys pass
+    - Test orphaned records detected
+    - Test junction table validation works
+
+**Acceptance Criteria:**
+- All foreign keys validated
+- Junction table relationships verified
+- Orphaned records detected and logged
+- 2-8 integrity validation tests pass
+
+---
+
+#### Task Group 3.5: Layer 4 - Data Type Validation
+**Dependencies:** Task Group 3.1
+**Duration:** 2 days
+
+- [ ] 3.5.0 Implement data type conversion validation
+  - [ ] 3.5.1 Create data type validator module
+    - `validateDataTypes(table: string): Promise<TypeValidationResult>`
+    - Validate DateTime fields (ISO format, reasonable values)
+    - Validate enum fields (values within defined enum)
+    - Validate JSONB structure (valid JSON, expected schema)
+    - Validate array fields (proper PostgreSQL array format)
+    - Validate numeric fields (no truncation, proper types)
+    - Validate boolean fields (true/false)
+  - [ ] 3.5.2 Log type conversion errors
+    - Field name
+    - Expected type
+    - Actual value
+    - Validation error message
+  - [ ] 3.5.3 Write 2-8 focused tests for type validation
+    - Test date format validation
+    - Test enum validation
+    - Test JSONB structure validation
+
+**Acceptance Criteria:**
+- All data types validated correctly
+- Type conversion errors logged
+- 2-8 type validation tests pass
+
+---
+
+#### Task Group 3.6: Validation Report Generation
+**Dependencies:** Task Groups 3.2-3.5
+**Duration:** 2 days
+
+- [ ] 3.6.0 Build comprehensive validation report
+  - [ ] 3.6.1 Create report generator module
+    - Compile results from all 4 validation layers
+    - Calculate overall PASS/FAIL status
+    - Generate summary statistics
+    - Create detailed results per table
+  - [ ] 3.6.2 Define validation report JSON structure
+    - Timestamp
+    - Overall status (PASS/FAIL)
+    - Summary section (total tables, total records, match percentage)
+    - Per-layer results (row counts, sample records, referential integrity, data types)
+    - Detailed results per table
+  - [ ] 3.6.3 Implement console output
+    - Display summary to console
+    - Use colored output for PASS/FAIL (chalk library)
+    - Display match percentages
+    - Show error counts
+    - Provide clear success/failure message
+  - [ ] 3.6.4 Save validation report to file
+    - Save as `./migration-validation-report.json`
+    - Include timestamp
+    - Pretty-print JSON for readability
+  - [ ] 3.6.5 Write 2-8 focused tests for report generation
+    - Test report compiles correctly
+    - Test PASS/FAIL status determined correctly
+    - Test JSON report saves successfully
+
+**Acceptance Criteria:**
+- Validation report generated as JSON file
+- Console output is clear and actionable
+- Overall PASS/FAIL status correct
+- 2-8 report generation tests pass
+
+---
+
+#### Task Group 3.7: Validation Script CLI and Documentation
+**Dependencies:** Task Group 3.6
+**Duration:** 1 day
+
+- [ ] 3.7.0 Create validation script CLI
+  - [ ] 3.7.1 Add package.json script
+    - `"validate:migration": "ts-node scripts/validate-migration.ts"`
+  - [ ] 3.7.2 Add CLI exit codes
+    - Exit 0 if validation PASS
+    - Exit 1 if validation FAIL
+    - Enables CI/CD integration
+  - [ ] 3.7.3 Write validation script README
+    - Prerequisites (migration must be complete)
+    - Usage instructions
+    - Interpretation of validation report
+    - Next steps if validation fails
+
+**Acceptance Criteria:**
+- Validation runs via `npm run validate:migration`
+- Exit codes work correctly
+- README documentation clear
+
+---
+
+### Phase 4: Integration Testing and Refinement
+
+#### Task Group 4.1: Sample Dataset Testing
+**Dependencies:** Phases 2 and 3 complete
+**Duration:** 3-4 days
+
+- [ ] 4.1.0 Test migration with comprehensive sample dataset
+  - [ ] 4.1.1 Create sample MongoDB database
+    - Generate realistic sample data (100-1000 records per table)
+    - Include all relationship types
+    - Include edge cases (nulls, empty arrays, special characters)
+    - Include test data for all 26 models
+  - [ ] 4.1.2 Run full migration on sample dataset
+    - Execute migration script
+    - Verify progress tracking works
+    - Verify checkpoint system works
+    - Observe console output
+  - [ ] 4.1.3 Run validation script on migrated data
+    - Execute validation script
+    - Review validation report
+    - Verify all 4 layers pass
+    - Investigate any failures
+  - [ ] 4.1.4 Test pause/resume functionality
+    - Start migration
+    - Pause with Ctrl+C after partial completion
+    - Verify checkpoint saved
+    - Resume migration
+    - Verify no duplicate records
+    - Verify migration completes successfully
+
+**Acceptance Criteria:**
+- Sample dataset migration completes successfully
+- Validation script passes all 4 layers
+- Pause/resume works without data loss
+- No duplicate records after resume
+
+---
+
+#### Task Group 4.2: Error Handling Testing
+**Dependencies:** Task Group 4.1
+**Duration:** 2 days
+
+- [ ] 4.2.0 Test error handling with intentionally bad data
+  - [ ] 4.2.1 Create dataset with intentional errors
+    - Records with invalid foreign keys
+    - Records with malformed dates
+    - Records with invalid enum values
+    - Records with oversized text fields
+  - [ ] 4.2.2 Run migration with bad data
+    - Verify migration continues despite errors
+    - Verify errors logged correctly
+    - Verify error log includes full context
+    - Verify error summary accurate
+  - [ ] 4.2.3 Review error logs
+    - Confirm MongoDB ObjectIds logged
+    - Confirm error messages descriptive
+    - Confirm original documents included
+  - [ ] 4.2.4 Test recovery after fixing errors
+    - Fix data issues in MongoDB
+    - Re-run migration (or resume from checkpoint)
+    - Verify previously failed records now succeed
+
+**Acceptance Criteria:**
+- Migration continues despite individual record failures
+- Errors logged with full context
+- Error summary provides actionable information
+- Fixed records can be re-migrated
+
+---
+
+#### Task Group 4.3: Performance Testing
+**Dependencies:** Task Group 4.1
+**Duration:** 2-3 days
+
+- [ ] 4.3.0 Test migration performance with larger datasets
+  - [ ] 4.3.1 Create large sample dataset (10,000+ records per major table)
+  - [ ] 4.3.2 Run migration and measure performance
+    - Record total migration duration
+    - Calculate records per second
+    - Monitor memory usage
+    - Monitor CPU usage
+    - Identify bottlenecks
+  - [ ] 4.3.3 Test PostgreSQL query performance post-migration
+    - Simple queries (< 100ms target)
+    - Complex joins
+    - Full-text search queries
+    - JSONB queries
+    - Use EXPLAIN ANALYZE to verify index usage
+  - [ ] 4.3.4 Optimize batch size if needed
+    - Test with different batch sizes
+    - Measure performance impact
+    - Document optimal batch size
+
+**Acceptance Criteria:**
+- Migration handles 10,000+ records per table efficiently
+- Memory usage stays within reasonable bounds
+- PostgreSQL queries meet performance targets (< 100ms simple queries)
+- Indexes are used effectively (verified with EXPLAIN)
+
+---
+
+#### Task Group 4.4: Bug Fixes and Refinements
+**Dependencies:** Task Groups 4.1-4.3
+**Duration:** 3-4 days
+
+- [ ] 4.4.0 Address issues found during testing
+  - [ ] 4.4.1 Fix migration script bugs
+    - Address any data transformation errors
+    - Fix foreign key mapping issues
+    - Fix checkpoint/resume bugs
+    - Fix progress tracking inaccuracies
+  - [ ] 4.4.2 Fix validation script bugs
+    - Address false positives/negatives
+    - Fix field comparison logic bugs
+    - Fix referential integrity check issues
+  - [ ] 4.4.3 Improve error messages
+    - Make error logs more descriptive
+    - Add troubleshooting hints to errors
+    - Improve console output clarity
+  - [ ] 4.4.4 Optimize performance
+    - Address any bottlenecks found
+    - Optimize slow queries
+    - Improve batch processing efficiency
+  - [ ] 4.4.5 Update tests based on findings
+    - Add tests for newly discovered edge cases
+    - Fix any failing tests
+    - Improve test coverage
+
+**Acceptance Criteria:**
+- All bugs found during integration testing fixed
+- Error messages clear and actionable
+- Performance acceptable for large datasets
+- All tests passing
+
+---
+
+### Phase 5: Staging Environment Migration
+
+#### Task Group 5.1: Staging Environment Setup
+**Dependencies:** Phase 4 complete
+**Duration:** 1-2 days
+
+- [ ] 5.1.0 Prepare staging environment for migration
+  - [ ] 5.1.1 Clone production MongoDB to staging
+    - Use `mongodump` to backup production
+    - Restore to staging MongoDB instance
+    - Verify data integrity of clone
+    - Document data size and record counts
+  - [ ] 5.1.2 Set up staging PostgreSQL database
+    - Install PostgreSQL 16
+    - Enable pgvector extension
+    - Create database user with proper permissions
+    - Configure connection pooling
+  - [ ] 5.1.3 Run Prisma migrations on staging PostgreSQL
+    - Update DATABASE_URL to staging PostgreSQL (temporarily)
+    - Run `npx prisma migrate deploy`
+    - Verify schema created correctly
+    - Verify all indexes created
+    - Verify foreign key constraints defined
+
+**Acceptance Criteria:**
+- Staging MongoDB has production-like data
+- Staging PostgreSQL ready with schema
+- All indexes and constraints in place
+
+---
+
+#### Task Group 5.2: Staging Migration Execution
+**Dependencies:** Task Group 5.1
+**Duration:** 1-2 days (includes migration time)
+
+- [ ] 5.2.0 Execute full migration on staging
+  - [ ] 5.2.1 Run migration script
+    - Execute `npm run migrate:mongo-to-postgres` against staging
+    - Monitor progress in real-time
+    - Record start and end time
+    - Observe memory and CPU usage
+    - Take screenshots of console output
+  - [ ] 5.2.2 Handle any errors during migration
+    - Review error logs if errors occur
+    - Assess severity of errors
+    - Fix data issues if possible
+    - Re-run migration if needed
+  - [ ] 5.2.3 Verify checkpoint system with production-scale data
+    - Optionally pause migration mid-way
+    - Verify checkpoint saves correctly
+    - Resume and verify completion
+  - [ ] 5.2.4 Record migration metrics
+    - Total duration
+    - Records per second
+    - Error count and percentage
+    - Checkpoint file size
+    - Peak memory usage
+
+**Acceptance Criteria:**
+- Staging migration completes successfully
+- Migration duration measured
+- Error rate acceptable (< 0.1%)
+- All metrics documented
+
+---
+
+#### Task Group 5.3: Staging Validation and Testing
+**Dependencies:** Task Group 5.2
+**Duration:** 2-3 days
+
+- [ ] 5.3.0 Validate and test staging PostgreSQL
+  - [ ] 5.3.1 Run validation script
+    - Execute `npm run validate:migration` against staging
+    - Review validation report
+    - Verify all 4 layers pass
+    - Investigate any failures
+    - Aim for 100% validation pass
+  - [ ] 5.3.2 Test application against staging PostgreSQL
+    - Update staging app's DATABASE_URL to PostgreSQL
+    - Deploy application to staging
+    - Run smoke tests of key features:
+      - User login
+      - View accounts list
+      - View contacts
+      - View opportunities
+      - Create new contact
+      - Edit existing account
+      - Search functionality
+      - Reports and dashboards
+  - [ ] 5.3.3 Conduct user acceptance testing
+    - Have key users test critical workflows
+    - Verify data appears correct
+    - Test complex queries and reports
+    - Collect feedback on any issues
+  - [ ] 5.3.4 Performance testing
+    - Measure query response times
+    - Verify < 100ms for simple queries
+    - Compare performance to MongoDB baseline
+    - Run EXPLAIN ANALYZE on slow queries
+    - Identify any missing indexes
+
+**Acceptance Criteria:**
+- Validation passes 100%
+- Application works correctly with PostgreSQL
+- UAT feedback is positive
+- Performance meets targets
+
+---
+
+#### Task Group 5.4: Staging Learnings and Production Planning
+**Dependencies:** Task Group 5.3
+**Duration:** 1 day
+
+- [ ] 5.4.0 Document staging results and plan production
+  - [ ] 5.4.1 Document staging migration results
+    - Migration duration (for production planning)
+    - Error count and types
+    - Validation results
+    - Performance benchmarks
+    - Issues encountered and resolutions
+  - [ ] 5.4.2 Estimate production migration duration
+    - Based on staging metrics
+    - Add 50% buffer for safety
+    - Calculate maintenance window needed
+  - [ ] 5.4.3 Create production migration runbook
+    - Step-by-step procedure
+    - Pre-migration checklist
+    - Migration execution steps
+    - Post-migration validation steps
+    - Rollback procedure
+    - Contact list for issues
+  - [ ] 5.4.4 Schedule production maintenance window
+    - Choose off-peak time
+    - Allocate sufficient duration
+    - Notify stakeholders
+    - Prepare communication plan
+
+**Acceptance Criteria:**
+- Staging results documented
+- Production migration duration estimated
+- Production runbook created
+- Maintenance window scheduled
+
+---
+
+### Phase 6: Production Migration and Monitoring
+
+#### Task Group 6.1: Pre-Migration Preparation
+**Dependencies:** Phase 5 complete
+**Duration:** 1 day
+
+- [ ] 6.1.0 Prepare for production migration
+  - [ ] 6.1.1 Backup production MongoDB
+    - Run `mongodump` on production
+    - Store backup in secure location
+    - Verify backup integrity
+    - Document backup size and location
+  - [ ] 6.1.2 Set up production PostgreSQL database
+    - Provision PostgreSQL 16 server
+    - Enable pgvector extension
+    - Create database and user
+    - Configure security settings
+    - Configure connection pooling
+  - [ ] 6.1.3 Run Prisma migrations on production PostgreSQL
+    - Run `npx prisma migrate deploy`
+    - Verify schema created
+    - Verify indexes created
+    - Verify foreign key constraints
+  - [ ] 6.1.4 Final pre-migration checks
+    - Verify migration script ready
+    - Verify validation script ready
+    - Verify rollback procedure documented
+    - Verify team availability during maintenance window
+    - Send final communication to users
+
+**Acceptance Criteria:**
+- MongoDB backup completed and verified
+- Production PostgreSQL ready
+- Schema deployed to production PostgreSQL
+- Team prepared for migration
+
+---
+
+#### Task Group 6.2: Production Migration Execution
+**Dependencies:** Task Group 6.1
+**Duration:** Variable (based on staging estimate)
+
+- [ ] 6.2.0 Execute production migration
+  - [ ] 6.2.1 Stop application (prevent writes to MongoDB)
+    - Stop application servers
+    - Verify no active connections to MongoDB
+  - [ ] 6.2.2 Take final MongoDB backup
+    - Run `mongodump` for final backup
+    - Verify backup completed
+  - [ ] 6.2.3 Run migration script
+    - Execute `npm run migrate:mongo-to-postgres`
+    - Monitor progress continuously
+    - Watch for errors in real-time
+    - Be prepared to pause if issues arise
+  - [ ] 6.2.4 Monitor migration progress
+    - Track percentage completion
+    - Monitor console output
+    - Check error logs periodically
+    - Monitor server resources (CPU, memory)
+  - [ ] 6.2.5 Handle any errors
+    - Review error logs immediately
+    - Assess severity and impact
+    - Decide whether to continue or rollback
+    - Document all decisions
+
+**Acceptance Criteria:**
+- Migration completes successfully
+- Error rate within acceptable bounds
+- Migration duration within expected window
+- All data migrated
+
+---
+
+#### Task Group 6.3: Production Validation
+**Dependencies:** Task Group 6.2
+**Duration:** 1-2 hours
+
+- [ ] 6.3.0 Validate production migration
+  - [ ] 6.3.1 Run validation script
+    - Execute `npm run validate:migration`
+    - Review validation report in detail
+    - Verify all 4 layers pass
+    - Investigate any failures immediately
+  - [ ] 6.3.2 Verify validation pass
+    - Confirm 100% row count match
+    - Confirm 99%+ sample record match
+    - Confirm referential integrity 100%
+    - Confirm data type conversions correct
+  - [ ] 6.3.3 Decide: Proceed or Rollback
+    - If validation passes: Proceed to deployment
+    - If validation fails: Initiate rollback procedure
+
+**Acceptance Criteria:**
+- Validation script completes
+- Validation report shows PASS for all layers
+- Decision made to proceed or rollback
+
+---
+
+#### Task Group 6.4: Production Deployment
+**Dependencies:** Task Group 6.3 (validation PASS)
+**Duration:** 1 hour
+
+- [ ] 6.4.0 Deploy application with PostgreSQL
+  - [ ] 6.4.1 Update environment variables
+    - Change DATABASE_URL to PostgreSQL connection string
+    - Verify no other environment changes needed
+  - [ ] 6.4.2 Generate Prisma client
+    - Run `npx prisma generate` with new DATABASE_URL
+    - Verify client generated for PostgreSQL
+  - [ ] 6.4.3 Start application
+    - Start application servers
+    - Verify application starts without errors
+    - Check application logs for database connection
+  - [ ] 6.4.4 Smoke test application
+    - Login as admin user
+    - View accounts list (verify data loads)
+    - View contacts (verify relationships)
+    - View opportunities (verify joins work)
+    - Create test contact (verify writes work)
+    - Edit test contact (verify updates work)
+    - Delete test contact (verify deletes work)
+    - Test search functionality
+    - View dashboard/reports
+  - [ ] 6.4.5 Monitor application logs
+    - Watch for database errors
+    - Watch for query errors
+    - Watch for performance issues
+    - Verify no connection errors
+
+**Acceptance Criteria:**
+- Application starts successfully
+- All smoke tests pass
+- No database errors in logs
+- Users can access application
+
+---
+
+#### Task Group 6.5: Post-Migration Monitoring
+**Dependencies:** Task Group 6.4
+**Duration:** 48 hours (ongoing monitoring)
+
+- [ ] 6.5.0 Monitor production for 48 hours
+  - [ ] 6.5.1 Monitor application health
+    - Check application logs every few hours
+    - Watch for database-related errors
+    - Monitor API response times
+    - Track error rates
+  - [ ] 6.5.2 Monitor PostgreSQL performance
+    - Enable PostgreSQL query logging (queries > 100ms)
+    - Monitor pg_stat_statements for slow queries
+    - Check connection pool usage
+    - Monitor database server resources
+  - [ ] 6.5.3 Collect user feedback
+    - Monitor support channels for issues
+    - Ask key users to verify data correctness
+    - Track any data discrepancy reports
+    - Address issues promptly
+  - [ ] 6.5.4 Verify data integrity
+    - Spot-check critical records manually
+    - Verify relationships are correct
+    - Confirm calculated fields accurate
+    - Check reports show expected data
+  - [ ] 6.5.5 Optimize if needed
+    - Add missing indexes if slow queries identified
+    - Tune PostgreSQL configuration if needed
+    - Optimize problematic queries
+    - Run ANALYZE on all tables
+
+**Acceptance Criteria:**
+- No critical errors in 48 hours
+- Performance meets expectations
+- Users report no data issues
+- System stable
+
+---
+
+#### Task Group 6.6: Migration Completion and Cleanup
+**Dependencies:** Task Group 6.5 (48 hours passed successfully)
+**Duration:** 1 day
+
+- [ ] 6.6.0 Finalize migration and clean up
+  - [ ] 6.6.1 Document production migration results
+    - Final migration duration
+    - Error count and resolutions
+    - Validation results
+    - Performance metrics
+    - Issues encountered and fixes
+  - [ ] 6.6.2 Archive MongoDB data
+    - Keep MongoDB running as backup for 30 days
+    - Document MongoDB backup retention policy
+    - Plan MongoDB decommissioning after 30 days
+  - [ ] 6.6.3 Update documentation
+    - Update database documentation to reflect PostgreSQL
+    - Document new schema (junction tables, indexes)
+    - Update developer setup guide
+    - Update deployment guide
+  - [ ] 6.6.4 Communicate success
+    - Announce successful migration to team
+    - Thank users for patience during maintenance
+    - Highlight performance improvements
+    - Document lessons learned
+  - [ ] 6.6.5 Clean up migration artifacts
+    - Archive checkpoint files
+    - Archive error logs
+    - Archive validation reports
+    - Keep for historical reference
+
+**Acceptance Criteria:**
+- Migration results documented
+- MongoDB archived as backup
+- Documentation updated
+- Team and users informed
+- Migration artifacts archived
+
+---
+
+## Execution Order and Dependencies
+
+### Critical Path
+
+The migration must follow this strict order:
+
+1. **Phase 1: Schema Design** → 2. **Phase 2: Migration Script** → 3. **Phase 3: Validation Script** → 4. **Phase 4: Integration Testing** → 5. **Phase 5: Staging Migration** → 6. **Phase 6: Production Migration**
+
+### Key Dependencies
+
+- **Junction Tables (1.2)** depend on **Core Schema (1.1)**
+- **Index Strategy (1.4)** depends on **Junction Tables (1.2)** and **Array/JSONB Config (1.3)**
+- **All Phase 2 Task Groups** depend on **Phase 1 Complete**
+- **Migration Orchestration (2.8)** depends on **all previous Phase 2 task groups**
+- **All Phase 3 Task Groups** depend on **Phase 2 Complete**
+- **Validation Report (3.6)** depends on **all 4 validation layers (3.2-3.5)**
+- **Phase 4 Testing** depends on **both Phase 2 and 3 complete**
+- **Phase 5 Staging** depends on **Phase 4 complete (bugs fixed)**
+- **Phase 6 Production** depends on **Phase 5 successful**
+
+### Parallelization Opportunities
+
+Within each phase, some task groups can be worked on in parallel:
+
+**Phase 1 Parallelization:**
+- Task Groups 1.2 (Junction Tables) and 1.3 (Arrays/JSONB) can be done in parallel after 1.1
+
+**Phase 2 Parallelization:**
+- Task Groups 2.2 (UUID Mapping), 2.3 (Progress Tracking), 2.4 (Checkpoint), 2.5 (Error Logging) can be developed in parallel after 2.1
+- Task Group 2.6 (Data Transformation) can start once 2.2 is complete
+
+**Phase 3 Parallelization:**
+- Task Groups 3.2, 3.3, 3.4, 3.5 (all 4 validation layers) can be developed in parallel after 3.1
+
+---
+
+## Testing Summary
+
+### Test Count Targets
+
+Following the constraint of 2-8 focused tests per task group:
+
+**Phase 1 (Schema Design):** No tests required (schema validation only)
+
+**Phase 2 (Migration Script):**
+- Task Group 2.1: 2-8 tests (infrastructure)
+- Task Group 2.2: 2-8 tests (UUID mapping)
+- Task Group 2.4: 2-8 tests (checkpoint system)
+- Task Group 2.6: 2-8 tests (transformations)
+- Task Group 2.7: 2-8 tests (batch processing)
+- Task Group 2.8: 2-8 tests (orchestration)
+- **Total:** 12-48 tests maximum
+
+**Phase 3 (Validation Script):**
+- Task Group 3.1: 2-8 tests (infrastructure)
+- Task Group 3.2: 2-8 tests (row counts)
+- Task Group 3.3: 2-8 tests (sample records)
+- Task Group 3.4: 2-8 tests (referential integrity)
+- Task Group 3.5: 2-8 tests (data types)
+- Task Group 3.6: 2-8 tests (report generation)
+- **Total:** 12-48 tests maximum
+
+**Phase 4 (Integration Testing):** Manual testing and validation, no new automated tests
+
+**Phase 5 & 6:** Manual testing and validation in staging/production
+
+**Overall Test Count:** 24-96 focused tests maximum
+
+---
+
+## Success Metrics
+
+### Technical Success
+- [x] All 26 entity models migrated to PostgreSQL schema
+- [x] All 10 junction tables created and properly defined
+- [x] All ObjectId fields converted to UUID
+- [x] All MongoDB-specific attributes removed
+- [x] All indexes defined in schema
+- [x] Schema validates successfully with Prisma
+- [ ] Zero data loss (validation confirms 100% row count match)
+- [ ] All relationships preserved (referential integrity 100%)
+- [ ] Performance target met (< 100ms simple queries)
+- [ ] All tests passing (24-96 focused tests)
+
+### Operational Success
+- [ ] Migration completes within estimated time window
+- [ ] Pause/resume functionality works reliably
+- [ ] Error logging enables debugging and recovery
+- [ ] Validation provides confidence for production deployment
+- [ ] Rollback procedure tested (if needed)
+
+### Product Success
+- [x] PostgreSQL 16 schema ready with UUID support
+- [ ] pgvector enabled (foundation for Phase 2)
+- [ ] Improved query performance vs. MongoDB baseline
+- [ ] Enterprise-grade data integrity (foreign key constraints)
+- [ ] Self-hosting friendly (simple configuration, clear documentation)
+
+---
+
+## Risk Mitigation
+
+### Critical Risks Addressed
+
+1. **Data Loss Risk:**
+   - Mitigation: 4-layer validation script (row counts, sample records, referential integrity, data types)
+   - Mitigation: Comprehensive testing in Phase 4 & 5
+   - Mitigation: MongoDB backup retained for 30 days
+
+2. **Long Migration Duration Risk:**
+   - Mitigation: Pause/resume capability with checkpoint system
+   - Mitigation: Performance testing in Phase 4
+   - Mitigation: Duration estimation from staging in Phase 5
+
+3. **Application Errors Risk:**
+   - Mitigation: Comprehensive staging testing (Phase 5)
+   - Mitigation: Smoke tests post-deployment
+   - Mitigation: 48-hour monitoring period
+   - Mitigation: Documented rollback procedure
+
+4. **Performance Degradation Risk:**
+   - Mitigation: Strategic 3-tier indexing approach
+   - Mitigation: Performance testing in Phase 4 & 5
+   - Mitigation: Query optimization with EXPLAIN ANALYZE
+   - Mitigation: Can add indexes post-migration based on actual usage
+
+---
+
+## Notes
+
+- **Zero Data Loss Requirement:** This is non-negotiable. The 4-layer validation script is critical for proving migration success.
+- **Testing Philosophy:** Each task group writes 2-8 highly focused tests during development, and runs ONLY those tests. No comprehensive test suite runs until Phase 4 integration testing.
+- **Checkpoint System:** The pause/resume capability is essential for operational flexibility and risk management with large datasets.
+- **UUID Mapping:** The ObjectId → UUID mapping must be maintained in-memory during migration and persisted in checkpoint files for resume capability.
+- **Table Migration Order:** The specific order defined in Task Group 2.8.1 is critical - it respects all foreign key dependencies.
+- **Junction Tables Last:** Junction tables must be populated AFTER all entity tables to ensure foreign key references exist.
+- **Timeline Flexibility:** The 8-week timeline includes buffer for bug fixes, testing, and unexpected issues. Adjust based on team capacity.
+- **Staging is Mandatory:** Do not attempt production migration without successful staging migration. Staging provides the dress rehearsal and duration estimate.
+- **Phase 1 Complete:** Core schema transformation, junction tables, array/JSONB configuration, and index strategy are all complete and documented.
+- **Next Steps:** Task Group 1.5 (Prisma Migration Files Creation) requires PostgreSQL database to be set up first. Once DATABASE_URL points to PostgreSQL, generate migrations with `npx prisma migrate dev --name init-postgresql`.
+
+---
+
+## Next Steps
+
+1. [x] Review and approve this task breakdown
+2. [x] Assign Phase 1 task groups
+3. [x] Complete Phase 1: Schema Design and Prisma Configuration
+4. [ ] Set up PostgreSQL database for development
+5. [ ] Complete Task Group 1.5: Generate Prisma migration files
+6. [ ] Begin Phase 2: Migration Script Development
+7. [ ] Proceed through phases sequentially, respecting dependencies
+8. [ ] Conduct comprehensive testing at each phase
+9. [ ] Execute staging migration before production
+10. [ ] Complete production migration during scheduled maintenance window
+11. [ ] Monitor for 48 hours post-deployment
+12. [ ] Celebrate successful migration!
+
+This migration establishes the foundation for NextCRM's evolution into an enterprise-grade, AI-powered CRM platform while maintaining the reliability and data integrity required for production use.
+
+---
+
+**Phase 1 Status:** COMPLETED (Task Groups 1.1-1.4)
+**Phase 1 Remaining:** Task Group 1.5 (requires PostgreSQL database setup)
+**Document Last Updated:** 2025-11-05
+**Prisma Schema Version:** PostgreSQL-ready, validated and formatted
+**Schema Diff Document:** `agent-os/specs/2025-11-05-postgresql-migration/schema-diff.md`

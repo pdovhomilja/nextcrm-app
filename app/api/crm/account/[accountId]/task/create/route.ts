@@ -78,24 +78,24 @@ export async function POST(req: Request) {
 
     //Notification to user who are account watchers
     try {
-      const emailRecipients = await prismadb.users.findMany({
+      // Find all users watching this account through AccountWatchers junction table
+      const accountWatchers = await prismadb.accountWatchers.findMany({
         where: {
-          //Send to all users watching the board except the user who created the comment
-          id: {
+          account_id: account,
+          // Exclude the user who created the task
+          user_id: {
             not: session.user.id,
           },
-          watching_accountsIDs: {
-            has: account,
-          },
+        },
+        include: {
+          user: true,
         },
       });
+
+      const emailRecipients = accountWatchers.map(w => w.user);
+
       //Create notifications for every user watching the specific account except the user who created the task
-      for (const userID of emailRecipients) {
-        const user = await prismadb.users.findUnique({
-          where: {
-            id: userID.id,
-          },
-        });
+      for (const user of emailRecipients) {
         console.log("Send email to user: ", user?.email!);
         await resend.emails.send({
           from:

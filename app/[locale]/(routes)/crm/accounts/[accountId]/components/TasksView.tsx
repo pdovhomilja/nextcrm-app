@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { crm_Accounts } from "@prisma/client";
 
@@ -21,8 +21,10 @@ import NewTaskForm from "./NewTaskForm";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
+  SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 
@@ -36,15 +38,6 @@ const AccountsTasksView = ({ data, account }: TasksViewProps) => {
   const router = useRouter();
 
   const [open, setOpen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) {
-    return null;
-  }
 
   return (
     <Card>
@@ -60,18 +53,19 @@ const AccountsTasksView = ({ data, account }: TasksViewProps) => {
             <CardDescription></CardDescription>
           </div>
           <div className="flex space-x-2">
-            <Sheet open={open} onOpenChange={() => setOpen(false)}>
-              <Button
-                className="m-2 cursor-pointer"
-                onClick={() => setOpen(true)}
-              >
-                +
-              </Button>
-              <SheetContent className="min-w-[500px] space-y-2">
+            <Sheet open={open} onOpenChange={setOpen}>
+              <SheetTrigger asChild>
+                <Button className="m-2 cursor-pointer">+</Button>
+              </SheetTrigger>
+              <SheetContent className="max-w-3xl overflow-y-auto">
                 <SheetHeader>
                   <SheetTitle>Create new Task</SheetTitle>
+                  <SheetDescription>
+                    Create a new task for this account with assigned user, due
+                    date, and priority
+                  </SheetDescription>
                 </SheetHeader>
-                <div className="h-full overflow-y-auto">
+                <div className="mt-6 space-y-4">
                   <NewTaskForm
                     account={account}
                     onFinish={() => setOpen(false)}

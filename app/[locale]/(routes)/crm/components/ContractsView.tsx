@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 import {
   Card,
   CardContent,
@@ -20,15 +18,6 @@ import CreateContractForm from "../contracts/_forms/create-contract";
 
 const ContractsView = ({ data, crmData, accountId }: any) => {
   const router = useRouter();
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) {
-    return null;
-  }
 
   const { users, accounts } = crmData;
 

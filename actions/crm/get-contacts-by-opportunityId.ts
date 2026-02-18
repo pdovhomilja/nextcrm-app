@@ -3,9 +3,10 @@ import { prismadb } from "@/lib/prisma";
 export const getContactsByOpportunityId = async (opportunityId: string) => {
   const data = await prismadb.crm_Contacts.findMany({
     where: {
-      assigned_opportunities: {
+      // Filter through ContactsToOpportunities junction table
+      opportunities: {
         some: {
-          id: opportunityId,
+          opportunity_id: opportunityId,
         },
       },
     },

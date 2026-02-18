@@ -1,4 +1,5 @@
 import { prismadb } from "@/lib/prisma";
+import { junctionTableHelpers } from "@/lib/junction-helpers";
 
 export const getTask = async (taskId: string) => {
   const data = await prismadb.tasks.findFirst({
@@ -12,11 +13,16 @@ export const getTask = async (taskId: string) => {
           name: true,
         },
       },
+      // Include documents through DocumentsToTasks junction table
       documents: {
-        select: {
-          id: true,
-          document_name: true,
-          document_file_url: true,
+        include: {
+          document: {
+            select: {
+              id: true,
+              document_name: true,
+              document_file_url: true,
+            },
+          },
         },
       },
       comments: {

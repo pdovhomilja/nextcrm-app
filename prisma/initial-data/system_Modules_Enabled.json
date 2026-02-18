@@ -19,44 +19,38 @@
   },
   {
     "v": 0,
-    "name": "secondBrain",
-    "enabled": true,
-    "position": 4
-  },
-  {
-    "v": 0,
     "name": "employee",
     "enabled": false,
-    "position": 5
+    "position": 4
   },
   {
     "v": 0,
     "name": "invoice",
     "enabled": true,
-    "position": 6
+    "position": 5
   },
   {
     "v": 0,
     "name": "reports",
     "enabled": true,
-    "position": 7
+    "position": 6
   },
   {
     "v": 0,
     "name": "documents",
     "enabled": true,
-    "position": 8
+    "position": 7
   },
   {
     "v": 0,
     "name": "databox",
     "enabled": false,
-    "position": 9
+    "position": 8
   },
   {
     "v": 0,
     "name": "openai",
     "enabled": true,
-    "position": 10
+    "position": 9
   }
 ]

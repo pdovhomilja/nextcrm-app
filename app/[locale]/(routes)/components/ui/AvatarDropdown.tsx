@@ -54,7 +54,7 @@ const AvatarDropdown = ({ avatar, userId, name, email }: Props) => {
       <DropdownMenuContent>
         <DropdownMenuLabel className="space-y-1">
           <div>{name}</div>
-          <div className="text-xs text-gray-500">{email}</div>
+          <div className="text-xs text-muted-foreground">{email}</div>
         </DropdownMenuLabel>
 
         <DropdownMenuSeparator />
@@ -68,12 +68,12 @@ const AvatarDropdown = ({ avatar, userId, name, email }: Props) => {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => router.push("/profile")}>
-          <Settings className="w-4 h-4 inline-block mr-2 stroke-current text-gray-500" />
+          <Settings className="w-4 h-4 inline-block mr-2 stroke-current text-muted-foreground" />
           <span>Profile settings</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => signOut()}>
-          <LogOut className="w-4 h-4 inline-block mr-2 stroke-current text-gray-500" />
+          <LogOut className="w-4 h-4 inline-block mr-2 stroke-current text-muted-foreground" />
           <span>Sign out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>

@@ -67,7 +67,7 @@ const NewTaskForm = ({ account, onFinish }: NewTaskFormProps) => {
   const formSchema = z.object({
     title: z.string().min(3).max(255),
     user: z.string().min(3).max(255),
-    account: z.string().default(account?.id!),
+    account: z.string(),
     dueDateAt: z.date().optional(),
     priority: z.string().min(3).max(10),
     content: z.string().min(3).max(500),
@@ -77,6 +77,9 @@ const NewTaskForm = ({ account, onFinish }: NewTaskFormProps) => {
 
   const form = useForm<NewAccountFormValues>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      account: account?.id || "",
+    },
   });
 
   useEffect(() => {

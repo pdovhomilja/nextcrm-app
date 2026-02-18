@@ -10,7 +10,14 @@ import { Button } from "@/components/ui/button";
 import { FormInput } from "@/components/form/form-input";
 import { FormSubmit } from "@/components/form/form-submit";
 import { FormTextarea } from "@/components/form/form-textarea";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger
+} from "@/components/ui/sheet";
 
 import { useAction } from "@/hooks/use-action";
 
@@ -39,36 +46,36 @@ const SendMailToAll = () => {
       <SheetTrigger ref={closeRef} asChild>
         <Button>Send mail to all users</Button>
       </SheetTrigger>
-      <SheetContent>
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-col gap-2">
-            <h4 className="text-xl font-semibold tracking-tight">
-              Send mail to all users
-            </h4>
-            <p>This will send an email to all users with a message from you.</p>
-            <form action={onSendMail} className="space-y-4">
-              <FormInput
-                id="title"
-                label="Message title"
-                type="text"
-                errors={fieldErrors}
-              />
-              <FormTextarea
-                id="message"
-                label="Message"
-                placeholder="Message"
-                required
-                errors={fieldErrors}
-              />
-              <FormSubmit className="w-full">
-                {isLoading ? (
-                  <Loader2 className="h-6 w-6  animate-spin" />
-                ) : (
-                  "Send mail"
-                )}
-              </FormSubmit>
-            </form>
-          </div>
+      <SheetContent className="max-w-3xl overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>Send mail to all users</SheetTitle>
+          <SheetDescription>
+            Send an email notification to all registered users in the system
+          </SheetDescription>
+        </SheetHeader>
+        <div className="mt-6 space-y-4">
+          <form action={onSendMail} className="space-y-4">
+            <FormInput
+              id="title"
+              label="Message title"
+              type="text"
+              errors={fieldErrors}
+            />
+            <FormTextarea
+              id="message"
+              label="Message"
+              placeholder="Message"
+              required
+              errors={fieldErrors}
+            />
+            <FormSubmit className="w-full">
+              {isLoading ? (
+                <Loader2 className="h-6 w-6  animate-spin" />
+              ) : (
+                "Send mail"
+              )}
+            </FormSubmit>
+          </form>
         </div>
       </SheetContent>
     </Sheet>

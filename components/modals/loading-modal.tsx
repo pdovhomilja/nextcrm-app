@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 import SuspenseLoading from "../loadings/suspense";
 import {
   Dialog,
@@ -10,7 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
-import { type } from "os";
 
 type LoadingModalProps = {
   isOpen: boolean;
@@ -19,24 +16,16 @@ type LoadingModalProps = {
 };
 
 const LoadingModal = ({ isOpen, title, description }: LoadingModalProps) => {
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) {
-    return null;
-  }
-
   return (
     <Dialog open={isOpen}>
-      <DialogContent>
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription className="py-5">{description}</DialogDescription>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        <SuspenseLoading />
+        <div className="flex justify-center py-6">
+          <SuspenseLoading />
+        </div>
       </DialogContent>
     </Dialog>
   );

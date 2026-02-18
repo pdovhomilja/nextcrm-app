@@ -1,26 +1,33 @@
 import { Wrench } from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { NavItem } from "../nav-main";
+
+/**
+ * Administration Module Menu Item - Task Group 2.7
+ *
+ * Converted from Link component to navigation item object.
+ * Returns a NavItem object for Administration navigation.
+ *
+ * Administration module is a simple navigation item (not a collapsible group)
+ * pointing to the admin panel at /admin.
+ *
+ * IMPORTANT: This menu item should ONLY be visible to admin users.
+ * Role-based visibility check (session.user.is_admin === true) is implemented
+ * in the app-sidebar.tsx component, not here.
+ *
+ * @param title - Localized label for Administration module
+ * @returns NavItem object for Administration navigation
+ */
 
 type Props = {
-  open: boolean;
   title: string;
 };
 
-const AdministrationMenu = ({ open, title }: Props) => {
-  const pathname = usePathname();
-  const isPath = pathname.includes("admin");
-  return (
-    <div className="flex flex-row items-center mx-auto p-2">
-      <Link
-        href={"/admin"}
-        className={`flex gap-2 p-2 ${isPath ? "text-muted-foreground" : null}`}
-      >
-        <Wrench className="w-6" />
-        <span className={open ? "" : "hidden"}>{title}</span>
-      </Link>
-    </div>
-  );
+export const getAdministrationMenuItem = ({ title }: Props): NavItem => {
+  return {
+    title,
+    url: "/admin",
+    icon: Wrench,
+  };
 };
 
-export default AdministrationMenu;
+export default getAdministrationMenuItem;

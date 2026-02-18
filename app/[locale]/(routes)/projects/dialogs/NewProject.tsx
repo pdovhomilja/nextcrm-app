@@ -95,93 +95,95 @@ const NewProjectDialog = () => {
       <DialogTrigger asChild>
         <Button className="px-2">New project</Button>
       </DialogTrigger>
-      <DialogContent className="">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle className="p-2">New Project</DialogTitle>
-          <DialogDescription className="p-2">
+          <DialogTitle>New Project</DialogTitle>
+          <DialogDescription>
             Fill out the form below to create a new project.
           </DialogDescription>
         </DialogHeader>
         {isLoading ? (
           <LoadingComponent />
         ) : (
-          <div className="flex w-full ">
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="h-full w-full space-y-3"
-              >
-                <div className="flex flex-col space-y-3">
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>New project name</FormLabel>
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-4"
+            >
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>New project name</FormLabel>
+                      <FormControl>
+                        <Input
+                          disabled={isLoading}
+                          placeholder="Enter project name"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Project description</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          disabled={isLoading}
+                          placeholder="Enter project description"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="visibility"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Project visibility</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <FormControl>
-                          <Input
-                            disabled={isLoading}
-                            placeholder="Enter project name"
-                            {...field}
-                          />
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select projects visibility" />
+                          </SelectTrigger>
                         </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Project description</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            disabled={isLoading}
-                            placeholder="Enter project description"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="visibility"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Project visibility</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select projects visibility" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value={"public"}>{`Public`}</SelectItem>
-                            <SelectItem
-                              value={"private"}
-                            >{`Private`}</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="flex w-full justify-end space-x-2 pt-2">
-                  <DialogTrigger asChild>
-                    <Button variant={"destructive"}>Cancel</Button>
-                  </DialogTrigger>
-                  <Button type="submit">Create</Button>
-                </div>
-              </form>
-            </Form>
-          </div>
+                        <SelectContent>
+                          <SelectItem value={"public"}>{`Public`}</SelectItem>
+                          <SelectItem
+                            value={"private"}
+                          >{`Private`}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit">Create</Button>
+              </DialogFooter>
+            </form>
+          </Form>
         )}
       </DialogContent>
     </Dialog>

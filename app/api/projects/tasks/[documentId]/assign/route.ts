@@ -24,33 +24,21 @@ export async function POST(req: Request, props: { params: Promise<{ documentId: 
     });
 
     if (task) {
-      //Connect the document to the task
+      // Create junction table entry using DocumentsToTasks
+      await prismadb.documentsToTasks.create({
+        data: {
+          document_id: documentId,
+          task_id: taskId,
+        },
+      });
+
+      // Update task metadata
       await prismadb.tasks.update({
         where: {
           id: taskId,
         },
         data: {
           updatedBy: session.user.id,
-          documents: {
-            connect: {
-              id: documentId,
-            },
-          },
-        },
-      });
-
-      //Connect the task to the document
-      await prismadb.documents.update({
-        where: {
-          id: documentId,
-        },
-        data: {
-          tasks: {
-            //Disconnect the task from the document
-            connect: {
-              id: taskId,
-            },
-          },
         },
       });
 
@@ -63,6 +51,6 @@ export async function POST(req: Request, props: { params: Promise<{ documentId: 
     }
   } catch (error) {
     console.log(error);
-    return NextResponse.json({ error: "Task not found" }, { status: 404 });
+    return NextResponse.json({ error: "Failed to assign document to task" }, { status: 500 });
   }
 }

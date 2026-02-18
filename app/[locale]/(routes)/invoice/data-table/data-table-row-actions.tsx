@@ -53,7 +53,7 @@ export function DataTableRowActions<TData>({
   const [openTestSheet, setOpenTestSheet] = useState(false);
 
   //zustand
-  const { setIsOpen, setNotionUrl } = useAppStore();
+  const { setIsOpen } = useAppStore();
 
   const router = useRouter();
   const { toast } = useToast();
@@ -182,12 +182,16 @@ export function DataTableRowActions<TData>({
         description="Extracted data from inovice will be sent to accountant email. Please wait..."
         isOpen={loadingXMLEmail}
       />
+      {/* Invoice Preview Sheet */}
       <Sheet open={openView} onOpenChange={setOpenView}>
-        <SheetContent className="min-w-[90vh]">
-          <SheetHeader className="py-4">
-            <SheetTitle>{"Preview Invoice" + " - " + invoice?.id}</SheetTitle>
+        <SheetContent className="max-w-6xl overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Preview Invoice - {invoice?.id}</SheetTitle>
+            <SheetDescription>
+              View invoice document and extracted data
+            </SheetDescription>
           </SheetHeader>
-          <div className="h-[90vh] pb-4">
+          <div className="mt-6 h-[80vh]">
             <embed
               style={{
                 width: "100%",
@@ -197,23 +201,20 @@ export function DataTableRowActions<TData>({
               src={invoice.invoice_file_url}
             />
           </div>
-          <SheetClose asChild>
-            <Button>Close</Button>
-          </SheetClose>
         </SheetContent>
       </Sheet>
+      {/* Rossum Edit Sheet */}
       <Sheet open={openRossumView} onOpenChange={setOpenRossumView}>
-        <SheetContent className="min-w-[90vh] max-w-full">
+        <SheetContent className="max-w-6xl overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>{"Update Invoice" + " - " + invoice?.id}</SheetTitle>
+            <SheetTitle>Update Invoice - {invoice?.id}</SheetTitle>
             <SheetDescription>
               Update invoice metadata with Rossum cockpit
             </SheetDescription>
           </SheetHeader>
-          <RossumCockpit invoiceData={row.original} />
-          <SheetClose asChild>
-            <Button>Close</Button>
-          </SheetClose>
+          <div className="mt-6 space-y-4">
+            <RossumCockpit invoiceData={row.original} />
+          </div>
         </SheetContent>
       </Sheet>
       <DropdownMenu>
@@ -248,9 +249,6 @@ export function DataTableRowActions<TData>({
               <DropdownMenuItem
                 onClick={() => {
                   setIsOpen(true);
-                  setNotionUrl(
-                    `${process.env.NEXT_PUBLIC_APP_URL}/invoice/detail/${invoice.id}`
-                  );
                 }}
               >
                 <Edit className="mr-2 w-4 h-4" />

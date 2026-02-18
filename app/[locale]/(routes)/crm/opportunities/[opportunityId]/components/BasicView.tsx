@@ -48,7 +48,12 @@ export async function BasicView({ data }: OppsViewProps) {
               <p className="text-sm font-medium leading-none">
                 Opportunity amount
               </p>
-              <p className="text-sm text-muted-foreground">{data.budget}</p>
+              <p className="text-sm text-muted-foreground">
+                {data.budget ? Number(data.budget).toLocaleString("en-US", {
+                  style: "currency",
+                  currency: "USD",
+                }) : "N/A"}
+              </p>
             </div>
           </div>
 
