@@ -21,6 +21,7 @@ import UpdateTaskDialog from "@/app/[locale]/(routes)/projects/dialogs/UpdateTas
 import { getActiveUsers } from "@/actions/get-users";
 import { useState } from "react";
 import { Icons } from "@/components/ui/icons";
+import { initial } from "cypress/types/lodash";
 
 const TaskViewActions = ({
   taskId,
