@@ -53,6 +53,7 @@ next-env.d.ts
 #prisma
 /lib/generated
 /db_backup
+/db_backups
 /db_scripts
 
 
