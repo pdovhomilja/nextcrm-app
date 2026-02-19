@@ -213,6 +213,111 @@ pnpm test tests/integration/ai-system.test.ts
 pnpm test tests/integration/board-wizard.test.ts
 ```
 
+## 🔌 MCP Integration
+
+TaskHQ exposes a [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) API that lets external AI agents, Claude Code, and automation tools manage tasks and boards programmatically. Any MCP-compatible client can connect to create tasks, run semantic search, analyze project health, and more — without touching the UI.
+
+### Authentication
+
+Generate an API token in **Settings > Account** inside TaskHQ, then include it in every request:
+
+```
+Authorization: Bearer thq_<your-token>
+```
+
+`X-API-Key: thq_<your-token>` is also accepted as an alternative header.
+
+### Endpoints
+
+| Endpoint | Purpose |
+|----------|---------|
+| `/api/mcp/mcp` | System tools + all tools (single entry point) |
+| `/api/mcp/tasks/mcp` | Task CRUD, search, move |
+| `/api/mcp/boards/mcp` | Board CRUD, sections, analytics |
+| `/api/mcp/search/mcp` | Semantic & hybrid vector search |
+| `/api/mcp/analytics/mcp` | Project health & team analytics |
+
+All endpoints accept `POST` with a JSON body following the MCP `tools/call` spec:
+
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "<tool_name>",
+    "arguments": { }
+  }
+}
+```
+
+### Available Tools (27 total)
+
+**System** — `health_check`, `server_info`
+
+**Tasks** — `create_task`, `get_task`, `update_task`, `delete_task`, `search_tasks`, `mark_task_done`, `move_task`
+
+**Boards** — `list_boards`, `create_board`, `edit_board`, `delete_board`, `get_board_info`, `list_board_sections`, `create_board_section`, `delete_board_section`, `compare_boards`, `suggest_board_optimizations`
+
+**Search** — `semantic_search_tasks`, `hybrid_search`, `find_similar_tasks`, `search_boards`, `get_embedding_status`, `vector_search_health`
+
+**Analytics** — `analyze_project_health`, `analyze_team_performance`
+
+### Quick Start
+
+```bash
+export BASE="https://taskhq.xmation.ai"
+export TOKEN="thq_your-token-here"
+
+# Health check
+curl -X POST "$BASE/api/mcp/mcp" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"method":"tools/call","params":{"name":"health_check","arguments":{}}}'
+
+# List boards
+curl -X POST "$BASE/api/mcp/boards/mcp" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"method":"tools/call","params":{"name":"list_boards","arguments":{}}}'
+
+# Create a task
+curl -X POST "$BASE/api/mcp/tasks/mcp" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"method":"tools/call","params":{"name":"create_task","arguments":{"title":"Fix login bug","boardSectionId":"<section-id>","priority":"HIGH"}}}'
+
+# Semantic search
+curl -X POST "$BASE/api/mcp/search/mcp" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"method":"tools/call","params":{"name":"semantic_search_tasks","arguments":{"query":"authentication and login issues","threshold":0.6,"limit":5}}}'
+```
+
+### Using with Claude Code
+
+Add TaskHQ as an MCP server in your Claude Code configuration (`~/.claude/claude_code_config.json` or via `claude mcp add`):
+
+```json
+{
+  "mcpServers": {
+    "taskhq": {
+      "type": "http",
+      "url": "https://taskhq.xmation.ai/api/mcp/mcp",
+      "headers": {
+        "Authorization": "Bearer thq_your-token-here"
+      }
+    }
+  }
+}
+```
+
+Once connected, Claude Code can list boards, create and update tasks, run semantic search, and analyze project health directly from your editor.
+
+### Full Documentation
+
+See [`public/SKILL.md`](./public/SKILL.md) for complete parameter documentation, response schemas, and additional workflow examples.
+
+---
+
 ## 🚀 Deployment
 
 ### Environment Setup
