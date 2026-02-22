@@ -1,0 +1,5 @@
+[
+{"_id":{"$oid":"65f300000000000000000001"},"title":"Call client","description":"Initial discovery call","dueDate":{"$date":"2024-04-01T00:00:00Z"},"status":"Pending","relatedTo":{"type":"company","id":{"$oid":"65f000000000000000000001"}},"createdAt":{"$date":"2024-03-15T10:00:00Z"}},
+{"_id":{"$oid":"65f300000000000000000002"},"title":"Send proposal","description":"Email pricing","dueDate":{"$date":"2024-04-02T00:00:00Z"},"status":"In Progress","relatedTo":{"type":"deal","id":{"$oid":"65f200000000000000000001"}},"createdAt":{"$date":"2024-03-15T11:00:00Z"}},
+{"_id":{"$oid":"65f300000000000000000003"},"title":"Follow up","description":"Check response","dueDate":{"$date":"2024-04-03T00:00:00Z"},"status":"Completed","relatedTo":{"type":"contact","id":{"$oid":"65f100000000000000000005"}},"createdAt":{"$date":"2024-03-15T12:00:00Z"}}
+]
