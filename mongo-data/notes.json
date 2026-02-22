@@ -1,0 +1,5 @@
+[
+{"_id":{"$oid":"65f400000000000000000001"},"content":"Client interested in enterprise plan.","relatedTo":{"type":"deal","id":{"$oid":"65f200000000000000000001"}},"createdBy":"sales_user","createdAt":{"$date":"2024-03-20T10:00:00Z"}},
+{"_id":{"$oid":"65f400000000000000000002"},"content":"Requested demo next week.","relatedTo":{"type":"contact","id":{"$oid":"65f100000000000000000002"}},"createdBy":"sales_user","createdAt":{"$date":"2024-03-20T11:00:00Z"}},
+{"_id":{"$oid":"65f400000000000000000003"},"content":"Budget approved internally.","relatedTo":{"type":"company","id":{"$oid":"65f000000000000000000003"}},"createdBy":"manager","createdAt":{"$date":"2024-03-20T12:00:00Z"}}
+]

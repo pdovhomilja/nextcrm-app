@@ -1,0 +1,7 @@
+[
+{"_id":{"$oid":"65f000000000000000000001"},"name":"TechNova Solutions","industry":"Software","website":"https://technova.com","phone":"+1-555-1001","address":"New York, USA","createdAt":{"$date":"2024-01-01T10:00:00Z"}},
+{"_id":{"$oid":"65f000000000000000000002"},"name":"HealthBridge","industry":"Healthcare","website":"https://healthbridge.com","phone":"+1-555-1002","address":"Chicago, USA","createdAt":{"$date":"2024-01-02T10:00:00Z"}},
+{"_id":{"$oid":"65f000000000000000000003"},"name":"FinEdge Corp","industry":"Finance","website":"https://finedge.com","phone":"+1-555-1003","address":"Boston, USA","createdAt":{"$date":"2024-01-03T10:00:00Z"}},
+{"_id":{"$oid":"65f000000000000000000004"},"name":"RetailSphere","industry":"Retail","website":"https://retailsphere.com","phone":"+1-555-1004","address":"Dallas, USA","createdAt":{"$date":"2024-01-04T10:00:00Z"}},
+{"_id":{"$oid":"65f000000000000000000005"},"name":"GreenEnergy Ltd","industry":"Energy","website":"https://greenenergy.com","phone":"+1-555-1005","address":"San Francisco, USA","createdAt":{"$date":"2024-01-05T10:00:00Z"}}
+]
