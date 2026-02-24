@@ -470,7 +470,7 @@ export function NewContactForm({
                   name="type"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Assigned user</FormLabel>
+                      <FormLabel>Contact type</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}

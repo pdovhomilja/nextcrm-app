@@ -41,7 +41,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const formSchema = z.object({
-    name: z.string().min(3).max(50),
+    name: z.string().min(3).max(100),
     office_phone: z.string().optional(),
     website: z.string().optional(),
     fax: z.string().optional(),
