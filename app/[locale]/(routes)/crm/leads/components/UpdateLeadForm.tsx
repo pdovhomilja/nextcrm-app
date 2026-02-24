@@ -34,6 +34,7 @@ import { Textarea } from "@/components/ui/textarea";
 import fetcher from "@/lib/fetcher";
 import useSWR from "swr";
 import SuspenseLoading from "@/components/loadings/suspense";
+import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 
 //TODO: fix all the types
 type NewTaskFormProps = {
@@ -49,11 +50,6 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
 
   const { data: accounts, isLoading: isLoadingAccounts } = useSWR(
     "/api/crm/account",
-    fetcher
-  );
-
-  const { data: users, isLoading: isLoadingUsers } = useSWR(
-    "/api/user",
     fetcher
   );
 
@@ -112,14 +108,14 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
     { name: "Completed", id: "COMPLETED" },
   ];
 
-  if (isLoadingUsers || isLoadingAccounts)
+  if (isLoadingAccounts)
     return (
       <div>
         <SuspenseLoading />
       </div>
     );
 
-  if (!users || !initialData)
+  if (!initialData)
     return <div>Something went wrong, there is no data for form</div>;
 
   return (
@@ -333,23 +329,14 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Assigned to</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a user" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="overflow-y-auto h-56">
-                        {users.map((user: any) => (
-                          <SelectItem key={user.id} value={user.id}>
-                            {user.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <UserSearchCombobox
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        placeholder="Select a user"
+                        disabled={isLoading}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

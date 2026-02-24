@@ -41,7 +41,7 @@ const OpportunitiesView = ({
 }: OpportunitiesViewProps) => {
   const [open, setOpen] = useState(false);
 
-  const { users, accounts, contacts, saleTypes, saleStages, campaigns } =
+  const { accounts, contacts, saleTypes, saleStages, campaigns } =
     crmData;
 
   return (
@@ -70,7 +70,6 @@ const OpportunitiesView = ({
                 </SheetHeader>
                 <div className="mt-6 space-y-4">
                   <NewOpportunityForm
-                    users={users}
                     accounts={accounts}
                     contacts={contacts}
                     salesType={saleTypes}

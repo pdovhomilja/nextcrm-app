@@ -2,7 +2,6 @@ import React from "react";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 
-import { getActiveUsers } from "@/actions/get-users";
 import { getBoards } from "@/actions/projects/get-boards";
 
 import { authOptions } from "@/lib/auth";
@@ -24,14 +23,13 @@ const ProjectsView = async () => {
 
   const userId = session.user.id;
 
-  const users = await getActiveUsers();
   const boards: any = await getBoards(userId!);
 
   return (
     <>
       <div className="flex gap-2 py-10">
         <NewProjectDialog />
-        <NewTaskDialog users={users} boards={boards} />
+        <NewTaskDialog boards={boards} />
         <Button asChild>
           <Link href="/projects/tasks">All Tasks</Link>
         </Button>

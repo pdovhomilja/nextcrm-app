@@ -11,6 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { cn } from "@/lib/utils";
 
+import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -46,7 +47,6 @@ import {
 
 //TODO: fix all the types
 type NewTaskFormProps = {
-  users: any[];
   accounts: crm_Accounts[];
   contacts: crm_Contacts[];
   salesType: crm_Opportunities_Type[];
@@ -58,7 +58,6 @@ type NewTaskFormProps = {
 };
 
 export function NewOpportunityForm({
-  users,
   accounts,
   contacts,
   salesType,
@@ -73,17 +72,8 @@ export function NewOpportunityForm({
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const [searchUserValue, setSearchUserValue] = useState<string>("");
   const [searchAccountValue, setSearchAccountValue] = useState<string>("");
   const [searchContactValue, setSearchContactValue] = useState<string>("");
-
-  const filteredUsers = useMemo(
-    () =>
-      users.filter((user) =>
-        user.name.toLowerCase().includes(searchUserValue.toLowerCase())
-      ),
-    [users, searchUserValue]
-  );
 
   const filteredAccounts = useMemo(
     () =>
@@ -389,27 +379,14 @@ export function NewOpportunityForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Assigned to</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a user to assign the account" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="overflow-y-auto h-56">
-                          <Input
-                            placeholder="Search user..."
-                            onChange={(e) => setSearchUserValue(e.target.value)}
-                          />
-                          {filteredUsers.map((user) => (
-                            <SelectItem key={user.id} value={user.id}>
-                              {user.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <UserSearchCombobox
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          placeholder="Select a user"
+                          disabled={isLoading}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

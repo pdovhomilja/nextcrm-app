@@ -210,7 +210,7 @@ const CRMKanban = ({
   const [opportunities, setOpportunities] = useState(data);
   const [activeOpportunity, setActiveOpportunity] = useState<crm_Opportunities | null>(null);
 
-  const { users, accounts, contacts, saleTypes, saleStages, campaigns } =
+  const { accounts, contacts, saleTypes, saleStages, campaigns } =
     crmData;
 
   const sensors = useSensors(
@@ -312,7 +312,6 @@ const CRMKanban = ({
       <Dialog open={isDialogOpen} onOpenChange={() => setIsDialogOpen(false)}>
         <DialogContent className="min-w-[1000px] py-10 overflow-auto ">
           <NewOpportunityForm
-            users={users}
             accounts={accounts}
             contacts={contacts}
             salesType={saleTypes}

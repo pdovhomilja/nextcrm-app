@@ -30,13 +30,11 @@ import {
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
-  users: any[];
   accounts: any[];
 }
 
 export function DataTableRowActions<TData>({
   row,
-  users,
   accounts,
 }: DataTableRowActionsProps<TData>) {
   const router = useRouter();
@@ -87,7 +85,6 @@ export function DataTableRowActions<TData>({
           <div className="mt-6 space-y-4">
             <UpdateContactForm
               initialData={row.original}
-              users={users}
               accounts={accounts}
               setOpen={setUpdateOpen}
             />

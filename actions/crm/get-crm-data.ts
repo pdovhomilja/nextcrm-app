@@ -3,7 +3,6 @@ import { prismadb } from "@/lib/prisma";
 
 export const getAllCrmData = cache(async () => {
   const [
-    users,
     accounts,
     opportunities,
     leads,
@@ -14,7 +13,6 @@ export const getAllCrmData = cache(async () => {
     campaigns,
     industries,
   ] = await Promise.all([
-    prismadb.users.findMany({ where: { userStatus: "ACTIVE" } }),
     prismadb.crm_Accounts.findMany({}),
     prismadb.crm_Opportunities.findMany({}),
     prismadb.crm_Leads.findMany({}),
@@ -27,7 +25,6 @@ export const getAllCrmData = cache(async () => {
   ]);
 
   const data = {
-    users,
     accounts,
     opportunities,
     leads,

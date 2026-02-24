@@ -34,7 +34,7 @@ interface LeadsViewProps {
 }
 
 const LeadsView = ({ data, crmData }: LeadsViewProps) => {
-  const { users, accounts } = crmData;
+  const { accounts } = crmData;
   const [open, setOpen] = useState(false);
 
   return (
@@ -59,7 +59,7 @@ const LeadsView = ({ data, crmData }: LeadsViewProps) => {
                   <SheetDescription>Fill in the details to create a new lead</SheetDescription>
                 </SheetHeader>
                 <div className="mt-6 space-y-4">
-                  <NewLeadForm users={users} accounts={accounts} onFinish={() => setOpen(false)} />
+                  <NewLeadForm accounts={accounts} onFinish={() => setOpen(false)} />
                 </div>
               </SheetContent>
             </Sheet>

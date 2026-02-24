@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -28,18 +28,17 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 import { Switch } from "@/components/ui/switch";
+import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 
 //TODO: fix all the types
 type UpdateContactFormProps = {
   initialData: any;
-  users: any[];
   accounts: any[];
   setOpen: (value: boolean) => void;
 };
 
 export function UpdateContactForm({
   initialData,
-  users,
   accounts,
   setOpen,
 }: UpdateContactFormProps) {
@@ -47,15 +46,6 @@ export function UpdateContactForm({
   const { toast } = useToast();
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [searchTerm, setSearchTerm] = useState("");
-
-  const filteredData = useMemo(
-    () =>
-      users.filter((item: any) =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase())
-      ),
-    [users, searchTerm]
-  );
 
   const formSchema = z.object({
     id: z.string().min(5).max(30),
@@ -119,7 +109,7 @@ export function UpdateContactForm({
     }
   };
 
-  if (!users || !accounts || !initialData)
+  if (!accounts || !initialData)
     return <div>Something went wrong, there is no data for form</div>;
 
   const yearArray = Array.from(
@@ -349,28 +339,14 @@ export function UpdateContactForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Assigned user</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Choose an user " />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="h-96 overflow-y-auto">
-                          <Input
-                            type="text"
-                            placeholder="Search in users ..."
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                          />
-                          {filteredData.map((item: any) => (
-                            <SelectItem key={item.id} value={item.id}>
-                              {item.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <UserSearchCombobox
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          placeholder="Choose a user"
+                          disabled={isLoading}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
