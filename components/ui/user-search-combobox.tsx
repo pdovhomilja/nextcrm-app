@@ -110,7 +110,7 @@ export function UserSearchCombobox({
               value={search}
               onValueChange={setSearch}
             />
-            <CommandList>
+            <CommandList onWheelCapture={(e) => e.stopPropagation()}>
               {isLoading && skip === 0 ? (
                 <div className="py-6 text-center text-sm text-muted-foreground">
                   Loading...
