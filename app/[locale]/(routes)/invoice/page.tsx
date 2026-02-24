@@ -11,10 +11,9 @@ import { InvoiceDataTable } from "./data-table/data-table";
 import Container from "../components/ui/Container";
 
 import ModalDropzone from "./components/modal-dropzone";
-import { MyAccountSettingsForm } from "./components/MyAccountSettingsForm";
+import { AccountSettingsSheet } from "./components/AccountSettingsSheet";
 
 import { Button } from "@/components/ui/button";
-import RightViewModal from "@/components/modals/right-view-modal";
 import { MyAccount } from "@prisma/client";
 import { getActiveUsers } from "@/actions/get-users";
 import { getBoards } from "@/actions/projects/get-boards";
@@ -44,14 +43,7 @@ const InvoicePage = async () => {
           <CronButton />
         </div>
         <div>
-          <RightViewModal
-            label="Settings"
-            title="Your company settings"
-            description="This data will be used as default values for your invoices. You can change them at any time. Very important is to set account email which will receive files for import to ERPs"
-            width={"w-[900px]"}
-          >
-            <MyAccountSettingsForm initialData={myAccountSettings} />
-          </RightViewModal>
+          <AccountSettingsSheet initialData={myAccountSettings} />
         </div>
       </div>
       <div>

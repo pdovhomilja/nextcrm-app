@@ -31,11 +31,8 @@ export const columns: ColumnDef<Account>[] = [
 
     cell: ({ row }) => (
       <div className="w-[150px]">
-        {
-          //@ts-ignore
-          //TODO: fix this
-          row.getValue("assigned_to_user")?.name ?? "Unassigned"
-        }
+        {(row.getValue("assigned_to_user") as { name?: string } | null)?.name ??
+          "Unassigned"}
       </div>
     ),
     enableSorting: true,
@@ -49,13 +46,7 @@ export const columns: ColumnDef<Account>[] = [
 
     cell: ({ row }) => (
       <Link href={`/crm/accounts/${row.original?.id}`}>
-        <div className="w-[250px]">
-          {
-            //@ts-ignore
-            //TODO: fix this
-            row.getValue("name")
-          }
-        </div>
+        <div className="w-[250px]">{row.original.name}</div>
       </Link>
     ),
     enableSorting: false,

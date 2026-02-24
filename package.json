@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build":  "prisma generate && next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
     "migrate:mongo-to-postgres": "pnpm exec tsx scripts/migrate-mongo-to-postgres.ts",
@@ -136,8 +136,18 @@
       "@types/react-dom": "npm:types-react-dom@19.0.0-rc.1"
     },
     "onlyBuiltDependencies": [
+      "@parcel/watcher",
       "@prisma/engines",
-      "prisma"
+      "@swc/core",
+      "aws-crt",
+      "bcrypt",
+      "canvas",
+      "esbuild",
+      "msgpackr-extract",
+      "msw",
+      "prisma",
+      "sharp",
+      "unrs-resolver"
     ]
   }
 }

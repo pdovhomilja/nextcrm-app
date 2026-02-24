@@ -27,10 +27,7 @@ import {
 
 import { DataTablePagination } from "./data-table-pagination";
 import { DataTableToolbar } from "./data-table-toolbar";
-import { Button } from "@/components/ui/button";
-import { Divide, PanelTopClose, PanelTopOpen } from "lucide-react";
-import RightViewModal from "@/components/modals/right-view-modal";
-import { NewAccountForm } from "../components/NewAccountForm";
+import { PanelTopClose, PanelTopOpen } from "lucide-react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -81,14 +78,6 @@ export function AccountDataTable<TData, TValue>({
     <div className="space-y-4">
       <div className="flex justify-between items-start gap-3">
         <div></div>
-        {/*         <RightViewModal
-          label={"Create account"}
-          title="Create account"
-          description=""
-        >
-          <NewAccountForm industries={industries} users={users} />
-        </RightViewModal> */}
-
         <div className="flex justify-end space-x-2">
           {hide ? (
             <PanelTopOpen

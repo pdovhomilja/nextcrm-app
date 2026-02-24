@@ -17,7 +17,7 @@ const InvoiceChat = () => {
       <SheetTrigger asChild>
         <MessagesSquare className="w-6 h-6 m-2 cursor-pointer" />
       </SheetTrigger>
-      <SheetContent className="max-w-3xl overflow-y-auto">
+      <SheetContent className="w-full overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Invoice conversation</SheetTitle>
           <SheetDescription>

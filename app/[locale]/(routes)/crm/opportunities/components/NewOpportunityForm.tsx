@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import axios from "axios";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { useForm } from "react-hook-form";
 import { CalendarIcon } from "lucide-react";
@@ -44,8 +44,6 @@ import {
   crm_campaigns,
 } from "@prisma/client";
 
-import useDebounce from "@/hooks/useDebounce";
-
 //TODO: fix all the types
 type NewTaskFormProps = {
   users: any[];
@@ -76,31 +74,38 @@ export function NewOpportunityForm({
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [searchUserValue, setSearchUserValue] = useState<string>("");
-  const debouncedValue = useDebounce(searchUserValue, 1000);
-
-  const filteredUsers = users.filter((user) =>
-    user.name.toLowerCase().includes(debouncedValue.toLowerCase())
-  );
-
   const [searchAccountValue, setSearchAccountValue] = useState<string>("");
-  const debouncedAccountValue = useDebounce(searchAccountValue, 1000);
+  const [searchContactValue, setSearchContactValue] = useState<string>("");
 
-  const filteredAccounts = accounts.filter((account) =>
-    account.name.toLowerCase().includes(debouncedAccountValue.toLowerCase())
+  const filteredUsers = useMemo(
+    () =>
+      users.filter((user) =>
+        user.name.toLowerCase().includes(searchUserValue.toLowerCase())
+      ),
+    [users, searchUserValue]
   );
 
-  const [searchContactValue, setSearchContactValue] = useState<string>("");
-  const debouncedContactValue = useDebounce(searchContactValue, 1000);
+  const filteredAccounts = useMemo(
+    () =>
+      accounts.filter((account) =>
+        account.name.toLowerCase().includes(searchAccountValue.toLowerCase())
+      ),
+    [accounts, searchAccountValue]
+  );
 
-  const filteredContacts = contacts.filter(
-    (contact) =>
-      contact.last_name
-        .toLowerCase()
-        .includes(debouncedContactValue.toLowerCase()) ||
-      (contact.first_name &&
-        contact.first_name
-          .toLowerCase()
-          .includes(debouncedContactValue.toLowerCase()))
+  const filteredContacts = useMemo(
+    () =>
+      contacts.filter(
+        (contact) =>
+          contact.last_name
+            .toLowerCase()
+            .includes(searchContactValue.toLowerCase()) ||
+          (contact.first_name &&
+            contact.first_name
+              .toLowerCase()
+              .includes(searchContactValue.toLowerCase()))
+      ),
+    [contacts, searchContactValue]
   );
 
   const formSchema = z.object({
@@ -171,15 +176,9 @@ export function NewOpportunityForm({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="w-full h-full px-10"
+        className="w-full h-full px-4 md:px-10"
       >
-        {/*         <div>
-          <pre>
-            <code>{JSON.stringify(form.watch(), null, 2)}</code>
-          </pre>
-        </div> */}
-
-        <div className=" w-[800px] text-sm">
+        <div className="w-full text-sm">
           <div className="pb-5 space-y-2">
             <FormField
               control={form.control}
@@ -256,8 +255,8 @@ export function NewOpportunityForm({
                 </FormItem>
               )}
             />
-            <div className="flex space-x-5">
-              <div className="w-1/2 space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
                 <FormField
                   control={form.control}
                   name="type"
@@ -383,7 +382,7 @@ export function NewOpportunityForm({
                   )}
                 />
               </div>
-              <div className="w-1/2 space-y-2">
+              <div className="space-y-2">
                 <FormField
                   control={form.control}
                   name="assigned_to"
