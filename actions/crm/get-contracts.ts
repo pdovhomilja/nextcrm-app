@@ -1,8 +1,9 @@
 "use server";
 
+import { cache } from "react";
 import { prismadb } from "@/lib/prisma";
 
-export const getContractsWithIncludes = async () => {
+export const getContractsWithIncludes = cache(async () => {
   const data = await prismadb.crm_Contracts.findMany({
     include: {
       assigned_to_user: {
@@ -21,7 +22,7 @@ export const getContractsWithIncludes = async () => {
     },
   });
   return data;
-};
+});
 
 export const getContractsByAccountId = async (accountId: string) => {
   const data = await prismadb.crm_Contracts.findMany({

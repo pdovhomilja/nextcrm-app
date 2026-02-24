@@ -39,7 +39,7 @@ import { CalendarIcon } from "lucide-react";
 
 import { useParams, useRouter } from "next/navigation";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import useSWR from "swr";
 import { z } from "zod";
@@ -51,9 +51,7 @@ interface NewTaskFormProps {
 
 const NewTaskForm = ({ account, onFinish }: NewTaskFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
   const [date, setDate] = useState<Date>();
-  //  const [userSearch, setUserSearch] = useState<string>("");
 
   const { data: users, isLoading: isLoadingUsers } = useSWR(
     "/api/user",
@@ -81,16 +79,6 @@ const NewTaskForm = ({ account, onFinish }: NewTaskFormProps) => {
       account: account?.id || "",
     },
   });
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) {
-    return null;
-  }
-
-  //Actions
 
   const onSubmit = async (data: NewAccountFormValues) => {
     //console.log(data);
@@ -128,9 +116,6 @@ const NewTaskForm = ({ account, onFinish }: NewTaskFormProps) => {
         <LoadingComponent />
       ) : (
         <div className="flex w-full ">
-          {/*           <div>
-            <pre>{JSON.stringify(form.watch(), null, 2)}</pre>
-          </div> */}
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
@@ -225,25 +210,11 @@ const NewTaskForm = ({ account, onFinish }: NewTaskFormProps) => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="h-56 overflow-y-auto">
-                          {/*                    <Input
-                            {...field}
-                            placeholder="Search user ..."
-                            onChange={(e) => {
-                              setTimeout(() => {
-                                setUserSearch(e.target.value);
-                              }, 1000);
-                            }}
-                          /> */}
                           {users.map((user: any) => (
                             <SelectItem key={user.id} value={user.id}>
                               {user.name}
                             </SelectItem>
                           ))}
-                          {/*           {filteredUsers.map((user: any) => (
-                            <SelectItem key={user.id} value={user.id}>
-                              {user.name}
-                            </SelectItem>
-                          ))} */}
                         </SelectContent>
                       </Select>
                       <FormMessage />

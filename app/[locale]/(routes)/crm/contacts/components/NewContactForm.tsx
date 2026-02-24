@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -28,7 +28,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 import { Switch } from "@/components/ui/switch";
-import useDebounce from "@/hooks/useDebounce";
 
 //TODO: fix all the types
 type NewTaskFormProps = {
@@ -46,14 +45,15 @@ export function NewContactForm({
   const { toast } = useToast();
 
   const [searchTerm, setSearchTerm] = useState("");
-
-  const debounceSearchTerm = useDebounce(searchTerm, 1000);
-
-  const filteredData = users.filter((item) =>
-    item.name.toLowerCase().includes(debounceSearchTerm.toLowerCase())
-  );
-
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const filteredData = useMemo(
+    () =>
+      users.filter((item) =>
+        item.name.toLowerCase().includes(searchTerm.toLowerCase())
+      ),
+    [users, searchTerm]
+  );
 
   const formSchema = z.object({
     birthday_year: z.string().optional().nullable(),
@@ -143,18 +143,9 @@ export function NewContactForm({
     }
   };
 
-  //console.log(filteredData, "filteredData");
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="h-full">
-        {/*        <div>
-          <pre>
-            <code>{JSON.stringify(form.formState, null, 2)}</code>
-            <code>{JSON.stringify(form.watch(), null, 2)}</code>
-            <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
-          </pre>
-        </div> */}
         <div className="w-full text-sm">
           <div className="pb-5 space-y-2">
             <FormField

@@ -8,13 +8,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -29,10 +24,14 @@ import { UpdateContactForm } from "../components/UpdateContactForm";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
+  users: any[];
+  accounts: any[];
 }
 
 export function DataTableRowActions<TData>({
   row,
+  users,
+  accounts,
 }: DataTableRowActionsProps<TData>) {
   const router = useRouter();
   const contact = opportunitySchema.parse(row.original);
@@ -85,7 +84,12 @@ export function DataTableRowActions<TData>({
         open={updateOpen}
         setOpen={setUpdateOpen}
       >
-        <UpdateContactForm initialData={row.original} setOpen={setUpdateOpen} />
+        <UpdateContactForm
+          initialData={row.original}
+          users={users}
+          accounts={accounts}
+          setOpen={setUpdateOpen}
+        />
       </RightViewModalNoTrigger>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

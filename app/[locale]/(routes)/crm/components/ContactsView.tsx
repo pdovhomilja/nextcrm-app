@@ -1,20 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
-import { columns } from "../contacts/table-components/columns";
+import { createColumns } from "../contacts/table-components/columns";
 import { NewContactForm } from "../contacts/components/NewContactForm";
 import { ContactsDataTable } from "../contacts/table-components/data-table";
-import { useRouter } from "next/navigation";
 import {
   Sheet,
   SheetContent,
@@ -25,9 +24,17 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 
-const ContactsView = ({ data, crmData }: any) => {
-  const router = useRouter();
+import type { getAllCrmData } from "@/actions/crm/get-crm-data";
 
+type CrmData = Awaited<ReturnType<typeof getAllCrmData>>;
+
+interface ContactsViewProps {
+  data: any[];
+  crmData: CrmData;
+  accountId?: string;
+}
+
+const ContactsView = ({ data, crmData }: ContactsViewProps) => {
   const [open, setOpen] = useState(false);
 
   const { users, accounts } = crmData;
@@ -37,18 +44,16 @@ const ContactsView = ({ data, crmData }: any) => {
       <CardHeader className="pb-3">
         <div className="flex justify-between">
           <div>
-            <CardTitle
-              onClick={() => router.push("/crm/contacts")}
-              className="cursor-pointer"
-            >
-              Contacts
+            <CardTitle>
+              <Link href="/crm/contacts" className="hover:underline">
+                Contacts
+              </Link>
             </CardTitle>
-            <CardDescription></CardDescription>
           </div>
           <div className="flex space-x-2">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
-                <Button size="sm">+</Button>
+                <Button size="sm" aria-label="Add new contact">+</Button>
               </SheetTrigger>
               <SheetContent className="!w-[850px] max-w-[95vw] overflow-y-auto">
                 <SheetHeader>
@@ -75,7 +80,10 @@ const ContactsView = ({ data, crmData }: any) => {
         {!data || data.length === 0 ? (
           "No assigned contacts found"
         ) : (
-          <ContactsDataTable data={data} columns={columns} />
+          <ContactsDataTable
+            data={data}
+            columns={createColumns(users, accounts)}
+          />
         )}
       </CardContent>
     </Card>

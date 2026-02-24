@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -28,33 +28,34 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 import { Switch } from "@/components/ui/switch";
-import fetcher from "@/lib/fetcher";
-import useSWR from "swr";
-import SuspenseLoading from "@/components/loadings/suspense";
 
 //TODO: fix all the types
-type NewTaskFormProps = {
+type UpdateContactFormProps = {
   initialData: any;
+  users: any[];
+  accounts: any[];
   setOpen: (value: boolean) => void;
 };
 
-export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
+export function UpdateContactForm({
+  initialData,
+  users,
+  accounts,
+  setOpen,
+}: UpdateContactFormProps) {
   const router = useRouter();
   const { toast } = useToast();
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  const { data: accounts, isLoading: isLoadingAccounts } = useSWR(
-    "/api/crm/account",
-    fetcher
-  );
-
-  const { data: users, isLoading: isLoadingUsers } = useSWR(
-    "/api/user",
-    fetcher
-  );
-
   const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredData = useMemo(
+    () =>
+      users.filter((item: any) =>
+        item.name.toLowerCase().includes(searchTerm.toLowerCase())
+      ),
+    [users, searchTerm]
+  );
 
   const formSchema = z.object({
     id: z.string().min(5).max(30),
@@ -118,12 +119,8 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
     }
   };
 
-  if (isLoadingUsers || isLoadingAccounts)
-    return (
-      <div>
-        <SuspenseLoading />
-      </div>
-    );
+  if (!users || !accounts || !initialData)
+    return <div>Something went wrong, there is no data for form</div>;
 
   const yearArray = Array.from(
     //start in 1923 and count to +100 years
@@ -131,30 +128,9 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
     (_, i) => i + 1923
   );
 
-  const filteredData = users.filter((item: any) =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  if (!users || !accounts || !initialData)
-    return <div>Something went wrong, there is no data for form</div>;
-
-  //console.log(accounts, "accounts");
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="h-full px-10">
-        {/*    <div>
-          <pre>
-            <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
-          </pre>
-        </div> */}
-        {/*     <pre>
-          <code>{JSON.stringify(initialData, null, 2)}</code>
-        </pre> */}
-        {/*   <div>
-          <pre>
-            <code>{JSON.stringify(form.watch(), null, 2)}</code>
-          </pre>
-        </div> */}
         <div className=" w-[800px] text-sm">
           <div className="pb-5 space-y-2">
             <FormField
@@ -304,7 +280,6 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
                       <Select onValueChange={field.onChange}>
                         <SelectTrigger>Month</SelectTrigger>
                         <SelectContent>
-                          {/* Replace this with the range of months you want to allow */}
                           {Array.from({ length: 12 }, (_, i) => i + 1).map(
                             (monthOption) => (
                               <SelectItem
@@ -331,7 +306,6 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
                       <Select onValueChange={field.onChange}>
                         <SelectTrigger>Day</SelectTrigger>
                         <SelectContent>
-                          {/* Replace this with the range of months you want to allow */}
                           {Array.from({ length: 31 }, (_, i) => i + 1).map(
                             (dayOption) => (
                               <SelectItem
@@ -385,14 +359,6 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="h-96 overflow-y-auto">
-                          {/*                {
-                            //TODO: fix this
-                            users.map((user: any) => (
-                              <SelectItem key={user.id} value={user.id}>
-                                {user.name}
-                              </SelectItem>
-                            ))
-                          } */}
                           <Input
                             type="text"
                             placeholder="Search in users ..."
@@ -425,14 +391,11 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="flex overflow-y-auto h-56">
-                          {
-                            //TODO: fix this
-                            accounts.map((account: any) => (
-                              <SelectItem key={account.id} value={account.id}>
-                                {account.name}
-                              </SelectItem>
-                            ))
-                          }
+                          {accounts.map((account: any) => (
+                            <SelectItem key={account.id} value={account.id}>
+                              {account.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />

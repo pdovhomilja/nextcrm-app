@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
+
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -13,11 +14,17 @@ import RightViewModal from "@/components/modals/right-view-modal";
 import { columns } from "../leads/table-components/columns";
 import { NewLeadForm } from "../leads/components/NewLeadForm";
 import { LeadDataTable } from "../leads/table-components/data-table";
-import { useRouter } from "next/navigation";
 
-const LeadsView = ({ data, crmData }: any) => {
-  const router = useRouter();
+import type { getAllCrmData } from "@/actions/crm/get-crm-data";
 
+type CrmData = Awaited<ReturnType<typeof getAllCrmData>>;
+
+interface LeadsViewProps {
+  data: any[];
+  crmData: CrmData;
+}
+
+const LeadsView = ({ data, crmData }: LeadsViewProps) => {
   const { users, accounts } = crmData;
 
   return (
@@ -25,13 +32,11 @@ const LeadsView = ({ data, crmData }: any) => {
       <CardHeader className="pb-3">
         <div className="flex justify-between">
           <div>
-            <CardTitle
-              onClick={() => router.push("/crm/leads")}
-              className="cursor-pointer"
-            >
-              Leads
+            <CardTitle>
+              <Link href="/crm/leads" className="hover:underline">
+                Leads
+              </Link>
             </CardTitle>
-            <CardDescription></CardDescription>
           </div>
           <div className="flex space-x-2">
             <RightViewModal label={"+"} title="Create new lead" description="">
