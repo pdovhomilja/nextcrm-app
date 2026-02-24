@@ -54,7 +54,7 @@ const AccountsView = ({ data, crmData }: AccountsViewProps) => {
               <SheetTrigger asChild>
                 <Button size="sm" aria-label="Add new account">+</Button>
               </SheetTrigger>
-              <SheetContent className="max-w-3xl overflow-y-auto">
+              <SheetContent className="w-full md:max-w-[771px] overflow-y-auto">
                 <SheetHeader>
                   <SheetTitle>Create new Account</SheetTitle>
                   <SheetDescription>

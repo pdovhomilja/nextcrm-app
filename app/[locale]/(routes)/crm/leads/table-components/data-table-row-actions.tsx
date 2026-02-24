@@ -25,7 +25,13 @@ import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import axios from "axios";
 import { UpdateLeadForm } from "../components/UpdateLeadForm";
-import RightViewModalNoTrigger from "@/components/modals/right-view-notrigger";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -73,14 +79,17 @@ export function DataTableRowActions<TData>({
         onConfirm={onDelete}
         loading={loading}
       />
-      <RightViewModalNoTrigger
-        title={"Update lead" + " - " + lead?.firstName + " " + lead?.lastName}
-        description="Update contact details"
-        open={updateOpen}
-        setOpen={setUpdateOpen}
-      >
-        <UpdateLeadForm initialData={row.original} setOpen={setUpdateOpen} />
-      </RightViewModalNoTrigger>
+      <Sheet open={updateOpen} onOpenChange={setUpdateOpen}>
+        <SheetContent className="w-full md:max-w-[771px] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Update lead - {lead?.firstName} {lead?.lastName}</SheetTitle>
+            <SheetDescription>Update lead details</SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 space-y-4">
+            <UpdateLeadForm initialData={row.original} setOpen={setUpdateOpen} />
+          </div>
+        </SheetContent>
+      </Sheet>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button

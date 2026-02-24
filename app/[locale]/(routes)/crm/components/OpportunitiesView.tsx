@@ -60,7 +60,7 @@ const OpportunitiesView = ({
               <SheetTrigger asChild>
                 <Button className="my-2 cursor-pointer" aria-label="Add new opportunity">+</Button>
               </SheetTrigger>
-              <SheetContent className="max-w-3xl overflow-y-auto">
+              <SheetContent className="w-full md:max-w-[771px] overflow-y-auto">
                 <SheetHeader>
                   <SheetTitle>Create new opportunity</SheetTitle>
                   <SheetDescription>

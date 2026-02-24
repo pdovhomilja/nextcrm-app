@@ -19,8 +19,14 @@ import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import axios from "axios";
-import RightViewModalNoTrigger from "@/components/modals/right-view-notrigger";
 import { UpdateAccountForm } from "../components/UpdateAccountForm";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Eye, EyeOff } from "lucide-react";
 
 interface DataTableRowActionsProps<TData> {
@@ -107,14 +113,17 @@ export function DataTableRowActions<TData>({
         onConfirm={onDelete}
         loading={loading}
       />
-      <RightViewModalNoTrigger
-        title={"Update Account" + " - " + account?.name}
-        description="Update account details"
-        open={updateOpen}
-        setOpen={setUpdateOpen}
-      >
-        <UpdateAccountForm initialData={row.original} open={setUpdateOpen} />
-      </RightViewModalNoTrigger>
+      <Sheet open={updateOpen} onOpenChange={setUpdateOpen}>
+        <SheetContent className="w-full md:max-w-[771px] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Update Account - {account?.name}</SheetTitle>
+            <SheetDescription>Update account details</SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 space-y-4">
+            <UpdateAccountForm initialData={row.original} open={setUpdateOpen} />
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

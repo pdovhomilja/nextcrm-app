@@ -19,8 +19,14 @@ import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import axios from "axios";
-import RightViewModalNoTrigger from "@/components/modals/right-view-notrigger";
 import { UpdateContactForm } from "../components/UpdateContactForm";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -72,25 +78,22 @@ export function DataTableRowActions<TData>({
         onConfirm={onDelete}
         loading={loading}
       />
-      <RightViewModalNoTrigger
-        title={
-          "Update Contact" +
-          " - " +
-          contact?.first_name +
-          " " +
-          contact?.last_name
-        }
-        description="Update contact details"
-        open={updateOpen}
-        setOpen={setUpdateOpen}
-      >
-        <UpdateContactForm
-          initialData={row.original}
-          users={users}
-          accounts={accounts}
-          setOpen={setUpdateOpen}
-        />
-      </RightViewModalNoTrigger>
+      <Sheet open={updateOpen} onOpenChange={setUpdateOpen}>
+        <SheetContent className="w-full md:max-w-[771px] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Update Contact - {contact?.first_name} {contact?.last_name}</SheetTitle>
+            <SheetDescription>Update contact details</SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 space-y-4">
+            <UpdateContactForm
+              initialData={row.original}
+              users={users}
+              accounts={accounts}
+              setOpen={setUpdateOpen}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
