@@ -50,7 +50,7 @@ const ContactsView = ({ data, crmData }: any) => {
               <SheetTrigger asChild>
                 <Button size="sm">+</Button>
               </SheetTrigger>
-              <SheetContent className="max-w-3xl overflow-y-auto">
+              <SheetContent className="!w-[850px] max-w-[95vw] overflow-y-auto">
                 <SheetHeader>
                   <SheetTitle>Create new Contact</SheetTitle>
                   <SheetDescription>

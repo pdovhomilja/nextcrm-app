@@ -147,7 +147,7 @@ export function NewContactForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="h-full px-10">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="h-full">
         {/*        <div>
           <pre>
             <code>{JSON.stringify(form.formState, null, 2)}</code>
@@ -155,7 +155,7 @@ export function NewContactForm({
             <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
           </pre>
         </div> */}
-        <div className=" w-[800px] text-sm">
+        <div className="w-full text-sm">
           <div className="pb-5 space-y-2">
             <FormField
               control={form.control}
@@ -368,7 +368,7 @@ export function NewContactForm({
                 </FormItem>
               )}
             />
-            <div className="flex space-x-5">
+            <div className="flex gap-4">
               <div className="w-1/2 space-y-2">
                 <FormField
                   control={form.control}
