@@ -10,7 +10,6 @@ import { DataTableRowActions } from "./data-table-row-actions";
 import moment from "moment";
 
 export const createColumns = (
-  users: any[],
   accounts: any[]
 ): ColumnDef<Opportunity>[] => [
   {
@@ -103,7 +102,7 @@ export const createColumns = (
   {
     id: "actions",
     cell: ({ row }) => (
-      <DataTableRowActions row={row} users={users} accounts={accounts} />
+      <DataTableRowActions row={row} accounts={accounts} />
     ),
   },
 ];

@@ -1,11 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 import { useRouter } from "next/navigation";
 
-import { crm_Accounts, Users } from "@prisma/client";
+import { crm_Accounts } from "@prisma/client";
 
 import { useAction } from "@/hooks/use-action";
 
@@ -19,22 +20,22 @@ import { FormSubmit } from "@/components/form/form-submit";
 import { FormDatePicker } from "@/components/form/form-datepicker";
 import { FormTextarea } from "@/components/form/form-textarea";
 import { FormSelect } from "@/components/form/from-select";
+import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 
 const UpdateContractForm = ({
   onOpen,
   setOpen,
-  users,
   accounts,
   data,
 }: {
   onOpen: boolean;
   setOpen: (open: boolean) => void;
-  users: Users[];
   accounts: crm_Accounts[];
   //TODO: fix type for data
   data: any;
 }) => {
   const router = useRouter();
+  const [assignedTo, setAssignedTo] = useState<string>(data.assigned_to ?? "");
 
   const contractStatuses = [
     { id: "NOTSTARTED", name: "Not started" },
@@ -175,14 +176,17 @@ const UpdateContractForm = ({
           errors={fieldErrors}
           defaultValue={data.account}
         />
-        <FormSelect
-          id="assigned_to"
-          label="Assigned To"
-          type="hidden"
-          data={users}
-          errors={fieldErrors}
-          defaultValue={data.assigned_to}
-        />
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-neutral-700">
+            Assigned To
+          </label>
+          <UserSearchCombobox
+            value={assignedTo}
+            onChange={setAssignedTo}
+            placeholder="Select assigned user"
+            name="assigned_to"
+          />
+        </div>
         <FormSubmit className="w-full">
           {isLoading ? <Loader2 className="h-6 w-6  animate-spin" /> : "Update"}
         </FormSubmit>

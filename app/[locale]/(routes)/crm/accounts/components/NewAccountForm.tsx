@@ -28,14 +28,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 
 type Props = {
   industries: any[];
-  users: any[];
   onFinish: () => void;
 };
 
-export function NewAccountForm({ industries, users, onFinish }: Props) {
+export function NewAccountForm({ industries, onFinish }: Props) {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -464,23 +464,14 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Assigned to</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a user to assign the account" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="overflow-y-auto h-56">
-                        {users.map((user) => (
-                          <SelectItem key={user.id} value={user.id}>
-                            {user.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <UserSearchCombobox
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        placeholder="Select a user"
+                        disabled={isLoading}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

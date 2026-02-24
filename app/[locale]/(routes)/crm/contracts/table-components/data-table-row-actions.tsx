@@ -27,7 +27,6 @@ import { useToast } from "@/components/ui/use-toast";
 import { deleteContract } from "@/actions/crm/contracts/delete-contract";
 import FormSheet from "@/components/sheets/form-sheet";
 import UpdateContractForm from "../_forms/update-contract";
-import { getUsers } from "@/actions/get-users";
 import useSWR from "swr";
 import fetcher from "@/lib/fetcher";
 
@@ -47,11 +46,6 @@ export function DataTableRowActions<TData>({
 
   const { data: accounts, isLoading: isLoadingAccounts } = useSWR(
     "/api/crm/account",
-    fetcher
-  );
-
-  const { data: users, isLoading: isLoadingUsers } = useSWR(
-    "/api/user",
     fetcher
   );
 
@@ -91,7 +85,6 @@ export function DataTableRowActions<TData>({
       <UpdateContractForm
         onOpen={updateOpen}
         setOpen={setUpdateOpen}
-        users={users}
         accounts={accounts}
         data={contract}
       />

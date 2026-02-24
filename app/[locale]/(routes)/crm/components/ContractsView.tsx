@@ -25,7 +25,7 @@ interface ContractsViewProps {
 }
 
 const ContractsView = ({ data, crmData, accountId }: ContractsViewProps) => {
-  const { users, accounts } = crmData;
+  const { accounts } = crmData;
 
   return (
     <Card>
@@ -39,7 +39,6 @@ const ContractsView = ({ data, crmData, accountId }: ContractsViewProps) => {
 
           <div className="flex space-x-2">
             <CreateContractForm
-              users={users}
               accounts={accounts}
               accountId={accountId ?? ""}
             />

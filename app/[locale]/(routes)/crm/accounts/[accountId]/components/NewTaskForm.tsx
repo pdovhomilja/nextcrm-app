@@ -29,7 +29,6 @@ import { SheetTrigger } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 
-import fetcher from "@/lib/fetcher";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { crm_Accounts } from "@prisma/client";
@@ -37,12 +36,12 @@ import axios from "axios";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import useSWR from "swr";
 import { z } from "zod";
+import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 
 interface NewTaskFormProps {
   account: crm_Accounts | null;
@@ -52,11 +51,6 @@ interface NewTaskFormProps {
 const NewTaskForm = ({ account, onFinish }: NewTaskFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [date, setDate] = useState<Date>();
-
-  const { data: users, isLoading: isLoadingUsers } = useSWR(
-    "/api/user",
-    fetcher
-  );
 
   const router = useRouter();
 
@@ -101,14 +95,6 @@ const NewTaskForm = ({ account, onFinish }: NewTaskFormProps) => {
       router.refresh();
     }
   };
-
-  if (isLoadingUsers) {
-    return <LoadingComponent />;
-  }
-
-  /*   const filteredUsers = users?.filter((user: any) =>
-    user.name.toLowerCase().includes(userSearch.toLowerCase())
-  ); */
 
   return (
     <div className="flex flex-col">
@@ -200,23 +186,14 @@ const NewTaskForm = ({ account, onFinish }: NewTaskFormProps) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Assigned to</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select assigned user" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="h-56 overflow-y-auto">
-                          {users.map((user: any) => (
-                            <SelectItem key={user.id} value={user.id}>
-                              {user.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <UserSearchCombobox
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          placeholder="Select assigned user"
+                          disabled={isLoading}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

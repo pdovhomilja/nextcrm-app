@@ -5,7 +5,8 @@ import { Loader2 } from "lucide-react";
 import { ElementRef, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { crm_Accounts, Users } from "@prisma/client";
+import { crm_Accounts } from "@prisma/client";
+import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 
 import { useAction } from "@/hooks/use-action";
 
@@ -19,16 +20,15 @@ import { FormTextarea } from "@/components/form/form-textarea";
 import { FormSelect } from "@/components/form/from-select";
 
 const CreateContractForm = ({
-  users,
   accounts,
   accountId,
 }: {
-  users: Users[];
   accounts: crm_Accounts[];
   accountId: string;
 }) => {
   const router = useRouter();
   const closeRef = useRef<ElementRef<"button">>(null);
+  const [assignedTo, setAssignedTo] = useState<string>("");
 
   //console.log(accountId, "accountId");
 
@@ -130,13 +130,16 @@ const CreateContractForm = ({
           errors={fieldErrors}
           defaultValue={accountId}
         />
-        <FormSelect
-          id="assigned_to"
-          label="Assigned To"
-          type="hidden"
-          data={users}
-          errors={fieldErrors}
-        />
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Assigned To</label>
+          <UserSearchCombobox
+            value={assignedTo}
+            onChange={setAssignedTo}
+            placeholder="Select a user"
+            disabled={isLoading}
+            name="assigned_to"
+          />
+        </div>
         <FormSubmit className="w-full">
           {isLoading ? (
             <Loader2 className="h-6 w-6  animate-spin" />

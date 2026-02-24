@@ -36,7 +36,7 @@ interface AccountsViewProps {
 const AccountsView = ({ data, crmData }: AccountsViewProps) => {
   const [open, setOpen] = useState(false);
 
-  const { users, industries } = crmData;
+  const { industries } = crmData;
 
   return (
     <Card>
@@ -64,7 +64,6 @@ const AccountsView = ({ data, crmData }: AccountsViewProps) => {
                 <div className="mt-6 space-y-4">
                   <NewAccountForm
                     industries={industries}
-                    users={users}
                     onFinish={() => setOpen(false)}
                   />
                 </div>
@@ -83,7 +82,6 @@ const AccountsView = ({ data, crmData }: AccountsViewProps) => {
               data={data}
               columns={columns}
               industries={industries}
-              users={users}
             />
           </CardContent>
         ))}

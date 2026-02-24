@@ -33,14 +33,12 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   industries: any[];
-  users: any[];
 }
 
 export function AccountDataTable<TData, TValue>({
   columns,
   data,
   industries,
-  users,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =

@@ -37,7 +37,7 @@ interface ContactsViewProps {
 const ContactsView = ({ data, crmData }: ContactsViewProps) => {
   const [open, setOpen] = useState(false);
 
-  const { users, accounts } = crmData;
+  const { accounts } = crmData;
 
   return (
     <Card>
@@ -64,7 +64,6 @@ const ContactsView = ({ data, crmData }: ContactsViewProps) => {
                 </SheetHeader>
                 <div className="mt-6 space-y-4">
                   <NewContactForm
-                    users={users}
                     accounts={accounts}
                     onFinish={() => setOpen(false)}
                   />
@@ -82,7 +81,7 @@ const ContactsView = ({ data, crmData }: ContactsViewProps) => {
         ) : (
           <ContactsDataTable
             data={data}
-            columns={createColumns(users, accounts)}
+            columns={createColumns(accounts)}
           />
         )}
       </CardContent>
