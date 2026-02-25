@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import {
   Card,
@@ -36,6 +37,7 @@ interface ContactsViewProps {
 
 const ContactsView = ({ data, crmData }: ContactsViewProps) => {
   const [open, setOpen] = useState(false);
+  const t = useTranslations("CrmPage");
 
   const { accounts } = crmData;
 
@@ -46,20 +48,20 @@ const ContactsView = ({ data, crmData }: ContactsViewProps) => {
           <div>
             <CardTitle>
               <Link href="/crm/contacts" className="hover:underline">
-                Contacts
+                {t("contacts.viewTitle")}
               </Link>
             </CardTitle>
           </div>
           <div className="flex space-x-2">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
-                <Button size="sm" aria-label="Add new contact">+</Button>
+                <Button size="sm" aria-label={t("contacts.addNew")}>+</Button>
               </SheetTrigger>
               <SheetContent className="w-full md:max-w-[771px] overflow-y-auto">
                 <SheetHeader>
-                  <SheetTitle>Create new Contact</SheetTitle>
+                  <SheetTitle>{t("contacts.sheetTitle")}</SheetTitle>
                   <SheetDescription>
-                    Add a new contact to your CRM system. Fill in the contact details and assign to an account.
+                    {t("contacts.sheetDescription")}
                   </SheetDescription>
                 </SheetHeader>
                 <div className="mt-6 space-y-4">
@@ -77,7 +79,7 @@ const ContactsView = ({ data, crmData }: ContactsViewProps) => {
 
       <CardContent>
         {!data || data.length === 0 ? (
-          "No assigned contacts found"
+          t("contacts.empty")
         ) : (
           <ContactsDataTable
             data={data}

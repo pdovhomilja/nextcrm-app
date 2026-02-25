@@ -5,17 +5,19 @@ import { TasksDataTable } from "./components/data-table";
 import { columns } from "./components/columns";
 
 import { Button } from "@/components/ui/button";
+import { getTranslations } from "next-intl/server";
 
 const TasksPage = async () => {
   const tasks: any = await getTasks();
+  const t = await getTranslations("ProjectsPage");
 
   return (
     <Container
-      title="All tasks"
-      description={"Everything you need to know about tasks"}
+      title={t("tasks.title")}
+      description={t("tasks.description")}
     >
       <div className="py-5">
-        <Button>New task</Button>
+        <Button>{t("tasks.newTask")}</Button>
       </div>
       <div>
         <TasksDataTable data={tasks} columns={columns} />

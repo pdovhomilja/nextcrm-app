@@ -6,10 +6,12 @@ import { runCronJob } from "@/actions/cron/get-invoice-from-mail";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const CronButton = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const t = useTranslations("InvoicePage");
 
   const runCron = async () => {
     try {
@@ -28,11 +30,11 @@ const CronButton = () => {
     <Button onClick={runCron}>
       {isLoading ? (
         <div className="flex gap-2">
-          Checking ....
+          {t("checking")}
           <Loader2 className="animate-spin" />
         </div>
       ) : (
-        "Check for new invoices"
+        t("checkForNew")
       )}
     </Button>
   );

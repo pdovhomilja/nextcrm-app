@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import {
   Card,
@@ -40,6 +41,7 @@ const OpportunitiesView = ({
   accountId,
 }: OpportunitiesViewProps) => {
   const [open, setOpen] = useState(false);
+  const t = useTranslations("CrmPage");
 
   const { accounts, contacts, saleTypes, saleStages, campaigns } =
     crmData;
@@ -51,21 +53,20 @@ const OpportunitiesView = ({
           <div>
             <CardTitle>
               <Link href="/crm/opportunities" className="hover:underline">
-                Opportunities
+                {t("opportunities.viewTitle")}
               </Link>
             </CardTitle>
           </div>
           <div className="flex space-x-2">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
-                <Button className="my-2 cursor-pointer" aria-label="Add new opportunity">+</Button>
+                <Button className="my-2 cursor-pointer" aria-label={t("opportunities.addNew")}>+</Button>
               </SheetTrigger>
               <SheetContent className="w-full md:max-w-[771px] overflow-y-auto">
                 <SheetHeader>
-                  <SheetTitle>Create new opportunity</SheetTitle>
+                  <SheetTitle>{t("opportunities.sheetTitle")}</SheetTitle>
                   <SheetDescription>
-                    Create a new sales opportunity with account, contact, and
-                    deal information
+                    {t("opportunities.sheetDescription")}
                   </SheetDescription>
                 </SheetHeader>
                 <div className="mt-6 space-y-4">
@@ -88,7 +89,7 @@ const OpportunitiesView = ({
       <CardContent>
         {!data ||
           (data.length === 0 ? (
-            "No assigned opportunities found"
+            t("opportunities.empty")
           ) : (
             <OpportunitiesDataTable data={data} columns={columns} />
           ))}

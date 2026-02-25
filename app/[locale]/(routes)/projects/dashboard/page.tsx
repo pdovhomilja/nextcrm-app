@@ -7,10 +7,12 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getSections } from "@/actions/projects/get-sections";
 import { Sections } from "@prisma/client";
+import { getTranslations } from "next-intl/server";
 
 const ProjectDashboard = async () => {
   const session = await getServerSession(authOptions);
   const user = session?.user;
+  const t = await getTranslations("ProjectsPage");
   const dashboardData: any = await getTasksPastDue();
   const boards = await getBoards(user?.id!);
   const sections: Sections[] = await getSections();
@@ -21,10 +23,8 @@ const ProjectDashboard = async () => {
 
   return (
     <Container
-      title="Dashboard"
-      description={
-        "Welcome to NextCRM cockpit, here you can see your company overview"
-      }
+      title={t("dashboardTitle")}
+      description={t("dashboardDescription")}
     >
       <ProjectDashboardCockpit
         dashboardData={dashboardData}

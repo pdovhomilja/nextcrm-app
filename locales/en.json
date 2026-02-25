@@ -48,5 +48,406 @@
   },
   "CrmModuleMenuComponent": {
     "menuTitle": "Sales"
+  },
+  "Common": {
+    "success": "Success",
+    "error": "Error",
+    "cancel": "Cancel",
+    "create": "Create",
+    "update": "Update",
+    "activate": "Activate",
+    "savingData": "Saving data ...",
+    "somethingWentWrong": "Something went wrong. Please try again.",
+    "assignedTo": "Assigned to",
+    "selectUser": "Select a user",
+    "description": "Description",
+    "priorityLabel": "Priority",
+    "priorityPlaceholder": "Select priority",
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High",
+    "critical": "Critical"
+  },
+  "LanguageSelector": {
+    "english": "English",
+    "czech": "Czech",
+    "german": "German",
+    "ukrainian": "Ukrainian",
+    "selectPlaceholder": "Select language...",
+    "searchPlaceholder": "Search language...",
+    "noResult": "No language found.",
+    "loadingModal": "Changing language...",
+    "success": "Language changed",
+    "changedTo": "Language changed to {language}",
+    "error": "Error changing language"
+  },
+  "CrmPage": {
+    "title": "CRM",
+    "description": "Everything you need to know about sales",
+    "accounts": {
+      "pageTitle": "Accounts",
+      "pageDescription": "Everything you need to know about your accounts",
+      "viewTitle": "Accounts",
+      "addNew": "Add new account",
+      "sheetTitle": "Create new Account",
+      "sheetDescription": "Add a new company or organization to your CRM system. Fill in the account details and industry information.",
+      "empty": "No assigned accounts found"
+    },
+    "contacts": {
+      "pageTitle": "Contacts",
+      "pageDescription": "Everything you need to know about your contacts",
+      "viewTitle": "Contacts",
+      "addNew": "Add new contact",
+      "sheetTitle": "Create new Contact",
+      "sheetDescription": "Add a new contact to your CRM system. Fill in the contact details and assign to an account.",
+      "empty": "No assigned contacts found"
+    },
+    "opportunities": {
+      "pageTitle": "Opportunities",
+      "pageDescription": "Everything you need to know about your opportunities",
+      "viewTitle": "Opportunities",
+      "addNew": "Add new opportunity",
+      "sheetTitle": "Create new opportunity",
+      "sheetDescription": "Create a new sales opportunity with account, contact, and deal information",
+      "empty": "No assigned opportunities found"
+    },
+    "leads": {
+      "pageTitle": "Leads",
+      "pageDescription": "Everything you need to know about your leads",
+      "viewTitle": "Leads",
+      "addNew": "Add new lead",
+      "sheetTitle": "Create new lead",
+      "sheetDescription": "Fill in the details to create a new lead",
+      "empty": "No assigned leads found"
+    },
+    "contracts": {
+      "pageTitle": "Contracts",
+      "pageDescription": "Everything you need to know about your contracts",
+      "viewTitle": "Contracts",
+      "addNew": "Add new contract",
+      "sheetTitle": "Create new contract",
+      "sheetDescription": "Fill in the details to create a new contract",
+      "empty": "No assigned contracts found"
+    }
+  },
+  "CrmAccountForm": {
+    "accountName": "Account name",
+    "officePhone": "Office phone",
+    "email": "E-mail",
+    "website": "Website",
+    "accountId": "Account ID",
+    "vatNumber": "Account VAT number",
+    "billingStreet": "Billing street",
+    "billingPostalCode": "Billing postal code",
+    "billingCity": "Billing City",
+    "billingState": "Billing state",
+    "billingCountry": "Billing country",
+    "shippingStreet": "Shipping street",
+    "shippingPostalCode": "Shipping postal code",
+    "shippingCity": "Shipping City",
+    "shippingState": "Shipping state",
+    "shippingCountry": "Shipping country",
+    "annualRevenue": "Annual revenue",
+    "isMemberOf": "Is member of",
+    "industry": "Choose industry",
+    "industryPlaceholder": "Select new account industry",
+    "createButton": "Create account",
+    "updateButton": "Update account",
+    "createSuccess": "Account created successfully",
+    "updateSuccess": "Account updated successfully",
+    "errorDescription": "Something went wrong. Please try again."
+  },
+  "CrmContactForm": {
+    "firstName": "First name",
+    "lastName": "Last name",
+    "mobilePhone": "Mobile phone",
+    "officePhone": "Office phone",
+    "email": "Email",
+    "personalEmail": "Personal email",
+    "website": "Website",
+    "birthday": "Birthday - (optional)",
+    "year": "Year",
+    "month": "Month",
+    "day": "Day",
+    "descriptionPlaceholder": "Useful information about the contact",
+    "assignedUser": "Assigned user",
+    "assignedUserPlaceholder": "Choose a user",
+    "assignAccount": "Assign an Account",
+    "assignAccountPlaceholder": "Choose assigned account",
+    "position": "Position",
+    "isActive": "Is contact active?",
+    "contactType": "Contact type",
+    "contactTypePlaceholder": "Choose contact type",
+    "customer": "Customer",
+    "partner": "Partner",
+    "vendor": "Vendor",
+    "twitter": "Twitter",
+    "facebook": "Facebook",
+    "linkedin": "Linkedin",
+    "skype": "Skype",
+    "youtube": "YouTube",
+    "tiktok": "TikTok",
+    "createButton": "Create contact",
+    "updateButton": "Update contact",
+    "createSuccess": "Contact created successfully",
+    "updateSuccess": "Contact updated successfully"
+  },
+  "CrmOpportunityForm": {
+    "name": "Opportunity name",
+    "closeDate": "Expected close date",
+    "closeDatePlaceholder": "Pick a expected close date",
+    "salesType": "Sales type",
+    "salesTypePlaceholder": "Choose type",
+    "saleStage": "Sale stage",
+    "saleStagePlaceholder": "Choose actual stage",
+    "budget": "Budget",
+    "currency": "Currency",
+    "expectedRevenue": "Expected revenue",
+    "nextStep": "Next step",
+    "nextStepPlaceholder": "Describe the next step",
+    "assignedAccount": "Assigned Account",
+    "createSuccess": "Opportunity created successfully",
+    "updateSuccess": "Opportunity updated successfully"
+  },
+  "CrmLeadForm": {
+    "firstName": "First name",
+    "lastName": "Last name",
+    "company": "Company",
+    "jobTitle": "Job title",
+    "email": "Email",
+    "phone": "Phone",
+    "leadSource": "Lead source",
+    "leadSourcePlaceholder": "Select lead source",
+    "referredBy": "Referred by",
+    "campaign": "Campaign",
+    "assignAccount": "Assign an account",
+    "assignAccountPlaceholder": "Choose account",
+    "createButton": "Create lead",
+    "updateButton": "Update lead",
+    "createSuccess": "Lead created successfully",
+    "updateSuccess": "Lead updated successfully"
+  },
+  "CrmContractForm": {
+    "title": "Title",
+    "value": "Value",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "renewalReminderDate": "Renewal reminder date",
+    "customerSignedDate": "Customer signed date",
+    "companySignedDate": "Company signed date",
+    "account": "Account",
+    "createButton": "Create contract",
+    "createSuccess": "Contract created successfully"
+  },
+  "ProfilePage": {
+    "title": "Profile",
+    "description": "Manage your profile settings",
+    "profilePhoto": "Profile photo",
+    "profile": "Profile",
+    "passwordChange": "Password change",
+    "notionIntegration": "Notion integration",
+    "language": "Language",
+    "openAiIntegration": "OpenAI integration"
+  },
+  "ProfileForm": {
+    "fullName": "Full name",
+    "username": "Username",
+    "company": "Company",
+    "updateButton": "Update profile",
+    "photoUpdated": "Photo updated",
+    "photoUpdatedDescription": "Your profile photo has been updated.",
+    "photoError": "Error",
+    "photoErrorDescription": "Something went wrong. Please try again."
+  },
+  "PasswordChangeForm": {
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "success": "Password changed successfully",
+    "errorPrefix": "Error: "
+  },
+  "NotionForm": {
+    "databaseId": "Notion database ID",
+    "secretKey": "Notion secret key",
+    "activateButton": "Activate Notion"
+  },
+  "OpenAiForm": {
+    "organizationId": "OpenAI organization ID",
+    "secretKey": "OpenAI secret key",
+    "activateButton": "Activate OpenAI",
+    "orgIdTooShort": "Organization ID is too short",
+    "orgIdTooLong": "Organization ID is too long",
+    "secretKeyTooShort": "Secret key is too short"
+  },
+  "AdminPage": {
+    "title": "Administration",
+    "notAdmin": "You are not an admin",
+    "accessNotAllowed": "Access not allowed",
+    "setupDescription": "Setup your CRM system",
+    "usersAdmin": "Users",
+    "modulesAdmin": "Modules",
+    "users": {
+      "title": "Users",
+      "description": "Manage your CRM users",
+      "inviteHeading": "Invite new user"
+    },
+    "modules": {
+      "title": "Modules",
+      "description": "Manage your CRM modules"
+    },
+    "inviteForm": {
+      "name": "Name",
+      "email": "Email",
+      "success": "Success",
+      "invited": "User invited successfully",
+      "error": "Error",
+      "errorDesc": "Something went wrong. Please try again."
+    },
+    "sendMail": {
+      "trigger": "Send mail to all",
+      "title": "Send mail to all users",
+      "description": "Send an email to all active users",
+      "messageTitle": "Message title",
+      "message": "Message",
+      "sendButton": "Send",
+      "sent": "Mail sent successfully"
+    }
+  },
+  "ProjectsPage": {
+    "title": "Projects",
+    "description": "Manage your projects",
+    "allTasks": "All tasks",
+    "myTasks": "My tasks",
+    "dashboard": "Dashboard",
+    "projects": "Projects",
+    "dashboardTitle": "Projects dashboard",
+    "dashboardDescription": "Overview of all projects",
+    "tasks": {
+      "title": "Tasks",
+      "description": "Manage your tasks",
+      "newTask": "New task"
+    },
+    "newProject": {
+      "trigger": "New project",
+      "title": "Create new project",
+      "description": "Add a new project to your workspace",
+      "nameLabel": "Project name",
+      "namePlaceholder": "Enter project name",
+      "descLabel": "Description",
+      "descPlaceholder": "Enter project description",
+      "visibilityLabel": "Visibility",
+      "public": "Public",
+      "private": "Private",
+      "cancel": "Cancel",
+      "create": "Create",
+      "successMsg": "Project created successfully"
+    },
+    "newSection": {
+      "trigger": "New section",
+      "title": "Create new section",
+      "description": "Add a new section to this board",
+      "nameLabel": "Section name",
+      "namePlaceholder": "Enter section name",
+      "cancel": "Cancel",
+      "create": "Create",
+      "successMsg": "Section created successfully"
+    },
+    "newTask": {
+      "trigger": "New task",
+      "title": "Create new task",
+      "description": "Add a new task to your project",
+      "nameLabel": "Task name",
+      "namePlaceholder": "Enter task name",
+      "descLabel": "Description",
+      "descPlaceholder": "Enter task description",
+      "dueDateLabel": "Due date",
+      "assignedToPlaceholder": "Assign to user",
+      "projectLabel": "Project",
+      "projectPlaceholder": "Select project",
+      "cancel": "Cancel",
+      "create": "Create",
+      "successMsg": "Task created successfully"
+    },
+    "dataTable": {
+      "filterPlaceholder": "Filter projects...",
+      "visibility": "Visibility",
+      "reset": "Reset",
+      "view": "View",
+      "toggleColumns": "Toggle columns",
+      "rowsSelected": "{selected} of {total} row(s) selected.",
+      "rowsPerPage": "Rows per page",
+      "goToFirst": "Go to first page",
+      "goToPrev": "Go to previous page",
+      "goToNext": "Go to next page",
+      "goToLast": "Go to last page",
+      "viewDetail": "View detail",
+      "edit": "Edit",
+      "watchProject": "Watch project",
+      "stopWatching": "Stop watching",
+      "delete": "Delete",
+      "openMenu": "Open menu",
+      "editProject": "Edit project",
+      "editProjectDesc": "Edit project details",
+      "deleteError": "Error deleting project",
+      "watchError": "Error updating watch status"
+    }
+  },
+  "InvoicePage": {
+    "title": "Invoices",
+    "description": "Manage your invoices",
+    "uploadPdf": "Upload PDF",
+    "myInvoices": "My invoices",
+    "checkForNew": "Check for new",
+    "checking": "Checking...",
+    "somethingWentWrong": "Something went wrong",
+    "settings": {
+      "title": "Settings",
+      "companySettings": "Company settings",
+      "description": "Manage your invoice settings"
+    },
+    "dataTable": {
+      "filterPlaceholder": "Filter invoices...",
+      "reset": "Reset"
+    },
+    "newTask": {
+      "title": "Create new task",
+      "description": "Add a new task for this invoice"
+    }
+  },
+  "DocumentsPage": {
+    "title": "Documents",
+    "description": "Manage your documents",
+    "uploadPdf": "Upload PDF",
+    "uploadImages": "Upload images",
+    "uploadOther": "Upload other",
+    "dataTable": {
+      "filterPlaceholder": "Filter documents...",
+      "reset": "Reset"
+    }
+  },
+  "EmployeesPage": {
+    "title": "Employees",
+    "description": "Manage your employees",
+    "moduleContent": "Employees module content"
+  },
+  "ReportsPage": {
+    "title": "Reports",
+    "description": "View your business reports",
+    "newUsersByMonthOverallTitle": "New users by month (overall)",
+    "newUsersByMonthOverallChart": "New users by month overall",
+    "newUsersByMonth2023Title": "New users by month (2023)",
+    "newUsersByMonth2023Chart": "New users by month 2023",
+    "newUsersByMonth2024Title": "New users by month (2024)",
+    "newTasksByMonth2023": "New tasks by month (2023)",
+    "oppsBySalesStage": "Opportunities by sales stage",
+    "newOppsByMonth2023": "New opportunities by month (2023)"
+  },
+  "CommandComponent": {
+    "shortcutHint": "Press ⌘J to open command menu",
+    "placeholder": "Type a command or search...",
+    "noResults": "No results found.",
+    "settings": "Settings",
+    "dashboard": "Dashboard",
+    "profileSettings": "Profile settings",
+    "logout": "Log out"
   }
 }

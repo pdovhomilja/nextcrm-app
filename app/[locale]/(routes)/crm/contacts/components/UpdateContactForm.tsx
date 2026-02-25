@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
+import { useTranslations } from "next-intl";
 
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,8 @@ export function UpdateContactForm({
 }: UpdateContactFormProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const t = useTranslations("CrmContactForm");
+  const c = useTranslations("Common");
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -83,9 +86,9 @@ export function UpdateContactForm({
   });
 
   const contactType = [
-    { name: "Customer", id: "Customer" },
-    { name: "Partner", id: "Partner" },
-    { name: "Vendor", id: "Vendor" },
+    { name: t("customer"), id: "Customer" },
+    { name: t("partner"), id: "Partner" },
+    { name: t("vendor"), id: "Vendor" },
   ];
 
   const onSubmit = async (data: NewAccountFormValues) => {
@@ -93,13 +96,13 @@ export function UpdateContactForm({
     try {
       await axios.put("/api/crm/contacts", data);
       toast({
-        title: "Success",
-        description: "Contact updated successfully",
+        title: c("success"),
+        description: t("updateSuccess"),
       });
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error",
+        title: c("error"),
         description: error?.response?.data,
       });
     } finally {
@@ -110,7 +113,7 @@ export function UpdateContactForm({
   };
 
   if (!accounts || !initialData)
-    return <div>Something went wrong, there is no data for form</div>;
+    return <div>{c("somethingWentWrong")}</div>;
 
   const yearArray = Array.from(
     //start in 1923 and count to +100 years
@@ -128,7 +131,7 @@ export function UpdateContactForm({
               name="first_name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>First name</FormLabel>
+                  <FormLabel>{t("firstName")}</FormLabel>
                   <FormControl>
                     <Input disabled={isLoading} placeholder="John" {...field} />
                   </FormControl>
@@ -141,7 +144,7 @@ export function UpdateContactForm({
               name="last_name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Last name</FormLabel>
+                  <FormLabel>{t("lastName")}</FormLabel>
                   <FormControl>
                     <Input disabled={isLoading} placeholder="Doe" {...field} />
                   </FormControl>
@@ -154,7 +157,7 @@ export function UpdateContactForm({
               name="mobile_phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Mobile phone</FormLabel>
+                  <FormLabel>{t("mobilePhone")}</FormLabel>
                   <FormControl>
                     <Input
                       disabled={isLoading}
@@ -172,7 +175,7 @@ export function UpdateContactForm({
               name="office_phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Office phone</FormLabel>
+                  <FormLabel>{t("officePhone")}</FormLabel>
                   <FormControl>
                     <Input
                       disabled={isLoading}
@@ -189,7 +192,7 @@ export function UpdateContactForm({
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>{t("email")}</FormLabel>
                   <FormControl>
                     <Input
                       disabled={isLoading}
@@ -206,7 +209,7 @@ export function UpdateContactForm({
               name="personal_email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Personal email</FormLabel>
+                  <FormLabel>{t("personalEmail")}</FormLabel>
                   <FormControl>
                     <Input
                       disabled={isLoading}
@@ -223,7 +226,7 @@ export function UpdateContactForm({
               name="website"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Website</FormLabel>
+                  <FormLabel>{t("website")}</FormLabel>
                   <FormControl>
                     <Input
                       disabled={isLoading}
@@ -235,7 +238,7 @@ export function UpdateContactForm({
                 </FormItem>
               )}
             />
-            <h3>Birthday - (optional)</h3>
+            <h3>{t("birthday")}</h3>
             <div className="flex space-x-3 w-full mx-auto">
               <FormField
                 control={form.control}
@@ -244,7 +247,7 @@ export function UpdateContactForm({
                   <FormItem className="flex flex-col">
                     <div className="flex space-x-2 w-32">
                       <Select onValueChange={field.onChange}>
-                        <SelectTrigger>Year</SelectTrigger>
+                        <SelectTrigger>{t("year")}</SelectTrigger>
                         <SelectContent className="flex overflow-y-auto h-56">
                           {yearArray.map((yearOption) => (
                             <SelectItem
@@ -268,7 +271,7 @@ export function UpdateContactForm({
                   <FormItem className="flex flex-col">
                     <div className="flex space-x-2 w-28">
                       <Select onValueChange={field.onChange}>
-                        <SelectTrigger>Month</SelectTrigger>
+                        <SelectTrigger>{t("month")}</SelectTrigger>
                         <SelectContent>
                           {Array.from({ length: 12 }, (_, i) => i + 1).map(
                             (monthOption) => (
@@ -294,7 +297,7 @@ export function UpdateContactForm({
                   <FormItem className="flex flex-col">
                     <div className="flex space-x-2">
                       <Select onValueChange={field.onChange}>
-                        <SelectTrigger>Day</SelectTrigger>
+                        <SelectTrigger>{t("day")}</SelectTrigger>
                         <SelectContent>
                           {Array.from({ length: 31 }, (_, i) => i + 1).map(
                             (dayOption) => (
@@ -319,11 +322,11 @@ export function UpdateContactForm({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>{c("description")}</FormLabel>
                   <FormControl>
                     <Textarea
                       disabled={isLoading}
-                      placeholder="Useful information about the contact"
+                      placeholder={t("descriptionPlaceholder")}
                       {...field}
                     />
                   </FormControl>
@@ -338,12 +341,12 @@ export function UpdateContactForm({
                   name="assigned_to"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Assigned user</FormLabel>
+                      <FormLabel>{t("assignedUser")}</FormLabel>
                       <FormControl>
                         <UserSearchCombobox
                           value={field.value ?? ""}
                           onChange={field.onChange}
-                          placeholder="Choose a user"
+                          placeholder={t("assignedUserPlaceholder")}
                           disabled={isLoading}
                         />
                       </FormControl>
@@ -356,14 +359,14 @@ export function UpdateContactForm({
                   name="assigned_account"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Assign an Account</FormLabel>
+                      <FormLabel>{t("assignAccount")}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Choose assigned account " />
+                            <SelectValue placeholder={t("assignAccountPlaceholder")} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="flex overflow-y-auto h-56">
@@ -383,7 +386,7 @@ export function UpdateContactForm({
                   name="position"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Position</FormLabel>
+                      <FormLabel>{t("position")}</FormLabel>
                       <FormControl>
                         <Input
                           disabled={isLoading}
@@ -402,7 +405,7 @@ export function UpdateContactForm({
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                       <div className="space-y-0.5">
                         <FormLabel className="text-sm">
-                          Is contact active?
+                          {t("isActive")}
                         </FormLabel>
                       </div>
                       <FormControl>
@@ -419,14 +422,14 @@ export function UpdateContactForm({
                   name="type"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Assigned user</FormLabel>
+                      <FormLabel>{t("contactType")}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Choose contact type " />
+                            <SelectValue placeholder={t("contactTypePlaceholder")} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="flex overflow-y-auto h-56">
@@ -448,7 +451,7 @@ export function UpdateContactForm({
                   name="social_twitter"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Twitter</FormLabel>
+                      <FormLabel>{t("twitter")}</FormLabel>
                       <FormControl>
                         <Input
                           disabled={isLoading}
@@ -465,7 +468,7 @@ export function UpdateContactForm({
                   name="social_facebook"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Facebook</FormLabel>
+                      <FormLabel>{t("facebook")}</FormLabel>
                       <FormControl>
                         <Input
                           disabled={isLoading}
@@ -482,7 +485,7 @@ export function UpdateContactForm({
                   name="social_linkedin"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Linkedin</FormLabel>
+                      <FormLabel>{t("linkedin")}</FormLabel>
                       <FormControl>
                         <Input
                           disabled={isLoading}
@@ -499,7 +502,7 @@ export function UpdateContactForm({
                   name="social_skype"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Skype</FormLabel>
+                      <FormLabel>{t("skype")}</FormLabel>
                       <FormControl>
                         <Input
                           disabled={isLoading}
@@ -516,7 +519,7 @@ export function UpdateContactForm({
                   name="social_youtube"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>YouTube</FormLabel>
+                      <FormLabel>{t("youtube")}</FormLabel>
                       <FormControl>
                         <Input
                           disabled={isLoading}
@@ -533,7 +536,7 @@ export function UpdateContactForm({
                   name="social_tiktok"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>TikTok</FormLabel>
+                      <FormLabel>{t("tiktok")}</FormLabel>
                       <FormControl>
                         <Input
                           disabled={isLoading}
@@ -553,10 +556,10 @@ export function UpdateContactForm({
           <Button disabled={isLoading} type="submit">
             {isLoading ? (
               <span className="flex items-center animate-pulse">
-                Saving data ...
+                {c("savingData")}
               </span>
             ) : (
-              "Update contact"
+              t("updateButton")
             )}
           </Button>
         </div>

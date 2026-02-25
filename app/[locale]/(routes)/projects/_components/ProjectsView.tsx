@@ -15,9 +15,11 @@ import H2Title from "@/components/typography/h2";
 import { ProjectsDataTable } from "../table-components/data-table";
 import { columns } from "../table-components/columns";
 import AiAssistant from "./AiAssistant";
+import { getTranslations } from "next-intl/server";
 
 const ProjectsView = async () => {
   const session = await getServerSession(authOptions);
+  const t = await getTranslations("ProjectsPage");
 
   if (!session) return null;
 
@@ -31,18 +33,18 @@ const ProjectsView = async () => {
         <NewProjectDialog />
         <NewTaskDialog boards={boards} />
         <Button asChild>
-          <Link href="/projects/tasks">All Tasks</Link>
+          <Link href="/projects/tasks">{t("allTasks")}</Link>
         </Button>
         <Button asChild>
-          <Link href={`/projects/tasks/${userId}`}>My Tasks</Link>
+          <Link href={`/projects/tasks/${userId}`}>{t("myTasks")}</Link>
         </Button>
         <Button asChild>
-          <Link href="/projects/dashboard">Dashboard</Link>
+          <Link href="/projects/dashboard">{t("dashboard")}</Link>
         </Button>
         <AiAssistant session={session} />
       </div>
       <div className="pt-2 space-y-3">
-        <H2Title>Projects</H2Title>
+        <H2Title>{t("projects")}</H2Title>
         <ProjectsDataTable data={boards} columns={columns} />
       </div>
     </>

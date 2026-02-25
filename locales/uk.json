@@ -47,5 +47,406 @@
   },
   "CrmModuleMenuComponent": {
     "menuTitle": "Продажі"
+  },
+  "Common": {
+    "success": "Успіх",
+    "error": "Помилка",
+    "cancel": "Скасувати",
+    "create": "Створити",
+    "update": "Оновити",
+    "activate": "Активувати",
+    "savingData": "Збереження даних ...",
+    "somethingWentWrong": "Щось пішло не так. Будь ласка, спробуйте ще раз.",
+    "assignedTo": "Призначено",
+    "selectUser": "Виберіть користувача",
+    "description": "Опис",
+    "priorityLabel": "Пріоритет",
+    "priorityPlaceholder": "Виберіть пріоритет",
+    "low": "Низький",
+    "medium": "Середній",
+    "high": "Високий",
+    "critical": "Критичний"
+  },
+  "LanguageSelector": {
+    "english": "Англійська",
+    "czech": "Чеська",
+    "german": "Німецька",
+    "ukrainian": "Українська",
+    "selectPlaceholder": "Виберіть мову...",
+    "searchPlaceholder": "Пошук мови...",
+    "noResult": "Мову не знайдено.",
+    "loadingModal": "Змінюю мову...",
+    "success": "Мову змінено",
+    "changedTo": "Мову змінено на {language}",
+    "error": "Помилка зміни мови"
+  },
+  "CrmPage": {
+    "title": "CRM",
+    "description": "Все, що вам потрібно знати про продажі",
+    "accounts": {
+      "pageTitle": "Компанії",
+      "pageDescription": "Все, що вам потрібно знати про ваші компанії",
+      "viewTitle": "Компанії",
+      "addNew": "Додати нову компанію",
+      "sheetTitle": "Створити нову компанію",
+      "sheetDescription": "Додайте нову компанію або організацію до вашої CRM-системи.",
+      "empty": "Не знайдено призначених компаній"
+    },
+    "contacts": {
+      "pageTitle": "Контакти",
+      "pageDescription": "Все, що вам потрібно знати про ваші контакти",
+      "viewTitle": "Контакти",
+      "addNew": "Додати новий контакт",
+      "sheetTitle": "Створити новий контакт",
+      "sheetDescription": "Додайте новий контакт до вашої CRM-системи.",
+      "empty": "Не знайдено призначених контактів"
+    },
+    "opportunities": {
+      "pageTitle": "Можливості",
+      "pageDescription": "Все, що вам потрібно знати про ваші можливості",
+      "viewTitle": "Можливості",
+      "addNew": "Додати нову можливість",
+      "sheetTitle": "Створити нову можливість",
+      "sheetDescription": "Створіть нову торгову можливість з інформацією про компанію, контакт та угоду",
+      "empty": "Не знайдено призначених можливостей"
+    },
+    "leads": {
+      "pageTitle": "Ліди",
+      "pageDescription": "Все, що вам потрібно знати про ваші ліди",
+      "viewTitle": "Ліди",
+      "addNew": "Додати новий лід",
+      "sheetTitle": "Створити новий лід",
+      "sheetDescription": "Заповніть деталі для створення нового ліда",
+      "empty": "Не знайдено призначених лідів"
+    },
+    "contracts": {
+      "pageTitle": "Договори",
+      "pageDescription": "Все, що вам потрібно знати про ваші договори",
+      "viewTitle": "Договори",
+      "addNew": "Додати новий договір",
+      "sheetTitle": "Створити новий договір",
+      "sheetDescription": "Заповніть деталі для створення нового договору",
+      "empty": "Не знайдено призначених договорів"
+    }
+  },
+  "CrmAccountForm": {
+    "accountName": "Назва компанії",
+    "officePhone": "Офісний телефон",
+    "email": "Електронна пошта",
+    "website": "Веб-сайт",
+    "accountId": "ЄДРПОУ",
+    "vatNumber": "ПДВ номер",
+    "billingStreet": "Вулиця для виставлення рахунку",
+    "billingPostalCode": "Поштовий індекс для виставлення рахунку",
+    "billingCity": "Місто для виставлення рахунку",
+    "billingState": "Область для виставлення рахунку",
+    "billingCountry": "Країна для виставлення рахунку",
+    "shippingStreet": "Вулиця доставки",
+    "shippingPostalCode": "Поштовий індекс доставки",
+    "shippingCity": "Місто доставки",
+    "shippingState": "Область доставки",
+    "shippingCountry": "Країна доставки",
+    "annualRevenue": "Річний дохід",
+    "isMemberOf": "Є членом",
+    "industry": "Виберіть галузь",
+    "industryPlaceholder": "Виберіть галузь нової компанії",
+    "createButton": "Створити компанію",
+    "updateButton": "Оновити компанію",
+    "createSuccess": "Компанію успішно створено",
+    "updateSuccess": "Компанію успішно оновлено",
+    "errorDescription": "Щось пішло не так. Будь ласка, спробуйте ще раз."
+  },
+  "CrmContactForm": {
+    "firstName": "Ім'я",
+    "lastName": "Прізвище",
+    "mobilePhone": "Мобільний телефон",
+    "officePhone": "Офісний телефон",
+    "email": "Електронна пошта",
+    "personalEmail": "Особиста електронна пошта",
+    "website": "Веб-сайт",
+    "birthday": "День народження - (необов'язково)",
+    "year": "Рік",
+    "month": "Місяць",
+    "day": "День",
+    "descriptionPlaceholder": "Корисна інформація про контакт",
+    "assignedUser": "Призначений користувач",
+    "assignedUserPlaceholder": "Виберіть користувача",
+    "assignAccount": "Призначити компанію",
+    "assignAccountPlaceholder": "Виберіть призначену компанію",
+    "position": "Посада",
+    "isActive": "Контакт активний?",
+    "contactType": "Тип контакту",
+    "contactTypePlaceholder": "Виберіть тип контакту",
+    "customer": "Клієнт",
+    "partner": "Партнер",
+    "vendor": "Постачальник",
+    "twitter": "Twitter",
+    "facebook": "Facebook",
+    "linkedin": "LinkedIn",
+    "skype": "Skype",
+    "youtube": "YouTube",
+    "tiktok": "TikTok",
+    "createButton": "Створити контакт",
+    "updateButton": "Оновити контакт",
+    "createSuccess": "Контакт успішно створено",
+    "updateSuccess": "Контакт успішно оновлено"
+  },
+  "CrmOpportunityForm": {
+    "name": "Назва можливості",
+    "closeDate": "Очікувана дата закриття",
+    "closeDatePlaceholder": "Виберіть очікувану дату закриття",
+    "salesType": "Тип продажу",
+    "salesTypePlaceholder": "Виберіть тип",
+    "saleStage": "Стадія продажу",
+    "saleStagePlaceholder": "Виберіть поточну стадію",
+    "budget": "Бюджет",
+    "currency": "Валюта",
+    "expectedRevenue": "Очікуваний дохід",
+    "nextStep": "Наступний крок",
+    "nextStepPlaceholder": "Опишіть наступний крок",
+    "assignedAccount": "Призначена компанія",
+    "createSuccess": "Можливість успішно створено",
+    "updateSuccess": "Можливість успішно оновлено"
+  },
+  "CrmLeadForm": {
+    "firstName": "Ім'я",
+    "lastName": "Прізвище",
+    "company": "Компанія",
+    "jobTitle": "Посада",
+    "email": "Електронна пошта",
+    "phone": "Телефон",
+    "leadSource": "Джерело ліда",
+    "leadSourcePlaceholder": "Виберіть джерело ліда",
+    "referredBy": "Рекомендовано",
+    "campaign": "Кампанія",
+    "assignAccount": "Призначити компанію",
+    "assignAccountPlaceholder": "Виберіть компанію",
+    "createButton": "Створити лід",
+    "updateButton": "Оновити лід",
+    "createSuccess": "Лід успішно створено",
+    "updateSuccess": "Лід успішно оновлено"
+  },
+  "CrmContractForm": {
+    "title": "Назва",
+    "value": "Вартість",
+    "startDate": "Дата початку",
+    "endDate": "Дата закінчення",
+    "renewalReminderDate": "Дата нагадування про поновлення",
+    "customerSignedDate": "Дата підписання клієнтом",
+    "companySignedDate": "Дата підписання компанією",
+    "account": "Компанія",
+    "createButton": "Створити договір",
+    "createSuccess": "Договір успішно створено"
+  },
+  "ProfilePage": {
+    "title": "Профіль",
+    "description": "Керуйте налаштуваннями профілю",
+    "profilePhoto": "Фото профілю",
+    "profile": "Профіль",
+    "passwordChange": "Зміна пароля",
+    "notionIntegration": "Інтеграція Notion",
+    "language": "Мова",
+    "openAiIntegration": "Інтеграція OpenAI"
+  },
+  "ProfileForm": {
+    "fullName": "Повне ім'я",
+    "username": "Ім'я користувача",
+    "company": "Компанія",
+    "updateButton": "Оновити профіль",
+    "photoUpdated": "Фото оновлено",
+    "photoUpdatedDescription": "Ваше фото профілю було оновлено.",
+    "photoError": "Помилка",
+    "photoErrorDescription": "Щось пішло не так. Будь ласка, спробуйте ще раз."
+  },
+  "PasswordChangeForm": {
+    "password": "Пароль",
+    "confirmPassword": "Підтвердження пароля",
+    "success": "Пароль успішно змінено",
+    "errorPrefix": "Помилка: "
+  },
+  "NotionForm": {
+    "databaseId": "ID бази даних Notion",
+    "secretKey": "Секретний ключ Notion",
+    "activateButton": "Активувати Notion"
+  },
+  "OpenAiForm": {
+    "organizationId": "ID організації OpenAI",
+    "secretKey": "Секретний ключ OpenAI",
+    "activateButton": "Активувати OpenAI",
+    "orgIdTooShort": "ID організації занадто короткий",
+    "orgIdTooLong": "ID організації занадто довгий",
+    "secretKeyTooShort": "Секретний ключ занадто короткий"
+  },
+  "AdminPage": {
+    "title": "Адміністрування",
+    "notAdmin": "Ви не адміністратор",
+    "accessNotAllowed": "Доступ не дозволено",
+    "setupDescription": "Налаштуйте вашу CRM-систему",
+    "usersAdmin": "Користувачі",
+    "modulesAdmin": "Модулі",
+    "users": {
+      "title": "Користувачі",
+      "description": "Керуйте користувачами вашої CRM",
+      "inviteHeading": "Запросити нового користувача"
+    },
+    "modules": {
+      "title": "Модулі",
+      "description": "Керуйте модулями вашої CRM"
+    },
+    "inviteForm": {
+      "name": "Ім'я",
+      "email": "Електронна пошта",
+      "success": "Успіх",
+      "invited": "Користувача успішно запрошено",
+      "error": "Помилка",
+      "errorDesc": "Щось пішло не так. Будь ласка, спробуйте ще раз."
+    },
+    "sendMail": {
+      "trigger": "Надіслати листа всім",
+      "title": "Надіслати листа всім користувачам",
+      "description": "Надіслати електронний лист усім активним користувачам",
+      "messageTitle": "Тема повідомлення",
+      "message": "Повідомлення",
+      "sendButton": "Надіслати",
+      "sent": "Лист успішно надіслано"
+    }
+  },
+  "ProjectsPage": {
+    "title": "Проекти",
+    "description": "Керуйте своїми проектами",
+    "allTasks": "Всі завдання",
+    "myTasks": "Мої завдання",
+    "dashboard": "Панель приладів",
+    "projects": "Проекти",
+    "dashboardTitle": "Панель проектів",
+    "dashboardDescription": "Огляд усіх проектів",
+    "tasks": {
+      "title": "Завдання",
+      "description": "Керуйте своїми завданнями",
+      "newTask": "Нове завдання"
+    },
+    "newProject": {
+      "trigger": "Новий проект",
+      "title": "Створити новий проект",
+      "description": "Додайте новий проект до вашого робочого простору",
+      "nameLabel": "Назва проекту",
+      "namePlaceholder": "Введіть назву проекту",
+      "descLabel": "Опис",
+      "descPlaceholder": "Введіть опис проекту",
+      "visibilityLabel": "Видимість",
+      "public": "Публічний",
+      "private": "Приватний",
+      "cancel": "Скасувати",
+      "create": "Створити",
+      "successMsg": "Проект успішно створено"
+    },
+    "newSection": {
+      "trigger": "Новий розділ",
+      "title": "Створити новий розділ",
+      "description": "Додайте новий розділ до цієї дошки",
+      "nameLabel": "Назва розділу",
+      "namePlaceholder": "Введіть назву розділу",
+      "cancel": "Скасувати",
+      "create": "Створити",
+      "successMsg": "Розділ успішно створено"
+    },
+    "newTask": {
+      "trigger": "Нове завдання",
+      "title": "Створити нове завдання",
+      "description": "Додайте нове завдання до вашого проекту",
+      "nameLabel": "Назва завдання",
+      "namePlaceholder": "Введіть назву завдання",
+      "descLabel": "Опис",
+      "descPlaceholder": "Введіть опис завдання",
+      "dueDateLabel": "Термін виконання",
+      "assignedToPlaceholder": "Призначити користувачу",
+      "projectLabel": "Проект",
+      "projectPlaceholder": "Виберіть проект",
+      "cancel": "Скасувати",
+      "create": "Створити",
+      "successMsg": "Завдання успішно створено"
+    },
+    "dataTable": {
+      "filterPlaceholder": "Фільтрувати проекти...",
+      "visibility": "Видимість",
+      "reset": "Скинути",
+      "view": "Вигляд",
+      "toggleColumns": "Перемикання стовпців",
+      "rowsSelected": "{selected} з {total} рядків вибрано.",
+      "rowsPerPage": "Рядків на сторінку",
+      "goToFirst": "Перейти на першу сторінку",
+      "goToPrev": "Перейти на попередню сторінку",
+      "goToNext": "Перейти на наступну сторінку",
+      "goToLast": "Перейти на останню сторінку",
+      "viewDetail": "Переглянути деталі",
+      "edit": "Редагувати",
+      "watchProject": "Стежити за проектом",
+      "stopWatching": "Припинити стежити",
+      "delete": "Видалити",
+      "openMenu": "Відкрити меню",
+      "editProject": "Редагувати проект",
+      "editProjectDesc": "Редагувати деталі проекту",
+      "deleteError": "Помилка видалення проекту",
+      "watchError": "Помилка оновлення статусу спостереження"
+    }
+  },
+  "InvoicePage": {
+    "title": "Рахунки-фактури",
+    "description": "Керуйте своїми рахунками-фактурами",
+    "uploadPdf": "Завантажити PDF",
+    "myInvoices": "Мої рахунки-фактури",
+    "checkForNew": "Перевірити нові",
+    "checking": "Перевіряю...",
+    "somethingWentWrong": "Щось пішло не так",
+    "settings": {
+      "title": "Налаштування",
+      "companySettings": "Налаштування компанії",
+      "description": "Керуйте налаштуваннями рахунків-фактур"
+    },
+    "dataTable": {
+      "filterPlaceholder": "Фільтрувати рахунки-фактури...",
+      "reset": "Скинути"
+    },
+    "newTask": {
+      "title": "Створити нове завдання",
+      "description": "Додайте нове завдання для цього рахунку-фактури"
+    }
+  },
+  "DocumentsPage": {
+    "title": "Документи",
+    "description": "Керуйте своїми документами",
+    "uploadPdf": "Завантажити PDF",
+    "uploadImages": "Завантажити зображення",
+    "uploadOther": "Завантажити інше",
+    "dataTable": {
+      "filterPlaceholder": "Фільтрувати документи...",
+      "reset": "Скинути"
+    }
+  },
+  "EmployeesPage": {
+    "title": "Співробітники",
+    "description": "Керуйте своїми співробітниками",
+    "moduleContent": "Вміст модуля співробітників"
+  },
+  "ReportsPage": {
+    "title": "Звіти",
+    "description": "Переглянути бізнес-звіти",
+    "newUsersByMonthOverallTitle": "Нові користувачі за місяць (загалом)",
+    "newUsersByMonthOverallChart": "Нові користувачі за місяць загалом",
+    "newUsersByMonth2023Title": "Нові користувачі за місяць (2023)",
+    "newUsersByMonth2023Chart": "Нові користувачі за місяць 2023",
+    "newUsersByMonth2024Title": "Нові користувачі за місяць (2024)",
+    "newTasksByMonth2023": "Нові завдання за місяць (2023)",
+    "oppsBySalesStage": "Можливості за стадією продажу",
+    "newOppsByMonth2023": "Нові можливості за місяць (2023)"
+  },
+  "CommandComponent": {
+    "shortcutHint": "Натисніть ⌘J, щоб відкрити командне меню",
+    "placeholder": "Введіть команду або пошук...",
+    "noResults": "Результатів не знайдено.",
+    "settings": "Налаштування",
+    "dashboard": "Панель приладів",
+    "profileSettings": "Налаштування профілю",
+    "logout": "Вийти"
   }
 }

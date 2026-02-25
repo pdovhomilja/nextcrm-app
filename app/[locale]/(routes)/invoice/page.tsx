@@ -19,24 +19,26 @@ import { getBoards } from "@/actions/projects/get-boards";
 import NewTaskDialog from "./dialogs/NewTask";
 
 import CronButton from "./components/cron-button";
+import { getTranslations } from "next-intl/server";
 
 const InvoicePage = async () => {
   const session = await getServerSession(authOptions);
   const invoices: any = await getInvoices();
   const myAccountSettings: MyAccount | null = await getAccountSettings();
   const boards = await getBoards(session?.user.id!);
+  const t = await getTranslations("InvoicePage");
 
   return (
     <Container
-      title="Invoices"
-      description={"Everything you need to know about invoices and TAX"}
+      title={t("title")}
+      description={t("description")}
     >
       <NewTaskDialog boards={boards} />
       <div className="flex justify-between py-5 w-full">
         <div className="flex space-x-2">
-          <ModalDropzone buttonLabel="Upload pdf" />
+          <ModalDropzone buttonLabel={t("uploadPdf")} />
           <Button asChild>
-            <Link href={`/invoice/${session?.user.id}`}>My invoices</Link>
+            <Link href={`/invoice/${session?.user.id}`}>{t("myInvoices")}</Link>
           </Button>
           <CronButton />
         </div>
