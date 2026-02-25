@@ -3,6 +3,7 @@
 import LoadingComponent from "@/components/LoadingComponent";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 import {
   Dialog,
   DialogContent,
@@ -47,11 +48,10 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 type Props = {
-  users: any;
   boards: any;
 };
 
-const NewTaskDialog = ({ users, boards }: Props) => {
+const NewTaskDialog = ({ boards }: Props) => {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -219,23 +219,14 @@ const NewTaskDialog = ({ users, boards }: Props) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Assigned to</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select assigned user" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="h-56 overflow-y-auto">
-                          {users.map((user: any) => (
-                            <SelectItem key={user.id} value={user.id}>
-                              {user.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <UserSearchCombobox
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          placeholder="Select assigned user"
+                          disabled={isLoading}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

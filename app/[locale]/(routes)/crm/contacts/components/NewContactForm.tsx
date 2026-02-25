@@ -28,30 +28,20 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 import { Switch } from "@/components/ui/switch";
-import useDebounce from "@/hooks/useDebounce";
+import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 
 //TODO: fix all the types
 type NewTaskFormProps = {
-  users: any[];
   accounts: any[];
   onFinish: () => void;
 };
 
 export function NewContactForm({
-  users,
   accounts,
   onFinish,
 }: NewTaskFormProps) {
   const router = useRouter();
   const { toast } = useToast();
-
-  const [searchTerm, setSearchTerm] = useState("");
-
-  const debounceSearchTerm = useDebounce(searchTerm, 1000);
-
-  const filteredData = users.filter((item) =>
-    item.name.toLowerCase().includes(debounceSearchTerm.toLowerCase())
-  );
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -143,19 +133,10 @@ export function NewContactForm({
     }
   };
 
-  //console.log(filteredData, "filteredData");
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="h-full px-10">
-        {/*        <div>
-          <pre>
-            <code>{JSON.stringify(form.formState, null, 2)}</code>
-            <code>{JSON.stringify(form.watch(), null, 2)}</code>
-            <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
-          </pre>
-        </div> */}
-        <div className=" w-[800px] text-sm">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="h-full">
+        <div className="w-full text-sm">
           <div className="pb-5 space-y-2">
             <FormField
               control={form.control}
@@ -368,36 +349,22 @@ export function NewContactForm({
                 </FormItem>
               )}
             />
-            <div className="flex space-x-5">
-              <div className="w-1/2 space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
                 <FormField
                   control={form.control}
                   name="assigned_to"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Assigned user</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Choose an user " />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="h-96 overflow-y-auto">
-                          <Input
-                            type="text"
-                            placeholder="Search in users ..."
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                          />
-                          {filteredData.map((item, index) => (
-                            <SelectItem key={index} value={item.id}>
-                              {item.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <UserSearchCombobox
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          placeholder="Choose a user"
+                          disabled={isLoading}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -452,7 +419,7 @@ export function NewContactForm({
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                       <div className="space-y-0.5">
-                        <FormLabel className="text-base">
+                        <FormLabel className="text-sm">
                           Is contact active?
                         </FormLabel>
                       </div>
@@ -470,7 +437,7 @@ export function NewContactForm({
                   name="type"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Assigned user</FormLabel>
+                      <FormLabel>Contact type</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
@@ -493,7 +460,7 @@ export function NewContactForm({
                   )}
                 />
               </div>
-              <div className="w-1/2 space-y-2">
+              <div className="space-y-2">
                 <FormField
                   control={form.control}
                   name="social_twitter"

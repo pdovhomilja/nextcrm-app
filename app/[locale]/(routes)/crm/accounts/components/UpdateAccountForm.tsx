@@ -34,6 +34,7 @@ import fetcher from "@/lib/fetcher";
 import useSWR from "swr";
 import SuspenseLoading from "@/components/loadings/suspense";
 import { crm_Accounts } from "@prisma/client";
+import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 
 interface UpdateAccountFormProps {
   //TODO: fix this any
@@ -51,10 +52,6 @@ export function UpdateAccountForm({
 
   const { data: industries, isLoading: isLoadingIndustries } = useSWR(
     "/api/crm/industries",
-    fetcher
-  );
-  const { data: users, isLoading: isLoadingUsers } = useSWR(
-    "/api/user",
     fetcher
   );
 
@@ -145,21 +142,21 @@ export function UpdateAccountForm({
     }
   };
 
-  if (isLoadingIndustries || isLoadingUsers)
+  if (isLoadingIndustries)
     return (
       <div>
         <SuspenseLoading />
       </div>
     );
 
-  if (!industries || !users || !initialData)
+  if (!industries || !initialData)
     return <div>Something went wrong, there is no data for form</div>;
 
   return (
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="w-full h-full px-10"
+        className="w-full h-full px-4 md:px-10"
       >
         {/*    <div>
           <pre>
@@ -170,7 +167,7 @@ export function UpdateAccountForm({
           <code>{JSON.stringify(initialData, null, 2)}</code>
         </pre> */}
 
-        <div className=" w-[800px] text-sm">
+        <div className="w-full text-sm">
           <div className="pb-5 space-y-2">
             <FormField
               control={form.control}
@@ -277,8 +274,8 @@ export function UpdateAccountForm({
               )}
             />
           </div>
-          <div className="flex gap-5 pb-5">
-            <div className="w-1/2 space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-5">
+            <div className="space-y-2">
               <FormField
                 control={form.control}
                 name="billing_street"
@@ -361,7 +358,7 @@ export function UpdateAccountForm({
                 )}
               />
             </div>
-            <div className="w-1/2 space-y-2">
+            <div className="space-y-2">
               <FormField
                 control={form.control}
                 name="shipping_street"
@@ -445,8 +442,8 @@ export function UpdateAccountForm({
               />
             </div>
           </div>
-          <div className="flex gap-5 pb-5">
-            <div className="w-1/2 space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-5">
+            <div className="space-y-2">
               <FormField
                 control={form.control}
                 name="description"
@@ -465,7 +462,7 @@ export function UpdateAccountForm({
                 )}
               />
             </div>
-            <div className="w-1/2 space-y-2">
+            <div className="space-y-2">
               <FormField
                 control={form.control}
                 name="annual_revenue"
@@ -533,24 +530,14 @@ export function UpdateAccountForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Assigned to</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a user to assign the account" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="overflow-y-auto h-56">
-                        {users &&
-                          users.map((user: any) => (
-                            <SelectItem key={user.id} value={user.id}>
-                              {user.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <UserSearchCombobox
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        placeholder="Select a user"
+                        disabled={isLoading}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -25,43 +24,43 @@ import { columns } from "../opportunities/table-components/columns";
 import { NewOpportunityForm } from "../opportunities/components/NewOpportunityForm";
 import { OpportunitiesDataTable } from "../opportunities/table-components/data-table";
 
+import type { getAllCrmData } from "@/actions/crm/get-crm-data";
+
+type CrmData = Awaited<ReturnType<typeof getAllCrmData>>;
+
+interface OpportunitiesViewProps {
+  data: any[];
+  crmData: CrmData;
+  accountId?: string;
+}
+
 const OpportunitiesView = ({
   data,
   crmData,
   accountId,
-}: {
-  data: any;
-  crmData: any;
-  accountId?: string;
-}) => {
-  const router = useRouter();
-
-  const [dialogOpen, setDialogOpen] = useState(false);
+}: OpportunitiesViewProps) => {
   const [open, setOpen] = useState(false);
 
-  const { users, accounts, contacts, saleTypes, saleStages, campaigns } =
+  const { accounts, contacts, saleTypes, saleStages, campaigns } =
     crmData;
 
-  //console.log(accountId, "accountId");
   return (
     <Card>
       <CardHeader className="pb-3">
         <div className="flex justify-between">
           <div>
-            <CardTitle
-              onClick={() => router.push("/crm/opportunities")}
-              className="cursor-pointer"
-            >
-              Opportunities
+            <CardTitle>
+              <Link href="/crm/opportunities" className="hover:underline">
+                Opportunities
+              </Link>
             </CardTitle>
-            <CardDescription></CardDescription>
           </div>
           <div className="flex space-x-2">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
-                <Button className="my-2 cursor-pointer">+</Button>
+                <Button className="my-2 cursor-pointer" aria-label="Add new opportunity">+</Button>
               </SheetTrigger>
-              <SheetContent className="max-w-3xl overflow-y-auto">
+              <SheetContent className="w-full md:max-w-[771px] overflow-y-auto">
                 <SheetHeader>
                   <SheetTitle>Create new opportunity</SheetTitle>
                   <SheetDescription>
@@ -71,14 +70,13 @@ const OpportunitiesView = ({
                 </SheetHeader>
                 <div className="mt-6 space-y-4">
                   <NewOpportunityForm
-                    users={users}
                     accounts={accounts}
                     contacts={contacts}
                     salesType={saleTypes}
                     saleStages={saleStages}
                     campaigns={campaigns}
                     accountId={accountId}
-                    onDialogClose={() => setDialogOpen(false)}
+                    onDialogClose={() => setOpen(false)}
                   />
                 </div>
               </SheetContent>

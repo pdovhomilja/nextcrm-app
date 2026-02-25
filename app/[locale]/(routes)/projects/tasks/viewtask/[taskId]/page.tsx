@@ -24,7 +24,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Calendar, Shield, User } from "lucide-react";
-import { getActiveUsers } from "@/actions/get-users";
+import { prismadb } from "@/lib/prisma";
 import { getBoards } from "@/actions/projects/get-boards";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -42,11 +42,18 @@ const TaskPage = async (props: TaskPageProps) => {
 
   const { taskId } = params;
   const task: any = await getTask(taskId);
-  const taskDocuments: any = await getTaskDocuments(taskId);
-  const documents: any = await getDocuments();
-  const comments: any = await getTaskComments(taskId);
-  const activeUsers: any = await getActiveUsers();
-  const boards = await getBoards(user?.id!);
+  const [taskDocuments, documents, comments, boards] = await Promise.all([
+    getTaskDocuments(taskId),
+    getDocuments(),
+    getTaskComments(taskId),
+    getBoards(user?.id!),
+  ]);
+  const creatorUser = task?.createdBy
+    ? await prismadb.users.findFirst({
+        where: { id: task.createdBy },
+        select: { name: true },
+      })
+    : null;
 
   //console.log(taskDocuments, "taskDocuments");
 
@@ -141,9 +148,7 @@ const TaskPage = async (props: TaskPageProps) => {
                       Created by
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {activeUsers.find(
-                        (user: any) => user.id === task.createdBy
-                      )?.name || "Unknown"}
+                      {creatorUser?.name || "Unknown"}
                     </p>
                   </div>
                 </div>
@@ -152,7 +157,6 @@ const TaskPage = async (props: TaskPageProps) => {
             <CardFooter className="space-x-2">
               <TaskViewActions
                 taskId={taskId}
-                users={activeUsers}
                 boards={boards}
                 initialData={task}
               />
@@ -174,7 +178,7 @@ const TaskPage = async (props: TaskPageProps) => {
       </div>
 
       <div className="w-full md:w-1/3">
-        <TeamConversations data={comments} taskId={task.id} />
+        <TeamConversations data={comments as any} taskId={task.id} />
       </div>
     </div>
   );

@@ -195,7 +195,7 @@ export function MyAccountSettingsForm({ initialData }: UpdateAccountFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="h-full px-10">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="h-full px-4 md:px-10">
         <div>
           {/*        <pre>
             <code>{JSON.stringify(initialData, null, 2)}</code>
@@ -208,10 +208,10 @@ export function MyAccountSettingsForm({ initialData }: UpdateAccountFormProps) {
           </pre> */}
         </div>
 
-        <div className=" w-[800px] text-sm">
+        <div className="w-full text-sm">
           <div className="pb-5 space-y-2 ">
-            <div className="flex space-x-5 py-2">
-              <div className="w-1/2 space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-2">
+              <div className="space-y-2">
                 <FormField
                   control={form.control}
                   name={"company_name"}
@@ -349,14 +349,14 @@ export function MyAccountSettingsForm({ initialData }: UpdateAccountFormProps) {
                   )}
                 />
               </div>
-              <div className="w-1/2 space-y-2">
+              <div className="space-y-2">
                 <FormField
                   control={form.control}
                   name="is_person"
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                       <div className="space-y-0.5">
-                        <FormLabel className="text-base">
+                        <FormLabel className="text-sm">
                           Is Company a person?
                         </FormLabel>
                       </div>
@@ -440,8 +440,8 @@ export function MyAccountSettingsForm({ initialData }: UpdateAccountFormProps) {
               </div>
             </div>
           </div>
-          <div className="flex space-x-5 py-2">
-            <div className="w-1/2 space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-2">
+            <div className="space-y-2">
               <FormField
                 control={form.control}
                 name={"phone_prefix"}
@@ -511,7 +511,7 @@ export function MyAccountSettingsForm({ initialData }: UpdateAccountFormProps) {
                 )}
               />
             </div>
-            <div className="w-1/2 space-y-2">
+            <div className="space-y-2">
               <FormField
                 control={form.control}
                 name={"fax_prefix"}
@@ -549,8 +549,8 @@ export function MyAccountSettingsForm({ initialData }: UpdateAccountFormProps) {
             </div>
           </div>
 
-          <div className="flex space-x-5 py-2">
-            <div className="w-1/2 space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-2">
+            <div className="space-y-2">
               <FormField
                 control={form.control}
                 name={"street"}
@@ -634,7 +634,7 @@ export function MyAccountSettingsForm({ initialData }: UpdateAccountFormProps) {
                 )}
               />
             </div>
-            <div className="w-1/2 space-y-2">
+            <div className="space-y-2">
               <FormField
                 control={form.control}
                 name={"billing_street"}
