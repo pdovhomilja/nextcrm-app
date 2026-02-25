@@ -32,7 +32,8 @@ import {
 import { toast } from "@/components/ui/use-toast";
 
 import axios from "axios";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "@/i18n/navigation";
+import { useLocale } from "next-intl";
 import { useState } from "react";
 import LoadingModal from "./modals/loading-modal";
 
@@ -55,9 +56,12 @@ type Props = {
 
 export function SetLanguage({ userId }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
+  const locale = useLocale();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
+    defaultValues: { language: locale },
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -68,17 +72,15 @@ export function SetLanguage({ userId }: Props) {
       await axios.put(`/api/user/${userId}/set-language`, data);
       toast({
         title: "Success",
-        description: "You change user language to: " + data.language,
+        description: "Language changed to: " + data.language,
       });
+      router.replace(pathname, { locale: data.language });
     } catch (e) {
-      console.log(e, "error");
       toast({
         title: "Error",
         description: "Something went wrong.",
         variant: "destructive",
       });
-    } finally {
-      router.refresh();
       setIsLoading(false);
     }
   }
