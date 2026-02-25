@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import {
   Card,
@@ -35,6 +36,7 @@ interface AccountsViewProps {
 
 const AccountsView = ({ data, crmData }: AccountsViewProps) => {
   const [open, setOpen] = useState(false);
+  const t = useTranslations("CrmPage");
 
   const { industries } = crmData;
 
@@ -45,20 +47,20 @@ const AccountsView = ({ data, crmData }: AccountsViewProps) => {
           <div>
             <CardTitle>
               <Link href="/crm/accounts" className="hover:underline">
-                Accounts
+                {t("accounts.viewTitle")}
               </Link>
             </CardTitle>
           </div>
           <div className="flex space-x-2">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
-                <Button size="sm" aria-label="Add new account">+</Button>
+                <Button size="sm" aria-label={t("accounts.addNew")}>+</Button>
               </SheetTrigger>
               <SheetContent className="w-full md:max-w-[771px] overflow-y-auto">
                 <SheetHeader>
-                  <SheetTitle>Create new Account</SheetTitle>
+                  <SheetTitle>{t("accounts.sheetTitle")}</SheetTitle>
                   <SheetDescription>
-                    Add a new company or organization to your CRM system. Fill in the account details and industry information.
+                    {t("accounts.sheetDescription")}
                   </SheetDescription>
                 </SheetHeader>
                 <div className="mt-6 space-y-4">
@@ -75,7 +77,7 @@ const AccountsView = ({ data, crmData }: AccountsViewProps) => {
       </CardHeader>
       {!data ||
         (data.length === 0 ? (
-          <CardContent>No assigned accounts found</CardContent>
+          <CardContent>{t("accounts.empty")}</CardContent>
         ) : (
           <CardContent>
             <AccountDataTable

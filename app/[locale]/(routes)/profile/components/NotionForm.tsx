@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +35,7 @@ const FormSchema = z.object({
 
 export function NotionForm({ userId }: { userId: string }) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const t = useTranslations("NotionForm");
 
   const router = useRouter();
 
@@ -80,7 +82,7 @@ export function NotionForm({ userId }: { userId: string }) {
           name="databaseId"
           render={({ field }) => (
             <FormItem className="w-1/3">
-              <FormLabel>Database ID</FormLabel>
+              <FormLabel>{t("databaseId")}</FormLabel>
               <FormControl>
                 <Input
                   disabled={isLoading}
@@ -97,7 +99,7 @@ export function NotionForm({ userId }: { userId: string }) {
           name="secretKey"
           render={({ field }) => (
             <FormItem className="w-1/3">
-              <FormLabel>Secret Key</FormLabel>
+              <FormLabel>{t("secretKey")}</FormLabel>
               <FormControl>
                 <Input
                   disabled={isLoading}
@@ -111,7 +113,7 @@ export function NotionForm({ userId }: { userId: string }) {
         />
 
         <Button className="w-[150px]" type="submit">
-          Activate
+          {t("activateButton")}
         </Button>
       </form>
     </Form>

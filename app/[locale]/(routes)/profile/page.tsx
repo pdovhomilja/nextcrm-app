@@ -1,4 +1,5 @@
 import { getUser } from "@/actions/get-user";
+import { getTranslations } from "next-intl/server";
 
 import Container from "../components/ui/Container";
 import { NotionForm } from "./components/NotionForm";
@@ -8,8 +9,10 @@ import { ProfilePhotoForm } from "./components/ProfilePhotoForm";
 
 import H4Title from "@/components/typography/h4";
 import { OpenAiForm } from "./components/OpenAiForm";
+import { LanguageForm } from "./components/LanguageForm";
 
 const ProfilePage = async () => {
+  const t = await getTranslations("ProfilePage");
   const data = await getUser();
 
   if (!data) {
@@ -18,26 +21,29 @@ const ProfilePage = async () => {
 
   return (
     <Container
-      title="Profile"
-      description={"Here you can edit your user profile"}
+      title={t("title")}
+      description={t("description")}
     >
       <div>
         {/*         <pre>
           <code>{JSON.stringify(data, null, 2)}</code>
         </pre> */}
-        <H4Title>Profile photo</H4Title>
+        <H4Title>{t("profilePhoto")}</H4Title>
         <ProfilePhotoForm data={data} />
 
-        <H4Title>Profile</H4Title>
+        <H4Title>{t("profile")}</H4Title>
         <ProfileForm data={data} />
 
-        <H4Title>Password change</H4Title>
+        <H4Title>{t("passwordChange")}</H4Title>
         <PasswordChangeForm userId={data.id} />
 
-        <H4Title>Notion Integration</H4Title>
+        <H4Title>{t("notionIntegration")}</H4Title>
         <NotionForm userId={data.id} />
 
-        <H4Title>OpenAI Integration</H4Title>
+        <H4Title>{t("language")}</H4Title>
+        <LanguageForm userId={data.id} />
+
+        <H4Title>{t("openAiIntegration")}</H4Title>
         <OpenAiForm userId={data.id} />
       </div>
     </Container>

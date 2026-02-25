@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { ElementRef, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { crm_Accounts } from "@prisma/client";
 import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
@@ -29,12 +30,14 @@ const CreateContractForm = ({
   const router = useRouter();
   const closeRef = useRef<ElementRef<"button">>(null);
   const [assignedTo, setAssignedTo] = useState<string>("");
+  const t = useTranslations("CrmContractForm");
+  const c = useTranslations("Common");
 
   //console.log(accountId, "accountId");
 
   const { execute, fieldErrors, isLoading } = useAction(createNewContract, {
     onSuccess: (data) => {
-      toast.success("New contract created successfully!");
+      toast.success(t("createSuccess"));
       closeRef.current?.click();
       router.refresh();
     },
@@ -80,62 +83,62 @@ const CreateContractForm = ({
   return (
     <FormSheet
       trigger={"+"}
-      title="Create new contract"
+      title={t("createButton")}
       description="Create a new contract with specified terms, dates, and assigned users"
       onClose={closeRef}
     >
       <form action={onAction} className="space-y-4">
-        <FormInput id="title" label="Title" type="text" errors={fieldErrors} />
-        <FormInput id="value" label="Value" type="text" errors={fieldErrors} />
+        <FormInput id="title" label={t("title")} type="text" errors={fieldErrors} />
+        <FormInput id="value" label={t("value")} type="text" errors={fieldErrors} />
         <FormDatePicker
           id="startDate"
-          label="Start Date"
+          label={t("startDate")}
           type="hidden"
           errors={fieldErrors}
         />
         <FormDatePicker
           id="endDate"
-          label="End Date"
+          label={t("endDate")}
           type="hidden"
           errors={fieldErrors}
         />
         <FormDatePicker
           id="renewalReminderDate"
-          label="Renewal Reminder Date"
+          label={t("renewalReminderDate")}
           type="hidden"
           errors={fieldErrors}
         />
         <FormDatePicker
           id="customerSignedDate"
-          label="Customer Signed Date"
+          label={t("customerSignedDate")}
           type="hidden"
           errors={fieldErrors}
         />
         <FormDatePicker
           id="companySignedDate"
-          label="Company Signed Date"
+          label={t("companySignedDate")}
           type="hidden"
           errors={fieldErrors}
         />
         <FormTextarea
           id="description"
-          label="Description"
+          label={c("description")}
           errors={fieldErrors}
         />
         <FormSelect
           id="account"
-          label="Account"
+          label={t("account")}
           type="hidden"
           data={accounts}
           errors={fieldErrors}
           defaultValue={accountId}
         />
         <div className="space-y-1">
-          <label className="text-sm font-medium">Assigned To</label>
+          <label className="text-sm font-medium">{c("assignedTo")}</label>
           <UserSearchCombobox
             value={assignedTo}
             onChange={setAssignedTo}
-            placeholder="Select a user"
+            placeholder={c("selectUser")}
             disabled={isLoading}
             name="assigned_to"
           />
@@ -144,7 +147,7 @@ const CreateContractForm = ({
           {isLoading ? (
             <Loader2 className="h-6 w-6  animate-spin" />
           ) : (
-            "Create"
+            c("create")
           )}
         </FormSubmit>
       </form>

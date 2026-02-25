@@ -44,5 +44,409 @@
     "cardDescription": "Erstellen Sie ein Konto, indem Sie sich anmelden mit",
     "label": "Sprache",
     "locale": "{locale, select, de {Deutsch} en {Englisch} cz {Tschechisch} uk {Ukrainian} other {Unbekannt}}"
+  },
+  "CrmModuleMenuComponent": {
+    "menuTitle": "Handel"
+  },
+  "Common": {
+    "success": "Erfolg",
+    "error": "Fehler",
+    "cancel": "Abbrechen",
+    "create": "Erstellen",
+    "update": "Aktualisieren",
+    "activate": "Aktivieren",
+    "savingData": "Daten werden gespeichert ...",
+    "somethingWentWrong": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+    "assignedTo": "Zugewiesen an",
+    "selectUser": "Benutzer auswählen",
+    "description": "Beschreibung",
+    "priorityLabel": "Priorität",
+    "priorityPlaceholder": "Priorität auswählen",
+    "low": "Niedrig",
+    "medium": "Mittel",
+    "high": "Hoch",
+    "critical": "Kritisch"
+  },
+  "LanguageSelector": {
+    "english": "Englisch",
+    "czech": "Tschechisch",
+    "german": "Deutsch",
+    "ukrainian": "Ukrainisch",
+    "selectPlaceholder": "Sprache auswählen...",
+    "searchPlaceholder": "Sprache suchen...",
+    "noResult": "Keine Sprache gefunden.",
+    "loadingModal": "Sprache wird geändert...",
+    "success": "Sprache geändert",
+    "changedTo": "Sprache geändert zu {language}",
+    "error": "Fehler beim Ändern der Sprache"
+  },
+  "CrmPage": {
+    "title": "CRM",
+    "description": "Alles, was Sie über den Verkauf wissen müssen",
+    "accounts": {
+      "pageTitle": "Unternehmen",
+      "pageDescription": "Alles, was Sie über Ihre Unternehmen wissen müssen",
+      "viewTitle": "Unternehmen",
+      "addNew": "Neues Unternehmen hinzufügen",
+      "sheetTitle": "Neues Unternehmen erstellen",
+      "sheetDescription": "Fügen Sie ein neues Unternehmen oder eine Organisation zu Ihrem CRM-System hinzu.",
+      "empty": "Keine zugewiesenen Unternehmen gefunden"
+    },
+    "contacts": {
+      "pageTitle": "Kontakte",
+      "pageDescription": "Alles, was Sie über Ihre Kontakte wissen müssen",
+      "viewTitle": "Kontakte",
+      "addNew": "Neuen Kontakt hinzufügen",
+      "sheetTitle": "Neuen Kontakt erstellen",
+      "sheetDescription": "Fügen Sie einen neuen Kontakt zu Ihrem CRM-System hinzu.",
+      "empty": "Keine zugewiesenen Kontakte gefunden"
+    },
+    "opportunities": {
+      "pageTitle": "Möglichkeiten",
+      "pageDescription": "Alles, was Sie über Ihre Verkaufschancen wissen müssen",
+      "viewTitle": "Möglichkeiten",
+      "addNew": "Neue Möglichkeit hinzufügen",
+      "sheetTitle": "Neue Möglichkeit erstellen",
+      "sheetDescription": "Erstellen Sie eine neue Verkaufschance mit Unternehmens-, Kontakt- und Geschäftsinformationen",
+      "empty": "Keine zugewiesenen Möglichkeiten gefunden"
+    },
+    "leads": {
+      "pageTitle": "Leads",
+      "pageDescription": "Alles, was Sie über Ihre Leads wissen müssen",
+      "viewTitle": "Leads",
+      "addNew": "Neuen Lead hinzufügen",
+      "sheetTitle": "Neuen Lead erstellen",
+      "sheetDescription": "Füllen Sie die Details aus, um einen neuen Lead zu erstellen",
+      "empty": "Keine zugewiesenen Leads gefunden"
+    },
+    "contracts": {
+      "pageTitle": "Verträge",
+      "pageDescription": "Alles, was Sie über Ihre Verträge wissen müssen",
+      "viewTitle": "Verträge",
+      "addNew": "Neuen Vertrag hinzufügen",
+      "sheetTitle": "Neuen Vertrag erstellen",
+      "sheetDescription": "Füllen Sie die Details aus, um einen neuen Vertrag zu erstellen",
+      "empty": "Keine zugewiesenen Verträge gefunden"
+    }
+  },
+  "CrmAccountForm": {
+    "accountName": "Unternehmensname",
+    "officePhone": "Bürotelefon",
+    "email": "E-Mail",
+    "website": "Webseite",
+    "accountId": "Unternehmens-ID",
+    "vatNumber": "USt-IdNr.",
+    "billingStreet": "Rechnungsstraße",
+    "billingPostalCode": "Rechnungs-PLZ",
+    "billingCity": "Rechnungsstadt",
+    "billingState": "Rechnungsbundesland",
+    "billingCountry": "Rechnungsland",
+    "shippingStreet": "Lieferstraße",
+    "shippingPostalCode": "Liefer-PLZ",
+    "shippingCity": "Lieferstadt",
+    "shippingState": "Lieferbundesland",
+    "shippingCountry": "Lieferland",
+    "annualRevenue": "Jahresumsatz",
+    "isMemberOf": "Mitglied von",
+    "industry": "Branche auswählen",
+    "industryPlaceholder": "Branche des neuen Unternehmens auswählen",
+    "createButton": "Unternehmen erstellen",
+    "updateButton": "Unternehmen aktualisieren",
+    "createSuccess": "Unternehmen erfolgreich erstellt",
+    "updateSuccess": "Unternehmen erfolgreich aktualisiert",
+    "errorDescription": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+  },
+  "CrmContactForm": {
+    "firstName": "Vorname",
+    "lastName": "Nachname",
+    "mobilePhone": "Mobiltelefon",
+    "officePhone": "Bürotelefon",
+    "email": "E-Mail",
+    "personalEmail": "Persönliche E-Mail",
+    "website": "Webseite",
+    "birthday": "Geburtstag - (optional)",
+    "year": "Jahr",
+    "month": "Monat",
+    "day": "Tag",
+    "descriptionPlaceholder": "Nützliche Informationen über den Kontakt",
+    "assignedUser": "Zugewiesener Benutzer",
+    "assignedUserPlaceholder": "Benutzer auswählen",
+    "assignAccount": "Unternehmen zuweisen",
+    "assignAccountPlaceholder": "Zugewiesenes Unternehmen auswählen",
+    "position": "Position",
+    "isActive": "Ist Kontakt aktiv?",
+    "contactType": "Kontakttyp",
+    "contactTypePlaceholder": "Kontakttyp auswählen",
+    "customer": "Kunde",
+    "partner": "Partner",
+    "vendor": "Lieferant",
+    "twitter": "Twitter",
+    "facebook": "Facebook",
+    "linkedin": "LinkedIn",
+    "skype": "Skype",
+    "youtube": "YouTube",
+    "tiktok": "TikTok",
+    "createButton": "Kontakt erstellen",
+    "updateButton": "Kontakt aktualisieren",
+    "createSuccess": "Kontakt erfolgreich erstellt",
+    "updateSuccess": "Kontakt erfolgreich aktualisiert"
+  },
+  "CrmOpportunityForm": {
+    "name": "Name der Möglichkeit",
+    "closeDate": "Erwartetes Abschlussdatum",
+    "closeDatePlaceholder": "Erwartetes Abschlussdatum auswählen",
+    "salesType": "Verkaufstyp",
+    "salesTypePlaceholder": "Typ auswählen",
+    "saleStage": "Verkaufsphase",
+    "saleStagePlaceholder": "Aktuelle Phase auswählen",
+    "budget": "Budget",
+    "currency": "Währung",
+    "expectedRevenue": "Erwarteter Umsatz",
+    "nextStep": "Nächster Schritt",
+    "nextStepPlaceholder": "Nächsten Schritt beschreiben",
+    "assignedAccount": "Zugewiesenes Unternehmen",
+    "createSuccess": "Möglichkeit erfolgreich erstellt",
+    "updateSuccess": "Möglichkeit erfolgreich aktualisiert"
+  },
+  "CrmLeadForm": {
+    "firstName": "Vorname",
+    "lastName": "Nachname",
+    "company": "Unternehmen",
+    "jobTitle": "Berufsbezeichnung",
+    "email": "E-Mail",
+    "phone": "Telefon",
+    "leadSource": "Lead-Quelle",
+    "leadSourcePlaceholder": "Lead-Quelle auswählen",
+    "referredBy": "Empfohlen von",
+    "campaign": "Kampagne",
+    "assignAccount": "Unternehmen zuweisen",
+    "assignAccountPlaceholder": "Unternehmen auswählen",
+    "createButton": "Lead erstellen",
+    "updateButton": "Lead aktualisieren",
+    "createSuccess": "Lead erfolgreich erstellt",
+    "updateSuccess": "Lead erfolgreich aktualisiert"
+  },
+  "CrmContractForm": {
+    "title": "Titel",
+    "value": "Wert",
+    "startDate": "Startdatum",
+    "endDate": "Enddatum",
+    "renewalReminderDate": "Erinnerungsdatum für Verlängerung",
+    "customerSignedDate": "Datum der Kundenunterschrift",
+    "companySignedDate": "Datum der Unternehmensunterschrift",
+    "account": "Unternehmen",
+    "createButton": "Vertrag erstellen",
+    "createSuccess": "Vertrag erfolgreich erstellt"
+  },
+  "ProfilePage": {
+    "title": "Profil",
+    "description": "Verwalten Sie Ihre Profileinstellungen",
+    "profilePhoto": "Profilfoto",
+    "profile": "Profil",
+    "passwordChange": "Passwort ändern",
+    "notionIntegration": "Notion-Integration",
+    "language": "Sprache",
+    "openAiIntegration": "OpenAI-Integration"
+  },
+  "ProfileForm": {
+    "fullName": "Vollständiger Name",
+    "username": "Benutzername",
+    "company": "Unternehmen",
+    "updateButton": "Profil aktualisieren",
+    "photoUpdated": "Foto aktualisiert",
+    "photoUpdatedDescription": "Ihr Profilfoto wurde aktualisiert.",
+    "photoError": "Fehler",
+    "photoErrorDescription": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+  },
+  "PasswordChangeForm": {
+    "password": "Passwort",
+    "confirmPassword": "Passwort bestätigen",
+    "success": "Passwort erfolgreich geändert",
+    "errorPrefix": "Fehler: "
+  },
+  "NotionForm": {
+    "databaseId": "Notion-Datenbank-ID",
+    "secretKey": "Notion-Geheimschlüssel",
+    "activateButton": "Notion aktivieren"
+  },
+  "OpenAiForm": {
+    "organizationId": "OpenAI-Organisations-ID",
+    "secretKey": "OpenAI-Geheimschlüssel",
+    "activateButton": "OpenAI aktivieren",
+    "orgIdTooShort": "Organisations-ID ist zu kurz",
+    "orgIdTooLong": "Organisations-ID ist zu lang",
+    "secretKeyTooShort": "Geheimschlüssel ist zu kurz"
+  },
+  "AdminPage": {
+    "title": "Administration",
+    "notAdmin": "Sie sind kein Administrator",
+    "accessNotAllowed": "Zugriff nicht erlaubt",
+    "setupDescription": "Richten Sie Ihr CRM-System ein",
+    "usersAdmin": "Benutzer",
+    "modulesAdmin": "Module",
+    "users": {
+      "title": "Benutzer",
+      "description": "Verwalten Sie Ihre CRM-Benutzer",
+      "inviteHeading": "Neuen Benutzer einladen"
+    },
+    "modules": {
+      "title": "Module",
+      "description": "Verwalten Sie Ihre CRM-Module"
+    },
+    "inviteForm": {
+      "name": "Name",
+      "email": "E-Mail",
+      "success": "Erfolg",
+      "invited": "Benutzer erfolgreich eingeladen",
+      "error": "Fehler",
+      "errorDesc": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+    },
+    "sendMail": {
+      "trigger": "E-Mail an alle senden",
+      "title": "E-Mail an alle Benutzer senden",
+      "description": "Eine E-Mail an alle aktiven Benutzer senden",
+      "messageTitle": "Nachrichtentitel",
+      "message": "Nachricht",
+      "sendButton": "Senden",
+      "sent": "E-Mail erfolgreich gesendet"
+    }
+  },
+  "ProjectsPage": {
+    "title": "Projekte",
+    "description": "Verwalten Sie Ihre Projekte",
+    "allTasks": "Alle Aufgaben",
+    "myTasks": "Meine Aufgaben",
+    "dashboard": "Dashboard",
+    "projects": "Projekte",
+    "dashboardTitle": "Projekt-Dashboard",
+    "dashboardDescription": "Übersicht aller Projekte",
+    "tasks": {
+      "title": "Aufgaben",
+      "description": "Verwalten Sie Ihre Aufgaben",
+      "newTask": "Neue Aufgabe"
+    },
+    "newProject": {
+      "trigger": "Neues Projekt",
+      "title": "Neues Projekt erstellen",
+      "description": "Fügen Sie ein neues Projekt zu Ihrem Arbeitsbereich hinzu",
+      "nameLabel": "Projektname",
+      "namePlaceholder": "Projektnamen eingeben",
+      "descLabel": "Beschreibung",
+      "descPlaceholder": "Projektbeschreibung eingeben",
+      "visibilityLabel": "Sichtbarkeit",
+      "public": "Öffentlich",
+      "private": "Privat",
+      "cancel": "Abbrechen",
+      "create": "Erstellen",
+      "successMsg": "Projekt erfolgreich erstellt"
+    },
+    "newSection": {
+      "trigger": "Neuer Abschnitt",
+      "title": "Neuen Abschnitt erstellen",
+      "description": "Fügen Sie diesem Board einen neuen Abschnitt hinzu",
+      "nameLabel": "Abschnittsname",
+      "namePlaceholder": "Abschnittsnamen eingeben",
+      "cancel": "Abbrechen",
+      "create": "Erstellen",
+      "successMsg": "Abschnitt erfolgreich erstellt"
+    },
+    "newTask": {
+      "trigger": "Neue Aufgabe",
+      "title": "Neue Aufgabe erstellen",
+      "description": "Fügen Sie eine neue Aufgabe zu Ihrem Projekt hinzu",
+      "nameLabel": "Aufgabenname",
+      "namePlaceholder": "Aufgabennamen eingeben",
+      "descLabel": "Beschreibung",
+      "descPlaceholder": "Aufgabenbeschreibung eingeben",
+      "dueDateLabel": "Fälligkeitsdatum",
+      "assignedToPlaceholder": "Benutzer zuweisen",
+      "projectLabel": "Projekt",
+      "projectPlaceholder": "Projekt auswählen",
+      "cancel": "Abbrechen",
+      "create": "Erstellen",
+      "successMsg": "Aufgabe erfolgreich erstellt"
+    },
+    "dataTable": {
+      "filterPlaceholder": "Projekte filtern...",
+      "visibility": "Sichtbarkeit",
+      "reset": "Zurücksetzen",
+      "view": "Ansicht",
+      "toggleColumns": "Spalten umschalten",
+      "rowsSelected": "{selected} von {total} Zeile(n) ausgewählt.",
+      "rowsPerPage": "Zeilen pro Seite",
+      "goToFirst": "Zur ersten Seite",
+      "goToPrev": "Zur vorherigen Seite",
+      "goToNext": "Zur nächsten Seite",
+      "goToLast": "Zur letzten Seite",
+      "viewDetail": "Detail anzeigen",
+      "edit": "Bearbeiten",
+      "watchProject": "Projekt beobachten",
+      "stopWatching": "Beobachtung beenden",
+      "delete": "Löschen",
+      "openMenu": "Menü öffnen",
+      "editProject": "Projekt bearbeiten",
+      "editProjectDesc": "Projektdetails bearbeiten",
+      "deleteError": "Fehler beim Löschen des Projekts",
+      "watchError": "Fehler beim Aktualisieren des Beobachtungsstatus"
+    }
+  },
+  "InvoicePage": {
+    "title": "Rechnungen",
+    "description": "Verwalten Sie Ihre Rechnungen",
+    "uploadPdf": "PDF hochladen",
+    "myInvoices": "Meine Rechnungen",
+    "checkForNew": "Auf neue prüfen",
+    "checking": "Prüfe...",
+    "somethingWentWrong": "Etwas ist schiefgelaufen",
+    "settings": {
+      "title": "Einstellungen",
+      "companySettings": "Unternehmenseinstellungen",
+      "description": "Rechnungseinstellungen verwalten"
+    },
+    "dataTable": {
+      "filterPlaceholder": "Rechnungen filtern...",
+      "reset": "Zurücksetzen"
+    },
+    "newTask": {
+      "title": "Neue Aufgabe erstellen",
+      "description": "Eine neue Aufgabe für diese Rechnung hinzufügen"
+    }
+  },
+  "DocumentsPage": {
+    "title": "Dokumente",
+    "description": "Verwalten Sie Ihre Dokumente",
+    "uploadPdf": "PDF hochladen",
+    "uploadImages": "Bilder hochladen",
+    "uploadOther": "Andere hochladen",
+    "dataTable": {
+      "filterPlaceholder": "Dokumente filtern...",
+      "reset": "Zurücksetzen"
+    }
+  },
+  "EmployeesPage": {
+    "title": "Mitarbeiter",
+    "description": "Verwalten Sie Ihre Mitarbeiter",
+    "moduleContent": "Inhalt des Mitarbeitermoduls"
+  },
+  "ReportsPage": {
+    "title": "Berichte",
+    "description": "Geschäftsberichte anzeigen",
+    "newUsersByMonthOverallTitle": "Neue Benutzer pro Monat (gesamt)",
+    "newUsersByMonthOverallChart": "Neue Benutzer pro Monat gesamt",
+    "newUsersByMonth2023Title": "Neue Benutzer pro Monat (2023)",
+    "newUsersByMonth2023Chart": "Neue Benutzer pro Monat 2023",
+    "newUsersByMonth2024Title": "Neue Benutzer pro Monat (2024)",
+    "newTasksByMonth2023": "Neue Aufgaben pro Monat (2023)",
+    "oppsBySalesStage": "Möglichkeiten nach Verkaufsphase",
+    "newOppsByMonth2023": "Neue Möglichkeiten pro Monat (2023)"
+  },
+  "CommandComponent": {
+    "shortcutHint": "Drücken Sie ⌘J, um das Befehlsmenü zu öffnen",
+    "placeholder": "Befehl eingeben oder suchen...",
+    "noResults": "Keine Ergebnisse gefunden.",
+    "settings": "Einstellungen",
+    "dashboard": "Dashboard",
+    "profileSettings": "Profileinstellungen",
+    "logout": "Abmelden"
   }
 }

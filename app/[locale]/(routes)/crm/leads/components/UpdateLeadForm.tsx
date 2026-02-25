@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 
@@ -45,6 +46,8 @@ type NewTaskFormProps = {
 export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const t = useTranslations("CrmLeadForm");
+  const c = useTranslations("Common");
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -86,13 +89,13 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
     try {
       await axios.put("/api/crm/leads", data);
       toast({
-        title: "Success",
-        description: "Lead updated successfully",
+        title: c("success"),
+        description: t("updateSuccess"),
       });
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error",
+        title: c("error"),
         description: error?.response?.data,
       });
     } finally {
@@ -116,7 +119,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
     );
 
   if (!initialData)
-    return <div>Something went wrong, there is no data for form</div>;
+    return <div>{c("somethingWentWrong")}</div>;
 
   return (
     <Form {...form}>
@@ -135,7 +138,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                 name="firstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>First name</FormLabel>
+                    <FormLabel>{t("firstName")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -152,7 +155,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                 name="lastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Last name</FormLabel>
+                    <FormLabel>{t("lastName")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -171,7 +174,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                 name="company"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Company</FormLabel>
+                    <FormLabel>{t("company")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -188,7 +191,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                 name="jobTitle"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Job Title</FormLabel>
+                    <FormLabel>{t("jobTitle")}</FormLabel>
                     <FormControl>
                       <Input disabled={isLoading} placeholder="CTO" {...field} />
                     </FormControl>
@@ -203,7 +206,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>E-mail</FormLabel>
+                    <FormLabel>{t("email")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -220,7 +223,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone</FormLabel>
+                    <FormLabel>{t("phone")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -238,7 +241,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>{c("description")}</FormLabel>
                   <FormControl>
                     <Textarea
                       disabled={isLoading}
@@ -256,7 +259,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                 name="lead_source"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Lead source</FormLabel>
+                    <FormLabel>{t("leadSource")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -273,7 +276,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                 name="refered_by"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Refered by</FormLabel>
+                    <FormLabel>{t("referredBy")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -292,7 +295,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                 name="campaign"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Campaign</FormLabel>
+                    <FormLabel>{t("campaign")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -328,12 +331,12 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                 name="assigned_to"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Assigned to</FormLabel>
+                    <FormLabel>{c("assignedTo")}</FormLabel>
                     <FormControl>
                       <UserSearchCombobox
                         value={field.value ?? ""}
                         onChange={field.onChange}
-                        placeholder="Select a user"
+                        placeholder={c("selectUser")}
                         disabled={isLoading}
                       />
                     </FormControl>
@@ -374,14 +377,14 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
               name="accountIDs"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Assign an Account</FormLabel>
+                  <FormLabel>{t("assignAccount")}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Choose assigned account" />
+                        <SelectValue placeholder={t("assignAccountPlaceholder")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -402,10 +405,10 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
           <Button disabled={isLoading} type="submit">
             {isLoading ? (
               <span className="flex items-center animate-pulse">
-                Saving data ...
+                {c("savingData")}
               </span>
             ) : (
-              "Update lead"
+              t("updateButton")
             )}
           </Button>
         </div>

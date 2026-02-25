@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { CalendarIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 
@@ -69,6 +70,8 @@ export function NewOpportunityForm({
 }: NewTaskFormProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const t = useTranslations("CrmOpportunityForm");
+  const c = useTranslations("Common");
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -131,13 +134,13 @@ export function NewOpportunityForm({
     try {
       await axios.post("/api/crm/opportunity", data);
       toast({
-        title: "Success",
-        description: "Opportunity created successfully",
+        title: c("success"),
+        description: t("createSuccess"),
       });
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error",
+        title: c("error"),
         description: error?.response?.data,
       });
     } finally {
@@ -175,7 +178,7 @@ export function NewOpportunityForm({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Oportunity name</FormLabel>
+                  <FormLabel>{t("name")}</FormLabel>
                   <FormControl>
                     <Input
                       disabled={isLoading}
@@ -192,7 +195,7 @@ export function NewOpportunityForm({
               name="close_date"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Expected close date</FormLabel>
+                  <FormLabel>{t("closeDate")}</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -206,7 +209,7 @@ export function NewOpportunityForm({
                           {field.value ? (
                             format(field.value, "PPP")
                           ) : (
-                            <span>Pick a expected close date</span>
+                            <span>{t("closeDatePlaceholder")}</span>
                           )}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
@@ -233,7 +236,7 @@ export function NewOpportunityForm({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>{c("description")}</FormLabel>
                   <FormControl>
                     <Textarea
                       disabled={isLoading}
@@ -252,14 +255,14 @@ export function NewOpportunityForm({
                   name="type"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Sales type</FormLabel>
+                      <FormLabel>{t("salesType")}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Choose type " />
+                            <SelectValue placeholder={t("salesTypePlaceholder")} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="flex overflow-y-auto h-56">
@@ -279,14 +282,14 @@ export function NewOpportunityForm({
                   name="sales_stage"
                   render={({ field }) => (
                     <FormItem hidden={selectedStage ? true : false}>
-                      <FormLabel>Sale stage</FormLabel>
+                      <FormLabel>{t("saleStage")}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={selectedStage}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Choose actual stage " />
+                            <SelectValue placeholder={t("saleStagePlaceholder")} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="flex overflow-y-auto h-56">
@@ -306,7 +309,7 @@ export function NewOpportunityForm({
                   name="budget"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Bugdget</FormLabel>
+                      <FormLabel>{t("budget")}</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -324,7 +327,7 @@ export function NewOpportunityForm({
                   name="currency"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Currency</FormLabel>
+                      <FormLabel>{t("currency")}</FormLabel>
                       <FormControl>
                         <Input
                           disabled={isLoading}
@@ -341,7 +344,7 @@ export function NewOpportunityForm({
                   name="expected_revenue"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Expected revenue</FormLabel>
+                      <FormLabel>{t("expectedRevenue")}</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -359,11 +362,11 @@ export function NewOpportunityForm({
                   name="next_step"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Next step</FormLabel>
+                      <FormLabel>{t("nextStep")}</FormLabel>
                       <FormControl>
                         <Textarea
                           disabled={isLoading}
-                          placeholder="Describe the next step"
+                          placeholder={t("nextStepPlaceholder")}
                           {...field}
                         />
                       </FormControl>
@@ -378,12 +381,12 @@ export function NewOpportunityForm({
                   name="assigned_to"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Assigned to</FormLabel>
+                      <FormLabel>{c("assignedTo")}</FormLabel>
                       <FormControl>
                         <UserSearchCombobox
                           value={field.value ?? ""}
                           onChange={field.onChange}
-                          placeholder="Select a user"
+                          placeholder={c("selectUser")}
                           disabled={isLoading}
                         />
                       </FormControl>
@@ -396,7 +399,7 @@ export function NewOpportunityForm({
                   name="account"
                   render={({ field }) => (
                     <FormItem hidden={accountId ? true : false}>
-                      <FormLabel>Assigned Account</FormLabel>
+                      <FormLabel>{t("assignedAccount")}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
@@ -553,10 +556,10 @@ export function NewOpportunityForm({
           <Button disabled={isLoading} type="submit">
             {isLoading ? (
               <span className="flex items-center animate-pulse">
-                Saving data ...
+                {c("savingData")}
               </span>
             ) : (
-              "Create opportunity"
+              c("create")
             )}
           </Button>
         </div>

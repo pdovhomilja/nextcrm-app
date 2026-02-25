@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import {
   Card,
@@ -26,6 +27,7 @@ interface ContractsViewProps {
 
 const ContractsView = ({ data, crmData, accountId }: ContractsViewProps) => {
   const { accounts } = crmData;
+  const t = useTranslations("CrmPage");
 
   return (
     <Card>
@@ -33,7 +35,7 @@ const ContractsView = ({ data, crmData, accountId }: ContractsViewProps) => {
         <div className="flex justify-between">
           <CardTitle>
             <Link href="/crm/contracts" className="hover:underline">
-              Contracts
+              {t("contracts.viewTitle")}
             </Link>
           </CardTitle>
 
@@ -49,7 +51,7 @@ const ContractsView = ({ data, crmData, accountId }: ContractsViewProps) => {
       <CardContent>
         {!data ||
           (data.length === 0 ? (
-            "No assigned contracts found"
+            t("contracts.empty")
           ) : (
             <ContractsDataTable data={data} columns={columns} />
           ))}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import {
   Card,
@@ -36,6 +37,7 @@ interface LeadsViewProps {
 const LeadsView = ({ data, crmData }: LeadsViewProps) => {
   const { accounts } = crmData;
   const [open, setOpen] = useState(false);
+  const t = useTranslations("CrmPage");
 
   return (
     <Card>
@@ -44,19 +46,19 @@ const LeadsView = ({ data, crmData }: LeadsViewProps) => {
           <div>
             <CardTitle>
               <Link href="/crm/leads" className="hover:underline">
-                Leads
+                {t("leads.viewTitle")}
               </Link>
             </CardTitle>
           </div>
           <div className="flex space-x-2">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
-                <Button size="sm" aria-label="Add new lead">+</Button>
+                <Button size="sm" aria-label={t("leads.addNew")}>+</Button>
               </SheetTrigger>
               <SheetContent className="w-full md:max-w-[771px] overflow-y-auto">
                 <SheetHeader>
-                  <SheetTitle>Create new lead</SheetTitle>
-                  <SheetDescription>Fill in the details to create a new lead</SheetDescription>
+                  <SheetTitle>{t("leads.sheetTitle")}</SheetTitle>
+                  <SheetDescription>{t("leads.sheetDescription")}</SheetDescription>
                 </SheetHeader>
                 <div className="mt-6 space-y-4">
                   <NewLeadForm accounts={accounts} onFinish={() => setOpen(false)} />
@@ -70,7 +72,7 @@ const LeadsView = ({ data, crmData }: LeadsViewProps) => {
       <CardContent>
         {!data ||
           (data.length === 0 ? (
-            "No assigned leads found"
+            t("leads.empty")
           ) : (
             <LeadDataTable data={data} columns={columns} />
           ))}

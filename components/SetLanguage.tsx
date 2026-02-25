@@ -32,16 +32,10 @@ import {
 import { toast } from "@/components/ui/use-toast";
 
 import axios from "axios";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "@/i18n/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import LoadingModal from "./modals/loading-modal";
-
-const languages = [
-  { label: "English", value: "en" },
-  { label: "Czech", value: "cz" },
-  { label: "German", value: "de" },
-  { label: "Ukrainian", value: "uk" },
-] as const;
 
 const FormSchema = z.object({
   language: z.string({
@@ -55,9 +49,20 @@ type Props = {
 
 export function SetLanguage({ userId }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
+  const locale = useLocale();
+  const t = useTranslations("LanguageSelector");
+
+  const languages = [
+    { label: t("english"), value: "en" },
+    { label: t("czech"), value: "cz" },
+    { label: t("german"), value: "de" },
+    { label: t("ukrainian"), value: "uk" },
+  ] as const;
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
+    defaultValues: { language: locale },
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -67,18 +72,16 @@ export function SetLanguage({ userId }: Props) {
     try {
       await axios.put(`/api/user/${userId}/set-language`, data);
       toast({
-        title: "Success",
-        description: "You change user language to: " + data.language,
+        title: t("success"),
+        description: t("changedTo", { language: data.language }),
       });
+      router.replace(pathname, { locale: data.language });
     } catch (e) {
-      console.log(e, "error");
       toast({
-        title: "Error",
-        description: "Something went wrong.",
+        title: t("error"),
+        description: t("error"),
         variant: "destructive",
       });
-    } finally {
-      router.refresh();
       setIsLoading(false);
     }
   }
@@ -87,7 +90,7 @@ export function SetLanguage({ userId }: Props) {
     return (
       <LoadingModal
         isOpen={isLoading}
-        description="Changing NextCRM language"
+        description={t("loadingModal")}
       />
     );
   }

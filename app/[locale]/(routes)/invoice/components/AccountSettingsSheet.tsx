@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/sheet";
 import { MyAccountSettingsForm } from "./MyAccountSettingsForm";
 import { MyAccount } from "@prisma/client";
+import { useTranslations } from "next-intl";
 
 interface AccountSettingsSheetProps {
   initialData: MyAccount | null;
@@ -20,17 +21,18 @@ interface AccountSettingsSheetProps {
 
 export function AccountSettingsSheet({ initialData }: AccountSettingsSheetProps) {
   const [open, setOpen] = useState(false);
+  const t = useTranslations("InvoicePage");
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button>Settings</Button>
+        <Button>{t("settings.title")}</Button>
       </SheetTrigger>
       <SheetContent className="w-full overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Your company settings</SheetTitle>
+          <SheetTitle>{t("settings.companySettings")}</SheetTitle>
           <SheetDescription>
-            This data will be used as default values for your invoices. You can change them at any time. Very important is to set account email which will receive files for import to ERPs
+            {t("settings.description")}
           </SheetDescription>
         </SheetHeader>
         <div className="mt-6 space-y-4">

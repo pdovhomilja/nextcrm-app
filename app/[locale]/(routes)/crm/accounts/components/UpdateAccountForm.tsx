@@ -4,6 +4,7 @@ import React from "react";
 import { z } from "zod";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { useToast } from "@/components/ui/use-toast";
 
@@ -49,6 +50,8 @@ export function UpdateAccountForm({
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
+  const t = useTranslations("CrmAccountForm");
+  const c = useTranslations("Common");
 
   const { data: industries, isLoading: isLoadingIndustries } = useSWR(
     "/api/crm/industries",
@@ -126,13 +129,13 @@ export function UpdateAccountForm({
     try {
       await axios.put("/api/crm/account", data);
       toast({
-        title: "Success",
-        description: "Account updated successfully",
+        title: c("success"),
+        description: t("updateSuccess"),
       });
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error",
+        title: c("error"),
         description: error?.response?.data,
       });
     } finally {
@@ -150,7 +153,7 @@ export function UpdateAccountForm({
     );
 
   if (!industries || !initialData)
-    return <div>Something went wrong, there is no data for form</div>;
+    return <div>{c("somethingWentWrong")}</div>;
 
   return (
     <Form {...form}>
@@ -174,7 +177,7 @@ export function UpdateAccountForm({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Account name</FormLabel>
+                  <FormLabel>{t("accountName")}</FormLabel>
                   <FormControl>
                     <Input
                       disabled={isLoading}
@@ -191,7 +194,7 @@ export function UpdateAccountForm({
               name="office_phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Office phone</FormLabel>
+                  <FormLabel>{t("officePhone")}</FormLabel>
                   <FormControl>
                     <Input
                       disabled={isLoading}
@@ -210,7 +213,7 @@ export function UpdateAccountForm({
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>E-mail</FormLabel>
+                  <FormLabel>{t("email")}</FormLabel>
                   <FormControl>
                     <Input
                       disabled={isLoading}
@@ -227,7 +230,7 @@ export function UpdateAccountForm({
               name="website"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Website</FormLabel>
+                  <FormLabel>{t("website")}</FormLabel>
                   <FormControl>
                     <Input
                       disabled={isLoading}
@@ -244,7 +247,7 @@ export function UpdateAccountForm({
               name="company_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Account ID</FormLabel>
+                  <FormLabel>{t("accountId")}</FormLabel>
                   <FormControl>
                     <Input
                       disabled={isLoading}
@@ -261,7 +264,7 @@ export function UpdateAccountForm({
               name="vat"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Account VAT number</FormLabel>
+                  <FormLabel>{t("vatNumber")}</FormLabel>
                   <FormControl>
                     <Input
                       disabled={isLoading}
@@ -281,7 +284,7 @@ export function UpdateAccountForm({
                 name="billing_street"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Billing street</FormLabel>
+                    <FormLabel>{t("billingStreet")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -298,7 +301,7 @@ export function UpdateAccountForm({
                 name="billing_postal_code"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Billing postal code</FormLabel>
+                    <FormLabel>{t("billingPostalCode")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -315,7 +318,7 @@ export function UpdateAccountForm({
                 name="billing_city"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Billing City</FormLabel>
+                    <FormLabel>{t("billingCity")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -332,7 +335,7 @@ export function UpdateAccountForm({
                 name="billing_state"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Billing state</FormLabel>
+                    <FormLabel>{t("billingState")}</FormLabel>
                     <FormControl>
                       <Input disabled={isLoading} placeholder="" {...field} />
                     </FormControl>
@@ -345,7 +348,7 @@ export function UpdateAccountForm({
                 name="billing_country"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Billing country</FormLabel>
+                    <FormLabel>{t("billingCountry")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -364,7 +367,7 @@ export function UpdateAccountForm({
                 name="shipping_street"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Shipping street</FormLabel>
+                    <FormLabel>{t("shippingStreet")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -381,7 +384,7 @@ export function UpdateAccountForm({
                 name="shipping_postal_code"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Shipping postal code</FormLabel>
+                    <FormLabel>{t("shippingPostalCode")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -398,7 +401,7 @@ export function UpdateAccountForm({
                 name="shipping_city"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Shipping City</FormLabel>
+                    <FormLabel>{t("shippingCity")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -415,7 +418,7 @@ export function UpdateAccountForm({
                 name="shipping_state"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Shipping state</FormLabel>
+                    <FormLabel>{t("shippingState")}</FormLabel>
                     <FormControl>
                       <Input disabled={isLoading} placeholder="" {...field} />
                     </FormControl>
@@ -428,7 +431,7 @@ export function UpdateAccountForm({
                 name="shipping_country"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Shipping country</FormLabel>
+                    <FormLabel>{t("shippingCountry")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -449,7 +452,7 @@ export function UpdateAccountForm({
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>{c("description")}</FormLabel>
                     <FormControl>
                       <Textarea
                         disabled={isLoading}
@@ -468,7 +471,7 @@ export function UpdateAccountForm({
                 name="annual_revenue"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Annual revenue</FormLabel>
+                    <FormLabel>{t("annualRevenue")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -485,7 +488,7 @@ export function UpdateAccountForm({
                 name="member_of"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Is member of</FormLabel>
+                    <FormLabel>{t("isMemberOf")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -502,14 +505,14 @@ export function UpdateAccountForm({
                 name="industry"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Choose industry</FormLabel>
+                    <FormLabel>{t("industry")}</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select new account industry" />
+                          <SelectValue placeholder={t("industryPlaceholder")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="flex overflow-y-auto h-56">
@@ -529,12 +532,12 @@ export function UpdateAccountForm({
                 name="assigned_to"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Assigned to</FormLabel>
+                    <FormLabel>{c("assignedTo")}</FormLabel>
                     <FormControl>
                       <UserSearchCombobox
                         value={field.value ?? ""}
                         onChange={field.onChange}
-                        placeholder="Select a user"
+                        placeholder={c("selectUser")}
                         disabled={isLoading}
                       />
                     </FormControl>
@@ -547,7 +550,7 @@ export function UpdateAccountForm({
         </div>
         <div className="grid gap-2 py-5">
           <Button disabled={isLoading} type="submit">
-            Update account
+            {t("updateButton")}
           </Button>
         </div>
       </form>
