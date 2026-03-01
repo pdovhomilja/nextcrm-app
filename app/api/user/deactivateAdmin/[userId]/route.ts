@@ -10,6 +10,9 @@ export async function POST(req: Request, props: { params: Promise<{ userId: stri
   if (!session) {
     return new NextResponse("Unauthenticated", { status: 401 });
   }
+  if (!session.user.isAdmin) {
+    return new NextResponse("Forbidden", { status: 403 });
+  }
 
   try {
     const user = await prismadb.users.update({
@@ -18,6 +21,19 @@ export async function POST(req: Request, props: { params: Promise<{ userId: stri
       },
       data: {
         is_admin: false,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        username: true,
+        account_name: true,
+        avatar: true,
+        is_admin: true,
+        is_account_admin: true,
+        userLanguage: true,
+        userStatus: true,
+        lastLoginAt: true,
       },
     });
 

@@ -8,6 +8,7 @@ const intlMiddleware = createMiddleware(routing);
 // Admin-only: require session.user.isAdmin
 const ADMIN_ONLY_PATHS = [
   "/api/user/activateAdmin",
+  "/api/user/deactivateAdmin",
   "/api/user/activate",
   "/api/user/deactivate",
   "/api/user/inviteuser",
@@ -37,6 +38,7 @@ export const config = {
   matcher: [
     // Admin-only API paths
     "/api/user/activateAdmin/:path*",
+    "/api/user/deactivateAdmin/:path*",
     "/api/user/activate/:path*",
     "/api/user/deactivate/:path*",
     "/api/user/inviteuser",

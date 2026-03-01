@@ -54,6 +54,19 @@ export async function DELETE(req: Request, props: { params: Promise<{ userId: st
       where: {
         id: params.userId,
       },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        username: true,
+        account_name: true,
+        avatar: true,
+        is_admin: true,
+        is_account_admin: true,
+        userLanguage: true,
+        userStatus: true,
+        lastLoginAt: true,
+      },
     });
 
     return NextResponse.json(user);
