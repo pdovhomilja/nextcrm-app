@@ -14,7 +14,6 @@ import H2Title from "@/components/typography/h2";
 
 import { ProjectsDataTable } from "../table-components/data-table";
 import { columns } from "../table-components/columns";
-import AiAssistant from "./AiAssistant";
 import { getTranslations } from "next-intl/server";
 
 const ProjectsView = async () => {
@@ -41,7 +40,6 @@ const ProjectsView = async () => {
         <Button asChild>
           <Link href="/projects/dashboard">{t("dashboard")}</Link>
         </Button>
-        <AiAssistant session={session} />
       </div>
       <div className="pt-2 space-y-3">
         <H2Title>{t("projects")}</H2Title>

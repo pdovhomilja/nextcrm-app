@@ -10,3 +10,12 @@ export async function requireOwnerOrAdmin(userId: string) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   return { session };
 }
+
+export async function requireAdmin() {
+  const session = await getServerSession(authOptions);
+  if (!session)
+    return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
+  if (!session.user.isAdmin)
+    return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 });
+  return { session };
+}

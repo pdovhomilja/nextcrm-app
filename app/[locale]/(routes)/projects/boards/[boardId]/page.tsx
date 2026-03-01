@@ -12,7 +12,6 @@ import Kanban from "./components/Kanban";
 import { getBoards } from "@/actions/projects/get-boards";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import AiAssistantProject from "./components/AiAssistantProject";
 import { Lock } from "lucide-react";
 
 interface BoardDetailProps {
@@ -45,7 +44,6 @@ const BoardPage = async (props: BoardDetailProps) => {
             boardId={boardId}
             sections={sections}
           />
-          <AiAssistantProject session={session} boardId={boardId} />
         </div>
         <div>
           <DeleteProjectDialog
