@@ -18,7 +18,6 @@ import { MyAccount } from "@prisma/client";
 import { getBoards } from "@/actions/projects/get-boards";
 import NewTaskDialog from "./dialogs/NewTask";
 
-import CronButton from "./components/cron-button";
 import { getTranslations } from "next-intl/server";
 
 const InvoicePage = async () => {
@@ -40,7 +39,6 @@ const InvoicePage = async () => {
           <Button asChild>
             <Link href={`/invoice/${session?.user.id}`}>{t("myInvoices")}</Link>
           </Button>
-          <CronButton />
         </div>
         <div>
           <AccountSettingsSheet initialData={myAccountSettings} />

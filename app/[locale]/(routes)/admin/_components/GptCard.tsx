@@ -9,7 +9,6 @@ import {
 import { prismadb } from "@/lib/prisma";
 import SetGptModel from "../forms/SetGptModel";
 
-import OnTestButton from "./OnTestButton";
 import { gpt_models } from "@prisma/client";
 
 const GptCard = async () => {
@@ -32,7 +31,6 @@ const GptCard = async () => {
       </CardHeader>
       <CardContent className="space-y-2">
         <SetGptModel models={gptModels} />
-        <OnTestButton />
       </CardContent>
     </Card>
   );

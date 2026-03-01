@@ -14,23 +14,8 @@ const ADMIN_ONLY_PATHS = [
   "/api/admin",
 ];
 
-// Internal cron: require Authorization: Bearer CRON_SECRET
-const CRON_PATHS = [
-  "/api/upload/cron",
-  "/api/invoice/get-invoice-from-email",
-];
-
 export async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
-
-  // Cron routes — validate secret header instead of user session
-  if (CRON_PATHS.some((p) => path.startsWith(p))) {
-    const authHeader = req.headers.get("authorization");
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    return NextResponse.next();
-  }
 
   // Admin-only routes — check JWT token's isAdmin flag
   if (ADMIN_ONLY_PATHS.some((p) => path.startsWith(p))) {
@@ -56,9 +41,6 @@ export const config = {
     "/api/user/deactivate/:path*",
     "/api/user/inviteuser",
     "/api/admin/:path*",
-    // Cron paths
-    "/api/upload/cron",
-    "/api/invoice/get-invoice-from-email",
     // All non-API routes (existing intl matcher)
     "/((?!api|trpc|_next|_vercel|.*\\..*).*)",
   ],
