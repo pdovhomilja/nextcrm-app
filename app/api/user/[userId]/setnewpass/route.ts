@@ -1,17 +1,15 @@
 import { NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { hash } from "bcryptjs";
+import { requireOwnerOrAdmin } from "@/lib/auth-guards";
 
 export async function PUT(req: Request, props: { params: Promise<{ userId: string }> }) {
   const params = await props.params;
-  const session = await getServerSession(authOptions);
   const { password, cpassword } = await req.json();
 
-  if (!session) {
-    return new NextResponse("Unauthenticated", { status: 401 });
-  }
+  const guard = await requireOwnerOrAdmin(params.userId);
+  if (guard instanceof NextResponse) return guard;
+  const { session } = guard;
 
   if (!params.userId) {
     return new NextResponse("No user ID provided", { status: 400 });
@@ -25,7 +23,7 @@ export async function PUT(req: Request, props: { params: Promise<{ userId: strin
     return new NextResponse("Passwords do not match", { status: 400 });
   }
 
-  if (session.user.email === "demo@nextcrm.io") {
+  if (session.user?.email === "demo@nextcrm.io") {
     return new NextResponse(
       "Hey, don't be a fool! There are so many works done! Thanks!",
       {
