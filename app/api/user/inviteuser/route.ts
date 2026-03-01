@@ -80,6 +80,19 @@ export async function POST(req: Request) {
             userLanguage: language,
             password: await hash(password, 12),
           },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            username: true,
+            account_name: true,
+            avatar: true,
+            is_admin: true,
+            is_account_admin: true,
+            userLanguage: true,
+            userStatus: true,
+            lastLoginAt: true,
+          },
         });
 
         if (!user) {
