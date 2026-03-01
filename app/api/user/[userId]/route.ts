@@ -3,19 +3,30 @@ import { getServerSession } from "next-auth";
 
 import { prismadb } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
+import { requireOwnerOrAdmin } from "@/lib/auth-guards";
 
 export async function GET(req: Request, props: { params: Promise<{ userId: string }> }) {
   const params = await props.params;
-  const session = await getServerSession(authOptions);
-
-  if (!session) {
-    return new NextResponse("Unauthenticated", { status: 401 });
-  }
+  const guard = await requireOwnerOrAdmin(params.userId);
+  if (guard instanceof NextResponse) return guard;
 
   try {
-    const user = await prismadb.users.findMany({
+    const user = await prismadb.users.findUnique({
       where: {
         id: params.userId,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        username: true,
+        account_name: true,
+        avatar: true,
+        is_admin: true,
+        is_account_admin: true,
+        userLanguage: true,
+        userStatus: true,
+        lastLoginAt: true,
       },
     });
 
@@ -31,7 +42,11 @@ export async function DELETE(req: Request, props: { params: Promise<{ userId: st
   const session = await getServerSession(authOptions);
 
   if (!session) {
-    return new NextResponse("Unauthenticated", { status: 401 });
+    return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
+  }
+
+  if (!session.user.isAdmin) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   try {

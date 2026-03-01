@@ -81,6 +81,13 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
+    async jwt({ token, user }: any) {
+      if (user) {
+        token.id = user.id;
+        token.isAdmin = user.is_admin ?? false;
+      }
+      return token;
+    },
     //TODO: fix this any
     async session({ token, session }: any) {
       const user = await prismadb.users.findFirst({
