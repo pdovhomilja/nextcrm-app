@@ -71,7 +71,7 @@ export function ContactsDataTable<TData, TValue>({
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full">
       <div className="flex justify-between items-start gap-3">
         <div></div>
         <div className="flex justify-end space-x-2">
@@ -96,7 +96,7 @@ export function ContactsDataTable<TData, TValue>({
       ) : (
         <>
           <DataTableToolbar table={table} />
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto w-full">
             <Table>
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
