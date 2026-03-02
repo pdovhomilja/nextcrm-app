@@ -47,7 +47,7 @@ interface MailProps {
 export function MailComponent({
   accounts,
   mails,
-  defaultLayout = [265, 440, 655],
+  defaultLayout = [20, 35, 45],
   defaultCollapsed = false,
   navCollapsedSize,
 }: MailProps) {
@@ -59,8 +59,10 @@ export function MailComponent({
       <ResizablePanelGroup
         orientation="horizontal"
         onLayoutChange={(layout) => {
+          // Convert v4 layout object to array format for storage
+          const layoutArray = Object.values(layout);
           document.cookie = `react-resizable-panels:layout=${JSON.stringify(
-            layout
+            layoutArray
           )}`;
         }}
         className="h-full flex-row"
