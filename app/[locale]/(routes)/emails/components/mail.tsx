@@ -71,7 +71,7 @@ export function MailComponent({
           defaultSize={defaultLayout[0]}
           collapsedSize={navCollapsedSize}
           collapsible={true}
-          minSize={15}
+          minSize={18}
           maxSize={20}
           onResize={(panelSize) => {
             const collapsed = panelSize.asPercentage <= navCollapsedSize;
