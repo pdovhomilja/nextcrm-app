@@ -68,11 +68,11 @@ export function MailComponent({
         className="h-full flex-row"
       >
         <ResizablePanel
-          defaultSize={defaultLayout[0]}
-          collapsedSize={navCollapsedSize}
+          defaultSize={`${defaultLayout[0]}%`}
+          collapsedSize={`${navCollapsedSize}%`}
           collapsible={true}
-          minSize={18}
-          maxSize={20}
+          minSize="18%"
+          maxSize="20%"
           onResize={(panelSize) => {
             const collapsed = panelSize.asPercentage <= navCollapsedSize;
             if (collapsed !== isCollapsed) {
@@ -187,7 +187,7 @@ export function MailComponent({
           />
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={defaultLayout[1]} minSize={30}>
+        <ResizablePanel defaultSize={`${defaultLayout[1]}%`} minSize="30%">
           <Tabs defaultValue="all">
             <div className="flex items-center px-4 py-2">
               <h1 className="text-xl font-bold">Inbox</h1>
@@ -224,7 +224,7 @@ export function MailComponent({
           </Tabs>
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={defaultLayout[2]} minSize={30}>
+        <ResizablePanel defaultSize={`${defaultLayout[2]}%`} minSize="30%">
           <MailDisplay
             mail={mails.find((item) => item.id === mail.selected) || null}
           />
