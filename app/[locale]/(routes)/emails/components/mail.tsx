@@ -63,7 +63,7 @@ export function MailComponent({
             layout
           )}`;
         }}
-        className="h-full  items-stretch"
+        className="h-full"
       >
         <ResizablePanel
           defaultSize={defaultLayout[0]}
@@ -222,7 +222,7 @@ export function MailComponent({
           </Tabs>
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={defaultLayout[2]}>
+        <ResizablePanel defaultSize={defaultLayout[2]} minSize={30}>
           <MailDisplay
             mail={mails.find((item) => item.id === mail.selected) || null}
           />
