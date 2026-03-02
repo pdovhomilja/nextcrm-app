@@ -63,7 +63,7 @@ export function MailComponent({
             layout
           )}`;
         }}
-        className="h-full"
+        className="h-full flex-row"
       >
         <ResizablePanel
           defaultSize={defaultLayout[0]}
