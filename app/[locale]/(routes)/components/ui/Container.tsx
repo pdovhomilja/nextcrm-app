@@ -23,7 +23,7 @@ const Container = ({
         visibility={visibility}
       />
       <Separator />
-      <div className="text-sm h-full overflow-auto pb-32  space-y-5">
+      <div className="text-sm h-[calc(100vh-280px)] overflow-hidden flex flex-col">
         {children}
       </div>
     </div>
