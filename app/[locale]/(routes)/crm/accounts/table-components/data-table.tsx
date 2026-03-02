@@ -98,7 +98,7 @@ export function AccountDataTable<TData, TValue>({
       ) : (
         <>
           <DataTableToolbar table={table} />
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
