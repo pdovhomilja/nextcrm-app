@@ -38,7 +38,7 @@ const EmailRoute = async () => {
           mails={mails}
           defaultLayout={defaultLayout}
           defaultCollapsed={defaultCollapsed}
-          navCollapsedSize={4}
+          navCollapsedSize={8}
         />
       </Suspense>
     </Container>
