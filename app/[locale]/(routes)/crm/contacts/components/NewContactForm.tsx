@@ -7,9 +7,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { useTranslations } from "next-intl";
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
-
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,13 +26,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 
 import { Switch } from "@/components/ui/switch";
 import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
@@ -58,7 +48,9 @@ export function NewContactForm({
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const formSchema = z.object({
-    birthday: z.date().optional(),
+    birthday_year: z.string().optional(),
+    birthday_month: z.string().optional(),
+    birthday_day: z.string().optional(),
     first_name: z.string().optional(),
     last_name: z.string(),
     description: z.string().optional(),
@@ -95,12 +87,7 @@ export function NewContactForm({
   const onSubmit = async (data: NewAccountFormValues) => {
     setIsLoading(true);
     try {
-      // Extract birthday components for API compatibility
-      const { birthday_year, birthday_month, birthday_day } = extractBirthdayData(data.birthday);
-      const submitData = { ...data, birthday_year, birthday_month, birthday_day };
-      delete submitData.birthday;
-      
-      await axios.post("/api/crm/contacts", submitData);
+      await axios.post("/api/crm/contacts", data);
       toast({
         title: c("success"),
         description: t("createSuccess"),
@@ -133,23 +120,13 @@ export function NewContactForm({
         social_skype: "",
         social_youtube: "",
         social_tiktok: "",
-        birthday: undefined,
+        birthday_year: undefined,
+        birthday_month: undefined,
+        birthday_day: undefined,
       });
       router.refresh();
       onFinish();
     }
-  };
-
-  // Extract year, month, day from birthday date for API
-  const extractBirthdayData = (birthday: Date | undefined) => {
-    if (!birthday) {
-      return { birthday_year: null, birthday_month: null, birthday_day: null };
-    }
-    return {
-      birthday_year: birthday.getFullYear().toString(),
-      birthday_month: (birthday.getMonth() + 1).toString(),
-      birthday_day: birthday.getDate().toString(),
-    };
   };
 
   return (
@@ -269,47 +246,93 @@ export function NewContactForm({
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="birthday"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>{t("birthday")}</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-[240px] pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>{t("pickBirthday")}</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) =>
-                          date > new Date() || date < new Date("1923-01-01")
-                        }
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div>
+              <FormLabel>{t("birthday")}</FormLabel>
+              <div className="flex space-x-3 w-full">
+                <FormField
+                  control={form.control}
+                  name="birthday_year"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t("year")} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="flex overflow-y-auto h-56">
+                          {Array.from({ length: 100 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                            <SelectItem key={year} value={year.toString()}>
+                              {year}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="birthday_month"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t("month")} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {[
+                            { value: "1", label: t("january") },
+                            { value: "2", label: t("february") },
+                            { value: "3", label: t("march") },
+                            { value: "4", label: t("april") },
+                            { value: "5", label: t("may") },
+                            { value: "6", label: t("june") },
+                            { value: "7", label: t("july") },
+                            { value: "8", label: t("august") },
+                            { value: "9", label: t("september") },
+                            { value: "10", label: t("october") },
+                            { value: "11", label: t("november") },
+                            { value: "12", label: t("december") },
+                          ].map((month) => (
+                            <SelectItem key={month.value} value={month.value}>
+                              {month.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="birthday_day"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t("day")} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                            <SelectItem key={day} value={day.toString()}>
+                              {day}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
 
             <FormField
               control={form.control}
