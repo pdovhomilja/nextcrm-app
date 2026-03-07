@@ -246,7 +246,7 @@ export function NewContactForm({
                 </FormItem>
               )}
             />
-            <div>
+            <FormItem>
               <FormLabel>{t("birthday")}</FormLabel>
               <div className="flex space-x-3 w-full">
                 <FormField
@@ -332,7 +332,8 @@ export function NewContactForm({
                   )}
                 />
               </div>
-            </div>
+              <FormMessage />
+            </FormItem>
 
             <FormField
               control={form.control}
