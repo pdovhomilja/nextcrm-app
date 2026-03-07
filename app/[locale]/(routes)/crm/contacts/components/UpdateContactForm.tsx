@@ -51,7 +51,7 @@ export function UpdateContactForm({
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const formSchema = z.object({
-    id: z.string().min(5).max(30),
+    id: z.string().min(5),
     birthday_year: z.string().optional().nullable(),
     birthday_month: z.string().optional().nullable(),
     birthday_day: z.string().optional().nullable(),
@@ -80,11 +80,31 @@ export function UpdateContactForm({
   type NewAccountFormValues = z.infer<typeof formSchema>;
 
   // Parse birthday from initialData (single date) into year/month/day components
+  // Coerce null → "" (strings) or false (booleans) to keep inputs controlled and pass Zod validation
   const parsedInitialData = {
     ...initialData,
-    birthday_year: initialData.birthday ? new Date(initialData.birthday).getFullYear().toString() : null,
-    birthday_month: initialData.birthday ? (new Date(initialData.birthday).getMonth() + 1).toString() : null,
-    birthday_day: initialData.birthday ? new Date(initialData.birthday).getDate().toString() : null,
+    last_name: initialData.last_name ?? "",
+    email: initialData.email ?? "",
+    type: initialData.type ?? "",
+    assigned_to: initialData.assigned_to ?? "",
+    status: initialData.status ?? false,
+    first_name: initialData.first_name ?? "",
+    description: initialData.description ?? "",
+    personal_email: initialData.personal_email ?? "",
+    office_phone: initialData.office_phone ?? "",
+    mobile_phone: initialData.mobile_phone ?? "",
+    website: initialData.website ?? "",
+    position: initialData.position ?? "",
+    assigned_account: initialData.assigned_account ?? "",
+    social_twitter: initialData.social_twitter ?? "",
+    social_facebook: initialData.social_facebook ?? "",
+    social_linkedin: initialData.social_linkedin ?? "",
+    social_skype: initialData.social_skype ?? "",
+    social_youtube: initialData.social_youtube ?? "",
+    social_tiktok: initialData.social_tiktok ?? "",
+    birthday_year: initialData.birthday ? new Date(initialData.birthday).getFullYear().toString() : "",
+    birthday_month: initialData.birthday ? (new Date(initialData.birthday).getMonth() + 1).toString() : "",
+    birthday_day: initialData.birthday ? new Date(initialData.birthday).getDate().toString() : "",
   };
 
   //TODO: fix this any
@@ -246,9 +266,9 @@ export function UpdateContactForm({
                 </FormItem>
               )}
             />
-            <FormItem>
-              <FormLabel>{t("birthday")}</FormLabel>
-              <div className="flex space-x-3 w-full">
+            <div>
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{t("birthday")}</label>
+              <div className="flex space-x-3 w-full mt-2">
                 <FormField
                   control={form.control}
                   name="birthday_year"
@@ -260,7 +280,7 @@ export function UpdateContactForm({
                             <SelectValue placeholder={t("year")} />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="flex overflow-y-auto h-56">
+                        <SelectContent className="h-56">
                           {yearArray.map((yearOption) => (
                             <SelectItem
                               key={yearOption}
@@ -286,7 +306,7 @@ export function UpdateContactForm({
                             <SelectValue placeholder={t("month")} />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="h-56">
                           {[
                             { value: "1", label: t("january") },
                             { value: "2", label: t("february") },
@@ -322,7 +342,7 @@ export function UpdateContactForm({
                             <SelectValue placeholder={t("day")} />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="h-56">
                           {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
                             <SelectItem key={day} value={day.toString()}>
                               {day}
@@ -335,8 +355,7 @@ export function UpdateContactForm({
                   )}
                 />
               </div>
-              <FormMessage />
-            </FormItem>
+            </div>
             <FormField
               control={form.control}
               name="description"
@@ -382,14 +401,14 @@ export function UpdateContactForm({
                       <FormLabel>{t("assignAccount")}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value ?? ""}
                       >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder={t("assignAccountPlaceholder")} />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="flex overflow-y-auto h-56">
+                        <SelectContent className="h-56">
                           {accounts.map((account: any) => (
                             <SelectItem key={account.id} value={account.id}>
                               {account.name}
@@ -445,14 +464,14 @@ export function UpdateContactForm({
                       <FormLabel>{t("contactType")}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value ?? ""}
                       >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder={t("contactTypePlaceholder")} />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="flex overflow-y-auto h-56">
+                        <SelectContent className="h-56">
                           {contactType.map((type) => (
                             <SelectItem key={type.id} value={type.id}>
                               {type.name}

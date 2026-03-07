@@ -246,9 +246,9 @@ export function NewContactForm({
                 </FormItem>
               )}
             />
-            <FormItem>
-              <FormLabel>{t("birthday")}</FormLabel>
-              <div className="flex space-x-3 w-full">
+            <div>
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{t("birthday")}</label>
+              <div className="flex space-x-3 w-full mt-2">
                 <FormField
                   control={form.control}
                   name="birthday_year"
@@ -260,7 +260,7 @@ export function NewContactForm({
                             <SelectValue placeholder={t("year")} />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="flex overflow-y-auto h-56">
+                        <SelectContent className="h-56">
                           {Array.from({ length: 100 }, (_, i) => new Date().getFullYear() - i).map((year) => (
                             <SelectItem key={year} value={year.toString()}>
                               {year}
@@ -283,7 +283,7 @@ export function NewContactForm({
                             <SelectValue placeholder={t("month")} />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="h-56">
                           {[
                             { value: "1", label: t("january") },
                             { value: "2", label: t("february") },
@@ -319,7 +319,7 @@ export function NewContactForm({
                             <SelectValue placeholder={t("day")} />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="h-56">
                           {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
                             <SelectItem key={day} value={day.toString()}>
                               {day}
@@ -332,8 +332,7 @@ export function NewContactForm({
                   )}
                 />
               </div>
-              <FormMessage />
-            </FormItem>
+            </div>
 
             <FormField
               control={form.control}
