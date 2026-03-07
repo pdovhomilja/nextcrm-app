@@ -7,7 +7,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { useTranslations } from "next-intl";
-
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,9 +48,9 @@ export function NewContactForm({
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const formSchema = z.object({
-    birthday_year: z.string().optional().nullable(),
-    birthday_month: z.string().optional().nullable(),
-    birthday_day: z.string().optional().nullable(),
+    birthday_year: z.string().optional(),
+    birthday_month: z.string().optional(),
+    birthday_day: z.string().optional(),
     first_name: z.string().optional(),
     last_name: z.string(),
     description: z.string().optional(),
@@ -84,12 +83,6 @@ export function NewContactForm({
     { name: t("partner"), id: "Partner" },
     { name: t("vendor"), id: "Vendor" },
   ];
-
-  const yearArray = Array.from(
-    //start in 1923 and count to +100 years
-    { length: 100 },
-    (_, i) => i + 1923
-  );
 
   const onSubmit = async (data: NewAccountFormValues) => {
     setIsLoading(true);
@@ -127,9 +120,9 @@ export function NewContactForm({
         social_skype: "",
         social_youtube: "",
         social_tiktok: "",
-        birthday_year: "",
-        birthday_month: "",
-        birthday_day: "",
+        birthday_year: undefined,
+        birthday_month: undefined,
+        birthday_day: undefined,
       });
       router.refresh();
       onFinish();
@@ -253,87 +246,94 @@ export function NewContactForm({
                 </FormItem>
               )}
             />
-            <h3>{t("birthday")}</h3>
-            <div className="flex space-x-3 w-full mx-auto">
-              <FormField
-                control={form.control}
-                name="birthday_year"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <div className="flex space-x-2 w-32">
-                      <Select onValueChange={field.onChange}>
-                        <SelectTrigger>{t("year")}</SelectTrigger>
-                        <SelectContent>
-                          {yearArray.map((yearOption) => (
-                            <SelectItem
-                              key={yearOption}
-                              value={yearOption.toString()}
-                            >
-                              {yearOption}
+            <FormItem>
+              <FormLabel>{t("birthday")}</FormLabel>
+              <div className="flex space-x-3 w-full">
+                <FormField
+                  control={form.control}
+                  name="birthday_year"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t("year")} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="flex overflow-y-auto h-56">
+                          {Array.from({ length: 100 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                            <SelectItem key={year} value={year.toString()}>
+                              {year}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="birthday_month"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <div className="flex space-x-2 w-28">
-                      <Select onValueChange={field.onChange}>
-                        <SelectTrigger>{t("month")}</SelectTrigger>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="birthday_month"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t("month")} />
+                          </SelectTrigger>
+                        </FormControl>
                         <SelectContent>
-                          {/* Replace this with the range of months you want to allow */}
-                          {Array.from({ length: 12 }, (_, i) => i + 1).map(
-                            (monthOption) => (
-                              <SelectItem
-                                key={monthOption}
-                                value={monthOption.toString()}
-                              >
-                                {monthOption}
-                              </SelectItem>
-                            )
-                          )}
+                          {[
+                            { value: "1", label: t("january") },
+                            { value: "2", label: t("february") },
+                            { value: "3", label: t("march") },
+                            { value: "4", label: t("april") },
+                            { value: "5", label: t("may") },
+                            { value: "6", label: t("june") },
+                            { value: "7", label: t("july") },
+                            { value: "8", label: t("august") },
+                            { value: "9", label: t("september") },
+                            { value: "10", label: t("october") },
+                            { value: "11", label: t("november") },
+                            { value: "12", label: t("december") },
+                          ].map((month) => (
+                            <SelectItem key={month.value} value={month.value}>
+                              {month.label}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="birthday_day"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <div className="flex space-x-2">
-                      <Select onValueChange={field.onChange}>
-                        <SelectTrigger>{t("day")}</SelectTrigger>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="birthday_day"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t("day")} />
+                          </SelectTrigger>
+                        </FormControl>
                         <SelectContent>
-                          {/* Replace this with the range of months you want to allow */}
-                          {Array.from({ length: 31 }, (_, i) => i + 1).map(
-                            (dayOption) => (
-                              <SelectItem
-                                key={dayOption}
-                                value={dayOption.toString()}
-                              >
-                                {dayOption}
-                              </SelectItem>
-                            )
-                          )}
+                          {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                            <SelectItem key={day} value={day.toString()}>
+                              {day}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormMessage />
+            </FormItem>
 
             <FormField
               control={form.control}
