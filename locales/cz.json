@@ -260,7 +260,6 @@
     "profilePhoto": "Profilová fotografie",
     "profile": "Profil",
     "passwordChange": "Změna hesla",
-    "notionIntegration": "Integrace Notion",
     "language": "Jazyk",
     "openAiIntegration": "Integrace OpenAI"
   },
@@ -279,11 +278,6 @@
     "confirmPassword": "Potvrzení hesla",
     "success": "Heslo úspěšně změněno",
     "errorPrefix": "Chyba: "
-  },
-  "NotionForm": {
-    "databaseId": "Notion databáze ID",
-    "secretKey": "Notion tajný klíč",
-    "activateButton": "Aktivovat Notion"
   },
   "OpenAiForm": {
     "organizationId": "OpenAI ID organizace",

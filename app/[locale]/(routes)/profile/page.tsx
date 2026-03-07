@@ -2,7 +2,6 @@ import { getUser } from "@/actions/get-user";
 import { getTranslations } from "next-intl/server";
 
 import Container from "../components/ui/Container";
-import { NotionForm } from "./components/NotionForm";
 import { ProfileForm } from "./components/ProfileForm";
 import { PasswordChangeForm } from "./components/PasswordChange";
 import { ProfilePhotoForm } from "./components/ProfilePhotoForm";
@@ -36,9 +35,6 @@ const ProfilePage = async () => {
 
         <H4Title>{t("passwordChange")}</H4Title>
         <PasswordChangeForm userId={data.id} />
-
-        <H4Title>{t("notionIntegration")}</H4Title>
-        <NotionForm userId={data.id} />
 
         <H4Title>{t("language")}</H4Title>
         <LanguageForm userId={data.id} />

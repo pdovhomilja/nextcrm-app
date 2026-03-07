@@ -90,7 +90,6 @@ export const TABLE_MIGRATION_PHASES: TableMigrationPhase[] = [
     phase: 9,
     description: 'Integration tables',
     tables: [
-      'secondBrain_notions', // Depends on: Users
       'openAi_keys',         // Depends on: Users
     ],
   },
