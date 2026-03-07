@@ -57,7 +57,6 @@ export const ENTITY_TABLES = [
   'Employees',
   'ImageUpload',
   'TodoList',
-  'secondBrain_notions',
   'openAi_keys',
   'gpt_models',
 ];
@@ -355,13 +354,6 @@ export const TABLE_SCHEMAS: Record<string, TableSchema> = {
   },
   TodoList: {
     tableName: 'TodoList',
-    foreignKeys: [
-      { field: 'userId', referencedTable: 'Users' },
-    ],
-    fieldDefinitions: [],
-  },
-  secondBrain_notions: {
-    tableName: 'secondBrain_notions',
     foreignKeys: [
       { field: 'userId', referencedTable: 'Users' },
     ],

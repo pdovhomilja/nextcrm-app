@@ -258,7 +258,6 @@
     "profilePhoto": "Profile photo",
     "profile": "Profile",
     "passwordChange": "Password change",
-    "notionIntegration": "Notion integration",
     "language": "Language",
     "openAiIntegration": "OpenAI integration"
   },
@@ -277,11 +276,6 @@
     "confirmPassword": "Confirm password",
     "success": "Password changed successfully",
     "errorPrefix": "Error: "
-  },
-  "NotionForm": {
-    "databaseId": "Notion database ID",
-    "secretKey": "Notion secret key",
-    "activateButton": "Activate Notion"
   },
   "OpenAiForm": {
     "organizationId": "OpenAI organization ID",

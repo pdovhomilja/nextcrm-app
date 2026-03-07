@@ -32,7 +32,6 @@ export { transformEmployees } from './employees-transformer';
 export { transformImageUpload } from './image-upload-transformer';
 export { transformTodoList } from './todo-list-transformer';
 export { transformGptModels } from './gpt-models-transformer';
-export { transformSecondBrainNotions } from './second-brain-notions-transformer';
 export { transformOpenAiKeys } from './openai-keys-transformer';
 
 // Import all transformers to use in the registry
@@ -63,7 +62,6 @@ import { transformEmployees } from './employees-transformer';
 import { transformImageUpload } from './image-upload-transformer';
 import { transformTodoList } from './todo-list-transformer';
 import { transformGptModels } from './gpt-models-transformer';
-import { transformSecondBrainNotions } from './second-brain-notions-transformer';
 import { transformOpenAiKeys } from './openai-keys-transformer';
 
 /**
@@ -110,7 +108,6 @@ export const TRANSFORMERS: Record<string, TransformerFunction> = {
   ImageUpload: transformImageUpload,
   TodoList: transformTodoList,
   gpt_models: transformGptModels,
-  secondBrain_notions: transformSecondBrainNotions,
   openAi_keys: transformOpenAiKeys,
 };
 

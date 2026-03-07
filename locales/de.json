@@ -257,7 +257,6 @@
     "profilePhoto": "Profilfoto",
     "profile": "Profil",
     "passwordChange": "Passwort ändern",
-    "notionIntegration": "Notion-Integration",
     "language": "Sprache",
     "openAiIntegration": "OpenAI-Integration"
   },
@@ -276,11 +275,6 @@
     "confirmPassword": "Passwort bestätigen",
     "success": "Passwort erfolgreich geändert",
     "errorPrefix": "Fehler: "
-  },
-  "NotionForm": {
-    "databaseId": "Notion-Datenbank-ID",
-    "secretKey": "Notion-Geheimschlüssel",
-    "activateButton": "Notion aktivieren"
   },
   "OpenAiForm": {
     "organizationId": "OpenAI-Organisations-ID",

@@ -257,7 +257,6 @@
     "profilePhoto": "Фото профілю",
     "profile": "Профіль",
     "passwordChange": "Зміна пароля",
-    "notionIntegration": "Інтеграція Notion",
     "language": "Мова",
     "openAiIntegration": "Інтеграція OpenAI"
   },
@@ -276,11 +275,6 @@
     "confirmPassword": "Підтвердження пароля",
     "success": "Пароль успішно змінено",
     "errorPrefix": "Помилка: "
-  },
-  "NotionForm": {
-    "databaseId": "ID бази даних Notion",
-    "secretKey": "Секретний ключ Notion",
-    "activateButton": "Активувати Notion"
   },
   "OpenAiForm": {
     "organizationId": "ID організації OpenAI",
