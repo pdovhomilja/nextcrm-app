@@ -133,7 +133,7 @@ export function LoginComponent() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error!,
+        description: error?.message || error?.toString() || "An error occurred during login",
       });
     } finally {
       setIsLoading(false);
@@ -151,14 +151,12 @@ export function LoginComponent() {
         title: "Success",
         description: "Password reset email has been sent.",
       });
-    } catch (error) {
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Something went wrong while resetting the password.",
-        });
-      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error?.response?.data?.error || error?.message || "Something went wrong while resetting the password.",
+      });
     } finally {
       setIsLoading(false);
       setOpen(false);

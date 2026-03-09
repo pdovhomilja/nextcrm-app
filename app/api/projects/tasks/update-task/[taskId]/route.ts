@@ -16,7 +16,16 @@ export async function PUT(req: Request, props: { params: Promise<{ taskId: strin
   /*
   Resend.com function init - this is a helper function that will be used to send emails
   */
-  const resend = await resendHelper();
+  let resend;
+  try {
+    resend = await resendHelper();
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error?.message || "Resend API key is not configured" },
+      { status: 500 }
+    );
+  }
+  
   const session = await getServerSession(authOptions);
   const body = await req.json();
   //console.log(body, "body");
