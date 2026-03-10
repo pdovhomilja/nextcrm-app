@@ -137,6 +137,12 @@ export function NewOpportunityForm({
         title: c("success"),
         description: t("createSuccess"),
       });
+      // Close dialog before refresh to prevent it from reopening
+      onDialogClose();
+      // Small delay to ensure dialog state update propagates
+      setTimeout(() => {
+        router.refresh();
+      }, 100);
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -145,8 +151,6 @@ export function NewOpportunityForm({
       });
     } finally {
       setIsLoading(false);
-      router.refresh();
-      onDialogClose();
       form.reset({
         name: "",
         close_date: new Date(),
