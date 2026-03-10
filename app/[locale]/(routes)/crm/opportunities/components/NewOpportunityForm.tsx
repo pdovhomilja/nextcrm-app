@@ -152,8 +152,12 @@ export function NewOpportunityForm({
         contact: "",
         campaign: "",
       });
+      // Close dialog before refresh to prevent it from reopening
       onDialogClose();
-      router.refresh();
+      // Small delay to ensure dialog state update propagates
+      setTimeout(() => {
+        router.refresh();
+      }, 100);
     } catch (error: any) {
       toast({
         variant: "destructive",
