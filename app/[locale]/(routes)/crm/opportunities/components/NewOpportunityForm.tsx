@@ -137,16 +137,6 @@ export function NewOpportunityForm({
         title: c("success"),
         description: t("createSuccess"),
       });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: c("error"),
-        description: error?.response?.data,
-      });
-    } finally {
-      setIsLoading(false);
-      router.refresh();
-      onDialogClose();
       form.reset({
         name: "",
         close_date: new Date(),
@@ -162,6 +152,16 @@ export function NewOpportunityForm({
         contact: "",
         campaign: "",
       });
+      onDialogClose();
+      router.refresh();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: c("error"),
+        description: error?.response?.data || t("createError"),
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 

@@ -8,9 +8,13 @@ export default async function resendHelper() {
     },
   });
 
-  const resend = new Resend(
-    process.env.RESEND_API_KEY || resendKey?.serviceKey!
-  );
+  const apiKey = process.env.RESEND_API_KEY || resendKey?.serviceKey;
+
+  if (!apiKey) {
+    throw new Error("Resend API key is not configured. Please add it in Admin settings or set RESEND_API_KEY environment variable.");
+  }
+
+  const resend = new Resend(apiKey);
 
   return resend;
 }
