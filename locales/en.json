@@ -11,7 +11,9 @@
       "opportunities": "Opportunities",
       "contacts": "Contacts",
       "leads": "Leads",
-      "contracts": "Contracts"
+      "contracts": "Contracts",
+      "targets": "Targets",
+      "targetLists": "Target Lists"
     },
     "projects": "Projects",
     "emails": "E-mails",

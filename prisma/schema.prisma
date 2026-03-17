@@ -692,6 +692,8 @@ model Users {
   boards               Boards[]              @relation("assigned_user")
   watching_boards      BoardWatchers[]
   watching_accounts    AccountWatchers[]
+  created_targets      crm_Targets[]         @relation("created_targets")
+  created_target_lists crm_TargetLists[]     @relation("created_target_lists")
 
   @@index([email])
   @@index([userStatus])
@@ -879,4 +881,67 @@ model ContactsToOpportunities {
   @@id([contact_id, opportunity_id])
   @@index([contact_id])
   @@index([opportunity_id])
+}
+
+// ============================================
+// CRM TARGETS FEATURE
+// ============================================
+
+model crm_Targets {
+  id               String    @id @default(uuid()) @db.Uuid
+  first_name       String?
+  last_name        String
+  email            String?
+  mobile_phone     String?
+  office_phone     String?
+  company          String?
+  company_website  String?
+  personal_website String?
+  position         String?
+  social_x         String?
+  social_linkedin  String?
+  social_instagram String?
+  social_facebook  String?
+  status           Boolean   @default(true)
+  tags             String[]
+  notes            String[]
+  created_by       String?   @db.Uuid
+  created_on       DateTime? @default(now())
+  updatedAt        DateTime? @updatedAt
+  updatedBy        String?   @db.Uuid
+
+  crate_by_user Users?               @relation("created_targets", fields: [created_by], references: [id])
+  target_lists  TargetsToTargetLists[]
+
+  @@index([created_by])
+  @@index([status])
+  @@index([created_on])
+}
+
+model crm_TargetLists {
+  id          String    @id @default(uuid()) @db.Uuid
+  name        String
+  description String?
+  status      Boolean   @default(true)
+  created_by  String?   @db.Uuid
+  created_on  DateTime? @default(now())
+  updatedAt   DateTime? @updatedAt
+
+  crate_by_user Users?               @relation("created_target_lists", fields: [created_by], references: [id])
+  targets       TargetsToTargetLists[]
+
+  @@index([created_by])
+  @@index([status])
+}
+
+model TargetsToTargetLists {
+  target_id      String @db.Uuid
+  target_list_id String @db.Uuid
+
+  target      crm_Targets     @relation(fields: [target_id], references: [id], onDelete: Cascade)
+  target_list crm_TargetLists @relation(fields: [target_list_id], references: [id], onDelete: Cascade)
+
+  @@id([target_id, target_list_id])
+  @@index([target_id])
+  @@index([target_list_id])
 }

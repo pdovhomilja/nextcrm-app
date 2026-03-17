@@ -71,9 +71,6 @@ export default async function AppLayout({
   // Fetch modules data for sidebar
   const modules = await getModules();
 
-  // Get user language for localization
-  const lang = user?.userLanguage || "en";
-
   // Fetch localization dictionary
   const dict = await getTranslations("ModuleMenu");
 
@@ -87,6 +84,8 @@ export default async function AppLayout({
       contacts: dict("crm.contacts"),
       leads: dict("crm.leads"),
       contracts: dict("crm.contracts"),
+      targets: dict("crm.targets"),
+      targetLists: dict("crm.targetLists"),
     },
     projects: dict("projects"),
     emails: dict("emails"),
