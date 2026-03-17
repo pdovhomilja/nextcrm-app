@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -41,6 +42,7 @@ const FormSchema = z.object({
 
 export function ProfileForm({ data }: ProfileFormProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const t = useTranslations("ProfileForm");
 
   const router = useRouter();
 
@@ -94,7 +96,7 @@ export function ProfileForm({ data }: ProfileFormProps) {
           name="name"
           render={({ field }) => (
             <FormItem className="w-1/3">
-              <FormLabel>Full name</FormLabel>
+              <FormLabel>{t("fullName")}</FormLabel>
               <FormControl>
                 <Input disabled={isLoading} placeholder="John Doe" {...field} />
               </FormControl>
@@ -107,7 +109,7 @@ export function ProfileForm({ data }: ProfileFormProps) {
           name="username"
           render={({ field }) => (
             <FormItem className="w-1/3">
-              <FormLabel>Username</FormLabel>
+              <FormLabel>{t("username")}</FormLabel>
               <FormControl>
                 <Input disabled={isLoading} placeholder="jdoe" {...field} />
               </FormControl>
@@ -120,7 +122,7 @@ export function ProfileForm({ data }: ProfileFormProps) {
           name="account_name"
           render={({ field }) => (
             <FormItem className="w-1/3">
-              <FormLabel>Company</FormLabel>
+              <FormLabel>{t("company")}</FormLabel>
               <FormControl>
                 <Input
                   disabled={isLoading}
@@ -134,7 +136,7 @@ export function ProfileForm({ data }: ProfileFormProps) {
         />
 
         <Button className="w-[150px]" type="submit">
-          Update
+          {t("updateButton")}
         </Button>
       </form>
     </Form>

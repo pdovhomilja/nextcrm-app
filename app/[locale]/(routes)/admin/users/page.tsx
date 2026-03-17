@@ -11,20 +11,22 @@ import { columns } from "./table-components/columns";
 import { Users } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import SendMailToAll from "./components/send-mail-to-all";
+import { getTranslations } from "next-intl/server";
 
 const AdminUsersPage = async () => {
   const users: Users[] = await getUsers();
+  const t = await getTranslations("AdminPage");
 
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.isAdmin) {
     return (
       <Container
-        title="Administration"
-        description="You are not admin, access not allowed"
+        title={t("title")}
+        description={t("accessNotAllowed")}
       >
         <div className="flex w-full h-full items-center justify-center">
-          Access not allowed
+          {t("accessNotAllowed")}
         </div>
       </Container>
     );
@@ -32,12 +34,12 @@ const AdminUsersPage = async () => {
 
   return (
     <Container
-      title="Users administration"
-      description={"Here you can manage your NextCRM users"}
+      title={t("users.title")}
+      description={t("users.description")}
     >
       <div className="flex-col1">
         <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">
-          Invite new user to NextCRM
+          {t("users.inviteHeading")}
         </h4>
         <InviteForm />
       </div>

@@ -149,7 +149,6 @@ export class BatchProcessor {
       'ImageUpload': 'imageUpload',
       'TodoList': 'todoList',
       'gpt_models': 'gpt_models',
-      'secondBrain_notions': 'secondBrain_notions',
       'openAi_keys': 'openAi_keys',
       // Junction tables
       'DocumentsToInvoices': 'documentsToInvoices',

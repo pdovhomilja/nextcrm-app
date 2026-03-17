@@ -32,6 +32,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -45,6 +46,7 @@ const NewProjectDialog = () => {
 
   const router = useRouter();
   const { toast } = useToast();
+  const t = useTranslations("ProjectsPage");
 
   const formSchema = z.object({
     title: z.string().min(3).max(255),
@@ -74,13 +76,13 @@ const NewProjectDialog = () => {
     try {
       await axios.post("/api/projects/", data);
       toast({
-        title: "Success",
+        title: t("newProject.successMsg"),
         description: `New project: ${data.title}, created successfully`,
       });
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error",
+        title: t("newProject.title"),
         description: error?.response?.data,
       });
     } finally {
@@ -93,13 +95,13 @@ const NewProjectDialog = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="px-2">New project</Button>
+        <Button className="px-2">{t("newProject.trigger")}</Button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>New Project</DialogTitle>
+          <DialogTitle>{t("newProject.title")}</DialogTitle>
           <DialogDescription>
-            Fill out the form below to create a new project.
+            {t("newProject.description")}
           </DialogDescription>
         </DialogHeader>
         {isLoading ? (
@@ -116,11 +118,11 @@ const NewProjectDialog = () => {
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>New project name</FormLabel>
+                      <FormLabel>{t("newProject.nameLabel")}</FormLabel>
                       <FormControl>
                         <Input
                           disabled={isLoading}
-                          placeholder="Enter project name"
+                          placeholder={t("newProject.namePlaceholder")}
                           {...field}
                         />
                       </FormControl>
@@ -133,11 +135,11 @@ const NewProjectDialog = () => {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Project description</FormLabel>
+                      <FormLabel>{t("newProject.descLabel")}</FormLabel>
                       <FormControl>
                         <Textarea
                           disabled={isLoading}
-                          placeholder="Enter project description"
+                          placeholder={t("newProject.descPlaceholder")}
                           {...field}
                         />
                       </FormControl>
@@ -150,21 +152,19 @@ const NewProjectDialog = () => {
                   name="visibility"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Project visibility</FormLabel>
+                      <FormLabel>{t("newProject.visibilityLabel")}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select projects visibility" />
+                            <SelectValue placeholder={t("newProject.visibilityLabel")} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value={"public"}>{`Public`}</SelectItem>
-                          <SelectItem
-                            value={"private"}
-                          >{`Private`}</SelectItem>
+                          <SelectItem value={"public"}>{t("newProject.public")}</SelectItem>
+                          <SelectItem value={"private"}>{t("newProject.private")}</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -178,9 +178,9 @@ const NewProjectDialog = () => {
                   variant="outline"
                   onClick={() => setOpen(false)}
                 >
-                  Cancel
+                  {t("newProject.cancel")}
                 </Button>
-                <Button type="submit">Create</Button>
+                <Button type="submit">{t("newProject.create")}</Button>
               </DialogFooter>
             </form>
           </Form>

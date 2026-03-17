@@ -4,6 +4,7 @@ import { z } from "zod";
 import axios from "axios";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { useToast } from "@/components/ui/use-toast";
 
@@ -28,20 +29,22 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 
 type Props = {
   industries: any[];
-  users: any[];
   onFinish: () => void;
 };
 
-export function NewAccountForm({ industries, users, onFinish }: Props) {
+export function NewAccountForm({ industries, onFinish }: Props) {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const t = useTranslations("CrmAccountForm");
+  const c = useTranslations("Common");
 
   const formSchema = z.object({
-    name: z.string().min(3).max(50),
+    name: z.string().min(3).max(100),
     office_phone: z.string().optional(),
     website: z.string().optional(),
     fax: z.string().optional(),
@@ -78,14 +81,14 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
     try {
       await axios.post("/api/crm/account", data);
       toast({
-        title: "Success",
-        description: "Account created successfully",
+        title: c("success"),
+        description: t("createSuccess"),
       });
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Something went wrong. Please try again.",
+        title: c("error"),
+        description: t("errorDescription"),
       });
     } finally {
       form.reset();
@@ -97,20 +100,20 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="h-full px-10">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="h-full px-4 md:px-10">
         {/*        <div>
           <pre>
             <code>{JSON.stringify(form.watch(), null, 2)}</code>
           </pre>
         </div> */}
-        <div className=" w-[800px] text-sm">
+        <div className="w-full text-sm">
           <div className="pb-5 space-y-2">
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Account name</FormLabel>
+                  <FormLabel>{t("accountName")}</FormLabel>
                   <FormControl>
                     <Input
                       disabled={isLoading}
@@ -127,7 +130,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
               name="office_phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Office phone</FormLabel>
+                  <FormLabel>{t("officePhone")}</FormLabel>
                   <FormControl>
                     <Input
                       disabled={isLoading}
@@ -144,7 +147,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>E-mail</FormLabel>
+                  <FormLabel>{t("email")}</FormLabel>
                   <FormControl>
                     <Input
                       disabled={isLoading}
@@ -161,7 +164,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
               name="website"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Website</FormLabel>
+                  <FormLabel>{t("website")}</FormLabel>
                   <FormControl>
                     <Input
                       disabled={isLoading}
@@ -178,7 +181,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
               name="company_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Account ID</FormLabel>
+                  <FormLabel>{t("accountId")}</FormLabel>
                   <FormControl>
                     <Input
                       disabled={isLoading}
@@ -195,7 +198,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
               name="vat"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Account VAT number</FormLabel>
+                  <FormLabel>{t("vatNumber")}</FormLabel>
                   <FormControl>
                     <Input
                       disabled={isLoading}
@@ -208,14 +211,14 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
               )}
             />
           </div>
-          <div className="flex gap-5 pb-5">
-            <div className="w-1/2 space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-5">
+            <div className="space-y-2">
               <FormField
                 control={form.control}
                 name="billing_street"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Billing street</FormLabel>
+                    <FormLabel>{t("billingStreet")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -232,7 +235,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                 name="billing_postal_code"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Billing postal code</FormLabel>
+                    <FormLabel>{t("billingPostalCode")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -249,7 +252,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                 name="billing_city"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Billing City</FormLabel>
+                    <FormLabel>{t("billingCity")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -266,7 +269,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                 name="billing_state"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Billing state</FormLabel>
+                    <FormLabel>{t("billingState")}</FormLabel>
                     <FormControl>
                       <Input disabled={isLoading} placeholder="" {...field} />
                     </FormControl>
@@ -279,7 +282,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                 name="billing_country"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Billing country</FormLabel>
+                    <FormLabel>{t("billingCountry")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -292,13 +295,13 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                 )}
               />
             </div>
-            <div className="w-1/2 space-y-2">
+            <div className="space-y-2">
               <FormField
                 control={form.control}
                 name="shipping_street"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Shipping street</FormLabel>
+                    <FormLabel>{t("shippingStreet")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -315,7 +318,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                 name="shipping_postal_code"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Shipping postal code</FormLabel>
+                    <FormLabel>{t("shippingPostalCode")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -332,7 +335,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                 name="shipping_city"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Shipping City</FormLabel>
+                    <FormLabel>{t("shippingCity")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -349,7 +352,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                 name="shipping_state"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Shipping state</FormLabel>
+                    <FormLabel>{t("shippingState")}</FormLabel>
                     <FormControl>
                       <Input disabled={isLoading} placeholder="" {...field} />
                     </FormControl>
@@ -362,7 +365,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                 name="shipping_country"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Shipping country</FormLabel>
+                    <FormLabel>{t("shippingCountry")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -376,14 +379,14 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
               />
             </div>
           </div>
-          <div className="flex gap-5 pb-5">
-            <div className="w-1/2 space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-5">
+            <div className="space-y-2">
               <FormField
                 control={form.control}
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>{c("description")}</FormLabel>
                     <FormControl>
                       <Textarea
                         disabled={isLoading}
@@ -396,13 +399,13 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                 )}
               />
             </div>
-            <div className="w-1/2 space-y-2">
+            <div className="space-y-2">
               <FormField
                 control={form.control}
                 name="annual_revenue"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Annual revenue</FormLabel>
+                    <FormLabel>{t("annualRevenue")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -419,7 +422,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                 name="member_of"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Is member of</FormLabel>
+                    <FormLabel>{t("isMemberOf")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
@@ -436,14 +439,14 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                 name="industry"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Choose industry</FormLabel>
+                    <FormLabel>{t("industry")}</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select new account industry" />
+                          <SelectValue placeholder={t("industryPlaceholder")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="flex overflow-y-auto h-56">
@@ -463,24 +466,15 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
                 name="assigned_to"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Assigned to</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a user to assign the account" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="overflow-y-auto h-56">
-                        {users.map((user) => (
-                          <SelectItem key={user.id} value={user.id}>
-                            {user.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>{c("assignedTo")}</FormLabel>
+                    <FormControl>
+                      <UserSearchCombobox
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        placeholder={c("selectUser")}
+                        disabled={isLoading}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -490,7 +484,7 @@ export function NewAccountForm({ industries, users, onFinish }: Props) {
         </div>
         <div className="grid gap-2 py-5">
           <Button disabled={isLoading} type="submit">
-            Create account
+            {t("createButton")}
           </Button>
         </div>
       </form>

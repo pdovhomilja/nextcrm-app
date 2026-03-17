@@ -26,6 +26,7 @@ import { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { Icons } from "@/components/ui/icons";
+import { useTranslations } from "next-intl";
 
 const FormSchema = z.object({
   name: z.string().min(3).max(50),
@@ -39,6 +40,7 @@ const FormSchema = z.object({
 
 export function InviteForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const t = useTranslations("AdminPage");
 
   const router = useRouter();
 
@@ -56,20 +58,20 @@ export function InviteForm() {
       if (response.data.error) {
         toast({
           variant: "destructive",
-          title: "Error",
+          title: t("inviteForm.error"),
           description: response.data.error,
         });
       } else {
         toast({
-          title: "Success!",
-          description: "User invited successfully.",
+          title: t("inviteForm.success"),
+          description: t("inviteForm.invited"),
         });
       }
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Something went wrong while inviting the user.",
+        title: t("inviteForm.error"),
+        description: t("inviteForm.errorDesc"),
       });
     } finally {
       form.reset({
@@ -93,7 +95,7 @@ export function InviteForm() {
           name="name"
           render={({ field }) => (
             <FormItem className="w-1/3">
-              <FormLabel>Name</FormLabel>
+              <FormLabel>{t("inviteForm.name")}</FormLabel>
               <FormControl>
                 <Input disabled={isLoading} placeholder="jdoe" {...field} />
               </FormControl>
@@ -106,7 +108,7 @@ export function InviteForm() {
           name="email"
           render={({ field }) => (
             <FormItem className="w-1/3">
-              <FormLabel>E-main</FormLabel>
+              <FormLabel>{t("inviteForm.email")}</FormLabel>
               <FormControl>
                 <Input
                   disabled={isLoading}

@@ -70,7 +70,7 @@ export function AdminUserDataTable<TData, TValue>({
   return (
     <div className="space-y-5 pt-5">
       <DataTableToolbar table={table} />
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

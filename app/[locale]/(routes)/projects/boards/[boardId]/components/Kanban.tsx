@@ -198,7 +198,6 @@ function TaskItem({ task, onDelete, onDone, onEdit, router }: any) {
 const Kanban = (props: any) => {
   const boardId = props.boardId;
   const boards = props.boards;
-  const users = props.users;
 
   const [data, setData]: any = useState([]);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
@@ -511,7 +510,6 @@ const Kanban = (props: any) => {
             </SheetHeader>
             <div className="mt-6 space-y-4">
               <UpdateTaskDialog
-                users={users}
                 boards={boards}
                 boardId={boardId}
                 initialData={selectedTask}

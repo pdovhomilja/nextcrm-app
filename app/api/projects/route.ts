@@ -3,6 +3,42 @@ import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+export async function GET(req: Request) {
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    return new NextResponse("Unauthenticated", { status: 401 });
+  }
+
+  try {
+    const boards = await prismadb.boards.findMany({
+      include: {
+        sections: true,
+        assigned_user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        watchers: {
+          select: {
+            user_id: true,
+          },
+        },
+      },
+      orderBy: {
+        position: "asc",
+      },
+    });
+
+    return NextResponse.json({ boards }, { status: 200 });
+  } catch (error) {
+    console.log("[PROJECTS_GET]", error);
+    return new NextResponse("Internal error", { status: 500 });
+  }
+}
+
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   const body = await req.json();

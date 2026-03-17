@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -47,12 +48,11 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 type Props = {
-  users: any;
   boardId: string;
   sections: any;
 };
 
-const NewTaskInProjectDialog = ({ users, boardId, sections }: Props) => {
+const NewTaskInProjectDialog = ({ boardId, sections }: Props) => {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -210,23 +210,14 @@ const NewTaskInProjectDialog = ({ users, boardId, sections }: Props) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Assigned to</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select assigned user" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {users.map((user: any) => (
-                            <SelectItem key={user.id} value={user.id}>
-                              {user.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <UserSearchCombobox
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          placeholder="Select assigned user"
+                          disabled={isLoading}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

@@ -6,9 +6,11 @@ import FileUploader from "@/components/ui/file-uploader";
 import { FileUploaderDropzone } from "@/components/ui/file-uploader-dropzone";
 import ModalDropzone from "./components/modal-dropzone";
 import { Documents } from "@prisma/client";
+import { getTranslations } from "next-intl/server";
 
 const DocumentsPage = async () => {
   const documents: Documents[] = await getDocuments();
+  const t = await getTranslations("DocumentsPage");
 
   if (!documents) {
     return <div>Something went wrong</div>;
@@ -16,14 +18,14 @@ const DocumentsPage = async () => {
 
   return (
     <Container
-      title="Documents"
-      description={"Everything you need to know about company documents"}
+      title={t("title")}
+      description={t("description")}
     >
       <div className="flex space-x-5 py-5">
-        <ModalDropzone buttonLabel="Upload pdf" fileType="pdfUploader" />
-        <ModalDropzone buttonLabel="Upload images" fileType="imageUploader" />
+        <ModalDropzone buttonLabel={t("uploadPdf")} fileType="pdfUploader" />
+        <ModalDropzone buttonLabel={t("uploadImages")} fileType="imageUploader" />
         <ModalDropzone
-          buttonLabel="Upload other files"
+          buttonLabel={t("uploadOther")}
           fileType="docUploader"
         />
       </div>

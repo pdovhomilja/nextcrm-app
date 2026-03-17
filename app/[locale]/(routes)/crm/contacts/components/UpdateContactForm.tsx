@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
+import { useTranslations } from "next-intl";
 
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
@@ -28,36 +29,29 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 import { Switch } from "@/components/ui/switch";
-import fetcher from "@/lib/fetcher";
-import useSWR from "swr";
-import SuspenseLoading from "@/components/loadings/suspense";
+import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 
 //TODO: fix all the types
-type NewTaskFormProps = {
+type UpdateContactFormProps = {
   initialData: any;
+  accounts: any[];
   setOpen: (value: boolean) => void;
 };
 
-export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
+export function UpdateContactForm({
+  initialData,
+  accounts,
+  setOpen,
+}: UpdateContactFormProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const t = useTranslations("CrmContactForm");
+  const c = useTranslations("Common");
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const { data: accounts, isLoading: isLoadingAccounts } = useSWR(
-    "/api/crm/account",
-    fetcher
-  );
-
-  const { data: users, isLoading: isLoadingUsers } = useSWR(
-    "/api/user",
-    fetcher
-  );
-
-  const [searchTerm, setSearchTerm] = useState("");
-
   const formSchema = z.object({
-    id: z.string().min(5).max(30),
+    id: z.string().min(5),
     birthday_year: z.string().optional().nullable(),
     birthday_month: z.string().optional().nullable(),
     birthday_day: z.string().optional().nullable(),
@@ -85,16 +79,44 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
 
   type NewAccountFormValues = z.infer<typeof formSchema>;
 
+  // Parse birthday from initialData (single date) into year/month/day components
+  // Coerce null → "" (strings) or false (booleans) to keep inputs controlled and pass Zod validation
+  const parsedInitialData = {
+    ...initialData,
+    last_name: initialData.last_name ?? "",
+    email: initialData.email ?? "",
+    type: initialData.type ?? "",
+    assigned_to: initialData.assigned_to ?? "",
+    status: initialData.status ?? false,
+    first_name: initialData.first_name ?? "",
+    description: initialData.description ?? "",
+    personal_email: initialData.personal_email ?? "",
+    office_phone: initialData.office_phone ?? "",
+    mobile_phone: initialData.mobile_phone ?? "",
+    website: initialData.website ?? "",
+    position: initialData.position ?? "",
+    assigned_account: initialData.assigned_account ?? "",
+    social_twitter: initialData.social_twitter ?? "",
+    social_facebook: initialData.social_facebook ?? "",
+    social_linkedin: initialData.social_linkedin ?? "",
+    social_skype: initialData.social_skype ?? "",
+    social_youtube: initialData.social_youtube ?? "",
+    social_tiktok: initialData.social_tiktok ?? "",
+    birthday_year: initialData.birthday ? new Date(initialData.birthday).getFullYear().toString() : "",
+    birthday_month: initialData.birthday ? (new Date(initialData.birthday).getMonth() + 1).toString() : "",
+    birthday_day: initialData.birthday ? new Date(initialData.birthday).getDate().toString() : "",
+  };
+
   //TODO: fix this any
   const form = useForm<any>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData,
+    defaultValues: parsedInitialData,
   });
 
   const contactType = [
-    { name: "Customer", id: "Customer" },
-    { name: "Partner", id: "Partner" },
-    { name: "Vendor", id: "Vendor" },
+    { name: t("customer"), id: "Customer" },
+    { name: t("partner"), id: "Partner" },
+    { name: t("vendor"), id: "Vendor" },
   ];
 
   const onSubmit = async (data: NewAccountFormValues) => {
@@ -102,13 +124,13 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
     try {
       await axios.put("/api/crm/contacts", data);
       toast({
-        title: "Success",
-        description: "Contact updated successfully",
+        title: c("success"),
+        description: t("updateSuccess"),
       });
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error",
+        title: c("error"),
         description: error?.response?.data,
       });
     } finally {
@@ -118,12 +140,8 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
     }
   };
 
-  if (isLoadingUsers || isLoadingAccounts)
-    return (
-      <div>
-        <SuspenseLoading />
-      </div>
-    );
+  if (!accounts || !initialData)
+    return <div>{c("somethingWentWrong")}</div>;
 
   const yearArray = Array.from(
     //start in 1923 and count to +100 years
@@ -131,38 +149,17 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
     (_, i) => i + 1923
   );
 
-  const filteredData = users.filter((item: any) =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  if (!users || !accounts || !initialData)
-    return <div>Something went wrong, there is no data for form</div>;
-
-  //console.log(accounts, "accounts");
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="h-full px-10">
-        {/*    <div>
-          <pre>
-            <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
-          </pre>
-        </div> */}
-        {/*     <pre>
-          <code>{JSON.stringify(initialData, null, 2)}</code>
-        </pre> */}
-        {/*   <div>
-          <pre>
-            <code>{JSON.stringify(form.watch(), null, 2)}</code>
-          </pre>
-        </div> */}
-        <div className=" w-[800px] text-sm">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="h-full px-4 md:px-10">
+        <div className="w-full text-sm">
           <div className="pb-5 space-y-2">
             <FormField
               control={form.control}
               name="first_name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>First name</FormLabel>
+                  <FormLabel>{t("firstName")}</FormLabel>
                   <FormControl>
                     <Input disabled={isLoading} placeholder="John" {...field} />
                   </FormControl>
@@ -175,7 +172,7 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
               name="last_name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Last name</FormLabel>
+                  <FormLabel>{t("lastName")}</FormLabel>
                   <FormControl>
                     <Input disabled={isLoading} placeholder="Doe" {...field} />
                   </FormControl>
@@ -188,7 +185,7 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
               name="mobile_phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Mobile phone</FormLabel>
+                  <FormLabel>{t("mobilePhone")}</FormLabel>
                   <FormControl>
                     <Input
                       disabled={isLoading}
@@ -206,7 +203,7 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
               name="office_phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Office phone</FormLabel>
+                  <FormLabel>{t("officePhone")}</FormLabel>
                   <FormControl>
                     <Input
                       disabled={isLoading}
@@ -223,7 +220,7 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>{t("email")}</FormLabel>
                   <FormControl>
                     <Input
                       disabled={isLoading}
@@ -240,7 +237,7 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
               name="personal_email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Personal email</FormLabel>
+                  <FormLabel>{t("personalEmail")}</FormLabel>
                   <FormControl>
                     <Input
                       disabled={isLoading}
@@ -257,7 +254,7 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
               name="website"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Website</FormLabel>
+                  <FormLabel>{t("website")}</FormLabel>
                   <FormControl>
                     <Input
                       disabled={isLoading}
@@ -269,17 +266,21 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
                 </FormItem>
               )}
             />
-            <h3>Birthday - (optional)</h3>
-            <div className="flex space-x-3 w-full mx-auto">
-              <FormField
-                control={form.control}
-                name="birthday_year"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <div className="flex space-x-2 w-32">
-                      <Select onValueChange={field.onChange}>
-                        <SelectTrigger>Year</SelectTrigger>
-                        <SelectContent className="flex overflow-y-auto h-56">
+            <div>
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{t("birthday")}</label>
+              <div className="flex space-x-3 w-full mt-2">
+                <FormField
+                  control={form.control}
+                  name="birthday_year"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t("year")} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="h-56">
                           {yearArray.map((yearOption) => (
                             <SelectItem
                               key={yearOption}
@@ -290,117 +291,38 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
                           ))}
                         </SelectContent>
                       </Select>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="birthday_month"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <div className="flex space-x-2 w-28">
-                      <Select onValueChange={field.onChange}>
-                        <SelectTrigger>Month</SelectTrigger>
-                        <SelectContent>
-                          {/* Replace this with the range of months you want to allow */}
-                          {Array.from({ length: 12 }, (_, i) => i + 1).map(
-                            (monthOption) => (
-                              <SelectItem
-                                key={monthOption}
-                                value={monthOption.toString()}
-                              >
-                                {monthOption}
-                              </SelectItem>
-                            )
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="birthday_day"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <div className="flex space-x-2">
-                      <Select onValueChange={field.onChange}>
-                        <SelectTrigger>Day</SelectTrigger>
-                        <SelectContent>
-                          {/* Replace this with the range of months you want to allow */}
-                          {Array.from({ length: 31 }, (_, i) => i + 1).map(
-                            (dayOption) => (
-                              <SelectItem
-                                key={dayOption}
-                                value={dayOption.toString()}
-                              >
-                                {dayOption}
-                              </SelectItem>
-                            )
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      disabled={isLoading}
-                      placeholder="Useful information about the contact"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="flex space-x-5">
-              <div className="w-1/2 space-y-2">
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={form.control}
-                  name="assigned_to"
+                  name="birthday_month"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Assigned user</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
+                    <FormItem className="flex-1">
+                      <Select onValueChange={field.onChange} value={field.value ?? ""}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Choose an user " />
+                            <SelectValue placeholder={t("month")} />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="h-96 overflow-y-auto">
-                          {/*                {
-                            //TODO: fix this
-                            users.map((user: any) => (
-                              <SelectItem key={user.id} value={user.id}>
-                                {user.name}
-                              </SelectItem>
-                            ))
-                          } */}
-                          <Input
-                            type="text"
-                            placeholder="Search in users ..."
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                          />
-                          {filteredData.map((item: any) => (
-                            <SelectItem key={item.id} value={item.id}>
-                              {item.name}
+                        <SelectContent className="h-56">
+                          {[
+                            { value: "1", label: t("january") },
+                            { value: "2", label: t("february") },
+                            { value: "3", label: t("march") },
+                            { value: "4", label: t("april") },
+                            { value: "5", label: t("may") },
+                            { value: "6", label: t("june") },
+                            { value: "7", label: t("july") },
+                            { value: "8", label: t("august") },
+                            { value: "9", label: t("september") },
+                            { value: "10", label: t("october") },
+                            { value: "11", label: t("november") },
+                            { value: "12", label: t("december") },
+                          ].map((month) => (
+                            <SelectItem key={month.value} value={month.value}>
+                              {month.label}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -411,28 +333,87 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
                 />
                 <FormField
                   control={form.control}
+                  name="birthday_day"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t("day")} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="h-56">
+                          {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                            <SelectItem key={day} value={day.toString()}>
+                              {day}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{c("description")}</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      disabled={isLoading}
+                      placeholder={t("descriptionPlaceholder")}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <FormField
+                  control={form.control}
+                  name="assigned_to"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("assignedUser")}</FormLabel>
+                      <FormControl>
+                        <UserSearchCombobox
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          placeholder={t("assignedUserPlaceholder")}
+                          disabled={isLoading}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
                   name="assigned_account"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Assign an Account</FormLabel>
+                      <FormLabel>{t("assignAccount")}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value ?? ""}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Choose assigned account " />
+                            <SelectValue placeholder={t("assignAccountPlaceholder")} />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="flex overflow-y-auto h-56">
-                          {
-                            //TODO: fix this
-                            accounts.map((account: any) => (
-                              <SelectItem key={account.id} value={account.id}>
-                                {account.name}
-                              </SelectItem>
-                            ))
-                          }
+                        <SelectContent className="h-56">
+                          {accounts.map((account: any) => (
+                            <SelectItem key={account.id} value={account.id}>
+                              {account.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -444,7 +425,7 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
                   name="position"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Position</FormLabel>
+                      <FormLabel>{t("position")}</FormLabel>
                       <FormControl>
                         <Input
                           disabled={isLoading}
@@ -462,8 +443,8 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                       <div className="space-y-0.5">
-                        <FormLabel className="text-base">
-                          Is contact active?
+                        <FormLabel className="text-sm">
+                          {t("isActive")}
                         </FormLabel>
                       </div>
                       <FormControl>
@@ -480,17 +461,17 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
                   name="type"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Assigned user</FormLabel>
+                      <FormLabel>{t("contactType")}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value ?? ""}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Choose contact type " />
+                            <SelectValue placeholder={t("contactTypePlaceholder")} />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="flex overflow-y-auto h-56">
+                        <SelectContent className="h-56">
                           {contactType.map((type) => (
                             <SelectItem key={type.id} value={type.id}>
                               {type.name}
@@ -503,13 +484,13 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
                   )}
                 />
               </div>
-              <div className="w-1/2 space-y-2">
+              <div className="space-y-2">
                 <FormField
                   control={form.control}
                   name="social_twitter"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Twitter</FormLabel>
+                      <FormLabel>{t("twitter")}</FormLabel>
                       <FormControl>
                         <Input
                           disabled={isLoading}
@@ -526,7 +507,7 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
                   name="social_facebook"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Facebook</FormLabel>
+                      <FormLabel>{t("facebook")}</FormLabel>
                       <FormControl>
                         <Input
                           disabled={isLoading}
@@ -543,7 +524,7 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
                   name="social_linkedin"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Linkedin</FormLabel>
+                      <FormLabel>{t("linkedin")}</FormLabel>
                       <FormControl>
                         <Input
                           disabled={isLoading}
@@ -560,7 +541,7 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
                   name="social_skype"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Skype</FormLabel>
+                      <FormLabel>{t("skype")}</FormLabel>
                       <FormControl>
                         <Input
                           disabled={isLoading}
@@ -577,7 +558,7 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
                   name="social_youtube"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>YouTube</FormLabel>
+                      <FormLabel>{t("youtube")}</FormLabel>
                       <FormControl>
                         <Input
                           disabled={isLoading}
@@ -594,7 +575,7 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
                   name="social_tiktok"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>TikTok</FormLabel>
+                      <FormLabel>{t("tiktok")}</FormLabel>
                       <FormControl>
                         <Input
                           disabled={isLoading}
@@ -614,10 +595,10 @@ export function UpdateContactForm({ initialData, setOpen }: NewTaskFormProps) {
           <Button disabled={isLoading} type="submit">
             {isLoading ? (
               <span className="flex items-center animate-pulse">
-                Saving data ...
+                {c("savingData")}
               </span>
             ) : (
-              "Update contact"
+              t("updateButton")
             )}
           </Button>
         </div>

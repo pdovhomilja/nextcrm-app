@@ -47,7 +47,7 @@ export const AiProjectReportEmail = ({
                 className="my-0 mx-auto rounded-full"
               />
             </Section>
-            <Heading className="text-black text-[24px] font-normal text-center p-0 my-[30px] mx-0">
+            <Heading className="text-black text-2xl font-normal text-center p-0 my-[30px] mx-0">
               Ai assistant Project report for: <strong>{username}</strong>
             </Heading>
             <Markdown>{data}</Markdown>

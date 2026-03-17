@@ -1,23 +1,30 @@
+import { cache } from "react";
 import { prismadb } from "@/lib/prisma";
 
-export const getAllCrmData = async () => {
-  const users = await prismadb.users.findMany({
-    where: {
-      userStatus: "ACTIVE",
-    },
-  });
-  const accounts = await prismadb.crm_Accounts.findMany({});
-  const opportunities = await prismadb.crm_Opportunities.findMany({});
-  const leads = await prismadb.crm_Leads.findMany({});
-  const contacts = await prismadb.crm_Contacts.findMany({});
-  const contracts = await prismadb.crm_Contracts.findMany({});
-  const saleTypes = await prismadb.crm_Opportunities_Type.findMany({});
-  const saleStages = await prismadb.crm_Opportunities_Sales_Stages.findMany({});
-  const campaigns = await prismadb.crm_campaigns.findMany({});
-  const industries = await prismadb.crm_Industry_Type.findMany({});
+export const getAllCrmData = cache(async () => {
+  const [
+    accounts,
+    opportunities,
+    leads,
+    contacts,
+    contracts,
+    saleTypes,
+    saleStages,
+    campaigns,
+    industries,
+  ] = await Promise.all([
+    prismadb.crm_Accounts.findMany({}),
+    prismadb.crm_Opportunities.findMany({}),
+    prismadb.crm_Leads.findMany({}),
+    prismadb.crm_Contacts.findMany({}),
+    prismadb.crm_Contracts.findMany({}),
+    prismadb.crm_Opportunities_Type.findMany({}),
+    prismadb.crm_Opportunities_Sales_Stages.findMany({}),
+    prismadb.crm_campaigns.findMany({}),
+    prismadb.crm_Industry_Type.findMany({}),
+  ]);
 
   const data = {
-    users,
     accounts,
     opportunities,
     leads,
@@ -30,4 +37,4 @@ export const getAllCrmData = async () => {
   };
 
   return data;
-};
+});

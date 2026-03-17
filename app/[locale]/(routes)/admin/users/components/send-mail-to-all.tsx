@@ -3,6 +3,7 @@
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import React, { ElementRef, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { sendMailToAll } from "@/actions/admin/send-mail-to-all";
 
@@ -23,10 +24,11 @@ import { useAction } from "@/hooks/use-action";
 
 const SendMailToAll = () => {
   const closeRef = useRef<ElementRef<"button">>(null);
+  const t = useTranslations("AdminPage");
 
   const { execute, fieldErrors, isLoading } = useAction(sendMailToAll, {
     onSuccess: (data) => {
-      toast.success("Message sent!");
+      toast.success(t("sendMail.sent"));
       closeRef.current?.click();
     },
     onError: (error) => {
@@ -44,27 +46,27 @@ const SendMailToAll = () => {
   return (
     <Sheet>
       <SheetTrigger ref={closeRef} asChild>
-        <Button>Send mail to all users</Button>
+        <Button>{t("sendMail.trigger")}</Button>
       </SheetTrigger>
       <SheetContent className="max-w-3xl overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Send mail to all users</SheetTitle>
+          <SheetTitle>{t("sendMail.title")}</SheetTitle>
           <SheetDescription>
-            Send an email notification to all registered users in the system
+            {t("sendMail.description")}
           </SheetDescription>
         </SheetHeader>
         <div className="mt-6 space-y-4">
           <form action={onSendMail} className="space-y-4">
             <FormInput
               id="title"
-              label="Message title"
+              label={t("sendMail.messageTitle")}
               type="text"
               errors={fieldErrors}
             />
             <FormTextarea
               id="message"
-              label="Message"
-              placeholder="Message"
+              label={t("sendMail.message")}
+              placeholder={t("sendMail.message")}
               required
               errors={fieldErrors}
             />
@@ -72,7 +74,7 @@ const SendMailToAll = () => {
               {isLoading ? (
                 <Loader2 className="h-6 w-6  animate-spin" />
               ) : (
-                "Send mail"
+                t("sendMail.sendButton")
               )}
             </FormSubmit>
           </form>

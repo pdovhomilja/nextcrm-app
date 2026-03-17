@@ -10,6 +10,7 @@ import { FileUploaderDropzone } from "@/components/ui/file-uploader-dropzone";
 
 import useAvatarStore from "@/store/useAvatarStore";
 import axios from "axios";
+import { useTranslations } from "next-intl";
 
 interface ProfileFormProps {
   data: Users;
@@ -17,6 +18,7 @@ interface ProfileFormProps {
 
 export function ProfilePhotoForm({ data }: ProfileFormProps) {
   const [avatar, setAvatar] = useState(data.avatar);
+  const t = useTranslations("ProfileForm");
 
   const { toast } = useToast();
   const router = useRouter();
@@ -32,16 +34,16 @@ export function ProfilePhotoForm({ data }: ProfileFormProps) {
       setAvatarStore(newAvatar);
       await axios.put("/api/profile/updateProfilePhoto", { avatar: newAvatar });
       toast({
-        title: "Profile photo updated.",
-        description: "Your profile photo has been updated.",
+        title: t("photoUpdated"),
+        description: t("photoUpdatedDescription"),
         duration: 5000,
       });
     } catch (e) {
       console.log(e);
       toast({
         variant: "default",
-        title: "Error updating profile photo.",
-        description: "There was an error updating your profile photo.",
+        title: t("photoError"),
+        description: t("photoErrorDescription"),
         duration: 5000,
       });
     } finally {

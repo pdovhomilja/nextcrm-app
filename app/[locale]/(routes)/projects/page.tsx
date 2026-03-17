@@ -8,18 +8,20 @@ import { Session } from "next-auth";
 
 import ProjectsView from "./_components/ProjectsView";
 import SuspenseLoading from "@/components/loadings/suspense";
+import { getTranslations } from "next-intl/server";
 
 export const maxDuration = 300;
 
 const ProjectsPage = async () => {
   const session: Session | null = await getServerSession(authOptions);
+  const t = await getTranslations("ProjectsPage");
 
   if (!session) return redirect("/sign-in");
 
   return (
     <Container
-      title="Projects"
-      description={"Everything you need to know about projects"}
+      title={t("title")}
+      description={t("description")}
     >
       <Suspense fallback={<SuspenseLoading />}>
         <ProjectsView />

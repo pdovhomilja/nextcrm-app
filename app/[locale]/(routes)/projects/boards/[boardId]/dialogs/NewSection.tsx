@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import LoadingComponent from "@/components/LoadingComponent";
+import { useTranslations } from "next-intl";
 
 type Props = {
   boardId: string;
@@ -41,6 +42,7 @@ const NewSectionDialog = ({ boardId }: Props) => {
 
   const router = useRouter();
   const { toast } = useToast();
+  const t = useTranslations("ProjectsPage");
 
   const formSchema = z.object({
     title: z.string().min(3).max(255),
@@ -67,13 +69,13 @@ const NewSectionDialog = ({ boardId }: Props) => {
     try {
       await axios.post(`/api/projects/sections/${boardId}`, data);
       toast({
-        title: "Success",
+        title: t("newSection.successMsg"),
         description: `New section: ${data.title}, created successfully`,
       });
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error",
+        title: t("newSection.title"),
         description: error?.response?.data,
       });
     } finally {
@@ -89,13 +91,13 @@ const NewSectionDialog = ({ boardId }: Props) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="px-2">Create new section</Button>
+        <Button className="px-2">{t("newSection.trigger")}</Button>
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Create new section</DialogTitle>
+          <DialogTitle>{t("newSection.title")}</DialogTitle>
           <DialogDescription>
-            Fill out the form below to create a new section to this project.
+            {t("newSection.description")}
           </DialogDescription>
         </DialogHeader>
         {isLoading ? (
@@ -111,11 +113,11 @@ const NewSectionDialog = ({ boardId }: Props) => {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>New section name</FormLabel>
+                    <FormLabel>{t("newSection.nameLabel")}</FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="Enter section name"
+                        placeholder={t("newSection.namePlaceholder")}
                         {...field}
                       />
                     </FormControl>
@@ -129,9 +131,9 @@ const NewSectionDialog = ({ boardId }: Props) => {
                   variant="outline"
                   onClick={() => setOpen(false)}
                 >
-                  Cancel
+                  {t("newSection.cancel")}
                 </Button>
-                <Button type="submit">Create</Button>
+                <Button type="submit">{t("newSection.create")}</Button>
               </DialogFooter>
             </form>
           </Form>

@@ -48,7 +48,7 @@ export async function POST(req: Request) {
         v: 0,
         createdBy: userId,
         updatedBy: userId,
-        ...(assigned_account !== null && assigned_account !== undefined
+        ...(assigned_account
           ? {
               assigned_accounts: {
                 connect: {
@@ -57,12 +57,19 @@ export async function POST(req: Request) {
               },
             }
           : {}),
-        assigned_to_user: {
-          connect: {
-            id: assigned_to,
-          },
-        },
-        birthday: birthday_day + "/" + birthday_month + "/" + birthday_year,
+        ...(assigned_to
+          ? {
+              assigned_to_user: {
+                connect: {
+                  id: assigned_to,
+                },
+              },
+            }
+          : {}),
+        birthday:
+          birthday_day && birthday_month && birthday_year
+            ? birthday_day + "/" + birthday_month + "/" + birthday_year
+            : null,
         description,
         email,
         personal_email,
@@ -155,8 +162,6 @@ export async function PUT(req: Request) {
       type,
     } = body;
 
-    console.log(assigned_account, "assigned_account");
-
     const newContact = await prismadb.crm_Contacts.update({
       where: {
         id,
@@ -164,8 +169,7 @@ export async function PUT(req: Request) {
       data: {
         v: 0,
         updatedBy: userId,
-        //Update assigned_accountsIDs only if assigned_account is not empty
-        ...(assigned_account !== null && assigned_account !== undefined
+        ...(assigned_account
           ? {
               assigned_accounts: {
                 connect: {
@@ -174,12 +178,19 @@ export async function PUT(req: Request) {
               },
             }
           : {}),
-        assigned_to_user: {
-          connect: {
-            id: assigned_to,
-          },
-        },
-        birthday: birthday_day + "/" + birthday_month + "/" + birthday_year,
+        ...(assigned_to
+          ? {
+              assigned_to_user: {
+                connect: {
+                  id: assigned_to,
+                },
+              },
+            }
+          : {}),
+        birthday:
+          birthday_day && birthday_month && birthday_year
+            ? birthday_day + "/" + birthday_month + "/" + birthday_year
+            : null,
         description,
         email,
         personal_email,

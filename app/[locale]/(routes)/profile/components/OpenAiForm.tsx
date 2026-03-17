@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -30,16 +31,17 @@ import { useRouter } from "next/navigation";
 const FormSchema = z.object({
   organizationId: z
     .string()
-    .min(3, "No organization ID is too short")
-    .max(50, "Organization ID is too long"),
+    .min(3)
+    .max(50),
   secretKey: z
     .string()
-    .min(3, "Secret key is too short")
-    .max(70, "Organization ID is too long"),
+    .min(3)
+    .max(70),
 });
 
 export function OpenAiForm({ userId }: { userId: string }) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const t = useTranslations("OpenAiForm");
 
   const router = useRouter();
 
@@ -86,7 +88,7 @@ export function OpenAiForm({ userId }: { userId: string }) {
           name="organizationId"
           render={({ field }) => (
             <FormItem className="w-1/3">
-              <FormLabel>Organization ID</FormLabel>
+              <FormLabel>{t("organizationId")}</FormLabel>
               <FormControl>
                 <Input
                   disabled={isLoading}
@@ -103,7 +105,7 @@ export function OpenAiForm({ userId }: { userId: string }) {
           name="secretKey"
           render={({ field }) => (
             <FormItem className="w-1/3">
-              <FormLabel>Secret Key</FormLabel>
+              <FormLabel>{t("secretKey")}</FormLabel>
               <FormControl>
                 <Input
                   disabled={isLoading}
@@ -117,7 +119,7 @@ export function OpenAiForm({ userId }: { userId: string }) {
         />
 
         <Button className="w-[150px]" type="submit">
-          Activate
+          {t("activateButton")}
         </Button>
       </form>
     </Form>

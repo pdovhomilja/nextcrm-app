@@ -34,13 +34,13 @@ export const MessageToAllUsers = ({
       <Tailwind>
         <Body className="bg-white my-auto mx-auto font-sans">
           <Container className="border border-solid border-slate-300 rounded-md my-[40px] mx-auto p-[20px] w-[465px]">
-            <Heading className="text-black text-[24px] font-normal text-center p-0 my-[30px] mx-0">
+            <Heading className="text-black text-2xl font-normal text-center p-0 my-[30px] mx-0">
               {title}
             </Heading>
-            <Text className="text-black text-[14px] leading-[24px]">
+            <Text className="text-black text-sm leading-[24px]">
               <strong>Message from {baseUrl} Admin</strong>
             </Text>
-            <Text className="text-black text-[14px] leading-[24px]">
+            <Text className="text-black text-sm leading-[24px]">
               {"Hello " + username + ","}
             </Text>
             <Markdown>{message}</Markdown>

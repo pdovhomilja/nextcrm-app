@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +28,7 @@ const FormSchema = z.object({
 
 export function PasswordChangeForm({ userId }: { userId: string }) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const t = useTranslations("PasswordChangeForm");
 
   const router = useRouter();
 
@@ -42,17 +44,14 @@ export function PasswordChangeForm({ userId }: { userId: string }) {
       await axios.put(`/api/user/${userId}/setnewpass`, data);
       //TODO: send data to the server
       toast({
-        title: "Password changed  successfully",
+        title: t("success"),
       });
       router.refresh();
     } catch (error: any) {
       console.log(error.response.data);
       toast({
         variant: "destructive",
-        title: "Error",
-        description:
-          "Something went wrong while changing your password: " +
-          error.response.data,
+        title: t("errorPrefix") + error.response.data,
       });
     } finally {
       setIsLoading(false);
@@ -70,7 +69,7 @@ export function PasswordChangeForm({ userId }: { userId: string }) {
           name="password"
           render={({ field }) => (
             <FormItem className="w-1/3">
-              <FormLabel>Password</FormLabel>
+              <FormLabel>{t("password")}</FormLabel>
               <FormControl>
                 <Input
                   disabled={isLoading}
@@ -88,7 +87,7 @@ export function PasswordChangeForm({ userId }: { userId: string }) {
           name="cpassword"
           render={({ field }) => (
             <FormItem className="w-1/3">
-              <FormLabel>Confirm password</FormLabel>
+              <FormLabel>{t("confirmPassword")}</FormLabel>
               <FormControl>
                 <Input
                   disabled={isLoading}

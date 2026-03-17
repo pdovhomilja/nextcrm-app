@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 
 import {
   Form,
@@ -25,7 +26,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
@@ -41,7 +41,6 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 type Props = {
-  users: any;
   boards: any;
   boardId?: string;
   initialData: any;
@@ -49,7 +48,6 @@ type Props = {
 };
 
 const UpdateTaskDialog = ({
-  users,
   boards,
   boardId,
   initialData,
@@ -224,23 +222,14 @@ const UpdateTaskDialog = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Assigned to</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select assigned user" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="h-56 overflow-y-auto">
-                      {users.map((user: any) => (
-                        <SelectItem key={user.id} value={user.id}>
-                          {user.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <UserSearchCombobox
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      placeholder="Select assigned user"
+                      disabled={isLoading}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

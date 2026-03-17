@@ -109,7 +109,7 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -117,9 +117,40 @@ export async function GET() {
   }
 
   try {
-    const users = await prismadb.users.findMany({});
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    const search = searchParams.get("search") ?? "";
+    const skip = Math.max(0, parseInt(searchParams.get("skip") ?? "0", 10));
+    const take = Math.min(100, Math.max(1, parseInt(searchParams.get("take") ?? "50", 10)));
 
-    return NextResponse.json(users);
+    const userSelect = { id: true, name: true, avatar: true } as const;
+
+    if (id) {
+      const user = await prismadb.users.findFirst({
+        where: { id, userStatus: "ACTIVE" },
+        select: userSelect,
+      });
+      if (!user) return new NextResponse("Not found", { status: 404 });
+      return NextResponse.json(user);
+    }
+
+    const where = {
+      userStatus: "ACTIVE" as const,
+      ...(search ? { name: { contains: search, mode: "insensitive" as const } } : {}),
+    };
+
+    const [users, total] = await prismadb.$transaction([
+      prismadb.users.findMany({
+        where,
+        select: userSelect,
+        orderBy: { name: "asc" },
+        skip,
+        take,
+      }),
+      prismadb.users.count({ where }),
+    ]);
+
+    return NextResponse.json({ users, total, hasMore: skip + take < total });
   } catch (error) {
     console.log("[USERS_GET]", error);
     return new NextResponse("Initial error", { status: 500 });

@@ -18,18 +18,15 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import UpdateTaskDialog from "@/app/[locale]/(routes)/projects/dialogs/UpdateTask";
-import { getActiveUsers } from "@/actions/get-users";
 import { useState } from "react";
 import { Icons } from "@/components/ui/icons";
 
 const TaskViewActions = ({
   taskId,
-  users,
   boards,
   initialData,
 }: {
   taskId: string;
-  users: any;
   boards: any;
   initialData: any;
 }) => {
@@ -98,7 +95,6 @@ const TaskViewActions = ({
           </SheetHeader>
           <div className="mt-6 space-y-4">
             <UpdateTaskDialog
-              users={users}
               boards={boards}
               initialData={initialData}
               onDone={() => setOpenEdit(false)}

@@ -57,7 +57,7 @@ const AccountsTasksView = ({ data, account }: TasksViewProps) => {
               <SheetTrigger asChild>
                 <Button className="m-2 cursor-pointer">+</Button>
               </SheetTrigger>
-              <SheetContent className="max-w-3xl overflow-y-auto">
+              <SheetContent className="w-full overflow-y-auto">
                 <SheetHeader>
                   <SheetTitle>Create new Task</SheetTitle>
                   <SheetDescription>

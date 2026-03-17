@@ -3,7 +3,6 @@ import { hasLocale } from "next-intl";
 import { routing } from "./routing";
 
 export default getRequestConfig(async ({ requestLocale }) => {
-  // Typically corresponds to the `[locale]` segment
   const requested = await requestLocale;
   const locale = hasLocale(routing.locales, requested)
     ? requested
@@ -11,6 +10,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
 
   return {
     locale,
-    // ...
+    messages: (await import(`../locales/${locale}.json`)).default,
+    timeZone: "Europe/Prague",
   };
 });

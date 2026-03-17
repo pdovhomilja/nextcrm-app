@@ -9,6 +9,7 @@ import { DataTableViewOptions } from "./data-table-view-options";
 
 import { statuses } from "../data/data";
 import { DataTableFacetedFilter } from "./data-table-faceted-filter";
+import { useTranslations } from "next-intl";
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
@@ -18,12 +19,13 @@ export function DataTableToolbar<TData>({
   table,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0;
+  const t = useTranslations("InvoicePage");
 
   return (
     <div className="flex items-center justify-between">
       <div className="flex flex-1 items-center space-x-2">
         <Input
-          placeholder="Filter by invoice number ..."
+          placeholder={t("dataTable.filterPlaceholder")}
           value={
             (table.getColumn("variable_symbol")?.getFilterValue() as string) ??
             ""
@@ -55,7 +57,7 @@ export function DataTableToolbar<TData>({
             onClick={() => table.resetColumnFilters()}
             className="h-8 px-2 lg:px-3"
           >
-            Reset
+            {t("dataTable.reset")}
             <Cross2Icon className="ml-2 h-4 w-4" />
           </Button>
         )}

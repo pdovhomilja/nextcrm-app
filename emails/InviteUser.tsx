@@ -44,17 +44,17 @@ export const InviteUserEmail = ({
       <Tailwind>
         <Body className="bg-white my-auto mx-auto font-sans">
           <Container className="border border-solid border-slate-300 rounded-md my-[40px] mx-auto p-[20px] w-[465px]">
-            <Heading className="text-black text-[24px] font-normal text-center p-0 my-[30px] mx-0">
+            <Heading className="text-black text-2xl font-normal text-center p-0 my-[30px] mx-0">
               {userLanguage === "en"
                 ? "  You have been invited to cooperate on something special"
                 : "Byl(a) jste pozván(a) ke spolupráci na něčem úžasném"}
             </Heading>
-            <Text className="text-black text-[14px] leading-[24px]">
+            <Text className="text-black text-sm leading-[24px]">
               {userLanguage === "en"
                 ? `Hello ${username},`
                 : `Dobrý den ${username},`}
             </Text>
-            <Text className="text-black text-[14px] leading-[24px]">
+            <Text className="text-black text-sm leading-[24px]">
               <strong>{invitedByUsername}</strong>
               {/*   (
             <Link
@@ -71,7 +71,7 @@ export const InviteUserEmail = ({
               <strong>{process.env.NEXT_PUBLIC_APP_NAME}</strong> app:
               <strong>{process.env.NEXT_PUBLIC_APP_URL}</strong>.
             </Text>
-            <Text className="text-black text-[14px] leading-[24px]">
+            <Text className="text-black text-sm leading-[24px]">
               {userLanguage === "en"
                 ? `
               To accept this invitation, click the button below. And use this
@@ -84,13 +84,13 @@ export const InviteUserEmail = ({
 
             <Section className="text-center mt-[32px] mb-[32px]">
               <Button
-                className="bg-slate-800 rounded-md text-white  py-3 px-4 text-[12px] font-semibold no-underline text-center"
+                className="bg-slate-800 rounded-md text-white  py-3 px-4 text-xs font-semibold no-underline text-center"
                 href={process.env.NEXT_PUBLIC_APP_URL}
               >
                 {userLanguage === "en" ? "Join the team" : "Připojit se"}
               </Button>
             </Section>
-            <Text className="text-black text-[14px] leading-[24px]">
+            <Text className="text-black text-sm leading-[24px]">
               {userLanguage === "en"
                 ? `
               or copy and paste this URL into your browser:`
@@ -103,7 +103,7 @@ export const InviteUserEmail = ({
               </Link>
             </Text>
             <Hr className="border border-solid border-[#eaeaea] my-[26px] mx-0 w-full" />
-            <Text className="text-slate-500 text-muted-foreground text-[12px] leading-[24px]">
+            <Text className="text-slate-500 text-muted-foreground text-xs leading-[24px]">
               {userLanguage === "en"
                 ? `This invitation was intended for `
                 : `Toto pozvání bylo určeno pro `}

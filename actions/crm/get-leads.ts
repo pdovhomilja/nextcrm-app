@@ -1,6 +1,7 @@
+import { cache } from "react";
 import { prismadb } from "@/lib/prisma";
 
-export const getLeads = async () => {
+export const getLeads = cache(async () => {
   const data = await prismadb.crm_Leads.findMany({
     include: {
       // Include assigned user (uses "LeadAssignedTo" relation)
@@ -28,4 +29,4 @@ export const getLeads = async () => {
     },
   });
   return data;
-};
+});

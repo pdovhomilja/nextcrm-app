@@ -7,18 +7,20 @@ import Container from "../../components/ui/Container";
 
 import { authOptions } from "@/lib/auth";
 import { getModules } from "@/actions/get-modules";
+import { getTranslations } from "next-intl/server";
 
 const AdminModulesPage = async () => {
   const session = await getServerSession(authOptions);
+  const t = await getTranslations("AdminPage");
 
   if (!session?.user?.isAdmin) {
     return (
       <Container
-        title="Administration"
-        description="You are not admin, access not allowed"
+        title={t("title")}
+        description={t("accessNotAllowed")}
       >
         <div className="flex w-full h-full items-center justify-center">
-          Access not allowed
+          {t("accessNotAllowed")}
         </div>
       </Container>
     );
@@ -27,8 +29,8 @@ const AdminModulesPage = async () => {
   const modules: any = await getModules();
   return (
     <Container
-      title="Modules administration"
-      description={"Here you can manage your NextCRM modules"}
+      title={t("modules.title")}
+      description={t("modules.description")}
     >
       <DataTable columns={columns} data={modules} search="name" />
     </Container>

@@ -184,7 +184,7 @@ export function DataTableRowActions<TData>({
       />
       {/* Invoice Preview Sheet */}
       <Sheet open={openView} onOpenChange={setOpenView}>
-        <SheetContent className="max-w-6xl overflow-y-auto">
+        <SheetContent className="w-full overflow-y-auto">
           <SheetHeader>
             <SheetTitle>Preview Invoice - {invoice?.id}</SheetTitle>
             <SheetDescription>
@@ -205,7 +205,7 @@ export function DataTableRowActions<TData>({
       </Sheet>
       {/* Rossum Edit Sheet */}
       <Sheet open={openRossumView} onOpenChange={setOpenRossumView}>
-        <SheetContent className="max-w-6xl overflow-y-auto">
+        <SheetContent className="w-full overflow-y-auto">
           <SheetHeader>
             <SheetTitle>Update Invoice - {invoice?.id}</SheetTitle>
             <SheetDescription>

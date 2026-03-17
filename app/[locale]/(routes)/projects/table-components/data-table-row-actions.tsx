@@ -34,6 +34,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { useTranslations } from "next-intl";
 
 import UpdateProjectForm from "../forms/UpdateProject";
 
@@ -46,6 +47,7 @@ export function DataTableRowActions<TData>({
 }: DataTableRowActionsProps<TData>) {
   const router = useRouter();
   const project = taskSchema.parse(row.original);
+  const t = useTranslations("ProjectsPage");
 
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -60,12 +62,12 @@ export function DataTableRowActions<TData>({
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Error, project not deleted. Please try again.",
+        title: t("dataTable.deleteError"),
       });
       console.log(error);
     } finally {
       toast({
-        title: "Success",
+        title: t("dataTable.delete"),
         description: `Project: ${project.title}, deleted successfully`,
       });
       router.refresh();
@@ -81,12 +83,12 @@ export function DataTableRowActions<TData>({
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Error, project not watched. Please try again.",
+        title: t("dataTable.watchError"),
       });
       console.log(error);
     } finally {
       toast({
-        title: "Success",
+        title: t("dataTable.watchProject"),
         description: `Project: ${project.title}, watched successfully`,
       });
       setLoading(false);
@@ -100,12 +102,12 @@ export function DataTableRowActions<TData>({
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Error, project not watched. Please try again.",
+        title: t("dataTable.watchError"),
       });
       console.log(error);
     } finally {
       toast({
-        title: "Success",
+        title: t("dataTable.stopWatching"),
         description: `Project: ${project.title}, You stop watching this project successfully`,
       });
       setLoading(false);
@@ -123,9 +125,9 @@ export function DataTableRowActions<TData>({
       <Sheet open={editOpen} onOpenChange={() => setEditOpen(false)}>
         <SheetContent className="max-w-3xl overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>Edit Project</SheetTitle>
+            <SheetTitle>{t("dataTable.editProject")}</SheetTitle>
             <SheetDescription>
-              Update project details including title, description, dates, and assigned users
+              {t("dataTable.editProjectDesc")}
             </SheetDescription>
           </SheetHeader>
           <div className="mt-6 space-y-4">
@@ -140,7 +142,7 @@ export function DataTableRowActions<TData>({
             className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
           >
             <DotsHorizontalIcon className="h-4 w-4" />
-            <span className="sr-only">Open menu</span>
+            <span className="sr-only">{t("dataTable.openMenu")}</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-[260px]">
@@ -148,25 +150,25 @@ export function DataTableRowActions<TData>({
             onClick={() => router.push(`/projects/boards/${project.id}`)}
           >
             <Glasses className="mr-2 w-4 h-4" />
-            View detail
+            {t("dataTable.viewDetail")}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setEditOpen(true)}>
             <Pencil className="mr-2 w-4 h-4" />
-            Edit
+            {t("dataTable.edit")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={onWatch}>
             <Eye className="mr-2 w-4 h-4" />
-            Watch project
+            {t("dataTable.watchProject")}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={onUnWatch}>
             <EyeOff className="mr-2 w-4 h-4" />
-            Stop watching project
+            {t("dataTable.stopWatching")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setOpen(true)}>
             <Trash className="mr-2 w-4 h-4" />
-            Delete
+            {t("dataTable.delete")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

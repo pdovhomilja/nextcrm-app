@@ -106,10 +106,10 @@ const DashboardPage = async () => {
               <div className="text-2xl font-medium">
                 {
                   //I need revenue value in format 1.000.000
-                  revenue.toLocaleString("en-US", {
+                  typeof revenue === 'number' ? revenue.toLocaleString("en-US", {
                     style: "currency",
                     currency: "USD",
-                  })
+                  }) : "$0.00"
                 }
               </div>
             </CardContent>

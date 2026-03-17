@@ -3,6 +3,7 @@
 import LoadingComponent from "@/components/LoadingComponent";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 import {
   Dialog,
   DialogContent,
@@ -41,17 +42,17 @@ import axios from "axios";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 type Props = {
-  users: any;
   boards: any;
 };
 
-const NewTaskDialog = ({ users, boards }: Props) => {
+const NewTaskDialog = ({ boards }: Props) => {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -59,6 +60,8 @@ const NewTaskDialog = ({ users, boards }: Props) => {
 
   const router = useRouter();
   const { toast } = useToast();
+  const t = useTranslations("ProjectsPage");
+  const c = useTranslations("Common");
 
   const formSchema = z.object({
     title: z.string().min(3).max(255),
@@ -94,13 +97,13 @@ const NewTaskDialog = ({ users, boards }: Props) => {
     try {
       await axios.post(`/api/projects/tasks/create-task`, data);
       toast({
-        title: "Success",
+        title: t("newTask.successMsg"),
         description: `New task: ${data.title}, created successfully`,
       });
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error",
+        title: c("error"),
         description: error?.response?.data,
       });
     } finally {
@@ -120,13 +123,13 @@ const NewTaskDialog = ({ users, boards }: Props) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="px-2">Create task</Button>
+        <Button className="px-2">{t("newTask.trigger")}</Button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New Task</DialogTitle>
+          <DialogTitle>{t("newTask.title")}</DialogTitle>
           <DialogDescription>
-            Fill out the form below to create a new task.
+            {t("newTask.description")}
           </DialogDescription>
         </DialogHeader>
         {isLoading ? (
@@ -143,11 +146,11 @@ const NewTaskDialog = ({ users, boards }: Props) => {
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>New task name</FormLabel>
+                      <FormLabel>{t("newTask.nameLabel")}</FormLabel>
                       <FormControl>
                         <Input
                           disabled={isLoading}
-                          placeholder="Enter task name"
+                          placeholder={t("newTask.namePlaceholder")}
                           {...field}
                         />
                       </FormControl>
@@ -160,11 +163,11 @@ const NewTaskDialog = ({ users, boards }: Props) => {
                   name="content"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Task description</FormLabel>
+                      <FormLabel>{t("newTask.descLabel")}</FormLabel>
                       <FormControl>
                         <Textarea
                           disabled={isLoading}
-                          placeholder="Enter task description"
+                          placeholder={t("newTask.descPlaceholder")}
                           {...field}
                         />
                       </FormControl>
@@ -177,7 +180,7 @@ const NewTaskDialog = ({ users, boards }: Props) => {
                   name="dueDateAt"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Due date</FormLabel>
+                      <FormLabel>{t("newTask.dueDateLabel")}</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -218,24 +221,15 @@ const NewTaskDialog = ({ users, boards }: Props) => {
                   name="user"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Assigned to</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select assigned user" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="h-56 overflow-y-auto">
-                          {users.map((user: any) => (
-                            <SelectItem key={user.id} value={user.id}>
-                              {user.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>{c("assignedTo")}</FormLabel>
+                      <FormControl>
+                        <UserSearchCombobox
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          placeholder={t("newTask.assignedToPlaceholder")}
+                          disabled={isLoading}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -245,14 +239,14 @@ const NewTaskDialog = ({ users, boards }: Props) => {
                   name="board"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Choose project</FormLabel>
+                      <FormLabel>{t("newTask.projectLabel")}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select tasks board" />
+                            <SelectValue placeholder={t("newTask.projectPlaceholder")} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -272,21 +266,21 @@ const NewTaskDialog = ({ users, boards }: Props) => {
                   name="priority"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Choose task priority</FormLabel>
+                      <FormLabel>{c("priorityLabel")}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select tasks priority" />
+                            <SelectValue placeholder={c("priorityPlaceholder")} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="critical">Critical</SelectItem>
+                          <SelectItem value="low">{c("low")}</SelectItem>
+                          <SelectItem value="medium">{c("medium")}</SelectItem>
+                          <SelectItem value="high">{c("high")}</SelectItem>
+                          <SelectItem value="critical">{c("critical")}</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -300,9 +294,9 @@ const NewTaskDialog = ({ users, boards }: Props) => {
                   variant="outline"
                   onClick={() => setOpen(false)}
                 >
-                  Cancel
+                  {t("newTask.cancel")}
                 </Button>
-                <Button type="submit">Create</Button>
+                <Button type="submit">{t("newTask.create")}</Button>
               </DialogFooter>
             </form>
           </Form>

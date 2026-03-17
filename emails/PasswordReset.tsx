@@ -49,31 +49,31 @@ export const PasswordResetEmail = ({
                 className="my-0 mx-auto rounded-full"
               />
             </Section>
-            <Heading className="text-black text-[24px] font-normal text-center p-0 my-[30px] mx-0">
+            <Heading className="text-black text-2xl font-normal text-center p-0 my-[30px] mx-0">
               Password reset for: <strong>{username}</strong>
             </Heading>
-            <Text className="text-black text-[14px] leading-[24px]">
+            <Text className="text-black text-sm leading-[24px]">
               Hello {username},
             </Text>
-            <Text className="text-black text-[14px] leading-[24px]">
+            <Text className="text-black text-sm leading-[24px]">
               {userLanguage === "en"
                 ? "Your password was reset,"
                 : "Vaše heslo bylo resetováno,"}
             </Text>
-            <Text className="text-black text-[14px] leading-[24px]">
+            <Text className="text-black text-sm leading-[24px]">
               {userLanguage === "en"
                 ? "Your username: "
                 : "Vaše uživatelské jméno: "}
               <strong>{email}</strong>
             </Text>
-            <Text className="text-black text-[14px] leading-[24px]">
+            <Text className="text-black text-sm leading-[24px]">
               {userLanguage === "en"
                 ? "Your new password: "
                 : "Vaše nové heslo: "}
 
               <strong>{password}</strong>
             </Text>
-            <Text className="text-black text-[14px] leading-[24px]">
+            <Text className="text-black text-sm leading-[24px]">
               {userLanguage === "en"
                 ? "Please login to "
                 : "Prosíme přihlašte se na "}
@@ -84,7 +84,7 @@ export const PasswordResetEmail = ({
                 {process.env.NEXT_PUBLIC_APP_URL}
               </Link>
             </Text>
-            <Text className="text-black text-[14px] leading-[24px]">
+            <Text className="text-black text-sm leading-[24px]">
               {userLanguage === "en" ? "Thank you, " : "Děkujeme, "}
               {process.env.NEXT_PUBLIC_APP_NAME}
             </Text>

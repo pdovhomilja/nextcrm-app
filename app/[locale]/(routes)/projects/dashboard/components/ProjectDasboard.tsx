@@ -56,12 +56,10 @@ export interface Comment {
 
 const ProjectDashboardCockpit = ({
   dashboardData,
-  users,
   boards,
   sections,
 }: {
   dashboardData: DashboardData;
-  users: any;
   boards: any;
   sections: Sections[];
 }) => {
@@ -176,7 +174,6 @@ const ProjectDashboardCockpit = ({
                 onClose={closeRef}
               >
                 <UpdateTaskDialog
-                  users={users}
                   boards={boards}
                   boardId={
                     sections.find(
@@ -290,7 +287,6 @@ const ProjectDashboardCockpit = ({
                   </SheetHeader>
                   <div className="mt-6 space-y-4">
                     <UpdateTaskDialog
-                      users={users}
                       boards={boards}
                       initialData={task}
                     />

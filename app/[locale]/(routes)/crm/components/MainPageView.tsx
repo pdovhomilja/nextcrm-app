@@ -14,12 +14,15 @@ import LeadsView from "./LeadsView";
 import ContractsView from "./ContractsView";
 
 const MainPageView = async () => {
-  const crmData = await getAllCrmData();
-  const accounts = await getAccounts();
-  const contacts = await getContacts();
-  const opportunities = await getOpportunitiesFull();
-  const leads = await getLeads();
-  const contracts = await getContractsWithIncludes();
+  const [crmData, accounts, contacts, opportunities, leads, contracts] =
+    await Promise.all([
+      getAllCrmData(),
+      getAccounts(),
+      getContacts(),
+      getOpportunitiesFull(),
+      getLeads(),
+      getContractsWithIncludes(),
+    ]);
   return (
     <>
       <AccountsView crmData={crmData} data={accounts} />

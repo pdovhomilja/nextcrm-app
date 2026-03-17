@@ -20,9 +20,30 @@ const EmailRoute = async () => {
 
   const layout = (await cookies()).get("react-resizable-panels:layout");
   const collapsed = (await cookies()).get("react-resizable-panels:collapsed");
-  //console.log(layout, collapsed, "layout, collapsed");
 
-  const defaultLayout = layout ? JSON.parse(layout.value) : undefined;
+  // Parse layout with validation - ensure left panel is visible
+  const FALLBACK_LAYOUT = [20, 35, 45];
+  let validatedLayout: number[] | undefined;
+  
+  if (layout) {
+    try {
+      const parsed = JSON.parse(layout.value);
+      // Validate: must be array of 3 numbers, first panel >= 18%
+      if (
+        Array.isArray(parsed) &&
+        parsed.length === 3 &&
+        parsed.every((n: number) => typeof n === "number" && n > 0) &&
+        parsed[0] >= 18
+      ) {
+        validatedLayout = parsed;
+      } else {
+        validatedLayout = FALLBACK_LAYOUT;
+      }
+    } catch {
+      validatedLayout = FALLBACK_LAYOUT;
+    }
+  }
+
   const defaultCollapsed = collapsed ? JSON.parse(collapsed.value) : undefined;
 
   return (
@@ -36,9 +57,9 @@ const EmailRoute = async () => {
         <MailComponent
           accounts={accounts}
           mails={mails}
-          defaultLayout={defaultLayout}
+          defaultLayout={validatedLayout}
           defaultCollapsed={defaultCollapsed}
-          navCollapsedSize={4}
+          navCollapsedSize={8}
         />
       </Suspense>
     </Container>

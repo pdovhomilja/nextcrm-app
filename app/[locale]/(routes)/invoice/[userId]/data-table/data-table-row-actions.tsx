@@ -27,8 +27,14 @@ import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
 import axios from "axios";
 import InvoiceViewModal from "@/components/modals/invoice-view-modal";
-import RightViewModalNoTrigger from "@/components/modals/right-view-notrigger";
 import RossumCockpit from "../../components/RossumCockpit";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import Link from "next/link";
 import LoadingModal from "@/components/modals/loading-modal";
 import { set } from "date-fns";
@@ -119,14 +125,17 @@ export function DataTableRowActions<TData>({
         isOpen={loadingOpen}
       />
 
-      <RightViewModalNoTrigger
-        title={"Update Invoice" + " - " + invoice?.id}
-        description="Update invoice metadata with Rossum cockpit"
-        open={openRossumView}
-        setOpen={setOpenRossumView}
-      >
-        <RossumCockpit invoiceData={row.original} />
-      </RightViewModalNoTrigger>
+      <Sheet open={openRossumView} onOpenChange={setOpenRossumView}>
+        <SheetContent className="w-full overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Update Invoice - {invoice?.id}</SheetTitle>
+            <SheetDescription>Update invoice metadata with Rossum cockpit</SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 space-y-4">
+            <RossumCockpit invoiceData={row.original} />
+          </div>
+        </SheetContent>
+      </Sheet>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button

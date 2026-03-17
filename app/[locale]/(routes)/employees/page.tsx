@@ -2,16 +2,18 @@ import Heading from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
 import React from "react";
 import Container from "../components/ui/Container";
+import { getTranslations } from "next-intl/server";
 
 type Props = {};
 
-const CrmPage = (props: Props) => {
+const CrmPage = async (props: Props) => {
+  const t = await getTranslations("EmployeesPage");
   return (
     <Container
-      title="Employees"
-      description={"Everything you need to know about Human Resources"}
+      title={t("title")}
+      description={t("description")}
     >
-      <div>Module content here</div>
+      <div>{t("moduleContent")}</div>
     </Container>
   );
 };
