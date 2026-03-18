@@ -29,7 +29,6 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/components/ui/use-toast";
 import { FingerprintIcon } from "lucide-react";
-import axios from "axios";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +39,7 @@ import {
 } from "@/components/ui/dialog";
 
 import LoadingComponent from "@/components/LoadingComponent";
+import { passwordReset } from "@/actions/auth/password-reset";
 
 export function LoginComponent() {
   const [isLoading, setIsLoading] = useState(false);
@@ -114,7 +114,6 @@ export function LoginComponent() {
         password: data.password,
         callbackUrl: process.env.NEXT_PUBLIC_APP_URL,
       });
-      //console.log(status, "status");
       if (status?.error) {
         toast({
           variant: "destructive",
@@ -123,7 +122,6 @@ export function LoginComponent() {
         });
       }
       if (status?.ok) {
-        // console.log("Status OK");
         toast({
           description: "Login successful.",
         });
@@ -144,9 +142,15 @@ export function LoginComponent() {
   async function onPasswordReset(email: string) {
     try {
       setIsLoading(true);
-      await axios.post("/api/user/passwordReset", {
-        email,
-      });
+      const result = await passwordReset(email);
+      if (result.error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.error,
+        });
+        return;
+      }
       toast({
         title: "Success",
         description: "Password reset email has been sent.",
@@ -155,7 +159,7 @@ export function LoginComponent() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error?.response?.data?.error || error?.message || "Something went wrong while resetting the password.",
+        description: error?.message || "Something went wrong while resetting the password.",
       });
     } finally {
       setIsLoading(false);

@@ -5,7 +5,7 @@ import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
+import { updateTarget } from "@/actions/crm/targets/update-target";
 
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
@@ -71,23 +71,22 @@ export function UpdateTargetForm({ initialData, setOpen }: UpdateTargetFormProps
 
   const onSubmit = async (data: UpdateTargetFormValues) => {
     setIsLoading(true);
-    try {
-      await axios.put("/api/crm/targets", { id: initialData.id, ...data });
-      toast({
-        title: "Success",
-        description: "Target updated successfully",
-      });
-      router.refresh();
-      setOpen(false);
-    } catch (error: any) {
+    const result = await updateTarget({ id: initialData.id, ...data });
+    setIsLoading(false);
+    if (result.error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error?.response?.data?.error || "Something went wrong",
+        description: result.error,
       });
-    } finally {
-      setIsLoading(false);
+      return;
     }
+    toast({
+      title: "Success",
+      description: "Target updated successfully",
+    });
+    router.refresh();
+    setOpen(false);
   };
 
   return (

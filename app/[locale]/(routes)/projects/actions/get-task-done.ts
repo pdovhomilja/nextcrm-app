@@ -1,9 +1,9 @@
-import axios from "axios";
+import { markTaskDone } from "@/actions/projects/mark-task-done";
 
-//Actions
+//Actions - wrapper kept for backwards compatibility
 export const getTaskDone = async (taskId: string) => {
   try {
-    await axios.post(`/api/projects/tasks/mark-task-as-done/${taskId}`);
+    await markTaskDone(taskId);
   } catch (error) {
     console.log(error);
   }

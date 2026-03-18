@@ -26,7 +26,7 @@ import { useRouter } from "next/navigation";
 import DocumentViewModal from "@/components/modals/document-view-modal";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import axios from "axios";
+import { assignDocumentToTask } from "@/actions/projects/assign-document-to-task";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -49,9 +49,21 @@ export function DataTableRowActions<TData>({
   const onAssign = async () => {
     setLoading(true);
     try {
-      await axios.post(`/api/projects/tasks/${document.id}/assign`, {
-        taskId: params?.taskId!,
+      const result = await assignDocumentToTask({
+        documentId: document.id,
+        taskId: params?.taskId as string,
       });
+      if (result?.error) {
+        toast({
+          title: "Error",
+          description: result.error,
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Document was assigned to task",
+        });
+      }
     } catch (error) {
       console.error(error);
       toast({
@@ -59,10 +71,6 @@ export function DataTableRowActions<TData>({
         description: "Something went wrong, while assigning document to task",
       });
     } finally {
-      toast({
-        title: "Success",
-        description: "Document was assigned to task",
-      });
       router.refresh();
       setLoading(false);
     }

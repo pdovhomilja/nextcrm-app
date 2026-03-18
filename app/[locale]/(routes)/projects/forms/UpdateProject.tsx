@@ -22,12 +22,12 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 import { useRouter } from "next/navigation";
 
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { updateProject } from "@/actions/projects/update-project";
 
 type Props = {
   initialData: any;
@@ -70,16 +70,24 @@ const UpdateProjectForm = ({ initialData, openEdit }: Props) => {
   const onSubmit = async (data: NewAccountFormValues) => {
     setIsLoading(true);
     try {
-      await axios.put("/api/projects/", data);
-      toast({
-        title: "Success",
-        description: `Project: ${data.title}, update successfully`,
-      });
+      const result = await updateProject(data);
+      if (result?.error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.error,
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: `Project: ${data.title}, update successfully`,
+        });
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error?.response?.data,
+        description: error?.message,
       });
     } finally {
       setIsLoading(false);

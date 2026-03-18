@@ -18,7 +18,7 @@ import { useRouter } from "next/navigation";
 import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import axios from "axios";
+import { deleteTargetList } from "@/actions/crm/target-lists/delete-target-list";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -37,23 +37,22 @@ export function DataTableRowActions<TData>({
 
   const onDelete = async () => {
     setLoading(true);
-    try {
-      await axios.delete(`/api/crm/target-lists/${targetList?.id}`);
-      toast({
-        title: "Success",
-        description: "Target list has been deleted",
-      });
-    } catch (error) {
+    const result = await deleteTargetList(targetList?.id);
+    setLoading(false);
+    setOpen(false);
+    if (result.error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Something went wrong while deleting the target list. Please try again.",
+        description: result.error,
       });
-    } finally {
-      setLoading(false);
-      setOpen(false);
-      router.refresh();
+      return;
     }
+    toast({
+      title: "Success",
+      description: "Target list has been deleted",
+    });
+    router.refresh();
   };
 
   return (

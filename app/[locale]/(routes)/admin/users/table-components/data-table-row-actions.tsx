@@ -16,9 +16,13 @@ import { useRouter } from "next/navigation";
 import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import axios from "axios";
 
 import { Copy, Edit, MoreHorizontal, Trash } from "lucide-react";
+import { deleteUser } from "@/actions/admin/users/delete-user";
+import { activateUser } from "@/actions/admin/users/activate-user";
+import { deactivateUser } from "@/actions/admin/users/deactivate-user";
+import { activateAdmin } from "@/actions/admin/users/activate-admin";
+import { deactivateAdmin } from "@/actions/admin/users/deactivate-admin";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -47,7 +51,15 @@ export function DataTableRowActions<TData>({
   const onDelete = async () => {
     try {
       setLoading(true);
-      await axios.delete(`/api/user/${data.id}`);
+      const result = await deleteUser(data.id);
+      if (result.error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.error,
+        });
+        return;
+      }
       router.refresh();
       toast({
         title: "Success",
@@ -68,7 +80,15 @@ export function DataTableRowActions<TData>({
   const onActivate = async () => {
     try {
       setLoading(true);
-      await axios.post(`/api/user/activate/${data.id}`);
+      const result = await activateUser(data.id);
+      if (result.error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.error,
+        });
+        return;
+      }
       router.refresh();
       toast({
         title: "Success",
@@ -90,7 +110,15 @@ export function DataTableRowActions<TData>({
   const onDeactivate = async () => {
     try {
       setLoading(true);
-      await axios.post(`/api/user/deactivate/${data.id}`);
+      const result = await deactivateUser(data.id);
+      if (result.error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.error,
+        });
+        return;
+      }
       router.refresh();
       toast({
         title: "Success",
@@ -108,10 +136,19 @@ export function DataTableRowActions<TData>({
       setOpen(false);
     }
   };
+
   const onDeactivateAdmin = async () => {
     try {
       setLoading(true);
-      await axios.post(`/api/user/deactivateAdmin/${data.id}`);
+      const result = await deactivateAdmin(data.id);
+      if (result.error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.error,
+        });
+        return;
+      }
       router.refresh();
       toast({
         title: "Success",
@@ -133,7 +170,15 @@ export function DataTableRowActions<TData>({
   const onActivateAdmin = async () => {
     try {
       setLoading(true);
-      await axios.post(`/api/user/activateAdmin/${data.id}`);
+      const result = await activateAdmin(data.id);
+      if (result.error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.error,
+        });
+        return;
+      }
       router.refresh();
       toast({
         title: "Success",

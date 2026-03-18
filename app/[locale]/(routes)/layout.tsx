@@ -89,7 +89,6 @@ export default async function AppLayout({
     },
     projects: dict("projects"),
     emails: dict("emails"),
-    invoices: dict("invoices"),
     reports: dict("reports"),
     documents: dict("documents"),
     settings: dict("settings"),

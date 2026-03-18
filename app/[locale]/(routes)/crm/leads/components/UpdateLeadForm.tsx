@@ -5,12 +5,7 @@ import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
 import { useTranslations } from "next-intl";
-
-import { cn } from "@/lib/utils";
 
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
@@ -36,6 +31,7 @@ import fetcher from "@/lib/fetcher";
 import useSWR from "swr";
 import SuspenseLoading from "@/components/loadings/suspense";
 import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
+import { updateLead } from "@/actions/crm/leads/update-lead";
 
 //TODO: fix all the types
 type NewTaskFormProps = {
@@ -87,16 +83,24 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
   const onSubmit = async (data: NewLeadFormValues) => {
     setIsLoading(true);
     try {
-      await axios.put("/api/crm/leads", data);
-      toast({
-        title: c("success"),
-        description: t("updateSuccess"),
-      });
+      const result = await updateLead(data);
+      if (result.error) {
+        toast({
+          variant: "destructive",
+          title: c("error"),
+          description: result.error,
+        });
+      } else {
+        toast({
+          title: c("success"),
+          description: t("updateSuccess"),
+        });
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: c("error"),
-        description: error?.response?.data,
+        description: error?.message,
       });
     } finally {
       setIsLoading(false);
@@ -388,7 +392,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {accounts.map((account: any) => (
+                      {accounts?.map((account: any) => (
                         <SelectItem key={account.id} value={account.id}>
                           {account.name}
                         </SelectItem>

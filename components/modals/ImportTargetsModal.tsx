@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { suggestMapping } from "@/actions/crm/targets/suggest-mapping";
 import Papa from "papaparse";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
@@ -103,8 +104,8 @@ const ImportTargetsModal = () => {
     setIsSuggesting(true);
     setStep("mapping");
     try {
-      const res = await axios.post("/api/crm/targets/import/suggest-mapping", { headers });
-      const suggested: Record<string, string | null> = res.data.mapping ?? {};
+      const res = await suggestMapping(headers);
+      const suggested: Record<string, string | null> = res.mapping ?? {};
       // Convert from { csvHeader -> targetField } to { targetField -> csvHeader }
       const newMapping: Record<string, string> = {};
       for (const field of TARGET_FIELDS) {

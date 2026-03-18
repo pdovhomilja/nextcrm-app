@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import { removeTargetFromList } from "@/actions/crm/target-lists/remove-target-from-list";
 import {
   Card,
   CardContent,
@@ -34,21 +34,18 @@ export function BasicView({ data }: TargetListBasicViewProps) {
 
   const handleRemove = async (targetId: string) => {
     setRemovingId(targetId);
-    try {
-      await axios.delete(`/api/crm/target-lists/${data.id}/targets`, {
-        data: { targetId },
-      });
-      toast({ title: "Removed", description: "Target removed from list" });
-      router.refresh();
-    } catch (error: any) {
+    const result = await removeTargetFromList(data.id, targetId);
+    setRemovingId(null);
+    if (result.error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error?.response?.data?.error || "Failed to remove target",
+        description: result.error,
       });
-    } finally {
-      setRemovingId(null);
+      return;
     }
+    toast({ title: "Removed", description: "Target removed from list" });
+    router.refresh();
   };
 
   return (

@@ -23,7 +23,6 @@ import { useRouter } from "next/navigation";
 import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import axios from "axios";
 import { UpdateLeadForm } from "../components/UpdateLeadForm";
 import {
   Sheet,
@@ -32,6 +31,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { deleteLead } from "@/actions/crm/leads/delete-lead";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -52,17 +52,25 @@ export function DataTableRowActions<TData>({
   const onDelete = async () => {
     setLoading(true);
     try {
-      await axios.delete(`/api/crm/leads/${lead?.id}`);
-      toast({
-        title: "Success",
-        description: "Opportunity has been deleted",
-      });
+      const result = await deleteLead(lead?.id);
+      if (result.error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.error,
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Lead has been deleted",
+        });
+      }
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
         description:
-          "Something went wrong while deleting opportunity. Please try again.",
+          "Something went wrong while deleting lead. Please try again.",
       });
     } finally {
       setLoading(false);

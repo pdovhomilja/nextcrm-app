@@ -38,7 +38,6 @@ import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -46,6 +45,7 @@ import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { createTaskInBoard } from "@/actions/projects/create-task-in-board";
 
 type Props = {
   boardId: string;
@@ -83,16 +83,32 @@ const NewTaskInProjectDialog = ({ boardId, sections }: Props) => {
     console.log(data);
     setIsLoading(true);
     try {
-      await axios.post(`/api/projects/tasks/create-task/${boardId}`, data);
-      toast({
-        title: "Success",
-        description: `New task: ${data.title}, created successfully`,
+      const result = await createTaskInBoard({
+        boardId,
+        section: data.section,
+        title: data.title,
+        priority: data.priority,
+        content: data.content,
+        user: data.user,
+        dueDateAt: data.dueDateAt,
       });
+      if (result?.error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.error,
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: `New task: ${data.title}, created successfully`,
+        });
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error?.response?.data,
+        description: error?.message,
       });
     } finally {
       setIsLoading(false);

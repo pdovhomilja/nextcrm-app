@@ -18,7 +18,6 @@
     "projects": "Projekte",
     "emails": "E-Mails",
     "tasks": "Aufgaben",
-    "invoices": "Rechnungen",
     "reports": "Berichte",
     "documents": "Dokumente",
     "storage": "Speicher",
@@ -37,7 +36,6 @@
     "projects": "Projekte",
     "tasks": "Aufgaben",
     "myTasks": "Meine Aufgaben",
-    "invoices": "Rechnungen",
     "documents": "Dokumente",
     "storage": "Speicher"
   },
@@ -397,28 +395,6 @@
       "editProjectDesc": "Projektdetails bearbeiten",
       "deleteError": "Fehler beim Löschen des Projekts",
       "watchError": "Fehler beim Aktualisieren des Beobachtungsstatus"
-    }
-  },
-  "InvoicePage": {
-    "title": "Rechnungen",
-    "description": "Verwalten Sie Ihre Rechnungen",
-    "uploadPdf": "PDF hochladen",
-    "myInvoices": "Meine Rechnungen",
-    "checkForNew": "Auf neue prüfen",
-    "checking": "Prüfe...",
-    "somethingWentWrong": "Etwas ist schiefgelaufen",
-    "settings": {
-      "title": "Einstellungen",
-      "companySettings": "Unternehmenseinstellungen",
-      "description": "Rechnungseinstellungen verwalten"
-    },
-    "dataTable": {
-      "filterPlaceholder": "Rechnungen filtern...",
-      "reset": "Zurücksetzen"
-    },
-    "newTask": {
-      "title": "Neue Aufgabe erstellen",
-      "description": "Eine neue Aufgabe für diese Rechnung hinzufügen"
     }
   },
   "DocumentsPage": {

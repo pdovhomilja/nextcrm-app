@@ -18,7 +18,6 @@
     "projects": "Projects",
     "emails": "E-mails",
     "tasks": "Tasks",
-    "invoices": "Invoices",
     "reports": "Reports",
     "documents": "Documents",
     "storage": "Storage",
@@ -38,7 +37,6 @@
     "projects": "Projects",
     "tasks": "Tasks",
     "myTasks": "My tasks",
-    "invoices": "Invoices",
     "documents": "Documents",
     "storage": "Storage"
   },
@@ -398,28 +396,6 @@
       "editProjectDesc": "Edit project details",
       "deleteError": "Error deleting project",
       "watchError": "Error updating watch status"
-    }
-  },
-  "InvoicePage": {
-    "title": "Invoices",
-    "description": "Manage your invoices",
-    "uploadPdf": "Upload PDF",
-    "myInvoices": "My invoices",
-    "checkForNew": "Check for new",
-    "checking": "Checking...",
-    "somethingWentWrong": "Something went wrong",
-    "settings": {
-      "title": "Settings",
-      "companySettings": "Company settings",
-      "description": "Manage your invoice settings"
-    },
-    "dataTable": {
-      "filterPlaceholder": "Filter invoices...",
-      "reset": "Reset"
-    },
-    "newTask": {
-      "title": "Create new task",
-      "description": "Add a new task for this invoice"
     }
   },
   "DocumentsPage": {

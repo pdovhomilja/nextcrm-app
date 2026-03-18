@@ -1,6 +1,5 @@
 "use client";
 
-import axios from "axios";
 import { useRouter } from "next/navigation";
 import { MoreHorizontal, PowerIcon, PowerOffIcon } from "lucide-react";
 
@@ -15,6 +14,8 @@ import {
 import { Button } from "@/components/ui/button";
 
 import { ModuleColumn } from "./Columns";
+import { activateModule } from "@/actions/admin/activate-module";
+import { deactivateModule } from "@/actions/admin/deactivate-module";
 
 interface CellActionProps {
   data: ModuleColumn;
@@ -26,7 +27,15 @@ export const CellAction = ({ data }: CellActionProps) => {
 
   const onActivate = async () => {
     try {
-      await axios.post(`/api/admin/activateModule/${data.id}`);
+      const result = await activateModule(data.id);
+      if (result.error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.error,
+        });
+        return;
+      }
       router.refresh();
       toast({
         title: "Success",
@@ -44,7 +53,15 @@ export const CellAction = ({ data }: CellActionProps) => {
 
   const onDeactivate = async () => {
     try {
-      await axios.post(`/api/admin/deactivateModule/${data.id}`);
+      const result = await deactivateModule(data.id);
+      if (result.error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.error,
+        });
+        return;
+      }
       router.refresh();
       toast({
         title: "Success",

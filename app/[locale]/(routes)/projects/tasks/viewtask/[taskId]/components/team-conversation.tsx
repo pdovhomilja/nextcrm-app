@@ -22,12 +22,12 @@ import { Icons } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 import moment from "moment";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { addCommentToTask } from "@/actions/projects/add-comment-to-task";
 
 const FormSchema = z.object({
   comment: z.string().min(3).max(160),
@@ -53,10 +53,18 @@ export function TeamConversations({
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setIsLoading(true);
     try {
-      await axios.post(`/api/projects/tasks/addCommentToTask/${taskId}`, data);
-      toast({
-        title: "Success, comment added.",
-      });
+      const result = await addCommentToTask({ taskId, comment: data.comment });
+      if (result?.error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.error,
+        });
+      } else {
+        toast({
+          title: "Success, comment added.",
+        });
+      }
     } catch (error) {
       toast({
         variant: "destructive",

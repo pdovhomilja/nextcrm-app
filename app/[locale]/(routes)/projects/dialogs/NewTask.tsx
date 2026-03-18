@@ -38,7 +38,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -47,6 +46,7 @@ import { useTranslations } from "next-intl";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { createTask } from "@/actions/projects/create-task";
 
 type Props = {
   boards: any;
@@ -95,16 +95,24 @@ const NewTaskDialog = ({ boards }: Props) => {
     console.log(data);
     setIsLoading(true);
     try {
-      await axios.post(`/api/projects/tasks/create-task`, data);
-      toast({
-        title: t("newTask.successMsg"),
-        description: `New task: ${data.title}, created successfully`,
-      });
+      const result = await createTask(data);
+      if (result?.error) {
+        toast({
+          variant: "destructive",
+          title: c("error"),
+          description: result.error,
+        });
+      } else {
+        toast({
+          title: t("newTask.successMsg"),
+          description: `New task: ${data.title}, created successfully`,
+        });
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: c("error"),
-        description: error?.response?.data,
+        description: error?.message,
       });
     } finally {
       setIsLoading(false);

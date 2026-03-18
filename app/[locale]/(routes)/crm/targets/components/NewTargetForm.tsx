@@ -5,7 +5,7 @@ import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
+import { createTarget } from "@/actions/crm/targets/create-target";
 
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
@@ -63,24 +63,23 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
       return;
     }
     setIsLoading(true);
-    try {
-      await axios.post("/api/crm/targets", data);
-      toast({
-        title: "Success",
-        description: "Target created successfully",
-      });
-      form.reset();
-      router.refresh();
-      onFinish();
-    } catch (error: any) {
+    const result = await createTarget(data);
+    setIsLoading(false);
+    if (result.error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error?.response?.data?.error || "Something went wrong",
+        description: result.error,
       });
-    } finally {
-      setIsLoading(false);
+      return;
     }
+    toast({
+      title: "Success",
+      description: "Target created successfully",
+    });
+    form.reset();
+    router.refresh();
+    onFinish();
   };
 
   return (

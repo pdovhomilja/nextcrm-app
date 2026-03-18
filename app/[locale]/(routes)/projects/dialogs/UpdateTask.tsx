@@ -30,7 +30,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
@@ -39,6 +38,7 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { updateTask } from "@/actions/projects/update-task";
 
 type Props = {
   boards: any;
@@ -97,19 +97,27 @@ const UpdateTaskDialog = ({
   const onSubmit = async (data: UpdatedTaskForm) => {
     setIsLoading(true);
     try {
-      await axios.put(
-        `/api/projects/tasks/update-task/${initialData.id}`,
-        data
-      );
-      toast({
-        title: "Success",
-        description: `Task: ${data.title}, updated successfully`,
+      const result = await updateTask({
+        taskId: initialData.id,
+        ...data,
       });
+      if (result?.error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.error,
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: `Task: ${data.title}, updated successfully`,
+        });
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error?.response?.data,
+        description: error?.message,
       });
     } finally {
       setIsLoading(false);
@@ -120,7 +128,7 @@ const UpdateTaskDialog = ({
 
   return (
     <div className="flex flex-col space-y-2 w-full ">
-      {/* 
+      {/*
       <pre>
         <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
       </pre>

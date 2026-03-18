@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { z } from "zod";
 
 import { useRouter } from "next/navigation";
@@ -10,7 +10,6 @@ import { useToast } from "@/components/ui/use-toast";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 
 import { Button } from "@/components/ui/button";
 
@@ -31,11 +30,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import fetcher from "@/lib/fetcher";
-import useSWR from "swr";
 import SuspenseLoading from "@/components/loadings/suspense";
-import { crm_Accounts } from "@prisma/client";
 import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
+import { updateAccount } from "@/actions/crm/accounts/update-account";
+import { getIndustries } from "@/actions/crm/get-industries";
 
 interface UpdateAccountFormProps {
   //TODO: fix this any
@@ -53,10 +51,14 @@ export function UpdateAccountForm({
   const t = useTranslations("CrmAccountForm");
   const c = useTranslations("Common");
 
-  const { data: industries, isLoading: isLoadingIndustries } = useSWR(
-    "/api/crm/industries",
-    fetcher
-  );
+  const [industries, setIndustries] = React.useState<any[] | null>(null);
+  const [isLoadingIndustries, setIsLoadingIndustries] = React.useState(true);
+
+  useEffect(() => {
+    getIndustries()
+      .then((data) => setIndustries(data))
+      .finally(() => setIsLoadingIndustries(false));
+  }, []);
 
   const formSchema = z.object({
     id: z.string().min(5).max(30),
@@ -127,16 +129,24 @@ export function UpdateAccountForm({
     //console.log(data);
     setIsLoading(true);
     try {
-      await axios.put("/api/crm/account", data);
-      toast({
-        title: c("success"),
-        description: t("updateSuccess"),
-      });
+      const result = await updateAccount(data);
+      if (result.error) {
+        toast({
+          variant: "destructive",
+          title: c("error"),
+          description: result.error,
+        });
+      } else {
+        toast({
+          title: c("success"),
+          description: t("updateSuccess"),
+        });
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: c("error"),
-        description: error?.response?.data,
+        description: t("errorDescription"),
       });
     } finally {
       setIsLoading(false);

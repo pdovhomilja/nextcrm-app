@@ -1,7 +1,6 @@
 "use client";
 
 import { z } from "zod";
-import axios from "axios";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -20,6 +19,7 @@ import { Icons } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { DialogClose } from "@radix-ui/react-dialog";
+import { createSection } from "@/actions/projects/create-section";
 
 type NewSectionFormProps = {
   boardId: string;
@@ -56,16 +56,24 @@ const NewSectionForm = ({ boardId, onClose }: NewSectionFormProps) => {
   const onSubmit = async (data: NewAccountFormValues) => {
     setIsLoading(true);
     try {
-      await axios.post(`/api/projects/sections/${boardId}`, data);
-      toast({
-        title: "Success",
-        description: `New project: ${data.title}, created successfully`,
-      });
+      const result = await createSection({ boardId, title: data.title });
+      if (result?.error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.error,
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: `New section: ${data.title}, created successfully`,
+        });
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error?.response?.data,
+        description: error?.message,
       });
     } finally {
       form.reset({

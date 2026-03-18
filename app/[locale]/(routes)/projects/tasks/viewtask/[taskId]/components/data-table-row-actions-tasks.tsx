@@ -26,7 +26,7 @@ import { useRouter } from "next/navigation";
 import DocumentViewModal from "@/components/modals/document-view-modal";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import axios from "axios";
+import { disconnectDocumentFromTask } from "@/actions/projects/assign-document-to-task";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -49,9 +49,21 @@ export function DataTableRowActionsTasks<TData>({
   const onDisconnect = async () => {
     setLoading(true);
     try {
-      await axios.post(`/api/projects/tasks/${document.id}/disconnect`, {
-        taskId: params?.taskId!,
+      const result = await disconnectDocumentFromTask({
+        documentId: document.id,
+        taskId: params?.taskId as string,
       });
+      if (result?.error) {
+        toast({
+          title: "Error",
+          description: result.error,
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Document was disconnected from task",
+        });
+      }
     } catch (error) {
       console.error(error);
       toast({
@@ -60,10 +72,6 @@ export function DataTableRowActionsTasks<TData>({
           "Something went wrong, while disconnecting document from task",
       });
     } finally {
-      toast({
-        title: "Success",
-        description: "Document was disconnected from task",
-      });
       router.refresh();
       setLoading(false);
     }

@@ -25,9 +25,8 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import axios from "axios";
 import { useRouter } from "next/navigation";
-import { Users } from "@prisma/client";
+import { updateProfile } from "@/actions/user/update-profile";
 
 interface ProfileFormProps {
   data: any;
@@ -62,8 +61,22 @@ export function ProfileForm({ data }: ProfileFormProps) {
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     try {
       setIsLoading(true);
-      await axios.put(`/api/user/${data.id}/updateprofile`, data);
-      //TODO: send data to the server
+      const result = await updateProfile({
+        userId: data.id,
+        name: data.name,
+        username: data.username,
+        account_name: data.account_name,
+      });
+
+      if (result.error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.error,
+        });
+        return;
+      }
+
       toast({
         title: "You submitted the following values:",
         description: (

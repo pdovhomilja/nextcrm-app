@@ -31,7 +31,6 @@ import { getStorageSize } from "@/actions/documents/get-storage-size";
 import { getContactCount } from "@/actions/dashboard/get-contacts-count";
 import { getAccountsCount } from "@/actions/dashboard/get-accounts-count";
 import { getContractsCount } from "@/actions/dashboard/get-contracts-count";
-import { getInvoicesCount } from "@/actions/dashboard/get-invoices-count";
 import { getDocumentsCount } from "@/actions/dashboard/get-documents-count";
 import { getActiveUsersCount } from "@/actions/dashboard/get-active-users-count";
 import { getOpportunitiesCount } from "@/actions/dashboard/get-opportunities-count";
@@ -60,7 +59,6 @@ const DashboardPage = async () => {
   const contracts = await getContractsCount();
   const users = await getActiveUsersCount();
   const accounts = await getAccountsCount();
-  const invoices = await getInvoicesCount();
   const revenue = await getExpectedRevenue();
   const documents = await getDocumentsCount();
   const opportunities = await getOpportunitiesCount();
@@ -68,7 +66,6 @@ const DashboardPage = async () => {
 
   //Find which modules are enabled
   const crmModule = modules.find((module) => module.name === "crm");
-  const invoiceModule = modules.find((module) => module.name === "invoice");
   const projectsModule = modules.find((module) => module.name === "projects");
   const documentsModule = modules.find((module) => module.name === "documents");
   const employeesModule = modules.find((module) => module.name === "employees");
@@ -191,14 +188,6 @@ const DashboardPage = async () => {
               content={usersTasks}
             />
           </>
-        )}
-        {invoiceModule?.enabled && (
-          <DashboardCard
-            href="/invoice"
-            title={dict("invoices")}
-            IconComponent={CoinsIcon}
-            content={invoices}
-          />
         )}
         {documentsModule?.enabled && (
           <DashboardCard

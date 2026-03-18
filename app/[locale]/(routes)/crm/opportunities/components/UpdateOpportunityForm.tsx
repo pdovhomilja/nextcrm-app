@@ -5,7 +5,6 @@ import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
@@ -40,6 +39,7 @@ import { Calendar } from "@/components/ui/calendar";
 import SuspenseLoading from "@/components/loadings/suspense";
 import fetcher from "@/lib/fetcher";
 import useSWR from "swr";
+import { updateOpportunity } from "@/actions/crm/opportunities/update-opportunity";
 
 //TODO: fix all the types
 type NewTaskFormProps = {
@@ -96,17 +96,24 @@ export function UpdateOpportunityForm({
   const onSubmit = async (data: NewAccountFormValues) => {
     setIsLoading(true);
     try {
-      //Convert data.budget and data.expected_revenue to number
-      await axios.put("/api/crm/opportunity", data);
-      toast({
-        title: c("success"),
-        description: t("updateSuccess"),
-      });
+      const result = await updateOpportunity(data);
+      if (result.error) {
+        toast({
+          variant: "destructive",
+          title: c("error"),
+          description: result.error,
+        });
+      } else {
+        toast({
+          title: c("success"),
+          description: t("updateSuccess"),
+        });
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: c("error"),
-        description: error?.response?.data,
+        description: error?.message,
       });
     } finally {
       setIsLoading(false);

@@ -18,7 +18,6 @@
     "projects": "Projekty",
     "emails": "Pošta",
     "tasks": "Úkoly",
-    "invoices": "Faktury",
     "reports": "Reporty",
     "documents": "Dokumenty",
     "storage": "Úložiště",
@@ -37,7 +36,6 @@
     "projects": "Projekty",
     "tasks": "Úkoly",
     "myTasks": "Moje úkoly",
-    "invoices": "Faktury",
     "documents": "Dokumenty",
     "storage": "Úložiště"
   },
@@ -400,28 +398,6 @@
       "editProjectDesc": "Upravit detaily projektu",
       "deleteError": "Chyba při mazání projektu",
       "watchError": "Chyba při aktualizaci sledování"
-    }
-  },
-  "InvoicePage": {
-    "title": "Faktury",
-    "description": "Spravujte své faktury",
-    "uploadPdf": "Nahrát PDF",
-    "myInvoices": "Moje faktury",
-    "checkForNew": "Zkontrolovat nové",
-    "checking": "Kontroluji...",
-    "somethingWentWrong": "Něco se pokazilo",
-    "settings": {
-      "title": "Nastavení",
-      "companySettings": "Nastavení firmy",
-      "description": "Spravujte nastavení faktur"
-    },
-    "dataTable": {
-      "filterPlaceholder": "Filtrovat faktury...",
-      "reset": "Resetovat"
-    },
-    "newTask": {
-      "title": "Vytvořit nový úkol",
-      "description": "Přidejte nový úkol pro tuto fakturu"
     }
   },
   "DocumentsPage": {

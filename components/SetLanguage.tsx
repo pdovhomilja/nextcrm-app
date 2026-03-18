@@ -31,11 +31,11 @@ import {
 } from "@/components/ui/popover";
 import { toast } from "@/components/ui/use-toast";
 
-import axios from "axios";
 import { useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import LoadingModal from "./modals/loading-modal";
+import { setLanguage } from "@/actions/user/set-language";
 
 const FormSchema = z.object({
   language: z.string({
@@ -70,7 +70,16 @@ export function SetLanguage({ userId }: Props) {
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setIsLoading(true);
     try {
-      await axios.put(`/api/user/${userId}/set-language`, data);
+      const result = await setLanguage({ userId, language: data.language });
+      if (result.error) {
+        toast({
+          title: t("error"),
+          description: result.error,
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
       toast({
         title: t("success"),
         description: t("changedTo", { language: data.language }),

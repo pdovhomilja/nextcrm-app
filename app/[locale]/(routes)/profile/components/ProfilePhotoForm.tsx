@@ -9,7 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { FileUploaderDropzone } from "@/components/ui/file-uploader-dropzone";
 
 import useAvatarStore from "@/store/useAvatarStore";
-import axios from "axios";
+import { updateProfilePhoto } from "@/actions/user/update-profile-photo";
 import { useTranslations } from "next-intl";
 
 interface ProfileFormProps {
@@ -32,7 +32,7 @@ export function ProfilePhotoForm({ data }: ProfileFormProps) {
     try {
       setAvatar(newAvatar);
       setAvatarStore(newAvatar);
-      await axios.put("/api/profile/updateProfilePhoto", { avatar: newAvatar });
+      await updateProfilePhoto(newAvatar);
       toast({
         title: t("photoUpdated"),
         description: t("photoUpdatedDescription"),

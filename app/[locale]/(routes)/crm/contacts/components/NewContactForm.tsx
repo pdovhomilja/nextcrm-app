@@ -5,7 +5,6 @@ import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
@@ -29,6 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { Switch } from "@/components/ui/switch";
 import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
+import { createContact } from "@/actions/crm/contacts/create-contact";
 
 //TODO: fix all the types
 type NewTaskFormProps = {
@@ -87,16 +87,24 @@ export function NewContactForm({
   const onSubmit = async (data: NewAccountFormValues) => {
     setIsLoading(true);
     try {
-      await axios.post("/api/crm/contacts", data);
-      toast({
-        title: c("success"),
-        description: t("createSuccess"),
-      });
+      const result = await createContact(data);
+      if (result.error) {
+        toast({
+          variant: "destructive",
+          title: c("error"),
+          description: result.error,
+        });
+      } else {
+        toast({
+          title: c("success"),
+          description: t("createSuccess"),
+        });
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: c("error"),
-        description: error?.response?.data,
+        description: error?.message,
       });
     } finally {
       setIsLoading(false);

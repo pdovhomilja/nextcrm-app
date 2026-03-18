@@ -1,7 +1,6 @@
 "use client";
 
 import { z } from "zod";
-import axios from "axios";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -30,6 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
+import { createAccount } from "@/actions/crm/accounts/create-account";
 
 type Props = {
   industries: any[];
@@ -79,11 +79,19 @@ export function NewAccountForm({ industries, onFinish }: Props) {
     //console.log(data);
     setIsLoading(true);
     try {
-      await axios.post("/api/crm/account", data);
-      toast({
-        title: c("success"),
-        description: t("createSuccess"),
-      });
+      const result = await createAccount(data);
+      if (result.error) {
+        toast({
+          variant: "destructive",
+          title: c("error"),
+          description: result.error,
+        });
+      } else {
+        toast({
+          title: c("success"),
+          description: t("createSuccess"),
+        });
+      }
     } catch (error) {
       toast({
         variant: "destructive",

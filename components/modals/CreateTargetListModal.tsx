@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import { createTargetList } from "@/actions/crm/target-lists/create-target-list";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,25 +37,24 @@ const CreateTargetListModal = () => {
     }
 
     setIsLoading(true);
-    try {
-      await axios.post("/api/crm/target-lists", { name, description });
-      toast({
-        title: "Success",
-        description: "Target list created successfully",
-      });
-      setOpen(false);
-      setName("");
-      setDescription("");
-      router.refresh();
-    } catch (error: any) {
+    const result = await createTargetList({ name, description });
+    setIsLoading(false);
+    if (result.error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error?.response?.data?.error || "Something went wrong",
+        description: result.error,
       });
-    } finally {
-      setIsLoading(false);
+      return;
     }
+    toast({
+      title: "Success",
+      description: "Target list created successfully",
+    });
+    setOpen(false);
+    setName("");
+    setDescription("");
+    router.refresh();
   };
 
   return (

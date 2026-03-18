@@ -30,13 +30,13 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { createProject } from "@/actions/projects/create-project";
 
 const NewProjectDialog = () => {
   const [open, setOpen] = useState(false);
@@ -74,16 +74,24 @@ const NewProjectDialog = () => {
     console.log(data);
     setIsLoading(true);
     try {
-      await axios.post("/api/projects/", data);
-      toast({
-        title: t("newProject.successMsg"),
-        description: `New project: ${data.title}, created successfully`,
-      });
+      const result = await createProject(data);
+      if (result?.error) {
+        toast({
+          variant: "destructive",
+          title: t("newProject.title"),
+          description: result.error,
+        });
+      } else {
+        toast({
+          title: t("newProject.successMsg"),
+          description: `New project: ${data.title}, created successfully`,
+        });
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: t("newProject.title"),
-        description: error?.response?.data,
+        description: error?.message,
       });
     } finally {
       setIsLoading(false);
