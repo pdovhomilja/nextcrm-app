@@ -1,3 +1,8 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import axios from "axios";
 import {
   Card,
   CardContent,
@@ -5,23 +10,46 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
-import {
-  CalendarDays,
-  MoreHorizontal,
-  User,
-  Users,
-} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/use-toast";
+import { CalendarDays, Trash2, User, Users } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
+import AddTargetToListModal from "@/components/modals/AddTargetToListModal";
 
 interface TargetListBasicViewProps {
   data: any;
 }
 
 export function BasicView({ data }: TargetListBasicViewProps) {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [addOpen, setAddOpen] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+
   if (!data) return <div>Target list not found</div>;
+
+  const existingTargetIds: string[] = (data.targets ?? []).map((t: any) => t.target_id);
+
+  const handleRemove = async (targetId: string) => {
+    setRemovingId(targetId);
+    try {
+      await axios.delete(`/api/crm/target-lists/${data.id}/targets`, {
+        data: { targetId },
+      });
+      toast({ title: "Removed", description: "Target removed from list" });
+      router.refresh();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error?.response?.data?.error || "Failed to remove target",
+      });
+    } finally {
+      setRemovingId(null);
+    }
+  };
 
   return (
     <div className="pb-3 space-y-5">
@@ -31,9 +59,6 @@ export function BasicView({ data }: TargetListBasicViewProps) {
             <div>
               <CardTitle>{data.name}</CardTitle>
               <CardDescription>ID: {data.id}</CardDescription>
-            </div>
-            <div>
-              <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
             </div>
           </div>
         </CardHeader>
@@ -87,9 +112,12 @@ export function BasicView({ data }: TargetListBasicViewProps) {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle>
-            Targets ({data.targets?.length || 0})
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Targets ({data.targets?.length || 0})</CardTitle>
+            <Button size="sm" variant="outline" onClick={() => setAddOpen(true)}>
+              + Add Target
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {!data.targets || data.targets.length === 0 ? (
@@ -101,8 +129,8 @@ export function BasicView({ data }: TargetListBasicViewProps) {
                   key={t.target_id}
                   className="-mx-2 flex items-center space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground"
                 >
-                  <User className="h-4 w-4" />
-                  <div className="flex-1">
+                  <User className="h-4 w-4 shrink-0" />
+                  <div className="flex-1 min-w-0">
                     <Link
                       href={`/crm/targets/${t.target?.id}`}
                       className="text-sm font-medium hover:underline"
@@ -116,12 +144,28 @@ export function BasicView({ data }: TargetListBasicViewProps) {
                   {t.target?.company && (
                     <Badge variant="outline">{t.target.company}</Badge>
                   )}
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                    disabled={removingId === t.target_id}
+                    onClick={() => handleRemove(t.target_id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               ))}
             </div>
           )}
         </CardContent>
       </Card>
+
+      <AddTargetToListModal
+        targetListId={data.id}
+        existingTargetIds={existingTargetIds}
+        open={addOpen}
+        onOpenChange={setAddOpen}
+      />
     </div>
   );
 }
