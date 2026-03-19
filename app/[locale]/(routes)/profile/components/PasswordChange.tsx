@@ -15,11 +15,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import axios from "axios";
 import { useRouter } from "next/navigation";
+import { setNewPassword } from "@/actions/user/set-new-password";
 
 const FormSchema = z.object({
   password: z.string().min(5).max(50),
@@ -32,7 +32,6 @@ export function PasswordChangeForm({ userId }: { userId: string }) {
 
   const router = useRouter();
 
-  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -41,18 +40,21 @@ export function PasswordChangeForm({ userId }: { userId: string }) {
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     try {
       setIsLoading(true);
-      await axios.put(`/api/user/${userId}/setnewpass`, data);
-      //TODO: send data to the server
-      toast({
-        title: t("success"),
+      const result = await setNewPassword({
+        userId,
+        password: data.password,
+        cpassword: data.cpassword,
       });
+
+      if (result.error) {
+        toast.error(t("errorPrefix") + result.error);
+        return;
+      }
+
+      toast.success(t("success"));
       router.refresh();
     } catch (error: any) {
-      console.log(error.response.data);
-      toast({
-        variant: "destructive",
-        title: t("errorPrefix") + error.response.data,
-      });
+      toast.error(t("errorPrefix") + (error?.message || "Unknown error"));
     } finally {
       setIsLoading(false);
     }

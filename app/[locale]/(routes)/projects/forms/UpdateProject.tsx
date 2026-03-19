@@ -20,14 +20,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 import { useRouter } from "next/navigation";
 
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { updateProject } from "@/actions/projects/update-project";
 
 type Props = {
   initialData: any;
@@ -41,7 +41,6 @@ const UpdateProjectForm = ({ initialData, openEdit }: Props) => {
   const [isMounted, setIsMounted] = useState(false);
 
   const router = useRouter();
-  const { toast } = useToast();
 
   const formSchema = z.object({
     id: z.string(),
@@ -70,17 +69,14 @@ const UpdateProjectForm = ({ initialData, openEdit }: Props) => {
   const onSubmit = async (data: NewAccountFormValues) => {
     setIsLoading(true);
     try {
-      await axios.put("/api/projects/", data);
-      toast({
-        title: "Success",
-        description: `Project: ${data.title}, update successfully`,
-      });
+      const result = await updateProject(data);
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
+        toast.success(`Project: ${data.title}, update successfully`);
+      }
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error?.response?.data,
-      });
+      toast.error(error?.message);
     } finally {
       setIsLoading(false);
       setOpen(false);

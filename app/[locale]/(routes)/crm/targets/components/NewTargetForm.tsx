@@ -1,13 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { z } from "zod";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
+import { toast } from "sonner";
+import { createTarget } from "@/actions/crm/targets/create-target";
 
-import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,10 +23,6 @@ type NewTargetFormProps = {
 };
 
 export function NewTargetForm({ onFinish }: NewTargetFormProps) {
-  const router = useRouter();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
   const formSchema = z.object({
     first_name: z.string().optional(),
     last_name: z.string().min(1, "Last name is required"),
@@ -50,36 +44,24 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
 
   const form = useForm<NewTargetFormValues>({
     resolver: zodResolver(formSchema),
+    mode: "onBlur",
     defaultValues: { status: true },
   });
 
   const onSubmit = async (data: NewTargetFormValues) => {
     if (!data.email && !data.mobile_phone) {
-      toast({
-        variant: "destructive",
-        title: "Validation error",
-        description: "Please provide either email or mobile phone.",
+      form.setError("root.serverError", {
+        message: "Please provide either email or mobile phone.",
       });
       return;
     }
-    setIsLoading(true);
-    try {
-      await axios.post("/api/crm/targets", data);
-      toast({
-        title: "Success",
-        description: "Target created successfully",
-      });
-      form.reset();
-      router.refresh();
+    const result = await createTarget(data);
+    if (result?.error) {
+      form.setError("root.serverError", { message: result.error });
+    } else {
+      toast.success("Target created successfully");
+      form.reset({ status: true });
       onFinish();
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error?.response?.data?.error || "Something went wrong",
-      });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -94,7 +76,7 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
               <FormItem>
                 <FormLabel>First name</FormLabel>
                 <FormControl>
-                  <Input disabled={isLoading} placeholder="John" {...field} />
+                  <Input disabled={form.formState.isSubmitting} placeholder="John" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -107,7 +89,7 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
               <FormItem>
                 <FormLabel>Last name *</FormLabel>
                 <FormControl>
-                  <Input disabled={isLoading} placeholder="Doe" {...field} />
+                  <Input disabled={form.formState.isSubmitting} placeholder="Doe" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -122,7 +104,7 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input disabled={isLoading} placeholder="john@example.com" {...field} />
+                  <Input disabled={form.formState.isSubmitting} placeholder="john@example.com" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -135,7 +117,7 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
               <FormItem>
                 <FormLabel>Mobile phone</FormLabel>
                 <FormControl>
-                  <Input disabled={isLoading} placeholder="+1 234 567 890" {...field} />
+                  <Input disabled={form.formState.isSubmitting} placeholder="+1 234 567 890" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -150,7 +132,7 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
               <FormItem>
                 <FormLabel>Office phone</FormLabel>
                 <FormControl>
-                  <Input disabled={isLoading} placeholder="+1 234 567 891" {...field} />
+                  <Input disabled={form.formState.isSubmitting} placeholder="+1 234 567 891" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -163,7 +145,7 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
               <FormItem>
                 <FormLabel>Position</FormLabel>
                 <FormControl>
-                  <Input disabled={isLoading} placeholder="CEO" {...field} />
+                  <Input disabled={form.formState.isSubmitting} placeholder="CEO" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -178,7 +160,7 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
               <FormItem>
                 <FormLabel>Company</FormLabel>
                 <FormControl>
-                  <Input disabled={isLoading} placeholder="Acme Corp" {...field} />
+                  <Input disabled={form.formState.isSubmitting} placeholder="Acme Corp" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -191,7 +173,7 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
               <FormItem>
                 <FormLabel>Company website</FormLabel>
                 <FormControl>
-                  <Input disabled={isLoading} placeholder="https://acme.com" {...field} />
+                  <Input disabled={form.formState.isSubmitting} placeholder="https://acme.com" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -205,7 +187,7 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
             <FormItem>
               <FormLabel>Personal website</FormLabel>
               <FormControl>
-                <Input disabled={isLoading} placeholder="https://johndoe.com" {...field} />
+                <Input disabled={form.formState.isSubmitting} placeholder="https://johndoe.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -219,7 +201,7 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
               <FormItem>
                 <FormLabel>LinkedIn</FormLabel>
                 <FormControl>
-                  <Input disabled={isLoading} placeholder="https://linkedin.com/in/john" {...field} />
+                  <Input disabled={form.formState.isSubmitting} placeholder="https://linkedin.com/in/john" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -232,7 +214,7 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
               <FormItem>
                 <FormLabel>X (Twitter)</FormLabel>
                 <FormControl>
-                  <Input disabled={isLoading} placeholder="https://x.com/john" {...field} />
+                  <Input disabled={form.formState.isSubmitting} placeholder="https://x.com/john" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -247,7 +229,7 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
               <FormItem>
                 <FormLabel>Instagram</FormLabel>
                 <FormControl>
-                  <Input disabled={isLoading} placeholder="https://instagram.com/john" {...field} />
+                  <Input disabled={form.formState.isSubmitting} placeholder="https://instagram.com/john" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -260,7 +242,7 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
               <FormItem>
                 <FormLabel>Facebook</FormLabel>
                 <FormControl>
-                  <Input disabled={isLoading} placeholder="https://facebook.com/john" {...field} />
+                  <Input disabled={form.formState.isSubmitting} placeholder="https://facebook.com/john" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -284,8 +266,13 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
             </FormItem>
           )}
         />
-        <Button disabled={isLoading} type="submit" className="w-full">
-          {isLoading ? (
+        {form.formState.errors.root?.serverError && (
+          <p className="text-sm text-destructive" aria-live="polite">
+            {form.formState.errors.root.serverError.message}
+          </p>
+        )}
+        <Button disabled={form.formState.isSubmitting} type="submit" className="w-full">
+          {form.formState.isSubmitting ? (
             <span className="flex items-center animate-pulse">Saving data ...</span>
           ) : (
             "Create target"

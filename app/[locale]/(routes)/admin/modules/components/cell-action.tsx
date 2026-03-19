@@ -1,10 +1,9 @@
 "use client";
 
-import axios from "axios";
 import { useRouter } from "next/navigation";
 import { MoreHorizontal, PowerIcon, PowerOffIcon } from "lucide-react";
 
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,48 +14,41 @@ import {
 import { Button } from "@/components/ui/button";
 
 import { ModuleColumn } from "./Columns";
+import { activateModule } from "@/actions/admin/activate-module";
+import { deactivateModule } from "@/actions/admin/deactivate-module";
 
 interface CellActionProps {
   data: ModuleColumn;
 }
 
 export const CellAction = ({ data }: CellActionProps) => {
-  const { toast } = useToast();
   const router = useRouter();
 
   const onActivate = async () => {
     try {
-      await axios.post(`/api/admin/activateModule/${data.id}`);
+      const result = await activateModule(data.id);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
       router.refresh();
-      toast({
-        title: "Success",
-        description: "Module has been activated.",
-      });
+      toast.success("Module has been activated.");
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description:
-          "Something went wrong while activating module. Please try again.",
-      });
+      toast.error("Something went wrong while activating module. Please try again.");
     }
   };
 
   const onDeactivate = async () => {
     try {
-      await axios.post(`/api/admin/deactivateModule/${data.id}`);
+      const result = await deactivateModule(data.id);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
       router.refresh();
-      toast({
-        title: "Success",
-        description: "Module has been deactivated.",
-      });
+      toast.success("Module has been deactivated.");
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description:
-          "Something went wrong while deactivating module. Please try again.",
-      });
+      toast.error("Something went wrong while deactivating module. Please try again.");
     }
   };
 

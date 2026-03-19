@@ -15,10 +15,14 @@ import { adminUserSchema } from "../table-data/schema";
 import { useRouter } from "next/navigation";
 import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
-import axios from "axios";
+import { toast } from "sonner";
 
 import { Copy, Edit, MoreHorizontal, Trash } from "lucide-react";
+import { deleteUser } from "@/actions/admin/users/delete-user";
+import { activateUser } from "@/actions/admin/users/activate-user";
+import { deactivateUser } from "@/actions/admin/users/deactivate-user";
+import { activateAdmin } from "@/actions/admin/users/activate-admin";
+import { deactivateAdmin } from "@/actions/admin/users/deactivate-admin";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -34,31 +38,24 @@ export function DataTableRowActions<TData>({
   const [loading, setLoading] = useState(false);
   const [updateOpen, setUpdateOpen] = useState(false);
 
-  const { toast } = useToast();
   const onCopy = (id: string) => {
     navigator.clipboard.writeText(id);
-    toast({
-      title: "Copied",
-      description: "The URL has been copied to your clipboard.",
-    });
+    toast.success("The URL has been copied to your clipboard.");
   };
 
   //Action triggered when the delete button is clicked to delete the store
   const onDelete = async () => {
     try {
       setLoading(true);
-      await axios.delete(`/api/user/${data.id}`);
+      const result = await deleteUser(data.id);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
       router.refresh();
-      toast({
-        title: "Success",
-        description: "User has been deleted",
-      });
+      toast.success("User has been deleted");
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Something went wrong: " + error + ". Please try again.",
-      });
+      toast.error("Something went wrong: " + error + ". Please try again.");
     } finally {
       setLoading(false);
       setOpen(false);
@@ -68,19 +65,15 @@ export function DataTableRowActions<TData>({
   const onActivate = async () => {
     try {
       setLoading(true);
-      await axios.post(`/api/user/activate/${data.id}`);
+      const result = await activateUser(data.id);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
       router.refresh();
-      toast({
-        title: "Success",
-        description: "User has been activated.",
-      });
+      toast.success("User has been activated.");
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description:
-          "Something went wrong while activating user. Please try again.",
-      });
+      toast.error("Something went wrong while activating user. Please try again.");
     } finally {
       setLoading(false);
       setOpen(false);
@@ -90,40 +83,33 @@ export function DataTableRowActions<TData>({
   const onDeactivate = async () => {
     try {
       setLoading(true);
-      await axios.post(`/api/user/deactivate/${data.id}`);
+      const result = await deactivateUser(data.id);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
       router.refresh();
-      toast({
-        title: "Success",
-        description: "User has been deactivated.",
-      });
+      toast.success("User has been deactivated.");
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description:
-          "Something went wrong while deactivating user. Please try again.",
-      });
+      toast.error("Something went wrong while deactivating user. Please try again.");
     } finally {
       setLoading(false);
       setOpen(false);
     }
   };
+
   const onDeactivateAdmin = async () => {
     try {
       setLoading(true);
-      await axios.post(`/api/user/deactivateAdmin/${data.id}`);
+      const result = await deactivateAdmin(data.id);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
       router.refresh();
-      toast({
-        title: "Success",
-        description: "User Admin rights has been deactivated.",
-      });
+      toast.success("User Admin rights has been deactivated.");
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description:
-          "Something went wrong while deactivating user as a admin. Please try again.",
-      });
+      toast.error("Something went wrong while deactivating user as a admin. Please try again.");
     } finally {
       setLoading(false);
       setOpen(false);
@@ -133,19 +119,15 @@ export function DataTableRowActions<TData>({
   const onActivateAdmin = async () => {
     try {
       setLoading(true);
-      await axios.post(`/api/user/activateAdmin/${data.id}`);
+      const result = await activateAdmin(data.id);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
       router.refresh();
-      toast({
-        title: "Success",
-        description: "User Admin rights has been activated.",
-      });
+      toast.success("User Admin rights has been activated.");
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description:
-          "Something went wrong while activating uses as a admin. Please try again.",
-      });
+      toast.error("Something went wrong while activating uses as a admin. Please try again.");
     } finally {
       setLoading(false);
       setOpen(false);

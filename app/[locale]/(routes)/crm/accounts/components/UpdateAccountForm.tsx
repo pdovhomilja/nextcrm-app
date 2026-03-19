@@ -1,16 +1,13 @@
 "use client";
 
-import React from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 
 import { Button } from "@/components/ui/button";
 
@@ -31,11 +28,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import fetcher from "@/lib/fetcher";
-import useSWR from "swr";
 import SuspenseLoading from "@/components/loadings/suspense";
-import { crm_Accounts } from "@prisma/client";
 import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
+import { updateAccount } from "@/actions/crm/accounts/update-account";
+import { getIndustries } from "@/actions/crm/get-industries";
 
 interface UpdateAccountFormProps {
   //TODO: fix this any
@@ -47,26 +43,27 @@ export function UpdateAccountForm({
   initialData,
   open,
 }: UpdateAccountFormProps) {
-  const router = useRouter();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const t = useTranslations("CrmAccountForm");
   const c = useTranslations("Common");
 
-  const { data: industries, isLoading: isLoadingIndustries } = useSWR(
-    "/api/crm/industries",
-    fetcher
-  );
+  const [industries, setIndustries] = useState<any[] | null>(null);
+  const [isLoadingIndustries, setIsLoadingIndustries] = useState(true);
+
+  useEffect(() => {
+    getIndustries()
+      .then((data) => setIndustries(data))
+      .finally(() => setIsLoadingIndustries(false));
+  }, []);
 
   const formSchema = z.object({
     id: z.string().min(5).max(30),
-    name: z.string().min(3).max(80),
+    name: z.string().min(1, t("nameRequired")).max(80),
     office_phone: z.string().nullable().optional(),
     website: z.string().nullable().optional(),
     fax: z.string().nullable().optional(),
     company_id: z.string().min(5).max(10),
     vat: z.string().min(5).max(20).nullable().optional(),
-    email: z.string().email(),
+    email: z.string().email(t("emailInvalid")),
     billing_street: z.string().min(3).max(50),
     billing_postal_code: z.string().min(2).max(10),
     billing_city: z.string().min(3).max(50),
@@ -90,6 +87,7 @@ export function UpdateAccountForm({
   //TODO: fix this any
   const form = useForm<any>({
     resolver: zodResolver(formSchema),
+    mode: "onBlur",
     //@ts-ignore
     //TODO: fix this
     defaultValues: initialData
@@ -124,24 +122,12 @@ export function UpdateAccountForm({
   });
 
   const onSubmit = async (data: NewAccountFormValues) => {
-    //console.log(data);
-    setIsLoading(true);
-    try {
-      await axios.put("/api/crm/account", data);
-      toast({
-        title: c("success"),
-        description: t("updateSuccess"),
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: c("error"),
-        description: error?.response?.data,
-      });
-    } finally {
-      setIsLoading(false);
+    const result = await updateAccount(data);
+    if (result?.error) {
+      form.setError("root.serverError", { message: result.error });
+    } else {
+      toast.success(t("updateSuccess"));
       open(false);
-      router.refresh();
     }
   };
 
@@ -161,15 +147,6 @@ export function UpdateAccountForm({
         onSubmit={form.handleSubmit(onSubmit)}
         className="w-full h-full px-4 md:px-10"
       >
-        {/*    <div>
-          <pre>
-            <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
-          </pre>
-        </div> */}
-        {/*       <pre>
-          <code>{JSON.stringify(initialData, null, 2)}</code>
-        </pre> */}
-
         <div className="w-full text-sm">
           <div className="pb-5 space-y-2">
             <FormField
@@ -180,7 +157,7 @@ export function UpdateAccountForm({
                   <FormLabel>{t("accountName")}</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="NextCRM Inc."
                       {...field}
                     />
@@ -197,7 +174,7 @@ export function UpdateAccountForm({
                   <FormLabel>{t("officePhone")}</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="+420 ...."
                       //@ts-ignore
                       value={field.value}
@@ -216,7 +193,7 @@ export function UpdateAccountForm({
                   <FormLabel>{t("email")}</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="account@domain.com"
                       {...field}
                     />
@@ -233,7 +210,7 @@ export function UpdateAccountForm({
                   <FormLabel>{t("website")}</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="https://www.domain.com"
                       {...field}
                     />
@@ -250,7 +227,7 @@ export function UpdateAccountForm({
                   <FormLabel>{t("accountId")}</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="1234567890"
                       {...field}
                     />
@@ -267,7 +244,7 @@ export function UpdateAccountForm({
                   <FormLabel>{t("vatNumber")}</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="CZ1234567890"
                       {...field}
                     />
@@ -287,7 +264,7 @@ export function UpdateAccountForm({
                     <FormLabel>{t("billingStreet")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Švábova 772/18"
                         {...field}
                       />
@@ -304,7 +281,7 @@ export function UpdateAccountForm({
                     <FormLabel>{t("billingPostalCode")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="252 18"
                         {...field}
                       />
@@ -321,7 +298,7 @@ export function UpdateAccountForm({
                     <FormLabel>{t("billingCity")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Prague"
                         {...field}
                       />
@@ -337,7 +314,7 @@ export function UpdateAccountForm({
                   <FormItem>
                     <FormLabel>{t("billingState")}</FormLabel>
                     <FormControl>
-                      <Input disabled={isLoading} placeholder="" {...field} />
+                      <Input disabled={form.formState.isSubmitting} placeholder="" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -351,7 +328,7 @@ export function UpdateAccountForm({
                     <FormLabel>{t("billingCountry")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Czechia"
                         {...field}
                       />
@@ -370,7 +347,7 @@ export function UpdateAccountForm({
                     <FormLabel>{t("shippingStreet")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Švábova 772/18"
                         {...field}
                       />
@@ -387,7 +364,7 @@ export function UpdateAccountForm({
                     <FormLabel>{t("shippingPostalCode")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="252 18"
                         {...field}
                       />
@@ -404,7 +381,7 @@ export function UpdateAccountForm({
                     <FormLabel>{t("shippingCity")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Prague"
                         {...field}
                       />
@@ -420,7 +397,7 @@ export function UpdateAccountForm({
                   <FormItem>
                     <FormLabel>{t("shippingState")}</FormLabel>
                     <FormControl>
-                      <Input disabled={isLoading} placeholder="" {...field} />
+                      <Input disabled={form.formState.isSubmitting} placeholder="" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -434,7 +411,7 @@ export function UpdateAccountForm({
                     <FormLabel>{t("shippingCountry")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Czechia"
                         {...field}
                       />
@@ -455,7 +432,7 @@ export function UpdateAccountForm({
                     <FormLabel>{c("description")}</FormLabel>
                     <FormControl>
                       <Textarea
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Description"
                         {...field}
                       />
@@ -474,7 +451,7 @@ export function UpdateAccountForm({
                     <FormLabel>{t("annualRevenue")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="1.0000.000"
                         {...field}
                       />
@@ -491,7 +468,7 @@ export function UpdateAccountForm({
                     <FormLabel>{t("isMemberOf")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Tesla Inc."
                         {...field}
                       />
@@ -538,7 +515,7 @@ export function UpdateAccountForm({
                         value={field.value ?? ""}
                         onChange={field.onChange}
                         placeholder={c("selectUser")}
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                       />
                     </FormControl>
                     <FormMessage />
@@ -549,8 +526,17 @@ export function UpdateAccountForm({
           </div>
         </div>
         <div className="grid gap-2 py-5">
-          <Button disabled={isLoading} type="submit">
-            {t("updateButton")}
+          {form.formState.errors.root?.serverError && (
+            <p className="text-sm text-destructive" aria-live="polite">
+              {form.formState.errors.root.serverError.message}
+            </p>
+          )}
+          <Button disabled={form.formState.isSubmitting} type="submit">
+            {form.formState.isSubmitting ? (
+              <span className="flex items-center animate-pulse">{c("savingData")}</span>
+            ) : (
+              t("updateButton")
+            )}
           </Button>
         </div>
       </form>

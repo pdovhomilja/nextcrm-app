@@ -17,7 +17,6 @@ import getCrmMenuItem from "./menu-items/Crm";
 import getProjectsMenuItem from "./menu-items/Projects";
 import getEmailsMenuItem from "./menu-items/Emails";
 import getEmployeesMenuItem from "./menu-items/Employees";
-import getInvoicesMenuItem from "./menu-items/Invoices";
 import getReportsMenuItem from "./menu-items/Reports";
 import getDocumentsMenuItem from "./menu-items/Documents";
 import getDataboxMenuItem from "./menu-items/Databoxes";
@@ -38,7 +37,7 @@ import getAdministrationMenuItem from "./menu-items/Administration";
  * - Task 2.3: Added CRM module navigation (collapsible group with module filtering)
  * - Task 2.4: Added Projects module navigation (simple item with module filtering)
  * - Task 2.5: Added Emails module navigation (simple item with module filtering)
- * - Task 2.6: Added remaining module navigation items (Employees, Invoices, Reports, Documents, Databox)
+ * - Task 2.6: Added remaining module navigation items (Employees, Reports, Documents, Databox)
  * - Task 2.7: Added Administration menu with role-based visibility (is_admin check)
  * - NavMain component renders all enabled module navigation items
  * - Module filtering ensures only enabled modules appear in navigation
@@ -156,18 +155,6 @@ export function AppSidebar({
       title: "Employees", // No translation in dict.ModuleMenu, using default
     });
     navItems.push(employeesItem);
-  }
-
-  // Task 2.6.3: Invoices module navigation (with module filtering)
-  // Only show if Invoices module is enabled
-  const invoicesModule = modules.find(
-    (menuItem: any) => menuItem.name === "invoice" && menuItem.enabled
-  );
-  if (invoicesModule && dict?.invoices) {
-    const invoicesItem = getInvoicesMenuItem({
-      title: dict.invoices,
-    });
-    navItems.push(invoicesItem);
   }
 
   // Task 2.6.4: Reports module navigation (with module filtering)

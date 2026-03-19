@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/select";
 import { SheetTrigger } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -54,7 +54,6 @@ const NewTaskForm = ({ account, onFinish }: NewTaskFormProps) => {
 
   const router = useRouter();
 
-  const { toast } = useToast();
 
   const formSchema = z.object({
     title: z.string().min(3).max(255),
@@ -79,16 +78,9 @@ const NewTaskForm = ({ account, onFinish }: NewTaskFormProps) => {
     setIsLoading(true);
     try {
       await axios.post(`/api/crm/account/${account?.id}/task/create`, data);
-      toast({
-        title: "Success",
-        description: `New task: ${data.title}, created successfully`,
-      });
+      toast.success(`New task: ${data.title}, created successfully`);
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error?.response?.data,
-      });
+      toast.error(error?.response?.data);
     } finally {
       setIsLoading(false);
       onFinish();

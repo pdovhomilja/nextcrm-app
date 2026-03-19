@@ -1,14 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { z } from "zod";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
-import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -30,25 +27,21 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { Switch } from "@/components/ui/switch";
 import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
+import { AccountSearchCombobox } from "@/components/ui/account-search-combobox";
+import { updateContact } from "@/actions/crm/contacts/update-contact";
 
 //TODO: fix all the types
 type UpdateContactFormProps = {
   initialData: any;
-  accounts: any[];
   setOpen: (value: boolean) => void;
 };
 
 export function UpdateContactForm({
   initialData,
-  accounts,
   setOpen,
 }: UpdateContactFormProps) {
-  const router = useRouter();
-  const { toast } = useToast();
   const t = useTranslations("CrmContactForm");
   const c = useTranslations("Common");
-
-  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const formSchema = z.object({
     id: z.string().min(5),
@@ -56,9 +49,9 @@ export function UpdateContactForm({
     birthday_month: z.string().optional().nullable(),
     birthday_day: z.string().optional().nullable(),
     first_name: z.string().nullable().optional(),
-    last_name: z.string(),
+    last_name: z.string().min(1, t("lastNameRequired")),
     description: z.string().nullable().optional(),
-    email: z.string(),
+    email: z.string().email(t("emailInvalid")).optional().or(z.literal("")),
     personal_email: z.string().nullable().optional(),
     office_phone: z.string().nullable().optional(),
     mobile_phone: z.string().nullable().optional(),
@@ -67,7 +60,6 @@ export function UpdateContactForm({
     status: z.boolean(),
     type: z.string(),
     assigned_to: z.string(),
-    accountsIDs: z.string().nullable().optional(),
     assigned_account: z.string().nullable().optional(),
     social_twitter: z.string().nullable().optional(),
     social_facebook: z.string().nullable().optional(),
@@ -95,7 +87,7 @@ export function UpdateContactForm({
     mobile_phone: initialData.mobile_phone ?? "",
     website: initialData.website ?? "",
     position: initialData.position ?? "",
-    assigned_account: initialData.assigned_account ?? "",
+    assigned_account: initialData.accountsIDs ?? "",
     social_twitter: initialData.social_twitter ?? "",
     social_facebook: initialData.social_facebook ?? "",
     social_linkedin: initialData.social_linkedin ?? "",
@@ -110,6 +102,7 @@ export function UpdateContactForm({
   //TODO: fix this any
   const form = useForm<any>({
     resolver: zodResolver(formSchema),
+    mode: "onBlur",
     defaultValues: parsedInitialData,
   });
 
@@ -120,27 +113,16 @@ export function UpdateContactForm({
   ];
 
   const onSubmit = async (data: NewAccountFormValues) => {
-    setIsLoading(true);
-    try {
-      await axios.put("/api/crm/contacts", data);
-      toast({
-        title: c("success"),
-        description: t("updateSuccess"),
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: c("error"),
-        description: error?.response?.data,
-      });
-    } finally {
-      setIsLoading(false);
-      router.refresh();
+    const result = await updateContact(data);
+    if (result?.error) {
+      form.setError("root.serverError", { message: result.error });
+    } else {
+      toast.success(t("updateSuccess"));
       setOpen(false);
     }
   };
 
-  if (!accounts || !initialData)
+  if (!initialData)
     return <div>{c("somethingWentWrong")}</div>;
 
   const yearArray = Array.from(
@@ -161,7 +143,7 @@ export function UpdateContactForm({
                 <FormItem>
                   <FormLabel>{t("firstName")}</FormLabel>
                   <FormControl>
-                    <Input disabled={isLoading} placeholder="John" {...field} />
+                    <Input disabled={form.formState.isSubmitting} placeholder="John" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -174,7 +156,7 @@ export function UpdateContactForm({
                 <FormItem>
                   <FormLabel>{t("lastName")}</FormLabel>
                   <FormControl>
-                    <Input disabled={isLoading} placeholder="Doe" {...field} />
+                    <Input disabled={form.formState.isSubmitting} placeholder="Doe" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -188,7 +170,7 @@ export function UpdateContactForm({
                   <FormLabel>{t("mobilePhone")}</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="+11 1236 77 55"
                       {...field}
                     />
@@ -206,7 +188,7 @@ export function UpdateContactForm({
                   <FormLabel>{t("officePhone")}</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="+11 1236 77 55"
                       {...field}
                     />
@@ -223,7 +205,7 @@ export function UpdateContactForm({
                   <FormLabel>{t("email")}</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="john@domain.com"
                       {...field}
                     />
@@ -240,7 +222,7 @@ export function UpdateContactForm({
                   <FormLabel>{t("personalEmail")}</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="littlejohny@gmail.com"
                       {...field}
                     />
@@ -257,7 +239,7 @@ export function UpdateContactForm({
                   <FormLabel>{t("website")}</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="https://www.domain.com"
                       {...field}
                     />
@@ -364,7 +346,7 @@ export function UpdateContactForm({
                   <FormLabel>{c("description")}</FormLabel>
                   <FormControl>
                     <Textarea
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder={t("descriptionPlaceholder")}
                       {...field}
                     />
@@ -386,7 +368,7 @@ export function UpdateContactForm({
                           value={field.value ?? ""}
                           onChange={field.onChange}
                           placeholder={t("assignedUserPlaceholder")}
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                         />
                       </FormControl>
                       <FormMessage />
@@ -399,23 +381,14 @@ export function UpdateContactForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t("assignAccount")}</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value ?? ""}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t("assignAccountPlaceholder")} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="h-56">
-                          {accounts.map((account: any) => (
-                            <SelectItem key={account.id} value={account.id}>
-                              {account.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <AccountSearchCombobox
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          placeholder={t("assignAccountPlaceholder")}
+                          disabled={form.formState.isSubmitting}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -428,7 +401,7 @@ export function UpdateContactForm({
                       <FormLabel>{t("position")}</FormLabel>
                       <FormControl>
                         <Input
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                           placeholder="CTO"
                           {...field}
                         />
@@ -493,7 +466,7 @@ export function UpdateContactForm({
                       <FormLabel>{t("twitter")}</FormLabel>
                       <FormControl>
                         <Input
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                           placeholder="https://www.twitter.com/john"
                           {...field}
                         />
@@ -510,7 +483,7 @@ export function UpdateContactForm({
                       <FormLabel>{t("facebook")}</FormLabel>
                       <FormControl>
                         <Input
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                           placeholder="https://www.facebook.com/john"
                           {...field}
                         />
@@ -527,7 +500,7 @@ export function UpdateContactForm({
                       <FormLabel>{t("linkedin")}</FormLabel>
                       <FormControl>
                         <Input
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                           placeholder="https://www.linkedin.com/john"
                           {...field}
                         />
@@ -544,7 +517,7 @@ export function UpdateContactForm({
                       <FormLabel>{t("skype")}</FormLabel>
                       <FormControl>
                         <Input
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                           placeholder="https://www.skype.com/john"
                           {...field}
                         />
@@ -561,7 +534,7 @@ export function UpdateContactForm({
                       <FormLabel>{t("youtube")}</FormLabel>
                       <FormControl>
                         <Input
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                           placeholder="https://www.youtube.com/nextcrmio"
                           {...field}
                         />
@@ -578,7 +551,7 @@ export function UpdateContactForm({
                       <FormLabel>{t("tiktok")}</FormLabel>
                       <FormControl>
                         <Input
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                           placeholder="https://www.domain.com"
                           {...field}
                         />
@@ -592,8 +565,13 @@ export function UpdateContactForm({
           </div>
         </div>
         <div className="grid gap-2 py-5">
-          <Button disabled={isLoading} type="submit">
-            {isLoading ? (
+          {form.formState.errors.root?.serverError && (
+            <p className="text-sm text-destructive" aria-live="polite">
+              {form.formState.errors.root.serverError.message}
+            </p>
+          )}
+          <Button disabled={form.formState.isSubmitting} type="submit">
+            {form.formState.isSubmitting ? (
               <span className="flex items-center animate-pulse">
                 {c("savingData")}
               </span>

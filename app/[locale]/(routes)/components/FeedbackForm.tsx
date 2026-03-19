@@ -18,7 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Icons } from "@/components/ui/icons";
 
 const formSchema = z.object({
@@ -33,7 +33,6 @@ interface FeedbackFormProps {
 
 const FeedbackForm = ({ setOpen }: FeedbackFormProps) => {
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -45,16 +44,9 @@ const FeedbackForm = ({ setOpen }: FeedbackFormProps) => {
       await axios.post("/api/feedback", data);
     } catch (error) {
       console.error(error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Something went wrong. Please try again later.",
-      });
+      toast.error("Something went wrong. Please try again later.");
     } finally {
-      toast({
-        title: "Success",
-        description: "Thank you for your feedback.",
-      });
+      toast.success("Thank you for your feedback.");
       setOpen(false);
       setLoading(false);
     }

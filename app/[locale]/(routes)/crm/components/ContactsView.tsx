@@ -83,7 +83,7 @@ const ContactsView = ({ data, crmData }: ContactsViewProps) => {
         ) : (
           <ContactsDataTable
             data={data}
-            columns={createColumns(accounts)}
+            columns={createColumns()}
           />
         )}
       </CardContent>

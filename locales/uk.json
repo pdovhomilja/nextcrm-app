@@ -18,7 +18,6 @@
     "projects": "Проекти",
     "emails": "електронні листи",
     "tasks": "завдання",
-    "invoices": "Рахунки-фактури",
     "reports": "Звіти",
     "documents": "Документи",
     "storage": "Зберігання",
@@ -37,7 +36,6 @@
     "projects": "Проекти",
     "tasks": "Завдання",
     "myTasks": "Мої завдання",
-    "invoices": "Рахунки-фактури",
     "documents": "Документи",
     "storage": "Зберігання"
   },
@@ -156,7 +154,9 @@
     "updateButton": "Оновити компанію",
     "createSuccess": "Компанію успішно створено",
     "updateSuccess": "Компанію успішно оновлено",
-    "errorDescription": "Щось пішло не так. Будь ласка, спробуйте ще раз."
+    "errorDescription": "Щось пішло не так. Будь ласка, спробуйте ще раз.",
+    "nameRequired": "Назва компанії є обов'язковою",
+    "emailInvalid": "Введіть дійсну адресу електронної пошти"
   },
   "CrmContactForm": {
     "firstName": "Ім'я",
@@ -204,7 +204,9 @@
     "createButton": "Створити контакт",
     "updateButton": "Оновити контакт",
     "createSuccess": "Контакт успішно створено",
-    "updateSuccess": "Контакт успішно оновлено"
+    "updateSuccess": "Контакт успішно оновлено",
+    "lastNameRequired": "Прізвище є обов'язковим",
+    "emailInvalid": "Введіть дійсну адресу електронної пошти"
   },
   "CrmOpportunityForm": {
     "name": "Назва можливості",
@@ -221,7 +223,9 @@
     "nextStepPlaceholder": "Опишіть наступний крок",
     "assignedAccount": "Призначена компанія",
     "createSuccess": "Можливість успішно створено",
-    "updateSuccess": "Можливість успішно оновлено"
+    "updateSuccess": "Можливість успішно оновлено",
+    "nameRequired": "Назва можливості є обов'язковою",
+    "createError": "Не вдалося створити можливість"
   },
   "CrmLeadForm": {
     "firstName": "Ім'я",
@@ -239,7 +243,9 @@
     "createButton": "Створити лід",
     "updateButton": "Оновити лід",
     "createSuccess": "Лід успішно створено",
-    "updateSuccess": "Лід успішно оновлено"
+    "updateSuccess": "Лід успішно оновлено",
+    "lastNameRequired": "Прізвище є обов'язковим",
+    "emailInvalid": "Введіть дійсну адресу електронної пошти"
   },
   "CrmContractForm": {
     "title": "Назва",
@@ -397,28 +403,6 @@
       "editProjectDesc": "Редагувати деталі проекту",
       "deleteError": "Помилка видалення проекту",
       "watchError": "Помилка оновлення статусу спостереження"
-    }
-  },
-  "InvoicePage": {
-    "title": "Рахунки-фактури",
-    "description": "Керуйте своїми рахунками-фактурами",
-    "uploadPdf": "Завантажити PDF",
-    "myInvoices": "Мої рахунки-фактури",
-    "checkForNew": "Перевірити нові",
-    "checking": "Перевіряю...",
-    "somethingWentWrong": "Щось пішло не так",
-    "settings": {
-      "title": "Налаштування",
-      "companySettings": "Налаштування компанії",
-      "description": "Керуйте налаштуваннями рахунків-фактур"
-    },
-    "dataTable": {
-      "filterPlaceholder": "Фільтрувати рахунки-фактури...",
-      "reset": "Скинути"
-    },
-    "newTask": {
-      "title": "Створити нове завдання",
-      "description": "Додайте нове завдання для цього рахунку-фактури"
     }
   },
   "DocumentsPage": {

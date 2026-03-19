@@ -17,8 +17,8 @@ import { targetSchema } from "../table-data/schema";
 import { useRouter } from "next/navigation";
 import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
-import axios from "axios";
+import { toast } from "sonner";
+import { deleteTarget } from "@/actions/crm/targets/delete-target";
 import RightViewModalNoTrigger from "@/components/modals/right-view-notrigger";
 import { UpdateTargetForm } from "../components/UpdateTargetForm";
 
@@ -36,27 +36,18 @@ export function DataTableRowActions<TData>({
   const [loading, setLoading] = useState(false);
   const [updateOpen, setUpdateOpen] = useState(false);
 
-  const { toast } = useToast();
 
   const onDelete = async () => {
     setLoading(true);
-    try {
-      await axios.delete(`/api/crm/targets/${target?.id}`);
-      toast({
-        title: "Success",
-        description: "Target has been deleted",
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Something went wrong while deleting target. Please try again.",
-      });
-    } finally {
-      setLoading(false);
-      setOpen(false);
-      router.refresh();
+    const result = await deleteTarget(target?.id);
+    setLoading(false);
+    setOpen(false);
+    if (result.error) {
+      toast.error(result.error);
+      return;
     }
+    toast.success("Target has been deleted");
+    router.refresh();
   };
 
   return (

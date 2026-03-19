@@ -1,18 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { z } from "zod";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
-import { cn } from "@/lib/utils";
-
-import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -32,10 +25,9 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-import fetcher from "@/lib/fetcher";
-import useSWR from "swr";
-import SuspenseLoading from "@/components/loadings/suspense";
 import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
+import { AccountSearchCombobox } from "@/components/ui/account-search-combobox";
+import { updateLead } from "@/actions/crm/leads/update-lead";
 
 //TODO: fix all the types
 type NewTaskFormProps = {
@@ -44,36 +36,27 @@ type NewTaskFormProps = {
 };
 
 export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
-  const router = useRouter();
-  const { toast } = useToast();
   const t = useTranslations("CrmLeadForm");
   const c = useTranslations("Common");
 
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  const { data: accounts, isLoading: isLoadingAccounts } = useSWR(
-    "/api/crm/account",
-    fetcher
-  );
-
   const formSchema = z.object({
-    id: z.string().min(5).max(30),
+    id: z.string().min(5),
     firstName: z.string().optional().nullable(),
-    lastName: z.string().min(3).max(30).nonempty(),
+    lastName: z.string().min(1, t("lastNameRequired")).max(30),
     company: z.string().nullable().optional(),
     jobTitle: z.string().nullable().optional(),
-    email: z.string().email().nullable().optional(),
+    email: z.string().email(t("emailInvalid")).nullable().optional().or(z.literal("")),
     phone: z.string().min(0).max(15).nullable().optional(),
     description: z.string().nullable().optional(),
     lead_source: z.string().nullable().optional(),
     refered_by: z.string().optional().nullable(),
     //TODO: add campaing schema from db as data source
     campaign: z.string().optional().nullable(),
-    assigned_to: z.string().optional(),
-    status: z.string(),
+    assigned_to: z.string().optional().nullable(),
+    status: z.string().optional().nullable(),
     //TODO: add type schema from db as data source
-    type: z.string().optional(),
-    accountIDs: z.string().optional(),
+    type: z.string().optional().nullable(),
+    accountsIDs: z.string().optional().nullable(),
   });
 
   type NewLeadFormValues = z.infer<typeof formSchema>;
@@ -81,27 +64,23 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
   //TODO: fix this any
   const form = useForm<any>({
     resolver: zodResolver(formSchema),
+    mode: "onBlur",
     defaultValues: initialData,
   });
 
   const onSubmit = async (data: NewLeadFormValues) => {
-    setIsLoading(true);
-    try {
-      await axios.put("/api/crm/leads", data);
-      toast({
-        title: c("success"),
-        description: t("updateSuccess"),
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: c("error"),
-        description: error?.response?.data,
-      });
-    } finally {
-      setIsLoading(false);
+    const result = await updateLead({
+      ...data,
+      assigned_to: data.assigned_to ?? undefined,
+      status: data.status ?? undefined,
+      type: data.type ?? undefined,
+      accountIDs: data.accountsIDs ?? undefined,
+    });
+    if (result?.error) {
+      form.setError("root.serverError", { message: result.error });
+    } else {
+      toast.success(t("updateSuccess"));
       setOpen(false);
-      router.refresh();
     }
   };
 
@@ -111,25 +90,12 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
     { name: "Completed", id: "COMPLETED" },
   ];
 
-  if (isLoadingAccounts)
-    return (
-      <div>
-        <SuspenseLoading />
-      </div>
-    );
-
   if (!initialData)
     return <div>{c("somethingWentWrong")}</div>;
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="h-full px-4 md:px-10">
-        {/*        <div>
-          <pre>
-            <code>{JSON.stringify(form.watch(), null, 2)}</code>
-            <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
-          </pre>
-        </div> */}
         <div className="w-full text-sm">
           <div className="pb-5 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -141,7 +107,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                     <FormLabel>{t("firstName")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Johny"
                         {...field}
                       />
@@ -158,7 +124,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                     <FormLabel>{t("lastName")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Walker"
                         {...field}
                       />
@@ -177,7 +143,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                     <FormLabel>{t("company")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="NextCRM Inc."
                         {...field}
                       />
@@ -193,7 +159,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                   <FormItem>
                     <FormLabel>{t("jobTitle")}</FormLabel>
                     <FormControl>
-                      <Input disabled={isLoading} placeholder="CTO" {...field} />
+                      <Input disabled={form.formState.isSubmitting} placeholder="CTO" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -209,7 +175,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                     <FormLabel>{t("email")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="johny@domain.com"
                         {...field}
                       />
@@ -226,7 +192,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                     <FormLabel>{t("phone")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="+11 123 456 789"
                         {...field}
                       />
@@ -244,7 +210,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                   <FormLabel>{c("description")}</FormLabel>
                   <FormControl>
                     <Textarea
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="New NextCRM functionality"
                       {...field}
                     />
@@ -262,7 +228,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                     <FormLabel>{t("leadSource")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Website"
                         {...field}
                       />
@@ -279,7 +245,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                     <FormLabel>{t("referredBy")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Johny Walker"
                         {...field}
                       />
@@ -298,7 +264,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                     <FormLabel>{t("campaign")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Social networks"
                         {...field}
                       />
@@ -315,7 +281,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                     <FormLabel>Type</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Cold lead"
                         {...field}
                       />
@@ -337,7 +303,7 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
                         value={field.value ?? ""}
                         onChange={field.onChange}
                         placeholder={c("selectUser")}
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                       />
                     </FormControl>
                     <FormMessage />
@@ -374,27 +340,18 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
             </div>
             <FormField
               control={form.control}
-              name="accountIDs"
+              name="accountsIDs"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t("assignAccount")}</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t("assignAccountPlaceholder")} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {accounts.map((account: any) => (
-                        <SelectItem key={account.id} value={account.id}>
-                          {account.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <AccountSearchCombobox
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      placeholder={t("assignAccountPlaceholder")}
+                      disabled={form.formState.isSubmitting}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -402,8 +359,13 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
           </div>
         </div>
         <div className="grid gap-2 py-5">
-          <Button disabled={isLoading} type="submit">
-            {isLoading ? (
+          {form.formState.errors.root?.serverError && (
+            <p className="text-sm text-destructive" aria-live="polite">
+              {form.formState.errors.root.serverError.message}
+            </p>
+          )}
+          <Button disabled={form.formState.isSubmitting} type="submit">
+            {form.formState.isSubmitting ? (
               <span className="flex items-center animate-pulse">
                 {c("savingData")}
               </span>

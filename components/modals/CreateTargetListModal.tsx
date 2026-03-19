@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
-import { useToast } from "@/components/ui/use-toast";
+import { createTargetList } from "@/actions/crm/target-lists/create-target-list";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,7 +20,6 @@ import { Label } from "@/components/ui/label";
 
 const CreateTargetListModal = () => {
   const router = useRouter();
-  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [name, setName] = useState("");
@@ -28,34 +27,22 @@ const CreateTargetListModal = () => {
 
   const handleCreate = async () => {
     if (!name.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Validation error",
-        description: "Name is required.",
-      });
+      toast.error("Name is required.");
       return;
     }
 
     setIsLoading(true);
-    try {
-      await axios.post("/api/crm/target-lists", { name, description });
-      toast({
-        title: "Success",
-        description: "Target list created successfully",
-      });
-      setOpen(false);
-      setName("");
-      setDescription("");
-      router.refresh();
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error?.response?.data?.error || "Something went wrong",
-      });
-    } finally {
-      setIsLoading(false);
+    const result = await createTargetList({ name, description });
+    setIsLoading(false);
+    if (result.error) {
+      toast.error(result.error);
+      return;
     }
+    toast.success("Target list created successfully");
+    setOpen(false);
+    setName("");
+    setDescription("");
+    router.refresh();
   };
 
   return (

@@ -20,13 +20,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import axios from "axios";
 import { useRouter } from "next/navigation";
 import { Icons } from "@/components/ui/icons";
 import { useTranslations } from "next-intl";
+import { inviteUser } from "@/actions/admin/users/invite-user";
 
 const FormSchema = z.object({
   name: z.string().min(3).max(50),
@@ -44,7 +44,6 @@ export function InviteForm() {
 
   const router = useRouter();
 
-  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -53,26 +52,15 @@ export function InviteForm() {
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setIsLoading(true);
     try {
-      const response = await axios.post("/api/user/inviteuser", data);
+      const result = await inviteUser(data);
 
-      if (response.data.error) {
-        toast({
-          variant: "destructive",
-          title: t("inviteForm.error"),
-          description: response.data.error,
-        });
+      if (result.error) {
+        toast.error(result.error);
       } else {
-        toast({
-          title: t("inviteForm.success"),
-          description: t("inviteForm.invited"),
-        });
+        toast.success(t("inviteForm.invited"));
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: t("inviteForm.error"),
-        description: t("inviteForm.errorDesc"),
-      });
+      toast.error(t("inviteForm.errorDesc"));
     } finally {
       form.reset({
         name: "",

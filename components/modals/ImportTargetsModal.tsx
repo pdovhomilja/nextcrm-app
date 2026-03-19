@@ -2,9 +2,10 @@
 
 import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import { importTargets } from "@/actions/crm/targets/import-targets";
+import { suggestMapping } from "@/actions/crm/targets/suggest-mapping";
 import Papa from "papaparse";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -52,7 +53,6 @@ const SKIP_VALUE = "__skip__";
 
 const ImportTargetsModal = () => {
   const router = useRouter();
-  const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [open, setOpen] = useState(false);
@@ -103,8 +103,8 @@ const ImportTargetsModal = () => {
     setIsSuggesting(true);
     setStep("mapping");
     try {
-      const res = await axios.post("/api/crm/targets/import/suggest-mapping", { headers });
-      const suggested: Record<string, string | null> = res.data.mapping ?? {};
+      const res = await suggestMapping(headers);
+      const suggested: Record<string, string | null> = res.mapping ?? {};
       // Convert from { csvHeader -> targetField } to { targetField -> csvHeader }
       const newMapping: Record<string, string> = {};
       for (const field of TARGET_FIELDS) {
@@ -176,23 +176,13 @@ const ImportTargetsModal = () => {
     formData.append("mapping", JSON.stringify(apiMapping));
 
     try {
-      const response = await axios.post("/api/crm/targets/import", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      const { imported, skipped, errors } = response.data;
-      toast({
-        title: "Import completed",
-        description: `Imported: ${imported}, Skipped: ${skipped}${errors.length > 0 ? `. Errors: ${errors.slice(0, 3).join("; ")}` : ""}`,
-      });
+      const { imported, skipped, errors } = await importTargets(formData);
+      toast.success(`Imported: ${imported}, Skipped: ${skipped}${errors.length > 0 ? `. Errors: ${errors.slice(0, 3).join("; ")}` : ""}`);
       setOpen(false);
       resetState();
       router.refresh();
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Import failed",
-        description: error?.response?.data?.error || "Something went wrong",
-      });
+      toast.error(error?.message || "Something went wrong");
     } finally {
       setIsLoading(false);
     }

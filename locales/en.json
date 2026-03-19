@@ -18,7 +18,6 @@
     "projects": "Projects",
     "emails": "E-mails",
     "tasks": "Tasks",
-    "invoices": "Invoices",
     "reports": "Reports",
     "documents": "Documents",
     "storage": "Storage",
@@ -38,7 +37,6 @@
     "projects": "Projects",
     "tasks": "Tasks",
     "myTasks": "My tasks",
-    "invoices": "Invoices",
     "documents": "Documents",
     "storage": "Storage"
   },
@@ -157,7 +155,9 @@
     "updateButton": "Update account",
     "createSuccess": "Account created successfully",
     "updateSuccess": "Account updated successfully",
-    "errorDescription": "Something went wrong. Please try again."
+    "errorDescription": "Something went wrong. Please try again.",
+    "nameRequired": "Account name is required",
+    "emailInvalid": "Please enter a valid email address"
   },
   "CrmContactForm": {
     "firstName": "First name",
@@ -205,7 +205,9 @@
     "createButton": "Create contact",
     "updateButton": "Update contact",
     "createSuccess": "Contact created successfully",
-    "updateSuccess": "Contact updated successfully"
+    "updateSuccess": "Contact updated successfully",
+    "lastNameRequired": "Last name is required",
+    "emailInvalid": "Please enter a valid email address"
   },
   "CrmOpportunityForm": {
     "name": "Opportunity name",
@@ -222,7 +224,9 @@
     "nextStepPlaceholder": "Describe the next step",
     "assignedAccount": "Assigned Account",
     "createSuccess": "Opportunity created successfully",
-    "updateSuccess": "Opportunity updated successfully"
+    "updateSuccess": "Opportunity updated successfully",
+    "nameRequired": "Opportunity name is required",
+    "createError": "Failed to create opportunity"
   },
   "CrmLeadForm": {
     "firstName": "First name",
@@ -240,7 +244,9 @@
     "createButton": "Create lead",
     "updateButton": "Update lead",
     "createSuccess": "Lead created successfully",
-    "updateSuccess": "Lead updated successfully"
+    "updateSuccess": "Lead updated successfully",
+    "lastNameRequired": "Last name is required",
+    "emailInvalid": "Please enter a valid email address"
   },
   "CrmContractForm": {
     "title": "Title",
@@ -398,28 +404,6 @@
       "editProjectDesc": "Edit project details",
       "deleteError": "Error deleting project",
       "watchError": "Error updating watch status"
-    }
-  },
-  "InvoicePage": {
-    "title": "Invoices",
-    "description": "Manage your invoices",
-    "uploadPdf": "Upload PDF",
-    "myInvoices": "My invoices",
-    "checkForNew": "Check for new",
-    "checking": "Checking...",
-    "somethingWentWrong": "Something went wrong",
-    "settings": {
-      "title": "Settings",
-      "companySettings": "Company settings",
-      "description": "Manage your invoice settings"
-    },
-    "dataTable": {
-      "filterPlaceholder": "Filter invoices...",
-      "reset": "Reset"
-    },
-    "newTask": {
-      "title": "Create new task",
-      "description": "Add a new task for this invoice"
     }
   },
   "DocumentsPage": {

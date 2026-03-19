@@ -1,7 +1,6 @@
 "use client";
 
 import { z } from "zod";
-import axios from "axios";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -26,9 +25,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import LoadingComponent from "@/components/LoadingComponent";
 import { useTranslations } from "next-intl";
+import { createSection } from "@/actions/projects/create-section";
 
 type Props = {
   boardId: string;
@@ -41,7 +41,6 @@ const NewSectionDialog = ({ boardId }: Props) => {
   const [isMounted, setIsMounted] = useState(false);
 
   const router = useRouter();
-  const { toast } = useToast();
   const t = useTranslations("ProjectsPage");
 
   const formSchema = z.object({
@@ -67,17 +66,14 @@ const NewSectionDialog = ({ boardId }: Props) => {
   const onSubmit = async (data: NewAccountFormValues) => {
     setIsLoading(true);
     try {
-      await axios.post(`/api/projects/sections/${boardId}`, data);
-      toast({
-        title: t("newSection.successMsg"),
-        description: `New section: ${data.title}, created successfully`,
-      });
+      const result = await createSection({ boardId, title: data.title });
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
+        toast.success(`New section: ${data.title}, created successfully`);
+      }
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: t("newSection.title"),
-        description: error?.response?.data,
-      });
+      toast.error(error?.message);
     } finally {
       form.reset({
         title: "",

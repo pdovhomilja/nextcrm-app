@@ -30,7 +30,6 @@ export const getAccount = async (accountId: string) => {
           },
         },
       },
-      invoices: true,
       assigned_to_user: {
         select: {
           name: true,

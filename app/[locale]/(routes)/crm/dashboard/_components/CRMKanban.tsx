@@ -37,7 +37,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import LoadingModal from "@/components/modals/loading-modal";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -200,7 +200,6 @@ const CRMKanban = ({
   crmData,
 }: CRMKanbanProps) => {
   const router = useRouter();
-  const { toast } = useToast();
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -266,17 +265,10 @@ const CRMKanban = ({
         destination: destinationStageId,
       });
       setOpportunities(response.data.data);
-      toast({
-        title: "Success",
-        description: "Opportunity sale stage changed",
-      });
+      toast.success("Opportunity sale stage changed");
     } catch (error) {
       console.log(error);
-      toast({
-        title: "Error",
-        description: "Something went wrong",
-        variant: "destructive",
-      });
+      toast.error("Something went wrong");
     } finally {
       router.refresh();
       setIsLoading(false);
@@ -290,10 +282,7 @@ const CRMKanban = ({
   const onThumbsDown = async (opportunityId: string) => {
     try {
       await setInactiveOpportunity(opportunityId);
-      toast({
-        title: "Success",
-        description: "Opportunity has been set to inactive",
-      });
+      toast.success("Opportunity has been set to inactive");
     } catch (error) {
       console.log(error);
     } finally {

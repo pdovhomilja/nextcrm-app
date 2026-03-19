@@ -1,12 +1,8 @@
 "use client";
 
 import { z } from "zod";
-import axios from "axios";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,6 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
+import { createAccount } from "@/actions/crm/accounts/create-account";
 
 type Props = {
   industries: any[];
@@ -37,20 +34,17 @@ type Props = {
 };
 
 export function NewAccountForm({ industries, onFinish }: Props) {
-  const router = useRouter();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const t = useTranslations("CrmAccountForm");
   const c = useTranslations("Common");
 
   const formSchema = z.object({
-    name: z.string().min(3).max(100),
+    name: z.string().min(1, t("nameRequired")).max(100),
     office_phone: z.string().optional(),
     website: z.string().optional(),
     fax: z.string().optional(),
     company_id: z.string().min(5).max(10),
     vat: z.string().max(20).optional(),
-    email: z.string().email(),
+    email: z.string().email(t("emailInvalid")),
     billing_street: z.string().min(3).max(50),
     billing_postal_code: z.string().min(2).max(10),
     billing_city: z.string().min(3).max(50),
@@ -73,39 +67,23 @@ export function NewAccountForm({ industries, onFinish }: Props) {
 
   const form = useForm<NewAccountFormValues>({
     resolver: zodResolver(formSchema),
+    mode: "onBlur",
   });
 
   const onSubmit = async (data: NewAccountFormValues) => {
-    //console.log(data);
-    setIsLoading(true);
-    try {
-      await axios.post("/api/crm/account", data);
-      toast({
-        title: c("success"),
-        description: t("createSuccess"),
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: c("error"),
-        description: t("errorDescription"),
-      });
-    } finally {
+    const result = await createAccount(data);
+    if (result?.error) {
+      form.setError("root.serverError", { message: result.error });
+    } else {
+      toast.success(t("createSuccess"));
       form.reset();
-      router.refresh();
       onFinish();
-      setIsLoading(false);
     }
   };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="h-full px-4 md:px-10">
-        {/*        <div>
-          <pre>
-            <code>{JSON.stringify(form.watch(), null, 2)}</code>
-          </pre>
-        </div> */}
         <div className="w-full text-sm">
           <div className="pb-5 space-y-2">
             <FormField
@@ -116,7 +94,7 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                   <FormLabel>{t("accountName")}</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="NextCRM Inc."
                       {...field}
                     />
@@ -133,7 +111,7 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                   <FormLabel>{t("officePhone")}</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="+420 ...."
                       {...field}
                     />
@@ -150,7 +128,7 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                   <FormLabel>{t("email")}</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="account@domain.com"
                       {...field}
                     />
@@ -167,7 +145,7 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                   <FormLabel>{t("website")}</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="https://www.domain.com"
                       {...field}
                     />
@@ -184,7 +162,7 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                   <FormLabel>{t("accountId")}</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="1234567890"
                       {...field}
                     />
@@ -201,7 +179,7 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                   <FormLabel>{t("vatNumber")}</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="CZ1234567890"
                       {...field}
                     />
@@ -221,7 +199,7 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                     <FormLabel>{t("billingStreet")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Švábova 772/18"
                         {...field}
                       />
@@ -238,7 +216,7 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                     <FormLabel>{t("billingPostalCode")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="252 18"
                         {...field}
                       />
@@ -255,7 +233,7 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                     <FormLabel>{t("billingCity")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Prague"
                         {...field}
                       />
@@ -271,7 +249,7 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                   <FormItem>
                     <FormLabel>{t("billingState")}</FormLabel>
                     <FormControl>
-                      <Input disabled={isLoading} placeholder="" {...field} />
+                      <Input disabled={form.formState.isSubmitting} placeholder="" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -285,7 +263,7 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                     <FormLabel>{t("billingCountry")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Czechia"
                         {...field}
                       />
@@ -304,7 +282,7 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                     <FormLabel>{t("shippingStreet")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Švábova 772/18"
                         {...field}
                       />
@@ -321,7 +299,7 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                     <FormLabel>{t("shippingPostalCode")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="252 18"
                         {...field}
                       />
@@ -338,7 +316,7 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                     <FormLabel>{t("shippingCity")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Prague"
                         {...field}
                       />
@@ -354,7 +332,7 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                   <FormItem>
                     <FormLabel>{t("shippingState")}</FormLabel>
                     <FormControl>
-                      <Input disabled={isLoading} placeholder="" {...field} />
+                      <Input disabled={form.formState.isSubmitting} placeholder="" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -368,7 +346,7 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                     <FormLabel>{t("shippingCountry")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Czechia"
                         {...field}
                       />
@@ -389,7 +367,7 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                     <FormLabel>{c("description")}</FormLabel>
                     <FormControl>
                       <Textarea
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Description"
                         {...field}
                       />
@@ -408,7 +386,7 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                     <FormLabel>{t("annualRevenue")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="1.0000.000"
                         {...field}
                       />
@@ -425,7 +403,7 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                     <FormLabel>{t("isMemberOf")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Tesla Inc."
                         {...field}
                       />
@@ -472,7 +450,7 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                         value={field.value ?? ""}
                         onChange={field.onChange}
                         placeholder={c("selectUser")}
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                       />
                     </FormControl>
                     <FormMessage />
@@ -483,8 +461,17 @@ export function NewAccountForm({ industries, onFinish }: Props) {
           </div>
         </div>
         <div className="grid gap-2 py-5">
-          <Button disabled={isLoading} type="submit">
-            {t("createButton")}
+          {form.formState.errors.root?.serverError && (
+            <p className="text-sm text-destructive" aria-live="polite">
+              {form.formState.errors.root.serverError.message}
+            </p>
+          )}
+          <Button disabled={form.formState.isSubmitting} type="submit">
+            {form.formState.isSubmitting ? (
+              <span className="flex items-center animate-pulse">{c("savingData")}</span>
+            ) : (
+              t("createButton")
+            )}
           </Button>
         </div>
       </form>

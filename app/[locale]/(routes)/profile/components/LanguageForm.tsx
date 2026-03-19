@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import axios from "axios";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter, usePathname } from "@/i18n/navigation";
 import {
@@ -11,13 +10,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
+import { setLanguage } from "@/actions/user/set-language";
 
 export function LanguageForm({ userId }: { userId: string }) {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const t = useTranslations("LanguageSelector");
 
@@ -31,15 +30,16 @@ export function LanguageForm({ userId }: { userId: string }) {
   async function handleChange(language: string) {
     setIsLoading(true);
     try {
-      await axios.put(`/api/user/${userId}/set-language`, { language });
-      toast({ title: t("success"), description: t("changedTo", { language }) });
+      const result = await setLanguage({ userId, language });
+      if (result.error) {
+        toast.error(result.error);
+        setIsLoading(false);
+        return;
+      }
+      toast.success(t("changedTo", { language }));
       router.replace(pathname, { locale: language });
     } catch (e) {
-      toast({
-        title: t("error"),
-        description: t("error"),
-        variant: "destructive",
-      });
+      toast.error(t("error"));
       setIsLoading(false);
     }
   }

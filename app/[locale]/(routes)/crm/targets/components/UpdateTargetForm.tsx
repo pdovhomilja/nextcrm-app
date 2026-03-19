@@ -1,13 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { z } from "zod";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
+import { toast } from "sonner";
+import { updateTarget } from "@/actions/crm/targets/update-target";
 
-import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -26,10 +24,6 @@ type UpdateTargetFormProps = {
 };
 
 export function UpdateTargetForm({ initialData, setOpen }: UpdateTargetFormProps) {
-  const router = useRouter();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
   const formSchema = z.object({
     first_name: z.string().optional(),
     last_name: z.string().min(1, "Last name is required"),
@@ -51,6 +45,7 @@ export function UpdateTargetForm({ initialData, setOpen }: UpdateTargetFormProps
 
   const form = useForm<UpdateTargetFormValues>({
     resolver: zodResolver(formSchema),
+    mode: "onBlur",
     defaultValues: {
       first_name: initialData.first_name || "",
       last_name: initialData.last_name || "",
@@ -70,23 +65,12 @@ export function UpdateTargetForm({ initialData, setOpen }: UpdateTargetFormProps
   });
 
   const onSubmit = async (data: UpdateTargetFormValues) => {
-    setIsLoading(true);
-    try {
-      await axios.put("/api/crm/targets", { id: initialData.id, ...data });
-      toast({
-        title: "Success",
-        description: "Target updated successfully",
-      });
-      router.refresh();
+    const result = await updateTarget({ id: initialData.id, ...data });
+    if (result?.error) {
+      form.setError("root.serverError", { message: result.error });
+    } else {
+      toast.success("Target updated successfully");
       setOpen(false);
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error?.response?.data?.error || "Something went wrong",
-      });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -101,7 +85,7 @@ export function UpdateTargetForm({ initialData, setOpen }: UpdateTargetFormProps
               <FormItem>
                 <FormLabel>First name</FormLabel>
                 <FormControl>
-                  <Input disabled={isLoading} placeholder="John" {...field} />
+                  <Input disabled={form.formState.isSubmitting} placeholder="John" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -114,7 +98,7 @@ export function UpdateTargetForm({ initialData, setOpen }: UpdateTargetFormProps
               <FormItem>
                 <FormLabel>Last name *</FormLabel>
                 <FormControl>
-                  <Input disabled={isLoading} placeholder="Doe" {...field} />
+                  <Input disabled={form.formState.isSubmitting} placeholder="Doe" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -129,7 +113,7 @@ export function UpdateTargetForm({ initialData, setOpen }: UpdateTargetFormProps
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input disabled={isLoading} placeholder="john@example.com" {...field} />
+                  <Input disabled={form.formState.isSubmitting} placeholder="john@example.com" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -142,7 +126,7 @@ export function UpdateTargetForm({ initialData, setOpen }: UpdateTargetFormProps
               <FormItem>
                 <FormLabel>Mobile phone</FormLabel>
                 <FormControl>
-                  <Input disabled={isLoading} placeholder="+1 234 567 890" {...field} />
+                  <Input disabled={form.formState.isSubmitting} placeholder="+1 234 567 890" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -157,7 +141,7 @@ export function UpdateTargetForm({ initialData, setOpen }: UpdateTargetFormProps
               <FormItem>
                 <FormLabel>Office phone</FormLabel>
                 <FormControl>
-                  <Input disabled={isLoading} placeholder="+1 234 567 891" {...field} />
+                  <Input disabled={form.formState.isSubmitting} placeholder="+1 234 567 891" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -170,7 +154,7 @@ export function UpdateTargetForm({ initialData, setOpen }: UpdateTargetFormProps
               <FormItem>
                 <FormLabel>Position</FormLabel>
                 <FormControl>
-                  <Input disabled={isLoading} placeholder="CEO" {...field} />
+                  <Input disabled={form.formState.isSubmitting} placeholder="CEO" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -185,7 +169,7 @@ export function UpdateTargetForm({ initialData, setOpen }: UpdateTargetFormProps
               <FormItem>
                 <FormLabel>Company</FormLabel>
                 <FormControl>
-                  <Input disabled={isLoading} placeholder="Acme Corp" {...field} />
+                  <Input disabled={form.formState.isSubmitting} placeholder="Acme Corp" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -198,7 +182,7 @@ export function UpdateTargetForm({ initialData, setOpen }: UpdateTargetFormProps
               <FormItem>
                 <FormLabel>Company website</FormLabel>
                 <FormControl>
-                  <Input disabled={isLoading} placeholder="https://acme.com" {...field} />
+                  <Input disabled={form.formState.isSubmitting} placeholder="https://acme.com" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -212,7 +196,7 @@ export function UpdateTargetForm({ initialData, setOpen }: UpdateTargetFormProps
             <FormItem>
               <FormLabel>Personal website</FormLabel>
               <FormControl>
-                <Input disabled={isLoading} placeholder="https://johndoe.com" {...field} />
+                <Input disabled={form.formState.isSubmitting} placeholder="https://johndoe.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -226,7 +210,7 @@ export function UpdateTargetForm({ initialData, setOpen }: UpdateTargetFormProps
               <FormItem>
                 <FormLabel>LinkedIn</FormLabel>
                 <FormControl>
-                  <Input disabled={isLoading} placeholder="https://linkedin.com/in/john" {...field} />
+                  <Input disabled={form.formState.isSubmitting} placeholder="https://linkedin.com/in/john" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -239,7 +223,7 @@ export function UpdateTargetForm({ initialData, setOpen }: UpdateTargetFormProps
               <FormItem>
                 <FormLabel>X (Twitter)</FormLabel>
                 <FormControl>
-                  <Input disabled={isLoading} placeholder="https://x.com/john" {...field} />
+                  <Input disabled={form.formState.isSubmitting} placeholder="https://x.com/john" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -254,7 +238,7 @@ export function UpdateTargetForm({ initialData, setOpen }: UpdateTargetFormProps
               <FormItem>
                 <FormLabel>Instagram</FormLabel>
                 <FormControl>
-                  <Input disabled={isLoading} placeholder="https://instagram.com/john" {...field} />
+                  <Input disabled={form.formState.isSubmitting} placeholder="https://instagram.com/john" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -267,7 +251,7 @@ export function UpdateTargetForm({ initialData, setOpen }: UpdateTargetFormProps
               <FormItem>
                 <FormLabel>Facebook</FormLabel>
                 <FormControl>
-                  <Input disabled={isLoading} placeholder="https://facebook.com/john" {...field} />
+                  <Input disabled={form.formState.isSubmitting} placeholder="https://facebook.com/john" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -291,8 +275,13 @@ export function UpdateTargetForm({ initialData, setOpen }: UpdateTargetFormProps
             </FormItem>
           )}
         />
-        <Button disabled={isLoading} type="submit" className="w-full">
-          {isLoading ? (
+        {form.formState.errors.root?.serverError && (
+          <p className="text-sm text-destructive" aria-live="polite">
+            {form.formState.errors.root.serverError.message}
+          </p>
+        )}
+        <Button disabled={form.formState.isSubmitting} type="submit" className="w-full">
+          {form.formState.isSubmitting ? (
             <span className="flex items-center animate-pulse">Saving data ...</span>
           ) : (
             "Update target"

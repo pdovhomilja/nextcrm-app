@@ -17,8 +17,7 @@ import { accountSchema } from "../table-data/schema";
 import { useRouter } from "next/navigation";
 import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
-import axios from "axios";
+import { toast } from "sonner";
 import { UpdateAccountForm } from "../components/UpdateAccountForm";
 import {
   Sheet,
@@ -28,6 +27,9 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Eye, EyeOff } from "lucide-react";
+import { deleteAccount } from "@/actions/crm/accounts/delete-account";
+import { watchAccount } from "@/actions/crm/accounts/watch-account";
+import { unwatchAccount } from "@/actions/crm/accounts/unwatch-account";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -43,23 +45,18 @@ export function DataTableRowActions<TData>({
   const [updateOpen, setUpdateOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { toast } = useToast();
 
   const onDelete = async () => {
     setLoading(true);
     try {
-      await axios.delete(`/api/crm/account/${account.id}`);
-      toast({
-        title: "Success",
-        description: "Opportunity has been deleted",
-      });
+      const result = await deleteAccount(account.id);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Account has been deleted");
+      }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description:
-          "Something went wrong while deleting opportunity. Please try again.",
-      });
+      toast.error("Something went wrong while deleting account. Please try again.");
     } finally {
       setLoading(false);
       setOpen(false);
@@ -70,18 +67,16 @@ export function DataTableRowActions<TData>({
   const onWatch = async () => {
     setLoading(true);
     try {
-      await axios.post(`/api/crm/account/${account.id}/watch`);
+      const result = await watchAccount(account.id);
+      if (result.error) {
+        toast.error("Error");
+      } else {
+        toast.success(`You are now Account: ${account.name}, watcher`);
+      }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error, Account not watched. Please try again.",
-      });
+      toast.error("Error");
       console.log(error);
     } finally {
-      toast({
-        title: "Success",
-        description: `You are now Account: ${account.name}, watcher`,
-      });
       setLoading(false);
     }
   };
@@ -89,18 +84,16 @@ export function DataTableRowActions<TData>({
   const onUnWatch = async () => {
     setLoading(true);
     try {
-      await axios.post(`/api/crm/account/${account.id}/unwatch`);
+      const result = await unwatchAccount(account.id);
+      if (result.error) {
+        toast.error("Error");
+      } else {
+        toast.success(`You are no longer Account: ${account.name}, watcher`);
+      }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error, Account not watched. Please try again.",
-      });
+      toast.error("Error");
       console.log(error);
     } finally {
-      toast({
-        title: "Success",
-        description: `You are no longer Project: ${account.name}, watcher`,
-      });
       setLoading(false);
     }
   };

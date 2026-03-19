@@ -29,13 +29,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
-import axios from "axios";
 import { useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import LoadingModal from "./modals/loading-modal";
+import { setLanguage } from "@/actions/user/set-language";
 
 const FormSchema = z.object({
   language: z.string({
@@ -70,18 +70,16 @@ export function SetLanguage({ userId }: Props) {
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setIsLoading(true);
     try {
-      await axios.put(`/api/user/${userId}/set-language`, data);
-      toast({
-        title: t("success"),
-        description: t("changedTo", { language: data.language }),
-      });
+      const result = await setLanguage({ userId, language: data.language });
+      if (result.error) {
+        toast.error(result.error);
+        setIsLoading(false);
+        return;
+      }
+      toast.success(t("changedTo", { language: data.language }));
       router.replace(pathname, { locale: data.language });
     } catch (e) {
-      toast({
-        title: t("error"),
-        description: t("error"),
-        variant: "destructive",
-      });
+      toast.error(t("error"));
       setIsLoading(false);
     }
   }

@@ -25,32 +25,26 @@
   },
   {
     "v": 0,
-    "name": "invoice",
+    "name": "reports",
     "enabled": true,
     "position": 5
   },
   {
     "v": 0,
-    "name": "reports",
+    "name": "documents",
     "enabled": true,
     "position": 6
   },
   {
     "v": 0,
-    "name": "documents",
-    "enabled": true,
-    "position": 7
-  },
-  {
-    "v": 0,
     "name": "databox",
     "enabled": false,
-    "position": 8
+    "position": 7
   },
   {
     "v": 0,
     "name": "openai",
     "enabled": true,
-    "position": 9
+    "position": 8
   }
 ]

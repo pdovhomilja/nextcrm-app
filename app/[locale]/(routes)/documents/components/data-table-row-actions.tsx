@@ -19,8 +19,8 @@ import { useRouter } from "next/navigation";
 import DocumentViewModal from "@/components/modals/document-view-modal";
 import { useState } from "react";
 import AlertModal from "@/components/modals/alert-modal";
-import { useToast } from "@/components/ui/use-toast";
-import axios from "axios";
+import { toast } from "sonner";
+import { deleteDocument } from "@/actions/documents/delete-document";
 import Link from "next/link";
 
 interface DataTableRowActionsProps<TData> {
@@ -34,7 +34,6 @@ export function DataTableRowActions<TData>({
   const [openView, setOpenView] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { toast } = useToast();
 
   const document = taskSchema.parse(row.original);
 
@@ -42,19 +41,11 @@ export function DataTableRowActions<TData>({
   const onDelete = async () => {
     try {
       setLoading(true);
-      await axios.delete(`/api/documents/${document.id}`);
+      await deleteDocument(document.id);
       router.refresh();
-      toast({
-        title: "Success",
-        description: "Document has been deleted",
-      });
+      toast.success("Document has been deleted");
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description:
-          "Something went wrong while deleting document. Please try again.",
-      });
+      toast.error("Something went wrong while deleting document. Please try again.");
     } finally {
       setLoading(false);
       setOpen(false);

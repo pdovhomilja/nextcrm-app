@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import AlertModal from "@/components/modals/alert-modal";
 
 import { taskSchema } from "../data/schema";
@@ -30,7 +30,6 @@ export function DataTableRowActions<TData>({
   const router = useRouter();
   const task = taskSchema.parse(row.original);
 
-  const { toast } = useToast();
 
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -44,17 +43,10 @@ export function DataTableRowActions<TData>({
           section: task?.section,
         },
       });
-      toast({
-        title: "Task deleted",
-        description: "Task deleted successfully",
-      });
+      toast.success("Task deleted successfully");
     } catch (error) {
       console.log(error);
-      toast({
-        variant: "destructive",
-        title: "Task deleted",
-        description: "Something went wrong, during deleting task",
-      });
+      toast.error("Something went wrong, during deleting task");
       setIsLoading(false);
       setOpen(false);
     } finally {

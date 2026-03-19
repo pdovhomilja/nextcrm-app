@@ -4,7 +4,7 @@ import moment from "moment";
 import Link from "next/link";
 
 import { TeamConversations } from "../../tasks/viewtask/[taskId]/components/team-conversation";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 import { useRouter } from "next/navigation";
 import { getTaskDone } from "../../actions/get-task-done";
@@ -63,7 +63,6 @@ const ProjectDashboardCockpit = ({
   boards: any;
   sections: Sections[];
 }) => {
-  const { toast } = useToast();
   const router = useRouter();
 
   const [updateOpenSheet, setUpdateOpenSheet] = useState(false);
@@ -74,14 +73,9 @@ const ProjectDashboardCockpit = ({
     try {
       await getTaskDone(taskId);
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error, task not marked as done.",
-      });
+      toast.error("Error");
     } finally {
-      toast({
-        title: "Success, task marked as done.",
-      });
+      toast.success("Success");
       router.refresh();
     }
   };

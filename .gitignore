@@ -38,8 +38,6 @@ yarn-error.log*
 # vercel
 .vercel
 
-backup
-
 # typescript
 *.tsbuildinfo
 next-env.d.ts
@@ -47,11 +45,16 @@ next-env.d.ts
 # migration logs (may contain secrets)
 migration-errors.log
 
+# backups
+backups/
+
 #Agents
 .claude/
 .agents/
 .cursor/
 .agent-os/
+.claude
+.vscode
 
 # Playwright
 test-results/

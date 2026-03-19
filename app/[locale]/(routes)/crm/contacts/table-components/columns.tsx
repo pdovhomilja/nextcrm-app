@@ -9,9 +9,7 @@ import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
 import moment from "moment";
 
-export const createColumns = (
-  accounts: any[]
-): ColumnDef<Opportunity>[] => [
+export const createColumns = (): ColumnDef<Opportunity>[] => [
   {
     accessorKey: "created_on",
     header: ({ column }) => (
@@ -102,7 +100,7 @@ export const createColumns = (
   {
     id: "actions",
     cell: ({ row }) => (
-      <DataTableRowActions row={row} accounts={accounts} />
+      <DataTableRowActions row={row} />
     ),
   },
 ];

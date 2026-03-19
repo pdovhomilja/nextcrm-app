@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
+import { getTargets } from "@/actions/crm/get-targets";
+import { addTargetsToList } from "@/actions/crm/target-lists/add-targets-to-list";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,7 +20,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Target {
   id: string;
-  first_name: string;
+  first_name: string | null;
   last_name: string;
   email: string | null;
   company: string | null;
@@ -39,7 +40,6 @@ const AddTargetToListModal = ({
   onOpenChange,
 }: AddTargetToListModalProps) => {
   const router = useRouter();
-  const { toast } = useToast();
   const [targets, setTargets] = useState<Target[]>([]);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
@@ -49,14 +49,12 @@ const AddTargetToListModal = ({
   useEffect(() => {
     if (!open) return;
     setIsFetching(true);
-    axios
-      .get("/api/crm/targets")
-      .then((res) => {
-        const all: Target[] = res.data;
+    getTargets()
+      .then((all) => {
         setTargets(all.filter((t) => !existingTargetIds.includes(t.id)));
       })
       .catch(() => {
-        toast({ variant: "destructive", title: "Error", description: "Failed to load targets" });
+        toast.error("Failed to load targets");
       })
       .finally(() => setIsFetching(false));
   }, [open]);
@@ -93,24 +91,17 @@ const AddTargetToListModal = ({
   const handleSubmit = async () => {
     if (selected.length === 0) return;
     setIsLoading(true);
-    try {
-      await axios.post(`/api/crm/target-lists/${targetListId}/targets`, {
-        targetIds: selected,
-      });
-      toast({ title: "Success", description: `Added ${selected.length} target(s) to the list` });
-      setSelected([]);
-      setSearch("");
-      onOpenChange(false);
-      router.refresh();
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error?.response?.data?.error || "Something went wrong",
-      });
-    } finally {
-      setIsLoading(false);
+    const result = await addTargetsToList(targetListId, selected);
+    setIsLoading(false);
+    if (result.error) {
+      toast.error(result.error);
+      return;
     }
+    toast.success(`Added ${selected.length} target(s) to the list`);
+    setSelected([]);
+    setSearch("");
+    onOpenChange(false);
+    router.refresh();
   };
 
   return (

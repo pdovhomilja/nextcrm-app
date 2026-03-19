@@ -16,17 +16,14 @@ import { taskSchema } from "../data/schema";
 import { useRouter } from "next/navigation";
 import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
-import axios from "axios";
 import {
   Eye,
-  EyeIcon,
   EyeOff,
   Glasses,
-  Magnet,
   Pencil,
   Trash,
 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import {
   Sheet,
   SheetContent,
@@ -37,6 +34,8 @@ import {
 import { useTranslations } from "next-intl";
 
 import UpdateProjectForm from "../forms/UpdateProject";
+import { deleteProject } from "@/actions/projects/delete-project";
+import { watchProject, unwatchProject } from "@/actions/projects/watch-project";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -53,23 +52,20 @@ export function DataTableRowActions<TData>({
   const [editOpen, setEditOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { toast } = useToast();
 
   const onDelete = async () => {
     setLoading(true);
     try {
-      await axios.delete(`/api/projects/${project.id}`);
+      const result = await deleteProject(project.id);
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
+        toast.success(`Project: ${project.title}, deleted successfully`);
+      }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: t("dataTable.deleteError"),
-      });
+      toast.error(t("dataTable.deleteError"));
       console.log(error);
     } finally {
-      toast({
-        title: t("dataTable.delete"),
-        description: `Project: ${project.title}, deleted successfully`,
-      });
       router.refresh();
       setOpen(false);
       setLoading(false);
@@ -79,18 +75,16 @@ export function DataTableRowActions<TData>({
   const onWatch = async () => {
     setLoading(true);
     try {
-      await axios.post(`/api/projects/${project.id}/watch`);
+      const result = await watchProject(project.id);
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
+        toast.success(`Project: ${project.title}, watched successfully`);
+      }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: t("dataTable.watchError"),
-      });
+      toast.error(t("dataTable.watchError"));
       console.log(error);
     } finally {
-      toast({
-        title: t("dataTable.watchProject"),
-        description: `Project: ${project.title}, watched successfully`,
-      });
       setLoading(false);
     }
   };
@@ -98,18 +92,16 @@ export function DataTableRowActions<TData>({
   const onUnWatch = async () => {
     setLoading(true);
     try {
-      await axios.post(`/api/projects/${project.id}/unwatch`);
+      const result = await unwatchProject(project.id);
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
+        toast.success(`Project: ${project.title}, You stop watching this project successfully`);
+      }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: t("dataTable.watchError"),
-      });
+      toast.error(t("dataTable.watchError"));
       console.log(error);
     } finally {
-      toast({
-        title: t("dataTable.stopWatching"),
-        description: `Project: ${project.title}, You stop watching this project successfully`,
-      });
       setLoading(false);
     }
   };

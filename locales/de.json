@@ -18,7 +18,6 @@
     "projects": "Projekte",
     "emails": "E-Mails",
     "tasks": "Aufgaben",
-    "invoices": "Rechnungen",
     "reports": "Berichte",
     "documents": "Dokumente",
     "storage": "Speicher",
@@ -37,7 +36,6 @@
     "projects": "Projekte",
     "tasks": "Aufgaben",
     "myTasks": "Meine Aufgaben",
-    "invoices": "Rechnungen",
     "documents": "Dokumente",
     "storage": "Speicher"
   },
@@ -156,7 +154,9 @@
     "updateButton": "Unternehmen aktualisieren",
     "createSuccess": "Unternehmen erfolgreich erstellt",
     "updateSuccess": "Unternehmen erfolgreich aktualisiert",
-    "errorDescription": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+    "errorDescription": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+    "nameRequired": "Unternehmensname ist erforderlich",
+    "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein"
   },
   "CrmContactForm": {
     "firstName": "Vorname",
@@ -204,7 +204,9 @@
     "createButton": "Kontakt erstellen",
     "updateButton": "Kontakt aktualisieren",
     "createSuccess": "Kontakt erfolgreich erstellt",
-    "updateSuccess": "Kontakt erfolgreich aktualisiert"
+    "updateSuccess": "Kontakt erfolgreich aktualisiert",
+    "lastNameRequired": "Nachname ist erforderlich",
+    "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein"
   },
   "CrmOpportunityForm": {
     "name": "Name der Möglichkeit",
@@ -221,7 +223,9 @@
     "nextStepPlaceholder": "Nächsten Schritt beschreiben",
     "assignedAccount": "Zugewiesenes Unternehmen",
     "createSuccess": "Möglichkeit erfolgreich erstellt",
-    "updateSuccess": "Möglichkeit erfolgreich aktualisiert"
+    "updateSuccess": "Möglichkeit erfolgreich aktualisiert",
+    "nameRequired": "Name der Möglichkeit ist erforderlich",
+    "createError": "Möglichkeit konnte nicht erstellt werden"
   },
   "CrmLeadForm": {
     "firstName": "Vorname",
@@ -239,7 +243,9 @@
     "createButton": "Lead erstellen",
     "updateButton": "Lead aktualisieren",
     "createSuccess": "Lead erfolgreich erstellt",
-    "updateSuccess": "Lead erfolgreich aktualisiert"
+    "updateSuccess": "Lead erfolgreich aktualisiert",
+    "lastNameRequired": "Nachname ist erforderlich",
+    "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein"
   },
   "CrmContractForm": {
     "title": "Titel",
@@ -397,28 +403,6 @@
       "editProjectDesc": "Projektdetails bearbeiten",
       "deleteError": "Fehler beim Löschen des Projekts",
       "watchError": "Fehler beim Aktualisieren des Beobachtungsstatus"
-    }
-  },
-  "InvoicePage": {
-    "title": "Rechnungen",
-    "description": "Verwalten Sie Ihre Rechnungen",
-    "uploadPdf": "PDF hochladen",
-    "myInvoices": "Meine Rechnungen",
-    "checkForNew": "Auf neue prüfen",
-    "checking": "Prüfe...",
-    "somethingWentWrong": "Etwas ist schiefgelaufen",
-    "settings": {
-      "title": "Einstellungen",
-      "companySettings": "Unternehmenseinstellungen",
-      "description": "Rechnungseinstellungen verwalten"
-    },
-    "dataTable": {
-      "filterPlaceholder": "Rechnungen filtern...",
-      "reset": "Zurücksetzen"
-    },
-    "newTask": {
-      "title": "Neue Aufgabe erstellen",
-      "description": "Eine neue Aufgabe für diese Rechnung hinzufügen"
     }
   },
   "DocumentsPage": {

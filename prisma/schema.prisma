@@ -42,7 +42,6 @@ model crm_Accounts {
   vat                  String?
   website              String?
 
-  invoices           Invoices[]
   contacts           crm_Contacts[]
   leads              crm_Leads[]
   industry_type      crm_Industry_Type?    @relation(fields: [industry], references: [id])
@@ -333,136 +332,6 @@ model ImageUpload {
   id String @id @default(uuid()) @db.Uuid
 }
 
-model MyAccount {
-  id                   String  @id @default(uuid()) @db.Uuid
-  v                    Int     @map("__v")
-  company_name         String
-  is_person            Boolean @default(false)
-  email                String?
-  email_accountant     String?
-  phone_prefix         String?
-  phone                String?
-  mobile_prefix        String?
-  mobile               String?
-  fax_prefix           String?
-  fax                  String?
-  website              String?
-  // office Address
-  street               String?
-  city                 String?
-  state                String?
-  zip                  String?
-  country              String?
-  country_code         String?
-  // billing Address
-  billing_street       String?
-  billing_city         String?
-  billing_state        String?
-  billing_zip          String?
-  billing_country      String?
-  billing_country_code String?
-  //other
-  currency             String?
-  currency_symbol      String?
-  VAT_number           String
-  TAX_number           String?
-  bank_name            String?
-  bank_account         String?
-  bank_code            String?
-  bank_IBAN            String?
-  bank_SWIFT           String?
-}
-
-model Invoices {
-  id                            String    @id @default(uuid()) @db.Uuid
-  v                             Int?      @map("__v")
-  date_created                  DateTime  @default(now())
-  last_updated                  DateTime  @updatedAt
-  last_updated_by               String?   @db.Uuid
-  date_received                 DateTime? @default(now())
-  date_of_case                  DateTime?
-  date_tax                      DateTime?
-  date_due                      DateTime?
-  description                   String?
-  document_type                 String?
-  favorite                      Boolean?  @default(false)
-  variable_symbol               String?
-  constant_symbol               String?
-  specific_symbol               String?
-  order_number                  String?
-  internal_number               String?
-  invoice_number                String?
-  invoice_amount                String?
-  invoice_file_mimeType         String
-  invoice_file_url              String
-  invoice_items                 Json?     @db.JsonB
-  invoice_type                  String?
-  invoice_currency              String?
-  invoice_language              String?
-  partner                       String?
-  partner_street                String?
-  partner_city                  String?
-  partner_zip                   String?
-  partner_country               String?
-  partner_country_code          String?
-  partner_business_street       String?
-  partner_business_city         String?
-  partner_business_zip          String?
-  partner_business_country      String?
-  partner_business_country_code String?
-  partner_VAT_number            String?
-  partner_TAX_number            String?
-  partner_TAX_local_number      String?
-  partner_phone_prefix          String?
-  partner_phone_number          String?
-  partner_fax_prefix            String?
-  partner_fax_number            String?
-  partner_email                 String?
-  partner_website               String?
-  partner_is_person             Boolean?
-  partner_bank                  String?
-  partner_account_number        String?
-  partner_account_bank_number   String?
-  partner_IBAN                  String?
-  partner_SWIFT                 String?
-  partner_BIC                   String?
-  rossum_status                 String?
-  rossum_annotation_id          String?
-  rossum_annotation_url         String?
-  rossum_document_id            String?
-  rossum_document_url           String?
-  rossum_annotation_json_url    String?
-  rossum_annotation_xml_url     String?
-  money_s3_url                  String?
-  status                        String?
-  invoice_state_id              String?   @db.Uuid
-  assigned_user_id              String?   @db.Uuid
-  assigned_account_id           String?   @db.Uuid
-  visibility                    Boolean   @default(true)
-
-  invoice_states invoice_States?       @relation(fields: [invoice_state_id], references: [id])
-  users          Users?                @relation(fields: [assigned_user_id], references: [id])
-  accounts       crm_Accounts?         @relation(fields: [assigned_account_id], references: [id])
-  documents      DocumentsToInvoices[]
-
-  @@index([invoice_state_id])
-  @@index([assigned_user_id])
-  @@index([assigned_account_id])
-  @@index([last_updated_by])
-  @@index([status])
-  @@index([invoice_type])
-  @@index([date_created])
-  @@index([date_due])
-  @@index([favorite])
-  @@index([status, date_created])
-}
-
-model invoice_States {
-  id                String     @id @default(uuid()) @db.Uuid
-  name              String
-  assigned_invoices Invoices[]
-}
-
 model Documents {
   id                     String    @id @default(uuid()) @db.Uuid
   v                      Int?      @map("__v")
@@ -490,7 +359,6 @@ model Documents {
   assigned_to_user     Users?                        @relation("assigned_to_user", fields: [assigned_user], references: [id])
   documents_type       Documents_Types?              @relation(fields: [document_type], references: [id])
   document_system_type DocumentSystemType?           @default(OTHER)
-  invoices             DocumentsToInvoices[]
   opportunities        DocumentsToOpportunities[]
   contacts             DocumentsToContacts[]
   tasks                DocumentsToTasks[]
@@ -510,7 +378,6 @@ model Documents {
 }
 
 enum DocumentSystemType {
-  INVOICE
   RECEIPT
   CONTRACT
   OFFER
@@ -687,7 +554,6 @@ model Users {
   assigned_contacts    crm_Contacts[]        @relation("assigned_contacts")
   crated_contacts      crm_Contacts[]        @relation("created_contacts")
   openAi_key           openAi_keys[]
-  assigned_invoices    Invoices[]
   assigned_contracts   crm_Contracts[]
   boards               Boards[]              @relation("assigned_user")
   watching_boards      BoardWatchers[]
@@ -760,19 +626,7 @@ enum gptStatus {
 // JUNCTION TABLES FOR MANY-TO-MANY RELATIONSHIPS
 // ============================================
 
-// Documents junction tables (7 tables)
-model DocumentsToInvoices {
-  document_id String @db.Uuid
-  invoice_id  String @db.Uuid
-
-  document Documents @relation(fields: [document_id], references: [id], onDelete: Cascade)
-  invoice  Invoices  @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
-
-  @@id([document_id, invoice_id])
-  @@index([document_id])
-  @@index([invoice_id])
-}
-
+// Documents junction tables (6 tables)
 model DocumentsToOpportunities {
   document_id    String @db.Uuid
   opportunity_id String @db.Uuid

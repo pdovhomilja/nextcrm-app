@@ -1,6 +1,5 @@
 "use client";
 
-import axios from "axios";
 import moment from "moment";
 import { useRouter } from "next/navigation";
 import React, { ChangeEvent, useEffect, useState } from "react";
@@ -50,7 +49,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import AlertModal from "@/components/modals/alert-modal";
 import LoadingComponent from "@/components/LoadingComponent";
 import { DialogHeader } from "@/components/ui/dialog-document-view";
@@ -65,7 +64,12 @@ import {
 
 import NewSectionForm from "../forms/NewSection";
 import UpdateTaskDialog from "../../../dialogs/UpdateTask";
-import { getTaskDone } from "../../../actions/get-task-done";
+import { markTaskDone } from "@/actions/projects/mark-task-done";
+import { deleteSection } from "@/actions/projects/delete-section";
+import { updateSectionTitle } from "@/actions/projects/update-section-title";
+import { createTaskInBoard } from "@/actions/projects/create-task-in-board";
+import { deleteTask } from "@/actions/projects/delete-task";
+import { updateKanbanPosition } from "@/actions/projects/update-kanban-position";
 
 let timer: any;
 const timeout = 1000;
@@ -214,7 +218,6 @@ const Kanban = (props: any) => {
   const [isLoadingSection, setIsLoadingSection] = useState(false);
 
   const router = useRouter();
-  const { toast } = useToast();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -309,22 +312,15 @@ const Kanban = (props: any) => {
     setData(newData);
 
     try {
-      await axios.put(`/api/projects/tasks/update-kanban-position`, {
+      await updateKanbanPosition({
         resourceList: sourceSection.tasks,
         destinationList: targetSection.tasks,
         resourceSectionId: sourceSection.id,
         destinationSectionId: targetSection.id,
       });
-      toast({
-        title: "Task moved",
-        description: "New task position saved in database",
-      });
+      toast.success("New task position saved in database");
     } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update task position",
-      });
+      toast.error("Failed to update task position");
       // Revert on error
       setData(props.data);
     }
@@ -333,19 +329,16 @@ const Kanban = (props: any) => {
   const onDeleteSection = async () => {
     setIsLoadingSection(true);
     try {
-      await axios.delete(`/api/projects/sections/delete-section/${sectionId}`);
-      const newData = [...data].filter((e) => e.id !== sectionId);
-      setData(newData);
-      toast({
-        title: "Section deleted",
-        description: "Section deleted successfully",
-      });
+      const result = await deleteSection(sectionId as unknown as string);
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
+        const newData = [...data].filter((e) => e.id !== sectionId);
+        setData(newData);
+        toast.success("Section deleted successfully");
+      }
     } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Something went wrong, during deleting section",
-      });
+      toast.error("Something went wrong, during deleting section");
     } finally {
       setIsLoadingSection(false);
       setSectionId(null);
@@ -354,7 +347,7 @@ const Kanban = (props: any) => {
     }
   };
 
-  const updateSectionTitle = async (
+  const updateSectionTitleHandler = async (
     e: ChangeEvent<HTMLInputElement>,
     sectionId: string
   ) => {
@@ -366,13 +359,10 @@ const Kanban = (props: any) => {
     setData(newData);
     timer = setTimeout(async () => {
       try {
-        await axios.put(`/api/projects/sections/update-title/${sectionId}`, {
-          newTitle,
-        });
-        toast({
-          title: "Section title updated",
-          description: "New section title saved in database",
-        });
+        const result = await updateSectionTitle({ sectionId, newTitle });
+        if (result?.success) {
+          toast.success("New section title saved in database");
+        }
       } catch (err) {
         alert(err);
       }
@@ -381,27 +371,14 @@ const Kanban = (props: any) => {
 
   const createTask = async (sectionId: string) => {
     try {
-      const task = await axios.post(
-        `/api/projects/tasks/create-task/${boardId}`,
-        {
-          section: sectionId,
-        }
-      );
-      const newData = [...data];
-      const index = newData.findIndex((e) => e.id === sectionId);
-      newData[index].tasks.unshift(task);
-      setData(newData);
-      toast({
-        title: "Task created",
-        description: "New task saved in database",
+      await createTaskInBoard({
+        boardId,
+        section: sectionId,
       });
+      toast.success("New task saved in database");
     } catch (error) {
       console.log(error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Something went wrong, during creating task",
-      });
+      toast.error("Something went wrong, during creating task");
     } finally {
       setIsLoading(false);
       router.refresh();
@@ -411,15 +388,10 @@ const Kanban = (props: any) => {
   const onDone = async (id: string) => {
     setIsLoading(true);
     try {
-      await getTaskDone(id);
-      toast({
-        title: "Success, task marked as done.",
-      });
+      await markTaskDone(id);
+      toast.success("Success");
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error, task not marked as done.",
-      });
+      toast.error("Error");
     } finally {
       setIsLoading(false);
       router.refresh();
@@ -430,32 +402,23 @@ const Kanban = (props: any) => {
     setOpen(false);
     setIsLoading(true);
     if (!selectedTask || !selectedTask.id || !selectedTask.section) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Invalid task. Please select a valid task to delete.",
-      });
+      toast.error("Invalid task. Please select a valid task to delete.");
       setIsLoading(false);
       return;
     }
     try {
-      await axios.delete(`/api/projects/tasks/`, {
-        data: {
-          id: selectedTask.id,
-          section: selectedTask.section,
-        },
+      const result = await deleteTask({
+        id: selectedTask.id,
+        section: selectedTask.section,
       });
-      toast({
-        title: "Task deleted",
-        description: "Task deleted successfully",
-      });
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Task deleted successfully");
+      }
     } catch (error) {
       console.log(error);
-      toast({
-        variant: "destructive",
-        title: "Task deleted",
-        description: "Something went wrong, during deleting task",
-      });
+      toast.error("Something went wrong, during deleting task");
     } finally {
       setIsLoading(false);
       router.refresh();
@@ -542,7 +505,9 @@ const Kanban = (props: any) => {
                         type="text"
                         className="  pl-2  px-1 py-1 rounded-md m-2  "
                         placeholder={section?.title}
-                        onChange={(e) => updateSectionTitle(e, section.id)}
+                        onChange={(e) =>
+                          updateSectionTitleHandler(e, section.id)
+                        }
                       />
                       <div className="flex items-center justify-end pr-2">
                         <span className="border rounded-full px-2 m-2">

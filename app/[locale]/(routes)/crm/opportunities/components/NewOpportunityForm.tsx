@@ -1,14 +1,13 @@
 "use client";
 
 import { z } from "zod";
-import axios from "axios";
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { useForm } from "react-hook-form";
 import { CalendarIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 
@@ -17,7 +16,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
 import {
   Form,
   FormControl,
@@ -45,6 +43,7 @@ import {
   crm_Opportunities_Type,
   crm_campaigns,
 } from "@prisma/client";
+import { createOpportunity } from "@/actions/crm/opportunities/create-opportunity";
 
 //TODO: fix all the types
 type NewTaskFormProps = {
@@ -68,12 +67,8 @@ export function NewOpportunityForm({
   accountId,
   onDialogClose,
 }: NewTaskFormProps) {
-  const router = useRouter();
-  const { toast } = useToast();
   const t = useTranslations("CrmOpportunityForm");
   const c = useTranslations("Common");
-
-  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [searchAccountValue, setSearchAccountValue] = useState<string>("");
   const [searchContactValue, setSearchContactValue] = useState<string>("");
@@ -102,7 +97,7 @@ export function NewOpportunityForm({
   );
 
   const formSchema = z.object({
-    name: z.string(),
+    name: z.string().min(1, t("nameRequired")),
     close_date: z.date({
       message: "A expected close date is required.",
     }),
@@ -123,6 +118,7 @@ export function NewOpportunityForm({
 
   const form = useForm<NewAccountFormValues>({
     resolver: zodResolver(formSchema),
+    mode: "onBlur",
     defaultValues: {
       sales_stage: selectedStage ? selectedStage : undefined,
       account: accountId ? accountId : undefined,
@@ -130,13 +126,11 @@ export function NewOpportunityForm({
   });
 
   const onSubmit = async (data: NewAccountFormValues) => {
-    setIsLoading(true);
-    try {
-      await axios.post("/api/crm/opportunity", data);
-      toast({
-        title: c("success"),
-        description: t("createSuccess"),
-      });
+    const result = await createOpportunity(data);
+    if (result?.error) {
+      form.setError("root.serverError", { message: result.error || t("createError") });
+    } else {
+      toast.success(t("createSuccess"));
       form.reset({
         name: "",
         close_date: new Date(),
@@ -152,20 +146,7 @@ export function NewOpportunityForm({
         contact: "",
         campaign: "",
       });
-      // Close dialog before refresh to prevent it from reopening
       onDialogClose();
-      // Small delay to ensure dialog state update propagates
-      setTimeout(() => {
-        router.refresh();
-      }, 100);
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: c("error"),
-        description: error?.response?.data || t("createError"),
-      });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -185,7 +166,7 @@ export function NewOpportunityForm({
                   <FormLabel>{t("name")}</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="New NextCRM functionality"
                       {...field}
                     />
@@ -243,7 +224,7 @@ export function NewOpportunityForm({
                   <FormLabel>{c("description")}</FormLabel>
                   <FormControl>
                     <Textarea
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="New NextCRM functionality"
                       {...field}
                     />
@@ -317,7 +298,7 @@ export function NewOpportunityForm({
                       <FormControl>
                         <Input
                           type="number"
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                           placeholder="1000000"
                           {...field}
                         />
@@ -334,7 +315,7 @@ export function NewOpportunityForm({
                       <FormLabel>{t("currency")}</FormLabel>
                       <FormControl>
                         <Input
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                           placeholder="USD"
                           {...field}
                         />
@@ -352,7 +333,7 @@ export function NewOpportunityForm({
                       <FormControl>
                         <Input
                           type="number"
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                           placeholder="500000"
                           {...field}
                         />
@@ -369,7 +350,7 @@ export function NewOpportunityForm({
                       <FormLabel>{t("nextStep")}</FormLabel>
                       <FormControl>
                         <Textarea
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                           placeholder={t("nextStepPlaceholder")}
                           {...field}
                         />
@@ -391,7 +372,7 @@ export function NewOpportunityForm({
                           value={field.value ?? ""}
                           onChange={field.onChange}
                           placeholder={c("selectUser")}
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                         />
                       </FormControl>
                       <FormMessage />
@@ -491,74 +472,18 @@ export function NewOpportunityForm({
                     </FormItem>
                   )}
                 />
-                {/*  <FormField
-                  control={form.control}
-                  name="contact"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Assigned contact</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              className={cn(
-                                "w-[200px] justify-between",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value
-                                ? test.find(
-                                    (contact) => contact.value === field.value
-                                  )?.label //TODO: attention here
-                                : "Select Contact"}
-                              <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[200px] p-0">
-                          <Command>
-                            <CommandInput placeholder="Search in contacts..." />
-                            <CommandEmpty>No contact found.</CommandEmpty>
-                            <CommandGroup>
-                              {test.map((contact) => (
-                                <CommandItem
-                                  value={contact.value}
-                                  key={contact.value}
-                                  onSelect={(value) => {
-                                    form.setValue("contact", value);
-                                  }}
-                                >
-                                  <CheckIcon
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      contact.value === field.value
-                                        ? "opacity-100"
-                                        : "opacity-0"
-                                    )}
-                                  />
-                                  {contact.label}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                      <FormDescription>
-                        This is the language that will be used in the dashboard.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                /> */}
               </div>
             </div>
           </div>
         </div>
         <div className="grid gap-2 py-5">
-          <Button disabled={isLoading} type="submit">
-            {isLoading ? (
+          {form.formState.errors.root?.serverError && (
+            <p className="text-sm text-destructive" aria-live="polite">
+              {form.formState.errors.root.serverError.message}
+            </p>
+          )}
+          <Button disabled={form.formState.isSubmitting} type="submit">
+            {form.formState.isSubmitting ? (
               <span className="flex items-center animate-pulse">
                 {c("savingData")}
               </span>

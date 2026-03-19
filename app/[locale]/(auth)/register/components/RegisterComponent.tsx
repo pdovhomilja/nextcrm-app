@@ -1,6 +1,5 @@
 "use client";
 import { z } from "zod";
-import axios from "axios";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
@@ -37,11 +36,11 @@ import {
 import { Icons } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
+import { registerUser } from "@/actions/auth/register-user";
 
 export function RegisterComponent() {
   const router = useRouter();
-  const { toast } = useToast();
 
   //Local states
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
@@ -73,21 +72,17 @@ export function RegisterComponent() {
   const onSubmit = async (data: BillboardFormValues) => {
     setIsLoading(true);
     try {
-      const response = await axios.post("/api/user", data);
-      toast({
-        title: "Success",
-        description: "User created successfully, please login.",
-      });
+      const result = await registerUser(data);
 
-      if (response.status === 200) {
-        router.push("/");
+      if (result.error) {
+        toast.error(result.error);
+        return;
       }
+
+      toast.success("User created successfully, please login.");
+      router.push("/");
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error?.response?.data,
-      });
+      toast.error(error?.message);
     } finally {
       setIsLoading(false);
     }

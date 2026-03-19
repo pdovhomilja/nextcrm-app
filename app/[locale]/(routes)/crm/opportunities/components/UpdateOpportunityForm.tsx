@@ -1,18 +1,15 @@
 "use client";
 
-import { useState } from "react";
 import { z } from "zod";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 
-import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -40,6 +37,7 @@ import { Calendar } from "@/components/ui/calendar";
 import SuspenseLoading from "@/components/loadings/suspense";
 import fetcher from "@/lib/fetcher";
 import useSWR from "swr";
+import { updateOpportunity } from "@/actions/crm/opportunities/update-opportunity";
 
 //TODO: fix all the types
 type NewTaskFormProps = {
@@ -51,12 +49,8 @@ export function UpdateOpportunityForm({
   initialData,
   setOpen,
 }: NewTaskFormProps) {
-  const router = useRouter();
-  const { toast } = useToast();
   const t = useTranslations("CrmOpportunityForm");
   const c = useTranslations("Common");
-
-  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const { data: opportunities, isLoading: isLoadingOpportunities } = useSWR(
     "/api/crm/opportunity",
@@ -65,7 +59,7 @@ export function UpdateOpportunityForm({
 
   const formSchema = z.object({
     id: z.string().min(5).max(30),
-    name: z.string(),
+    name: z.string().min(1, t("nameRequired")),
     close_date: z.date({
       message: "A expected close date is required.",
     }),
@@ -86,6 +80,7 @@ export function UpdateOpportunityForm({
 
   const form = useForm<any>({
     resolver: zodResolver(formSchema),
+    mode: "onBlur",
     defaultValues: {
       ...initialData,
       budget: String(initialData.budget),
@@ -94,28 +89,16 @@ export function UpdateOpportunityForm({
   });
 
   const onSubmit = async (data: NewAccountFormValues) => {
-    setIsLoading(true);
-    try {
-      //Convert data.budget and data.expected_revenue to number
-      await axios.put("/api/crm/opportunity", data);
-      toast({
-        title: c("success"),
-        description: t("updateSuccess"),
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: c("error"),
-        description: error?.response?.data,
-      });
-    } finally {
-      setIsLoading(false);
+    const result = await updateOpportunity(data);
+    if (result?.error) {
+      form.setError("root.serverError", { message: result.error });
+    } else {
+      toast.success(t("updateSuccess"));
       setOpen(false);
-      router.refresh();
     }
   };
 
-  if (isLoading || isLoadingOpportunities)
+  if (isLoadingOpportunities)
     return (
       <div>
         <SuspenseLoading />
@@ -131,19 +114,6 @@ export function UpdateOpportunityForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="h-full px-4 md:px-10">
-        {/*        <div>
-          <pre>
-            <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
-          </pre>
-        </div> */}
-        {/*     <pre>
-          <code>{JSON.stringify(initialData, null, 2)}</code>
-        </pre> */}
-        {/*        <div>
-          <pre>
-            <code>{JSON.stringify(form.watch(), null, 2)}</code>
-          </pre>
-        </div> */}
         <div className="w-full text-sm">
           <div className="pb-5 space-y-2">
             <FormField
@@ -154,7 +124,7 @@ export function UpdateOpportunityForm({
                   <FormLabel>{t("name")}</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="New NextCRM functionality"
                       {...field}
                     />
@@ -212,7 +182,7 @@ export function UpdateOpportunityForm({
                   <FormLabel>{c("description")}</FormLabel>
                   <FormControl>
                     <Textarea
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="New NextCRM functionality"
                       {...field}
                     />
@@ -286,7 +256,7 @@ export function UpdateOpportunityForm({
                       <FormControl>
                         <Input
                           type={"number"}
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                           placeholder="1000000"
                           {...field}
                         />
@@ -303,7 +273,7 @@ export function UpdateOpportunityForm({
                       <FormLabel>{t("currency")}</FormLabel>
                       <FormControl>
                         <Input
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                           placeholder="USD"
                           {...field}
                         />
@@ -321,7 +291,7 @@ export function UpdateOpportunityForm({
                       <FormControl>
                         <Input
                           type="number"
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                           placeholder="500000"
                           {...field}
                         />
@@ -338,7 +308,7 @@ export function UpdateOpportunityForm({
                       <FormLabel>{t("nextStep")}</FormLabel>
                       <FormControl>
                         <Textarea
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                           placeholder={t("nextStepPlaceholder")}
                           {...field}
                         />
@@ -462,8 +432,13 @@ export function UpdateOpportunityForm({
           </div>
         </div>
         <div className="grid gap-2 py-5">
-          <Button disabled={isLoading} type="submit">
-            {isLoading ? (
+          {form.formState.errors.root?.serverError && (
+            <p className="text-sm text-destructive" aria-live="polite">
+              {form.formState.errors.root.serverError.message}
+            </p>
+          )}
+          <Button disabled={form.formState.isSubmitting} type="submit">
+            {form.formState.isSubmitting ? (
               <span className="flex items-center animate-pulse">
                 {c("savingData")}
               </span>

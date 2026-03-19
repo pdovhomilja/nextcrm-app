@@ -22,12 +22,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import axios from "axios";
 import { useRouter } from "next/navigation";
-import { Users } from "@prisma/client";
+import { updateProfile } from "@/actions/user/update-profile";
 
 interface ProfileFormProps {
   data: any;
@@ -46,7 +45,6 @@ export function ProfileForm({ data }: ProfileFormProps) {
 
   const router = useRouter();
 
-  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -62,24 +60,22 @@ export function ProfileForm({ data }: ProfileFormProps) {
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     try {
       setIsLoading(true);
-      await axios.put(`/api/user/${data.id}/updateprofile`, data);
-      //TODO: send data to the server
-      toast({
-        title: "You submitted the following values:",
-        description: (
-          <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-            <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-          </pre>
-        ),
+      const result = await updateProfile({
+        userId: data.id,
+        name: data.name,
+        username: data.username,
+        account_name: data.account_name,
       });
+
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success("Profile saved successfully");
       router.refresh();
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description:
-          "Something went wrong while activating your notion integration.",
-      });
+      toast.error("Something went wrong while activating your notion integration.");
     } finally {
       setIsLoading(false);
     }

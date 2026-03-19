@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import updateModel from "@/actions/admin/update-gpt-model";
 import { useRouter } from "next/navigation";
 import { gpt_models } from "@prisma/client";
@@ -46,9 +46,7 @@ const SetGptModel = ({ models }: any) => {
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     try {
       await updateModel(data.model);
-      toast({
-        title: "GPT model updated",
-      });
+      toast.success("GPT model updated");
     } catch (error) {
       console.log(error);
     } finally {

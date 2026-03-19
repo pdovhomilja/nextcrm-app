@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import useSWR from "swr";
+import { useState, useEffect, useTransition } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -19,10 +18,11 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import fetcher from "@/lib/fetcher";
 import useDebounce from "@/hooks/useDebounce";
+import { searchUsers } from "@/actions/user/search-users";
+import { getUserById } from "@/actions/user/get-user-by-id";
 
-type User = { id: string; name: string; avatar: string | null };
+type User = { id: string; name: string | null; avatar: string | null };
 
 interface UserSearchComboboxProps {
   value: string;
@@ -45,21 +45,31 @@ export function UserSearchCombobox({
   const [search, setSearch] = useState("");
   const [skip, setSkip] = useState(0);
   const [accumulatedUsers, setAccumulatedUsers] = useState<User[]>([]);
+  const [listData, setListData] = useState<{
+    users: User[];
+    hasMore: boolean;
+  } | null>(null);
+  const [singleUser, setSingleUser] = useState<User | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   const debouncedSearch = useDebounce(search, 300);
 
-  const listUrl = open
-    ? `/api/user?search=${encodeURIComponent(debouncedSearch)}&skip=${skip}&take=${PAGE_SIZE}`
-    : null;
-
-  const { data: listData, isLoading } = useSWR(listUrl, fetcher);
-
   const selectedInList = accumulatedUsers.find((u) => u.id === value);
-  const { data: singleUser } = useSWR(
-    value && !selectedInList ? `/api/user?id=${value}` : null,
-    fetcher
-  );
 
+  // Load list of users when open
+  useEffect(() => {
+    if (!open) return;
+    startTransition(async () => {
+      const data = await searchUsers({
+        search: debouncedSearch,
+        skip,
+        take: PAGE_SIZE,
+      });
+      setListData(data);
+    });
+  }, [open, debouncedSearch, skip]);
+
+  // Accumulate users across pages
   useEffect(() => {
     if (listData?.users) {
       if (skip === 0) {
@@ -70,10 +80,21 @@ export function UserSearchCombobox({
     }
   }, [listData, skip]);
 
+  // Reset on search change
   useEffect(() => {
     setSkip(0);
     setAccumulatedUsers([]);
+    setListData(null);
   }, [debouncedSearch]);
+
+  // Load selected user if not in list
+  useEffect(() => {
+    if (!value || selectedInList) return;
+    startTransition(async () => {
+      const user = await getUserById(value);
+      setSingleUser(user);
+    });
+  }, [value, selectedInList]);
 
   const displayUser = selectedInList ?? singleUser ?? null;
 
@@ -81,6 +102,8 @@ export function UserSearchCombobox({
     onChange(userId === value ? "" : userId);
     setOpen(false);
   };
+
+  const isLoading = isPending && skip === 0 && accumulatedUsers.length === 0;
 
   return (
     <>
@@ -111,7 +134,7 @@ export function UserSearchCombobox({
               onValueChange={setSearch}
             />
             <CommandList onWheelCapture={(e) => e.stopPropagation()}>
-              {isLoading && skip === 0 ? (
+              {isLoading ? (
                 <div className="py-6 text-center text-sm text-muted-foreground">
                   Loading...
                 </div>
@@ -142,7 +165,7 @@ export function UserSearchCombobox({
                         className="w-full text-sm"
                         type="button"
                         onClick={() => setSkip((prev) => prev + PAGE_SIZE)}
-                        disabled={isLoading}
+                        disabled={isPending}
                       >
                         Load more
                       </Button>
