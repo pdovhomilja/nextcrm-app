@@ -1,16 +1,18 @@
-import { NextResponse } from "next/server";
+"use server";
+
+import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import Papa from "papaparse";
 
-export async function POST(req: Request) {
+export async function importTargets(
+  formData: FormData
+): Promise<{ imported: number; skipped: number; errors: string[] }> {
   const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) throw new Error("Unauthorized");
 
-  const formData = await req.formData();
-  const file = formData.get("file") as File;
-  if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
+  const file = formData.get("file") as File | null;
+  if (!file) throw new Error("No file provided");
 
   const mappingRaw = formData.get("mapping") as string | null;
   const mapping: Record<string, string> = mappingRaw ? JSON.parse(mappingRaw) : {};
@@ -25,7 +27,6 @@ export async function POST(req: Request) {
   const errors: string[] = [];
 
   data.forEach((rawRow, index) => {
-    // Apply mapping to normalize the row
     const row: Record<string, string> = {};
     if (Object.keys(mapping).length > 0) {
       Object.entries(mapping).forEach(([csvCol, targetField]) => {
@@ -34,7 +35,6 @@ export async function POST(req: Request) {
         }
       });
     } else {
-      // No mapping provided — use raw row as-is (backwards compatibility)
       Object.assign(row, rawRow);
     }
 
@@ -73,5 +73,5 @@ export async function POST(req: Request) {
     await prismadb.crm_Targets.createMany({ data: valid, skipDuplicates: true });
   }
 
-  return NextResponse.json({ imported: valid.length, skipped: errors.length, errors });
+  return { imported: valid.length, skipped: errors.length, errors };
 }

@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -58,7 +58,6 @@ const UpdateTaskDialog = ({
   const [isMounted, setIsMounted] = useState(false);
 
   const router = useRouter();
-  const { toast } = useToast();
 
   const formSchema = z.object({
     title: z.string().min(3).max(255),
@@ -102,23 +101,12 @@ const UpdateTaskDialog = ({
         ...data,
       });
       if (result?.error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.error,
-        });
+        toast.error(result.error);
       } else {
-        toast({
-          title: "Success",
-          description: `Task: ${data.title}, updated successfully`,
-        });
+        toast.success(`Task: ${data.title}, updated successfully`);
       }
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error?.message,
-      });
+      toast.error(error?.message);
     } finally {
       setIsLoading(false);
       onDone && onDone();

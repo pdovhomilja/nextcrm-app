@@ -5,9 +5,9 @@ import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { useForm } from "react-hook-form";
 import { CalendarIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 
@@ -16,7 +16,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
 import {
   Form,
   FormControl,
@@ -68,12 +67,8 @@ export function NewOpportunityForm({
   accountId,
   onDialogClose,
 }: NewTaskFormProps) {
-  const router = useRouter();
-  const { toast } = useToast();
   const t = useTranslations("CrmOpportunityForm");
   const c = useTranslations("Common");
-
-  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [searchAccountValue, setSearchAccountValue] = useState<string>("");
   const [searchContactValue, setSearchContactValue] = useState<string>("");
@@ -102,7 +97,7 @@ export function NewOpportunityForm({
   );
 
   const formSchema = z.object({
-    name: z.string(),
+    name: z.string().min(1, t("nameRequired")),
     close_date: z.date({
       message: "A expected close date is required.",
     }),
@@ -123,6 +118,7 @@ export function NewOpportunityForm({
 
   const form = useForm<NewAccountFormValues>({
     resolver: zodResolver(formSchema),
+    mode: "onBlur",
     defaultValues: {
       sales_stage: selectedStage ? selectedStage : undefined,
       account: accountId ? accountId : undefined,
@@ -130,50 +126,27 @@ export function NewOpportunityForm({
   });
 
   const onSubmit = async (data: NewAccountFormValues) => {
-    setIsLoading(true);
-    try {
-      const result = await createOpportunity(data);
-      if (result.error) {
-        toast({
-          variant: "destructive",
-          title: c("error"),
-          description: result.error || t("createError"),
-        });
-      } else {
-        toast({
-          title: c("success"),
-          description: t("createSuccess"),
-        });
-        form.reset({
-          name: "",
-          close_date: new Date(),
-          description: "",
-          type: "",
-          sales_stage: "",
-          budget: "",
-          currency: "",
-          expected_revenue: "",
-          next_step: "",
-          assigned_to: "",
-          account: "",
-          contact: "",
-          campaign: "",
-        });
-        // Close dialog before refresh to prevent it from reopening
-        onDialogClose();
-        // Small delay to ensure dialog state update propagates
-        setTimeout(() => {
-          router.refresh();
-        }, 100);
-      }
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: c("error"),
-        description: error?.message || t("createError"),
+    const result = await createOpportunity(data);
+    if (result?.error) {
+      form.setError("root.serverError", { message: result.error || t("createError") });
+    } else {
+      toast.success(t("createSuccess"));
+      form.reset({
+        name: "",
+        close_date: new Date(),
+        description: "",
+        type: "",
+        sales_stage: "",
+        budget: "",
+        currency: "",
+        expected_revenue: "",
+        next_step: "",
+        assigned_to: "",
+        account: "",
+        contact: "",
+        campaign: "",
       });
-    } finally {
-      setIsLoading(false);
+      onDialogClose();
     }
   };
 
@@ -193,7 +166,7 @@ export function NewOpportunityForm({
                   <FormLabel>{t("name")}</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="New NextCRM functionality"
                       {...field}
                     />
@@ -251,7 +224,7 @@ export function NewOpportunityForm({
                   <FormLabel>{c("description")}</FormLabel>
                   <FormControl>
                     <Textarea
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="New NextCRM functionality"
                       {...field}
                     />
@@ -325,7 +298,7 @@ export function NewOpportunityForm({
                       <FormControl>
                         <Input
                           type="number"
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                           placeholder="1000000"
                           {...field}
                         />
@@ -342,7 +315,7 @@ export function NewOpportunityForm({
                       <FormLabel>{t("currency")}</FormLabel>
                       <FormControl>
                         <Input
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                           placeholder="USD"
                           {...field}
                         />
@@ -360,7 +333,7 @@ export function NewOpportunityForm({
                       <FormControl>
                         <Input
                           type="number"
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                           placeholder="500000"
                           {...field}
                         />
@@ -377,7 +350,7 @@ export function NewOpportunityForm({
                       <FormLabel>{t("nextStep")}</FormLabel>
                       <FormControl>
                         <Textarea
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                           placeholder={t("nextStepPlaceholder")}
                           {...field}
                         />
@@ -399,7 +372,7 @@ export function NewOpportunityForm({
                           value={field.value ?? ""}
                           onChange={field.onChange}
                           placeholder={c("selectUser")}
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                         />
                       </FormControl>
                       <FormMessage />
@@ -504,8 +477,13 @@ export function NewOpportunityForm({
           </div>
         </div>
         <div className="grid gap-2 py-5">
-          <Button disabled={isLoading} type="submit">
-            {isLoading ? (
+          {form.formState.errors.root?.serverError && (
+            <p className="text-sm text-destructive" aria-live="polite">
+              {form.formState.errors.root.serverError.message}
+            </p>
+          )}
+          <Button disabled={form.formState.isSubmitting} type="submit">
+            {form.formState.isSubmitting ? (
               <span className="flex items-center animate-pulse">
                 {c("savingData")}
               </span>

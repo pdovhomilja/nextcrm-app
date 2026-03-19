@@ -49,7 +49,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import AlertModal from "@/components/modals/alert-modal";
 import LoadingComponent from "@/components/LoadingComponent";
 import { DialogHeader } from "@/components/ui/dialog-document-view";
@@ -218,7 +218,6 @@ const Kanban = (props: any) => {
   const [isLoadingSection, setIsLoadingSection] = useState(false);
 
   const router = useRouter();
-  const { toast } = useToast();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -319,16 +318,9 @@ const Kanban = (props: any) => {
         resourceSectionId: sourceSection.id,
         destinationSectionId: targetSection.id,
       });
-      toast({
-        title: "Task moved",
-        description: "New task position saved in database",
-      });
+      toast.success("New task position saved in database");
     } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update task position",
-      });
+      toast.error("Failed to update task position");
       // Revert on error
       setData(props.data);
     }
@@ -339,25 +331,14 @@ const Kanban = (props: any) => {
     try {
       const result = await deleteSection(sectionId as unknown as string);
       if (result?.error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.error,
-        });
+        toast.error(result.error);
       } else {
         const newData = [...data].filter((e) => e.id !== sectionId);
         setData(newData);
-        toast({
-          title: "Section deleted",
-          description: "Section deleted successfully",
-        });
+        toast.success("Section deleted successfully");
       }
     } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Something went wrong, during deleting section",
-      });
+      toast.error("Something went wrong, during deleting section");
     } finally {
       setIsLoadingSection(false);
       setSectionId(null);
@@ -380,10 +361,7 @@ const Kanban = (props: any) => {
       try {
         const result = await updateSectionTitle({ sectionId, newTitle });
         if (result?.success) {
-          toast({
-            title: "Section title updated",
-            description: "New section title saved in database",
-          });
+          toast.success("New section title saved in database");
         }
       } catch (err) {
         alert(err);
@@ -397,17 +375,10 @@ const Kanban = (props: any) => {
         boardId,
         section: sectionId,
       });
-      toast({
-        title: "Task created",
-        description: "New task saved in database",
-      });
+      toast.success("New task saved in database");
     } catch (error) {
       console.log(error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Something went wrong, during creating task",
-      });
+      toast.error("Something went wrong, during creating task");
     } finally {
       setIsLoading(false);
       router.refresh();
@@ -418,14 +389,9 @@ const Kanban = (props: any) => {
     setIsLoading(true);
     try {
       await markTaskDone(id);
-      toast({
-        title: "Success, task marked as done.",
-      });
+      toast.success("Success");
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error, task not marked as done.",
-      });
+      toast.error("Error");
     } finally {
       setIsLoading(false);
       router.refresh();
@@ -436,11 +402,7 @@ const Kanban = (props: any) => {
     setOpen(false);
     setIsLoading(true);
     if (!selectedTask || !selectedTask.id || !selectedTask.section) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Invalid task. Please select a valid task to delete.",
-      });
+      toast.error("Invalid task. Please select a valid task to delete.");
       setIsLoading(false);
       return;
     }
@@ -450,24 +412,13 @@ const Kanban = (props: any) => {
         section: selectedTask.section,
       });
       if (result?.error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.error,
-        });
+        toast.error(result.error);
       } else {
-        toast({
-          title: "Task deleted",
-          description: "Task deleted successfully",
-        });
+        toast.success("Task deleted successfully");
       }
     } catch (error) {
       console.log(error);
-      toast({
-        variant: "destructive",
-        title: "Task deleted",
-        description: "Something went wrong, during deleting task",
-      });
+      toast.error("Something went wrong, during deleting task");
     } finally {
       setIsLoading(false);
       router.refresh();

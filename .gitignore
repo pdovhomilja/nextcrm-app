@@ -53,6 +53,8 @@ backups/
 .agents/
 .cursor/
 .agent-os/
+.claude
+.vscode
 
 # Playwright
 test-results/

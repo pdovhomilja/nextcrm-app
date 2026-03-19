@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { CalendarDays, Trash2, User, Users } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
@@ -24,7 +24,6 @@ interface TargetListBasicViewProps {
 
 export function BasicView({ data }: TargetListBasicViewProps) {
   const router = useRouter();
-  const { toast } = useToast();
   const [addOpen, setAddOpen] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
 
@@ -37,14 +36,10 @@ export function BasicView({ data }: TargetListBasicViewProps) {
     const result = await removeTargetFromList(data.id, targetId);
     setRemovingId(null);
     if (result.error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: result.error,
-      });
+      toast.error(result.error);
       return;
     }
-    toast({ title: "Removed", description: "Target removed from list" });
+    toast.success("Target removed from list");
     router.refresh();
   };
 

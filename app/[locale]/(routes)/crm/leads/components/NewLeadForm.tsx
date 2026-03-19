@@ -1,13 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { z } from "zod";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
-import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -36,19 +34,15 @@ type NewTaskFormProps = {
 };
 
 export function NewLeadForm({ accounts, onFinish }: NewTaskFormProps) {
-  const router = useRouter();
-  const { toast } = useToast();
   const t = useTranslations("CrmLeadForm");
   const c = useTranslations("Common");
 
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
   const formSchema = z.object({
-    first_name: z.string(),
-    last_name: z.string().min(3).max(30).nonempty(),
+    first_name: z.string().optional(),
+    last_name: z.string().min(1, t("lastNameRequired")).max(30),
     company: z.string().optional(),
     jobTitle: z.string().optional(),
-    email: z.string().email().optional(),
+    email: z.string().email(t("emailInvalid")).or(z.literal("")).optional(),
     phone: z.string().min(0).max(15).optional(),
     description: z.string().optional(),
     lead_source: z.string().optional(),
@@ -62,47 +56,30 @@ export function NewLeadForm({ accounts, onFinish }: NewTaskFormProps) {
 
   const form = useForm<NewLeadFormValues>({
     resolver: zodResolver(formSchema),
+    mode: "onBlur",
+    defaultValues: {
+      first_name: "",
+      last_name: "",
+      company: "",
+      jobTitle: "",
+      email: "",
+      phone: "",
+      description: "",
+      lead_source: "",
+      refered_by: "",
+      campaign: "",
+      assigned_to: "",
+      accountIDs: "",
+    },
   });
 
   const onSubmit = async (data: NewLeadFormValues) => {
-    setIsLoading(true);
-    try {
-      const result = await createLead(data);
-      if (result.error) {
-        toast({
-          variant: "destructive",
-          title: c("error"),
-          description: result.error,
-        });
-      } else {
-        toast({
-          title: c("success"),
-          description: t("createSuccess"),
-        });
-      }
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: c("error"),
-        description: error?.message,
-      });
-    } finally {
-      setIsLoading(false);
-      form.reset({
-        first_name: "",
-        last_name: "",
-        company: "",
-        jobTitle: "",
-        email: "",
-        phone: "",
-        description: "",
-        lead_source: "",
-        refered_by: "",
-        campaign: "",
-        assigned_to: "",
-        accountIDs: "",
-      });
-      router.refresh();
+    const result = await createLead(data);
+    if (result?.error) {
+      form.setError("root.serverError", { message: result.error });
+    } else {
+      toast.success(t("createSuccess"));
+      form.reset();
       onFinish?.();
     }
   };
@@ -110,12 +87,6 @@ export function NewLeadForm({ accounts, onFinish }: NewTaskFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="h-full px-4 md:px-10">
-        {/*        <div>
-          <pre>
-            <code>{JSON.stringify(form.watch(), null, 2)}</code>
-            <code>{JSON.stringify(form.formState.errors, null, 2)}</code>
-          </pre>
-        </div> */}
         <div className="w-full text-sm">
           <div className="pb-5 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -127,7 +98,7 @@ export function NewLeadForm({ accounts, onFinish }: NewTaskFormProps) {
                     <FormLabel>{t("firstName")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Johny"
                         {...field}
                       />
@@ -144,7 +115,7 @@ export function NewLeadForm({ accounts, onFinish }: NewTaskFormProps) {
                     <FormLabel>{t("lastName")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Walker"
                         {...field}
                       />
@@ -163,7 +134,7 @@ export function NewLeadForm({ accounts, onFinish }: NewTaskFormProps) {
                     <FormLabel>{t("company")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="NextCRM Inc."
                         {...field}
                       />
@@ -179,7 +150,7 @@ export function NewLeadForm({ accounts, onFinish }: NewTaskFormProps) {
                   <FormItem>
                     <FormLabel>{t("jobTitle")}</FormLabel>
                     <FormControl>
-                      <Input disabled={isLoading} placeholder="CTO" {...field} />
+                      <Input disabled={form.formState.isSubmitting} placeholder="CTO" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -195,7 +166,7 @@ export function NewLeadForm({ accounts, onFinish }: NewTaskFormProps) {
                     <FormLabel>{t("email")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="johny@domain.com"
                         {...field}
                       />
@@ -212,7 +183,7 @@ export function NewLeadForm({ accounts, onFinish }: NewTaskFormProps) {
                     <FormLabel>{t("phone")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="+11 123 456 789"
                         {...field}
                       />
@@ -230,7 +201,7 @@ export function NewLeadForm({ accounts, onFinish }: NewTaskFormProps) {
                   <FormLabel>{c("description")}</FormLabel>
                   <FormControl>
                     <Textarea
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="New NextCRM functionality"
                       {...field}
                     />
@@ -248,7 +219,7 @@ export function NewLeadForm({ accounts, onFinish }: NewTaskFormProps) {
                     <FormLabel>{t("leadSource")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Website"
                         {...field}
                       />
@@ -265,7 +236,7 @@ export function NewLeadForm({ accounts, onFinish }: NewTaskFormProps) {
                     <FormLabel>{t("referredBy")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Johny Walker"
                         {...field}
                       />
@@ -284,7 +255,7 @@ export function NewLeadForm({ accounts, onFinish }: NewTaskFormProps) {
                     <FormLabel>{t("campaign")}</FormLabel>
                     <FormControl>
                       <Input
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                         placeholder="Social networks"
                         {...field}
                       />
@@ -304,7 +275,7 @@ export function NewLeadForm({ accounts, onFinish }: NewTaskFormProps) {
                         value={field.value ?? ""}
                         onChange={field.onChange}
                         placeholder={c("selectUser")}
-                        disabled={isLoading}
+                        disabled={form.formState.isSubmitting}
                       />
                     </FormControl>
                     <FormMessage />
@@ -342,8 +313,13 @@ export function NewLeadForm({ accounts, onFinish }: NewTaskFormProps) {
           </div>
         </div>
         <div className="grid gap-2 py-5">
-          <Button disabled={isLoading} type="submit">
-            {isLoading ? (
+          {form.formState.errors.root?.serverError && (
+            <p className="text-sm text-destructive" aria-live="polite">
+              {form.formState.errors.root.serverError.message}
+            </p>
+          )}
+          <Button disabled={form.formState.isSubmitting} type="submit">
+            {form.formState.isSubmitting ? (
               <span className="flex items-center animate-pulse">
                 {c("savingData")}
               </span>

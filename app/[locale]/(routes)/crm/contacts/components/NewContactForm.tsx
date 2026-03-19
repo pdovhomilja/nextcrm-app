@@ -1,12 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { z } from "zod";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -30,31 +28,31 @@ import { Switch } from "@/components/ui/switch";
 import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 import { createContact } from "@/actions/crm/contacts/create-contact";
 
-//TODO: fix all the types
-type NewTaskFormProps = {
-  accounts: any[];
+type AccountOption = {
+  id: string;
+  name: string;
+};
+
+type NewContactFormProps = {
+  accounts: AccountOption[];
   onFinish: () => void;
 };
 
 export function NewContactForm({
   accounts,
   onFinish,
-}: NewTaskFormProps) {
-  const router = useRouter();
-  const { toast } = useToast();
+}: NewContactFormProps) {
   const t = useTranslations("CrmContactForm");
   const c = useTranslations("Common");
-
-  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const formSchema = z.object({
     birthday_year: z.string().optional(),
     birthday_month: z.string().optional(),
     birthday_day: z.string().optional(),
     first_name: z.string().optional(),
-    last_name: z.string(),
+    last_name: z.string().min(1, t("lastNameRequired")),
     description: z.string().optional(),
-    email: z.string(),
+    email: z.union([z.string().email(t("emailInvalid")), z.literal("")]).optional(),
     personal_email: z.string().optional(),
     office_phone: z.string().optional(),
     mobile_phone: z.string().optional(),
@@ -76,6 +74,31 @@ export function NewContactForm({
 
   const form = useForm<NewAccountFormValues>({
     resolver: zodResolver(formSchema),
+    mode: "onBlur",
+    defaultValues: {
+      first_name: "",
+      last_name: "",
+      description: "",
+      email: "",
+      personal_email: "",
+      office_phone: "",
+      mobile_phone: "",
+      website: "",
+      position: "",
+      status: false,
+      type: "",
+      assigned_to: "",
+      assigned_account: "",
+      social_twitter: "",
+      social_facebook: "",
+      social_linkedin: "",
+      social_skype: "",
+      social_youtube: "",
+      social_tiktok: "",
+      birthday_year: undefined,
+      birthday_month: undefined,
+      birthday_day: undefined,
+    },
   });
 
   const contactType = [
@@ -85,54 +108,12 @@ export function NewContactForm({
   ];
 
   const onSubmit = async (data: NewAccountFormValues) => {
-    setIsLoading(true);
-    try {
-      const result = await createContact(data);
-      if (result.error) {
-        toast({
-          variant: "destructive",
-          title: c("error"),
-          description: result.error,
-        });
-      } else {
-        toast({
-          title: c("success"),
-          description: t("createSuccess"),
-        });
-      }
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: c("error"),
-        description: error?.message,
-      });
-    } finally {
-      setIsLoading(false);
-      form.reset({
-        first_name: "",
-        last_name: "",
-        description: "",
-        email: "",
-        personal_email: "",
-        office_phone: "",
-        mobile_phone: "",
-        website: "",
-        position: "",
-        status: false,
-        type: "",
-        assigned_to: "",
-        assigned_account: "",
-        social_twitter: "",
-        social_facebook: "",
-        social_linkedin: "",
-        social_skype: "",
-        social_youtube: "",
-        social_tiktok: "",
-        birthday_year: undefined,
-        birthday_month: undefined,
-        birthday_day: undefined,
-      });
-      router.refresh();
+    const result = await createContact(data);
+    if (result?.error) {
+      form.setError("root.serverError", { message: result.error });
+    } else {
+      toast.success(t("createSuccess"));
+      form.reset();
       onFinish();
     }
   };
@@ -149,7 +130,7 @@ export function NewContactForm({
                 <FormItem>
                   <FormLabel>{t("firstName")}</FormLabel>
                   <FormControl>
-                    <Input disabled={isLoading} placeholder="John" {...field} />
+                    <Input disabled={form.formState.isSubmitting} placeholder="John" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -162,7 +143,7 @@ export function NewContactForm({
                 <FormItem>
                   <FormLabel>{t("lastName")}</FormLabel>
                   <FormControl>
-                    <Input disabled={isLoading} placeholder="Doe" {...field} />
+                    <Input disabled={form.formState.isSubmitting} placeholder="Doe" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -176,7 +157,7 @@ export function NewContactForm({
                   <FormLabel>{t("mobilePhone")}</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="+11 1236 77 55"
                       {...field}
                     />
@@ -194,7 +175,7 @@ export function NewContactForm({
                   <FormLabel>{t("officePhone")}</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="+11 1236 77 55"
                       {...field}
                     />
@@ -211,7 +192,7 @@ export function NewContactForm({
                   <FormLabel>{t("email")}</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="john@domain.com"
                       {...field}
                     />
@@ -228,7 +209,7 @@ export function NewContactForm({
                   <FormLabel>{t("personalEmail")}</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="littlejohny@gmail.com"
                       {...field}
                     />
@@ -245,7 +226,7 @@ export function NewContactForm({
                   <FormLabel>{t("website")}</FormLabel>
                   <FormControl>
                     <Input
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder="https://www.domain.com"
                       {...field}
                     />
@@ -350,7 +331,7 @@ export function NewContactForm({
                   <FormLabel>{c("description")}</FormLabel>
                   <FormControl>
                     <Textarea
-                      disabled={isLoading}
+                      disabled={form.formState.isSubmitting}
                       placeholder={t("descriptionPlaceholder")}
                       {...field}
                     />
@@ -372,7 +353,7 @@ export function NewContactForm({
                           value={field.value ?? ""}
                           onChange={field.onChange}
                           placeholder={t("assignedUserPlaceholder")}
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                         />
                       </FormControl>
                       <FormMessage />
@@ -414,7 +395,7 @@ export function NewContactForm({
                       <FormLabel>{t("position")}</FormLabel>
                       <FormControl>
                         <Input
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                           placeholder="CTO"
                           {...field}
                         />
@@ -479,7 +460,7 @@ export function NewContactForm({
                       <FormLabel>{t("twitter")}</FormLabel>
                       <FormControl>
                         <Input
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                           placeholder="https://www.twitter.com/john"
                           {...field}
                         />
@@ -496,7 +477,7 @@ export function NewContactForm({
                       <FormLabel>{t("facebook")}</FormLabel>
                       <FormControl>
                         <Input
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                           placeholder="https://www.facebook.com/john"
                           {...field}
                         />
@@ -513,7 +494,7 @@ export function NewContactForm({
                       <FormLabel>{t("linkedin")}</FormLabel>
                       <FormControl>
                         <Input
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                           placeholder="https://www.linkedin.com/john"
                           {...field}
                         />
@@ -530,7 +511,7 @@ export function NewContactForm({
                       <FormLabel>{t("skype")}</FormLabel>
                       <FormControl>
                         <Input
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                           placeholder="https://www.skype.com/john"
                           {...field}
                         />
@@ -547,7 +528,7 @@ export function NewContactForm({
                       <FormLabel>{t("youtube")}</FormLabel>
                       <FormControl>
                         <Input
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                           placeholder="https://www.youtube.com/nextcrmio"
                           {...field}
                         />
@@ -564,7 +545,7 @@ export function NewContactForm({
                       <FormLabel>{t("tiktok")}</FormLabel>
                       <FormControl>
                         <Input
-                          disabled={isLoading}
+                          disabled={form.formState.isSubmitting}
                           placeholder="https://www.domain.com"
                           {...field}
                         />
@@ -578,8 +559,13 @@ export function NewContactForm({
           </div>
         </div>
         <div className="grid gap-2 py-5">
-          <Button disabled={isLoading} type="submit">
-            {isLoading ? (
+          {form.formState.errors.root?.serverError && (
+            <p className="text-sm text-destructive" aria-live="polite">
+              {form.formState.errors.root.serverError.message}
+            </p>
+          )}
+          <Button disabled={form.formState.isSubmitting} type="submit">
+            {form.formState.isSubmitting ? (
               <span className="flex items-center animate-pulse">
                 {c("savingData")}
               </span>

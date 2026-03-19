@@ -17,7 +17,7 @@ import { opportunitySchema } from "../table-data/schema";
 import { useRouter } from "next/navigation";
 import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { UpdateContactForm } from "../components/UpdateContactForm";
 import {
   Sheet,
@@ -30,12 +30,10 @@ import { deleteContact } from "@/actions/crm/contacts/delete-contact";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
-  accounts: any[];
 }
 
 export function DataTableRowActions<TData>({
   row,
-  accounts,
 }: DataTableRowActionsProps<TData>) {
   const router = useRouter();
   const contact = opportunitySchema.parse(row.original);
@@ -44,31 +42,18 @@ export function DataTableRowActions<TData>({
   const [loading, setLoading] = useState(false);
   const [updateOpen, setUpdateOpen] = useState(false);
 
-  const { toast } = useToast();
 
   const onDelete = async () => {
     setLoading(true);
     try {
       const result = await deleteContact(contact?.id);
       if (result.error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.error,
-        });
+        toast.error(result.error);
       } else {
-        toast({
-          title: "Success",
-          description: "Contact has been deleted",
-        });
+        toast.success("Contact has been deleted");
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description:
-          "Something went wrong while deleting contact. Please try again.",
-      });
+      toast.error("Something went wrong while deleting contact. Please try again.");
     } finally {
       setLoading(false);
       setOpen(false);
@@ -93,7 +78,6 @@ export function DataTableRowActions<TData>({
           <div className="mt-6 space-y-4">
             <UpdateContactForm
               initialData={row.original}
-              accounts={accounts}
               setOpen={setUpdateOpen}
             />
           </div>

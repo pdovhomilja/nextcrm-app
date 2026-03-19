@@ -15,7 +15,7 @@ import { adminUserSchema } from "../table-data/schema";
 import { useRouter } from "next/navigation";
 import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 import { Copy, Edit, MoreHorizontal, Trash } from "lucide-react";
 import { deleteUser } from "@/actions/admin/users/delete-user";
@@ -38,13 +38,9 @@ export function DataTableRowActions<TData>({
   const [loading, setLoading] = useState(false);
   const [updateOpen, setUpdateOpen] = useState(false);
 
-  const { toast } = useToast();
   const onCopy = (id: string) => {
     navigator.clipboard.writeText(id);
-    toast({
-      title: "Copied",
-      description: "The URL has been copied to your clipboard.",
-    });
+    toast.success("The URL has been copied to your clipboard.");
   };
 
   //Action triggered when the delete button is clicked to delete the store
@@ -53,24 +49,13 @@ export function DataTableRowActions<TData>({
       setLoading(true);
       const result = await deleteUser(data.id);
       if (result.error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.error,
-        });
+        toast.error(result.error);
         return;
       }
       router.refresh();
-      toast({
-        title: "Success",
-        description: "User has been deleted",
-      });
+      toast.success("User has been deleted");
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Something went wrong: " + error + ". Please try again.",
-      });
+      toast.error("Something went wrong: " + error + ". Please try again.");
     } finally {
       setLoading(false);
       setOpen(false);
@@ -82,25 +67,13 @@ export function DataTableRowActions<TData>({
       setLoading(true);
       const result = await activateUser(data.id);
       if (result.error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.error,
-        });
+        toast.error(result.error);
         return;
       }
       router.refresh();
-      toast({
-        title: "Success",
-        description: "User has been activated.",
-      });
+      toast.success("User has been activated.");
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description:
-          "Something went wrong while activating user. Please try again.",
-      });
+      toast.error("Something went wrong while activating user. Please try again.");
     } finally {
       setLoading(false);
       setOpen(false);
@@ -112,25 +85,13 @@ export function DataTableRowActions<TData>({
       setLoading(true);
       const result = await deactivateUser(data.id);
       if (result.error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.error,
-        });
+        toast.error(result.error);
         return;
       }
       router.refresh();
-      toast({
-        title: "Success",
-        description: "User has been deactivated.",
-      });
+      toast.success("User has been deactivated.");
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description:
-          "Something went wrong while deactivating user. Please try again.",
-      });
+      toast.error("Something went wrong while deactivating user. Please try again.");
     } finally {
       setLoading(false);
       setOpen(false);
@@ -142,25 +103,13 @@ export function DataTableRowActions<TData>({
       setLoading(true);
       const result = await deactivateAdmin(data.id);
       if (result.error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.error,
-        });
+        toast.error(result.error);
         return;
       }
       router.refresh();
-      toast({
-        title: "Success",
-        description: "User Admin rights has been deactivated.",
-      });
+      toast.success("User Admin rights has been deactivated.");
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description:
-          "Something went wrong while deactivating user as a admin. Please try again.",
-      });
+      toast.error("Something went wrong while deactivating user as a admin. Please try again.");
     } finally {
       setLoading(false);
       setOpen(false);
@@ -172,25 +121,13 @@ export function DataTableRowActions<TData>({
       setLoading(true);
       const result = await activateAdmin(data.id);
       if (result.error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.error,
-        });
+        toast.error(result.error);
         return;
       }
       router.refresh();
-      toast({
-        title: "Success",
-        description: "User Admin rights has been activated.",
-      });
+      toast.success("User Admin rights has been activated.");
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description:
-          "Something went wrong while activating uses as a admin. Please try again.",
-      });
+      toast.error("Something went wrong while activating uses as a admin. Please try again.");
     } finally {
       setLoading(false);
       setOpen(false);

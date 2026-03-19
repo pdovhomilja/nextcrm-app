@@ -35,7 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
@@ -59,7 +59,6 @@ const NewTaskDialog = ({ boards }: Props) => {
   const [isMounted, setIsMounted] = useState(false);
 
   const router = useRouter();
-  const { toast } = useToast();
   const t = useTranslations("ProjectsPage");
   const c = useTranslations("Common");
 
@@ -97,23 +96,12 @@ const NewTaskDialog = ({ boards }: Props) => {
     try {
       const result = await createTask(data);
       if (result?.error) {
-        toast({
-          variant: "destructive",
-          title: c("error"),
-          description: result.error,
-        });
+        toast.error(result.error);
       } else {
-        toast({
-          title: t("newTask.successMsg"),
-          description: `New task: ${data.title}, created successfully`,
-        });
+        toast.success(`New task: ${data.title}, created successfully`);
       }
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: c("error"),
-        description: error?.message,
-      });
+      toast.error(error?.message);
     } finally {
       setIsLoading(false);
       setOpen(false);

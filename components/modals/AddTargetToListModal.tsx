@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { getTargets } from "@/actions/crm/get-targets";
 import { addTargetsToList } from "@/actions/crm/target-lists/add-targets-to-list";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,6 @@ const AddTargetToListModal = ({
   onOpenChange,
 }: AddTargetToListModalProps) => {
   const router = useRouter();
-  const { toast } = useToast();
   const [targets, setTargets] = useState<Target[]>([]);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
@@ -55,7 +54,7 @@ const AddTargetToListModal = ({
         setTargets(all.filter((t) => !existingTargetIds.includes(t.id)));
       })
       .catch(() => {
-        toast({ variant: "destructive", title: "Error", description: "Failed to load targets" });
+        toast.error("Failed to load targets");
       })
       .finally(() => setIsFetching(false));
   }, [open]);
@@ -95,14 +94,10 @@ const AddTargetToListModal = ({
     const result = await addTargetsToList(targetListId, selected);
     setIsLoading(false);
     if (result.error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: result.error,
-      });
+      toast.error(result.error);
       return;
     }
-    toast({ title: "Success", description: `Added ${selected.length} target(s) to the list` });
+    toast.success(`Added ${selected.length} target(s) to the list`);
     setSelected([]);
     setSearch("");
     onOpenChange(false);

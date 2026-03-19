@@ -15,7 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -32,7 +32,6 @@ export function PasswordChangeForm({ userId }: { userId: string }) {
 
   const router = useRouter();
 
-  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -48,22 +47,14 @@ export function PasswordChangeForm({ userId }: { userId: string }) {
       });
 
       if (result.error) {
-        toast({
-          variant: "destructive",
-          title: t("errorPrefix") + result.error,
-        });
+        toast.error(t("errorPrefix") + result.error);
         return;
       }
 
-      toast({
-        title: t("success"),
-      });
+      toast.success(t("success"));
       router.refresh();
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: t("errorPrefix") + (error?.message || "Unknown error"),
-      });
+      toast.error(t("errorPrefix") + (error?.message || "Unknown error"));
     } finally {
       setIsLoading(false);
     }

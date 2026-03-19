@@ -10,7 +10,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { TrashIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -28,7 +28,6 @@ const DeleteProjectDialog = ({ boardId, boardName }: Props) => {
 
   const [isMounted, setIsMounted] = useState(false);
 
-  const { toast } = useToast();
   const router = useRouter();
 
   useEffect(() => {
@@ -46,24 +45,12 @@ const DeleteProjectDialog = ({ boardId, boardName }: Props) => {
     try {
       const result = await deleteProject(boardId);
       if (result?.error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.error,
-        });
+        toast.error(result.error);
       } else {
-        toast({
-          title: "Success",
-          description: `Project: ${boardName} deleted successfully`,
-        });
+        toast.success(`Project: ${boardName} deleted successfully`);
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description:
-          "Something went wrong while deleting project. Please try again.",
-      });
+      toast.error("Something went wrong while deleting project. Please try again.");
     } finally {
       setOpen(false);
       setIsLoading(false);

@@ -17,7 +17,7 @@ import { targetListSchema } from "../table-data/schema";
 import { useRouter } from "next/navigation";
 import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { deleteTargetList } from "@/actions/crm/target-lists/delete-target-list";
 
 interface DataTableRowActionsProps<TData> {
@@ -33,7 +33,6 @@ export function DataTableRowActions<TData>({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { toast } = useToast();
 
   const onDelete = async () => {
     setLoading(true);
@@ -41,17 +40,10 @@ export function DataTableRowActions<TData>({
     setLoading(false);
     setOpen(false);
     if (result.error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: result.error,
-      });
+      toast.error(result.error);
       return;
     }
-    toast({
-      title: "Success",
-      description: "Target list has been deleted",
-    });
+    toast.success("Target list has been deleted");
     router.refresh();
   };
 

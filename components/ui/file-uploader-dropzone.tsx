@@ -1,7 +1,6 @@
 import { UploadDropzone } from "@uploadthing/react";
 import { OurFileRouter } from "@/app/api/uploadthing/core";
 
-import "@uploadthing/react/styles.css";
 
 interface Props {
   uploader:

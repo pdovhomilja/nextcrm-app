@@ -157,7 +157,9 @@
     "updateButton": "Aktualizovat firmu",
     "createSuccess": "Firma úspěšně vytvořena",
     "updateSuccess": "Firma úspěšně aktualizována",
-    "errorDescription": "Něco se pokazilo. Zkuste to prosím znovu."
+    "errorDescription": "Něco se pokazilo. Zkuste to prosím znovu.",
+    "nameRequired": "Název firmy je povinný",
+    "emailInvalid": "Zadejte platnou e-mailovou adresu"
   },
   "CrmContactForm": {
     "firstName": "Jméno",
@@ -205,7 +207,9 @@
     "createButton": "Vytvořit kontakt",
     "updateButton": "Aktualizovat kontakt",
     "createSuccess": "Kontakt úspěšně vytvořen",
-    "updateSuccess": "Kontakt úspěšně aktualizován"
+    "updateSuccess": "Kontakt úspěšně aktualizován",
+    "lastNameRequired": "Příjmení je povinné",
+    "emailInvalid": "Zadejte platnou e-mailovou adresu"
   },
   "CrmOpportunityForm": {
     "name": "Název příležitosti",
@@ -222,7 +226,9 @@
     "nextStepPlaceholder": "Popište další krok",
     "assignedAccount": "Přiřazená firma",
     "createSuccess": "Příležitost úspěšně vytvořena",
-    "updateSuccess": "Příležitost úspěšně aktualizována"
+    "updateSuccess": "Příležitost úspěšně aktualizována",
+    "nameRequired": "Název příležitosti je povinný",
+    "createError": "Nepodařilo se vytvořit příležitost"
   },
   "CrmLeadForm": {
     "firstName": "Jméno",
@@ -240,7 +246,9 @@
     "createButton": "Vytvořit lead",
     "updateButton": "Aktualizovat lead",
     "createSuccess": "Lead úspěšně vytvořen",
-    "updateSuccess": "Lead úspěšně aktualizován"
+    "updateSuccess": "Lead úspěšně aktualizován",
+    "lastNameRequired": "Příjmení je povinné",
+    "emailInvalid": "Zadejte platnou e-mailovou adresu"
   },
   "CrmContractForm": {
     "title": "Název",

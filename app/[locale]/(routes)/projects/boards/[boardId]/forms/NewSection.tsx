@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Icons } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { createSection } from "@/actions/projects/create-section";
 
@@ -32,7 +32,6 @@ const NewSectionForm = ({ boardId, onClose }: NewSectionFormProps) => {
   const [isMounted, setIsMounted] = useState(false);
 
   const router = useRouter();
-  const { toast } = useToast();
 
   const formSchema = z.object({
     title: z.string().min(3).max(255),
@@ -58,23 +57,12 @@ const NewSectionForm = ({ boardId, onClose }: NewSectionFormProps) => {
     try {
       const result = await createSection({ boardId, title: data.title });
       if (result?.error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.error,
-        });
+        toast.error(result.error);
       } else {
-        toast({
-          title: "Success",
-          description: `New section: ${data.title}, created successfully`,
-        });
+        toast.success(`New section: ${data.title}, created successfully`);
       }
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error?.message,
-      });
+      toast.error(error?.message);
     } finally {
       form.reset({
         title: "",

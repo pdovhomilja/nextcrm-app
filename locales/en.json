@@ -155,7 +155,9 @@
     "updateButton": "Update account",
     "createSuccess": "Account created successfully",
     "updateSuccess": "Account updated successfully",
-    "errorDescription": "Something went wrong. Please try again."
+    "errorDescription": "Something went wrong. Please try again.",
+    "nameRequired": "Account name is required",
+    "emailInvalid": "Please enter a valid email address"
   },
   "CrmContactForm": {
     "firstName": "First name",
@@ -203,7 +205,9 @@
     "createButton": "Create contact",
     "updateButton": "Update contact",
     "createSuccess": "Contact created successfully",
-    "updateSuccess": "Contact updated successfully"
+    "updateSuccess": "Contact updated successfully",
+    "lastNameRequired": "Last name is required",
+    "emailInvalid": "Please enter a valid email address"
   },
   "CrmOpportunityForm": {
     "name": "Opportunity name",
@@ -220,7 +224,9 @@
     "nextStepPlaceholder": "Describe the next step",
     "assignedAccount": "Assigned Account",
     "createSuccess": "Opportunity created successfully",
-    "updateSuccess": "Opportunity updated successfully"
+    "updateSuccess": "Opportunity updated successfully",
+    "nameRequired": "Opportunity name is required",
+    "createError": "Failed to create opportunity"
   },
   "CrmLeadForm": {
     "firstName": "First name",
@@ -238,7 +244,9 @@
     "createButton": "Create lead",
     "updateButton": "Update lead",
     "createSuccess": "Lead created successfully",
-    "updateSuccess": "Lead updated successfully"
+    "updateSuccess": "Lead updated successfully",
+    "lastNameRequired": "Last name is required",
+    "emailInvalid": "Please enter a valid email address"
   },
   "CrmContractForm": {
     "title": "Title",

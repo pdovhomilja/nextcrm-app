@@ -18,7 +18,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import moment from "moment";
@@ -54,7 +54,6 @@ export function TeamConversations({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const router = useRouter();
 
-  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -64,15 +63,9 @@ export function TeamConversations({
     try {
       setIsLoading(true);
       await axios.post(`/api/crm/tasks/addCommentToTask/${taskId}`, data);
-      toast({
-        title: "Success, comment added.",
-      });
+      toast.success("Success");
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Something went wrong while sending comment to the DB",
-      });
+      toast.error("Something went wrong while sending comment to the DB");
     } finally {
       form.reset({
         comment: "",

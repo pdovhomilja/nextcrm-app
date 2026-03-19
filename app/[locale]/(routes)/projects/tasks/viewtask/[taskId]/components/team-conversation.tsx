@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/form";
 import { Icons } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import moment from "moment";
 import { useRouter } from "next/navigation";
@@ -44,7 +44,6 @@ export function TeamConversations({
 
   const router = useRouter();
 
-  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -55,22 +54,12 @@ export function TeamConversations({
     try {
       const result = await addCommentToTask({ taskId, comment: data.comment });
       if (result?.error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.error,
-        });
+        toast.error(result.error);
       } else {
-        toast({
-          title: "Success, comment added.",
-        });
+        toast.success("Success");
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Something went wrong while sending comment to the DB",
-      });
+      toast.error("Something went wrong while sending comment to the DB");
     } finally {
       form.reset({
         comment: "",

@@ -5,7 +5,7 @@ import { Users } from "@prisma/client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { FileUploaderDropzone } from "@/components/ui/file-uploader-dropzone";
 
 import useAvatarStore from "@/store/useAvatarStore";
@@ -20,7 +20,6 @@ export function ProfilePhotoForm({ data }: ProfileFormProps) {
   const [avatar, setAvatar] = useState(data.avatar);
   const t = useTranslations("ProfileForm");
 
-  const { toast } = useToast();
   const router = useRouter();
   const setAvatarStore = useAvatarStore((state) => state.setAvatar);
 
@@ -33,19 +32,10 @@ export function ProfilePhotoForm({ data }: ProfileFormProps) {
       setAvatar(newAvatar);
       setAvatarStore(newAvatar);
       await updateProfilePhoto(newAvatar);
-      toast({
-        title: t("photoUpdated"),
-        description: t("photoUpdatedDescription"),
-        duration: 5000,
-      });
+      toast.success(t("photoUpdatedDescription"), { duration: 5000 });
     } catch (e) {
       console.log(e);
-      toast({
-        variant: "default",
-        title: t("photoError"),
-        description: t("photoErrorDescription"),
-        duration: 5000,
-      });
+      toast.error(t("photoErrorDescription"), { duration: 5000 });
     } finally {
       router.refresh();
     }

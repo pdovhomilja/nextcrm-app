@@ -154,7 +154,9 @@
     "updateButton": "Оновити компанію",
     "createSuccess": "Компанію успішно створено",
     "updateSuccess": "Компанію успішно оновлено",
-    "errorDescription": "Щось пішло не так. Будь ласка, спробуйте ще раз."
+    "errorDescription": "Щось пішло не так. Будь ласка, спробуйте ще раз.",
+    "nameRequired": "Назва компанії є обов'язковою",
+    "emailInvalid": "Введіть дійсну адресу електронної пошти"
   },
   "CrmContactForm": {
     "firstName": "Ім'я",
@@ -202,7 +204,9 @@
     "createButton": "Створити контакт",
     "updateButton": "Оновити контакт",
     "createSuccess": "Контакт успішно створено",
-    "updateSuccess": "Контакт успішно оновлено"
+    "updateSuccess": "Контакт успішно оновлено",
+    "lastNameRequired": "Прізвище є обов'язковим",
+    "emailInvalid": "Введіть дійсну адресу електронної пошти"
   },
   "CrmOpportunityForm": {
     "name": "Назва можливості",
@@ -219,7 +223,9 @@
     "nextStepPlaceholder": "Опишіть наступний крок",
     "assignedAccount": "Призначена компанія",
     "createSuccess": "Можливість успішно створено",
-    "updateSuccess": "Можливість успішно оновлено"
+    "updateSuccess": "Можливість успішно оновлено",
+    "nameRequired": "Назва можливості є обов'язковою",
+    "createError": "Не вдалося створити можливість"
   },
   "CrmLeadForm": {
     "firstName": "Ім'я",
@@ -237,7 +243,9 @@
     "createButton": "Створити лід",
     "updateButton": "Оновити лід",
     "createSuccess": "Лід успішно створено",
-    "updateSuccess": "Лід успішно оновлено"
+    "updateSuccess": "Лід успішно оновлено",
+    "lastNameRequired": "Прізвище є обов'язковим",
+    "emailInvalid": "Введіть дійсну адресу електронної пошти"
   },
   "CrmContractForm": {
     "title": "Назва",

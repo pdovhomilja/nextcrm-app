@@ -23,7 +23,7 @@ import {
   Pencil,
   Trash,
 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import {
   Sheet,
   SheetContent,
@@ -52,29 +52,18 @@ export function DataTableRowActions<TData>({
   const [editOpen, setEditOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { toast } = useToast();
 
   const onDelete = async () => {
     setLoading(true);
     try {
       const result = await deleteProject(project.id);
       if (result?.error) {
-        toast({
-          variant: "destructive",
-          title: t("dataTable.deleteError"),
-          description: result.error,
-        });
+        toast.error(result.error);
       } else {
-        toast({
-          title: t("dataTable.delete"),
-          description: `Project: ${project.title}, deleted successfully`,
-        });
+        toast.success(`Project: ${project.title}, deleted successfully`);
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: t("dataTable.deleteError"),
-      });
+      toast.error(t("dataTable.deleteError"));
       console.log(error);
     } finally {
       router.refresh();
@@ -88,22 +77,12 @@ export function DataTableRowActions<TData>({
     try {
       const result = await watchProject(project.id);
       if (result?.error) {
-        toast({
-          variant: "destructive",
-          title: t("dataTable.watchError"),
-          description: result.error,
-        });
+        toast.error(result.error);
       } else {
-        toast({
-          title: t("dataTable.watchProject"),
-          description: `Project: ${project.title}, watched successfully`,
-        });
+        toast.success(`Project: ${project.title}, watched successfully`);
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: t("dataTable.watchError"),
-      });
+      toast.error(t("dataTable.watchError"));
       console.log(error);
     } finally {
       setLoading(false);
@@ -115,22 +94,12 @@ export function DataTableRowActions<TData>({
     try {
       const result = await unwatchProject(project.id);
       if (result?.error) {
-        toast({
-          variant: "destructive",
-          title: t("dataTable.watchError"),
-          description: result.error,
-        });
+        toast.error(result.error);
       } else {
-        toast({
-          title: t("dataTable.stopWatching"),
-          description: `Project: ${project.title}, You stop watching this project successfully`,
-        });
+        toast.success(`Project: ${project.title}, You stop watching this project successfully`);
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: t("dataTable.watchError"),
-      });
+      toast.error(t("dataTable.watchError"));
       console.log(error);
     } finally {
       setLoading(false);

@@ -25,7 +25,7 @@ import { taskSchema } from "../data/schema";
 import { useRouter } from "next/navigation";
 import DocumentViewModal from "@/components/modals/document-view-modal";
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { assignDocumentToTask } from "@/actions/projects/assign-document-to-task";
 
 interface DataTableRowActionsProps<TData> {
@@ -44,7 +44,6 @@ export function DataTableRowActions<TData>({
 
   //console.log(params, "params");
 
-  const { toast } = useToast();
 
   const onAssign = async () => {
     setLoading(true);
@@ -54,22 +53,13 @@ export function DataTableRowActions<TData>({
         taskId: params?.taskId as string,
       });
       if (result?.error) {
-        toast({
-          title: "Error",
-          description: result.error,
-        });
+        toast.success(result.error);
       } else {
-        toast({
-          title: "Success",
-          description: "Document was assigned to task",
-        });
+        toast.success("Document was assigned to task");
       }
     } catch (error) {
       console.error(error);
-      toast({
-        title: "Error",
-        description: "Something went wrong, while assigning document to task",
-      });
+      toast.success("Something went wrong, while assigning document to task");
     } finally {
       router.refresh();
       setLoading(false);

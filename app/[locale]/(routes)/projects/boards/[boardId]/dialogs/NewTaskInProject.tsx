@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
@@ -57,7 +57,6 @@ const NewTaskInProjectDialog = ({ boardId, sections }: Props) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
-  const { toast } = useToast();
 
   const formSchema = z.object({
     title: z.string().min(3).max(255),
@@ -93,23 +92,12 @@ const NewTaskInProjectDialog = ({ boardId, sections }: Props) => {
         dueDateAt: data.dueDateAt,
       });
       if (result?.error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.error,
-        });
+        toast.error(result.error);
       } else {
-        toast({
-          title: "Success",
-          description: `New task: ${data.title}, created successfully`,
-        });
+        toast.success(`New task: ${data.title}, created successfully`);
       }
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error?.message,
-      });
+      toast.error(error?.message);
     } finally {
       setIsLoading(false);
       setOpen(false);

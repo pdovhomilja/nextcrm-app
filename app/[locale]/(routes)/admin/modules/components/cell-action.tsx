@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { MoreHorizontal, PowerIcon, PowerOffIcon } from "lucide-react";
 
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,32 +22,19 @@ interface CellActionProps {
 }
 
 export const CellAction = ({ data }: CellActionProps) => {
-  const { toast } = useToast();
   const router = useRouter();
 
   const onActivate = async () => {
     try {
       const result = await activateModule(data.id);
       if (result.error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.error,
-        });
+        toast.error(result.error);
         return;
       }
       router.refresh();
-      toast({
-        title: "Success",
-        description: "Module has been activated.",
-      });
+      toast.success("Module has been activated.");
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description:
-          "Something went wrong while activating module. Please try again.",
-      });
+      toast.error("Something went wrong while activating module. Please try again.");
     }
   };
 
@@ -55,25 +42,13 @@ export const CellAction = ({ data }: CellActionProps) => {
     try {
       const result = await deactivateModule(data.id);
       if (result.error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.error,
-        });
+        toast.error(result.error);
         return;
       }
       router.refresh();
-      toast({
-        title: "Success",
-        description: "Module has been deactivated.",
-      });
+      toast.success("Module has been deactivated.");
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description:
-          "Something went wrong while deactivating module. Please try again.",
-      });
+      toast.error("Something went wrong while deactivating module. Please try again.");
     }
   };
 

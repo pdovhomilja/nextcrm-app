@@ -17,7 +17,7 @@ import { targetSchema } from "../table-data/schema";
 import { useRouter } from "next/navigation";
 import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { deleteTarget } from "@/actions/crm/targets/delete-target";
 import RightViewModalNoTrigger from "@/components/modals/right-view-notrigger";
 import { UpdateTargetForm } from "../components/UpdateTargetForm";
@@ -36,7 +36,6 @@ export function DataTableRowActions<TData>({
   const [loading, setLoading] = useState(false);
   const [updateOpen, setUpdateOpen] = useState(false);
 
-  const { toast } = useToast();
 
   const onDelete = async () => {
     setLoading(true);
@@ -44,17 +43,10 @@ export function DataTableRowActions<TData>({
     setLoading(false);
     setOpen(false);
     if (result.error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: result.error,
-      });
+      toast.error(result.error);
       return;
     }
-    toast({
-      title: "Success",
-      description: "Target has been deleted",
-    });
+    toast.success("Target has been deleted");
     router.refresh();
   };
 

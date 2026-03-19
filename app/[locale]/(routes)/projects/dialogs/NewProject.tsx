@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -45,7 +45,6 @@ const NewProjectDialog = () => {
   const [isMounted, setIsMounted] = useState(false);
 
   const router = useRouter();
-  const { toast } = useToast();
   const t = useTranslations("ProjectsPage");
 
   const formSchema = z.object({
@@ -76,23 +75,12 @@ const NewProjectDialog = () => {
     try {
       const result = await createProject(data);
       if (result?.error) {
-        toast({
-          variant: "destructive",
-          title: t("newProject.title"),
-          description: result.error,
-        });
+        toast.error(result.error);
       } else {
-        toast({
-          title: t("newProject.successMsg"),
-          description: `New project: ${data.title}, created successfully`,
-        });
+        toast.success(`New project: ${data.title}, created successfully`);
       }
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: t("newProject.title"),
-        description: error?.message,
-      });
+      toast.error(error?.message);
     } finally {
       setIsLoading(false);
       setOpen(false);

@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 
@@ -41,7 +41,6 @@ const UpdateProjectForm = ({ initialData, openEdit }: Props) => {
   const [isMounted, setIsMounted] = useState(false);
 
   const router = useRouter();
-  const { toast } = useToast();
 
   const formSchema = z.object({
     id: z.string(),
@@ -72,23 +71,12 @@ const UpdateProjectForm = ({ initialData, openEdit }: Props) => {
     try {
       const result = await updateProject(data);
       if (result?.error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.error,
-        });
+        toast.error(result.error);
       } else {
-        toast({
-          title: "Success",
-          description: `Project: ${data.title}, update successfully`,
-        });
+        toast.success(`Project: ${data.title}, update successfully`);
       }
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error?.message,
-      });
+      toast.error(error?.message);
     } finally {
       setIsLoading(false);
       setOpen(false);

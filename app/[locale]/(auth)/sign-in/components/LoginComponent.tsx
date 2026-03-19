@@ -27,7 +27,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { FingerprintIcon } from "lucide-react";
 import {
   Dialog,
@@ -48,7 +48,6 @@ export function LoginComponent() {
   const [open, setOpen] = useState(false);
 
   const [email, setEmail] = useState("");
-  const { toast } = useToast();
 
   const router = useRouter();
 
@@ -76,11 +75,7 @@ export function LoginComponent() {
       });
     } catch (error) {
       console.log(error, "error");
-      toast({
-        variant: "destructive",
-        description:
-          "Something went wrong while logging with your Google account.",
-      });
+      toast.error("Something went wrong while logging with your Google account.");
     } finally {
       setIsLoading(false);
     }
@@ -95,11 +90,7 @@ export function LoginComponent() {
       });
     } catch (error) {
       console.log(error, "error");
-      toast({
-        variant: "destructive",
-        description:
-          "Something went wrong while logging with your Google account.",
-      });
+      toast.error("Something went wrong while logging with your Google account.");
     } finally {
       setIsLoading(false);
     }
@@ -115,24 +106,14 @@ export function LoginComponent() {
         callbackUrl: process.env.NEXT_PUBLIC_APP_URL,
       });
       if (status?.error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: status.error,
-        });
+        toast.error(status.error);
       }
       if (status?.ok) {
-        toast({
-          description: "Login successful.",
-        });
+        toast.success("Login successful.");
       }
     } catch (error: any) {
       console.log(error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error?.message || error?.toString() || "An error occurred during login",
-      });
+      toast.error(error?.message || error?.toString() || "An error occurred during login");
     } finally {
       setIsLoading(false);
       router.push("/");
@@ -144,23 +125,12 @@ export function LoginComponent() {
       setIsLoading(true);
       const result = await passwordReset(email);
       if (result.error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.error,
-        });
+        toast.error(result.error);
         return;
       }
-      toast({
-        title: "Success",
-        description: "Password reset email has been sent.",
-      });
+      toast.success("Password reset email has been sent.");
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error?.message || "Something went wrong while resetting the password.",
-      });
+      toast.error(error?.message || "Something went wrong while resetting the password.");
     } finally {
       setIsLoading(false);
       setOpen(false);

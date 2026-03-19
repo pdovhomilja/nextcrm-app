@@ -29,7 +29,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 import { useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -72,25 +72,14 @@ export function SetLanguage({ userId }: Props) {
     try {
       const result = await setLanguage({ userId, language: data.language });
       if (result.error) {
-        toast({
-          title: t("error"),
-          description: result.error,
-          variant: "destructive",
-        });
+        toast.error(result.error);
         setIsLoading(false);
         return;
       }
-      toast({
-        title: t("success"),
-        description: t("changedTo", { language: data.language }),
-      });
+      toast.success(t("changedTo", { language: data.language }));
       router.replace(pathname, { locale: data.language });
     } catch (e) {
-      toast({
-        title: t("error"),
-        description: t("error"),
-        variant: "destructive",
-      });
+      toast.error(t("error"));
       setIsLoading(false);
     }
   }

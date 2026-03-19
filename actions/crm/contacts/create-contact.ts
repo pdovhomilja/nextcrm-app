@@ -91,7 +91,7 @@ export const createContact = async (data: {
       }
     }
 
-    revalidatePath("/[locale]/(routes)/crm/contacts", "page");
+    revalidatePath("/[locale]/crm/contacts", "page");
     return { data: contact };
   } catch (error) {
     console.log("[CREATE_CONTACT]", error);

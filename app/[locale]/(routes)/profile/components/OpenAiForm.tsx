@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import axios from "axios";
@@ -45,7 +45,6 @@ export function OpenAiForm({ userId }: { userId: string }) {
 
   const router = useRouter();
 
-  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -56,22 +55,10 @@ export function OpenAiForm({ userId }: { userId: string }) {
       setIsLoading(true);
       await axios.post(`/api/user/${userId}/setOpenAi`, data);
       //TODO: send data to the server
-      toast({
-        title: "You submitted the following values:",
-        description: (
-          <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-            <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-          </pre>
-        ),
-      });
+      toast.success("OpenAI settings saved successfully");
       router.refresh();
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description:
-          "Something went wrong while activating your notion integration.",
-      });
+      toast.error("Something went wrong while activating your notion integration.");
     } finally {
       setIsLoading(false);
     }

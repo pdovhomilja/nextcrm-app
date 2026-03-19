@@ -17,7 +17,7 @@ import { opportunitySchema } from "../table-data/schema";
 import { useRouter } from "next/navigation";
 import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { UpdateOpportunityForm } from "../components/UpdateOpportunityForm";
 import {
   Sheet,
@@ -42,31 +42,18 @@ export function DataTableRowActions<TData>({
   const [loading, setLoading] = useState(false);
   const [updateOpen, setUpdateOpen] = useState(false);
 
-  const { toast } = useToast();
 
   const onDelete = async () => {
     setLoading(true);
     try {
       const result = await deleteOpportunity(opportunity?.id);
       if (result.error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.error,
-        });
+        toast.error(result.error);
       } else {
-        toast({
-          title: "Success",
-          description: "Opportunity has been deleted",
-        });
+        toast.success("Opportunity has been deleted");
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description:
-          "Something went wrong while deleting opportunity. Please try again.",
-      });
+      toast.error("Something went wrong while deleting opportunity. Please try again.");
     } finally {
       setLoading(false);
       setOpen(false);

@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { getTaskDone } from "@/app/[locale]/(routes)/projects/actions/get-task-done";
 import { Badge } from "@/components/ui/badge";
 import { CheckSquare, Pencil } from "lucide-react";
@@ -29,7 +29,6 @@ const TaskViewActions = ({
   boards: any;
   initialData: any;
 }) => {
-  const { toast } = useToast();
   const router = useRouter();
 
   const [openEdit, setOpenEdit] = useState(false);
@@ -43,14 +42,9 @@ const TaskViewActions = ({
     setIsLoading(true);
     try {
       await getTaskDone(taskId);
-      toast({
-        title: "Success, task marked as done.",
-      });
+      toast.success("Success");
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error, task not marked as done.",
-      });
+      toast.error("Error");
     } finally {
       setIsLoading(false);
       router.refresh();

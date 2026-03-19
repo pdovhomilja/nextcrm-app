@@ -17,7 +17,7 @@ import { accountSchema } from "../table-data/schema";
 import { useRouter } from "next/navigation";
 import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { UpdateAccountForm } from "../components/UpdateAccountForm";
 import {
   Sheet,
@@ -45,31 +45,18 @@ export function DataTableRowActions<TData>({
   const [updateOpen, setUpdateOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { toast } = useToast();
 
   const onDelete = async () => {
     setLoading(true);
     try {
       const result = await deleteAccount(account.id);
       if (result.error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.error,
-        });
+        toast.error(result.error);
       } else {
-        toast({
-          title: "Success",
-          description: "Account has been deleted",
-        });
+        toast.success("Account has been deleted");
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description:
-          "Something went wrong while deleting account. Please try again.",
-      });
+      toast.error("Something went wrong while deleting account. Please try again.");
     } finally {
       setLoading(false);
       setOpen(false);
@@ -82,21 +69,12 @@ export function DataTableRowActions<TData>({
     try {
       const result = await watchAccount(account.id);
       if (result.error) {
-        toast({
-          variant: "destructive",
-          title: "Error, Account not watched. Please try again.",
-        });
+        toast.error("Error");
       } else {
-        toast({
-          title: "Success",
-          description: `You are now Account: ${account.name}, watcher`,
-        });
+        toast.success(`You are now Account: ${account.name}, watcher`);
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error, Account not watched. Please try again.",
-      });
+      toast.error("Error");
       console.log(error);
     } finally {
       setLoading(false);
@@ -108,21 +86,12 @@ export function DataTableRowActions<TData>({
     try {
       const result = await unwatchAccount(account.id);
       if (result.error) {
-        toast({
-          variant: "destructive",
-          title: "Error, Account not unwatched. Please try again.",
-        });
+        toast.error("Error");
       } else {
-        toast({
-          title: "Success",
-          description: `You are no longer Account: ${account.name}, watcher`,
-        });
+        toast.success(`You are no longer Account: ${account.name}, watcher`);
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error, Account not watched. Please try again.",
-      });
+      toast.error("Error");
       console.log(error);
     } finally {
       setLoading(false);

@@ -22,7 +22,7 @@ import { contractsSchema } from "../table-data/schema";
 import { useRouter } from "next/navigation";
 import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 import { deleteContract } from "@/actions/crm/contracts/delete-contract";
 import FormSheet from "@/components/sheets/form-sheet";
@@ -49,23 +49,14 @@ export function DataTableRowActions<TData>({
     fetcher
   );
 
-  const { toast } = useToast();
 
   const onDelete = async () => {
     setLoading(true);
     try {
       await deleteContract({ id: contract.id });
-      toast({
-        title: "Success",
-        description: "Contract has been deleted",
-      });
+      toast.success("Contract has been deleted");
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description:
-          "Something went wrong while deleting contract. Please try again.",
-      });
+      toast.error("Something went wrong while deleting contract. Please try again.");
     } finally {
       setLoading(false);
       setOpen(false);

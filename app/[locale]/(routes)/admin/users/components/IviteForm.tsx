@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -44,7 +44,6 @@ export function InviteForm() {
 
   const router = useRouter();
 
-  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -56,23 +55,12 @@ export function InviteForm() {
       const result = await inviteUser(data);
 
       if (result.error) {
-        toast({
-          variant: "destructive",
-          title: t("inviteForm.error"),
-          description: result.error,
-        });
+        toast.error(result.error);
       } else {
-        toast({
-          title: t("inviteForm.success"),
-          description: t("inviteForm.invited"),
-        });
+        toast.success(t("inviteForm.invited"));
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: t("inviteForm.error"),
-        description: t("inviteForm.errorDesc"),
-      });
+      toast.error(t("inviteForm.errorDesc"));
     } finally {
       form.reset({
         name: "",

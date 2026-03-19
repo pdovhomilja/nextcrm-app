@@ -36,12 +36,11 @@ import {
 import { Icons } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { registerUser } from "@/actions/auth/register-user";
 
 export function RegisterComponent() {
   const router = useRouter();
-  const { toast } = useToast();
 
   //Local states
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
@@ -76,25 +75,14 @@ export function RegisterComponent() {
       const result = await registerUser(data);
 
       if (result.error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.error,
-        });
+        toast.error(result.error);
         return;
       }
 
-      toast({
-        title: "Success",
-        description: "User created successfully, please login.",
-      });
+      toast.success("User created successfully, please login.");
       router.push("/");
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error?.message,
-      });
+      toast.error(error?.message);
     } finally {
       setIsLoading(false);
     }
