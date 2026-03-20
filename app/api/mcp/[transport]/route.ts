@@ -42,14 +42,7 @@ const handler = createMcpHandler(
     }
   },
   {
-    capabilities: {
-      tools: Object.fromEntries(
-        allTools.map((t) => [t.name, { description: t.description }])
-      ),
-    },
-  },
-  {
-    redactSensitiveHeaders: true,
+    capabilities: { tools: {} },
   }
 );
 
