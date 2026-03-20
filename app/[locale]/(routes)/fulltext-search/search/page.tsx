@@ -1,25 +1,13 @@
-import ResultPage from "./components/ResultPage";
+import { redirect } from "next/navigation";
 
-import { getSearch } from "@/actions/fulltext/get-search-results";
-import Container from "../../components/ui/Container";
-
-const FullTextSearchPage = async (
-  props: {
-    params: Promise<{ search: string }>;
-  }
-) => {
+const FullTextSearchPage = async (props: {
+  params: Promise<{ locale: string }>;
+  searchParams?: Promise<{ q?: string }>;
+}) => {
   const params = await props.params;
-  const { search } = params;
-  const results: any = await getSearch(search);
-
-  return (
-    <Container
-      title={`Search: ${search} `}
-      description={`Search results for ${search}`}
-    >
-      <ResultPage search={search} results={results} />
-    </Container>
-  );
+  const searchParams = await props.searchParams;
+  const q = searchParams?.q;
+  redirect(`/${params.locale}/fulltext-search${q ? `?q=${encodeURIComponent(q)}` : ""}`);
 };
 
 export default FullTextSearchPage;
