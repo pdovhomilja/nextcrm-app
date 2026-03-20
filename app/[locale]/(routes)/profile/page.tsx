@@ -9,6 +9,7 @@ import { ProfilePhotoForm } from "./components/ProfilePhotoForm";
 import H4Title from "@/components/typography/h4";
 import { OpenAiForm } from "./components/OpenAiForm";
 import { LanguageForm } from "./components/LanguageForm";
+import { ApiTokens } from "./components/ApiTokens";
 
 const ProfilePage = async () => {
   const t = await getTranslations("ProfilePage");
@@ -41,6 +42,9 @@ const ProfilePage = async () => {
 
         <H4Title>{t("openAiIntegration")}</H4Title>
         <OpenAiForm userId={data.id} />
+
+        <H4Title>MCP API Tokens</H4Title>
+        <ApiTokens />
       </div>
     </Container>
   );

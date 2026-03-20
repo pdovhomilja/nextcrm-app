@@ -564,6 +564,7 @@ model Users {
   watching_accounts    AccountWatchers[]
   created_targets      crm_Targets[]         @relation("created_targets")
   created_target_lists crm_TargetLists[]     @relation("created_target_lists")
+  apiTokens            ApiToken[]
 
   @@index([email])
   @@index([userStatus])
@@ -854,4 +855,23 @@ model crm_Embeddings_Opportunities {
   opportunity    crm_Opportunities @relation(fields: [opportunity_id], references: [id], onDelete: Cascade)
 
   @@map("crm_Embeddings_Opportunities")
+}
+
+// ============================================
+// API TOKENS
+// ============================================
+
+model ApiToken {
+  id          String    @id @default(uuid()) @db.Uuid
+  name        String
+  tokenHash   String    @unique
+  tokenPrefix String    @db.VarChar(8)
+  userId      String    @db.Uuid
+  user        Users     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt   DateTime?
+  revokedAt   DateTime?
+  lastUsedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
 }
