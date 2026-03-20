@@ -49,10 +49,10 @@ importers:
         specifier: ^1.0.7
         version: 1.0.7(@prisma/client@7.5.0(prisma@7.5.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(types-react@19.0.0-rc.1)(typescript@5.9.3))(typescript@5.9.3))(next-auth@4.24.13(next@16.1.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(nodemailer@8.0.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))
       '@prisma/adapter-pg':
-        specifier: ^7.4.1
+        specifier: 7.5.0
         version: 7.5.0
       '@prisma/client':
-        specifier: ^7.4.1
+        specifier: 7.5.0
         version: 7.5.0(prisma@7.5.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(types-react@19.0.0-rc.1)(typescript@5.9.3))(typescript@5.9.3)
       '@radix-ui/react-avatar':
         specifier: ^1.1.11
