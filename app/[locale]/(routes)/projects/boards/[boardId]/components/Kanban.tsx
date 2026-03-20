@@ -2,7 +2,7 @@
 
 import moment from "moment";
 import { useRouter } from "next/navigation";
-import React, { ChangeEvent, useEffect, useState } from "react";
+import React, { ChangeEvent, useEffect, useRef, useState } from "react";
 import { Check, EyeIcon, Pencil, PlusCircle, PlusIcon } from "lucide-react";
 
 import {
@@ -13,14 +13,17 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  useDroppable,
   DragStartEvent,
   DragEndEvent,
+  DragOverEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
   useSortable,
+  arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
@@ -199,12 +202,41 @@ function TaskItem({ task, onDelete, onDone, onEdit, router }: any) {
   );
 }
 
+function DroppableColumn({ id, children }: { id: string; children: React.ReactNode }) {
+  const { setNodeRef } = useDroppable({ id });
+  return (
+    <div ref={setNodeRef} className="min-h-[50px]">
+      {children}
+    </div>
+  );
+}
+
 const Kanban = (props: any) => {
   const boardId = props.boardId;
   const boards = props.boards;
 
-  const [data, setData]: any = useState([]);
+  const serverDataRef = useRef(props.data);
+  const [data, setData]: any = useState(() =>
+    structuredClone(props.data || [])
+  );
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const dataRef = useRef<any[]>(data);
+  dataRef.current = data;
+  const origSectionIdRef = useRef<string | null>(null); // section at drag start
+  const isDraggingRef = useRef(false);
+
+  // Sync from server after router.refresh() — only when not dragging
+  useEffect(() => {
+    if (serverDataRef.current !== props.data && !isDraggingRef.current) {
+      serverDataRef.current = props.data;
+      setData(structuredClone(props.data || []));
+    }
+  }, [props.data]);
+
+  const setDataAndRef = (newData: any[]) => {
+    dataRef.current = newData;
+    setData(newData);
+  };
 
   const [sectionId, setSectionId] = useState(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -214,7 +246,7 @@ const Kanban = (props: any) => {
   const [sectionOpenDialog, setSectionOpenDialog] = useState(false);
   const [updateOpenSheet, setUpdateOpenSheet] = useState(false);
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isLoadingSection, setIsLoadingSection] = useState(false);
 
   const router = useRouter();
@@ -230,98 +262,122 @@ const Kanban = (props: any) => {
     })
   );
 
-  useEffect(() => {
-    setData(props.data);
-    setIsLoading(false);
-  }, [props.data]);
-
   const handleDragStart = (event: DragStartEvent) => {
+    isDraggingRef.current = true;
     const { active } = event;
-    // Find the task being dragged
-    for (const section of data) {
-      const task = section.tasks.find((t: Task) => t.id === active.id);
+    const activeId = active.id as string;
+    for (const section of dataRef.current) {
+      const task = section.tasks.find((t: Task) => t.id === activeId);
       if (task) {
         setActiveTask(task);
+        origSectionIdRef.current = section.id; // record where drag started
         break;
       }
     }
   };
 
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+    const activeId = active.id as string;
+    const overId = over.id as string;
+    if (activeId === overId) return;
+
+    const current = dataRef.current;
+
+    // Find source section and task index
+    let fromSectionIdx = -1, fromTaskIdx = -1;
+    for (let i = 0; i < current.length; i++) {
+      const idx = current[i].tasks.findIndex((t: Task) => t.id === activeId);
+      if (idx !== -1) { fromSectionIdx = i; fromTaskIdx = idx; break; }
+    }
+    if (fromSectionIdx === -1) return;
+
+    // Determine destination — overId could be a section ID or a task ID
+    let toSectionIdx = current.findIndex((s: any) => s.id === overId);
+    let toTaskIdx = 0;
+    const isOverSection = toSectionIdx !== -1;
+
+    if (!isOverSection) {
+      // overId is a task — find which section it belongs to
+      for (let i = 0; i < current.length; i++) {
+        const idx = current[i].tasks.findIndex((t: Task) => t.id === overId);
+        if (idx !== -1) { toSectionIdx = i; toTaskIdx = idx; break; }
+      }
+    } else {
+      // Dropping directly onto section — insert at end
+      toTaskIdx = current[toSectionIdx].tasks.length;
+    }
+
+    if (toSectionIdx === -1) return;
+    if (fromSectionIdx === toSectionIdx) return; // same section — SortableContext handles it
+
+    const newData = current.map((s: any) => ({ ...s, tasks: [...s.tasks] }));
+    const [movedTask] = newData[fromSectionIdx].tasks.splice(fromTaskIdx, 1);
+    movedTask.section = newData[toSectionIdx].id;
+    newData[toSectionIdx].tasks.splice(toTaskIdx, 0, movedTask);
+    setDataAndRef(newData);
+  };
+
   const handleDragEnd = async (event: DragEndEvent) => {
+    isDraggingRef.current = false;
     const { active, over } = event;
     setActiveTask(null);
-
     if (!over) return;
 
     const activeId = active.id as string;
     const overId = over.id as string;
+    const current = dataRef.current;
 
-    // Find source section and task
-    let sourceSectionIndex = -1;
-    let sourceTaskIndex = -1;
-    let sourceTask: Task | null = null;
+    // Find current position of the dragged task
+    let curSectionIdx = -1, curTaskIdx = -1;
+    for (let i = 0; i < current.length; i++) {
+      const idx = current[i].tasks.findIndex((t: Task) => t.id === activeId);
+      if (idx !== -1) { curSectionIdx = i; curTaskIdx = idx; break; }
+    }
+    if (curSectionIdx === -1) return;
 
-    for (let i = 0; i < data.length; i++) {
-      const taskIndex = data[i].tasks.findIndex((t: Task) => t.id === activeId);
-      if (taskIndex !== -1) {
-        sourceSectionIndex = i;
-        sourceTaskIndex = taskIndex;
-        sourceTask = data[i].tasks[taskIndex];
-        break;
+    const curSectionId = current[curSectionIdx].id;
+    const wasCrossSectionMove = origSectionIdRef.current !== null &&
+      origSectionIdRef.current !== curSectionId;
+
+    if (wasCrossSectionMove) {
+      // handleDragOver already updated local state — just persist with original source section
+      const newData = current.map((s: any) => ({ ...s, tasks: [...s.tasks] }));
+      const origSectionIdx = newData.findIndex((s: any) => s.id === origSectionIdRef.current);
+      const origSection = origSectionIdx !== -1 ? newData[origSectionIdx] : newData[curSectionIdx];
+      const destSection = newData[curSectionIdx];
+      try {
+        await updateKanbanPosition({
+          resourceList: origSection.tasks,
+          destinationList: destSection.tasks,
+          resourceSectionId: origSection.id,
+          destinationSectionId: destSection.id,
+        });
+      } catch (err) {
+        toast.error("Failed to update task position");
+        setData(props.data);
       }
+      return;
     }
 
-    if (!sourceTask || sourceSectionIndex === -1) return;
+    // Same-section reorder — find target task index and use arrayMove
+    let overTaskIdx = current[curSectionIdx].tasks.findIndex((t: Task) => t.id === overId);
+    if (overTaskIdx === -1) return; // dropped on same task or no move
 
-    // Check if overId is a section or a task
-    const destinationSectionIndex = data.findIndex(
-      (section: any) => section.id === overId
-    );
-
-    let targetSectionIndex = destinationSectionIndex;
-    let targetTaskIndex = 0;
-
-    if (destinationSectionIndex === -1) {
-      // overId is a task, find its section
-      for (let i = 0; i < data.length; i++) {
-        const taskIndex = data[i].tasks.findIndex((t: Task) => t.id === overId);
-        if (taskIndex !== -1) {
-          targetSectionIndex = i;
-          targetTaskIndex = taskIndex;
-          break;
-        }
-      }
-    }
-
-    if (targetSectionIndex === -1) return;
-
-    const newData = [...data];
-    const sourceSection = newData[sourceSectionIndex];
-    const targetSection = newData[targetSectionIndex];
-
-    // Remove task from source
-    const [movedTask] = sourceSection.tasks.splice(sourceTaskIndex, 1);
-
-    // Add task to target
-    if (sourceSectionIndex === targetSectionIndex) {
-      targetSection.tasks.splice(targetTaskIndex, 0, movedTask);
-    } else {
-      targetSection.tasks.splice(targetTaskIndex, 0, movedTask);
-    }
-
-    setData(newData);
+    const newData = current.map((s: any) => ({ ...s, tasks: [...s.tasks] }));
+    newData[curSectionIdx].tasks = arrayMove(newData[curSectionIdx].tasks, curTaskIdx, overTaskIdx);
+    setDataAndRef(newData);
 
     try {
       await updateKanbanPosition({
-        resourceList: sourceSection.tasks,
-        destinationList: targetSection.tasks,
-        resourceSectionId: sourceSection.id,
-        destinationSectionId: targetSection.id,
+        resourceList: newData[curSectionIdx].tasks,
+        destinationList: newData[curSectionIdx].tasks,
+        resourceSectionId: curSectionId,
+        destinationSectionId: curSectionId,
       });
-      toast.success("New task position saved in database");
     } catch (err) {
       toast.error("Failed to update task position");
-      // Revert on error
       setData(props.data);
     }
   };
@@ -490,6 +546,7 @@ const Kanban = (props: any) => {
           sensors={sensors}
           collisionDetection={closestCorners}
           onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
           <div className="flex flex-row items-start  ">
@@ -539,7 +596,7 @@ const Kanban = (props: any) => {
                     items={section.tasks.map((t: Task) => t.id)}
                     strategy={verticalListSortingStrategy}
                   >
-                    <div className="">
+                    <DroppableColumn id={section.id}>
                       {section.tasks?.map((task: any) => (
                         <TaskItem
                           key={task.id}
@@ -556,7 +613,7 @@ const Kanban = (props: any) => {
                           router={router}
                         />
                       ))}
-                    </div>
+                    </DroppableColumn>
                   </SortableContext>
                 </div>
               </div>
