@@ -813,8 +813,11 @@ model crm_Embeddings_Accounts {
   account_id   String   @unique @db.Uuid
   embedding    Unsupported("vector(1536)")
   content_hash String
+  /// Must be set explicitly on upsert — @default(now()) only fires on INSERT
   embedded_at  DateTime @default(now())
   account      crm_Accounts @relation(fields: [account_id], references: [id], onDelete: Cascade)
+
+  @@map("crm_Embeddings_Accounts")
 }
 
 model crm_Embeddings_Contacts {
@@ -822,8 +825,11 @@ model crm_Embeddings_Contacts {
   contact_id   String   @unique @db.Uuid
   embedding    Unsupported("vector(1536)")
   content_hash String
+  /// Must be set explicitly on upsert — @default(now()) only fires on INSERT
   embedded_at  DateTime @default(now())
   contact      crm_Contacts @relation(fields: [contact_id], references: [id], onDelete: Cascade)
+
+  @@map("crm_Embeddings_Contacts")
 }
 
 model crm_Embeddings_Leads {
@@ -831,8 +837,11 @@ model crm_Embeddings_Leads {
   lead_id      String   @unique @db.Uuid
   embedding    Unsupported("vector(1536)")
   content_hash String
+  /// Must be set explicitly on upsert — @default(now()) only fires on INSERT
   embedded_at  DateTime @default(now())
   lead         crm_Leads @relation(fields: [lead_id], references: [id], onDelete: Cascade)
+
+  @@map("crm_Embeddings_Leads")
 }
 
 model crm_Embeddings_Opportunities {
@@ -840,6 +849,9 @@ model crm_Embeddings_Opportunities {
   opportunity_id String   @unique @db.Uuid
   embedding      Unsupported("vector(1536)")
   content_hash   String
+  /// Must be set explicitly on upsert — @default(now()) only fires on INSERT
   embedded_at    DateTime @default(now())
   opportunity    crm_Opportunities @relation(fields: [opportunity_id], references: [id], onDelete: Cascade)
+
+  @@map("crm_Embeddings_Opportunities")
 }

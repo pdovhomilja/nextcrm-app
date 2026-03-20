@@ -9,6 +9,9 @@ CREATE TABLE "crm_Embeddings_Accounts" (
   "content_hash" TEXT NOT NULL,
   "embedded_at"  TIMESTAMP NOT NULL DEFAULT NOW()
 );
+-- HNSW indexes: m=16 (connections per layer), ef_construction=64 (build quality)
+-- These are pgvector defaults. For 1536-dim embeddings, ef_construction=128 improves
+-- recall at minimal cost. Tune if similarity quality is insufficient at scale.
 CREATE INDEX ON "crm_Embeddings_Accounts" USING hnsw ("embedding" vector_cosine_ops);
 
 -- Contacts embeddings
