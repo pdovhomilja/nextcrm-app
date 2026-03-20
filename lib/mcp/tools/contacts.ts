@@ -77,6 +77,7 @@ export const contactTools = [
           where,
           take: args.limit,
           skip: args.offset,
+          orderBy: { createdAt: "desc" },
         }),
         prismadb.crm_Contacts.count({ where }),
       ]);
@@ -98,10 +99,12 @@ export const contactTools = [
       const { last_name, ...rest } = args;
       const contact = await prismadb.crm_Contacts.create({
         data: {
+          v: 0,
           last_name,
           ...rest,
           assigned_to: userId,
           createdBy: userId,
+          updatedBy: userId,
         },
       });
       return { data: contact };
@@ -120,7 +123,7 @@ export const contactTools = [
       position: z.string().optional(),
     }),
     async handler(
-      args: { id: string; [key: string]: any },
+      args: { id: string; first_name?: string; last_name?: string; email?: string; office_phone?: string; mobile_phone?: string; position?: string },
       userId: string
     ) {
       const existing = await prismadb.crm_Contacts.findFirst({

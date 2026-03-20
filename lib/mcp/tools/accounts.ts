@@ -60,6 +60,7 @@ export const accountTools = [
           where,
           take: args.limit,
           skip: args.offset,
+          orderBy: { createdAt: "desc" },
         }),
         prismadb.crm_Accounts.count({ where }),
       ]);
@@ -104,7 +105,7 @@ export const accountTools = [
       website: z.string().optional(),
     }),
     async handler(
-      args: { id: string; [key: string]: any },
+      args: { id: string; name?: string; email?: string; description?: string; office_phone?: string; website?: string },
       userId: string
     ) {
       const existing = await prismadb.crm_Accounts.findFirst({

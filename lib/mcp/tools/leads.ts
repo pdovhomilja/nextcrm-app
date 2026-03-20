@@ -66,6 +66,7 @@ export const leadTools = [
           where,
           take: args.limit,
           skip: args.offset,
+          orderBy: { createdAt: "desc" },
         }),
         prismadb.crm_Leads.count({ where }),
       ]);
@@ -110,7 +111,7 @@ export const leadTools = [
       jobTitle: z.string().optional(),
     }),
     async handler(
-      args: { id: string; [key: string]: any },
+      args: { id: string; firstName?: string; lastName?: string; email?: string; company?: string; phone?: string; jobTitle?: string },
       userId: string
     ) {
       const existing = await prismadb.crm_Leads.findFirst({

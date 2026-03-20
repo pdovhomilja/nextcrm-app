@@ -68,6 +68,7 @@ export const targetTools = [
           where,
           take: args.limit,
           skip: args.offset,
+          orderBy: { created_on: "desc" },
         }),
         prismadb.crm_Targets.count({ where }),
       ]);
@@ -112,7 +113,7 @@ export const targetTools = [
       position: z.string().optional(),
     }),
     async handler(
-      args: { id: string; [key: string]: any },
+      args: { id: string; first_name?: string; last_name?: string; email?: string; mobile_phone?: string; office_phone?: string; company?: string; position?: string },
       userId: string
     ) {
       const existing = await prismadb.crm_Targets.findFirst({

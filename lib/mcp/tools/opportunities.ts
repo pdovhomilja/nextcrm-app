@@ -66,6 +66,7 @@ export const opportunityTools = [
           where,
           take: args.limit,
           skip: args.offset,
+          orderBy: { createdAt: "desc" },
         }),
         prismadb.crm_Opportunities.count({ where }),
       ]);
@@ -121,7 +122,7 @@ export const opportunityTools = [
       next_step: z.string().optional(),
     }),
     async handler(
-      args: { id: string; [key: string]: any },
+      args: { id: string; name?: string; description?: string; close_date?: string; budget?: number; expected_revenue?: number; currency?: string; next_step?: string },
       userId: string
     ) {
       const existing = await prismadb.crm_Opportunities.findFirst({
