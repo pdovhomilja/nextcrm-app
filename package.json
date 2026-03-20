@@ -57,6 +57,7 @@
     "@tanstack/react-table": "^8.21.3",
     "@tremor/react": "^3.18.7",
     "@uploadthing/react": "^7.3.3",
+    "@vercel/mcp-adapter": "^0.3.2",
     "ai": "^6.0.99",
     "autoprefixer": "^10.4.24",
     "aws-crt": "^1.29.0",

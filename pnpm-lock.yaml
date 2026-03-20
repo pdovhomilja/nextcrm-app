@@ -126,6 +126,9 @@ importers:
       '@uploadthing/react':
         specifier: ^7.3.3
         version: 7.3.3(next@16.1.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)(uploadthing@7.7.4(express@5.2.1)(next@16.1.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(tailwindcss@4.2.1))
+      '@vercel/mcp-adapter':
+        specifier: ^0.3.2
+        version: 0.3.2
       ai:
         specifier: ^6.0.99
         version: 6.0.116(zod@4.3.6)
@@ -3636,6 +3639,9 @@ packages:
 
   '@uploadthing/shared@7.1.10':
     resolution: {integrity: sha512-R/XSA3SfCVnLIzFpXyGaKPfbwlYlWYSTuGjTFHuJhdAomuBuhopAHLh2Ois5fJibAHzi02uP1QCKbgTAdmArqg==}
+
+  '@vercel/mcp-adapter@0.3.2':
+    resolution: {integrity: sha512-FmAy0LIxMuA03H8wsYCs0dwrfrvdV9eFHaVDMaG1pQuy+2upbT0Be+mzMIxhYfXVWrFzylYkqyvTaDTyFCt8Eg==}
 
   '@vercel/oidc@3.1.0':
     resolution: {integrity: sha512-Fw28YZpRnA3cAHHDlkt7xQHiJ0fcL+NRcIqsocZQUSmbzeIKRpwttJjik5ZGanXP+vlA4SbTg+AbA3bP363l+w==}
@@ -11193,6 +11199,8 @@ snapshots:
       '@uploadthing/mime-types': 0.3.6
       effect: 3.17.7
       sqids: 0.3.0
+
+  '@vercel/mcp-adapter@0.3.2': {}
 
   '@vercel/oidc@3.1.0': {}
 
