@@ -94,10 +94,12 @@ export const contactTools = [
       mobile_phone: z.string().optional(),
       position: z.string().optional(),
     }),
-    async handler(args: Record<string, any>, userId: string) {
+    async handler(args: { first_name?: string; last_name: string; email?: string; office_phone?: string; mobile_phone?: string; position?: string }, userId: string) {
+      const { last_name, ...rest } = args;
       const contact = await prismadb.crm_Contacts.create({
         data: {
-          ...args,
+          last_name,
+          ...rest,
           assigned_to: userId,
           createdBy: userId,
         },

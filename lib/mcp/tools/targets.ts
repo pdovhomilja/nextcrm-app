@@ -86,10 +86,12 @@ export const targetTools = [
       company: z.string().optional(),
       position: z.string().optional(),
     }),
-    async handler(args: Record<string, any>, userId: string) {
+    async handler(args: { first_name?: string; last_name: string; email?: string; mobile_phone?: string; office_phone?: string; company?: string; position?: string }, userId: string) {
+      const { last_name, ...rest } = args;
       const target = await prismadb.crm_Targets.create({
         data: {
-          ...args,
+          last_name,
+          ...rest,
           created_by: userId,
         },
       });

@@ -83,11 +83,13 @@ export const leadTools = [
       phone: z.string().optional(),
       jobTitle: z.string().optional(),
     }),
-    async handler(args: Record<string, any>, userId: string) {
+    async handler(args: { firstName?: string; lastName: string; email?: string; company?: string; phone?: string; jobTitle?: string }, userId: string) {
+      const { lastName, ...rest } = args;
       const lead = await prismadb.crm_Leads.create({
         data: {
           v: 0,
-          ...args,
+          lastName,
+          ...rest,
           assigned_to: userId,
           createdBy: userId,
         },

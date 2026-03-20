@@ -85,11 +85,12 @@ export const opportunityTools = [
       currency: z.string().optional(),
       next_step: z.string().optional(),
     }),
-    async handler(args: Record<string, any>, userId: string) {
-      const { budget, expected_revenue, close_date, ...rest } = args;
+    async handler(args: { name: string; description?: string; close_date?: string; budget?: number; expected_revenue?: number; currency?: string; next_step?: string }, userId: string) {
+      const { name, budget, expected_revenue, close_date, ...rest } = args;
       const opp = await prismadb.crm_Opportunities.create({
         data: {
           v: 0,
+          name,
           ...rest,
           ...(budget !== undefined && { budget: BigInt(budget) }),
           ...(expected_revenue !== undefined && {

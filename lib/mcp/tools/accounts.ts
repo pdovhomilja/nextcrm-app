@@ -76,11 +76,13 @@ export const accountTools = [
       office_phone: z.string().optional(),
       website: z.string().optional(),
     }),
-    async handler(args: Record<string, any>, userId: string) {
+    async handler(args: { name: string; email?: string; description?: string; office_phone?: string; website?: string }, userId: string) {
+      const { name, ...rest } = args;
       const account = await prismadb.crm_Accounts.create({
         data: {
           v: 0,
-          ...args,
+          name,
+          ...rest,
           assigned_to: userId,
           createdBy: userId,
           updatedBy: userId,
