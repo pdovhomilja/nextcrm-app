@@ -51,6 +51,7 @@ model crm_Accounts {
   contracts          crm_Contracts[]
   documents          DocumentsToAccounts[]
   watchers           AccountWatchers[]
+  embedding          crm_Embeddings_Accounts?
 
   @@index([assigned_to])
   @@index([industry])
@@ -86,6 +87,7 @@ model crm_Leads {
   accountsIDs       String?            @db.Uuid
   assigned_accounts crm_Accounts?      @relation(fields: [accountsIDs], references: [id])
   documents         DocumentsToLeads[]
+  embedding         crm_Embeddings_Leads?
 
   @@index([assigned_to])
   @@index([accountsIDs])
@@ -141,6 +143,7 @@ model crm_Opportunities {
   assigned_campaings   crm_campaigns?                  @relation(fields: [campaign], references: [id])
   documents            DocumentsToOpportunities[]
   contacts             ContactsToOpportunities[]
+  embedding            crm_Embeddings_Opportunities?
 
   @@index([account])
   @@index([assigned_to])
@@ -229,6 +232,7 @@ model crm_Contacts {
   assigned_accounts crm_Accounts?             @relation(fields: [accountsIDs], references: [id])
   opportunities     ContactsToOpportunities[]
   documents         DocumentsToContacts[]
+  embedding         crm_Embeddings_Contacts?
 
   @@index([assigned_to])
   @@index([created_by])
@@ -798,4 +802,44 @@ model TargetsToTargetLists {
   @@id([target_id, target_list_id])
   @@index([target_id])
   @@index([target_list_id])
+}
+
+// ============================================
+// PGVECTOR EMBEDDING COMPANION MODELS
+// ============================================
+
+model crm_Embeddings_Accounts {
+  id           String   @id @default(uuid()) @db.Uuid
+  account_id   String   @unique @db.Uuid
+  embedding    Unsupported("vector(1536)")
+  content_hash String
+  embedded_at  DateTime @default(now())
+  account      crm_Accounts @relation(fields: [account_id], references: [id], onDelete: Cascade)
+}
+
+model crm_Embeddings_Contacts {
+  id           String   @id @default(uuid()) @db.Uuid
+  contact_id   String   @unique @db.Uuid
+  embedding    Unsupported("vector(1536)")
+  content_hash String
+  embedded_at  DateTime @default(now())
+  contact      crm_Contacts @relation(fields: [contact_id], references: [id], onDelete: Cascade)
+}
+
+model crm_Embeddings_Leads {
+  id           String   @id @default(uuid()) @db.Uuid
+  lead_id      String   @unique @db.Uuid
+  embedding    Unsupported("vector(1536)")
+  content_hash String
+  embedded_at  DateTime @default(now())
+  lead         crm_Leads @relation(fields: [lead_id], references: [id], onDelete: Cascade)
+}
+
+model crm_Embeddings_Opportunities {
+  id             String   @id @default(uuid()) @db.Uuid
+  opportunity_id String   @unique @db.Uuid
+  embedding      Unsupported("vector(1536)")
+  content_hash   String
+  embedded_at    DateTime @default(now())
+  opportunity    crm_Opportunities @relation(fields: [opportunity_id], references: [id], onDelete: Cascade)
 }
