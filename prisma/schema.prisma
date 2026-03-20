@@ -872,4 +872,6 @@ model ApiToken {
   revokedAt   DateTime?
   lastUsedAt  DateTime?
   createdAt   DateTime  @default(now())
+
+  @@index([userId])
 }

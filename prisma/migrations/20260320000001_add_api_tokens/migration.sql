@@ -16,5 +16,8 @@ CREATE TABLE "ApiToken" (
 -- CreateIndex
 CREATE UNIQUE INDEX "ApiToken_tokenHash_key" ON "ApiToken"("tokenHash");
 
+-- CreateIndex
+CREATE INDEX "ApiToken_userId_idx" ON "ApiToken"("userId");
+
 -- AddForeignKey
 ALTER TABLE "ApiToken" ADD CONSTRAINT "ApiToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Users"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -141,11 +141,11 @@ All tools are scoped to the authenticated user. No delete operations.
 - `update_opportunity` — partial update by ID, verifies `assigned_to` before update
 
 ### Targets
-- `list_targets` — paginated list, filtered by `assigned_to`
-- `get_target` — single record by ID, ownership verified
+- `list_targets` — paginated list, filtered by `created_by` (Targets model uses `created_by`, not `assigned_to`)
+- `get_target` — single record by ID, ownership verified via `created_by`
 - `search_targets` — substring match on name
-- `create_target` — validated input, sets `assigned_to` from userId
-- `update_target` — partial update by ID, verifies `assigned_to` before update
+- `create_target` — validated input, sets `created_by` from userId
+- `update_target` — partial update by ID, verifies `created_by` before update
 
 **Common input patterns:**
 - All inputs validated with Zod schemas
@@ -202,6 +202,6 @@ All tools are scoped to the authenticated user. No delete operations.
 | SHA-256 hash storage | Raw token never persisted; DB breach doesn't expose tokens |
 | `nxtc__` prefix | Visually distinct, easy to identify in logs and configs |
 | Session fallback dev-only | Production revocation must be absolute; session bypass would undermine it |
-| `assigned_to` for scoping | Primary user association field in all 5 CRM models |
+| `assigned_to` for scoping | Primary user association field in 4 CRM models; Targets uses `created_by` |
 | Max 10 tokens per user | Prevents table flooding; sufficient for all practical agent configurations |
 | `lastUsedAt` silently fails | Informational field; blocking on audit update would degrade performance |
