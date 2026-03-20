@@ -1,6 +1,6 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
-import type { SimilarRecord, SimilarityResult } from "./get-similar-accounts";
+import type { SimilarityResult } from "./get-similar-accounts";
 
 export async function getSimilarContacts(
   recordId: string,
