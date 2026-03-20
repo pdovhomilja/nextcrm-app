@@ -15,7 +15,7 @@ export const contactTools = [
           where: { assigned_to: userId },
           take: args.limit,
           skip: args.offset,
-          orderBy: { createdAt: "desc" },
+          orderBy: { created_on: "desc" },
         }),
         prismadb.crm_Contacts.count({ where: { assigned_to: userId } }),
       ]);
@@ -77,7 +77,7 @@ export const contactTools = [
           where,
           take: args.limit,
           skip: args.offset,
-          orderBy: { createdAt: "desc" },
+          orderBy: { created_on: "desc" },
         }),
         prismadb.crm_Contacts.count({ where }),
       ]);
