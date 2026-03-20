@@ -56,8 +56,8 @@ export async function unifiedSearch(
   try {
     const embedding = await generateEmbedding(query.trim());
     queryVec = toVectorLiteral(embedding);
-  } catch {
-    // intentional silent fallback to keyword-only
+  } catch (e) {
+    console.warn("[UNIFIED_SEARCH] embedding failed, falling back to keyword-only", e);
   }
 
   const noSemantic = Promise.resolve([] as { id: string; similarity: number }[]);
