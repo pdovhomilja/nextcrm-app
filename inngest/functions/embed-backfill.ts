@@ -1,6 +1,8 @@
 import { inngest } from "@/inngest/client";
 import { prismadb } from "@/lib/prisma";
 
+const BATCH_SIZE = 512;
+
 export const embedBackfill = inngest.createFunction(
   { id: "embed-backfill", name: "Embed Backfill All CRM Records", triggers: [{ event: "crm/backfill.requested" }] },
   async () => {
@@ -18,8 +20,9 @@ export const embedBackfill = inngest.createFunction(
       ...opportunities.map((r) => ({ name: "crm/opportunity.saved" as const, data: { record_id: r.id } })),
     ];
 
-    if (events.length > 0) {
-      await inngest.send(events);
+    // Chunk into batches of 512 (Inngest's per-send limit)
+    for (let i = 0; i < events.length; i += BATCH_SIZE) {
+      await inngest.send(events.slice(i, i + BATCH_SIZE));
     }
 
     return {
