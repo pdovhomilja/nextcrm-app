@@ -1,4 +1,4 @@
-import { generateApiToken, validateApiToken, revokeApiToken } from "@/lib/api-tokens";
+import { generateApiToken, validateApiToken, revokeApiToken, listApiTokens } from "@/lib/api-tokens";
 import { prismadb } from "@/lib/prisma";
 
 // Mock prisma
@@ -45,6 +45,9 @@ describe("validateApiToken", () => {
 
     const result = await validateApiToken(token);
     expect(result).toBe("user-123");
+    expect(mockPrisma.apiToken.findUnique).toHaveBeenCalledWith({
+      where: expect.objectContaining({ tokenHash: expect.any(String) }),
+    });
   });
 
   it("throws for revoked token", async () => {
@@ -102,5 +105,29 @@ describe("revokeApiToken", () => {
     (mockPrisma.apiToken.findUnique as jest.Mock).mockResolvedValue(null);
 
     await expect(revokeApiToken("token-id", "user-123")).rejects.toThrow("Not found");
+  });
+});
+
+describe("listApiTokens", () => {
+  it("returns tokens for user without tokenHash", async () => {
+    const mockTokens = [
+      {
+        id: "t1",
+        name: "My Token",
+        tokenPrefix: "abc12345",
+        expiresAt: null,
+        revokedAt: null,
+        createdAt: new Date(),
+        lastUsedAt: null,
+      },
+    ];
+    // Mock findMany on prismadb.apiToken
+    (prismadb.apiToken.findMany as jest.Mock) = jest.fn().mockResolvedValue(mockTokens);
+
+    const result = await listApiTokens("user-123");
+    expect(result).toEqual(mockTokens);
+    expect(prismadb.apiToken.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { userId: "user-123" } })
+    );
   });
 });

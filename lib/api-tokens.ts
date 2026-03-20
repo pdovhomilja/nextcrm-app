@@ -45,6 +45,7 @@ export async function generateApiToken(
 }
 
 export async function validateApiToken(rawToken: string): Promise<string> {
+  if (!rawToken.startsWith("nxtc__")) throw new Error("Invalid token");
   const tokenHash = hashToken(rawToken);
 
   const token = await prismadb.apiToken.findUnique({
