@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { inngest } from "@/inngest/client";
 
 export const updateContact = async (data: {
   id: string;
@@ -72,6 +73,7 @@ export const updateContact = async (data: {
         ...rest,
       },
     });
+    void inngest.send({ name: "crm/contact.saved", data: { record_id: contact.id } });
     revalidatePath("/[locale]/(routes)/crm/contacts", "page");
     return { data: contact };
   } catch (error) {

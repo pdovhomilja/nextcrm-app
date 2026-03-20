@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import sendEmail from "@/lib/sendmail";
+import { inngest } from "@/inngest/client";
 
 export const createOpportunity = async (data: {
   account?: string;
@@ -84,6 +85,7 @@ export const createOpportunity = async (data: {
       }
     }
 
+    void inngest.send({ name: "crm/opportunity.saved", data: { record_id: opportunity.id } });
     revalidatePath("/[locale]/(routes)/crm/opportunities", "page");
     return { data: opportunity };
   } catch (error) {

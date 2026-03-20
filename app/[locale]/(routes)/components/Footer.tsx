@@ -10,7 +10,6 @@ const Footer = async () => {
       <div className="hidden md:flex pr-5">
         <Link href="/">
           <h1 className="text-muted-foreground hover:text-foreground transition-colors">
-            {" "}
             {process.env.NEXT_PUBLIC_APP_NAME} - {process.env.NEXT_PUBLIC_APP_V}
           </h1>
         </Link>
@@ -22,18 +21,14 @@ const Footer = async () => {
         </span>
         +
         <Link href={"https://ui.shadcn.com/"}>
-          <span className="rounded-md mr-2 hover:text-foreground transition-colors">shadcnUI</span>
+          <span className="rounded-md mr-2 hover:text-foreground transition-colors">
+            shadcnUI
+          </span>
         </Link>{" "}
         hosted by:
         <span className="text-bold underline hover:text-foreground transition-colors">
           <Link href="https://www.vercel.com">Vercel</Link>
         </span>
-      </div>
-      <div className="hidden md:flex space-x-2">
-        Supported by:
-        <Link className="pl-1 font-bold hover:text-foreground transition-colors" href="https://www.softbase.cz">
-          SoftBase s.r.o.
-        </Link>
       </div>
     </footer>
   );

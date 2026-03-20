@@ -18,6 +18,11 @@ const ADMIN_ONLY_PATHS = [
 export async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
+  // Inngest webhook — pass through, Inngest handles its own auth via signing key
+  if (path.startsWith("/api/inngest")) {
+    return NextResponse.next();
+  }
+
   // Admin-only routes — check JWT token's isAdmin flag
   if (ADMIN_ONLY_PATHS.some((p) => path.startsWith(p))) {
     const token = await getToken({ req, secret: process.env.JWT_SECRET });

@@ -112,7 +112,7 @@ export function AppSidebar({
   // Task 2.3: CRM module navigation (with module filtering)
   // Only show if CRM module is enabled
   const crmModule = modules.find(
-    (menuItem: any) => menuItem.name === "crm" && menuItem.enabled
+    (menuItem: any) => menuItem.name === "crm" && menuItem.enabled,
   );
   if (crmModule && dict?.crm) {
     const crmItem = getCrmMenuItem({
@@ -124,7 +124,7 @@ export function AppSidebar({
   // Task 2.4: Projects module navigation (with module filtering)
   // Only show if Projects module is enabled
   const projectsModule = modules.find(
-    (menuItem: any) => menuItem.name === "projects" && menuItem.enabled
+    (menuItem: any) => menuItem.name === "projects" && menuItem.enabled,
   );
   if (projectsModule && dict?.projects) {
     const projectsItem = getProjectsMenuItem({
@@ -136,7 +136,7 @@ export function AppSidebar({
   // Task 2.5: Emails module navigation (with module filtering)
   // Only show if Emails module is enabled
   const emailsModule = modules.find(
-    (menuItem: any) => menuItem.name === "emails" && menuItem.enabled
+    (menuItem: any) => menuItem.name === "emails" && menuItem.enabled,
   );
   if (emailsModule && dict?.emails) {
     const emailsItem = getEmailsMenuItem({
@@ -148,7 +148,7 @@ export function AppSidebar({
   // Task 2.6.2: Employees module navigation (with module filtering)
   // Only show if Employees module is enabled
   const employeesModule = modules.find(
-    (menuItem: any) => menuItem.name === "employee" && menuItem.enabled
+    (menuItem: any) => menuItem.name === "employee" && menuItem.enabled,
   );
   if (employeesModule) {
     const employeesItem = getEmployeesMenuItem({
@@ -160,7 +160,7 @@ export function AppSidebar({
   // Task 2.6.4: Reports module navigation (with module filtering)
   // Only show if Reports module is enabled
   const reportsModule = modules.find(
-    (menuItem: any) => menuItem.name === "reports" && menuItem.enabled
+    (menuItem: any) => menuItem.name === "reports" && menuItem.enabled,
   );
   if (reportsModule && dict?.reports) {
     const reportsItem = getReportsMenuItem({
@@ -172,7 +172,7 @@ export function AppSidebar({
   // Task 2.6.5: Documents module navigation (with module filtering)
   // Only show if Documents module is enabled
   const documentsModule = modules.find(
-    (menuItem: any) => menuItem.name === "documents" && menuItem.enabled
+    (menuItem: any) => menuItem.name === "documents" && menuItem.enabled,
   );
   if (documentsModule && dict?.documents) {
     const documentsItem = getDocumentsMenuItem({
@@ -184,7 +184,7 @@ export function AppSidebar({
   // Task 2.6.6: Databox module navigation (with module filtering)
   // Only show if Databox module is enabled
   const databoxModule = modules.find(
-    (menuItem: any) => menuItem.name === "databox" && menuItem.enabled
+    (menuItem: any) => menuItem.name === "databox" && menuItem.enabled,
   );
   if (databoxModule) {
     const databoxItem = getDataboxMenuItem({
@@ -217,14 +217,14 @@ export function AppSidebar({
         <div
           className={cn(
             "flex items-center py-1",
-            isExpanded ? "gap-x-4" : "justify-center"
+            isExpanded ? "gap-x-4" : "justify-center",
           )}
         >
           {/* "N" Branding Symbol with rotation animation */}
           <div
             className={cn(
               "flex-shrink-0 border rounded-full px-4 py-2 transition-transform duration-500",
-              isExpanded && "rotate-[360deg]"
+              isExpanded && "rotate-[360deg]",
             )}
           >
             N
@@ -234,7 +234,7 @@ export function AppSidebar({
           <h1
             className={cn(
               "origin-left font-medium text-xl transition-all overflow-hidden whitespace-nowrap",
-              !isExpanded ? "w-0 opacity-0" : "w-auto opacity-100"
+              !isExpanded ? "w-0 opacity-0" : "w-auto opacity-100",
             )}
           >
             {process.env.NEXT_PUBLIC_APP_NAME || "NextCRM"}
@@ -252,18 +252,6 @@ export function AppSidebar({
       <SidebarFooter>
         {/* Task 3.1: NavUser component with user profile and actions */}
         <NavUser user={userData} />
-
-        {/* Build version display (when sidebar expanded) */}
-        {/* Task 5.4: Changed text-gray-500 to text-muted-foreground for theme support */}
-        <div
-          className={cn("flex justify-center items-center w-full", {
-            hidden: !isExpanded,
-          })}
-        >
-          <span className="text-xs text-muted-foreground pb-2">
-            build: 0.0.3-beta-{build}
-          </span>
-        </div>
       </SidebarFooter>
 
       {/* Rail for toggling sidebar on desktop */}

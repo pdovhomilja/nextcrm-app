@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import sendEmail from "@/lib/sendmail";
+import { inngest } from "@/inngest/client";
 
 export const updateLead = async (data: {
   id: string;
@@ -90,6 +91,7 @@ export const updateLead = async (data: {
       }
     }
 
+    void inngest.send({ name: "crm/lead.saved", data: { record_id: lead.id } });
     revalidatePath("/[locale]/(routes)/crm/leads", "page");
     return { data: lead };
   } catch (error) {
