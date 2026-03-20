@@ -26,7 +26,7 @@ Upgrade the existing fulltext search page into a unified search experience that 
    - **Contacts** — same
    - **Leads** — same
    - **Opportunities** — same
-   - **Projects** (`prismadb.boards`) — `ILIKE` keyword only
+   - **Projects** (`prismadb.Boards`) — `ILIKE` keyword only
    - **Tasks** — `ILIKE` keyword only
    - **Users** — `ILIKE` keyword only
 6. Returns grouped results: `{ accounts[], contacts[], leads[], opportunities[], projects[], tasks[], users[] }`
@@ -125,17 +125,19 @@ interface SearchResult {
 
 | Entity | Prisma Model | `title` | `subtitle` | `url` |
 |--------|-------------|---------|-----------|-------|
-| Accounts | `crm_Accounts` | `name` | `industry` or `type` | `/crm/accounts/${id}` |
-| Contacts | `crm_Contacts` | `first_name + ' ' + last_name` | `email` | `/crm/contacts/${id}` |
-| Leads | `crm_Leads` | `first_name + ' ' + last_name` or `company` | `email` | `/crm/leads/${id}` |
-| Opportunities | `crm_Opportunities` | `name` | `type` or `sales_stage` | `/crm/opportunities/${id}` |
-| Projects | `boards` | `title` | `description` (truncated) | `/projects/${id}` |
-| Tasks | `crm_Tasks` | `subject` | `status` | `/tasks/${id}` |
-| Users | `users` | `name` | `email` | `/settings/users/${id}` |
+| Accounts | `crm_Accounts` | `name` | `industry` or `type` | `/${locale}/crm/accounts/${id}` |
+| Contacts | `crm_Contacts` | `first_name + ' ' + last_name` | `email` | `/${locale}/crm/contacts/${id}` |
+| Leads | `crm_Leads` | `first_name + ' ' + last_name` or `company` | `email` | `/${locale}/crm/leads/${id}` |
+| Opportunities | `crm_Opportunities` | `name` | `type` or `sales_stage` | `/${locale}/crm/opportunities/${id}` |
+| Projects | `Boards` | `title` | `description` (truncated) | `/${locale}/projects/${id}` |
+| Tasks | `Tasks` | `title` | `status` | `/${locale}/tasks/${id}` |
+| Users | `Users` | `name` | `email` | `/${locale}/settings/users/${id}` |
+
+> **Note on locale:** All `url` values must be prefixed with the current locale (e.g., `/en/crm/accounts/${id}`). The locale should be passed as a parameter to the server action or resolved server-side via `headers()`.
 
 ### Per-Entity Result Limit
 
-Each entity query returns a maximum of **10 results** (after merging keyword + semantic). Raw semantic queries use `LIMIT 10`. Keyword queries use Prisma `take: 10`.
+Each entity query returns a maximum of **10 results** after merging. Raw semantic queries use `LIMIT 10`. Keyword queries use Prisma `take: 10`. After deduplication and scoring, results are sorted by `score` descending and capped at 10.
 
 ## Components
 
@@ -158,7 +160,7 @@ Displays title, subtitle, match type indicator (keyword / semantic / both), and 
 | Unauthenticated request | Return `{ error: "Unauthorized" }` |
 | Empty query | No search fired, results cleared |
 | Query < 2 chars | Inline hint shown, no API call |
-| Embedding API failure | Fallback to keyword-only for all entities, no error shown |
+| Embedding API failure | Fallback to keyword-only for all entities, no error shown (intentional silent degradation) |
 | Un-embedded records | Appear as keyword-only matches (score 0.5) |
 | No results for entity | Section hidden |
 | All sections empty | Show "No results found for {query}" |
