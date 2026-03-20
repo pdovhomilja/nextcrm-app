@@ -19,17 +19,18 @@ Upgrade the existing fulltext search page into a unified search experience that 
 
 1. User types query and submits the form
 2. Client calls single server action `unifiedSearch(query: string)`
-3. Action generates one OpenAI embedding for the query
-4. Action runs 7 parallel queries via `Promise.all`:
-   - **Accounts** — `ILIKE` keyword + pgvector `<=>` cosine similarity → merged, deduped, ranked
+3. Action verifies session via `getServerSession(authOptions)` — returns `{ error: "Unauthorized" }` if unauthenticated
+4. Action generates one OpenAI embedding for the query
+5. Action runs 7 parallel queries via `Promise.all`:
+   - **Accounts** — `ILIKE` keyword + pgvector cosine similarity → merged, deduped, ranked
    - **Contacts** — same
    - **Leads** — same
    - **Opportunities** — same
-   - **Projects** — `ILIKE` keyword only
+   - **Projects** (`prismadb.boards`) — `ILIKE` keyword only
    - **Tasks** — `ILIKE` keyword only
    - **Users** — `ILIKE` keyword only
-5. Returns grouped results: `{ accounts[], contacts[], leads[], opportunities[], projects[], tasks[], users[] }`
-6. UI renders collapsible sections per entity, sorted by score descending
+6. Returns grouped results: `{ accounts[], contacts[], leads[], opportunities[], projects[], tasks[], users[] }`
+7. UI renders collapsible sections per entity, sorted by score descending
 
 ### Scoring (CRM entities with embeddings)
 
@@ -42,17 +43,42 @@ score = 0.5 * keywordScore + 0.5 * similarityScore
 
 Records that match both keyword and semantic get a score up to 1.0. Semantic-only matches score up to 0.5. Keyword-only matches score exactly 0.5.
 
+### pgvector Operator
+
+Use `<=>` which is the **cosine distance** operator. Do NOT use `<->` (L2/Euclidean distance). Raw SQL pattern:
+
+```sql
+1 - (e.embedding <=> $queryVector::vector) AS similarity_score
+```
+
 ### Fallback on Embedding Failure
 
 If the OpenAI embedding call fails, the action falls back to keyword-only search for all entities. Semantic results are silently omitted — no error is surfaced to the user.
 
+### Handling Un-embedded Records
+
+For CRM entities, some records may not yet have an entry in their embedding table (`crm_Embeddings_*`). The semantic query must use a strategy that preserves keyword-matched records regardless of embedding presence:
+
+1. Run keyword query (`ILIKE`) → get set K
+2. Run semantic query (raw SQL with `LEFT JOIN` on embedding table, filter by `embedding IS NOT NULL`) → get set S
+3. Union K ∪ S, deduplicate by `id`, compute merged score per record
+
+Records in K but not in S get `similarityScore = 0`, final score = 0.5.
+
 ## Files
+
+### Old Files to Retire
+
+The following files are **replaced** by the new unified action and must be deleted:
+
+- `actions/fulltext/search.ts`
+- `actions/fulltext/get-search-results.ts`
 
 ### New Files
 
 | File | Purpose |
 |------|---------|
-| `actions/fulltext/unified-search.ts` | Unified server action — embedding generation, parallel queries, merge, rank |
+| `actions/fulltext/unified-search.ts` | Unified server action — auth, embedding, parallel queries, merge, rank |
 | `components/fulltext-search/search-results.tsx` | Renders grouped result sections |
 | `components/fulltext-search/entity-result-section.tsx` | Collapsible section per entity type |
 | `components/fulltext-search/result-card.tsx` | Single result card with entity badge and score indicator |
@@ -68,14 +94,14 @@ If the OpenAI embedding call fails, the action falls back to keyword-only search
 - `actions/crm/similarity/get-similar-*.ts` — used only by the "Find Similar" drawer
 - `inngest/` functions — embedding generation pipeline unchanged
 
-## Components
+## Data Interfaces
 
-### `unified-search.ts` (server action)
+### Server Action
 
-```
-unifiedSearch(query: string): Promise<SearchResults>
+```typescript
+unifiedSearch(query: string): Promise<SearchResults | { error: string }>
 
-SearchResults {
+interface SearchResults {
   accounts: SearchResult[]
   contacts: SearchResult[]
   leads: SearchResult[]
@@ -85,7 +111,7 @@ SearchResults {
   users: SearchResult[]
 }
 
-SearchResult {
+interface SearchResult {
   id: string
   title: string
   subtitle?: string
@@ -94,6 +120,24 @@ SearchResult {
   matchType: 'keyword' | 'semantic' | 'both'
 }
 ```
+
+### Per-Entity Field Mapping
+
+| Entity | Prisma Model | `title` | `subtitle` | `url` |
+|--------|-------------|---------|-----------|-------|
+| Accounts | `crm_Accounts` | `name` | `industry` or `type` | `/crm/accounts/${id}` |
+| Contacts | `crm_Contacts` | `first_name + ' ' + last_name` | `email` | `/crm/contacts/${id}` |
+| Leads | `crm_Leads` | `first_name + ' ' + last_name` or `company` | `email` | `/crm/leads/${id}` |
+| Opportunities | `crm_Opportunities` | `name` | `type` or `sales_stage` | `/crm/opportunities/${id}` |
+| Projects | `boards` | `title` | `description` (truncated) | `/projects/${id}` |
+| Tasks | `crm_Tasks` | `subject` | `status` | `/tasks/${id}` |
+| Users | `users` | `name` | `email` | `/settings/users/${id}` |
+
+### Per-Entity Result Limit
+
+Each entity query returns a maximum of **10 results** (after merging keyword + semantic). Raw semantic queries use `LIMIT 10`. Keyword queries use Prisma `take: 10`.
+
+## Components
 
 ### `search-results.tsx`
 
@@ -111,9 +155,11 @@ Displays title, subtitle, match type indicator (keyword / semantic / both), and 
 
 | Case | Behavior |
 |------|---------|
+| Unauthenticated request | Return `{ error: "Unauthorized" }` |
 | Empty query | No search fired, results cleared |
 | Query < 2 chars | Inline hint shown, no API call |
-| Embedding API failure | Fallback to keyword-only, no error shown |
+| Embedding API failure | Fallback to keyword-only for all entities, no error shown |
+| Un-embedded records | Appear as keyword-only matches (score 0.5) |
 | No results for entity | Section hidden |
 | All sections empty | Show "No results found for {query}" |
 | Slow response | Loading skeleton shown while search runs |
