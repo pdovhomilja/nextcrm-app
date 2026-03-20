@@ -40,49 +40,66 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 ```sql
 -- Accounts
-CREATE TABLE crm_Embeddings_Accounts (
-  id           TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
-  account_id   TEXT NOT NULL UNIQUE REFERENCES crm_Accounts(id) ON DELETE CASCADE,
+CREATE TABLE "crm_Embeddings_Accounts" (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  account_id   UUID NOT NULL UNIQUE REFERENCES "crm_Accounts"(id) ON DELETE CASCADE,
   embedding    vector(1536) NOT NULL,
   content_hash TEXT NOT NULL,
   embedded_at  TIMESTAMP NOT NULL DEFAULT NOW()
 );
-CREATE INDEX ON crm_Embeddings_Accounts USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+CREATE INDEX ON "crm_Embeddings_Accounts" USING hnsw (embedding vector_cosine_ops);
 
 -- Contacts
-CREATE TABLE crm_Embeddings_Contacts (
-  id           TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
-  contact_id   TEXT NOT NULL UNIQUE REFERENCES crm_Contacts(id) ON DELETE CASCADE,
+CREATE TABLE "crm_Embeddings_Contacts" (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  contact_id   UUID NOT NULL UNIQUE REFERENCES "crm_Contacts"(id) ON DELETE CASCADE,
   embedding    vector(1536) NOT NULL,
   content_hash TEXT NOT NULL,
   embedded_at  TIMESTAMP NOT NULL DEFAULT NOW()
 );
-CREATE INDEX ON crm_Embeddings_Contacts USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+CREATE INDEX ON "crm_Embeddings_Contacts" USING hnsw (embedding vector_cosine_ops);
 
 -- Leads
-CREATE TABLE crm_Embeddings_Leads (
-  id           TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
-  lead_id      TEXT NOT NULL UNIQUE REFERENCES crm_Leads(id) ON DELETE CASCADE,
+CREATE TABLE "crm_Embeddings_Leads" (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  lead_id      UUID NOT NULL UNIQUE REFERENCES "crm_Leads"(id) ON DELETE CASCADE,
   embedding    vector(1536) NOT NULL,
   content_hash TEXT NOT NULL,
   embedded_at  TIMESTAMP NOT NULL DEFAULT NOW()
 );
-CREATE INDEX ON crm_Embeddings_Leads USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+CREATE INDEX ON "crm_Embeddings_Leads" USING hnsw (embedding vector_cosine_ops);
 
 -- Opportunities
-CREATE TABLE crm_Embeddings_Opportunities (
-  id              TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
-  opportunity_id  TEXT NOT NULL UNIQUE REFERENCES crm_Opportunities(id) ON DELETE CASCADE,
+CREATE TABLE "crm_Embeddings_Opportunities" (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  opportunity_id  UUID NOT NULL UNIQUE REFERENCES "crm_Opportunities"(id) ON DELETE CASCADE,
   embedding       vector(1536) NOT NULL,
   content_hash    TEXT NOT NULL,
   embedded_at     TIMESTAMP NOT NULL DEFAULT NOW()
 );
-CREATE INDEX ON crm_Embeddings_Opportunities USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+CREATE INDEX ON "crm_Embeddings_Opportunities" USING hnsw (embedding vector_cosine_ops);
 ```
+
+**Note:** HNSW index is used instead of ivfflat because it has no minimum row count requirement (ivfflat degrades on small datasets). HNSW works correctly at any CRM scale.
 
 ### Prisma Schema Addition
 
-Add `Unsupported("vector(1536)")` fields using Prisma's raw type support with `@@ignore` on the embedding column (use raw SQL for vector operations). Companion models are added to `schema.prisma` for FK integrity and metadata queries.
+Add companion models to `schema.prisma`. The `embedding` field uses `Unsupported("vector(1536)")` with a field-level `@ignore` annotation so Prisma manages all other fields normally while skipping the vector column in generated client types. Vector operations use raw SQL via `prisma.$queryRaw`.
+
+Example model:
+
+```prisma
+model crm_Embeddings_Accounts {
+  id           String   @id @default(uuid()) @db.Uuid
+  account_id   String   @unique @db.Uuid
+  embedding    Unsupported("vector(1536)") @ignore
+  content_hash String
+  embedded_at  DateTime @default(now())
+  account      crm_Accounts @relation(fields: [account_id], references: [id], onDelete: Cascade)
+}
+```
+
+The same pattern applies to the other three companion models. The `@ignore` on the `embedding` field means Prisma Client will not include it in queries — all vector reads/writes use `prisma.$queryRaw` or `prisma.$executeRaw`.
 
 ### Embedded Text Per Entity (key fields only)
 
@@ -90,10 +107,12 @@ Add `Unsupported("vector(1536)")` fields using Prisma's raw type support with `@
 |--------|-------------------|
 | Account | `name + description + email` |
 | Contact | `first_name + last_name + position + email` |
-| Lead | `name + description + status` |
-| Opportunity | `name + description + stage` |
+| Lead | `firstName + lastName + description + status` |
+| Opportunity | `name + description + [resolved sales_stage name]` |
 
 Null fields are omitted. Fields joined with `" "`.
+
+**Note for Leads:** The schema uses `firstName`/`lastName` (not `name`). **Note for Opportunities:** `sales_stage` is a UUID FK to `crm_Opportunities_Sales_Stages` — the Inngest job must JOIN to resolve the stage name string before embedding (a raw UUID provides no semantic signal).
 
 ---
 
@@ -138,7 +157,7 @@ Existing server actions in `/actions/crm/` call `inngest.send()` after each Pris
 
 ### Backfill
 
-`embed-backfill.ts` fans out via `inngest.sendMany()` — sends one event per existing record for each entity type. Used for initial seeding and model changes.
+`embed-backfill.ts` fans out via `inngest.send([...])` (passing an array of events) — sends one event per existing record for each entity type. Used for initial seeding and model changes.
 
 ---
 
@@ -184,7 +203,22 @@ ORDER  BY e.embedding <=> $1::vector
 LIMIT  $3;
 ```
 
-The embedding vector for the source record is fetched first, then passed as `$1`.
+**Step 1** — fetch the source record's embedding:
+```sql
+SELECT embedding FROM "crm_Embeddings_Accounts" WHERE account_id = $1;
+```
+If no row is returned, the action returns `{ status: 'no_embedding' }` immediately.
+
+**Step 2** — find similar records using the fetched embedding as `$1`:
+```sql
+SELECT a.id, a.name, a.email,
+       1 - (e.embedding <=> $1::vector) AS similarity
+FROM   "crm_Accounts" a
+JOIN   "crm_Embeddings_Accounts" e ON e.account_id = a.id
+WHERE  a.id != $2
+ORDER  BY e.embedding <=> $1::vector
+LIMIT  $3;
+```
 
 ---
 
@@ -195,10 +229,10 @@ The embedding vector for the source record is fetched first, then passed as `$1`
 A "Find Similar" button added to the header area of each entity detail page:
 
 ```
-app/[locale]/(routes)/crm/accounts/[id]/page.tsx
-app/[locale]/(routes)/crm/contacts/[id]/page.tsx
-app/[locale]/(routes)/crm/leads/[id]/page.tsx
-app/[locale]/(routes)/crm/opportunities/[id]/page.tsx
+app/[locale]/(routes)/crm/accounts/[accountId]/page.tsx
+app/[locale]/(routes)/crm/contacts/[contactId]/page.tsx
+app/[locale]/(routes)/crm/leads/[leadId]/page.tsx
+app/[locale]/(routes)/crm/opportunities/[opportunityId]/page.tsx
 ```
 
 ### Reusable Drawer Component
@@ -259,10 +293,24 @@ components/crm/
 prisma/
   migrations/
     XXXX_add_pgvector_embeddings/
-      migration.sql   (raw SQL, not Prisma-generated)
+      migration.sql   (raw SQL — see Migration Strategy below)
 
 prisma/schema.prisma  (companion models added)
 ```
+
+---
+
+## Migration Strategy
+
+The pgvector extension and companion tables require raw SQL that Prisma cannot auto-generate. Use the following workflow to integrate with Prisma's migration history:
+
+1. Run `pnpm prisma migrate dev --create-only --name add_pgvector_embeddings` — creates an empty migration file without applying it
+2. Replace the generated `migration.sql` with the raw SQL (extension + CREATE TABLE + CREATE INDEX statements)
+3. Run `pnpm prisma migrate dev` — applies the hand-written migration and records it in `_prisma_migrations`
+4. Add companion model definitions to `schema.prisma` (as described above)
+5. Run `pnpm prisma generate` to regenerate the Prisma Client
+
+This keeps the migration in the standard Prisma history so `prisma migrate deploy` works correctly in production.
 
 ---
 
