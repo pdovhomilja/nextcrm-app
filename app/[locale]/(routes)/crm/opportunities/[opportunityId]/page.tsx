@@ -2,6 +2,7 @@ import Container from "@/app/[locale]/(routes)/components/ui/Container";
 import React from "react";
 
 import { BasicView } from "./components/BasicView";
+import { FindSimilarButton } from "@/components/crm/find-similar-button";
 
 import DocumentsView from "../../components/DocumentsView";
 import ContactsView from "../../components/ContactsView";
@@ -39,6 +40,7 @@ const OpportunityView = async (
     >
       <div className="space-y-5">
         <BasicView data={opportunity} />
+        <FindSimilarButton entityType="opportunity" recordId={opportunityId} />
         <AccountsView crmData={crmData} data={accounts} />
         <ContactsView crmData={crmData} data={contacts} />
         <DocumentsView data={documents} />

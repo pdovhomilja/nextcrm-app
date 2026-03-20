@@ -1,6 +1,7 @@
 import Container from "@/app/[locale]/(routes)/components/ui/Container";
 import React from "react";
 import { BasicView } from "./components/BasicView";
+import { FindSimilarButton } from "@/components/crm/find-similar-button";
 
 import { getAccount } from "@/actions/crm/get-account";
 import { getAllCrmData } from "@/actions/crm/get-crm-data";
@@ -57,6 +58,7 @@ const AccountDetailPage = async (props: AccountDetailPageProps) => {
     >
       <div className="space-y-5">
         <BasicView data={account} />
+        <FindSimilarButton entityType="account" recordId={accountId} />
         <AccountsTasksView data={tasks} account={account} />
         <OpportunitiesView
           data={opportunities}
