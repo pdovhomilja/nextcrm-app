@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import SuspenseLoading from "@/components/loadings/suspense";
+import CrmTableSkeleton from "@/components/skeletons/crm-table-skeleton";
 import Container from "../../components/ui/Container";
 import TargetsView from "./components/TargetsView";
 import { getTargets } from "@/actions/crm/get-targets";
@@ -12,7 +12,7 @@ const TargetsPage = async () => {
       title="Targets"
       description="Manage your marketing and sales targets"
     >
-      <Suspense fallback={<SuspenseLoading />}>
+      <Suspense fallback={<CrmTableSkeleton />}>
         <TargetsView data={targets} />
       </Suspense>
     </Container>

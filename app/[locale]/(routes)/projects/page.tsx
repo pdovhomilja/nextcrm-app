@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 import { Session } from "next-auth";
 
 import ProjectsView from "./_components/ProjectsView";
-import SuspenseLoading from "@/components/loadings/suspense";
+import ProjectsSkeleton from "@/components/skeletons/projects-skeleton";
 import { getTranslations } from "next-intl/server";
 
 export const maxDuration = 300;
@@ -23,7 +23,7 @@ const ProjectsPage = async () => {
       title={t("title")}
       description={t("description")}
     >
-      <Suspense fallback={<SuspenseLoading />}>
+      <Suspense fallback={<ProjectsSkeleton />}>
         <ProjectsView />
       </Suspense>
     </Container>

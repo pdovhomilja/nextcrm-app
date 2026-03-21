@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { MailComponent } from "./components/mail";
 import { accounts, mails } from "@/app/[locale]/(routes)/emails/data";
 import Container from "../components/ui/Container";
-import SuspenseLoading from "@/components/loadings/suspense";
+import EmailsSkeleton from "@/components/skeletons/emails-skeleton";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getTranslations } from "next-intl/server";
@@ -53,7 +53,7 @@ const EmailRoute = async () => {
         "This module is in development. Now it is only frontend demo."
       }
     >
-      <Suspense fallback={<SuspenseLoading />}>
+      <Suspense fallback={<EmailsSkeleton />}>
         <MailComponent
           accounts={accounts}
           mails={mails}
