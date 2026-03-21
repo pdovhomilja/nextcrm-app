@@ -1,9 +1,9 @@
 // app/[locale]/(routes)/profile/components/ProfileHero.tsx
-import { User } from "@prisma/client";
+import { Users } from "@prisma/client";
 import { getTranslations } from "next-intl/server";
 
 type Props = {
-  data: User;
+  data: Users;
 };
 
 export async function ProfileHero({ data }: Props) {
