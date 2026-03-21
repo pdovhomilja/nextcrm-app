@@ -1,15 +1,15 @@
+// app/[locale]/(routes)/profile/page.tsx
+import { Suspense } from "react";
 import { getUser } from "@/actions/get-user";
 import { getTranslations } from "next-intl/server";
 
 import Container from "../components/ui/Container";
-import { ProfileForm } from "./components/ProfileForm";
-import { PasswordChangeForm } from "./components/PasswordChange";
-import { ProfilePhotoForm } from "./components/ProfilePhotoForm";
-
-import H4Title from "@/components/typography/h4";
-import { OpenAiForm } from "./components/OpenAiForm";
-import { LanguageForm } from "./components/LanguageForm";
-import { ApiTokens } from "./components/ApiTokens";
+import { ProfileHero } from "./components/ProfileHero";
+import { ProfileTabs } from "./components/ProfileTabs";
+import { ProfileTabContent } from "./components/tabs/ProfileTabContent";
+import { SecurityTabContent } from "./components/tabs/SecurityTabContent";
+import { PreferencesTabContent } from "./components/tabs/PreferencesTabContent";
+import { DeveloperTabContent } from "./components/tabs/DeveloperTabContent";
 
 const ProfilePage = async () => {
   const t = await getTranslations("ProfilePage");
@@ -20,31 +20,17 @@ const ProfilePage = async () => {
   }
 
   return (
-    <Container
-      title={t("title")}
-      description={t("description")}
-    >
-      <div>
-        {/*         <pre>
-          <code>{JSON.stringify(data, null, 2)}</code>
-        </pre> */}
-        <H4Title>{t("profilePhoto")}</H4Title>
-        <ProfilePhotoForm data={data} />
-
-        <H4Title>{t("profile")}</H4Title>
-        <ProfileForm data={data} />
-
-        <H4Title>{t("passwordChange")}</H4Title>
-        <PasswordChangeForm userId={data.id} />
-
-        <H4Title>{t("language")}</H4Title>
-        <LanguageForm userId={data.id} />
-
-        <H4Title>{t("openAiIntegration")}</H4Title>
-        <OpenAiForm userId={data.id} />
-
-        <H4Title>MCP API Tokens</H4Title>
-        <ApiTokens />
+    <Container title={t("title")} description={t("description")}>
+      <div className="rounded-lg border border-border overflow-hidden">
+        <ProfileHero data={data} />
+        <Suspense fallback={<div className="p-6 text-sm text-muted-foreground">Loading...</div>}>
+          <ProfileTabs
+            profileContent={<ProfileTabContent data={data} />}
+            securityContent={<SecurityTabContent userId={data.id} />}
+            preferencesContent={<PreferencesTabContent userId={data.id} />}
+            developerContent={<DeveloperTabContent userId={data.id} />}
+          />
+        </Suspense>
       </div>
     </Container>
   );
