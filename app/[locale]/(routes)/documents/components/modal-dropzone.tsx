@@ -28,13 +28,13 @@ const ModalDropzone = ({ buttonLabel, fileType }: Props) => {
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
-  const handleUploadSuccess = async (url: string) => {
+  const handleUploadSuccess = async (url: string, key: string) => {
     try {
       const filename = url.split("/").pop() ?? "document";
       await createDocument({
         name: filename,
         url,
-        key: url.split("/").slice(-2).join("/"), // folder/uuid.ext
+        key, // use key directly instead of reconstructing from URL
         size: 0, // size not available from presigned URL flow
         mimeType: MIME_MAP[fileType] ?? "application/octet-stream",
       });

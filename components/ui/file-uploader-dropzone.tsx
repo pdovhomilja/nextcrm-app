@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { MinioUploader } from "@/components/ui/minio-uploader";
 
 type UploaderEndpoint =
@@ -8,7 +9,7 @@ type UploaderEndpoint =
 
 interface Props {
   uploader: UploaderEndpoint;
-  onUploadSuccess?: (url: string) => void;
+  onUploadSuccess?: (url: string, key: string) => void;
 }
 
 const UPLOADER_CONFIG: Record<
@@ -36,8 +37,8 @@ export const FileUploaderDropzone = ({ uploader, onUploadSuccess }: Props) => {
       folder={config.folder}
       accept={config.accept}
       maxSizeMB={config.maxSizeMB}
-      onUploadComplete={(url) => onUploadSuccess?.(url)}
-      onUploadError={(err) => alert(`Upload error: ${err}`)}
+      onUploadComplete={(url, key) => onUploadSuccess?.(url, key)}
+      onUploadError={(err) => toast.error(`Upload error: ${err}`)}
     />
   );
 };
