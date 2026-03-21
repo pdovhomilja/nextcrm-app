@@ -79,7 +79,7 @@ export function NavUser({ user }: NavUserProps) {
   }, [getAvatar])
 
   // Get avatar URL or fallback to default
-  const avatarUrl = currentAvatar || user.avatar || `${process.env.NEXT_PUBLIC_APP_URL}/images/nouser.png`
+  const avatarUrl = currentAvatar || user.avatar || undefined
 
   // Get user initials for avatar fallback
   const userInitials = user.name
