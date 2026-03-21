@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import SuspenseLoading from "@/components/loadings/suspense";
+import { Skeleton } from "@/components/ui/skeleton";
 import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 import { updateAccount } from "@/actions/crm/accounts/update-account";
 import { getIndustries } from "@/actions/crm/get-industries";
@@ -133,8 +133,10 @@ export function UpdateAccountForm({
 
   if (isLoadingIndustries)
     return (
-      <div>
-        <SuspenseLoading />
+      <div className="flex flex-col gap-2 py-4">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-3/4" />
       </div>
     );
 

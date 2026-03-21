@@ -38,7 +38,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-import LoadingComponent from "@/components/LoadingComponent";
+import { Skeleton } from "@/components/ui/skeleton";
 import { passwordReset } from "@/actions/auth/password-reset";
 
 export function LoginComponent() {
@@ -265,7 +265,11 @@ export function LoginComponent() {
                 </DialogDescription>
               </DialogHeader>
               {isLoading ? (
-                <LoadingComponent />
+                <div className="flex flex-col gap-2 py-4">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
               ) : (
                 <div className="flex px-2 space-x-5 py-5">
                   <Input

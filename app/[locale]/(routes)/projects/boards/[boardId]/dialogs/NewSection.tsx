@@ -26,7 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import LoadingComponent from "@/components/LoadingComponent";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslations } from "next-intl";
 import { createSection } from "@/actions/projects/create-section";
 
@@ -97,7 +97,11 @@ const NewSectionDialog = ({ boardId }: Props) => {
           </DialogDescription>
         </DialogHeader>
         {isLoading ? (
-          <LoadingComponent />
+          <div className="flex flex-col gap-2 py-4">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
         ) : (
           <Form {...form}>
             <form
