@@ -267,7 +267,28 @@
     "profile": "Profile",
     "passwordChange": "Password change",
     "language": "Language",
-    "openAiIntegration": "OpenAI integration"
+    "openAiIntegration": "OpenAI integration",
+    "tabs": {
+      "profile": "Profile",
+      "security": "Security",
+      "preferences": "Preferences",
+      "developer": "Developer",
+      "profileDesc": "Update your photo and personal details",
+      "securityDesc": "Manage your password and account security",
+      "preferencesDesc": "Customize your language and display settings",
+      "developerDesc": "Manage API keys and developer integrations"
+    },
+    "cards": {
+      "photo": "Profile Photo",
+      "personalInfo": "Personal Information",
+      "changePassword": "Change Password",
+      "language": "Language",
+      "openai": "OpenAI Integration",
+      "apiTokens": "API Tokens"
+    },
+    "hero": {
+      "role": "Admin"
+    }
   },
   "ProfileForm": {
     "fullName": "Full name",
