@@ -2,7 +2,7 @@ import React, { Suspense } from "react";
 
 import AccountsView from "../components/AccountsView";
 import Container from "../../components/ui/Container";
-import SuspenseLoading from "@/components/loadings/suspense";
+import CrmAccountsSkeleton from "@/components/skeletons/crm-accounts-skeleton";
 import { getAllCrmData } from "@/actions/crm/get-crm-data";
 import { getAccounts } from "@/actions/crm/get-accounts";
 import { getTranslations } from "next-intl/server";
@@ -17,7 +17,7 @@ const AccountsPage = async () => {
       title={t("accounts.pageTitle")}
       description={t("accounts.pageDescription")}
     >
-      <Suspense fallback={<SuspenseLoading />}>
+      <Suspense fallback={<CrmAccountsSkeleton />}>
         <AccountsView crmData={crmData} data={accounts} />
       </Suspense>
     </Container>
