@@ -27,8 +27,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "filename and contentType are required" }, { status: 400 });
   }
 
-  // Fall back to "bin" if filename has no extension
-  const ext = filename.includes(".") ? filename.split(".").pop() : "bin";
+  // Fall back to "bin" if filename has no extension or extension is empty (e.g., ".")
+  const ext = filename.includes(".") ? filename.split(".").pop()?.trim() || "bin" : "bin";
   const key = `${folder}/${randomUUID()}.${ext}`;
 
   const command = new PutObjectCommand({
