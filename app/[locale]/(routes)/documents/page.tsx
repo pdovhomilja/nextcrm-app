@@ -2,8 +2,6 @@ import { getDocuments } from "@/actions/documents/get-documents";
 import Container from "../components/ui/Container";
 import { DocumentsDataTable } from "./components/data-table";
 import { columns } from "./components/columns";
-import FileUploader from "@/components/ui/file-uploader";
-import { FileUploaderDropzone } from "@/components/ui/file-uploader-dropzone";
 import ModalDropzone from "./components/modal-dropzone";
 import { Documents } from "@prisma/client";
 import { getTranslations } from "next-intl/server";
