@@ -67,7 +67,7 @@ export function ProfileTabs({
               onClick={() => {
                 const params = new URLSearchParams(searchParams.toString());
                 params.set("tab", id);
-                router.push(`?${params.toString()}`);
+                router.replace(`?${params.toString()}`, { scroll: false });
               }}
               className={cn(
                 "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-left transition-colors",
@@ -95,7 +95,7 @@ export function ProfileTabs({
                 onClick={() => {
                   const params = new URLSearchParams(searchParams.toString());
                   params.set("tab", id);
-                  router.push(`?${params.toString()}`);
+                  router.replace(`?${params.toString()}`, { scroll: false });
                 }}
                 className={cn(
                   "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs whitespace-nowrap transition-colors",
