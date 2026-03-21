@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import UploadFileModal from "@/components/modals/upload-file-modal";
 import { Button } from "@/components/ui/button";
