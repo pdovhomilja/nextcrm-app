@@ -31,7 +31,7 @@ export function ProfilePhotoForm({ data }: ProfileFormProps) {
   }, [data.avatar]);
 
   // Upload completes — show preview, wait for user to confirm
-  const handleUploadSuccess = (newAvatar: string) => {
+  const handleUploadSuccess = (newAvatar: string, _key: string) => {
     setPendingAvatar(newAvatar);
   };
 
@@ -71,7 +71,7 @@ export function ProfilePhotoForm({ data }: ProfileFormProps) {
           height={100}
           className="rounded-full object-cover border border-border"
         />
-        {pendingAvatar && (
+        {pendingAvatar !== null && (
           <span className="text-xs text-muted-foreground">Preview</span>
         )}
       </div>
@@ -80,7 +80,7 @@ export function ProfilePhotoForm({ data }: ProfileFormProps) {
           uploader={"profilePhotoUploader"}
           onUploadSuccess={handleUploadSuccess}
         />
-        {pendingAvatar && (
+        {pendingAvatar !== null && (
           <div className="flex gap-2">
             <Button onClick={handleSave} disabled={saving} size="sm">
               {saving ? "Saving..." : "Save photo"}
