@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { FileUploaderDropzone } from "@/components/ui/file-uploader-dropzone";
 import { Button } from "@/components/ui/button";
 
-import useAvatarStore from "@/store/useAvatarStore";
+import { useAvatarContext } from "@/context/avatar-context";
 import { updateProfilePhoto } from "@/actions/user/update-profile-photo";
 import { useTranslations } from "next-intl";
 
@@ -24,7 +24,7 @@ export function ProfilePhotoForm({ data }: ProfileFormProps) {
   const t = useTranslations("ProfileForm");
 
   const router = useRouter();
-  const setAvatarStore = useAvatarStore((state) => state.setAvatar);
+  const { setAvatar: setAvatarContext } = useAvatarContext();
 
   useEffect(() => {
     setAvatar(data.avatar);
@@ -42,7 +42,7 @@ export function ProfilePhotoForm({ data }: ProfileFormProps) {
     try {
       await updateProfilePhoto(pendingAvatar);
       setAvatar(pendingAvatar);
-      setAvatarStore(pendingAvatar);
+      setAvatarContext(pendingAvatar);
       setPendingAvatar(null);
       toast.success(t("photoUpdatedDescription"), { duration: 5000 });
       router.refresh();

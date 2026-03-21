@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import useAvatarStore from "@/store/useAvatarStore";
+import { useAvatarContext } from "@/context/avatar-context";
 
 type Props = {
   avatar: string | null;
@@ -10,17 +9,8 @@ type Props = {
 };
 
 export function ProfileHeroAvatar({ avatar, name }: Props) {
-  const getAvatar = useAvatarStore((state) => state.avatar);
-  const setAvatar = useAvatarStore((state) => state.setAvatar);
-  const [currentAvatar, setCurrentAvatar] = useState(getAvatar || avatar);
-
-  useEffect(() => {
-    if (avatar) setAvatar(avatar);
-  }, [avatar, setAvatar]);
-
-  useEffect(() => {
-    setCurrentAvatar(getAvatar || avatar);
-  }, [getAvatar, avatar]);
+  const { avatar: contextAvatar } = useAvatarContext();
+  const currentAvatar = contextAvatar || avatar;
 
   const initials = name
     ? name
