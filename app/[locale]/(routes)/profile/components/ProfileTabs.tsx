@@ -3,7 +3,6 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Users } from "@prisma/client";
 import { cn } from "@/lib/utils";
 import { UserCircle, Lock, Globe, Code2 } from "lucide-react";
 
@@ -20,7 +19,6 @@ const TAB_ICONS: Record<Tab, React.ElementType> = {
 };
 
 type Props = {
-  data: Users;
   profileContent: React.ReactNode;
   securityContent: React.ReactNode;
   preferencesContent: React.ReactNode;
@@ -28,7 +26,6 @@ type Props = {
 };
 
 export function ProfileTabs({
-  data,
   profileContent,
   securityContent,
   preferencesContent,
@@ -38,7 +35,9 @@ export function ProfileTabs({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const activeTab = (searchParams.get("tab") as Tab) ?? "profile";
+  const TAB_IDS: Tab[] = ["profile", "security", "preferences", "developer"];
+  const raw = searchParams.get("tab");
+  const activeTab: Tab = TAB_IDS.includes(raw as Tab) ? (raw as Tab) : "profile";
 
   const tabs: { id: Tab; label: string; desc: string }[] = [
     { id: "profile", label: t("tabs.profile"), desc: t("tabs.profileDesc") },
@@ -65,7 +64,11 @@ export function ProfileTabs({
           return (
             <button
               key={id}
-              onClick={() => router.push(`?tab=${id}`)}
+              onClick={() => {
+                const params = new URLSearchParams(searchParams.toString());
+                params.set("tab", id);
+                router.push(`?${params.toString()}`);
+              }}
               className={cn(
                 "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-left transition-colors",
                 activeTab === id
@@ -89,7 +92,11 @@ export function ProfileTabs({
             return (
               <button
                 key={id}
-                onClick={() => router.push(`?tab=${id}`)}
+                onClick={() => {
+                  const params = new URLSearchParams(searchParams.toString());
+                  params.set("tab", id);
+                  router.push(`?${params.toString()}`);
+                }}
                 className={cn(
                   "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs whitespace-nowrap transition-colors",
                   activeTab === id
