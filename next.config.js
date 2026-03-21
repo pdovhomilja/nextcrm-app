@@ -9,8 +9,7 @@ const nextConfig = {
       { protocol: "https", hostname: "localhost" },
       { protocol: "https", hostname: "res.cloudinary.com" },
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
-      { protocol: "https", hostname: "uploadthing.com" },
-      { protocol: "https", hostname: "utfs.io" },
+      { protocol: "https", hostname: "minio-cwg0o4ss0scoccgwso8sk004.coolify.cz" },
     ],
   },
 };
