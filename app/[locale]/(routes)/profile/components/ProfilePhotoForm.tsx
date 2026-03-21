@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 
 import { toast } from "sonner";
 import { FileUploaderDropzone } from "@/components/ui/file-uploader-dropzone";
+import { Button } from "@/components/ui/button";
 
 import useAvatarStore from "@/store/useAvatarStore";
 import { updateProfilePhoto } from "@/actions/user/update-profile-photo";
@@ -18,6 +19,8 @@ interface ProfileFormProps {
 
 export function ProfilePhotoForm({ data }: ProfileFormProps) {
   const [avatar, setAvatar] = useState(data.avatar);
+  const [pendingAvatar, setPendingAvatar] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const t = useTranslations("ProfileForm");
 
   const router = useRouter();
@@ -25,37 +28,68 @@ export function ProfilePhotoForm({ data }: ProfileFormProps) {
 
   useEffect(() => {
     setAvatar(data.avatar);
-  }, [data.avatar, toast]);
+  }, [data.avatar]);
 
-  const handleUploadSuccess = async (newAvatar: string) => {
+  // Upload completes — show preview, wait for user to confirm
+  const handleUploadSuccess = (newAvatar: string) => {
+    setPendingAvatar(newAvatar);
+  };
+
+  // Save button — persist to DB
+  const handleSave = async () => {
+    if (!pendingAvatar) return;
+    setSaving(true);
     try {
-      setAvatar(newAvatar);
-      setAvatarStore(newAvatar);
-      await updateProfilePhoto(newAvatar);
+      await updateProfilePhoto(pendingAvatar);
+      setAvatar(pendingAvatar);
+      setAvatarStore(pendingAvatar);
+      setPendingAvatar(null);
       toast.success(t("photoUpdatedDescription"), { duration: 5000 });
+      router.refresh();
     } catch (e) {
       console.log(e);
       toast.error(t("photoErrorDescription"), { duration: 5000 });
     } finally {
-      router.refresh();
+      setSaving(false);
     }
   };
 
+  // Cancel — discard pending upload
+  const handleCancel = () => {
+    setPendingAvatar(null);
+  };
+
+  const previewUrl = pendingAvatar ?? avatar ?? "/images/nouser.png";
+
   return (
-    <div className="flex items-center space-x-5">
-      <div>
+    <div className="flex items-start gap-6">
+      <div className="flex flex-col items-center gap-2">
         <Image
-          src={avatar || "/images/nouser.png"}
+          src={previewUrl}
           alt="avatar"
           width={100}
           height={100}
+          className="rounded-full object-cover border border-border"
         />
+        {pendingAvatar && (
+          <span className="text-xs text-muted-foreground">Preview</span>
+        )}
       </div>
-      <div>
+      <div className="flex flex-col gap-3">
         <FileUploaderDropzone
           uploader={"profilePhotoUploader"}
           onUploadSuccess={handleUploadSuccess}
         />
+        {pendingAvatar && (
+          <div className="flex gap-2">
+            <Button onClick={handleSave} disabled={saving} size="sm">
+              {saving ? "Saving..." : "Save photo"}
+            </Button>
+            <Button onClick={handleCancel} variant="outline" size="sm" disabled={saving}>
+              Cancel
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
