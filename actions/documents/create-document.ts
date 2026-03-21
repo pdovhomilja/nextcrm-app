@@ -31,5 +31,5 @@ export async function createDocument(input: CreateDocumentInput) {
     },
   });
 
-  revalidatePath("/[locale]/documents");
+  revalidatePath("/[locale]/(routes)/documents");
 }
