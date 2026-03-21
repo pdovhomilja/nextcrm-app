@@ -20,7 +20,7 @@ export const FileUploaderDropzone = ({ uploader, onUploadSuccess }: Props) => (
       // Do something with the response
       console.log("Files: ", res);
       if (onUploadSuccess && res) {
-        onUploadSuccess(res[0]?.url);
+        onUploadSuccess(res[0]?.ufsUrl ?? res[0]?.url);
       }
     }}
     onUploadError={(error: Error) => {

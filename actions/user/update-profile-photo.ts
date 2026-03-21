@@ -16,5 +16,5 @@ export async function updateProfilePhoto(avatar: string) {
     data: { avatar },
   });
 
-  revalidatePath("/[locale]/(routes)/profile");
+  revalidatePath("/[locale]/profile");
 }
