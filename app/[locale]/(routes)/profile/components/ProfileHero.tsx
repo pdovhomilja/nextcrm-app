@@ -1,9 +1,9 @@
 // app/[locale]/(routes)/profile/components/ProfileHero.tsx
-import { Users } from "@prisma/client";
+import { User } from "@prisma/client";
 import { getTranslations } from "next-intl/server";
 
 type Props = {
-  data: Users;
+  data: User;
 };
 
 export async function ProfileHero({ data }: Props) {
@@ -24,7 +24,7 @@ export async function ProfileHero({ data }: Props) {
         {data.avatar ? (
           <img
             src={data.avatar}
-            alt={data.name ?? ""}
+            alt={data.name ?? "User avatar"}
             className="h-full w-full object-cover"
           />
         ) : (
