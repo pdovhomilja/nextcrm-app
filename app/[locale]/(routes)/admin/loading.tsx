@@ -1,9 +1,5 @@
-import LoadingComponent from "@/components/LoadingComponent";
+import AdminSkeleton from "@/components/skeletons/admin-skeleton";
 
-export default function loading() {
-  return (
-    <div className="flex w-full h-screen justify-center items-center">
-      <LoadingComponent />
-    </div>
-  );
+export default function Loading() {
+  return <AdminSkeleton />;
 }
