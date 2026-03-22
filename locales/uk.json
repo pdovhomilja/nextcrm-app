@@ -266,7 +266,11 @@
     "profile": "Профіль",
     "passwordChange": "Зміна пароля",
     "language": "Мова",
-    "openAiIntegration": "Інтеграція OpenAI"
+    "openAiIntegration": "Інтеграція OpenAI",
+    "tabs": {
+      "emails": "Email Accounts",
+      "emailsDesc": "Manage your connected IMAP mailboxes"
+    }
   },
   "ProfileForm": {
     "fullName": "Повне ім'я",

@@ -1,25 +1,14 @@
 "use client";
 import * as React from "react";
-import {
-  AlertCircle,
-  Archive,
-  ArchiveX,
-  File,
-  Inbox,
-  MessagesSquare,
-  PenBox,
-  Search,
-  Send,
-  ShoppingCart,
-  Trash2,
-  Users2,
-} from "lucide-react";
+import { Inbox, PenBox, Search, Send } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 
 import { AccountSwitcher } from "@/app/[locale]/(routes)/emails/components/account-switcher";
+import { ComposeModal } from "@/app/[locale]/(routes)/emails/components/ComposeModal";
 import { MailDisplay } from "@/app/[locale]/(routes)/emails/components/mail-display";
 import { MailList } from "@/app/[locale]/(routes)/emails/components/mail-list";
 import { Nav } from "@/app/[locale]/(routes)/emails/components/nav";
-import { Mail } from "@/app/[locale]/(routes)/emails/data";
+import type { ConnectedAccount, Mail } from "@/app/[locale]/(routes)/emails/data";
 import { useMail } from "@/app/[locale]/(routes)/emails/use-mail";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
@@ -33,12 +22,12 @@ import {
 } from "@/components/ui/resizable";
 
 interface MailProps {
-  accounts: {
-    label: string;
-    email: string;
-    icon: React.ReactNode;
-  }[];
+  accounts: ConnectedAccount[];
   mails: Mail[];
+  activeAccountId: string | null;
+  activeFolder: "INBOX" | "SENT";
+  page: number;
+  totalPages: number;
   defaultLayout: number[] | undefined;
   defaultCollapsed?: boolean;
   navCollapsedSize: number;
@@ -47,12 +36,24 @@ interface MailProps {
 export function MailComponent({
   accounts,
   mails,
+  activeAccountId,
+  activeFolder,
+  page,
+  totalPages,
   defaultLayout = [20, 35, 45],
   defaultCollapsed = false,
   navCollapsedSize,
 }: MailProps) {
   const [isCollapsed, setIsCollapsed] = React.useState(defaultCollapsed);
   const [mail] = useMail();
+  const searchParams = useSearchParams();
+
+  function folderHref(folder: string) {
+    const p = new URLSearchParams(searchParams.toString());
+    p.set("folder", folder);
+    p.delete("page");
+    return `?${p.toString()}`;
+  }
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -91,19 +92,28 @@ export function MailComponent({
               className="w-full"
               // className={cn("w-full flex-1", isCollapsed ? "w-full" : "w-[80%]")}
             >
-              <AccountSwitcher isCollapsed={isCollapsed} accounts={accounts} />
+              <AccountSwitcher
+                isCollapsed={isCollapsed}
+                accounts={accounts}
+                activeAccountId={activeAccountId}
+              />
             </div>
           </div>
           <Separator />
+          {activeAccountId && !isCollapsed && (
+            <div className="p-2">
+              <ComposeModal accountId={activeAccountId} />
+            </div>
+          )}
           <div className={cn(isCollapsed ? "block" : "hidden")}>
             <Nav
               isCollapsed={isCollapsed}
               links={[
                 {
                   title: "Compose",
-                  label: "",
                   icon: PenBox,
                   variant: "ghost",
+                  href: "#",
                 },
               ]}
             />
@@ -113,75 +123,15 @@ export function MailComponent({
             links={[
               {
                 title: "Inbox",
-                label: "128",
                 icon: Inbox,
-                variant: "default",
-              },
-              {
-                title: "Drafts",
-                label: "9",
-                icon: File,
-                variant: "ghost",
+                variant: activeFolder === "INBOX" ? "default" : "ghost",
+                href: folderHref("INBOX"),
               },
               {
                 title: "Sent",
-                label: "",
                 icon: Send,
-                variant: "ghost",
-              },
-              {
-                title: "Junk",
-                label: "23",
-                icon: ArchiveX,
-                variant: "ghost",
-              },
-              {
-                title: "Trash",
-                label: "",
-                icon: Trash2,
-                variant: "ghost",
-              },
-              {
-                title: "Archive",
-                label: "",
-                icon: Archive,
-                variant: "ghost",
-              },
-            ]}
-          />
-          <Separator />
-          <Nav
-            isCollapsed={isCollapsed}
-            links={[
-              {
-                title: "Social",
-                label: "972",
-                icon: Users2,
-                variant: "ghost",
-              },
-              {
-                title: "Updates",
-                label: "342",
-                icon: AlertCircle,
-                variant: "ghost",
-              },
-              {
-                title: "Forums",
-                label: "128",
-                icon: MessagesSquare,
-                variant: "ghost",
-              },
-              {
-                title: "Shopping",
-                label: "8",
-                icon: ShoppingCart,
-                variant: "ghost",
-              },
-              {
-                title: "Promotions",
-                label: "21",
-                icon: Archive,
-                variant: "ghost",
+                variant: activeFolder === "SENT" ? "default" : "ghost",
+                href: folderHref("SENT"),
               },
             ]}
           />
@@ -190,7 +140,9 @@ export function MailComponent({
         <ResizablePanel defaultSize={`${defaultLayout[1]}%`} minSize="30%">
           <Tabs defaultValue="all">
             <div className="flex items-center px-4 py-2">
-              <h1 className="text-xl font-bold">Inbox</h1>
+              <h1 className="text-xl font-bold">
+                {activeFolder === "SENT" ? "Sent" : "Inbox"}
+              </h1>
               <TabsList className="ml-auto">
                 <TabsTrigger
                   value="all"
@@ -216,10 +168,10 @@ export function MailComponent({
               </form>
             </div>
             <TabsContent value="all" className="m-0">
-              <MailList items={mails} />
+              <MailList items={mails} page={page} totalPages={totalPages} />
             </TabsContent>
             <TabsContent value="unread" className="m-0">
-              <MailList items={mails.filter((item) => !item.read)} />
+              <MailList items={mails.filter((item) => !item.isRead)} page={page} totalPages={totalPages} />
             </TabsContent>
           </Tabs>
         </ResizablePanel>
@@ -227,6 +179,7 @@ export function MailComponent({
         <ResizablePanel defaultSize={`${defaultLayout[2]}%`} minSize="30%">
           <MailDisplay
             mail={mails.find((item) => item.id === mail.selected) || null}
+            activeAccountId={activeAccountId}
           />
         </ResizablePanel>
       </ResizablePanelGroup>

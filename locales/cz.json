@@ -269,7 +269,11 @@
     "profile": "Profil",
     "passwordChange": "Změna hesla",
     "language": "Jazyk",
-    "openAiIntegration": "Integrace OpenAI"
+    "openAiIntegration": "Integrace OpenAI",
+    "tabs": {
+      "emails": "Email Accounts",
+      "emailsDesc": "Manage your connected IMAP mailboxes"
+    }
   },
   "ProfileForm": {
     "fullName": "Celé jméno",

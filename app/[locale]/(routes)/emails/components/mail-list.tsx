@@ -1,19 +1,30 @@
-import { ComponentProps } from "react";
+"use client";
+
 import { formatDistanceToNow } from "date-fns";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { Mail } from "@/app/[locale]/(routes)/emails/data";
+import type { Mail } from "@/app/[locale]/(routes)/emails/data";
 import { useMail } from "@/app/[locale]/(routes)/emails/use-mail";
 
 interface MailListProps {
   items: Mail[];
+  page: number;
+  totalPages: number;
 }
 
-export function MailList({ items }: MailListProps) {
+export function MailList({ items, page, totalPages }: MailListProps) {
   const [mail, setMail] = useMail();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  function navigate(toPage: number) {
+    const p = new URLSearchParams(searchParams.toString());
+    p.set("page", String(toPage));
+    router.push(`?${p.toString()}`);
+  }
 
   return (
     <ScrollArea className="h-full">
@@ -35,8 +46,10 @@ export function MailList({ items }: MailListProps) {
             <div className="flex w-full flex-col gap-1">
               <div className="flex items-center">
                 <div className="flex items-center gap-2">
-                  <div className="font-semibold">{item.name}</div>
-                  {!item.read && (
+                  <div className="font-semibold">
+                    {item.fromName ?? item.fromEmail ?? "Unknown"}
+                  </div>
+                  {!item.isRead && (
                     <span className="flex h-2 w-2 rounded-full bg-blue-600" />
                   )}
                 </div>
@@ -48,42 +61,43 @@ export function MailList({ items }: MailListProps) {
                       : "text-muted-foreground"
                   )}
                 >
-                  {formatDistanceToNow(new Date(item.date), {
-                    addSuffix: true,
-                  })}
+                  {item.sentAt
+                    ? formatDistanceToNow(new Date(item.sentAt), {
+                        addSuffix: true,
+                      })
+                    : ""}
                 </div>
               </div>
-              <div className="text-xs font-medium">{item.subject}</div>
-            </div>
-            <div className="line-clamp-2 text-xs text-muted-foreground">
-              {item.text.substring(0, 300)}
-            </div>
-            {item.labels.length ? (
-              <div className="flex items-center gap-2">
-                {item.labels.map((label) => (
-                  <Badge key={label} variant={getBadgeVariantFromLabel(label)}>
-                    {label}
-                  </Badge>
-                ))}
+              <div className="text-xs font-medium">
+                {item.subject ?? "(no subject)"}
               </div>
-            ) : null}
+            </div>
           </button>
         ))}
       </div>
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between border-t px-4 py-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={page <= 1}
+            onClick={() => navigate(page - 1)}
+          >
+            Previous
+          </Button>
+          <span className="text-xs text-muted-foreground">
+            {page} / {totalPages}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={page >= totalPages}
+            onClick={() => navigate(page + 1)}
+          >
+            Next
+          </Button>
+        </div>
+      )}
     </ScrollArea>
   );
-}
-
-function getBadgeVariantFromLabel(
-  label: string
-): ComponentProps<typeof Badge>["variant"] {
-  if (["work"].includes(label.toLowerCase())) {
-    return "default";
-  }
-
-  if (["personal"].includes(label.toLowerCase())) {
-    return "outline";
-  }
-
-  return "secondary";
 }

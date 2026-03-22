@@ -273,10 +273,12 @@
       "security": "Security",
       "preferences": "Preferences",
       "developer": "Developer",
+      "emails": "Email Accounts",
       "profileDesc": "Update your photo and personal details",
       "securityDesc": "Manage your password and account security",
       "preferencesDesc": "Customize your language and display settings",
-      "developerDesc": "Manage API keys and developer integrations"
+      "developerDesc": "Manage API keys and developer integrations",
+      "emailsDesc": "Manage your connected IMAP mailboxes"
     },
     "cards": {
       "photo": "Profile Photo",
