@@ -1,6 +1,6 @@
 "use client";
 
-import SuspenseLoading from "../loadings/suspense";
+import { Skeleton } from "../ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -23,8 +23,10 @@ const LoadingModal = ({ isOpen, title, description }: LoadingModalProps) => {
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        <div className="flex justify-center py-6">
-          <SuspenseLoading />
+        <div className="flex flex-col gap-2 w-full">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4" />
         </div>
       </DialogContent>
     </Dialog>

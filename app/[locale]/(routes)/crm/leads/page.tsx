@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import SuspenseLoading from "@/components/loadings/suspense";
+import CrmTableSkeleton from "@/components/skeletons/crm-table-skeleton";
 
 import Container from "../../components/ui/Container";
 import LeadsView from "../components/LeadsView";
@@ -20,7 +20,7 @@ const LeadsPage = async () => {
       title={t("leads.pageTitle")}
       description={t("leads.pageDescription")}
     >
-      <Suspense fallback={<SuspenseLoading />}>
+      <Suspense fallback={<CrmTableSkeleton />}>
         <LeadsView crmData={crmData} data={leads} />
       </Suspense>
     </Container>

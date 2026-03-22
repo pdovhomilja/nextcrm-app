@@ -54,7 +54,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import AlertModal from "@/components/modals/alert-modal";
-import LoadingComponent from "@/components/LoadingComponent";
+import { Skeleton } from "@/components/ui/skeleton";
 import { DialogHeader } from "@/components/ui/dialog-document-view";
 import {
   Sheet,
@@ -481,7 +481,13 @@ const Kanban = (props: any) => {
     }
   };
 
-  if (isLoading) return <LoadingComponent />;
+  if (isLoading) return (
+    <div className="flex flex-col gap-2 py-4">
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-3/4" />
+    </div>
+  );
 
   return (
     <>

@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import SuspenseLoading from "@/components/loadings/suspense";
+import CrmTableSkeleton from "@/components/skeletons/crm-table-skeleton";
 import Container from "../../components/ui/Container";
 import TargetListsView from "./components/TargetListsView";
 import { getTargetLists } from "@/actions/crm/get-target-lists";
@@ -12,7 +12,7 @@ const TargetListsPage = async () => {
       title="Target Lists"
       description="Manage your target lists for campaigns and outreach"
     >
-      <Suspense fallback={<SuspenseLoading />}>
+      <Suspense fallback={<CrmTableSkeleton />}>
         <TargetListsView data={targetLists} />
       </Suspense>
     </Container>

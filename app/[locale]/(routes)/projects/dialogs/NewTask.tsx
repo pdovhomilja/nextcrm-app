@@ -1,6 +1,6 @@
 "use client";
 
-import LoadingComponent from "@/components/LoadingComponent";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
@@ -129,7 +129,11 @@ const NewTaskDialog = ({ boards }: Props) => {
           </DialogDescription>
         </DialogHeader>
         {isLoading ? (
-          <LoadingComponent />
+          <div className="flex flex-col gap-2 py-4">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
         ) : (
           <Form {...form}>
             <form

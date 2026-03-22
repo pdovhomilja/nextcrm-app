@@ -1,11 +1,11 @@
 import React, { Suspense } from "react";
 
 import SearchResult from "./components/SearchResult";
-import SuspenseLoading from "@/components/loadings/suspense";
+import SearchSkeleton from "@/components/skeletons/search-skeleton";
 
 const FulltextPage = () => {
   return (
-    <Suspense fallback={<SuspenseLoading />}>
+    <Suspense fallback={<SearchSkeleton />}>
       <SearchResult />
     </Suspense>
   );

@@ -34,7 +34,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import SuspenseLoading from "@/components/loadings/suspense";
+import { Skeleton } from "@/components/ui/skeleton";
 import fetcher from "@/lib/fetcher";
 import useSWR from "swr";
 import { updateOpportunity } from "@/actions/crm/opportunities/update-opportunity";
@@ -100,8 +100,10 @@ export function UpdateOpportunityForm({
 
   if (isLoadingOpportunities)
     return (
-      <div>
-        <SuspenseLoading />
+      <div className="flex flex-col gap-2 py-4">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-3/4" />
       </div>
     );
   //console.log(opportunities, "opportunities");

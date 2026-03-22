@@ -1,6 +1,6 @@
 import React, { Suspense } from "react";
 import Container from "../../components/ui/Container";
-import SuspenseLoading from "@/components/loadings/suspense";
+import CrmTableSkeleton from "@/components/skeletons/crm-table-skeleton";
 import { getAllCrmData } from "@/actions/crm/get-crm-data";
 import { getContractsWithIncludes } from "@/actions/crm/get-contracts";
 import ContractsView from "../components/ContractsView";
@@ -15,7 +15,7 @@ const ContractsPage = async () => {
       title={t("contracts.pageTitle")}
       description={t("contracts.pageDescription")}
     >
-      <Suspense fallback={<SuspenseLoading />}>
+      <Suspense fallback={<CrmTableSkeleton />}>
         <ContractsView crmData={crmData} data={contracts} />
       </Suspense>
     </Container>
