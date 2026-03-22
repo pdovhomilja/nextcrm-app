@@ -934,6 +934,7 @@ model Email {
   sentAt          DateTime?
   isRead          Boolean     @default(false)
   isDeleted       Boolean     @default(false)
+  updatedAt       DateTime    @updatedAt
   createdAt       DateTime    @default(now())
 
   account   EmailAccount     @relation(fields: [emailAccountId], references: [id], onDelete: Cascade)
@@ -948,7 +949,7 @@ model Email {
   @@index([folder])
   @@index([isDeleted])
   @@index([sentAt])
-  @@index([userId, folder, isDeleted])
+  @@index([userId, folder, isDeleted, isRead])
 }
 
 model EmailEmbedding {
