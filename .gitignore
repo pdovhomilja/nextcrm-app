@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/node-compile-cache
 /.pnp
 .pnp.js
 
@@ -62,5 +63,9 @@ test-results/
 playwright-report/
 playwright/.cache/
 playwright/.auth/
+
+#jest
+/jest_dy
+/jiti1
 
 .worktrees/
