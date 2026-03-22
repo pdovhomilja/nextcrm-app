@@ -1,5 +1,8 @@
-import { addDays, nextSaturday } from "date-fns";
+"use client";
 
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { addDays, nextSaturday } from "date-fns";
 import { format, addHours } from "date-fns";
 
 import {
@@ -38,7 +41,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Mail } from "@/app/[locale]/(routes)/emails/data";
+import type { Mail } from "@/app/[locale]/(routes)/emails/data";
+import { getEmail, deleteEmail } from "@/actions/emails/messages";
 
 interface MailDisplayProps {
   mail: Mail | null;
@@ -46,13 +50,34 @@ interface MailDisplayProps {
 
 export function MailDisplay({ mail }: MailDisplayProps) {
   const today = new Date();
+  const router = useRouter();
 
-  const senderName = mail?.fromName ?? mail?.fromEmail ?? "Unknown";
+  const [fullEmail, setFullEmail] = useState<Awaited<ReturnType<typeof getEmail>> | null>(null);
+
+  useEffect(() => {
+    if (!mail?.id) {
+      setFullEmail(null);
+      return;
+    }
+    getEmail(mail.id).then(setFullEmail).catch(() => setFullEmail(null));
+  }, [mail?.id]);
+
+  const senderName = fullEmail?.fromName ?? fullEmail?.fromEmail ?? "?";
   const senderInitials = senderName
     .split(" ")
-    .map((chunk) => chunk[0])
+    .map((c) => c[0])
     .join("")
     .toUpperCase();
+
+  async function handleDelete() {
+    if (!mail?.id) return;
+    try {
+      await deleteEmail(mail.id);
+      router.refresh();
+    } catch (e) {
+      console.error("Failed to delete email", e);
+    }
+  }
 
   return (
     <div className="flex h-full flex-col">
@@ -78,7 +103,12 @@ export function MailDisplay({ mail }: MailDisplayProps) {
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" disabled={!mail}>
+              <Button
+                variant="ghost"
+                size="icon"
+                disabled={!mail}
+                onClick={handleDelete}
+              >
                 <Trash2 className="h-4 w-4" />
                 <span className="sr-only">Move to trash</span>
               </Button>
@@ -149,7 +179,12 @@ export function MailDisplay({ mail }: MailDisplayProps) {
         <div className="ml-auto flex items-center gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" disabled={!mail}>
+              <Button
+                variant="ghost"
+                size="icon"
+                disabled={!mail}
+                onClick={() => console.log("Reply — ComposeModal coming in Task 9")}
+              >
                 <Reply className="h-4 w-4" />
                 <span className="sr-only">Reply</span>
               </Button>
@@ -167,7 +202,12 @@ export function MailDisplay({ mail }: MailDisplayProps) {
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" disabled={!mail}>
+              <Button
+                variant="ghost"
+                size="icon"
+                disabled={!mail}
+                onClick={() => console.log("Forward — ComposeModal coming in Task 9")}
+              >
                 <Forward className="h-4 w-4" />
                 <span className="sr-only">Forward</span>
               </Button>
@@ -201,22 +241,40 @@ export function MailDisplay({ mail }: MailDisplayProps) {
                 <AvatarFallback>{senderInitials}</AvatarFallback>
               </Avatar>
               <div className="grid gap-1">
-                <div className="font-semibold">{senderName}</div>
-                <div className="line-clamp-1 text-xs">{mail.subject}</div>
+                <div className="font-semibold">
+                  {fullEmail?.fromName ?? fullEmail?.fromEmail ?? "(unknown)"}
+                </div>
                 <div className="line-clamp-1 text-xs">
-                  <span className="font-medium">From:</span> {mail.fromEmail}
+                  {fullEmail?.subject ?? "(no subject)"}
+                </div>
+                <div className="line-clamp-1 text-xs">
+                  <span className="font-medium">From:</span>{" "}
+                  {fullEmail?.fromEmail ?? ""}
                 </div>
               </div>
             </div>
-            {mail.sentAt && (
+            {fullEmail?.sentAt && (
               <div className="ml-auto text-xs text-muted-foreground">
-                {format(new Date(mail.sentAt), "PPpp")}
+                {format(new Date(fullEmail.sentAt), "PPpp")}
               </div>
             )}
           </div>
           <Separator />
-          <div className="flex-1 whitespace-pre-wrap p-4 text-sm text-muted-foreground">
-            Select an email to read its full content.
+          <div className="flex-1 overflow-auto">
+            {fullEmail?.bodyHtml ? (
+              <iframe
+                srcDoc={fullEmail.bodyHtml}
+                sandbox="allow-popups allow-popups-to-escape-sandbox"
+                referrerPolicy="no-referrer"
+                className="w-full border-0"
+                style={{ maxHeight: "600px", overflowY: "auto" }}
+                title="Email body"
+              />
+            ) : (
+              <pre className="whitespace-pre-wrap p-4 text-sm font-sans">
+                {fullEmail?.bodyText ?? (fullEmail ? "(No content)" : "Loading...")}
+              </pre>
+            )}
           </div>
           <Separator className="mt-auto" />
           <div className="p-4">
@@ -224,7 +282,7 @@ export function MailDisplay({ mail }: MailDisplayProps) {
               <div className="grid gap-4">
                 <Textarea
                   className="p-4"
-                  placeholder={`Reply to ${senderName}...`}
+                  placeholder={`Reply to ${fullEmail?.fromName ?? fullEmail?.fromEmail ?? "..."}...`}
                 />
                 <div className="flex items-center">
                   <Label
