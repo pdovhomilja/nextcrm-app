@@ -1,6 +1,7 @@
 import React, { Suspense } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { MailComponent } from "./components/mail";
 import Container from "../components/ui/Container";
 import EmailsSkeleton from "@/components/skeletons/emails-skeleton";
@@ -53,6 +54,25 @@ const EmailRoute = async ({
   const defaultCollapsed = collapsed ? JSON.parse(collapsed.value) : undefined;
 
   const connectedAccounts = await getEmailAccounts();
+
+  if (connectedAccounts.length === 0) {
+    return (
+      <Container title={t("emails")} description="Your connected mailboxes">
+        <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
+          <p className="text-muted-foreground text-sm">
+            You don&apos;t have any mailbox registered yet.
+          </p>
+          <Link
+            href="/profile"
+            className="text-sm font-medium underline underline-offset-4"
+          >
+            Go to your profile to set up your first mailbox
+          </Link>
+        </div>
+      </Container>
+    );
+  }
+
   const activeAccountId = params.accountId ?? connectedAccounts[0]?.id;
   const activeFolder = params.folder === "SENT" ? EmailFolder.SENT : EmailFolder.INBOX;
 
