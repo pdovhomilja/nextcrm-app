@@ -47,6 +47,13 @@ interface MailDisplayProps {
 export function MailDisplay({ mail }: MailDisplayProps) {
   const today = new Date();
 
+  const senderName = mail?.fromName ?? mail?.fromEmail ?? "Unknown";
+  const senderInitials = senderName
+    .split(" ")
+    .map((chunk) => chunk[0])
+    .join("")
+    .toUpperCase();
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center p-2">
@@ -190,31 +197,26 @@ export function MailDisplay({ mail }: MailDisplayProps) {
           <div className="flex items-start p-4">
             <div className="flex items-start gap-4 text-sm">
               <Avatar>
-                <AvatarImage alt={mail.name} />
-                <AvatarFallback>
-                  {mail.name
-                    .split(" ")
-                    .map((chunk) => chunk[0])
-                    .join("")}
-                </AvatarFallback>
+                <AvatarImage alt={senderName} />
+                <AvatarFallback>{senderInitials}</AvatarFallback>
               </Avatar>
               <div className="grid gap-1">
-                <div className="font-semibold">{mail.name}</div>
+                <div className="font-semibold">{senderName}</div>
                 <div className="line-clamp-1 text-xs">{mail.subject}</div>
                 <div className="line-clamp-1 text-xs">
-                  <span className="font-medium">Reply-To:</span> {mail.email}
+                  <span className="font-medium">From:</span> {mail.fromEmail}
                 </div>
               </div>
             </div>
-            {mail.date && (
+            {mail.sentAt && (
               <div className="ml-auto text-xs text-muted-foreground">
-                {format(new Date(mail.date), "PPpp")}
+                {format(new Date(mail.sentAt), "PPpp")}
               </div>
             )}
           </div>
           <Separator />
-          <div className="flex-1 whitespace-pre-wrap p-4 text-sm">
-            {mail.text}
+          <div className="flex-1 whitespace-pre-wrap p-4 text-sm text-muted-foreground">
+            Select an email to read its full content.
           </div>
           <Separator className="mt-auto" />
           <div className="p-4">
@@ -222,7 +224,7 @@ export function MailDisplay({ mail }: MailDisplayProps) {
               <div className="grid gap-4">
                 <Textarea
                   className="p-4"
-                  placeholder={`Reply ${mail.name}...`}
+                  placeholder={`Reply to ${senderName}...`}
                 />
                 <div className="flex items-center">
                   <Label

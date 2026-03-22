@@ -1,13 +1,13 @@
 import { atom, useAtom } from "jotai";
 
-import { Mail, mails } from "@/app/[locale]/(routes)/emails//data";
+import { Mail } from "@/app/[locale]/(routes)/emails/data";
 
 type Config = {
   selected: Mail["id"] | null;
 };
 
 const configAtom = atom<Config>({
-  selected: mails[0].id,
+  selected: null,
 });
 
 export function useMail() {

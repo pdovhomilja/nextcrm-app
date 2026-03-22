@@ -19,7 +19,7 @@ import { AccountSwitcher } from "@/app/[locale]/(routes)/emails/components/accou
 import { MailDisplay } from "@/app/[locale]/(routes)/emails/components/mail-display";
 import { MailList } from "@/app/[locale]/(routes)/emails/components/mail-list";
 import { Nav } from "@/app/[locale]/(routes)/emails/components/nav";
-import { Mail } from "@/app/[locale]/(routes)/emails/data";
+import type { ConnectedAccount, Mail } from "@/app/[locale]/(routes)/emails/data";
 import { useMail } from "@/app/[locale]/(routes)/emails/use-mail";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
@@ -33,12 +33,10 @@ import {
 } from "@/components/ui/resizable";
 
 interface MailProps {
-  accounts: {
-    label: string;
-    email: string;
-    icon: React.ReactNode;
-  }[];
+  accounts: ConnectedAccount[];
   mails: Mail[];
+  activeAccountId: string | null;
+  activeFolder: "INBOX" | "SENT";
   defaultLayout: number[] | undefined;
   defaultCollapsed?: boolean;
   navCollapsedSize: number;
@@ -47,6 +45,8 @@ interface MailProps {
 export function MailComponent({
   accounts,
   mails,
+  activeAccountId,
+  activeFolder,
   defaultLayout = [20, 35, 45],
   defaultCollapsed = false,
   navCollapsedSize,
@@ -91,7 +91,11 @@ export function MailComponent({
               className="w-full"
               // className={cn("w-full flex-1", isCollapsed ? "w-full" : "w-[80%]")}
             >
-              <AccountSwitcher isCollapsed={isCollapsed} accounts={accounts} />
+              <AccountSwitcher
+                isCollapsed={isCollapsed}
+                accounts={accounts}
+                activeAccountId={activeAccountId}
+              />
             </div>
           </div>
           <Separator />
@@ -113,9 +117,9 @@ export function MailComponent({
             links={[
               {
                 title: "Inbox",
-                label: "128",
+                label: "",
                 icon: Inbox,
-                variant: "default",
+                variant: activeFolder === "INBOX" ? "default" : "ghost",
               },
               {
                 title: "Drafts",
@@ -127,7 +131,7 @@ export function MailComponent({
                 title: "Sent",
                 label: "",
                 icon: Send,
-                variant: "ghost",
+                variant: activeFolder === "SENT" ? "default" : "ghost",
               },
               {
                 title: "Junk",
@@ -190,7 +194,9 @@ export function MailComponent({
         <ResizablePanel defaultSize={`${defaultLayout[1]}%`} minSize="30%">
           <Tabs defaultValue="all">
             <div className="flex items-center px-4 py-2">
-              <h1 className="text-xl font-bold">Inbox</h1>
+              <h1 className="text-xl font-bold">
+                {activeFolder === "SENT" ? "Sent" : "Inbox"}
+              </h1>
               <TabsList className="ml-auto">
                 <TabsTrigger
                   value="all"
@@ -219,7 +225,7 @@ export function MailComponent({
               <MailList items={mails} />
             </TabsContent>
             <TabsContent value="unread" className="m-0">
-              <MailList items={mails.filter((item) => !item.read)} />
+              <MailList items={mails.filter((item) => !item.isRead)} />
             </TabsContent>
           </Tabs>
         </ResizablePanel>
