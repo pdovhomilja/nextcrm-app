@@ -33,7 +33,10 @@ export function connectImap(account: ImapAccount): Promise<Imap> {
       authTimeout: 15000,
       connTimeout: 15000,
     });
-    imap.once("ready", () => resolve(imap));
+    imap.once("ready", () => {
+      imap.removeAllListeners("error");
+      resolve(imap);
+    });
     imap.once("error", reject);
     imap.connect();
   });
@@ -83,7 +86,8 @@ export function fetchHeaders(
                 })),
                 sentAt: parsed.date || undefined,
               });
-            } catch {
+            } catch (e) {
+              console.warn(`[imap-utils] Failed to parse header for UID ${uid}:`, e);
               // skip unparseable header
             }
           })()
