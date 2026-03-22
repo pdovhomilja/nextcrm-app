@@ -1,19 +1,7 @@
 "use client";
 import * as React from "react";
-import {
-  AlertCircle,
-  Archive,
-  ArchiveX,
-  File,
-  Inbox,
-  MessagesSquare,
-  PenBox,
-  Search,
-  Send,
-  ShoppingCart,
-  Trash2,
-  Users2,
-} from "lucide-react";
+import { Inbox, PenBox, Search, Send } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 
 import { AccountSwitcher } from "@/app/[locale]/(routes)/emails/components/account-switcher";
 import { ComposeModal } from "@/app/[locale]/(routes)/emails/components/ComposeModal";
@@ -58,6 +46,14 @@ export function MailComponent({
 }: MailProps) {
   const [isCollapsed, setIsCollapsed] = React.useState(defaultCollapsed);
   const [mail] = useMail();
+  const searchParams = useSearchParams();
+
+  function folderHref(folder: string) {
+    const p = new URLSearchParams(searchParams.toString());
+    p.set("folder", folder);
+    p.delete("page");
+    return `?${p.toString()}`;
+  }
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -115,9 +111,9 @@ export function MailComponent({
               links={[
                 {
                   title: "Compose",
-                  label: "",
                   icon: PenBox,
                   variant: "ghost",
+                  href: "#",
                 },
               ]}
             />
@@ -127,75 +123,15 @@ export function MailComponent({
             links={[
               {
                 title: "Inbox",
-                label: "",
                 icon: Inbox,
                 variant: activeFolder === "INBOX" ? "default" : "ghost",
-              },
-              {
-                title: "Drafts",
-                label: "9",
-                icon: File,
-                variant: "ghost",
+                href: folderHref("INBOX"),
               },
               {
                 title: "Sent",
-                label: "",
                 icon: Send,
                 variant: activeFolder === "SENT" ? "default" : "ghost",
-              },
-              {
-                title: "Junk",
-                label: "23",
-                icon: ArchiveX,
-                variant: "ghost",
-              },
-              {
-                title: "Trash",
-                label: "",
-                icon: Trash2,
-                variant: "ghost",
-              },
-              {
-                title: "Archive",
-                label: "",
-                icon: Archive,
-                variant: "ghost",
-              },
-            ]}
-          />
-          <Separator />
-          <Nav
-            isCollapsed={isCollapsed}
-            links={[
-              {
-                title: "Social",
-                label: "972",
-                icon: Users2,
-                variant: "ghost",
-              },
-              {
-                title: "Updates",
-                label: "342",
-                icon: AlertCircle,
-                variant: "ghost",
-              },
-              {
-                title: "Forums",
-                label: "128",
-                icon: MessagesSquare,
-                variant: "ghost",
-              },
-              {
-                title: "Shopping",
-                label: "8",
-                icon: ShoppingCart,
-                variant: "ghost",
-              },
-              {
-                title: "Promotions",
-                label: "21",
-                icon: Archive,
-                variant: "ghost",
+                href: folderHref("SENT"),
               },
             ]}
           />
