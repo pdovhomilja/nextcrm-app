@@ -14,7 +14,7 @@ import { EmailFolder } from "@prisma/client";
 const EmailRoute = async ({
   searchParams,
 }: {
-  searchParams: Promise<{ accountId?: string; folder?: string; search?: string }>;
+  searchParams: Promise<{ accountId?: string; folder?: string; search?: string; page?: string }>;
 }) => {
   const session = await getServerSession(authOptions);
 
@@ -56,8 +56,9 @@ const EmailRoute = async ({
   const activeAccountId = params.accountId ?? connectedAccounts[0]?.id;
   const activeFolder = params.folder === "SENT" ? EmailFolder.SENT : EmailFolder.INBOX;
 
+  const activePage = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
   const emailsResult = activeAccountId
-    ? await getEmails(activeAccountId, activeFolder, 1, params.search)
+    ? await getEmails(activeAccountId, activeFolder, activePage, params.search)
     : { emails: [], total: 0, page: 1, totalPages: 0 };
 
   return (
@@ -71,6 +72,8 @@ const EmailRoute = async ({
           mails={emailsResult.emails}
           activeAccountId={activeAccountId ?? null}
           activeFolder={activeFolder}
+          page={emailsResult.page}
+          totalPages={emailsResult.totalPages}
           defaultLayout={validatedLayout}
           defaultCollapsed={defaultCollapsed}
           navCollapsedSize={8}

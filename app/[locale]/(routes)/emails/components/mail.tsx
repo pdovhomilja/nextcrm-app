@@ -37,6 +37,8 @@ interface MailProps {
   mails: Mail[];
   activeAccountId: string | null;
   activeFolder: "INBOX" | "SENT";
+  page: number;
+  totalPages: number;
   defaultLayout: number[] | undefined;
   defaultCollapsed?: boolean;
   navCollapsedSize: number;
@@ -47,6 +49,8 @@ export function MailComponent({
   mails,
   activeAccountId,
   activeFolder,
+  page,
+  totalPages,
   defaultLayout = [20, 35, 45],
   defaultCollapsed = false,
   navCollapsedSize,
@@ -222,10 +226,10 @@ export function MailComponent({
               </form>
             </div>
             <TabsContent value="all" className="m-0">
-              <MailList items={mails} />
+              <MailList items={mails} page={page} totalPages={totalPages} />
             </TabsContent>
             <TabsContent value="unread" className="m-0">
-              <MailList items={mails.filter((item) => !item.isRead)} />
+              <MailList items={mails.filter((item) => !item.isRead)} page={page} totalPages={totalPages} />
             </TabsContent>
           </Tabs>
         </ResizablePanel>

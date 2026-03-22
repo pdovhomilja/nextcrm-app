@@ -59,7 +59,11 @@ export function MailDisplay({ mail }: MailDisplayProps) {
       setFullEmail(null);
       return;
     }
-    getEmail(mail.id).then(setFullEmail).catch(() => setFullEmail(null));
+    let cancelled = false;
+    getEmail(mail.id)
+      .then((data) => { if (!cancelled) setFullEmail(data); })
+      .catch(() => { if (!cancelled) setFullEmail(null); });
+    return () => { cancelled = true; };
   }, [mail?.id]);
 
   const senderName = fullEmail?.fromName ?? fullEmail?.fromEmail ?? "?";
@@ -251,6 +255,20 @@ export function MailDisplay({ mail }: MailDisplayProps) {
                   <span className="font-medium">From:</span>{" "}
                   {fullEmail?.fromEmail ?? ""}
                 </div>
+                {Array.isArray(fullEmail?.toRecipients) && fullEmail.toRecipients.length > 0 && (
+                  <div className="line-clamp-1 text-xs">
+                    <span className="font-medium">To:</span>{" "}
+                    {(fullEmail.toRecipients as { name?: string; email: string }[])
+                      .map((r) => r.name ?? r.email).join(", ")}
+                  </div>
+                )}
+                {Array.isArray(fullEmail?.ccRecipients) && fullEmail.ccRecipients.length > 0 && (
+                  <div className="line-clamp-1 text-xs">
+                    <span className="font-medium">CC:</span>{" "}
+                    {(fullEmail.ccRecipients as { name?: string; email: string }[])
+                      .map((r) => r.name ?? r.email).join(", ")}
+                  </div>
+                )}
               </div>
             </div>
             {fullEmail?.sentAt && (
@@ -267,7 +285,7 @@ export function MailDisplay({ mail }: MailDisplayProps) {
                 sandbox="allow-popups allow-popups-to-escape-sandbox"
                 referrerPolicy="no-referrer"
                 className="w-full border-0"
-                style={{ maxHeight: "600px", overflowY: "auto" }}
+                style={{ height: "600px", maxHeight: "600px" }}
                 title="Email body"
               />
             ) : (
