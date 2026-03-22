@@ -10,6 +10,7 @@ import { ProfileTabContent } from "./components/tabs/ProfileTabContent";
 import { SecurityTabContent } from "./components/tabs/SecurityTabContent";
 import { PreferencesTabContent } from "./components/tabs/PreferencesTabContent";
 import { DeveloperTabContent } from "./components/tabs/DeveloperTabContent";
+import { EmailAccountsTabContent } from "./components/tabs/EmailAccountsTabContent";
 
 const ProfilePage = async () => {
   const t = await getTranslations("ProfilePage");
@@ -29,6 +30,7 @@ const ProfilePage = async () => {
             securityContent={<SecurityTabContent userId={data.id} />}
             preferencesContent={<PreferencesTabContent userId={data.id} />}
             developerContent={<DeveloperTabContent userId={data.id} />}
+            emailsContent={<EmailAccountsTabContent />}
           />
         </Suspense>
       </div>

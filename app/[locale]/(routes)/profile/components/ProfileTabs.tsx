@@ -4,18 +4,19 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
-import { UserCircle, Lock, Globe, Code2 } from "lucide-react";
+import { UserCircle, Lock, Globe, Code2, Mail } from "lucide-react";
 
 // Do NOT import tab content components here — they are Server Components
 // and must be passed as ReactNode props from page.tsx
 
-type Tab = "profile" | "security" | "preferences" | "developer";
+type Tab = "profile" | "security" | "preferences" | "developer" | "emails";
 
 const TAB_ICONS: Record<Tab, React.ElementType> = {
   profile: UserCircle,
   security: Lock,
   preferences: Globe,
   developer: Code2,
+  emails: Mail,
 };
 
 type Props = {
@@ -23,6 +24,7 @@ type Props = {
   securityContent: React.ReactNode;
   preferencesContent: React.ReactNode;
   developerContent: React.ReactNode;
+  emailsContent: React.ReactNode;
 };
 
 export function ProfileTabs({
@@ -30,12 +32,13 @@ export function ProfileTabs({
   securityContent,
   preferencesContent,
   developerContent,
+  emailsContent,
 }: Props) {
   const t = useTranslations("ProfilePage");
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const TAB_IDS: Tab[] = ["profile", "security", "preferences", "developer"];
+  const TAB_IDS: Tab[] = ["profile", "security", "preferences", "developer", "emails"];
   const raw = searchParams.get("tab");
   const activeTab: Tab = TAB_IDS.includes(raw as Tab) ? (raw as Tab) : "profile";
 
@@ -44,6 +47,7 @@ export function ProfileTabs({
     { id: "security", label: t("tabs.security"), desc: t("tabs.securityDesc") },
     { id: "preferences", label: t("tabs.preferences"), desc: t("tabs.preferencesDesc") },
     { id: "developer", label: t("tabs.developer"), desc: t("tabs.developerDesc") },
+    { id: "emails", label: "Email Accounts", desc: "Manage your connected IMAP mailboxes" },
   ];
 
   const activeTabMeta = tabs.find((t) => t.id === activeTab) ?? tabs[0];
@@ -53,6 +57,7 @@ export function ProfileTabs({
     security: securityContent,
     preferences: preferencesContent,
     developer: developerContent,
+    emails: emailsContent,
   };
 
   return (
