@@ -30,6 +30,7 @@ export function EmailAccountsList({ accounts }: { accounts: Account[] }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [syncingId, setSyncingId] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [form, setForm] = useState({
     label: "",
@@ -82,8 +83,13 @@ export function EmailAccountsList({ accounts }: { accounts: Account[] }) {
   }
 
   async function handleSync(id: string) {
-    await triggerSync(id);
-    refresh();
+    setSyncingId(id);
+    try {
+      await triggerSync(id);
+      refresh();
+    } finally {
+      setSyncingId(null);
+    }
   }
 
   return (
@@ -118,10 +124,11 @@ export function EmailAccountsList({ accounts }: { accounts: Account[] }) {
             <Button
               variant="ghost"
               size="sm"
+              disabled={syncingId === acc.id}
               onClick={() => handleSync(acc.id)}
             >
               <RefreshCw className="mr-1 h-3 w-3" />
-              Sync
+              {syncingId === acc.id ? "Syncing…" : "Sync"}
             </Button>
             <Button
               variant="ghost"
