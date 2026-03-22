@@ -2,7 +2,7 @@
 
 export type EmailRecipient = { name?: string; email: string };
 
-/** Shape returned by getEmails() — matches the Prisma select in actions/emails/messages.ts */
+/** Core shape returned by getEmails() list view. Detail fields are optional — populated by getEmail(). */
 export type Mail = {
   id: string;
   subject: string | null;
@@ -11,6 +11,12 @@ export type Mail = {
   sentAt: Date | null;
   isRead: boolean;
   folder: "INBOX" | "SENT";
+  // Detail fields — present only when fetched via getEmail()
+  rfcMessageId?: string;
+  toRecipients?: EmailRecipient[];
+  ccRecipients?: EmailRecipient[];
+  bodyText?: string | null;
+  bodyHtml?: string | null;
 };
 
 export type ConnectedAccount = {

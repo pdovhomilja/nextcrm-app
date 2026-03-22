@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import {
@@ -23,12 +24,18 @@ export function AccountSwitcher({
   accounts,
   activeAccountId,
 }: AccountSwitcherProps) {
-  const [selectedAccount, setSelectedAccount] = React.useState<string>(
-    activeAccountId ?? accounts[0]?.id ?? ""
-  );
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedAccount = activeAccountId ?? accounts[0]?.id ?? "";
+
+  function switchAccount(id: string) {
+    const p = new URLSearchParams(searchParams.toString());
+    p.set("accountId", id);
+    router.push(`?${p.toString()}`);
+  }
 
   return (
-    <Select defaultValue={selectedAccount} onValueChange={setSelectedAccount}>
+    <Select value={selectedAccount} onValueChange={switchAccount}>
       <SelectTrigger
         className={cn(
           "flex flex-1 items-center gap-2 [&>span]:line-clamp-1 [&>span]:flex [&>span]:w-full [&>span]:items-center [&>span]:gap-1 [&>span]:truncate [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0",
