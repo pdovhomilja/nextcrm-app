@@ -74,8 +74,8 @@ Synced email messages. Stores Inbox and Sent messages.
 | id | UUID | PK |
 | emailAccountId | UUID | FK → EmailAccount |
 | userId | UUID | FK → Users, indexed (fast ownership filtering) |
-| rfcMessageId | String | RFC 822 `Message-ID` header — stable global identifier |
-| imapUid | Int? | IMAP UID (folder-scoped) — stored for reference only |
+| rfcMessageId | String | RFC 822 `Message-ID` header — stable global identifier. If the header is absent (malformed/legacy messages), synthesize a fallback: `<emailAccountId>-<folder>-<imapUid>@local`. The unique constraint still holds. |
+| imapUid | Int? | IMAP UID (folder-scoped) — stored for reference and used in the fallback rfcMessageId |
 | folder | Enum | INBOX \| SENT |
 | subject | String? | |
 | fromName | String? | |
@@ -132,7 +132,7 @@ New tab added to `ProfileTabs` component: **"Email Accounts"**.
 File: `app/[locale]/(routes)/profile/components/tabs/EmailAccountsTabContent.tsx`
 
 **Contents:**
-- List of connected accounts: label, host, username, last synced timestamp, active/inactive badge
+- List of connected accounts: label, host, username, last synced timestamp, active/inactive badge (clickable — toggles `isActive` via `setEmailAccountActive`)
 - **Add account** button → dialog with form:
   - Label, IMAP host, IMAP port, IMAP SSL toggle
   - SMTP host, SMTP port, SMTP SSL toggle
@@ -190,10 +190,11 @@ testEmailConnection(data)       — open IMAP connection, return { ok, error }
 
 ### `actions/emails/messages.ts`
 ```
-getEmails(accountId, folder, page, search)  — paginated (50/page), filtered by userId; returns { emails, total, page, totalPages }
-getEmail(id)                               — fetch + mark isRead=true
+getEmails(accountId, folder, page, search)  — paginated (50/page), filtered by userId AND isDeleted=false; returns { emails, total, page, totalPages }. COUNT(*) is capped at 10,000 for performance on large mailboxes — totalPages reflects the cap.
+getEmail(id)                               — fetch (isDeleted=false) + mark isRead=true
 deleteEmail(id)                            — verify ownership, set isDeleted=true
-sendEmail({ to, cc, bcc, subject, body, inReplyTo? }) — send via SMTP, set threading headers, immediately write record to Email table (folder=SENT, isRead=true)
+sendEmail({ to, cc, bcc, subject, body, inReplyTo? }) — send via SMTP; set inReplyTo header and build References header (parent's References + parent's Message-ID); immediately write record to Email table (folder=SENT, isRead=true, bccRecipients populated)
+setEmailAccountActive(id, isActive)        — verify ownership, toggle isActive on account
 ```
 
 ### `actions/emails/sync.ts`
@@ -220,9 +221,9 @@ Only `/api/inngest` remains as an HTTP route (required by Inngest webhook contra
   2. Connect via `imap` package
   3. Fetch messages with UID > `inboxLastUid` from INBOX, UID > `sentLastUid` from SENT (cursor-based, not timestamp-based)
   4. Parse with `mailparser`
-  5. Upsert into `Email` table (unique on `(emailAccountId, rfcMessageId)`)
-  6. Update `EmailAccount.lastSyncedAt`, `inboxLastUid`, `sentLastUid`
-  7. Fire `email/embed-email` for each new message
+  5. Upsert all new messages into `Email` table (unique on `(emailAccountId, rfcMessageId)`) — in a single transaction
+  6. Update `EmailAccount.lastSyncedAt`, `inboxLastUid`, `sentLastUid` — **atomically within the same transaction as step 5**. Cursor only advances if all upserts succeed. If the transaction fails, the cursor is not advanced and the next sync cycle retries.
+  7. Fire `email/embed-email` for each successfully upserted message
 
 ### `email/embed-email`
 - **Trigger:** `email/sync-account` per new message
@@ -260,10 +261,9 @@ Only `/api/inngest` remains as an HTTP route (required by Inngest webhook contra
 
 ### HTML Email Rendering
 - Rendered in `<iframe srcdoc={bodyHtml} sandbox="allow-popups allow-popups-to-escape-sandbox" referrerPolicy="no-referrer">`
-- `sandbox` — blocks all scripts (XSS prevention)
+- `sandbox` — blocks all scripts (XSS prevention). Note: because `allow-same-origin` and `allow-scripts` are intentionally absent, `contentDocument` is inaccessible — do NOT attempt to auto-resize via `onLoad + scrollHeight`. Use a fixed `max-height` (e.g. 600px) with `overflow-y: auto` on the iframe instead.
 - `referrerPolicy="no-referrer"` — blocks tracking pixel leaks
-- `allow-popups` — links open in new tab
-- Auto-resizes to content height via `onLoad` handler
+- `allow-popups allow-popups-to-escape-sandbox` — links open in new tab outside the sandbox
 
 ### SMTP Sending
 - Uses `nodemailer` (already installed)
@@ -276,7 +276,7 @@ Only `/api/inngest` remains as an HTTP route (required by Inngest webhook contra
 
 Junction tables defined in Data Models above (`EmailsToContacts`, `EmailsToAccounts`).
 
-The `email/link-crm` Inngest function matches `fromEmail`, `toRecipients`, and `ccRecipients` addresses against `crm_Contacts.email` and `crm_Accounts.email`. Matches are written as rows in the junction tables. Existing links are not duplicated (upsert or check-before-insert).
+The `email/link-crm` Inngest function matches `fromEmail`, `toRecipients`, and `ccRecipients` addresses against `crm_Contacts.email` and `crm_Accounts.email`. `bccRecipients` is intentionally excluded from matching (privacy: BCC recipients are not visible to the email sender's CRM). Matches are written as rows in the junction tables. Existing links are not duplicated (upsert or check-before-insert).
 
 CRM badges shown in email detail view when links exist — clicking a badge navigates to the matched contact/account.
 
