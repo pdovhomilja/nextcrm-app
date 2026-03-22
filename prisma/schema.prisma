@@ -52,6 +52,7 @@ model crm_Accounts {
   documents          DocumentsToAccounts[]
   watchers           AccountWatchers[]
   embedding          crm_Embeddings_Accounts?
+  emails             EmailsToAccounts[]
 
   @@index([assigned_to])
   @@index([industry])
@@ -233,6 +234,7 @@ model crm_Contacts {
   opportunities     ContactsToOpportunities[]
   documents         DocumentsToContacts[]
   embedding         crm_Embeddings_Contacts?
+  emails            EmailsToContacts[]
 
   @@index([assigned_to])
   @@index([created_by])
@@ -565,6 +567,8 @@ model Users {
   created_targets      crm_Targets[]         @relation("created_targets")
   created_target_lists crm_TargetLists[]     @relation("created_target_lists")
   apiTokens            ApiToken[]
+  emailAccounts        EmailAccount[]
+  emails               Email[]
 
   @@index([email])
   @@index([userStatus])
@@ -874,4 +878,111 @@ model ApiToken {
   createdAt   DateTime  @default(now())
 
   @@index([userId])
+}
+
+// ============================================
+// EMAIL FEATURE
+// ============================================
+
+model EmailAccount {
+  id                String    @id @default(uuid()) @db.Uuid
+  userId            String    @db.Uuid
+  label             String
+  imapHost          String
+  imapPort          Int
+  imapSsl           Boolean   @default(true)
+  smtpHost          String
+  smtpPort          Int
+  smtpSsl           Boolean   @default(true)
+  username          String
+  passwordEncrypted String
+  isActive          Boolean   @default(true)
+  sentFolderName    String    @default("Sent")
+  lastSyncedAt      DateTime?
+  inboxLastUid      Int?
+  sentLastUid       Int?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user   Users   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emails Email[]
+
+  @@index([userId])
+  @@index([isActive])
+}
+
+enum EmailFolder {
+  INBOX
+  SENT
+}
+
+model Email {
+  id              String      @id @default(uuid()) @db.Uuid
+  emailAccountId  String      @db.Uuid
+  userId          String      @db.Uuid
+  rfcMessageId    String
+  imapUid         Int?
+  folder          EmailFolder
+  subject         String?
+  fromName        String?
+  fromEmail       String?
+  toRecipients    Json        @default("[]")
+  ccRecipients    Json        @default("[]")
+  bccRecipients   Json        @default("[]")
+  bodyText        String?
+  bodyHtml        String?
+  sentAt          DateTime?
+  isRead          Boolean     @default(false)
+  isDeleted       Boolean     @default(false)
+  createdAt       DateTime    @default(now())
+
+  account   EmailAccount     @relation(fields: [emailAccountId], references: [id], onDelete: Cascade)
+  user      Users            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  embedding EmailEmbedding?
+  contacts  EmailsToContacts[]
+  accounts  EmailsToAccounts[]
+
+  @@unique([emailAccountId, rfcMessageId])
+  @@index([userId])
+  @@index([emailAccountId])
+  @@index([folder])
+  @@index([isDeleted])
+  @@index([sentAt])
+  @@index([userId, folder, isDeleted])
+}
+
+model EmailEmbedding {
+  id          String   @id @default(uuid()) @db.Uuid
+  emailId     String   @unique @db.Uuid
+  embedding   Unsupported("vector(1536)")
+  contentHash String
+  embeddedAt  DateTime @default(now())
+
+  email Email @relation(fields: [emailId], references: [id], onDelete: Cascade)
+
+  @@map("EmailEmbedding")
+}
+
+model EmailsToContacts {
+  emailId   String @db.Uuid
+  contactId String @db.Uuid
+
+  email   Email        @relation(fields: [emailId], references: [id], onDelete: Cascade)
+  contact crm_Contacts @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@id([emailId, contactId])
+  @@index([emailId])
+  @@index([contactId])
+}
+
+model EmailsToAccounts {
+  emailId   String @db.Uuid
+  accountId String @db.Uuid
+
+  email   Email        @relation(fields: [emailId], references: [id], onDelete: Cascade)
+  account crm_Accounts @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@id([emailId, accountId])
+  @@index([emailId])
+  @@index([accountId])
 }
