@@ -47,11 +47,6 @@ export const embedEmail = inngest.createFunction(
         "embeddedAt" = NOW()
     `;
 
-    await inngest.send({
-      name: "email/link-crm",
-      data: { emailId },
-    });
-
     return { embedded: true, emailId };
   }
 );
