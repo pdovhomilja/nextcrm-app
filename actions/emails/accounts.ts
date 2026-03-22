@@ -50,6 +50,16 @@ type CreateInput = {
 
 export async function createEmailAccount(input: CreateInput) {
   const userId = await requireSession();
+
+  // Validate required string fields
+  if (!input.label?.trim()) throw new Error("Label is required");
+  if (!input.imapHost?.trim()) throw new Error("IMAP host is required");
+  if (!input.smtpHost?.trim()) throw new Error("SMTP host is required");
+  if (!input.username?.trim()) throw new Error("Username is required");
+  if (!input.password?.trim()) throw new Error("Password is required");
+  if (input.imapPort < 1 || input.imapPort > 65535) throw new Error("Invalid IMAP port");
+  if (input.smtpPort < 1 || input.smtpPort > 65535) throw new Error("Invalid SMTP port");
+
   const passwordEncrypted = encrypt(input.password);
   return prismadb.emailAccount.create({
     data: {
@@ -95,13 +105,15 @@ export async function testEmailConnection(
   input: TestInput
 ): Promise<{ ok: boolean; error?: string }> {
   await requireSession();
-  return new Promise((resolve) => {
+
+  const connectionPromise = new Promise<{ ok: boolean; error?: string }>((resolve) => {
     const imap = new Imap({
       user: input.username,
       password: input.password,
       host: input.imapHost,
       port: input.imapPort,
       tls: input.imapSsl,
+      // tlsOptions: { rejectUnauthorized: false } intentionally disabled for self-signed cert support
       tlsOptions: { rejectUnauthorized: false },
       authTimeout: 8000,
       connTimeout: 8000,
@@ -115,4 +127,10 @@ export async function testEmailConnection(
     });
     imap.connect();
   });
+
+  const timeoutPromise = new Promise<{ ok: boolean; error?: string }>((resolve) =>
+    setTimeout(() => resolve({ ok: false, error: "Connection timed out" }), 10000)
+  );
+
+  return Promise.race([connectionPromise, timeoutPromise]);
 }
