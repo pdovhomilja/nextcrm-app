@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { AccountSwitcher } from "@/app/[locale]/(routes)/emails/components/account-switcher";
+import { ComposeModal } from "@/app/[locale]/(routes)/emails/components/ComposeModal";
 import { MailDisplay } from "@/app/[locale]/(routes)/emails/components/mail-display";
 import { MailList } from "@/app/[locale]/(routes)/emails/components/mail-list";
 import { Nav } from "@/app/[locale]/(routes)/emails/components/nav";
@@ -103,6 +104,11 @@ export function MailComponent({
             </div>
           </div>
           <Separator />
+          {activeAccountId && !isCollapsed && (
+            <div className="p-2">
+              <ComposeModal accountId={activeAccountId} />
+            </div>
+          )}
           <div className={cn(isCollapsed ? "block" : "hidden")}>
             <Nav
               isCollapsed={isCollapsed}
@@ -237,6 +243,7 @@ export function MailComponent({
         <ResizablePanel defaultSize={`${defaultLayout[2]}%`} minSize="30%">
           <MailDisplay
             mail={mails.find((item) => item.id === mail.selected) || null}
+            activeAccountId={activeAccountId}
           />
         </ResizablePanel>
       </ResizablePanelGroup>

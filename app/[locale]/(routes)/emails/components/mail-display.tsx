@@ -43,12 +43,14 @@ import {
 } from "@/components/ui/tooltip";
 import type { Mail } from "@/app/[locale]/(routes)/emails/data";
 import { getEmail, deleteEmail } from "@/actions/emails/messages";
+import { ComposeModal } from "@/app/[locale]/(routes)/emails/components/ComposeModal";
 
 interface MailDisplayProps {
   mail: Mail | null;
+  activeAccountId: string | null;
 }
 
-export function MailDisplay({ mail }: MailDisplayProps) {
+export function MailDisplay({ mail, activeAccountId }: MailDisplayProps) {
   const today = new Date();
   const router = useRouter();
 
@@ -183,15 +185,17 @@ export function MailDisplay({ mail }: MailDisplayProps) {
         <div className="ml-auto flex items-center gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                disabled={!mail}
-                onClick={() => console.log("Reply — ComposeModal coming in Task 9")}
-              >
-                <Reply className="h-4 w-4" />
-                <span className="sr-only">Reply</span>
-              </Button>
+              <ComposeModal
+                accountId={activeAccountId ?? ""}
+                mode="reply"
+                replyTo={fullEmail ? (fullEmail as unknown as Mail) : undefined}
+                trigger={
+                  <Button variant="ghost" size="icon" disabled={!mail}>
+                    <Reply className="h-4 w-4" />
+                    <span className="sr-only">Reply</span>
+                  </Button>
+                }
+              />
             </TooltipTrigger>
             <TooltipContent>Reply</TooltipContent>
           </Tooltip>
@@ -206,15 +210,17 @@ export function MailDisplay({ mail }: MailDisplayProps) {
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                disabled={!mail}
-                onClick={() => console.log("Forward — ComposeModal coming in Task 9")}
-              >
-                <Forward className="h-4 w-4" />
-                <span className="sr-only">Forward</span>
-              </Button>
+              <ComposeModal
+                accountId={activeAccountId ?? ""}
+                mode="forward"
+                replyTo={fullEmail ? (fullEmail as unknown as Mail) : undefined}
+                trigger={
+                  <Button variant="ghost" size="icon" disabled={!mail}>
+                    <Forward className="h-4 w-4" />
+                    <span className="sr-only">Forward</span>
+                  </Button>
+                }
+              />
             </TooltipTrigger>
             <TooltipContent>Forward</TooltipContent>
           </Tooltip>
