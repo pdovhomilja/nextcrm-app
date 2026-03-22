@@ -9,8 +9,8 @@ export const emailLinkCrm = inngest.createFunction(
     name: "Email: Link to CRM",
     triggers: [{ event: "email/link-crm" }],
   },
-  async ({ event, step }: { event: { data: { emailId: string } }; step: any }) => {
-    const { emailId } = event.data;
+  async ({ event, step }) => {
+    const { emailId } = event.data as { emailId: string };
 
     const email = await prismadb.email.findUnique({
       where: { id: emailId },
@@ -51,12 +51,12 @@ export const emailLinkCrm = inngest.createFunction(
       const contactLinks = contacts.map((c) => ({ emailId, contactId: c.id }));
       const accountLinks = accounts.map((a) => ({ emailId, accountId: a.id }));
 
-      await Promise.all([
-        contactLinks.length > 0 &&
-          prismadb.emailsToContacts.createMany({ data: contactLinks, skipDuplicates: true }),
-        accountLinks.length > 0 &&
-          prismadb.emailsToAccounts.createMany({ data: accountLinks, skipDuplicates: true }),
-      ]);
+      if (contactLinks.length > 0) {
+        await prismadb.emailsToContacts.createMany({ data: contactLinks, skipDuplicates: true });
+      }
+      if (accountLinks.length > 0) {
+        await prismadb.emailsToAccounts.createMany({ data: accountLinks, skipDuplicates: true });
+      }
 
       return contactLinks.length + accountLinks.length;
     });
@@ -112,6 +112,10 @@ export const emailLinkCrm = inngest.createFunction(
           name: "email/embed-email",
           data: { emailId },
         });
+      } else {
+        console.warn(
+          `[link-crm] EmailAccount ${email.emailAccountId} not found for email ${emailId} — skipping body fetch`
+        );
       }
     }
 
