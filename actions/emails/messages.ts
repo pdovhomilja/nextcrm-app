@@ -88,7 +88,7 @@ export async function getEmail(id: string) {
 
 export async function deleteEmail(id: string) {
   const userId = await requireSession();
-  const email = await prismadb.email.findFirst({ where: { id, userId } });
+  const email = await prismadb.email.findFirst({ where: { id, userId, isDeleted: false } });
   if (!email) throw new Error("Not found");
   await prismadb.email.update({ where: { id }, data: { isDeleted: true } });
 }
