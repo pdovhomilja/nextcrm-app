@@ -20,15 +20,9 @@ import {
   setEmailAccountActive,
   testEmailConnection,
 } from "@/actions/emails/accounts";
+import type { getEmailAccounts } from "@/actions/emails/accounts";
 
-type Account = {
-  id: string;
-  label: string;
-  imapHost: string;
-  username: string;
-  isActive: boolean;
-  lastSyncedAt: Date | null;
-};
+type Account = Awaited<ReturnType<typeof getEmailAccounts>>[number];
 
 export function EmailAccountsList({ accounts }: { accounts: Account[] }) {
   const router = useRouter();

@@ -266,7 +266,11 @@
     "profile": "Profil",
     "passwordChange": "Passwort ändern",
     "language": "Sprache",
-    "openAiIntegration": "OpenAI-Integration"
+    "openAiIntegration": "OpenAI-Integration",
+    "tabs": {
+      "emails": "Email Accounts",
+      "emailsDesc": "Manage your connected IMAP mailboxes"
+    }
   },
   "ProfileForm": {
     "fullName": "Vollständiger Name",

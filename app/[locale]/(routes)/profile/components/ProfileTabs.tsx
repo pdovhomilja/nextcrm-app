@@ -47,7 +47,7 @@ export function ProfileTabs({
     { id: "security", label: t("tabs.security"), desc: t("tabs.securityDesc") },
     { id: "preferences", label: t("tabs.preferences"), desc: t("tabs.preferencesDesc") },
     { id: "developer", label: t("tabs.developer"), desc: t("tabs.developerDesc") },
-    { id: "emails", label: "Email Accounts", desc: "Manage your connected IMAP mailboxes" },
+    { id: "emails", label: t("tabs.emails"), desc: t("tabs.emailsDesc") },
   ];
 
   const activeTabMeta = tabs.find((t) => t.id === activeTab) ?? tabs[0];
