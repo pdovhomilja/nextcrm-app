@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useRouter } from "next/navigation";
+import { RefreshCw } from "lucide-react";
 import {
   createEmailAccount,
   deleteEmailAccount,
@@ -79,6 +80,8 @@ export function EmailAccountsList({ accounts }: { accounts: Account[] }) {
     refresh();
   }
 
+  async function handleSync(id: string) { /* TODO Task 6: triggerSync(id) */ }
+
   return (
     <div className="space-y-3">
       {accounts.length === 0 && (
@@ -108,6 +111,14 @@ export function EmailAccountsList({ accounts }: { accounts: Account[] }) {
             >
               {acc.isActive ? "Active" : "Inactive"}
             </Badge>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleSync(acc.id)}
+            >
+              <RefreshCw className="mr-1 h-3 w-3" />
+              Sync
+            </Button>
             <Button
               variant="ghost"
               size="sm"
