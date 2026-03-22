@@ -42,4 +42,9 @@ describe("email-crypto", () => {
     process.env.EMAIL_ENCRYPTION_KEY = "short";
     expect(() => encrypt("x")).toThrow("EMAIL_ENCRYPTION_KEY");
   });
+
+  it("throws if EMAIL_ENCRYPTION_KEY contains non-hex characters", () => {
+    process.env.EMAIL_ENCRYPTION_KEY = "z".repeat(64); // valid length, invalid hex
+    expect(() => encrypt("x")).toThrow("EMAIL_ENCRYPTION_KEY");
+  });
 });
