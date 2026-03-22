@@ -24,7 +24,7 @@ async function searchFolder(
       imap.search(criteria, (searchErr, uids) => {
         if (searchErr) return reject(searchErr);
         const validUids = uids ?? [];
-        const highest = validUids.length > 0 ? Math.max(...validUids) : lastUid;
+        const highest = validUids.length > 0 ? validUids.reduce((a, b) => Math.max(a, b), lastUid) : lastUid;
         imap.closeBox(() => resolve({ uids: validUids, highestUid: highest }));
       });
     });
@@ -45,15 +45,6 @@ export const emailSyncAccount = inngest.createFunction(
     );
     if (!account) return { skipped: "account not found" };
 
-    const password = decrypt(account.passwordEncrypted);
-    const imapAccount = {
-      username: account.username,
-      password,
-      imapHost: account.imapHost,
-      imapPort: account.imapPort,
-      imapSsl: account.imapSsl,
-    };
-
     const sentFolder = account.sentFolderName || "Sent";
 
     // Step: search for new UIDs in both folders (fast — no body download)
@@ -61,12 +52,14 @@ export const emailSyncAccount = inngest.createFunction(
     const { inboxUids, sentUids, newInboxHighest, newSentHighest } = await step.run(
       "search-uids",
       async () => {
+        const pwd = decrypt(account.passwordEncrypted);
+        const acc = { username: account.username, password: pwd, imapHost: account.imapHost, imapPort: account.imapPort, imapSsl: account.imapSsl };
         const [inbox, sent] = await Promise.all([
-          connectImap(imapAccount).then(async (imap) => {
+          connectImap(acc).then(async (imap) => {
             try { return await searchFolder(imap, "INBOX", account.inboxLastUid ?? 0); }
             finally { imap.end(); }
           }),
-          connectImap(imapAccount).then(async (imap) => {
+          connectImap(acc).then(async (imap) => {
             try { return await searchFolder(imap, sentFolder, account.sentLastUid ?? 0); }
             finally { imap.end(); }
           }),
@@ -92,9 +85,11 @@ export const emailSyncAccount = inngest.createFunction(
 
     // Step: fetch headers only — separate connections per folder to avoid box-state conflicts
     const { inboxHeaders, sentHeaders } = await step.run("fetch-headers", async () => {
+      const pwd = decrypt(account.passwordEncrypted);
+      const acc = { username: account.username, password: pwd, imapHost: account.imapHost, imapPort: account.imapPort, imapSsl: account.imapSsl };
       const [inbox, sent] = await Promise.all([
         inboxUids.length > 0
-          ? connectImap(imapAccount).then(async (imap) => {
+          ? connectImap(acc).then(async (imap) => {
               try {
                 await new Promise<void>((res, rej) =>
                   imap.openBox("INBOX", true, (err) => err ? rej(err) : res())
@@ -104,7 +99,7 @@ export const emailSyncAccount = inngest.createFunction(
             })
           : Promise.resolve([] as ParsedHeader[]),
         sentUids.length > 0
-          ? connectImap(imapAccount).then(async (imap) => {
+          ? connectImap(acc).then(async (imap) => {
               try {
                 await new Promise<void>((res, rej) =>
                   imap.openBox(sentFolder, true, (err) => err ? rej(err) : res())
@@ -127,6 +122,7 @@ export const emailSyncAccount = inngest.createFunction(
         ];
 
         for (const msg of allMessages) {
+          if (!msg.rfcMessageId) continue;
           const existing = await tx.email.findFirst({
             where: { emailAccountId: accountId, rfcMessageId: msg.rfcMessageId },
             select: { id: true },
