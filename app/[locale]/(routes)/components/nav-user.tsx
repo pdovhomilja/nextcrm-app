@@ -1,6 +1,5 @@
 "use client"
 
-import * as React from "react"
 import { useRouter } from "next/navigation"
 import { signOut } from "next-auth/react"
 import {
@@ -27,7 +26,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import useAvatarStore from "@/store/useAvatarStore"
+import { useAvatarContext } from "@/context/avatar-context"
 
 /**
  * NavUser Component - Task Group 3.1
@@ -62,24 +61,10 @@ interface NavUserProps {
 export function NavUser({ user }: NavUserProps) {
   const router = useRouter()
   const { isMobile } = useSidebar()
-  const setAvatar = useAvatarStore((state) => state.setAvatar)
-  const getAvatar = useAvatarStore((state) => state.avatar)
-  const [currentAvatar, setCurrentAvatar] = React.useState(getAvatar)
-
-  // Sync avatar from props to store
-  React.useEffect(() => {
-    if (user.avatar) {
-      setAvatar(user.avatar)
-    }
-  }, [user.avatar, setAvatar])
-
-  // Update current avatar when store changes
-  React.useEffect(() => {
-    setCurrentAvatar(getAvatar)
-  }, [getAvatar])
+  const { avatar } = useAvatarContext()
 
   // Get avatar URL or fallback to default
-  const avatarUrl = currentAvatar || user.avatar || undefined
+  const avatarUrl = avatar || user.avatar || undefined
 
   // Get user initials for avatar fallback
   const userInitials = user.name

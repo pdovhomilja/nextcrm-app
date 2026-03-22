@@ -13,8 +13,7 @@ import { signOut } from "next-auth/react";
 
 import { LogOut, Settings } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import useAvatarStore from "@/store/useAvatarStore";
+import { useAvatarContext } from "@/context/avatar-context";
 
 type Props = {
   avatar: string;
@@ -25,17 +24,7 @@ type Props = {
 
 const AvatarDropdown = ({ avatar, userId, name, email }: Props) => {
   const router = useRouter();
-  const setAvatar = useAvatarStore((state) => state.setAvatar);
-  const getAvatar = useAvatarStore((state) => state.avatar);
-  const [newAvatar, setNewAvatar] = useState(getAvatar);
-
-  useEffect(() => {
-    setAvatar(avatar);
-  }, [avatar, setAvatar]);
-
-  useEffect(() => {
-    setNewAvatar(getAvatar);
-  }, [getAvatar]);
+  const { avatar: newAvatar } = useAvatarContext();
 
   //console.log(newAvatar, "newAvatar");
   return (

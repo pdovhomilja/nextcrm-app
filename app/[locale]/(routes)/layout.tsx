@@ -13,6 +13,7 @@ import { Metadata } from "next";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "./components/app-sidebar";
 import { getTranslations } from "next-intl/server";
+import { AvatarProvider } from "@/context/avatar-context";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -99,6 +100,7 @@ export default async function AppLayout({
 
   //console.log(typeof build, "build");
   return (
+    <AvatarProvider initialAvatar={user?.image}>
     <SidebarProvider defaultOpen={sidebarOpen}>
       <AppSidebar
         modules={modules}
@@ -127,5 +129,6 @@ export default async function AppLayout({
         </div>
       </SidebarInset>
     </SidebarProvider>
+    </AvatarProvider>
   );
 }
