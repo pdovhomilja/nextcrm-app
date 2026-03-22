@@ -113,15 +113,15 @@ export async function getEmail(id: string) {
             where: { id },
             data: { bodyText: body.bodyText ?? null, bodyHtml: body.bodyHtml ?? null },
           });
+          // Patch in-memory so caller gets the body immediately (before any send that may throw)
+          email.bodyText = body.bodyText ?? null;
+          email.bodyHtml = body.bodyHtml ?? null;
           // Trigger embed only if already CRM-linked (avoids embedding unrelated emails)
           const isLinked = email.contacts.length > 0 || email.accounts.length > 0;
           if (isLinked) {
             const { inngest } = await import("@/inngest/client");
-            await inngest.send({ name: "email/embed-email", data: { emailId: id } });
+            inngest.send({ name: "email/embed-email", data: { emailId: id } });
           }
-          // Patch in-memory so caller gets the body immediately
-          email.bodyText = body.bodyText ?? null;
-          email.bodyHtml = body.bodyHtml ?? null;
         }
       }
     } catch {
