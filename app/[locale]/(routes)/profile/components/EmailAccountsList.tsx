@@ -22,6 +22,7 @@ import {
   testEmailConnection,
 } from "@/actions/emails/accounts";
 import type { getEmailAccounts } from "@/actions/emails/accounts";
+import { triggerSync } from "@/actions/emails/sync";
 
 type Account = Awaited<ReturnType<typeof getEmailAccounts>>[number];
 
@@ -80,7 +81,10 @@ export function EmailAccountsList({ accounts }: { accounts: Account[] }) {
     refresh();
   }
 
-  async function handleSync(id: string) { /* TODO Task 6: triggerSync(id) */ }
+  async function handleSync(id: string) {
+    await triggerSync(id);
+    refresh();
+  }
 
   return (
     <div className="space-y-3">
