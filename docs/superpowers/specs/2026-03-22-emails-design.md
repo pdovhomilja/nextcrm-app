@@ -60,6 +60,7 @@ Stores IMAP/SMTP credentials per user. Multiple accounts per user are supported.
 | username | String | |
 | passwordEncrypted | String | AES-256-GCM encrypted |
 | isActive | Boolean | default true |
+| sentFolderName | String | IMAP folder name for sent mail (default "Sent"; common values: "Sent Items", "[Gmail]/Sent Mail") |
 | lastSyncedAt | DateTime? | Timestamp of last completed sync |
 | inboxLastUid | Int? | Highest IMAP UID seen in INBOX (sync cursor) |
 | sentLastUid | Int? | Highest IMAP UID seen in SENT (sync cursor) |
