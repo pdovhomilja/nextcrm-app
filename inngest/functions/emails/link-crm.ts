@@ -103,8 +103,9 @@ export const emailLinkCrm = inngest.createFunction(
                 bodyHtml: body.bodyHtml ?? null,
               },
             });
-          } catch {
-            // Body fetch failed — embed will run with subject-only text
+          } catch (e) {
+            console.warn(`[link-crm] Body fetch failed for email ${emailId}:`, e);
+            // embed will still fire with subject-only text
           }
         });
 
