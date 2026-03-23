@@ -12,6 +12,10 @@
 
 **TDD note:** Every task that introduces logic follows the pattern: write failing test → run → implement → run → commit. The SSE route's validation logic is tested in Task 5 steps 1–4 before the route itself is written in step 5.
 
+**Inngest registration note:** Task 7 Step 3 explicitly registers both `enrichContact` and `enrichContactsBulk` in `app/api/inngest/route.ts`. Do not skip this step.
+
+**Deployment note:** The SSE route uses a module-level `Map` for session tracking. This works correctly in single-process / long-running deployments (Node.js, Railway, Render). In serverless/multi-replica environments (Vercel functions with autoscaling) the cancel endpoint may land on a different process instance. For production scale-out, replace the in-memory Map with a Redis-backed session store. For now, `export const runtime = "nodejs"` is set to minimize cold-start issues.
+
 **Spec:** `docs/superpowers/specs/2026-03-23-contact-enrichment-design.md`
 
 ---
