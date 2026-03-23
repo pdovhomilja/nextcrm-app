@@ -119,6 +119,26 @@ model crm_Contact_Enrichment {
   @@index([triggeredBy])
 }
 
+model crm_Target_Enrichment {
+  id          String                  @id @default(uuid()) @db.Uuid
+  targetId    String                  @db.Uuid
+  status      crm_Enrichment_Status   @default(PENDING)
+  fields      String[]
+  result      Json?
+  error       String?
+  triggeredBy String?                 @db.Uuid
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+
+  target            crm_Targets       @relation(fields: [targetId], references: [id])
+  triggered_by_user Users?            @relation("target_enrichment_triggered_by", fields: [triggeredBy], references: [id])
+
+  @@index([targetId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([triggeredBy])
+}
+
 enum crm_Enrichment_Status {
   PENDING
   RUNNING
@@ -598,7 +618,8 @@ model Users {
   apiTokens            ApiToken[]
   emailAccounts        EmailAccount[]
   emails               Email[]
-  enrichments_triggered  crm_Contact_Enrichment[]  @relation("enrichment_triggered_by")
+  enrichments_triggered          crm_Contact_Enrichment[]  @relation("enrichment_triggered_by")
+  target_enrichments_triggered  crm_Target_Enrichment[]   @relation("target_enrichment_triggered_by")
 
   @@index([email])
   @@index([userStatus])
@@ -805,6 +826,7 @@ model crm_Targets {
 
   crate_by_user Users?               @relation("created_targets", fields: [created_by], references: [id])
   target_lists  TargetsToTargetLists[]
+  enrichments   crm_Target_Enrichment[]
 
   @@index([created_by])
   @@index([status])
