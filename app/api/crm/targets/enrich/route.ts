@@ -6,6 +6,7 @@ import { AgentEnrichmentStrategy } from "@/lib/enrichment/strategies/agent-enric
 import type { EnrichmentField } from "@/lib/enrichment/types";
 import type { StoredEnrichmentResult } from "@/lib/enrichment/types/stored-result";
 import { validateEnrichRequest } from "./validate";
+import { getApiKey } from "@/lib/api-keys";
 
 export const runtime = "nodejs";
 
@@ -17,13 +18,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const firecrawlApiKey = process.env.FIRECRAWL_API_KEY;
-  const openaiApiKey = process.env.OPENAI_API_KEY;
+  const firecrawlApiKey = await getApiKey("FIRECRAWL", session.user.id);
+  const openaiApiKey = await getApiKey("OPENAI", session.user.id);
   if (!firecrawlApiKey || !openaiApiKey) {
-    return NextResponse.json(
-      { error: "Enrichment not configured. Set FIRECRAWL_API_KEY and OPENAI_API_KEY." },
-      { status: 503 }
-    );
+    return NextResponse.json({ error: "NO_API_KEY" }, { status: 402 });
   }
 
   const body = await request.json();
