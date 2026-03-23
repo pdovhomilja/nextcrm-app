@@ -36,7 +36,7 @@ export const enrichTargetsBulk = inngest.createFunction(
       "fan-out-target-enrichments",
       records.map((r: { id: string; targetId: string }) => ({
         name: "enrich/target.run",
-        data: { targetId: r.targetId, enrichmentId: r.id, fields },
+        data: { targetId: r.targetId, enrichmentId: r.id, fields, triggeredBy },
       }))
     );
 

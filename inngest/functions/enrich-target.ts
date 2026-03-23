@@ -2,6 +2,7 @@ import { inngest } from "@/inngest/client";
 import { prismadb } from "@/lib/prisma";
 import { AgentEnrichmentStrategy } from "@/lib/enrichment/strategies/agent-enrichment-strategy";
 import { isFieldEmpty } from "@/lib/enrichment/utils/field-utils";
+import { getApiKey } from "@/lib/api-keys";
 import type { EnrichmentField } from "@/lib/enrichment/types";
 import type { StoredEnrichmentResult } from "@/lib/enrichment/types/stored-result";
 
@@ -34,14 +35,23 @@ export const enrichTarget = inngest.createFunction(
     retries: 3,
   },
   async ({ event }) => {
-    const { targetId, enrichmentId, fields } = event.data as {
+    const { targetId, enrichmentId, fields, triggeredBy } = event.data as {
       targetId: string;
       enrichmentId: string;
       fields: EnrichmentField[];
+      triggeredBy?: string;
     };
 
-    const firecrawlApiKey = process.env.FIRECRAWL_API_KEY;
-    const openaiApiKey = process.env.OPENAI_API_KEY;
+    const firecrawlApiKey = await getApiKey("FIRECRAWL", triggeredBy);
+    const openaiApiKey = await getApiKey("OPENAI", triggeredBy);
+
+    if (!firecrawlApiKey || !openaiApiKey) {
+      await prismadb.crm_Target_Enrichment.update({
+        where: { id: enrichmentId },
+        data: { status: "FAILED", error: "NO_API_KEY: configure keys in admin or profile settings" },
+      });
+      return;
+    }
 
     await prismadb.crm_Target_Enrichment.update({
       where: { id: enrichmentId },
