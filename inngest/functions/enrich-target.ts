@@ -91,38 +91,47 @@ export const enrichTarget = inngest.createFunction(
       return { skipped: "recently enriched" };
     }
 
-    const strategy = new AgentEnrichmentStrategy(openaiApiKey!, firecrawlApiKey!);
+    try {
+      const strategy = new AgentEnrichmentStrategy(openaiApiKey!, firecrawlApiKey!);
 
-    const result = await strategy.enrichRow({ email: target.email }, fields, "email");
+      const result = await strategy.enrichRow({ email: target.email }, fields, "email");
 
-    const stored: StoredEnrichmentResult = {
-      enrichments: result.enrichments,
-      status: result.status as "completed" | "error" | "skipped",
-      error: result.error,
-    };
+      const stored: StoredEnrichmentResult = {
+        enrichments: result.enrichments,
+        status: result.status as "completed" | "error" | "skipped",
+        error: result.error,
+      };
 
-    const updates: Record<string, string> = {};
-    for (const [fieldName, enrichment] of Object.entries(result.enrichments)) {
-      const contactColumn = contactFieldMap[fieldName as keyof typeof contactFieldMap];
-      if (!contactColumn) continue;
-      const currentValue = target[contactColumn] as string | null;
-      if (isFieldEmpty(currentValue) && enrichment.value) {
-        updates[contactColumn] = String(enrichment.value);
+      const updates: Record<string, string> = {};
+      for (const [fieldName, enrichment] of Object.entries(result.enrichments)) {
+        const contactColumn = contactFieldMap[fieldName as keyof typeof contactFieldMap];
+        if (!contactColumn) continue;
+        const currentValue = target[contactColumn] as string | null;
+        if (isFieldEmpty(currentValue) && enrichment.value) {
+          updates[contactColumn] = String(enrichment.value);
+        }
       }
-    }
 
-    if (Object.keys(updates).length > 0) {
-      await prismadb.crm_Targets.update({
-        where: { id: targetId },
-        data: updates,
+      if (Object.keys(updates).length > 0) {
+        await prismadb.crm_Targets.update({
+          where: { id: targetId },
+          data: updates,
+        });
+      }
+
+      await prismadb.crm_Target_Enrichment.update({
+        where: { id: enrichmentId },
+        data: { status: "COMPLETED", result: stored as object },
       });
+
+      return { enriched: true, fieldsApplied: Object.keys(updates) };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      await prismadb.crm_Target_Enrichment.update({
+        where: { id: enrichmentId },
+        data: { status: "FAILED", error: message },
+      }).catch(() => {});
+      throw err; // re-throw so Inngest retries
     }
-
-    await prismadb.crm_Target_Enrichment.update({
-      where: { id: enrichmentId },
-      data: { status: "COMPLETED", result: stored as object },
-    });
-
-    return { enriched: true, fieldsApplied: Object.keys(updates) };
   }
 );
