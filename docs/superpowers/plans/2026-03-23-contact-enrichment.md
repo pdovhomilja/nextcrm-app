@@ -108,16 +108,25 @@ grep -r "from '@/lib/" lib/enrichment/ --include="*.ts"
 
 Expected: no output (fire-enrich already uses relative imports like `'../services/firecrawl'`).
 
-If output IS found (imports like `from '@/lib/services/firecrawl'`), fix them with:
+If output IS found (imports like `from '@/lib/services/firecrawl'`), fix them with a portable node script:
 
 ```bash
-# Replace @/lib/ aliases with relative paths within lib/enrichment/
-# Run from the nextcrm-app root:
-find lib/enrichment -name "*.ts" -exec \
-  sed -i '' "s|from '@/lib/|from '@/lib/enrichment/|g" {} \;
+node -e "
+const fs = require('fs');
+const path = require('path');
+const glob = require('glob');
+const files = glob.sync('lib/enrichment/**/*.ts');
+files.forEach(f => {
+  const content = fs.readFileSync(f, 'utf8');
+  if (content.includes(\"from '@/lib/\")) {
+    fs.writeFileSync(f, content.replace(/from '@\\/lib\\//g, \"from '@/lib/enrichment/\"));
+    console.log('fixed:', f);
+  }
+});
+"
 ```
 
-Then manually verify each changed file's imports resolve correctly by running `npx tsc --noEmit 2>&1 | grep enrichment`.
+Then verify: `npx tsc --noEmit 2>&1 | grep enrichment`
 
 - [ ] **Step 3: Create StoredEnrichmentResult type**
 
@@ -864,17 +873,27 @@ export async function POST(request: NextRequest) {
 
 - [ ] **Step 3: Register both new functions in Inngest route**
 
-Modify `app/api/inngest/route.ts` — add imports and register:
+Open `app/api/inngest/route.ts`. It currently imports and registers 9 functions. Make two additions:
 
+**At the top, after the existing imports, add:**
 ```typescript
-// Add these imports at the top:
 import { enrichContact } from "@/inngest/functions/enrich-contact";
 import { enrichContactsBulk } from "@/inngest/functions/enrich-contacts-bulk";
-
-// Add to functions array:
-enrichContact,
-enrichContactsBulk,
 ```
+
+**Inside the `functions: [...]` array, append:**
+```typescript
+    enrichContact,
+    enrichContactsBulk,
+```
+
+The final `functions` array must include all existing entries PLUS these two new ones. Verify with:
+
+```bash
+npx tsc --noEmit 2>&1 | grep "inngest/route" | head -5
+```
+
+Expected: no errors. If you see "enrichContact is not exported" — check the function name matches exactly in `inngest/functions/enrich-contact.ts`.
 
 - [ ] **Step 4: TypeScript check**
 
