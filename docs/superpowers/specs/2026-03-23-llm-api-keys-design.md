@@ -8,6 +8,15 @@
 
 Remove the hard requirement for `FIRECRAWL_API_KEY` and `OPENAI_API_KEY` environment variables. Instead, implement a 3-tier priority system where API keys can be configured at the ENV level, by an admin system-wide, or by individual users in their profile. The app builds and runs without any AI keys in `.env`; enrichment features gracefully degrade when no key is found.
 
+## Priority Order
+
+```
+ENV variable  →  Admin system-wide  →  User profile
+(highest)                              (lowest)
+```
+
+ENV always wins. System-wide admin keys take precedence over individual user keys. User-profile keys are the last resort — used only when neither ENV nor a system-wide key is configured for that provider.
+
 ## Goals
 
 - App builds and starts without `FIRECRAWL_API_KEY` or `OPENAI_API_KEY` in `.env`
@@ -53,12 +62,24 @@ model ApiKeys {
   updatedAt    DateTime       @updatedAt
   user         Users?         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([scope, userId, provider])
   @@index([scope, provider])
+  @@index([userId, provider])
 }
 ```
 
-The `@@unique` constraint on `(scope, userId, provider)` ensures one key per provider per scope/user.
+**Note on uniqueness:** A standard `@@unique([scope, userId, provider])` does not work for SYSTEM rows because PostgreSQL treats `NULL != NULL`, meaning multiple system rows per provider would be allowed. Instead the migration adds two partial unique indexes via raw SQL:
+
+```sql
+-- One system key per provider
+CREATE UNIQUE INDEX api_keys_system_provider_unique
+  ON "ApiKeys" (provider)
+  WHERE scope = 'SYSTEM';
+
+-- One user key per provider per user
+CREATE UNIQUE INDEX api_keys_user_provider_unique
+  ON "ApiKeys" ("userId", provider)
+  WHERE scope = 'USER';
+```
 
 ### Encryption
 
@@ -71,14 +92,14 @@ New file: `lib/api-keys.ts`
 ```ts
 export async function getApiKey(
   provider: ApiKeyProvider,
-  userId: string
+  userId?: string          // optional — omit for background/system-only lookup
 ): Promise<string | null>
 ```
 
 Priority:
 1. `process.env[PROVIDER_ENV_MAP[provider]]` — if set, return immediately
 2. `ApiKeys` where `scope = SYSTEM`, `provider = provider` — decrypt and return if found
-3. `ApiKeys` where `scope = USER`, `userId = userId`, `provider = provider` — decrypt and return if found
+3. If `userId` provided: `ApiKeys` where `scope = USER`, `userId = userId`, `provider = provider` — decrypt and return if found
 4. Return `null`
 
 `PROVIDER_ENV_MAP`:
@@ -93,8 +114,8 @@ const PROVIDER_ENV_MAP: Record<ApiKeyProvider, string> = {
 
 ### Migration
 
-- Add `ApiKeys` table and enums via new Prisma migration
-- Migrate existing `openAi_keys` rows: encrypt `api_key`, insert as `scope=USER`, `provider=OPENAI`
+- Add `ApiKeys` table, enums, and partial unique indexes via new Prisma migration
+- Migrate existing `openAi_keys` rows: encrypt `api_key`, insert as `scope=USER`, `provider=OPENAI`. Discard `organization_id` (unused sentinel field) and `v` fields.
 - Drop `openAi_keys` table
 - Remove `openAi_key` relation from `Users` model
 
@@ -109,7 +130,7 @@ File: `app/[locale]/(routes)/admin/actions/api-keys.ts`
 | Action | Description |
 |---|---|
 | `getSystemApiKeys()` | Returns all providers with status: `ENV_ACTIVE`, `SYSTEM_SET`, `NOT_CONFIGURED`. Never returns decrypted keys — only last 4 chars for display. |
-| `upsertSystemApiKey(provider, key)` | Encrypts key, upserts row with `scope=SYSTEM`. Calls `revalidatePath("/admin/llm-keys")`. |
+| `upsertSystemApiKey(provider, key)` | Encrypts key, upserts row with `scope=SYSTEM`. Calls `revalidatePath` using the locale-aware path pattern matching other admin actions in the codebase. |
 | `deleteSystemApiKey(provider)` | Deletes system key row. Calls `revalidatePath`. |
 
 Guard: each action checks `session.user.is_admin` and throws if not admin.
@@ -120,7 +141,7 @@ File: `app/[locale]/(routes)/profile/actions/api-keys.ts`
 
 | Action | Description |
 |---|---|
-| `getUserApiKeys()` | Returns provider statuses for the current user. |
+| `getUserApiKeys()` | Returns provider statuses for the current user, including whether a higher-tier key (ENV or system) is active for each provider. |
 | `upsertUserApiKey(provider, key)` | Encrypts key, upserts row with `scope=USER`, `userId=session.user.id`. |
 | `deleteUserApiKey(provider)` | Deletes user key row. |
 
@@ -128,7 +149,9 @@ Guard: each action requires authenticated session.
 
 ---
 
-## 3. Enrich Routes
+## 3. Enrich Routes and Inngest Functions
+
+### SSE Enrich Routes
 
 Both `/api/crm/contacts/enrich` and `/api/crm/targets/enrich` are updated:
 
@@ -150,15 +173,52 @@ if (!firecrawlApiKey || !openaiApiKey) {
 }
 ```
 
-The `402` + `NO_API_KEY` error code is a distinct signal the frontend uses to show the setup modal instead of a generic error toast.
+The `402` + `NO_API_KEY` error code is the distinct signal the frontend uses to show the setup modal instead of a generic error toast.
 
 The `AgentEnrichmentStrategy` constructor already accepts both keys as arguments — no changes needed there.
+
+### Inngest Bulk-Enrich Functions
+
+The Inngest background functions (`inngest/functions/enrich-contact.ts`, `inngest/functions/enrich-target.ts`) also read `process.env` directly. These run without an active HTTP session.
+
+**Solution:** `triggeredBy` (userId) is present in the bulk fan-out functions but is not currently forwarded to the per-record child events. Two changes are required:
+
+**(a) Bulk fan-out functions** (`enrich-contacts-bulk.ts`, `enrich-targets-bulk.ts`) — add `triggeredBy` to each child event payload:
+
+```ts
+// When sending child events
+await step.sendEvent("enrich/contact.run", records.map(r => ({
+  data: { contactId: r.contactId, enrichmentId: r.id, fields, triggeredBy }
+  //                                                           ^^^^^^^^^^^^ add this
+})));
+```
+
+**(b) Per-record functions** (`enrich-contact.ts`, `enrich-target.ts`) — destructure `triggeredBy` and use it for key resolution:
+
+```ts
+const { contactId, enrichmentId, fields, triggeredBy } = event.data;
+const firecrawlApiKey = await getApiKey("FIRECRAWL", triggeredBy);
+const openaiApiKey = await getApiKey("OPENAI", triggeredBy);
+if (!firecrawlApiKey || !openaiApiKey) {
+  await prismadb.crm_Contact_Enrichment.update({
+    where: { id: enrichmentId },
+    data: { status: "FAILED", error: "NO_API_KEY: configure keys in admin or profile settings" }
+  });
+  return;
+}
+```
+
+`getApiKey` with a userId will resolve ENV → system → user-profile, same as the HTTP routes.
 
 ---
 
 ## 4. Frontend
 
 ### Admin Page Redesign
+
+**Existing admin structure:** The current admin page already contains `OpenAiCard`, `GptCard`, and `SetGptModel` — these are the old per-admin OpenAI key management UI. They are superseded by the new `llm-keys` page and **must be removed** from `admin/page.tsx` and `admin/_components/` when the new page is added. `ResendCard` (email service config) is unrelated and stays. The existing `admin/users/` and `admin/modules/` sub-pages are preserved and will be wrapped by the new `layout.tsx` sidebar.
+
+The existing `admin/page.tsx` should redirect to `admin/llm-keys` as the new default, or be repurposed as the LLM keys page directly.
 
 **New layout:** `app/[locale]/(routes)/admin/layout.tsx`
 - Persistent sidebar with nav items: LLM Keys, Users, Modules, Services
@@ -175,23 +235,35 @@ The `AgentEnrichmentStrategy` constructor already accepts both keys as arguments
 
 ### Profile LLMs Tab
 
-**Replace developer tab:**
-- Rename/repurpose `DeveloperTabContent.tsx` → `LlmsTabContent.tsx`
-- Update `ProfileTabs.tsx`: change tab label from "Developer" to "LLMs", update URL param from `developer` to `llms`
+**Add a new tab — keep Developer tab.** The existing `DeveloperTabContent.tsx` contains `ApiTokens` (app API bearer tokens for third-party integrations) alongside `OpenAiForm`. The `ApiTokens` component is unrelated to LLM providers and must not be lost. Therefore:
+
+- **Keep** the `developer` tab as-is (contains `ApiTokens`)
+- **Add** a new `llms` tab for LLM provider key management
+- **Remove** `OpenAiForm` from `DeveloperTabContent.tsx` (it is superseded by the new LLMs tab)
+
+The tab system in `ProfileTabs.tsx` uses a hardcoded TypeScript union. All of the following must be updated:
+- `ProfileTabs.tsx` — add `"llms"` to the union type, `TAB_IDS`, `TAB_ICONS`, `contentMap`, add `llmsContent` prop; remove `OpenAiForm` from `developerContent`
+- `profile/page.tsx` — add `llmsContent` prop
+- Translation keys — add `tabs.llms` / `tabs.llmsDesc`
+- New file: `LlmsTabContent.tsx`
 - Tab URL: `/profile?tab=llms`
 
-**Tab content:**
-- One section per provider: label, description, a masked input + Save + Remove button
-- If a higher-tier key is active (ENV or system), show an informational note: "A system-wide key is active — your key will be used as fallback"
-- Simple form, no modals — matches existing profile tab style (see `OpenAiForm.tsx` as reference)
+**Tab content (`LlmsTabContent.tsx`):**
+- One section per provider: label, short description, password input + Save + Remove button
+- If ENV or system key is active for a provider, show: "A system-wide key is active — your key is not in use"
+- Simple form matching existing profile tab style (reference `OpenAiForm.tsx`)
 
-### No API Key Modal
+### No API Key Dialog
 
-**New component:** `components/ui/NoApiKeyDialog.tsx`
+**New component:** `components/NoApiKeyDialog.tsx` (not in `components/ui/` — this has business logic)
 - Triggered when an enrich route returns `{ error: "NO_API_KEY" }`
-- Content: "Enrichment requires API keys. Configure them in your profile settings or ask your admin."
+- Content: "Enrichment requires API keys. Configure them in your profile settings, or ask your admin to set a system-wide key."
 - Two actions: "Go to Settings" (→ `/profile?tab=llms`) and "Close"
-- Wired into `EnrichDrawer` and `BulkEnrichModal` error handling (both contacts and targets)
+- Wired into the following components for both contacts and targets:
+  - `EnrichButton` / detail-page enrich trigger (single-record enrichment)
+  - `BulkEnrichModal` (contacts bulk)
+  - `BulkEnrichTargetsModal` (targets bulk)
+- Note: bulk modals call `/enrich-bulk` routes — those routes must also be updated to return `402 NO_API_KEY` (same pattern as `/enrich` routes).
 
 ---
 
@@ -199,32 +271,48 @@ The `AgentEnrichmentStrategy` constructor already accepts both keys as arguments
 
 ```
 prisma/
-  schema.prisma                          modified — add ApiKeys model, remove openAi_keys
-  migrations/YYYYMMDD_add_api_keys/      new migration
+  schema.prisma                          modified — add ApiKeys model + enums, remove openAi_keys
+  migrations/YYYYMMDD_add_api_keys/      new migration (includes partial unique index SQL)
 
 lib/
   api-keys.ts                            NEW — getApiKey resolver
 
+inngest/functions/
+  enrich-contact.ts                      modified — swap env reads for getApiKey(provider, triggeredBy)
+  enrich-target.ts                       modified — same
+
 app/[locale]/(routes)/
   admin/
     layout.tsx                           NEW — sidebar nav layout
+    page.tsx                             modified — redirect to llm-keys; remove OpenAiCard/GptCard
     llm-keys/
       page.tsx                           NEW — LLM keys admin page
     actions/
       api-keys.ts                        NEW — system key server actions
+    _components/
+      OpenAiCard.tsx                     deleted — superseded by llm-keys page
+      GptCard.tsx                        deleted — superseded
+    forms/
+      SetGptModel.tsx                    deleted — superseded
 
   profile/
-    components/tabs/
-      LlmsTabContent.tsx                 NEW (replaces DeveloperTabContent)
+    page.tsx                             modified — add llmsContent prop
+    components/
+      ProfileTabs.tsx                    modified — add llms tab to union/contentMap; remove OpenAiForm from developer tab
+      tabs/
+        LlmsTabContent.tsx               NEW
+        DeveloperTabContent.tsx          modified — remove OpenAiForm section (keep ApiTokens)
     actions/
       api-keys.ts                        NEW — user key server actions
 
-  components/ui/
+  components/
     NoApiKeyDialog.tsx                   NEW
 
 app/api/crm/
   contacts/enrich/route.ts              modified — swap env reads for getApiKey()
-  targets/enrich/route.ts               modified — swap env reads for getApiKey()
+  contacts/enrich-bulk/route.ts         modified — same, return 402 NO_API_KEY
+  targets/enrich/route.ts               modified — same
+  targets/enrich-bulk/route.ts          modified — same
 ```
 
 ---
@@ -234,16 +322,19 @@ app/api/crm/
 | Scenario | Behaviour |
 |---|---|
 | No key at any tier | Enrich route returns `402 NO_API_KEY`; frontend shows `NoApiKeyDialog` |
-| ENV key set | Admin/profile pages show it as read-only with `ENV` badge; system/user keys for that provider are ignored |
+| ENV key set | Admin/profile pages show it as read-only with `ENV` badge; system/user keys for that provider are stored but never resolved |
 | `EMAIL_ENCRYPTION_KEY` missing | `encrypt()`/`decrypt()` throws; server action returns error toast |
-| User deletes their key when system key exists | Enrichment falls back to system key transparently |
-| Admin deletes system key when user has one | Enrichment falls back to user key transparently |
+| User deletes their key when system key exists | Enrichment uses system key (higher priority) |
+| Admin deletes system key when user has one | Enrichment falls back to user key |
+| Inngest job has no key | Job marked `FAILED` with `NO_API_KEY` error message |
+| User key set but system key also set | System key is used; profile tab informs user their key is not in use |
 
 ---
 
 ## 7. Security
 
 - Keys are encrypted with AES-256-GCM before DB storage
-- Decrypted keys are never returned to the client — only masked suffix for display
-- Server actions validate session on every call
+- Decrypted keys are never returned to the client — only masked suffix (last 4 chars) for display
+- Server actions validate session on every call; admin actions additionally check `is_admin`
 - `EMAIL_ENCRYPTION_KEY` must be set in `.env` (already required for email accounts)
+- Inngest functions receive `userId` via event payload — they do not bypass the resolver
