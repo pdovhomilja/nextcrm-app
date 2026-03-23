@@ -4,7 +4,7 @@
  */
 import { getApiKey } from "@/lib/api-keys";
 import { prismadb } from "@/lib/prisma";
-import { decrypt, encrypt } from "@/lib/email-crypto";
+import { decrypt } from "@/lib/email-crypto";
 
 // Mock prismadb to avoid real DB calls
 jest.mock("@/lib/prisma", () => ({

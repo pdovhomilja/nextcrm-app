@@ -1,7 +1,8 @@
 import { prismadb } from "@/lib/prisma";
 import { decrypt } from "@/lib/email-crypto";
+import type { ApiKeyProvider } from "@prisma/client";
 
-export type ApiKeyProvider = "OPENAI" | "FIRECRAWL" | "ANTHROPIC" | "GROQ";
+export type { ApiKeyProvider };
 
 const PROVIDER_ENV_MAP: Record<ApiKeyProvider, string> = {
   OPENAI: "OPENAI_API_KEY",
