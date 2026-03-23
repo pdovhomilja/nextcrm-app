@@ -1,6 +1,6 @@
-export function validateEnrichRequest(body: { contactId?: string; fields?: unknown[] }): string | null {
-  if (!body.contactId || !body.fields?.length) {
-    return "contactId and fields are required";
+export function validateEnrichRequest(body: { targetId?: string; fields?: unknown[] }): string | null {
+  if (!body.targetId || !body.fields?.length) {
+    return "targetId and fields are required";
   }
   return null;
 }

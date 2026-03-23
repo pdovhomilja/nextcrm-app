@@ -43,7 +43,7 @@ export async function PATCH(
 
   const target = await prismadb.crm_Targets.update({
     where: { id },
-    data: updates,
+    data: { ...updates, updatedBy: session.user.id },
     select: { id: true },
   });
 

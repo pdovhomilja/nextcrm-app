@@ -27,11 +27,11 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const validationError = validateEnrichRequest(body);
+  const { contactId: targetId, fields } = body as { contactId: string; fields: EnrichmentField[] };
+  const validationError = validateEnrichRequest({ targetId, fields });
   if (validationError) {
     return NextResponse.json({ error: validationError }, { status: 400 });
   }
-  const { contactId: targetId, fields } = body as { contactId: string; fields: EnrichmentField[] };
 
   const target = await prismadb.crm_Targets.findUnique({
     where: { id: targetId },
