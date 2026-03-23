@@ -263,7 +263,7 @@ The tab system in `ProfileTabs.tsx` uses a hardcoded TypeScript union. All of th
   - `EnrichButton` / detail-page enrich trigger (single-record enrichment)
   - `BulkEnrichModal` (contacts bulk)
   - `BulkEnrichTargetsModal` (targets bulk)
-- Note: bulk modals call `/enrich-bulk` routes — those routes must also be updated to return `402 NO_API_KEY` (same pattern as `/enrich` routes).
+- Note: bulk modals call `/enrich-bulk` routes — those routes only fire an Inngest event today and do not call enrichment directly. They must be updated to call `getApiKey` before sending the Inngest event and return `402 NO_API_KEY` early if no key is found, providing fast user feedback rather than a silent Inngest job failure.
 
 ---
 
@@ -293,7 +293,7 @@ app/[locale]/(routes)/
       OpenAiCard.tsx                     deleted — superseded by llm-keys page
       GptCard.tsx                        deleted — superseded
     forms/
-      SetGptModel.tsx                    deleted — superseded
+      SetGptModel.tsx                    deleted — superseded (verify exact path before deleting)
 
   profile/
     page.tsx                             modified — add llmsContent prop
