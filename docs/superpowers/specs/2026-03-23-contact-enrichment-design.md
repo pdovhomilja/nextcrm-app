@@ -45,10 +45,10 @@ nextcrm-app/
 │           ├── email-detection.ts
 │           └── field-utils.ts
 ├── app/api/crm/contacts/
-│   └── enrich/
-│       └── route.ts                     ← SSE streaming endpoint (single contact)
-│       └── bulk/
-│           └── route.ts                 ← triggers Inngest bulk fan-out
+│   ├── enrich/
+│   │   └── route.ts                     ← SSE streaming endpoint (single contact)
+│   └── enrich-bulk/
+│       └── route.ts                     ← triggers Inngest bulk fan-out
 ├── inngest/functions/
 │   ├── enrich-contact.ts                ← single contact Inngest job
 │   └── enrich-contacts-bulk.ts          ← bulk fan-out orchestrator
@@ -81,11 +81,13 @@ model crm_Contact_Enrichment {
   createdAt   DateTime                @default(now())
   updatedAt   DateTime                @updatedAt
 
-  contact     crm_Contacts            @relation(fields: [contactId], references: [id])
+  contact         crm_Contacts        @relation(fields: [contactId], references: [id])
+  triggered_by_user Users?            @relation("enrichment_triggered_by", fields: [triggeredBy], references: [id])
 
   @@index([contactId])
   @@index([status])
   @@index([createdAt])
+  @@index([triggeredBy])
 }
 
 enum crm_Enrichment_Status {
@@ -143,11 +145,11 @@ FIRECRAWL_API_KEY=           # get from firecrawl.dev
 6. On complete: update enrichment record (`status: COMPLETED`, `result: JSON`)
 7. Client calls `PATCH /api/crm/contacts/[id]` to apply selected fields
 
-**Cancel:** `DELETE /api/crm/contacts/enrich?sessionId=...` aborts in-flight requests.
+**Cancellation:** The route handler attaches an abort listener to `request.signal` (Next.js App Router exposes this via the Web Fetch API). When the client disconnects, `request.signal` fires `abort` and the route calls `abortController.abort()` to cancel in-flight Firecrawl requests. No client-side DELETE call is needed for disconnect — but the client may also call `DELETE /api/crm/contacts/enrich?sessionId=...` explicitly (e.g. user clicks Cancel button) to abort before disconnect.
 
 ---
 
-### `POST /api/crm/contacts/enrich/bulk`
+### `POST /api/crm/contacts/enrich-bulk`
 
 **Request:**
 ```typescript
@@ -164,16 +166,26 @@ FIRECRAWL_API_KEY=           # get from firecrawl.dev
 ### Inngest Functions
 
 #### `enrich/contacts.bulk` → `enrich-contacts-bulk`
-Fan-out: creates one `crm_Contact_Enrichment` record per contact (status: PENDING), then sends one `enrich/contact.run` event per contact.
+Fan-out:
+1. For each `contactId`, create one `crm_Contact_Enrichment` record (status: PENDING)
+2. Send one `enrich/contact.run` event per contact, with payload:
+   ```typescript
+   { contactId: string; enrichmentId: string; fields: EnrichmentField[] }
+   ```
 
 #### `enrich/contact.run` → `enrich-contact`
-1. Fetch contact email from DB
-2. Skip if no email (update record to SKIPPED)
-3. Instantiate `AgentEnrichmentStrategy`
-4. Run enrichment
-5. Write enriched values directly to `crm_Contacts` — **only empty fields** (never overwrite existing data)
-6. Update `crm_Contact_Enrichment` record (COMPLETED or FAILED)
-7. Retry up to 3x on failure with exponential backoff
+
+Event payload: `{ contactId, enrichmentId, fields }`
+
+1. Update enrichment record to RUNNING (by `enrichmentId`)
+2. Fetch contact email from DB
+3. Skip if no email (update record to SKIPPED)
+4. Skip if another COMPLETED record exists for this contact within last 7 days (update to SKIPPED)
+5. Instantiate `AgentEnrichmentStrategy`
+6. Run enrichment
+7. Write enriched values directly to `crm_Contacts` — **only empty fields** (never overwrite existing data)
+8. Update `crm_Contact_Enrichment` record (COMPLETED or FAILED) by `enrichmentId`
+9. Retry up to 3x on failure with exponential backoff
 
 ---
 
@@ -239,9 +251,10 @@ Table of all `crm_Contact_Enrichment` records:
 | Contact has no email | Enrich button disabled with tooltip; API returns 422 |
 | Personal email (gmail, yahoo, etc.) | Returns `skipped` status with friendly message |
 | Partial enrichment (some fields fail) | Diff preview shows partial results; user applies what was found |
-| SSE connection dropped mid-enrichment | Client calls DELETE endpoint to abort; enrichment record set to FAILED |
+| SSE connection dropped mid-enrichment | Server detects via `request.signal` abort event and cancels in-flight requests; enrichment record set to FAILED |
 | Bulk Firecrawl rate limit | Inngest retries with exponential backoff (max 3 attempts) |
 | Bulk: contact already recently enriched | Check for COMPLETED record within last 7 days; skip with `status: SKIPPED` |
+| Single: user re-runs enrichment on same contact | No deduplication — always runs. User sees the new diff and chooses what to apply. |
 
 ---
 
