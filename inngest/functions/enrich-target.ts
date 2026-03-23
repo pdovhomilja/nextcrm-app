@@ -104,11 +104,11 @@ export const enrichTarget = inngest.createFunction(
 
       const updates: Record<string, string> = {};
       for (const [fieldName, enrichment] of Object.entries(result.enrichments)) {
-        const contactColumn = targetFieldMap[fieldName as keyof typeof targetFieldMap];
-        if (!contactColumn) continue;
-        const currentValue = target[contactColumn] as string | null;
+        const targetColumn = targetFieldMap[fieldName as keyof typeof targetFieldMap];
+        if (!targetColumn) continue;
+        const currentValue = target[targetColumn] as string | null;
         if (isFieldEmpty(currentValue) && enrichment.value) {
-          updates[contactColumn] = String(enrichment.value);
+          updates[targetColumn] = String(enrichment.value);
         }
       }
 
