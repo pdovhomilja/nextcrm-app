@@ -608,7 +608,7 @@ model Users {
   assigned_opportunity crm_Opportunities[]   @relation("assigned_to_user_relation")
   assigned_contacts    crm_Contacts[]        @relation("assigned_contacts")
   crated_contacts      crm_Contacts[]        @relation("created_contacts")
-  openAi_key           openAi_keys[]
+  apiKeys              ApiKeys[]
   assigned_contracts   crm_Contracts[]
   boards               Boards[]              @relation("assigned_user")
   watching_boards      BoardWatchers[]
@@ -645,15 +645,30 @@ model system_Modules_Enabled {
   position Int
 }
 
-model openAi_keys {
-  id              String @id @default(uuid()) @db.Uuid
-  v               Int    @map("__v")
-  user            String @db.Uuid
-  organization_id String
-  api_key         String
-  assigned_user   Users? @relation(fields: [user], references: [id])
+enum ApiKeyScope {
+  SYSTEM
+  USER
+}
 
-  @@index([user])
+enum ApiKeyProvider {
+  OPENAI
+  FIRECRAWL
+  ANTHROPIC
+  GROQ
+}
+
+model ApiKeys {
+  id           String         @id @default(uuid()) @db.Uuid
+  scope        ApiKeyScope
+  userId       String?        @db.Uuid
+  provider     ApiKeyProvider
+  encryptedKey String
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  user         Users?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([scope, provider])
+  @@index([userId, provider])
 }
 
 model systemServices {
