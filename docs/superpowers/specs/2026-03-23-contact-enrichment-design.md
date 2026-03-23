@@ -81,8 +81,10 @@ model crm_Contact_Enrichment {
   createdAt   DateTime                @default(now())
   updatedAt   DateTime                @updatedAt
 
-  contact         crm_Contacts        @relation(fields: [contactId], references: [id])
+  contact           crm_Contacts      @relation(fields: [contactId], references: [id])
   triggered_by_user Users?            @relation("enrichment_triggered_by", fields: [triggeredBy], references: [id])
+  // Note: add matching back-reference on Users model to avoid Prisma ambiguous-relation error:
+  // enrichments_triggered  crm_Contact_Enrichment[]  @relation("enrichment_triggered_by")
 
   @@index([contactId])
   @@index([status])
@@ -99,7 +101,24 @@ enum crm_Enrichment_Status {
 }
 ```
 
-The `result` JSON field stores the full `RowEnrichmentResult` from fire-enrich (per-field values, confidence scores, source URLs). This powers the diff preview before the user applies changes.
+The `result` JSON field stores the full `RowEnrichmentResult` from fire-enrich. Type reference: `lib/enrichment/types/index.ts`. Abbreviated shape:
+
+```typescript
+// result JSON shape stored in crm_Contact_Enrichment.result
+interface StoredEnrichmentResult {
+  enrichments: Record<string, {
+    field: string;
+    value: string | number | boolean | string[];
+    confidence: number;        // 0–1
+    source?: string;
+    sourceContext?: { url: string; snippet: string }[];
+  }>;
+  status: 'completed' | 'error' | 'skipped';
+  error?: string;
+}
+```
+
+This powers the diff preview (values + source URLs) and the bulk apply logic (field values to write).
 
 No changes to `crm_Contacts` — all existing fields are sufficient targets.
 
@@ -147,6 +166,15 @@ FIRECRAWL_API_KEY=           # get from firecrawl.dev
 
 **Cancellation:** The route handler attaches an abort listener to `request.signal` (Next.js App Router exposes this via the Web Fetch API). When the client disconnects, `request.signal` fires `abort` and the route calls `abortController.abort()` to cancel in-flight Firecrawl requests. No client-side DELETE call is needed for disconnect — but the client may also call `DELETE /api/crm/contacts/enrich?sessionId=...` explicitly (e.g. user clicks Cancel button) to abort before disconnect.
 
+The SSE `{ type: 'session', sessionId }` event carries a runtime session ID (not the `crm_Contact_Enrichment.id`). The route maintains a `Map<sessionId, { abortController, enrichmentId }>` in memory. On cancel (either signal abort or DELETE), the handler calls `abortController.abort()` and updates the `crm_Contact_Enrichment` record to `FAILED`.
+
+**`DELETE /api/crm/contacts/enrich?sessionId=<id>`**
+
+Behavior:
+1. Look up `sessionId` in the in-memory map
+2. If found: call `abortController.abort()`, update enrichment record to `FAILED`, return `{ success: true }`
+3. If not found: return 404 `{ error: 'Session not found or already complete' }` (idempotent — the enrichment may have already finished)
+
 ---
 
 ### `POST /api/crm/contacts/enrich-bulk`
@@ -183,7 +211,7 @@ Event payload: `{ contactId, enrichmentId, fields }`
 4. Skip if another COMPLETED record exists for this contact within last 7 days (update to SKIPPED)
 5. Instantiate `AgentEnrichmentStrategy`
 6. Run enrichment
-7. Write enriched values directly to `crm_Contacts` — **only empty fields** (never overwrite existing data)
+7. Write enriched values directly to `crm_Contacts` — **only empty fields** (never overwrite existing data). A field is considered empty if its current DB value is `null` or an empty string after trimming (`"".trim() === ""`)
 8. Update `crm_Contact_Enrichment` record (COMPLETED or FAILED) by `enrichmentId`
 9. Retry up to 3x on failure with exponential backoff
 
@@ -228,6 +256,8 @@ Drawer disabled + tooltip shown if contact has no email: *"Add an email to enabl
 ---
 
 ### `/crm/contacts/enrichment` — Enrichment Jobs Page
+
+Data fetching: Server Component with direct Prisma query (no separate REST endpoint). The page uses `revalidate` or a refresh button since Inngest jobs update records asynchronously. "Running" records are highlighted; the page does not poll automatically — user refreshes to update status.
 
 Table of all `crm_Contact_Enrichment` records:
 
