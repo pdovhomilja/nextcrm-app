@@ -27,7 +27,9 @@ import {
 
 import { DataTablePagination } from "./data-table-pagination";
 import { DataTableToolbar } from "./data-table-toolbar";
-import { PanelTopClose, PanelTopOpen } from "lucide-react";
+import { PanelTopClose, PanelTopOpen, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { BulkEnrichTargetsModal } from "../components/BulkEnrichTargetsModal";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -47,6 +49,7 @@ export function TargetsDataTable<TData, TValue>({
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
   const [hide, setHide] = React.useState(false);
+  const [bulkEnrichOpen, setBulkEnrichOpen] = React.useState(false);
 
   const table = useReactTable({
     data,
@@ -96,6 +99,28 @@ export function TargetsDataTable<TData, TValue>({
       ) : (
         <>
           <DataTableToolbar table={table} />
+          {table.getSelectedRowModel().rows.length > 0 && (
+            <>
+              <div className="flex items-center gap-2 py-2 px-1 bg-muted/50 rounded-md border">
+                <span className="text-sm text-muted-foreground">
+                  {table.getSelectedRowModel().rows.length} selected
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setBulkEnrichOpen(true)}
+                >
+                  <Sparkles className="h-4 w-4 mr-1 text-orange-500" />
+                  Enrich {table.getSelectedRowModel().rows.length} targets
+                </Button>
+              </div>
+              <BulkEnrichTargetsModal
+                targetIds={table.getSelectedRowModel().rows.map((row) => (row.original as { id: string }).id)}
+                open={bulkEnrichOpen}
+                onOpenChange={setBulkEnrichOpen}
+              />
+            </>
+          )}
           <div className="rounded-md border">
             <Table>
               <TableHeader>
