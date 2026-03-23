@@ -17,8 +17,9 @@ const FIELD_MAP: Record<string, string> = {
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -40,7 +41,7 @@ export async function PATCH(
   }
 
   const contact = await prismadb.crm_Contacts.update({
-    where: { id: params.id },
+    where: { id },
     data: { ...updates, updatedBy: session.user.id },
     select: { id: true },
   });
