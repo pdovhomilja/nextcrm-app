@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { contactId: targetId, fields } = body as { contactId: string; fields: EnrichmentField[] };
+  const { targetId, fields } = body as { targetId: string; fields: EnrichmentField[] };
   const validationError = validateEnrichRequest({ targetId, fields });
   if (validationError) {
     return NextResponse.json({ error: validationError }, { status: 400 });
