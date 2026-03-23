@@ -51,7 +51,7 @@ export function EnrichFieldSelector({ onStart, loading }: EnrichFieldSelectorPro
       required: false,
     };
     setCustomFields((prev) => [...prev, field]);
-    setSelected((prev) => new Set(Array.from(prev).concat(field.name)));
+    setSelected((prev) => { const next = new Set(prev); next.add(field.name); return next; });
     setCustomName("");
     setCustomDesc("");
   };
