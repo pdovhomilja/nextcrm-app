@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { EnrichFieldSelector } from "../../components/EnrichFieldSelector";
 import type { EnrichmentField } from "@/lib/enrichment/types";
 import type { StoredEnrichmentResult } from "@/lib/enrichment/types/stored-result";
+import { NoApiKeyDialog } from "@/app/components/NoApiKeyDialog";
 
 type Step = "select" | "progress" | "diff";
 
@@ -55,6 +56,7 @@ export function EnrichContactDrawer({
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [selectedApply, setSelectedApply] = useState<Set<string>>(new Set());
   const [applying, setApplying] = useState(false);
+  const [showNoApiKeyDialog, setShowNoApiKeyDialog] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const reset = () => {
@@ -83,6 +85,11 @@ export function EnrichContactDrawer({
 
     if (!response.ok) {
       const err = await response.json();
+      if (response.status === 402 || err.error === "NO_API_KEY") {
+        setShowNoApiKeyDialog(true);
+        setStep("select");
+        return;
+      }
       toast.error(err.error ?? "Failed to start enrichment");
       setStep("select");
       return;
@@ -287,5 +294,6 @@ export function EnrichContactDrawer({
         )}
       </SheetContent>
     </Sheet>
+    <NoApiKeyDialog open={showNoApiKeyDialog} onClose={() => setShowNoApiKeyDialog(false)} />
   );
 }

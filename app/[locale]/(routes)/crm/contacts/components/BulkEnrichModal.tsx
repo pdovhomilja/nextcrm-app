@@ -11,6 +11,7 @@ import {
 import { toast } from "sonner";
 import { EnrichFieldSelector } from "./EnrichFieldSelector";
 import type { EnrichmentField } from "@/lib/enrichment/types";
+import { NoApiKeyDialog } from "@/app/components/NoApiKeyDialog";
 
 interface BulkEnrichModalProps {
   contactIds: string[];
@@ -20,6 +21,7 @@ interface BulkEnrichModalProps {
 
 export function BulkEnrichModal({ contactIds, open, onOpenChange }: BulkEnrichModalProps) {
   const [loading, setLoading] = useState(false);
+  const [showNoApiKeyDialog, setShowNoApiKeyDialog] = useState(false);
 
   const handleStart = async (fields: EnrichmentField[]) => {
     setLoading(true);
@@ -34,7 +36,11 @@ export function BulkEnrichModal({ contactIds, open, onOpenChange }: BulkEnrichMo
         onOpenChange(false);
       } else {
         const err = await res.json();
-        toast.error(err.error ?? "Failed to start bulk enrichment");
+        if (res.status === 402 || err.error === "NO_API_KEY") {
+          setShowNoApiKeyDialog(true);
+        } else {
+          toast.error(err.error ?? "Failed to start bulk enrichment");
+        }
       }
     } finally {
       setLoading(false);
@@ -54,5 +60,6 @@ export function BulkEnrichModal({ contactIds, open, onOpenChange }: BulkEnrichMo
         <EnrichFieldSelector onStart={handleStart} loading={loading} />
       </DialogContent>
     </Dialog>
+    <NoApiKeyDialog open={showNoApiKeyDialog} onClose={() => setShowNoApiKeyDialog(false)} />
   );
 }
