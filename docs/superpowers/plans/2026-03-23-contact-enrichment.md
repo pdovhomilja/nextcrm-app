@@ -6,7 +6,11 @@
 
 **Architecture:** Copy fire-enrich's `lib/` into `lib/enrichment/`. A streaming SSE route handles single-contact enrichment with real-time agent progress; a separate bulk route fans out to Inngest jobs. The drawer shows a diff preview before saving; bulk auto-applies to empty fields only.
 
-**Tech Stack:** Next.js App Router, Prisma + PostgreSQL, Inngest, `@mendable/firecrawl-js`, OpenAI (already present), Zod (already present), Tailwind + shadcn/ui (`vaul` Drawer, Radix Dialog), TanStack Table (already present).
+**Tech Stack:** Next.js App Router, Prisma + PostgreSQL, Inngest, `@mendable/firecrawl-js`, OpenAI (already present), Zod (already present), Tailwind + shadcn/ui, TanStack Table (already present).
+
+**Note on drawer component:** The spec says "slide-over drawer" — this maps to shadcn `Sheet` (slides in from the right). `vaul` is a bottom-sheet library for mobile and is NOT used here. `Sheet` is the correct choice.
+
+**TDD note:** Every task that introduces logic follows the pattern: write failing test → run → implement → run → commit. The SSE route's validation logic is tested in Task 5 steps 1–4 before the route itself is written in step 5.
 
 **Spec:** `docs/superpowers/specs/2026-03-23-contact-enrichment-design.md`
 
@@ -504,6 +508,8 @@ export async function POST(request: NextRequest) {
   });
 }
 
+// ---- CANCEL ENDPOINT (DELETE /api/crm/contacts/enrich?sessionId=...) ----
+// Required by spec — called by drawer Cancel button and on SSE connection drop.
 export async function DELETE(request: NextRequest) {
   const sessionId = new URL(request.url).searchParams.get("sessionId");
   if (!sessionId) {
