@@ -69,7 +69,7 @@ target_enrichments_triggered  crm_Target_Enrichment[]  @relation("target_enrichm
 
 ## Field Mapping
 
-Only fields with a direct `crm_Targets` column are included. No social URL fields exist on this model.
+All fields with a direct `crm_Targets` column mapping:
 
 | Enrichment field name | `crm_Targets` column | Display name |
 |---|---|---|
@@ -79,8 +79,12 @@ Only fields with a direct `crm_Targets` column are included. No social URL field
 | `personal_website` | `personal_website` | Personal Website |
 | `mobile_phone` | `mobile_phone` | Mobile Phone |
 | `office_phone` | `office_phone` | Office Phone |
+| `social_linkedin` | `social_linkedin` | LinkedIn URL |
+| `social_x` | `social_x` | Twitter / X URL |
+| `social_instagram` | `social_instagram` | Instagram URL |
+| `social_facebook` | `social_facebook` | Facebook URL |
 
-The `EnrichFieldSelector` component is reused. The target drawer passes these 6 preset fields instead of the contact fields.
+The `EnrichFieldSelector` component is reused. The target drawer passes these 10 preset fields.
 
 ---
 
@@ -132,23 +136,57 @@ Both functions registered in `app/api/inngest/route.ts`.
 
 ## UI Components
 
+### File tree
+
+**New files:**
+```
+app/api/crm/targets/
+├── enrich/
+│   └── route.ts                    ← SSE stream + cancel (POST/DELETE)
+├── enrich-bulk/
+│   └── route.ts                    ← bulk trigger
+└── [id]/
+    └── route.ts                    ← PATCH apply enrichment fields
+inngest/functions/
+├── enrich-target.ts                ← per-target Inngest job
+└── enrich-targets-bulk.ts          ← fan-out orchestrator
+app/[locale]/(routes)/crm/targets/
+├── [targetId]/components/
+│   ├── EnrichButton.tsx            ← client wrapper (button + drawer)
+│   └── EnrichTargetDrawer.tsx      ← field selector + progress + diff
+├── components/
+│   └── BulkEnrichTargetsModal.tsx  ← bulk field selector modal
+└── enrichment/
+    ├── page.tsx                    ← jobs status page (Server Component)
+    └── RetryEnrichmentButton.tsx   ← retry action (Client Component)
+```
+
+**Modified files:**
+- `prisma/schema.prisma`
+- `app/api/inngest/route.ts`
+- `app/[locale]/(routes)/crm/targets/[targetId]/components/BasicView.tsx`
+- `app/[locale]/(routes)/crm/targets/table-components/columns.tsx`
+- `app/[locale]/(routes)/crm/targets/table-components/data-table.tsx`
+
 ### `EnrichTargetDrawer`
 
+Located at `app/[locale]/(routes)/crm/targets/[targetId]/components/EnrichTargetDrawer.tsx`.
+
 Identical to `EnrichContactDrawer` with:
-- Preset fields: the 6 target fields above (no social URLs)
+- Preset fields: the 10 target fields above
 - POSTs to `/api/crm/targets/enrich`
 - PATCHes to `/api/crm/targets/[id]`
 - `contactCurrentData` → `targetCurrentData`
 
 ### `EnrichButton` (targets)
 
-Client wrapper component in `app/[locale]/(routes)/crm/targets/[targetId]/components/EnrichButton.tsx`. Wired into `BasicView.tsx` (Server Component) — same pattern as contacts.
+Client wrapper component at `app/[locale]/(routes)/crm/targets/[targetId]/components/EnrichButton.tsx`. Wired into `BasicView.tsx` (Server Component) — same pattern as contacts.
 
 ### `BulkEnrichTargetsModal`
 
-Identical to `BulkEnrichModal` — POSTs to `/api/crm/targets/enrich-bulk`.
+Located at `app/[locale]/(routes)/crm/targets/components/BulkEnrichTargetsModal.tsx`. Identical to `BulkEnrichModal` — POSTs to `/api/crm/targets/enrich-bulk`.
 
-### Contacts list (targets table)
+### Targets table
 
 - Checkbox column added to `columns.tsx` (same as contacts)
 - Bulk toolbar in `data-table.tsx` (same pattern)
@@ -177,5 +215,4 @@ Identical to contact enrichment:
 ## Out of Scope
 
 - Enrichment of `crm_Leads` (separate future feature)
-- Social URL fields for targets (no columns exist on `crm_Targets`)
 - Automatic periodic re-enrichment
