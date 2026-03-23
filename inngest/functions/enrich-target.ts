@@ -13,7 +13,7 @@ export function shouldSkipTargetEnrichment(lastCompletedAt: Date | null): boolea
   return Date.now() - lastCompletedAt.getTime() < SEVEN_DAYS_MS;
 }
 
-const contactFieldMap = {
+const targetFieldMap = {
   position:         "position",
   company:          "company",
   company_website:  "company_website",
@@ -104,7 +104,7 @@ export const enrichTarget = inngest.createFunction(
 
       const updates: Record<string, string> = {};
       for (const [fieldName, enrichment] of Object.entries(result.enrichments)) {
-        const contactColumn = contactFieldMap[fieldName as keyof typeof contactFieldMap];
+        const contactColumn = targetFieldMap[fieldName as keyof typeof targetFieldMap];
         if (!contactColumn) continue;
         const currentValue = target[contactColumn] as string | null;
         if (isFieldEmpty(currentValue) && enrichment.value) {
