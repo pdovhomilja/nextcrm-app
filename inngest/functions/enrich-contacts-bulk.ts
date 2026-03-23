@@ -36,7 +36,7 @@ export const enrichContactsBulk = inngest.createFunction(
     // Fan out: one event per contact
     await step.sendEvent(
       "fan-out-enrichments",
-      records.map((r) => ({
+      records.map((r: { id: string; contactId: string }) => ({
         name: "enrich/contact.run",
         data: { contactId: r.contactId, enrichmentId: r.id, fields },
       }))
