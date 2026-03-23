@@ -84,6 +84,8 @@ All fields with a direct `crm_Targets` column mapping:
 | `social_instagram` | `social_instagram` | Instagram URL |
 | `social_facebook` | `social_facebook` | Facebook URL |
 
+Note: `email` is the enrichment seed (used as input) and is not written back — it is excluded from the field mapping table.
+
 The `EnrichFieldSelector` component is reused. The target drawer passes these 10 preset fields.
 
 ---
@@ -94,12 +96,16 @@ The `EnrichFieldSelector` component is reused. The target drawer passes these 10
 
 Identical to `/api/crm/contacts/enrich` with:
 - Fetches `crm_Targets` instead of `crm_Contacts`
-- Creates `crm_Target_Enrichment` record
+- Returns 422 if target has no email
+- Creates `crm_Target_Enrichment` record (status: RUNNING)
 - Same SSE event shape, same session map, same abort handling
 
 ### `DELETE /api/crm/targets/enrich?sessionId=<id>`
 
-Same cancel behavior as contacts.
+Same cancel behavior as contacts:
+1. Look up `sessionId` in in-memory map
+2. If found: call `abortController.abort()`, update enrichment record to FAILED, return `{ success: true }`
+3. If not found: return 404 `{ error: 'Session not found or already complete' }` (idempotent)
 
 ### `POST /api/crm/targets/enrich-bulk`
 
@@ -209,6 +215,17 @@ Identical to contact enrichment:
 | Bulk rate limit | Inngest retries (max 3, exponential backoff) |
 | Recently enriched (< 7 days) | Bulk job skips with SKIPPED status |
 | Single re-enrichment | Always runs (no dedup) |
+
+---
+
+## Required env vars
+
+Same as contact enrichment — no new vars needed:
+
+```
+FIRECRAWL_API_KEY=    # get from firecrawl.dev
+OPENAI_API_KEY=       # already present
+```
 
 ---
 
