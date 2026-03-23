@@ -165,6 +165,7 @@ export function EnrichContactDrawer({
   const noEmail = !contactEmail;
 
   return (
+    <>
     <Sheet open={open} onOpenChange={handleClose}>
       <SheetContent className="w-[420px] sm:w-[540px]">
         <SheetHeader>
@@ -295,5 +296,6 @@ export function EnrichContactDrawer({
       </SheetContent>
     </Sheet>
     <NoApiKeyDialog open={showNoApiKeyDialog} onClose={() => setShowNoApiKeyDialog(false)} />
+    </>
   );
 }

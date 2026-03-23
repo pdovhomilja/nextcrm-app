@@ -48,6 +48,7 @@ export function BulkEnrichModal({ contactIds, open, onOpenChange }: BulkEnrichMo
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
@@ -61,5 +62,6 @@ export function BulkEnrichModal({ contactIds, open, onOpenChange }: BulkEnrichMo
       </DialogContent>
     </Dialog>
     <NoApiKeyDialog open={showNoApiKeyDialog} onClose={() => setShowNoApiKeyDialog(false)} />
+    </>
   );
 }
