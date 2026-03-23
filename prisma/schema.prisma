@@ -99,6 +99,34 @@ model crm_Leads {
   @@index([createdAt])
 }
 
+model crm_Contact_Enrichment {
+  id          String                  @id @default(uuid()) @db.Uuid
+  contactId   String                  @db.Uuid
+  status      crm_Enrichment_Status   @default(PENDING)
+  fields      String[]
+  result      Json?
+  error       String?
+  triggeredBy String?                 @db.Uuid
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+
+  contact           crm_Contacts      @relation(fields: [contactId], references: [id])
+  triggered_by_user Users?            @relation("enrichment_triggered_by", fields: [triggeredBy], references: [id])
+
+  @@index([contactId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([triggeredBy])
+}
+
+enum crm_Enrichment_Status {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  SKIPPED
+}
+
 enum crm_Lead_Status {
   NEW
   CONTACTED
@@ -235,6 +263,7 @@ model crm_Contacts {
   documents         DocumentsToContacts[]
   embedding         crm_Embeddings_Contacts?
   emails            EmailsToContacts[]
+  enrichments       crm_Contact_Enrichment[]
 
   @@index([assigned_to])
   @@index([created_by])
@@ -569,6 +598,7 @@ model Users {
   apiTokens            ApiToken[]
   emailAccounts        EmailAccount[]
   emails               Email[]
+  enrichments_triggered  crm_Contact_Enrichment[]  @relation("enrichment_triggered_by")
 
   @@index([email])
   @@index([userStatus])
