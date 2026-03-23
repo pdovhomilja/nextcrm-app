@@ -23,12 +23,17 @@ const PRESET_FIELDS: EnrichmentField[] = [
 interface EnrichFieldSelectorProps {
   onStart: (fields: EnrichmentField[]) => void;
   loading?: boolean;
+  presetFields?: EnrichmentField[];
+  defaultSelected?: string[];
 }
 
-export function EnrichFieldSelector({ onStart, loading }: EnrichFieldSelectorProps) {
-  const [selected, setSelected] = useState<Set<string>>(
-    new Set(["position", "social_linkedin", "website", "description"])
-  );
+export function EnrichFieldSelector({
+  onStart,
+  loading,
+  presetFields = PRESET_FIELDS,
+  defaultSelected = ["position", "social_linkedin", "website", "description"],
+}: EnrichFieldSelectorProps) {
+  const [selected, setSelected] = useState<Set<string>>(new Set(defaultSelected));
   const [customFields, setCustomFields] = useState<EnrichmentField[]>([]);
   const [customName, setCustomName] = useState("");
   const [customDesc, setCustomDesc] = useState("");
@@ -61,7 +66,7 @@ export function EnrichFieldSelector({ onStart, loading }: EnrichFieldSelectorPro
     setSelected((prev) => { const next = new Set(prev); next.delete(name); return next; });
   };
 
-  const allFields = [...PRESET_FIELDS, ...customFields];
+  const allFields = [...presetFields, ...customFields];
   const selectedFields = allFields.filter((f) => selected.has(f.name));
 
   return (
@@ -71,7 +76,7 @@ export function EnrichFieldSelector({ onStart, loading }: EnrichFieldSelectorPro
       </p>
 
       <div className="space-y-2">
-        {PRESET_FIELDS.map((field) => (
+        {presetFields.map((field) => (
           <div key={field.name} className="flex items-center gap-2">
             <Checkbox
               id={field.name}
