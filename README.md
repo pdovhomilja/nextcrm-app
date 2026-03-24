@@ -39,6 +39,24 @@ You can try it here [demo.nextcrm.io](https://demo.nextcrm.io), login via Google
 
 ## What's New
 
+### 🧠 AI Enrichment — Flexible API Key Management *(NEW)*
+
+Contacts and Targets can be enriched with AI — Firecrawl scrapes the web and OpenAI fills in missing fields. API keys are now managed through a **3-tier priority system** so the app runs without any AI keys in `.env`:
+
+```
+ENV variable  →  Admin system-wide  →  User profile
+(highest)                              (lowest)
+```
+
+- **Admin panel** (`/admin/llm-keys`) — redesigned with sidebar navigation; admins set system-wide keys for OpenAI, Firecrawl, Anthropic, and Groq. Keys are encrypted at rest (AES-256-GCM).
+- **Profile settings** (`/profile?tab=llms`) — users configure their own keys as a fallback when no system-wide key is set.
+- **Graceful degradation** — enrichment buttons show an informative dialog when no key is available at any tier, with a direct link to settings.
+- **Background jobs** — Inngest bulk-enrich jobs resolve keys the same way, using the `triggeredBy` user ID from the event payload.
+
+> **Migration note:** The old `openAi_keys` table is replaced by the new `ApiKeys` table. Run `pnpm prisma migrate deploy` to apply the migration.
+
+---
+
 ### 🤖 MCP Server — AI Agent Access to CRM Data *(NEW)*
 
 NextCRM now ships with a built-in [Model Context Protocol](https://modelcontextprotocol.io/) server, letting AI agents (Claude, Cursor, custom agents) read and write CRM data directly.
@@ -148,7 +166,8 @@ Global search across all CRM entities from a single search bar — grouped resul
 8. ✅ Unified search — keyword + semantic search across all CRM modules
 9. ✅ CRM Targets module — sales target and target list management
 10. ✅ MCP server — 25 CRM tools for AI agent access via Bearer token auth
-11. 🔄 More AI powered features — daily summary of tasks and projects
+11. ✅ AI enrichment — contact/target enrichment with Firecrawl + OpenAI; 3-tier API key management (ENV → admin → user)
+12. 🔄 More AI powered features — daily summary of tasks and projects
 12. 📋 Email campaigns management — integration with MailChimp and Listmonk
 13. 📋 Testing expansion — Jest + Playwright coverage (contributions welcome!)
 14. 🔄 Fix all TypeScript `any` types — ongoing cleanup
@@ -209,9 +228,11 @@ Available soon at: http://docs.nextcrm.io
 
    > > - NextAUTH - for auth
    > > - uploadthings - for storing files
-   > > - openAI - for embeddings and project management assistant
+   > > - openAI - for embeddings and project management assistant *(optional — can be set via admin panel instead)*
+   > > - Firecrawl - for contact/target enrichment *(optional — can be set via admin panel instead)*
    > > - SMTP and IMAP for emails
    > > - Inngest - for background embedding jobs
+   > > - `EMAIL_ENCRYPTION_KEY` - required for encrypting API keys stored in the database
 
 1. Init Prisma
 
