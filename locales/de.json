@@ -269,7 +269,9 @@
     "openAiIntegration": "OpenAI-Integration",
     "tabs": {
       "emails": "Email Accounts",
-      "emailsDesc": "Manage your connected IMAP mailboxes"
+      "emailsDesc": "Manage your connected IMAP mailboxes",
+      "llms": "LLMs",
+      "llmsDesc": "LLM API-Schlüssel verwalten"
     }
   },
   "ProfileForm": {

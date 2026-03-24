@@ -269,7 +269,9 @@
     "openAiIntegration": "Інтеграція OpenAI",
     "tabs": {
       "emails": "Email Accounts",
-      "emailsDesc": "Manage your connected IMAP mailboxes"
+      "emailsDesc": "Manage your connected IMAP mailboxes",
+      "llms": "LLMs",
+      "llmsDesc": "Керуйте своїми LLM API-ключами"
     }
   },
   "ProfileForm": {

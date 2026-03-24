@@ -9,6 +9,10 @@ import { emailSyncAll } from "@/inngest/functions/emails/sync-all";
 import { emailSyncAccount } from "@/inngest/functions/emails/sync-account";
 import { embedEmail } from "@/inngest/functions/emails/embed-email";
 import { emailLinkCrm } from "@/inngest/functions/emails/link-crm";
+import { enrichContact } from "@/inngest/functions/enrich-contact";
+import { enrichContactsBulk } from "@/inngest/functions/enrich-contacts-bulk";
+import { enrichTarget } from "@/inngest/functions/enrich-target";
+import { enrichTargetsBulk } from "@/inngest/functions/enrich-targets-bulk";
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
@@ -22,5 +26,9 @@ export const { GET, POST, PUT } = serve({
     emailSyncAccount,
     embedEmail,
     emailLinkCrm,
+    enrichContact,
+    enrichContactsBulk,
+    enrichTarget,
+    enrichTargetsBulk,
   ],
 });

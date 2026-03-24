@@ -272,7 +272,9 @@
     "openAiIntegration": "Integrace OpenAI",
     "tabs": {
       "emails": "Email Accounts",
-      "emailsDesc": "Manage your connected IMAP mailboxes"
+      "emailsDesc": "Manage your connected IMAP mailboxes",
+      "llms": "LLMs",
+      "llmsDesc": "Spravujte své klíče LLM API"
     }
   },
   "ProfileForm": {

@@ -1,0 +1,235 @@
+# Target Enrichment via Firecrawl — Design Spec
+
+**Date:** 2026-03-23
+**Status:** Approved
+**Branch:** feature/target-enrichment (to be created)
+
+---
+
+## Overview
+
+Extend the existing contact enrichment feature to `crm_Targets`. Users can enrich target records (company info, position, websites, phone numbers) using the same Firecrawl + GPT-4o multi-agent engine already integrated for contacts. Supports both single-target interactive enrichment (SSE drawer) and bulk background enrichment (Inngest fan-out).
+
+This feature is intentionally identical in architecture to contact enrichment. All enrichment logic (`lib/enrichment/`) is reused unchanged.
+
+---
+
+## Architecture
+
+Mirrors `feature/contact-enrichment` exactly:
+- SSE streaming route for single-target enrichment with real-time progress
+- Inngest fan-out for bulk background enrichment
+- Drawer with field selector → progress → diff preview (single)
+- Bulk modal with field selector → background jobs (bulk)
+- Jobs status page at `/crm/targets/enrichment`
+
+No new library code — all `lib/enrichment/` files are reused as-is.
+
+---
+
+## Data Model
+
+### New Prisma model
+
+```prisma
+model crm_Target_Enrichment {
+  id          String                  @id @default(uuid()) @db.Uuid
+  targetId    String                  @db.Uuid
+  status      crm_Enrichment_Status   @default(PENDING)
+  fields      String[]
+  result      Json?
+  error       String?
+  triggeredBy String?                 @db.Uuid
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+
+  target            crm_Targets       @relation(fields: [targetId], references: [id])
+  triggered_by_user Users?            @relation("target_enrichment_triggered_by", fields: [triggeredBy], references: [id])
+
+  @@index([targetId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([triggeredBy])
+}
+```
+
+Reuses the existing `crm_Enrichment_Status` enum (PENDING, RUNNING, COMPLETED, FAILED, SKIPPED).
+
+### New back-relations
+
+```prisma
+// Add to crm_Targets model:
+enrichments   crm_Target_Enrichment[]
+
+// Add to Users model:
+target_enrichments_triggered  crm_Target_Enrichment[]  @relation("target_enrichment_triggered_by")
+```
+
+---
+
+## Field Mapping
+
+All fields with a direct `crm_Targets` column mapping:
+
+| Enrichment field name | `crm_Targets` column | Display name |
+|---|---|---|
+| `position` | `position` | Position / Job Title |
+| `company` | `company` | Company Name |
+| `company_website` | `company_website` | Company Website |
+| `personal_website` | `personal_website` | Personal Website |
+| `mobile_phone` | `mobile_phone` | Mobile Phone |
+| `office_phone` | `office_phone` | Office Phone |
+| `social_linkedin` | `social_linkedin` | LinkedIn URL |
+| `social_x` | `social_x` | Twitter / X URL |
+| `social_instagram` | `social_instagram` | Instagram URL |
+| `social_facebook` | `social_facebook` | Facebook URL |
+
+Note: `email` is the enrichment seed (used as input) and is not written back — it is excluded from the field mapping table.
+
+The `EnrichFieldSelector` component is reused. The target drawer passes these 10 preset fields.
+
+---
+
+## API Layer
+
+### `POST /api/crm/targets/enrich` — SSE stream (single target)
+
+Identical to `/api/crm/contacts/enrich` with:
+- Fetches `crm_Targets` instead of `crm_Contacts`
+- Returns 422 if target has no email
+- Creates `crm_Target_Enrichment` record (status: RUNNING)
+- Same SSE event shape, same session map, same abort handling
+
+### `DELETE /api/crm/targets/enrich?sessionId=<id>`
+
+Same cancel behavior as contacts:
+1. Look up `sessionId` in in-memory map
+2. If found: call `abortController.abort()`, update enrichment record to FAILED, return `{ success: true }`
+3. If not found: return 404 `{ error: 'Session not found or already complete' }` (idempotent)
+
+### `POST /api/crm/targets/enrich-bulk`
+
+Identical to `/api/crm/contacts/enrich-bulk`. Sends `enrich/targets.bulk` Inngest event.
+
+### `PATCH /api/crm/targets/[id]`
+
+Applies selected enrichment fields to `crm_Targets`. Same FIELD_MAP pattern, same `params: Promise<{id: string}>` signature (Next.js 16).
+
+---
+
+## Inngest Functions
+
+### `enrich/targets.bulk` → `enrich-targets-bulk`
+
+Fan-out: creates `crm_Target_Enrichment` records (status: PENDING) and sends one `enrich/target.run` event per target.
+
+### `enrich/target.run` → `enrich-target`
+
+Per-target job:
+1. Mark record RUNNING
+2. Fetch target email
+3. Skip if no email (SKIPPED)
+4. 7-day dedup check (same as contacts)
+5. Run `AgentEnrichmentStrategy`
+6. Write enriched values to empty fields only
+7. Update record (COMPLETED or FAILED), retry 3x on failure
+
+Exports `shouldSkipTargetEnrichment` (same logic as `shouldSkipBulkEnrichment`, separate export for clarity).
+
+Both functions registered in `app/api/inngest/route.ts`.
+
+---
+
+## UI Components
+
+### File tree
+
+**New files:**
+```
+app/api/crm/targets/
+├── enrich/
+│   └── route.ts                    ← SSE stream + cancel (POST/DELETE)
+├── enrich-bulk/
+│   └── route.ts                    ← bulk trigger
+└── [id]/
+    └── route.ts                    ← PATCH apply enrichment fields
+inngest/functions/
+├── enrich-target.ts                ← per-target Inngest job
+└── enrich-targets-bulk.ts          ← fan-out orchestrator
+app/[locale]/(routes)/crm/targets/
+├── [targetId]/components/
+│   ├── EnrichButton.tsx            ← client wrapper (button + drawer)
+│   └── EnrichTargetDrawer.tsx      ← field selector + progress + diff
+├── components/
+│   └── BulkEnrichTargetsModal.tsx  ← bulk field selector modal
+└── enrichment/
+    ├── page.tsx                    ← jobs status page (Server Component)
+    └── RetryEnrichmentButton.tsx   ← retry action (Client Component)
+```
+
+**Modified files:**
+- `prisma/schema.prisma`
+- `app/api/inngest/route.ts`
+- `app/[locale]/(routes)/crm/targets/[targetId]/components/BasicView.tsx`
+- `app/[locale]/(routes)/crm/targets/table-components/columns.tsx`
+- `app/[locale]/(routes)/crm/targets/table-components/data-table.tsx`
+
+### `EnrichTargetDrawer`
+
+Located at `app/[locale]/(routes)/crm/targets/[targetId]/components/EnrichTargetDrawer.tsx`.
+
+Identical to `EnrichContactDrawer` with:
+- Preset fields: the 10 target fields above
+- POSTs to `/api/crm/targets/enrich`
+- PATCHes to `/api/crm/targets/[id]`
+- `contactCurrentData` → `targetCurrentData`
+
+### `EnrichButton` (targets)
+
+Client wrapper component at `app/[locale]/(routes)/crm/targets/[targetId]/components/EnrichButton.tsx`. Wired into `BasicView.tsx` (Server Component) — same pattern as contacts.
+
+### `BulkEnrichTargetsModal`
+
+Located at `app/[locale]/(routes)/crm/targets/components/BulkEnrichTargetsModal.tsx`. Identical to `BulkEnrichModal` — POSTs to `/api/crm/targets/enrich-bulk`.
+
+### Targets table
+
+- Checkbox column added to `columns.tsx` (same as contacts)
+- Bulk toolbar in `data-table.tsx` (same pattern)
+
+### `/crm/targets/enrichment` — Jobs page
+
+Server Component, same table as contacts enrichment jobs page but queries `crm_Target_Enrichment`. Retry button POSTs to `/api/crm/targets/enrich-bulk`.
+
+---
+
+## Error Handling
+
+Identical to contact enrichment:
+
+| Scenario | Behavior |
+|---|---|
+| No `FIRECRAWL_API_KEY` | 503 response |
+| Target has no email | Button disabled; API returns 422 |
+| SSE disconnect | `request.signal` abort cancels in-flight requests |
+| Bulk rate limit | Inngest retries (max 3, exponential backoff) |
+| Recently enriched (< 7 days) | Bulk job skips with SKIPPED status |
+| Single re-enrichment | Always runs (no dedup) |
+
+---
+
+## Required env vars
+
+Same as contact enrichment — no new vars needed:
+
+```
+FIRECRAWL_API_KEY=    # get from firecrawl.dev
+OPENAI_API_KEY=       # already present
+```
+
+---
+
+## Out of Scope
+
+- Enrichment of `crm_Leads` (separate future feature)
+- Automatic periodic re-enrichment

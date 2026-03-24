@@ -22,6 +22,7 @@ import moment from "moment";
 import Link from "next/link";
 import { EnvelopeClosedIcon } from "@radix-ui/react-icons";
 import { Badge } from "@/components/ui/badge";
+import { EnrichButton } from "./EnrichButton";
 
 interface TargetBasicViewProps {
   data: any;
@@ -41,7 +42,23 @@ export async function BasicView({ data }: TargetBasicViewProps) {
               </CardTitle>
               <CardDescription>ID: {data.id}</CardDescription>
             </div>
-            <div>
+            <div className="flex items-center gap-2">
+              <EnrichButton
+                targetId={data.id}
+                targetEmail={data.email ?? null}
+                targetCurrentData={{
+                  position:         data.position ?? null,
+                  company:          data.company ?? null,
+                  company_website:  data.company_website ?? null,
+                  personal_website: data.personal_website ?? null,
+                  mobile_phone:     data.mobile_phone ?? null,
+                  office_phone:     data.office_phone ?? null,
+                  social_linkedin:  data.social_linkedin ?? null,
+                  social_x:         data.social_x ?? null,
+                  social_instagram: data.social_instagram ?? null,
+                  social_facebook:  data.social_facebook ?? null,
+                }}
+              />
               <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
             </div>
           </div>

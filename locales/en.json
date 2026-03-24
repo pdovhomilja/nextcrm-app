@@ -278,7 +278,9 @@
       "securityDesc": "Manage your password and account security",
       "preferencesDesc": "Customize your language and display settings",
       "developerDesc": "Manage API keys and developer integrations",
-      "emailsDesc": "Manage your connected IMAP mailboxes"
+      "emailsDesc": "Manage your connected IMAP mailboxes",
+      "llms": "LLMs",
+      "llmsDesc": "Manage your LLM API keys"
     },
     "cards": {
       "photo": "Profile Photo",

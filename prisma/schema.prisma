@@ -99,6 +99,54 @@ model crm_Leads {
   @@index([createdAt])
 }
 
+model crm_Contact_Enrichment {
+  id          String                  @id @default(uuid()) @db.Uuid
+  contactId   String                  @db.Uuid
+  status      crm_Enrichment_Status   @default(PENDING)
+  fields      String[]
+  result      Json?
+  error       String?
+  triggeredBy String?                 @db.Uuid
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+
+  contact           crm_Contacts      @relation(fields: [contactId], references: [id])
+  triggered_by_user Users?            @relation("enrichment_triggered_by", fields: [triggeredBy], references: [id])
+
+  @@index([contactId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([triggeredBy])
+}
+
+model crm_Target_Enrichment {
+  id          String                  @id @default(uuid()) @db.Uuid
+  targetId    String                  @db.Uuid
+  status      crm_Enrichment_Status   @default(PENDING)
+  fields      String[]
+  result      Json?
+  error       String?
+  triggeredBy String?                 @db.Uuid
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+
+  target            crm_Targets       @relation(fields: [targetId], references: [id])
+  triggered_by_user Users?            @relation("target_enrichment_triggered_by", fields: [triggeredBy], references: [id])
+
+  @@index([targetId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([triggeredBy])
+}
+
+enum crm_Enrichment_Status {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  SKIPPED
+}
+
 enum crm_Lead_Status {
   NEW
   CONTACTED
@@ -235,6 +283,7 @@ model crm_Contacts {
   documents         DocumentsToContacts[]
   embedding         crm_Embeddings_Contacts?
   emails            EmailsToContacts[]
+  enrichments       crm_Contact_Enrichment[]
 
   @@index([assigned_to])
   @@index([created_by])
@@ -559,7 +608,7 @@ model Users {
   assigned_opportunity crm_Opportunities[]   @relation("assigned_to_user_relation")
   assigned_contacts    crm_Contacts[]        @relation("assigned_contacts")
   crated_contacts      crm_Contacts[]        @relation("created_contacts")
-  openAi_key           openAi_keys[]
+  apiKeys              ApiKeys[]
   assigned_contracts   crm_Contracts[]
   boards               Boards[]              @relation("assigned_user")
   watching_boards      BoardWatchers[]
@@ -569,6 +618,8 @@ model Users {
   apiTokens            ApiToken[]
   emailAccounts        EmailAccount[]
   emails               Email[]
+  enrichments_triggered          crm_Contact_Enrichment[]  @relation("enrichment_triggered_by")
+  target_enrichments_triggered  crm_Target_Enrichment[]   @relation("target_enrichment_triggered_by")
 
   @@index([email])
   @@index([userStatus])
@@ -594,15 +645,30 @@ model system_Modules_Enabled {
   position Int
 }
 
-model openAi_keys {
-  id              String @id @default(uuid()) @db.Uuid
-  v               Int    @map("__v")
-  user            String @db.Uuid
-  organization_id String
-  api_key         String
-  assigned_user   Users? @relation(fields: [user], references: [id])
+enum ApiKeyScope {
+  SYSTEM
+  USER
+}
 
-  @@index([user])
+enum ApiKeyProvider {
+  OPENAI
+  FIRECRAWL
+  ANTHROPIC
+  GROQ
+}
+
+model ApiKeys {
+  id           String         @id @default(uuid()) @db.Uuid
+  scope        ApiKeyScope
+  userId       String?        @db.Uuid
+  provider     ApiKeyProvider
+  encryptedKey String
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  user         Users?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([scope, provider])
+  @@index([userId, provider])
 }
 
 model systemServices {
@@ -775,6 +841,7 @@ model crm_Targets {
 
   crate_by_user Users?               @relation("created_targets", fields: [created_by], references: [id])
   target_lists  TargetsToTargetLists[]
+  enrichments   crm_Target_Enrichment[]
 
   @@index([created_by])
   @@index([status])
