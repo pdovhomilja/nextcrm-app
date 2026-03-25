@@ -3,12 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Key, Users, Puzzle, Settings } from "lucide-react";
+import { Key, Users, Settings } from "lucide-react";
 
 const navItems = [
   { label: "LLM Keys", href: "/admin/llm-keys", icon: Key },
   { label: "Users", href: "/admin/users", icon: Users },
-  { label: "Modules", href: "/admin/modules", icon: Puzzle },
   { label: "Services", href: "/admin/services", icon: Settings },
 ];
 

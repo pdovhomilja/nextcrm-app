@@ -12,6 +12,20 @@ const nextConfig = {
       { protocol: "https", hostname: "minio-cwg0o4ss0scoccgwso8sk004.coolify.cz" },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: "/:locale/crm/targets/:path*",
+        destination: "/:locale/campaigns/targets/:path*",
+        permanent: true,
+      },
+      {
+        source: "/:locale/crm/target-lists/:path*",
+        destination: "/:locale/campaigns/target-lists/:path*",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 module.exports = withNextIntl(nextConfig);

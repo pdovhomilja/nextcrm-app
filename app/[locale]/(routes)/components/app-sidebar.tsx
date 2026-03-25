@@ -21,6 +21,7 @@ import getReportsMenuItem from "./menu-items/Reports";
 import getDocumentsMenuItem from "./menu-items/Documents";
 import getDataboxMenuItem from "./menu-items/Databoxes";
 import getAdministrationMenuItem from "./menu-items/Administration";
+import getCampaignsMenuItem from "./menu-items/Campaigns";
 
 /**
  * AppSidebar Component - Task Groups 1.2, 2.2-2.7, 3.1, 5.3, 5.4
@@ -61,13 +62,6 @@ import getAdministrationMenuItem from "./menu-items/Administration";
  * @param session - User session data for role-based navigation and user profile
  */
 
-interface Module {
-  id: string;
-  name: string;
-  enabled: boolean;
-  position?: number;
-}
-
 interface User {
   id: string;
   name?: string | null;
@@ -84,14 +78,12 @@ interface Session {
 }
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  modules: Module[];
   dict: any;
   build: number;
   session: Session;
 }
 
 export function AppSidebar({
-  modules,
   dict,
   build,
   session,
@@ -100,106 +92,29 @@ export function AppSidebar({
   const { state } = useSidebar();
   const isExpanded = state === "expanded";
 
-  // Build navigation items array
-  const navItems = [];
+  const navItems = [
+    getDashboardMenuItem({ title: dict?.dashboard || "Dashboard" }),
+    getCrmMenuItem({ localizations: dict.crm }),
+    getCampaignsMenuItem({
+      localizations: {
+        title: "Campaigns",
+        campaigns: "All Campaigns",
+        templates: "Templates",
+        targets: "Targets",
+        targetLists: "Target Lists",
+      },
+    }),
+    getProjectsMenuItem({ title: dict?.projects || "Projects" }),
+    getEmailsMenuItem({ title: dict?.emails || "Emails" }),
+    getEmployeesMenuItem({ title: "Employees" }),
+    getReportsMenuItem({ title: dict?.reports || "Reports" }),
+    getDocumentsMenuItem({ title: dict?.documents || "Documents" }),
+    getDataboxMenuItem({ title: "Databoxes" }),
+  ];
 
-  // Dashboard menu item (always visible)
-  const dashboardItem = getDashboardMenuItem({
-    title: dict?.dashboard || "Dashboard",
-  });
-  navItems.push(dashboardItem);
-
-  // Task 2.3: CRM module navigation (with module filtering)
-  // Only show if CRM module is enabled
-  const crmModule = modules.find(
-    (menuItem: any) => menuItem.name === "crm" && menuItem.enabled,
-  );
-  if (crmModule && dict?.crm) {
-    const crmItem = getCrmMenuItem({
-      localizations: dict.crm,
-    });
-    navItems.push(crmItem);
-  }
-
-  // Task 2.4: Projects module navigation (with module filtering)
-  // Only show if Projects module is enabled
-  const projectsModule = modules.find(
-    (menuItem: any) => menuItem.name === "projects" && menuItem.enabled,
-  );
-  if (projectsModule && dict?.projects) {
-    const projectsItem = getProjectsMenuItem({
-      title: dict.projects,
-    });
-    navItems.push(projectsItem);
-  }
-
-  // Task 2.5: Emails module navigation (with module filtering)
-  // Only show if Emails module is enabled
-  const emailsModule = modules.find(
-    (menuItem: any) => menuItem.name === "emails" && menuItem.enabled,
-  );
-  if (emailsModule && dict?.emails) {
-    const emailsItem = getEmailsMenuItem({
-      title: dict.emails,
-    });
-    navItems.push(emailsItem);
-  }
-
-  // Task 2.6.2: Employees module navigation (with module filtering)
-  // Only show if Employees module is enabled
-  const employeesModule = modules.find(
-    (menuItem: any) => menuItem.name === "employee" && menuItem.enabled,
-  );
-  if (employeesModule) {
-    const employeesItem = getEmployeesMenuItem({
-      title: "Employees", // No translation in dict.ModuleMenu, using default
-    });
-    navItems.push(employeesItem);
-  }
-
-  // Task 2.6.4: Reports module navigation (with module filtering)
-  // Only show if Reports module is enabled
-  const reportsModule = modules.find(
-    (menuItem: any) => menuItem.name === "reports" && menuItem.enabled,
-  );
-  if (reportsModule && dict?.reports) {
-    const reportsItem = getReportsMenuItem({
-      title: dict.reports,
-    });
-    navItems.push(reportsItem);
-  }
-
-  // Task 2.6.5: Documents module navigation (with module filtering)
-  // Only show if Documents module is enabled
-  const documentsModule = modules.find(
-    (menuItem: any) => menuItem.name === "documents" && menuItem.enabled,
-  );
-  if (documentsModule && dict?.documents) {
-    const documentsItem = getDocumentsMenuItem({
-      title: dict.documents,
-    });
-    navItems.push(documentsItem);
-  }
-
-  // Task 2.6.6: Databox module navigation (with module filtering)
-  // Only show if Databox module is enabled
-  const databoxModule = modules.find(
-    (menuItem: any) => menuItem.name === "databox" && menuItem.enabled,
-  );
-  if (databoxModule) {
-    const databoxItem = getDataboxMenuItem({
-      title: "Databoxes", // No translation in dict.ModuleMenu, using default
-    });
-    navItems.push(databoxItem);
-  }
-
-  // Task 2.7: Administration menu navigation (with role-based visibility)
-  // Only show if user is an admin (session.user.isAdmin === true)
-  if (session?.user?.isAdmin && dict?.settings) {
-    const administrationItem = getAdministrationMenuItem({
-      title: dict.settings,
-    });
-    navItems.push(administrationItem);
+  // Administration: admin users only
+  if (session?.user?.isAdmin) {
+    navItems.push(getAdministrationMenuItem({ title: dict?.settings || "Administration" }));
   }
 
   // Prepare user data for NavUser component

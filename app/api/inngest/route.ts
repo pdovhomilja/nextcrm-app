@@ -13,6 +13,10 @@ import { enrichContact } from "@/inngest/functions/enrich-contact";
 import { enrichContactsBulk } from "@/inngest/functions/enrich-contacts-bulk";
 import { enrichTarget } from "@/inngest/functions/enrich-target";
 import { enrichTargetsBulk } from "@/inngest/functions/enrich-targets-bulk";
+import { campaignScheduleSend } from "@/inngest/functions/campaigns/schedule-send";
+import { campaignSendStep } from "@/inngest/functions/campaigns/send-step";
+import { campaignProcessFollowUp } from "@/inngest/functions/campaigns/process-follow-up";
+import { campaignSendNow } from "@/inngest/functions/campaigns/send-now";
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
@@ -30,5 +34,9 @@ export const { GET, POST, PUT } = serve({
     enrichContactsBulk,
     enrichTarget,
     enrichTargetsBulk,
+    campaignScheduleSend,
+    campaignSendStep,
+    campaignProcessFollowUp,
+    campaignSendNow,
   ],
 });

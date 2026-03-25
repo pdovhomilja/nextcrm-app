@@ -215,12 +215,102 @@ enum crm_Opportunity_Status {
 }
 
 model crm_campaigns {
-  id            String              @id @default(uuid()) @db.Uuid
-  v             Int                 @map("__v")
-  name          String
-  description   String?
-  status        String?
-  opportunities crm_Opportunities[]
+  id           String    @id @default(uuid()) @db.Uuid
+  v            Int       @map("__v")
+  name         String
+  description  String?
+  status       String?   // draft | scheduled | sending | sent | paused | deleted
+
+  template_id  String?   @db.Uuid
+  from_name    String?
+  reply_to     String?
+  scheduled_at DateTime?
+  sent_at      DateTime?
+  created_by   String?   @db.Uuid
+  created_on   DateTime? @default(now())
+  updatedAt    DateTime? @updatedAt
+
+  template         crm_campaign_templates?  @relation("CampaignTemplate", fields: [template_id], references: [id])
+  created_by_user  Users?                   @relation("created_campaigns", fields: [created_by], references: [id])
+  steps            crm_campaign_steps[]
+  target_lists     CampaignToTargetLists[]
+  sends            crm_campaign_sends[]
+  opportunities    crm_Opportunities[]
+}
+
+model crm_campaign_templates {
+  id              String    @id @default(uuid()) @db.Uuid
+  name            String
+  description     String?
+  subject_default String?
+  content_html    String    @db.Text
+  content_json    Json
+  created_by      String?   @db.Uuid
+  created_on      DateTime? @default(now())
+  updatedAt       DateTime? @updatedAt
+
+  created_by_user Users?               @relation("created_campaign_templates", fields: [created_by], references: [id])
+  campaigns       crm_campaigns[]      @relation("CampaignTemplate")
+  steps           crm_campaign_steps[]
+
+  @@index([created_by])
+}
+
+model crm_campaign_steps {
+  id           String    @id @default(uuid()) @db.Uuid
+  campaign_id  String    @db.Uuid
+  order        Int
+  template_id  String    @db.Uuid
+  subject      String
+  delay_days   Int       @default(0)
+  send_to      String    @default("all")  // "all" | "non_openers"
+  scheduled_at DateTime?
+  sent_at      DateTime?
+
+  campaign crm_campaigns          @relation(fields: [campaign_id], references: [id], onDelete: Cascade)
+  template crm_campaign_templates @relation(fields: [template_id], references: [id])
+  sends    crm_campaign_sends[]
+
+  @@unique([campaign_id, order])
+  @@index([campaign_id])
+  @@index([scheduled_at])
+}
+
+model CampaignToTargetLists {
+  campaign_id    String @db.Uuid
+  target_list_id String @db.Uuid
+
+  campaign    crm_campaigns   @relation(fields: [campaign_id], references: [id], onDelete: Cascade)
+  target_list crm_TargetLists @relation(fields: [target_list_id], references: [id], onDelete: Cascade)
+
+  @@id([campaign_id, target_list_id])
+}
+
+model crm_campaign_sends {
+  id                String    @id @default(uuid()) @db.Uuid
+  campaign_id       String    @db.Uuid
+  step_id           String    @db.Uuid
+  target_id         String    @db.Uuid
+  email             String
+  status            String    @default("queued")  // queued | sent | delivered | bounced | failed
+  resend_message_id String?
+  unsubscribe_token String    @unique @default(uuid())
+  opened_at         DateTime?
+  clicked_at        DateTime?
+  unsubscribed_at   DateTime?
+  error_message     String?
+  sent_at           DateTime?
+
+  campaign crm_campaigns      @relation(fields: [campaign_id], references: [id])  // no Cascade — campaigns use soft delete
+  step     crm_campaign_steps @relation(fields: [step_id], references: [id])
+  target   crm_Targets        @relation(fields: [target_id], references: [id])
+
+  @@unique([step_id, target_id])
+  @@index([campaign_id])
+  @@index([step_id, target_id])
+  @@index([resend_message_id])
+  @@index([status])
+  @@index([unsubscribe_token])
 }
 
 model crm_Opportunities_Sales_Stages {
@@ -619,7 +709,9 @@ model Users {
   emailAccounts        EmailAccount[]
   emails               Email[]
   enrichments_triggered          crm_Contact_Enrichment[]  @relation("enrichment_triggered_by")
-  target_enrichments_triggered  crm_Target_Enrichment[]   @relation("target_enrichment_triggered_by")
+  target_enrichments_triggered   crm_Target_Enrichment[]   @relation("target_enrichment_triggered_by")
+  created_campaigns              crm_campaigns[]           @relation("created_campaigns")
+  created_campaign_templates     crm_campaign_templates[]  @relation("created_campaign_templates")
 
   @@index([email])
   @@index([userStatus])
@@ -637,13 +729,6 @@ enum Language {
   uk
 }
 
-model system_Modules_Enabled {
-  id       String  @id @default(uuid()) @db.Uuid
-  v        Int     @map("__v")
-  name     String
-  enabled  Boolean
-  position Int
-}
 
 enum ApiKeyScope {
   SYSTEM
@@ -839,9 +924,10 @@ model crm_Targets {
   updatedAt        DateTime? @updatedAt
   updatedBy        String?   @db.Uuid
 
-  crate_by_user Users?               @relation("created_targets", fields: [created_by], references: [id])
-  target_lists  TargetsToTargetLists[]
-  enrichments   crm_Target_Enrichment[]
+  crate_by_user  Users?               @relation("created_targets", fields: [created_by], references: [id])
+  target_lists   TargetsToTargetLists[]
+  enrichments    crm_Target_Enrichment[]
+  campaign_sends crm_campaign_sends[]
 
   @@index([created_by])
   @@index([status])
@@ -857,8 +943,9 @@ model crm_TargetLists {
   created_on  DateTime? @default(now())
   updatedAt   DateTime? @updatedAt
 
-  crate_by_user Users?               @relation("created_target_lists", fields: [created_by], references: [id])
-  targets       TargetsToTargetLists[]
+  crate_by_user  Users?               @relation("created_target_lists", fields: [created_by], references: [id])
+  targets        TargetsToTargetLists[]
+  campaign_lists CampaignToTargetLists[]
 
   @@index([created_by])
   @@index([status])

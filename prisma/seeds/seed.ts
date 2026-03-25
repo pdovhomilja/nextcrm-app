@@ -11,8 +11,6 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 /*
 Seed data is used to populate the database with initial data.
 */
-//Menu Items
-import moduleData from "../initial-data/system_Modules_Enabled.json";
 //GPT Models
 import gptModelsDataRaw from "../initial-data/gpt_Models.json";
 
@@ -35,18 +33,6 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   // Your seeding logic here using Prisma Client
   console.log("-------- Seeding DB --------");
-
-  //Seed Menu Items
-  const modules = await prisma.system_Modules_Enabled.findMany();
-
-  if (modules.length === 0) {
-    await prisma.system_Modules_Enabled.createMany({
-      data: moduleData,
-    });
-    console.log("Modules seeded successfully");
-  } else {
-    console.log("Modules already seeded");
-  }
 
   //Seed CRM Opportunity Types
   const crmOpportunityType = await prisma.crm_Opportunities_Type.findMany();
