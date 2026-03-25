@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sparkles, CheckCircle, XCircle, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
-import { EnrichFieldSelector } from "../../../contacts/components/EnrichFieldSelector";
+import { EnrichFieldSelector } from "@/app/[locale]/(routes)/crm/contacts/components/EnrichFieldSelector";
 import type { EnrichmentField } from "@/lib/enrichment/types";
 import type { StoredEnrichmentResult } from "@/lib/enrichment/types/stored-result";
 import { NoApiKeyDialog } from "@/app/components/NoApiKeyDialog";
