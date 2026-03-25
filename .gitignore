@@ -34,6 +34,7 @@ yarn-error.log*
 # local env files
 .env*.local
 .env.demo
+.env.xmation
 .env
 .env.test.coolify
 
