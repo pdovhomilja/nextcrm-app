@@ -7,7 +7,6 @@ import { cookies } from "next/headers";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import getAllCommits from "@/actions/github/get-repo-commits";
-import { getModules } from "@/actions/get-modules";
 
 import { Metadata } from "next";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
@@ -69,9 +68,6 @@ export default async function AppLayout({
 
   const build = await getAllCommits();
 
-  // Fetch modules data for sidebar
-  const modules = await getModules();
-
   // Fetch localization dictionary
   const dict = await getTranslations("ModuleMenu");
 
@@ -103,7 +99,6 @@ export default async function AppLayout({
     <AvatarProvider initialAvatar={user?.image}>
     <SidebarProvider defaultOpen={sidebarOpen}>
       <AppSidebar
-        modules={modules}
         dict={translations}
         build={build}
         session={session}
