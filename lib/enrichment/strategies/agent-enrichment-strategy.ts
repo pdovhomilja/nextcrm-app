@@ -17,37 +17,29 @@ export class AgentEnrichmentStrategy {
     fields: EnrichmentField[],
     emailColumn: string,
     onProgress?: (field: string, value: unknown) => void,
-    onAgentProgress?: (message: string, type: 'info' | 'success' | 'warning' | 'agent') => void
+    onAgentProgress?: (message: string, type: 'info' | 'success' | 'warning' | 'agent') => void,
+    identityOverride?: { companyName?: string; companyWebsite?: string }
   ): Promise<RowEnrichmentResult> {
     const email = row[emailColumn];
     console.log(`[AgentEnrichmentStrategy] Starting enrichment for email: ${email}`);
     console.log(`[AgentEnrichmentStrategy] Requested fields: ${fields.map(f => f.name).join(', ')}`);
-    
-    if (!email) {
-      console.log(`[AgentEnrichmentStrategy] No email found in column: ${emailColumn}`);
-      return {
-        rowIndex: 0,
-        originalData: row,
-        enrichments: {},
-        status: 'error',
-        error: 'No email found in specified column',
-      };
+
+    if (email) {
+      // Check skip list
+      const skipList = await loadSkipList();
+      if (shouldSkipEmail(email, skipList)) {
+        const skipReason = getSkipReason(email, skipList);
+        console.log(`[AgentEnrichmentStrategy] Skipping email ${email}: ${skipReason}`);
+        return {
+          rowIndex: 0,
+          originalData: row,
+          enrichments: {},
+          status: 'skipped',
+          error: skipReason,
+        };
+      }
     }
-    
-    // Check skip list
-    const skipList = await loadSkipList();
-    if (shouldSkipEmail(email, skipList)) {
-      const skipReason = getSkipReason(email, skipList);
-      console.log(`[AgentEnrichmentStrategy] Skipping email ${email}: ${skipReason}`);
-      return {
-        rowIndex: 0,
-        originalData: row,
-        enrichments: {},
-        status: 'skipped',
-        error: skipReason,
-      };
-    }
-    
+
     try {
       console.log(`[AgentEnrichmentStrategy] Delegating to AgentOrchestrator`);
       // Use the agent orchestrator for enrichment
@@ -56,7 +48,8 @@ export class AgentEnrichmentStrategy {
         fields,
         emailColumn,
         onProgress,
-        onAgentProgress
+        onAgentProgress,
+        identityOverride
       );
       
       // Filter out null values to match the expected type
