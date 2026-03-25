@@ -79,8 +79,8 @@ export async function POST(request: NextRequest) {
           fields,
           "email",
           undefined,
-          (message: string, type: string, sourceUrl?: string) => {
-            enqueue({ type: "agent_progress", message, messageType: type, sourceUrl });
+          (message: string, type: 'info' | 'success' | 'warning' | 'agent') => {
+            enqueue({ type: "agent_progress", message, messageType: type });
           },
           {
             companyName: target.company ?? undefined,
