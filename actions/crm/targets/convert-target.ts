@@ -48,7 +48,7 @@ export async function convertTarget(
         data: {
           v: 0,
           first_name: target.first_name ?? undefined,
-          last_name: target.last_name,
+          last_name: target.last_name ?? target.company ?? "Unknown",
           email: target.email ?? undefined,
           personal_email: target.personal_email ?? undefined,
           mobile_phone: target.mobile_phone ?? undefined,
