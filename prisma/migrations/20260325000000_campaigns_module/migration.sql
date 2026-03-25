@@ -117,11 +117,11 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ============================================================
--- CAMPAIGNS MODULE TABLES
+-- CAMPAIGNS MODULE TABLES (all idempotent)
 -- ============================================================
 
--- CreateTable: crm_campaign_templates
-CREATE TABLE "crm_campaign_templates" (
+-- CreateTable (IF NOT EXISTS): crm_campaign_templates
+CREATE TABLE IF NOT EXISTS "crm_campaign_templates" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "name" TEXT NOT NULL,
     "description" TEXT,
@@ -135,8 +135,8 @@ CREATE TABLE "crm_campaign_templates" (
     CONSTRAINT "crm_campaign_templates_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable: crm_campaign_steps
-CREATE TABLE "crm_campaign_steps" (
+-- CreateTable (IF NOT EXISTS): crm_campaign_steps
+CREATE TABLE IF NOT EXISTS "crm_campaign_steps" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "campaign_id" UUID NOT NULL,
     "order" INTEGER NOT NULL,
@@ -150,16 +150,16 @@ CREATE TABLE "crm_campaign_steps" (
     CONSTRAINT "crm_campaign_steps_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable: CampaignToTargetLists
-CREATE TABLE "CampaignToTargetLists" (
+-- CreateTable (IF NOT EXISTS): CampaignToTargetLists
+CREATE TABLE IF NOT EXISTS "CampaignToTargetLists" (
     "campaign_id" UUID NOT NULL,
     "target_list_id" UUID NOT NULL,
 
     CONSTRAINT "CampaignToTargetLists_pkey" PRIMARY KEY ("campaign_id","target_list_id")
 );
 
--- CreateTable: crm_campaign_sends
-CREATE TABLE "crm_campaign_sends" (
+-- CreateTable (IF NOT EXISTS): crm_campaign_sends
+CREATE TABLE IF NOT EXISTS "crm_campaign_sends" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "campaign_id" UUID NOT NULL,
     "step_id" UUID NOT NULL,
@@ -177,76 +177,77 @@ CREATE TABLE "crm_campaign_sends" (
     CONSTRAINT "crm_campaign_sends_pkey" PRIMARY KEY ("id")
 );
 
--- AlterTable: crm_campaigns — add new columns
+-- AlterTable: crm_campaigns — add new columns (IF NOT EXISTS)
 ALTER TABLE "crm_campaigns"
-    ADD COLUMN "template_id" UUID,
-    ADD COLUMN "from_name" TEXT,
-    ADD COLUMN "reply_to" TEXT,
-    ADD COLUMN "scheduled_at" TIMESTAMP(3),
-    ADD COLUMN "sent_at" TIMESTAMP(3),
-    ADD COLUMN "created_by" UUID,
-    ADD COLUMN "created_on" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    ADD COLUMN "updatedAt" TIMESTAMP(3);
+    ADD COLUMN IF NOT EXISTS "template_id" UUID,
+    ADD COLUMN IF NOT EXISTS "from_name" TEXT,
+    ADD COLUMN IF NOT EXISTS "reply_to" TEXT,
+    ADD COLUMN IF NOT EXISTS "scheduled_at" TIMESTAMP(3),
+    ADD COLUMN IF NOT EXISTS "sent_at" TIMESTAMP(3),
+    ADD COLUMN IF NOT EXISTS "created_by" UUID,
+    ADD COLUMN IF NOT EXISTS "created_on" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3);
 
--- CreateIndex
-CREATE INDEX "crm_campaign_templates_created_by_idx" ON "crm_campaign_templates"("created_by");
+-- CreateIndex (IF NOT EXISTS)
+CREATE INDEX IF NOT EXISTS "crm_campaign_templates_created_by_idx" ON "crm_campaign_templates"("created_by");
+CREATE UNIQUE INDEX IF NOT EXISTS "crm_campaign_steps_campaign_id_order_key" ON "crm_campaign_steps"("campaign_id", "order");
+CREATE INDEX IF NOT EXISTS "crm_campaign_steps_campaign_id_idx" ON "crm_campaign_steps"("campaign_id");
+CREATE INDEX IF NOT EXISTS "crm_campaign_steps_scheduled_at_idx" ON "crm_campaign_steps"("scheduled_at");
+CREATE UNIQUE INDEX IF NOT EXISTS "crm_campaign_sends_unsubscribe_token_key" ON "crm_campaign_sends"("unsubscribe_token");
+CREATE UNIQUE INDEX IF NOT EXISTS "crm_campaign_sends_step_id_target_id_key" ON "crm_campaign_sends"("step_id", "target_id");
+CREATE INDEX IF NOT EXISTS "crm_campaign_sends_campaign_id_idx" ON "crm_campaign_sends"("campaign_id");
+CREATE INDEX IF NOT EXISTS "crm_campaign_sends_step_id_target_id_idx" ON "crm_campaign_sends"("step_id", "target_id");
+CREATE INDEX IF NOT EXISTS "crm_campaign_sends_resend_message_id_idx" ON "crm_campaign_sends"("resend_message_id");
+CREATE INDEX IF NOT EXISTS "crm_campaign_sends_status_idx" ON "crm_campaign_sends"("status");
+CREATE INDEX IF NOT EXISTS "crm_campaign_sends_unsubscribe_token_idx" ON "crm_campaign_sends"("unsubscribe_token");
 
--- CreateIndex
-CREATE UNIQUE INDEX "crm_campaign_steps_campaign_id_order_key" ON "crm_campaign_steps"("campaign_id", "order");
+-- AddForeignKey (idempotent)
+DO $$ BEGIN
+  ALTER TABLE "crm_campaigns" ADD CONSTRAINT "crm_campaigns_template_id_fkey"
+    FOREIGN KEY ("template_id") REFERENCES "crm_campaign_templates"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
--- CreateIndex
-CREATE INDEX "crm_campaign_steps_campaign_id_idx" ON "crm_campaign_steps"("campaign_id");
+DO $$ BEGIN
+  ALTER TABLE "crm_campaigns" ADD CONSTRAINT "crm_campaigns_created_by_fkey"
+    FOREIGN KEY ("created_by") REFERENCES "Users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
--- CreateIndex
-CREATE INDEX "crm_campaign_steps_scheduled_at_idx" ON "crm_campaign_steps"("scheduled_at");
+DO $$ BEGIN
+  ALTER TABLE "crm_campaign_templates" ADD CONSTRAINT "crm_campaign_templates_created_by_fkey"
+    FOREIGN KEY ("created_by") REFERENCES "Users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
--- CreateIndex
-CREATE UNIQUE INDEX "crm_campaign_sends_unsubscribe_token_key" ON "crm_campaign_sends"("unsubscribe_token");
+DO $$ BEGIN
+  ALTER TABLE "crm_campaign_steps" ADD CONSTRAINT "crm_campaign_steps_campaign_id_fkey"
+    FOREIGN KEY ("campaign_id") REFERENCES "crm_campaigns"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
--- CreateIndex
-CREATE UNIQUE INDEX "crm_campaign_sends_step_id_target_id_key" ON "crm_campaign_sends"("step_id", "target_id");
+DO $$ BEGIN
+  ALTER TABLE "crm_campaign_steps" ADD CONSTRAINT "crm_campaign_steps_template_id_fkey"
+    FOREIGN KEY ("template_id") REFERENCES "crm_campaign_templates"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
--- CreateIndex
-CREATE INDEX "crm_campaign_sends_campaign_id_idx" ON "crm_campaign_sends"("campaign_id");
+DO $$ BEGIN
+  ALTER TABLE "CampaignToTargetLists" ADD CONSTRAINT "CampaignToTargetLists_campaign_id_fkey"
+    FOREIGN KEY ("campaign_id") REFERENCES "crm_campaigns"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
--- CreateIndex
-CREATE INDEX "crm_campaign_sends_step_id_target_id_idx" ON "crm_campaign_sends"("step_id", "target_id");
+DO $$ BEGIN
+  ALTER TABLE "CampaignToTargetLists" ADD CONSTRAINT "CampaignToTargetLists_target_list_id_fkey"
+    FOREIGN KEY ("target_list_id") REFERENCES "crm_TargetLists"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
--- CreateIndex
-CREATE INDEX "crm_campaign_sends_resend_message_id_idx" ON "crm_campaign_sends"("resend_message_id");
+DO $$ BEGIN
+  ALTER TABLE "crm_campaign_sends" ADD CONSTRAINT "crm_campaign_sends_campaign_id_fkey"
+    FOREIGN KEY ("campaign_id") REFERENCES "crm_campaigns"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
--- CreateIndex
-CREATE INDEX "crm_campaign_sends_status_idx" ON "crm_campaign_sends"("status");
+DO $$ BEGIN
+  ALTER TABLE "crm_campaign_sends" ADD CONSTRAINT "crm_campaign_sends_step_id_fkey"
+    FOREIGN KEY ("step_id") REFERENCES "crm_campaign_steps"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
--- CreateIndex
-CREATE INDEX "crm_campaign_sends_unsubscribe_token_idx" ON "crm_campaign_sends"("unsubscribe_token");
-
--- AddForeignKey
-ALTER TABLE "crm_campaigns" ADD CONSTRAINT "crm_campaigns_template_id_fkey" FOREIGN KEY ("template_id") REFERENCES "crm_campaign_templates"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "crm_campaigns" ADD CONSTRAINT "crm_campaigns_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "Users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "crm_campaign_templates" ADD CONSTRAINT "crm_campaign_templates_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "Users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "crm_campaign_steps" ADD CONSTRAINT "crm_campaign_steps_campaign_id_fkey" FOREIGN KEY ("campaign_id") REFERENCES "crm_campaigns"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "crm_campaign_steps" ADD CONSTRAINT "crm_campaign_steps_template_id_fkey" FOREIGN KEY ("template_id") REFERENCES "crm_campaign_templates"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "CampaignToTargetLists" ADD CONSTRAINT "CampaignToTargetLists_campaign_id_fkey" FOREIGN KEY ("campaign_id") REFERENCES "crm_campaigns"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "CampaignToTargetLists" ADD CONSTRAINT "CampaignToTargetLists_target_list_id_fkey" FOREIGN KEY ("target_list_id") REFERENCES "crm_TargetLists"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "crm_campaign_sends" ADD CONSTRAINT "crm_campaign_sends_campaign_id_fkey" FOREIGN KEY ("campaign_id") REFERENCES "crm_campaigns"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "crm_campaign_sends" ADD CONSTRAINT "crm_campaign_sends_step_id_fkey" FOREIGN KEY ("step_id") REFERENCES "crm_campaign_steps"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "crm_campaign_sends" ADD CONSTRAINT "crm_campaign_sends_target_id_fkey" FOREIGN KEY ("target_id") REFERENCES "crm_Targets"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "crm_campaign_sends" ADD CONSTRAINT "crm_campaign_sends_target_id_fkey"
+    FOREIGN KEY ("target_id") REFERENCES "crm_Targets"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
