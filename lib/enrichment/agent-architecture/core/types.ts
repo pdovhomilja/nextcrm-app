@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 // Email context that flows through all agents
 export const EmailContext = z.object({
-  email: z.string().email(),
+  email: z.string().email().or(z.literal('')),
   domain: z.string(),
   companyDomain: z.string().optional(),
   personalName: z.string().optional(),

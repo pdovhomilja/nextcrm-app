@@ -46,7 +46,7 @@ export class AgentOrchestrator {
 
     const emailContext = email
       ? this.extractEmailContext(email)
-      : this.buildCompanyNameContext(companyName!, identityOverride?.companyWebsite);
+      : this.buildCompanyNameContext(companyName, identityOverride?.companyWebsite);
 
     const displayIdentity = emailContext.companyNameGuess || emailContext.domain || email || companyName || 'unknown';
     console.log(`[Orchestrator] Starting enrichment — email: ${email ?? 'none'}, company: ${companyName ?? 'none'}`);
@@ -299,7 +299,8 @@ export class AgentOrchestrator {
     };
   }
   
-  private buildCompanyNameContext(companyName: string, companyWebsite?: string): EmailContext {
+  private buildCompanyNameContext(companyName: string | null, companyWebsite?: string): EmailContext {
+    const name = companyName ?? '';
     let domain = '';
     if (companyWebsite) {
       try {
@@ -313,7 +314,7 @@ export class AgentOrchestrator {
       domain,
       companyDomain: domain || undefined,
       personalName: undefined,
-      companyNameGuess: companyName,
+      companyNameGuess: name,
       isPersonalEmail: false,
     };
   }
