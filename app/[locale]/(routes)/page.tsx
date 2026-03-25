@@ -23,7 +23,6 @@ import {
   getTasksCount,
   getUsersTasksCount,
 } from "@/actions/dashboard/get-tasks-count";
-import { getModules } from "@/actions/get-modules";
 import { getEmployees } from "@/actions/get-empoloyees";
 import { getLeadsCount } from "@/actions/dashboard/get-leads-count";
 import { getBoardsCount } from "@/actions/dashboard/get-boards-count";
@@ -49,7 +48,6 @@ const DashboardPage = async () => {
 
   //Fetch translations from dictionary
   const dict = await getTranslations("DashboardPage");
-  const modules = await getModules();
   const leads = await getLeadsCount();
   const tasks = await getTasksCount();
   const employees = await getEmployees();
@@ -63,12 +61,6 @@ const DashboardPage = async () => {
   const documents = await getDocumentsCount();
   const opportunities = await getOpportunitiesCount();
   const usersTasks = await getUsersTasksCount(userId);
-
-  //Find which modules are enabled
-  const crmModule = modules.find((module) => module.name === "crm");
-  const projectsModule = modules.find((module) => module.name === "projects");
-  const documentsModule = modules.find((module) => module.name === "documents");
-  const employeesModule = modules.find((module) => module.name === "employees");
 
   return (
     <Container
@@ -119,84 +111,66 @@ const DashboardPage = async () => {
           IconComponent={UserIcon}
           content={users}
         />
-        {
-          //show crm module only if enabled is true
-          employeesModule?.enabled && (
-            <DashboardCard
-              href="/employees"
-              title="Employees"
-              IconComponent={Users2Icon}
-              content={employees.length}
-            />
-          )
-        }
-        {
-          //show crm module only if enabled is true
-          crmModule?.enabled && (
-            <>
-              <DashboardCard
-                href="/crm/accounts"
-                title={dict("accounts")}
-                IconComponent={LandmarkIcon}
-                content={accounts}
-              />
-              <DashboardCard
-                href="/crm/opportunities"
-                title={dict("opportunities")}
-                IconComponent={HeartHandshakeIcon}
-                content={opportunities}
-              />
-              <DashboardCard
-                href="/crm/contacts"
-                title={dict("contacts")}
-                IconComponent={Contact}
-                content={contacts}
-              />
-              <DashboardCard
-                href="/crm/leads"
-                title={dict("leads")}
-                IconComponent={CoinsIcon}
-                content={leads}
-              />
-              <DashboardCard
-                href="/crm/contracts"
-                title={dict("contracts")}
-                IconComponent={FilePenLine}
-                content={contracts}
-              />
-            </>
-          )
-        }
-        {projectsModule?.enabled && (
-          <>
-            <DashboardCard
-              href="/projects"
-              title={dict("projects")}
-              IconComponent={CoinsIcon}
-              content={projects}
-            />
-            <DashboardCard
-              href="/projects/tasks"
-              title={dict("tasks")}
-              IconComponent={CoinsIcon}
-              content={tasks}
-            />
-            <DashboardCard
-              href={`/projects/tasks/${userId}`}
-              title={dict("myTasks")}
-              IconComponent={CoinsIcon}
-              content={usersTasks}
-            />
-          </>
-        )}
-        {documentsModule?.enabled && (
-          <DashboardCard
-            href="/documents"
-            title={dict("documents")}
-            IconComponent={CoinsIcon}
-            content={documents}
-          />
-        )}
+        <DashboardCard
+          href="/employees"
+          title="Employees"
+          IconComponent={Users2Icon}
+          content={employees.length}
+        />
+        <DashboardCard
+          href="/crm/accounts"
+          title={dict("accounts")}
+          IconComponent={LandmarkIcon}
+          content={accounts}
+        />
+        <DashboardCard
+          href="/crm/opportunities"
+          title={dict("opportunities")}
+          IconComponent={HeartHandshakeIcon}
+          content={opportunities}
+        />
+        <DashboardCard
+          href="/crm/contacts"
+          title={dict("contacts")}
+          IconComponent={Contact}
+          content={contacts}
+        />
+        <DashboardCard
+          href="/crm/leads"
+          title={dict("leads")}
+          IconComponent={CoinsIcon}
+          content={leads}
+        />
+        <DashboardCard
+          href="/crm/contracts"
+          title={dict("contracts")}
+          IconComponent={FilePenLine}
+          content={contracts}
+        />
+        <DashboardCard
+          href="/projects"
+          title={dict("projects")}
+          IconComponent={CoinsIcon}
+          content={projects}
+        />
+        <DashboardCard
+          href="/projects/tasks"
+          title={dict("tasks")}
+          IconComponent={CoinsIcon}
+          content={tasks}
+        />
+        <DashboardCard
+          href={`/projects/tasks/${userId}`}
+          title={dict("myTasks")}
+          IconComponent={CoinsIcon}
+          content={usersTasks}
+        />
+        <DashboardCard
+          href="/documents"
+          title={dict("documents")}
+          IconComponent={CoinsIcon}
+          content={documents}
+        />
 
         <StorageQuota actual={storage} title={dict("storage")} />
       </div>

@@ -729,13 +729,6 @@ enum Language {
   uk
 }
 
-model system_Modules_Enabled {
-  id       String  @id @default(uuid()) @db.Uuid
-  v        Int     @map("__v")
-  name     String
-  enabled  Boolean
-  position Int
-}
 
 enum ApiKeyScope {
   SYSTEM
