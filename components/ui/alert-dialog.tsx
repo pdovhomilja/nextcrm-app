@@ -106,7 +106,6 @@ const AlertDialogAction = React.forwardRef<
   React.ButtonHTMLAttributes<HTMLButtonElement>
 >(({ className, onClick, ...props }, ref) => {
   // Close the dialog after the action handler runs
-  const [open, setOpen] = React.useState(true)
   const closeRef = React.useRef<HTMLButtonElement>(null)
 
   const handleClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
