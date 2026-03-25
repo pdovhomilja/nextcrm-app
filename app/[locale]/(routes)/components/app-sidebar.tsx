@@ -21,6 +21,7 @@ import getReportsMenuItem from "./menu-items/Reports";
 import getDocumentsMenuItem from "./menu-items/Documents";
 import getDataboxMenuItem from "./menu-items/Databoxes";
 import getAdministrationMenuItem from "./menu-items/Administration";
+import getCampaignsMenuItem from "./menu-items/Campaigns";
 
 /**
  * AppSidebar Component - Task Groups 1.2, 2.2-2.7, 3.1, 5.3, 5.4
@@ -119,6 +120,24 @@ export function AppSidebar({
       localizations: dict.crm,
     });
     navItems.push(crmItem);
+  }
+
+  // Campaigns module navigation (with module filtering)
+  // Only show if Campaigns module is enabled
+  const campaignsModule = modules.find(
+    (menuItem: any) => menuItem.name === "campaigns" && menuItem.enabled,
+  );
+  if (campaignsModule) {
+    const campaignsItem = getCampaignsMenuItem({
+      localizations: {
+        title: "Campaigns",
+        campaigns: "All Campaigns",
+        templates: "Templates",
+        targets: "Targets",
+        targetLists: "Target Lists",
+      },
+    });
+    navItems.push(campaignsItem);
   }
 
   // Task 2.4: Projects module navigation (with module filtering)
