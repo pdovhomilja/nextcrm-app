@@ -1,3 +1,125 @@
+-- CreateTable (IF NOT EXISTS): crm_Targets — may already exist on upgraded DBs
+CREATE TABLE IF NOT EXISTS "crm_Targets" (
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "first_name" TEXT,
+    "last_name" TEXT NOT NULL,
+    "email" TEXT,
+    "mobile_phone" TEXT,
+    "office_phone" TEXT,
+    "company" TEXT,
+    "company_website" TEXT,
+    "personal_website" TEXT,
+    "position" TEXT,
+    "social_x" TEXT,
+    "social_linkedin" TEXT,
+    "social_instagram" TEXT,
+    "social_facebook" TEXT,
+    "status" BOOLEAN NOT NULL DEFAULT true,
+    "tags" TEXT[],
+    "notes" TEXT[],
+    "created_by" UUID,
+    "created_on" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
+    "updatedBy" UUID,
+
+    CONSTRAINT "crm_Targets_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable (IF NOT EXISTS): crm_TargetLists — may already exist on upgraded DBs
+CREATE TABLE IF NOT EXISTS "crm_TargetLists" (
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "status" BOOLEAN NOT NULL DEFAULT true,
+    "created_by" UUID,
+    "created_on" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3),
+
+    CONSTRAINT "crm_TargetLists_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable (IF NOT EXISTS): TargetsToTargetLists — may already exist on upgraded DBs
+CREATE TABLE IF NOT EXISTS "TargetsToTargetLists" (
+    "target_id" UUID NOT NULL,
+    "target_list_id" UUID NOT NULL,
+
+    CONSTRAINT "TargetsToTargetLists_pkey" PRIMARY KEY ("target_id","target_list_id")
+);
+
+-- CreateTable (IF NOT EXISTS): crm_Target_Enrichment — may already exist on upgraded DBs
+CREATE TABLE IF NOT EXISTS "crm_Target_Enrichment" (
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "targetId" UUID NOT NULL,
+    "status" "crm_Enrichment_Status" NOT NULL DEFAULT 'PENDING',
+    "fields" TEXT[],
+    "result" JSONB,
+    "error" TEXT,
+    "triggeredBy" UUID,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "crm_Target_Enrichment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex (IF NOT EXISTS) for crm_Targets
+CREATE INDEX IF NOT EXISTS "crm_Targets_created_by_idx" ON "crm_Targets"("created_by");
+CREATE INDEX IF NOT EXISTS "crm_Targets_status_idx" ON "crm_Targets"("status");
+CREATE INDEX IF NOT EXISTS "crm_Targets_created_on_idx" ON "crm_Targets"("created_on");
+
+-- CreateIndex (IF NOT EXISTS) for crm_TargetLists
+CREATE INDEX IF NOT EXISTS "crm_TargetLists_created_by_idx" ON "crm_TargetLists"("created_by");
+CREATE INDEX IF NOT EXISTS "crm_TargetLists_status_idx" ON "crm_TargetLists"("status");
+
+-- CreateIndex (IF NOT EXISTS) for TargetsToTargetLists
+CREATE INDEX IF NOT EXISTS "TargetsToTargetLists_target_id_idx" ON "TargetsToTargetLists"("target_id");
+CREATE INDEX IF NOT EXISTS "TargetsToTargetLists_target_list_id_idx" ON "TargetsToTargetLists"("target_list_id");
+
+-- CreateIndex (IF NOT EXISTS) for crm_Target_Enrichment
+CREATE INDEX IF NOT EXISTS "crm_Target_Enrichment_targetId_idx" ON "crm_Target_Enrichment"("targetId");
+CREATE INDEX IF NOT EXISTS "crm_Target_Enrichment_status_idx" ON "crm_Target_Enrichment"("status");
+CREATE INDEX IF NOT EXISTS "crm_Target_Enrichment_createdAt_idx" ON "crm_Target_Enrichment"("createdAt");
+CREATE INDEX IF NOT EXISTS "crm_Target_Enrichment_triggeredBy_idx" ON "crm_Target_Enrichment"("triggeredBy");
+
+-- AddForeignKey (idempotent) for Targets → Users
+DO $$ BEGIN
+  ALTER TABLE "crm_Targets" ADD CONSTRAINT "crm_Targets_created_by_fkey"
+    FOREIGN KEY ("created_by") REFERENCES "Users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- AddForeignKey (idempotent) for TargetLists → Users
+DO $$ BEGIN
+  ALTER TABLE "crm_TargetLists" ADD CONSTRAINT "crm_TargetLists_created_by_fkey"
+    FOREIGN KEY ("created_by") REFERENCES "Users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- AddForeignKey (idempotent) for TargetsToTargetLists → crm_Targets
+DO $$ BEGIN
+  ALTER TABLE "TargetsToTargetLists" ADD CONSTRAINT "TargetsToTargetLists_target_id_fkey"
+    FOREIGN KEY ("target_id") REFERENCES "crm_Targets"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- AddForeignKey (idempotent) for TargetsToTargetLists → crm_TargetLists
+DO $$ BEGIN
+  ALTER TABLE "TargetsToTargetLists" ADD CONSTRAINT "TargetsToTargetLists_target_list_id_fkey"
+    FOREIGN KEY ("target_list_id") REFERENCES "crm_TargetLists"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- AddForeignKey (idempotent) for crm_Target_Enrichment → crm_Targets
+DO $$ BEGIN
+  ALTER TABLE "crm_Target_Enrichment" ADD CONSTRAINT "crm_Target_Enrichment_targetId_fkey"
+    FOREIGN KEY ("targetId") REFERENCES "crm_Targets"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- AddForeignKey (idempotent) for crm_Target_Enrichment → Users
+DO $$ BEGIN
+  ALTER TABLE "crm_Target_Enrichment" ADD CONSTRAINT "crm_Target_Enrichment_triggeredBy_fkey"
+    FOREIGN KEY ("triggeredBy") REFERENCES "Users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- ============================================================
+-- CAMPAIGNS MODULE TABLES
+-- ============================================================
+
 -- CreateTable: crm_campaign_templates
 CREATE TABLE "crm_campaign_templates" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
