@@ -72,13 +72,13 @@ export class AgentOrchestrator {
       
       // Send initial agent progress
       if (onAgentProgress) {
-        onAgentProgress(`Planning enrichment strategy for ${emailContext.companyNameGuess || emailContext.domain}`, 'info');
+        onAgentProgress(`Planning enrichment strategy for ${displayIdentity}`, 'info');
         onAgentProgress(`Agent pipeline: ${agentsToUse.map(a => a.replace('-agent', '').replace('-', ' ')).join(' → ')}`, 'info');
       }
       
       // Step 3: Progressive enrichment
       const enrichments: Record<string, unknown> = {};
-      const context: OrchestrationContext = { email: email || '', emailContext, discoveredData: {} };
+      const context: OrchestrationContext = { email: email ?? '', emailContext, discoveredData: {} };
       
       // Discovery phase (company identity)
       if (fieldCategories.discovery.length > 0) {
