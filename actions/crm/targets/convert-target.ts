@@ -76,8 +76,8 @@ export async function convertTarget(
       return [acct, ctct];
     });
 
-    revalidatePath("/campaigns/targets");
-    revalidatePath("/crm/accounts");
+    revalidatePath("/[locale]/(routes)/campaigns/targets", "page");
+    revalidatePath("/[locale]/(routes)/crm/accounts", "page");
 
     return { accountId: account.id, contactId: contact.id };
   } catch (error) {
