@@ -24,6 +24,13 @@ const TARGET_PRESET_FIELDS: EnrichmentField[] = [
   { name: "social_x",         displayName: "Twitter / X URL",        description: "The target's Twitter/X profile URL", type: "string", required: false },
   { name: "social_instagram", displayName: "Instagram URL",          description: "The target's Instagram profile URL", type: "string", required: false },
   { name: "social_facebook",  displayName: "Facebook URL",           description: "The target's Facebook profile URL", type: "string", required: false },
+  { name: "company_email",    displayName: "Company Email",          description: "Generic company contact email (info@...)", type: "string", required: false },
+  { name: "company_phone",    displayName: "Company Phone",          description: "Main company switchboard number", type: "string", required: false },
+  { name: "city",             displayName: "City",                   description: "Company HQ city", type: "string", required: false },
+  { name: "country",          displayName: "Country",                description: "Company HQ country", type: "string", required: false },
+  { name: "industry",         displayName: "Industry",               description: "Company industry / sector", type: "string", required: false },
+  { name: "employees",        displayName: "Employees",              description: "Number of employees", type: "string", required: false },
+  { name: "description",      displayName: "Description",            description: "Short company description", type: "string", required: false },
 ];
 
 interface BulkEnrichTargetsModalProps {
