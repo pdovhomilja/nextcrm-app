@@ -41,18 +41,15 @@ export async function importTargets(
     const last_name = row.last_name;
     const email = row.email;
     const mobile_phone = row.mobile_phone;
+    const company = row.company;
 
-    if (!last_name) {
-      errors.push(`Row ${index + 2}: missing last_name`);
-      return;
-    }
-    if (!email && !mobile_phone) {
-      errors.push(`Row ${index + 2}: missing email or mobile_phone`);
+    if (!last_name && !company) {
+      errors.push(`Row ${index + 2}: missing last_name or company`);
       return;
     }
 
     valid.push({
-      last_name,
+      last_name: last_name ?? "",
       first_name: row.first_name || null,
       email: email || null,
       mobile_phone: mobile_phone || null,

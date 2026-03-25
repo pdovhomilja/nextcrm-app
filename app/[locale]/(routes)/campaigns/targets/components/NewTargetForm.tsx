@@ -25,7 +25,7 @@ type NewTargetFormProps = {
 export function NewTargetForm({ onFinish }: NewTargetFormProps) {
   const formSchema = z.object({
     first_name: z.string().optional(),
-    last_name: z.string().min(1, "Last name is required"),
+    last_name: z.string().optional(),
     email: z.string().optional(),
     mobile_phone: z.string().optional(),
     office_phone: z.string().optional(),
@@ -49,9 +49,9 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
   });
 
   const onSubmit = async (data: NewTargetFormValues) => {
-    if (!data.email && !data.mobile_phone) {
+    if (!data.last_name && !data.company) {
       form.setError("root.serverError", {
-        message: "Please provide either email or mobile phone.",
+        message: "Please provide either last name or company.",
       });
       return;
     }
@@ -87,7 +87,7 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
             name="last_name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Last name *</FormLabel>
+                <FormLabel>Last name</FormLabel>
                 <FormControl>
                   <Input disabled={form.formState.isSubmitting} placeholder="Doe" {...field} />
                 </FormControl>
