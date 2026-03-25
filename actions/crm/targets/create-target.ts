@@ -5,7 +5,7 @@ import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
 export const createTarget = async (data: {
-  last_name: string;
+  last_name?: string;
   first_name?: string;
   email?: string;
   mobile_phone?: string;
@@ -24,12 +24,11 @@ export const createTarget = async (data: {
   if (!session) return { error: "Unauthorized" };
 
   const { last_name, email, mobile_phone, ...rest } = data;
-  if (!last_name) return { error: "last_name is required" };
-  if (!email && !mobile_phone) return { error: "email or mobile_phone is required" };
+  if (!last_name && !data.company) return { error: "last_name or company is required" };
 
   try {
     const target = await prismadb.crm_Targets.create({
-      data: { last_name, email, mobile_phone, ...rest, created_by: (session.user as any).id },
+      data: { last_name: last_name ?? "", email, mobile_phone, ...rest, created_by: (session.user as any).id },
     });
     revalidatePath("/[locale]/(routes)/crm/targets", "page");
     return { data: target };
