@@ -96,7 +96,7 @@ export function EnrichTargetDrawer({
     setStep("progress");
     setMessages([]);
 
-    const response = await fetch("/api/crm/targets/enrich", {
+    const response = await fetch("/api/campaigns/targets/enrich", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ targetId, fields }),
@@ -147,7 +147,7 @@ export function EnrichTargetDrawer({
 
   const handleCancel = async () => {
     if (sessionId) {
-      await fetch(`/api/crm/targets/enrich?sessionId=${sessionId}`, { method: "DELETE" });
+      await fetch(`/api/campaigns/targets/enrich?sessionId=${sessionId}`, { method: "DELETE" });
     }
     reset();
   };
@@ -163,7 +163,7 @@ export function EnrichTargetDrawer({
       }
     }
 
-    const res = await fetch(`/api/crm/targets/${targetId}`, {
+    const res = await fetch(`/api/campaigns/targets/${targetId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ enrichmentFields: updates }),

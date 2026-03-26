@@ -16,7 +16,7 @@ export function RetryEnrichmentButton({ targetId, fields }: RetryEnrichmentButto
   const handleRetry = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/crm/targets/enrich-bulk", {
+      const res = await fetch("/api/campaigns/targets/enrich-bulk", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

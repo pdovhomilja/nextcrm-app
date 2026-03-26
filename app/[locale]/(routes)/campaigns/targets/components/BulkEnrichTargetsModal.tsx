@@ -28,7 +28,7 @@ export function BulkEnrichTargetsModal({ targetIds, open, onOpenChange }: BulkEn
   const handleStart = async (fields: EnrichmentField[]) => {
     setLoading(true);
     try {
-      const res = await fetch("/api/crm/targets/enrich-bulk", {
+      const res = await fetch("/api/campaigns/targets/enrich-bulk", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ targetIds, fields }),
