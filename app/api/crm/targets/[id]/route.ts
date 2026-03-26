@@ -14,6 +14,14 @@ const FIELD_MAP: Record<string, string> = {
   social_x:         "social_x",
   social_instagram: "social_instagram",
   social_facebook:  "social_facebook",
+  personal_email:   "personal_email",
+  company_email:    "company_email",
+  company_phone:    "company_phone",
+  industry:         "industry",
+  employees:        "employees",
+  description:      "description",
+  city:             "city",
+  country:          "country",
 };
 
 export async function PATCH(

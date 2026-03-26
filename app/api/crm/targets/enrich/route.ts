@@ -39,9 +39,12 @@ export async function POST(request: NextRequest) {
   if (!target) {
     return NextResponse.json({ error: "Target not found" }, { status: 404 });
   }
+
+  // Scenario 1: personal search — requires email
+  // Scenario 2: company search — requires company name
   if (!target.email && !target.company) {
     return NextResponse.json(
-      { error: "Target needs at least an email or company name to enrich." },
+      { error: "Add an email (personal search) or company name (company search) to this target before enriching." },
       { status: 422 }
     );
   }

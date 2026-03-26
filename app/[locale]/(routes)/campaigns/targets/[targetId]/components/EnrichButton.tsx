@@ -8,6 +8,7 @@ import { EnrichTargetDrawer } from "./EnrichTargetDrawer";
 interface EnrichButtonProps {
   targetId: string;
   targetEmail: string | null;
+  targetCompany: string | null;
   targetCurrentData: {
     position?: string | null;
     company?: string | null;
@@ -22,7 +23,7 @@ interface EnrichButtonProps {
   };
 }
 
-export function EnrichButton({ targetId, targetEmail, targetCurrentData }: EnrichButtonProps) {
+export function EnrichButton({ targetId, targetEmail, targetCompany, targetCurrentData }: EnrichButtonProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -31,8 +32,7 @@ export function EnrichButton({ targetId, targetEmail, targetCurrentData }: Enric
         variant="outline"
         size="sm"
         onClick={() => setOpen(true)}
-        disabled={!targetEmail}
-        title={!targetEmail ? "Add an email to enable enrichment" : "Enrich with AI"}
+        title="Enrich with AI"
       >
         <Sparkles className="h-4 w-4 mr-1 text-orange-500" />
         Enrich with AI
@@ -40,6 +40,7 @@ export function EnrichButton({ targetId, targetEmail, targetCurrentData }: Enric
       <EnrichTargetDrawer
         targetId={targetId}
         targetEmail={targetEmail}
+        targetCompany={targetCompany}
         targetCurrentData={targetCurrentData}
         open={open}
         onOpenChange={setOpen}

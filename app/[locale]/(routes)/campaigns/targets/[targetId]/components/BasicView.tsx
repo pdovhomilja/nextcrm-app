@@ -46,6 +46,7 @@ export async function BasicView({ data }: TargetBasicViewProps) {
               <EnrichButton
                 targetId={data.id}
                 targetEmail={data.email ?? null}
+                targetCompany={data.company ?? null}
                 targetCurrentData={{
                   position:         data.position ?? null,
                   company:          data.company ?? null,

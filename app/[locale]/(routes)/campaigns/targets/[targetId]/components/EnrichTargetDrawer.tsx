@@ -5,7 +5,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sparkles, CheckCircle, XCircle, ExternalLink } from "lucide-react";
+import { Sparkles, CheckCircle, XCircle, ExternalLink, User, Building2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { EnrichFieldSelector } from "@/app/[locale]/(routes)/crm/contacts/components/EnrichFieldSelector";
 import type { EnrichmentField } from "@/lib/enrichment/types";
@@ -13,6 +14,7 @@ import type { StoredEnrichmentResult } from "@/lib/enrichment/types/stored-resul
 import { NoApiKeyDialog } from "@/app/components/NoApiKeyDialog";
 
 type Step = "select" | "progress" | "diff";
+type EnrichScenario = "personal" | "company" | "none";
 
 interface AgentMessage {
   message: string;
@@ -36,33 +38,59 @@ interface TargetCurrentData {
 interface EnrichTargetDrawerProps {
   targetId: string;
   targetEmail: string | null;
+  targetCompany: string | null;
   targetCurrentData: TargetCurrentData;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onApplied: () => void;
 }
 
-const TARGET_PRESET_FIELDS: EnrichmentField[] = [
+const PERSONAL_PRESET_FIELDS: EnrichmentField[] = [
   { name: "position",         displayName: "Position / Job Title",  description: "The target's job title or role", type: "string", required: false },
   { name: "company",          displayName: "Company Name",           description: "The target's company name", type: "string", required: false },
   { name: "company_website",  displayName: "Company Website",        description: "The company's official website URL", type: "string", required: false },
-  { name: "personal_website", displayName: "Personal Website",       description: "The target's personal website URL", type: "string", required: false },
-  { name: "mobile_phone",     displayName: "Mobile Phone",           description: "The target's mobile phone number", type: "string", required: false },
-  { name: "office_phone",     displayName: "Office Phone",           description: "The target's office phone number", type: "string", required: false },
   { name: "social_linkedin",  displayName: "LinkedIn URL",           description: "The target's LinkedIn profile URL", type: "string", required: false },
   { name: "social_x",         displayName: "Twitter / X URL",        description: "The target's Twitter/X profile URL", type: "string", required: false },
+  { name: "mobile_phone",     displayName: "Mobile Phone",           description: "The target's mobile phone number", type: "string", required: false },
+  { name: "office_phone",     displayName: "Office Phone",           description: "The target's office phone number", type: "string", required: false },
+  { name: "personal_website", displayName: "Personal Website",       description: "The target's personal website URL", type: "string", required: false },
+  { name: "personal_email",   displayName: "Personal Email",         description: "The target's personal (non-company) email", type: "string", required: false },
   { name: "social_instagram", displayName: "Instagram URL",          description: "The target's Instagram profile URL", type: "string", required: false },
   { name: "social_facebook",  displayName: "Facebook URL",           description: "The target's Facebook profile URL", type: "string", required: false },
 ];
 
+const PERSONAL_DEFAULTS = ["position", "company", "social_linkedin", "company_website"];
+
+const COMPANY_PRESET_FIELDS: EnrichmentField[] = [
+  { name: "company_website",  displayName: "Company Website",        description: "The company's official website URL", type: "string", required: false },
+  { name: "industry",         displayName: "Industry",               description: "Company industry / sector", type: "string", required: false },
+  { name: "employees",        displayName: "Employees",              description: "Approximate number of employees", type: "string", required: false },
+  { name: "description",      displayName: "Description",            description: "Short company description", type: "string", required: false },
+  { name: "city",             displayName: "City",                   description: "Company HQ city", type: "string", required: false },
+  { name: "country",          displayName: "Country",                description: "Company HQ country", type: "string", required: false },
+  { name: "company_email",    displayName: "Company Email",          description: "Generic company contact email (info@...)", type: "string", required: false },
+  { name: "company_phone",    displayName: "Company Phone",          description: "Main company switchboard number", type: "string", required: false },
+  { name: "social_linkedin",  displayName: "LinkedIn (Company Page)", description: "The company's LinkedIn page URL", type: "string", required: false },
+];
+
+const COMPANY_DEFAULTS = ["industry", "employees", "description", "city", "country", "company_website"];
+
+function getScenario(email: string | null, company: string | null): EnrichScenario {
+  if (email) return "personal";
+  if (company) return "company";
+  return "none";
+}
+
 export function EnrichTargetDrawer({
   targetId,
   targetEmail,
+  targetCompany,
   targetCurrentData,
   open,
   onOpenChange,
   onApplied,
 }: EnrichTargetDrawerProps) {
+  const scenario = getScenario(targetEmail, targetCompany);
   const [step, setStep] = useState<Step>("select");
   const [messages, setMessages] = useState<AgentMessage[]>([]);
   const [result, setResult] = useState<StoredEnrichmentResult | null>(null);
@@ -175,10 +203,12 @@ export function EnrichTargetDrawer({
     setApplying(false);
   };
 
-  const noEmail = !targetEmail;
+  const presetFields = scenario === "company" ? COMPANY_PRESET_FIELDS : PERSONAL_PRESET_FIELDS;
+  const defaultSelected = scenario === "company" ? COMPANY_DEFAULTS : PERSONAL_DEFAULTS;
 
   return (
     <>
+    <NoApiKeyDialog open={showNoApiKeyDialog} onClose={() => setShowNoApiKeyDialog(false)} />
     <Sheet open={open} onOpenChange={handleClose}>
       <SheetContent className="w-[420px] sm:w-[540px]">
         <SheetHeader>
@@ -187,24 +217,38 @@ export function EnrichTargetDrawer({
             Enrich with AI
           </SheetTitle>
           <SheetDescription>
-            {noEmail
-              ? "Add an email to this target to enable enrichment."
-              : "Firecrawl searches the web to fill in missing target details."}
+            Firecrawl searches the web to fill in missing target details.
           </SheetDescription>
         </SheetHeader>
 
-        {noEmail && (
-          <div className="mt-4 text-sm text-muted-foreground">
-            No email address found on this target.
+        {scenario === "none" && (
+          <div className="mt-4 rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+            Add an email or company name to this target to enable enrichment.
           </div>
         )}
 
-        {!noEmail && step === "select" && (
-          <div className="mt-4">
+        {scenario !== "none" && step === "select" && (
+          <div className="mt-4 space-y-3">
+            <div className="flex items-center gap-2">
+              {scenario === "personal" ? (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <User className="h-3 w-3" /> Personal search
+                </Badge>
+              ) : (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <Building2 className="h-3 w-3" /> Company search
+                </Badge>
+              )}
+              <span className="text-xs text-muted-foreground">
+                {scenario === "personal"
+                  ? "Using email to find contact & company info"
+                  : "Using company name to find company details"}
+              </span>
+            </div>
             <EnrichFieldSelector
               onStart={handleStart}
-              presetFields={TARGET_PRESET_FIELDS}
-              defaultSelected={["position", "company", "social_linkedin", "company_website"]}
+              presetFields={presetFields}
+              defaultSelected={defaultSelected}
             />
           </div>
         )}
@@ -312,7 +356,6 @@ export function EnrichTargetDrawer({
         )}
       </SheetContent>
     </Sheet>
-    <NoApiKeyDialog open={showNoApiKeyDialog} onClose={() => setShowNoApiKeyDialog(false)} />
     </>
   );
 }
