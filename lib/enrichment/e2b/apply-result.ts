@@ -60,5 +60,8 @@ export function buildContactUpsertKey(
   if (contact.email) {
     return { targetId_email: { targetId, email: contact.email } };
   }
-  return { targetId_linkedinUrl: { targetId, linkedinUrl: contact.linkedinUrl } };
+  if (contact.linkedinUrl) {
+    return { targetId_linkedinUrl: { targetId, linkedinUrl: contact.linkedinUrl } };
+  }
+  throw new Error("buildContactUpsertKey: contact has neither email nor linkedinUrl");
 }

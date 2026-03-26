@@ -63,4 +63,9 @@ describe("buildContactUpsertKey", () => {
     expect(buildContactUpsertKey("target-1", { email: null, linkedinUrl: "https://linkedin.com/in/foo" }))
       .toEqual({ targetId_linkedinUrl: { targetId: "target-1", linkedinUrl: "https://linkedin.com/in/foo" } });
   });
+
+  it("throws when both email and linkedinUrl are null", () => {
+    expect(() => buildContactUpsertKey("target-1", { email: null, linkedinUrl: null }))
+      .toThrow("buildContactUpsertKey: contact has neither email nor linkedinUrl");
+  });
 });

@@ -35,13 +35,15 @@ export const enrichTargetContact = inngest.createFunction(
 
     if (!contact) return { skipped: "contact not found" };
 
-    if (contact.title && contact.linkedinUrl) {
+    const skipReason = await step.run("check-already-enriched", async () => {
+      if (!contact.title || !contact.linkedinUrl) return null;
       await prismadb.crm_Target_Contact.update({
         where: { id: contactId },
         data: { enrichStatus: "COMPLETED", enrichedAt: new Date() },
       });
-      return { skipped: "already enriched" };
-    }
+      return "already enriched";
+    });
+    if (skipReason) return { skipped: skipReason };
 
     const anthropicKey = await step.run("resolve-api-key", () =>
       getApiKey("ANTHROPIC", triggeredBy)
@@ -55,10 +57,12 @@ export const enrichTargetContact = inngest.createFunction(
       return;
     }
 
-    await prismadb.crm_Target_Contact.update({
-      where: { id: contactId },
-      data: { enrichStatus: "RUNNING" },
-    });
+    await step.run("mark-running", () =>
+      prismadb.crm_Target_Contact.update({
+        where: { id: contactId },
+        data: { enrichStatus: "RUNNING" },
+      })
+    );
 
     const agentOutput = await step.run("run-e2b-agent", async (): Promise<AgentOutput> => {
       const knownDomain = resolveCompanyDomain({

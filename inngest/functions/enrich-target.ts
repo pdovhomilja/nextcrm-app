@@ -152,7 +152,7 @@ export const enrichTarget = inngest.createFunction(
     const contactIds = await step.run("upsert-contacts", async () => {
       const ids: string[] = [];
       for (const contact of agentOutput.contacts ?? []) {
-        if (!contact.name && !contact.email && !contact.linkedinUrl) continue;
+        if (!contact.email && !contact.linkedinUrl) continue;
         const whereKey = buildContactUpsertKey(targetId, contact);
         const upserted = await prismadb.crm_Target_Contact.upsert({
           where: whereKey as Parameters<typeof prismadb.crm_Target_Contact.upsert>[0]["where"],
