@@ -7,6 +7,7 @@ import type { EnrichmentField } from "@/lib/enrichment/types";
 import type { StoredEnrichmentResult } from "@/lib/enrichment/types/stored-result";
 import { validateEnrichRequest } from "./validate";
 import { getApiKey } from "@/lib/api-keys";
+import { FIELD_MAP } from "@/lib/enrichment/presets/target-fields";
 
 export const runtime = "nodejs";
 
@@ -29,6 +30,15 @@ export async function POST(request: NextRequest) {
   const validationError = validateEnrichRequest({ targetId, fields });
   if (validationError) {
     return NextResponse.json({ error: validationError }, { status: 400 });
+  }
+
+  const validFieldNames = new Set(Object.keys(FIELD_MAP));
+  const invalidFields = (fields as EnrichmentField[]).filter((f) => !validFieldNames.has(f.name));
+  if (invalidFields.length > 0) {
+    return NextResponse.json(
+      { error: `Unknown fields: ${invalidFields.map((f) => f.name).join(", ")}` },
+      { status: 400 }
+    );
   }
 
   const target = await prismadb.crm_Targets.findUnique({
