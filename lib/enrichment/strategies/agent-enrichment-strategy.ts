@@ -2,6 +2,17 @@ import { AgentOrchestrator } from '../agent-architecture';
 import type { CSVRow, EnrichmentField, RowEnrichmentResult, EnrichmentResult } from '../types';
 import { shouldSkipEmail, loadSkipList, getSkipReason } from '../utils/skip-list';
 
+const ENRICHMENT_TIMEOUT_MS = 90_000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`${label} timed out after ${ms / 1000}s`)), ms)
+    ),
+  ]);
+}
+
 export class AgentEnrichmentStrategy {
   private orchestrator: AgentOrchestrator;
   
@@ -43,13 +54,17 @@ export class AgentEnrichmentStrategy {
     try {
       console.log(`[AgentEnrichmentStrategy] Delegating to AgentOrchestrator`);
       // Use the agent orchestrator for enrichment
-      const result = await this.orchestrator.enrichRow(
-        row,
-        fields,
-        emailColumn,
-        onProgress,
-        onAgentProgress,
-        identityOverride
+      const result = await withTimeout(
+        this.orchestrator.enrichRow(
+          row,
+          fields,
+          emailColumn,
+          onProgress,
+          onAgentProgress,
+          identityOverride
+        ),
+        ENRICHMENT_TIMEOUT_MS,
+        "Enrichment"
       );
       
       // Filter out null values to match the expected type
