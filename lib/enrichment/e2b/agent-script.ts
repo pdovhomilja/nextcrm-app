@@ -1,29 +1,31 @@
-export interface AgentScriptParams {
-  email: string;
-  companyName: string;
-  companyWebsite: string;
-  targetName: string;
-  knownDomain: string | null;
-}
-
 /** Returns the complete Node.js enrichment agent script as a string.
- *  This is uploaded to the E2B sandbox at runtime. */
-export function getAgentScript(params: AgentScriptParams): string {
-  const { email, companyName, companyWebsite, targetName, knownDomain } = params;
-
-  const domainInstruction = companyWebsite
-    ? `The company website is known: ${companyWebsite}. Open it directly — do not search for the domain.`
-    : knownDomain
-    ? `Derive the company domain from the email: ${knownDomain}. Open https://${knownDomain} directly.`
-    : `Search for "${companyName} official website" to discover the company domain.`;
-
-  const contactInstruction = targetName
-    ? `Also specifically find ${targetName}'s job title and LinkedIn URL.`
-    : '';
-
+ *  All runtime values are read from process.env inside the script — nothing
+ *  is interpolated into the script source, which prevents script-injection
+ *  via user-controlled strings (backticks, ${...}, etc.).
+ *
+ *  Expected env vars (set by the Inngest caller via sandbox.commands.run envs):
+ *    COMPANY_NAME, COMPANY_WEBSITE, TARGET_EMAIL, TARGET_NAME, KNOWN_DOMAIN
+ */
+export function getAgentScript(): string {
   return `
 import Anthropic from '@anthropic-ai/sdk';
 import { execSync } from 'child_process';
+
+const companyName    = process.env.COMPANY_NAME    || '';
+const companyWebsite = process.env.COMPANY_WEBSITE || '';
+const email          = process.env.TARGET_EMAIL    || '';
+const targetName     = process.env.TARGET_NAME     || '';
+const knownDomain    = process.env.KNOWN_DOMAIN    || '';
+
+const domainInstruction = companyWebsite
+  ? \`The company website is known: \${companyWebsite}. Open it directly — do not search for the domain.\`
+  : knownDomain
+  ? \`Derive the company domain from the email: \${knownDomain}. Open https://\${knownDomain} directly.\`
+  : \`Search for "\${companyName} official website" to discover the company domain.\`;
+
+const contactInstruction = targetName
+  ? \`Also specifically find \${targetName}'s job title and LinkedIn URL.\`
+  : '';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -78,18 +80,18 @@ function executeTool(name, input) {
 const systemPrompt = \`You are an expert B2B researcher. Your job is to find all data needed to start outreach to a company.
 
 Known information:
-- Company name: ${companyName || 'unknown'}
-- Company website: ${companyWebsite || 'not known'}
-- Contact email: ${email || 'not known'}
-- Contact name: ${targetName || 'not known'}
+- Company name: \${companyName || 'unknown'}
+- Company website: \${companyWebsite || 'not known'}
+- Contact email: \${email || 'not known'}
+- Contact name: \${targetName || 'not known'}
 
 Research strategy (follow this order):
-1. ${domainInstruction}
+1. \${domainInstruction}
 2. From the company homepage, extract: company description, industry, employee count, HQ location/city, main phone number, LinkedIn company URL, Twitter/X URL.
 3. Open /contact or /about pages if homepage lacks address or phone.
-4. Search for C-level contacts at "${companyName}": search "CEO OR CTO OR CFO OR CMO OR \\"VP Sales\\" OR \\"Head of Sales\\" ${companyName} site:linkedin.com".
+4. Search for C-level contacts at "\${companyName}": search "CEO OR CTO OR CFO OR CMO OR \\"VP Sales\\" OR \\"Head of Sales\\" \${companyName} site:linkedin.com".
 5. For each C-level person found in search results, record their name, title, and LinkedIn URL.
-${contactInstruction}
+\${contactInstruction}
 
 When you have gathered sufficient data (or exhausted reasonable research steps), output ONLY a valid JSON object in this exact format and nothing else:
 
