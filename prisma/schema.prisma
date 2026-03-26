@@ -140,6 +140,30 @@ model crm_Target_Enrichment {
   @@index([triggeredBy])
 }
 
+model crm_Target_Contact {
+  id           String                @id @default(uuid()) @db.Uuid
+  targetId     String                @db.Uuid
+  contactId    String?               @db.Uuid
+  name         String?
+  email        String?
+  title        String?
+  phone        String?
+  linkedinUrl  String?
+  source       String                @default("manual")
+  enrichStatus crm_Enrichment_Status @default(PENDING)
+  enrichedAt   DateTime?
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+
+  target   crm_Targets    @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  contact  crm_Contacts?  @relation("target_contact_link", fields: [contactId], references: [id], onDelete: SetNull)
+
+  @@unique([targetId, email])
+  @@unique([targetId, linkedinUrl])
+  @@index([targetId])
+  @@index([enrichStatus])
+}
+
 enum crm_Enrichment_Status {
   PENDING
   RUNNING
@@ -374,8 +398,9 @@ model crm_Contacts {
   documents         DocumentsToContacts[]
   embedding         crm_Embeddings_Contacts?
   emails            EmailsToContacts[]
-  enrichments       crm_Contact_Enrichment[]
-  converted_targets crm_Targets[]            @relation("target_converted_contact")
+  enrichments           crm_Contact_Enrichment[]
+  converted_targets     crm_Targets[]            @relation("target_converted_contact")
+  target_contact_links  crm_Target_Contact[]     @relation("target_contact_link")
 
   @@index([assigned_to])
   @@index([created_by])
@@ -944,6 +969,7 @@ model crm_Targets {
   crate_by_user     Users?                 @relation("created_targets", fields: [created_by], references: [id])
   target_lists      TargetsToTargetLists[]
   enrichments       crm_Target_Enrichment[]
+  target_contacts   crm_Target_Contact[]
   campaign_sends    crm_campaign_sends[]
   converted_account crm_Accounts?          @relation("target_converted_account", fields: [converted_account_id], references: [id], onDelete: SetNull)
   converted_contact crm_Contacts?          @relation("target_converted_contact", fields: [converted_contact_id], references: [id], onDelete: SetNull)
