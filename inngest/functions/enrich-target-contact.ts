@@ -2,7 +2,7 @@ import { inngest } from "@/inngest/client";
 import { prismadb } from "@/lib/prisma";
 import { getApiKey } from "@/lib/api-keys";
 import { getAgentScript } from "@/lib/enrichment/e2b/agent-script";
-import { resolveCompanyDomain, filterByConfidence, type AgentOutput } from "@/lib/enrichment/e2b/apply-result";
+import { resolveCompanyDomain, type AgentOutput } from "@/lib/enrichment/e2b/apply-result";
 import { isFieldEmpty } from "@/lib/enrichment/utils/field-utils";
 import { Sandbox } from "e2b";
 
