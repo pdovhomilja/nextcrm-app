@@ -142,7 +142,7 @@ export const enrichTarget = inngest.createFunction(
       for (const [fieldName, enrichment] of Object.entries(result.enrichments)) {
         const targetColumn = targetFieldMap[fieldName as keyof typeof targetFieldMap];
         if (!targetColumn) continue;
-        const currentValue = (target as Record<string, string | null>)[targetColumn];
+        const currentValue = (target as unknown as Record<string, string | null>)[targetColumn];
         if (isFieldEmpty(currentValue) && enrichment.value) {
           updates[targetColumn] = String(enrichment.value);
         }
