@@ -44,6 +44,7 @@ model crm_Accounts {
 
   contacts           crm_Contacts[]
   leads              crm_Leads[]
+  converted_targets  crm_Targets[]         @relation("target_converted_account")
   industry_type      crm_Industry_Type?    @relation(fields: [industry], references: [id])
   opportunities      crm_Opportunities[]
   assigned_to_user   Users?                @relation("AccountAssignedTo", fields: [assigned_to], references: [id])
@@ -374,6 +375,7 @@ model crm_Contacts {
   embedding         crm_Embeddings_Contacts?
   emails            EmailsToContacts[]
   enrichments       crm_Contact_Enrichment[]
+  converted_targets crm_Targets[]            @relation("target_converted_contact")
 
   @@index([assigned_to])
   @@index([created_by])
@@ -924,14 +926,33 @@ model crm_Targets {
   updatedAt        DateTime? @updatedAt
   updatedBy        String?   @db.Uuid
 
-  crate_by_user  Users?               @relation("created_targets", fields: [created_by], references: [id])
-  target_lists   TargetsToTargetLists[]
-  enrichments    crm_Target_Enrichment[]
-  campaign_sends crm_campaign_sends[]
+  // Extended contact fields
+  personal_email   String?
+  company_email    String?
+  company_phone    String?
+  city             String?
+  country          String?
+  industry         String?
+  employees        String?
+  description      String?
+
+  // Conversion tracking
+  converted_at         DateTime?
+  converted_account_id String?   @db.Uuid
+  converted_contact_id String?   @db.Uuid
+
+  crate_by_user     Users?                 @relation("created_targets", fields: [created_by], references: [id])
+  target_lists      TargetsToTargetLists[]
+  enrichments       crm_Target_Enrichment[]
+  campaign_sends    crm_campaign_sends[]
+  converted_account crm_Accounts?          @relation("target_converted_account", fields: [converted_account_id], references: [id], onDelete: SetNull)
+  converted_contact crm_Contacts?          @relation("target_converted_contact", fields: [converted_contact_id], references: [id], onDelete: SetNull)
 
   @@index([created_by])
   @@index([status])
   @@index([created_on])
+  @@index([converted_account_id])
+  @@index([converted_contact_id])
 }
 
 model crm_TargetLists {

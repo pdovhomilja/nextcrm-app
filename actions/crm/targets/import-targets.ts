@@ -62,6 +62,14 @@ export async function importTargets(
       social_x: row.social_x || null,
       social_instagram: row.social_instagram || null,
       social_facebook: row.social_facebook || null,
+      personal_email: row.personal_email || null,
+      company_email: row.company_email || null,
+      company_phone: row.company_phone || null,
+      city: row.city || null,
+      country: row.country || null,
+      industry: row.industry || null,
+      employees: row.employees || null,
+      description: row.description || null,
       created_by: (session.user as any).id,
     });
   });

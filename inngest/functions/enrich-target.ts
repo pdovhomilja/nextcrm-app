@@ -76,12 +76,12 @@ export const enrichTarget = inngest.createFunction(
       },
     });
 
-    if (!target?.email) {
+    if (!target?.email && !target?.company) {
       await prismadb.crm_Target_Enrichment.update({
         where: { id: enrichmentId },
-        data: { status: "SKIPPED", error: "No email on target" },
+        data: { status: "SKIPPED", error: "No email or company on target" },
       });
-      return { skipped: "no email" };
+      return { skipped: "no email or company" };
     }
 
     const recentEnrichment = await prismadb.crm_Target_Enrichment.findFirst({
@@ -104,7 +104,17 @@ export const enrichTarget = inngest.createFunction(
     try {
       const strategy = new AgentEnrichmentStrategy(openaiApiKey!, firecrawlApiKey!);
 
-      const result = await strategy.enrichRow({ email: target.email }, fields, "email");
+      const result = await strategy.enrichRow(
+        { email: target.email ?? '' },
+        fields,
+        "email",
+        undefined,
+        undefined,
+        {
+          companyName: target.company ?? undefined,
+          companyWebsite: target.company_website ?? undefined,
+        }
+      );
 
       const stored: StoredEnrichmentResult = {
         enrichments: result.enrichments,

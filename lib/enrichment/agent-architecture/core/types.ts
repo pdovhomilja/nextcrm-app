@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 // Email context that flows through all agents
 export const EmailContext = z.object({
-  email: z.string().email(),
+  email: z.union([z.email(), z.literal('')]),
   domain: z.string(),
   companyDomain: z.string().optional(),
   personalName: z.string().optional(),
@@ -25,7 +25,7 @@ export type EnrichmentField = z.infer<typeof EnrichmentFieldSchema>;
 
 // Handoff data between agents
 export const EnrichmentHandoff = z.object({
-  email: z.string().email(),
+  email: z.union([z.email(), z.literal('')]),
   emailContext: EmailContext,
   requestedFields: z.array(EnrichmentFieldSchema),
   discoveredData: z.record(z.string(), z.any()).optional(),
