@@ -47,6 +47,14 @@ const TARGET_FIELDS: TargetField[] = [
   { key: "social_x", label: "X / Twitter", required: false },
   { key: "social_instagram", label: "Instagram", required: false },
   { key: "social_facebook", label: "Facebook", required: false },
+  { key: "personal_email", label: "Personal Email", required: false },
+  { key: "company_email",  label: "Company Email",  required: false },
+  { key: "company_phone",  label: "Company Phone",  required: false },
+  { key: "city",           label: "City",           required: false },
+  { key: "country",        label: "Country",        required: false },
+  { key: "industry",       label: "Industry",       required: false },
+  { key: "employees",      label: "Employees",      required: false },
+  { key: "description",    label: "Description",    required: false },
 ];
 
 const SKIP_VALUE = "__skip__";

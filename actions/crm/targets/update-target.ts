@@ -19,6 +19,14 @@ export const updateTarget = async (data: {
   social_linkedin?: string;
   social_instagram?: string;
   social_facebook?: string;
+  personal_email?: string;
+  company_email?: string;
+  company_phone?: string;
+  city?: string;
+  country?: string;
+  industry?: string;
+  employees?: string;
+  description?: string;
   status?: boolean;
 }) => {
   const session = await getServerSession(authOptions);

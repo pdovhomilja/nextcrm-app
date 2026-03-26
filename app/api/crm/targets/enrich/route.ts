@@ -33,15 +33,15 @@ export async function POST(request: NextRequest) {
 
   const target = await prismadb.crm_Targets.findUnique({
     where: { id: targetId },
-    select: { id: true, email: true },
+    select: { id: true, email: true, company: true, company_website: true },
   });
 
   if (!target) {
     return NextResponse.json({ error: "Target not found" }, { status: 404 });
   }
-  if (!target.email) {
+  if (!target.email && !target.company) {
     return NextResponse.json(
-      { error: "Target has no email. Add an email to enable enrichment." },
+      { error: "Target needs at least an email or company name to enrich." },
       { status: 422 }
     );
   }
@@ -75,12 +75,16 @@ export async function POST(request: NextRequest) {
         enqueue({ type: "session", sessionId });
 
         const result = await strategy.enrichRow(
-          { email: target.email! },
+          { email: target.email ?? '' },
           fields,
           "email",
           undefined,
-          (message: string, type: string, sourceUrl?: string) => {
-            enqueue({ type: "agent_progress", message, messageType: type, sourceUrl });
+          (message: string, type: 'info' | 'success' | 'warning' | 'agent') => {
+            enqueue({ type: "agent_progress", message, messageType: type });
+          },
+          {
+            companyName: target.company ?? undefined,
+            companyWebsite: target.company_website ?? undefined,
           }
         );
 

@@ -945,8 +945,8 @@ model crm_Targets {
   target_lists      TargetsToTargetLists[]
   enrichments       crm_Target_Enrichment[]
   campaign_sends    crm_campaign_sends[]
-  converted_account crm_Accounts?          @relation("target_converted_account", fields: [converted_account_id], references: [id])
-  converted_contact crm_Contacts?          @relation("target_converted_contact", fields: [converted_contact_id], references: [id])
+  converted_account crm_Accounts?          @relation("target_converted_account", fields: [converted_account_id], references: [id], onDelete: SetNull)
+  converted_contact crm_Contacts?          @relation("target_converted_contact", fields: [converted_contact_id], references: [id], onDelete: SetNull)
 
   @@index([created_by])
   @@index([status])

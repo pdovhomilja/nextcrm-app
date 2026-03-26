@@ -21,33 +21,38 @@ export class AgentOrchestrator {
     fields: EnrichmentField[],
     emailColumn: string,
     onProgress?: (field: string, value: unknown) => void,
-    onAgentProgress?: (message: string, type: 'info' | 'success' | 'warning' | 'agent') => void
+    onAgentProgress?: (message: string, type: 'info' | 'success' | 'warning' | 'agent') => void,
+    identityOverride?: { companyName?: string; companyWebsite?: string }
   ): Promise<RowEnrichmentResult> {
-    const email = row[emailColumn];
-    console.log(`[Orchestrator] Starting enrichment for email: ${email}`);
-    
     interface OrchestrationContext extends Record<string, unknown> {
       email: string;
       emailContext: EmailContext;
       discoveredData: Record<string, unknown>;
       companyName?: string;
     }
-    
-    if (!email) {
+
+    const email = row[emailColumn] || null;
+    const companyName = identityOverride?.companyName || null;
+
+    if (!email && !companyName) {
       return {
         rowIndex: 0,
         originalData: row,
         enrichments: {},
         status: 'error',
-        error: 'No email found',
+        error: 'Enrichment requires at least an email or company name',
       };
     }
-    
+
+    const emailContext = email
+      ? this.extractEmailContext(email)
+      : this.buildCompanyNameContext(companyName, identityOverride?.companyWebsite);
+
+    const displayIdentity = emailContext.companyNameGuess || emailContext.domain || email || companyName || 'unknown';
+    console.log(`[Orchestrator] Starting enrichment — email: ${email ?? 'none'}, company: ${companyName ?? 'none'}`);
+    console.log(`[Orchestrator] Email context: domain=${emailContext.domain}, company=${emailContext.companyNameGuess || 'unknown'}`);
+
     try {
-      // Step 1: Extract email context
-      console.log(`[Orchestrator] Extracting email context from: ${email}`);
-      const emailContext = this.extractEmailContext(email);
-      console.log(`[Orchestrator] Email context: domain=${emailContext.domain}, company=${emailContext.companyNameGuess || 'unknown'}`);
       
       // Step 2: Categorize fields
       const fieldCategories = this.categorizeFields(fields);
@@ -67,13 +72,13 @@ export class AgentOrchestrator {
       
       // Send initial agent progress
       if (onAgentProgress) {
-        onAgentProgress(`Planning enrichment strategy for ${emailContext.companyNameGuess || emailContext.domain}`, 'info');
+        onAgentProgress(`Planning enrichment strategy for ${displayIdentity}`, 'info');
         onAgentProgress(`Agent pipeline: ${agentsToUse.map(a => a.replace('-agent', '').replace('-', ' ')).join(' → ')}`, 'info');
       }
       
       // Step 3: Progressive enrichment
       const enrichments: Record<string, unknown> = {};
-      const context: OrchestrationContext = { email, emailContext, discoveredData: {} };
+      const context: OrchestrationContext = { email: email ?? '', emailContext, discoveredData: {} };
       
       // Discovery phase (company identity)
       if (fieldCategories.discovery.length > 0) {
@@ -247,7 +252,7 @@ export class AgentOrchestrator {
       const missingFields = fields.filter(f => !enrichmentResults[f.name]?.value).map(f => f.name);
       
       console.log(`[Orchestrator] ====== ENRICHMENT SUMMARY ======`);
-      console.log(`[Orchestrator] Email: ${email}`);
+      console.log(`[Orchestrator] Identity: ${displayIdentity}`);
       console.log(`[Orchestrator] Successfully enriched: ${enrichedFields.length}/${fields.length} fields`);
       if (enrichedFields.length > 0) {
         console.log(`[Orchestrator] Enriched fields: ${enrichedFields.join(', ')}`);
@@ -294,6 +299,26 @@ export class AgentOrchestrator {
     };
   }
   
+  private buildCompanyNameContext(companyName: string | null, companyWebsite?: string): EmailContext {
+    const name = companyName ?? '';
+    let domain = '';
+    if (companyWebsite) {
+      try {
+        domain = new URL(companyWebsite).hostname.replace(/^www\./, '');
+      } catch {
+        // ignore malformed URL
+      }
+    }
+    return {
+      email: '',
+      domain,
+      companyDomain: domain || undefined,
+      personalName: undefined,
+      companyNameGuess: name,
+      isPersonalEmail: false,
+    };
+  }
+
   private categorizeFields(fields: EnrichmentField[]) {
     console.log(`[Orchestrator] Categorizing ${fields.length} fields for agent assignment...`);
     
