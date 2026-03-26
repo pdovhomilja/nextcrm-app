@@ -12,6 +12,19 @@ export const getTarget = async (targetId: string) => {
     include: {
       crate_by_user: { select: { name: true } },
       target_lists: { include: { target_list: true } },
+      target_contacts: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          title: true,
+          phone: true,
+          linkedinUrl: true,
+          source: true,
+          enrichStatus: true,
+        },
+        orderBy: { createdAt: "asc" },
+      },
     },
   });
   return target;

@@ -23,9 +23,21 @@ import Link from "next/link";
 import { EnvelopeClosedIcon } from "@radix-ui/react-icons";
 import { Badge } from "@/components/ui/badge";
 import { EnrichButton } from "./EnrichButton";
+import { TargetContactsTable } from "./TargetContactsTable";
+
+interface TargetContact {
+  id: string;
+  name: string | null;
+  email: string | null;
+  title: string | null;
+  phone: string | null;
+  linkedinUrl: string | null;
+  source: string;
+  enrichStatus: string;
+}
 
 interface TargetBasicViewProps {
-  data: any;
+  data: any & { target_contacts?: TargetContact[] };
 }
 
 export async function BasicView({ data }: TargetBasicViewProps) {
@@ -295,6 +307,18 @@ export async function BasicView({ data }: TargetBasicViewProps) {
           </CardContent>
         </Card>
       )}
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle>Contacts</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <TargetContactsTable
+            targetId={data.id}
+            contacts={data.target_contacts ?? []}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }
