@@ -1,0 +1,31 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prismadb } from "@/lib/prisma";
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
+
+  const { id: targetId } = await params;
+  const { name, email } = await request.json() as { name?: string; email?: string };
+
+  if (!name && !email) {
+    return new NextResponse("name or email required", { status: 400 });
+  }
+
+  const contact = await prismadb.crm_Target_Contact.create({
+    data: {
+      targetId,
+      name: name ?? null,
+      email: email ?? null,
+      source: "manual",
+      enrichStatus: "PENDING",
+    },
+  });
+
+  return NextResponse.json(contact);
+}
