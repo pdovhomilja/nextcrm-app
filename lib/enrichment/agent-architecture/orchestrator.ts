@@ -66,7 +66,38 @@ export class AgentOrchestrator {
     console.log(`[Orchestrator] Email context: domain=${emailContext.domain}, company=${emailContext.companyNameGuess || 'unknown'}`);
 
     try {
-      
+      // Step 1: If no company domain is known, discover it via a quick search so all
+      // subsequent agents can scrape the actual company website.
+      if (!emailContext.companyDomain && emailContext.companyNameGuess) {
+        if (onAgentProgress) {
+          onAgentProgress(`Discovering company domain for "${emailContext.companyNameGuess}"...`, 'info');
+        }
+        try {
+          const domainSearchResults = await this.firecrawl.search(
+            `"${emailContext.companyNameGuess}" official website`,
+            { limit: 5 }
+          );
+          const skipHosts = ['linkedin.com', 'facebook.com', 'twitter.com', 'instagram.com',
+            'crunchbase.com', 'glassdoor.com', 'wikipedia.org', 'bloomberg.com', 'youtube.com'];
+          for (const result of domainSearchResults ?? []) {
+            if (!result.url) continue;
+            try {
+              const hostname = new URL(result.url).hostname.replace(/^www\./, '');
+              if (!skipHosts.some(s => hostname.endsWith(s))) {
+                emailContext = { ...emailContext, companyDomain: hostname, domain: emailContext.domain || hostname };
+                console.log(`[Orchestrator] Pre-discovered company domain: ${hostname}`);
+                if (onAgentProgress) {
+                  onAgentProgress(`Discovered company domain: ${hostname}`, 'success');
+                }
+                break;
+              }
+            } catch { /* try next result */ }
+          }
+        } catch (e) {
+          console.log(`[Orchestrator] Pre-discovery search failed: ${e instanceof Error ? e.message : String(e)}`);
+        }
+      }
+
       // Step 2: Categorize fields
       const fieldCategories = this.categorizeFields(fields);
       console.log(`[Orchestrator] Field categories: discovery=${fieldCategories.discovery.length}, profile=${fieldCategories.profile.length}, metrics=${fieldCategories.metrics.length}, funding=${fieldCategories.funding.length}, techStack=${fieldCategories.techStack.length}, other=${fieldCategories.other.length}`);
@@ -111,7 +142,24 @@ export class AgentOrchestrator {
         }
         Object.assign(enrichments, discoveryResults);
         Object.assign(context.discoveredData, discoveryResults);
-        
+
+        // If we found a company website, propagate the domain to context so later agents can use it
+        if (!emailContext.companyDomain) {
+          const wsKey = Object.keys(discoveryResults).find(k => k.includes('website') && !k.includes('personal'));
+          if (wsKey) {
+            const wsResult = discoveryResults[wsKey] as { value?: unknown };
+            const wsValue = typeof wsResult?.value === 'string' ? wsResult.value : null;
+            if (wsValue) {
+              try {
+                const domain = new URL(wsValue).hostname.replace(/^www\./, '');
+                emailContext = { ...emailContext, companyDomain: domain, domain: emailContext.domain || domain };
+                context.emailContext = emailContext;
+                console.log(`[Orchestrator] Updated domain from discovered website: ${domain}`);
+              } catch { /* ignore malformed URL */ }
+            }
+          }
+        }
+
         // If we found a company name, update the context
         const companyNameField = Object.keys(discoveryResults).find(key => 
           key.toLowerCase().includes('company') && key.toLowerCase().includes('name')
