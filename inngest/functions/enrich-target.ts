@@ -25,6 +25,14 @@ const targetFieldMap = {
   social_x:         "social_x",
   social_instagram: "social_instagram",
   social_facebook:  "social_facebook",
+  personal_email:   "personal_email",
+  company_email:    "company_email",
+  company_phone:    "company_phone",
+  industry:         "industry",
+  employees:        "employees",
+  description:      "description",
+  city:             "city",
+  country:          "country",
 } as const;
 
 export const enrichTarget = inngest.createFunction(
@@ -73,6 +81,14 @@ export const enrichTarget = inngest.createFunction(
         social_x: true,
         social_instagram: true,
         social_facebook: true,
+        personal_email: true,
+        company_email: true,
+        company_phone: true,
+        industry: true,
+        employees: true,
+        description: true,
+        city: true,
+        country: true,
       },
     });
 
