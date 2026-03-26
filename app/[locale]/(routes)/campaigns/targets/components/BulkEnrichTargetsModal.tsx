@@ -14,6 +14,8 @@ import type { EnrichmentField } from "@/lib/enrichment/types";
 import { NoApiKeyDialog } from "@/app/components/NoApiKeyDialog";
 
 const TARGET_PRESET_FIELDS: EnrichmentField[] = [
+  { name: "email",            displayName: "Email",                  description: "The target's direct email address", type: "string", required: false },
+  { name: "personal_email",   displayName: "Personal Email",         description: "The target's personal (non-company) email", type: "string", required: false },
   { name: "position",         displayName: "Position / Job Title",  description: "The target's job title or role", type: "string", required: false },
   { name: "company",          displayName: "Company Name",           description: "The target's company name", type: "string", required: false },
   { name: "company_website",  displayName: "Company Website",        description: "The company's official website URL", type: "string", required: false },
