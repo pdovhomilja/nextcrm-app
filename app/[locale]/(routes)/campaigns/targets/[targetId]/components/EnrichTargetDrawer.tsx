@@ -11,6 +11,12 @@ import { toast } from "sonner";
 import { EnrichFieldSelector } from "@/app/[locale]/(routes)/crm/contacts/components/EnrichFieldSelector";
 import type { EnrichmentField } from "@/lib/enrichment/types";
 import type { StoredEnrichmentResult } from "@/lib/enrichment/types/stored-result";
+import {
+  PERSONAL_PRESET_FIELDS,
+  PERSONAL_DEFAULTS,
+  COMPANY_PRESET_FIELDS,
+  COMPANY_DEFAULTS,
+} from "@/lib/enrichment/presets/target-fields";
 import { NoApiKeyDialog } from "@/app/components/NoApiKeyDialog";
 
 type Step = "select" | "progress" | "diff";
@@ -45,35 +51,6 @@ interface EnrichTargetDrawerProps {
   onApplied: () => void;
 }
 
-const PERSONAL_PRESET_FIELDS: EnrichmentField[] = [
-  { name: "position",         displayName: "Position / Job Title",  description: "The target's job title or role", type: "string", required: false },
-  { name: "company",          displayName: "Company Name",           description: "The target's company name", type: "string", required: false },
-  { name: "company_website",  displayName: "Company Website",        description: "The company's official website URL", type: "string", required: false },
-  { name: "social_linkedin",  displayName: "LinkedIn URL",           description: "The target's LinkedIn profile URL", type: "string", required: false },
-  { name: "social_x",         displayName: "Twitter / X URL",        description: "The target's Twitter/X profile URL", type: "string", required: false },
-  { name: "mobile_phone",     displayName: "Mobile Phone",           description: "The target's mobile phone number", type: "string", required: false },
-  { name: "office_phone",     displayName: "Office Phone",           description: "The target's office phone number", type: "string", required: false },
-  { name: "personal_website", displayName: "Personal Website",       description: "The target's personal website URL", type: "string", required: false },
-  { name: "personal_email",   displayName: "Personal Email",         description: "The target's personal (non-company) email", type: "string", required: false },
-  { name: "social_instagram", displayName: "Instagram URL",          description: "The target's Instagram profile URL", type: "string", required: false },
-  { name: "social_facebook",  displayName: "Facebook URL",           description: "The target's Facebook profile URL", type: "string", required: false },
-];
-
-const PERSONAL_DEFAULTS = ["position", "company", "social_linkedin", "company_website"];
-
-const COMPANY_PRESET_FIELDS: EnrichmentField[] = [
-  { name: "company_website",  displayName: "Company Website",        description: "The company's official website URL", type: "string", required: false },
-  { name: "industry",         displayName: "Industry",               description: "Company industry / sector", type: "string", required: false },
-  { name: "employees",        displayName: "Employees",              description: "Approximate number of employees", type: "string", required: false },
-  { name: "description",      displayName: "Description",            description: "Short company description", type: "string", required: false },
-  { name: "city",             displayName: "City",                   description: "Company HQ city", type: "string", required: false },
-  { name: "country",          displayName: "Country",                description: "Company HQ country", type: "string", required: false },
-  { name: "company_email",    displayName: "Company Email",          description: "Generic company contact email (info@...)", type: "string", required: false },
-  { name: "company_phone",    displayName: "Company Phone",          description: "Main company switchboard number", type: "string", required: false },
-  { name: "social_linkedin",  displayName: "LinkedIn (Company Page)", description: "The company's LinkedIn page URL", type: "string", required: false },
-];
-
-const COMPANY_DEFAULTS = ["industry", "employees", "description", "city", "country", "company_website"];
 
 function getScenario(email: string | null, company: string | null): EnrichScenario {
   if (email) return "personal";
