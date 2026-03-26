@@ -8,40 +8,47 @@
 ## 1. Inngest Field Mapping Divergence (Critical)
 
 ### Problem
-`targetFieldMap` in `inngest/functions/enrich-target.ts` has 17 fields. The API PATCH route (`app/api/crm/targets/[id]/route.ts`) has 20 fields after adding company-search fields. The 8 new fields — `personal_email`, `company_email`, `company_phone`, `industry`, `employees`, `description`, `city`, `country` — are silently dropped in bulk Inngest enrichment jobs.
+`targetFieldMap` in `inngest/functions/enrich-target.ts` has 10 fields. The API PATCH route (`app/api/crm/targets/[id]/route.ts`) has 20 fields after adding company-search fields. The 8 new fields — `personal_email`, `company_email`, `company_phone`, `industry`, `employees`, `description`, `city`, `country` — are silently dropped in bulk Inngest enrichment jobs.
+
+Additionally, the Prisma `select` block in `enrich-target.ts` only fetches the original 10 columns. The `isFieldEmpty` guard reads `target[targetColumn]` to skip fields that already have a value — for the 8 new fields that are not in the `select`, this lookup returns `undefined`, bypassing the "only fill empty fields" protection.
 
 ### Fix
-Extend `targetFieldMap` in `enrich-target.ts` to include the 8 missing fields. The map already uses `prisma_field: db_column` pairs, so this is a direct addition. No logic changes required.
+Two changes in `enrich-target.ts`:
+1. Extend `targetFieldMap` to include the 8 missing fields.
+2. Extend the Prisma `select` block to fetch all 8 new columns so `isFieldEmpty` works correctly.
 
 ### Files Changed
-- `inngest/functions/enrich-target.ts` — add 8 entries to `targetFieldMap`
+- `inngest/functions/enrich-target.ts` — add 8 entries to `targetFieldMap` + extend `select`
 
 ---
 
-## 2. BulkEnrichTargetsModal Missing Company-Search Fields (Critical)
+## 2. Shared Target Field Presets — DRY Refactor (Consistency Fix)
 
 ### Problem
-`BulkEnrichTargetsModal` hardcodes personal preset fields and defaults: `["position", "company", "social_linkedin", "company_website"]`. Targets enriched via bulk that only have a company name (no email) will use the company-search path in the orchestrator, but the field selector only offers personal fields. Users can't select company-specific fields (industry, employees, description, etc.) in bulk mode.
+`PERSONAL_PRESET_FIELDS`, `COMPANY_PRESET_FIELDS`, and their defaults are defined inline in `EnrichTargetDrawer.tsx`. `BulkEnrichTargetsModal.tsx` has its own `TARGET_PRESET_FIELDS` array (all fields combined) defined separately. These two definitions are out of sync and will drift as fields are added.
 
 ### Fix
-Import and expose both `PERSONAL_PRESET_FIELDS` and `COMPANY_PRESET_FIELDS` (defined in `EnrichTargetDrawer.tsx`) in the bulk modal. Since bulk runs a mix of targets, show the combined set of fields from both presets. The orchestrator already routes each target to the correct scenario — the field list just needs to include all possible fields so results can be applied regardless of scenario.
+Extract all preset arrays into a shared module: `lib/enrichment/presets/target-fields.ts`. Export:
+- `PERSONAL_PRESET_FIELDS` + `PERSONAL_DEFAULTS`
+- `COMPANY_PRESET_FIELDS` + `COMPANY_DEFAULTS`
+- `ALL_TARGET_PRESET_FIELDS` (combined, for bulk modal)
 
-Extract the two preset arrays and their defaults into a shared module (`lib/enrichment/presets/target-fields.ts`) so both `EnrichTargetDrawer` and `BulkEnrichTargetsModal` import from the same source.
+Both `EnrichTargetDrawer` and `BulkEnrichTargetsModal` import from this module. No functional change — this ensures both UIs stay in sync when fields are added in future.
 
 ### Files Changed
-- `lib/enrichment/presets/target-fields.ts` — new file, exports `PERSONAL_PRESET_FIELDS`, `COMPANY_PRESET_FIELDS`, `PERSONAL_DEFAULTS`, `COMPANY_DEFAULTS`, `ALL_TARGET_PRESET_FIELDS`
-- `app/[locale]/(routes)/campaigns/targets/[targetId]/components/EnrichTargetDrawer.tsx` — import from shared module
-- `app/[locale]/(routes)/campaigns/targets/components/BulkEnrichTargetsModal.tsx` — import from shared module, use `ALL_TARGET_PRESET_FIELDS`
+- `lib/enrichment/presets/target-fields.ts` — new file, single source of truth for all target enrichment fields
+- `app/[locale]/(routes)/campaigns/targets/[targetId]/components/EnrichTargetDrawer.tsx` — import from shared module, remove inline definitions
+- `app/[locale]/(routes)/campaigns/targets/components/BulkEnrichTargetsModal.tsx` — import `ALL_TARGET_PRESET_FIELDS` from shared module, remove inline definition
 
 ---
 
 ## 3. Skip-List Loading on Every Enrichment (Quick Win)
 
 ### Problem
-`loadSkipList()` is called on every call to `AgentEnrichmentStrategy.enrichRow()`, with no caching. If the skip list is stored in the DB or a file, this adds unnecessary latency to every enrichment request.
+`loadSkipList()` is called on every call to `AgentEnrichmentStrategy.enrichRow()`, with no caching. This adds unnecessary latency to every enrichment request.
 
 ### Fix
-Add a module-level cache in `agent-enrichment-strategy.ts` (or `skip-list.ts`): store the loaded result and a timestamp. Re-use the cached value if it is less than 5 minutes old; otherwise reload. TTL of 5 minutes balances freshness vs. performance.
+Add a module-level cache in `agent-enrichment-strategy.ts`: store the loaded result and a timestamp. Re-use the cached value if it is less than 5 minutes old; otherwise reload. If `loadSkipList()` throws, the error propagates normally — no stale cache is written.
 
 ```typescript
 let skipListCache: { data: SkipList; loadedAt: number } | null = null;
@@ -51,24 +58,26 @@ async function getCachedSkipList(): Promise<SkipList> {
   if (skipListCache && Date.now() - skipListCache.loadedAt < SKIP_LIST_TTL_MS) {
     return skipListCache.data;
   }
-  const data = await loadSkipList();
+  const data = await loadSkipList(); // throws on error — cache not written
   skipListCache = { data, loadedAt: Date.now() };
   return data;
 }
 ```
 
+**Known limitation:** In serverless environments (Vercel), each cold start gets a fresh module instance, so the cache has no effect across invocations. The TTL matters only for long-running processes (local dev, self-hosted). Still worth adding — no downside in serverless, meaningful savings in persistent deployments.
+
 ### Files Changed
-- `lib/enrichment/strategies/agent-enrichment-strategy.ts` — replace `loadSkipList()` call with `getCachedSkipList()`
+- `lib/enrichment/strategies/agent-enrichment-strategy.ts` — add `getCachedSkipList()`, replace `loadSkipList()` call
 
 ---
 
 ## 4. Field Name Validation on Enrich Routes (Quick Win)
 
 ### Problem
-`POST /api/crm/targets/enrich` and `POST /api/crm/targets/enrich-bulk` accept any strings in the `fields` array. Unknown field names are silently ignored by the orchestrator, leading to confusing results (user selects a field, nothing comes back).
+`POST /api/crm/targets/enrich` and `POST /api/crm/targets/enrich-bulk` accept any strings in the `fields` array. Unknown field names are silently ignored by the orchestrator.
 
 ### Fix
-On each route, validate submitted field names against `FIELD_MAP` keys (from `app/api/crm/targets/[id]/route.ts`). If any unknown names are present, return `400` with a descriptive error listing the invalid fields.
+Move `FIELD_MAP` to `lib/enrichment/presets/target-fields.ts` (the shared module created in Fix #2). Both enrich routes import from there and validate submitted field names against its keys. Return `400` with the list of invalid fields if any are present.
 
 ```typescript
 const validFields = new Set(Object.keys(FIELD_MAP));
@@ -81,12 +90,13 @@ if (invalidFields.length > 0) {
 }
 ```
 
-Export `FIELD_MAP` (or its key set) from a shared location so both routes use the same source of truth.
+`app/api/crm/targets/[id]/route.ts` imports `FIELD_MAP` from the shared module instead of defining it locally.
 
 ### Files Changed
-- `app/api/crm/targets/[id]/route.ts` — export `FIELD_MAP`
-- `app/api/crm/targets/enrich/route.ts` — import and validate against `FIELD_MAP`
-- `app/api/crm/targets/enrich-bulk/route.ts` — import and validate against `FIELD_MAP`
+- `lib/enrichment/presets/target-fields.ts` — add and export `FIELD_MAP`
+- `app/api/crm/targets/[id]/route.ts` — import `FIELD_MAP` from shared module
+- `app/api/crm/targets/enrich/route.ts` — import `FIELD_MAP`, add validation
+- `app/api/crm/targets/enrich-bulk/route.ts` — import `FIELD_MAP`, add validation
 
 ---
 
@@ -96,7 +106,7 @@ Export `FIELD_MAP` (or its key set) from a shared location so both routes use th
 `AgentOrchestrator.enrichRow()` has no maximum execution time. A slow or hung Firecrawl/OpenAI call can block a streaming SSE connection indefinitely.
 
 ### Fix
-Wrap the orchestration pipeline in `Promise.race()` against a 90-second timeout. On timeout, resolve with a structured error result rather than throwing, so the caller receives a clean `status: "error"` response that can be streamed back to the client.
+Apply the timeout in `AgentEnrichmentStrategy.enrichRow()`, wrapping the `this.orchestrator.enrichRow(...)` call. On timeout, catch the error and return a structured `RowEnrichmentResult` with `status: "error"` so the SSE stream receives a clean response rather than hanging.
 
 ```typescript
 const ENRICHMENT_TIMEOUT_MS = 90_000;
@@ -109,23 +119,29 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
     ),
   ]);
 }
+
+// In enrichRow():
+const raw = await withTimeout(
+  this.orchestrator.enrichRow(row, fields, emailColumn, onProgress, onAgentProgress, identityOverride),
+  ENRICHMENT_TIMEOUT_MS,
+  "Enrichment"
+);
 ```
 
-Apply at the top of `enrichRow()` before dispatching agents.
-
 ### Files Changed
-- `lib/enrichment/agent-architecture/orchestrator.ts` — wrap pipeline with `withTimeout()`
+- `lib/enrichment/strategies/agent-enrichment-strategy.ts` — add `withTimeout()`, wrap orchestrator call, catch timeout error and return `{ status: "error", enrichments: {}, error: "..." }`
 
 ---
 
 ## Implementation Order
 
-1. `target-fields.ts` shared module (unblocks fix #2)
-2. Inngest field mapping (fix #1, isolated)
-3. BulkEnrichTargetsModal (fix #2, depends on shared module)
-4. Skip-list caching (fix #3, isolated)
-5. Field name validation (fix #4, after `FIELD_MAP` is exported)
-6. Orchestrator timeout (fix #5, isolated)
+1. `lib/enrichment/presets/target-fields.ts` — shared module (unblocks fixes #2 and #4)
+2. Inngest field mapping + select (fix #1, isolated)
+3. `EnrichTargetDrawer` + `BulkEnrichTargetsModal` import from shared module (fix #2)
+4. Move `FIELD_MAP` to shared module; update `[id]/route.ts` import (fix #4 part 1)
+5. Add field validation to enrich routes (fix #4 part 2)
+6. Skip-list caching (fix #3, isolated)
+7. Orchestrator timeout (fix #5, isolated)
 
 ---
 
