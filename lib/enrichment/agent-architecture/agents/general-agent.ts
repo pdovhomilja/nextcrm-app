@@ -85,6 +85,39 @@ export class GeneralAgent {
         }
       }
       
+      // Scrape the company contact page for email/phone fields
+      if (companyDomain && this.hasContactFields(fields)) {
+        try {
+          console.log(`[AGENT-GENERAL] Scraping contact pages for email/phone fields`);
+          const contactUrls = [
+            `https://${companyDomain}/contact`,
+            `https://${companyDomain}/contact-us`,
+            `https://${companyDomain}/kontakt`,
+            `https://${companyDomain}/contacts`,
+          ];
+
+          for (const url of contactUrls) {
+            try {
+              const scraped = await this.tools.scrape(url);
+              if (scraped.success && scraped.markdown) {
+                allSearchResults.push({
+                  url,
+                  title: 'Company Contact Page',
+                  markdown: scraped.markdown,
+                  content: scraped.markdown
+                });
+                console.log(`[AGENT-GENERAL] Successfully scraped contact page ${url}`);
+                break;
+              }
+            } catch (error) {
+              console.log(`[AGENT-GENERAL] Failed to scrape ${url}: ${error instanceof Error ? error.message : String(error)}`);
+            }
+          }
+        } catch (error) {
+          console.log(`[AGENT-GENERAL] Failed to scrape contact pages: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }
+
       // Also try to scrape the company website for executive info
       if (companyDomain && this.hasExecutiveFields(fields)) {
         try {
@@ -92,7 +125,7 @@ export class GeneralAgent {
           const aboutUrl = `https://${companyDomain}/about`;
           const teamUrl = `https://${companyDomain}/team`;
           const leadershipUrl = `https://${companyDomain}/leadership`;
-          
+
           for (const url of [aboutUrl, teamUrl, leadershipUrl]) {
             try {
               const scraped = await this.tools.scrape(url);
@@ -219,6 +252,13 @@ export class GeneralAgent {
     return queries;
   }
   
+  private hasContactFields(fields: EnrichmentField[]): boolean {
+    return fields.some(f => {
+      const name = f.name.toLowerCase();
+      return name.includes('email') || name.includes('phone');
+    });
+  }
+
   private hasExecutiveFields(fields: EnrichmentField[]): boolean {
     return fields.some(f => this.isExecutiveField(f));
   }

@@ -44,9 +44,22 @@ export class AgentOrchestrator {
       };
     }
 
-    const emailContext = email
+    let emailContext = email
       ? this.extractEmailContext(email)
       : this.buildCompanyNameContext(companyName, identityOverride?.companyWebsite);
+
+    // If email is personal (or has no company domain), supplement with the target's
+    // company_website and company name so the orchestrator uses the right domain.
+    if (!emailContext.companyDomain && identityOverride?.companyWebsite) {
+      try {
+        const overrideDomain = new URL(identityOverride.companyWebsite).hostname.replace(/^www\./, '');
+        emailContext = { ...emailContext, companyDomain: overrideDomain, domain: emailContext.domain || overrideDomain };
+        console.log(`[Orchestrator] Supplemented company domain from website override: ${overrideDomain}`);
+      } catch { /* ignore malformed URL */ }
+    }
+    if (!emailContext.companyNameGuess && identityOverride?.companyName) {
+      emailContext = { ...emailContext, companyNameGuess: identityOverride.companyName };
+    }
 
     const displayIdentity = emailContext.companyNameGuess || emailContext.domain || email || companyName || 'unknown';
     console.log(`[Orchestrator] Starting enrichment — email: ${email ?? 'none'}, company: ${companyName ?? 'none'}`);
