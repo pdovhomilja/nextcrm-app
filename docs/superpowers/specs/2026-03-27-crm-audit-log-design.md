@@ -54,7 +54,7 @@ model crm_AuditLog {
 }
 ```
 
-> **Note on `Users.id` type annotation:** `Users.id` in the schema does not currently carry `@db.Uuid`. The `crm_AuditLog.userId @db.Uuid` must match the actual DB column type. If `Users.id` is stored as `uuid` in Postgres (which it is, via `@default(uuid())`), add `@db.Uuid` to `Users.id` in the same migration. This is a schema-level fix, not a data migration.
+> **Note on `Users.id` type annotation:** Confirmed — `Users.id` already carries `@db.Uuid` in the schema. No change needed. The `crm_AuditLog.userId @db.Uuid` FK is compatible as-is.
 
 **`changes` JSON shape:**
 

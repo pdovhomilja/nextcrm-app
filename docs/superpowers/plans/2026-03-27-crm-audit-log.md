@@ -38,7 +38,7 @@
 ### Modified files
 | File | Change |
 |------|--------|
-| `prisma/schema.prisma` | Add `crm_AuditLog` model; add `deletedAt`/`deletedBy` to 5 entities; add `@db.Uuid` to `Users.id` |
+| `prisma/schema.prisma` | Add `crm_AuditLog` model; add `deletedAt`/`deletedBy` to 5 entities (`Users.id` already has `@db.Uuid` — no change needed) |
 | `actions/crm/accounts/delete-account.ts` | Hard → soft delete + audit |
 | `actions/crm/accounts/create-account.ts` | Add audit `created` call |
 | `actions/crm/accounts/update-account.ts` | Fetch before, add audit `updated` diff |
