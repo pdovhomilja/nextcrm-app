@@ -11,7 +11,9 @@ export async function POST(
   if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
 
   const { id: targetId } = await params;
-  const { name, email } = await request.json() as { name?: string; email?: string };
+  const { name, email, phone, linkedinUrl } = await request.json() as {
+    name?: string; email?: string; phone?: string; linkedinUrl?: string;
+  };
 
   if (!name && !email) {
     return new NextResponse("name or email required", { status: 400 });
@@ -22,6 +24,8 @@ export async function POST(
       targetId,
       name: name ?? null,
       email: email ?? null,
+      phone: phone || null,
+      linkedinUrl: linkedinUrl || null,
       source: "manual",
       enrichStatus: "PENDING",
     },

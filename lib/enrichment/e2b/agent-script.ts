@@ -32,12 +32,17 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const tools = [
   {
     name: 'browser_open',
-    description: 'Navigate to a URL in the browser',
+    description: 'Navigate to a URL in the browser. Always use full URL with https://.',
     input_schema: { type: 'object', properties: { url: { type: 'string', description: 'Full URL including https://' } }, required: ['url'] },
   },
   {
     name: 'browser_snapshot',
-    description: 'Get the accessible text tree of the current page with interactive element refs like @e1, @e2',
+    description: 'Get the accessible text tree of the current page with interactive element refs like @e1, @e2. Use -c flag for compact output.',
+    input_schema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'browser_get_text',
+    description: 'Get the full visible text of the current page. Use this after browser_open to read page content for extracting company info.',
     input_schema: { type: 'object', properties: {} },
   },
   {
@@ -46,20 +51,15 @@ const tools = [
     input_schema: { type: 'object', properties: { ref: { type: 'string' } }, required: ['ref'] },
   },
   {
-    name: 'browser_extract',
-    description: 'Extract specific information from the current page using a natural language prompt',
-    input_schema: { type: 'object', properties: { prompt: { type: 'string' } }, required: ['prompt'] },
-  },
-  {
     name: 'web_search',
-    description: 'Search the web and return results',
+    description: 'Search Google for a query. Opens Google search and returns the results snapshot.',
     input_schema: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] },
   },
 ];
 
 function runBrowser(args) {
   try {
-    return execSync('agent-browser ' + args.map(a => JSON.stringify(a)).join(' '), {
+    return execSync('agent-browser --ignore-https-errors ' + args.map(a => JSON.stringify(a)).join(' '), {
       encoding: 'utf8',
       timeout: 30000,
     });
@@ -70,10 +70,14 @@ function runBrowser(args) {
 
 function executeTool(name, input) {
   if (name === 'browser_open')     return runBrowser(['open', input.url]);
-  if (name === 'browser_snapshot') return runBrowser(['snapshot']);
+  if (name === 'browser_snapshot') return runBrowser(['snapshot', '-c']);
+  if (name === 'browser_get_text') return runBrowser(['get', 'text', 'body']);
   if (name === 'browser_click')    return runBrowser(['click', input.ref]);
-  if (name === 'browser_extract')  return runBrowser(['extract', input.prompt]);
-  if (name === 'web_search')       return runBrowser(['search', input.query]);
+  if (name === 'web_search') {
+    const url = 'https://www.bing.com/search?q=' + encodeURIComponent(input.query);
+    runBrowser(['open', url]);
+    return runBrowser(['snapshot', '-c']);
+  }
   return 'unknown tool';
 }
 
@@ -87,9 +91,13 @@ Known information:
 
 Research strategy (follow this order):
 1. \${domainInstruction}
-2. From the company homepage, extract: company description, industry, employee count, HQ location/city, main phone number, LinkedIn company URL, Twitter/X URL.
-3. Open /contact or /about pages if homepage lacks address or phone.
-4. Search for C-level contacts at "\${companyName}": search "CEO OR CTO OR CFO OR CMO OR \\"VP Sales\\" OR \\"Head of Sales\\" \${companyName} site:linkedin.com".
+2. Use browser_open to navigate to the company website, then browser_get_text to read the full page text. Scan carefully for:
+   - Any email address (look for "mailto:" links, "@" patterns)
+   - Any phone number (look for "tel:", "+1", area codes, formatted numbers)
+   - Company description, industry, employee count, HQ city
+   - LinkedIn company URL (linkedin.com/company/...), Twitter/X URL
+3. If the homepage lacks phone or email, open the /contact or /about page with browser_open, then browser_get_text again. These pages almost always have phone and email.
+4. Use web_search to find C-level contacts: query "CEO OR CTO OR CFO OR CMO OR \\"VP Sales\\" \${companyName} site:linkedin.com".
 5. For each C-level person found in search results, record their name, title, and LinkedIn URL.
 \${contactInstruction}
 
@@ -126,6 +134,8 @@ Rules:
 - Set confidence for any field you are not certain about (0.0 to 1.0)
 - Set null for fields you could not find
 - Do not search for information you already have
+- If a URL navigation fails (ERR_NAME_NOT_RESOLVED, ERR_CONNECTION_CLOSED, ERR_BLOCKED_BY_CLIENT), do NOT retry the same domain. Move on to the next research step immediately.
+- If the company website is unreachable, fall back to web_search to find info about the company.
 \`;
 
 async function main() {

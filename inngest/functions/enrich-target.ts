@@ -35,12 +35,23 @@ export const enrichTarget = inngest.createFunction(
     retries: 3,
   },
   async ({ event, step }) => {
-    const { targetId, enrichmentId, triggeredBy } = event.data as {
+    const { targetId, enrichmentId: incomingEnrichmentId, triggeredBy, force } = event.data as {
       targetId: string;
-      enrichmentId: string;
-      fields: EnrichmentField[];
+      enrichmentId?: string;
+      fields?: EnrichmentField[];
       triggeredBy?: string;
+      force?: boolean;
     };
+
+    // Create an enrichment log row if one wasn't pre-created by the caller.
+    const enrichmentId = await step.run("ensure-enrichment-log", async () => {
+      if (incomingEnrichmentId) return incomingEnrichmentId;
+      const row = await prismadb.crm_Target_Enrichment.create({
+        data: { targetId, status: "RUNNING", triggeredBy: triggeredBy ?? null },
+        select: { id: true },
+      });
+      return row.id;
+    });
 
     const anthropicKey = await step.run("resolve-api-key", () =>
       getApiKey("ANTHROPIC", triggeredBy)
@@ -79,7 +90,7 @@ export const enrichTarget = inngest.createFunction(
       select: { createdAt: true },
     });
 
-    if (shouldSkipTargetEnrichment(recentEnrichment?.createdAt ?? null)) {
+    if (!force && shouldSkipTargetEnrichment(recentEnrichment?.createdAt ?? null)) {
       await prismadb.crm_Target_Enrichment.update({
         where: { id: enrichmentId },
         data: { status: "SKIPPED", error: "Enriched within last 7 days" },
@@ -111,19 +122,26 @@ export const enrichTarget = inngest.createFunction(
 
       try {
         await sandbox.files.write("/home/user/agent.mjs", script);
-        const result = await sandbox.commands.run("node /home/user/agent.mjs", {
-          envs: {
-            ANTHROPIC_API_KEY: anthropicKey,
-            COMPANY_NAME: target.company ?? "",
-            COMPANY_WEBSITE: target.company_website ?? "",
-            TARGET_EMAIL: target.email ?? "",
-            TARGET_NAME: [target.first_name, target.last_name].filter(Boolean).join(" "),
-            KNOWN_DOMAIN: knownDomain ?? "",
-          },
-        });
+        let result: { exitCode: number; stdout: string; stderr: string };
+        try {
+          result = await sandbox.commands.run("node /home/user/agent.mjs", {
+            timeoutMs: 0, // no per-request timeout; sandbox-level timeout handles the limit
+            envs: {
+              ANTHROPIC_API_KEY: anthropicKey,
+              COMPANY_NAME: target.company ?? "",
+              COMPANY_WEBSITE: target.company_website ?? "",
+              TARGET_EMAIL: target.email ?? "",
+              TARGET_NAME: [target.first_name, target.last_name].filter(Boolean).join(" "),
+              KNOWN_DOMAIN: knownDomain ?? "",
+            },
+          });
+        } catch (cmdErr: unknown) {
+          const e = cmdErr as Record<string, unknown>;
+          throw new Error(`Agent failed: ${e["stderr"] ?? e["stdout"] ?? String(cmdErr)}`);
+        }
 
         if (result.exitCode !== 0) {
-          throw new Error(`Agent exited ${result.exitCode}: ${result.stderr}`);
+          throw new Error(`Agent exited ${result.exitCode}: ${result.stderr || result.stdout}`);
         }
 
         return JSON.parse(result.stdout) as AgentOutput;

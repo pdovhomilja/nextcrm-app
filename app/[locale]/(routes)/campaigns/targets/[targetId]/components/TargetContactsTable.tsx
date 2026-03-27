@@ -40,7 +40,7 @@ const STATUS_BADGE: Record<string, { label: string; variant: "default" | "second
 export function TargetContactsTable({ targetId, contacts: initialContacts }: Props) {
   const [contacts, setContacts] = useState(initialContacts);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", linkedinUrl: "" });
   const [saving, setSaving] = useState(false);
 
   async function handleAddContact(e: React.FormEvent) {
@@ -56,7 +56,7 @@ export function TargetContactsTable({ targetId, contacts: initialContacts }: Pro
       const created: TargetContact = await res.json();
       setContacts((prev) => [...prev, created]);
       setOpen(false);
-      setForm({ name: "", email: "" });
+      setForm({ name: "", email: "", phone: "", linkedinUrl: "" });
       toast.success("Contact added");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to add contact");
@@ -112,6 +112,24 @@ export function TargetContactsTable({ targetId, contacts: initialContacts }: Pro
                   placeholder="jane@acme.com"
                 />
               </div>
+              <div className="space-y-1">
+                <Label htmlFor="phone">Phone</Label>
+                <Input
+                  id="phone"
+                  value={form.phone}
+                  onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                  placeholder="+1 415 000 0000"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="linkedinUrl">LinkedIn URL</Label>
+                <Input
+                  id="linkedinUrl"
+                  value={form.linkedinUrl}
+                  onChange={(e) => setForm((f) => ({ ...f, linkedinUrl: e.target.value }))}
+                  placeholder="https://linkedin.com/in/..."
+                />
+              </div>
               <Button type="submit" disabled={saving} className="w-full">
                 {saving ? "Adding…" : "Add Contact"}
               </Button>
@@ -131,6 +149,8 @@ export function TargetContactsTable({ targetId, contacts: initialContacts }: Pro
               <TableHead>Name</TableHead>
               <TableHead>Title</TableHead>
               <TableHead>Email</TableHead>
+              <TableHead>Phone</TableHead>
+              <TableHead>LinkedIn</TableHead>
               <TableHead>Status</TableHead>
               <TableHead></TableHead>
             </TableRow>
@@ -143,6 +163,19 @@ export function TargetContactsTable({ targetId, contacts: initialContacts }: Pro
                   <TableCell className="font-medium">{contact.name ?? "—"}</TableCell>
                   <TableCell>{contact.title ?? "—"}</TableCell>
                   <TableCell>{contact.email ?? "—"}</TableCell>
+                  <TableCell>{contact.phone ?? "—"}</TableCell>
+                  <TableCell>
+                    {contact.linkedinUrl ? (
+                      <a
+                        href={contact.linkedinUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-600 hover:underline"
+                      >
+                        View
+                      </a>
+                    ) : "—"}
+                  </TableCell>
                   <TableCell>
                     <Badge variant={badge.variant}>{badge.label}</Badge>
                   </TableCell>
@@ -155,16 +188,6 @@ export function TargetContactsTable({ targetId, contacts: initialContacts }: Pro
                       >
                         Enrich
                       </Button>
-                    )}
-                    {contact.linkedinUrl && (
-                      <a
-                        href={contact.linkedinUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="ml-2 text-sm text-blue-600 hover:underline"
-                      >
-                        LinkedIn
-                      </a>
                     )}
                   </TableCell>
                 </TableRow>

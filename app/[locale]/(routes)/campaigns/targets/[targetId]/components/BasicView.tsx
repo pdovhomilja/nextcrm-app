@@ -55,23 +55,7 @@ export async function BasicView({ data }: TargetBasicViewProps) {
               <CardDescription>ID: {data.id}</CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <EnrichButton
-                targetId={data.id}
-                targetEmail={data.email ?? null}
-                targetCompany={data.company ?? null}
-                targetCurrentData={{
-                  position:         data.position ?? null,
-                  company:          data.company ?? null,
-                  company_website:  data.company_website ?? null,
-                  personal_website: data.personal_website ?? null,
-                  mobile_phone:     data.mobile_phone ?? null,
-                  office_phone:     data.office_phone ?? null,
-                  social_linkedin:  data.social_linkedin ?? null,
-                  social_x:         data.social_x ?? null,
-                  social_instagram: data.social_instagram ?? null,
-                  social_facebook:  data.social_facebook ?? null,
-                }}
-              />
+              <EnrichButton targetId={data.id} />
               <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
             </div>
           </div>
