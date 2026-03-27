@@ -58,7 +58,7 @@ export const createContact = async (data: {
             ? birthday_day + "/" + birthday_month + "/" + birthday_year
             : null,
         ...rest,
-      },
+      } as any,
     });
 
     if (assigned_to && assigned_to !== userId) {

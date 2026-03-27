@@ -61,7 +61,7 @@ export const updateContact = async (data: {
             ? birthday_day + "/" + birthday_month + "/" + birthday_year
             : null,
         ...rest,
-      },
+      } as any,
     });
     void inngest.send({ name: "crm/contact.saved", data: { record_id: contact.id } });
     revalidatePath("/[locale]/(routes)/crm/contacts", "page");
