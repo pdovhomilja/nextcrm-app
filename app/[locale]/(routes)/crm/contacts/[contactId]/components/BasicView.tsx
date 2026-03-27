@@ -168,7 +168,7 @@ export async function BasicView({ data }: OppsViewProps) {
                 <CoinsIcon className="mt-px h-5 w-5" />
                 <div className="space-y-1">
                   <p className="text-sm font-medium leading-none">Type</p>
-                  <p className="text-sm text-muted-foreground">{data.type}</p>
+                  <p className="text-sm text-muted-foreground">{data.contact_type?.name ?? "—"}</p>
                 </div>
               </div>
               <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">

@@ -6,6 +6,10 @@ export const getLead = async (leadId: string) => {
       id: leadId,
     },
     include: {
+      // Include FK relation name fields
+      lead_source: { select: { id: true, name: true } },
+      lead_status: { select: { id: true, name: true } },
+      lead_type:   { select: { id: true, name: true } },
       // Include assigned user (uses "LeadAssignedTo" relation)
       assigned_to_user: {
         select: {

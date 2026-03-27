@@ -191,14 +191,14 @@ export async function BasicView({ data }: OppsViewProps) {
                 <LightningBoltIcon className="mt-px h-5 w-5" />
                 <div className="space-y-1">
                   <p className="text-sm font-medium leading-none">Status</p>
-                  <p className="text-sm text-muted-foreground">{data.status}</p>
+                  <p className="text-sm text-muted-foreground">{data.lead_status?.name ?? "—"}</p>
                 </div>
               </div>
               <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
                 <CoinsIcon className="mt-px h-5 w-5" />
                 <div className="space-y-1">
                   <p className="text-sm font-medium leading-none">Type</p>
-                  <p className="text-sm text-muted-foreground">{data.type}</p>
+                  <p className="text-sm text-muted-foreground">{data.lead_type?.name ?? "—"}</p>
                 </div>
               </div>
               <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
@@ -208,7 +208,7 @@ export async function BasicView({ data }: OppsViewProps) {
                     Lead source
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {data.lead_source}
+                    {data.lead_source?.name ?? "—"}
                   </p>
                 </div>
               </div>

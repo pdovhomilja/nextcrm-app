@@ -42,6 +42,8 @@ export const getContact = async (contactId: string) => {
           },
         },
       },
+      // Include FK relation name field
+      contact_type: { select: { id: true, name: true } },
       // Include assigned account
       assigned_accounts: true,
       // Include assigned user (uses "assigned_contacts" relation)
