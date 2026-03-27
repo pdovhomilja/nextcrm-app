@@ -57,7 +57,7 @@ import {
   createConfigValue,
   updateConfigValue,
   deleteConfigValue,
-} from "@/app/[locale]/(routes)/admin/crm-settings/_actions/crm-settings";
+} from "../app/[locale]/(routes)/admin/crm-settings/_actions/crm-settings";
 
 const mockPrisma = prisma as jest.Mocked<typeof prisma>;
 
