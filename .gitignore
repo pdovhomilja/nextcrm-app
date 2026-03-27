@@ -71,3 +71,6 @@ playwright/.auth/
 /jiti1
 
 .worktrees/
+
+# v8 compile cache
+v8-compile-cache-*/

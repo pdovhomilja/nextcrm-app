@@ -16,10 +16,8 @@ import getDashboardMenuItem from "./menu-items/Dashboard";
 import getCrmMenuItem from "./menu-items/Crm";
 import getProjectsMenuItem from "./menu-items/Projects";
 import getEmailsMenuItem from "./menu-items/Emails";
-import getEmployeesMenuItem from "./menu-items/Employees";
 import getReportsMenuItem from "./menu-items/Reports";
 import getDocumentsMenuItem from "./menu-items/Documents";
-import getDataboxMenuItem from "./menu-items/Databoxes";
 import getAdministrationMenuItem from "./menu-items/Administration";
 import getCampaignsMenuItem from "./menu-items/Campaigns";
 
@@ -106,15 +104,15 @@ export function AppSidebar({
     }),
     getProjectsMenuItem({ title: dict?.projects || "Projects" }),
     getEmailsMenuItem({ title: dict?.emails || "Emails" }),
-    getEmployeesMenuItem({ title: "Employees" }),
     getReportsMenuItem({ title: dict?.reports || "Reports" }),
     getDocumentsMenuItem({ title: dict?.documents || "Documents" }),
-    getDataboxMenuItem({ title: "Databoxes" }),
   ];
 
   // Administration: admin users only
   if (session?.user?.isAdmin) {
-    navItems.push(getAdministrationMenuItem({ title: dict?.settings || "Administration" }));
+    navItems.push(
+      getAdministrationMenuItem({ title: dict?.settings || "Administration" }),
+    );
   }
 
   // Prepare user data for NavUser component
