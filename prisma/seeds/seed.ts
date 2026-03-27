@@ -24,6 +24,29 @@ import crmOpportunitySaleStagesData from "../initial-data/crm_Opportunities_Sale
 import crmCampaignsData from "../initial-data/crm_campaigns.json";
 import crmIndustryTypeData from "../initial-data/crm_Industry_Type.json";
 
+// New CRM Config Tables
+const contactTypesData = [
+  { name: "Customer" },
+  { name: "Partner" },
+  { name: "Vendor" },
+  { name: "Prospect" },
+];
+const leadSourcesData = [
+  { name: "Web" },
+  { name: "Referral" },
+  { name: "Cold Call" },
+  { name: "Email Campaign" },
+  { name: "Event" },
+  { name: "Other" },
+];
+const leadStatusesData = [
+  { name: "New" },
+  { name: "Contacted" },
+  { name: "Qualified" },
+  { name: "Lost" },
+];
+const leadTypesData = [{ name: "Demo" }];
+
 const connectionString = process.env.DATABASE_URL!;
 const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);
@@ -127,6 +150,38 @@ async function main() {
       },
     });
     console.log(`Test user updated: ${testUserEmail}`);
+  }
+
+  const contactTypes = await prisma.crm_Contact_Types.findMany();
+  if (contactTypes.length === 0) {
+    await prisma.crm_Contact_Types.createMany({ data: contactTypesData });
+    console.log("Contact Types seeded successfully");
+  } else {
+    console.log("Contact Types already seeded");
+  }
+
+  const leadSources = await prisma.crm_Lead_Sources.findMany();
+  if (leadSources.length === 0) {
+    await prisma.crm_Lead_Sources.createMany({ data: leadSourcesData });
+    console.log("Lead Sources seeded successfully");
+  } else {
+    console.log("Lead Sources already seeded");
+  }
+
+  const leadStatuses = await prisma.crm_Lead_Statuses.findMany();
+  if (leadStatuses.length === 0) {
+    await prisma.crm_Lead_Statuses.createMany({ data: leadStatusesData });
+    console.log("Lead Statuses seeded successfully");
+  } else {
+    console.log("Lead Statuses already seeded");
+  }
+
+  const leadTypes = await prisma.crm_Lead_Types.findMany();
+  if (leadTypes.length === 0) {
+    await prisma.crm_Lead_Types.createMany({ data: leadTypesData });
+    console.log("Lead Types seeded successfully");
+  } else {
+    console.log("Lead Types already seeded");
   }
 
   console.log("-------- Seed DB completed --------");
