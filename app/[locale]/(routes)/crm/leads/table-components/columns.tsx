@@ -11,7 +11,13 @@ import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
 import moment from "moment";
 
-export const columns: ColumnDef<Lead>[] = [
+type ConfigItem = { id: string; name: string };
+
+export const createColumns = (
+  leadSources: ConfigItem[],
+  leadStatuses: ConfigItem[],
+  leadTypes: ConfigItem[],
+): ColumnDef<Lead>[] => [
   {
     accessorKey: "createdAt",
     header: ({ column }) => (
@@ -139,6 +145,13 @@ export const columns: ColumnDef<Lead>[] = [
   },
   {
     id: "actions",
-    cell: ({ row }) => <DataTableRowActions row={row} />,
+    cell: ({ row }) => (
+      <DataTableRowActions
+        row={row}
+        leadSources={leadSources}
+        leadStatuses={leadStatuses}
+        leadTypes={leadTypes}
+      />
+    ),
   },
 ];

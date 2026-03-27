@@ -31,14 +31,18 @@ import { AccountSearchCombobox } from "@/components/ui/account-search-combobox";
 import { updateContact } from "@/actions/crm/contacts/update-contact";
 
 //TODO: fix all the types
+type ConfigItem = { id: string; name: string };
+
 type UpdateContactFormProps = {
   initialData: any;
   setOpen: (value: boolean) => void;
+  contactTypes: ConfigItem[];
 };
 
 export function UpdateContactForm({
   initialData,
   setOpen,
+  contactTypes,
 }: UpdateContactFormProps) {
   const t = useTranslations("CrmContactForm");
   const c = useTranslations("Common");
@@ -58,7 +62,7 @@ export function UpdateContactForm({
     website: z.string().nullable().optional(),
     position: z.string().nullable().optional(),
     status: z.boolean(),
-    type: z.string(),
+    contact_type_id: z.string().optional(),
     assigned_to: z.string(),
     assigned_account: z.string().nullable().optional(),
     social_twitter: z.string().nullable().optional(),
@@ -77,7 +81,7 @@ export function UpdateContactForm({
     ...initialData,
     last_name: initialData.last_name ?? "",
     email: initialData.email ?? "",
-    type: initialData.type ?? "",
+    contact_type_id: initialData.contact_type_id ?? "",
     assigned_to: initialData.assigned_to ?? "",
     status: initialData.status ?? false,
     first_name: initialData.first_name ?? "",
@@ -105,12 +109,6 @@ export function UpdateContactForm({
     mode: "onBlur",
     defaultValues: parsedInitialData,
   });
-
-  const contactType = [
-    { name: t("customer"), id: "Customer" },
-    { name: t("partner"), id: "Partner" },
-    { name: t("vendor"), id: "Vendor" },
-  ];
 
   const onSubmit = async (data: NewAccountFormValues) => {
     const result = await updateContact(data);
@@ -431,7 +429,7 @@ export function UpdateContactForm({
                 />
                 <FormField
                   control={form.control}
-                  name="type"
+                  name="contact_type_id"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t("contactType")}</FormLabel>
@@ -444,8 +442,8 @@ export function UpdateContactForm({
                             <SelectValue placeholder={t("contactTypePlaceholder")} />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="h-56">
-                          {contactType.map((type) => (
+                        <SelectContent>
+                          {contactTypes.map((type) => (
                             <SelectItem key={type.id} value={type.id}>
                               {type.name}
                             </SelectItem>

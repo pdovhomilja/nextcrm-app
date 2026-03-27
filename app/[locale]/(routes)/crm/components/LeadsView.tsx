@@ -21,7 +21,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-import { columns } from "../leads/table-components/columns";
 import { NewLeadForm } from "../leads/components/NewLeadForm";
 import { LeadDataTable } from "../leads/table-components/data-table";
 
@@ -35,7 +34,7 @@ interface LeadsViewProps {
 }
 
 const LeadsView = ({ data, crmData }: LeadsViewProps) => {
-  const { accounts } = crmData;
+  const { accounts, leadSources, leadStatuses, leadTypes } = crmData;
   const [open, setOpen] = useState(false);
   const t = useTranslations("CrmPage");
 
@@ -61,7 +60,13 @@ const LeadsView = ({ data, crmData }: LeadsViewProps) => {
                   <SheetDescription>{t("leads.sheetDescription")}</SheetDescription>
                 </SheetHeader>
                 <div className="mt-6 space-y-4">
-                  <NewLeadForm accounts={accounts} onFinish={() => setOpen(false)} />
+                  <NewLeadForm
+                    accounts={accounts}
+                    leadSources={leadSources}
+                    leadStatuses={leadStatuses}
+                    leadTypes={leadTypes}
+                    onFinish={() => setOpen(false)}
+                  />
                 </div>
               </SheetContent>
             </Sheet>
@@ -74,7 +79,13 @@ const LeadsView = ({ data, crmData }: LeadsViewProps) => {
           (data.length === 0 ? (
             t("leads.empty")
           ) : (
-            <LeadDataTable data={data} columns={columns} />
+            <LeadDataTable
+              data={data}
+              columns={[]}
+              leadSources={leadSources}
+              leadStatuses={leadStatuses}
+              leadTypes={leadTypes}
+            />
           ))}
       </CardContent>
     </Card>

@@ -39,7 +39,7 @@ const ContactsView = ({ data, crmData }: ContactsViewProps) => {
   const [open, setOpen] = useState(false);
   const t = useTranslations("CrmPage");
 
-  const { accounts } = crmData;
+  const { accounts, contactTypes } = crmData;
 
   return (
     <Card>
@@ -83,7 +83,7 @@ const ContactsView = ({ data, crmData }: ContactsViewProps) => {
         ) : (
           <ContactsDataTable
             data={data}
-            columns={createColumns()}
+            columns={createColumns(contactTypes)}
           />
         )}
       </CardContent>
