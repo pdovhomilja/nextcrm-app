@@ -36,22 +36,25 @@ Add a complete audit trail to the NextCRM sales module. Every field change, crea
 
 ```prisma
 model crm_AuditLog {
-  id         String   @id @default(uuid()) @db.Uuid
-  entityType String   // "account" | "contact" | "lead" | "opportunity" | "contract"
-  entityId   String   @db.Uuid
-  action     String   // "created" | "updated" | "deleted" | "restored" | "relation_added" | "relation_removed"
-  changes    Json?    @db.JsonB
-  userId     String   @db.Uuid
-  createdAt  DateTime @default(now())
+  id         String    @id @default(uuid()) @db.Uuid
+  entityType String    // "account" | "contact" | "lead" | "opportunity" | "contract"
+  entityId   String    @db.Uuid
+  action     String    // "created" | "updated" | "deleted" | "restored" | "relation_added" | "relation_removed"
+  changes    Json?     @db.JsonB
+  userId     String?   @db.Uuid  // nullable: background jobs or edge cases may have no session user
+  createdAt  DateTime  @default(now())
 
-  user Users @relation(fields: [userId], references: [id])
+  user Users? @relation(fields: [userId], references: [id])
 
   @@index([entityType, entityId])
+  @@index([entityType, entityId, createdAt])  // covering index for timeline pagination
   @@index([userId])
   @@index([createdAt])
   @@index([entityType, createdAt])
 }
 ```
+
+> **Note on `Users.id` type annotation:** `Users.id` in the schema does not currently carry `@db.Uuid`. The `crm_AuditLog.userId @db.Uuid` must match the actual DB column type. If `Users.id` is stored as `uuid` in Postgres (which it is, via `@default(uuid())`), add `@db.Uuid` to `Users.id` in the same migration. This is a schema-level fix, not a data migration.
 
 **`changes` JSON shape:**
 
@@ -112,8 +115,8 @@ export async function writeAuditLog(params: WriteAuditLogParams): Promise<void>
 
 - `actions/crm/accounts/delete-account.ts`
 - `actions/crm/contacts/delete-contact.ts`
-- `actions/crm/leads/delete-lead.ts` (if exists, otherwise create)
-- `actions/crm/opportunities/delete-opportunity.ts` (if exists, otherwise create)
+- `actions/crm/leads/delete-lead.ts` (existing — modify)
+- `actions/crm/opportunities/delete-opportunity.ts` (existing — modify)
 - `actions/crm/contracts/delete-contract/index.ts`
 
 **Audit log calls added to:**
@@ -139,12 +142,16 @@ export async function writeAuditLog(params: WriteAuditLogParams): Promise<void>
 
 **New admin actions:**
 
-- `actions/crm/accounts/restore-account.ts` — sets `deletedAt: null, deletedBy: null`, writes `restored` audit entry
-- Same pattern for contacts, leads, opportunities, contracts
+- `actions/crm/accounts/restore-account.ts` — checks `session.user.is_admin`, returns unauthorized error if false, then sets `deletedAt: null, deletedBy: null`, writes `restored` audit entry
+- Same authorization + restore pattern for contacts, leads, opportunities, contracts
+
+> **Authorization:** All restore actions must verify `session.user.is_admin === true` (matching the `Users.is_admin` field) before executing. Return a 403/unauthorized response otherwise. This is the same guard used in existing admin actions.
 
 **All list/get queries updated:**
 
-Every `getXxx()` action for the 5 entities adds `where: { deletedAt: null }` (or merges with existing where clause). Admin-facing queries (audit log page) omit this filter.
+Every `getXxx()` action for the 5 entities adds `where: { deletedAt: null }` (or merges with existing where clause). This includes both list actions and single-record detail actions (e.g. `get-account.ts`) — a direct URL to a soft-deleted record must return null/404, not render the record. Admin-facing queries (audit log page) omit this filter.
+
+> **Legacy flat-namespace actions** (`actions/crm/get-accounts.ts`, `get-contacts.ts`, `get-contact.ts`, etc.) are read-only fetch helpers — they do not mutate data and do not need audit log calls, but they **do** need the `deletedAt: null` filter added.
 
 ### New data fetch actions
 
@@ -279,8 +286,9 @@ No existing data migration needed — audit log starts from zero on deploy.
 ## Error Handling
 
 - `writeAuditLog` wraps DB write in try/catch; on failure logs error but does not throw
-- Soft-deleted records are invisible to all non-admin queries — no UI changes needed beyond filter
-- If `userId` is missing (edge case), audit entry is skipped silently
+- Soft-deleted records are invisible to all non-admin queries — `deletedAt: null` filter on all detail and list actions ensures direct URL access also returns 404
+- `userId` is nullable in the schema; if no session user is available, `writeAuditLog` writes the entry with `userId: null` rather than skipping (preserving the audit trail)
+- `crm_Contacts` has legacy inconsistencies (`cratedAt` typo, dual `created_on`/`cratedAt` fields) — the migration adds `deletedAt`/`deletedBy` cleanly and does not touch existing fields
 
 ---
 
@@ -289,7 +297,7 @@ No existing data migration needed — audit log starts from zero on deploy.
 - [ ] Every field change on any of the 5 CRM entities creates an audit log entry
 - [ ] Record create/delete/restore events are logged
 - [ ] Relation add/remove events are logged
-- [ ] Deleted records do not appear in any list or detail page (except admin audit log)
+- [ ] Deleted records do not appear in any list view or detail page — direct URL to a soft-deleted record returns 404 (except admin audit log page)
 - [ ] Admin can restore a soft-deleted record
 - [ ] History tab renders correctly on all 5 entity detail pages
 - [ ] Admin audit log page supports filtering by entity type, action, user, date range
