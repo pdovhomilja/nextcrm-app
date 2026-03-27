@@ -1,7 +1,6 @@
 // Jest runs in node environment — mock Prisma
 jest.mock("@/lib/prisma", () => ({
-  __esModule: true,
-  default: {
+  prismadb: {
     crm_Industry_Type: {
       findMany: jest.fn(),
       create: jest.fn(),
@@ -52,7 +51,7 @@ jest.mock("@/lib/prisma", () => ({
 
 jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));
 
-import prisma from "@/lib/prisma";
+import { prismadb as prisma } from "@/lib/prisma";
 import {
   getConfigValues,
   createConfigValue,
