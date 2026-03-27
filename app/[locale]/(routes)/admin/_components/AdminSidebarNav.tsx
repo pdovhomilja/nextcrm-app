@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Key, Users, Settings } from "lucide-react";
+import { Key, Users, Settings, SlidersHorizontal } from "lucide-react";
 
 const navItems = [
-  { label: "LLM Keys", href: "/admin/llm-keys", icon: Key },
-  { label: "Users", href: "/admin/users", icon: Users },
-  { label: "Services", href: "/admin/services", icon: Settings },
+  { label: "LLM Keys",     href: "/admin/llm-keys",    icon: Key },
+  { label: "Users",        href: "/admin/users",        icon: Users },
+  { label: "Services",     href: "/admin/services",     icon: Settings },
+  { label: "CRM Settings", href: "/admin/crm-settings", icon: SlidersHorizontal },
 ];
 
 export function AdminSidebarNav() {
