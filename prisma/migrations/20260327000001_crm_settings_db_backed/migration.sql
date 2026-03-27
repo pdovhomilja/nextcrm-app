@@ -8,7 +8,6 @@ CREATE TABLE IF NOT EXISTS "crm_Contact_Types" (
   CONSTRAINT "crm_Contact_Types_pkey" PRIMARY KEY ("id"),
   CONSTRAINT "crm_Contact_Types_name_key" UNIQUE ("name")
 );
-CREATE INDEX IF NOT EXISTS "crm_Contact_Types_name_idx" ON "crm_Contact_Types"("name");
 
 CREATE TABLE IF NOT EXISTS "crm_Lead_Sources" (
   "id" UUID NOT NULL DEFAULT gen_random_uuid(),
@@ -17,7 +16,6 @@ CREATE TABLE IF NOT EXISTS "crm_Lead_Sources" (
   CONSTRAINT "crm_Lead_Sources_pkey" PRIMARY KEY ("id"),
   CONSTRAINT "crm_Lead_Sources_name_key" UNIQUE ("name")
 );
-CREATE INDEX IF NOT EXISTS "crm_Lead_Sources_name_idx" ON "crm_Lead_Sources"("name");
 
 CREATE TABLE IF NOT EXISTS "crm_Lead_Statuses" (
   "id" UUID NOT NULL DEFAULT gen_random_uuid(),
@@ -26,7 +24,6 @@ CREATE TABLE IF NOT EXISTS "crm_Lead_Statuses" (
   CONSTRAINT "crm_Lead_Statuses_pkey" PRIMARY KEY ("id"),
   CONSTRAINT "crm_Lead_Statuses_name_key" UNIQUE ("name")
 );
-CREATE INDEX IF NOT EXISTS "crm_Lead_Statuses_name_idx" ON "crm_Lead_Statuses"("name");
 
 CREATE TABLE IF NOT EXISTS "crm_Lead_Types" (
   "id" UUID NOT NULL DEFAULT gen_random_uuid(),
@@ -35,7 +32,6 @@ CREATE TABLE IF NOT EXISTS "crm_Lead_Types" (
   CONSTRAINT "crm_Lead_Types_pkey" PRIMARY KEY ("id"),
   CONSTRAINT "crm_Lead_Types_name_key" UNIQUE ("name")
 );
-CREATE INDEX IF NOT EXISTS "crm_Lead_Types_name_idx" ON "crm_Lead_Types"("name");
 
 -- Step 2: Populate new tables from known current string values
 INSERT INTO "crm_Contact_Types" ("name") VALUES
@@ -52,6 +48,13 @@ ON CONFLICT ("name") DO NOTHING;
 
 -- crm_Lead_Sources: lead_source was free-text, no backfill needed
 -- Seed rows will be added by seed.ts after migration
+
+-- IMPORTANT: If your database has lead status/type values outside of
+-- ('New','Contacted','Qualified','Lost') or ('Demo'), the assertions in
+-- Step 5 will catch them and roll back this migration. Run this query
+-- first to check: SELECT DISTINCT status FROM "crm_Leads" WHERE status IS NOT NULL;
+-- and: SELECT DISTINCT type FROM "crm_Leads" WHERE type IS NOT NULL;
+-- Add any extra values to the seed INSERTs in Step 2 before applying.
 
 -- Step 3: Add new nullable FK columns alongside old columns
 ALTER TABLE "crm_Contacts" ADD COLUMN IF NOT EXISTS "contact_type_id" UUID;
