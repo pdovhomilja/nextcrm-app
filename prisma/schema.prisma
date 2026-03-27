@@ -79,11 +79,14 @@ model crm_Leads {
   email             String?
   phone             String?
   description       String?
-  lead_source       String?
+  lead_source_id  String?            @db.Uuid
+  lead_status_id  String?            @db.Uuid
+  lead_type_id    String?            @db.Uuid
+  lead_source     crm_Lead_Sources?  @relation("lead_source_relation", fields: [lead_source_id], references: [id])
+  lead_status     crm_Lead_Statuses? @relation("lead_status_relation", fields: [lead_status_id], references: [id])
+  lead_type       crm_Lead_Types?    @relation("lead_type_relation", fields: [lead_type_id], references: [id])
   refered_by        String?
   campaign          String?
-  status            String?            @default("NEW")
-  type              String?            @default("DEMO")
   assigned_to       String?            @db.Uuid
   assigned_to_user  Users?             @relation("LeadAssignedTo", fields: [assigned_to], references: [id])
   accountsIDs       String?            @db.Uuid
@@ -95,8 +98,9 @@ model crm_Leads {
   @@index([accountsIDs])
   @@index([createdBy])
   @@index([updatedBy])
-  @@index([status])
-  @@index([type])
+  @@index([lead_source_id])
+  @@index([lead_status_id])
+  @@index([lead_type_id])
   @@index([createdAt])
 }
 
@@ -170,17 +174,6 @@ enum crm_Enrichment_Status {
   COMPLETED
   FAILED
   SKIPPED
-}
-
-enum crm_Lead_Status {
-  NEW
-  CONTACTED
-  QUALIFIED
-  LOST
-}
-
-enum crm_Lead_Type {
-  DEMO
 }
 
 model crm_Opportunities {
@@ -355,6 +348,42 @@ model crm_Opportunities_Type {
   assigned_opportunities crm_Opportunities[]
 }
 
+model crm_Contact_Types {
+  id       String         @id @default(uuid()) @db.Uuid
+  v        Int            @default(0) @map("__v")
+  name     String         @unique
+  contacts crm_Contacts[]
+
+  @@index([name])
+}
+
+model crm_Lead_Sources {
+  id    String      @id @default(uuid()) @db.Uuid
+  v     Int         @default(0) @map("__v")
+  name  String      @unique
+  leads crm_Leads[] @relation("lead_source_relation")
+
+  @@index([name])
+}
+
+model crm_Lead_Statuses {
+  id    String      @id @default(uuid()) @db.Uuid
+  v     Int         @default(0) @map("__v")
+  name  String      @unique
+  leads crm_Leads[] @relation("lead_status_relation")
+
+  @@index([name])
+}
+
+model crm_Lead_Types {
+  id    String      @id @default(uuid()) @db.Uuid
+  v     Int         @default(0) @map("__v")
+  name  String      @unique
+  leads crm_Leads[] @relation("lead_type_relation")
+
+  @@index([name])
+}
+
 model crm_Contacts {
   id               String    @id @default(uuid()) @db.Uuid
   v                Int       @default(0) @map("__v")
@@ -386,7 +415,8 @@ model crm_Contacts {
   social_instagram String?
   social_youtube   String?
   social_tiktok    String?
-  type             String?   @default("Customer")
+  contact_type_id  String?            @db.Uuid
+  contact_type     crm_Contact_Types? @relation(fields: [contact_type_id], references: [id])
   tags             String[]
   notes            String[]
 
@@ -408,16 +438,9 @@ model crm_Contacts {
   @@index([createdBy])
   @@index([updatedBy])
   @@index([status])
-  @@index([type])
+  @@index([contact_type_id])
   @@index([cratedAt])
   @@index([last_activity])
-}
-
-enum crm_Contact_Type {
-  Customer
-  Partner
-  Vendor
-  Prospect
 }
 
 model crm_Contracts {
