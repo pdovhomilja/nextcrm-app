@@ -63,7 +63,7 @@ ALTER TABLE "crm_Leads"    ADD COLUMN IF NOT EXISTS "lead_type_id"    UUID;
 UPDATE "crm_Contacts" c
 SET "contact_type_id" = ct.id
 FROM "crm_Contact_Types" ct
-WHERE c.type = ct.name AND c.type IS NOT NULL;
+WHERE LOWER(c.type) = LOWER(ct.name) AND c.type IS NOT NULL;
 
 -- Case-insensitive match: old values were uppercase ("NEW"), new rows are title-case ("New")
 UPDATE "crm_Leads" l
