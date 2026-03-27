@@ -15,12 +15,12 @@ export const updateLead = async (data: {
   email?: string | null;
   phone?: string | null;
   description?: string | null;
-  lead_source?: string | null;
+  lead_source_id?: string | null;
+  lead_status_id?: string | null;
+  lead_type_id?: string | null;
   refered_by?: string | null;
   campaign?: string | null;
   assigned_to?: string;
-  status?: string;
-  type?: string;
   accountIDs?: string;
 }) => {
   const session = await getServerSession(authOptions);
@@ -36,13 +36,13 @@ export const updateLead = async (data: {
     email,
     phone,
     description,
-    lead_source,
+    lead_source_id,
+    lead_status_id,
+    lead_type_id,
     refered_by,
     campaign,
     assigned_to,
     accountIDs,
-    status,
-    type,
   } = data;
 
   if (!id) return { error: "id is required" };
@@ -60,13 +60,13 @@ export const updateLead = async (data: {
         email,
         phone,
         description,
-        lead_source,
+        lead_source_id: lead_source_id ?? undefined,
+        lead_status_id: lead_status_id ?? undefined,
+        lead_type_id: lead_type_id ?? undefined,
         refered_by,
         campaign,
         assigned_to: assigned_to || userId,
         accountsIDs: accountIDs,
-        status,
-        type,
       },
     });
 

@@ -14,7 +14,7 @@ export const embedLead = inngest.createFunction(
 
     const lead = await prismadb.crm_Leads.findUnique({
       where: { id: record_id },
-      select: { id: true, firstName: true, lastName: true, description: true, status: true },
+      select: { id: true, firstName: true, lastName: true, description: true },
     });
     if (!lead) return { skipped: "record not found" };
 
@@ -22,7 +22,6 @@ export const embedLead = inngest.createFunction(
       lead.firstName,
       lead.lastName,
       lead.description,
-      lead.status,
     ]);
     if (!text) return { skipped: "no embeddable text" };
 

@@ -35,7 +35,6 @@ export async function POST(req: Request) {
         last_name: surname,
         email,
         mobile_phone: phone,
-        type: "Prospect",
         tags: [tag],
         notes: ["Account: " + company, "Message: " + message],
       },

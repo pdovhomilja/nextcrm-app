@@ -55,9 +55,6 @@ export async function POST(req: Request) {
           jobTitle: job,
           email,
           phone,
-          lead_source,
-          status: "NEW",
-          type: "DEMO",
         },
       });
 

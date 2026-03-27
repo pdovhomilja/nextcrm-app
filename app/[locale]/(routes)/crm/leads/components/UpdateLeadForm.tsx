@@ -72,8 +72,6 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
     const result = await updateLead({
       ...data,
       assigned_to: data.assigned_to ?? undefined,
-      status: data.status ?? undefined,
-      type: data.type ?? undefined,
       accountIDs: data.accountsIDs ?? undefined,
     });
     if (result?.error) {

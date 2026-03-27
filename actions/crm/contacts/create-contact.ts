@@ -28,7 +28,7 @@ export const createContact = async (data: {
   social_instagram?: string;
   social_youtube?: string;
   social_tiktok?: string;
-  type?: string;
+  contact_type_id?: string;
 }) => {
   const session = await getServerSession(authOptions);
   if (!session) return { error: "Unauthorized" };
@@ -40,6 +40,7 @@ export const createContact = async (data: {
     birthday_day,
     birthday_month,
     birthday_year,
+    contact_type_id,
     ...rest
   } = data;
 
@@ -62,6 +63,9 @@ export const createContact = async (data: {
                 connect: { id: assigned_to },
               },
             }
+          : {}),
+        ...(contact_type_id
+          ? { contact_type: { connect: { id: contact_type_id } } }
           : {}),
         birthday:
           birthday_day && birthday_month && birthday_year

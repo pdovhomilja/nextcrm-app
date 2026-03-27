@@ -37,7 +37,7 @@ const UserDashboardPage = async () => {
   ]);
 
   const openTasks = tasks.filter((t) => t.taskStatus === "ACTIVE");
-  const openLeads = leads.filter((l) => l.status !== "CONVERTED");
+  const openLeads = leads;
   const activeOpportunities = opportunities.filter(
     (o) => o.status === "ACTIVE"
   );
@@ -236,10 +236,10 @@ const UserDashboardPage = async () => {
                       <TableCell>{lead.email ?? "—"}</TableCell>
                       <TableCell>
                         <Badge variant="outline">
-                          {lead.status ?? "NEW"}
+                          {"—"}
                         </Badge>
                       </TableCell>
-                      <TableCell>{lead.lead_source ?? "—"}</TableCell>
+                      <TableCell>{"—"}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
