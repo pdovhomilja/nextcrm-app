@@ -54,7 +54,7 @@ export async function createConfigValue(configType: CrmConfigType, name: string)
   const parsed = nameSchema.parse(name);
   const { model } = configMap[configType];
   await (model() as any).create({ data: { name: parsed } });
-  revalidatePath("/admin/crm-settings");
+  revalidatePath("/", "layout");
 }
 
 export async function updateConfigValue(
@@ -65,7 +65,7 @@ export async function updateConfigValue(
   const parsed = nameSchema.parse(name);
   const { model } = configMap[configType];
   await (model() as any).update({ where: { id }, data: { name: parsed } });
-  revalidatePath("/admin/crm-settings");
+  revalidatePath("/", "layout");
 }
 
 export async function deleteConfigValue(
@@ -78,6 +78,10 @@ export async function deleteConfigValue(
   }
 
   const { model, updateMany } = configMap[configType];
+
+  if (replacementId && !updateMany) {
+    throw new Error(`Config type does not support reassignment`);
+  }
   const field = fkField[configType];
 
   if (replacementId && updateMany && field) {
@@ -92,5 +96,5 @@ export async function deleteConfigValue(
     await (model() as any).delete({ where: { id } });
   }
 
-  revalidatePath("/admin/crm-settings");
+  revalidatePath("/", "layout");
 }

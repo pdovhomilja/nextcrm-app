@@ -97,6 +97,21 @@ describe("createConfigValue", () => {
   });
 });
 
+describe("updateConfigValue", () => {
+  it("updates the name of a config value", async () => {
+    (mockPrisma.crm_Contact_Types.update as jest.Mock).mockResolvedValue({});
+    await updateConfigValue("contactType", "id-1", "New Name");
+    expect(mockPrisma.crm_Contact_Types.update).toHaveBeenCalledWith({
+      where: { id: "id-1" },
+      data: { name: "New Name" },
+    });
+  });
+
+  it("rejects empty name", async () => {
+    await expect(updateConfigValue("contactType", "id-1", "")).rejects.toThrow();
+  });
+});
+
 describe("deleteConfigValue", () => {
   it("deletes directly when no replacement needed", async () => {
     (mockPrisma.crm_Contact_Types.delete as jest.Mock).mockResolvedValue({});
@@ -114,5 +129,11 @@ describe("deleteConfigValue", () => {
 
   it("rejects if replacementId equals id", async () => {
     await expect(deleteConfigValue("contactType", "id-1", "id-1")).rejects.toThrow();
+  });
+
+  it("throws when replacementId provided for type without reassignment support", async () => {
+    await expect(deleteConfigValue("industry", "id-1", "id-2")).rejects.toThrow(
+      "Config type does not support reassignment"
+    );
   });
 });
