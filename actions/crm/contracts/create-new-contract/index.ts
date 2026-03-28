@@ -7,6 +7,7 @@ import { InputType, ReturnType } from "./types";
 import { createSafeAction } from "@/lib/create-safe-action";
 import { getServerSession, Session } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { writeAuditLog } from "@/lib/audit-log";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
   const session: Session | null = await getServerSession(authOptions);
@@ -65,7 +66,13 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         createdBy: user.id,
       },
     });
-    //console.log(result, "result");
+    await writeAuditLog({
+      entityType: "contract",
+      entityId: result.id,
+      action: "created",
+      changes: null,
+      userId: user.id,
+    });
   } catch (error) {
     console.log(error);
     return {

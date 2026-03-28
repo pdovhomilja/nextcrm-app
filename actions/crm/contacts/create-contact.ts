@@ -5,6 +5,7 @@ import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import sendEmail from "@/lib/sendmail";
 import { inngest } from "@/inngest/client";
+import { writeAuditLog } from "@/lib/audit-log";
 
 export const createContact = async (data: {
   assigned_to?: string;
@@ -82,6 +83,13 @@ export const createContact = async (data: {
       }
     }
 
+    await writeAuditLog({
+      entityType: "contact",
+      entityId: contact.id,
+      action: "created",
+      changes: null,
+      userId: session.user.id,
+    });
     void inngest.send({ name: "crm/contact.saved", data: { record_id: contact.id } });
     revalidatePath("/[locale]/crm/contacts", "page");
     return { data: contact };

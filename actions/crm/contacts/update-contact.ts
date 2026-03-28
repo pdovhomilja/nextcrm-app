@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { inngest } from "@/inngest/client";
+import { writeAuditLog, diffObjects } from "@/lib/audit-log";
 
 export const updateContact = async (data: {
   id: string;
@@ -48,6 +49,7 @@ export const updateContact = async (data: {
   if (!id) return { error: "id is required" };
 
   try {
+    const before = await prismadb.crm_Contacts.findUnique({ where: { id } });
     const contact = await prismadb.crm_Contacts.update({
       where: { id },
       data: {
@@ -62,6 +64,14 @@ export const updateContact = async (data: {
             : null,
         ...rest,
       } as any,
+    });
+    const changes = before ? diffObjects(before as Record<string, unknown>, contact as Record<string, unknown>) : null;
+    await writeAuditLog({
+      entityType: "contact",
+      entityId: contact.id,
+      action: "updated",
+      changes,
+      userId: session.user.id,
     });
     void inngest.send({ name: "crm/contact.saved", data: { record_id: contact.id } });
     revalidatePath("/[locale]/(routes)/crm/contacts", "page");

@@ -5,6 +5,7 @@ import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import sendEmail from "@/lib/sendmail";
 import { inngest } from "@/inngest/client";
+import { writeAuditLog, diffObjects } from "@/lib/audit-log";
 
 export const updateLead = async (data: {
   id: string;
@@ -48,6 +49,7 @@ export const updateLead = async (data: {
   if (!id) return { error: "id is required" };
 
   try {
+    const before = await prismadb.crm_Leads.findUnique({ where: { id } });
     const lead = await prismadb.crm_Leads.update({
       where: { id },
       data: {
@@ -91,6 +93,14 @@ export const updateLead = async (data: {
       }
     }
 
+    const changes = before ? diffObjects(before as Record<string, unknown>, lead as Record<string, unknown>) : null;
+    await writeAuditLog({
+      entityType: "lead",
+      entityId: lead.id,
+      action: "updated",
+      changes,
+      userId: session.user.id,
+    });
     void inngest.send({ name: "crm/lead.saved", data: { record_id: lead.id } });
     revalidatePath("/[locale]/(routes)/crm/leads", "page");
     return { data: lead };

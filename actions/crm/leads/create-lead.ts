@@ -5,6 +5,7 @@ import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import sendEmail from "@/lib/sendmail";
 import { inngest } from "@/inngest/client";
+import { writeAuditLog } from "@/lib/audit-log";
 
 export const createLead = async (data: {
   first_name?: string;
@@ -87,6 +88,13 @@ export const createLead = async (data: {
       }
     }
 
+    await writeAuditLog({
+      entityType: "lead",
+      entityId: lead.id,
+      action: "created",
+      changes: null,
+      userId: session.user.id,
+    });
     void inngest.send({ name: "crm/lead.saved", data: { record_id: lead.id } });
     revalidatePath("/[locale]/(routes)/crm/leads", "page");
     return { data: lead };
