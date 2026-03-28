@@ -1,11 +1,12 @@
 import fs from 'fs/promises';
 import path from 'path';
 
-let skipListCache: Set<string> | null = null;
+let skipListCache: { data: Set<string>; loadedAt: number } | null = null;
+const SKIP_LIST_TTL_MS = 5 * 60 * 1000;
 
 export async function loadSkipList(): Promise<Set<string>> {
-  if (skipListCache) {
-    return skipListCache;
+  if (skipListCache && Date.now() - skipListCache.loadedAt < SKIP_LIST_TTL_MS) {
+    return skipListCache.data;
   }
 
   try {
@@ -22,7 +23,7 @@ export async function loadSkipList(): Promise<Set<string>> {
       }
     });
     
-    skipListCache = skipDomains;
+    skipListCache = { data: skipDomains, loadedAt: Date.now() };
     return skipDomains;
   } catch (error) {
     console.error('Failed to load skip list:', error);

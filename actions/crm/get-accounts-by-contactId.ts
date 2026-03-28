@@ -3,6 +3,7 @@ import { prismadb } from "@/lib/prisma";
 export const getAccountsByContactId = async (contactId: string) => {
   const data = await prismadb.crm_Accounts.findMany({
     where: {
+      deletedAt: null,
       contacts: {
         some: {
           id: contactId,

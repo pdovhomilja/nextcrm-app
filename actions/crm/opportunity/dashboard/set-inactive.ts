@@ -18,6 +18,7 @@ export async function setInactiveOpportunity(id: string) {
     const opportunity = await prismadb.crm_Opportunities.findUnique({
       where: {
         id,
+        deletedAt: null,
       },
       select: {
         assigned_to: true,

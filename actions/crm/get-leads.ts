@@ -3,6 +3,7 @@ import { prismadb } from "@/lib/prisma";
 
 export const getLeads = cache(async () => {
   const data = await prismadb.crm_Leads.findMany({
+    where: { deletedAt: null },
     include: {
       // Include assigned user (uses "LeadAssignedTo" relation)
       assigned_to_user: {

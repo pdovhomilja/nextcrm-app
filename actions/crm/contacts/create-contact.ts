@@ -5,6 +5,7 @@ import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import sendEmail from "@/lib/sendmail";
 import { inngest } from "@/inngest/client";
+import { writeAuditLog } from "@/lib/audit-log";
 
 export const createContact = async (data: {
   assigned_to?: string;
@@ -28,7 +29,7 @@ export const createContact = async (data: {
   social_instagram?: string;
   social_youtube?: string;
   social_tiktok?: string;
-  type?: string;
+  contact_type_id?: string;
 }) => {
   const session = await getServerSession(authOptions);
   if (!session) return { error: "Unauthorized" };
@@ -40,6 +41,7 @@ export const createContact = async (data: {
     birthday_day,
     birthday_month,
     birthday_year,
+    contact_type_id,
     ...rest
   } = data;
 
@@ -49,26 +51,15 @@ export const createContact = async (data: {
         v: 0,
         createdBy: userId,
         updatedBy: userId,
-        ...(assigned_account
-          ? {
-              assigned_accounts: {
-                connect: { id: assigned_account },
-              },
-            }
-          : {}),
-        ...(assigned_to
-          ? {
-              assigned_to_user: {
-                connect: { id: assigned_to },
-              },
-            }
-          : {}),
+        accountsIDs: assigned_account ?? undefined,
+        assigned_to: assigned_to ?? undefined,
+        contact_type_id: contact_type_id ?? undefined,
         birthday:
           birthday_day && birthday_month && birthday_year
             ? birthday_day + "/" + birthday_month + "/" + birthday_year
             : null,
         ...rest,
-      },
+      } as any,
     });
 
     if (assigned_to && assigned_to !== userId) {
@@ -92,6 +83,13 @@ export const createContact = async (data: {
       }
     }
 
+    await writeAuditLog({
+      entityType: "contact",
+      entityId: contact.id,
+      action: "created",
+      changes: null,
+      userId: session.user.id,
+    });
     void inngest.send({ name: "crm/contact.saved", data: { record_id: contact.id } });
     revalidatePath("/[locale]/crm/contacts", "page");
     return { data: contact };

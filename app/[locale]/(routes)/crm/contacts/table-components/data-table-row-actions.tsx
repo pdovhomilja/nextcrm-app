@@ -28,12 +28,16 @@ import {
 } from "@/components/ui/sheet";
 import { deleteContact } from "@/actions/crm/contacts/delete-contact";
 
+type ConfigItem = { id: string; name: string };
+
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
+  contactTypes: ConfigItem[];
 }
 
 export function DataTableRowActions<TData>({
   row,
+  contactTypes,
 }: DataTableRowActionsProps<TData>) {
   const router = useRouter();
   const contact = opportunitySchema.parse(row.original);
@@ -79,6 +83,7 @@ export function DataTableRowActions<TData>({
             <UpdateContactForm
               initialData={row.original}
               setOpen={setUpdateOpen}
+              contactTypes={contactTypes}
             />
           </div>
         </SheetContent>

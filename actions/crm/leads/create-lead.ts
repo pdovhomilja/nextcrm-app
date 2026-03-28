@@ -5,6 +5,7 @@ import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import sendEmail from "@/lib/sendmail";
 import { inngest } from "@/inngest/client";
+import { writeAuditLog } from "@/lib/audit-log";
 
 export const createLead = async (data: {
   first_name?: string;
@@ -14,7 +15,9 @@ export const createLead = async (data: {
   email?: string;
   phone?: string;
   description?: string;
-  lead_source?: string;
+  lead_source_id?: string;
+  lead_status_id?: string;
+  lead_type_id?: string;
   refered_by?: string;
   campaign?: string;
   assigned_to?: string;
@@ -32,7 +35,9 @@ export const createLead = async (data: {
     email,
     phone,
     description,
-    lead_source,
+    lead_source_id,
+    lead_status_id,
+    lead_type_id,
     refered_by,
     campaign,
     assigned_to,
@@ -52,13 +57,13 @@ export const createLead = async (data: {
         email,
         phone,
         description,
-        lead_source,
+        lead_source_id: lead_source_id ?? undefined,
+        lead_status_id: lead_status_id ?? undefined,
+        lead_type_id: lead_type_id ?? undefined,
         refered_by,
         campaign,
         assigned_to: assigned_to || userId,
         accountsIDs: accountIDs,
-        status: "NEW",
-        type: "DEMO",
       },
     });
 
@@ -83,6 +88,13 @@ export const createLead = async (data: {
       }
     }
 
+    await writeAuditLog({
+      entityType: "lead",
+      entityId: lead.id,
+      action: "created",
+      changes: null,
+      userId: session.user.id,
+    });
     void inngest.send({ name: "crm/lead.saved", data: { record_id: lead.id } });
     revalidatePath("/[locale]/(routes)/crm/leads", "page");
     return { data: lead };

@@ -5,10 +5,11 @@ const config: Config = {
   testEnvironment: "node",
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
+    "^e2b$": "<rootDir>/__mocks__/e2b.ts",
   },
   testMatch: ["**/__tests__/**/*.test.ts", "**/__tests__/**/*.test.tsx"],
   transform: {
-    "^.+\\.tsx?$": ["ts-jest", { tsconfig: { jsx: "react" } }],
+    "^.+\\.tsx?$": ["ts-jest", { tsconfig: { jsx: "react", target: "es2017" } }],
   },
 };
 

@@ -4,6 +4,7 @@ export const getExpectedRevenue = async () => {
   const activeOpportunities = await prismadb.crm_Opportunities.findMany({
     where: {
       status: "ACTIVE",
+      deletedAt: null,
     },
   });
 

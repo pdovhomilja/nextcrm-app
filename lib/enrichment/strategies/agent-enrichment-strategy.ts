@@ -2,6 +2,17 @@ import { AgentOrchestrator } from '../agent-architecture';
 import type { CSVRow, EnrichmentField, RowEnrichmentResult, EnrichmentResult } from '../types';
 import { shouldSkipEmail, loadSkipList, getSkipReason } from '../utils/skip-list';
 
+const ENRICHMENT_TIMEOUT_MS = 90_000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`${label} timed out after ${ms / 1000}s`)), ms)
+    ),
+  ]);
+}
+
 export class AgentEnrichmentStrategy {
   private orchestrator: AgentOrchestrator;
   
@@ -17,46 +28,43 @@ export class AgentEnrichmentStrategy {
     fields: EnrichmentField[],
     emailColumn: string,
     onProgress?: (field: string, value: unknown) => void,
-    onAgentProgress?: (message: string, type: 'info' | 'success' | 'warning' | 'agent') => void
+    onAgentProgress?: (message: string, type: 'info' | 'success' | 'warning' | 'agent') => void,
+    identityOverride?: { companyName?: string; companyWebsite?: string }
   ): Promise<RowEnrichmentResult> {
     const email = row[emailColumn];
     console.log(`[AgentEnrichmentStrategy] Starting enrichment for email: ${email}`);
     console.log(`[AgentEnrichmentStrategy] Requested fields: ${fields.map(f => f.name).join(', ')}`);
-    
-    if (!email) {
-      console.log(`[AgentEnrichmentStrategy] No email found in column: ${emailColumn}`);
-      return {
-        rowIndex: 0,
-        originalData: row,
-        enrichments: {},
-        status: 'error',
-        error: 'No email found in specified column',
-      };
+
+    if (email) {
+      // Check skip list
+      const skipList = await loadSkipList();
+      if (shouldSkipEmail(email, skipList)) {
+        const skipReason = getSkipReason(email, skipList);
+        console.log(`[AgentEnrichmentStrategy] Skipping email ${email}: ${skipReason}`);
+        return {
+          rowIndex: 0,
+          originalData: row,
+          enrichments: {},
+          status: 'skipped',
+          error: skipReason,
+        };
+      }
     }
-    
-    // Check skip list
-    const skipList = await loadSkipList();
-    if (shouldSkipEmail(email, skipList)) {
-      const skipReason = getSkipReason(email, skipList);
-      console.log(`[AgentEnrichmentStrategy] Skipping email ${email}: ${skipReason}`);
-      return {
-        rowIndex: 0,
-        originalData: row,
-        enrichments: {},
-        status: 'skipped',
-        error: skipReason,
-      };
-    }
-    
+
     try {
       console.log(`[AgentEnrichmentStrategy] Delegating to AgentOrchestrator`);
       // Use the agent orchestrator for enrichment
-      const result = await this.orchestrator.enrichRow(
-        row,
-        fields,
-        emailColumn,
-        onProgress,
-        onAgentProgress
+      const result = await withTimeout(
+        this.orchestrator.enrichRow(
+          row,
+          fields,
+          emailColumn,
+          onProgress,
+          onAgentProgress,
+          identityOverride
+        ),
+        ENRICHMENT_TIMEOUT_MS,
+        "Enrichment"
       );
       
       // Filter out null values to match the expected type

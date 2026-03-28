@@ -28,12 +28,17 @@ import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 import { createLead } from "@/actions/crm/leads/create-lead";
 
 //TODO: fix all the types
+type ConfigItem = { id: string; name: string };
+
 type NewTaskFormProps = {
   accounts: any[];
+  leadSources: ConfigItem[];
+  leadStatuses: ConfigItem[];
+  leadTypes: ConfigItem[];
   onFinish?: () => void;
 };
 
-export function NewLeadForm({ accounts, onFinish }: NewTaskFormProps) {
+export function NewLeadForm({ accounts, leadSources, leadStatuses, leadTypes, onFinish }: NewTaskFormProps) {
   const t = useTranslations("CrmLeadForm");
   const c = useTranslations("Common");
 
@@ -45,7 +50,9 @@ export function NewLeadForm({ accounts, onFinish }: NewTaskFormProps) {
     email: z.string().email(t("emailInvalid")).or(z.literal("")).optional(),
     phone: z.string().min(0).max(15).optional(),
     description: z.string().optional(),
-    lead_source: z.string().optional(),
+    lead_source_id: z.string().optional(),
+    lead_status_id: z.string().optional(),
+    lead_type_id: z.string().optional(),
     refered_by: z.string().optional(),
     campaign: z.string().optional(),
     assigned_to: z.string().optional(),
@@ -65,7 +72,9 @@ export function NewLeadForm({ accounts, onFinish }: NewTaskFormProps) {
       email: "",
       phone: "",
       description: "",
-      lead_source: "",
+      lead_source_id: "",
+      lead_status_id: "",
+      lead_type_id: "",
       refered_by: "",
       campaign: "",
       assigned_to: "",
@@ -213,17 +222,20 @@ export function NewLeadForm({ accounts, onFinish }: NewTaskFormProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="lead_source"
+                name="lead_source_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t("leadSource")}</FormLabel>
-                    <FormControl>
-                      <Input
-                        disabled={form.formState.isSubmitting}
-                        placeholder="Website"
-                        {...field}
-                      />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select source…" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {leadSources.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -241,6 +253,48 @@ export function NewLeadForm({ accounts, onFinish }: NewTaskFormProps) {
                         {...field}
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="lead_status_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Lead Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select status…" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {leadStatuses.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="lead_type_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Lead Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select type…" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {leadTypes.map((lt) => (
+                          <SelectItem key={lt.id} value={lt.id}>{lt.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

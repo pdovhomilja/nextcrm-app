@@ -29,6 +29,9 @@ import {
 
 import AccountsTasksView from "./components/TasksView";
 import ContractsView from "../../components/ContractsView";
+import { ActivitiesSection } from "./components/ActivitiesSection";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { HistoryTab } from "./components/HistoryTab";
 
 interface AccountDetailPageProps {
   params: Promise<{
@@ -56,24 +59,36 @@ const AccountDetailPage = async (props: AccountDetailPageProps) => {
       title={`Account: ${account?.name}`}
       description={"Everything you need to know about sales potential"}
     >
-      <div className="space-y-5">
-        <BasicView data={account} />
-        <FindSimilarButton entityType="account" recordId={accountId} />
-        <AccountsTasksView data={tasks} account={account} />
-        <OpportunitiesView
-          data={opportunities}
-          crmData={crmData}
-          accountId={accountId}
-        />
-        <ContactsView data={contacts} crmData={crmData} accountId={accountId} />
-        <ContractsView
-          data={contracts}
-          crmData={crmData}
-          accountId={accountId}
-        />
-        <LeadsView data={leads} crmData={crmData} />
-        <DocumentsView data={documents} />
-      </div>
+      <Tabs defaultValue="overview">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="history">History</TabsTrigger>
+        </TabsList>
+        <TabsContent value="overview">
+          <div className="space-y-5">
+            <BasicView data={account} />
+            <ActivitiesSection accountId={account.id} />
+            <FindSimilarButton entityType="account" recordId={accountId} />
+            <AccountsTasksView data={tasks} account={account} />
+            <OpportunitiesView
+              data={opportunities}
+              crmData={crmData}
+              accountId={accountId}
+            />
+            <ContactsView data={contacts} crmData={crmData} accountId={accountId} />
+            <ContractsView
+              data={contracts}
+              crmData={crmData}
+              accountId={accountId}
+            />
+            <LeadsView data={leads} crmData={crmData} />
+            <DocumentsView data={documents} />
+          </div>
+        </TabsContent>
+        <TabsContent value="history">
+          <HistoryTab accountId={accountId} />
+        </TabsContent>
+      </Tabs>
     </Container>
   );
 };

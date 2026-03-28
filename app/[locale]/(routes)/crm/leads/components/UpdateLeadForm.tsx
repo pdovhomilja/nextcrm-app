@@ -30,12 +30,17 @@ import { AccountSearchCombobox } from "@/components/ui/account-search-combobox";
 import { updateLead } from "@/actions/crm/leads/update-lead";
 
 //TODO: fix all the types
+type ConfigItem = { id: string; name: string };
+
 type NewTaskFormProps = {
   initialData: any;
   setOpen: (value: boolean) => void;
+  leadSources: ConfigItem[];
+  leadStatuses: ConfigItem[];
+  leadTypes: ConfigItem[];
 };
 
-export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
+export function UpdateLeadForm({ initialData, setOpen, leadSources, leadStatuses, leadTypes }: NewTaskFormProps) {
   const t = useTranslations("CrmLeadForm");
   const c = useTranslations("Common");
 
@@ -48,14 +53,13 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
     email: z.string().email(t("emailInvalid")).nullable().optional().or(z.literal("")),
     phone: z.string().min(0).max(15).nullable().optional(),
     description: z.string().nullable().optional(),
-    lead_source: z.string().nullable().optional(),
+    lead_source_id: z.string().nullable().optional(),
+    lead_status_id: z.string().nullable().optional(),
+    lead_type_id: z.string().nullable().optional(),
     refered_by: z.string().optional().nullable(),
     //TODO: add campaing schema from db as data source
     campaign: z.string().optional().nullable(),
     assigned_to: z.string().optional().nullable(),
-    status: z.string().optional().nullable(),
-    //TODO: add type schema from db as data source
-    type: z.string().optional().nullable(),
     accountsIDs: z.string().optional().nullable(),
   });
 
@@ -65,15 +69,21 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
   const form = useForm<any>({
     resolver: zodResolver(formSchema),
     mode: "onBlur",
-    defaultValues: initialData,
+    defaultValues: {
+      ...initialData,
+      lead_source_id: initialData.lead_source_id ?? "",
+      lead_status_id: initialData.lead_status_id ?? "",
+      lead_type_id: initialData.lead_type_id ?? "",
+    },
   });
 
   const onSubmit = async (data: NewLeadFormValues) => {
     const result = await updateLead({
       ...data,
+      lead_source_id: data.lead_source_id ?? undefined,
+      lead_status_id: data.lead_status_id ?? undefined,
+      lead_type_id: data.lead_type_id ?? undefined,
       assigned_to: data.assigned_to ?? undefined,
-      status: data.status ?? undefined,
-      type: data.type ?? undefined,
       accountIDs: data.accountsIDs ?? undefined,
     });
     if (result?.error) {
@@ -83,12 +93,6 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
       setOpen(false);
     }
   };
-
-  const leadStatus = [
-    { name: "New", id: "NEW" },
-    { name: "In progress", id: "IN_PROGRESS" },
-    { name: "Completed", id: "COMPLETED" },
-  ];
 
   if (!initialData)
     return <div>{c("somethingWentWrong")}</div>;
@@ -222,17 +226,20 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="lead_source"
+                name="lead_source_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t("leadSource")}</FormLabel>
-                    <FormControl>
-                      <Input
-                        disabled={form.formState.isSubmitting}
-                        placeholder="Website"
-                        {...field}
-                      />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select source…" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {leadSources.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -275,17 +282,20 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
               />
               <FormField
                 control={form.control}
-                name="type"
+                name="lead_type_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Type</FormLabel>
-                    <FormControl>
-                      <Input
-                        disabled={form.formState.isSubmitting}
-                        placeholder="Cold lead"
-                        {...field}
-                      />
-                    </FormControl>
+                    <FormLabel>Lead Type</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select type…" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {leadTypes.map((lt) => (
+                          <SelectItem key={lt.id} value={lt.id}>{lt.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -312,24 +322,17 @@ export function UpdateLeadForm({ initialData, setOpen }: NewTaskFormProps) {
               />
               <FormField
                 control={form.control}
-                name="status"
+                name="lead_status_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Lead status</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <FormLabel>Lead Status</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value ?? ""}>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select lead status" />
-                        </SelectTrigger>
+                        <SelectTrigger><SelectValue placeholder="Select status…" /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {leadStatus.map((status: any) => (
-                          <SelectItem key={status.id} value={status.id}>
-                            {status.name}
-                          </SelectItem>
+                        {leadStatuses.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>

@@ -2,19 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
+import { FIELD_MAP } from "@/lib/enrichment/presets/target-fields";
 
-const FIELD_MAP: Record<string, string> = {
-  position:         "position",
-  company:          "company",
-  company_website:  "company_website",
-  personal_website: "personal_website",
-  mobile_phone:     "mobile_phone",
-  office_phone:     "office_phone",
-  social_linkedin:  "social_linkedin",
-  social_x:         "social_x",
-  social_instagram: "social_instagram",
-  social_facebook:  "social_facebook",
-};
 
 export async function PATCH(
   request: NextRequest,

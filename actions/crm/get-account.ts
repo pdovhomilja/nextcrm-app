@@ -4,6 +4,7 @@ export const getAccount = async (accountId: string) => {
   const data = await prismadb.crm_Accounts.findFirst({
     where: {
       id: accountId,
+      deletedAt: null,
     },
     include: {
       contacts: true,

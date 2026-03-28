@@ -10,7 +10,9 @@ import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
 import moment from "moment";
 
-export const createColumns = (): ColumnDef<Opportunity>[] => [
+type ConfigItem = { id: string; name: string };
+
+export const createColumns = (contactTypes: ConfigItem[] = []): ColumnDef<Opportunity>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -121,7 +123,7 @@ export const createColumns = (): ColumnDef<Opportunity>[] => [
   {
     id: "actions",
     cell: ({ row }) => (
-      <DataTableRowActions row={row} />
+      <DataTableRowActions row={row} contactTypes={contactTypes} />
     ),
   },
 ];

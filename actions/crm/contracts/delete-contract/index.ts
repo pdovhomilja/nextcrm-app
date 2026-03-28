@@ -7,6 +7,7 @@ import { InputType, ReturnType } from "./types";
 import { createSafeAction } from "@/lib/create-safe-action";
 import { getServerSession, Session } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { writeAuditLog } from "@/lib/audit-log";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
   const session: Session | null = await getServerSession(authOptions);
@@ -38,12 +39,17 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   }
 
   try {
-    const result = await prismadb.crm_Contracts.delete({
-      where: {
-        id: id,
-      },
+    await prismadb.crm_Contracts.update({
+      where: { id: id },
+      data: { deletedAt: new Date(), deletedBy: user.id },
     });
-    console.log(result, "result");
+    await writeAuditLog({
+      entityType: "contract",
+      entityId: id,
+      action: "deleted",
+      changes: null,
+      userId: user.id,
+    });
   } catch (error) {
     console.log(error);
     return {

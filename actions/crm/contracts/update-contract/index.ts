@@ -7,6 +7,7 @@ import { InputType, ReturnType } from "./types";
 import { createSafeAction } from "@/lib/create-safe-action";
 import { getServerSession, Session } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { writeAuditLog, diffObjects } from "@/lib/audit-log";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
   const session: Session | null = await getServerSession(authOptions);
@@ -57,6 +58,8 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     };
   }
 
+  const before = await prismadb.crm_Contracts.findUnique({ where: { id, deletedAt: null } });
+
   try {
     const result = await prismadb.crm_Contracts.update({
       where: {
@@ -79,7 +82,14 @@ const handler = async (data: InputType): Promise<ReturnType> => {
       },
     });
 
-    //console.log("Result: ", result);
+    const changes = before ? diffObjects(before as Record<string, unknown>, result as Record<string, unknown>) : null;
+    await writeAuditLog({
+      entityType: "contract",
+      entityId: result.id,
+      action: "updated",
+      changes,
+      userId: user.id,
+    });
   } catch (error) {
     console.log(error);
     return {

@@ -23,9 +23,21 @@ import Link from "next/link";
 import { EnvelopeClosedIcon } from "@radix-ui/react-icons";
 import { Badge } from "@/components/ui/badge";
 import { EnrichButton } from "./EnrichButton";
+import { TargetContactsTable } from "./TargetContactsTable";
+
+interface TargetContact {
+  id: string;
+  name: string | null;
+  email: string | null;
+  title: string | null;
+  phone: string | null;
+  linkedinUrl: string | null;
+  source: string;
+  enrichStatus: string;
+}
 
 interface TargetBasicViewProps {
-  data: any;
+  data: any & { target_contacts?: TargetContact[] };
 }
 
 export async function BasicView({ data }: TargetBasicViewProps) {
@@ -43,22 +55,7 @@ export async function BasicView({ data }: TargetBasicViewProps) {
               <CardDescription>ID: {data.id}</CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <EnrichButton
-                targetId={data.id}
-                targetEmail={data.email ?? null}
-                targetCurrentData={{
-                  position:         data.position ?? null,
-                  company:          data.company ?? null,
-                  company_website:  data.company_website ?? null,
-                  personal_website: data.personal_website ?? null,
-                  mobile_phone:     data.mobile_phone ?? null,
-                  office_phone:     data.office_phone ?? null,
-                  social_linkedin:  data.social_linkedin ?? null,
-                  social_x:         data.social_x ?? null,
-                  social_instagram: data.social_instagram ?? null,
-                  social_facebook:  data.social_facebook ?? null,
-                }}
-              />
+              <EnrichButton targetId={data.id} />
               <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
             </div>
           </div>
@@ -294,6 +291,18 @@ export async function BasicView({ data }: TargetBasicViewProps) {
           </CardContent>
         </Card>
       )}
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle>Contacts</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <TargetContactsTable
+            targetId={data.id}
+            contacts={data.target_contacts ?? []}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }

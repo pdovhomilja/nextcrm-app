@@ -3,6 +3,7 @@ import { prismadb } from "@/lib/prisma";
 
 export const getAccounts = cache(async () => {
   const data = await prismadb.crm_Accounts.findMany({
+    where: { deletedAt: null },
     include: {
       assigned_to_user: {
         select: {

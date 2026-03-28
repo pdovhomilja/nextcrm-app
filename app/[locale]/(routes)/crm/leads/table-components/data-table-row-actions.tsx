@@ -33,12 +33,20 @@ import {
 } from "@/components/ui/sheet";
 import { deleteLead } from "@/actions/crm/leads/delete-lead";
 
+type ConfigItem = { id: string; name: string };
+
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
+  leadSources: ConfigItem[];
+  leadStatuses: ConfigItem[];
+  leadTypes: ConfigItem[];
 }
 
 export function DataTableRowActions<TData>({
   row,
+  leadSources,
+  leadStatuses,
+  leadTypes,
 }: DataTableRowActionsProps<TData>) {
   const router = useRouter();
   const lead = leadSchema.parse(row.original);
@@ -81,7 +89,13 @@ export function DataTableRowActions<TData>({
             <SheetDescription>Update lead details</SheetDescription>
           </SheetHeader>
           <div className="mt-6 space-y-4">
-            <UpdateLeadForm initialData={row.original} setOpen={setUpdateOpen} />
+            <UpdateLeadForm
+              initialData={row.original}
+              setOpen={setUpdateOpen}
+              leadSources={leadSources}
+              leadStatuses={leadStatuses}
+              leadTypes={leadTypes}
+            />
           </div>
         </SheetContent>
       </Sheet>

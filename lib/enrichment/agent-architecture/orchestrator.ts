@@ -21,34 +21,83 @@ export class AgentOrchestrator {
     fields: EnrichmentField[],
     emailColumn: string,
     onProgress?: (field: string, value: unknown) => void,
-    onAgentProgress?: (message: string, type: 'info' | 'success' | 'warning' | 'agent') => void
+    onAgentProgress?: (message: string, type: 'info' | 'success' | 'warning' | 'agent') => void,
+    identityOverride?: { companyName?: string; companyWebsite?: string }
   ): Promise<RowEnrichmentResult> {
-    const email = row[emailColumn];
-    console.log(`[Orchestrator] Starting enrichment for email: ${email}`);
-    
     interface OrchestrationContext extends Record<string, unknown> {
       email: string;
       emailContext: EmailContext;
       discoveredData: Record<string, unknown>;
       companyName?: string;
     }
-    
-    if (!email) {
+
+    const email = row[emailColumn] || null;
+    const companyName = identityOverride?.companyName || null;
+
+    if (!email && !companyName) {
       return {
         rowIndex: 0,
         originalData: row,
         enrichments: {},
         status: 'error',
-        error: 'No email found',
+        error: 'Enrichment requires at least an email or company name',
       };
     }
-    
+
+    let emailContext = email
+      ? this.extractEmailContext(email)
+      : this.buildCompanyNameContext(companyName, identityOverride?.companyWebsite);
+
+    // If email is personal (or has no company domain), supplement with the target's
+    // company_website and company name so the orchestrator uses the right domain.
+    if (!emailContext.companyDomain && identityOverride?.companyWebsite) {
+      try {
+        const overrideDomain = new URL(identityOverride.companyWebsite).hostname.replace(/^www\./, '');
+        emailContext = { ...emailContext, companyDomain: overrideDomain, domain: emailContext.domain || overrideDomain };
+        console.log(`[Orchestrator] Supplemented company domain from website override: ${overrideDomain}`);
+      } catch { /* ignore malformed URL */ }
+    }
+    if (!emailContext.companyNameGuess && identityOverride?.companyName) {
+      emailContext = { ...emailContext, companyNameGuess: identityOverride.companyName };
+    }
+
+    const displayIdentity = emailContext.companyNameGuess || emailContext.domain || email || companyName || 'unknown';
+    console.log(`[Orchestrator] Starting enrichment — email: ${email ?? 'none'}, company: ${companyName ?? 'none'}`);
+    console.log(`[Orchestrator] Email context: domain=${emailContext.domain}, company=${emailContext.companyNameGuess || 'unknown'}`);
+
     try {
-      // Step 1: Extract email context
-      console.log(`[Orchestrator] Extracting email context from: ${email}`);
-      const emailContext = this.extractEmailContext(email);
-      console.log(`[Orchestrator] Email context: domain=${emailContext.domain}, company=${emailContext.companyNameGuess || 'unknown'}`);
-      
+      // Step 1: If no company domain is known, discover it via a quick search so all
+      // subsequent agents can scrape the actual company website.
+      if (!emailContext.companyDomain && emailContext.companyNameGuess) {
+        if (onAgentProgress) {
+          onAgentProgress(`Discovering company domain for "${emailContext.companyNameGuess}"...`, 'info');
+        }
+        try {
+          const domainSearchResults = await this.firecrawl.search(
+            `"${emailContext.companyNameGuess}" official website`,
+            { limit: 5 }
+          );
+          const skipHosts = ['linkedin.com', 'facebook.com', 'twitter.com', 'instagram.com',
+            'crunchbase.com', 'glassdoor.com', 'wikipedia.org', 'bloomberg.com', 'youtube.com'];
+          for (const result of domainSearchResults ?? []) {
+            if (!result.url) continue;
+            try {
+              const hostname = new URL(result.url).hostname.replace(/^www\./, '');
+              if (!skipHosts.some(s => hostname.endsWith(s))) {
+                emailContext = { ...emailContext, companyDomain: hostname, domain: emailContext.domain || hostname };
+                console.log(`[Orchestrator] Pre-discovered company domain: ${hostname}`);
+                if (onAgentProgress) {
+                  onAgentProgress(`Discovered company domain: ${hostname}`, 'success');
+                }
+                break;
+              }
+            } catch { /* try next result */ }
+          }
+        } catch (e) {
+          console.log(`[Orchestrator] Pre-discovery search failed: ${e instanceof Error ? e.message : String(e)}`);
+        }
+      }
+
       // Step 2: Categorize fields
       const fieldCategories = this.categorizeFields(fields);
       console.log(`[Orchestrator] Field categories: discovery=${fieldCategories.discovery.length}, profile=${fieldCategories.profile.length}, metrics=${fieldCategories.metrics.length}, funding=${fieldCategories.funding.length}, techStack=${fieldCategories.techStack.length}, other=${fieldCategories.other.length}`);
@@ -67,13 +116,13 @@ export class AgentOrchestrator {
       
       // Send initial agent progress
       if (onAgentProgress) {
-        onAgentProgress(`Planning enrichment strategy for ${emailContext.companyNameGuess || emailContext.domain}`, 'info');
+        onAgentProgress(`Planning enrichment strategy for ${displayIdentity}`, 'info');
         onAgentProgress(`Agent pipeline: ${agentsToUse.map(a => a.replace('-agent', '').replace('-', ' ')).join(' → ')}`, 'info');
       }
       
       // Step 3: Progressive enrichment
       const enrichments: Record<string, unknown> = {};
-      const context: OrchestrationContext = { email, emailContext, discoveredData: {} };
+      const context: OrchestrationContext = { email: email ?? '', emailContext, discoveredData: {} };
       
       // Discovery phase (company identity)
       if (fieldCategories.discovery.length > 0) {
@@ -93,7 +142,24 @@ export class AgentOrchestrator {
         }
         Object.assign(enrichments, discoveryResults);
         Object.assign(context.discoveredData, discoveryResults);
-        
+
+        // If we found a company website, propagate the domain to context so later agents can use it
+        if (!emailContext.companyDomain) {
+          const wsKey = Object.keys(discoveryResults).find(k => k.includes('website') && !k.includes('personal'));
+          if (wsKey) {
+            const wsResult = discoveryResults[wsKey] as { value?: unknown };
+            const wsValue = typeof wsResult?.value === 'string' ? wsResult.value : null;
+            if (wsValue) {
+              try {
+                const domain = new URL(wsValue).hostname.replace(/^www\./, '');
+                emailContext = { ...emailContext, companyDomain: domain, domain: emailContext.domain || domain };
+                context.emailContext = emailContext;
+                console.log(`[Orchestrator] Updated domain from discovered website: ${domain}`);
+              } catch { /* ignore malformed URL */ }
+            }
+          }
+        }
+
         // If we found a company name, update the context
         const companyNameField = Object.keys(discoveryResults).find(key => 
           key.toLowerCase().includes('company') && key.toLowerCase().includes('name')
@@ -247,7 +313,7 @@ export class AgentOrchestrator {
       const missingFields = fields.filter(f => !enrichmentResults[f.name]?.value).map(f => f.name);
       
       console.log(`[Orchestrator] ====== ENRICHMENT SUMMARY ======`);
-      console.log(`[Orchestrator] Email: ${email}`);
+      console.log(`[Orchestrator] Identity: ${displayIdentity}`);
       console.log(`[Orchestrator] Successfully enriched: ${enrichedFields.length}/${fields.length} fields`);
       if (enrichedFields.length > 0) {
         console.log(`[Orchestrator] Enriched fields: ${enrichedFields.join(', ')}`);
@@ -294,6 +360,26 @@ export class AgentOrchestrator {
     };
   }
   
+  private buildCompanyNameContext(companyName: string | null, companyWebsite?: string): EmailContext {
+    const name = companyName ?? '';
+    let domain = '';
+    if (companyWebsite) {
+      try {
+        domain = new URL(companyWebsite).hostname.replace(/^www\./, '');
+      } catch {
+        // ignore malformed URL
+      }
+    }
+    return {
+      email: '',
+      domain,
+      companyDomain: domain || undefined,
+      personalName: undefined,
+      companyNameGuess: name,
+      isPersonalEmail: false,
+    };
+  }
+
   private categorizeFields(fields: EnrichmentField[]) {
     console.log(`[Orchestrator] Categorizing ${fields.length} fields for agent assignment...`);
     

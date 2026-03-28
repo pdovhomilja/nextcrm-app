@@ -28,16 +28,25 @@ import {
 import { DataTablePagination } from "./data-table-pagination";
 import { DataTableToolbar } from "./data-table-toolbar";
 import { PanelTopClose, PanelTopOpen } from "lucide-react";
+import { createColumns } from "./columns";
+
+type ConfigItem = { id: string; name: string };
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  leadSources?: ConfigItem[];
+  leadStatuses?: ConfigItem[];
+  leadTypes?: ConfigItem[];
 }
 
 export function LeadDataTable<TData, TValue>({
-  columns,
   data,
+  leadSources = [],
+  leadStatuses = [],
+  leadTypes = [],
 }: DataTableProps<TData, TValue>) {
+  const columns = createColumns(leadSources, leadStatuses, leadTypes) as ColumnDef<TData, TValue>[];
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});

@@ -4,8 +4,13 @@ export const getLead = async (leadId: string) => {
   const data = await prismadb.crm_Leads.findFirst({
     where: {
       id: leadId,
+      deletedAt: null,
     },
     include: {
+      // Include FK relation name fields
+      lead_source: { select: { id: true, name: true } },
+      lead_status: { select: { id: true, name: true } },
+      lead_type:   { select: { id: true, name: true } },
       // Include assigned user (uses "LeadAssignedTo" relation)
       assigned_to_user: {
         select: {

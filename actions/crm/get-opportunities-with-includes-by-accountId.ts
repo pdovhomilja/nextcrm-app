@@ -4,6 +4,7 @@ export const getOpportunitiesFullByAccountId = async (accountId: string) => {
   const data = await prismadb.crm_Opportunities.findMany({
     where: {
       account: accountId,
+      deletedAt: null,
     },
     include: {
       assigned_account: {

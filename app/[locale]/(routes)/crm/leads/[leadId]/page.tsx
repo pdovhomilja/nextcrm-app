@@ -4,6 +4,9 @@ import React from "react";
 import { BasicView } from "./components/BasicView";
 import { FindSimilarButton } from "@/components/crm/find-similar-button";
 import DocumentsView from "../../components/DocumentsView";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { HistoryTab } from "./components/HistoryTab";
+import { ActivitiesSection } from "./components/ActivitiesSection";
 
 interface LeadDetailPageProps {
   params: Promise<{
@@ -23,11 +26,23 @@ const LeadDetailPage = async (props: LeadDetailPageProps) => {
       title={`Lead: ${lead?.firstName} ${lead?.lastName}`}
       description={"Everything you need to know about sales potential"}
     >
-      <div className="space-y-5">
-        <BasicView data={lead} />
-        <FindSimilarButton entityType="lead" recordId={leadId} />
-        {/*         <DocumentsView data={lead?.documents} /> */}
-      </div>
+      <Tabs defaultValue="overview">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="history">History</TabsTrigger>
+        </TabsList>
+        <TabsContent value="overview">
+          <div className="space-y-5">
+            <BasicView data={lead} />
+            <ActivitiesSection leadId={lead.id} />
+            <FindSimilarButton entityType="lead" recordId={leadId} />
+            {/*         <DocumentsView data={lead?.documents} /> */}
+          </div>
+        </TabsContent>
+        <TabsContent value="history">
+          <HistoryTab leadId={leadId} />
+        </TabsContent>
+      </Tabs>
     </Container>
   );
 };
