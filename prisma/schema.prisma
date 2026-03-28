@@ -182,6 +182,15 @@ enum crm_Enrichment_Status {
   SKIPPED
 }
 
+enum crm_AuditLog_Action {
+  created
+  updated
+  deleted
+  restored
+  relation_added
+  relation_removed
+}
+
 model crm_Opportunities {
   id               String                  @id @default(uuid()) @db.Uuid
   v                Int                     @default(0) @map("__v")
@@ -792,14 +801,13 @@ model crm_AuditLog {
   id         String    @id @default(uuid()) @db.Uuid
   entityType String
   entityId   String    @db.Uuid
-  action     String
+  action     crm_AuditLog_Action
   changes    Json?     @db.JsonB
   userId     String?   @db.Uuid
   createdAt  DateTime  @default(now())
 
   user Users? @relation(fields: [userId], references: [id])
 
-  @@index([entityType, entityId])
   @@index([entityType, entityId, createdAt])
   @@index([userId])
   @@index([createdAt])
