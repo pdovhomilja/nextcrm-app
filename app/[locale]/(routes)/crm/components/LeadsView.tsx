@@ -52,7 +52,7 @@ const LeadsView = ({ data, crmData }: LeadsViewProps) => {
           <div className="flex space-x-2">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
-                <Button size="sm" aria-label={t("leads.addNew")}>+</Button>
+                <Button size="sm" aria-label={t("leads.addNew")} data-testid="add-lead-btn">+</Button>
               </SheetTrigger>
               <SheetContent className="w-full md:max-w-[771px] overflow-y-auto">
                 <SheetHeader>

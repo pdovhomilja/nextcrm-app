@@ -60,7 +60,7 @@ const OpportunitiesView = ({
           <div className="flex space-x-2">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
-                <Button className="my-2 cursor-pointer" aria-label={t("opportunities.addNew")}>+</Button>
+                <Button className="my-2 cursor-pointer" aria-label={t("opportunities.addNew")} data-testid="add-opportunity-btn">+</Button>
               </SheetTrigger>
               <SheetContent className="w-full md:max-w-[771px] overflow-y-auto">
                 <SheetHeader>

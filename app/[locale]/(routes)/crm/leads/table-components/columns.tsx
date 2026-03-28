@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ColumnDef } from "@tanstack/react-table";
 
 import { Badge } from "@/components/ui/badge";
@@ -87,11 +88,11 @@ export const createColumns = (
     ),
 
     cell: ({ row }) => (
-      <div>
-        {row.original.firstName
-          ? row.getValue("firstName")
-          : "" + " " + row.original.lastName}
-      </div>
+      <Link href={`/crm/leads/${row.original.id}`} data-testid="lead-row-name">
+        <div>
+          {[row.original.firstName, row.original.lastName].filter(Boolean).join(" ")}
+        </div>
+      </Link>
     ),
     enableSorting: false,
     enableHiding: true,

@@ -45,23 +45,23 @@ export const createOpportunity = async (data: {
   try {
     const opportunity = await prismadb.crm_Opportunities.create({
       data: {
-        account,
-        assigned_to,
+        account: account || undefined,
+        assigned_to: assigned_to || userId,
         budget: budget ? Number(budget) : undefined,
-        campaign,
+        campaign: campaign || undefined,
         close_date,
-        contact,
+        contact: contact || undefined,
         created_by: userId,
         last_activity_by: userId,
         updatedBy: userId,
-        currency,
-        description,
+        currency: currency || undefined,
+        description: description || undefined,
         expected_revenue: expected_revenue ? Number(expected_revenue) : undefined,
         name,
-        next_step,
-        sales_stage,
+        next_step: next_step || undefined,
+        sales_stage: sales_stage || undefined,
         status: "ACTIVE",
-        type,
+        type: type || undefined,
       },
     });
 

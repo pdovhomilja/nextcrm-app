@@ -45,7 +45,7 @@ export const columns: ColumnDef<Account>[] = [
     ),
 
     cell: ({ row }) => (
-      <Link href={`/crm/accounts/${row.original?.id}`}>
+      <Link href={`/crm/accounts/${row.original?.id}`} data-testid="account-row-name">
         <div className="w-[250px]">{row.original.name}</div>
       </Link>
     ),

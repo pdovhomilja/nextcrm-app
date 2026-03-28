@@ -122,7 +122,7 @@ export function ContactsDataTable<TData, TValue>({
             </>
           )}
           <div className="rounded-md border overflow-x-auto w-full">
-            <Table>
+            <Table data-testid="contacts-table">
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>

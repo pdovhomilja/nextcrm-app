@@ -108,7 +108,8 @@ export function NewContactForm({
   ];
 
   const onSubmit = async (data: NewAccountFormValues) => {
-    const result = await createContact(data);
+    const { type, ...rest } = data;
+    const result = await createContact({ ...rest, contact_type_id: type || undefined });
     if (result?.error) {
       form.setError("root.serverError", { message: result.error });
     } else {
@@ -564,7 +565,7 @@ export function NewContactForm({
               {form.formState.errors.root.serverError.message}
             </p>
           )}
-          <Button disabled={form.formState.isSubmitting} type="submit">
+          <Button disabled={form.formState.isSubmitting} type="submit" data-testid="contact-submit-btn">
             {form.formState.isSubmitting ? (
               <span className="flex items-center animate-pulse">
                 {c("savingData")}

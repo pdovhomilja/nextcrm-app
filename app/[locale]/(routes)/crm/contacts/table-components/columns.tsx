@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ColumnDef } from "@tanstack/react-table";
 
 import { Badge } from "@/components/ui/badge";
@@ -87,7 +88,11 @@ export const createColumns = (contactTypes: ConfigItem[] = []): ColumnDef<Opport
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Sure name" />
     ),
-    cell: ({ row }) => <div className="">{row.getValue("last_name")}</div>,
+    cell: ({ row }) => (
+      <Link href={`/crm/contacts/${row.original.id}`} data-testid="contact-row-name">
+        <div className="">{row.getValue("last_name")}</div>
+      </Link>
+    ),
     enableSorting: true,
     enableHiding: true,
   },

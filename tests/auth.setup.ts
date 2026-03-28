@@ -14,9 +14,13 @@ setup("authenticate", async ({ page }) => {
   await page.getByLabel("Password").fill(TEST_USER_PASSWORD);
   await page.getByRole("button", { name: "Login" }).click();
 
-  // Wait for the final URL to ensure that the cookies are actually set.
-  // The app uses next-intl with locale prefix (e.g., /en)
-  await page.waitForURL(/\/(en|cs|de|uk)/);
+  // Wait for redirect away from sign-in page to confirm login succeeded.
+  // Using a function predicate to exclude sign-in URLs — the previous regex
+  // /\/(en|cs|de|uk)/ matched /en/sign-in immediately, saving empty cookies.
+  await page.waitForURL(
+    (url) => /^\/(en|cs|de|uk)(\/|$)/.test(url.pathname) && !url.pathname.includes("sign-in"),
+    { timeout: 15000 }
+  );
 
   // End of authentication steps.
   await page.context().storageState({ path: authFile });
