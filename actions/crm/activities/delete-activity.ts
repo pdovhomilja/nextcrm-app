@@ -1,0 +1,34 @@
+"use server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prismadb } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
+
+export const deleteActivity = async (activityId: string) => {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) return { error: "Unauthorized" };
+
+    // Fetch links BEFORE deleting so we can revalidate after cascade
+    const links = await (prismadb as any).crm_ActivityLinks.findMany({
+      where: { activityId },
+    });
+
+    await (prismadb as any).crm_Activities.delete({
+      where: { id: activityId },
+    });
+
+    // Links are cascade-deleted by DB; now revalidate captured pages
+    for (const link of links) {
+      revalidatePath(
+        `/[locale]/(routes)/crm/${link.entityType}s/${link.entityId}`,
+        "page"
+      );
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("deleteActivity error:", error);
+    return { error: "Failed to delete activity" };
+  }
+};
