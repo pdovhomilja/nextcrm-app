@@ -1,6 +1,7 @@
 import { test, expect, Page } from "@playwright/test";
 
-// Shared state — populated by each test, consumed by later tests
+// Module-level state is safe here because test.describe.serial guarantees
+// all tests run in the same worker in order.
 const testData = {
   accountId: "",
   contactId: "",
@@ -12,7 +13,7 @@ const testData = {
 
 /** Wait for the Sheet slide-in panel to fully open */
 async function waitForSheet(page: Page) {
-  await page.waitForSelector('[data-state="open"]', { timeout: 5000 });
+  await page.waitForSelector('[role="dialog"][data-state="open"]', { timeout: 5000 });
 }
 
 /**
@@ -23,8 +24,9 @@ async function selectFirstOption(page: Page, labelText: string) {
   const formItem = page.locator("div").filter({ hasText: new RegExp(`^${labelText}$`) }).locator("..");
   const selectTrigger = formItem.locator('[role="combobox"]').first();
   await selectTrigger.click();
-  await page.waitForSelector('[role="option"]', { timeout: 3000 });
-  await page.locator('[role="option"]').first().click();
+  const listbox = page.locator('[role="listbox"]');
+  await listbox.waitFor({ timeout: 3000 });
+  await listbox.locator('[role="option"]').first().click();
 }
 
 /**
@@ -38,42 +40,33 @@ async function selectUserInCombobox(page: Page, labelText: string, searchTerm: s
   await comboTrigger.click();
   await page.waitForSelector('[cmdk-input]', { timeout: 3000 });
   await page.locator('[cmdk-input]').fill(searchTerm);
-  await page.waitForSelector('[cmdk-item]', { timeout: 3000 });
-  await page.locator('[cmdk-item]').first().click();
+  await page.waitForSelector('[data-state="open"] [cmdk-item]', { timeout: 3000 });
+  await page.locator('[data-state="open"] [cmdk-item]').first().click();
 }
 
 /** Assert that a Sonner success toast is visible */
 async function assertSuccessToast(page: Page) {
-  // Try specific data-type first, fall back to any sonner toast
-  const specific = page.locator('[data-sonner-toast][data-type="success"]').first();
-  const fallback = page.locator('[data-sonner-toast]').first();
-  try {
-    await expect(specific).toBeVisible({ timeout: 8000 });
-  } catch {
-    await expect(fallback).toBeVisible({ timeout: 8000 });
-  }
+  await expect(
+    page.locator('[data-sonner-toast][data-type="success"]').first()
+  ).toBeVisible({ timeout: 8000 });
 }
 
 /**
  * Open the Calendar date-picker popover and click the first available
  * non-disabled day.
  */
-async function pickFutureDate(page: Page) {
-  // Find the date picker button by its calendar icon sibling
-  const datePickerBtn = page.locator('button').filter({ has: page.locator('svg') }).filter({ hasText: /pick a date|select date/i }).first();
-  // Fallback: click any button with CalendarIcon that opens a popover
-  const calendarTrigger = page.locator('[role="button"]').filter({ has: page.locator('[data-lucide="calendar"]') }).first();
-  try {
-    await datePickerBtn.click({ timeout: 2000 });
-  } catch {
-    await calendarTrigger.click({ timeout: 2000 });
-  }
-  await page.waitForSelector('table[role="grid"], [role="grid"]', { timeout: 3000 });
-  await page.locator('[role="grid"] button:not([disabled])').first().click();
+async function pickFutureDate(page: Page, closeDateLabel: string) {
+  // Find the FormItem containing the close date label, then click its Button trigger
+  const formItem = page.locator("div").filter({ hasText: new RegExp(`^${closeDateLabel}$`) }).locator("..");
+  await formItem.locator("button").first().click();
+  await page.waitForSelector('[role="dialog"] table', { timeout: 3000 });
+  await page.locator('[role="dialog"] table button:not([disabled])').first().click();
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
+// Serial mode is intentional: each test depends on IDs extracted by the previous test.
+// A failure in Test 1 will skip Tests 2-4, which is correct behaviour for this chain.
 test.describe.serial("Sales Flow", () => {
   test.use({ storageState: "playwright/.auth/user.json" });
 
@@ -127,8 +120,9 @@ test.describe.serial("Sales Flow", () => {
     // Pick the account we created — label is "Assign an Account"
     const accountSelect = page.locator("div").filter({ hasText: /^Assign an Account$/ }).locator("..").locator('[role="combobox"]').first();
     await accountSelect.click();
-    await page.waitForSelector('[role="option"]', { timeout: 3000 });
-    await page.locator('[role="option"]').filter({ hasText: "Playwright Test Inc." }).click();
+    const listbox = page.locator('[role="listbox"]');
+    await listbox.waitFor({ timeout: 3000 });
+    await listbox.locator('[role="option"]').filter({ hasText: "Playwright Test Inc." }).click();
 
     await selectFirstOption(page, "Contact type");
 
@@ -184,7 +178,7 @@ test.describe.serial("Sales Flow", () => {
     // Exact label strings from locales/en.json (CrmOpportunityForm + Common namespaces)
     await page.getByLabel("Opportunity name").fill("Playwright Test Opportunity");
 
-    await pickFutureDate(page);
+    await pickFutureDate(page, "Expected close date");
 
     await page.getByLabel("Description").fill("Automated test opportunity");
     await selectFirstOption(page, "Sales type");
@@ -197,14 +191,16 @@ test.describe.serial("Sales Flow", () => {
     // "Assigned Account" is the translated label from CrmOpportunityForm.assignedAccount
     const accountSelect = page.locator("div").filter({ hasText: /^Assigned Account$/ }).locator("..").locator('[role="combobox"]').first();
     await accountSelect.click();
-    await page.waitForSelector('[role="option"]', { timeout: 3000 });
-    await page.locator('[role="option"]').filter({ hasText: "Playwright Test Inc." }).click();
+    const listbox = page.locator('[role="listbox"]');
+    await listbox.waitFor({ timeout: 3000 });
+    await listbox.locator('[role="option"]').filter({ hasText: "Playwright Test Inc." }).click();
 
     // "Assigned Contact" is hardcoded in the Opportunity form (no translation key)
     const contactSelect = page.locator("div").filter({ hasText: /^Assigned Contact$/ }).locator("..").locator('[role="combobox"]').first();
     await contactSelect.click();
-    await page.waitForSelector('[role="option"]', { timeout: 3000 });
-    await page.locator('[role="option"]').filter({ hasText: "Playwright" }).first().click();
+    const listbox2 = page.locator('[role="listbox"]');
+    await listbox2.waitFor({ timeout: 3000 });
+    await listbox2.locator('[role="option"]').filter({ hasText: "Playwright" }).first().click();
 
     await page.getByTestId("opportunity-submit-btn").click();
     await assertSuccessToast(page);
