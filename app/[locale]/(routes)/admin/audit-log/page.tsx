@@ -4,11 +4,19 @@ import { redirect } from "next/navigation";
 import { getAuditLogAdmin } from "@/actions/crm/audit-log/get-audit-log-admin";
 import { AuditAdminTable } from "@/components/crm/audit-log/AdminTable";
 
-const AuditLogPage = async () => {
+const AuditLogPage = async (props: {
+  searchParams?: Promise<{ page?: string }>;
+}) => {
   const session = await getServerSession(authOptions);
   if (!session?.user?.isAdmin) redirect("/");
 
-  const result = await getAuditLogAdmin({ page: 1 });
+  const searchParams = await props.searchParams;
+  const currentPage = Math.max(
+    1,
+    parseInt(searchParams?.page ?? "1", 10) || 1
+  );
+
+  const result = await getAuditLogAdmin({ page: currentPage });
   if ("error" in result) return <div>Access denied</div>;
 
   return (
@@ -20,11 +28,10 @@ const AuditLogPage = async () => {
         </p>
       </div>
       <AuditAdminTable
-        entries={result.data as any}
+        entries={result.data}
         total={result.total}
         page={result.page}
         totalPages={result.totalPages}
-        onPageChange={() => {}}
         isAdmin
       />
     </div>

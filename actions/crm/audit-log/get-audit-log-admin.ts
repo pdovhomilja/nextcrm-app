@@ -15,7 +15,7 @@ interface AuditLogAdminFilters {
 export const getAuditLogAdmin = async (filters: AuditLogAdminFilters = {}) => {
   const session = await getServerSession(authOptions);
   if (!session) return { error: "Unauthorized" };
-  if (!session.user.isAdmin) return { error: "Forbidden" };
+  if (!session?.user?.isAdmin) return { error: "Forbidden" };
 
   const { entityType, action, userId, dateFrom, dateTo, page = 1 } = filters;
   const take = 50;

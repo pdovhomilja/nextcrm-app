@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
@@ -11,7 +12,7 @@ interface AuditEntry {
   action: string;
   changes: unknown;
   createdAt: Date;
-  user: { name: string | null } | null;
+  user: { id: string; name: string | null; avatar: string | null } | null;
 }
 
 interface AdminTableProps {
@@ -19,7 +20,6 @@ interface AdminTableProps {
   total: number;
   page: number;
   totalPages: number;
-  onPageChange: (page: number) => void;
   onRestore?: (entityType: string, entityId: string) => void;
   isAdmin?: boolean;
 }
@@ -29,10 +29,10 @@ export function AuditAdminTable({
   total,
   page,
   totalPages,
-  onPageChange,
   onRestore,
   isAdmin,
 }: AdminTableProps) {
+  const router = useRouter();
   const [expanded, setExpanded] = useState<string | null>(null);
 
   return (
@@ -123,7 +123,7 @@ export function AuditAdminTable({
           size="sm"
           variant="outline"
           disabled={page <= 1}
-          onClick={() => onPageChange(page - 1)}
+          onClick={() => router.push(`?page=${page - 1}`)}
         >
           Previous
         </Button>
@@ -134,7 +134,7 @@ export function AuditAdminTable({
           size="sm"
           variant="outline"
           disabled={page >= totalPages}
-          onClick={() => onPageChange(page + 1)}
+          onClick={() => router.push(`?page=${page + 1}`)}
         >
           Next
         </Button>
