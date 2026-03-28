@@ -555,7 +555,6 @@ model crm_ActivityLinks {
   activity crm_Activities @relation(fields: [activityId], references: [id], onDelete: Cascade)
 
   @@index([activityId])
-  @@index([entityType, entityId])
   @@index([entityType, entityId, activityId])
 }
 
