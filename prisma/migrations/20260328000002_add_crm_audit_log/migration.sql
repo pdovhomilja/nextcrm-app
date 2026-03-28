@@ -31,4 +31,8 @@ CREATE INDEX IF NOT EXISTS "crm_AuditLog_createdAt_idx" ON "crm_AuditLog"("creat
 CREATE INDEX IF NOT EXISTS "crm_AuditLog_entityType_createdAt_idx" ON "crm_AuditLog"("entityType", "createdAt");
 
 -- AddForeignKey
-ALTER TABLE "crm_AuditLog" ADD CONSTRAINT "crm_AuditLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$ BEGIN
+    ALTER TABLE "crm_AuditLog" ADD CONSTRAINT "crm_AuditLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
