@@ -482,7 +482,7 @@ export function NewOpportunityForm({
               {form.formState.errors.root.serverError.message}
             </p>
           )}
-          <Button disabled={form.formState.isSubmitting} type="submit">
+          <Button disabled={form.formState.isSubmitting} type="submit" data-testid="opportunity-submit-btn">
             {form.formState.isSubmitting ? (
               <span className="flex items-center animate-pulse">
                 {c("savingData")}

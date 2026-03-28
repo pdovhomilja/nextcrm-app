@@ -91,7 +91,7 @@ export const columns: ColumnDef<Opportunity>[] = [
     ),
 
     cell: ({ row }) => (
-      <Link href={`/crm/opportunities/${row.original.id}`}>
+      <Link href={`/crm/opportunities/${row.original.id}`} data-testid="opportunity-row-name">
         <div className="w-[250px] overflow-hidden">{row.getValue("name")}</div>
       </Link>
     ),
