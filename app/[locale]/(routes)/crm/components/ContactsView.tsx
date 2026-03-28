@@ -55,7 +55,7 @@ const ContactsView = ({ data, crmData }: ContactsViewProps) => {
           <div className="flex space-x-2">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
-                <Button size="sm" aria-label={t("contacts.addNew")}>+</Button>
+                <Button size="sm" aria-label={t("contacts.addNew")} data-testid="add-contact-btn">+</Button>
               </SheetTrigger>
               <SheetContent className="w-full md:max-w-[771px] overflow-y-auto">
                 <SheetHeader>
