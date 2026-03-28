@@ -12,6 +12,8 @@ import { getAccountsByContactId } from "@/actions/crm/get-accounts-by-contactId"
 import AccountsView from "../../components/AccountsView";
 import OpportunitiesView from "../../components/OpportunitiesView";
 import DocumentsView from "../../components/DocumentsView";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { HistoryTab } from "./components/HistoryTab";
 
 const ContactViewPage = async (props: any) => {
   const params = await props.params;
@@ -31,13 +33,24 @@ const ContactViewPage = async (props: any) => {
       title={`Contact detail view: ${contact?.first_name} ${contact?.last_name}`}
       description={"Everything you need to know about sales potential"}
     >
-      <div className="space-y-5">
-        <BasicView data={contact} />
-        <FindSimilarButton entityType="contact" recordId={contactId} />
-        <AccountsView data={accounts} crmData={crmData} />
-        <OpportunitiesView data={opportunities} crmData={crmData} />
-        <DocumentsView data={documents} />
-      </div>
+      <Tabs defaultValue="overview">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="history">History</TabsTrigger>
+        </TabsList>
+        <TabsContent value="overview">
+          <div className="space-y-5">
+            <BasicView data={contact} />
+            <FindSimilarButton entityType="contact" recordId={contactId} />
+            <AccountsView data={accounts} crmData={crmData} />
+            <OpportunitiesView data={opportunities} crmData={crmData} />
+            <DocumentsView data={documents} />
+          </div>
+        </TabsContent>
+        <TabsContent value="history">
+          <HistoryTab contactId={contactId} />
+        </TabsContent>
+      </Tabs>
     </Container>
   );
 };

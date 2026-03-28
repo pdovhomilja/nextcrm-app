@@ -1,5 +1,7 @@
 import { prismadb } from "@/lib/prisma";
 import React from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { HistoryTab } from "./components/HistoryTab";
 
 interface ContractDetailPageProps {
   params: Promise<{
@@ -16,7 +18,18 @@ const ContractPage = async (props: ContractDetailPageProps) => {
   });
   return (
     <div>
-      <pre>{JSON.stringify(contract, null, 2)}</pre>
+      <Tabs defaultValue="overview">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="history">History</TabsTrigger>
+        </TabsList>
+        <TabsContent value="overview">
+          <pre>{JSON.stringify(contract, null, 2)}</pre>
+        </TabsContent>
+        <TabsContent value="history">
+          <HistoryTab contractId={contractId} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
