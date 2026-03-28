@@ -2,21 +2,32 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getAuditLogAdmin } from "@/actions/crm/audit-log/get-audit-log-admin";
-import { AuditAdminTable } from "@/components/crm/audit-log/AdminTable";
+import { AdminFilters } from "@/components/crm/audit-log/AdminFilters";
+import { AdminAuditLogClient } from "@/components/crm/audit-log/AdminPageClient";
 
 const AuditLogPage = async (props: {
-  searchParams?: Promise<{ page?: string }>;
+  searchParams?: Promise<{
+    page?: string;
+    entityType?: string;
+    action?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  }>;
 }) => {
   const session = await getServerSession(authOptions);
   if (!session?.user?.isAdmin) redirect("/");
 
-  const searchParams = await props.searchParams;
-  const currentPage = Math.max(
-    1,
-    parseInt(searchParams?.page ?? "1", 10) || 1
-  );
+  const sp = await props.searchParams;
+  const currentPage = Math.max(1, parseInt(sp?.page ?? "1", 10) || 1);
+  const filters = {
+    page: currentPage,
+    entityType: sp?.entityType,
+    action: sp?.action,
+    dateFrom: sp?.dateFrom ? new Date(sp.dateFrom) : undefined,
+    dateTo: sp?.dateTo ? new Date(sp.dateTo) : undefined,
+  };
 
-  const result = await getAuditLogAdmin({ page: currentPage });
+  const result = await getAuditLogAdmin(filters);
   if ("error" in result) return <div>Access denied</div>;
 
   return (
@@ -27,7 +38,13 @@ const AuditLogPage = async (props: {
           Complete history of all CRM changes.
         </p>
       </div>
-      <AuditAdminTable
+      <AdminFilters
+        entityType={sp?.entityType}
+        action={sp?.action}
+        dateFrom={sp?.dateFrom}
+        dateTo={sp?.dateTo}
+      />
+      <AdminAuditLogClient
         entries={result.data}
         total={result.total}
         page={result.page}
