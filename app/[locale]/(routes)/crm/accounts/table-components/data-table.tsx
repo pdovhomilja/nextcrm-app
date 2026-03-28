@@ -99,7 +99,7 @@ export function AccountDataTable<TData, TValue>({
         <>
           <DataTableToolbar table={table} />
           <div className="rounded-md border overflow-x-auto">
-            <Table>
+            <Table data-testid="accounts-table">
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
