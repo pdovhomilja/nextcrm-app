@@ -40,17 +40,19 @@ export const getActivitiesByEntity = async (
       return { data: [], nextCursor: null };
     }
 
-    const where: Record<string, unknown> = { id: { in: activityIds } };
+    const andClauses: Record<string, unknown>[] = [{ id: { in: activityIds } }];
 
     if (cursor) {
-      where.OR = [
-        { date: { lt: new Date(cursor.date) } },
-        { date: new Date(cursor.date), id: { lt: cursor.id } },
-      ];
+      andClauses.push({
+        OR: [
+          { date: { lt: new Date(cursor.date) } },
+          { date: new Date(cursor.date), id: { lt: cursor.id } },
+        ],
+      });
     }
 
     const activities = await (prismadb as any).crm_Activities.findMany({
-      where,
+      where: { AND: andClauses },
       orderBy: [{ date: "desc" }, { id: "desc" }],
       take: PAGE_SIZE,
       include: {
