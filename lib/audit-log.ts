@@ -22,21 +22,21 @@ export interface AuditChange {
   new: unknown;
 }
 
-const INTERNAL_FIELDS = new Set([
-  "updatedAt", "updatedBy", "createdAt", "createdBy",
-  "created_on", "cratedAt", "v", "deletedAt", "deletedBy",
-]);
+const INTERNAL_FIELDS: Record<string, true> = {
+  updatedAt: true, updatedBy: true, createdAt: true, createdBy: true,
+  created_on: true, cratedAt: true, v: true, deletedAt: true, deletedBy: true,
+};
 
 export function diffObjects(
   before: Record<string, unknown>,
   after: Record<string, unknown>
 ): AuditChange[] {
   const changes: AuditChange[] = [];
-  const seen = new Set<string>();
+  const seen: Record<string, boolean> = {};
 
   const process = (key: string) => {
-    if (seen.has(key) || INTERNAL_FIELDS.has(key)) return;
-    seen.add(key);
+    if (seen[key] || INTERNAL_FIELDS[key]) return;
+    seen[key] = true;
     const oldVal = before[key];
     const newVal = after[key];
     if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
