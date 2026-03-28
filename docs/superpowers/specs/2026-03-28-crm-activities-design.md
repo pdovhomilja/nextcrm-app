@@ -156,8 +156,9 @@ export const deleteActivity = async (activityId: string) => { ... }
 ```
 
 - Checks session
-- Hard delete — links are cascade-deleted automatically
-- `revalidatePath` for previously linked entity pages
+- **Before deleting:** fetch all `crm_ActivityLinks` for the activity to capture which entity pages need revalidation
+- Hard delete — links are cascade-deleted automatically by the DB
+- **After deleting:** call `revalidatePath` for each entity page captured in the pre-delete fetch
 
 ### Fetch actions (`actions/crm/activities/`)
 
@@ -167,21 +168,16 @@ export const deleteActivity = async (activityId: string) => { ... }
 export const getActivitiesByEntity = async (
   entityType: string,
   entityId: string,
-  cursor?: string  // activityId for cursor-based pagination
-) => Promise<{ data: ActivityWithLinks[], nextCursor: string | null }>
+  cursor?: { date: string; id: string }  // compound cursor for deterministic pagination
+) => Promise<{ data: ActivityWithLinks[], nextCursor: { date: string; id: string } | null }>
 ```
 
 - Finds all `crm_ActivityLinks` where `entityType + entityId` match
-- Joins `crm_Activities` ordered by `date DESC`
-- Returns 25 per page with cursor
+- Joins `crm_Activities` ordered by `date DESC, id DESC` (compound sort for determinism when multiple activities share the same date)
+- Cursor pagination uses compound `(date, id)`: `where: { OR: [{ date: { lt: cursor.date } }, { date: cursor.date, id: { lt: cursor.id } }] }`
+- Returns 25 per page
 - Includes `created_by_user: { select: { id, name, avatar } }`
-
-#### `get-activities-admin.ts`
-
-- Admin-only (`session.user.isAdmin`)
-- Filterable by type, status, createdBy, dateFrom, dateTo
-- 50 per page, page-based pagination
-- For future admin page — returns raw activity list
+- `nextCursor` is `null` when fewer than 25 results returned; otherwise `{ date: lastEntry.date.toISOString(), id: lastEntry.id }`
 
 ---
 
@@ -202,6 +198,11 @@ Sheet-based create/edit form. Uses the same Sheet pattern as `TasksView.tsx`.
 - Call + Meeting: Duration (minutes), Outcome (Input)
 - Meeting: (future: attendees via metadata)
 - Email: Subject (stored in metadata.subject)
+
+**Default status by type:**
+- Call + Meeting: default `scheduled` (these are typically planned ahead)
+- Note + Email: default `completed` (these are always retrospective logs)
+- The form auto-sets `status` when `type` changes, but the user can always override it manually.
 
 **Entity links section:**
 - Shows which entities this activity is linked to
@@ -249,7 +250,7 @@ Card container for the activity feed on each entity detail page.
 
 `ActivitiesView` is added as a new section inside the existing **"Overview" tab** on all 5 entity detail pages, below `BasicView` and above other sub-views. No new tab is needed — activities are primary content, not secondary history.
 
-**Wrapper component per entity** (`app/[locale]/(routes)/crm/[entity]/[entityId]/components/ActivitiesSection.tsx`):
+**Wrapper component per entity** — one `ActivitiesSection.tsx` per entity, placed in its `components/` directory (see File Structure below):
 
 ```typescript
 // Server component — fetches initial data, then passes to client ActivitiesView
@@ -269,7 +270,6 @@ actions/crm/activities/
   update-activity.ts
   delete-activity.ts
   get-activities-by-entity.ts
-  get-activities-admin.ts
 
 components/crm/activities/
   ActivityForm.tsx          # Sheet-based create/edit form
