@@ -1,5 +1,5 @@
 "use client";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,15 +25,12 @@ export function AdminFilters({
 }: AdminFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const apply = (overrides: Record<string, string>) => {
-    const params = new URLSearchParams();
+    // Start from current URL params so we don't drop unknown params
+    const params = new URLSearchParams(searchParams.toString());
     params.set("page", "1"); // reset page on filter change
-    if (entityType) params.set("entityType", entityType);
-    if (action) params.set("action", action);
-    if (dateFrom) params.set("dateFrom", dateFrom);
-    if (dateTo) params.set("dateTo", dateTo);
-    // apply overrides
     Object.entries(overrides).forEach(([k, v]) => {
       if (v) params.set(k, v);
       else params.delete(k);

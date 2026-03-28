@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
+import { toast } from "sonner";
 import { AuditAdminTable } from "./AdminTable";
 import { restoreAccount } from "@/actions/crm/accounts/restore-account";
 import { restoreContact } from "@/actions/crm/contacts/restore-contact";
@@ -38,8 +39,9 @@ export function AdminAuditLogClient(props: Props) {
           result = { error: "Unknown entity type" };
       }
       if (result.error) {
-        console.error("[RESTORE]", result.error);
+        toast.error(result.error);
       } else {
+        toast.success("Record restored successfully");
         router.refresh();
       }
     });
