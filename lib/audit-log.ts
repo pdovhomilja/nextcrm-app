@@ -1,6 +1,5 @@
 // lib/audit-log.ts
 import { prismadb } from "@/lib/prisma";
-import { crm_AuditLog_Action } from "@prisma/client";
 
 export type AuditEntityType =
   | "account"
@@ -9,7 +8,13 @@ export type AuditEntityType =
   | "opportunity"
   | "contract";
 
-export type AuditAction = crm_AuditLog_Action;
+export type AuditAction =
+  | "created"
+  | "updated"
+  | "deleted"
+  | "restored"
+  | "relation_added"
+  | "relation_removed";
 
 export interface AuditChange {
   field: string;
@@ -27,16 +32,20 @@ export function diffObjects(
   after: Record<string, unknown>
 ): AuditChange[] {
   const changes: AuditChange[] = [];
-  const allKeys = new Set([...Object.keys(before), ...Object.keys(after)]);
+  const seen = new Set<string>();
 
-  for (const key of allKeys) {
-    if (INTERNAL_FIELDS.has(key)) continue;
+  const process = (key: string) => {
+    if (seen.has(key) || INTERNAL_FIELDS.has(key)) return;
+    seen.add(key);
     const oldVal = before[key];
     const newVal = after[key];
     if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
       changes.push({ field: key, old: oldVal ?? null, new: newVal ?? null });
     }
-  }
+  };
+
+  Object.keys(before).forEach(process);
+  Object.keys(after).forEach(process);
   return changes;
 }
 
@@ -50,7 +59,8 @@ interface WriteAuditLogParams {
 
 export async function writeAuditLog(params: WriteAuditLogParams): Promise<void> {
   try {
-    await prismadb.crm_AuditLog.create({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (prismadb as any).crm_AuditLog.create({
       data: {
         entityType: params.entityType,
         entityId: params.entityId,
