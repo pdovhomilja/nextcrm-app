@@ -90,9 +90,7 @@ export const createColumns = (
     cell: ({ row }) => (
       <Link href={`/crm/leads/${row.original.id}`} data-testid="lead-row-name">
         <div>
-          {row.original.firstName
-            ? row.getValue("firstName")
-            : row.original.lastName}
+          {[row.original.firstName, row.original.lastName].filter(Boolean).join(" ")}
         </div>
       </Link>
     ),

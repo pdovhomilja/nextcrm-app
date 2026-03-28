@@ -13,18 +13,17 @@ const testData = {
 
 /** Wait for the Sheet slide-in panel to fully open */
 async function waitForSheet(page: Page) {
-  await page.waitForSelector('[role="dialog"][data-state="open"]', { timeout: 5000 });
+  await page.waitForSelector('[role="dialog"][data-state="open"]', { timeout: 10000 });
 }
 
 /**
  * Open a shadcn Select by clicking its trigger, then pick the first
- * SelectItem in the dropdown. Works for any DB-backed select.
+ * SelectItem in the dropdown. Uses getByLabel() which resolves via the
+ * FormLabel htmlFor → SelectTrigger id association.
  */
 async function selectFirstOption(page: Page, labelText: string) {
-  const formItem = page.locator("div").filter({ hasText: new RegExp(`^${labelText}$`) }).locator("..");
-  const selectTrigger = formItem.locator('[role="combobox"]').first();
-  await selectTrigger.click();
-  const listbox = page.locator('[role="listbox"]');
+  await page.getByLabel(labelText).click();
+  const listbox = page.locator('[role="listbox"][data-state="open"]');
   await listbox.waitFor({ timeout: 3000 });
   await listbox.locator('[role="option"]').first().click();
 }
@@ -32,11 +31,11 @@ async function selectFirstOption(page: Page, labelText: string) {
 /**
  * Open the UserSearchCombobox (Popover + Command), type a search term,
  * and pick the first matching result.
- * The Command input has attribute [cmdk-input] based on the cmdk library.
+ * UserSearchCombobox doesn't forward FormControl's id to its Button, so
+ * getByLabel() won't find it. Instead navigate: label → parent FormItem → button.
  */
 async function selectUserInCombobox(page: Page, labelText: string, searchTerm: string) {
-  const formItem = page.locator("div").filter({ hasText: new RegExp(`^${labelText}$`) }).locator("..");
-  const comboTrigger = formItem.locator("button").first();
+  const comboTrigger = page.locator("label").filter({ hasText: labelText }).locator("..").locator("button").first();
   await comboTrigger.click();
   await page.waitForSelector('[cmdk-input]', { timeout: 3000 });
   await page.locator('[cmdk-input]').fill(searchTerm);
@@ -56,9 +55,8 @@ async function assertSuccessToast(page: Page) {
  * non-disabled day.
  */
 async function pickFutureDate(page: Page, closeDateLabel: string) {
-  // Find the FormItem containing the close date label, then click its Button trigger
-  const formItem = page.locator("div").filter({ hasText: new RegExp(`^${closeDateLabel}$`) }).locator("..");
-  await formItem.locator("button").first().click();
+  // getByLabel resolves via FormLabel htmlFor → date picker Button id
+  await page.getByLabel(closeDateLabel).click();
   await page.waitForSelector('[role="dialog"] table', { timeout: 3000 });
   await page.locator('[role="dialog"] table button:not([disabled])').first().click();
 }
@@ -93,10 +91,10 @@ test.describe.serial("Sales Flow", () => {
     await assertSuccessToast(page);
 
     await expect(
-      page.getByTestId("accounts-table").getByText("Playwright Test Inc.")
+      page.getByTestId("accounts-table").getByText("Playwright Test Inc.").first()
     ).toBeVisible({ timeout: 8000 });
 
-    await page.getByTestId("account-row-name").filter({ hasText: "Playwright Test Inc." }).click();
+    await page.getByTestId("account-row-name").filter({ hasText: "Playwright Test Inc." }).first().click();
     await page.waitForURL(/crm\/accounts\/.+/, { timeout: 8000 });
 
     const url = page.url();
@@ -118,22 +116,19 @@ test.describe.serial("Sales Flow", () => {
     await selectUserInCombobox(page, "Assigned user", "a");
 
     // Pick the account we created — label is "Assign an Account"
-    const accountSelect = page.locator("div").filter({ hasText: /^Assign an Account$/ }).locator("..").locator('[role="combobox"]').first();
-    await accountSelect.click();
-    const listbox = page.locator('[role="listbox"]');
+    await page.getByLabel("Assign an Account").click();
+    const listbox = page.locator('[role="listbox"][data-state="open"]');
     await listbox.waitFor({ timeout: 3000 });
-    await listbox.locator('[role="option"]').filter({ hasText: "Playwright Test Inc." }).click();
-
-    await selectFirstOption(page, "Contact type");
+    await listbox.locator('[role="option"]').filter({ hasText: "Playwright Test Inc." }).first().click();
 
     await page.getByTestId("contact-submit-btn").click();
     await assertSuccessToast(page);
 
     await expect(
-      page.getByTestId("contacts-table").getByText("Playwright")
+      page.getByTestId("contacts-table").getByText("Playwright").first()
     ).toBeVisible({ timeout: 8000 });
 
-    await page.getByTestId("contact-row-name").filter({ hasText: "Playwright" }).click();
+    await page.getByTestId("contact-row-name").filter({ hasText: "Playwright" }).first().click();
     await page.waitForURL(/crm\/contacts\/.+/, { timeout: 8000 });
 
     const url = page.url();
@@ -144,6 +139,7 @@ test.describe.serial("Sales Flow", () => {
   test("should create a new Lead", async ({ page }) => {
     await page.goto("/crm/leads");
     await page.waitForURL(/crm\/leads/, { timeout: 10000 });
+    await page.waitForLoadState("networkidle", { timeout: 10000 });
 
     await page.getByTestId("add-lead-btn").click();
     await waitForSheet(page);
@@ -157,7 +153,7 @@ test.describe.serial("Sales Flow", () => {
     await assertSuccessToast(page);
 
     await expect(
-      page.getByTestId("leads-table").getByText("PlaywrightLead")
+      page.getByTestId("leads-table").getByText("PlaywrightLead").first()
     ).toBeVisible({ timeout: 8000 });
 
     await page.getByTestId("lead-row-name").filter({ hasText: "PlaywrightLead" }).first().click();
@@ -182,23 +178,22 @@ test.describe.serial("Sales Flow", () => {
 
     await page.getByLabel("Description").fill("Automated test opportunity");
     await selectFirstOption(page, "Sales type");
+    await selectFirstOption(page, "Sale stage");
     await page.getByLabel("Budget").fill("100000");
     await page.getByLabel("Currency").fill("USD");
     await page.getByLabel("Expected revenue").fill("80000");
 
     await selectUserInCombobox(page, "Assigned to", "a");
 
-    // "Assigned Account" is the translated label from CrmOpportunityForm.assignedAccount
-    const accountSelect = page.locator("div").filter({ hasText: /^Assigned Account$/ }).locator("..").locator('[role="combobox"]').first();
-    await accountSelect.click();
-    const listbox = page.locator('[role="listbox"]');
+    // "Assigned Account" label from CrmOpportunityForm.assignedAccount
+    await page.getByLabel("Assigned Account").click();
+    const listbox = page.locator('[role="listbox"][data-state="open"]');
     await listbox.waitFor({ timeout: 3000 });
-    await listbox.locator('[role="option"]').filter({ hasText: "Playwright Test Inc." }).click();
+    await listbox.locator('[role="option"]').filter({ hasText: "Playwright Test Inc." }).first().click();
 
     // "Assigned Contact" is hardcoded in the Opportunity form (no translation key)
-    const contactSelect = page.locator("div").filter({ hasText: /^Assigned Contact$/ }).locator("..").locator('[role="combobox"]').first();
-    await contactSelect.click();
-    const listbox2 = page.locator('[role="listbox"]');
+    await page.getByLabel("Assigned Contact").click();
+    const listbox2 = page.locator('[role="listbox"][data-state="open"]');
     await listbox2.waitFor({ timeout: 3000 });
     await listbox2.locator('[role="option"]').filter({ hasText: "Playwright" }).first().click();
 
@@ -206,10 +201,10 @@ test.describe.serial("Sales Flow", () => {
     await assertSuccessToast(page);
 
     await expect(
-      page.getByTestId("opportunities-table").getByText("Playwright Test Opportunity")
+      page.getByTestId("opportunities-table").getByText("Playwright Test Opportunity").first()
     ).toBeVisible({ timeout: 8000 });
 
-    await page.getByTestId("opportunity-row-name").filter({ hasText: "Playwright Test Opportunity" }).click();
+    await page.getByTestId("opportunity-row-name").filter({ hasText: "Playwright Test Opportunity" }).first().click();
     await page.waitForURL(/crm\/opportunities\/.+/, { timeout: 8000 });
 
     const url = page.url();

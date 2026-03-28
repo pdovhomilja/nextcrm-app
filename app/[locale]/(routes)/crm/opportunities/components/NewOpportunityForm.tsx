@@ -120,8 +120,18 @@ export function NewOpportunityForm({
     resolver: zodResolver(formSchema),
     mode: "onBlur",
     defaultValues: {
-      sales_stage: selectedStage ? selectedStage : undefined,
-      account: accountId ? accountId : undefined,
+      sales_stage: selectedStage ? selectedStage : "",
+      account: accountId ? accountId : "",
+      type: "",
+      budget: "",
+      currency: "",
+      expected_revenue: "",
+      next_step: "",
+      assigned_to: "",
+      contact: "",
+      campaign: "",
+      description: "",
+      name: "",
     },
   });
 

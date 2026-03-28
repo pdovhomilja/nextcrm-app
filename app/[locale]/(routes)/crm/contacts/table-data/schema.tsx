@@ -14,7 +14,7 @@ export const opportunitySchema = z.object({
   website: z.string().nullable(),
   position: z.string().nullable(),
   status: z.boolean(),
-  type: z.string().nullable(),
+  type: z.string().nullish(),
 });
 
 export type Opportunity = z.infer<typeof opportunitySchema>;
