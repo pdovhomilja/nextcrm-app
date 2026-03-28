@@ -94,7 +94,7 @@ export function AuditAdminTable({
                     </td>
                   )}
                 </tr>
-                {expanded === entry.id && entry.changes != null && (
+                {expanded === entry.id && entry.changes != null ? (
                   <tr className="bg-muted/20">
                     <td colSpan={isAdmin ? 5 : 4} className="px-4 py-2">
                       <pre className="text-xs overflow-auto">
@@ -102,7 +102,7 @@ export function AuditAdminTable({
                       </pre>
                     </td>
                   </tr>
-                )}
+                ) : null}
               </React.Fragment>
             ))}
             {entries.length === 0 && (
