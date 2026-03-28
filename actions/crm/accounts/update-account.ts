@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { inngest } from "@/inngest/client";
+import { writeAuditLog, diffObjects } from "@/lib/audit-log";
 
 export const updateAccount = async (data: {
   id: string;
@@ -38,6 +39,7 @@ export const updateAccount = async (data: {
   if (!id) return { error: "id is required" };
 
   try {
+    const before = await prismadb.crm_Accounts.findUnique({ where: { id } });
     const account = await prismadb.crm_Accounts.update({
       where: { id },
       data: {
@@ -45,6 +47,17 @@ export const updateAccount = async (data: {
         updatedBy: session.user.id,
         ...rest,
       },
+    });
+    const changes = before ? diffObjects(
+      before as Record<string, unknown>,
+      account as Record<string, unknown>
+    ) : null;
+    await writeAuditLog({
+      entityType: "account",
+      entityId: account.id,
+      action: "updated",
+      changes,
+      userId: session.user.id,
     });
     void inngest.send({ name: "crm/account.saved", data: { record_id: account.id } });
     revalidatePath("/[locale]/(routes)/crm/accounts", "page");
