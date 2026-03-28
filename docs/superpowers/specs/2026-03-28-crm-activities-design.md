@@ -56,7 +56,7 @@ model crm_Activities {
   date        DateTime
   duration    Int?                 // minutes — calls and meetings only
   outcome     String?              // result of call/meeting
-  status      crm_Activity_Status  @default(scheduled)
+  status      crm_Activity_Status  @default(scheduled)  // DB fallback only; app layer sends the correct per-type default (note/email → completed)
   metadata    Json?                @db.JsonB  // type-specific extras (attendees, email subject, etc.)
   createdBy   String?              @db.Uuid
   updatedBy   String?              @db.Uuid
