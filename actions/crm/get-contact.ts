@@ -4,6 +4,7 @@ export const getContact = async (contactId: string) => {
   const data = await prismadb.crm_Contacts.findFirst({
     where: {
       id: contactId,
+      deletedAt: null,
     },
     include: {
       // Include opportunities through ContactsToOpportunities junction table

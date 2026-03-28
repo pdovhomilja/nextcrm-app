@@ -49,7 +49,7 @@ export const updateContact = async (data: {
   if (!id) return { error: "id is required" };
 
   try {
-    const before = await prismadb.crm_Contacts.findUnique({ where: { id } });
+    const before = await prismadb.crm_Contacts.findUnique({ where: { id, deletedAt: null } });
     const contact = await prismadb.crm_Contacts.update({
       where: { id },
       data: {

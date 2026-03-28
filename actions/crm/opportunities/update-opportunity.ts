@@ -46,7 +46,7 @@ export const updateOpportunity = async (data: {
   if (!id) return { error: "id is required" };
 
   try {
-    const before = await prismadb.crm_Opportunities.findUnique({ where: { id } });
+    const before = await prismadb.crm_Opportunities.findUnique({ where: { id, deletedAt: null } });
     const opportunity = await prismadb.crm_Opportunities.update({
       where: { id },
       data: {

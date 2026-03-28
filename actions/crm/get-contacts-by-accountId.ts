@@ -4,6 +4,7 @@ export const getContactsByAccountId = async (accountId: string) => {
   const data = await prismadb.crm_Contacts.findMany({
     where: {
       accountsIDs: accountId,
+      deletedAt: null,
     },
     include: {
       assigned_to_user: {

@@ -5,6 +5,7 @@ import { prismadb } from "@/lib/prisma";
 
 export const getOpportunitiesFull = cache(async () => {
   const data = await prismadb.crm_Opportunities.findMany({
+    where: { deletedAt: null },
     include: {
       assigned_account: {
         select: {

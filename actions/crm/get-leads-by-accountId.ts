@@ -4,6 +4,7 @@ export const getLeadsByAccountId = async (accountId: string) => {
   const data = await prismadb.crm_Leads.findMany({
     where: {
       accountsIDs: accountId,
+      deletedAt: null,
     },
     include: {
       assigned_to_user: {

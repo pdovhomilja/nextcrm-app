@@ -3,6 +3,7 @@ import { prismadb } from "@/lib/prisma";
 
 export const getContacts = cache(async () => {
   const data = await prismadb.crm_Contacts.findMany({
+    where: { deletedAt: null },
     include: {
       // Include assigned user (uses "assigned_contacts" relation)
       assigned_to_user: {

@@ -39,7 +39,7 @@ export const updateAccount = async (data: {
   if (!id) return { error: "id is required" };
 
   try {
-    const before = await prismadb.crm_Accounts.findUnique({ where: { id } });
+    const before = await prismadb.crm_Accounts.findUnique({ where: { id, deletedAt: null } });
     const account = await prismadb.crm_Accounts.update({
       where: { id },
       data: {

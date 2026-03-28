@@ -58,7 +58,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     };
   }
 
-  const before = await prismadb.crm_Contracts.findUnique({ where: { id } });
+  const before = await prismadb.crm_Contracts.findUnique({ where: { id, deletedAt: null } });
 
   try {
     const result = await prismadb.crm_Contracts.update({
