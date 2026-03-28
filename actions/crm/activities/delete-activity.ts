@@ -4,6 +4,14 @@ import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
+const ENTITY_SLUGS: Record<string, string> = {
+  account: "accounts",
+  contact: "contacts",
+  lead: "leads",
+  opportunity: "opportunities",
+  contract: "contracts",
+};
+
 export const deleteActivity = async (activityId: string) => {
   try {
     const session = await getServerSession(authOptions);
@@ -21,7 +29,7 @@ export const deleteActivity = async (activityId: string) => {
     // Links are cascade-deleted by DB; now revalidate captured pages
     for (const link of links) {
       revalidatePath(
-        `/[locale]/(routes)/crm/${link.entityType}s/${link.entityId}`,
+        `/[locale]/(routes)/crm/${ENTITY_SLUGS[link.entityType] ?? `${link.entityType}s`}/${link.entityId}`,
         "page"
       );
     }

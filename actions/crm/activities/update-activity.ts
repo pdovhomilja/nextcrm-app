@@ -4,6 +4,14 @@ import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
+const ENTITY_SLUGS: Record<string, string> = {
+  account: "accounts",
+  contact: "contacts",
+  lead: "leads",
+  opportunity: "opportunities",
+  contract: "contracts",
+};
+
 export const updateActivity = async (data: {
   id: string;
   title?: string;
@@ -73,13 +81,21 @@ export const updateActivity = async (data: {
       if (!seen.has(key)) {
         seen.add(key);
         revalidatePath(
-          `/[locale]/(routes)/crm/${link.entityType}s/${link.entityId}`,
+          `/[locale]/(routes)/crm/${ENTITY_SLUGS[link.entityType] ?? `${link.entityType}s`}/${link.entityId}`,
           "page"
         );
       }
     }
 
-    return { data: activity };
+    const fullActivity = await (prismadb as any).crm_Activities.findUnique({
+      where: { id: activity.id },
+      include: {
+        created_by_user: { select: { id: true, name: true, avatar: true } },
+        links: { select: { id: true, entityType: true, entityId: true } },
+      },
+    });
+
+    return { data: fullActivity };
   } catch (error) {
     console.error("updateActivity error:", error);
     return { error: "Failed to update activity" };

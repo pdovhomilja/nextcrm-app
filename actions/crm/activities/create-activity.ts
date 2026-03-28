@@ -4,6 +4,14 @@ import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
+const ENTITY_SLUGS: Record<string, string> = {
+  account: "accounts",
+  contact: "contacts",
+  lead: "leads",
+  opportunity: "opportunities",
+  contract: "contracts",
+};
+
 export const createActivity = async (data: {
   type: "call" | "meeting" | "note" | "email";
   title: string;
@@ -47,14 +55,22 @@ export const createActivity = async (data: {
       return created;
     });
 
+    const fullActivity = await (prismadb as any).crm_Activities.findUnique({
+      where: { id: activity.id },
+      include: {
+        created_by_user: { select: { id: true, name: true, avatar: true } },
+        links: { select: { id: true, entityType: true, entityId: true } },
+      },
+    });
+
     for (const link of data.links) {
       revalidatePath(
-        `/[locale]/(routes)/crm/${link.entityType}s/${link.entityId}`,
+        `/[locale]/(routes)/crm/${ENTITY_SLUGS[link.entityType] ?? `${link.entityType}s`}/${link.entityId}`,
         "page"
       );
     }
 
-    return { data: activity };
+    return { data: fullActivity };
   } catch (error) {
     console.error("createActivity error:", error);
     return { error: "Failed to create activity" };
