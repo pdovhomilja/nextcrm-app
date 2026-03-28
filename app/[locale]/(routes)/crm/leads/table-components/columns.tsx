@@ -92,7 +92,7 @@ export const createColumns = (
         <div>
           {row.original.firstName
             ? row.getValue("firstName")
-            : "" + " " + row.original.lastName}
+            : row.original.lastName}
         </div>
       </Link>
     ),
