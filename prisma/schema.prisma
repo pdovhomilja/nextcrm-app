@@ -41,6 +41,8 @@ model crm_Accounts {
   type                 String?   @default("Customer")
   vat                  String?
   website              String?
+  deletedAt            DateTime?
+  deletedBy            String?   @db.Uuid
 
   contacts           crm_Contacts[]
   leads              crm_Leads[]
@@ -62,6 +64,7 @@ model crm_Accounts {
   @@index([status])
   @@index([type])
   @@index([createdAt])
+  @@index([deletedAt])
 }
 
 model crm_Leads {
@@ -93,6 +96,8 @@ model crm_Leads {
   assigned_accounts crm_Accounts?      @relation(fields: [accountsIDs], references: [id])
   documents         DocumentsToLeads[]
   embedding         crm_Embeddings_Leads?
+  deletedAt         DateTime?
+  deletedBy         String?   @db.Uuid
 
   @@index([assigned_to])
   @@index([accountsIDs])
@@ -102,6 +107,7 @@ model crm_Leads {
   @@index([lead_status_id])
   @@index([lead_type_id])
   @@index([createdAt])
+  @@index([deletedAt])
 }
 
 model crm_Contact_Enrichment {
@@ -211,6 +217,8 @@ model crm_Opportunities {
   documents            DocumentsToOpportunities[]
   contacts             ContactsToOpportunities[]
   embedding            crm_Embeddings_Opportunities?
+  deletedAt            DateTime?
+  deletedBy            String?   @db.Uuid
 
   @@index([account])
   @@index([assigned_to])
@@ -223,6 +231,7 @@ model crm_Opportunities {
   @@index([createdAt])
   @@index([close_date])
   @@index([status, sales_stage])
+  @@index([deletedAt])
 }
 
 enum crm_Opportunity_Status {
@@ -431,6 +440,8 @@ model crm_Contacts {
   enrichments           crm_Contact_Enrichment[]
   converted_targets     crm_Targets[]            @relation("target_converted_contact")
   target_contact_links  crm_Target_Contact[]     @relation("target_contact_link")
+  deletedAt             DateTime?
+  deletedBy             String?   @db.Uuid
 
   @@index([assigned_to])
   @@index([created_by])
@@ -441,6 +452,7 @@ model crm_Contacts {
   @@index([contact_type_id])
   @@index([cratedAt])
   @@index([last_activity])
+  @@index([deletedAt])
 }
 
 model crm_Contracts {
@@ -462,6 +474,8 @@ model crm_Contracts {
   updatedBy           String?              @db.Uuid
   status              crm_Contracts_Status @default(NOTSTARTED)
   type                String?
+  deletedAt           DateTime?
+  deletedBy           String?   @db.Uuid
 
   assigned_account crm_Accounts? @relation(fields: [account], references: [id])
   assigned_to_user Users?        @relation(fields: [assigned_to], references: [id])
@@ -475,6 +489,7 @@ model crm_Contracts {
   @@index([endDate])
   @@index([createdAt])
   @@index([startDate, endDate])
+  @@index([deletedAt])
 }
 
 enum crm_Contracts_Status {
@@ -762,6 +777,7 @@ model Users {
   target_enrichments_triggered   crm_Target_Enrichment[]   @relation("target_enrichment_triggered_by")
   created_campaigns              crm_campaigns[]           @relation("created_campaigns")
   created_campaign_templates     crm_campaign_templates[]  @relation("created_campaign_templates")
+  auditLogs                      crm_AuditLog[]
 
   @@index([email])
   @@index([userStatus])
@@ -770,6 +786,24 @@ model Users {
   @@index([is_account_admin])
   @@index([created_on])
   @@index([lastLoginAt])
+}
+
+model crm_AuditLog {
+  id         String    @id @default(uuid()) @db.Uuid
+  entityType String
+  entityId   String    @db.Uuid
+  action     String
+  changes    Json?     @db.JsonB
+  userId     String?   @db.Uuid
+  createdAt  DateTime  @default(now())
+
+  user Users? @relation(fields: [userId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([entityType, entityId, createdAt])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([entityType, createdAt])
 }
 
 enum Language {
