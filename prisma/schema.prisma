@@ -507,6 +507,58 @@ enum crm_Contracts_Status {
   SIGNED
 }
 
+enum crm_Activity_Type {
+  call
+  meeting
+  note
+  email
+}
+
+enum crm_Activity_Status {
+  scheduled
+  completed
+  cancelled
+}
+
+model crm_Activities {
+  id          String               @id @default(uuid()) @db.Uuid
+  type        crm_Activity_Type
+  title       String
+  description String?
+  date        DateTime
+  duration    Int?
+  outcome     String?
+  status      crm_Activity_Status  @default(scheduled)
+  metadata    Json?                @db.JsonB
+  createdBy   String?              @db.Uuid
+  updatedBy   String?              @db.Uuid
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime?            @updatedAt
+
+  created_by_user Users?              @relation("activity_created_by", fields: [createdBy], references: [id])
+  updated_by_user Users?              @relation("activity_updated_by", fields: [updatedBy], references: [id])
+  links       crm_ActivityLinks[]
+
+  @@index([date])
+  @@index([type])
+  @@index([status])
+  @@index([createdBy])
+  @@index([createdAt])
+}
+
+model crm_ActivityLinks {
+  id         String          @id @default(uuid()) @db.Uuid
+  activityId String          @db.Uuid
+  entityType String
+  entityId   String          @db.Uuid
+
+  activity crm_Activities @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@index([activityId])
+  @@index([entityType, entityId])
+  @@index([entityType, entityId, activityId])
+}
+
 model Boards {
   id                String    @id @default(uuid()) @db.Uuid
   v                 Int       @map("__v")
@@ -787,6 +839,8 @@ model Users {
   created_campaigns              crm_campaigns[]           @relation("created_campaigns")
   created_campaign_templates     crm_campaign_templates[]  @relation("created_campaign_templates")
   auditLogs                      crm_AuditLog[]
+  activities_created             crm_Activities[]  @relation("activity_created_by")
+  activities_updated             crm_Activities[]  @relation("activity_updated_by")
 
   @@index([email])
   @@index([userStatus])
