@@ -6,6 +6,7 @@ import { FindSimilarButton } from "@/components/crm/find-similar-button";
 import DocumentsView from "../../components/DocumentsView";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HistoryTab } from "./components/HistoryTab";
+import { ActivitiesSection } from "./components/ActivitiesSection";
 
 interface LeadDetailPageProps {
   params: Promise<{
@@ -33,6 +34,7 @@ const LeadDetailPage = async (props: LeadDetailPageProps) => {
         <TabsContent value="overview">
           <div className="space-y-5">
             <BasicView data={lead} />
+            <ActivitiesSection leadId={lead.id} />
             <FindSimilarButton entityType="lead" recordId={leadId} />
             {/*         <DocumentsView data={lead?.documents} /> */}
           </div>

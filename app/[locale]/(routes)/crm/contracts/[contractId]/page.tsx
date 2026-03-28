@@ -3,6 +3,7 @@ import { getContract } from "@/actions/crm/get-contract";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HistoryTab } from "./components/HistoryTab";
 import { BasicView } from "./components/BasicView";
+import { ActivitiesSection } from "./components/ActivitiesSection";
 
 interface ContractDetailPageProps {
   params: Promise<{ contractId: string }>;
@@ -28,6 +29,7 @@ const ContractPage = async (props: ContractDetailPageProps) => {
         <TabsContent value="overview">
           <div className="space-y-5">
             <BasicView data={contract} />
+            <ActivitiesSection contractId={contractId} />
           </div>
         </TabsContent>
         <TabsContent value="history">

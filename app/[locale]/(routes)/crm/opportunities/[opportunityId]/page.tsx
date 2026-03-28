@@ -15,6 +15,7 @@ import { getDocumentsByOpportunityId } from "@/actions/documents/get-documents-b
 import { getAccountsByOpportunityId } from "@/actions/crm/get-accounts-by-opportunityId";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HistoryTab } from "./components/HistoryTab";
+import { ActivitiesSection } from "./components/ActivitiesSection";
 
 const OpportunityView = async (
   props: {
@@ -48,6 +49,7 @@ const OpportunityView = async (
         <TabsContent value="overview">
           <div className="space-y-5">
             <BasicView data={opportunity} />
+            <ActivitiesSection opportunityId={opportunityId} />
             <FindSimilarButton entityType="opportunity" recordId={opportunityId} />
             <AccountsView crmData={crmData} data={accounts} />
             <ContactsView crmData={crmData} data={contacts} />

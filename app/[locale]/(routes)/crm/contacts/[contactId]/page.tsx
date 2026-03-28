@@ -14,6 +14,7 @@ import OpportunitiesView from "../../components/OpportunitiesView";
 import DocumentsView from "../../components/DocumentsView";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HistoryTab } from "./components/HistoryTab";
+import { ActivitiesSection } from "./components/ActivitiesSection";
 
 const ContactViewPage = async (props: any) => {
   const params = await props.params;
@@ -41,6 +42,7 @@ const ContactViewPage = async (props: any) => {
         <TabsContent value="overview">
           <div className="space-y-5">
             <BasicView data={contact} />
+            <ActivitiesSection contactId={contact.id} />
             <FindSimilarButton entityType="contact" recordId={contactId} />
             <AccountsView data={accounts} crmData={crmData} />
             <OpportunitiesView data={opportunities} crmData={crmData} />

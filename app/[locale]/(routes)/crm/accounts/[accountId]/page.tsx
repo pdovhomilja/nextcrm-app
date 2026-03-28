@@ -29,6 +29,7 @@ import {
 
 import AccountsTasksView from "./components/TasksView";
 import ContractsView from "../../components/ContractsView";
+import { ActivitiesSection } from "./components/ActivitiesSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HistoryTab } from "./components/HistoryTab";
 
@@ -66,6 +67,7 @@ const AccountDetailPage = async (props: AccountDetailPageProps) => {
         <TabsContent value="overview">
           <div className="space-y-5">
             <BasicView data={account} />
+            <ActivitiesSection accountId={account.id} />
             <FindSimilarButton entityType="account" recordId={accountId} />
             <AccountsTasksView data={tasks} account={account} />
             <OpportunitiesView
