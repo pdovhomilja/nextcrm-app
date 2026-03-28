@@ -19,7 +19,6 @@ import {
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { deleteActivity } from "@/actions/crm/activities/delete-activity";
@@ -91,18 +90,16 @@ export function ActivityEntry({ activity, onDeleted, onUpdated, entityType, enti
             </div>
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="text-xs text-muted-foreground cursor-default">
-                    {formatDistanceToNow(new Date(activity.date), { addSuffix: true })}
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {new Date(activity.date).toLocaleString()}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="text-xs text-muted-foreground cursor-default">
+                  {formatDistanceToNow(new Date(activity.date), { addSuffix: true })}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                {new Date(activity.date).toLocaleString()}
+              </TooltipContent>
+            </Tooltip>
             <Button
               variant="ghost"
               size="icon"
