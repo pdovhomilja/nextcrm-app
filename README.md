@@ -39,19 +39,51 @@ You can try it here [demo.nextcrm.io](https://demo.nextcrm.io), login via Google
 
 ## What's New
 
-### 🧠 AI Enrichment — Flexible API Key Management *(NEW)*
+### 📋 CRM Activities — Full Activity Tracking *(NEW)*
 
-Contacts and Targets can be enriched with AI — Firecrawl scrapes the web and OpenAI fills in missing fields. API keys are now managed through a **3-tier priority system** so the app runs without any AI keys in `.env`:
+All 5 CRM entity detail pages (Accounts, Contacts, Leads, Opportunities, Contracts) now have an **Activities** tab with a live paginated feed of interactions:
+
+- **Activity types** — Notes, Calls, Emails, Meetings, Tasks
+- **Create / edit / delete** — inline Sheet form on every CRM entity detail page
+- **Paginated feed** — compound cursor pagination with `createdAt + id` for stable ordering
+- **Linked records** — activities attach to multiple entities via `crm_ActivityLinks` (e.g. a call can reference both a Contact and an Opportunity)
+- **Real-time revalidation** — server actions revalidate the correct path after every mutation
+
+---
+
+### 🕵️ Audit Log & History — Full Change Trail *(NEW)*
+
+Every CRM entity (Accounts, Contacts, Leads, Opportunities, Contracts) now tracks its full change history:
+
+- **History tab** — per-entity timeline of all field changes, shown on every detail page with `AuditTimeline` + `AuditEntry` components
+- **Soft delete** — records are never hard-deleted; `deletedAt` column preserves data while hiding it from normal queries
+- **Admin audit log** — `/admin/audit-log` shows a global filterable table of every change across all entities, with restore support for soft-deleted records
+- **Diff engine** — `diffObjects` utility computes before/after diffs and stores structured JSON in the audit record
+
+---
+
+### 🧠 AI Enrichment — E2B Sandboxed Agent + Flexible API Key Management *(NEW)*
+
+Target and Contact enrichment now runs inside an **[E2B](https://e2b.dev/) cloud sandbox** — a full Linux environment with a real browser (Chrome) — replacing the previous Firecrawl API path:
+
+- **Real-browser research** — the agent navigates JS-heavy sites, LinkedIn public profiles, and paginated results that a simple API call cannot reach
+- **LLM tool-use loop** — Claude Sonnet 4.6 drives the research with tools: `browser_open`, `browser_snapshot`, `browser_click`, `browser_extract`, `web_search`
+- **C-level contact discovery** — given only a company name, the agent finds all discoverable C-level contacts and creates `crm_Target_Contact` records automatically
+- **Context-aware strategy** — agent skips research it doesn't need (e.g. already has a website → skips domain discovery)
+- **Confidence scoring** — fields below 0.6 confidence are discarded; only empty target fields are overwritten
+- **5-minute timeout per target** — partial results are applied even if the agent times out
+- **Fan-out** — after company enrichment, each discovered contact is enriched independently via a separate Inngest job
+
+**API keys** are managed through a **3-tier priority system** so the app runs without any keys in `.env`:
 
 ```
 ENV variable  →  Admin system-wide  →  User profile
 (highest)                              (lowest)
 ```
 
-- **Admin panel** (`/admin/llm-keys`) — redesigned with sidebar navigation; admins set system-wide keys for OpenAI, Firecrawl, Anthropic, and Groq. Keys are encrypted at rest (AES-256-GCM).
-- **Profile settings** (`/profile?tab=llms`) — users configure their own keys as a fallback when no system-wide key is set.
-- **Graceful degradation** — enrichment buttons show an informative dialog when no key is available at any tier, with a direct link to settings.
-- **Background jobs** — Inngest bulk-enrich jobs resolve keys the same way, using the `triggeredBy` user ID from the event payload.
+- **Admin panel** (`/admin/llm-keys`) — set system-wide keys for OpenAI, Firecrawl, Anthropic, and Groq. Keys are encrypted at rest (AES-256-GCM).
+- **Profile settings** (`/profile?tab=llms`) — users configure their own keys as a fallback.
+- **Graceful degradation** — enrichment buttons show an informative dialog when no key is available at any tier.
 
 > **Migration note:** The old `openAi_keys` table is replaced by the new `ApiKeys` table. Run `pnpm prisma migrate deploy` to apply the migration.
 
@@ -130,8 +162,10 @@ Global search across all CRM entities from a single search bar — grouped resul
 ### AI & MCP
 
 - [OpenAI API](https://openai.com/blog/openai-api) – `text-embedding-3-small` for vector embeddings; GPT for project management assistant
+- [Anthropic API](https://www.anthropic.com/) – Claude Sonnet 4.6 drives the E2B enrichment agent tool-use loop
 - [Vercel AI SDK 6.x](https://sdk.vercel.ai/) – Unified AI interface
 - [pgvector](https://github.com/pgvector/pgvector) – PostgreSQL vector extension for similarity search (HNSW indexes)
+- [E2B](https://e2b.dev/) – Cloud sandboxes with real Chrome browser for AI-driven web research and contact enrichment
 - [MCP Server](https://modelcontextprotocol.io/) – 25 CRM tools via `@vercel/mcp-adapter`, Bearer token auth, SSE + HTTP transports
 
 ### Data fetching
@@ -166,11 +200,13 @@ Global search across all CRM entities from a single search bar — grouped resul
 8. ✅ Unified search — keyword + semantic search across all CRM modules
 9. ✅ CRM Targets module — sales target and target list management
 10. ✅ MCP server — 25 CRM tools for AI agent access via Bearer token auth
-11. ✅ AI enrichment — contact/target enrichment with Firecrawl + OpenAI; 3-tier API key management (ENV → admin → user)
-12. 🔄 More AI powered features — daily summary of tasks and projects
-12. 📋 Email campaigns management — integration with MailChimp and Listmonk
-13. 📋 Testing expansion — Jest + Playwright coverage (contributions welcome!)
-14. 🔄 Fix all TypeScript `any` types — ongoing cleanup
+11. ✅ AI enrichment — E2B sandboxed agent (real browser + Claude Sonnet) for target/contact enrichment; C-level contact discovery; 3-tier API key management (ENV → admin → user)
+12. ✅ Audit log & history — soft delete + full field-level change trail on all CRM entities; global admin audit log page
+13. ✅ CRM Activities — notes, calls, emails, meetings, tasks linked to any CRM entity; paginated feed on all detail pages
+14. 🔄 More AI powered features — daily summary of tasks and projects
+15. 📋 Email campaigns management — integration with MailChimp and Listmonk
+16. 📋 Testing expansion — Jest + Playwright coverage (contributions welcome!)
+17. 🔄 Fix all TypeScript `any` types — ongoing cleanup
 
 ## Emails
 
