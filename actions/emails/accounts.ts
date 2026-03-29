@@ -134,3 +134,53 @@ export async function testEmailConnection(
 
   return Promise.race([connectionPromise, timeoutPromise]);
 }
+
+type ListFoldersInput = {
+  imapHost: string;
+  imapPort: number;
+  imapSsl: boolean;
+  username: string;
+  password: string;
+};
+
+export async function listImapFolders(
+  input: ListFoldersInput
+): Promise<{ ok: true; folders: string[] } | { ok: false; error: string }> {
+  await requireSession();
+
+  return new Promise((resolve) => {
+    const imap = new Imap({
+      user: input.username,
+      password: input.password,
+      host: input.imapHost,
+      port: input.imapPort,
+      tls: input.imapSsl,
+      tlsOptions: { rejectUnauthorized: false },
+      authTimeout: 8000,
+      connTimeout: 8000,
+    });
+
+    imap.once("ready", () => {
+      imap.getBoxes("", (err, boxes) => {
+        imap.end();
+        if (err) return resolve({ ok: false, error: err.message });
+
+        const names: string[] = [];
+        function walk(node: Imap.MailBoxes, prefix: string) {
+          for (const [name, box] of Object.entries(node)) {
+            const full = prefix ? `${prefix}${box.delimiter ?? "/"}${name}` : name;
+            names.push(full);
+            if (box.children) walk(box.children, full);
+          }
+        }
+        walk(boxes, "");
+        resolve({ ok: true, folders: names.sort() });
+      });
+    });
+
+    imap.once("error", (err: Error) => resolve({ ok: false, error: err.message }));
+    imap.connect();
+
+    setTimeout(() => resolve({ ok: false, error: "Connection timed out" }), 10000);
+  });
+}
