@@ -56,7 +56,7 @@ export function UpdateAccountForm({
   }, []);
 
   const formSchema = z.object({
-    id: z.string().min(5).max(30),
+    id: z.string().uuid(),
     name: z.string().min(1, t("nameRequired")).max(80),
     office_phone: z.string().nullable().optional(),
     website: z.string().nullable().optional(),

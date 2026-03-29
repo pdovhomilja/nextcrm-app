@@ -16,7 +16,6 @@ import {
   Globe2,
   Landmark,
   List,
-  MoreHorizontal,
   Percent,
   Phone,
   SquareStack,
@@ -29,6 +28,7 @@ import { prismadb } from "@/lib/prisma";
 import Link from "next/link";
 import { EnvelopeClosedIcon, LightningBoltIcon } from "@radix-ui/react-icons";
 import { LucideLandmark } from "lucide-react";
+import { AccountDetailActions } from "./AccountDetailActions";
 
 interface OppsViewProps {
   data: any;
@@ -49,11 +49,7 @@ export async function BasicView({ data }: OppsViewProps) {
               <CardDescription>ID:{data.id}</CardDescription>
             </div>
             <div>
-              {
-                //TODO: Add menu
-                //TODO: Add edit button
-              }
-              <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
+              <AccountDetailActions account={data} />
             </div>
           </div>
         </CardHeader>
