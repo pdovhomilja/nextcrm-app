@@ -27,6 +27,7 @@ export function TipTapEditor({ content, onChange }: Props) {
       Link.configure({ openOnClick: false }),
     ],
     content: content ?? "",
+    immediatelyRender: false,
     onUpdate({ editor }) {
       onChange?.(editor.getHTML(), editor.getJSON() as object);
     },
