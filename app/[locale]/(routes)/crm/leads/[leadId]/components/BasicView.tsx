@@ -17,7 +17,6 @@ import {
   Landmark,
   List,
   Medal,
-  MoreHorizontal,
   Percent,
   Phone,
   SquareStack,
@@ -30,6 +29,8 @@ import { prismadb } from "@/lib/prisma";
 import Link from "next/link";
 import { EnvelopeClosedIcon, LightningBoltIcon } from "@radix-ui/react-icons";
 import { LucideLandmark } from "lucide-react";
+import { LeadDetailActions } from "./LeadDetailActions";
+import { getAllCrmData } from "@/actions/crm/get-crm-data";
 
 interface OppsViewProps {
   data: any;
@@ -38,6 +39,8 @@ interface OppsViewProps {
 export async function BasicView({ data }: OppsViewProps) {
   //console.log(data, "data");
   const users = await prismadb.users.findMany();
+  const crmData = await getAllCrmData();
+  const { leadSources, leadStatuses, leadTypes } = crmData;
   if (!data) return <div>Opportunity not found</div>;
   return (
     <div className="pb-3 space-y-5">
@@ -51,13 +54,12 @@ export async function BasicView({ data }: OppsViewProps) {
               </CardTitle>
               <CardDescription>ID:{data.id}</CardDescription>
             </div>
-            <div>
-              {
-                //TODO: Add menu
-                //TODO: Add edit button
-              }
-              <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
-            </div>
+            <LeadDetailActions
+              lead={data}
+              leadSources={leadSources}
+              leadStatuses={leadStatuses}
+              leadTypes={leadTypes}
+            />
           </div>
         </CardHeader>
         <CardContent>

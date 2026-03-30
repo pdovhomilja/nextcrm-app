@@ -34,45 +34,46 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Skeleton } from "@/components/ui/skeleton";
-import fetcher from "@/lib/fetcher";
-import useSWR from "swr";
+import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
+import { AccountSearchCombobox } from "@/components/ui/account-search-combobox";
 import { updateOpportunity } from "@/actions/crm/opportunities/update-opportunity";
 
-//TODO: fix all the types
-type NewTaskFormProps = {
+type ConfigItem = { id: string; name: string };
+
+type UpdateOpportunityFormProps = {
   initialData: any;
   setOpen: (value: boolean) => void;
+  saleTypes: ConfigItem[];
+  saleStages: ConfigItem[];
+  campaigns: ConfigItem[];
 };
 
 export function UpdateOpportunityForm({
   initialData,
   setOpen,
-}: NewTaskFormProps) {
+  saleTypes,
+  saleStages,
+  campaigns,
+}: UpdateOpportunityFormProps) {
   const t = useTranslations("CrmOpportunityForm");
   const c = useTranslations("Common");
 
-  const { data: opportunities, isLoading: isLoadingOpportunities } = useSWR(
-    "/api/crm/opportunity",
-    fetcher
-  );
-
   const formSchema = z.object({
-    id: z.string().min(5).max(30),
+    id: z.uuid(),
     name: z.string().min(1, t("nameRequired")),
     close_date: z.date({
       message: "A expected close date is required.",
     }),
-    description: z.string(),
-    type: z.string(),
-    sales_stage: z.string(),
-    budget: z.string(),
-    currency: z.string(),
-    expected_revenue: z.string(),
-    next_step: z.string(),
-    assigned_to: z.string(),
-    account: z.string(),
-    contact: z.string(),
+    description: z.string().nullable().optional(),
+    type: z.string().nullable().optional(),
+    sales_stage: z.string().nullable().optional(),
+    budget: z.string().nullable().optional(),
+    currency: z.string().nullable().optional(),
+    expected_revenue: z.string().nullable().optional(),
+    next_step: z.string().nullable().optional(),
+    assigned_to: z.string().nullable().optional(),
+    account: z.string().nullable().optional(),
+    contact: z.string().nullable().optional(),
     campaign: z.string().nullable().optional(),
   });
 
@@ -83,13 +84,25 @@ export function UpdateOpportunityForm({
     mode: "onBlur",
     defaultValues: {
       ...initialData,
-      budget: String(initialData.budget),
-      expected_revenue: String(initialData.expected_revenue),
+      description: initialData.description ?? "",
+      budget: String(initialData.budget ?? ""),
+      currency: initialData.currency ?? "",
+      expected_revenue: String(initialData.expected_revenue ?? ""),
+      next_step: initialData.next_step ?? "",
+      assigned_to: initialData.assigned_to ?? "",
+      account: initialData.account ?? "",
+      contact: initialData.contact ?? "",
+      campaign: initialData.campaign ?? "",
+      type: initialData.type ?? "",
+      sales_stage: initialData.sales_stage ?? "",
     },
   });
 
   const onSubmit = async (data: NewAccountFormValues) => {
-    const result = await updateOpportunity(data);
+    const cleaned = Object.fromEntries(
+      Object.entries(data).map(([k, v]) => [k, v === null ? undefined : v])
+    ) as any;
+    const result = await updateOpportunity(cleaned);
     if (result?.error) {
       form.setError("root.serverError", { message: result.error });
     } else {
@@ -98,19 +111,7 @@ export function UpdateOpportunityForm({
     }
   };
 
-  if (isLoadingOpportunities)
-    return (
-      <div className="flex flex-col gap-2 py-4">
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-3/4" />
-      </div>
-    );
-  //console.log(opportunities, "opportunities");
-  const { users, accounts, contacts, saleTypes, saleStages, campaigns } =
-    opportunities;
-
-  if (!users || !accounts || !initialData)
+  if (!initialData)
     return <div>{c("somethingWentWrong")}</div>;
 
   return (
@@ -327,23 +328,14 @@ export function UpdateOpportunityForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{c("assignedTo")}</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a user to assign the account" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="overflow-y-auto h-56">
-                          {users.map((user: any) => (
-                            <SelectItem key={user.id} value={user.id}>
-                              {user.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <UserSearchCombobox
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          placeholder={c("selectUser")}
+                          disabled={form.formState.isSubmitting}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -354,23 +346,14 @@ export function UpdateOpportunityForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t("assignedAccount")}</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Choose account " />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="flex overflow-y-auto h-56">
-                          {accounts.map((account: any) => (
-                            <SelectItem key={account.id} value={account.id}>
-                              {account.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <AccountSearchCombobox
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          placeholder="Choose account"
+                          disabled={form.formState.isSubmitting}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -381,23 +364,13 @@ export function UpdateOpportunityForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Assigned Contact</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a user to assign the account" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="flex overflow-y-auto h-56">
-                          {contacts.map((contact: any) => (
-                            <SelectItem key={contact.id} value={contact.id}>
-                              {contact.first_name + " " + contact.last_name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <Input
+                          disabled={form.formState.isSubmitting}
+                          placeholder="Contact ID"
+                          {...field}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

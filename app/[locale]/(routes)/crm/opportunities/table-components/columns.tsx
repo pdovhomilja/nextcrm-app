@@ -12,7 +12,15 @@ import { DataTableRowActions } from "./data-table-row-actions";
 import moment from "moment";
 import Link from "next/link";
 
-export const columns: ColumnDef<Opportunity>[] = [
+type ConfigItem = { id: string; name: string };
+
+export type OpportunityConfig = {
+  saleTypes: ConfigItem[];
+  saleStages: ConfigItem[];
+  campaigns: ConfigItem[];
+};
+
+export const createColumns = (config: OpportunityConfig): ColumnDef<Opportunity>[] => [
   /* {
     id: "select",
     header: ({ table }) => (
@@ -161,6 +169,6 @@ export const columns: ColumnDef<Opportunity>[] = [
   },
   {
     id: "actions",
-    cell: ({ row }) => <DataTableRowActions row={row} />,
+    cell: ({ row }) => <DataTableRowActions row={row} config={config} />,
   },
 ];

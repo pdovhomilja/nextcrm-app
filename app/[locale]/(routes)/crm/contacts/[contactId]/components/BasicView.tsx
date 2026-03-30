@@ -13,7 +13,6 @@ import {
   Instagram,
   LayoutGrid,
   Linkedin,
-  MoreHorizontal,
   Twitter,
   User,
   Youtube,
@@ -24,6 +23,8 @@ import Link from "next/link";
 import { EnvelopeClosedIcon } from "@radix-ui/react-icons";
 import { Badge } from "@/components/ui/badge";
 import { EnrichButton } from "./EnrichButton";
+import { ContactDetailActions } from "./ContactDetailActions";
+import { getAllCrmData } from "@/actions/crm/get-crm-data";
 
 interface OppsViewProps {
   data: any;
@@ -32,6 +33,8 @@ interface OppsViewProps {
 export async function BasicView({ data }: OppsViewProps) {
   //console.log(data, "data");
   const users = await prismadb.users.findMany();
+  const crmData = await getAllCrmData();
+  const contactTypes = crmData.contactTypes;
   if (!data) return <div>Opportunity not found</div>;
   return (
     <div className="pb-3 space-y-5">
@@ -61,7 +64,7 @@ export async function BasicView({ data }: OppsViewProps) {
                   mobile_phone:     data.mobile_phone ?? null,
                 }}
               />
-              <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
+              <ContactDetailActions contact={data} contactTypes={contactTypes} />
             </div>
           </div>
         </CardHeader>

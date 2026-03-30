@@ -48,7 +48,7 @@ export function UpdateContactForm({
   const c = useTranslations("Common");
 
   const formSchema = z.object({
-    id: z.string().min(5),
+    id: z.uuid(),
     birthday_year: z.string().optional().nullable(),
     birthday_month: z.string().optional().nullable(),
     birthday_day: z.string().optional().nullable(),

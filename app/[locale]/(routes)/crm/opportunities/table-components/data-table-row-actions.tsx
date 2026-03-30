@@ -28,12 +28,16 @@ import {
 } from "@/components/ui/sheet";
 import { deleteOpportunity } from "@/actions/crm/opportunities/delete-opportunity";
 
+import type { OpportunityConfig } from "./columns";
+
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
+  config: OpportunityConfig;
 }
 
 export function DataTableRowActions<TData>({
   row,
+  config,
 }: DataTableRowActionsProps<TData>) {
   const router = useRouter();
   const opportunity = opportunitySchema.parse(row.original);
@@ -79,6 +83,9 @@ export function DataTableRowActions<TData>({
             <UpdateOpportunityForm
               initialData={row.original}
               setOpen={setUpdateOpen}
+              saleTypes={config.saleTypes}
+              saleStages={config.saleStages}
+              campaigns={config.campaigns}
             />
           </div>
         </SheetContent>
