@@ -101,4 +101,68 @@ test.describe.serial("Campaign Targets", () => {
     await filterInput.fill("");
     await waitForRows(page);
   });
+
+  test("should navigate to target detail via row action View", async ({
+    page,
+  }) => {
+    await page.goto("/en/campaigns/targets");
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+    await waitForRows(page);
+
+    const firstRow = page.locator("table tbody tr").first();
+    await firstRow.hover();
+    await firstRow.locator("button:has(.sr-only)").first().click();
+
+    await page.getByRole("menuitem", { name: "View" }).click();
+    await page.waitForURL(/\/targets\/[a-z0-9-]+$/, {
+      timeout: 10000,
+    });
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+  });
+
+  test("should update a target via row action", async ({ page }) => {
+    await page.goto("/en/campaigns/targets");
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+    await waitForRows(page);
+
+    const firstRow = page.locator("table tbody tr").first();
+    await firstRow.hover();
+    await firstRow.locator("button:has(.sr-only)").first().click();
+
+    await page.getByRole("menuitem", { name: "Update" }).click();
+
+    // Wait for the update form modal to appear
+    await expect(page.getByText("Update target details")).toBeVisible({
+      timeout: 5000,
+    });
+
+    // Modify a field
+    const positionField = page.getByLabel("Position");
+    await positionField.clear();
+    await positionField.fill("Senior QA Engineer");
+
+    await page.getByRole("button", { name: "Update target" }).click();
+
+    await assertSuccessToast(page);
+  });
+
+  test("should navigate away from list via row action View", async ({
+    page,
+  }) => {
+    await page.goto("/en/campaigns/targets");
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+    await waitForRows(page);
+
+    const firstRow = page.locator("table tbody tr").first();
+    await firstRow.hover();
+    await firstRow.locator("button:has(.sr-only)").first().click();
+
+    await page.getByRole("menuitem", { name: "View" }).click();
+    await page.waitForURL(/\/campaigns\/targets\/[a-z0-9-]+$/, {
+      timeout: 10000,
+    });
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+    // Verify we are on a detail page (URL ends with an ID, not just the list URL)
+    expect(page.url()).toMatch(/\/campaigns\/targets\/[a-z0-9-]+$/);
+  });
 });
