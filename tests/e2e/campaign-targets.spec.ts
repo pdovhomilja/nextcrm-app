@@ -274,4 +274,108 @@ test.describe.serial("Campaign Target Lists", () => {
     });
     await page.waitForLoadState("networkidle", { timeout: 15000 });
   });
+
+  test("should add a target to the list", async ({ page }) => {
+    await page.goto("/en/campaigns/target-lists");
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+    await waitForRows(page);
+
+    // Navigate to PW-Target-List detail
+    const firstRow = page.locator("table tbody tr").first();
+    await firstRow.hover();
+    await firstRow.locator("button:has(.sr-only)").first().click();
+    await page.getByRole("menuitem", { name: "View" }).click();
+    await page.waitForURL(/\/campaigns\/target-lists\/[a-z0-9-]+$/, {
+      timeout: 10000,
+    });
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+
+    // Click "+ Add Target" button
+    await page.getByRole("button", { name: /\+ Add Target/i }).click();
+
+    await expect(page.getByText("Add Targets to List")).toBeVisible({
+      timeout: 5000,
+    });
+
+    // Wait for targets to load
+    await expect(page.getByText("Loading targets...")).not.toBeVisible({
+      timeout: 10000,
+    });
+
+    const targetCheckboxes = page.locator(
+      '[role="dialog"] input[type="checkbox"]'
+    );
+    const count = await targetCheckboxes.count();
+    if (count > 0) {
+      await targetCheckboxes.first().check();
+      await page.getByRole("button", { name: /Add Selected/i }).click();
+      await assertSuccessToast(page);
+    } else {
+      test.skip(true, "No targets available to add");
+    }
+  });
+
+  test("should remove a target from the list", async ({ page }) => {
+    await page.goto("/en/campaigns/target-lists");
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+    await waitForRows(page);
+
+    // Navigate to PW-Target-List detail
+    const firstRow = page.locator("table tbody tr").first();
+    await firstRow.hover();
+    await firstRow.locator("button:has(.sr-only)").first().click();
+    await page.getByRole("menuitem", { name: "View" }).click();
+    await page.waitForURL(/\/campaigns\/target-lists\/[a-z0-9-]+$/, {
+      timeout: 10000,
+    });
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+
+    // Check if there are any targets in the list
+    const noTargets = await page.getByText("No targets in this list yet.").isVisible();
+    if (noTargets) {
+      test.skip(true, "No targets in list to remove");
+      return;
+    }
+
+    // Find the Trash2 icon button — it's a ghost icon button in the targets list
+    // Use aria or filter by not being the "+ Add Target" button
+    const removeButton = page.locator('button[class*="h-7"][class*="w-7"]').first();
+    const removeCount = await removeButton.count();
+    if (removeCount === 0) {
+      test.skip(true, "No remove buttons found");
+      return;
+    }
+    await removeButton.click();
+
+    await assertSuccessToast(page);
+  });
+
+  test("should delete a target list via row action", async ({ page }) => {
+    await page.goto("/en/campaigns/target-lists");
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+    await waitForRows(page);
+
+    const rowCountBefore = await page.locator("table tbody tr").count();
+
+    const lastRow = page.locator("table tbody tr").last();
+    await lastRow.hover();
+    await lastRow.locator("button:has(.sr-only)").first().click();
+
+    await page.getByRole("menuitem", { name: "Delete" }).click();
+
+    const confirmBtn = page.getByRole("button", {
+      name: /Continue|Confirm|Delete/i,
+    });
+    await expect(confirmBtn).toBeVisible({ timeout: 5000 });
+    await confirmBtn.click();
+
+    await assertSuccessToast(page);
+
+    await page.waitForLoadState("networkidle", { timeout: 10000 });
+    await expect(async () => {
+      const rowCountAfter = await page.locator("table tbody tr").count();
+      const isEmpty = await page.getByText("No results.").isVisible();
+      expect(isEmpty || rowCountAfter < rowCountBefore).toBeTruthy();
+    }).toPass({ timeout: 5000 });
+  });
 });
