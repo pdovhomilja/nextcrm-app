@@ -146,23 +146,74 @@ test.describe.serial("Campaign Targets", () => {
     await assertSuccessToast(page);
   });
 
-  test("should navigate away from list via row action View", async ({
-    page,
-  }) => {
+  test("should display target detail with all fields", async ({ page }) => {
     await page.goto("/en/campaigns/targets");
     await page.waitForLoadState("networkidle", { timeout: 15000 });
     await waitForRows(page);
 
+    // Navigate to the PW-created target detail via View row action
     const firstRow = page.locator("table tbody tr").first();
     await firstRow.hover();
     await firstRow.locator("button:has(.sr-only)").first().click();
-
     await page.getByRole("menuitem", { name: "View" }).click();
     await page.waitForURL(/\/campaigns\/targets\/[a-z0-9-]+$/, {
       timeout: 10000,
     });
     await page.waitForLoadState("networkidle", { timeout: 15000 });
-    // Verify we are on a detail page (URL ends with an ID, not just the list URL)
-    expect(page.url()).toMatch(/\/campaigns\/targets\/[a-z0-9-]+$/);
+
+    // Verify header with target name
+    await expect(
+      page.getByRole("heading", { name: /PW-Target-First/, level: 2 })
+    ).toBeVisible({
+      timeout: 10000,
+    });
+
+    // Verify company info
+    await expect(page.getByText("Company").first()).toBeVisible();
+    await expect(page.getByText("PW Test Corp")).toBeVisible();
+
+    // Verify position
+    await expect(page.getByText("Position").first()).toBeVisible();
+
+    // Verify Contact Information card
+    await expect(page.getByText("Contact information")).toBeVisible();
+    await expect(page.getByText("pw-target@test.example.com")).toBeVisible();
+
+    // Verify Social Networks card
+    await expect(page.getByText("Social networks")).toBeVisible();
   });
+
+  test("should convert target to account + contact", async ({ page }) => {
+    await page.goto("/en/campaigns/targets");
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+    await waitForRows(page);
+
+    // Open Update modal for the target (convert is inside the update form)
+    const firstRow = page.locator("table tbody tr").first();
+    await firstRow.hover();
+    await firstRow.locator("button:has(.sr-only)").first().click();
+
+    await page.getByRole("menuitem", { name: "Update" }).click();
+
+    await expect(page.getByText("Update target details")).toBeVisible({
+      timeout: 5000,
+    });
+
+    // Click "Convert to Account" button
+    await page
+      .getByRole("button", { name: /Convert to Account/i })
+      .click();
+
+    // Confirm the conversion dialog
+    await expect(
+      page.getByText("Convert to Account + Contact?")
+    ).toBeVisible({ timeout: 5000 });
+
+    await page
+      .getByRole("button", { name: "Convert", exact: true })
+      .click();
+
+    await assertSuccessToast(page);
+  });
+
 });
