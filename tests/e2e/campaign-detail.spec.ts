@@ -1,7 +1,100 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, Page } from "@playwright/test";
 
-test.describe("Campaign Detail Page", () => {
+async function assertSuccessToast(page: Page) {
+  await expect(
+    page.locator('[data-sonner-toast][data-type="success"]').first()
+  ).toBeVisible({ timeout: 15000 });
+}
+
+test.describe.serial("Campaign Detail Page", () => {
   test.use({ storageState: "playwright/.auth/user.json" });
+
+  test("should create a target list for detail tests", async ({ page }) => {
+    await page.goto("/en/campaigns/target-lists");
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+
+    await page.getByRole("button", { name: /\+ New List/i }).click();
+    await expect(page.getByText("Create Target List")).toBeVisible({
+      timeout: 5000,
+    });
+
+    await page.getByLabel("Name *").fill("PW-CD-Target-List");
+    await page
+      .getByLabel("Description")
+      .fill("Target list for campaign detail tests");
+
+    await page.getByRole("button", { name: "Create" }).click();
+    await assertSuccessToast(page);
+  });
+
+  test("should create a template for detail tests", async ({ page }) => {
+    await page.goto("/en/campaigns/templates/new");
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+
+    await page.getByLabel("Template Name *").fill("PW-CD-Template");
+    await page.getByLabel("Subject Line *").fill("PW Detail Test Subject");
+
+    const editor = page.locator(".tiptap, .ProseMirror").first();
+    if (await editor.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await editor.click();
+      await editor.pressSequentially("Detail test email body");
+    }
+
+    await page.getByRole("button", { name: /Save Template/i }).click();
+    await page.waitForURL(/\/campaigns\/templates$/, { timeout: 15000 });
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+  });
+
+  test("should create a campaign for detail tests", async ({ page }) => {
+    await page.goto("/en/campaigns/new");
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+
+    // Step 1: Details
+    await page.getByLabel("Campaign Name *").fill("PW-Campaign-Detail");
+    await page
+      .getByLabel("Description")
+      .fill("Playwright detail test campaign");
+    await page.getByLabel("From Name").fill("PW Detail Sender");
+    await page.getByLabel("Reply-to Email").fill("pw-detail@example.com");
+    await page.getByRole("button", { name: /Next →/ }).click();
+
+    // Step 2: Template — use "Choose Existing" tab
+    await page.getByText("Subject Line").waitFor({ timeout: 5000 });
+    await page.getByRole("tab", { name: /Choose Existing/i }).click();
+
+    const templateBtn = page
+      .locator('[role="tabpanel"] button.text-left')
+      .filter({ hasText: /PW-CD-Template/i })
+      .first();
+    await expect(templateBtn).toBeVisible({ timeout: 5000 });
+    await templateBtn.click();
+
+    const subjectInput = page.locator(
+      'input[placeholder="Your email subject..."]'
+    );
+    await expect(subjectInput).not.toHaveValue("", { timeout: 3000 });
+
+    await page.getByRole("button", { name: /Next →/ }).click();
+
+    // Step 3: Audience
+    await page.waitForTimeout(500);
+    const checkboxes = page.locator('input[type="checkbox"]');
+    const checkboxCount = await checkboxes.count();
+    expect(checkboxCount).toBeGreaterThan(0);
+    await checkboxes.first().check();
+    await page.getByRole("button", { name: /Next →/ }).click();
+
+    // Step 4: Schedule — send now
+    await expect(page.getByText("When to send")).toBeVisible({
+      timeout: 5000,
+    });
+    await page.getByText("Send now").click();
+    await page.getByRole("button", { name: /Submit Campaign/i }).click();
+
+    // Should redirect to campaign list
+    await page.waitForURL(/\/campaigns$/, { timeout: 15000 });
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+  });
 
   test("should navigate to detail page and display campaign info", async ({
     page,
@@ -62,11 +155,19 @@ test.describe("Campaign Detail Page", () => {
     await page.waitForURL(/\/campaigns\//, { timeout: 10000 });
     await page.waitForLoadState("networkidle", { timeout: 15000 });
 
-    // Stats grid should show all 5 metric labels (scoped to grid to avoid select option conflicts)
+    // Stats grid should show all 5 metric labels
     const statsGrid = page.locator("div.grid");
-    const expectedLabels = ["Sent", "Delivered", "Open Rate", "Click Rate", "Bounced"];
+    const expectedLabels = [
+      "Sent",
+      "Delivered",
+      "Open Rate",
+      "Click Rate",
+      "Bounced",
+    ];
     for (const label of expectedLabels) {
-      await expect(statsGrid.getByText(label, { exact: true }).first()).toBeVisible({
+      await expect(
+        statsGrid.getByText(label, { exact: true }).first()
+      ).toBeVisible({
         timeout: 5000,
       });
     }
@@ -76,8 +177,8 @@ test.describe("Campaign Detail Page", () => {
     await page.goto("/en/campaigns/00000000-0000-0000-0000-000000000000");
 
     // Should show 404 page
-    await expect(
-      page.getByText(/not found|404/i)
-    ).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/not found|404/i)).toBeVisible({
+      timeout: 10000,
+    });
   });
 });
