@@ -50,24 +50,25 @@ export const updateOpportunity = async (data: {
     const opportunity = await prismadb.crm_Opportunities.update({
       where: { id },
       data: {
-        account,
-        assigned_to,
+        account: account || undefined,
+        assigned_to: assigned_to || undefined,
         budget: budget ? Number(budget) : undefined,
-        campaign,
+        campaign: campaign || undefined,
         close_date,
-        contact,
+        contact: contact || undefined,
         updatedBy: userId,
         currency,
         description,
         expected_revenue: expected_revenue ? Number(expected_revenue) : undefined,
         name,
         next_step,
-        sales_stage,
+        sales_stage: sales_stage || undefined,
         status: "ACTIVE",
-        type,
+        type: type || undefined,
       },
     });
-    const changes = before ? diffObjects(before as Record<string, unknown>, opportunity as Record<string, unknown>) : null;
+    const serialize = (obj: any) => JSON.parse(JSON.stringify(obj, (_, v) => typeof v === "bigint" ? v.toString() : v));
+    const changes = before ? diffObjects(serialize(before), serialize(opportunity)) : null;
     await writeAuditLog({
       entityType: "opportunity",
       entityId: opportunity.id,
@@ -77,7 +78,7 @@ export const updateOpportunity = async (data: {
     });
     void inngest.send({ name: "crm/opportunity.saved", data: { record_id: opportunity.id } });
     revalidatePath("/[locale]/(routes)/crm/opportunities", "page");
-    return { data: opportunity };
+    return { data: serialize(opportunity) };
   } catch (error) {
     console.log("[UPDATE_OPPORTUNITY]", error);
     return { error: "Failed to update opportunity" };

@@ -64,16 +64,16 @@ export function UpdateOpportunityForm({
     close_date: z.date({
       message: "A expected close date is required.",
     }),
-    description: z.string(),
-    type: z.string(),
-    sales_stage: z.string(),
-    budget: z.string(),
-    currency: z.string(),
-    expected_revenue: z.string(),
-    next_step: z.string(),
-    assigned_to: z.string(),
-    account: z.string(),
-    contact: z.string(),
+    description: z.string().nullable().optional(),
+    type: z.string().nullable().optional(),
+    sales_stage: z.string().nullable().optional(),
+    budget: z.string().nullable().optional(),
+    currency: z.string().nullable().optional(),
+    expected_revenue: z.string().nullable().optional(),
+    next_step: z.string().nullable().optional(),
+    assigned_to: z.string().nullable().optional(),
+    account: z.string().nullable().optional(),
+    contact: z.string().nullable().optional(),
     campaign: z.string().nullable().optional(),
   });
 
@@ -84,13 +84,25 @@ export function UpdateOpportunityForm({
     mode: "onBlur",
     defaultValues: {
       ...initialData,
-      budget: String(initialData.budget),
-      expected_revenue: String(initialData.expected_revenue),
+      description: initialData.description ?? "",
+      budget: String(initialData.budget ?? ""),
+      currency: initialData.currency ?? "",
+      expected_revenue: String(initialData.expected_revenue ?? ""),
+      next_step: initialData.next_step ?? "",
+      assigned_to: initialData.assigned_to ?? "",
+      account: initialData.account ?? "",
+      contact: initialData.contact ?? "",
+      campaign: initialData.campaign ?? "",
+      type: initialData.type ?? "",
+      sales_stage: initialData.sales_stage ?? "",
     },
   });
 
   const onSubmit = async (data: NewAccountFormValues) => {
-    const result = await updateOpportunity(data);
+    const cleaned = Object.fromEntries(
+      Object.entries(data).map(([k, v]) => [k, v === null ? undefined : v])
+    ) as any;
+    const result = await updateOpportunity(cleaned);
     if (result?.error) {
       form.setError("root.serverError", { message: result.error });
     } else {
