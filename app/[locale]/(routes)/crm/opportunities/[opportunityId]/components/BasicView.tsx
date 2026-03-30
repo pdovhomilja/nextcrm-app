@@ -20,6 +20,7 @@ import {
 import moment from "moment";
 import { Clapperboard } from "lucide-react";
 import { prismadb } from "@/lib/prisma";
+import { OpportunityDetailActions } from "./OpportunityDetailActions";
 
 interface OppsViewProps {
   data: {
@@ -37,8 +38,13 @@ export async function BasicView({ data }: OppsViewProps) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle>{data.name}</CardTitle>
-        <CardDescription>ID:{data.id}</CardDescription>
+        <div className="flex w-full justify-between">
+          <div>
+            <CardTitle>{data.name}</CardTitle>
+            <CardDescription>ID:{data.id}</CardDescription>
+          </div>
+          <OpportunityDetailActions opportunity={data} />
+        </div>
       </CardHeader>
       <CardContent className="grid grid-cols-2 gap-1">
         <div>
