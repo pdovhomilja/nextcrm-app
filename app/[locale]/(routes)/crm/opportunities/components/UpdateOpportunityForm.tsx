@@ -58,7 +58,7 @@ export function UpdateOpportunityForm({
   );
 
   const formSchema = z.object({
-    id: z.string().uuid(),
+    id: z.uuid(),
     name: z.string().min(1, t("nameRequired")),
     close_date: z.date({
       message: "A expected close date is required.",
