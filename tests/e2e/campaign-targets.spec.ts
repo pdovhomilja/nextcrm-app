@@ -379,3 +379,36 @@ test.describe.serial("Campaign Target Lists", () => {
     }).toPass({ timeout: 5000 });
   });
 });
+
+test.describe.serial("Target Cleanup", () => {
+  test.use({ storageState: "playwright/.auth/user.json" });
+
+  test("should delete a target via row action", async ({ page }) => {
+    await page.goto("/en/campaigns/targets");
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+    await waitForRows(page);
+
+    const rowCountBefore = await page.locator("table tbody tr").count();
+
+    const lastRow = page.locator("table tbody tr").last();
+    await lastRow.hover();
+    await lastRow.locator("button:has(.sr-only)").first().click();
+
+    await page.getByRole("menuitem", { name: "Delete" }).click();
+
+    const confirmBtn = page.getByRole("button", {
+      name: /Continue|Confirm|Delete/i,
+    });
+    await expect(confirmBtn).toBeVisible({ timeout: 5000 });
+    await confirmBtn.click();
+
+    await assertSuccessToast(page);
+
+    await page.waitForLoadState("networkidle", { timeout: 10000 });
+    await expect(async () => {
+      const rowCountAfter = await page.locator("table tbody tr").count();
+      const isEmpty = await page.getByText("No results.").isVisible();
+      expect(isEmpty || rowCountAfter < rowCountBefore).toBeTruthy();
+    }).toPass({ timeout: 5000 });
+  });
+});
