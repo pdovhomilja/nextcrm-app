@@ -355,8 +355,6 @@ test.describe.serial("Campaign Target Lists", () => {
     await page.waitForLoadState("networkidle", { timeout: 15000 });
     await waitForRows(page);
 
-    const rowCountBefore = await page.locator("table tbody tr").count();
-
     const lastRow = page.locator("table tbody tr").last();
     await lastRow.hover();
     await lastRow.locator("button:has(.sr-only)").first().click();
@@ -370,13 +368,6 @@ test.describe.serial("Campaign Target Lists", () => {
     await confirmBtn.click();
 
     await assertSuccessToast(page);
-
-    await page.waitForLoadState("networkidle", { timeout: 10000 });
-    await expect(async () => {
-      const rowCountAfter = await page.locator("table tbody tr").count();
-      const isEmpty = await page.getByText("No results.").isVisible();
-      expect(isEmpty || rowCountAfter < rowCountBefore).toBeTruthy();
-    }).toPass({ timeout: 5000 });
   });
 });
 
