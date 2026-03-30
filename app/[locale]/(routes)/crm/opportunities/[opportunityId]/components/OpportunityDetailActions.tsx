@@ -18,12 +18,20 @@ import {
 } from "@/components/ui/sheet";
 import { UpdateOpportunityForm } from "../../components/UpdateOpportunityForm";
 
+type ConfigItem = { id: string; name: string };
+
 interface OpportunityDetailActionsProps {
   opportunity: any;
+  saleTypes: ConfigItem[];
+  saleStages: ConfigItem[];
+  campaigns: ConfigItem[];
 }
 
 export function OpportunityDetailActions({
   opportunity,
+  saleTypes,
+  saleStages,
+  campaigns,
 }: OpportunityDetailActionsProps) {
   const [updateOpen, setUpdateOpen] = useState(false);
 
@@ -39,6 +47,9 @@ export function OpportunityDetailActions({
             <UpdateOpportunityForm
               initialData={opportunity}
               setOpen={setUpdateOpen}
+              saleTypes={saleTypes}
+              saleStages={saleStages}
+              campaigns={campaigns}
             />
           </div>
         </SheetContent>

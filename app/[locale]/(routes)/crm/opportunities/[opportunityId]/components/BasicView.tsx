@@ -20,6 +20,7 @@ import {
 import moment from "moment";
 import { Clapperboard } from "lucide-react";
 import { prismadb } from "@/lib/prisma";
+import { getAllCrmData } from "@/actions/crm/get-crm-data";
 import { OpportunityDetailActions } from "./OpportunityDetailActions";
 
 interface OppsViewProps {
@@ -34,6 +35,8 @@ interface OppsViewProps {
 export async function BasicView({ data }: OppsViewProps) {
   //console.log(data, "data");
   const users = await prismadb.users.findMany();
+  const crmData = await getAllCrmData();
+  const { saleTypes, saleStages, campaigns } = crmData;
   if (!data) return <div>Opportunity not found</div>;
   return (
     <Card>
@@ -43,7 +46,12 @@ export async function BasicView({ data }: OppsViewProps) {
             <CardTitle>{data.name}</CardTitle>
             <CardDescription>ID:{data.id}</CardDescription>
           </div>
-          <OpportunityDetailActions opportunity={data} />
+          <OpportunityDetailActions
+            opportunity={data}
+            saleTypes={saleTypes}
+            saleStages={saleStages}
+            campaigns={campaigns}
+          />
         </div>
       </CardHeader>
       <CardContent className="grid grid-cols-2 gap-1">

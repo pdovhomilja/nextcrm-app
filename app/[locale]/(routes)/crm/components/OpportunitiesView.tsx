@@ -21,7 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
-import { columns } from "../opportunities/table-components/columns";
+import { createColumns } from "../opportunities/table-components/columns";
 import { NewOpportunityForm } from "../opportunities/components/NewOpportunityForm";
 import { OpportunitiesDataTable } from "../opportunities/table-components/data-table";
 
@@ -43,8 +43,9 @@ const OpportunitiesView = ({
   const [open, setOpen] = useState(false);
   const t = useTranslations("CrmPage");
 
-  const { accounts, contacts, saleTypes, saleStages, campaigns } =
-    crmData;
+  const { accounts, contacts, saleTypes, saleStages, campaigns } = crmData;
+
+  const opportunityColumns = createColumns({ saleTypes, saleStages, campaigns });
 
   return (
     <Card>
@@ -91,7 +92,7 @@ const OpportunitiesView = ({
           (data.length === 0 ? (
             t("opportunities.empty")
           ) : (
-            <OpportunitiesDataTable data={data} columns={columns} />
+            <OpportunitiesDataTable data={data} columns={opportunityColumns} />
           ))}
       </CardContent>
     </Card>

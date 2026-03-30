@@ -34,28 +34,29 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Skeleton } from "@/components/ui/skeleton";
-import fetcher from "@/lib/fetcher";
-import useSWR from "swr";
+import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
+import { AccountSearchCombobox } from "@/components/ui/account-search-combobox";
 import { updateOpportunity } from "@/actions/crm/opportunities/update-opportunity";
 
-//TODO: fix all the types
-type NewTaskFormProps = {
+type ConfigItem = { id: string; name: string };
+
+type UpdateOpportunityFormProps = {
   initialData: any;
   setOpen: (value: boolean) => void;
+  saleTypes: ConfigItem[];
+  saleStages: ConfigItem[];
+  campaigns: ConfigItem[];
 };
 
 export function UpdateOpportunityForm({
   initialData,
   setOpen,
-}: NewTaskFormProps) {
+  saleTypes,
+  saleStages,
+  campaigns,
+}: UpdateOpportunityFormProps) {
   const t = useTranslations("CrmOpportunityForm");
   const c = useTranslations("Common");
-
-  const { data: opportunities, isLoading: isLoadingOpportunities } = useSWR(
-    "/api/crm/opportunity",
-    fetcher
-  );
 
   const formSchema = z.object({
     id: z.uuid(),
@@ -98,19 +99,7 @@ export function UpdateOpportunityForm({
     }
   };
 
-  if (isLoadingOpportunities)
-    return (
-      <div className="flex flex-col gap-2 py-4">
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-3/4" />
-      </div>
-    );
-  //console.log(opportunities, "opportunities");
-  const { users, accounts, contacts, saleTypes, saleStages, campaigns } =
-    opportunities;
-
-  if (!users || !accounts || !initialData)
+  if (!initialData)
     return <div>{c("somethingWentWrong")}</div>;
 
   return (
@@ -327,23 +316,14 @@ export function UpdateOpportunityForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{c("assignedTo")}</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a user to assign the account" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="overflow-y-auto h-56">
-                          {users.map((user: any) => (
-                            <SelectItem key={user.id} value={user.id}>
-                              {user.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <UserSearchCombobox
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          placeholder={c("selectUser")}
+                          disabled={form.formState.isSubmitting}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -354,23 +334,14 @@ export function UpdateOpportunityForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t("assignedAccount")}</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Choose account " />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="flex overflow-y-auto h-56">
-                          {accounts.map((account: any) => (
-                            <SelectItem key={account.id} value={account.id}>
-                              {account.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <AccountSearchCombobox
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          placeholder="Choose account"
+                          disabled={form.formState.isSubmitting}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -381,23 +352,13 @@ export function UpdateOpportunityForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Assigned Contact</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a user to assign the account" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="flex overflow-y-auto h-56">
-                          {contacts.map((contact: any) => (
-                            <SelectItem key={contact.id} value={contact.id}>
-                              {contact.first_name + " " + contact.last_name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <Input
+                          disabled={form.formState.isSubmitting}
+                          placeholder="Contact ID"
+                          {...field}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
