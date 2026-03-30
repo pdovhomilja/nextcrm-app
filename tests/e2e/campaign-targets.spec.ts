@@ -217,3 +217,61 @@ test.describe.serial("Campaign Targets", () => {
   });
 
 });
+
+test.describe.serial("Campaign Target Lists", () => {
+  test.use({ storageState: "playwright/.auth/user.json" });
+
+  test("should display target lists page with table", async ({ page }) => {
+    await page.goto("/en/campaigns/target-lists");
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+
+    await expect(
+      page.locator("h2").filter({ hasText: "Target Lists" })
+    ).toBeVisible({ timeout: 10000 });
+
+    await expect(
+      page.getByRole("button", { name: /\+ New List/i })
+    ).toBeVisible();
+
+    await expect(page.locator("table")).toBeVisible({ timeout: 10000 });
+  });
+
+  test("should create a new target list", async ({ page }) => {
+    await page.goto("/en/campaigns/target-lists");
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+
+    // Open create modal
+    await page.getByRole("button", { name: /\+ New List/i }).click();
+
+    await expect(page.getByText("Create Target List")).toBeVisible({
+      timeout: 5000,
+    });
+
+    // Fill form
+    await page.getByLabel("Name *").fill("PW-Target-List");
+    await page.getByLabel("Description").fill("Playwright test target list");
+
+    // Submit
+    await page.getByRole("button", { name: "Create" }).click();
+
+    await assertSuccessToast(page);
+
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+  });
+
+  test("should navigate to target list detail", async ({ page }) => {
+    await page.goto("/en/campaigns/target-lists");
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+    await waitForRows(page);
+
+    const firstRow = page.locator("table tbody tr").first();
+    await firstRow.hover();
+    await firstRow.locator("button:has(.sr-only)").first().click();
+
+    await page.getByRole("menuitem", { name: "View" }).click();
+    await page.waitForURL(/\/campaigns\/target-lists\/[a-z0-9-]+$/, {
+      timeout: 10000,
+    });
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+  });
+});
