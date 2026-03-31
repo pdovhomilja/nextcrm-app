@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { Card } from "@tremor/react";
+import { Card, CardContent } from "@/components/ui/card";
 import { ReportPageLayout } from "@/components/reports/ReportPageLayout";
 import { ReportChart } from "@/components/reports/ReportChart";
 import { ReportTable } from "@/components/reports/ReportTable";
@@ -40,13 +40,13 @@ export default async function LeadsReportPage({ searchParams }: Props) {
       category="leads"
       currentFilters={params.toString()}
     >
-      <Card className="rounded-md p-4">
+      <Card><CardContent className="p-4">
         <p className="text-sm text-muted-foreground">{t("leads.conversionRate")}</p>
         <p className="text-2xl font-bold mt-1">{conversion.rate}%</p>
         <p className="text-xs text-muted-foreground mt-1">
           {conversion.converted} / {conversion.leads} {t("leads.converted")}
         </p>
-      </Card>
+      </CardContent></Card>
       <ReportChart data={newLeads} titleKey="newLeads" type="area" />
       <ReportChart data={leadSources} titleKey="leadSources" type="bar" />
       <ReportChart data={newContacts} titleKey="newContacts" type="area" />
