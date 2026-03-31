@@ -60,6 +60,23 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // PDF handled in Task 20
-  return NextResponse.json({ error: "PDF export not yet implemented" }, { status: 501 });
+  if (format === "pdf") {
+    const { generatePDF } = await import("@/actions/reports/export-pdf");
+    const { data, headers } = await getReportData(category, filters);
+    const dateRange = `${searchParams.get("from") ?? "all"} to ${searchParams.get("to") ?? "now"}`;
+    const buffer = await generatePDF(
+      `${category.charAt(0).toUpperCase() + category.slice(1)} Report`,
+      dateRange,
+      data,
+      headers as [string, string]
+    );
+    return new Response(buffer, {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${category}-report.pdf"`,
+      },
+    });
+  }
+
+  return NextResponse.json({ error: "Unknown format" }, { status: 400 });
 }
