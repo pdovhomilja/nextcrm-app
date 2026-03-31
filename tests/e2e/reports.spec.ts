@@ -13,7 +13,7 @@ test.describe("Reports Module", () => {
     ).toBeVisible({ timeout: 10000 });
 
     // Verify at least one KPI card is rendered
-    const kpiCards = page.locator('[class*="tremor"]').filter({ hasText: /\d/ });
+    const kpiCards = page.locator('[class*="bg-card"]').filter({ hasText: /\d/ });
     await expect(kpiCards.first()).toBeVisible({ timeout: 10000 });
   });
 
@@ -41,7 +41,7 @@ test.describe("Reports Module", () => {
     ).toBeVisible({ timeout: 10000 });
 
     // Verify at least one chart card is rendered
-    const cards = page.locator('[class*="tremor"]');
+    const cards = page.locator('[class*="bg-card"]');
     await expect(cards.first()).toBeVisible({ timeout: 10000 });
   });
 

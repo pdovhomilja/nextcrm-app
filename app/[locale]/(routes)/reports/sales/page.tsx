@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { Card } from "@tremor/react";
+import { Card, CardContent } from "@/components/ui/card";
 import { ReportPageLayout } from "@/components/reports/ReportPageLayout";
 import { ReportChart } from "@/components/reports/ReportChart";
 import { parseSearchParamsToFilters } from "@/actions/reports/types";
@@ -50,28 +50,28 @@ export default async function SalesReportPage({ searchParams }: Props) {
       currentFilters={params.toString()}
     >
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="rounded-md p-4">
+        <Card><CardContent className="p-4">
           <p className="text-sm text-muted-foreground">{t("sales.revenue")}</p>
           <p className="text-2xl font-bold mt-1">{currencyFormatter.format(revenue)}</p>
-        </Card>
-        <Card className="rounded-md p-4">
+        </CardContent></Card>
+        <Card><CardContent className="p-4">
           <p className="text-sm text-muted-foreground">{t("sales.pipeline")}</p>
           <p className="text-2xl font-bold mt-1">{currencyFormatter.format(pipeline)}</p>
-        </Card>
-        <Card className="rounded-md p-4">
+        </CardContent></Card>
+        <Card><CardContent className="p-4">
           <p className="text-sm text-muted-foreground">{t("sales.avgDeal")}</p>
           <p className="text-2xl font-bold mt-1">{currencyFormatter.format(avgDeal)}</p>
-        </Card>
+        </CardContent></Card>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Card className="rounded-md p-4">
+        <Card><CardContent className="p-4">
           <p className="text-sm text-muted-foreground">{t("sales.winRate")}</p>
           <p className="text-2xl font-bold mt-1">{winLoss.rate}%</p>
-        </Card>
-        <Card className="rounded-md p-4">
+        </CardContent></Card>
+        <Card><CardContent className="p-4">
           <p className="text-sm text-muted-foreground">{t("sales.cycleLength")}</p>
           <p className="text-2xl font-bold mt-1">{cycleLength} {t("sales.days")}</p>
-        </Card>
+        </CardContent></Card>
       </div>
       <ReportChart data={oppsByStage} titleKey="oppsByStage" type="bar" />
       <ReportChart data={oppsByMonth} titleKey="oppsByMonth" type="area" />
