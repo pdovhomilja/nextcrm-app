@@ -3,6 +3,7 @@
 import { prismadb } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import type { Prisma } from "@prisma/client";
 import type { ReportCategory } from "./types";
 
 async function getUserId(): Promise<string> {
@@ -13,7 +14,7 @@ async function getUserId(): Promise<string> {
 
 export async function saveConfig(input: { name: string; category: ReportCategory; filters: Record<string, unknown>; isShared: boolean }) {
   const userId = await getUserId();
-  return prismadb.crm_Report_Config.create({ data: { name: input.name, category: input.category, filters: input.filters, isShared: input.isShared, createdBy: userId } });
+  return prismadb.crm_Report_Config.create({ data: { name: input.name, category: input.category, filters: input.filters as Prisma.InputJsonValue, isShared: input.isShared, createdBy: userId } });
 }
 
 export async function loadConfigs(category: ReportCategory) {
@@ -30,7 +31,7 @@ export async function duplicateConfig(configId: string, newName: string) {
   const userId = await getUserId();
   const original = await prismadb.crm_Report_Config.findMany({ where: { id: configId } });
   if (!original[0]) throw new Error("Config not found");
-  return prismadb.crm_Report_Config.create({ data: { name: newName, category: original[0].category, filters: original[0].filters as Record<string, unknown>, isShared: false, createdBy: userId } });
+  return prismadb.crm_Report_Config.create({ data: { name: newName, category: original[0].category, filters: original[0].filters as Prisma.InputJsonValue, isShared: false, createdBy: userId } });
 }
 
 export async function toggleShare(configId: string, isShared: boolean) {
