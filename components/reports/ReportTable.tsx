@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, Title } from "@tremor/react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ChartDataPoint } from "@/actions/reports/types";
@@ -21,9 +21,10 @@ export function ReportTable({ data, titleKey, nameColumnKey = "name", valueColum
   const sorted = [...data].sort((a, b) => sortAsc ? a.Number - b.Number : b.Number - a.Number);
 
   return (
-    <Card className="rounded-md">
-      <Title>{t(titleKey)}</Title>
-      <table className="w-full mt-4">
+    <Card>
+      <CardHeader><CardTitle className="text-base">{t(titleKey)}</CardTitle></CardHeader>
+      <CardContent>
+      <table className="w-full">
         <thead>
           <tr className="border-b">
             <th className="text-left py-2 text-sm text-muted-foreground">{t(nameColumnKey)}</th>
@@ -44,6 +45,7 @@ export function ReportTable({ data, titleKey, nameColumnKey = "name", valueColum
           ))}
         </tbody>
       </table>
+      </CardContent>
     </Card>
   );
 }
