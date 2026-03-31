@@ -62,15 +62,17 @@ backups/
 
 # Playwright
 test-results/
-playwright-report/
-playwright/.cache/
-playwright/.auth/
+playwright*/
+tsx-*
 
 #jest
 /jest_dy
-/jiti1
+/jiti
 
 .worktrees/
 
 # v8 compile cache
 v8-compile-cache-*/
+
+#superpowers plugin
+.superpowers/

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Card } from "@tremor/react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
 import type { KPIData } from "@/actions/reports/types";
 import { useTranslations } from "next-intl";
@@ -21,15 +21,17 @@ export function KPICard({ kpi, dateParams }: { kpi: KPIData; dateParams: string 
 
   return (
     <Link href={`${kpi.href}?${dateParams}`}>
-      <Card className="rounded-md cursor-pointer hover:shadow-md transition-shadow p-4">
-        <p className="text-sm text-muted-foreground">{t(kpi.label)}</p>
-        <div className="flex items-end justify-between mt-2">
-          <p className="text-2xl font-bold">{formatValue(kpi.value, kpi.label)}</p>
-          <div className={`flex items-center text-sm ${isPositive ? "text-green-600" : isZero ? "text-gray-500" : "text-red-600"}`}>
+      <Card className="cursor-pointer hover:shadow-md transition-shadow">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">{t(kpi.label)}</CardTitle>
+          <div className={`flex items-center text-sm ${isPositive ? "text-green-600 dark:text-green-400" : isZero ? "text-gray-500 dark:text-gray-400" : "text-red-600 dark:text-red-400"}`}>
             {isPositive ? <ArrowUpRight className="h-4 w-4" /> : isZero ? <Minus className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
             <span>{Math.abs(kpi.changePercent)}%</span>
           </div>
-        </div>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-medium">{formatValue(kpi.value, kpi.label)}</div>
+        </CardContent>
       </Card>
     </Link>
   );
