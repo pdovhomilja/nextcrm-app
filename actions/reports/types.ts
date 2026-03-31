@@ -59,6 +59,15 @@ export function parseSearchParamsToFilters(params: URLSearchParams): ReportFilte
   };
 }
 
+/** Convert a Record<string, number> to ChartDataPoint[], optionally sorted by key */
+export function groupedToChartData(
+  grouped: Record<string, number>,
+  sort = false
+): ChartDataPoint[] {
+  const keys = sort ? Object.keys(grouped).sort() : Object.keys(grouped);
+  return keys.map((name) => ({ name, Number: grouped[name] }));
+}
+
 export function filtersToSearchParams(filters: ReportFilters): string {
   const params = new URLSearchParams();
   params.set("from", filters.dateFrom.toISOString().split("T")[0]);

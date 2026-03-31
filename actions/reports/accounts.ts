@@ -1,18 +1,19 @@
 import { prismadb } from "@/lib/prisma";
 import type { ReportFilters, ChartDataPoint } from "./types";
+import { groupedToChartData } from "./types";
 
 export async function getNewAccounts(filters: ReportFilters): Promise<ChartDataPoint[]> {
   const accounts = await prismadb.crm_Accounts.findMany({
     where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null },
     select: { createdAt: true },
   });
-  const grouped = accounts.reduce<Record<string, number>>((acc, a) => {
+  const grouped: Record<string, number> = {};
+  for (const a of accounts) {
     const d = new Date(a.createdAt);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    acc[key] = (acc[key] || 0) + 1;
-    return acc;
-  }, {});
-  return Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([name, count]: [string, number]) => ({ name, Number: count }));
+    grouped[key] = (grouped[key] || 0) + 1;
+  }
+  return groupedToChartData(grouped, true);
 }
 
 export async function getAccountsByIndustry(filters: ReportFilters): Promise<ChartDataPoint[]> {
@@ -20,12 +21,12 @@ export async function getAccountsByIndustry(filters: ReportFilters): Promise<Cha
     where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null },
     select: { industry_type: { select: { name: true } } },
   });
-  const grouped = accounts.reduce<Record<string, number>>((acc, a) => {
+  const grouped: Record<string, number> = {};
+  for (const a of accounts) {
     const name = a.industry_type?.name ?? "Unknown";
-    acc[name] = (acc[name] || 0) + 1;
-    return acc;
-  }, {});
-  return Object.entries(grouped).map(([name, count]: [string, number]) => ({ name, Number: count }));
+    grouped[name] = (grouped[name] || 0) + 1;
+  }
+  return groupedToChartData(grouped);
 }
 
 export async function getTopAccountsByRevenue(filters: ReportFilters): Promise<ChartDataPoint[]> {
@@ -35,7 +36,7 @@ export async function getTopAccountsByRevenue(filters: ReportFilters): Promise<C
     orderBy: { annual_revenue: "desc" },
     take: 10,
   });
-  return accounts.map((a) => ({ name: a.name, Number: parseInt(a.annual_revenue ?? "0", 10) }));
+  return accounts.map((a: { name: string; annual_revenue: string | null }) => ({ name: a.name, Number: parseInt(a.annual_revenue ?? "0", 10) }));
 }
 
 export async function getAccountsBySize(filters: ReportFilters): Promise<ChartDataPoint[]> {
@@ -59,5 +60,9 @@ export async function getAccountsBySize(filters: ReportFilters): Promise<ChartDa
     const range = ranges.find((r) => emp >= r.min && emp <= r.max);
     if (range) counts[range.label]++;
   }
-  return Object.entries(counts).filter(([, count]: [string, number]) => count > 0).map(([name, count]: [string, number]) => ({ name, Number: count }));
+  const result: ChartDataPoint[] = [];
+  for (const key of Object.keys(counts)) {
+    if (counts[key] > 0) result.push({ name: key, Number: counts[key] });
+  }
+  return result;
 }

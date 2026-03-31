@@ -1,5 +1,6 @@
 import { prismadb } from "@/lib/prisma";
 import type { ReportFilters, ChartDataPoint } from "./types";
+import { groupedToChartData } from "./types";
 
 function dateRangeWhere(filters: ReportFilters) {
   return {
@@ -29,12 +30,12 @@ export async function getOppsByStage(filters: ReportFilters): Promise<ChartDataP
     where: dateRangeWhere(filters),
     select: { assigned_sales_stage: { select: { name: true } } },
   });
-  const grouped = opps.reduce<Record<string, number>>((acc, opp) => {
+  const grouped: Record<string, number> = {};
+  for (const opp of opps) {
     const stage = opp.assigned_sales_stage?.name ?? "Unassigned";
-    acc[stage] = (acc[stage] || 0) + 1;
-    return acc;
-  }, {});
-  return Object.entries(grouped).map(([name, count]: [string, number]) => ({ name, Number: count }));
+    grouped[stage] = (grouped[stage] || 0) + 1;
+  }
+  return groupedToChartData(grouped);
 }
 
 export async function getOppsByMonth(filters: ReportFilters): Promise<ChartDataPoint[]> {
@@ -42,16 +43,14 @@ export async function getOppsByMonth(filters: ReportFilters): Promise<ChartDataP
     where: dateRangeWhere(filters),
     select: { created_on: true },
   });
-  const grouped = opps.reduce<Record<string, number>>((acc, opp) => {
-    if (!opp.created_on) return acc;
+  const grouped: Record<string, number> = {};
+  for (const opp of opps) {
+    if (!opp.created_on) continue;
     const d = new Date(opp.created_on);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    acc[key] = (acc[key] || 0) + 1;
-    return acc;
-  }, {});
-  return Object.entries(grouped)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([name, count]: [string, number]) => ({ name, Number: count }));
+    grouped[key] = (grouped[key] || 0) + 1;
+  }
+  return groupedToChartData(grouped, true);
 }
 
 export async function getWinLossRate(
@@ -80,10 +79,11 @@ export async function getSalesCycleLength(filters: ReportFilters): Promise<numbe
     select: { created_on: true, close_date: true },
   });
   if (opps.length === 0) return 0;
-  const totalDays = opps.reduce((sum: number, opp) => {
-    if (!opp.created_on || !opp.close_date) return sum;
+  let totalDays = 0;
+  for (const opp of opps) {
+    if (!opp.created_on || !opp.close_date) continue;
     const diff = opp.close_date.getTime() - opp.created_on.getTime();
-    return sum + diff / (1000 * 60 * 60 * 24);
-  }, 0);
+    totalDays += diff / (1000 * 60 * 60 * 24);
+  }
   return Math.round(totalDays / opps.length);
 }
