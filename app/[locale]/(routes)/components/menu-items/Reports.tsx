@@ -29,6 +29,7 @@ export default function getReportsMenuItem({
     title,
     icon: FileBarChart,
     items: [
+      { title: "Dashboard", url: "/reports", exact: true },
       { title: "Sales", url: "/reports/sales" },
       { title: "Leads", url: "/reports/leads" },
       { title: "Accounts", url: "/reports/accounts" },

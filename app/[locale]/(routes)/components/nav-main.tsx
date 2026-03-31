@@ -52,6 +52,7 @@ export interface NavSubItem {
   title: string
   url: string
   isActive?: boolean
+  exact?: boolean
 }
 
 interface NavMainProps {
@@ -63,9 +64,12 @@ export function NavMain({ items, dict }: NavMainProps) {
   const pathname = usePathname()
 
   // Helper function to check if a route is active
-  const isRouteActive = (url: string): boolean => {
+  const isRouteActive = (url: string, exact?: boolean): boolean => {
     if (url === "/" || url === "") {
       return pathname === "/" || pathname === ""
+    }
+    if (exact) {
+      return pathname === url || pathname.replace(/^\/[a-z]{2}(?=\/|$)/, "") === url
     }
     return pathname.startsWith(url)
   }
@@ -106,7 +110,7 @@ export function NavMain({ items, dict }: NavMainProps) {
                   <CollapsibleContent>
                     <SidebarMenuSub>
                       {item.items.map((subItem) => {
-                        const isActive = isRouteActive(subItem.url)
+                        const isActive = isRouteActive(subItem.url, subItem.exact)
                         return (
                           <SidebarMenuSubItem key={subItem.title}>
                             <SidebarMenuSubButton
