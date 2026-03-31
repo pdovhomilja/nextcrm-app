@@ -9,7 +9,7 @@ function groupByMonth(items: { createdAt?: Date | null }[]): ChartDataPoint[] {
     acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {});
-  return Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([name, count]) => ({ name, Number: count }));
+  return Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([name, count]: [string, number]) => ({ name, Number: count }));
 }
 
 export async function getNewLeads(filters: ReportFilters): Promise<ChartDataPoint[]> {
@@ -30,7 +30,7 @@ export async function getLeadSources(filters: ReportFilters): Promise<ChartDataP
     acc[source] = (acc[source] || 0) + 1;
     return acc;
   }, {});
-  return Object.entries(grouped).map(([name, count]) => ({ name, Number: count }));
+  return Object.entries(grouped).map(([name, count]: [string, number]) => ({ name, Number: count }));
 }
 
 export async function getConversionRate(filters: ReportFilters): Promise<{ leads: number; converted: number; rate: number }> {
@@ -61,5 +61,5 @@ export async function getContactsByAccount(filters: ReportFilters): Promise<Char
     acc[name] = (acc[name] || 0) + 1;
     return acc;
   }, {});
-  return Object.entries(grouped).map(([name, count]) => ({ name, Number: count }));
+  return Object.entries(grouped).map(([name, count]: [string, number]) => ({ name, Number: count }));
 }

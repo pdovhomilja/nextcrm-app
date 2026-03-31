@@ -34,7 +34,7 @@ export async function getOppsByStage(filters: ReportFilters): Promise<ChartDataP
     acc[stage] = (acc[stage] || 0) + 1;
     return acc;
   }, {});
-  return Object.entries(grouped).map(([name, count]) => ({ name, Number: count }));
+  return Object.entries(grouped).map(([name, count]: [string, number]) => ({ name, Number: count }));
 }
 
 export async function getOppsByMonth(filters: ReportFilters): Promise<ChartDataPoint[]> {
@@ -51,7 +51,7 @@ export async function getOppsByMonth(filters: ReportFilters): Promise<ChartDataP
   }, {});
   return Object.entries(grouped)
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([name, count]) => ({ name, Number: count }));
+    .map(([name, count]: [string, number]) => ({ name, Number: count }));
 }
 
 export async function getWinLossRate(
@@ -80,7 +80,7 @@ export async function getSalesCycleLength(filters: ReportFilters): Promise<numbe
     select: { created_on: true, close_date: true },
   });
   if (opps.length === 0) return 0;
-  const totalDays = opps.reduce((sum, opp) => {
+  const totalDays = opps.reduce((sum: number, opp) => {
     if (!opp.created_on || !opp.close_date) return sum;
     const diff = opp.close_date.getTime() - opp.created_on.getTime();
     return sum + diff / (1000 * 60 * 60 * 24);

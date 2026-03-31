@@ -12,7 +12,7 @@ export async function getNewAccounts(filters: ReportFilters): Promise<ChartDataP
     acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {});
-  return Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([name, count]) => ({ name, Number: count }));
+  return Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([name, count]: [string, number]) => ({ name, Number: count }));
 }
 
 export async function getAccountsByIndustry(filters: ReportFilters): Promise<ChartDataPoint[]> {
@@ -25,7 +25,7 @@ export async function getAccountsByIndustry(filters: ReportFilters): Promise<Cha
     acc[name] = (acc[name] || 0) + 1;
     return acc;
   }, {});
-  return Object.entries(grouped).map(([name, count]) => ({ name, Number: count }));
+  return Object.entries(grouped).map(([name, count]: [string, number]) => ({ name, Number: count }));
 }
 
 export async function getTopAccountsByRevenue(filters: ReportFilters): Promise<ChartDataPoint[]> {
@@ -59,5 +59,5 @@ export async function getAccountsBySize(filters: ReportFilters): Promise<ChartDa
     const range = ranges.find((r) => emp >= r.min && emp <= r.max);
     if (range) counts[range.label]++;
   }
-  return Object.entries(counts).filter(([, count]) => count > 0).map(([name, count]) => ({ name, Number: count }));
+  return Object.entries(counts).filter(([, count]: [string, number]) => count > 0).map(([name, count]: [string, number]) => ({ name, Number: count }));
 }
