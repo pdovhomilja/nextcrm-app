@@ -6,7 +6,7 @@ jest.mock("@/lib/prisma", () => ({
     crm_Accounts: { count: jest.fn() },
     crm_Contracts: { count: jest.fn() },
     crm_campaign_sends: { count: jest.fn() },
-    Tasks: { count: jest.fn() },
+    tasks: { count: jest.fn() },
     users: { count: jest.fn() },
   },
 }));
@@ -30,7 +30,7 @@ describe("getDashboardKPIs", () => {
     (prismadb.crm_Opportunities.count as jest.Mock).mockResolvedValueOnce(25).mockResolvedValueOnce(20);
     (prismadb.crm_Contacts.count as jest.Mock).mockResolvedValueOnce(100).mockResolvedValueOnce(80);
     (prismadb.users.count as jest.Mock).mockResolvedValueOnce(30).mockResolvedValueOnce(25);
-    (prismadb.Tasks.count as jest.Mock).mockResolvedValueOnce(15).mockResolvedValueOnce(12).mockResolvedValueOnce(3).mockResolvedValueOnce(2);
+    (prismadb.tasks.count as jest.Mock).mockResolvedValueOnce(15).mockResolvedValueOnce(12).mockResolvedValueOnce(3).mockResolvedValueOnce(2);
     (prismadb.crm_campaign_sends.count as jest.Mock).mockResolvedValueOnce(200).mockResolvedValueOnce(150).mockResolvedValueOnce(80).mockResolvedValueOnce(60);
     (prismadb.crm_Accounts.count as jest.Mock).mockResolvedValueOnce(20).mockResolvedValueOnce(15);
     (prismadb.crm_Contracts.count as jest.Mock).mockResolvedValueOnce(5).mockResolvedValueOnce(3);
