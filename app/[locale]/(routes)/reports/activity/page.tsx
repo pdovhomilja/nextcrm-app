@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { Card } from "@tremor/react";
+import { Card, CardContent } from "@/components/ui/card";
 import { ReportPageLayout } from "@/components/reports/ReportPageLayout";
 import { ReportChart } from "@/components/reports/ReportChart";
 import { parseSearchParamsToFilters } from "@/actions/reports/types";
@@ -42,10 +42,10 @@ export default async function ActivityReportPage({ searchParams }: Props) {
       category="activity"
       currentFilters={params.toString()}
     >
-      <Card className="rounded-md p-4">
+      <Card><CardContent className="p-4">
         <p className="text-sm text-muted-foreground">{t("activity.overdueTasks")}</p>
         <p className="text-2xl font-bold mt-1 text-red-500">{overdue}</p>
-      </Card>
+      </CardContent></Card>
       <ReportChart
         data={taskChartData as never}
         titleKey="tasksCreatedCompleted"
