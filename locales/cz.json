@@ -463,6 +463,43 @@
     "campaignsDescription": "Email campaign performance analytics",
     "usersTitle": "Users Reports",
     "usersDescription": "User growth and activity analytics",
+    "sales": {
+      "title": "Sales Reports",
+      "description": "Revenue, pipeline, and deal analytics",
+      "revenue": "Total Revenue",
+      "pipeline": "Pipeline Value",
+      "avgDeal": "Average Deal Size",
+      "winRate": "Win Rate",
+      "cycleLength": "Avg. Sales Cycle",
+      "days": "days"
+    },
+    "leads": {
+      "title": "Leads & Contacts Reports",
+      "description": "Lead generation and contact analytics",
+      "conversionRate": "Conversion Rate",
+      "converted": "converted"
+    },
+    "accounts": {
+      "title": "Accounts Reports",
+      "description": "Account growth and segmentation"
+    },
+    "activity": {
+      "title": "Activity Reports",
+      "description": "Tasks and activities analytics",
+      "overdueTasks": "Overdue Tasks"
+    },
+    "campaigns": {
+      "title": "Campaigns Reports",
+      "description": "Email campaign performance analytics",
+      "sent": "Emails Sent",
+      "openRate": "Open Rate",
+      "clickRate": "Click Rate"
+    },
+    "users": {
+      "title": "Users Reports",
+      "description": "User growth and activity analytics",
+      "totalActive": "Total Active Users"
+    },
     "kpi": {
       "totalRevenue": "Total Revenue",
       "pipelineValue": "Pipeline Value",
@@ -507,6 +544,15 @@
       "activeUsersByYear": "Active Users by Year",
       "userGrowth": "User Growth",
       "usersByRole": "Users by Role",
+      "oppsByStage": "Opportunities by Sales Stage",
+      "newLeads": "New Leads by Month",
+      "newContacts": "New Contacts by Month",
+      "newAccounts": "New Accounts by Month",
+      "byIndustry": "Accounts by Industry",
+      "topByRevenue": "Top Accounts by Revenue",
+      "bySize": "Accounts by Size",
+      "targetGrowth": "Target List Growth",
+      "activeByYear": "Active Users by Year",
       "name": "Name",
       "value": "Value"
     },
