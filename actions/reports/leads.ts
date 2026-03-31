@@ -46,15 +46,15 @@ export async function getConversionRate(filters: ReportFilters): Promise<{ leads
 
 export async function getNewContacts(filters: ReportFilters): Promise<ChartDataPoint[]> {
   const contacts = await prismadb.crm_Contacts.findMany({
-    where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null },
-    select: { createdAt: true },
+    where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo } },
+    select: { created_on: true },
   });
-  return groupByMonth(contacts);
+  return groupByMonth(contacts.map((c) => ({ createdAt: c.created_on })));
 }
 
 export async function getContactsByAccount(filters: ReportFilters): Promise<ChartDataPoint[]> {
   const contacts = await prismadb.crm_Contacts.findMany({
-    where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null },
+    where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo } },
     select: { assigned_accounts: { select: { name: true } } },
   });
   const grouped: Record<string, number> = {};

@@ -5,7 +5,7 @@ import { groupedToChartData } from "./types";
 export async function getTasksCreatedCompleted(
   filters: ReportFilters
 ): Promise<{ name: string; created: number; completed: number }[]> {
-  const tasks = await prismadb.Tasks.findMany({
+  const tasks = await prismadb.tasks.findMany({
     where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo } },
     select: { createdAt: true, taskStatus: true },
   });
@@ -26,13 +26,13 @@ export async function getTasksCreatedCompleted(
 }
 
 export async function getOverdueTasks(filters: ReportFilters): Promise<number> {
-  return prismadb.Tasks.count({
+  return prismadb.tasks.count({
     where: { dueDateAt: { lt: new Date(), gte: filters.dateFrom }, taskStatus: "ACTIVE" },
   });
 }
 
 export async function getTasksByAssignee(filters: ReportFilters): Promise<ChartDataPoint[]> {
-  const tasks = await prismadb.Tasks.findMany({
+  const tasks = await prismadb.tasks.findMany({
     where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo } },
     select: { assigned_user: { select: { name: true } } },
   });

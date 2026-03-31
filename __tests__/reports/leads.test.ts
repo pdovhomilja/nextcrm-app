@@ -51,8 +51,8 @@ describe("leads report actions", () => {
   describe("getNewContacts", () => {
     it("groups contacts by creation month", async () => {
       (prismadb.crm_Contacts.findMany as jest.Mock).mockResolvedValue([
-        { createdAt: new Date("2025-02-10") },
-        { createdAt: new Date("2025-02-15") },
+        { created_on: new Date("2025-02-10") },
+        { created_on: new Date("2025-02-15") },
       ]);
       const result = await getNewContacts(baseFilters);
       expect(result).toEqual([{ name: "2025-02", Number: 2 }]);

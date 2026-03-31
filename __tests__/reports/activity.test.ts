@@ -1,6 +1,6 @@
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
-    Tasks: { findMany: jest.fn(), count: jest.fn() },
+    tasks: { findMany: jest.fn(), count: jest.fn() },
     crm_Activities: { findMany: jest.fn() },
   },
 }));
@@ -16,7 +16,7 @@ describe("activity report actions", () => {
 
   describe("getTasksCreatedCompleted", () => {
     it("returns created and completed task counts by month", async () => {
-      (prismadb.Tasks.findMany as jest.Mock).mockResolvedValue([
+      (prismadb.tasks.findMany as jest.Mock).mockResolvedValue([
         { createdAt: new Date("2025-01-10"), taskStatus: "ACTIVE" },
         { createdAt: new Date("2025-01-20"), taskStatus: "COMPLETE" },
         { createdAt: new Date("2025-02-10"), taskStatus: "COMPLETE" },
@@ -31,7 +31,7 @@ describe("activity report actions", () => {
 
   describe("getOverdueTasks", () => {
     it("returns count of overdue tasks", async () => {
-      (prismadb.Tasks.count as jest.Mock).mockResolvedValue(5);
+      (prismadb.tasks.count as jest.Mock).mockResolvedValue(5);
       const result = await getOverdueTasks(baseFilters);
       expect(result).toBe(5);
     });
@@ -39,7 +39,7 @@ describe("activity report actions", () => {
 
   describe("getTasksByAssignee", () => {
     it("groups tasks by assigned user name", async () => {
-      (prismadb.Tasks.findMany as jest.Mock).mockResolvedValue([
+      (prismadb.tasks.findMany as jest.Mock).mockResolvedValue([
         { assigned_user: { name: "Alice" } },
         { assigned_user: { name: "Alice" } },
         { assigned_user: { name: "Bob" } },
