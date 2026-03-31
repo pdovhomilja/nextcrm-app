@@ -40,12 +40,13 @@ export async function getTopTemplates(filters: ReportFilters): Promise<ChartData
 
 export async function getTargetListGrowth(filters: ReportFilters): Promise<ChartDataPoint[]> {
   const lists = await prismadb.crm_TargetLists.findMany({
-    where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo } },
-    select: { createdAt: true, _count: { select: { targets: true } } },
+    where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo } },
+    select: { created_on: true, _count: { select: { targets: true } } },
   });
   const grouped: Record<string, number> = {};
   for (const l of lists) {
-    const d = new Date(l.createdAt);
+    if (!l.created_on) continue;
+    const d = new Date(l.created_on);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     grouped[key] = (grouped[key] || 0) + l._count.targets;
   }
