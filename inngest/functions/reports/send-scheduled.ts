@@ -37,9 +37,12 @@ function isScheduleDue(cron: string, lastSentAt: Date | null): boolean {
 }
 
 export const reportSendScheduled = inngest.createFunction(
-  { id: "report-send-scheduled", name: "Reports: Send Scheduled" },
-  { cron: "*/15 * * * *" },
-  async ({ step }) => {
+  {
+    id: "report-send-scheduled",
+    name: "Reports: Send Scheduled",
+    triggers: [{ cron: "*/15 * * * *" }],
+  },
+  async ({ step }: { step: any }) => {
     const schedules = await step.run("find-due-schedules", async () => {
       return prismadb.crm_Report_Schedule.findMany({
         where: { isActive: true },
@@ -47,7 +50,7 @@ export const reportSendScheduled = inngest.createFunction(
       });
     });
 
-    const dueSchedules = schedules.filter((s) => isScheduleDue(s.cronExpression, s.lastSentAt));
+    const dueSchedules = schedules.filter((s: any) => isScheduleDue(s.cronExpression, s.lastSentAt));
     if (dueSchedules.length === 0) return { processed: 0 };
 
     for (const schedule of dueSchedules) {
