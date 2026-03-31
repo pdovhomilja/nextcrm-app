@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { Card } from "@tremor/react";
+import { Card, CardContent } from "@/components/ui/card";
 import { ReportPageLayout } from "@/components/reports/ReportPageLayout";
 import { ReportChart } from "@/components/reports/ReportChart";
 import { parseSearchParamsToFilters } from "@/actions/reports/types";
@@ -37,21 +37,21 @@ export default async function CampaignsReportPage({ searchParams }: Props) {
       currentFilters={params.toString()}
     >
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="rounded-md p-4">
+        <Card><CardContent className="p-4">
           <p className="text-sm text-muted-foreground">{t("campaigns.sent")}</p>
           <p className="text-2xl font-bold mt-1">{performance.sent.toLocaleString()}</p>
-        </Card>
-        <Card className="rounded-md p-4">
+        </CardContent></Card>
+        <Card><CardContent className="p-4">
           <p className="text-sm text-muted-foreground">{t("campaigns.openRate")}</p>
           <p className="text-2xl font-bold mt-1">{performance.openRate}%</p>
-        </Card>
-        <Card className="rounded-md p-4">
+        </CardContent></Card>
+        <Card><CardContent className="p-4">
           <p className="text-sm text-muted-foreground">{t("campaigns.clickRate")}</p>
           <p className="text-2xl font-bold mt-1">{performance.clickRate}%</p>
-        </Card>
+        </CardContent></Card>
       </div>
       <ReportChart data={campaignROI} titleKey="campaignROI" type="bar" />
-      <ReportChart data={topTemplates} titleKey="topTemplates" type="bar" />
+      <ReportChart data={topTemplates} titleKey="topTemplates" type="bar" layout="horizontal" />
       <ReportChart data={targetGrowth} titleKey="targetGrowth" type="area" />
     </ReportPageLayout>
   );
