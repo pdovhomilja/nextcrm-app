@@ -1,8 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Flex, ProgressBar, Text } from "@tremor/react";
-import { Database, Server } from "lucide-react";
+import { Database } from "lucide-react";
 
 // Single KPI card in the demo dashboard with sample inputs
 export default function StorageQuota({
@@ -22,16 +21,17 @@ export default function StorageQuota({
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-medium">{actual}/MB</div>
-        <div>
-          <Flex className="mt-4">
-            <Text className="truncate">
-              {percent}% ({actual}MB)
-            </Text>
-            <Text>2000MB</Text>
-          </Flex>
+        <div className="flex justify-between mt-4">
+          <p className="truncate text-sm text-muted-foreground">
+            {percent}% ({actual}MB)
+          </p>
+          <p className="text-sm text-muted-foreground">2000MB</p>
         </div>
-        <div>
-          <ProgressBar value={percent} color={"orange"} className="mt-2" />
+        <div className="mt-2 h-2 w-full rounded-full bg-muted overflow-hidden">
+          <div
+            className="h-full rounded-full bg-orange-500"
+            style={{ width: `${Math.min(percent, 100)}%` }}
+          />
         </div>
       </CardContent>
     </Card>
