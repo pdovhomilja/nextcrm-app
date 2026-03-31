@@ -18,6 +18,7 @@ import { campaignScheduleSend } from "@/inngest/functions/campaigns/schedule-sen
 import { campaignSendStep } from "@/inngest/functions/campaigns/send-step";
 import { campaignProcessFollowUp } from "@/inngest/functions/campaigns/process-follow-up";
 import { campaignSendNow } from "@/inngest/functions/campaigns/send-now";
+import { reportSendScheduled } from "@/inngest/functions/reports/send-scheduled";
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
@@ -40,5 +41,6 @@ export const { GET, POST, PUT } = serve({
     campaignSendStep,
     campaignProcessFollowUp,
     campaignSendNow,
+    reportSendScheduled,
   ],
 });

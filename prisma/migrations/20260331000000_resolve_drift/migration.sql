@@ -1,0 +1,1 @@
+-- Baseline: resolve drift between migration history and database state

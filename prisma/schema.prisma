@@ -840,6 +840,8 @@ model Users {
   auditLogs                      crm_AuditLog[]
   activities_created             crm_Activities[]  @relation("activity_created_by")
   activities_updated             crm_Activities[]  @relation("activity_updated_by")
+  report_configs               crm_Report_Config[]   @relation("report_configs")
+  report_schedules             crm_Report_Schedule[] @relation("report_schedules")
 
   @@index([email])
   @@index([userStatus])
@@ -865,6 +867,47 @@ model crm_AuditLog {
   @@index([userId])
   @@index([createdAt])
   @@index([entityType, createdAt])
+}
+
+model crm_Report_Config {
+  id        String   @id @default(cuid())
+  name      String
+  category  String   // sales | leads | accounts | activity | campaigns | users
+  filters   Json     @db.JsonB
+  isShared  Boolean  @default(false)
+  createdBy String   @db.Uuid
+
+  user      Users    @relation("report_configs", fields: [createdBy], references: [id])
+  schedules crm_Report_Schedule[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdBy])
+  @@index([category])
+  @@index([isShared])
+}
+
+model crm_Report_Schedule {
+  id             String    @id @default(cuid())
+  reportConfigId String
+  cronExpression String
+  recipients     Json      @db.JsonB
+  format         String    // csv | pdf | both
+  isActive       Boolean   @default(true)
+  lastSentAt     DateTime?
+  createdBy      String    @db.Uuid
+
+  reportConfig crm_Report_Config @relation(fields: [reportConfigId], references: [id], onDelete: Cascade)
+  user         Users              @relation("report_schedules", fields: [createdBy], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([reportConfigId])
+  @@index([createdBy])
+  @@index([isActive])
+  @@index([lastSentAt])
 }
 
 enum Language {
