@@ -135,7 +135,7 @@ export function NavUser({ user }: NavUserProps) {
               Profile Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => signOut()}>
+            <DropdownMenuItem onClick={async () => { await signOut(); window.location.href = "/sign-in"; }}>
               <LogOut className="mr-2 h-4 w-4" />
               Logout
             </DropdownMenuItem>

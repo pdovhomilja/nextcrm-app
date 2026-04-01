@@ -49,7 +49,7 @@ export function CommandComponent() {
         setOpen(false);
       }
       if (e.key === "k" && e.metaKey) {
-        signOut();
+        signOut().then(() => { window.location.href = "/sign-in"; });
       }
     };
 
@@ -94,7 +94,7 @@ export function CommandComponent() {
               <span>{t("profileSettings")}</span>
               <CommandShortcut>Shift + ⌘ + P</CommandShortcut>
             </CommandItem>
-            <CommandItem onClick={() => signOut()}>
+            <CommandItem onClick={async () => { await signOut(); window.location.href = "/sign-in"; }}>
               <LogOut className="mr-2 h-4 w-4" />
               <span>{t("logout")}</span>
               <CommandShortcut>⌘k</CommandShortcut>
