@@ -3,7 +3,7 @@ export interface Session {
   _id: string;
   name: string;
   avatar?: string | null | undefined;
-  isAdmin: boolean;
+  role: string;
   userLanguage: string;
   userStatus: string;
 }

@@ -48,7 +48,7 @@ const AuditLogPage = async (props: {
         total={result.total}
         page={result.page}
         totalPages={result.totalPages}
-        isAdmin
+        role={session?.user?.role ?? "member"}
       />
     </div>
   );

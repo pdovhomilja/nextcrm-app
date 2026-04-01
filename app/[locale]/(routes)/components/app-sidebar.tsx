@@ -65,7 +65,7 @@ interface User {
   name?: string | null;
   email?: string | null;
   image?: string | null;
-  isAdmin?: boolean;
+  role?: string | null;
   userStatus?: string;
   userLanguage?: string;
   lastLoginAt?: Date;
@@ -109,7 +109,7 @@ export function AppSidebar({
   ];
 
   // Administration: admin users only
-  if (session?.user?.isAdmin) {
+  if (session?.user?.role === "admin") {
     navItems.push(
       getAdministrationMenuItem({ title: dict?.settings || "Administration" }),
     );

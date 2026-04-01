@@ -7,7 +7,7 @@ export const adminUserSchema = z.object({
   id: z.string(),
   created_on: z.date(),
   lastLoginAt: z.date().nullable().optional(),
-  is_admin: z.boolean(),
+  role: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
   email: z.string(),
   userStatus: z.string(),

@@ -73,16 +73,19 @@ export const columns: ColumnDef<AdminUser>[] = [
     enableHiding: true,
   },
   {
-    accessorKey: "is_admin",
+    accessorKey: "role",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Admin" />
+      <DataTableColumnHeader column={column} title="Role" />
     ),
 
     cell: ({ row }) => (
-      <div className="">{row.original.is_admin ? "Enable" : "Disable"}</div>
+      <div className="">{row.original.role ?? "member"}</div>
     ),
     enableSorting: true,
     enableHiding: true,
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id));
+    },
   },
 
   {

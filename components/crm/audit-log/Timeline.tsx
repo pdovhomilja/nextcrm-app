@@ -10,11 +10,11 @@ interface TimelineProps {
   entityType: string;
   entityId: string;
   initialData: Awaited<ReturnType<typeof getAuditLogByEntity>>;
-  isAdmin?: boolean;
+  role?: string;
   onRestore?: (entryId: string) => void;
 }
 
-export function AuditTimeline({ entityType, entityId, initialData, isAdmin, onRestore }: TimelineProps) {
+export function AuditTimeline({ entityType, entityId, initialData, role, onRestore }: TimelineProps) {
   const [entries, setEntries] = useState<AuditLogEntry[]>(initialData.data);
   const [cursor, setCursor] = useState<string | null>(initialData.nextCursor);
   const [isPending, startTransition] = useTransition();
@@ -38,7 +38,7 @@ export function AuditTimeline({ entityType, entityId, initialData, isAdmin, onRe
           <AuditEntry
             key={entry.id}
             entry={entry as any}
-            showRestore={isAdmin}
+            showRestore={role === "admin"}
             onRestore={onRestore ? () => onRestore(entry.id) : undefined}
           />
         ))}

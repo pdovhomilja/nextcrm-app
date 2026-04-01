@@ -36,17 +36,15 @@ export async function getUserGrowth(filters: ReportFilters): Promise<ChartDataPo
 export async function getUsersByRole(filters: ReportFilters): Promise<ChartDataPoint[]> {
   const users = await prismadb.users.findMany({
     where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo } },
-    select: { is_admin: true, is_account_admin: true },
+    select: { role: true },
   });
-  let admins = 0, accountAdmins = 0, regularUsers = 0;
+  const roleCounts: Record<string, number> = {};
   for (const u of users) {
-    if (u.is_admin) admins++;
-    else if (u.is_account_admin) accountAdmins++;
-    else regularUsers++;
+    const role = u.role ?? "member";
+    roleCounts[role] = (roleCounts[role] || 0) + 1;
   }
-  const result: ChartDataPoint[] = [];
-  if (admins > 0) result.push({ name: "Admin", Number: admins });
-  if (accountAdmins > 0) result.push({ name: "Account Admin", Number: accountAdmins });
-  if (regularUsers > 0) result.push({ name: "User", Number: regularUsers });
-  return result;
+  return Object.entries(roleCounts).map(([name, Number]) => ({
+    name: name.charAt(0).toUpperCase() + name.slice(1),
+    Number,
+  }));
 }

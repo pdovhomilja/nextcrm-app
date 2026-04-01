@@ -13,7 +13,7 @@ export async function HistoryTab({ contactId }: { contactId: string }) {
       entityType="contact"
       entityId={contactId}
       initialData={initialData}
-      isAdmin={session?.user?.role === "admin" ?? false}
+      role={session?.user?.role ?? "member"}
     />
   );
 }

@@ -135,6 +135,7 @@ async function main() {
         userStatus: "ACTIVE",
         is_admin: true,
         is_account_admin: true,
+        role: "admin",
       },
     });
     console.log(`Test user created: ${testUserEmail}`);
@@ -147,6 +148,7 @@ async function main() {
         userStatus: "ACTIVE",
         is_admin: true,
         is_account_admin: true,
+        role: "admin",
       },
     });
     console.log(`Test user updated: ${testUserEmail}`);
