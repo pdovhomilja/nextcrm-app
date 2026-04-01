@@ -1,14 +1,13 @@
 "use server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
 export const deleteUser = async (userId: string) => {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) return { error: "Unauthorized" };
 
-  if (!session.user.isAdmin) return { error: "Forbidden" };
+  if (!session.user.role === "admin") return { error: "Forbidden" };
 
   if (!userId) return { error: "userId is required" };
 

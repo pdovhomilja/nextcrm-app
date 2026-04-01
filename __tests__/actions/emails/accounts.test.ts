@@ -1,4 +1,4 @@
-jest.mock("next-auth", () => ({ getServerSession: jest.fn() }));
+jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
     emailAccount: {
@@ -10,13 +10,12 @@ jest.mock("@/lib/prisma", () => ({
     },
   },
 }));
-jest.mock("@/lib/auth", () => ({ authOptions: {} }));
 jest.mock("@/lib/email-crypto", () => ({
   encrypt: jest.fn().mockReturnValue("encrypted-password"),
   decrypt: jest.fn().mockReturnValue("plaintext"),
 }));
 
-import { getServerSession } from "next-auth";
+import { getSession } from "@/lib/auth-server";
 import {
   getEmailAccounts,
   createEmailAccount,
@@ -27,7 +26,7 @@ import {
 import { prismadb } from "@/lib/prisma";
 import { encrypt } from "@/lib/email-crypto";
 
-const mockGetServerSession = getServerSession as jest.MockedFunction<typeof getServerSession>;
+const mockGetSession = getSession as jest.MockedFunction<typeof getSession>;
 const mockFindFirst = prismadb.emailAccount.findFirst as jest.MockedFunction<typeof prismadb.emailAccount.findFirst>;
 
 const AUTHED_SESSION = { user: { id: "user-123" } } as any;
@@ -38,12 +37,12 @@ beforeEach(() => {
 
 describe("getEmailAccounts", () => {
   it("throws Unauthorized when no session", async () => {
-    mockGetServerSession.mockResolvedValue(null);
+    mockGetSession.mockResolvedValue(null);
     await expect(getEmailAccounts()).rejects.toThrow("Unauthorized");
   });
 
   it("returns accounts for authenticated user", async () => {
-    mockGetServerSession.mockResolvedValue(AUTHED_SESSION);
+    mockGetSession.mockResolvedValue(AUTHED_SESSION);
     const result = await getEmailAccounts();
     expect(prismadb.emailAccount.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { userId: "user-123" } })
@@ -66,12 +65,12 @@ describe("createEmailAccount", () => {
   };
 
   it("throws Unauthorized when no session", async () => {
-    mockGetServerSession.mockResolvedValue(null);
+    mockGetSession.mockResolvedValue(null);
     await expect(createEmailAccount(input)).rejects.toThrow("Unauthorized");
   });
 
   it("encrypts password and saves account for authenticated user", async () => {
-    mockGetServerSession.mockResolvedValue(AUTHED_SESSION);
+    mockGetSession.mockResolvedValue(AUTHED_SESSION);
     await createEmailAccount(input);
     expect(encrypt).toHaveBeenCalledWith("secret");
     expect(prismadb.emailAccount.create).toHaveBeenCalledWith(
@@ -86,7 +85,7 @@ describe("createEmailAccount", () => {
   });
 
   it("throws when required fields are empty", async () => {
-    mockGetServerSession.mockResolvedValue(AUTHED_SESSION);
+    mockGetSession.mockResolvedValue(AUTHED_SESSION);
     await expect(
       createEmailAccount({ ...input, imapHost: "" })
     ).rejects.toThrow();
@@ -95,18 +94,18 @@ describe("createEmailAccount", () => {
 
 describe("deleteEmailAccount", () => {
   it("throws Unauthorized when no session", async () => {
-    mockGetServerSession.mockResolvedValue(null);
+    mockGetSession.mockResolvedValue(null);
     await expect(deleteEmailAccount("acc-1")).rejects.toThrow("Unauthorized");
   });
 
   it("throws Not found when account does not belong to user", async () => {
-    mockGetServerSession.mockResolvedValue(AUTHED_SESSION);
+    mockGetSession.mockResolvedValue(AUTHED_SESSION);
     mockFindFirst.mockResolvedValue(null);
     await expect(deleteEmailAccount("other-acc")).rejects.toThrow("Not found");
   });
 
   it("deletes account when ownership verified", async () => {
-    mockGetServerSession.mockResolvedValue(AUTHED_SESSION);
+    mockGetSession.mockResolvedValue(AUTHED_SESSION);
     mockFindFirst.mockResolvedValue({ id: "acc-1" } as any);
     await deleteEmailAccount("acc-1");
     expect(prismadb.emailAccount.delete).toHaveBeenCalledWith({ where: { id: "acc-1" } });
@@ -115,18 +114,18 @@ describe("deleteEmailAccount", () => {
 
 describe("setEmailAccountActive", () => {
   it("throws Unauthorized when no session", async () => {
-    mockGetServerSession.mockResolvedValue(null);
+    mockGetSession.mockResolvedValue(null);
     await expect(setEmailAccountActive("acc-1", false)).rejects.toThrow("Unauthorized");
   });
 
   it("throws Not found when account does not belong to user", async () => {
-    mockGetServerSession.mockResolvedValue(AUTHED_SESSION);
+    mockGetSession.mockResolvedValue(AUTHED_SESSION);
     mockFindFirst.mockResolvedValue(null);
     await expect(setEmailAccountActive("acc-1", false)).rejects.toThrow("Not found");
   });
 
   it("updates isActive when ownership verified", async () => {
-    mockGetServerSession.mockResolvedValue(AUTHED_SESSION);
+    mockGetSession.mockResolvedValue(AUTHED_SESSION);
     mockFindFirst.mockResolvedValue({ id: "acc-1" } as any);
     await setEmailAccountActive("acc-1", false);
     expect(prismadb.emailAccount.update).toHaveBeenCalledWith({
@@ -138,7 +137,7 @@ describe("setEmailAccountActive", () => {
 
 describe("testEmailConnection", () => {
   it("throws Unauthorized when no session", async () => {
-    mockGetServerSession.mockResolvedValue(null);
+    mockGetSession.mockResolvedValue(null);
     await expect(
       testEmailConnection({ imapHost: "imap.example.com", imapPort: 993, imapSsl: true, username: "u", password: "p" })
     ).rejects.toThrow("Unauthorized");

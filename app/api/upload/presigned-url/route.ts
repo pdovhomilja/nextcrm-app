@@ -1,7 +1,6 @@
 import path from "path";
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/auth-server";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { minioClient, MINIO_BUCKET, MINIO_PUBLIC_URL } from "@/lib/minio";
@@ -11,7 +10,7 @@ const ALLOWED_FOLDERS = ["avatars", "images", "documents", "uploads"] as const;
 type AllowedFolder = (typeof ALLOWED_FOLDERS)[number];
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { filename: rawFilename, contentType, folder: rawFolder = "uploads" } = await req.json();

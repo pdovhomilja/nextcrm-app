@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import TryAgain from "./components/TryAgain";
@@ -10,12 +9,12 @@ import { Users } from "@prisma/client";
 const PendingPage = async () => {
   const adminUsers: Users[] = await prismadb.users.findMany({
     where: {
-      is_admin: true,
+      role: "admin",
       userStatus: "ACTIVE",
     },
   });
 
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
 
   if (session?.user.userStatus !== "PENDING") {
     return redirect("/");

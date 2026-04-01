@@ -1,10 +1,8 @@
-import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import dayjs from "dayjs";
-import { getServerSession } from "next-auth";
 
 export const getTasksPastDue = async () => {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   const today = dayjs().startOf("day");
   const nextWeek = dayjs().add(7, "day").startOf("day");
   if (session) {

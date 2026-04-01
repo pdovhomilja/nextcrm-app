@@ -1,10 +1,9 @@
 "use server";
+import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 
 export async function setInactiveOpportunity(id: string) {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) {
     return { error: "Unauthenticated" };
   }
@@ -29,7 +28,7 @@ export async function setInactiveOpportunity(id: string) {
       return { error: "Opportunity not found" };
     }
 
-    if (!session.user.isAdmin && opportunity.assigned_to !== session.user.id) {
+    if (!session.user.role === "admin" && opportunity.assigned_to !== session.user.id) {
       return { error: "Forbidden" };
     }
 

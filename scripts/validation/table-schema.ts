@@ -88,8 +88,7 @@ export const TABLE_SCHEMAS: Record<string, TableSchema> = {
     fieldDefinitions: [
       { name: 'userStatus', type: 'Enum', enumValues: ['ACTIVE', 'INACTIVE', 'PENDING'] },
       { name: 'userLanguage', type: 'Enum', enumValues: ['cz', 'en', 'de', 'uk'] },
-      { name: 'is_admin', type: 'Boolean' },
-      { name: 'is_account_admin', type: 'Boolean' },
+      { name: 'role', type: 'Enum', enumValues: ['admin', 'member', 'viewer'] },
       { name: 'created_on', type: 'DateTime' },
       { name: 'lastLoginAt', type: 'DateTime' },
     ],

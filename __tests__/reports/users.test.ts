@@ -54,18 +54,18 @@ describe("users report actions", () => {
   });
 
   describe("getUsersByRole", () => {
-    it("groups users by admin status", async () => {
+    it("groups users by role", async () => {
       (prismadb.users.findMany as jest.Mock).mockResolvedValue([
-        { is_admin: true, is_account_admin: false },
-        { is_admin: false, is_account_admin: true },
-        { is_admin: false, is_account_admin: false },
-        { is_admin: false, is_account_admin: false },
+        { role: "admin" },
+        { role: "member" },
+        { role: "viewer" },
+        { role: "member" },
       ]);
       const result = await getUsersByRole(baseFilters);
       expect(result).toEqual([
         { name: "Admin", Number: 1 },
-        { name: "Account Admin", Number: 1 },
-        { name: "User", Number: 2 },
+        { name: "Member", Number: 2 },
+        { name: "Viewer", Number: 1 },
       ]);
     });
   });

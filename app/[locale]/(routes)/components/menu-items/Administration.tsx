@@ -11,7 +11,7 @@ import { NavItem } from "../nav-main";
  * pointing to the admin panel at /admin.
  *
  * IMPORTANT: This menu item should ONLY be visible to admin users.
- * Role-based visibility check (session.user.is_admin === true) is implemented
+ * Role-based visibility check (session.user.role === "admin") is implemented
  * in the app-sidebar.tsx component, not here.
  *
  * @param title - Localized label for Administration module

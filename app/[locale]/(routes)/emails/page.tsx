@@ -5,8 +5,7 @@ import Link from "next/link";
 import { MailComponent } from "./components/mail";
 import Container from "../components/ui/Container";
 import EmailsSkeleton from "@/components/skeletons/emails-skeleton";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/auth-server";
 import { getTranslations } from "next-intl/server";
 import { getEmailAccounts } from "@/actions/emails/accounts";
 import { getEmails } from "@/actions/emails/messages";
@@ -17,7 +16,7 @@ const EmailRoute = async ({
 }: {
   searchParams: Promise<{ accountId?: string; folder?: string; search?: string; page?: string }>;
 }) => {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
 
   if (!session) {
     redirect("/");

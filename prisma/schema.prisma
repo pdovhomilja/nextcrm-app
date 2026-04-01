@@ -803,6 +803,7 @@ model Users {
   avatar           String?
   email            String       @unique
   is_account_admin Boolean      @default(false)
+  role             String       @default("member")
   is_admin         Boolean      @default(false)
   created_on       DateTime     @default(now())
   lastLoginAt      DateTime?
@@ -842,6 +843,8 @@ model Users {
   activities_updated             crm_Activities[]  @relation("activity_updated_by")
   report_configs               crm_Report_Config[]   @relation("report_configs")
   report_schedules             crm_Report_Schedule[] @relation("report_schedules")
+  sessions                     Session[]
+  authAccounts                 Account[]
 
   @@index([email])
   @@index([userStatus])
@@ -1348,4 +1351,48 @@ model EmailsToAccounts {
   @@id([emailId, accountId])
   @@index([emailId])
   @@index([accountId])
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String   @db.Uuid
+  user      Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String    @db.Uuid
+  user                  Users     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt
+
+  @@map("verification")
 }

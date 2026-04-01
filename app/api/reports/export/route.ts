@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/auth-server";
 import { parseSearchParamsToFilters } from "@/actions/reports/types";
 import { generateCSV } from "@/actions/reports/export-csv";
 import * as salesActions from "@/actions/reports/sales";
@@ -39,8 +38,8 @@ async function getReportData(category: string, filters: ReturnType<typeof parseS
 }
 
 export async function GET(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
+  const session = await getSession();
+  if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

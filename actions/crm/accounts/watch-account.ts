@@ -1,11 +1,10 @@
 "use server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { junctionTableHelpers } from "@/lib/junction-helpers";
 
 export const watchAccount = async (accountId: string) => {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) return { error: "Unauthorized" };
 
   if (!accountId) return { error: "accountId is required" };

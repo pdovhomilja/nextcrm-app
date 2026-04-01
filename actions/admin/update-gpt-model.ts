@@ -1,15 +1,14 @@
 "use server";
+import { getSession } from "@/lib/auth-server";
 
 import { prismadb } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 
 const updateModel = async (model: any) => {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) {
     return { error: "Unauthenticated" };
   }
-  if (!session.user.isAdmin) {
+  if (!session.user.role === "admin") {
     return { error: "Forbidden" };
   }
 

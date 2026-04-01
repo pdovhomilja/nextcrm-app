@@ -1,6 +1,5 @@
 "use server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import sendEmail from "@/lib/sendmail";
@@ -22,7 +21,7 @@ export const createOpportunity = async (data: {
   sales_stage?: string;
   type?: string;
 }) => {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) return { error: "Unauthorized" };
 
   const userId = session.user.id;
