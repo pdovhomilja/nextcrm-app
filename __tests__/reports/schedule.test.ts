@@ -3,8 +3,7 @@ jest.mock("@/lib/prisma", () => ({
     crm_Report_Schedule: { create: jest.fn(), findMany: jest.fn(), update: jest.fn(), delete: jest.fn() },
   },
 }));
-jest.mock("next-auth", () => ({ getServerSession: jest.fn() }));
-jest.mock("@/lib/auth", () => ({ authOptions: {} }));
+jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
 
 import { prismadb } from "@/lib/prisma";
 import { createSchedule, listSchedules, updateSchedule, deleteSchedule } from "@/actions/reports/schedule";
@@ -12,8 +11,8 @@ import { createSchedule, listSchedules, updateSchedule, deleteSchedule } from "@
 describe("report schedule actions", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    const { getServerSession } = require("next-auth");
-    (getServerSession as jest.Mock).mockResolvedValue({ user: { id: "user-1" } });
+    const { getSession } = require("@/lib/auth-server");
+    (getSession as jest.Mock).mockResolvedValue({ user: { id: "user-1" } });
   });
 
   describe("createSchedule", () => {
