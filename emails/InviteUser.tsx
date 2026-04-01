@@ -20,7 +20,6 @@ import * as React from "react";
 interface VercelInviteUserEmailProps {
   username: string;
   invitedByUsername: string;
-  invitedUserPassword: string;
   userLanguage: string;
 }
 
@@ -29,7 +28,6 @@ const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
 export const InviteUserEmail = ({
   username,
   invitedByUsername,
-  invitedUserPassword,
   userLanguage,
 }: VercelInviteUserEmailProps) => {
   const previewText =
@@ -73,13 +71,8 @@ export const InviteUserEmail = ({
             </Text>
             <Text className="text-black text-sm leading-[24px]">
               {userLanguage === "en"
-                ? `
-              To accept this invitation, click the button below. And use this
-              password to login: `
-                : `
-              Pro přijetí této pozvánky klikněte na tlačítko níže. A použijte toto heslo pro přihlášení:
-              `}
-              <strong>{invitedUserPassword}</strong>
+                ? `To accept this invitation, click the button below and sign in with your email address.`
+                : `Pro přijetí této pozvánky klikněte na tlačítko níže a přihlaste se pomocí své e-mailové adresy.`}
             </Text>
 
             <Section className="text-center mt-[32px] mb-[32px]">
