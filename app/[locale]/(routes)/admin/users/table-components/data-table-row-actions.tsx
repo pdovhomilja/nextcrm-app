@@ -8,6 +8,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -17,12 +21,11 @@ import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Copy, Edit, MoreHorizontal, Trash } from "lucide-react";
+import { Copy, Edit, MoreHorizontal, Shield, Trash, UserCheck, UserX } from "lucide-react";
 import { deleteUser } from "@/actions/admin/users/delete-user";
 import { activateUser } from "@/actions/admin/users/activate-user";
 import { deactivateUser } from "@/actions/admin/users/deactivate-user";
-import { activateAdmin } from "@/actions/admin/users/activate-admin";
-import { deactivateAdmin } from "@/actions/admin/users/deactivate-admin";
+import { setUserRole } from "@/actions/admin/users/set-role";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -36,14 +39,12 @@ export function DataTableRowActions<TData>({
 
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [updateOpen, setUpdateOpen] = useState(false);
 
   const onCopy = (id: string) => {
     navigator.clipboard.writeText(id);
     toast.success("The URL has been copied to your clipboard.");
   };
 
-  //Action triggered when the delete button is clicked to delete the store
   const onDelete = async () => {
     try {
       setLoading(true);
@@ -76,7 +77,6 @@ export function DataTableRowActions<TData>({
       toast.error("Something went wrong while activating user. Please try again.");
     } finally {
       setLoading(false);
-      setOpen(false);
     }
   };
 
@@ -94,43 +94,23 @@ export function DataTableRowActions<TData>({
       toast.error("Something went wrong while deactivating user. Please try again.");
     } finally {
       setLoading(false);
-      setOpen(false);
     }
   };
 
-  const onDeactivateAdmin = async () => {
+  const onSetRole = async (role: "admin" | "member" | "viewer") => {
     try {
       setLoading(true);
-      const result = await deactivateAdmin(data.id);
+      const result = await setUserRole(data.id, role);
       if (result.error) {
         toast.error(result.error);
         return;
       }
       router.refresh();
-      toast.success("User Admin rights has been deactivated.");
+      toast.success(`User role changed to ${role}.`);
     } catch (error) {
-      toast.error("Something went wrong while deactivating user as a admin. Please try again.");
+      toast.error("Something went wrong while changing role. Please try again.");
     } finally {
       setLoading(false);
-      setOpen(false);
-    }
-  };
-
-  const onActivateAdmin = async () => {
-    try {
-      setLoading(true);
-      const result = await activateAdmin(data.id);
-      if (result.error) {
-        toast.error(result.error);
-        return;
-      }
-      router.refresh();
-      toast.success("User Admin rights has been activated.");
-    } catch (error) {
-      toast.error("Something went wrong while activating uses as a admin. Please try again.");
-    } finally {
-      setLoading(false);
-      setOpen(false);
     }
   };
 
@@ -155,22 +135,34 @@ export function DataTableRowActions<TData>({
             <Copy className="mr-2 w-4 h-4" />
             Copy ID
           </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => onActivate()}>
-            <Edit className="mr-2 w-4 h-4" />
+            <UserCheck className="mr-2 w-4 h-4" />
             Activate
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => onDeactivate()}>
-            <Edit className="mr-2 w-4 h-4" />
+            <UserX className="mr-2 w-4 h-4" />
             Deactivate
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onActivateAdmin()}>
-            <Edit className="mr-2 w-4 h-4" />
-            Activate Admin rights
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onDeactivateAdmin()}>
-            <Edit className="mr-2 w-4 h-4" />
-            Deactivate Admin rights
-          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <Shield className="mr-2 w-4 h-4" />
+              Set Role
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuItem onClick={() => onSetRole("admin")}>
+                Admin
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onSetRole("member")}>
+                Member
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onSetRole("viewer")}>
+                Viewer
+              </DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setOpen(true)}>
             <Trash className="mr-2 w-4 h-4" />
             Delete
