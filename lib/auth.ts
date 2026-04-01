@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import { emailOTP } from "better-auth/plugins";
+import { emailOTP, testUtils } from "better-auth/plugins";
 import { admin as adminPlugin } from "better-auth/plugins";
 import { prismadb } from "@/lib/prisma";
 import { ac, admin, member, viewer } from "@/lib/auth-permissions";
@@ -21,6 +21,11 @@ export const auth = betterAuth({
 
   user: {
     modelName: "Users",
+    fields: {
+      createdAt: "created_on",
+      updatedAt: "updated_at",
+      image: "image",
+    },
     additionalFields: {
       role: {
         type: "string",
@@ -59,15 +64,28 @@ export const auth = betterAuth({
   plugins: [
     emailOTP({
       sendVerificationOTP: async ({ email, otp, type }) => {
-        const resend = await resendHelper();
-        await resend.emails.send({
-          from: `${process.env.NEXT_PUBLIC_APP_NAME} <${process.env.EMAIL_FROM}>`,
-          to: email,
-          subject: `Your verification code: ${otp}`,
-          text: `Your one-time verification code is: ${otp}\n\nThis code expires in 5 minutes.\n\nIf you did not request this, please ignore this email.`,
-        });
+        try {
+          const resend = await resendHelper();
+          await resend.emails.send({
+            from: `${process.env.NEXT_PUBLIC_APP_NAME} <${process.env.EMAIL_FROM}>`,
+            to: email,
+            subject: `Your verification code: ${otp}`,
+            text: `Your one-time verification code is: ${otp}\n\nThis code expires in 5 minutes.\n\nIf you did not request this, please ignore this email.`,
+          });
+        } catch (e) {
+          // In dev/test, email sending may fail — OTP is captured by testUtils plugin
+          if (process.env.NODE_ENV !== "production") {
+            console.log(`[Auth] OTP email send failed for ${email}, but captured by testUtils`);
+          } else {
+            throw e;
+          }
+        }
       },
     }),
+    // testUtils captures OTPs for E2E testing — only enabled in non-production
+    ...(process.env.NODE_ENV !== "production"
+      ? [testUtils({ captureOTP: true })]
+      : []),
     adminPlugin({
       ac,
       roles: { admin, member, viewer },

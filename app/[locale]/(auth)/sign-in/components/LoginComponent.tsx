@@ -75,7 +75,7 @@ export function LoginComponent() {
     }
     setIsLoading(true);
     try {
-      const { error } = await authClient.emailOtp.verifyEmail({
+      const { error } = await authClient.signIn.emailOtp({
         email,
         otp,
       });

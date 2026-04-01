@@ -802,10 +802,13 @@ model Users {
   account_name     String?
   avatar           String?
   email            String       @unique
+  emailVerified    Boolean      @default(false)
+  image            String?
   is_account_admin Boolean      @default(false)
   role             String       @default("member")
   is_admin         Boolean      @default(false)
   created_on       DateTime     @default(now())
+  updated_at       DateTime?    @updatedAt
   lastLoginAt      DateTime?
   name             String?
   password         String?
