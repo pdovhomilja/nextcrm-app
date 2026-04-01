@@ -1,7 +1,6 @@
 "use server";
+import { getSession } from "@/lib/auth-server";
 
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 
 const PAGE_SIZE_MAX = 100;
@@ -15,7 +14,7 @@ export async function searchUsers({
   skip?: number;
   take?: number;
 } = {}) {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
   const safeTake = Math.min(PAGE_SIZE_MAX, Math.max(1, take));

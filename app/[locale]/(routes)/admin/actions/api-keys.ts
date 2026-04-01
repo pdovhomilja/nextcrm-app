@@ -1,7 +1,6 @@
 "use server";
+import { getSession } from "@/lib/auth-server";
 
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { encrypt, decrypt } from "@/lib/email-crypto";
@@ -21,8 +20,8 @@ export type ProviderStatus = {
 };
 
 export async function getSystemApiKeys(): Promise<ProviderStatus[]> {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.isAdmin) throw new Error("Unauthorized");
+  const session = await getSession();
+  if (!session.user.role === "admin") throw new Error("Unauthorized");
 
   const providers = Object.values(ApiKeyProvider) as ApiKeyProvider[];
 
@@ -60,8 +59,8 @@ export async function upsertSystemApiKey(
   provider: ApiKeyProvider,
   key: string
 ): Promise<void> {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.isAdmin) throw new Error("Unauthorized");
+  const session = await getSession();
+  if (!session.user.role === "admin") throw new Error("Unauthorized");
 
   const encryptedKey = encrypt(key);
 
@@ -82,8 +81,8 @@ export async function upsertSystemApiKey(
 }
 
 export async function deleteSystemApiKey(provider: ApiKeyProvider): Promise<void> {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.isAdmin) throw new Error("Unauthorized");
+  const session = await getSession();
+  if (!session.user.role === "admin") throw new Error("Unauthorized");
 
   await prismadb.apiKeys.deleteMany({
     where: { scope: "SYSTEM", provider },

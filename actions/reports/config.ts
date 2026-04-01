@@ -1,13 +1,12 @@
 "use server";
+import { getSession } from "@/lib/auth-server";
 
 import { prismadb } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import type { Prisma } from "@prisma/client";
 import type { ReportCategory } from "./types";
 
 async function getUserId(): Promise<string> {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session?.user?.id) throw new Error("Unauthorized");
   return session.user.id;
 }

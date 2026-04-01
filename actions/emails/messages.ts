@@ -1,7 +1,6 @@
 "use server";
+import { getSession } from "@/lib/auth-server";
 
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { decrypt } from "@/lib/email-crypto";
 import nodemailer from "nodemailer";
@@ -11,7 +10,7 @@ const PAGE_SIZE = 50;
 const MAX_COUNT = 10_000;
 
 async function requireSession() {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session?.user?.id) throw new Error("Unauthorized");
   return session.user.id as string;
 }

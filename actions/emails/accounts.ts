@@ -1,13 +1,12 @@
 "use server";
+import { getSession } from "@/lib/auth-server";
 
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { encrypt } from "@/lib/email-crypto";
 import Imap from "imap";
 
 async function requireSession() {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session?.user?.id) throw new Error("Unauthorized");
   return session.user.id as string;
 }

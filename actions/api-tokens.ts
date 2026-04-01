@@ -1,6 +1,5 @@
 "use server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/auth-server";
 import {
   generateApiToken,
   listApiTokens,
@@ -11,7 +10,7 @@ export async function createApiToken(data: {
   name: string;
   expiresAt?: Date;
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) return { error: "Unauthorized" };
 
   try {
@@ -27,7 +26,7 @@ export async function createApiToken(data: {
 }
 
 export async function getApiTokens() {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) return { error: "Unauthorized" };
 
   try {
@@ -39,7 +38,7 @@ export async function getApiTokens() {
 }
 
 export async function deleteApiToken(tokenId: string) {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) return { error: "Unauthorized" };
 
   try {

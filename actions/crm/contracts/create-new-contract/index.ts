@@ -1,16 +1,15 @@
 "use server";
+import { getSession } from "@/lib/auth-server";
 
 import { prismadb } from "@/lib/prisma";
 import { CreateNewContract } from "./schema";
 import { InputType, ReturnType } from "./types";
 
 import { createSafeAction } from "@/lib/create-safe-action";
-import { getServerSession, Session } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit-log";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
-  const session: Session | null = await getServerSession(authOptions);
+  const session = await getSession();
 
   if (!session?.user?.email) {
     return {

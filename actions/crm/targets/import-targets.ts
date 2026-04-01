@@ -1,14 +1,13 @@
 "use server";
+import { getSession } from "@/lib/auth-server";
 
-import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
 import Papa from "papaparse";
 
 export async function importTargets(
   formData: FormData
 ): Promise<{ imported: number; skipped: number; errors: string[] }> {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
   const file = formData.get("file") as File | null;

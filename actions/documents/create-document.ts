@@ -1,7 +1,6 @@
 "use server";
+import { getSession } from "@/lib/auth-server";
 
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
@@ -14,7 +13,7 @@ interface CreateDocumentInput {
 }
 
 export async function createDocument(input: CreateDocumentInput) {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
   await prismadb.documents.create({
