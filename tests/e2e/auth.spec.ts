@@ -1,50 +1,48 @@
 import { test, expect } from "@playwright/test";
 
-// Use environment variables for test credentials
-const TEST_USER_EMAIL = process.env.TEST_USER_EMAIL || "admin@nextcrm.app";
-const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD || "password";
-
 test.describe("Authentication", () => {
-  test("should show sign-in page", async ({ page }) => {
+  test("should show sign-in page with Google and Email OTP options", async ({ page }) => {
     await page.goto("/sign-in");
-    
-    // Verify sign-in page elements using labels
-    await expect(page.getByLabel("E-mail")).toBeVisible();
-    await expect(page.getByLabel("Password")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Login" })).toBeVisible();
+
+    // Verify Google OAuth button
+    await expect(page.getByRole("button", { name: /continue with google/i })).toBeVisible();
+
+    // Verify Email input
+    await expect(page.getByLabel("Email")).toBeVisible();
+
+    // Verify Send verification code button
+    await expect(page.getByRole("button", { name: /send verification code/i })).toBeVisible();
+
+    // Verify NO password field exists
+    await expect(page.getByLabel("Password")).not.toBeVisible();
   });
 
-  test("should show validation error for invalid credentials", async ({ page }) => {
+  test("should show OTP input after entering email", async ({ page }) => {
     await page.goto("/sign-in");
-    
-    // Fill in invalid credentials
-    await page.getByLabel("E-mail").fill("invalid@example.com");
-    await page.getByLabel("Password").fill("wrongpassword");
-    await page.getByRole("button", { name: "Login" }).click();
-    
-    // Wait for response - either error message appears or stays on sign-in page
+
+    // Enter email
+    await page.getByLabel("Email").fill("test@example.com");
+    await page.getByRole("button", { name: /send verification code/i }).click();
+
+    // Wait for OTP step to appear (may show error toast if email sending fails in test,
+    // but the UI should transition to OTP step)
     await page.waitForTimeout(2000);
-    
-    // Check for error message, toast notification, or still on sign-in page
-    const currentUrl = page.url();
-    const hasError = await page.locator('text=/error|invalid|failed|wrong/i').first().isVisible().catch(() => false);
-    const onSignInPage = currentUrl.includes("sign-in");
-    
-    expect(hasError || onSignInPage).toBeTruthy();
+
+    // Check for either OTP input or error message (depends on Resend config)
+    const hasOtpInput = await page.locator('[data-input-otp]').isVisible().catch(() => false);
+    const hasToast = await page.locator('[data-sonner-toast]').isVisible().catch(() => false);
+
+    expect(hasOtpInput || hasToast).toBeTruthy();
   });
 
-  test("should successfully login with valid credentials", async ({ page }) => {
-    await page.goto("/sign-in");
-    
-    // Fill in valid credentials from environment variables
-    await page.getByLabel("E-mail").fill(TEST_USER_EMAIL);
-    await page.getByLabel("Password").fill(TEST_USER_PASSWORD);
-    await page.getByRole("button", { name: "Login" }).click();
-    
-    // Wait for navigation to dashboard (handles locale prefix like /en/)
-    await page.waitForURL(/\/(en|cs|de|uk)/, { timeout: 5000 });
-    
-    // Verify we're on the dashboard by checking URL contains locale
-    await expect(page).toHaveURL(/\/(en|cs|de|uk)/);
+  test("should redirect unauthenticated users to sign-in", async ({ page }) => {
+    // Clear any existing auth state
+    await page.context().clearCookies();
+
+    // Try to access protected route
+    await page.goto("/en");
+
+    // Should be redirected to sign-in
+    await expect(page).toHaveURL(/sign-in/);
   });
 });

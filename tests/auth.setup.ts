@@ -1,27 +1,57 @@
 import { test as setup, expect } from "@playwright/test";
 import path from "path";
+import { Pool } from "pg";
 
 const authFile = path.join(__dirname, "../playwright/.auth/user.json");
 
-// Use environment variables for test credentials
 const TEST_USER_EMAIL = process.env.TEST_USER_EMAIL || "admin@nextcrm.app";
-const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD || "password";
 
 setup("authenticate", async ({ page }) => {
-  // Perform authentication steps using environment variables
+  // Navigate to sign-in page
   await page.goto("/sign-in");
-  await page.getByLabel("E-mail").fill(TEST_USER_EMAIL);
-  await page.getByLabel("Password").fill(TEST_USER_PASSWORD);
-  await page.getByRole("button", { name: "Login" }).click();
 
-  // Wait for redirect away from sign-in page to confirm login succeeded.
-  // Using a function predicate to exclude sign-in URLs — the previous regex
-  // /\/(en|cs|de|uk)/ matched /en/sign-in immediately, saving empty cookies.
-  await page.waitForURL(
-    (url) => /^\/(en|cs|de|uk)(\/|$)/.test(url.pathname) && !url.pathname.includes("sign-in"),
-    { timeout: 15000 }
-  );
+  // Enter email address
+  await page.getByLabel("Email").fill(TEST_USER_EMAIL);
 
-  // End of authentication steps.
+  // Click send verification code
+  await page.getByRole("button", { name: /send verification code/i }).click();
+
+  // Wait for OTP to be sent (verification record created in DB)
+  await page.waitForTimeout(2000);
+
+  // Retrieve OTP from the verification table
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  try {
+    const result = await pool.query(
+      `SELECT value FROM verification
+       WHERE identifier = $1
+       ORDER BY "createdAt" DESC
+       LIMIT 1`,
+      [TEST_USER_EMAIL]
+    );
+
+    expect(result.rows.length).toBeGreaterThan(0);
+    const otp = result.rows[0].value;
+
+    // Enter OTP digits
+    const otpInputs = page.locator('[data-input-otp-slot]');
+    for (let i = 0; i < otp.length; i++) {
+      await otpInputs.nth(i).click();
+      await page.keyboard.type(otp[i]);
+    }
+
+    // Click verify button
+    await page.getByRole("button", { name: /verify and sign in/i }).click();
+
+    // Wait for redirect away from sign-in page
+    await page.waitForURL(
+      (url) => /^\/(en|cs|de|uk)(\/|$)/.test(url.pathname) && !url.pathname.includes("sign-in"),
+      { timeout: 15000 }
+    );
+  } finally {
+    await pool.end();
+  }
+
+  // Save auth state
   await page.context().storageState({ path: authFile });
 });
