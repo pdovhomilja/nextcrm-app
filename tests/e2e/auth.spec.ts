@@ -1,5 +1,8 @@
 import { test, expect } from "@playwright/test";
 
+// These tests must run WITHOUT stored auth state
+test.use({ storageState: { cookies: [], origins: [] } });
+
 test.describe("Authentication", () => {
   test("should show sign-in page with Google and Email OTP options", async ({ page }) => {
     await page.goto("/sign-in");
@@ -36,9 +39,6 @@ test.describe("Authentication", () => {
   });
 
   test("should redirect unauthenticated users to sign-in", async ({ page }) => {
-    // Clear any existing auth state
-    await page.context().clearCookies();
-
     // Try to access protected route
     await page.goto("/en");
 

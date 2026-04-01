@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { signOut } from "next-auth/react"
+import { signOut } from "@/lib/auth-client"
 import {
   ChevronsUpDown,
   LogOut,

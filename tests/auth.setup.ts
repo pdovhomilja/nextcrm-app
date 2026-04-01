@@ -1,57 +1,66 @@
 import { test as setup, expect } from "@playwright/test";
 import path from "path";
 import { Pool } from "pg";
+import crypto from "crypto";
 
 const authFile = path.join(__dirname, "../playwright/.auth/user.json");
 
-const TEST_USER_EMAIL = process.env.TEST_USER_EMAIL || "admin@nextcrm.app";
+const TEST_USER_EMAIL = process.env.TEST_USER_EMAIL || "test@nextcrm.app";
 
 setup("authenticate", async ({ page }) => {
-  // Navigate to sign-in page
-  await page.goto("/sign-in");
-
-  // Enter email address
-  await page.getByLabel("Email").fill(TEST_USER_EMAIL);
-
-  // Click send verification code
-  await page.getByRole("button", { name: /send verification code/i }).click();
-
-  // Wait for OTP to be sent (verification record created in DB)
-  await page.waitForTimeout(2000);
-
-  // Retrieve OTP from the verification table
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
   try {
-    const result = await pool.query(
-      `SELECT value FROM verification
-       WHERE identifier = $1
-       ORDER BY "createdAt" DESC
-       LIMIT 1`,
+    // Find the test user
+    const userResult = await pool.query(
+      `SELECT id FROM "Users" WHERE email = $1`,
       [TEST_USER_EMAIL]
     );
+    expect(userResult.rows.length).toBeGreaterThan(0);
+    const userId = userResult.rows[0].id;
 
-    expect(result.rows.length).toBeGreaterThan(0);
-    const otp = result.rows[0].value;
+    // Create a better-auth session directly in the DB
+    const sessionToken = crypto.randomBytes(32).toString("hex");
+    const sessionId = crypto.randomUUID();
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
-    // Enter OTP digits
-    const otpInputs = page.locator('[data-input-otp-slot]');
-    for (let i = 0; i < otp.length; i++) {
-      await otpInputs.nth(i).click();
-      await page.keyboard.type(otp[i]);
-    }
+    await pool.query(
+      `INSERT INTO session (id, token, "userId", "expiresAt", "createdAt", "updatedAt")
+       VALUES ($1, $2, $3, $4, NOW(), NOW())
+       ON CONFLICT (id) DO NOTHING`,
+      [sessionId, sessionToken, userId, expiresAt]
+    );
 
-    // Click verify button
-    await page.getByRole("button", { name: /verify and sign in/i }).click();
+    // Navigate to app and set the session cookie
+    await page.goto("/sign-in");
 
-    // Wait for redirect away from sign-in page
+    // Set the better-auth session cookie
+    await page.context().addCookies([
+      {
+        name: "better-auth.session_token",
+        value: sessionToken,
+        domain: "localhost",
+        path: "/",
+        httpOnly: true,
+        secure: false,
+        sameSite: "Lax",
+      },
+    ]);
+
+    // Navigate to a protected page to verify auth works
+    await page.goto("/en");
+
+    // Should NOT be redirected to sign-in
     await page.waitForURL(
-      (url) => /^\/(en|cs|de|uk)(\/|$)/.test(url.pathname) && !url.pathname.includes("sign-in"),
+      (url) =>
+        /^\/(en|cs|de|uk)(\/|$)/.test(url.pathname) &&
+        !url.pathname.includes("sign-in"),
       { timeout: 15000 }
     );
   } finally {
     await pool.end();
   }
 
-  // Save auth state
+  // Save auth state (cookies)
   await page.context().storageState({ path: authFile });
 });

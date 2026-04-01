@@ -6,7 +6,8 @@ import path from "path";
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
  */
-dotenv.config({ path: path.resolve(__dirname, ".env.local") });
+dotenv.config({ path: path.resolve(__dirname, ".env") });
+dotenv.config({ path: path.resolve(__dirname, ".env.local"), override: true });
 
 /**
  * See https://playwright.dev/docs/test-configuration.

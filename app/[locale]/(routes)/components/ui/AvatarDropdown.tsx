@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { signOut } from "next-auth/react";
+import { signOut } from "@/lib/auth-client";
 
 import { LogOut, Settings } from "lucide-react";
 import { useRouter } from "next/navigation";

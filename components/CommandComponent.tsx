@@ -24,7 +24,7 @@ import {
 import { redirect } from "next/navigation";
 import { useRouter } from "next/navigation";
 
-import { signOut } from "next-auth/react";
+import { signOut } from "@/lib/auth-client";
 import { useTranslations } from "next-intl";
 
 export function CommandComponent() {
