@@ -1,5 +1,4 @@
-import { authOptions } from "@/lib/auth";
-import { getServerSession } from "next-auth";
+import { getSession } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
 import React from "react";
 import Container from "../../../components/ui/Container";
@@ -7,7 +6,7 @@ import { getAccountsTasks } from "@/actions/crm/account/get-tasks";
 import { getUserCRMTasks } from "@/actions/crm/tasks/get-user-tasks";
 
 const UserCRMDashboard = async () => {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
 
   if (!session) {
     redirect("/auth/signin");
