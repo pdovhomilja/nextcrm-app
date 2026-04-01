@@ -1,6 +1,5 @@
 import { prismadb } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -36,8 +35,8 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default async function TargetEnrichmentJobsPage() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) redirect("/sign-in");
+  const session = await getSession();
+  if (!session) redirect("/sign-in");
 
   const records = await prismadb.crm_Target_Enrichment.findMany({
     orderBy: { createdAt: "desc" },

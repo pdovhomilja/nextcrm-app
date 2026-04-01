@@ -1,16 +1,15 @@
 import { getSystemApiKeys } from "../actions/api-keys";
 import { ProviderKeyCard } from "./ProviderKeyCard";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/auth-server";
 import Container from "../../components/ui/Container";
 import { getTranslations } from "next-intl/server";
 import { AlertCircle } from "lucide-react";
 
 export default async function LlmKeysPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   const t = await getTranslations("AdminPage");
 
-  if (!session?.user?.isAdmin) {
+  if (session?.user?.role !== "admin") {
     return (
       <Container title="AI Provider Keys" description="LLM API key management">
         <div className="flex w-full h-full items-center justify-center">

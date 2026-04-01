@@ -1,6 +1,5 @@
 import { Suspense } from "react";
-import { authOptions } from "@/lib/auth";
-import { getServerSession } from "next-auth";
+import { getSession } from "@/lib/auth-server";
 import {
   CoinsIcon,
   Contact,
@@ -37,7 +36,7 @@ import { getExpectedRevenue } from "@/actions/crm/opportunity/get-expected-reven
 import { getTranslations } from "next-intl/server";
 
 const DashboardPage = async () => {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
 
   if (!session) return null;
 

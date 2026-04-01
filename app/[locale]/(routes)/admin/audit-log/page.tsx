@@ -1,5 +1,4 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
 import { getAuditLogAdmin } from "@/actions/crm/audit-log/get-audit-log-admin";
 import { AdminFilters } from "@/components/crm/audit-log/AdminFilters";
@@ -14,8 +13,8 @@ const AuditLogPage = async (props: {
     dateTo?: string;
   }>;
 }) => {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.isAdmin) redirect("/");
+  const session = await getSession();
+  if (session?.user?.role !== "admin") redirect("/");
 
   const sp = await props.searchParams;
   const currentPage = Math.max(1, parseInt(sp?.page ?? "1", 10) || 1);
