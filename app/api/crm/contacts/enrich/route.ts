@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { AgentEnrichmentStrategy } from "@/lib/enrichment/strategies/agent-enrichment-strategy";
 import type { EnrichmentField } from "@/lib/enrichment/types";
@@ -15,8 +14,8 @@ export const runtime = "nodejs";
 const activeSessions = new Map<string, { controller: AbortController; enrichmentId: string }>();
 
 export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  const session = await getSession();
+  if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
