@@ -7,7 +7,7 @@ import { writeAuditLog } from "@/lib/audit-log";
 export const restoreContract = async (contractId: string) => {
   const session = await getSession();
   if (!session) return { error: "Unauthorized" };
-  if (!session.user.role === "admin") return { error: "Forbidden" };
+  if (session.user.role !== "admin") return { error: "Forbidden" };
   if (!contractId) return { error: "contractId is required" };
 
   try {

@@ -17,7 +17,7 @@ export const setLanguage = async (data: {
   if (!language) return { error: "language is required" };
 
   // Ensure user can only update their own language unless admin
-  if (session.user.id !== userId && !session.user.role === "admin") {
+  if (session.user.id !== userId && session.user.role !== "admin") {
     return { error: "Forbidden" };
   }
 

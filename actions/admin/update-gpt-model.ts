@@ -8,7 +8,7 @@ const updateModel = async (model: any) => {
   if (!session) {
     return { error: "Unauthenticated" };
   }
-  if (!session.user.role === "admin") {
+  if (session.user.role !== "admin") {
     return { error: "Forbidden" };
   }
 

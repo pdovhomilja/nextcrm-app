@@ -7,7 +7,7 @@ import { writeAuditLog } from "@/lib/audit-log";
 export const restoreOpportunity = async (opportunityId: string) => {
   const session = await getSession();
   if (!session) return { error: "Unauthorized" };
-  if (!session.user.role === "admin") return { error: "Forbidden" };
+  if (session.user.role !== "admin") return { error: "Forbidden" };
   if (!opportunityId) return { error: "opportunityId is required" };
 
   try {

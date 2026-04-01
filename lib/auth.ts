@@ -101,7 +101,7 @@ export const auth = betterAuth({
   },
 
   callbacks: {
-    async onUserCreated(user) {
+    async onUserCreated(user: { id: string }) {
       // Check if this is the first user — make them admin
       const count = await prismadb.users.count();
       if (count === 1) {

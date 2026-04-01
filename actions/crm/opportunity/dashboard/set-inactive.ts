@@ -28,7 +28,7 @@ export async function setInactiveOpportunity(id: string) {
       return { error: "Opportunity not found" };
     }
 
-    if (!session.user.role === "admin" && opportunity.assigned_to !== session.user.id) {
+    if (session.user.role !== "admin" && opportunity.assigned_to !== session.user.id) {
       return { error: "Forbidden" };
     }
 

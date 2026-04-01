@@ -7,7 +7,7 @@ export const deleteUser = async (userId: string) => {
   const session = await getSession();
   if (!session) return { error: "Unauthorized" };
 
-  if (!session.user.role === "admin") return { error: "Forbidden" };
+  if (session.user.role !== "admin") return { error: "Forbidden" };
 
   if (!userId) return { error: "userId is required" };
 

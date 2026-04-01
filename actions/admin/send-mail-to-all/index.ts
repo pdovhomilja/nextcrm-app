@@ -22,7 +22,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   }
 
   //Only admin can send mail to all users
-  if (!session.user.role === "admin") {
+  if (session.user.role !== "admin") {
     return {
       error: "You are not authorized to perform this action.",
     };

@@ -21,7 +21,7 @@ export type ProviderStatus = {
 
 export async function getSystemApiKeys(): Promise<ProviderStatus[]> {
   const session = await getSession();
-  if (session.user.role !== "admin") throw new Error("Unauthorized");
+  if (!session || session.user.role !== "admin") throw new Error("Unauthorized");
 
   const providers = Object.values(ApiKeyProvider) as ApiKeyProvider[];
 
@@ -60,7 +60,7 @@ export async function upsertSystemApiKey(
   key: string
 ): Promise<void> {
   const session = await getSession();
-  if (session.user.role !== "admin") throw new Error("Unauthorized");
+  if (!session || session.user.role !== "admin") throw new Error("Unauthorized");
 
   const encryptedKey = encrypt(key);
 
@@ -82,7 +82,7 @@ export async function upsertSystemApiKey(
 
 export async function deleteSystemApiKey(provider: ApiKeyProvider): Promise<void> {
   const session = await getSession();
-  if (session.user.role !== "admin") throw new Error("Unauthorized");
+  if (!session || session.user.role !== "admin") throw new Error("Unauthorized");
 
   await prismadb.apiKeys.deleteMany({
     where: { scope: "SYSTEM", provider },

@@ -1,4 +1,5 @@
 import { prismadb } from "@/lib/prisma";
+import { getSession } from "@/lib/auth-server";
 
 export const getUser = async () => {
   const session = await getSession();

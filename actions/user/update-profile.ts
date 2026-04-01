@@ -17,7 +17,7 @@ export const updateProfile = async (data: {
   if (!userId) return { error: "userId is required" };
 
   // Ensure user can only update their own profile unless admin
-  if (session.user.id !== userId && !session.user.role === "admin") {
+  if (session.user.id !== userId && session.user.role !== "admin") {
     return { error: "Forbidden" };
   }
 

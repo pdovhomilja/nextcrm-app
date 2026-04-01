@@ -7,7 +7,7 @@ import { writeAuditLog } from "@/lib/audit-log";
 export const restoreContact = async (contactId: string) => {
   const session = await getSession();
   if (!session) return { error: "Unauthorized" };
-  if (!session.user.role === "admin") return { error: "Forbidden" };
+  if (session.user.role !== "admin") return { error: "Forbidden" };
   if (!contactId) return { error: "contactId is required" };
 
   try {

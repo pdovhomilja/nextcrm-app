@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const ctx = await auth.$context;
-    const otp = ctx.test?.getOTP(email);
+    const otp = (ctx as any).test?.getOTP(email);
     if (otp) {
       return NextResponse.json({ otp });
     }
