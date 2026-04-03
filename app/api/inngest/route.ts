@@ -19,6 +19,8 @@ import { campaignSendStep } from "@/inngest/functions/campaigns/send-step";
 import { campaignProcessFollowUp } from "@/inngest/functions/campaigns/process-follow-up";
 import { campaignSendNow } from "@/inngest/functions/campaigns/send-now";
 import { reportSendScheduled } from "@/inngest/functions/reports/send-scheduled";
+import { enrichDocument } from "@/inngest/functions/documents/enrich-document";
+import { generateDocumentThumbnail } from "@/inngest/functions/documents/generate-thumbnail";
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
@@ -42,5 +44,7 @@ export const { GET, POST, PUT } = serve({
     campaignProcessFollowUp,
     campaignSendNow,
     reportSendScheduled,
+    enrichDocument,
+    generateDocumentThumbnail,
   ],
 });
