@@ -23,6 +23,7 @@ export interface UnifiedSearchResults {
   projects: SearchResult[];
   tasks: SearchResult[];
   users: SearchResult[];
+  documents: SearchResult[];
 }
 
 function mergeResults(
@@ -70,10 +71,13 @@ export async function unifiedSearch(
       kwProjects,
       kwTasks,
       kwUsers,
+      kwDocuments,
       semAccounts,
       semContacts,
       semLeads,
       semOpportunities,
+      semDocuments,
+      semDocChunks,
     ] = await Promise.all([
       prismadb.crm_Accounts.findMany({
         where: {
@@ -154,6 +158,24 @@ export async function unifiedSearch(
         take: 10,
         select: { id: true, name: true, email: true },
       }),
+      prismadb.documents.findMany({
+        where: {
+          parent_document_id: null,
+          OR: [
+            { document_name: { contains: query, mode: "insensitive" } },
+            { summary: { contains: query, mode: "insensitive" } },
+            { description: { contains: query, mode: "insensitive" } },
+          ],
+        },
+        take: 10,
+        select: {
+          id: true,
+          document_name: true,
+          summary: true,
+          document_system_type: true,
+          accounts: { select: { account: { select: { name: true } } }, take: 1 },
+        },
+      }),
       queryVec
         ? prismadb.$queryRaw<{ id: string; similarity: number }[]>`
             SELECT a.id, 1 - (e.embedding <=> ${queryVec}::vector) AS similarity
@@ -188,6 +210,26 @@ export async function unifiedSearch(
             LEFT JOIN "crm_Embeddings_Opportunities" e ON e.opportunity_id = o.id
             WHERE e.embedding IS NOT NULL
             ORDER BY e.embedding <=> ${queryVec}::vector
+            LIMIT 10`
+        : noSemantic,
+      queryVec
+        ? prismadb.$queryRaw<{ id: string; similarity: number }[]>`
+            SELECT d.id, 1 - (e.embedding <=> ${queryVec}::vector) AS similarity
+            FROM "Documents" d
+            LEFT JOIN "crm_Embeddings_Documents" e ON e.document_id = d.id
+            WHERE e.embedding IS NOT NULL AND d."parent_document_id" IS NULL
+            ORDER BY e.embedding <=> ${queryVec}::vector
+            LIMIT 10`
+        : noSemantic,
+      queryVec
+        ? prismadb.$queryRaw<{ id: string; similarity: number }[]>`
+            SELECT DISTINCT c."document_id" AS id,
+                   MAX(1 - (c.embedding <=> ${queryVec}::vector)) AS similarity
+            FROM "crm_Document_Chunks" c
+            JOIN "Documents" d ON d.id = c."document_id"
+            WHERE d."parent_document_id" IS NULL
+            GROUP BY c."document_id"
+            ORDER BY similarity DESC
             LIMIT 10`
         : noSemantic,
     ]);
@@ -294,7 +336,47 @@ export async function unifiedSearch(
       matchType: "keyword",
     }));
 
-    return { accounts, contacts, leads, opportunities, projects, tasks, users };
+    // Merge chunk semantic results into document semantic results
+    const allSemDocs = [...semDocuments];
+    for (const chunk of semDocChunks) {
+      const existing = allSemDocs.find((d) => d.id === chunk.id);
+      if (existing) {
+        existing.similarity = Math.max(existing.similarity, chunk.similarity);
+      } else {
+        allSemDocs.push(chunk);
+      }
+    }
+
+    const kwDocumentIds = new Set(kwDocuments.map((r) => r.id));
+
+    const extraDocuments = queryVec
+      ? await prismadb.documents.findMany({
+          where: {
+            parent_document_id: null,
+            id: { in: allSemDocs.map((r) => r.id).filter((id) => !kwDocumentIds.has(id)) },
+          },
+          select: {
+            id: true,
+            document_name: true,
+            summary: true,
+            document_system_type: true,
+            accounts: { select: { account: { select: { name: true } } }, take: 1 },
+          },
+        })
+      : [];
+
+    const documents = mergeResults(
+      kwDocumentIds,
+      semMap(allSemDocs),
+      [...kwDocuments, ...extraDocuments].map((r) => ({
+        id: r.id,
+        title: r.document_name,
+        subtitle: r.summary ?? r.accounts?.[0]?.account?.name ?? "",
+        url: `/${locale}/documents?highlight=${r.id}`,
+      }))
+    );
+
+    return { accounts, contacts, leads, opportunities, projects, tasks, users, documents };
   } catch (error) {
     console.error("[UNIFIED_SEARCH]", error);
     return { error: "Search failed" };

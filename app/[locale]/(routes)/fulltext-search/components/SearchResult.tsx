@@ -16,6 +16,7 @@ const ENTITY_LABELS: Record<keyof UnifiedSearchResults, string> = {
   projects: "Projects",
   tasks: "Tasks",
   users: "Users",
+  documents: "Documents",
 };
 
 const ENTITY_ORDER: (keyof UnifiedSearchResults)[] = [
@@ -26,6 +27,7 @@ const ENTITY_ORDER: (keyof UnifiedSearchResults)[] = [
   "projects",
   "tasks",
   "users",
+  "documents",
 ];
 
 export default function SearchResult() {
