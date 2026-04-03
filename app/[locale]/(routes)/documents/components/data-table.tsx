@@ -27,15 +27,20 @@ import {
 
 import { DataTablePagination } from "./data-table-pagination";
 import { DataTableToolbar } from "./data-table-toolbar";
+import { BatchActionsBar } from "./batch-actions-bar";
+import { DocumentRow } from "../data/schema";
+import { Table as TanstackTable } from "@tanstack/react-table";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  accounts?: { id: string; name: string }[];
 }
 
 export function DocumentsDataTable<TData, TValue>({
   columns,
   data,
+  accounts,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
@@ -70,6 +75,7 @@ export function DocumentsDataTable<TData, TValue>({
   return (
     <div className="space-y-4">
       <DataTableToolbar table={table} />
+      <BatchActionsBar table={table as unknown as TanstackTable<DocumentRow>} accounts={accounts ?? []} />
       <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
