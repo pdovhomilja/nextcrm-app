@@ -96,11 +96,12 @@ export function BulkUploadModal({ accountId }: BulkUploadModalProps) {
 
       updateFile(index, { progress: 30 });
 
-      await fetch(presignedUrl, {
+      const uploadRes = await fetch(presignedUrl, {
         method: "PUT",
         body: item.file,
         headers: { "Content-Type": item.file.type },
       });
+      if (!uploadRes.ok) throw new Error(`Upload failed: ${uploadRes.status}`);
 
       updateFile(index, { progress: 70 });
 
