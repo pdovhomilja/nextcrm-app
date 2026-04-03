@@ -2,9 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import ModalDocumentView from "../ui/modal-document-view";
-import DocViewer, { DocViewerRenderers } from "react-doc-viewer";
 import Link from "next/link";
-import Image from "next/image";
 
 interface AlertModalProps {
   isOpen: boolean;
@@ -39,12 +37,17 @@ const DocumentViewModal = ({
   console.log(document.document_file_mimeType, "mimeType");
 
   if (imageTypes.includes(document.document_file_mimeType)) {
-    console.log("image");
+    const imageUrl = document.document_file_url || "";
     return (
       <ModalDocumentView isOpen={isOpen} onClose={onClose}>
         <div className="flex flex-col h-full ">
           <div className="relative h-full p-10">
-            <Image fill alt="Image preview" src={document.document_file_url} />
+            {imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img alt="Image preview" src={imageUrl} className="object-contain w-full h-full" />
+            ) : (
+              <p className="text-muted-foreground">No preview available</p>
+            )}
           </div>
           <div className="pt-6 space-x-2 flex items-center justify-end w-full ">
             <Button disabled={loading} variant={"outline"} onClick={onClose}>
