@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataTableViewOptions } from "./data-table-view-options";
 
-import { priorities, statuses } from "../data/data";
+import { documentSystemTypes, processingStatuses } from "../data/data";
 import { DataTableFacetedFilter } from "./data-table-faceted-filter";
 import { useTranslations } from "next-intl";
 
@@ -34,20 +34,20 @@ export function DataTableToolbar<TData>({
           }
           className="h-8 w-[150px] lg:w-[250px]"
         />
-        {/*         {table.getColumn("taskStatus") && (
+        {table.getColumn("document_system_type") && (
           <DataTableFacetedFilter
-            column={table.getColumn("taskStatus")}
-            title="Status"
-            options={statuses}
+            column={table.getColumn("document_system_type")}
+            title="Type"
+            options={documentSystemTypes}
           />
         )}
-        {table.getColumn("priority") && (
+        {table.getColumn("processing_status") && (
           <DataTableFacetedFilter
-            column={table.getColumn("priority")}
-            title="Priority"
-            options={priorities}
+            column={table.getColumn("processing_status")}
+            title="Status"
+            options={processingStatuses}
           />
-        )} */}
+        )}
         {isFiltered && (
           <Button
             variant="ghost"
