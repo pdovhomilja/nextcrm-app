@@ -28,8 +28,10 @@ async function fetchFileBuffer(key: string): Promise<Buffer> {
 
 async function extractText(buffer: Buffer, mimeType: string): Promise<string | null> {
   if (mimeType === "application/pdf") {
-    const pdfParse = (await import("pdf-parse")).default;
-    const result = await pdfParse(buffer);
+    const { PDFParse } = await import("pdf-parse");
+    const parser = new PDFParse({ data: buffer });
+    const result = await parser.getText();
+    await parser.destroy();
     return result.text || null;
   }
 
