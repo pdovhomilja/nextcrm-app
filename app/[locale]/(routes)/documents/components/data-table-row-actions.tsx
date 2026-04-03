@@ -12,43 +12,39 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-import { labels } from "../data/data";
-import { taskSchema } from "../data/schema";
+import { documentSchema, DocumentRow } from "../data/schema";
 import { useRouter } from "next/navigation";
+import { DocumentDetailPanel } from "./document-detail-panel";
 import DocumentViewModal from "@/components/modals/document-view-modal";
-import { useState } from "react";
 import AlertModal from "@/components/modals/alert-modal";
+import { useState } from "react";
 import { toast } from "sonner";
 import { deleteDocument } from "@/actions/documents/delete-document";
-import Link from "next/link";
 
-interface DataTableRowActionsProps<TData> {
-  row: Row<TData>;
+interface DataTableRowActionsProps {
+  row: Row<DocumentRow>;
 }
 
-export function DataTableRowActions<TData>({
-  row,
-}: DataTableRowActionsProps<TData>) {
-  const [open, setOpen] = useState(false);
+export function DataTableRowActions({ row }: DataTableRowActionsProps) {
+  const [openDelete, setOpenDelete] = useState(false);
   const [openView, setOpenView] = useState(false);
+  const [openDetail, setOpenDetail] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const document = taskSchema.parse(row.original);
+  const document = documentSchema.parse(row.original);
 
-  //Action triggered when the delete button is clicked to delete the store
   const onDelete = async () => {
     try {
       setLoading(true);
       await deleteDocument(document.id);
       router.refresh();
       toast.success("Document has been deleted");
-    } catch (error) {
-      toast.error("Something went wrong while deleting document. Please try again.");
+    } catch {
+      toast.error("Something went wrong while deleting document.");
     } finally {
       setLoading(false);
-      setOpen(false);
+      setOpenDelete(false);
     }
   };
 
@@ -62,14 +58,19 @@ export function DataTableRowActions<TData>({
           document={document}
         />
       )}
-      {open && (
+      {openDelete && (
         <AlertModal
-          isOpen={open}
-          onClose={() => setOpen(false)}
+          isOpen={openDelete}
+          onClose={() => setOpenDelete(false)}
           onConfirm={onDelete}
           loading={loading}
         />
       )}
+      <DocumentDetailPanel
+        document={document}
+        open={openDetail}
+        onClose={() => setOpenDetail(false)}
+      />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -81,11 +82,14 @@ export function DataTableRowActions<TData>({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-[160px]">
+          <DropdownMenuItem onClick={() => setOpenDetail(true)}>
+            Details
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setOpenView(true)}>
-            View
+            View File
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setOpen(true)}>
+          <DropdownMenuItem onClick={() => setOpenDelete(true)}>
             Delete
             <DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>
           </DropdownMenuItem>
