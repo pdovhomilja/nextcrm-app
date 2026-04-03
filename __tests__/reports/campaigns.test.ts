@@ -46,8 +46,8 @@ describe("campaigns report actions", () => {
   describe("getTargetListGrowth", () => {
     it("groups target lists by creation month", async () => {
       (prismadb.crm_TargetLists.findMany as jest.Mock).mockResolvedValue([
-        { createdAt: new Date("2025-01-10"), _count: { targets: 50 } },
-        { createdAt: new Date("2025-02-15"), _count: { targets: 30 } },
+        { created_on: new Date("2025-01-10"), _count: { targets: 50 } },
+        { created_on: new Date("2025-02-15"), _count: { targets: 30 } },
       ]);
       const result = await getTargetListGrowth(baseFilters);
       expect(result).toEqual([{ name: "2025-01", Number: 50 }, { name: "2025-02", Number: 30 }]);
