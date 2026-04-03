@@ -39,8 +39,8 @@ export const embedOpportunity = inngest.createFunction(
     const vector = toVectorLiteral(embedding);
 
     await prismadb.$executeRaw`
-      INSERT INTO "crm_Embeddings_Opportunities" ("opportunity_id", "embedding", "content_hash", "embedded_at")
-      VALUES (${record_id}::uuid, ${vector}::vector, ${newHash}, NOW())
+      INSERT INTO "crm_Embeddings_Opportunities" ("id", "opportunity_id", "embedding", "content_hash", "embedded_at")
+      VALUES (gen_random_uuid(), ${record_id}::uuid, ${vector}::vector, ${newHash}, NOW())
       ON CONFLICT ("opportunity_id")
       DO UPDATE SET "embedding" = EXCLUDED."embedding",
                     "content_hash" = EXCLUDED."content_hash",
