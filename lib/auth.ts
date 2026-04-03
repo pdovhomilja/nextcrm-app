@@ -1,157 +1,123 @@
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import { emailOTP, testUtils } from "better-auth/plugins";
+import { admin as adminPlugin } from "better-auth/plugins";
 import { prismadb } from "@/lib/prisma";
-import { NextAuthOptions } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
-import GitHubProvider from "next-auth/providers/github";
-import CredentialsProvider from "next-auth/providers/credentials";
-import bcrypt from "bcrypt";
-import { newUserNotify } from "./new-user-notify";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { ac, admin, member, viewer } from "@/lib/auth-permissions";
+import { newUserNotify } from "@/lib/new-user-notify";
+import resendHelper from "@/lib/resend";
 
-function getGoogleCredentials(): { clientId: string; clientSecret: string } {
-  const clientId = process.env.GOOGLE_ID;
-  const clientSecret = process.env.GOOGLE_SECRET;
-  if (!clientId || clientId.length === 0) {
-    throw new Error("Missing GOOGLE_ID");
-  }
+const isDemo = process.env.NEXT_PUBLIC_APP_URL === "https://demo.nextcrm.io";
 
-  if (!clientSecret || clientSecret.length === 0) {
-    throw new Error("Missing GOOGLE_SECRET");
-  }
+export const auth = betterAuth({
+  database: prismaAdapter(prismadb, { provider: "postgresql" }),
+  secret: process.env.BETTER_AUTH_SECRET,
+  baseURL: process.env.BETTER_AUTH_URL,
 
-  return { clientId, clientSecret };
-}
-
-export const authOptions: NextAuthOptions = {
-  secret: process.env.JWT_SECRET,
-  //adapter: PrismaAdapter(prismadb),
   session: {
-    strategy: "jwt",
+    expiresIn: 60 * 60 * 24 * 7,       // 7 days
+    updateAge: 60 * 60 * 24,            // refresh every 24 hours
   },
 
-  providers: [
-    GoogleProvider({
-      clientId: getGoogleCredentials().clientId,
-      clientSecret: getGoogleCredentials().clientSecret,
-    }),
-
-    GitHubProvider({
-      name: "github",
-      clientId: process.env.GITHUB_ID!,
-      clientSecret: process.env.GITHUB_SECRET!,
-    }),
-
-    CredentialsProvider({
-      name: "credentials",
-      credentials: {
-        email: { label: "email", type: "text" },
-        password: { label: "password", type: "password" },
+  user: {
+    modelName: "Users",
+    fields: {
+      createdAt: "created_on",
+      updatedAt: "updated_at",
+      image: "image",
+    },
+    additionalFields: {
+      role: {
+        type: "string",
+        defaultValue: "member",
+        input: false,
       },
-
-      async authorize(credentials) {
-        // console.log(credentials, "credentials");
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error("Email or password is missing");
-        }
-
-        const user = await prismadb.users.findFirst({
-          where: {
-            email: credentials.email,
-          },
-        });
-
-        //clear white space from password
-        const trimmedPassword = credentials.password.trim();
-
-        if (!user || !user?.password) {
-          throw new Error("User not found, please register first");
-        }
-
-        const isCorrectPassword = await bcrypt.compare(
-          trimmedPassword,
-          user.password
-        );
-
-        if (!isCorrectPassword) {
-          throw new Error("Password is incorrect");
-        }
-
-        //console.log(user, "user");
-        return user;
+      userStatus: {
+        type: "string",
+        defaultValue: isDemo ? "ACTIVE" : "PENDING",
+        input: false,
       },
+      userLanguage: {
+        type: "string",
+        defaultValue: "en",
+        input: false,
+      },
+      avatar: {
+        type: "string",
+        required: false,
+        input: false,
+      },
+    },
+  },
+
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_ID!,
+      clientSecret: process.env.GOOGLE_SECRET!,
+    },
+  },
+
+  emailAndPassword: {
+    enabled: false,
+  },
+
+  plugins: [
+    emailOTP({
+      sendVerificationOTP: async ({ email, otp, type }) => {
+        try {
+          const resend = await resendHelper();
+          await resend.emails.send({
+            from: `${process.env.NEXT_PUBLIC_APP_NAME} <${process.env.EMAIL_FROM}>`,
+            to: email,
+            subject: `Your verification code: ${otp}`,
+            text: `Your one-time verification code is: ${otp}\n\nThis code expires in 5 minutes.\n\nIf you did not request this, please ignore this email.`,
+          });
+        } catch (e) {
+          // In dev/test, email sending may fail — OTP is captured by testUtils plugin
+          if (process.env.NODE_ENV !== "production") {
+            console.log(`[Auth] OTP email send failed for ${email}, but captured by testUtils`);
+          } else {
+            throw e;
+          }
+        }
+      },
+    }),
+    // testUtils captures OTPs for E2E testing — only enabled in non-production
+    ...(process.env.NODE_ENV !== "production"
+      ? [testUtils({ captureOTP: true })]
+      : []),
+    adminPlugin({
+      ac,
+      roles: { admin, member, viewer },
+      defaultRole: "member",
     }),
   ],
-  callbacks: {
-    async jwt({ token, user }: any) {
-      if (user) {
-        token.id = user.id;
-        token.isAdmin = user.is_admin ?? false;
-      }
-      return token;
-    },
-    //TODO: fix this any
-    async session({ token, session }: any) {
-      const user = await prismadb.users.findFirst({
-        where: {
-          email: token.email,
-        },
-      });
 
-      if (!user) {
-        try {
-          const newUser = await prismadb.users.create({
-            data: {
-              email: token.email,
-              name: token.name,
-              avatar: token.picture,
-              is_admin: false,
-              is_account_admin: false,
-              lastLoginAt: new Date(),
-              userStatus:
-                process.env.NEXT_PUBLIC_APP_URL === "https://demo.nextcrm.io"
-                  ? "ACTIVE"
-                  : "PENDING",
-            },
-          });
-
-          await newUserNotify(newUser);
-
-          //Put new created user data in session
-          session.user.id = newUser.id;
-          session.user.name = newUser.name;
-          session.user.email = newUser.email;
-          session.user.avatar = newUser.avatar;
-          session.user.image = newUser.avatar;
-          session.user.isAdmin = false;
-          session.user.userLanguage = newUser.userLanguage;
-          session.user.userStatus = newUser.userStatus;
-          session.user.lastLoginAt = newUser.lastLoginAt;
-          return session;
-        } catch (error) {
-          return console.log(error);
-        }
-      } else {
-        await prismadb.users.update({
-          where: {
-            id: user.id,
-          },
-          data: {
-            lastLoginAt: new Date(),
-          },
-        });
-        //User allready exist in localDB, put user data in session
-        session.user.id = user.id;
-        session.user.name = user.name;
-        session.user.email = user.email;
-        session.user.avatar = user.avatar;
-        session.user.image = user.avatar;
-        session.user.isAdmin = user.is_admin;
-        session.user.userLanguage = user.userLanguage;
-        session.user.userStatus = user.userStatus;
-        session.user.lastLoginAt = user.lastLoginAt;
-      }
-
-      //console.log(session, "session");
-      return session;
+  account: {
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ["google"],
     },
   },
-};
+
+  callbacks: {
+    async onUserCreated(user: { id: string }) {
+      // Check if this is the first user — make them admin
+      const count = await prismadb.users.count();
+      if (count === 1) {
+        await prismadb.users.update({
+          where: { id: user.id },
+          data: { role: "admin", userStatus: "ACTIVE" },
+        });
+      } else if (!isDemo) {
+        // Notify admins about new pending user
+        const dbUser = await prismadb.users.findUnique({ where: { id: user.id } });
+        if (dbUser) {
+          await newUserNotify(dbUser);
+        }
+      }
+    },
+  },
+});
+
+export type Session = typeof auth.$Infer.Session;

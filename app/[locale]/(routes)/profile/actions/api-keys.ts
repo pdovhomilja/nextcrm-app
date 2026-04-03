@@ -1,7 +1,6 @@
 "use server";
+import { getSession } from "@/lib/auth-server";
 
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { encrypt, decrypt } from "@/lib/email-crypto";
@@ -22,7 +21,7 @@ export type UserProviderStatus = {
 };
 
 export async function getUserApiKeys(): Promise<UserProviderStatus[]> {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
   const userId = session.user.id;
@@ -83,7 +82,7 @@ export async function upsertUserApiKey(
   provider: ApiKeyProvider,
   key: string
 ): Promise<void> {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
   const userId = session.user.id;
@@ -107,7 +106,7 @@ export async function upsertUserApiKey(
 }
 
 export async function deleteUserApiKey(provider: ApiKeyProvider): Promise<void> {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
   const userId = session.user.id;

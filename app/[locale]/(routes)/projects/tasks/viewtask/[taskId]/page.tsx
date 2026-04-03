@@ -26,8 +26,7 @@ import {
 import { Calendar, Shield, User } from "lucide-react";
 import { prismadb } from "@/lib/prisma";
 import { getBoards } from "@/actions/projects/get-boards";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/auth-server";
 
 type TaskPageProps = {
   params: Promise<{
@@ -37,7 +36,7 @@ type TaskPageProps = {
 
 const TaskPage = async (props: TaskPageProps) => {
   const params = await props.params;
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   const user = session?.user;
 
   const { taskId } = params;

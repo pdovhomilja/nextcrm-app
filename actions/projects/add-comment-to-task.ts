@@ -1,6 +1,5 @@
 "use server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { junctionTableHelpers } from "@/lib/junction-helpers";
 import { revalidatePath } from "next/cache";
@@ -11,7 +10,7 @@ export const addCommentToTask = async (data: {
   taskId: string;
   comment: string;
 }) => {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) return { error: "Unauthorized" };
 
   const { taskId, comment } = data;

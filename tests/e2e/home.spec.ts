@@ -19,10 +19,10 @@ test.describe("Home Page", () => {
     
     await page.goto("/");
     
-    // Check for sign-in related elements
-    await expect(page.getByLabel("E-mail")).toBeVisible();
-    await expect(page.getByLabel("Password")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Login" })).toBeVisible();
+    // Check for sign-in related elements (OTP email flow)
+    await expect(page.getByRole("textbox", { name: "Email" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Send verification code" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Continue with Google" })).toBeVisible();
     
     await context.close();
   });

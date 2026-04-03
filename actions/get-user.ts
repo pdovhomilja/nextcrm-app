@@ -1,9 +1,8 @@
-import { authOptions } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
+import { getSession } from "@/lib/auth-server";
 
 export const getUser = async () => {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   const data = await prismadb.users.findUnique({
     where: {
       id: session?.user?.id,

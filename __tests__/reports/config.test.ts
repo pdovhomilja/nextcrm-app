@@ -3,8 +3,7 @@ jest.mock("@/lib/prisma", () => ({
     crm_Report_Config: { create: jest.fn(), findMany: jest.fn(), delete: jest.fn(), update: jest.fn() },
   },
 }));
-jest.mock("next-auth", () => ({ getServerSession: jest.fn() }));
-jest.mock("@/lib/auth", () => ({ authOptions: {} }));
+jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
 
 import { prismadb } from "@/lib/prisma";
 import { saveConfig, loadConfigs, deleteConfig, duplicateConfig, toggleShare } from "@/actions/reports/config";
@@ -12,8 +11,8 @@ import { saveConfig, loadConfigs, deleteConfig, duplicateConfig, toggleShare } f
 describe("report config actions", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    const { getServerSession } = require("next-auth");
-    (getServerSession as jest.Mock).mockResolvedValue({ user: { id: "user-1", email: "test@example.com" } });
+    const { getSession } = require("@/lib/auth-server");
+    (getSession as jest.Mock).mockResolvedValue({ user: { id: "user-1", email: "test@example.com" } });
   });
 
   describe("saveConfig", () => {

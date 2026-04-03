@@ -1,9 +1,6 @@
 "use server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
-import { generateRandomPassword } from "@/lib/utils";
-import { hash } from "bcryptjs";
 import InviteUserEmail from "@/emails/InviteUser";
 import resendHelper from "@/lib/resend";
 import { revalidatePath } from "next/cache";
@@ -14,8 +11,9 @@ export const inviteUser = async (data: {
   email: string;
   language: string;
 }) => {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) return { error: "Unauthorized" };
+  if (session.user.role !== "admin") return { error: "Forbidden" };
 
   const { name, email, language } = data;
 
@@ -30,52 +28,29 @@ export const inviteUser = async (data: {
     return { error: error?.message || "Resend API key is not configured" };
   }
 
-  let message = "";
-  switch (language) {
-    case "en":
-      message = `You have been invited to ${process.env.NEXT_PUBLIC_APP_NAME} \n\n Your username is: ${email} \n\n Your password is: [generated] \n\n Please login to ${process.env.NEXT_PUBLIC_APP_URL} \n\n Thank you \n\n ${process.env.NEXT_PUBLIC_APP_NAME}`;
-      break;
-    case "cz":
-      message = `Byl jste pozván do ${process.env.NEXT_PUBLIC_APP_NAME} \n\n Vaše uživatelské jméno je: ${email} \n\n Prosím přihlašte se na ${process.env.NEXT_PUBLIC_APP_URL} \n\n Děkujeme \n\n ${process.env.NEXT_PUBLIC_APP_NAME}`;
-      break;
-    default:
-      message = `You have been invited to ${process.env.NEXT_PUBLIC_APP_NAME} \n\n Your username is: ${email} \n\n Please login to ${process.env.NEXT_PUBLIC_APP_URL} \n\n Thank you \n\n ${process.env.NEXT_PUBLIC_APP_NAME}`;
-      break;
-  }
-
   const checkexisting = await prismadb.users.findFirst({
     where: { email },
   });
 
   if (checkexisting) {
-    return { error: "User already exist, reset password instead!" };
+    return { error: "User already exists!" };
   }
 
   try {
-    const password = generateRandomPassword();
-
     const user = await prismadb.users.create({
       data: {
         name,
-        username: "",
-        avatar: "",
-        account_name: "",
-        is_account_admin: false,
-        is_admin: false,
         email,
         userStatus: "ACTIVE",
         userLanguage: language as Language,
-        password: await hash(password, 12),
+        role: "member",
       },
       select: {
         id: true,
         name: true,
         email: true,
-        username: true,
-        account_name: true,
         avatar: true,
-        is_admin: true,
-        is_account_admin: true,
+        role: true,
         userLanguage: true,
         userStatus: true,
         lastLoginAt: true,
@@ -87,18 +62,12 @@ export const inviteUser = async (data: {
     }
 
     await resend.emails.send({
-      from:
-        process.env.NEXT_PUBLIC_APP_NAME +
-        " <" +
-        process.env.EMAIL_FROM +
-        ">",
+      from: `${process.env.NEXT_PUBLIC_APP_NAME} <${process.env.EMAIL_FROM}>`,
       to: user.email,
       subject: `You have been invited to ${process.env.NEXT_PUBLIC_APP_NAME}`,
-      text: message,
       react: InviteUserEmail({
-        invitedByUsername: session.user?.name! || "admin",
-        username: user?.name!,
-        invitedUserPassword: password,
+        invitedByUsername: session.user?.name || "admin",
+        username: user.name!,
         userLanguage: language,
       }),
     });

@@ -1,6 +1,4 @@
-import { getServerSession } from "next-auth";
-
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 
@@ -48,7 +46,7 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
 
   //console.log(session, "session");
 

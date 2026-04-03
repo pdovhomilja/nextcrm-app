@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/auth-server";
 import { inngest } from "@/inngest/client";
 import { getApiKey } from "@/lib/api-keys";
 import { FIELD_MAP } from "@/lib/enrichment/presets/target-fields";
 import type { EnrichmentField } from "@/lib/enrichment/types";
 
 export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  const session = await getSession();
+  if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

@@ -1,6 +1,5 @@
 "use server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/auth-server";
 import { getApiKey } from "@/lib/api-keys";
 
 export const generateTemplate = async (
@@ -10,7 +9,7 @@ export const generateTemplate = async (
   json: object;
   subject: string;
 }> => {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
   const apiKey = await getApiKey("OPENAI", session.user.id);

@@ -11,6 +11,9 @@ const VALID_LANGUAGES = ['cz', 'en', 'de', 'uk'] as const;
 export function transformUsers(mongoRecord: any, uuidMapper: any): any {
   const newUuid = uuidMapper.generateAndMapUuid(mongoRecord._id);
 
+  const isAdmin = toBoolean(mongoRecord.is_admin);
+  const role = isAdmin ? "admin" : "member";
+
   return {
     id: newUuid,
     v: mongoRecord.__v || 0,
@@ -18,7 +21,8 @@ export function transformUsers(mongoRecord: any, uuidMapper: any): any {
     avatar: nullableString(mongoRecord.avatar),
     email: mongoRecord.email, // Required field
     is_account_admin: toBoolean(mongoRecord.is_account_admin),
-    is_admin: toBoolean(mongoRecord.is_admin),
+    is_admin: isAdmin,
+    role,
     created_on: convertDateToISO(mongoRecord.created_on) || new Date().toISOString(),
     lastLoginAt: convertDateToISO(mongoRecord.lastLoginAt),
     name: nullableString(mongoRecord.name),

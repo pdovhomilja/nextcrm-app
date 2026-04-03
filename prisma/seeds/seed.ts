@@ -3,8 +3,6 @@ import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import dotenv from "dotenv";
 import path from "path";
-import bcrypt from "bcryptjs";
-
 // Load .env.local for test user credentials
 dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
@@ -117,36 +115,32 @@ async function main() {
 
   //Seed Test User for E2E Testing
   const testUserEmail = process.env.TEST_USER_EMAIL || "test@nextcrm.app";
-  const testUserPassword =
-    process.env.TEST_USER_PASSWORD || "Som3Co0lP4ssw0rd123!";
 
   const existingTestUser = await prisma.users.findUnique({
     where: { email: testUserEmail },
   });
 
-  const hashedPassword = await bcrypt.hash(testUserPassword, 10);
-
   if (!existingTestUser) {
-    await prisma.users.create({
+    const user = await prisma.users.create({
       data: {
         email: testUserEmail,
         name: "Test User",
-        password: hashedPassword,
         userStatus: "ACTIVE",
         is_admin: true,
         is_account_admin: true,
+        role: "admin",
       },
     });
     console.log(`Test user created: ${testUserEmail}`);
   } else {
-    // Update password and status to ensure it matches env vars
+    // Update status to ensure it matches expectations
     await prisma.users.update({
       where: { email: testUserEmail },
       data: {
-        password: hashedPassword,
         userStatus: "ACTIVE",
         is_admin: true,
         is_account_admin: true,
+        role: "admin",
       },
     });
     console.log(`Test user updated: ${testUserEmail}`);

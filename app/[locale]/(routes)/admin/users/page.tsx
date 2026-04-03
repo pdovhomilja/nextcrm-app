@@ -4,8 +4,7 @@ import Container from "../../components/ui/Container";
 import { InviteForm } from "./components/IviteForm";
 import { Separator } from "@/components/ui/separator";
 
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/auth-server";
 import { AdminUserDataTable } from "./table-components/data-table";
 import { columns } from "./table-components/columns";
 import { Users } from "@prisma/client";
@@ -17,9 +16,9 @@ const AdminUsersPage = async () => {
   const users: Users[] = await getUsers();
   const t = await getTranslations("AdminPage");
 
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
 
-  if (!session?.user?.isAdmin) {
+  if (session?.user?.role !== "admin") {
     return (
       <Container
         title={t("title")}

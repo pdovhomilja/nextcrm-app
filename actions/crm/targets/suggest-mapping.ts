@@ -1,6 +1,5 @@
 "use server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/auth-server";
 import { openAiHelper } from "@/lib/openai";
 
 const TARGET_FIELDS = [
@@ -94,7 +93,7 @@ function fuzzyMatch(header: string): string | null {
 }
 
 export const suggestMapping = async (headers: string[]) => {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) return { error: "Unauthorized" };
 
   if (!Array.isArray(headers)) return { error: "Invalid request" };

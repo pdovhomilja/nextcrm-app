@@ -21,7 +21,7 @@ interface AdminTableProps {
   page: number;
   totalPages: number;
   onRestore?: (entityType: string, entityId: string) => void;
-  isAdmin?: boolean;
+  role?: string;
 }
 
 export function AuditAdminTable({
@@ -30,7 +30,7 @@ export function AuditAdminTable({
   page,
   totalPages,
   onRestore,
-  isAdmin,
+  role,
 }: AdminTableProps) {
   const router = useRouter();
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -46,7 +46,7 @@ export function AuditAdminTable({
               <th className="px-4 py-2 text-left font-medium">Action</th>
               <th className="px-4 py-2 text-left font-medium">User</th>
               <th className="px-4 py-2 text-left font-medium">Date</th>
-              {isAdmin && (
+              {role === "admin" && (
                 <th className="px-4 py-2 text-left font-medium">Actions</th>
               )}
             </tr>
@@ -76,7 +76,7 @@ export function AuditAdminTable({
                       addSuffix: true,
                     })}
                   </td>
-                  {isAdmin && (
+                  {role === "admin" && (
                     <td className="px-4 py-2">
                       {entry.action === "deleted" && onRestore && (
                         <Button
@@ -96,7 +96,7 @@ export function AuditAdminTable({
                 </tr>
                 {expanded === entry.id && entry.changes != null ? (
                   <tr className="bg-muted/20">
-                    <td colSpan={isAdmin ? 5 : 4} className="px-4 py-2">
+                    <td colSpan={role === "admin" ? 5 : 4} className="px-4 py-2">
                       <pre className="text-xs overflow-auto">
                         {JSON.stringify(entry.changes, null, 2)}
                       </pre>
@@ -108,7 +108,7 @@ export function AuditAdminTable({
             {entries.length === 0 && (
               <tr>
                 <td
-                  colSpan={isAdmin ? 5 : 4}
+                  colSpan={role === "admin" ? 5 : 4}
                   className="px-4 py-8 text-center text-muted-foreground"
                 >
                   No audit entries found.

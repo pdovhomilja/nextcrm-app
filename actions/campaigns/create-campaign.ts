@@ -1,7 +1,6 @@
 "use server";
+import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 
 type StepInput = {
   order: number;
@@ -21,7 +20,7 @@ export const createCampaign = async (data: {
   steps: StepInput[];
   scheduled_at?: Date;
 }) => {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   const { target_list_ids, steps, ...campaignData } = data;
 
   return prismadb.crm_campaigns.create({

@@ -1,27 +1,58 @@
 import { test as setup, expect } from "@playwright/test";
 import path from "path";
+import { Pool } from "pg";
 
 const authFile = path.join(__dirname, "../playwright/.auth/user.json");
+const TEST_USER_EMAIL = process.env.TEST_USER_EMAIL || "test@nextcrm.app";
 
-// Use environment variables for test credentials
-const TEST_USER_EMAIL = process.env.TEST_USER_EMAIL || "admin@nextcrm.app";
-const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD || "password";
+setup("authenticate", async ({ page, context }) => {
+  // Use context.request so cookies are shared with the browser page
+  const api = context.request;
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-setup("authenticate", async ({ page }) => {
-  // Perform authentication steps using environment variables
-  await page.goto("/sign-in");
-  await page.getByLabel("E-mail").fill(TEST_USER_EMAIL);
-  await page.getByLabel("Password").fill(TEST_USER_PASSWORD);
-  await page.getByRole("button", { name: "Login" }).click();
+  try {
+    // 1. Clean up old test OTP records
+    await pool.query(
+      `DELETE FROM verification WHERE identifier = $1`,
+      [`test-otp-${TEST_USER_EMAIL}`]
+    );
 
-  // Wait for redirect away from sign-in page to confirm login succeeded.
-  // Using a function predicate to exclude sign-in URLs — the previous regex
-  // /\/(en|cs|de|uk)/ matched /en/sign-in immediately, saving empty cookies.
-  await page.waitForURL(
-    (url) => /^\/(en|cs|de|uk)(\/|$)/.test(url.pathname) && !url.pathname.includes("sign-in"),
-    { timeout: 15000 }
-  );
+    // 2. Send OTP
+    const sendRes = await api.post("/api/auth/email-otp/send-verification-otp", {
+      data: { email: TEST_USER_EMAIL, type: "sign-in" },
+    });
+    expect(sendRes.ok()).toBeTruthy();
 
-  // End of authentication steps.
-  await page.context().storageState({ path: authFile });
+    // 3. Retrieve captured OTP from testUtils plugin
+    let otp: string | null = null;
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const otpRes = await api.get(`/api/auth/test-otp?email=${encodeURIComponent(TEST_USER_EMAIL)}`);
+      if (otpRes.ok()) {
+        const data = await otpRes.json();
+        otp = data.otp;
+        break;
+      }
+      await new Promise((r) => setTimeout(r, 500));
+    }
+    expect(otp).not.toBeNull();
+
+    // 4. Sign in with OTP — cookies shared with browser context via context.request
+    const signInRes = await api.post("/api/auth/sign-in/email-otp", {
+      data: { email: TEST_USER_EMAIL, otp },
+    });
+    expect(signInRes.ok()).toBeTruthy();
+
+    // 5. Navigate to protected page
+    await page.goto("/en");
+    await page.waitForURL(
+      (url) =>
+        /^\/(en|cs|de|uk)(\/|$)/.test(url.pathname) &&
+        !url.pathname.includes("sign-in"),
+      { timeout: 15000 }
+    );
+  } finally {
+    await pool.end();
+  }
+
+  await context.storageState({ path: authFile });
 });

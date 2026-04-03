@@ -1,6 +1,5 @@
 "use server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { Language } from "@prisma/client";
@@ -9,7 +8,7 @@ export const setLanguage = async (data: {
   userId: string;
   language: string;
 }) => {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) return { error: "Unauthorized" };
 
   const { userId, language } = data;
@@ -18,7 +17,7 @@ export const setLanguage = async (data: {
   if (!language) return { error: "language is required" };
 
   // Ensure user can only update their own language unless admin
-  if (session.user.id !== userId && !session.user.isAdmin) {
+  if (session.user.id !== userId && session.user.role !== "admin") {
     return { error: "Forbidden" };
   }
 

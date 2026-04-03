@@ -1,6 +1,5 @@
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/auth-server";
 import resendHelper from "@/lib/resend";
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -17,7 +16,7 @@ export async function POST(req: Request) {
     );
   }
   
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) {
     return new NextResponse("Unauthenticated", { status: 401 });
   }

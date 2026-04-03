@@ -1,11 +1,11 @@
 import createMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
-import { getToken } from "next-auth/jwt";
+import { getSessionCookie } from "better-auth/cookies";
 import { NextRequest, NextResponse } from "next/server";
 
 const intlMiddleware = createMiddleware(routing);
 
-// Admin-only: require session.user.isAdmin
+// Admin-only API paths — cookie presence checked here, role checked server-side
 const ADMIN_ONLY_PATHS = [
   "/api/user/activateAdmin",
   "/api/user/deactivateAdmin",
@@ -23,16 +23,31 @@ export async function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Admin-only routes — check JWT token's isAdmin flag
+  // better-auth API routes — pass through to better-auth handler
+  if (path.startsWith("/api/auth")) {
+    return NextResponse.next();
+  }
+
+  const sessionCookie = getSessionCookie(req);
+
+  // Admin-only routes — require session cookie (role checked server-side)
   if (ADMIN_ONLY_PATHS.some((p) => path.startsWith(p))) {
-    const token = await getToken({ req, secret: process.env.JWT_SECRET });
-    if (!token) {
+    if (!sessionCookie) {
       return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
     }
-    if (!token.isAdmin) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
     return NextResponse.next();
+  }
+
+  // Non-API routes — redirect to sign-in if no session cookie
+  if (!path.startsWith("/api")) {
+    if (!sessionCookie) {
+      // Allow auth pages (sign-in, register, pending, inactive)
+      const authPaths = ["/sign-in", "/register", "/pending", "/inactive"];
+      const isAuthPage = authPaths.some((p) => path.includes(p));
+      if (!isAuthPage) {
+        return NextResponse.redirect(new URL("/sign-in", req.nextUrl));
+      }
+    }
   }
 
   // Non-API routes — delegate to next-intl
@@ -48,6 +63,8 @@ export const config = {
     "/api/user/deactivate/:path*",
     "/api/user/inviteuser",
     "/api/admin/:path*",
+    // better-auth API
+    "/api/auth/:path*",
     // All non-API routes (existing intl matcher)
     "/((?!api|trpc|_next|_vercel|.*\\..*).*)",
   ],

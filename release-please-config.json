@@ -1,0 +1,17 @@
+{
+  "release-type": "node",
+  "include-component-in-tag": false,
+  "changelog-sections": [
+    { "type": "feat", "section": "### Added" },
+    { "type": "fix", "section": "### Fixed" },
+    { "type": "security", "section": "### Security" },
+    { "type": "refactor", "section": "### Changed" },
+    { "type": "perf", "section": "### Changed" },
+    { "type": "docs", "hidden": true },
+    { "type": "chore", "hidden": true },
+    { "type": "test", "hidden": true }
+  ],
+  "packages": {
+    ".": {}
+  }
+}
