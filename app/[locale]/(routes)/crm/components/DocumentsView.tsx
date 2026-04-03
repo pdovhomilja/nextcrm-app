@@ -2,6 +2,7 @@
 
 import { columns } from "@/app/[locale]/(routes)/documents/components/columns";
 import { DocumentsDataTable } from "@/app/[locale]/(routes)/documents/components/data-table";
+import { BulkUploadModal } from "@/app/[locale]/(routes)/documents/components/bulk-upload-modal";
 
 import {
   Card,
@@ -15,9 +16,10 @@ import { useRouter } from "next/navigation";
 
 interface DocumentsViewProps {
   data: any;
+  accountId?: string;
 }
 
-const DocumentsView = ({ data }: DocumentsViewProps) => {
+const DocumentsView = ({ data, accountId }: DocumentsViewProps) => {
   const router = useRouter();
 
   return (
@@ -33,7 +35,9 @@ const DocumentsView = ({ data }: DocumentsViewProps) => {
             </CardTitle>
             <CardDescription></CardDescription>
           </div>
-          <div className="flex space-x-2"></div>
+          <div className="flex space-x-2">
+            {accountId && <BulkUploadModal accountId={accountId} />}
+          </div>
         </div>
         <Separator />
       </CardHeader>
