@@ -65,7 +65,7 @@
     "@tiptap/starter-kit": "^3.20.5",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.37.0",
-    "@vercel/mcp-adapter": "^0.3.2",
+    "@vercel/mcp-adapter": "1.0.0",
     "ai": "^6.0.99",
     "autoprefixer": "^10.4.24",
     "aws-crt": "^1.29.0",
@@ -192,7 +192,8 @@
       "msw",
       "prisma",
       "sharp",
-      "unrs-resolver"
+      "unrs-resolver",
+      "@vercel/mcp-adapter"
     ]
   }
 }
