@@ -12,7 +12,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { documentSchema, DocumentRow } from "../data/schema";
+import { DocumentRow } from "../data/schema";
 import { useRouter } from "next/navigation";
 import { DocumentDetailPanel } from "./document-detail-panel";
 import DocumentViewModal from "@/components/modals/document-view-modal";
@@ -32,7 +32,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const document = documentSchema.parse(row.original);
+  const document = row.original;
 
   const onDelete = async () => {
     try {
