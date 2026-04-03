@@ -1,6 +1,7 @@
 import getNextVersion from "@/actions/system/get-next-version";
 import Link from "next/link";
-import React from "react";
+import { version } from "@/package.json";
+
 
 const Footer = async () => {
   const nextVersion = await getNextVersion();
@@ -10,7 +11,7 @@ const Footer = async () => {
       <div className="hidden md:flex pr-5">
         <Link href="/">
           <h1 className="text-muted-foreground hover:text-foreground transition-colors">
-            {process.env.NEXT_PUBLIC_APP_NAME} - {process.env.NEXT_PUBLIC_APP_V}
+            {process.env.NEXT_PUBLIC_APP_NAME} - v{version}
           </h1>
         </Link>
       </div>
