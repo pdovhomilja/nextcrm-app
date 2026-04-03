@@ -146,7 +146,7 @@ Triggered by: `document/uploaded`
 ### Global Header Search (⌘K)
 
 - Search input in the app header, accessible via ⌘K shortcut
-- Debounced input hits `POST /api/search/global`
+- Debounced input calls existing `unifiedSearch` server action (extended with Documents)
 - Searches across: Accounts (by name), Contacts (by name), Documents (by semantic similarity)
 - Document search flow:
   1. Generate embedding for query string
@@ -213,25 +213,22 @@ All UI changes use existing app component library (shadcn/ui, existing data tabl
 - Has its own "Upload Documents" button — auto-links to current Account
 - Can unlink documents without deleting them
 
-## 6. API Routes
+## 6. API Routes & Server Actions
 
-### New Endpoints
-
-| Method | Path | Purpose |
-|---|---|---|
-| POST | `/api/documents/check-duplicate` | Check content_hash for duplicate detection |
-| POST | `/api/search/global` | Global cross-module search (accounts, contacts, documents) |
-
-### Modified Endpoints
+### Modified API Routes
 
 | Method | Path | Change |
 |---|---|---|
 | POST | `/api/upload/presigned-url` | Accept all supported MIME types in a single upload flow |
 
+Note: No new API routes needed. The two originally proposed endpoints are implemented as server actions instead (see below).
+
 ### New/Modified Server Actions
 
 | Action | Change |
 |---|---|
+| `checkDuplicate` | New — receives SHA-256 hash, queries DB for existing document, returns match info. Location: `actions/documents/check-duplicate.ts` |
+| `unifiedSearch` | Modified — add Documents as a parallel vector search branch alongside existing 7 entity types. Existing location: `actions/fulltext/unified-search.ts` |
 | `createDocument` | Accept `content_hash`, set `processing_status: PENDING`, emit Inngest event |
 | `createDocumentVersion` | New — creates versioned record, updates parent's URL, triggers enrichment |
 | `bulkLinkToAccount` | New — links multiple documents to an Account |
