@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import sendEmail from "@/lib/sendmail";
 import { inngest } from "@/inngest/client";
 import { writeAuditLog } from "@/lib/audit-log";
+import { getSnapshotRate, getDefaultCurrency } from "@/lib/currency";
 
 export const createOpportunity = async (data: {
   account?: string;
@@ -42,11 +43,15 @@ export const createOpportunity = async (data: {
   } = data;
 
   try {
+    const defaultCurrency = await getDefaultCurrency();
+    const snapshotRate = currency
+      ? await getSnapshotRate(currency, defaultCurrency)
+      : null;
     const opportunity = await prismadb.crm_Opportunities.create({
       data: {
         account: account || undefined,
         assigned_to: assigned_to || userId,
-        budget: budget ? Number(budget) : undefined,
+        budget: budget ? parseFloat(budget) : undefined,
         campaign: campaign || undefined,
         close_date,
         contact: contact || undefined,
@@ -55,7 +60,8 @@ export const createOpportunity = async (data: {
         updatedBy: userId,
         currency: currency || undefined,
         description: description || undefined,
-        expected_revenue: expected_revenue ? Number(expected_revenue) : undefined,
+        expected_revenue: expected_revenue ? parseFloat(expected_revenue) : undefined,
+        snapshot_rate: snapshotRate ? parseFloat(snapshotRate.toString()) : undefined,
         name,
         next_step: next_step || undefined,
         sales_stage: sales_stage || undefined,
