@@ -1,8 +1,11 @@
--- CreateEnum
-CREATE TYPE "ExchangeRateSource" AS ENUM ('MANUAL', 'ECB');
+-- Clean up failed migration record from previous attempt (if exists)
+DELETE FROM "_prisma_migrations" WHERE "migration_name" = '20260404120000_add_currency_support';
+
+-- CreateEnum (idempotent)
+DO $$ BEGIN CREATE TYPE "ExchangeRateSource" AS ENUM ('MANUAL', 'ECB'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- CreateTable
-CREATE TABLE "Currency" (
+CREATE TABLE IF NOT EXISTS "Currency" (
     "code" VARCHAR(3) NOT NULL,
     "name" TEXT NOT NULL,
     "symbol" VARCHAR(5) NOT NULL,
@@ -15,7 +18,7 @@ CREATE TABLE "Currency" (
 );
 
 -- CreateTable
-CREATE TABLE "ExchangeRate" (
+CREATE TABLE IF NOT EXISTS "ExchangeRate" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "fromCurrency" VARCHAR(3) NOT NULL,
     "toCurrency" VARCHAR(3) NOT NULL,
@@ -29,7 +32,7 @@ CREATE TABLE "ExchangeRate" (
 );
 
 -- CreateTable
-CREATE TABLE "crm_SystemSettings" (
+CREATE TABLE IF NOT EXISTS "crm_SystemSettings" (
     "key" TEXT NOT NULL,
     "value" TEXT NOT NULL,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -83,8 +86,14 @@ CREATE UNIQUE INDEX IF NOT EXISTS "ExchangeRate_fromCurrency_toCurrency_key" ON 
 CREATE INDEX IF NOT EXISTS "ExchangeRate_fromCurrency_idx" ON "ExchangeRate"("fromCurrency");
 CREATE INDEX IF NOT EXISTS "ExchangeRate_toCurrency_idx" ON "ExchangeRate"("toCurrency");
 
--- AddForeignKey
-ALTER TABLE "crm_Opportunities" ADD CONSTRAINT "crm_Opportunities_currency_fkey" FOREIGN KEY ("currency") REFERENCES "Currency"("code") ON DELETE SET NULL ON UPDATE CASCADE;
-ALTER TABLE "crm_Contracts" ADD CONSTRAINT "crm_Contracts_currency_fkey" FOREIGN KEY ("currency") REFERENCES "Currency"("code") ON DELETE SET NULL ON UPDATE CASCADE;
-ALTER TABLE "ExchangeRate" ADD CONSTRAINT "ExchangeRate_fromCurrency_fkey" FOREIGN KEY ("fromCurrency") REFERENCES "Currency"("code") ON DELETE RESTRICT ON UPDATE CASCADE;
-ALTER TABLE "ExchangeRate" ADD CONSTRAINT "ExchangeRate_toCurrency_fkey" FOREIGN KEY ("toCurrency") REFERENCES "Currency"("code") ON DELETE RESTRICT ON UPDATE CASCADE;
+-- AddForeignKey (idempotent: drop if exists, then create)
+DO $$ BEGIN
+  ALTER TABLE "crm_Opportunities" DROP CONSTRAINT IF EXISTS "crm_Opportunities_currency_fkey";
+  ALTER TABLE "crm_Opportunities" ADD CONSTRAINT "crm_Opportunities_currency_fkey" FOREIGN KEY ("currency") REFERENCES "Currency"("code") ON DELETE SET NULL ON UPDATE CASCADE;
+  ALTER TABLE "crm_Contracts" DROP CONSTRAINT IF EXISTS "crm_Contracts_currency_fkey";
+  ALTER TABLE "crm_Contracts" ADD CONSTRAINT "crm_Contracts_currency_fkey" FOREIGN KEY ("currency") REFERENCES "Currency"("code") ON DELETE SET NULL ON UPDATE CASCADE;
+  ALTER TABLE "ExchangeRate" DROP CONSTRAINT IF EXISTS "ExchangeRate_fromCurrency_fkey";
+  ALTER TABLE "ExchangeRate" ADD CONSTRAINT "ExchangeRate_fromCurrency_fkey" FOREIGN KEY ("fromCurrency") REFERENCES "Currency"("code") ON DELETE RESTRICT ON UPDATE CASCADE;
+  ALTER TABLE "ExchangeRate" DROP CONSTRAINT IF EXISTS "ExchangeRate_toCurrency_fkey";
+  ALTER TABLE "ExchangeRate" ADD CONSTRAINT "ExchangeRate_toCurrency_fkey" FOREIGN KEY ("toCurrency") REFERENCES "Currency"("code") ON DELETE RESTRICT ON UPDATE CASCADE;
+END $$;
