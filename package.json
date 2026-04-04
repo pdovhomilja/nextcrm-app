@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma migrate resolve --rolled-back 20260404120000_add_currency_support 2>/dev/null; prisma migrate deploy && next build",
+    "build": "prisma generate && prisma migrate deploy && next build",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
     "migrate:mongo-to-postgres": "pnpm exec tsx scripts/migrate-mongo-to-postgres.ts",
