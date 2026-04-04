@@ -23,9 +23,11 @@ import { FormSelect } from "@/components/form/from-select";
 const CreateContractForm = ({
   accounts,
   accountId,
+  currencies = [],
 }: {
   accounts: crm_Accounts[];
   accountId: string;
+  currencies?: { code: string; name: string; symbol: string }[];
 }) => {
   const router = useRouter();
   const closeRef = useRef<ElementRef<"button">>(null);
@@ -63,6 +65,7 @@ const CreateContractForm = ({
     const description = formData.get("description") as string;
     const account = formData.get("account") as string;
     const assigned_to = formData.get("assigned_to") as string;
+    const currency = formData.get("currency") as string;
 
     await execute({
       title,
@@ -75,6 +78,7 @@ const CreateContractForm = ({
       description,
       account,
       assigned_to,
+      currency,
     });
   };
 
@@ -90,6 +94,13 @@ const CreateContractForm = ({
       <form action={onAction} className="space-y-4">
         <FormInput id="title" label={t("title")} type="text" errors={fieldErrors} />
         <FormInput id="value" label={t("value")} type="text" errors={fieldErrors} />
+        <FormSelect
+          id="currency"
+          label={t("currency")}
+          type="hidden"
+          data={currencies.map((c) => ({ id: c.code, name: `${c.symbol} ${c.code} — ${c.name}` }))}
+          errors={fieldErrors}
+        />
         <FormDatePicker
           id="startDate"
           label={t("startDate")}
