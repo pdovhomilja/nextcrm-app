@@ -93,9 +93,9 @@ export const opportunityTools = [
           v: 0,
           name,
           ...rest,
-          ...(budget !== undefined && { budget: BigInt(budget) }),
+          ...(budget !== undefined && { budget: budget }),
           ...(expected_revenue !== undefined && {
-            expected_revenue: BigInt(expected_revenue),
+            expected_revenue: expected_revenue,
           }),
           ...(close_date !== undefined && {
             close_date: new Date(close_date),
@@ -129,14 +129,15 @@ export const opportunityTools = [
         where: { id: args.id, assigned_to: userId },
       });
       if (!existing) throw new Error("NOT_FOUND");
-      const { id, budget, expected_revenue, close_date, ...rest } = args;
+      const { id, budget, expected_revenue, close_date, currency, ...rest } = args;
       const opp = await prismadb.crm_Opportunities.update({
         where: { id },
         data: {
           ...rest,
-          ...(budget !== undefined && { budget: BigInt(budget) }),
+          ...(currency !== undefined && { currency }),
+          ...(budget !== undefined && { budget: budget }),
           ...(expected_revenue !== undefined && {
-            expected_revenue: BigInt(expected_revenue),
+            expected_revenue: expected_revenue,
           }),
           ...(close_date !== undefined && {
             close_date: new Date(close_date),
