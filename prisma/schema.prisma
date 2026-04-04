@@ -839,6 +839,9 @@ model Users {
   username         String?
   userStatus       ActiveStatus @default(PENDING)
   userLanguage     Language     @default(en)
+  banned           Boolean      @default(false)
+  banReason        String?
+  banExpires       DateTime?
 
   tasksComment         tasksComments[]
   created_by_documents Documents[]           @relation("created_by_user")
@@ -1406,7 +1409,7 @@ model EmailsToAccounts {
 }
 
 model Session {
-  id        String   @id
+  id        String   @id @default(uuid())
   expiresAt DateTime
   token     String   @unique
   createdAt DateTime @default(now())
@@ -1420,7 +1423,7 @@ model Session {
 }
 
 model Account {
-  id                    String    @id
+  id                    String    @id @default(uuid())
   accountId             String
   providerId            String
   userId                String    @db.Uuid
@@ -1439,7 +1442,7 @@ model Account {
 }
 
 model Verification {
-  id         String    @id
+  id         String    @id @default(uuid()) @db.Uuid
   identifier String
   value      String
   expiresAt  DateTime
