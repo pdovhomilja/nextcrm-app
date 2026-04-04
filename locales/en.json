@@ -219,6 +219,7 @@
     "saleStagePlaceholder": "Choose actual stage",
     "budget": "Budget",
     "currency": "Currency",
+    "selectCurrency": "Select currency",
     "expectedRevenue": "Expected revenue",
     "nextStep": "Next step",
     "nextStepPlaceholder": "Describe the next step",
@@ -257,6 +258,7 @@
     "customerSignedDate": "Customer signed date",
     "companySignedDate": "Company signed date",
     "account": "Account",
+    "currency": "Currency",
     "createButton": "Create contract",
     "createSuccess": "Contract created successfully"
   },

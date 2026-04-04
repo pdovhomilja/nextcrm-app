@@ -18,6 +18,7 @@ export type OpportunityConfig = {
   saleTypes: ConfigItem[];
   saleStages: ConfigItem[];
   campaigns: ConfigItem[];
+  currencies: { code: string; name: string; symbol: string }[];
 };
 
 export const createColumns = (config: OpportunityConfig): ColumnDef<Opportunity>[] => [

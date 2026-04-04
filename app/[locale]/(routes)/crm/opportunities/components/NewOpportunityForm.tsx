@@ -52,6 +52,7 @@ type NewTaskFormProps = {
   salesType: crm_Opportunities_Type[];
   saleStages: crm_Opportunities_Sales_Stages[];
   campaigns: crm_campaigns[];
+  currencies: { code: string; name: string; symbol: string }[];
   selectedStage?: string;
   accountId?: string;
   onDialogClose: () => void;
@@ -63,6 +64,7 @@ export function NewOpportunityForm({
   salesType,
   saleStages,
   campaigns,
+  currencies,
   selectedStage,
   accountId,
   onDialogClose,
@@ -323,13 +325,20 @@ export function NewOpportunityForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t("currency")}</FormLabel>
-                      <FormControl>
-                        <Input
-                          disabled={form.formState.isSubmitting}
-                          placeholder="USD"
-                          {...field}
-                        />
-                      </FormControl>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t("selectCurrency")} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {currencies.map((c) => (
+                            <SelectItem key={c.code} value={c.code}>
+                              {c.symbol} {c.code} — {c.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

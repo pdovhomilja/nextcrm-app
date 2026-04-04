@@ -221,6 +221,7 @@
     "saleStagePlaceholder": "Vyberte aktuální fázi",
     "budget": "Rozpočet",
     "currency": "Měna",
+    "selectCurrency": "Vyberte měnu",
     "expectedRevenue": "Očekávaný výnos",
     "nextStep": "Další krok",
     "nextStepPlaceholder": "Popište další krok",
@@ -259,6 +260,7 @@
     "customerSignedDate": "Datum podpisu zákazníkem",
     "companySignedDate": "Datum podpisu firmou",
     "account": "Firma",
+    "currency": "Měna",
     "createButton": "Vytvořit smlouvu",
     "createSuccess": "Smlouva úspěšně vytvořena"
   },
