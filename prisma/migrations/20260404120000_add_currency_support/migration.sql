@@ -37,21 +37,51 @@ CREATE TABLE "crm_SystemSettings" (
     CONSTRAINT "crm_SystemSettings_pkey" PRIMARY KEY ("key")
 );
 
+-- Seed default currencies (needed before FK constraints)
+INSERT INTO "Currency" ("code", "name", "symbol", "isEnabled", "isDefault", "createdAt", "updatedAt")
+VALUES
+    ('EUR', 'Euro', '€', true, true, NOW(), NOW()),
+    ('USD', 'US Dollar', '$', true, false, NOW(), NOW()),
+    ('CZK', 'Czech Koruna', 'Kč', true, false, NOW(), NOW())
+ON CONFLICT ("code") DO NOTHING;
+
+-- Seed default exchange rates
+INSERT INTO "ExchangeRate" ("id", "fromCurrency", "toCurrency", "rate", "source", "effectiveDate", "createdAt", "updatedAt")
+VALUES
+    (gen_random_uuid(), 'EUR', 'USD', 1.084, 'ECB', NOW(), NOW(), NOW()),
+    (gen_random_uuid(), 'EUR', 'CZK', 25.315, 'ECB', NOW(), NOW(), NOW()),
+    (gen_random_uuid(), 'USD', 'EUR', 0.92251, 'ECB', NOW(), NOW(), NOW()),
+    (gen_random_uuid(), 'USD', 'CZK', 23.35, 'ECB', NOW(), NOW(), NOW()),
+    (gen_random_uuid(), 'CZK', 'EUR', 0.0395, 'ECB', NOW(), NOW(), NOW()),
+    (gen_random_uuid(), 'CZK', 'USD', 0.04283, 'ECB', NOW(), NOW(), NOW())
+ON CONFLICT DO NOTHING;
+
+-- Seed default system settings
+INSERT INTO "crm_SystemSettings" ("key", "value", "updatedAt")
+VALUES
+    ('ecb_auto_update', 'false', NOW()),
+    ('default_currency', 'EUR', NOW())
+ON CONFLICT ("key") DO NOTHING;
+
+-- Clean up existing currency values: truncate to 3 chars, nullify invalid ones
+UPDATE "crm_Opportunities" SET "currency" = LEFT(TRIM("currency"), 3) WHERE "currency" IS NOT NULL;
+UPDATE "crm_Opportunities" SET "currency" = NULL WHERE "currency" IS NOT NULL AND "currency" NOT IN (SELECT "code" FROM "Currency");
+
 -- AlterTable: crm_Opportunities
 ALTER TABLE "crm_Opportunities" ALTER COLUMN "budget" SET DATA TYPE DECIMAL(18,2);
 ALTER TABLE "crm_Opportunities" ALTER COLUMN "expected_revenue" SET DATA TYPE DECIMAL(18,2);
 ALTER TABLE "crm_Opportunities" ALTER COLUMN "currency" SET DATA TYPE VARCHAR(3);
-ALTER TABLE "crm_Opportunities" ADD COLUMN "snapshot_rate" DECIMAL(18,8);
+ALTER TABLE "crm_Opportunities" ADD COLUMN IF NOT EXISTS "snapshot_rate" DECIMAL(18,8);
 
 -- AlterTable: crm_Contracts
 ALTER TABLE "crm_Contracts" ALTER COLUMN "value" SET DATA TYPE DECIMAL(18,2);
-ALTER TABLE "crm_Contracts" ADD COLUMN "currency" VARCHAR(3);
-ALTER TABLE "crm_Contracts" ADD COLUMN "snapshot_rate" DECIMAL(18,8);
+ALTER TABLE "crm_Contracts" ADD COLUMN IF NOT EXISTS "currency" VARCHAR(3);
+ALTER TABLE "crm_Contracts" ADD COLUMN IF NOT EXISTS "snapshot_rate" DECIMAL(18,8);
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ExchangeRate_fromCurrency_toCurrency_key" ON "ExchangeRate"("fromCurrency", "toCurrency");
-CREATE INDEX "ExchangeRate_fromCurrency_idx" ON "ExchangeRate"("fromCurrency");
-CREATE INDEX "ExchangeRate_toCurrency_idx" ON "ExchangeRate"("toCurrency");
+CREATE UNIQUE INDEX IF NOT EXISTS "ExchangeRate_fromCurrency_toCurrency_key" ON "ExchangeRate"("fromCurrency", "toCurrency");
+CREATE INDEX IF NOT EXISTS "ExchangeRate_fromCurrency_idx" ON "ExchangeRate"("fromCurrency");
+CREATE INDEX IF NOT EXISTS "ExchangeRate_toCurrency_idx" ON "ExchangeRate"("toCurrency");
 
 -- AddForeignKey
 ALTER TABLE "crm_Opportunities" ADD CONSTRAINT "crm_Opportunities_currency_fkey" FOREIGN KEY ("currency") REFERENCES "Currency"("code") ON DELETE SET NULL ON UPDATE CASCADE;
