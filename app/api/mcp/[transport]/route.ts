@@ -1,4 +1,4 @@
-import { createMcpHandler } from "@vercel/mcp-adapter";
+import { createMcpHandler } from "mcp-handler";
 import { getMcpUser } from "@/lib/mcp/auth";
 import { accountTools } from "@/lib/mcp/tools/accounts";
 import { contactTools } from "@/lib/mcp/tools/contacts";

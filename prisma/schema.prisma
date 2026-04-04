@@ -625,6 +625,16 @@ model Documents {
   assigned_user          String?   @db.Uuid
   connected_documents    String[]
 
+  // --- New enrichment fields ---
+  content_text       String?
+  summary            String?
+  content_hash       String?
+  thumbnail_url      String?
+  processing_status  DocumentProcessingStatus @default(PENDING)
+  processing_error   String?
+  version            Int                      @default(1)
+  parent_document_id String?                  @db.Uuid
+
   created_by           Users?                        @relation("created_by_user", fields: [created_by_user], references: [id])
   assigned_to_user     Users?                        @relation("assigned_to_user", fields: [assigned_user], references: [id])
   documents_type       Documents_Types?              @relation(fields: [document_type], references: [id])
@@ -635,6 +645,10 @@ model Documents {
   crm_accounts_tasks   DocumentsToCrmAccountsTasks[]
   leads                DocumentsToLeads[]
   accounts             DocumentsToAccounts[]
+  parent_document      Documents?                    @relation("DocumentVersions", fields: [parent_document_id], references: [id])
+  child_versions       Documents[]                   @relation("DocumentVersions")
+  chunks               crm_Document_Chunks[]
+  embedding_record     crm_Embeddings_Documents?
 
   @@index([created_by_user])
   @@index([assigned_user])
@@ -645,6 +659,9 @@ model Documents {
   @@index([favourite])
   @@index([createdAt])
   @@index([document_system_type])
+  @@index([content_hash])
+  @@index([parent_document_id])
+  @@index([processing_status])
 }
 
 enum DocumentSystemType {
@@ -652,6 +669,13 @@ enum DocumentSystemType {
   CONTRACT
   OFFER
   OTHER
+}
+
+enum DocumentProcessingStatus {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
 }
 
 model Documents_Types {
@@ -1227,6 +1251,31 @@ model crm_Embeddings_Opportunities {
   opportunity    crm_Opportunities @relation(fields: [opportunity_id], references: [id], onDelete: Cascade)
 
   @@map("crm_Embeddings_Opportunities")
+}
+
+model crm_Embeddings_Documents {
+  id           String   @id @default(uuid()) @db.Uuid
+  document_id  String   @unique @db.Uuid
+  embedding    Unsupported("vector(1536)")
+  content_hash String
+  /// Must be set explicitly on upsert — @default(now()) only fires on INSERT
+  embedded_at  DateTime @default(now())
+  document     Documents @relation(fields: [document_id], references: [id], onDelete: Cascade)
+
+  @@map("crm_Embeddings_Documents")
+}
+
+model crm_Document_Chunks {
+  id           String   @id @default(uuid()) @db.Uuid
+  document_id  String   @db.Uuid
+  chunk_index  Int
+  chunk_text   String
+  embedding    Unsupported("vector(1536)")
+  embedded_at  DateTime @default(now())
+  document     Documents @relation(fields: [document_id], references: [id], onDelete: Cascade)
+
+  @@index([document_id])
+  @@map("crm_Document_Chunks")
 }
 
 // ============================================

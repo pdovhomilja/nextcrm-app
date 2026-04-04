@@ -82,7 +82,7 @@ const AccountDetailPage = async (props: AccountDetailPageProps) => {
               accountId={accountId}
             />
             <LeadsView data={leads} crmData={crmData} />
-            <DocumentsView data={documents} />
+            <DocumentsView data={documents} accountId={accountId} />
           </div>
         </TabsContent>
         <TabsContent value="history">

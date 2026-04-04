@@ -5,11 +5,13 @@ import {
   Calculator,
   Calendar,
   CreditCard,
+  FileText,
   LogOut,
   Settings,
   Smile,
   User,
 } from "lucide-react";
+import { searchDocuments, type DocumentSearchResult } from "@/actions/documents/search-documents";
 
 import {
   CommandDialog,
@@ -29,8 +31,21 @@ import { useTranslations } from "next-intl";
 
 export function CommandComponent() {
   const [open, setOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [docResults, setDocResults] = React.useState<DocumentSearchResult[]>([]);
   const router = useRouter();
   const t = useTranslations("CommandComponent");
+
+  React.useEffect(() => {
+    if (!searchQuery || searchQuery.length < 2) {
+      setDocResults([]);
+      return;
+    }
+    const timeout = setTimeout(() => {
+      searchDocuments(searchQuery).then(setDocResults).catch(() => {});
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [searchQuery]);
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -65,7 +80,11 @@ export function CommandComponent() {
         </kbd>
       </p>
       <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput placeholder={t("placeholder")} />
+        <CommandInput
+          placeholder={t("placeholder")}
+          value={searchQuery}
+          onValueChange={setSearchQuery}
+        />
         <CommandList>
           <CommandEmpty>{t("noResults")}</CommandEmpty>
           {/*           <CommandGroup heading="Suggestions">
@@ -82,6 +101,29 @@ export function CommandComponent() {
               <span>Calculator</span>
             </CommandItem>
           </CommandGroup> */}
+          {docResults.length > 0 && (
+            <CommandGroup heading="Documents">
+              {docResults.map((doc) => (
+                <CommandItem
+                  key={doc.id}
+                  onSelect={() => {
+                    router.push(`/documents?highlight=${doc.id}`);
+                    setOpen(false);
+                  }}
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  <div className="flex flex-col">
+                    <span>{doc.name}</span>
+                    {doc.summary && (
+                      <span className="text-xs text-muted-foreground line-clamp-1">
+                        {doc.summary}
+                      </span>
+                    )}
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
           <CommandSeparator />
           <CommandGroup heading={t("settings")}>
             <CommandItem onClick={() => redirect("/")}>
