@@ -97,10 +97,10 @@ export default async function AppLayout({
   const enabledCurrencies = await getEnabledCurrencies();
   const defaultCurrency = await getDefaultCurrency();
   const cookieCurrency = cookieStore.get("display_currency")?.value;
-  const displayCurrency = cookieCurrency && enabledCurrencies.some(c => c.code === cookieCurrency)
+  const displayCurrency = cookieCurrency && enabledCurrencies.some((c: { code: string }) => c.code === cookieCurrency)
     ? cookieCurrency
     : defaultCurrency;
-  const currencyList = enabledCurrencies.map(c => ({ code: c.code, name: c.name, symbol: c.symbol }));
+  const currencyList = enabledCurrencies.map((c: { code: string; name: string; symbol: string }) => ({ code: c.code, name: c.name, symbol: c.symbol }));
 
   //console.log(typeof build, "build");
   return (
