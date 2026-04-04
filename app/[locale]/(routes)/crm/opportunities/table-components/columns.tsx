@@ -11,6 +11,8 @@ import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
 import moment from "moment";
 import Link from "next/link";
+import { formatCurrency } from "@/lib/currency";
+import { Decimal } from "@prisma/client/runtime/client";
 
 type ConfigItem = { id: string; name: string };
 
@@ -114,17 +116,10 @@ export const createColumns = (config: OpportunityConfig): ColumnDef<Opportunity>
     ),
 
     cell: ({ row }) => {
-      //console.log(row.original.budget);
-      return (
-        <div>
-          {row.original.budget
-            ? Number(row.original.budget).toLocaleString("en-US", {
-                style: "currency",
-                currency: "USD",
-              })
-            : "N/A"}
-        </div>
-      );
+      const budget = row.original.budget;
+      const currency = row.original.currency || "EUR";
+      if (!budget) return <div>—</div>;
+      return <div>{formatCurrency(new Decimal(budget.toString()), currency)}</div>;
     },
     enableSorting: true,
     enableHiding: true,
