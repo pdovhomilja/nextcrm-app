@@ -3,9 +3,12 @@ import { prismadb } from "@/lib/prisma";
 import { ExchangeRateSource } from "@prisma/client";
 
 export const syncExchangeRates = inngest.createFunction(
-  { id: "ecb-sync-exchange-rates", name: "ECB Sync Exchange Rates" },
-  { cron: "0 17 * * 1-5" },
-  async ({ step }) => {
+  {
+    id: "ecb-sync-exchange-rates",
+    name: "ECB Sync Exchange Rates",
+    triggers: [{ cron: "0 17 * * 1-5" }],
+  },
+  async ({ step }: { step: any }) => {
     const enabled = await step.run("check-ecb-enabled", async () => {
       const setting = await prismadb.crm_SystemSettings.findUnique({
         where: { key: "ecb_auto_update" },
