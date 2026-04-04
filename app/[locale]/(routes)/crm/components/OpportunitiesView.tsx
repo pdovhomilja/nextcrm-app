@@ -43,9 +43,14 @@ const OpportunitiesView = ({
   const [open, setOpen] = useState(false);
   const t = useTranslations("CrmPage");
 
-  const { accounts, contacts, saleTypes, saleStages, campaigns } = crmData;
+  const { accounts, contacts, saleTypes, saleStages, campaigns, currencies } = crmData;
 
-  const opportunityColumns = createColumns({ saleTypes, saleStages, campaigns });
+  const opportunityColumns = createColumns({
+    saleTypes,
+    saleStages,
+    campaigns,
+    currencies: currencies.map((c) => ({ code: c.code, name: c.name, symbol: c.symbol })),
+  });
 
   return (
     <Card>
@@ -77,6 +82,7 @@ const OpportunitiesView = ({
                     salesType={saleTypes}
                     saleStages={saleStages}
                     campaigns={campaigns}
+                    currencies={currencies.map((c) => ({ code: c.code, name: c.name, symbol: c.symbol }))}
                     accountId={accountId}
                     onDialogClose={() => setOpen(false)}
                   />

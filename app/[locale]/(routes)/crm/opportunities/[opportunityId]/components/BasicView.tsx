@@ -22,6 +22,8 @@ import { Clapperboard } from "lucide-react";
 import { prismadb } from "@/lib/prisma";
 import { getAllCrmData } from "@/actions/crm/get-crm-data";
 import { OpportunityDetailActions } from "./OpportunityDetailActions";
+import { formatCurrency } from "@/lib/currency";
+import { Decimal } from "@prisma/client/runtime/client";
 
 interface OppsViewProps {
   data: {
@@ -36,7 +38,7 @@ export async function BasicView({ data }: OppsViewProps) {
   //console.log(data, "data");
   const users = await prismadb.users.findMany();
   const crmData = await getAllCrmData();
-  const { saleTypes, saleStages, campaigns } = crmData;
+  const { saleTypes, saleStages, campaigns, currencies } = crmData;
   if (!data) return <div>Opportunity not found</div>;
   return (
     <Card>
@@ -51,6 +53,7 @@ export async function BasicView({ data }: OppsViewProps) {
             saleTypes={saleTypes}
             saleStages={saleStages}
             campaigns={campaigns}
+            currencies={currencies.map((c: { code: string; name: string; symbol: string }) => ({ code: c.code, name: c.name, symbol: c.symbol }))}
           />
         </div>
       </CardHeader>
@@ -63,10 +66,9 @@ export async function BasicView({ data }: OppsViewProps) {
                 Opportunity amount
               </p>
               <p className="text-sm text-muted-foreground">
-                {data.budget ? Number(data.budget).toLocaleString("en-US", {
-                  style: "currency",
-                  currency: "USD",
-                }) : "N/A"}
+                {data.currency
+                  ? formatCurrency(new Decimal(data.budget?.toString() ?? "0"), data.currency)
+                  : data.budget?.toString() ?? "0"}
               </p>
             </div>
           </div>

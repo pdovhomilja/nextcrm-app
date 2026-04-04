@@ -1,4 +1,7 @@
 import { getTranslations } from "next-intl/server";
+import { cookies } from "next/headers";
+import { getDefaultCurrency, formatCurrency as formatCurrencyUtil } from "@/lib/currency";
+import { Decimal } from "@prisma/client/runtime/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { ReportPageLayout } from "@/components/reports/ReportPageLayout";
 import { ReportChart } from "@/components/reports/ReportChart";
@@ -15,12 +18,6 @@ import {
 
 type Props = { searchParams: Promise<Record<string, string | undefined>> };
 
-const currencyFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-});
-
 export default async function SalesReportPage({ searchParams }: Props) {
   const resolvedParams = await searchParams;
   const params = new URLSearchParams(
@@ -31,14 +28,18 @@ export default async function SalesReportPage({ searchParams }: Props) {
   const filters = parseSearchParamsToFilters(params);
   const t = await getTranslations("ReportsPage");
 
+  const cookieStore = await cookies();
+  const defaultCurrency = await getDefaultCurrency();
+  const displayCurrency = cookieStore.get("display_currency")?.value || defaultCurrency;
+
   const [revenue, pipeline, oppsByStage, oppsByMonth, winLoss, avgDeal, cycleLength] =
     await Promise.all([
-      getRevenue(filters),
-      getPipelineValue(filters),
+      getRevenue(filters, displayCurrency),
+      getPipelineValue(filters, displayCurrency),
       getOppsByStage(filters),
       getOppsByMonth(filters),
       getWinLossRate(filters),
-      getAvgDealSize(filters),
+      getAvgDealSize(filters, displayCurrency),
       getSalesCycleLength(filters),
     ]);
 
@@ -52,15 +53,15 @@ export default async function SalesReportPage({ searchParams }: Props) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card><CardContent className="p-4">
           <p className="text-sm text-muted-foreground">{t("sales.revenue")}</p>
-          <p className="text-2xl font-bold mt-1">{currencyFormatter.format(revenue)}</p>
+          <p className="text-2xl font-bold mt-1">{formatCurrencyUtil(new Decimal(revenue), displayCurrency)}</p>
         </CardContent></Card>
         <Card><CardContent className="p-4">
           <p className="text-sm text-muted-foreground">{t("sales.pipeline")}</p>
-          <p className="text-2xl font-bold mt-1">{currencyFormatter.format(pipeline)}</p>
+          <p className="text-2xl font-bold mt-1">{formatCurrencyUtil(new Decimal(pipeline), displayCurrency)}</p>
         </CardContent></Card>
         <Card><CardContent className="p-4">
           <p className="text-sm text-muted-foreground">{t("sales.avgDeal")}</p>
-          <p className="text-2xl font-bold mt-1">{currencyFormatter.format(avgDeal)}</p>
+          <p className="text-2xl font-bold mt-1">{formatCurrencyUtil(new Decimal(avgDeal), displayCurrency)}</p>
         </CardContent></Card>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

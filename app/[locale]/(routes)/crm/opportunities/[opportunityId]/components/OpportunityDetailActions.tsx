@@ -25,6 +25,7 @@ interface OpportunityDetailActionsProps {
   saleTypes: ConfigItem[];
   saleStages: ConfigItem[];
   campaigns: ConfigItem[];
+  currencies: { code: string; name: string; symbol: string }[];
 }
 
 export function OpportunityDetailActions({
@@ -32,6 +33,7 @@ export function OpportunityDetailActions({
   saleTypes,
   saleStages,
   campaigns,
+  currencies,
 }: OpportunityDetailActionsProps) {
   const [updateOpen, setUpdateOpen] = useState(false);
 
@@ -50,6 +52,7 @@ export function OpportunityDetailActions({
               saleTypes={saleTypes}
               saleStages={saleStages}
               campaigns={campaigns}
+              currencies={currencies}
             />
           </div>
         </SheetContent>

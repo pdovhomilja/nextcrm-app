@@ -218,6 +218,7 @@
     "saleStagePlaceholder": "Виберіть поточну стадію",
     "budget": "Бюджет",
     "currency": "Валюта",
+    "selectCurrency": "Виберіть валюту",
     "expectedRevenue": "Очікуваний дохід",
     "nextStep": "Наступний крок",
     "nextStepPlaceholder": "Опишіть наступний крок",
@@ -256,6 +257,7 @@
     "customerSignedDate": "Дата підписання клієнтом",
     "companySignedDate": "Дата підписання компанією",
     "account": "Компанія",
+    "currency": "Валюта",
     "createButton": "Створити договір",
     "createSuccess": "Договір успішно створено"
   },

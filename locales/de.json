@@ -218,6 +218,7 @@
     "saleStagePlaceholder": "Aktuelle Phase auswählen",
     "budget": "Budget",
     "currency": "Währung",
+    "selectCurrency": "Währung auswählen",
     "expectedRevenue": "Erwarteter Umsatz",
     "nextStep": "Nächster Schritt",
     "nextStepPlaceholder": "Nächsten Schritt beschreiben",
@@ -256,6 +257,7 @@
     "customerSignedDate": "Datum der Kundenunterschrift",
     "companySignedDate": "Datum der Unternehmensunterschrift",
     "account": "Unternehmen",
+    "currency": "Währung",
     "createButton": "Vertrag erstellen",
     "createSuccess": "Vertrag erfolgreich erstellt"
   },

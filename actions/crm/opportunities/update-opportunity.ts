@@ -4,6 +4,7 @@ import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { inngest } from "@/inngest/client";
 import { writeAuditLog, diffObjects } from "@/lib/audit-log";
+import { getSnapshotRate, getDefaultCurrency } from "@/lib/currency";
 
 export const updateOpportunity = async (data: {
   id: string;
@@ -45,20 +46,25 @@ export const updateOpportunity = async (data: {
   if (!id) return { error: "id is required" };
 
   try {
+    const defaultCurrency = await getDefaultCurrency();
+    const snapshotRate = currency
+      ? await getSnapshotRate(currency, defaultCurrency)
+      : null;
     const before = await prismadb.crm_Opportunities.findUnique({ where: { id, deletedAt: null } });
     const opportunity = await prismadb.crm_Opportunities.update({
       where: { id },
       data: {
         account: account || undefined,
         assigned_to: assigned_to || undefined,
-        budget: budget ? Number(budget) : undefined,
+        budget: budget ? parseFloat(budget) : undefined,
         campaign: campaign || undefined,
         close_date,
         contact: contact || undefined,
         updatedBy: userId,
         currency,
         description,
-        expected_revenue: expected_revenue ? Number(expected_revenue) : undefined,
+        expected_revenue: expected_revenue ? parseFloat(expected_revenue) : undefined,
+        snapshot_rate: snapshotRate ? parseFloat(snapshotRate.toString()) : undefined,
         name,
         next_step,
         sales_stage: sales_stage || undefined,

@@ -20,4 +20,5 @@ export const UpdateContract = z.object({
   status: z.nativeEnum(crm_Contracts_Status),
   account: z.string(),
   assigned_to: z.string(),
+  currency: z.string().length(3).optional(),
 });

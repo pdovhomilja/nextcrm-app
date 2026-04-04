@@ -11,6 +11,7 @@ Seed data is used to populate the database with initial data.
 */
 //GPT Models
 import gptModelsDataRaw from "../initial-data/gpt_Models.json";
+import { seedCurrencies } from "./currencies";
 
 const gptModelsData = gptModelsDataRaw.map((item) => ({
   ...item,
@@ -177,6 +178,9 @@ async function main() {
   } else {
     console.log("Lead Types already seeded");
   }
+
+  //Seed Currencies and Exchange Rates
+  await seedCurrencies();
 
   console.log("-------- Seed DB completed --------");
 }

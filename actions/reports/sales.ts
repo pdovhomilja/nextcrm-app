@@ -1,6 +1,8 @@
 import { prismadb } from "@/lib/prisma";
 import type { ReportFilters, ChartDataPoint } from "./types";
 import { groupedToChartData } from "./types";
+import { getExchangeRates, convertAmount } from "@/lib/currency";
+import { Decimal } from "@prisma/client/runtime/client";
 
 function dateRangeWhere(filters: ReportFilters) {
   return {
@@ -9,20 +11,36 @@ function dateRangeWhere(filters: ReportFilters) {
   };
 }
 
-export async function getRevenue(filters: ReportFilters): Promise<number> {
-  const result = await prismadb.crm_Opportunities.aggregate({
+export async function getRevenue(filters: ReportFilters, displayCurrency: string): Promise<number> {
+  const opps = await prismadb.crm_Opportunities.findMany({
     where: { ...dateRangeWhere(filters), status: "CLOSED" },
-    _sum: { budget: true },
+    select: { budget: true, currency: true },
   });
-  return Number(result._sum.budget ?? 0);
+  const rates = await getExchangeRates();
+  let total = new Decimal(0);
+  for (const opp of opps) {
+    const budget = new Decimal(opp.budget?.toString() ?? "0");
+    const from = opp.currency || displayCurrency;
+    const converted = convertAmount(budget, from, displayCurrency, rates);
+    total = total.add(converted ?? budget);
+  }
+  return total.toNumber();
 }
 
-export async function getPipelineValue(filters: ReportFilters): Promise<number> {
-  const result = await prismadb.crm_Opportunities.aggregate({
+export async function getPipelineValue(filters: ReportFilters, displayCurrency: string): Promise<number> {
+  const opps = await prismadb.crm_Opportunities.findMany({
     where: { ...dateRangeWhere(filters), status: "ACTIVE" },
-    _sum: { budget: true },
+    select: { budget: true, currency: true },
   });
-  return Number(result._sum.budget ?? 0);
+  const rates = await getExchangeRates();
+  let total = new Decimal(0);
+  for (const opp of opps) {
+    const budget = new Decimal(opp.budget?.toString() ?? "0");
+    const from = opp.currency || displayCurrency;
+    const converted = convertAmount(budget, from, displayCurrency, rates);
+    total = total.add(converted ?? budget);
+  }
+  return total.toNumber();
 }
 
 export async function getOppsByStage(filters: ReportFilters): Promise<ChartDataPoint[]> {
@@ -65,12 +83,21 @@ export async function getWinLossRate(
   return { won, total, rate: total > 0 ? Math.round((won / total) * 100) : 0 };
 }
 
-export async function getAvgDealSize(filters: ReportFilters): Promise<number> {
-  const result = await prismadb.crm_Opportunities.aggregate({
+export async function getAvgDealSize(filters: ReportFilters, displayCurrency: string): Promise<number> {
+  const opps = await prismadb.crm_Opportunities.findMany({
     where: { ...dateRangeWhere(filters), status: "CLOSED" },
-    _avg: { budget: true },
+    select: { budget: true, currency: true },
   });
-  return Number(result._avg.budget ?? 0);
+  if (opps.length === 0) return 0;
+  const rates = await getExchangeRates();
+  let total = new Decimal(0);
+  for (const opp of opps) {
+    const budget = new Decimal(opp.budget?.toString() ?? "0");
+    const from = opp.currency || displayCurrency;
+    const converted = convertAmount(budget, from, displayCurrency, rates);
+    total = total.add(converted ?? budget);
+  }
+  return total.div(opps.length).toDecimalPlaces(2).toNumber();
 }
 
 export async function getSalesCycleLength(filters: ReportFilters): Promise<number> {
