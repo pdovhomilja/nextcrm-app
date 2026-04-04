@@ -27,12 +27,14 @@ const UpdateContractForm = ({
   setOpen,
   accounts,
   data,
+  currencies = [],
 }: {
   onOpen: boolean;
   setOpen: (open: boolean) => void;
   accounts: crm_Accounts[];
   //TODO: fix type for data
   data: any;
+  currencies?: { code: string; name: string; symbol: string }[];
 }) => {
   const router = useRouter();
   const [assignedTo, setAssignedTo] = useState<string>(data.assigned_to ?? "");
@@ -77,6 +79,7 @@ const UpdateContractForm = ({
     const status = formData.get("status") as any;
     const account = formData.get("account") as string;
     const assigned_to = formData.get("assigned_to") as string;
+    const currency = formData.get("currency") as string;
 
     await execute({
       id: data.id,
@@ -92,6 +95,7 @@ const UpdateContractForm = ({
       status,
       account,
       assigned_to,
+      currency,
     });
   };
 
@@ -118,6 +122,14 @@ const UpdateContractForm = ({
           type="text"
           errors={fieldErrors}
           defaultValue={valueString}
+        />
+        <FormSelect
+          id="currency"
+          label="Currency"
+          type="hidden"
+          data={currencies.map((c) => ({ id: c.code, name: `${c.symbol} ${c.code} — ${c.name}` }))}
+          errors={fieldErrors}
+          defaultValue={data.currency ?? ""}
         />
         <FormDatePicker
           id="startDate"

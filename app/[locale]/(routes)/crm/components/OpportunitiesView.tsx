@@ -26,6 +26,8 @@ import { NewOpportunityForm } from "../opportunities/components/NewOpportunityFo
 import { OpportunitiesDataTable } from "../opportunities/table-components/data-table";
 
 import type { getAllCrmData } from "@/actions/crm/get-crm-data";
+import { useCurrency } from "@/context/currency-context";
+import { Decimal } from "@prisma/client/runtime/client";
 
 type CrmData = Awaited<ReturnType<typeof getAllCrmData>>;
 
@@ -42,10 +44,24 @@ const OpportunitiesView = ({
 }: OpportunitiesViewProps) => {
   const [open, setOpen] = useState(false);
   const t = useTranslations("CrmPage");
+  const { displayCurrency } = useCurrency();
 
-  const { accounts, contacts, saleTypes, saleStages, campaigns } = crmData;
+  const { accounts, contacts, saleTypes, saleStages, campaigns, currencies, exchangeRates } = crmData;
 
-  const opportunityColumns = createColumns({ saleTypes, saleStages, campaigns });
+  const rates = (exchangeRates ?? []).map((r: { fromCurrency: string; toCurrency: string; rate: unknown }) => ({
+    fromCurrency: r.fromCurrency,
+    toCurrency: r.toCurrency,
+    rate: new Decimal(String(r.rate)),
+  }));
+
+  const opportunityColumns = createColumns({
+    saleTypes,
+    saleStages,
+    campaigns,
+    currencies: currencies.map((c: { code: string; name: string; symbol: string }) => ({ code: c.code, name: c.name, symbol: c.symbol })),
+    displayCurrency,
+    exchangeRates: rates,
+  });
 
   return (
     <Card>
@@ -77,6 +93,7 @@ const OpportunitiesView = ({
                     salesType={saleTypes}
                     saleStages={saleStages}
                     campaigns={campaigns}
+                    currencies={currencies.map((c) => ({ code: c.code, name: c.name, symbol: c.symbol }))}
                     accountId={accountId}
                     onDialogClose={() => setOpen(false)}
                   />

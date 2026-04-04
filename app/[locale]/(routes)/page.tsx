@@ -34,6 +34,9 @@ import { getActiveUsersCount } from "@/actions/dashboard/get-active-users-count"
 import { getOpportunitiesCount } from "@/actions/dashboard/get-opportunities-count";
 import { getExpectedRevenue } from "@/actions/crm/opportunity/get-expected-revenue";
 import { getTranslations } from "next-intl/server";
+import { cookies } from "next/headers";
+import { getDefaultCurrency, formatCurrency as formatCurrencyUtil } from "@/lib/currency";
+import { Decimal } from "@prisma/client/runtime/client";
 
 const DashboardPage = async () => {
   const session = await getSession();
@@ -41,6 +44,10 @@ const DashboardPage = async () => {
   if (!session) return null;
 
   const userId = session?.user?.id;
+
+  const cookieStore = await cookies();
+  const defaultCurrency = await getDefaultCurrency();
+  const displayCurrency = cookieStore.get("display_currency")?.value || defaultCurrency;
 
   //Get user language
   const lang = session?.user?.userLanguage;
@@ -56,7 +63,7 @@ const DashboardPage = async () => {
   const contracts = await getContractsCount();
   const users = await getActiveUsersCount();
   const accounts = await getAccountsCount();
-  const revenue = await getExpectedRevenue();
+  const revenue = await getExpectedRevenue(displayCurrency);
   const documents = await getDocumentsCount();
   const opportunities = await getOpportunitiesCount();
   const usersTasks = await getUsersTasksCount(userId);
@@ -92,13 +99,7 @@ const DashboardPage = async () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-medium">
-                {
-                  //I need revenue value in format 1.000.000
-                  typeof revenue === 'number' ? revenue.toLocaleString("en-US", {
-                    style: "currency",
-                    currency: "USD",
-                  }) : "$0.00"
-                }
+                {formatCurrencyUtil(new Decimal(revenue), displayCurrency)}
               </div>
             </CardContent>
           </Card>

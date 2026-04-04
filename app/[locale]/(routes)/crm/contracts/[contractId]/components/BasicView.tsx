@@ -19,6 +19,8 @@ import {
 import moment from "moment";
 import Link from "next/link";
 import { prismadb } from "@/lib/prisma";
+import { formatCurrency as formatCurrencyUtil } from "@/lib/currency";
+import { Decimal } from "@prisma/client/runtime/client";
 
 interface BasicViewProps {
   data: any;
@@ -44,13 +46,9 @@ export async function BasicView({ data }: BasicViewProps) {
   const formatDate = (date: Date | null | undefined) =>
     date ? moment(date).format("MMM DD, YYYY") : "N/A";
 
-  const formatCurrency = (value: number | null | undefined) =>
+  const formatValue = (value: number | string | null | undefined) =>
     value != null
-      ? new Intl.NumberFormat("en-US", {
-          style: "currency",
-          currency: "USD",
-          maximumFractionDigits: 0,
-        }).format(value)
+      ? formatCurrencyUtil(new Decimal(value.toString()), data.currency || "EUR")
       : "N/A";
 
   return (
@@ -76,7 +74,7 @@ export async function BasicView({ data }: BasicViewProps) {
                 <div className="space-y-1">
                   <p className="text-sm font-medium leading-none">Value</p>
                   <p className="text-sm text-muted-foreground">
-                    {formatCurrency(data.value)}
+                    {formatValue(data.value)}
                   </p>
                 </div>
               </div>

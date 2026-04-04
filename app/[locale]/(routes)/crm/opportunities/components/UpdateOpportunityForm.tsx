@@ -46,6 +46,7 @@ type UpdateOpportunityFormProps = {
   saleTypes: ConfigItem[];
   saleStages: ConfigItem[];
   campaigns: ConfigItem[];
+  currencies: { code: string; name: string; symbol: string }[];
 };
 
 export function UpdateOpportunityForm({
@@ -54,6 +55,7 @@ export function UpdateOpportunityForm({
   saleTypes,
   saleStages,
   campaigns,
+  currencies,
 }: UpdateOpportunityFormProps) {
   const t = useTranslations("CrmOpportunityForm");
   const c = useTranslations("Common");
@@ -274,13 +276,20 @@ export function UpdateOpportunityForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t("currency")}</FormLabel>
-                      <FormControl>
-                        <Input
-                          disabled={form.formState.isSubmitting}
-                          placeholder="USD"
-                          {...field}
-                        />
-                      </FormControl>
+                      <Select onValueChange={field.onChange} defaultValue={field.value ?? ""}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t("selectCurrency")} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {currencies.map((c) => (
+                            <SelectItem key={c.code} value={c.code}>
+                              {c.symbol} {c.code} — {c.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

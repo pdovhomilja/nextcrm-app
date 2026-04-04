@@ -49,6 +49,12 @@ export function DataTableRowActions<TData>({
     fetcher
   );
 
+  const { data: currenciesRaw } = useSWR<{ code: string; name: string; symbol: string }[]>(
+    "/api/currencies",
+    fetcher
+  );
+  const currencies = currenciesRaw ?? [];
+
 
   const onDelete = async () => {
     setLoading(true);
@@ -78,6 +84,7 @@ export function DataTableRowActions<TData>({
         setOpen={setUpdateOpen}
         accounts={accounts}
         data={contract}
+        currencies={currencies}
       />
 
       <DropdownMenu>

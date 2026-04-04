@@ -11,4 +11,5 @@ export const CreateNewContract = z.object({
   description: z.string().max(255),
   account: z.string(),
   assigned_to: z.string(),
+  currency: z.string().length(3).optional(),
 });

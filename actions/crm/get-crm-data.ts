@@ -16,6 +16,8 @@ export const getAllCrmData = cache(async () => {
     leadSources,
     leadStatuses,
     leadTypes,
+    currencies,
+    exchangeRates,
   ] = await Promise.all([
     prismadb.crm_Accounts.findMany({ where: { deletedAt: null } }),
     prismadb.crm_Opportunities.findMany({ where: { deletedAt: null } }),
@@ -30,6 +32,8 @@ export const getAllCrmData = cache(async () => {
     prismadb.crm_Lead_Sources.findMany({ orderBy: { name: "asc" } }),
     prismadb.crm_Lead_Statuses.findMany({ orderBy: { name: "asc" } }),
     prismadb.crm_Lead_Types.findMany({ orderBy: { name: "asc" } }),
+    prismadb.currency.findMany({ where: { isEnabled: true }, orderBy: { code: "asc" } }),
+    prismadb.exchangeRate.findMany(),
   ]);
 
   const data = {
@@ -46,6 +50,12 @@ export const getAllCrmData = cache(async () => {
     leadSources,
     leadStatuses,
     leadTypes,
+    currencies,
+    exchangeRates: exchangeRates.map((r: { fromCurrency: string; toCurrency: string; rate: unknown }) => ({
+      fromCurrency: r.fromCurrency,
+      toCurrency: r.toCurrency,
+      rate: Number(r.rate),
+    })),
   };
 
   return data;

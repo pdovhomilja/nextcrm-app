@@ -22,6 +22,9 @@ import { Clapperboard } from "lucide-react";
 import { prismadb } from "@/lib/prisma";
 import { getAllCrmData } from "@/actions/crm/get-crm-data";
 import { OpportunityDetailActions } from "./OpportunityDetailActions";
+import { formatCurrency, convertAmount, getExchangeRates, getDefaultCurrency } from "@/lib/currency";
+import { Decimal } from "@prisma/client/runtime/client";
+import { cookies } from "next/headers";
 
 interface OppsViewProps {
   data: {
@@ -36,8 +39,18 @@ export async function BasicView({ data }: OppsViewProps) {
   //console.log(data, "data");
   const users = await prismadb.users.findMany();
   const crmData = await getAllCrmData();
-  const { saleTypes, saleStages, campaigns } = crmData;
+  const { saleTypes, saleStages, campaigns, currencies } = crmData;
+  const cookieStore = await cookies();
+  const defaultCurrency = await getDefaultCurrency();
+  const displayCurrency = cookieStore.get("display_currency")?.value || defaultCurrency;
+  const rates = await getExchangeRates();
   if (!data) return <div>Opportunity not found</div>;
+
+  const fromCurrency = data.currency || "EUR";
+  const budgetAmount = new Decimal(data.budget?.toString() ?? "0");
+  const displayBudget = displayCurrency !== fromCurrency
+    ? convertAmount(budgetAmount, fromCurrency, displayCurrency, rates)
+    : null;
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -51,6 +64,7 @@ export async function BasicView({ data }: OppsViewProps) {
             saleTypes={saleTypes}
             saleStages={saleStages}
             campaigns={campaigns}
+            currencies={currencies.map((c: { code: string; name: string; symbol: string }) => ({ code: c.code, name: c.name, symbol: c.symbol }))}
           />
         </div>
       </CardHeader>
@@ -63,10 +77,9 @@ export async function BasicView({ data }: OppsViewProps) {
                 Opportunity amount
               </p>
               <p className="text-sm text-muted-foreground">
-                {data.budget ? Number(data.budget).toLocaleString("en-US", {
-                  style: "currency",
-                  currency: "USD",
-                }) : "N/A"}
+                {displayBudget
+                  ? formatCurrency(displayBudget, displayCurrency)
+                  : formatCurrency(budgetAmount, fromCurrency)}
               </p>
             </div>
           </div>

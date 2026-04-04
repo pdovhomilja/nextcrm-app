@@ -26,7 +26,7 @@ interface ContractsViewProps {
 }
 
 const ContractsView = ({ data, crmData, accountId }: ContractsViewProps) => {
-  const { accounts } = crmData;
+  const { accounts, currencies } = crmData;
   const t = useTranslations("CrmPage");
 
   return (
@@ -43,6 +43,7 @@ const ContractsView = ({ data, crmData, accountId }: ContractsViewProps) => {
             <CreateContractForm
               accounts={accounts}
               accountId={accountId ?? ""}
+              currencies={currencies.map((c: { code: string; name: string; symbol: string }) => ({ code: c.code, name: c.name, symbol: c.symbol }))}
             />
           </div>
         </div>
