@@ -44,13 +44,13 @@ const AccountDetailPage = async (props: AccountDetailPageProps) => {
   const params = await props.params;
   const { accountId } = params;
   const account: crm_Accounts | null = await getAccount(accountId);
-  const opportunities = serializeDecimalsList(
-    await getOpportunitiesFullByAccountId(accountId) as any[]
-  ) as crm_Opportunities[];
+  const opportunities: crm_Opportunities[] = serializeDecimalsList(
+    await getOpportunitiesFullByAccountId(accountId)
+  );
   const contacts: crm_Contacts[] = await getContactsByAccountId(accountId);
-  const contracts = serializeDecimalsList(
-    await getContractsByAccountId(accountId) as any[]
-  ) as crm_Contracts[];
+  const contracts: crm_Contracts[] = serializeDecimalsList(
+    await getContractsByAccountId(accountId)
+  );
   const leads: crm_Leads[] = await getLeadsByAccountId(accountId);
   const documents: Documents[] = await getDocumentsByAccountId(accountId);
   const tasks: crm_Accounts_Tasks[] = await getAccountsTasks(accountId);

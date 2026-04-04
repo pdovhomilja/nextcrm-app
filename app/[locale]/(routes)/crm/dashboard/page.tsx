@@ -8,7 +8,7 @@ import { serializeDecimalsList } from "@/lib/serialize-decimals";
 
 const CrmDashboardPage = async () => {
   const salesStages = await getSaleStages();
-  const opportunities = serializeDecimalsList(await getOpportunities() as any[]);
+  const opportunities = serializeDecimalsList(await getOpportunities());
   const crmData = await getAllCrmData();
 
   return (

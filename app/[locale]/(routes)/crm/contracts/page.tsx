@@ -10,7 +10,7 @@ import { serializeDecimalsList } from "@/lib/serialize-decimals";
 const ContractsPage = async () => {
   const t = await getTranslations("CrmPage");
   const crmData = await getAllCrmData();
-  const contracts = serializeDecimalsList(await getContractsWithIncludes() as any[]);
+  const contracts = serializeDecimalsList(await getContractsWithIncludes());
   return (
     <Container
       title={t("contracts.pageTitle")}
