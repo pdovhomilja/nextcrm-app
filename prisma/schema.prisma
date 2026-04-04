@@ -208,7 +208,7 @@ model crm_Opportunities {
   updatedAt        DateTime?               @updatedAt
   updatedBy        String?                 @db.Uuid
   last_activity_by String?                 @db.Uuid
-  currency         String?
+  currency         String?                 @db.VarChar(3)
   snapshot_rate    Decimal?                @db.Decimal(18, 8)
   description      String?
   expected_revenue Decimal                 @default(0) @db.Decimal(18, 2)
