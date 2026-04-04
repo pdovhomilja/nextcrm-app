@@ -1,58 +1,13 @@
 import { Decimal } from "@prisma/client/runtime/client";
 import { prismadb } from "@/lib/prisma";
 
-type Rate = { fromCurrency: string; toCurrency: string; rate: Decimal };
+// Re-export pure functions so existing server-side imports still work
+export { findRate, convertAmount, formatCurrency } from "@/lib/currency-format";
+export type { Rate } from "@/lib/currency-format";
 
-const currencyLocaleMap: Record<string, string> = {
-  EUR: "fr-FR",
-  USD: "en-US",
-  CZK: "cs-CZ",
-  GBP: "en-GB",
-};
-
-export function findRate(
-  from: string,
-  to: string,
-  rates: Rate[]
-): Decimal | null {
-  if (from === to) return new Decimal("1");
-  const direct = rates.find(
-    (r) => r.fromCurrency === from && r.toCurrency === to
-  );
-  return direct ? new Decimal(direct.rate) : null;
-}
-
-export function convertAmount(
-  amount: Decimal,
-  from: string,
-  to: string,
-  rates: Rate[]
-): Decimal | null {
-  const rate = findRate(from, to, rates);
-  if (!rate) return null;
-  return amount.mul(rate).toDecimalPlaces(2);
-}
-
-export function formatCurrency(amount: Decimal, currencyCode: string): string {
-  const num = amount.toNumber();
-  const locale = currencyLocaleMap[currencyCode] || "en-US";
-  const isWhole = num % 1 === 0;
-  const formatted = new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: currencyCode,
-    minimumFractionDigits: isWhole ? 0 : 2,
-    maximumFractionDigits: isWhole ? 0 : 2,
-  }).format(num);
-  // If the currency symbol doesn't show the ISO code, append it
-  if (!formatted.includes(currencyCode)) {
-    return `${formatted} ${currencyCode}`;
-  }
-  return formatted;
-}
-
-export async function getExchangeRates(): Promise<Rate[]> {
+export async function getExchangeRates() {
   const rates = await prismadb.exchangeRate.findMany();
-  return rates.map((r) => ({
+  return rates.map((r: { fromCurrency: string; toCurrency: string; rate: Decimal }) => ({
     fromCurrency: r.fromCurrency,
     toCurrency: r.toCurrency,
     rate: r.rate,

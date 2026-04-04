@@ -11,7 +11,7 @@ import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
 import moment from "moment";
 import Link from "next/link";
-import { formatCurrency } from "@/lib/currency";
+import { formatCurrency } from "@/lib/currency-format";
 import { Decimal } from "@prisma/client/runtime/client";
 
 type ConfigItem = { id: string; name: string };
