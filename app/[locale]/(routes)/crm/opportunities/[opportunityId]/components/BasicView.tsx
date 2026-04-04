@@ -53,7 +53,7 @@ export async function BasicView({ data }: OppsViewProps) {
             saleTypes={saleTypes}
             saleStages={saleStages}
             campaigns={campaigns}
-            currencies={currencies.map((c) => ({ code: c.code, name: c.name, symbol: c.symbol }))}
+            currencies={currencies.map((c: { code: string; name: string; symbol: string }) => ({ code: c.code, name: c.name, symbol: c.symbol }))}
           />
         </div>
       </CardHeader>

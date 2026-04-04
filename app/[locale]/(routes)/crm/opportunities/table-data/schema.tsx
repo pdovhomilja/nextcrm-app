@@ -16,6 +16,7 @@ export const opportunitySchema = z.object({
   expected_revenue: z.union([z.number(), z.bigint()]).nullable().transform((val) =>
     typeof val === 'bigint' ? Number(val) : val
   ),
+  currency: z.string().nullable().optional(),
   assigned_account: z.object({}).optional().nullable(),
   assigned_sales_stage: z.object({}).optional().nullable(),
   assigned_to_user: z.object({}).optional().nullable(),
