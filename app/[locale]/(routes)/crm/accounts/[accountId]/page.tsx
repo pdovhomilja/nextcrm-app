@@ -10,6 +10,7 @@ import { getContactsByAccountId } from "@/actions/crm/get-contacts-by-accountId"
 import { getLeadsByAccountId } from "@/actions/crm/get-leads-by-accountId";
 import { getDocumentsByAccountId } from "@/actions/documents/get-documents-by-accountId";
 import { getContractsByAccountId } from "@/actions/crm/get-contracts";
+import { serializeDecimalsList } from "@/lib/serialize-decimals";
 import { getAccountsTasks } from "@/actions/crm/account/get-tasks";
 
 import OpportunitiesView from "../../components/OpportunitiesView";
@@ -43,10 +44,13 @@ const AccountDetailPage = async (props: AccountDetailPageProps) => {
   const params = await props.params;
   const { accountId } = params;
   const account: crm_Accounts | null = await getAccount(accountId);
-  const opportunities: crm_Opportunities[] =
-    await getOpportunitiesFullByAccountId(accountId);
+  const opportunities = serializeDecimalsList(
+    await getOpportunitiesFullByAccountId(accountId) as Record<string, unknown>[]
+  ) as unknown as crm_Opportunities[];
   const contacts: crm_Contacts[] = await getContactsByAccountId(accountId);
-  const contracts: crm_Contracts[] = await getContractsByAccountId(accountId);
+  const contracts = serializeDecimalsList(
+    await getContractsByAccountId(accountId) as Record<string, unknown>[]
+  ) as unknown as crm_Contracts[];
   const leads: crm_Leads[] = await getLeadsByAccountId(accountId);
   const documents: Documents[] = await getDocumentsByAccountId(accountId);
   const tasks: crm_Accounts_Tasks[] = await getAccountsTasks(accountId);
