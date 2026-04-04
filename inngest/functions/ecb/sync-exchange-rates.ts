@@ -33,10 +33,10 @@ export const syncExchangeRates = inngest.createFunction(
         where: { isEnabled: true },
         select: { code: true },
       });
-      const enabledCodes = new Set(enabledCurrencies.map((c) => c.code));
+      const enabledCodes = new Set<string>(enabledCurrencies.map((c: { code: string }) => c.code));
       let count = 0;
 
-      for (const [currency, rate] of Object.entries(ecbRates)) {
+      for (const [currency, rate] of Object.entries(ecbRates) as [string, number][]) {
         if (!enabledCodes.has(currency)) continue;
 
         // EUR → X
@@ -73,7 +73,7 @@ export const syncExchangeRates = inngest.createFunction(
       }
 
       // Cross rates between non-EUR currencies
-      const nonEurCodes = [...enabledCodes].filter((c) => c !== "EUR");
+      const nonEurCodes = Array.from(enabledCodes).filter((c) => c !== "EUR");
       for (const from of nonEurCodes) {
         for (const to of nonEurCodes) {
           if (from === to) continue;
