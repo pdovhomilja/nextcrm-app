@@ -1,5 +1,7 @@
 import { prismadb } from "@/lib/prisma";
 import type { ReportFilters, KPIData } from "./types";
+import { getExchangeRates, convertAmount } from "@/lib/currency";
+import { Decimal } from "@prisma/client/runtime/client";
 
 function calcChange(current: number, previous: number): number {
   if (previous === 0) return current > 0 ? 100 : 0;
@@ -14,14 +16,15 @@ function prevPeriod(filters: ReportFilters): { dateFrom: Date; dateTo: Date } {
   };
 }
 
-export async function getDashboardKPIs(filters: ReportFilters): Promise<KPIData[]> {
+export async function getDashboardKPIs(filters: ReportFilters, displayCurrency: string = "EUR"): Promise<KPIData[]> {
   const prev = prevPeriod(filters);
+  const rates = await getExchangeRates();
 
   const [
-    revCurr,
-    revPrev,
-    pipeCurr,
-    pipePrev,
+    revOppsCurr,
+    revOppsPrev,
+    pipeOppsCurr,
+    pipeOppsPrev,
     leadsCurr,
     leadsPrev,
     convCurr,
@@ -42,22 +45,22 @@ export async function getDashboardKPIs(filters: ReportFilters): Promise<KPIData[
     contractsPrev,
   ] = await Promise.all([
     // totalRevenue
-    prismadb.crm_Opportunities.aggregate({
+    prismadb.crm_Opportunities.findMany({
       where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null, status: "CLOSED" },
-      _sum: { budget: true },
+      select: { budget: true, currency: true },
     }),
-    prismadb.crm_Opportunities.aggregate({
+    prismadb.crm_Opportunities.findMany({
       where: { created_on: { gte: prev.dateFrom, lte: prev.dateTo }, deletedAt: null, status: "CLOSED" },
-      _sum: { budget: true },
+      select: { budget: true, currency: true },
     }),
     // pipelineValue
-    prismadb.crm_Opportunities.aggregate({
+    prismadb.crm_Opportunities.findMany({
       where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null, status: "ACTIVE" },
-      _sum: { budget: true },
+      select: { budget: true, currency: true },
     }),
-    prismadb.crm_Opportunities.aggregate({
+    prismadb.crm_Opportunities.findMany({
       where: { created_on: { gte: prev.dateFrom, lte: prev.dateTo }, deletedAt: null, status: "ACTIVE" },
-      _sum: { budget: true },
+      select: { budget: true, currency: true },
     }),
     // newLeads
     prismadb.crm_Leads.count({
@@ -124,10 +127,21 @@ export async function getDashboardKPIs(filters: ReportFilters): Promise<KPIData[
     }),
   ]);
 
-  const totalRevenueCurr = Number(revCurr._sum.budget ?? 0);
-  const totalRevenuePrev = Number(revPrev._sum.budget ?? 0);
-  const pipelineCurr = Number(pipeCurr._sum.budget ?? 0);
-  const pipelinePrev = Number(pipePrev._sum.budget ?? 0);
+  function sumConverted(opps: { budget: unknown; currency: string | null }[]): number {
+    let total = new Decimal(0);
+    for (const opp of opps) {
+      const budget = new Decimal(opp.budget?.toString() ?? "0");
+      const from = opp.currency || displayCurrency;
+      const converted = convertAmount(budget, from, displayCurrency, rates);
+      total = total.add(converted ?? budget);
+    }
+    return total.toNumber();
+  }
+
+  const totalRevenueCurr = sumConverted(revOppsCurr);
+  const totalRevenuePrev = sumConverted(revOppsPrev);
+  const pipelineCurr = sumConverted(pipeOppsCurr);
+  const pipelinePrev = sumConverted(pipeOppsPrev);
 
   // suppress unused vars
   void tasksCurr;

@@ -5,6 +5,8 @@ import { KPICard } from "@/components/reports/KPICard";
 import { DateRangePicker } from "@/components/reports/DateRangePicker";
 import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
+import { cookies } from "next/headers";
+import { getDefaultCurrency } from "@/lib/currency";
 
 type Props = {
   searchParams: Promise<Record<string, string | undefined>>;
@@ -18,7 +20,10 @@ export default async function ReportsPage({ searchParams }: Props) {
     )
   );
   const filters = parseSearchParamsToFilters(params);
-  const kpis = await getDashboardKPIs(filters);
+  const cookieStore = await cookies();
+  const defaultCurrency = await getDefaultCurrency();
+  const displayCurrency = cookieStore.get("display_currency")?.value || defaultCurrency;
+  const kpis = await getDashboardKPIs(filters, displayCurrency);
   const t = await getTranslations("ReportsPage");
   const dateParams = params.toString();
 
@@ -30,7 +35,7 @@ export default async function ReportsPage({ searchParams }: Props) {
         </Suspense>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {kpis.map((kpi) => (
-            <KPICard key={kpi.label} kpi={kpi} dateParams={dateParams} />
+            <KPICard key={kpi.label} kpi={kpi} dateParams={dateParams} displayCurrency={displayCurrency} />
           ))}
         </div>
       </div>
