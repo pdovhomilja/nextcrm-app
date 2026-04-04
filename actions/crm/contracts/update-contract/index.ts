@@ -7,6 +7,7 @@ import { InputType, ReturnType } from "./types";
 
 import { createSafeAction } from "@/lib/create-safe-action";
 import { writeAuditLog, diffObjects } from "@/lib/audit-log";
+import { getSnapshotRate, getDefaultCurrency } from "@/lib/currency";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
   const session = await getSession();
@@ -43,6 +44,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     status,
     account,
     assigned_to,
+    currency,
   } = data;
 
   if (!id) {
@@ -60,6 +62,10 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   const before = await prismadb.crm_Contracts.findUnique({ where: { id, deletedAt: null } });
 
   try {
+    const defaultCurrency = await getDefaultCurrency();
+    const snapshotRate = currency
+      ? await getSnapshotRate(currency, defaultCurrency)
+      : null;
     const result = await prismadb.crm_Contracts.update({
       where: {
         id: data.id,
@@ -78,6 +84,8 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         account: account || undefined,
         assigned_to: assigned_to || undefined,
         createdBy: user.id,
+        currency: currency || undefined,
+        snapshot_rate: snapshotRate ? parseFloat(snapshotRate.toString()) : undefined,
       },
     });
 
