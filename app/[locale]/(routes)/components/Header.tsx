@@ -7,6 +7,7 @@ import { SetLanguage } from "@/components/SetLanguage";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { CommandComponent } from "@/components/CommandComponent";
 import SupportComponent from "@/components/support";
+import { CurrencySwitcher } from "@/components/CurrencySwitcher";
 
 type Props = {
   id: string;
@@ -44,6 +45,7 @@ const Header = ({ id, lang }: Props) => {
           <CommandComponent />
           <SetLanguage userId={id} />
           <Feedback />
+          <CurrencySwitcher />
           <ThemeToggle />
           <SupportComponent />
         </div>
