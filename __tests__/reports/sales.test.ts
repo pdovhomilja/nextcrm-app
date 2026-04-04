@@ -5,6 +5,9 @@ jest.mock("@/lib/prisma", () => ({
       count: jest.fn(),
       aggregate: jest.fn(),
     },
+    exchangeRate: {
+      findMany: jest.fn(),
+    },
   },
 }));
 
@@ -25,39 +28,41 @@ const baseFilters: ReportFilters = {
   dateTo: new Date("2025-12-31"),
 };
 
+const mockRates = [
+  { fromCurrency: "EUR", toCurrency: "USD", rate: { toString: () => "1.084" } },
+  { fromCurrency: "USD", toCurrency: "EUR", rate: { toString: () => "0.92251" } },
+];
+
 describe("sales report actions", () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (prismadb.exchangeRate.findMany as jest.Mock).mockResolvedValue(mockRates);
+  });
 
   describe("getRevenue", () => {
     it("sums budget of won opportunities in date range", async () => {
-      (prismadb.crm_Opportunities.aggregate as jest.Mock).mockResolvedValue({
-        _sum: { budget: BigInt(150000) },
-      });
-      const result = await getRevenue(baseFilters);
-      expect(prismadb.crm_Opportunities.aggregate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({ status: "CLOSED", deletedAt: null }),
-          _sum: { budget: true },
-        })
-      );
+      (prismadb.crm_Opportunities.findMany as jest.Mock).mockResolvedValue([
+        { budget: 100000, currency: "EUR" },
+        { budget: 50000, currency: "EUR" },
+      ]);
+      const result = await getRevenue(baseFilters, "EUR");
       expect(result).toBe(150000);
     });
 
     it("returns 0 when no won opportunities", async () => {
-      (prismadb.crm_Opportunities.aggregate as jest.Mock).mockResolvedValue({
-        _sum: { budget: null },
-      });
-      const result = await getRevenue(baseFilters);
+      (prismadb.crm_Opportunities.findMany as jest.Mock).mockResolvedValue([]);
+      const result = await getRevenue(baseFilters, "EUR");
       expect(result).toBe(0);
     });
   });
 
   describe("getPipelineValue", () => {
     it("sums budget of active opportunities", async () => {
-      (prismadb.crm_Opportunities.aggregate as jest.Mock).mockResolvedValue({
-        _sum: { budget: BigInt(500000) },
-      });
-      const result = await getPipelineValue(baseFilters);
+      (prismadb.crm_Opportunities.findMany as jest.Mock).mockResolvedValue([
+        { budget: 300000, currency: "EUR" },
+        { budget: 200000, currency: "EUR" },
+      ]);
+      const result = await getPipelineValue(baseFilters, "EUR");
       expect(result).toBe(500000);
     });
   });
@@ -104,10 +109,11 @@ describe("sales report actions", () => {
 
   describe("getAvgDealSize", () => {
     it("returns average budget of closed opportunities", async () => {
-      (prismadb.crm_Opportunities.aggregate as jest.Mock).mockResolvedValue({
-        _avg: { budget: 75000 },
-      });
-      const result = await getAvgDealSize(baseFilters);
+      (prismadb.crm_Opportunities.findMany as jest.Mock).mockResolvedValue([
+        { budget: 50000, currency: "EUR" },
+        { budget: 100000, currency: "EUR" },
+      ]);
+      const result = await getAvgDealSize(baseFilters, "EUR");
       expect(result).toBe(75000);
     });
   });
