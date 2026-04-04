@@ -196,7 +196,7 @@ model crm_Opportunities {
   v                Int                     @default(0) @map("__v")
   account          String?                 @db.Uuid
   assigned_to      String?                 @db.Uuid
-  budget           BigInt                  @default(0)
+  budget           Decimal                 @default(0) @db.Decimal(18, 2)
   campaign         String?                 @db.Uuid
   close_date       DateTime?
   contact          String?                 @db.Uuid
@@ -209,8 +209,9 @@ model crm_Opportunities {
   updatedBy        String?                 @db.Uuid
   last_activity_by String?                 @db.Uuid
   currency         String?
+  snapshot_rate    Decimal?                @db.Decimal(18, 8)
   description      String?
-  expected_revenue BigInt                  @default(0)
+  expected_revenue Decimal                 @default(0) @db.Decimal(18, 2)
   name             String?
   next_step        String?
   sales_stage      String?                 @db.Uuid
@@ -223,6 +224,7 @@ model crm_Opportunities {
   created_by_user      Users?                          @relation("created_by_user_relation", fields: [created_by], references: [id])
   assigned_account     crm_Accounts?                   @relation(fields: [account], references: [id])
   assigned_campaings   crm_campaigns?                  @relation(fields: [campaign], references: [id])
+  assigned_currency    Currency?                       @relation(fields: [currency], references: [code])
   documents            DocumentsToOpportunities[]
   contacts             ContactsToOpportunities[]
   embedding            crm_Embeddings_Opportunities?
@@ -468,7 +470,7 @@ model crm_Contracts {
   id                  String               @id @default(uuid()) @db.Uuid
   v                   Int                  @map("__v")
   title               String
-  value               Int
+  value               Decimal              @db.Decimal(18, 2)
   startDate           DateTime?            @default(now())
   endDate             DateTime?
   renewalReminderDate DateTime?
@@ -483,11 +485,14 @@ model crm_Contracts {
   updatedBy           String?              @db.Uuid
   status              crm_Contracts_Status @default(NOTSTARTED)
   type                String?
+  currency            String?              @db.VarChar(3)
+  snapshot_rate       Decimal?             @db.Decimal(18, 8)
   deletedAt           DateTime?
   deletedBy           String?   @db.Uuid
 
-  assigned_account crm_Accounts? @relation(fields: [account], references: [id])
-  assigned_to_user Users?        @relation(fields: [assigned_to], references: [id])
+  assigned_account  crm_Accounts? @relation(fields: [account], references: [id])
+  assigned_to_user  Users?        @relation(fields: [assigned_to], references: [id])
+  assigned_currency Currency?     @relation(fields: [currency], references: [code])
 
   @@index([account])
   @@index([assigned_to])
@@ -505,6 +510,50 @@ enum crm_Contracts_Status {
   NOTSTARTED
   INPROGRESS
   SIGNED
+}
+
+enum ExchangeRateSource {
+  MANUAL
+  ECB
+}
+
+model Currency {
+  code      String   @id @db.VarChar(3)
+  name      String
+  symbol    String   @db.VarChar(5)
+  isEnabled Boolean  @default(true)
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ratesFrom     ExchangeRate[]      @relation("rate_from")
+  ratesTo       ExchangeRate[]      @relation("rate_to")
+  opportunities crm_Opportunities[]
+  contracts     crm_Contracts[]
+}
+
+model ExchangeRate {
+  id            String             @id @default(uuid()) @db.Uuid
+  fromCurrency  String             @db.VarChar(3)
+  toCurrency    String             @db.VarChar(3)
+  rate          Decimal            @db.Decimal(18, 8)
+  source        ExchangeRateSource @default(MANUAL)
+  effectiveDate DateTime           @default(now())
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  from Currency @relation("rate_from", fields: [fromCurrency], references: [code])
+  to   Currency @relation("rate_to", fields: [toCurrency], references: [code])
+
+  @@unique([fromCurrency, toCurrency])
+  @@index([fromCurrency])
+  @@index([toCurrency])
+}
+
+model crm_SystemSettings {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
 }
 
 enum crm_Activity_Type {
