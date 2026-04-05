@@ -82,7 +82,7 @@ export function DataTableRowActions<TData>({
       <UpdateContractForm
         onOpen={updateOpen}
         setOpen={setUpdateOpen}
-        accounts={accounts}
+        accounts={accounts ?? []}
         data={contract}
         currencies={currencies}
       />
