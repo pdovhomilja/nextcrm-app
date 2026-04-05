@@ -1,0 +1,3 @@
+name,sku,type,category,description,unit_price,unit_cost,currency,tax_rate,unit,is_recurring,billing_period
+"PW Import Widget","PW-IMP-001","PRODUCT","","Playwright import test product",49.99,25.00,"USD",10,"per unit",false,
+"PW Import Service","PW-IMP-002","SERVICE","","Playwright import test service",199.00,80.00,"USD",20,"per month",true,MONTHLY
