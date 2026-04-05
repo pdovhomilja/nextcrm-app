@@ -229,6 +229,7 @@ model crm_Opportunities {
   documents            DocumentsToOpportunities[]
   contacts             ContactsToOpportunities[]
   embedding            crm_Embeddings_Opportunities?
+  lineItems            crm_OpportunityLineItems[]
   deletedAt            DateTime?
   deletedBy            String?   @db.Uuid
 
@@ -276,6 +277,11 @@ enum crm_AccountProduct_Status {
   EXPIRED
   CANCELLED
   PENDING
+}
+
+enum crm_Discount_Type {
+  PERCENTAGE
+  FIXED
 }
 
 model crm_campaigns {
@@ -519,6 +525,7 @@ model crm_Contracts {
   assigned_account  crm_Accounts? @relation(fields: [account], references: [id])
   assigned_to_user  Users?        @relation(fields: [assigned_to], references: [id])
   assigned_currency Currency?     @relation(fields: [currency], references: [code])
+  lineItems         crm_ContractLineItems[]
 
   @@index([account])
   @@index([assigned_to])
@@ -1581,6 +1588,8 @@ model crm_Products {
   assigned_currency Currency?            @relation(fields: [currency], references: [code])
   created_by_user Users?                 @relation("ProductCreatedBy", fields: [createdBy], references: [id])
   accountProducts crm_AccountProducts[]
+  opportunityLineItems crm_OpportunityLineItems[]
+  contractLineItems    crm_ContractLineItems[]
 
   @@index([status])
   @@index([type])
@@ -1619,4 +1628,62 @@ model crm_AccountProducts {
   @@index([productId])
   @@index([status])
   @@index([accountId, productId])
+}
+
+model crm_OpportunityLineItems {
+  id             String            @id @default(uuid()) @db.Uuid
+  opportunityId  String            @db.Uuid
+  productId      String?           @db.Uuid
+
+  name           String
+  sku            String?
+  description    String?           @db.Text
+  quantity       Int               @default(1)
+  unit_price     Decimal           @db.Decimal(18, 2)
+  discount_type  crm_Discount_Type @default(PERCENTAGE)
+  discount_value Decimal           @default(0) @db.Decimal(18, 2)
+  line_total     Decimal           @db.Decimal(18, 2)
+  currency       String            @db.VarChar(3)
+  sort_order     Int               @default(0)
+
+  v         Int       @default(0) @map("__v")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String    @db.Uuid
+  updatedBy String?   @db.Uuid
+
+  opportunity crm_Opportunities @relation(fields: [opportunityId], references: [id])
+  product     crm_Products?     @relation(fields: [productId], references: [id])
+
+  @@index([opportunityId])
+  @@index([productId])
+}
+
+model crm_ContractLineItems {
+  id          String            @id @default(uuid()) @db.Uuid
+  contractId  String            @db.Uuid
+  productId   String?           @db.Uuid
+
+  name           String
+  sku            String?
+  description    String?           @db.Text
+  quantity       Int               @default(1)
+  unit_price     Decimal           @db.Decimal(18, 2)
+  discount_type  crm_Discount_Type @default(PERCENTAGE)
+  discount_value Decimal           @default(0) @db.Decimal(18, 2)
+  line_total     Decimal           @db.Decimal(18, 2)
+  currency       String            @db.VarChar(3)
+  sort_order     Int               @default(0)
+
+  v         Int       @default(0) @map("__v")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String    @db.Uuid
+  updatedBy String?   @db.Uuid
+
+  contract crm_Contracts @relation(fields: [contractId], references: [id])
+  product  crm_Products? @relation(fields: [productId], references: [id])
+
+  @@index([contractId])
+  @@index([productId])
 }
