@@ -89,7 +89,7 @@ const ProductPage = async (props: ProductDetailPageProps) => {
         </TabsContent>
         <TabsContent value="accounts">
           <AccountsTab
-            assignments={serializedAssignments}
+            assignments={serializedAssignments as any}
             productPrice={serializedProduct.unit_price as unknown as number}
             productCurrency={serializedProduct.currency}
           />

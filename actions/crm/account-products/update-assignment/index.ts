@@ -4,7 +4,7 @@ import { prismadb } from "@/lib/prisma";
 import { UpdateAssignment } from "./schema";
 import { InputType, ReturnType } from "./types";
 import { createSafeAction } from "@/lib/create-safe-action";
-import { writeAuditLog } from "@/lib/audit-log";
+import { writeAuditLog, diffObjects } from "@/lib/audit-log";
 import { revalidatePath } from "next/cache";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
@@ -45,7 +45,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
       },
     });
 
-    await writeAuditLog({ entityType: "account_product", entityId: assignment.id, action: "updated", changes: updateData, userId });
+    await writeAuditLog({ entityType: "account_product", entityId: assignment.id, action: "updated", changes: diffObjects(existing as unknown as Record<string, unknown>, assignment as unknown as Record<string, unknown>), userId });
 
     revalidatePath("/[locale]/(routes)/crm/accounts/[accountId]", "page");
     revalidatePath("/[locale]/(routes)/crm/products/[productId]", "page");

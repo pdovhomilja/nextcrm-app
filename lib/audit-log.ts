@@ -7,7 +7,8 @@ export type AuditEntityType =
   | "lead"
   | "opportunity"
   | "contract"
-  | "product";
+  | "product"
+  | "account_product";
 
 export type AuditAction =
   | "created"
@@ -16,7 +17,8 @@ export type AuditAction =
   | "restored"
   | "relation_added"
   | "relation_removed"
-  | "imported";
+  | "imported"
+  | "cancelled";
 
 export interface AuditChange {
   field: string;
