@@ -8,13 +8,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -25,10 +20,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { deleteContract } from "@/actions/crm/contracts/delete-contract";
-import FormSheet from "@/components/sheets/form-sheet";
 import UpdateContractForm from "../_forms/update-contract";
-import useSWR from "swr";
-import fetcher from "@/lib/fetcher";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -43,18 +35,6 @@ export function DataTableRowActions<TData>({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [updateOpen, setUpdateOpen] = useState(false);
-
-  const { data: accounts, isLoading: isLoadingAccounts } = useSWR(
-    "/api/crm/account",
-    fetcher
-  );
-
-  const { data: currenciesRaw } = useSWR<{ code: string; name: string; symbol: string }[]>(
-    "/api/currencies",
-    fetcher
-  );
-  const currencies = currenciesRaw ?? [];
-
 
   const onDelete = async () => {
     setLoading(true);
@@ -82,9 +62,7 @@ export function DataTableRowActions<TData>({
       <UpdateContractForm
         onOpen={updateOpen}
         setOpen={setUpdateOpen}
-        accounts={accounts ?? []}
         data={contract}
-        currencies={currencies}
       />
 
       <DropdownMenu>

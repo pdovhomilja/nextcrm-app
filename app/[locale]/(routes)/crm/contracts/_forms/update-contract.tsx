@@ -1,12 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 import { useRouter } from "next/navigation";
-
-import { crm_Accounts } from "@prisma/client";
 
 import { useAction } from "@/hooks/use-action";
 
@@ -21,23 +19,40 @@ import { FormDatePicker } from "@/components/form/form-datepicker";
 import { FormTextarea } from "@/components/form/form-textarea";
 import { FormSelect } from "@/components/form/from-select";
 import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
+import { getAccounts } from "@/actions/crm/accounts/get-accounts";
+import { getEnabledCurrencies } from "@/lib/currency";
 
 const UpdateContractForm = ({
   onOpen,
   setOpen,
-  accounts = [],
   data,
-  currencies = [],
 }: {
   onOpen: boolean;
   setOpen: (open: boolean) => void;
-  accounts?: crm_Accounts[];
-  //TODO: fix type for data
   data: any;
-  currencies?: { code: string; name: string; symbol: string }[];
 }) => {
   const router = useRouter();
   const [assignedTo, setAssignedTo] = useState<string>(data.assigned_to ?? "");
+  const [accounts, setAccounts] = useState<{ id: string; name: string }[]>([]);
+  const [currencies, setCurrencies] = useState<{ code: string; name: string; symbol: string }[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+
+  useEffect(() => {
+    Promise.all([getAccounts(), getEnabledCurrencies()])
+      .then(([accountsData, currenciesData]) => {
+        setAccounts(
+          (accountsData ?? []).map((a: any) => ({ id: a.id, name: a.name }))
+        );
+        setCurrencies(
+          (currenciesData ?? []).map((c: any) => ({
+            code: c.code,
+            name: c.name,
+            symbol: c.symbol,
+          }))
+        );
+      })
+      .finally(() => setIsLoadingData(false));
+  }, []);
 
   const contractStatuses = [
     { id: "NOTSTARTED", name: "Not started" },
@@ -47,12 +62,9 @@ const UpdateContractForm = ({
 
   const valueString = data && data.value ? data.value.toString() : "";
 
-  //console.log("Data", data);
-
   const { execute, fieldErrors, isLoading } = useAction(updateContract, {
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast.success("Contract updated successfully!");
-      //closeRef.current?.click();
       setOpen(false);
       router.refresh();
     },
@@ -99,8 +111,6 @@ const UpdateContractForm = ({
     });
   };
 
-  isLoading ? <Loader2 className="h-6 w-6  animate-spin" /> : null;
-
   return (
     <FormSheetNoTrigger
       title="Update contract"
@@ -108,101 +118,114 @@ const UpdateContractForm = ({
       open={onOpen}
       setOpen={setOpen}
     >
-      <form action={onAction} className="space-y-4">
-        <FormInput
-          id="title"
-          label="Title"
-          type="text"
-          errors={fieldErrors}
-          defaultValue={data.title}
-        />
-        <FormInput
-          id="value"
-          label="Value"
-          type="text"
-          errors={fieldErrors}
-          defaultValue={valueString}
-        />
-        <FormSelect
-          id="currency"
-          label="Currency"
-          type="hidden"
-          data={currencies.map((c) => ({ id: c.code, name: `${c.symbol} ${c.code} — ${c.name}` }))}
-          errors={fieldErrors}
-          defaultValue={data.currency ?? ""}
-        />
-        <FormDatePicker
-          id="startDate"
-          label="Start Date"
-          type="hidden"
-          errors={fieldErrors}
-          defaultValue={data.startDate}
-        />
-        <FormDatePicker
-          id="endDate"
-          label="End Date"
-          type="hidden"
-          errors={fieldErrors}
-          defaultValue={data.endDate}
-        />
-        <FormDatePicker
-          id="renewalReminderDate"
-          label="Renewal Reminder Date"
-          type="hidden"
-          errors={fieldErrors}
-          defaultValue={data.renewalReminderDate}
-        />
-        <FormDatePicker
-          id="customerSignedDate"
-          label="Customer Signed Date"
-          type="hidden"
-          errors={fieldErrors}
-          defaultValue={data.customerSignedDate}
-        />
-        <FormDatePicker
-          id="companySignedDate"
-          label="Company Signed Date"
-          type="hidden"
-          errors={fieldErrors}
-          defaultValue={data.companySignedDate}
-        />
-        <FormTextarea
-          id="description"
-          label="Description"
-          errors={fieldErrors}
-          defaultValue={data.description}
-        />
-        <FormSelect
-          id="status"
-          label="Status"
-          type="hidden"
-          data={contractStatuses}
-          errors={fieldErrors}
-          defaultValue={data.status}
-        />
-        <FormSelect
-          id="account"
-          label="Account"
-          type="hidden"
-          data={accounts}
-          errors={fieldErrors}
-          defaultValue={data.account}
-        />
-        <div className="space-y-2">
-          <label className="text-xs font-semibold text-neutral-700">
-            Assigned To
-          </label>
-          <UserSearchCombobox
-            value={assignedTo}
-            onChange={setAssignedTo}
-            placeholder="Select assigned user"
-            name="assigned_to"
-          />
+      {isLoadingData ? (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin" />
         </div>
-        <FormSubmit className="w-full">
-          {isLoading ? <Loader2 className="h-6 w-6  animate-spin" /> : "Update"}
-        </FormSubmit>
-      </form>
+      ) : (
+        <form action={onAction} className="space-y-4">
+          <FormInput
+            id="title"
+            label="Title"
+            type="text"
+            errors={fieldErrors}
+            defaultValue={data.title}
+          />
+          <FormInput
+            id="value"
+            label="Value"
+            type="text"
+            errors={fieldErrors}
+            defaultValue={valueString}
+          />
+          <FormSelect
+            id="currency"
+            label="Currency"
+            type="hidden"
+            data={currencies.map((c) => ({
+              id: c.code,
+              name: `${c.symbol} ${c.code} — ${c.name}`,
+            }))}
+            errors={fieldErrors}
+            defaultValue={data.currency ?? ""}
+          />
+          <FormDatePicker
+            id="startDate"
+            label="Start Date"
+            type="hidden"
+            errors={fieldErrors}
+            defaultValue={data.startDate}
+          />
+          <FormDatePicker
+            id="endDate"
+            label="End Date"
+            type="hidden"
+            errors={fieldErrors}
+            defaultValue={data.endDate}
+          />
+          <FormDatePicker
+            id="renewalReminderDate"
+            label="Renewal Reminder Date"
+            type="hidden"
+            errors={fieldErrors}
+            defaultValue={data.renewalReminderDate}
+          />
+          <FormDatePicker
+            id="customerSignedDate"
+            label="Customer Signed Date"
+            type="hidden"
+            errors={fieldErrors}
+            defaultValue={data.customerSignedDate}
+          />
+          <FormDatePicker
+            id="companySignedDate"
+            label="Company Signed Date"
+            type="hidden"
+            errors={fieldErrors}
+            defaultValue={data.companySignedDate}
+          />
+          <FormTextarea
+            id="description"
+            label="Description"
+            errors={fieldErrors}
+            defaultValue={data.description}
+          />
+          <FormSelect
+            id="status"
+            label="Status"
+            type="hidden"
+            data={contractStatuses}
+            errors={fieldErrors}
+            defaultValue={data.status}
+          />
+          <FormSelect
+            id="account"
+            label="Account"
+            type="hidden"
+            data={accounts}
+            errors={fieldErrors}
+            defaultValue={data.account}
+          />
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-neutral-700">
+              Assigned To
+            </label>
+            <UserSearchCombobox
+              value={assignedTo}
+              onChange={setAssignedTo}
+              placeholder="Select assigned user"
+              name="assigned_to"
+            />
+          </div>
+          <FormSubmit className="w-full">
+            {isLoading ? (
+              <Loader2 className="h-6 w-6 animate-spin" />
+            ) : (
+              "Update"
+            )}
+          </FormSubmit>
+        </form>
+      )}
     </FormSheetNoTrigger>
   );
 };
