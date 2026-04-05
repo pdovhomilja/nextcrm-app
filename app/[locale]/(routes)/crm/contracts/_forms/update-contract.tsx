@@ -25,13 +25,13 @@ import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 const UpdateContractForm = ({
   onOpen,
   setOpen,
-  accounts,
+  accounts = [],
   data,
   currencies = [],
 }: {
   onOpen: boolean;
   setOpen: (open: boolean) => void;
-  accounts: crm_Accounts[];
+  accounts?: crm_Accounts[];
   //TODO: fix type for data
   data: any;
   currencies?: { code: string; name: string; symbol: string }[];
