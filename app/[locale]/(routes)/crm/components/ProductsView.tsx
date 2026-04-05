@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { columns } from "../products/table-components/columns";
 import { ProductsDataTable } from "../products/table-components/data-table";
 import CreateProductForm from "../products/_forms/create-product";
+import { ImportProductsDialog } from "../products/components/ImportProductsDialog";
 
 import type { crm_ProductCategories } from "@prisma/client";
 
@@ -34,6 +35,7 @@ const ProductsView = ({ data, categories, currencies }: ProductsViewProps) => {
           </CardTitle>
 
           <div className="flex space-x-2">
+            <ImportProductsDialog />
             <CreateProductForm
               categories={categories}
               currencies={currencies}
