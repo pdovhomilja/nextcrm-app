@@ -32,6 +32,9 @@ test.describe("Product Creation", () => {
 
     await page.locator('button:has-text("+")').click();
     await waitForSheet(page);
+    await expect(
+      page.getByRole("heading", { name: /Create Product/i })
+    ).toBeVisible({ timeout: 5000 });
 
     const productName = `Test Product ${Date.now()}`;
     const dialog = page.locator('[role="dialog"][data-state="open"]');
@@ -75,6 +78,8 @@ test.describe("Product Creation", () => {
     await dialog.locator('[type="submit"]').click();
 
     await assertSuccessToast(page);
+    await expect(page.locator('[role="dialog"][data-state="open"]')).not.toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(productName)).toBeVisible({ timeout: 10000 });
   });
 
   test("should show validation error when name is empty", async ({ page }) => {
