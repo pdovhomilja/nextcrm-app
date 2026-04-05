@@ -68,7 +68,7 @@ const OpportunityView = async (
         </TabsList>
         <TabsContent value="overview">
           <div className="space-y-5">
-            <BasicView data={opportunity} />
+            <BasicView data={opportunity as any} />
             <LineItemsSection
               opportunityId={opportunityId}
               lineItems={serializedLineItems}

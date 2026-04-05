@@ -10,7 +10,6 @@ import { FormInput } from "@/components/form/form-input";
 import FormSheet from "@/components/sheets/form-sheet";
 import { FormSubmit } from "@/components/form/form-submit";
 import { FormTextarea } from "@/components/form/form-textarea";
-import { FormSelect } from "@/components/form/from-select";
 
 interface Product {
   id: string;
