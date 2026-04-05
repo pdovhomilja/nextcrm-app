@@ -110,6 +110,7 @@ test.describe.serial("Campaign Targets", () => {
     await waitForRows(page);
 
     const firstRow = page.locator("table tbody tr").first();
+    await expect(firstRow).toBeVisible({ timeout: 10000 });
     await firstRow.hover();
     await firstRow.locator("button:has(.sr-only)").first().click();
 
@@ -190,6 +191,7 @@ test.describe.serial("Campaign Targets", () => {
 
     // Open Update modal for the target (convert is inside the update form)
     const firstRow = page.locator("table tbody tr").first();
+    await expect(firstRow).toBeVisible({ timeout: 10000 });
     await firstRow.hover();
     await firstRow.locator("button:has(.sr-only)").first().click();
 
@@ -265,6 +267,7 @@ test.describe.serial("Campaign Target Lists", () => {
     await waitForRows(page);
 
     const firstRow = page.locator("table tbody tr").first();
+    await expect(firstRow).toBeVisible({ timeout: 10000 });
     await firstRow.hover();
     await firstRow.locator("button:has(.sr-only)").first().click();
 

@@ -25,6 +25,7 @@ import { OpportunityDetailActions } from "./OpportunityDetailActions";
 import { formatCurrency, convertAmount, getExchangeRates, getDefaultCurrency } from "@/lib/currency";
 import { Decimal } from "@prisma/client/runtime/client";
 import { cookies } from "next/headers";
+import { serializeDecimals } from "@/lib/serialize-decimals";
 
 interface OppsViewProps {
   data: {
@@ -60,7 +61,7 @@ export async function BasicView({ data }: OppsViewProps) {
             <CardDescription>ID:{data.id}</CardDescription>
           </div>
           <OpportunityDetailActions
-            opportunity={data}
+            opportunity={serializeDecimals(data)}
             saleTypes={saleTypes}
             saleStages={saleStages}
             campaigns={campaigns}

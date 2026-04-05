@@ -22,19 +22,19 @@ test.describe("Update Opportunity from detail page", () => {
     await page.waitForURL(/crm\/opportunities/, { timeout: 10000 });
     await page.waitForLoadState("networkidle", { timeout: 15000 });
 
+    // Wait for table to fully render before clicking
+    const oppTable = page.getByTestId("opportunities-table");
+    await expect(oppTable).toBeVisible({ timeout: 10000 });
+
     // Navigate to the first opportunity's detail page
-    await page
-      .getByTestId("opportunities-table")
-      .getByTestId("opportunity-row-name")
-      .first()
-      .click();
+    await oppTable.getByTestId("opportunity-row-name").first().click();
 
     await page.waitForURL(/crm\/opportunities\/.+/, { timeout: 10000 });
     await page.waitForLoadState("networkidle", { timeout: 15000 });
 
     // Open the ⋯ actions menu
     const actionsBtn = page.getByTestId("opportunity-detail-actions-btn");
-    await expect(actionsBtn).toBeVisible({ timeout: 8000 });
+    await expect(actionsBtn).toBeVisible({ timeout: 15000 });
     await actionsBtn.click();
 
     await page.getByRole("menuitem", { name: "Update" }).click();

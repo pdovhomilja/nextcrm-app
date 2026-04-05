@@ -6,7 +6,11 @@ export type AuditEntityType =
   | "contact"
   | "lead"
   | "opportunity"
-  | "contract";
+  | "contract"
+  | "product"
+  | "account_product"
+  | "opportunity_line_item"
+  | "contract_line_item";
 
 export type AuditAction =
   | "created"
@@ -14,7 +18,9 @@ export type AuditAction =
   | "deleted"
   | "restored"
   | "relation_added"
-  | "relation_removed";
+  | "relation_removed"
+  | "imported"
+  | "cancelled";
 
 export interface AuditChange {
   field: string;

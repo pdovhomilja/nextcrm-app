@@ -82,14 +82,14 @@ export const FormSelect = forwardRef<HTMLInputElement, FormInputProps>(
           />
           <Select
             onValueChange={(value: any) => setValue(value)}
-            defaultValue={defaultValue}
+            value={value}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder={placeholder} />
             </SelectTrigger>
             <SelectContent className="w-full border h-[250px]">
               <ScrollArea className="h-[250px]">
-                {data.map((item: any, index: number) => (
+                {(data ?? []).map((item: any, index: number) => (
                   <SelectItem key={index} value={item.id}>
                     {item.name}
                   </SelectItem>

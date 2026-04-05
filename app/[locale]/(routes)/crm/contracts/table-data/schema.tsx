@@ -21,6 +21,8 @@ export const contractsSchema = z.object({
   updatedBy: z.string().nullable(),
   status: z.string(),
   type: z.string().nullable(),
+  currency: z.string().nullable(),
+  snapshot_rate: z.number().nullable().optional(),
   assigned_account: z
     .object({
       name: z.string(),

@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { prismadb } from "@/lib/prisma";
+import { serializeDecimalsList } from "@/lib/serialize-decimals";
 
 export const getAllCrmData = cache(async () => {
   const [
@@ -18,6 +19,7 @@ export const getAllCrmData = cache(async () => {
     leadTypes,
     currencies,
     exchangeRates,
+    productCategories,
   ] = await Promise.all([
     prismadb.crm_Accounts.findMany({ where: { deletedAt: null } }),
     prismadb.crm_Opportunities.findMany({ where: { deletedAt: null } }),
@@ -34,14 +36,18 @@ export const getAllCrmData = cache(async () => {
     prismadb.crm_Lead_Types.findMany({ orderBy: { name: "asc" } }),
     prismadb.currency.findMany({ where: { isEnabled: true }, orderBy: { code: "asc" } }),
     prismadb.exchangeRate.findMany(),
+    prismadb.crm_ProductCategories.findMany({
+      where: { isActive: true },
+      orderBy: { order: "asc" },
+    }),
   ]);
 
   const data = {
     accounts,
-    opportunities,
+    opportunities: serializeDecimalsList(opportunities),
     leads,
     contacts,
-    contracts,
+    contracts: serializeDecimalsList(contracts),
     saleTypes,
     saleStages,
     campaigns,
@@ -51,6 +57,7 @@ export const getAllCrmData = cache(async () => {
     leadStatuses,
     leadTypes,
     currencies,
+    productCategories,
     exchangeRates: exchangeRates.map((r: { fromCurrency: string; toCurrency: string; rate: unknown }) => ({
       fromCurrency: r.fromCurrency,
       toCurrency: r.toCurrency,

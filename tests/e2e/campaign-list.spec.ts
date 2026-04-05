@@ -42,12 +42,11 @@ test.describe.serial("Campaign List", () => {
     await page.getByLabel("Template Name *").fill("PW-CL-Template");
     await page.getByLabel("Subject Line *").fill("PW List Test Subject");
 
-    // Type into TipTap editor
-    const editor = page.locator(".tiptap, .ProseMirror").first();
-    if (await editor.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await editor.click();
-      await editor.pressSequentially("Playwright test email body content");
-    }
+    // Type into TipTap editor — wait for contenteditable to mount (immediatelyRender: false)
+    const editor = page.locator(".tiptap, .ProseMirror, [contenteditable='true']").first();
+    await expect(editor).toBeVisible({ timeout: 10000 });
+    await editor.click();
+    await editor.pressSequentially("Playwright test email body content");
 
     await page.getByRole("button", { name: /Save Template/i }).click();
     // Should redirect to templates list

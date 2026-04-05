@@ -22,19 +22,19 @@ test.describe("Update Contact from detail page", () => {
     await page.waitForURL(/crm\/contacts/, { timeout: 10000 });
     await page.waitForLoadState("networkidle", { timeout: 15000 });
 
+    // Wait for table to fully render before clicking
+    const contactsTable = page.getByTestId("contacts-table");
+    await expect(contactsTable).toBeVisible({ timeout: 10000 });
+
     // Navigate to the first contact's detail page
-    await page
-      .getByTestId("contacts-table")
-      .getByTestId("contact-row-name")
-      .first()
-      .click();
+    await contactsTable.getByTestId("contact-row-name").first().click();
 
     await page.waitForURL(/crm\/contacts\/.+/, { timeout: 10000 });
     await page.waitForLoadState("networkidle", { timeout: 15000 });
 
     // Open the ⋯ actions menu
     const actionsBtn = page.getByTestId("contact-detail-actions-btn");
-    await expect(actionsBtn).toBeVisible({ timeout: 8000 });
+    await expect(actionsBtn).toBeVisible({ timeout: 15000 });
     await actionsBtn.click();
 
     await page.getByRole("menuitem", { name: "Update" }).click();

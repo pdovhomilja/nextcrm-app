@@ -10,6 +10,8 @@ import { getContactsByAccountId } from "@/actions/crm/get-contacts-by-accountId"
 import { getLeadsByAccountId } from "@/actions/crm/get-leads-by-accountId";
 import { getDocumentsByAccountId } from "@/actions/documents/get-documents-by-accountId";
 import { getContractsByAccountId } from "@/actions/crm/get-contracts";
+import { getAccountProducts } from "@/actions/crm/account-products/get-account-products";
+import { getProductsFull } from "@/actions/crm/products/get-products";
 import { serializeDecimalsList } from "@/lib/serialize-decimals";
 import { getAccountsTasks } from "@/actions/crm/account/get-tasks";
 
@@ -30,6 +32,7 @@ import {
 
 import AccountsTasksView from "./components/TasksView";
 import ContractsView from "../../components/ContractsView";
+import AccountProductsView from "./components/AccountProductsView";
 import { ActivitiesSection } from "./components/ActivitiesSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HistoryTab } from "./components/HistoryTab";
@@ -55,6 +58,13 @@ const AccountDetailPage = async (props: AccountDetailPageProps) => {
   const documents: Documents[] = await getDocumentsByAccountId(accountId);
   const tasks: crm_Accounts_Tasks[] = await getAccountsTasks(accountId);
   const crmData = await getAllCrmData();
+  const accountProducts = serializeDecimalsList(
+    await getAccountProducts(accountId)
+  );
+  const allProducts = await getProductsFull();
+  const activeProducts = allProducts
+    .filter((p) => p.status === "ACTIVE")
+    .map((p) => ({ id: p.id, name: p.name, currency: p.currency }));
 
   if (!account) return <div>Account not found</div>;
 
@@ -86,6 +96,12 @@ const AccountDetailPage = async (props: AccountDetailPageProps) => {
               accountId={accountId}
             />
             <LeadsView data={leads} crmData={crmData} />
+            <AccountProductsView
+              data={accountProducts}
+              accountId={accountId}
+              crmData={crmData}
+              activeProducts={activeProducts}
+            />
             <DocumentsView data={documents} accountId={accountId} />
           </div>
         </TabsContent>
