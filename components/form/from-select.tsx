@@ -82,7 +82,7 @@ export const FormSelect = forwardRef<HTMLInputElement, FormInputProps>(
           />
           <Select
             onValueChange={(value: any) => setValue(value)}
-            defaultValue={defaultValue}
+            value={value}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder={placeholder} />
