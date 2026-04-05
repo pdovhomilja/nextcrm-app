@@ -3,6 +3,7 @@ import React from "react";
 
 import { BasicView } from "./components/BasicView";
 import { FindSimilarButton } from "@/components/crm/find-similar-button";
+import LineItemsSection from "./components/LineItemsSection";
 
 import DocumentsView from "../../components/DocumentsView";
 import ContactsView from "../../components/ContactsView";
@@ -13,6 +14,8 @@ import { getOpportunity } from "@/actions/crm/get-opportunity";
 import { getContactsByOpportunityId } from "@/actions/crm/get-contacts-by-opportunityId";
 import { getDocumentsByOpportunityId } from "@/actions/documents/get-documents-by-opportunityId";
 import { getAccountsByOpportunityId } from "@/actions/crm/get-accounts-by-opportunityId";
+import { getProductsFull } from "@/actions/crm/products/get-products";
+import { serializeDecimalsList } from "@/lib/serialize-decimals";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HistoryTab } from "./components/HistoryTab";
 import { ActivitiesSection } from "./components/ActivitiesSection";
@@ -28,11 +31,28 @@ const OpportunityView = async (
     opportunityId
   } = params;
 
-  const opportunity: any = await getOpportunity(opportunityId);
-  const crmData = await getAllCrmData();
-  const accounts = await getAccountsByOpportunityId(opportunityId);
-  const contacts = await getContactsByOpportunityId(opportunityId);
-  const documents = await getDocumentsByOpportunityId(opportunityId);
+  const [opportunity, crmData, accounts, contacts, documents, allProducts] =
+    await Promise.all([
+      getOpportunity(opportunityId),
+      getAllCrmData(),
+      getAccountsByOpportunityId(opportunityId),
+      getContactsByOpportunityId(opportunityId),
+      getDocumentsByOpportunityId(opportunityId),
+      getProductsFull(),
+    ]);
+
+  const activeProducts = allProducts
+    .filter((p: any) => p.status === "ACTIVE")
+    .map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      sku: p.sku,
+      unit_price: Number(p.unit_price),
+    }));
+
+  const serializedLineItems = opportunity?.lineItems
+    ? serializeDecimalsList(opportunity.lineItems as any[])
+    : [];
 
   if (!opportunity) return <div>Opportunity not found</div>;
 
@@ -49,6 +69,12 @@ const OpportunityView = async (
         <TabsContent value="overview">
           <div className="space-y-5">
             <BasicView data={opportunity} />
+            <LineItemsSection
+              opportunityId={opportunityId}
+              lineItems={serializedLineItems}
+              currency={(opportunity as any)?.currency || "EUR"}
+              products={activeProducts}
+            />
             <ActivitiesSection opportunityId={opportunityId} />
             <FindSimilarButton entityType="opportunity" recordId={opportunityId} />
             <AccountsView crmData={crmData} data={accounts} />

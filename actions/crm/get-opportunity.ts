@@ -54,6 +54,15 @@ export const getOpportunity = async (opportunityId: string) => {
           email: true,
         },
       },
+      // Include line items
+      lineItems: {
+        include: {
+          product: {
+            select: { id: true, name: true, status: true },
+          },
+        },
+        orderBy: { sort_order: "asc" },
+      },
       // Include documents through DocumentsToOpportunities junction table
       documents: {
         include: {
