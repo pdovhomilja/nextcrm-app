@@ -20,7 +20,7 @@ import { FormTextarea } from "@/components/form/form-textarea";
 import { FormSelect } from "@/components/form/from-select";
 import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 import { getAccounts } from "@/actions/crm/accounts/get-accounts";
-import { getEnabledCurrencies } from "@/lib/currency";
+import { getCurrencies } from "@/actions/crm/get-currencies";
 
 const UpdateContractForm = ({
   onOpen,
@@ -38,18 +38,14 @@ const UpdateContractForm = ({
   const [isLoadingData, setIsLoadingData] = useState(true);
 
   useEffect(() => {
-    Promise.all([getAccounts(), getEnabledCurrencies()])
-      .then(([accountsData, currenciesData]) => {
-        setAccounts(
-          (accountsData ?? []).map((a: any) => ({ id: a.id, name: a.name }))
-        );
-        setCurrencies(
-          (currenciesData ?? []).map((c: any) => ({
-            code: c.code,
-            name: c.name,
-            symbol: c.symbol,
-          }))
-        );
+    Promise.all([getAccounts(), getCurrencies()])
+      .then(([accountsResult, currenciesResult]) => {
+        if ("data" in accountsResult && accountsResult.data) {
+          setAccounts(accountsResult.data);
+        }
+        if ("data" in currenciesResult && currenciesResult.data) {
+          setCurrencies(currenciesResult.data);
+        }
       })
       .finally(() => setIsLoadingData(false));
   }, []);
