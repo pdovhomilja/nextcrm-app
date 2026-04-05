@@ -22,19 +22,19 @@ test.describe("Update Lead from detail page", () => {
     await page.waitForURL(/crm\/leads/, { timeout: 10000 });
     await page.waitForLoadState("networkidle", { timeout: 15000 });
 
+    // Wait for table to fully render before clicking
+    const leadsTable = page.getByTestId("leads-table");
+    await expect(leadsTable).toBeVisible({ timeout: 10000 });
+
     // Navigate to the first lead's detail page
-    await page
-      .getByTestId("leads-table")
-      .getByTestId("lead-row-name")
-      .first()
-      .click();
+    await leadsTable.getByTestId("lead-row-name").first().click();
 
     await page.waitForURL(/crm\/leads\/.+/, { timeout: 10000 });
     await page.waitForLoadState("networkidle", { timeout: 15000 });
 
     // Open the ⋯ actions menu
     const actionsBtn = page.getByTestId("lead-detail-actions-btn");
-    await expect(actionsBtn).toBeVisible({ timeout: 8000 });
+    await expect(actionsBtn).toBeVisible({ timeout: 15000 });
     await actionsBtn.click();
 
     await page.getByRole("menuitem", { name: "Update" }).click();

@@ -5,6 +5,7 @@ import { test, expect, Page } from "@playwright/test";
 const testData = {
   accountId: "",
   contactId: "",
+  contactLastName: "",
   leadId: "",
   opportunityId: "",
 };
@@ -71,6 +72,7 @@ test.describe.serial("Sales Flow", () => {
   test("should create a new Account", async ({ page }) => {
     await page.goto("/crm/accounts");
     await page.waitForURL(/crm\/accounts/, { timeout: 10000 });
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
 
     await page.getByTestId("add-account-btn").click();
     await waitForSheet(page);
@@ -90,12 +92,15 @@ test.describe.serial("Sales Flow", () => {
     await page.getByTestId("account-submit-btn").click();
     await assertSuccessToast(page);
 
+    // Wait for router.refresh() to complete after form submission
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+
     await expect(
       page.getByTestId("accounts-table").getByText("Playwright Test Inc.").first()
-    ).toBeVisible({ timeout: 8000 });
+    ).toBeVisible({ timeout: 15000 });
 
     await page.getByTestId("account-row-name").filter({ hasText: "Playwright Test Inc." }).first().click();
-    await page.waitForURL(/crm\/accounts\/.+/, { timeout: 8000 });
+    await page.waitForURL(/crm\/accounts\/.+/, { timeout: 10000 });
 
     const url = page.url();
     testData.accountId = url.split("/crm/accounts/")[1].split("?")[0];
@@ -105,12 +110,16 @@ test.describe.serial("Sales Flow", () => {
   test("should create a new Contact linked to the Account", async ({ page }) => {
     await page.goto("/crm/contacts");
     await page.waitForURL(/crm\/contacts/, { timeout: 10000 });
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
 
     await page.getByTestId("add-contact-btn").click();
     await waitForSheet(page);
 
+    // Use a unique last name to avoid pagination issues from previous test runs
+    const contactLastName = `PW${Date.now()}`;
+
     // Exact label strings from locales/en.json (CrmContactForm + Common namespaces)
-    await page.getByLabel("Last name").fill("Playwright");
+    await page.getByLabel("Last name").fill(contactLastName);
     await page.getByLabel("Email").first().fill("playwright.contact@testinc.com");
 
     await selectUserInCombobox(page, "Assigned user", "a");
@@ -124,15 +133,26 @@ test.describe.serial("Sales Flow", () => {
     await page.getByTestId("contact-submit-btn").click();
     await assertSuccessToast(page);
 
-    await expect(
-      page.getByTestId("contacts-table").getByText("Playwright").first()
-    ).toBeVisible({ timeout: 8000 });
+    // Reload and filter by last name to find the contact despite pagination
+    await page.goto("/crm/contacts");
+    await page.waitForURL(/crm\/contacts/, { timeout: 10000 });
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
 
-    await page.getByTestId("contact-row-name").filter({ hasText: "Playwright" }).first().click();
-    await page.waitForURL(/crm\/contacts\/.+/, { timeout: 8000 });
+    // Use the table filter input to narrow results to our contact
+    const filterInput = page.getByPlaceholder("Filter in last name ...");
+    await expect(filterInput).toBeVisible({ timeout: 10000 });
+    await filterInput.fill(contactLastName);
+
+    await expect(
+      page.getByTestId("contact-row-name").filter({ hasText: contactLastName }).first()
+    ).toBeVisible({ timeout: 15000 });
+
+    await page.getByTestId("contact-row-name").filter({ hasText: contactLastName }).first().click();
+    await page.waitForURL(/crm\/contacts\/.+/, { timeout: 10000 });
 
     const url = page.url();
     testData.contactId = url.split("/crm/contacts/")[1].split("?")[0];
+    testData.contactLastName = contactLastName;
     expect(testData.contactId).toBeTruthy();
   });
 
@@ -152,12 +172,14 @@ test.describe.serial("Sales Flow", () => {
     await page.getByTestId("lead-submit-btn").click();
     await assertSuccessToast(page);
 
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+
     await expect(
       page.getByTestId("leads-table").getByText("PlaywrightLead").first()
-    ).toBeVisible({ timeout: 8000 });
+    ).toBeVisible({ timeout: 15000 });
 
     await page.getByTestId("lead-row-name").filter({ hasText: "PlaywrightLead" }).first().click();
-    await page.waitForURL(/crm\/leads\/.+/, { timeout: 8000 });
+    await page.waitForURL(/crm\/leads\/.+/, { timeout: 10000 });
 
     const url = page.url();
     testData.leadId = url.split("/crm/leads/")[1].split("?")[0];
@@ -167,6 +189,7 @@ test.describe.serial("Sales Flow", () => {
   test("should create a new Opportunity linked to Account and Contact", async ({ page }) => {
     await page.goto("/crm/opportunities");
     await page.waitForURL(/crm\/opportunities/, { timeout: 10000 });
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
 
     await page.getByTestId("add-opportunity-btn").click();
     await waitForSheet(page);
@@ -180,7 +203,7 @@ test.describe.serial("Sales Flow", () => {
     await selectFirstOption(page, "Sales type");
     await selectFirstOption(page, "Sale stage");
     await page.getByLabel("Budget").fill("100000");
-    await page.getByLabel("Currency").fill("USD");
+    await selectFirstOption(page, "Currency");
     await page.getByLabel("Expected revenue").fill("80000");
 
     await selectUserInCombobox(page, "Assigned to", "a");
@@ -195,17 +218,19 @@ test.describe.serial("Sales Flow", () => {
     await page.getByLabel("Assigned Contact").click();
     const listbox2 = page.locator('[role="listbox"][data-state="open"]');
     await listbox2.waitFor({ timeout: 3000 });
-    await listbox2.locator('[role="option"]').filter({ hasText: "Playwright" }).first().click();
+    await listbox2.locator('[role="option"]').filter({ hasText: testData.contactLastName }).first().click();
 
     await page.getByTestId("opportunity-submit-btn").click();
     await assertSuccessToast(page);
 
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+
     await expect(
       page.getByTestId("opportunities-table").getByText("Playwright Test Opportunity").first()
-    ).toBeVisible({ timeout: 8000 });
+    ).toBeVisible({ timeout: 15000 });
 
     await page.getByTestId("opportunity-row-name").filter({ hasText: "Playwright Test Opportunity" }).first().click();
-    await page.waitForURL(/crm\/opportunities\/.+/, { timeout: 8000 });
+    await page.waitForURL(/crm\/opportunities\/.+/, { timeout: 10000 });
 
     const url = page.url();
     testData.opportunityId = url.split("/crm/opportunities/")[1].split("?")[0];

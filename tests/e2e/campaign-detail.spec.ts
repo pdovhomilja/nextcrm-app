@@ -34,11 +34,10 @@ test.describe.serial("Campaign Detail Page", () => {
     await page.getByLabel("Template Name *").fill("PW-CD-Template");
     await page.getByLabel("Subject Line *").fill("PW Detail Test Subject");
 
-    const editor = page.locator(".tiptap, .ProseMirror").first();
-    if (await editor.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await editor.click();
-      await editor.pressSequentially("Detail test email body");
-    }
+    const editor = page.locator(".tiptap, .ProseMirror, [contenteditable='true']").first();
+    await expect(editor).toBeVisible({ timeout: 10000 });
+    await editor.click();
+    await editor.pressSequentially("Detail test email body");
 
     await page.getByRole("button", { name: /Save Template/i }).click();
     await page.waitForURL(/\/campaigns\/templates$/, { timeout: 15000 });

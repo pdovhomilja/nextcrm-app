@@ -122,8 +122,8 @@ test.describe("Campaign Creation Wizard", () => {
     await subjectInput.fill("Test Subject");
 
     // Type into TipTap editor (contenteditable div)
-    const editor = page.locator(".tiptap, .ProseMirror").first();
-    if (await editor.isVisible({ timeout: 3000 }).catch(() => false)) {
+    const editor = page.locator(".tiptap, .ProseMirror, [contenteditable='true']").first();
+    if (await editor.isVisible({ timeout: 10000 }).catch(() => false)) {
       await editor.click();
       await editor.pressSequentially("Test email body content");
     }
@@ -154,8 +154,8 @@ test.describe("Campaign Creation Wizard", () => {
     // Step 2
     const subjectInput = page.locator('input[placeholder="Your email subject..."]');
     await subjectInput.fill("Schedule Test Subject");
-    const editor = page.locator(".tiptap, .ProseMirror").first();
-    if (await editor.isVisible({ timeout: 3000 }).catch(() => false)) {
+    const editor = page.locator(".tiptap, .ProseMirror, [contenteditable='true']").first();
+    if (await editor.isVisible({ timeout: 10000 }).catch(() => false)) {
       await editor.click();
       await editor.pressSequentially("Body content");
     }
