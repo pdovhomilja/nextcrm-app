@@ -63,7 +63,6 @@ export const FormDatePicker = forwardRef<HTMLInputElement, FormDatePickerProps>(
           ) : null}
           <Input
             onBlur={onBlur}
-            defaultValue={defaultDate ? defaultDate.toISOString() : ""}
             ref={ref}
             required={required}
             value={date ? date.toISOString() : ""}
