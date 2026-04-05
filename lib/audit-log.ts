@@ -8,7 +8,9 @@ export type AuditEntityType =
   | "opportunity"
   | "contract"
   | "product"
-  | "account_product";
+  | "account_product"
+  | "opportunity_line_item"
+  | "contract_line_item";
 
 export type AuditAction =
   | "created"
