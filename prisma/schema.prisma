@@ -56,6 +56,7 @@ model crm_Accounts {
   watchers           AccountWatchers[]
   embedding          crm_Embeddings_Accounts?
   emails             EmailsToAccounts[]
+  accountProducts    crm_AccountProducts[]
 
   @@index([assigned_to])
   @@index([industry])
@@ -250,6 +251,31 @@ enum crm_Opportunity_Status {
   INACTIVE
   PENDING
   CLOSED
+}
+
+enum crm_Product_Type {
+  PRODUCT
+  SERVICE
+}
+
+enum crm_Product_Status {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum crm_Billing_Period {
+  MONTHLY
+  QUARTERLY
+  ANNUALLY
+  ONE_TIME
+}
+
+enum crm_AccountProduct_Status {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  PENDING
 }
 
 model crm_campaigns {
@@ -530,6 +556,8 @@ model Currency {
   ratesTo       ExchangeRate[]      @relation("rate_to")
   opportunities crm_Opportunities[]
   contracts     crm_Contracts[]
+  products        crm_Products[]
+  accountProducts crm_AccountProducts[]
 }
 
 model ExchangeRate {
@@ -918,6 +946,7 @@ model Users {
   created_campaigns              crm_campaigns[]           @relation("created_campaigns")
   created_campaign_templates     crm_campaign_templates[]  @relation("created_campaign_templates")
   auditLogs                      crm_AuditLog[]
+  created_products               crm_Products[]    @relation("ProductCreatedBy")
   activities_created             crm_Activities[]  @relation("activity_created_by")
   activities_updated             crm_Activities[]  @relation("activity_updated_by")
   report_configs               crm_Report_Config[]   @relation("report_configs")
@@ -1499,4 +1528,95 @@ model Verification {
   updatedAt  DateTime? @updatedAt
 
   @@map("verification")
+}
+
+// ============================================
+// PRODUCTS MODULE
+// ============================================
+
+model crm_ProductCategories {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  description String?
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String    @db.Uuid
+  updatedBy String?   @db.Uuid
+
+  products crm_Products[]
+
+  @@index([isActive])
+}
+
+model crm_Products {
+  id          String             @id @default(uuid()) @db.Uuid
+  name        String
+  description String?            @db.Text
+  sku         String?            @unique
+  type        crm_Product_Type
+  status      crm_Product_Status @default(DRAFT)
+
+  unit_price     Decimal             @db.Decimal(18, 2)
+  unit_cost      Decimal?            @db.Decimal(18, 2)
+  currency       String              @db.VarChar(3)
+  tax_rate       Decimal?            @db.Decimal(5, 2)
+  unit           String?
+  is_recurring   Boolean             @default(false)
+  billing_period crm_Billing_Period?
+
+  categoryId String? @db.Uuid
+
+  v         Int       @default(0) @map("__v")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String    @db.Uuid
+  updatedBy String?   @db.Uuid
+  deletedAt DateTime?
+  deletedBy String?   @db.Uuid
+
+  category        crm_ProductCategories? @relation(fields: [categoryId], references: [id])
+  assigned_currency Currency?            @relation(fields: [currency], references: [code])
+  created_by_user Users?                 @relation("ProductCreatedBy", fields: [createdBy], references: [id])
+  accountProducts crm_AccountProducts[]
+
+  @@index([status])
+  @@index([type])
+  @@index([categoryId])
+  @@index([createdBy])
+  @@index([deletedAt])
+}
+
+model crm_AccountProducts {
+  id         String                    @id @default(uuid()) @db.Uuid
+  accountId  String                    @db.Uuid
+  productId  String                    @db.Uuid
+  quantity   Int                       @default(1)
+
+  custom_price  Decimal?              @db.Decimal(18, 2)
+  currency      String                @db.VarChar(3)
+  snapshot_rate Decimal?              @db.Decimal(18, 8)
+
+  status       crm_AccountProduct_Status @default(ACTIVE)
+  start_date   DateTime
+  end_date     DateTime?
+  renewal_date DateTime?
+  notes        String?                @db.Text
+
+  v         Int       @default(0) @map("__v")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  createdBy String    @db.Uuid
+  updatedBy String?   @db.Uuid
+
+  account          crm_Accounts  @relation(fields: [accountId], references: [id])
+  product          crm_Products  @relation(fields: [productId], references: [id])
+  assigned_currency Currency?    @relation(fields: [currency], references: [code])
+
+  @@index([accountId])
+  @@index([productId])
+  @@index([status])
+  @@index([accountId, productId])
 }
