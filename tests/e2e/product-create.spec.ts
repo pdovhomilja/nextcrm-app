@@ -70,7 +70,7 @@ test.describe("Product Creation", () => {
     await dialog.locator(".space-y-2").filter({ hasText: "Unit Cost" }).locator("input").fill("50.00");
     await selectFormOption(page, "Currency", /USD/);
     await dialog.locator(".space-y-2").filter({ hasText: "Tax Rate" }).locator("input").fill("10");
-    await dialog.locator(".space-y-2").filter({ hasText: "Unit" }).locator("input").fill("each");
+    await dialog.locator("#unit").fill("each");
     await dialog.locator("#is_recurring").check();
     await selectFormOption(page, "Billing Period", "Monthly");
     await dialog.locator(".space-y-2").filter({ hasText: "Description" }).locator("textarea").fill("A full-featured service product");

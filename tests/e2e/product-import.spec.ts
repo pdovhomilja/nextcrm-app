@@ -41,9 +41,10 @@ test.describe("Product Import", () => {
     const fixtureFile = path.resolve(__dirname, "../fixtures/products-import.csv");
     await page.locator('input[type="file"]').setInputFiles(fixtureFile);
 
-    await expect(page.getByText("Showing first")).toBeVisible();
-    await expect(page.getByText("PW Import Widget")).toBeVisible();
-    await expect(page.getByText("PW Import Service")).toBeVisible();
+    const dialog = page.locator('[role="dialog"]');
+    await expect(dialog.getByText("Showing first")).toBeVisible();
+    await expect(dialog.getByText("PW Import Widget")).toBeVisible();
+    await expect(dialog.getByText("PW Import Service")).toBeVisible();
 
     await page.getByRole("button", { name: "Confirm Import" }).click();
 

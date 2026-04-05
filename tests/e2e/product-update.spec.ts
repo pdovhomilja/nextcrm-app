@@ -53,7 +53,7 @@ test.describe("Product Update", () => {
 
     await assertSuccessToast(page);
     await expect(page.locator('[role="dialog"][data-state="open"]')).not.toBeVisible({ timeout: 10000 });
-    await expect(page.getByText(updatedName)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(updatedName).first()).toBeVisible({ timeout: 10000 });
   });
 
   test("should update product price and status", async ({ page }) => {

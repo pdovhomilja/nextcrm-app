@@ -40,10 +40,12 @@ test.describe("Read Products", () => {
     await page.goto("/en/crm/products");
     await page.waitForLoadState("networkidle", { timeout: 15000 });
 
-    const typeButton = page.getByRole("button", { name: /Type/i });
-    if (await typeButton.isVisible()) {
+    // The filter button has border-dashed class (from DataTableFacetedFilter)
+    const typeButton = page.locator("button.border-dashed", { hasText: "Type" });
+    if (await typeButton.isVisible({ timeout: 5000 }).catch(() => false)) {
       await typeButton.click();
-      await page.getByRole("option", { name: "Product" }).click();
+      // CommandItem renders as [role="option"] in cmdk
+      await page.getByRole("option", { name: /Product/i }).click();
       await page.keyboard.press("Escape");
       await expect(page.locator("table").first()).toBeVisible();
     } else {
@@ -55,10 +57,10 @@ test.describe("Read Products", () => {
     await page.goto("/en/crm/products");
     await page.waitForLoadState("networkidle", { timeout: 15000 });
 
-    const statusButton = page.getByRole("button", { name: /Status/i });
-    if (await statusButton.isVisible()) {
+    const statusButton = page.locator("button.border-dashed", { hasText: "Status" });
+    if (await statusButton.isVisible({ timeout: 5000 }).catch(() => false)) {
       await statusButton.click();
-      await page.getByRole("option", { name: "Active" }).click();
+      await page.getByRole("option", { name: /Active/i }).click();
       await page.keyboard.press("Escape");
       await expect(page.locator("table").first()).toBeVisible();
     } else {
