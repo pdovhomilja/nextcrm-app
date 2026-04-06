@@ -387,8 +387,8 @@ model crm_Opportunities_Sales_Stages {
   id                                 String              @id @default(uuid()) @db.Uuid
   v                                  Int                 @map("__v")
   name                               String
-  probability                        BigInt?
-  order                              BigInt?
+  probability                        Int?
+  order                              Int?
   assigned_opportunities_sales_stage crm_Opportunities[] @relation("assinged_sales_stage")
 }
 
@@ -396,7 +396,7 @@ model crm_Opportunities_Type {
   id                     String              @id @default(uuid()) @db.Uuid
   v                      Int                 @map("__v")
   name                   String
-  order                  BigInt?
+  order                  Int?
   assigned_opportunities crm_Opportunities[]
 }
 
@@ -789,12 +789,6 @@ model crm_Industry_Type {
   accounts crm_Accounts[]
 }
 
-model modulStatus {
-  id        String  @id @default(uuid()) @db.Uuid
-  name      String
-  isVisible Boolean
-}
-
 model Tasks {
   id           String      @id @default(uuid()) @db.Uuid
   v            Int         @map("__v")
@@ -1072,20 +1066,6 @@ model systemServices {
   servicePassword String?
   servicePort     String?
   description     String?
-}
-
-model gpt_models {
-  id          String     @id @default(uuid()) @db.Uuid
-  v           Int        @map("__v")
-  model       String
-  description String?
-  status      gptStatus?
-  created_on  DateTime?  @default(now())
-}
-
-enum gptStatus {
-  ACTIVE
-  INACTIVE
 }
 
 // ============================================
