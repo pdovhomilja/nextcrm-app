@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
 import { paginationSchema, paginationArgs, listResponse, itemResponse } from "../helpers";
+import type { ReportFilters } from "@/actions/reports/types";
 
 export const reportTools = [
   {
@@ -53,7 +54,7 @@ export const reportTools = [
       const now = new Date();
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const filters = {
+      const filters: ReportFilters = {
         dateFrom: args.dateFrom ? new Date(args.dateFrom) : thirtyDaysAgo,
         dateTo: args.dateTo ? new Date(args.dateTo) : now,
       };
