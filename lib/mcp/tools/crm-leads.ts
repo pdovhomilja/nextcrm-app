@@ -7,7 +7,7 @@ import {
   itemResponse,
   ilike,
   notFound,
-  conflict,
+  softDeleteData,
 } from "../helpers";
 
 export const crmLeadTools = [
@@ -16,7 +16,7 @@ export const crmLeadTools = [
     description: "List CRM leads assigned to the authenticated user",
     schema: z.object({ ...paginationSchema }),
     async handler(args: { limit: number; offset: number }, userId: string) {
-      const where = { assigned_to: userId };
+      const where = { assigned_to: userId, deletedAt: null };
       const [data, total] = await Promise.all([
         prismadb.crm_Leads.findMany({
           where,
@@ -34,7 +34,7 @@ export const crmLeadTools = [
     schema: z.object({ id: z.string().uuid() }),
     async handler(args: { id: string }, userId: string) {
       const lead = await prismadb.crm_Leads.findFirst({
-        where: { id: args.id, assigned_to: userId },
+        where: { id: args.id, assigned_to: userId, deletedAt: null },
       });
       if (!lead) notFound("Lead");
       return itemResponse(lead);
@@ -50,6 +50,7 @@ export const crmLeadTools = [
     ) {
       const where = {
         assigned_to: userId,
+        deletedAt: null,
         OR: [
           ilike("firstName", args.query),
           ilike("lastName", args.query),
@@ -122,7 +123,7 @@ export const crmLeadTools = [
       userId: string
     ) {
       const existing = await prismadb.crm_Leads.findFirst({
-        where: { id: args.id, assigned_to: userId },
+        where: { id: args.id, assigned_to: userId, deletedAt: null },
       });
       if (!existing) notFound("Lead");
       const { id, ...updateData } = args;
@@ -135,10 +136,18 @@ export const crmLeadTools = [
   },
   {
     name: "crm_delete_lead",
-    description: "Soft-delete a CRM lead (not yet supported — pending schema migration)",
+    description: "Soft-delete a CRM lead by ID (sets deletedAt timestamp)",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(_args: { id: string }, _userId: string) {
-      conflict("Soft delete not yet supported for Leads. See docs/soft-delete-gaps.md");
+    async handler(args: { id: string }, userId: string) {
+      const existing = await prismadb.crm_Leads.findFirst({
+        where: { id: args.id, assigned_to: userId, deletedAt: null },
+      });
+      if (!existing) notFound("Lead");
+      const lead = await prismadb.crm_Leads.update({
+        where: { id: args.id },
+        data: softDeleteData(userId),
+      });
+      return itemResponse({ id: lead.id, deletedAt: lead.deletedAt });
     },
   },
 ];

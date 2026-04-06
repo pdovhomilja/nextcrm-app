@@ -7,7 +7,7 @@ import {
   itemResponse,
   ilike,
   notFound,
-  conflict,
+  softDeleteData,
 } from "../helpers";
 
 export const crmContactTools = [
@@ -16,7 +16,7 @@ export const crmContactTools = [
     description: "List CRM contacts assigned to the authenticated user",
     schema: z.object({ ...paginationSchema }),
     async handler(args: { limit: number; offset: number }, userId: string) {
-      const where = { assigned_to: userId };
+      const where = { assigned_to: userId, deletedAt: null };
       const [data, total] = await Promise.all([
         prismadb.crm_Contacts.findMany({
           where,
@@ -34,7 +34,7 @@ export const crmContactTools = [
     schema: z.object({ id: z.string().uuid() }),
     async handler(args: { id: string }, userId: string) {
       const contact = await prismadb.crm_Contacts.findFirst({
-        where: { id: args.id, assigned_to: userId },
+        where: { id: args.id, assigned_to: userId, deletedAt: null },
       });
       if (!contact) notFound("Contact");
       return itemResponse(contact);
@@ -50,6 +50,7 @@ export const crmContactTools = [
     ) {
       const where = {
         assigned_to: userId,
+        deletedAt: null,
         OR: [
           ilike("first_name", args.query),
           ilike("last_name", args.query),
@@ -130,7 +131,7 @@ export const crmContactTools = [
       userId: string
     ) {
       const existing = await prismadb.crm_Contacts.findFirst({
-        where: { id: args.id, assigned_to: userId },
+        where: { id: args.id, assigned_to: userId, deletedAt: null },
       });
       if (!existing) notFound("Contact");
       const { id, ...updateData } = args;
@@ -143,10 +144,18 @@ export const crmContactTools = [
   },
   {
     name: "crm_delete_contact",
-    description: "Soft-delete a CRM contact (not yet supported — pending schema migration)",
+    description: "Soft-delete a CRM contact by ID (sets deletedAt timestamp)",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(_args: { id: string }, _userId: string) {
-      conflict("Soft delete not yet supported for Contacts. See docs/soft-delete-gaps.md");
+    async handler(args: { id: string }, userId: string) {
+      const existing = await prismadb.crm_Contacts.findFirst({
+        where: { id: args.id, assigned_to: userId, deletedAt: null },
+      });
+      if (!existing) notFound("Contact");
+      const contact = await prismadb.crm_Contacts.update({
+        where: { id: args.id },
+        data: softDeleteData(userId),
+      });
+      return itemResponse({ id: contact.id, deletedAt: contact.deletedAt });
     },
   },
 ];

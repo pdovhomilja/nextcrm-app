@@ -7,7 +7,7 @@ import {
   itemResponse,
   ilike,
   notFound,
-  conflict,
+  softDeleteData,
 } from "../helpers";
 
 export const crmTargetTools = [
@@ -16,7 +16,7 @@ export const crmTargetTools = [
     description: "List CRM targets created by the authenticated user",
     schema: z.object({ ...paginationSchema }),
     async handler(args: { limit: number; offset: number }, userId: string) {
-      const where = { created_by: userId };
+      const where = { created_by: userId, deletedAt: null };
       const [data, total] = await Promise.all([
         prismadb.crm_Targets.findMany({
           where,
@@ -34,7 +34,7 @@ export const crmTargetTools = [
     schema: z.object({ id: z.string().uuid() }),
     async handler(args: { id: string }, userId: string) {
       const target = await prismadb.crm_Targets.findFirst({
-        where: { id: args.id, created_by: userId },
+        where: { id: args.id, created_by: userId, deletedAt: null },
       });
       if (!target) notFound("Target");
       return itemResponse(target);
@@ -50,6 +50,7 @@ export const crmTargetTools = [
     ) {
       const where = {
         created_by: userId,
+        deletedAt: null,
         OR: [
           ilike("first_name", args.query),
           ilike("last_name", args.query),
@@ -126,7 +127,7 @@ export const crmTargetTools = [
       userId: string
     ) {
       const existing = await prismadb.crm_Targets.findFirst({
-        where: { id: args.id, created_by: userId },
+        where: { id: args.id, created_by: userId, deletedAt: null },
       });
       if (!existing) notFound("Target");
       const { id, ...updateData } = args;
@@ -139,10 +140,18 @@ export const crmTargetTools = [
   },
   {
     name: "crm_delete_target",
-    description: "Soft-delete a CRM target (not yet supported — pending schema migration)",
+    description: "Soft-delete a CRM target by ID (sets deletedAt timestamp)",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(_args: { id: string }, _userId: string) {
-      conflict("Soft delete not yet supported for Targets. See docs/soft-delete-gaps.md");
+    async handler(args: { id: string }, userId: string) {
+      const existing = await prismadb.crm_Targets.findFirst({
+        where: { id: args.id, created_by: userId, deletedAt: null },
+      });
+      if (!existing) notFound("Target");
+      const target = await prismadb.crm_Targets.update({
+        where: { id: args.id },
+        data: softDeleteData(userId),
+      });
+      return itemResponse({ id: target.id, deletedAt: target.deletedAt });
     },
   },
 ];

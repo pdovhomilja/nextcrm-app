@@ -6,7 +6,7 @@ import {
   listResponse,
   itemResponse,
   notFound,
-  conflict,
+  softDeleteData,
 } from "../helpers";
 
 const entityLinkSchema = z.object({
@@ -39,6 +39,7 @@ export const crmActivityTools = [
     ) {
       const where: any = {
         createdBy: userId,
+        deletedAt: null,
         ...(args.type && { type: args.type as any }),
         ...(args.status && { status: args.status as any }),
         ...(args.entityType &&
@@ -66,7 +67,7 @@ export const crmActivityTools = [
     schema: z.object({ id: z.string().uuid() }),
     async handler(args: { id: string }, userId: string) {
       const activity = await prismadb.crm_Activities.findFirst({
-        where: { id: args.id, createdBy: userId },
+        where: { id: args.id, createdBy: userId, deletedAt: null },
         include: { links: true },
       });
       if (!activity) notFound("Activity");
@@ -149,7 +150,7 @@ export const crmActivityTools = [
       userId: string
     ) {
       const existing = await prismadb.crm_Activities.findFirst({
-        where: { id: args.id, createdBy: userId },
+        where: { id: args.id, createdBy: userId, deletedAt: null },
       });
       if (!existing) notFound("Activity");
       const { id, date, status, ...rest } = args;
@@ -167,13 +168,18 @@ export const crmActivityTools = [
   },
   {
     name: "crm_delete_activity",
-    description:
-      "Soft-delete a CRM activity (not yet supported — pending schema migration)",
+    description: "Soft-delete a CRM activity by ID (sets deletedAt timestamp)",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(_args: { id: string }, _userId: string) {
-      conflict(
-        "Soft delete not yet supported for Activities. See docs/soft-delete-gaps.md"
-      );
+    async handler(args: { id: string }, userId: string) {
+      const existing = await prismadb.crm_Activities.findFirst({
+        where: { id: args.id, createdBy: userId, deletedAt: null },
+      });
+      if (!existing) notFound("Activity");
+      const activity = await prismadb.crm_Activities.update({
+        where: { id: args.id },
+        data: softDeleteData(userId),
+      });
+      return itemResponse({ id: activity.id, deletedAt: activity.deletedAt });
     },
   },
 ];
