@@ -39,7 +39,7 @@ export function itemResponse<T>(data: T) {
 
 // ── Error Helpers ───────────────────────────────────────────────
 
-export function notFound(entity: string): never {
+export function notFound(_entity: string): never {
   throw new Error("NOT_FOUND");
 }
 
