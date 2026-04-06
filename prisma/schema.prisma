@@ -299,6 +299,8 @@ model crm_campaigns {
   created_by   String?   @db.Uuid
   created_on   DateTime? @default(now())
   updatedAt    DateTime? @updatedAt
+  deletedAt    DateTime?
+  deletedBy    String?   @db.Uuid
 
   template         crm_campaign_templates?  @relation("CampaignTemplate", fields: [template_id], references: [id])
   created_by_user  Users?                   @relation("created_campaigns", fields: [created_by], references: [id])
@@ -306,6 +308,8 @@ model crm_campaigns {
   target_lists     CampaignToTargetLists[]
   sends            crm_campaign_sends[]
   opportunities    crm_Opportunities[]
+
+  @@index([deletedAt])
 }
 
 model crm_campaign_templates {
@@ -318,12 +322,15 @@ model crm_campaign_templates {
   created_by      String?   @db.Uuid
   created_on      DateTime? @default(now())
   updatedAt       DateTime? @updatedAt
+  deletedAt       DateTime?
+  deletedBy       String?   @db.Uuid
 
   created_by_user Users?               @relation("created_campaign_templates", fields: [created_by], references: [id])
   campaigns       crm_campaigns[]      @relation("CampaignTemplate")
   steps           crm_campaign_steps[]
 
   @@index([created_by])
+  @@index([deletedAt])
 }
 
 model crm_campaign_steps {
@@ -618,6 +625,8 @@ model crm_Activities {
   updatedBy   String?              @db.Uuid
   createdAt   DateTime             @default(now())
   updatedAt   DateTime?            @updatedAt
+  deletedAt   DateTime?
+  deletedBy   String?              @db.Uuid
 
   created_by_user Users?              @relation("activity_created_by", fields: [createdBy], references: [id])
   updated_by_user Users?              @relation("activity_updated_by", fields: [updatedBy], references: [id])
@@ -628,6 +637,7 @@ model crm_Activities {
   @@index([status])
   @@index([createdBy])
   @@index([createdAt])
+  @@index([deletedAt])
 }
 
 model crm_ActivityLinks {
@@ -658,6 +668,8 @@ model Boards {
   createdBy         String?   @db.Uuid
   updatedAt         DateTime? @updatedAt
   updatedBy         String?   @db.Uuid
+  deletedAt         DateTime?
+  deletedBy         String?   @db.Uuid
 
   assigned_user Users?          @relation("assigned_user", fields: [user], references: [id])
   sections      Sections[]
@@ -670,6 +682,7 @@ model Boards {
   @@index([visibility])
   @@index([createdAt])
   @@index([user, favourite])
+  @@index([deletedAt])
 }
 
 model Employees {
@@ -1225,6 +1238,9 @@ model crm_Targets {
   converted_account_id String?   @db.Uuid
   converted_contact_id String?   @db.Uuid
 
+  deletedAt        DateTime?
+  deletedBy        String?   @db.Uuid
+
   crate_by_user     Users?                 @relation("created_targets", fields: [created_by], references: [id])
   target_lists      TargetsToTargetLists[]
   enrichments       crm_Target_Enrichment[]
@@ -1238,6 +1254,7 @@ model crm_Targets {
   @@index([created_on])
   @@index([converted_account_id])
   @@index([converted_contact_id])
+  @@index([deletedAt])
 }
 
 model crm_TargetLists {
