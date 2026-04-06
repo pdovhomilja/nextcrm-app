@@ -19,12 +19,12 @@ export function ilike(field: string, value: string) {
 
 // ── Soft Delete ─────────────────────────────────────────────────
 
-export function softDeleteUpdate(userId: string) {
-  return { status: "DELETED", updatedBy: userId, updatedAt: new Date() };
+export function softDeleteData(userId: string) {
+  return { deletedAt: new Date(), deletedBy: userId };
 }
 
 export function isNotDeleted() {
-  return { status: { not: "DELETED" } };
+  return { deletedAt: null };
 }
 
 // ── Response Helpers ────────────────────────────────────────────
