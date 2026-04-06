@@ -7,10 +7,12 @@ import {
   itemResponse,
   notFound,
   conflict,
+  softDeleteData,
 } from "../helpers";
 
 function userBoardWhere(userId: string) {
   return {
+    deletedAt: null,
     OR: [
       { user: userId },
       { sharedWith: { has: userId } },
@@ -115,10 +117,18 @@ export const projectTools = [
   },
   {
     name: "projects_delete_board",
-    description: "Soft-delete a project board (not yet supported — pending schema migration)",
+    description: "Soft-delete a project board (sets deletedAt timestamp)",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(_args: { id: string }, _userId: string) {
-      conflict("Soft delete not yet supported for Boards. See docs/soft-delete-gaps.md");
+    async handler(args: { id: string }, userId: string) {
+      const existing = await prismadb.boards.findFirst({
+        where: { id: args.id, ...userBoardWhere(userId) },
+      });
+      if (!existing) notFound("Board");
+      const board = await prismadb.boards.update({
+        where: { id: args.id },
+        data: softDeleteData(userId),
+      });
+      return itemResponse({ id: board.id, deletedAt: board.deletedAt });
     },
   },
 
