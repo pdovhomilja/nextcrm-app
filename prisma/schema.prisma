@@ -731,6 +731,8 @@ model Documents {
   processing_error   String?
   version            Int                      @default(1)
   parent_document_id String?                  @db.Uuid
+  deletedAt          DateTime?
+  deletedBy          String?                  @db.Uuid
 
   created_by           Users?                        @relation("created_by_user", fields: [created_by_user], references: [id])
   assigned_to_user     Users?                        @relation("assigned_to_user", fields: [assigned_user], references: [id])
@@ -759,6 +761,7 @@ model Documents {
   @@index([content_hash])
   @@index([parent_document_id])
   @@index([processing_status])
+  @@index([deletedAt])
 }
 
 enum DocumentSystemType {
@@ -1265,6 +1268,8 @@ model crm_TargetLists {
   created_by  String?   @db.Uuid
   created_on  DateTime? @default(now())
   updatedAt   DateTime? @updatedAt
+  deletedAt   DateTime?
+  deletedBy   String?   @db.Uuid
 
   crate_by_user  Users?               @relation("created_target_lists", fields: [created_by], references: [id])
   targets        TargetsToTargetLists[]
@@ -1272,6 +1277,7 @@ model crm_TargetLists {
 
   @@index([created_by])
   @@index([status])
+  @@index([deletedAt])
 }
 
 model TargetsToTargetLists {
