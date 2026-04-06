@@ -11,6 +11,7 @@ import {
   itemResponse,
   notFound,
   validationError,
+  softDeleteData,
 } from "../helpers";
 
 // Map entity types to their Prisma junction table accessor names (camelCase, lowercase first)
@@ -52,7 +53,7 @@ export const crmDocumentTools = [
     ) {
       const where: any = {
         created_by_user: userId,
-        status: { not: "DELETED" },
+        deletedAt: null,
       };
       if (args.entityType && args.entityId) {
         const relation =
@@ -86,7 +87,7 @@ export const crmDocumentTools = [
     schema: z.object({ id: z.string().uuid() }),
     async handler(args: { id: string }, userId: string) {
       const doc = await prismadb.documents.findFirst({
-        where: { id: args.id, created_by_user: userId, status: { not: "DELETED" } },
+        where: { id: args.id, created_by_user: userId, deletedAt: null },
         include: {
           accounts: true,
           contacts: true,
@@ -261,14 +262,14 @@ export const crmDocumentTools = [
     schema: z.object({ id: z.string().uuid() }),
     async handler(args: { id: string }, userId: string) {
       const existing = await prismadb.documents.findFirst({
-        where: { id: args.id, created_by_user: userId, status: { not: "DELETED" } },
+        where: { id: args.id, created_by_user: userId, deletedAt: null },
       });
       if (!existing) notFound("Document");
       const doc = await prismadb.documents.update({
         where: { id: args.id },
-        data: { status: "DELETED" },
+        data: softDeleteData(userId),
       });
-      return itemResponse({ id: doc.id, status: "DELETED" });
+      return itemResponse({ id: doc.id, deletedAt: doc.deletedAt });
     },
   },
 ];
