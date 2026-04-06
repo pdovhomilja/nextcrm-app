@@ -10,7 +10,10 @@ export const deleteTargetList = async (targetListId: string) => {
   if (!targetListId) return { error: "targetListId is required" };
 
   try {
-    await prismadb.crm_TargetLists.delete({ where: { id: targetListId } });
+    await prismadb.crm_TargetLists.update({
+      where: { id: targetListId },
+      data: { deletedAt: new Date(), deletedBy: session.user.id },
+    });
     revalidatePath("/[locale]/(routes)/crm/target-lists", "page");
     return { success: true };
   } catch (error) {

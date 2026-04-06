@@ -3,6 +3,7 @@ import { prismadb } from "@/lib/prisma";
 
 export const getTargetLists = async () => {
   const targetLists = await prismadb.crm_TargetLists.findMany({
+    where: { deletedAt: null },
     orderBy: { created_on: "desc" },
     include: {
       crate_by_user: { select: { name: true } },
