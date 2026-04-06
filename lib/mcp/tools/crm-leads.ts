@@ -1,47 +1,49 @@
 import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
+import {
+  paginationSchema,
+  paginationArgs,
+  listResponse,
+  itemResponse,
+  ilike,
+  notFound,
+  conflict,
+} from "../helpers";
 
-export const leadTools = [
+export const crmLeadTools = [
   {
-    name: "list_leads",
+    name: "crm_list_leads",
     description: "List CRM leads assigned to the authenticated user",
-    schema: z.object({
-      limit: z.number().min(1).max(100).default(20),
-      offset: z.number().min(0).default(0),
-    }),
+    schema: z.object({ ...paginationSchema }),
     async handler(args: { limit: number; offset: number }, userId: string) {
+      const where = { assigned_to: userId };
       const [data, total] = await Promise.all([
         prismadb.crm_Leads.findMany({
-          where: { assigned_to: userId },
-          take: args.limit,
-          skip: args.offset,
+          where,
+          ...paginationArgs(args),
           orderBy: { createdAt: "desc" },
         }),
-        prismadb.crm_Leads.count({ where: { assigned_to: userId } }),
+        prismadb.crm_Leads.count({ where }),
       ]);
-      return { data, total, offset: args.offset };
+      return listResponse(data, total, args.offset);
     },
   },
   {
-    name: "get_lead",
+    name: "crm_get_lead",
     description: "Get a single CRM lead by ID",
     schema: z.object({ id: z.string().uuid() }),
     async handler(args: { id: string }, userId: string) {
       const lead = await prismadb.crm_Leads.findFirst({
         where: { id: args.id, assigned_to: userId },
       });
-      if (!lead) throw new Error("NOT_FOUND");
-      return { data: lead };
+      if (!lead) notFound("Lead");
+      return itemResponse(lead);
     },
   },
   {
-    name: "search_leads",
+    name: "crm_search_leads",
     description: "Search leads by name, company, or email (substring match)",
-    schema: z.object({
-      query: z.string().min(1),
-      limit: z.number().min(1).max(100).default(20),
-      offset: z.number().min(0).default(0),
-    }),
+    schema: z.object({ query: z.string().min(1), ...paginationSchema }),
     async handler(
       args: { query: string; limit: number; offset: number },
       userId: string
@@ -49,32 +51,25 @@ export const leadTools = [
       const where = {
         assigned_to: userId,
         OR: [
-          {
-            firstName: { contains: args.query, mode: "insensitive" as const },
-          },
-          {
-            lastName: { contains: args.query, mode: "insensitive" as const },
-          },
-          { email: { contains: args.query, mode: "insensitive" as const } },
-          {
-            company: { contains: args.query, mode: "insensitive" as const },
-          },
+          ilike("firstName", args.query),
+          ilike("lastName", args.query),
+          ilike("email", args.query),
+          ilike("company", args.query),
         ],
       };
       const [data, total] = await Promise.all([
         prismadb.crm_Leads.findMany({
           where,
-          take: args.limit,
-          skip: args.offset,
+          ...paginationArgs(args),
           orderBy: { createdAt: "desc" },
         }),
         prismadb.crm_Leads.count({ where }),
       ]);
-      return { data, total, offset: args.offset };
+      return listResponse(data, total, args.offset);
     },
   },
   {
-    name: "create_lead",
+    name: "crm_create_lead",
     description: "Create a new CRM lead",
     schema: z.object({
       firstName: z.string().min(1).optional(),
@@ -84,22 +79,26 @@ export const leadTools = [
       phone: z.string().optional(),
       jobTitle: z.string().optional(),
     }),
-    async handler(args: { firstName?: string; lastName: string; email?: string; company?: string; phone?: string; jobTitle?: string }, userId: string) {
+    async handler(
+      args: {
+        firstName?: string;
+        lastName: string;
+        email?: string;
+        company?: string;
+        phone?: string;
+        jobTitle?: string;
+      },
+      userId: string
+    ) {
       const { lastName, ...rest } = args;
       const lead = await prismadb.crm_Leads.create({
-        data: {
-          v: 0,
-          lastName,
-          ...rest,
-          assigned_to: userId,
-          createdBy: userId,
-        },
+        data: { v: 0, lastName, ...rest, assigned_to: userId, createdBy: userId },
       });
-      return { data: lead };
+      return itemResponse(lead);
     },
   },
   {
-    name: "update_lead",
+    name: "crm_update_lead",
     description: "Update an existing CRM lead by ID",
     schema: z.object({
       id: z.string().uuid(),
@@ -111,19 +110,35 @@ export const leadTools = [
       jobTitle: z.string().optional(),
     }),
     async handler(
-      args: { id: string; firstName?: string; lastName?: string; email?: string; company?: string; phone?: string; jobTitle?: string },
+      args: {
+        id: string;
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+        company?: string;
+        phone?: string;
+        jobTitle?: string;
+      },
       userId: string
     ) {
       const existing = await prismadb.crm_Leads.findFirst({
         where: { id: args.id, assigned_to: userId },
       });
-      if (!existing) throw new Error("NOT_FOUND");
+      if (!existing) notFound("Lead");
       const { id, ...updateData } = args;
       const lead = await prismadb.crm_Leads.update({
         where: { id },
         data: { ...updateData, updatedBy: userId },
       });
-      return { data: lead };
+      return itemResponse(lead);
+    },
+  },
+  {
+    name: "crm_delete_lead",
+    description: "Soft-delete a CRM lead (not yet supported — pending schema migration)",
+    schema: z.object({ id: z.string().uuid() }),
+    async handler(_args: { id: string }, _userId: string) {
+      conflict("Soft delete not yet supported for Leads. See docs/soft-delete-gaps.md");
     },
   },
 ];
