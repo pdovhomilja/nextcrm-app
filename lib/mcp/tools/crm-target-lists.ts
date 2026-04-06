@@ -6,6 +6,7 @@ import {
   listResponse,
   itemResponse,
   notFound,
+  softDeleteData,
 } from "../helpers";
 
 export const crmTargetListTools = [
@@ -14,7 +15,7 @@ export const crmTargetListTools = [
     description: "List target lists (org-wide)",
     schema: z.object({ ...paginationSchema }),
     async handler(args: { limit: number; offset: number }, _userId: string) {
-      const where = { status: true };
+      const where = { deletedAt: null };
       const [data, total] = await Promise.all([
         prismadb.crm_TargetLists.findMany({
           where,
@@ -99,11 +100,11 @@ export const crmTargetListTools = [
         where: { id: args.id, status: true },
       });
       if (!existing) notFound("TargetList");
-      await prismadb.crm_TargetLists.update({
+      const tl = await prismadb.crm_TargetLists.update({
         where: { id: args.id },
-        data: { status: false },
+        data: softDeleteData(_userId),
       });
-      return itemResponse({ id: args.id, status: "DELETED" });
+      return itemResponse({ id: tl.id, deletedAt: tl.deletedAt });
     },
   },
   {
