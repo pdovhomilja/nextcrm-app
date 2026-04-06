@@ -7,7 +7,7 @@ import {
   itemResponse,
   ilike,
   notFound,
-  conflict,
+  softDeleteData,
 } from "../helpers";
 
 export const crmOpportunityTools = [
@@ -16,7 +16,7 @@ export const crmOpportunityTools = [
     description: "List CRM opportunities assigned to the authenticated user",
     schema: z.object({ ...paginationSchema }),
     async handler(args: { limit: number; offset: number }, userId: string) {
-      const where = { assigned_to: userId };
+      const where = { assigned_to: userId, deletedAt: null };
       const [data, total] = await Promise.all([
         prismadb.crm_Opportunities.findMany({
           where,
@@ -34,7 +34,7 @@ export const crmOpportunityTools = [
     schema: z.object({ id: z.string().uuid() }),
     async handler(args: { id: string }, userId: string) {
       const opp = await prismadb.crm_Opportunities.findFirst({
-        where: { id: args.id, assigned_to: userId },
+        where: { id: args.id, assigned_to: userId, deletedAt: null },
       });
       if (!opp) notFound("Opportunity");
       return itemResponse(opp);
@@ -50,6 +50,7 @@ export const crmOpportunityTools = [
     ) {
       const where = {
         assigned_to: userId,
+        deletedAt: null,
         OR: [ilike("name", args.query), ilike("description", args.query)],
       };
       const [data, total] = await Promise.all([
@@ -131,7 +132,7 @@ export const crmOpportunityTools = [
       userId: string
     ) {
       const existing = await prismadb.crm_Opportunities.findFirst({
-        where: { id: args.id, assigned_to: userId },
+        where: { id: args.id, assigned_to: userId, deletedAt: null },
       });
       if (!existing) notFound("Opportunity");
       const { id, budget, expected_revenue, close_date, currency, ...rest } = args;
@@ -151,10 +152,18 @@ export const crmOpportunityTools = [
   },
   {
     name: "crm_delete_opportunity",
-    description: "Soft-delete a CRM opportunity (not yet supported — pending enum migration to add DELETED value)",
+    description: "Soft-delete a CRM opportunity by ID",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(_args: { id: string }, _userId: string) {
-      conflict("Soft delete not yet supported for Opportunities. Status enum needs DELETED value. See docs/soft-delete-gaps.md");
+    async handler(args: { id: string }, userId: string) {
+      const existing = await prismadb.crm_Opportunities.findFirst({
+        where: { id: args.id, assigned_to: userId, deletedAt: null },
+      });
+      if (!existing) notFound("Opportunity");
+      const opp = await prismadb.crm_Opportunities.update({
+        where: { id: args.id },
+        data: softDeleteData(userId),
+      });
+      return itemResponse({ id: opp.id, deletedAt: opp.deletedAt });
     },
   },
 ];
