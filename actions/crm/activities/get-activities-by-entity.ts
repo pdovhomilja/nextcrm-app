@@ -40,7 +40,7 @@ export const getActivitiesByEntity = async (
       return { data: [], nextCursor: null };
     }
 
-    const andClauses: Record<string, unknown>[] = [{ id: { in: activityIds } }];
+    const andClauses: Record<string, unknown>[] = [{ id: { in: activityIds }, deletedAt: null }];
 
     if (cursor) {
       andClauses.push({

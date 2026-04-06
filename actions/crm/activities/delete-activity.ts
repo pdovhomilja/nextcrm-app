@@ -21,11 +21,12 @@ export const deleteActivity = async (activityId: string) => {
       where: { activityId },
     });
 
-    await (prismadb as any).crm_Activities.delete({
+    await (prismadb as any).crm_Activities.update({
       where: { id: activityId },
+      data: { deletedAt: new Date(), deletedBy: session.user.id },
     });
 
-    // Links are cascade-deleted by DB; now revalidate captured pages
+    // Activity is soft-deleted; links remain for audit trail. Revalidate captured pages.
     for (const link of links) {
       revalidatePath(
         `/[locale]/(routes)/crm/${ENTITY_SLUGS[link.entityType] ?? `${link.entityType}s`}/${link.entityId}`,
