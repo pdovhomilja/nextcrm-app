@@ -40,7 +40,7 @@ export const crmTargetListTools = [
       _userId: string
     ) {
       const tl = await prismadb.crm_TargetLists.findFirst({
-        where: { id: args.id, status: true },
+        where: { id: args.id, deletedAt: null },
         include: {
           targets: {
             ...paginationArgs(args),
@@ -80,7 +80,7 @@ export const crmTargetListTools = [
       _userId: string
     ) {
       const existing = await prismadb.crm_TargetLists.findFirst({
-        where: { id: args.id, status: true },
+        where: { id: args.id, deletedAt: null },
       });
       if (!existing) notFound("TargetList");
       const { id, ...updateData } = args;
@@ -93,11 +93,11 @@ export const crmTargetListTools = [
   },
   {
     name: "crm_delete_target_list",
-    description: "Soft-delete a target list (sets status to false)",
+    description: "Soft-delete a target list (sets deletedAt timestamp)",
     schema: z.object({ id: z.string().uuid() }),
     async handler(args: { id: string }, _userId: string) {
       const existing = await prismadb.crm_TargetLists.findFirst({
-        where: { id: args.id, status: true },
+        where: { id: args.id, deletedAt: null },
       });
       if (!existing) notFound("TargetList");
       const tl = await prismadb.crm_TargetLists.update({
@@ -119,7 +119,7 @@ export const crmTargetListTools = [
       _userId: string
     ) {
       const tl = await prismadb.crm_TargetLists.findFirst({
-        where: { id: args.target_list_id, status: true },
+        where: { id: args.target_list_id, deletedAt: null },
       });
       if (!tl) notFound("TargetList");
       await prismadb.targetsToTargetLists.createMany({

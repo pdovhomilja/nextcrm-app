@@ -1,31 +1,30 @@
-# Soft-Delete Gaps Report
+# Soft-Delete Report
 
-Generated: 2026-04-06 (updated after universal deletedAt migration)
+Updated: 2026-04-06 — All models migrated to `deletedAt` pattern.
 
-## Completed — Using `deletedAt` Pattern
+## All Models — Using `deletedAt DateTime?` + `deletedBy String?`
 
-All major CRM models now use `deletedAt DateTime?` + `deletedBy String?`:
+| Model | MCP Delete Tool | Frontend Action |
+|-------|-----------------|-----------------|
+| crm_Accounts | crm_delete_account | aligned |
+| crm_Contacts | crm_delete_contact | aligned |
+| crm_Leads | crm_delete_lead | aligned |
+| crm_Opportunities | crm_delete_opportunity | aligned |
+| crm_Targets | crm_delete_target | aligned |
+| crm_Products | crm_delete_product | aligned |
+| crm_Contracts | crm_delete_contract | aligned |
+| crm_Activities | crm_delete_activity | aligned |
+| crm_campaigns | campaigns_delete | aligned |
+| crm_campaign_templates | campaigns_delete_template | aligned |
+| Boards | projects_delete_board | aligned |
+| Documents | crm_delete_document | aligned |
+| crm_TargetLists | crm_delete_target_list | aligned |
 
-| Model | Pattern | MCP Delete Tool |
-|-------|---------|-----------------|
-| `crm_Accounts` | `deletedAt` (migrated from status) | `crm_delete_account` |
-| `crm_Contacts` | `deletedAt` | `crm_delete_contact` |
-| `crm_Leads` | `deletedAt` | `crm_delete_lead` |
-| `crm_Targets` | `deletedAt` | `crm_delete_target` |
-| `crm_Activities` | `deletedAt` | `crm_delete_activity` |
-| `crm_Products` | `deletedAt` (pre-existing) | `crm_delete_product` |
-| `crm_Contracts` | `deletedAt` (pre-existing) | `crm_delete_contract` |
-| `crm_campaigns` | `deletedAt` (migrated from status) | `campaigns_delete` |
-| `crm_campaign_templates` | `deletedAt` | `campaigns_delete_template` |
-| `Boards` | `deletedAt` | `projects_delete_board` |
+## Models Without Soft Delete (by design)
 
-## Remaining — Different Patterns
-
-| Model | Current Pattern | MCP Behavior |
-|-------|----------------|-------------|
-| `crm_Opportunities` | Enum status (no DELETED value) | `crm_delete_opportunity` throws CONFLICT |
-| `Tasks` | `taskStatus: COMPLETE` | `projects_delete_task` sets COMPLETE (semantic: completed, not deleted) |
-| `Documents` | `status: "DELETED"` (String) | `crm_delete_document` sets status |
-| `crm_TargetLists` | `status: Boolean` (false = deleted) | `crm_delete_target_list` sets false |
-
-These use legacy patterns that still work but could be migrated to `deletedAt` in a future cleanup.
+| Model | Reason |
+|-------|--------|
+| Tasks | Uses `taskStatus: COMPLETE` (completion semantic, not deletion) |
+| Sections | Hard delete allowed when empty |
+| crm_campaign_steps | Hard delete (cascade from campaign) |
+| tasksComments | No delete exposed |
