@@ -1,41 +1,31 @@
 # Soft-Delete Gaps Report
 
-Generated: 2026-04-06
+Generated: 2026-04-06 (updated after universal deletedAt migration)
 
-This documents which Prisma models can support soft delete today and which need schema migrations.
+## Completed — Using `deletedAt` Pattern
 
-## Ready (have status/deletedAt field)
+All major CRM models now use `deletedAt DateTime?` + `deletedBy String?`:
 
-| Model | Field | Current Values | Soft Delete Value |
-|-------|-------|----------------|-------------------|
-| `crm_Accounts` | `status` (String) | "Active", etc. | "DELETED" |
-| `crm_Opportunities` | `status` (enum) | ACTIVE, INACTIVE, PENDING, CLOSED | Add DELETED to enum |
-| `crm_Products` | `status` (enum) + `deletedAt` | DRAFT, ACTIVE, ARCHIVED | ARCHIVED + deletedAt |
-| `crm_Contracts` | `status` (enum) + `deletedAt` | NOTSTARTED, INPROGRESS, SIGNED | deletedAt timestamp |
-| `crm_campaigns` | `status` (String) | draft, scheduled, sending, sent, paused, deleted | "deleted" (already exists) |
-| `Documents` | `status` (String) | various | "DELETED" |
-| `Tasks` | `taskStatus` (enum) | ACTIVE, PENDING, COMPLETE | Using COMPLETE as soft delete |
-| `crm_TargetLists` | `status` (Boolean) | true/false | false = deleted |
+| Model | Pattern | MCP Delete Tool |
+|-------|---------|-----------------|
+| `crm_Accounts` | `deletedAt` (migrated from status) | `crm_delete_account` |
+| `crm_Contacts` | `deletedAt` | `crm_delete_contact` |
+| `crm_Leads` | `deletedAt` | `crm_delete_lead` |
+| `crm_Targets` | `deletedAt` | `crm_delete_target` |
+| `crm_Activities` | `deletedAt` | `crm_delete_activity` |
+| `crm_Products` | `deletedAt` (pre-existing) | `crm_delete_product` |
+| `crm_Contracts` | `deletedAt` (pre-existing) | `crm_delete_contract` |
+| `crm_campaigns` | `deletedAt` (migrated from status) | `campaigns_delete` |
+| `crm_campaign_templates` | `deletedAt` | `campaigns_delete_template` |
+| `Boards` | `deletedAt` | `projects_delete_board` |
 
-## Gaps (need schema migration)
+## Remaining — Different Patterns
 
-| Model | Recommended Change | MCP Behavior Today |
-|-------|-------------------|--------------------|
-| `crm_Contacts` | Add `status` String field with default "Active" | `crm_delete_contact` throws CONFLICT |
-| `crm_Leads` | Add `status` String field with default "Active" | `crm_delete_lead` throws CONFLICT |
-| `crm_Targets` | Add `status` String field with default "Active" | `crm_delete_target` throws CONFLICT |
-| `crm_Activities` | Add `deletedAt` DateTime field | `crm_delete_activity` throws CONFLICT |
-| `crm_campaign_templates` | Add `deletedAt` DateTime field | `campaigns_delete_template` throws CONFLICT |
-| `Boards` | Add `deletedAt` DateTime field | `projects_delete_board` throws CONFLICT |
-| `Sections` | No soft delete needed (hard delete if empty) | Hard delete (checks for tasks first) |
-| `tasksComments` | No soft delete needed | Not exposed for deletion |
-| `crm_campaign_steps` | No soft delete needed (hard delete, cascade) | Hard delete |
+| Model | Current Pattern | MCP Behavior |
+|-------|----------------|-------------|
+| `crm_Opportunities` | Enum status (no DELETED value) | `crm_delete_opportunity` throws CONFLICT |
+| `Tasks` | `taskStatus: COMPLETE` | `projects_delete_task` sets COMPLETE (semantic: completed, not deleted) |
+| `Documents` | `status: "DELETED"` (String) | `crm_delete_document` sets status |
+| `crm_TargetLists` | `status: Boolean` (false = deleted) | `crm_delete_target_list` sets false |
 
-## Migration Priority
-
-1. **crm_Contacts** — most commonly used entity
-2. **crm_Leads** — part of core sales flow
-3. **crm_Targets** — needed for campaign management
-4. **crm_Activities** — activity logs should never be hard deleted
-5. **crm_campaign_templates** — useful but lower priority
-6. **Boards** — project management
+These use legacy patterns that still work but could be migrated to `deletedAt` in a future cleanup.
