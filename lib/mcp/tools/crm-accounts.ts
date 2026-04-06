@@ -8,6 +8,7 @@ import {
   ilike,
   isNotDeleted,
   notFound,
+  softDeleteData,
 } from "../helpers";
 
 export const crmAccountTools = [
@@ -140,7 +141,7 @@ export const crmAccountTools = [
   },
   {
     name: "crm_delete_account",
-    description: "Soft-delete a CRM account by ID (sets status to DELETED)",
+    description: "Soft-delete a CRM account by ID (sets deletedAt timestamp)",
     schema: z.object({ id: z.string().uuid() }),
     async handler(args: { id: string }, userId: string) {
       const existing = await prismadb.crm_Accounts.findFirst({
@@ -149,9 +150,9 @@ export const crmAccountTools = [
       if (!existing) notFound("Account");
       const account = await prismadb.crm_Accounts.update({
         where: { id: args.id },
-        data: { status: "DELETED", updatedBy: userId },
+        data: softDeleteData(userId),
       });
-      return itemResponse({ id: account.id, status: "DELETED" });
+      return itemResponse({ id: account.id, deletedAt: account.deletedAt });
     },
   },
 ];
