@@ -8,6 +8,7 @@ import {
   itemResponse,
   notFound,
   conflict,
+  softDeleteData,
 } from "../helpers";
 
 export const campaignTools = [
@@ -20,9 +21,10 @@ export const campaignTools = [
       ...paginationSchema,
     }),
     async handler(args: { status?: string; limit: number; offset: number }, _userId: string) {
-      const where: any = args.status
-        ? { status: args.status }
-        : { status: { not: "deleted" } };
+      const where: any = {
+        deletedAt: null,
+        ...(args.status && { status: args.status }),
+      };
       const [data, total] = await Promise.all([
         prismadb.crm_campaigns.findMany({
           where,
@@ -41,7 +43,7 @@ export const campaignTools = [
     schema: z.object({ id: z.string().uuid() }),
     async handler(args: { id: string }, _userId: string) {
       const campaign = await prismadb.crm_campaigns.findFirst({
-        where: { id: args.id, status: { not: "deleted" } },
+        where: { id: args.id, deletedAt: null },
         include: {
           steps: { orderBy: { order: "asc" }, include: { template: true } },
           target_lists: { include: { target_list: true } },
@@ -94,7 +96,7 @@ export const campaignTools = [
     }),
     async handler(args: Record<string, any>, _userId: string) {
       const existing = await prismadb.crm_campaigns.findFirst({
-        where: { id: args.id, status: { not: "deleted" } },
+        where: { id: args.id, deletedAt: null },
       });
       if (!existing) notFound("Campaign");
       if (existing.status === "sending") conflict("Cannot update a campaign that is currently sending");
@@ -105,16 +107,19 @@ export const campaignTools = [
   },
   {
     name: "campaigns_delete",
-    description: "Soft-delete a campaign (sets status to deleted)",
+    description: "Soft-delete a campaign (sets deletedAt timestamp)",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, _userId: string) {
+    async handler(args: { id: string }, userId: string) {
       const existing = await prismadb.crm_campaigns.findFirst({
-        where: { id: args.id, status: { not: "deleted" } },
+        where: { id: args.id, deletedAt: null },
       });
       if (!existing) notFound("Campaign");
       if (existing.status === "sending") conflict("Cannot delete a campaign that is currently sending");
-      await prismadb.crm_campaigns.update({ where: { id: args.id }, data: { status: "deleted" } });
-      return itemResponse({ id: args.id, status: "deleted" });
+      await prismadb.crm_campaigns.update({
+        where: { id: args.id },
+        data: softDeleteData(userId),
+      });
+      return itemResponse({ id: args.id, deletedAt: new Date().toISOString() });
     },
   },
 
@@ -125,7 +130,7 @@ export const campaignTools = [
     schema: z.object({ id: z.string().uuid() }),
     async handler(args: { id: string }, _userId: string) {
       const campaign = await prismadb.crm_campaigns.findFirst({
-        where: { id: args.id, status: { not: "deleted" } },
+        where: { id: args.id, deletedAt: null },
       });
       if (!campaign) notFound("Campaign");
       if (!["draft", "scheduled"].includes(campaign.status ?? "")) {
@@ -176,12 +181,14 @@ export const campaignTools = [
     description: "List campaign email templates (org-wide)",
     schema: z.object({ ...paginationSchema }),
     async handler(args: { limit: number; offset: number }, _userId: string) {
+      const where = { deletedAt: null };
       const [data, total] = await Promise.all([
         prismadb.crm_campaign_templates.findMany({
+          where,
           ...paginationArgs(args),
           orderBy: { created_on: "desc" },
         }),
-        prismadb.crm_campaign_templates.count(),
+        prismadb.crm_campaign_templates.count({ where }),
       ]);
       return listResponse(data, total, args.offset);
     },
@@ -191,7 +198,7 @@ export const campaignTools = [
     description: "Get a campaign template by ID",
     schema: z.object({ id: z.string().uuid() }),
     async handler(args: { id: string }, _userId: string) {
-      const template = await prismadb.crm_campaign_templates.findUnique({ where: { id: args.id } });
+      const template = await prismadb.crm_campaign_templates.findFirst({ where: { id: args.id, deletedAt: null } });
       if (!template) notFound("Template");
       return itemResponse(template);
     },
@@ -235,7 +242,7 @@ export const campaignTools = [
       content_json: z.any().optional(),
     }),
     async handler(args: Record<string, any>, _userId: string) {
-      const existing = await prismadb.crm_campaign_templates.findUnique({ where: { id: args.id } });
+      const existing = await prismadb.crm_campaign_templates.findFirst({ where: { id: args.id, deletedAt: null } });
       if (!existing) notFound("Template");
       const { id, ...updateData } = args;
       const template = await prismadb.crm_campaign_templates.update({ where: { id }, data: updateData });
@@ -244,10 +251,16 @@ export const campaignTools = [
   },
   {
     name: "campaigns_delete_template",
-    description: "Soft-delete a campaign template (not yet supported — pending schema migration)",
+    description: "Soft-delete a campaign template (sets deletedAt timestamp)",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(_args: { id: string }, _userId: string) {
-      conflict("Soft delete not yet supported for campaign templates. See docs/soft-delete-gaps.md");
+    async handler(args: { id: string }, userId: string) {
+      const existing = await prismadb.crm_campaign_templates.findFirst({ where: { id: args.id, deletedAt: null } });
+      if (!existing) notFound("Template");
+      await prismadb.crm_campaign_templates.update({
+        where: { id: args.id },
+        data: softDeleteData(userId),
+      });
+      return itemResponse({ id: args.id, deletedAt: new Date().toISOString() });
     },
   },
 
@@ -268,7 +281,7 @@ export const campaignTools = [
       _userId: string
     ) {
       const campaign = await prismadb.crm_campaigns.findFirst({
-        where: { id: args.campaign_id, status: { not: "deleted" } },
+        where: { id: args.campaign_id, deletedAt: null },
       });
       if (!campaign) notFound("Campaign");
       const step = await prismadb.crm_campaign_steps.create({ data: args });
@@ -316,7 +329,7 @@ export const campaignTools = [
     }),
     async handler(args: { campaign_id: string; target_list_id: string }, _userId: string) {
       const campaign = await prismadb.crm_campaigns.findFirst({
-        where: { id: args.campaign_id, status: { not: "deleted" } },
+        where: { id: args.campaign_id, deletedAt: null },
       });
       if (!campaign) notFound("Campaign");
       await prismadb.campaignToTargetLists.create({
@@ -352,7 +365,7 @@ export const campaignTools = [
     schema: z.object({ id: z.string().uuid() }),
     async handler(args: { id: string }, _userId: string) {
       const campaign = await prismadb.crm_campaigns.findFirst({
-        where: { id: args.id, status: { not: "deleted" } },
+        where: { id: args.id, deletedAt: null },
       });
       if (!campaign) notFound("Campaign");
       const sends = await prismadb.crm_campaign_sends.findMany({
