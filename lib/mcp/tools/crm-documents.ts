@@ -227,8 +227,13 @@ export const crmDocumentTools = [
     }),
     async handler(
       args: { document_id: string; entityType: string; entityId: string },
-      _userId: string
+      userId: string
     ) {
+      const doc = await prismadb.documents.findFirst({
+        where: { id: args.document_id, created_by_user: userId },
+      });
+      if (!doc) notFound("Document");
+
       const table = ENTITY_LINK_MAP[args.entityType];
       const fk = ENTITY_FK_MAP[args.entityType];
       if (!table || !fk) validationError(`Invalid entity type: ${args.entityType}`);

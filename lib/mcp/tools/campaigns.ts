@@ -20,7 +20,9 @@ export const campaignTools = [
       ...paginationSchema,
     }),
     async handler(args: { status?: string; limit: number; offset: number }, _userId: string) {
-      const where: any = { status: { not: "deleted" }, ...(args.status && { status: args.status }) };
+      const where: any = args.status
+        ? { status: args.status }
+        : { status: { not: "deleted" } };
       const [data, total] = await Promise.all([
         prismadb.crm_campaigns.findMany({
           where,
