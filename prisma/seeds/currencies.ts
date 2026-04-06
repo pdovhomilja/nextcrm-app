@@ -1,7 +1,5 @@
 import { PrismaClient, ExchangeRateSource } from "@prisma/client";
 
-const prisma = new PrismaClient();
-
 const currencies = [
   { code: "EUR", name: "Euro", symbol: "€", isEnabled: true, isDefault: true },
   { code: "USD", name: "US Dollar", symbol: "$", isEnabled: true, isDefault: false },
@@ -17,7 +15,7 @@ const rates = [
   { fromCurrency: "CZK", toCurrency: "USD", rate: 0.04283, source: ExchangeRateSource.ECB },
 ];
 
-export async function seedCurrencies() {
+export async function seedCurrencies(prisma: PrismaClient) {
   console.log("Seeding currencies...");
 
   for (const currency of currencies) {

@@ -1,0 +1,6 @@
+[
+  { "name": "Customer" },
+  { "name": "Partner" },
+  { "name": "Vendor" },
+  { "name": "Prospect" }
+]
