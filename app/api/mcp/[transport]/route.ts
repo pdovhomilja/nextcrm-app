@@ -1,18 +1,6 @@
 import { createMcpHandler } from "mcp-handler";
 import { getMcpUser } from "@/lib/mcp/auth";
-import { accountTools } from "@/lib/mcp/tools/accounts";
-import { contactTools } from "@/lib/mcp/tools/contacts";
-import { leadTools } from "@/lib/mcp/tools/leads";
-import { opportunityTools } from "@/lib/mcp/tools/opportunities";
-import { targetTools } from "@/lib/mcp/tools/targets";
-
-const allTools = [
-  ...accountTools,
-  ...contactTools,
-  ...leadTools,
-  ...opportunityTools,
-  ...targetTools,
-];
+import { allTools } from "@/lib/mcp/tools";
 
 const handler = createMcpHandler(
   (server) => {
@@ -25,16 +13,16 @@ const handler = createMcpHandler(
             content: [{ type: "text" as const, text: JSON.stringify(result) }],
           };
         } catch (err: any) {
-          const code = err.message === "NOT_FOUND" ? "NOT_FOUND"
-            : err.message === "Unauthorized" ? "UNAUTHORIZED"
+          const msg: string = err.message ?? "Unknown error";
+          const code =
+            msg === "NOT_FOUND" ? "NOT_FOUND"
+            : msg === "Unauthorized" ? "UNAUTHORIZED"
+            : msg.startsWith("CONFLICT:") ? "INVALID_REQUEST"
+            : msg.startsWith("VALIDATION_ERROR:") ? "INVALID_PARAMS"
+            : msg.startsWith("EXTERNAL_ERROR:") ? "INTERNAL_ERROR"
             : "INTERNAL_ERROR";
           return {
-            content: [
-              {
-                type: "text" as const,
-                text: JSON.stringify({ error: err.message ?? "Unknown error", code }),
-              },
-            ],
+            content: [{ type: "text" as const, text: JSON.stringify({ error: msg, code }) }],
             isError: true,
           };
         }
