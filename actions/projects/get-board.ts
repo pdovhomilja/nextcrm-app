@@ -5,6 +5,7 @@ export const getBoard = async (id: string) => {
   const board = await prismadb.boards.findFirst({
     where: {
       id: id,
+      deletedAt: null,
     },
     include: {
       assigned_user: {

@@ -10,22 +10,9 @@ export const deleteProject = async (projectId: string) => {
   if (!projectId) return { error: "Missing project ID" };
 
   try {
-    const sections = await prismadb.sections.findMany({
-      where: { board: projectId },
-    });
-
-    for (const section of sections) {
-      await prismadb.tasks.deleteMany({
-        where: { section: section.id },
-      });
-    }
-
-    await prismadb.sections.deleteMany({
-      where: { board: projectId },
-    });
-
-    await prismadb.boards.delete({
+    await prismadb.boards.update({
       where: { id: projectId },
+      data: { deletedAt: new Date(), deletedBy: session.user.id },
     });
 
     revalidatePath("/[locale]/(routes)/projects", "page");

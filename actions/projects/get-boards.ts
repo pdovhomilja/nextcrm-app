@@ -7,6 +7,7 @@ export const getBoards = async (userId: string) => {
   }
   const data = await prismadb.boards.findMany({
     where: {
+      deletedAt: null,
       OR: [
         {
           user: userId,
