@@ -6,7 +6,7 @@ export const opportunitySchema = z.object({
   //TODO: fix all the types and nullable
   id: z.string(),
   name: z.string(),
-  description: z.string(),
+  description: z.string().nullable(),
   next_step: z.string().nullable(),
   close_date: z.date(),
   status: z.string().nullable(),
