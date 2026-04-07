@@ -9,7 +9,7 @@ export async function convertTarget(
   const session = await getSession();
   if (!session) return { error: "Unauthorized" };
 
-  const target = await prismadb.crm_Targets.findUnique({ where: { id: targetId } });
+  const target = await prismadb.crm_Targets.findFirst({ where: { id: targetId, deletedAt: null } });
   if (!target) return { error: "Target not found" };
 
   // Guard: need at least a name for the Account and Contact

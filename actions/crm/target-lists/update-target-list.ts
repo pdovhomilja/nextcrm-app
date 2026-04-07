@@ -16,6 +16,8 @@ export const updateTargetList = async (data: {
   if (!id) return { error: "id is required" };
 
   try {
+    const existing = await prismadb.crm_TargetLists.findFirst({ where: { id, deletedAt: null } });
+    if (!existing) return { error: "Target list not found" };
     const list = await prismadb.crm_TargetLists.update({
       where: { id },
       data: { name, description, status },
