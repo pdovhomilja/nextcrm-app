@@ -148,7 +148,7 @@ Global search across all CRM entities from a single search bar — grouped resul
 ### Frameworks
 
 - [Next.js 16](https://nextjs.org/) – React framework for building performant apps with the best developer experience (App Router)
-- [next-auth 4.x](https://next-auth.js.org/) – Handle user authentication with ease with providers like Google, GitHub, and Credentials
+- [Better Auth 1.5.x](https://www.better-auth.com/) – TypeScript-first authentication framework with email OTP, OAuth (Google), admin plugin, and session management
 - [Prisma 7.5](https://www.prisma.io/) – TypeScript-first ORM for PostgreSQL
 - [React Email 2.x](https://react.email/) – Versatile email framework for efficient and flexible email development
 
@@ -262,7 +262,7 @@ Available soon at: http://docs.nextcrm.io
 
    **.env.local**
 
-   > > - NextAUTH - for auth
+   > > - BETTER_AUTH_SECRET - for auth
    > > - uploadthings - for storing files
    > > - openAI - for embeddings and project management assistant *(optional — can be set via admin panel instead)*
    > > - Firecrawl - for contact/target enrichment *(optional — can be set via admin panel instead)*
