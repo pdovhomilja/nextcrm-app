@@ -93,12 +93,25 @@ ENV variable  →  Admin system-wide  →  User profile
 
 NextCRM now ships with a built-in [Model Context Protocol](https://modelcontextprotocol.io/) server, letting AI agents (Claude, Cursor, custom agents) read and write CRM data directly.
 
-**25 tools across 5 CRM modules** — Accounts, Contacts, Leads, Opportunities, Targets:
-- `list_*` — paginated list scoped to the authenticated user
-- `get_*` — single record by ID
-- `search_*` — full-text substring search
-- `create_*` — create new records
-- `update_*` — partial update by ID
+**127 tools across 15 modules:**
+
+| Module | Tools | Operations |
+|--------|-------|------------|
+| Accounts | 6 | list, get, search, create, update, delete |
+| Contacts | 6 | list, get, search, create, update, delete |
+| Leads | 6 | list, get, search, create, update, delete |
+| Opportunities | 6 | list, get, search, create, update, delete |
+| Targets | 6 | list, get, search, create, update, delete |
+| Products | 5 | list, get, create, update, delete |
+| Contracts | 5 | list, get, create, update, delete |
+| Activities | 5 | list, get, create, update, delete |
+| Documents | 8 | list, get, create, upload, download, link, unlink, delete |
+| Target Lists | 7 | list, get, create, update, delete, add members, remove members |
+| Enrichment | 4 | enrich contact, enrich target, bulk contact, bulk target |
+| Email Accounts | 1 | list |
+| Campaigns | 18 | full lifecycle: CRUD, send, pause, resume, templates, steps, stats |
+| Projects | 18 | boards, sections, tasks, comments, documents, watch |
+| Reports | 2 | list, run |
 
 **Authentication:** Generate Bearer tokens (`nxtc__...`) from your profile page. Tokens are SHA-256 hashed — the raw value is shown only once and never stored.
 
@@ -115,6 +128,8 @@ NextCRM now ships with a built-in [Model Context Protocol](https://modelcontextp
 ```
 
 Both SSE (`/api/mcp/sse`) and HTTP (`/api/mcp/http`) transports are supported.
+
+**Claude Code Skill:** Download the [SKILL.md](/en/profile?tab=developer) from your Developer profile tab for a ready-to-use Claude Code skill with full tool documentation.
 
 ---
 
@@ -148,7 +163,7 @@ Global search across all CRM entities from a single search bar — grouped resul
 ### Frameworks
 
 - [Next.js 16](https://nextjs.org/) – React framework for building performant apps with the best developer experience (App Router)
-- [next-auth 4.x](https://next-auth.js.org/) – Handle user authentication with ease with providers like Google, GitHub, and Credentials
+- [Better Auth 1.5.x](https://www.better-auth.com/) – TypeScript-first authentication framework with email OTP, OAuth (Google), admin plugin, and session management
 - [Prisma 7.5](https://www.prisma.io/) – TypeScript-first ORM for PostgreSQL
 - [React Email 2.x](https://react.email/) – Versatile email framework for efficient and flexible email development
 
@@ -166,7 +181,7 @@ Global search across all CRM entities from a single search bar — grouped resul
 - [Vercel AI SDK 6.x](https://sdk.vercel.ai/) – Unified AI interface
 - [pgvector](https://github.com/pgvector/pgvector) – PostgreSQL vector extension for similarity search (HNSW indexes)
 - [E2B](https://e2b.dev/) – Cloud sandboxes with real Chrome browser for AI-driven web research and contact enrichment
-- [MCP Server](https://modelcontextprotocol.io/) – 25 CRM tools via `@vercel/mcp-adapter`, Bearer token auth, SSE + HTTP transports
+- [MCP Server](https://modelcontextprotocol.io/) – 127 tools across 15 modules via `@vercel/mcp-adapter`, Bearer token auth, SSE + HTTP transports
 
 ### Data fetching
 
@@ -262,7 +277,7 @@ Available soon at: http://docs.nextcrm.io
 
    **.env.local**
 
-   > > - NextAUTH - for auth
+   > > - BETTER_AUTH_SECRET - for auth
    > > - uploadthings - for storing files
    > > - openAI - for embeddings and project management assistant *(optional — can be set via admin panel instead)*
    > > - Firecrawl - for contact/target enrichment *(optional — can be set via admin panel instead)*
