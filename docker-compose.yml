@@ -100,6 +100,15 @@ services:
       NEXT_PUBLIC_APP_NAME: NextCRM
       NEXT_PUBLIC_APP_URL: http://localhost:3000
 
+      # Initial admin account (created on first run by the seed script).
+      # IMPORTANT: set this to a real email you control. The app uses
+      # passwordless Email OTP, so the placeholder default cannot
+      # receive login codes. Override via .env on first start, then
+      # configure SMTP/Resend (RESEND_API_KEY) so OTP emails actually
+      # send. Without an email provider you can read the OTP from
+      # the database directly.
+      TEST_USER_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+
       # Placeholder values for optional external services.
       # The app initializes these clients at module load time, so empty
       # values cause crashes. Users override these via .env to enable

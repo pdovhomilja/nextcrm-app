@@ -317,10 +317,15 @@ The fastest way to run NextCRM is with Docker Compose. The provided `docker-comp
 ```sh
 git clone https://github.com/pdovhomilja/nextcrm-app.git
 cd nextcrm-app
+cp .env.docker .env
+nano .env                # set ADMIN_EMAIL to a real email you own
 docker compose up -d
 ```
 
-That's it. Open [http://localhost:3000](http://localhost:3000) — the app is ready, the schema is migrated, and a default admin user (`test@nextcrm.app`) has been seeded.
+Open [http://localhost:3000](http://localhost:3000) — the app is ready, the schema is migrated, and the seeded admin user matches the `ADMIN_EMAIL` you set.
+
+> [!IMPORTANT]
+> NextCRM uses **passwordless Email OTP** for login. You MUST set `ADMIN_EMAIL` to an address you control AND provide a `RESEND_API_KEY` (or another email provider) so OTP codes can actually be delivered. Without an email provider, you can still log in by reading the OTP straight from the database — convenient for first-time testing, not for production.
 
 ### What you get
 
@@ -386,13 +391,26 @@ This setup works out of the box with self-hosting platforms:
 
 In all cases, env vars set through the platform UI override the placeholders in `docker-compose.yml` the same way a `.env` file does locally.
 
-### Default login
+### First login
 
-After first start, the seeded admin account is:
+After first start, the seeded admin account uses whatever you set in `ADMIN_EMAIL`. Since login is passwordless Email OTP, there are two paths:
 
-- **Email:** `test@nextcrm.app`
+**With email provider configured (recommended)**
 
-The app uses passwordless Email OTP — log in with that email and grab the OTP from the database (or configure SMTP/Resend to actually send the email).
+Set `RESEND_API_KEY` (or another supported provider) in `.env`, then enter your `ADMIN_EMAIL` on the sign-in page and check your inbox for the OTP.
+
+**Without email provider (first-run testing)**
+
+Read the OTP directly from the database:
+
+```sh
+docker compose exec postgres psql -U nextcrm -d nextcrm \
+  -c 'SELECT identifier, value, "expiresAt" FROM "Verification" ORDER BY "createdAt" DESC LIMIT 1;'
+```
+
+(`identifier` is the email, `value` is the OTP code.)
+
+Use that OTP on the sign-in page. After login, configure an email provider from the Admin panel so future logins work normally.
 
 ## Contact
 
