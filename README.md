@@ -308,35 +308,91 @@ Available soon at: http://docs.nextcrm.io
 
 </details>
 
-## Docker installation
+## Docker Installation (Recommended for Self-Hosting)
 
-[Link to Docker HUB](https://hub.docker.com/repository/docker/nextcrmio/nextcrm/general)
+The fastest way to run NextCRM is with Docker Compose. The provided `docker-compose.yml` bundles everything you need: the app, PostgreSQL (with pgvector), MinIO for file storage, and Inngest for background jobs. No manual setup of databases, buckets, or migrations — it all happens automatically on first start.
 
-<details>
-<summary><b>Show instructions</b></summary>
+### Quick Start
 
-1. Make sure you have docker and docker-compose installed
+```sh
+git clone https://github.com/pdovhomilja/nextcrm-app.git
+cd nextcrm-app
+docker compose up -d
+```
 
-2. Prepare .env and .env.local files
+That's it. Open [http://localhost:3000](http://localhost:3000) — the app is ready, the schema is migrated, and a default admin user (`test@nextcrm.app`) has been seeded.
 
-   ```create
-   .env (for Prisma URI string) and .env.local (all others ENVs) file inside docker folder
-   ```
+### What you get
 
-3. build docker image
+| Service | Purpose | Exposed |
+|---|---|---|
+| `app` | NextCRM (Next.js standalone build) | `localhost:3000` |
+| `postgres` | PostgreSQL 17 with pgvector | internal only |
+| `minio` | S3-compatible object storage | internal only |
+| `inngest` | Background job runner | internal only |
 
-   ```sh
-   docker build -t nextcrm .
-   ```
+Only port `3000` is exposed to the host. Everything else stays on the internal Docker network — secure by default. Uncomment the relevant `ports:` blocks in `docker-compose.yml` if you need direct access (e.g. for psql or the MinIO console).
 
-4. Run docker container
+### Configuring environment variables
 
-   ```sh
-   docker run -p 3000:3000 nextcrm
-   ```
+You **never edit `Dockerfile` or `docker-compose.yml`** to add your secrets. Instead, create a `.env` file in the project root — Docker Compose reads it automatically and injects the values into the container.
 
-5. http://localhost:3000
-</details>
+```sh
+cp .env.docker .env
+nano .env       # add your real API keys
+docker compose up -d
+```
+
+The `.env.docker` file lists every supported variable with comments. Internal services (Postgres, MinIO, Inngest) already have working defaults — you only need to add values for **optional external integrations** you want to enable:
+
+```bash
+# Example .env
+OPENAI_API_KEY=sk-your-real-key       # enables AI features
+GOOGLE_ID=...apps.googleusercontent.com  # enables Google OAuth
+GOOGLE_SECRET=GOCSPX-...
+RESEND_API_KEY=re_...                 # enables transactional email
+FIRECRAWL_API_KEY=fc-...              # enables contact enrichment
+```
+
+`.env` is in `.gitignore`, so your secrets never get committed.
+
+### Persistent data
+
+Database and uploaded files persist across restarts via two named volumes:
+
+- `postgres_data` — your database
+- `minio_data` — uploaded files
+
+```sh
+docker compose down        # stops services, keeps data
+docker compose down -v     # stops services AND wipes all data
+```
+
+### Updating to a new release
+
+```sh
+git pull
+docker compose up -d --build
+```
+
+The entrypoint runs `prisma migrate deploy` on every start, so new schema changes are applied automatically. The seed only runs on first install (when no users exist), so your data is safe across upgrades.
+
+### Coolify, Dokku, Portainer, etc.
+
+This setup works out of the box with self-hosting platforms:
+
+- **Coolify** — point it at this repo, choose "Docker Compose" build pack, set your env vars in Coolify's UI
+- **Portainer / Dockge** — paste `docker-compose.yml` into a stack, add env vars in the UI
+
+In all cases, env vars set through the platform UI override the placeholders in `docker-compose.yml` the same way a `.env` file does locally.
+
+### Default login
+
+After first start, the seeded admin account is:
+
+- **Email:** `test@nextcrm.app`
+
+The app uses passwordless Email OTP — log in with that email and grab the OTP from the database (or configure SMTP/Resend to actually send the email).
 
 ## Contact
 
