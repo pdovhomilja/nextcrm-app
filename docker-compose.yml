@@ -1,7 +1,7 @@
 services:
-  # --- PostgreSQL Database ---
+  # --- PostgreSQL Database (with pgvector extension for embeddings) ---
   postgres:
-    image: postgres:18-alpine
+    image: pgvector/pgvector:pg17
     restart: unless-stopped
     environment:
       POSTGRES_USER: nextcrm
@@ -50,7 +50,7 @@ services:
     networks:
       - nextcrm
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8288/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8288/health"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -72,6 +72,8 @@ services:
       DB_HOST: postgres
       DB_PORT: "5432"
       DB_USER: nextcrm
+      DB_PASSWORD: nextcrm
+      DB_NAME: nextcrm
 
       # Auth
       BETTER_AUTH_URL: http://localhost:3000
@@ -98,12 +100,17 @@ services:
       NEXT_PUBLIC_APP_NAME: NextCRM
       NEXT_PUBLIC_APP_URL: http://localhost:3000
 
-      # Optional — override via .env file or environment:
-      # OPENAI_API_KEY: ""
-      # GOOGLE_ID: ""
-      # GOOGLE_SECRET: ""
-      # RESEND_API_KEY: ""
-      # FIRECRAWL_API_KEY: ""
+      # Placeholder values for optional external services.
+      # The app initializes these clients at module load time, so empty
+      # values cause crashes. Users override these via .env to enable
+      # the corresponding features. The app runs fine with placeholders;
+      # individual features just won't work until real keys are provided.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-sk-placeholder-replace-to-enable-ai}
+      RESEND_API_KEY: ${RESEND_API_KEY:-re_placeholder_replace_to_enable_email}
+      GOOGLE_ID: ${GOOGLE_ID:-}
+      GOOGLE_SECRET: ${GOOGLE_SECRET:-}
+      FIRECRAWL_API_KEY: ${FIRECRAWL_API_KEY:-}
+      E2B_API_KEY: ${E2B_API_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy

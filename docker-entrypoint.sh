@@ -30,7 +30,7 @@ fi
 
 # --- 3. Run Prisma migrations ---
 echo "==> Running database migrations..."
-npx prisma migrate deploy
+prisma migrate deploy
 echo "==> Migrations complete."
 
 # --- 4. Create MinIO bucket (idempotent) ---
@@ -56,18 +56,22 @@ if [ -n "$MINIO_ENDPOINT" ] && [ -n "$MINIO_ACCESS_KEY" ] && [ -n "$MINIO_SECRET
 fi
 
 # --- 5. Conditional database seed ---
+# Use psql to count users directly (reliable) rather than prisma db execute
+# (which emits noisy output hard to parse).
 echo "==> Checking if database needs seeding..."
-USER_COUNT=$(npx prisma db execute --stdin <<'SQL' 2>/dev/null | grep -c "1" || echo "0"
-SELECT 1 FROM "User" LIMIT 1;
-SQL
-)
+USER_COUNT=$(PGPASSWORD="${DB_PASSWORD:-nextcrm}" psql \
+  -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "${DB_NAME:-nextcrm}" \
+  -tAc 'SELECT COUNT(*) FROM "Users";' 2>/dev/null || echo "0")
 
-if [ "$USER_COUNT" = "0" ]; then
+# Strip whitespace
+USER_COUNT=$(echo "$USER_COUNT" | tr -d '[:space:]')
+
+if [ "$USER_COUNT" = "0" ] || [ -z "$USER_COUNT" ]; then
   echo "==> No users found, seeding database..."
-  npx prisma db seed
+  prisma db seed
   echo "==> Seeding complete."
 else
-  echo "==> Database already has users, skipping seed."
+  echo "==> Database already has $USER_COUNT user(s), skipping seed."
 fi
 
 # --- 6. Start the application ---
