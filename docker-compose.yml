@@ -1,0 +1,136 @@
+services:
+  # --- PostgreSQL Database (with pgvector extension for embeddings) ---
+  postgres:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nextcrm
+      POSTGRES_PASSWORD: nextcrm
+      POSTGRES_DB: nextcrm
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - nextcrm
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nextcrm"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    # Uncomment to expose Postgres to host:
+    # ports:
+    #   - "5432:5432"
+
+  # --- MinIO Object Storage ---
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    volumes:
+      - minio_data:/data
+    networks:
+      - nextcrm
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    # Uncomment to expose MinIO to host:
+    # ports:
+    #   - "9000:9000"
+    #   - "9001:9001"
+
+  # --- Inngest Dev Server ---
+  inngest:
+    image: inngest/inngest:latest
+    restart: unless-stopped
+    command: inngest dev -u http://app:3000/api/inngest
+    networks:
+      - nextcrm
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8288/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    # Uncomment to expose Inngest dashboard to host:
+    # ports:
+    #   - "8288:8288"
+
+  # --- NextCRM Application ---
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Database
+      DATABASE_URL: postgresql://nextcrm:nextcrm@postgres:5432/nextcrm
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: nextcrm
+      DB_PASSWORD: nextcrm
+      DB_NAME: nextcrm
+
+      # Auth
+      BETTER_AUTH_URL: http://localhost:3000
+      # BETTER_AUTH_SECRET is auto-generated if not set
+
+      # MinIO
+      NEXT_PUBLIC_MINIO_ENDPOINT: http://minio:9000
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_PORT: "9000"
+      MINIO_BUCKET: nextcrm
+      MINIO_USE_SSL: "false"
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin123
+
+      # Inngest
+      INNGEST_DEV: "1"
+      INNGEST_ID: nextcrm
+      INNGEST_APP_NAME: NextCRM
+      INNGEST_EVENT_KEY: local
+      INNGEST_SIGNING_KEY: ""
+      INNGEST_BASE_URL: http://inngest:8288
+
+      # App
+      NEXT_PUBLIC_APP_NAME: NextCRM
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+
+      # Placeholder values for optional external services.
+      # The app initializes these clients at module load time, so empty
+      # values cause crashes. Users override these via .env to enable
+      # the corresponding features. The app runs fine with placeholders;
+      # individual features just won't work until real keys are provided.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-sk-placeholder-replace-to-enable-ai}
+      RESEND_API_KEY: ${RESEND_API_KEY:-re_placeholder_replace_to_enable_email}
+      GOOGLE_ID: ${GOOGLE_ID:-}
+      GOOGLE_SECRET: ${GOOGLE_SECRET:-}
+      FIRECRAWL_API_KEY: ${FIRECRAWL_API_KEY:-}
+      E2B_API_KEY: ${E2B_API_KEY:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      inngest:
+        condition: service_healthy
+    networks:
+      - nextcrm
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  postgres_data:
+  minio_data:
+
+networks:
+  nextcrm:
+    driver: bridge
