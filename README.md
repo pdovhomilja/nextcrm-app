@@ -308,35 +308,112 @@ Available soon at: http://docs.nextcrm.io
 
 </details>
 
-## Docker installation
+## Docker Installation (Recommended for Self-Hosting)
 
-[Link to Docker HUB](https://hub.docker.com/repository/docker/nextcrmio/nextcrm/general)
+The fastest way to run NextCRM is with Docker Compose. The provided `docker-compose.yml` bundles everything you need: the app, PostgreSQL (with pgvector), MinIO for file storage, and Inngest for background jobs. No manual setup of databases, buckets, or migrations — it all happens automatically on first start.
 
-<details>
-<summary><b>Show instructions</b></summary>
+### Quick Start
 
-1. Make sure you have docker and docker-compose installed
+```sh
+git clone https://github.com/pdovhomilja/nextcrm-app.git
+cd nextcrm-app
+cp .env.docker .env
+nano .env                # set ADMIN_EMAIL to a real email you own
+docker compose up -d
+```
 
-2. Prepare .env and .env.local files
+Open [http://localhost:3000](http://localhost:3000) — the app is ready, the schema is migrated, and the seeded admin user matches the `ADMIN_EMAIL` you set.
 
-   ```create
-   .env (for Prisma URI string) and .env.local (all others ENVs) file inside docker folder
-   ```
+> [!IMPORTANT]
+> NextCRM uses **passwordless Email OTP** for login. You MUST set `ADMIN_EMAIL` to an address you control AND provide a `RESEND_API_KEY` (or another email provider) so OTP codes can actually be delivered. Without an email provider, you can still log in by reading the OTP straight from the database — convenient for first-time testing, not for production.
 
-3. build docker image
+### What you get
 
-   ```sh
-   docker build -t nextcrm .
-   ```
+| Service | Purpose | Exposed |
+|---|---|---|
+| `app` | NextCRM (Next.js standalone build) | `localhost:3000` |
+| `postgres` | PostgreSQL 17 with pgvector | internal only |
+| `minio` | S3-compatible object storage | internal only |
+| `inngest` | Background job runner | internal only |
 
-4. Run docker container
+Only port `3000` is exposed to the host. Everything else stays on the internal Docker network — secure by default. Uncomment the relevant `ports:` blocks in `docker-compose.yml` if you need direct access (e.g. for psql or the MinIO console).
 
-   ```sh
-   docker run -p 3000:3000 nextcrm
-   ```
+### Configuring environment variables
 
-5. http://localhost:3000
-</details>
+You **never edit `Dockerfile` or `docker-compose.yml`** to add your secrets. Instead, create a `.env` file in the project root — Docker Compose reads it automatically and injects the values into the container.
+
+```sh
+cp .env.docker .env
+nano .env       # set ADMIN_EMAIL, internal service passwords, and any optional API keys
+docker compose up -d
+```
+
+> [!WARNING]
+> The bundled Postgres and MinIO containers ship with a placeholder password (`changeme`) so the stack works on first run. The internal services are not exposed to the host network — only the app on port 3000 is reachable — so this is safe for local experimentation. **For any deployment beyond your laptop**, set strong values for `POSTGRES_PASSWORD` and `MINIO_ROOT_PASSWORD` in your `.env` file before starting the stack.
+
+The `.env.docker` file lists every supported variable with comments. Beyond the internal service passwords, you only need to add values for **optional external integrations** you want to enable:
+
+```bash
+# Example .env
+OPENAI_API_KEY=sk-your-real-key       # enables AI features
+GOOGLE_ID=...apps.googleusercontent.com  # enables Google OAuth
+GOOGLE_SECRET=GOCSPX-...
+RESEND_API_KEY=re_...                 # enables transactional email
+FIRECRAWL_API_KEY=fc-...              # enables contact enrichment
+```
+
+`.env` is in `.gitignore`, so your secrets never get committed.
+
+### Persistent data
+
+Database and uploaded files persist across restarts via two named volumes:
+
+- `postgres_data` — your database
+- `minio_data` — uploaded files
+
+```sh
+docker compose down        # stops services, keeps data
+docker compose down -v     # stops services AND wipes all data
+```
+
+### Updating to a new release
+
+```sh
+git pull
+docker compose up -d --build
+```
+
+The entrypoint runs `prisma migrate deploy` on every start, so new schema changes are applied automatically. The seed only runs on first install (when no users exist), so your data is safe across upgrades.
+
+### Coolify, Dokku, Portainer, etc.
+
+This setup works out of the box with self-hosting platforms:
+
+- **Coolify** — point it at this repo, choose "Docker Compose" build pack, set your env vars in Coolify's UI
+- **Portainer / Dockge** — paste `docker-compose.yml` into a stack, add env vars in the UI
+
+In all cases, env vars set through the platform UI override the placeholders in `docker-compose.yml` the same way a `.env` file does locally.
+
+### First login
+
+After first start, the seeded admin account uses whatever you set in `ADMIN_EMAIL`. Since login is passwordless Email OTP, there are two paths:
+
+**With email provider configured (recommended)**
+
+Set `RESEND_API_KEY` (or another supported provider) in `.env`, then enter your `ADMIN_EMAIL` on the sign-in page and check your inbox for the OTP.
+
+**Without email provider (first-run testing)**
+
+Read the OTP directly from the database:
+
+```sh
+docker compose exec postgres psql -U nextcrm -d nextcrm \
+  -c 'SELECT identifier, value, "expiresAt" FROM "Verification" ORDER BY "createdAt" DESC LIMIT 1;'
+```
+
+(`identifier` is the email, `value` is the OTP code.)
+
+Use that OTP on the sign-in page. After login, configure an email provider from the Admin panel so future logins work normally.
 
 ## Contact
 
