@@ -55,7 +55,12 @@ const AccountsTasksView = ({ data, account }: TasksViewProps) => {
           <div className="flex space-x-2">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
-                <Button className="m-2 cursor-pointer">+</Button>
+                <Button
+                  data-testid="add-task-btn"
+                  className="m-2 cursor-pointer"
+                >
+                  +
+                </Button>
               </SheetTrigger>
               <SheetContent className="w-full overflow-y-auto">
                 <SheetHeader>
