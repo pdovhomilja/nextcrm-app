@@ -4,15 +4,15 @@ services:
     image: pgvector/pgvector:pg17
     restart: unless-stopped
     environment:
-      POSTGRES_USER: nextcrm
-      POSTGRES_PASSWORD: nextcrm
-      POSTGRES_DB: nextcrm
+      POSTGRES_USER: ${POSTGRES_USER:-nextcrm}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB:-nextcrm}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - nextcrm
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U nextcrm"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nextcrm}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -26,8 +26,8 @@ services:
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin123
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-nextcrm}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-changeme}
     volumes:
       - minio_data:/data
     networks:
@@ -67,26 +67,27 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # Database
-      DATABASE_URL: postgresql://nextcrm:nextcrm@postgres:5432/nextcrm
+      # Database — values come from the same env vars as the postgres
+      # service above so a single override changes both sides.
+      DATABASE_URL: postgresql://${POSTGRES_USER:-nextcrm}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-nextcrm}
       DB_HOST: postgres
       DB_PORT: "5432"
-      DB_USER: nextcrm
-      DB_PASSWORD: nextcrm
-      DB_NAME: nextcrm
+      DB_USER: ${POSTGRES_USER:-nextcrm}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      DB_NAME: ${POSTGRES_DB:-nextcrm}
 
       # Auth
       BETTER_AUTH_URL: http://localhost:3000
       # BETTER_AUTH_SECRET is auto-generated if not set
 
-      # MinIO
+      # MinIO — values come from the same env vars as the minio service.
       NEXT_PUBLIC_MINIO_ENDPOINT: http://minio:9000
       MINIO_ENDPOINT: http://minio:9000
       MINIO_PORT: "9000"
       MINIO_BUCKET: nextcrm
       MINIO_USE_SSL: "false"
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin123
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-nextcrm}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-changeme}
 
       # Inngest
       INNGEST_DEV: "1"

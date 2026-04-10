@@ -344,11 +344,14 @@ You **never edit `Dockerfile` or `docker-compose.yml`** to add your secrets. Ins
 
 ```sh
 cp .env.docker .env
-nano .env       # add your real API keys
+nano .env       # set ADMIN_EMAIL, internal service passwords, and any optional API keys
 docker compose up -d
 ```
 
-The `.env.docker` file lists every supported variable with comments. Internal services (Postgres, MinIO, Inngest) already have working defaults — you only need to add values for **optional external integrations** you want to enable:
+> [!WARNING]
+> The bundled Postgres and MinIO containers ship with a placeholder password (`changeme`) so the stack works on first run. The internal services are not exposed to the host network — only the app on port 3000 is reachable — so this is safe for local experimentation. **For any deployment beyond your laptop**, set strong values for `POSTGRES_PASSWORD` and `MINIO_ROOT_PASSWORD` in your `.env` file before starting the stack.
+
+The `.env.docker` file lists every supported variable with comments. Beyond the internal service passwords, you only need to add values for **optional external integrations** you want to enable:
 
 ```bash
 # Example .env

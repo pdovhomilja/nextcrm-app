@@ -59,8 +59,8 @@ fi
 # Use psql to count users directly (reliable) rather than prisma db execute
 # (which emits noisy output hard to parse).
 echo "==> Checking if database needs seeding..."
-USER_COUNT=$(PGPASSWORD="${DB_PASSWORD:-nextcrm}" psql \
-  -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "${DB_NAME:-nextcrm}" \
+USER_COUNT=$(PGPASSWORD="$DB_PASSWORD" psql \
+  -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" \
   -tAc 'SELECT COUNT(*) FROM "Users";' 2>/dev/null || echo "0")
 
 # Strip whitespace
