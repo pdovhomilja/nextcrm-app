@@ -69,7 +69,7 @@
     "ai": "^6.0.99",
     "autoprefixer": "^10.4.24",
     "aws-crt": "^1.29.0",
-    "axios": "^1.13.5",
+    "axios": "^1.15.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
     "better-auth": "^1.5.6",
