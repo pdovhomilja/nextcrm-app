@@ -1,6 +1,5 @@
 "use client";
 
-import axios from "axios";
 import { useState } from "react";
 import { Row } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
@@ -19,6 +18,7 @@ import { toast } from "sonner";
 import AlertModal from "@/components/modals/alert-modal";
 
 import { taskSchema } from "../data/schema";
+import { deleteTask } from "@/actions/crm/tasks/delete-task";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -37,18 +37,15 @@ export function DataTableRowActions<TData>({
   const onDelete = async () => {
     setIsLoading(true);
     try {
-      await axios.delete(`/api/crm/tasks/`, {
-        data: {
-          id: task?.id,
-          section: task?.section,
-        },
-      });
-      toast.success("Task deleted successfully");
+      const result = await deleteTask(task.id);
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Task deleted successfully");
+      }
     } catch (error) {
       console.log(error);
       toast.error("Something went wrong, during deleting task");
-      setIsLoading(false);
-      setOpen(false);
     } finally {
       setOpen(false);
       setIsLoading(false);

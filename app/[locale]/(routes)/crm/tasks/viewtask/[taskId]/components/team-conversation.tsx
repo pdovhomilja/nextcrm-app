@@ -20,12 +20,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 import moment from "moment";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { addComment } from "@/actions/crm/tasks/add-comment";
 
 interface TeamConversationsProps {
   data: Array<{
@@ -62,8 +62,12 @@ export function TeamConversations({
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     try {
       setIsLoading(true);
-      await axios.post(`/api/crm/tasks/addCommentToTask/${taskId}`, data);
-      toast.success("Success");
+      const result = await addComment({ taskId, comment: data.comment });
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Success");
+      }
     } catch (error) {
       toast.error("Something went wrong while sending comment to the DB");
     } finally {
