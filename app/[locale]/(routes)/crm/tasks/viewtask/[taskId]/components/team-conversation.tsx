@@ -27,18 +27,19 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { addComment } from "@/actions/crm/tasks/add-comment";
 
+// Shape matches the `comments` relation select in actions/crm/account/get-task.ts.
+// Kept permissive on the nullable user fields because the relation returns
+// `name` and `avatar` as `string | null` straight out of Prisma.
 interface TeamConversationsProps {
   data: Array<{
     id: string;
-    v: number;
     comment: string;
-    createdAt: string;
-    task: string;
-    user: string;
+    createdAt: Date | string;
     assigned_user: {
-      name: string;
-      avatar: string;
-    };
+      id?: string;
+      name: string | null;
+      avatar: string | null;
+    } | null;
   }>;
   taskId: string;
 }
