@@ -880,7 +880,7 @@ model tasksComments {
   v                         Int      @map("__v")
   comment                   String
   createdAt                 DateTime @default(now())
-  task                      String   @db.Uuid
+  task                      String?  @db.Uuid
   user                      String   @db.Uuid
   assigned_crm_account_task String?  @db.Uuid
 

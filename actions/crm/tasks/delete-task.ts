@@ -10,8 +10,10 @@ export const deleteTask = async (taskId: string) => {
   if (!taskId) return { error: "taskId is required" };
 
   try {
+    // CRM account task comments link via `assigned_crm_account_task`, not
+    // the Projects-facing `task` FK — see actions/crm/tasks/add-comment.ts.
     await prismadb.tasksComments.deleteMany({
-      where: { task: taskId },
+      where: { assigned_crm_account_task: taskId },
     });
 
     await prismadb.crm_Accounts_Tasks.delete({

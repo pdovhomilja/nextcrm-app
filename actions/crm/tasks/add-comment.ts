@@ -22,11 +22,14 @@ export const addComment = async (data: {
 
     if (!task) return { error: "Task not found" };
 
+    // CRM account task comments link via `assigned_crm_account_task` — the
+    // Projects-facing `task` FK points at a different table (`Tasks`), so
+    // writing taskId there would violate the FK constraint.
     const newComment = await prismadb.tasksComments.create({
       data: {
         v: 0,
         comment,
-        task: taskId,
+        assigned_crm_account_task: taskId,
         user: session.user.id,
       },
     });
