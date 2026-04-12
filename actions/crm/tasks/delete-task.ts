@@ -16,6 +16,10 @@ export const deleteTask = async (taskId: string) => {
       where: { assigned_crm_account_task: taskId },
     });
 
+    await prismadb.documentsToCrmAccountsTasks.deleteMany({
+      where: { crm_accounts_task_id: taskId },
+    });
+
     await prismadb.crm_Accounts_Tasks.delete({
       where: { id: taskId },
     });
