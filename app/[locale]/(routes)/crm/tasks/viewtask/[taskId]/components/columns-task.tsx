@@ -21,11 +21,7 @@ export const columnsTask: ColumnDef<Task>[] = [
 
     cell: ({ row }) => (
       <div className="w-[150px]">
-        {
-          //@ts-ignore
-          //TODO: fix this - must change schema but problem is if value is null now. You must change db
-          row.original.assigned_to_user.name ?? "Unassigned"
-        }
+        {row.original.assigned_to_user?.name ?? "Unassigned"}
       </div>
     ),
     enableSorting: false,
