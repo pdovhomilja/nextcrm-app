@@ -8,25 +8,16 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
 import { useParams } from "next/navigation";
-
-import { labels } from "../data/data";
 import { taskSchema } from "../data/schema";
 import { useRouter } from "next/navigation";
 import DocumentViewModal from "@/components/modals/document-view-modal";
 import { useState } from "react";
 import { toast } from "sonner";
-import axios from "axios";
+import { disconnectDocumentFromCrmTask } from "@/actions/crm/tasks/assign-document";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -48,14 +39,19 @@ export function DataTableRowActionsTasks<TData>({
   const onDisconnect = async () => {
     setLoading(true);
     try {
-      await axios.post(`/api/projects/tasks/${document.id}/disconnect`, {
-        taskId: params?.taskId!,
+      const result = await disconnectDocumentFromCrmTask({
+        documentId: document.id,
+        taskId: params?.taskId as string,
       });
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Document was disconnected from task");
+      }
     } catch (error) {
       console.error(error);
-      toast.success("Something went wrong, while disconnecting document from task");
+      toast.error("Something went wrong, while disconnecting document from task");
     } finally {
-      toast.success("Document was disconnected from task");
       router.refresh();
       setLoading(false);
     }

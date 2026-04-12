@@ -4,7 +4,6 @@ import { cookies } from "next/headers";
 
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import getAllCommits from "@/actions/github/get-repo-commits";
 
 import { Metadata } from "next";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
@@ -66,8 +65,6 @@ export default async function AppLayout({
     return redirect("/inactive");
   }
 
-  const build = await getAllCommits();
-
   // Fetch localization dictionary
   const dict = await getTranslations("ModuleMenu");
 
@@ -110,7 +107,6 @@ export default async function AppLayout({
     <SidebarProvider defaultOpen={sidebarOpen}>
       <AppSidebar
         dict={translations}
-        build={build}
         session={session}
       />
       <SidebarInset>

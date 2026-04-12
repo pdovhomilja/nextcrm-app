@@ -1,8 +1,6 @@
-import axios, { AxiosResponse } from "axios";
-
 export default async function getGithubRepoStars(): Promise<number> {
   try {
-    const response: AxiosResponse<any> = await axios.get(
+    const response = await fetch(
       process.env.NEXT_PUBLIC_GITHUB_REPO_API ||
         "https://api.github.com/repos/pdovhomilja/nextcrm-app",
       {
@@ -12,9 +10,7 @@ export default async function getGithubRepoStars(): Promise<number> {
         },
       }
     );
-    //console.log(response, "response");
-    const stars = response.data;
-    //console.log(stars.stargazers_count);
+    const stars = await response.json();
     return stars.stargazers_count;
   } catch (error) {
     console.error("Error fetching commits:", error);

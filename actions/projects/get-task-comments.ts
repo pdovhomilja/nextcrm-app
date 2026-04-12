@@ -1,8 +1,12 @@
 import { prismadb } from "@/lib/prisma";
-/*
-This function is used for CRM tasks and Projects tasks. CRM Tasks (crm_Acccount_Tasks) models are different then Project Tasks (Tasks) but use the same comments model!.
-*/
 
+/**
+ * Fetch comments for a Projects task (`Tasks` model).
+ *
+ * Projects-module only. CRM account tasks have their own comments loaded
+ * via the `comments` relation on `crm_Accounts_Tasks` — do not route them
+ * through this function.
+ */
 export const getTaskComments = async (taskId: string) => {
   const data = await prismadb.tasksComments.findMany({
     where: {

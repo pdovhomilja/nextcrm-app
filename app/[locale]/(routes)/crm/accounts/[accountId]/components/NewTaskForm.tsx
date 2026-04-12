@@ -32,7 +32,6 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { crm_Accounts } from "@prisma/client";
-import axios from "axios";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 
@@ -42,6 +41,7 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
+import { createTask } from "@/actions/crm/accounts/create-task";
 
 interface NewTaskFormProps {
   account: crm_Accounts | null;
@@ -74,13 +74,16 @@ const NewTaskForm = ({ account, onFinish }: NewTaskFormProps) => {
   });
 
   const onSubmit = async (data: NewAccountFormValues) => {
-    //console.log(data);
     setIsLoading(true);
     try {
-      await axios.post(`/api/crm/account/${account?.id}/task/create`, data);
-      toast.success(`New task: ${data.title}, created successfully`);
+      const result = await createTask(data);
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
+        toast.success(`New task: ${data.title}, created successfully`);
+      }
     } catch (error: any) {
-      toast.error(error?.response?.data);
+      toast.error(error?.message ?? "Something went wrong while creating the task");
     } finally {
       setIsLoading(false);
       onFinish();

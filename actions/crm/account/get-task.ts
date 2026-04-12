@@ -1,5 +1,4 @@
 import { prismadb } from "@/lib/prisma";
-import { junctionTableHelpers } from "@/lib/junction-helpers";
 
 export const getCrMTask = async (taskId: string) => {
   const data = await prismadb.crm_Accounts_Tasks.findFirst({
@@ -21,6 +20,17 @@ export const getCrMTask = async (taskId: string) => {
               id: true,
               document_name: true,
               document_file_url: true,
+              document_file_mimeType: true,
+              assigned_to_user: {
+                select: {
+                  name: true,
+                },
+              },
+              created_by: {
+                select: {
+                  name: true,
+                },
+              },
             },
           },
         },

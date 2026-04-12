@@ -1,9 +1,7 @@
-import React from "react";
 import moment from "moment";
 
 import { getDocuments } from "@/actions/documents/get-documents";
-import { getTaskComments } from "@/actions/projects/get-task-comments";
-import { getTaskDocuments } from "@/actions/projects/get-task-documents";
+import { extractDocuments } from "@/lib/junction-helpers";
 
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -23,11 +21,13 @@ type TaskPageProps = {
 const CRMTaskPage = async (props: TaskPageProps) => {
   const params = await props.params;
   const { taskId } = params;
+  // getCrMTask already fetches CRM-scoped comments via the Prisma relation
+  // on crm_Accounts_Tasks — do not call the Projects-module getTaskComments
+  // from here, that's a cross-module boundary violation.
   const task: any = await getCrMTask(taskId);
-  const taskDocuments: any = await getTaskDocuments(taskId);
+  const taskDocuments = extractDocuments(task?.documents ?? []);
   const documents: any = await getDocuments();
-  //Info: This is the same as the one in the CRM task page
-  const comments: any = await getTaskComments(taskId);
+  const comments = task?.comments ?? [];
 
   return (
     <div className="flex flex-col md:flex-row w-full px-2 space-x-2 ">
