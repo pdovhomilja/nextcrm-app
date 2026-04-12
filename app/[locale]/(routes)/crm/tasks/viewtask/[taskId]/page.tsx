@@ -1,4 +1,3 @@
-import React from "react";
 import moment from "moment";
 
 import { getDocuments } from "@/actions/documents/get-documents";
