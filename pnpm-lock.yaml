@@ -175,9 +175,6 @@ importers:
       aws-crt:
         specifier: ^1.29.0
         version: 1.29.0
-      axios:
-        specifier: ^1.13.5
-        version: 1.13.5
       bcrypt:
         specifier: ^6.0.0
         version: 6.0.0

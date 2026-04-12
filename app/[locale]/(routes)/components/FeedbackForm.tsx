@@ -1,8 +1,8 @@
 "use client";
 
 import * as z from "zod";
-import axios from "axios";
 import { useState } from "react";
+import { sendFeedback } from "@/actions/feedback/send-feedback";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -41,13 +41,17 @@ const FeedbackForm = ({ setOpen }: FeedbackFormProps) => {
   const onSubmit = async (data: any) => {
     setLoading(true);
     try {
-      await axios.post("/api/feedback", data);
+      const result = await sendFeedback({ feedback: data.feedback });
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Thank you for your feedback.");
+        setOpen(false);
+      }
     } catch (error) {
       console.error(error);
       toast.error("Something went wrong. Please try again later.");
     } finally {
-      toast.success("Thank you for your feedback.");
-      setOpen(false);
       setLoading(false);
     }
   };
