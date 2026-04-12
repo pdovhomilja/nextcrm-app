@@ -26,7 +26,7 @@ import { useRouter } from "next/navigation";
 import DocumentViewModal from "@/components/modals/document-view-modal";
 import { useState } from "react";
 import { toast } from "sonner";
-import axios from "axios";
+import { assignDocumentToCrmTask } from "@/actions/crm/tasks/assign-document";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -48,14 +48,19 @@ export function DataTableRowActions<TData>({
   const onAssign = async () => {
     setLoading(true);
     try {
-      await axios.post(`/api/projects/tasks/${document.id}/assign`, {
-        taskId: params?.taskId!,
+      const result = await assignDocumentToCrmTask({
+        documentId: document.id,
+        taskId: params?.taskId as string,
       });
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Document was assigned to task");
+      }
     } catch (error) {
       console.error(error);
-      toast.success("Something went wrong, while assigning document to task");
+      toast.error("Something went wrong, while assigning document to task");
     } finally {
-      toast.success("Document was assigned to task");
       router.refresh();
       setLoading(false);
     }
