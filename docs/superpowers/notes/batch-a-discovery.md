@@ -35,3 +35,11 @@
   - For presigned URLs use `@aws-sdk/s3-request-presigner` (`getSignedUrl`) — check package.json before importing; add if missing.
   - There are no `putObject` / `presignedGetObject` convenience helpers yet — later batches should either add thin wrappers in `lib/minio.ts` or call the AWS SDK commands directly from the invoice storage helper.
 - **No changes made to `lib/minio.ts`** — `minioClient` is already exported under that exact name.
+
+## Known trap: prisma migrate diff drops search index
+
+`prisma migrate diff` and `prisma migrate dev` emit `DROP INDEX "invoices_search_vector_idx"`
+because the `search_vector` column is declared `Unsupported("tsvector")?` and Prisma does not
+know the GIN index belongs to it. Any future contributor running `migrate diff` must filter
+this out of generated migrations. Do not apply a Prisma-generated migration without
+verifying it does not contain this DROP. (Flagged during Batch A code review, 2026-04-15.)
