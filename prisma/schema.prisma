@@ -972,6 +972,9 @@ model Users {
   sessions                     Session[]
   authAccounts                 Account[]
   createdInvoices              Invoices[]           @relation("InvoiceCreatedBy")
+  invoicePayments              Invoice_Payments[]    @relation("InvoicePaymentCreatedBy")
+  invoiceAttachments           Invoice_Attachments[] @relation("InvoiceAttachmentUploadedBy")
+  invoiceActivity              Invoice_Activity[]    @relation("InvoiceActivityActor")
 
   @@index([email])
   @@index([userStatus])
@@ -1737,6 +1740,7 @@ model Invoices {
   dueDate               DateTime?
 
   currency              String           @db.VarChar(3)
+  currencyRef           Invoice_Currencies @relation("InvoiceCurrency", fields: [currency], references: [code], onDelete: Restrict)
   baseCurrency          String?          @db.VarChar(3)
   fxRateToBase          Decimal?         @db.Decimal(18, 8)
 
@@ -1775,6 +1779,8 @@ model Invoices {
   @@index([status])
   @@index([issueDate])
   @@index([dueDate])
+  @@index([createdBy])
+  @@index([originalInvoiceId])
 }
 
 model Invoice_LineItems {
@@ -1796,6 +1802,8 @@ model Invoice_LineItems {
   lineTotal       Decimal    @db.Decimal(14, 2)
 
   @@index([invoiceId])
+  @@index([productId])
+  @@index([taxRateId])
 }
 
 model Invoice_Payments {
@@ -1808,6 +1816,7 @@ model Invoice_Payments {
   reference   String?
   note        String?
   createdBy   String   @db.Uuid
+  createdByUser Users  @relation("InvoicePaymentCreatedBy", fields: [createdBy], references: [id], onDelete: Restrict)
   createdAt   DateTime @default(now())
 
   @@index([invoiceId])
@@ -1822,6 +1831,7 @@ model Invoice_Attachments {
   mimeType        String
   size            Int
   uploadedBy      String   @db.Uuid
+  uploadedByUser  Users    @relation("InvoiceAttachmentUploadedBy", fields: [uploadedBy], references: [id], onDelete: Restrict)
   uploadedAt      DateTime @default(now())
   isPrimaryPdf    Boolean  @default(false)
 
@@ -1833,6 +1843,7 @@ model Invoice_Activity {
   invoiceId   String   @db.Uuid
   invoice     Invoices @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   actorId     String   @db.Uuid
+  actor       Users    @relation("InvoiceActivityActor", fields: [actorId], references: [id], onDelete: Restrict)
   action      String
   meta        Json?
   createdAt   DateTime @default(now())
@@ -1850,6 +1861,7 @@ model Invoice_TaxRates {
   updatedAt   DateTime @updatedAt
 
   lineItems   Invoice_LineItems[]
+  defaultForSettings Invoice_Settings[]
 }
 
 model Invoice_Series {
@@ -1865,6 +1877,7 @@ model Invoice_Series {
   updatedAt       DateTime @updatedAt
 
   invoices        Invoices[]
+  defaultForSettings Invoice_Settings[]
 }
 
 model Invoice_Currencies {
@@ -1873,13 +1886,17 @@ model Invoice_Currencies {
   symbol      String?
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
+
+  invoices    Invoices[] @relation("InvoiceCurrency")
 }
 
 model Invoice_Settings {
   id                  String   @id @default(uuid()) @db.Uuid
   baseCurrency        String   @db.VarChar(3)
   defaultSeriesId     String?  @db.Uuid
+  defaultSeries       Invoice_Series? @relation(fields: [defaultSeriesId], references: [id], onDelete: SetNull)
   defaultTaxRateId    String?  @db.Uuid
+  defaultTaxRate      Invoice_TaxRates? @relation(fields: [defaultTaxRateId], references: [id], onDelete: SetNull)
   defaultDueDays      Int      @default(14)
   bankName            String?
   bankAccount         String?
