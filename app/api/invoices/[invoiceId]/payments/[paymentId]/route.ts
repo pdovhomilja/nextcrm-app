@@ -3,7 +3,7 @@ import { getSession } from "@/lib/auth-server";
 import { deletePayment } from "@/actions/invoices/delete-payment";
 
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ invoiceId: string; paymentId: string }> }
 ) {
   const { paymentId } = await params;

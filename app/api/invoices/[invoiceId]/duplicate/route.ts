@@ -3,7 +3,7 @@ import { getSession } from "@/lib/auth-server";
 import { duplicateInvoice } from "@/actions/invoices/duplicate-invoice";
 
 export async function POST(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ invoiceId: string }> }
 ) {
   const { invoiceId } = await params;

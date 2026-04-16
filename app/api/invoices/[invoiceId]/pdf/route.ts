@@ -4,7 +4,7 @@ import { prismadb } from "@/lib/prisma";
 import { getInvoicePdfPresignedUrl } from "@/lib/invoices/storage";
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ invoiceId: string }> }
 ) {
   const { invoiceId } = await params;

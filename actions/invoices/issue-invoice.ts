@@ -3,7 +3,7 @@
 import { prismadb } from "@/lib/prisma";
 import { getUser } from "@/actions/get-user";
 import { Decimal } from "decimal.js";
-import { computeInvoiceTotals, computeLineTotal } from "@/lib/invoices/totals";
+import { computeInvoiceTotals } from "@/lib/invoices/totals";
 import { canIssueInvoice, type InvoiceStatus } from "@/lib/invoices/permissions";
 import { consumeNextNumber } from "@/lib/invoices/numbering";
 import { fetchFxRate } from "@/lib/invoices/fx";
