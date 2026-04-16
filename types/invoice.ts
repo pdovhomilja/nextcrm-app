@@ -9,7 +9,7 @@ export const INVOICE_STATUSES = [
   "OVERDUE", "CANCELLED", "DISPUTED", "REFUNDED", "WRITTEN_OFF",
 ] as const;
 
-export const INVOICE_TYPES = ["INVOICE", "CREDIT_NOTE"] as const;
+export const INVOICE_TYPES = ["INVOICE", "CREDIT_NOTE", "PROFORMA"] as const;
 
 /* ------------------------------------------------------------------ */
 /*  Line item schema                                                   */
