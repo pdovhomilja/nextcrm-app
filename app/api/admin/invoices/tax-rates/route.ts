@@ -3,9 +3,11 @@ import { getUser } from "@/actions/get-user";
 import { prismadb } from "@/lib/prisma";
 
 export async function GET() {
-  const user = await getUser();
-  if (!user.is_admin) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  try {
+    const user = await getUser();
+    if (!user.is_admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const taxRates = await prismadb.invoice_TaxRates.findMany({
@@ -16,9 +18,11 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const user = await getUser();
-  if (!user.is_admin) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  try {
+    const user = await getUser();
+    if (!user.is_admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const body = await request.json();

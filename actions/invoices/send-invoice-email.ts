@@ -4,6 +4,8 @@ import { prismadb } from "@/lib/prisma";
 import { getUser } from "@/actions/get-user";
 import resendHelper from "@/lib/resend";
 import { getInvoicePdfStream } from "@/lib/invoices/storage";
+import { InvoiceEmail } from "@/emails/InvoiceEmail";
+import { render } from "@react-email/render";
 
 interface SendInvoiceEmailInput {
   invoiceId: string;
@@ -21,10 +23,15 @@ export async function sendInvoiceEmail(input: SendInvoiceEmailInput) {
       id: true,
       number: true,
       status: true,
+      createdBy: true,
       pdfStorageKey: true,
       account: { select: { name: true } },
     },
   });
+
+  if (invoice.createdBy !== user.id && !user.is_admin) {
+    throw new Error("Forbidden");
+  }
 
   if (!invoice.pdfStorageKey) {
     throw new Error("Invoice PDF not generated yet. Please issue the invoice first.");
@@ -51,11 +58,19 @@ export async function sendInvoiceEmail(input: SendInvoiceEmailInput) {
   const message =
     input.message ?? "Please find attached your invoice as a PDF.";
 
+  const html = await render(
+    InvoiceEmail({
+      number: invoice.number ?? "",
+      message,
+      userLanguage: user.userLanguage ?? "en",
+    })
+  );
+
   await resend.emails.send({
     from: fromEmail,
     to: input.to,
     subject,
-    text: message,
+    html,
     attachments: [
       {
         filename: `invoice-${invoice.number ?? invoice.id}.pdf`,

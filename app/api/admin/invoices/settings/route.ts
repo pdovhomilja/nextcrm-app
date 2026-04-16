@@ -3,9 +3,12 @@ import { getUser } from "@/actions/get-user";
 import { prismadb } from "@/lib/prisma";
 
 export async function GET() {
-  const user = await getUser();
-  if (!user.is_admin) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  let user;
+  try {
+    user = await getUser();
+    if (!user.is_admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const settings = await prismadb.invoice_Settings.findFirst();
@@ -18,9 +21,12 @@ export async function GET() {
 }
 
 export async function PATCH(request: NextRequest) {
-  const user = await getUser();
-  if (!user.is_admin) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  let user;
+  try {
+    user = await getUser();
+    if (!user.is_admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const body = await request.json();

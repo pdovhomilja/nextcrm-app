@@ -27,7 +27,7 @@ export async function duplicateInvoice(invoiceId: string) {
       iban: source.iban,
       swift: source.swift,
       variableSymbol: source.variableSymbol,
-      originalInvoiceId: source.originalInvoiceId,
+      originalInvoiceId: source.id,
       subtotal: source.subtotal,
       discountTotal: source.discountTotal,
       vatTotal: source.vatTotal,

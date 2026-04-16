@@ -10,52 +10,50 @@ import { fetchFxRate } from "@/lib/invoices/fx";
 import { issueInvoiceSchema } from "@/types/invoice";
 import { renderInvoicePdf } from "@/lib/invoices/pdf/render";
 import { uploadInvoicePdf } from "@/lib/invoices/storage";
-import { getPdfStrings } from "@/lib/invoices/pdf/i18n";
 import type { InvoicePdfData, PdfParty } from "@/lib/invoices/pdf/templates/default-invoice";
 
 export async function issueInvoice(raw: unknown) {
   const user = await getUser();
   const input = issueInvoiceSchema.parse(raw);
 
+  // Read invoice and settings outside the transaction to avoid holding locks during network calls
+  const invoice = await prismadb.invoices.findUniqueOrThrow({
+    where: { id: input.invoiceId },
+    include: {
+      lineItems: { include: { taxRate: true } },
+      account: true,
+    },
+  });
+
+  if (
+    !canIssueInvoice(
+      { status: invoice.status as InvoiceStatus, createdBy: invoice.createdBy },
+      { id: user.id, isAdmin: user.is_admin }
+    )
+  ) {
+    throw new Error("Cannot issue this invoice");
+  }
+
+  if (invoice.lineItems.length === 0) {
+    throw new Error("Invoice must have at least one line item");
+  }
+
+  const settings = await prismadb.invoice_Settings.findFirst();
+  if (!settings) {
+    throw new Error("Invoice settings not configured. Please configure in Admin > Invoices.");
+  }
+
+  const seriesId = invoice.seriesId ?? settings.defaultSeriesId;
+  if (!seriesId) {
+    throw new Error("No invoice series configured");
+  }
+
+  // Fetch FX rate outside the transaction (network call)
+  const fxRate = await fetchFxRate(invoice.currency, settings.baseCurrency);
+
   const result = await prismadb.$transaction(
     async (tx) => {
-      const invoice = await tx.invoices.findUniqueOrThrow({
-        where: { id: input.invoiceId },
-        include: {
-          lineItems: { include: { taxRate: true } },
-          account: true,
-        },
-      });
-
-      if (
-        !canIssueInvoice(
-          { status: invoice.status as InvoiceStatus, createdBy: invoice.createdBy },
-          { id: user.id, isAdmin: user.is_admin }
-        )
-      ) {
-        throw new Error("Cannot issue this invoice");
-      }
-
-      if (invoice.lineItems.length === 0) {
-        throw new Error("Invoice must have at least one line item");
-      }
-
-      // Get settings for default series + base currency
-      const settings = await tx.invoice_Settings.findFirst();
-      if (!settings) {
-        throw new Error("Invoice settings not configured. Please configure in Admin > Invoices.");
-      }
-
-      // Determine series and consume next number
-      const seriesId = invoice.seriesId ?? settings.defaultSeriesId;
-      if (!seriesId) {
-        throw new Error("No invoice series configured");
-      }
-
       const { number } = await consumeNextNumber(tx, seriesId);
-
-      // Fetch FX rate
-      const fxRate = await fetchFxRate(invoice.currency, settings.baseCurrency);
 
       // Snapshot account billing info (customer)
       const acct = invoice.account;
@@ -130,9 +128,6 @@ export async function issueInvoice(raw: unknown) {
 
   // After transaction: generate PDF (non-blocking for the legal issuance)
   try {
-    const t = getPdfStrings(user.userLanguage ?? "en");
-    void t; // strings are used via locale below
-
     const customer: PdfParty = {
       name: result.account.name,
       street: result.account.billing_street ?? undefined,

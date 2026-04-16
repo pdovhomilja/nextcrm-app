@@ -13,7 +13,7 @@ export async function updateInvoice(invoiceId: string, raw: unknown) {
 
   const existing = await prismadb.invoices.findUniqueOrThrow({
     where: { id: invoiceId },
-    select: { status: true, createdBy: true },
+    select: { status: true, createdBy: true, paidTotal: true },
   });
 
   if (
@@ -63,7 +63,9 @@ export async function updateInvoice(invoiceId: string, raw: unknown) {
           discountTotal: totals.discountTotal.toString(),
           vatTotal: totals.vatTotal.toString(),
           grandTotal: totals.grandTotal.toString(),
-          balanceDue: totals.grandTotal.toString(),
+          balanceDue: totals.grandTotal
+            .minus(new Decimal(existing.paidTotal?.toString() ?? "0"))
+            .toString(),
           lineItems: {
             create: input.lineItems!.map((l, i) => {
               const lt = computeLineTotal(lineInputs[i]);

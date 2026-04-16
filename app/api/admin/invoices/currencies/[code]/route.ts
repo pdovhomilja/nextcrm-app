@@ -7,9 +7,11 @@ export async function PATCH(
   { params }: { params: Promise<{ code: string }> }
 ) {
   const { code } = await params;
-  const user = await getUser();
-  if (!user.is_admin) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  try {
+    const user = await getUser();
+    if (!user.is_admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const body = await request.json();
@@ -30,9 +32,11 @@ export async function DELETE(
   { params }: { params: Promise<{ code: string }> }
 ) {
   const { code } = await params;
-  const user = await getUser();
-  if (!user.is_admin) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  try {
+    const user = await getUser();
+    if (!user.is_admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   await prismadb.invoice_Currencies.delete({ where: { code } });

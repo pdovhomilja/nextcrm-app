@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-server";
+import { getUser } from "@/actions/get-user";
 import { prismadb } from "@/lib/prisma";
 import { updateInvoice } from "@/actions/invoices/update-invoice";
 
@@ -69,13 +70,19 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const user = await getUser();
+
   const invoice = await prismadb.invoices.findUnique({
     where: { id: invoiceId },
-    select: { status: true },
+    select: { status: true, createdBy: true },
   });
 
   if (!invoice) {
     return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
+  }
+
+  if (invoice.createdBy !== user.id && !user.is_admin) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   if (invoice.status !== "DRAFT") {
