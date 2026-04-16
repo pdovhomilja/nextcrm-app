@@ -28,7 +28,7 @@ export function canCancelInvoice(invoice: InvoiceCtx, user: UserCtx): boolean {
   return isOwnerOrAdmin(invoice, user);
 }
 
-const PAYMENT_ALLOWED: ReadonlySet<InvoiceStatus> = new Set([
+const PAYMENT_ALLOWED: ReadonlySet<InvoiceStatus> = new Set<InvoiceStatus>([
   "ISSUED", "SENT", "PARTIALLY_PAID", "OVERDUE",
 ]);
 
