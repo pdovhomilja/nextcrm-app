@@ -21,6 +21,7 @@
     "tasks": "Tasks",
     "reports": "Reports",
     "documents": "Documents",
+    "invoices": "Invoices",
     "storage": "Storage",
     "settings": "Administration"
   },
@@ -611,6 +612,121 @@
     "savedReports": {
       "placeholder": "Saved reports...",
       "shared": "shared"
+    }
+  },
+  "InvoicesPage": {
+    "title": "Invoices",
+    "description": "Manage invoices, payments, and billing",
+    "new": "New Invoice",
+    "search": "Search invoices...",
+    "status": {
+      "DRAFT": "Draft",
+      "ISSUED": "Issued",
+      "SENT": "Sent",
+      "PARTIALLY_PAID": "Partially Paid",
+      "PAID": "Paid",
+      "OVERDUE": "Overdue",
+      "CANCELLED": "Cancelled",
+      "DISPUTED": "Disputed",
+      "REFUNDED": "Refunded",
+      "WRITTEN_OFF": "Written Off"
+    },
+    "table": {
+      "number": "Number",
+      "account": "Account",
+      "issueDate": "Issued",
+      "dueDate": "Due",
+      "total": "Total",
+      "status": "Status",
+      "type": "Type",
+      "currency": "Currency"
+    },
+    "form": {
+      "account": "Account",
+      "currency": "Currency",
+      "series": "Invoice Series",
+      "dueDate": "Due Date",
+      "type": "Type",
+      "lineItems": "Line Items",
+      "addLine": "Add Line",
+      "product": "Product",
+      "description": "Description",
+      "quantity": "Quantity",
+      "unitPrice": "Unit Price",
+      "discount": "Discount %",
+      "taxRate": "Tax Rate",
+      "total": "Total",
+      "publicNotes": "Public Notes",
+      "internalNotes": "Internal Notes",
+      "save": "Save Draft",
+      "issue": "Issue Invoice",
+      "bankName": "Bank Name",
+      "iban": "IBAN",
+      "swift": "SWIFT",
+      "variableSymbol": "Variable Symbol"
+    },
+    "actions": {
+      "issue": "Issue",
+      "cancel": "Cancel",
+      "duplicate": "Duplicate",
+      "send": "Send by Email",
+      "downloadPdf": "Download PDF",
+      "addPayment": "Add Payment",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "payment": {
+      "amount": "Amount",
+      "date": "Date",
+      "method": "Method",
+      "reference": "Reference",
+      "note": "Note"
+    }
+  },
+  "InvoicesAdminPage": {
+    "title": "Invoice Settings",
+    "description": "Configure invoice defaults and options",
+    "taxRates": {
+      "title": "Tax Rates",
+      "name": "Name",
+      "rate": "Rate %",
+      "isDefault": "Default",
+      "active": "Active",
+      "add": "Add Tax Rate",
+      "edit": "Edit Tax Rate",
+      "delete": "Delete Tax Rate"
+    },
+    "series": {
+      "title": "Invoice Series",
+      "name": "Name",
+      "prefix": "Prefix Template",
+      "resetPolicy": "Reset Policy",
+      "isDefault": "Default",
+      "active": "Active",
+      "add": "Add Series",
+      "edit": "Edit Series",
+      "delete": "Delete Series"
+    },
+    "currencies": {
+      "title": "Invoice Currencies",
+      "code": "Code",
+      "name": "Name",
+      "symbol": "Symbol",
+      "active": "Active",
+      "add": "Add Currency"
+    },
+    "settings": {
+      "title": "General Settings",
+      "baseCurrency": "Base Currency",
+      "defaultSeries": "Default Series",
+      "defaultTaxRate": "Default Tax Rate",
+      "defaultDueDays": "Default Due Days",
+      "bankName": "Bank Name",
+      "bankAccount": "Bank Account",
+      "iban": "IBAN",
+      "swift": "SWIFT",
+      "footerText": "Footer Text",
+      "save": "Save Settings"
     }
   },
   "CommandComponent": {
