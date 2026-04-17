@@ -6,6 +6,7 @@ import { Decimal } from "decimal.js";
 import { computeInvoiceTotals, computeLineTotal } from "@/lib/invoices/totals";
 import { updateInvoiceSchema } from "@/types/invoice";
 import { canEditInvoice, type InvoiceStatus } from "@/lib/invoices/permissions";
+import { serializeDecimals } from "@/lib/serialize-decimals";
 
 export async function updateInvoice(invoiceId: string, raw: unknown) {
   const user = await getUser();
@@ -89,12 +90,12 @@ export async function updateInvoice(invoiceId: string, raw: unknown) {
         },
       });
 
-      return updated;
+      return serializeDecimals(updated);
     });
   }
 
   // No line items change — simple field update
-  return prismadb.invoices.update({
+  const updated = await prismadb.invoices.update({
     where: { id: invoiceId },
     data: {
       ...buildUpdateData(input),
@@ -103,6 +104,8 @@ export async function updateInvoice(invoiceId: string, raw: unknown) {
       },
     },
   });
+
+  return serializeDecimals(updated);
 }
 
 function buildUpdateData(input: Record<string, unknown>) {

@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-NextCRM is an open-source CRM built with Next.js 16, React 19, TypeScript, PostgreSQL (Prisma 7), and shadcn/ui. Features CRM, project management, document storage, email client, AI-powered features, vector search, and MCP server for AI agent access.
+NextCRM is an open-source CRM built with Next.js 16, React 19, TypeScript, PostgreSQL (Prisma 7), and shadcn/ui. Features CRM, project management, invoicing, document storage, email client, AI-powered features, vector search, and MCP server for AI agent access.
 </p>
 
 <p align="center">
@@ -38,6 +38,27 @@ You can try it here [demo.nextcrm.io](https://demo.nextcrm.io), login via Google
 ---
 
 ## What's New
+
+### 🧾 Invoices Module — Full Invoicing Workflow *(NEW)*
+
+Complete invoicing system built into NextCRM — create, issue, pay, duplicate, and cancel invoices with multi-currency support, tax rates, and PDF generation.
+
+- **Invoice types** — Invoice, Credit Note, Proforma, and Receipt
+- **Line items** — per-line quantity, unit price, discount %, and tax rate with automatic totals calculation
+- **Tax engine** — configurable tax rates (VAT, GST, etc.) with per-line tax breakdown and VAT summary buckets
+- **Invoice series** — auto-numbered sequences with configurable prefix/suffix (e.g. `INV-2026-0001`)
+- **Multi-currency** — admin-managed currency list with locale-aware formatting via `next-intl`
+- **Status lifecycle** — `DRAFT → ISSUED → PAID / PARTIALLY_PAID / CANCELLED` with permission guards (only drafts are editable)
+- **Payments** — record partial/full payments, auto-computed balance due, payment history on detail page
+- **Duplicate & cancel** — one-click invoice duplication; cancellation with audit trail
+- **Email delivery** — send invoices to account email via Resend with React Email template
+- **PDF export** — server-side PDF generation at `/api/invoices/[id]/pdf`
+- **Activity log** — every status change and edit is recorded with actor and timestamp
+- **Admin settings** — manage tax rates, invoice series, currencies, and default settings from `/admin/invoices`
+- **i18n** — full English and Czech translations
+- **Server actions** — create/update operations use Next.js server actions with Zod validation (no API route middleman)
+
+---
 
 ### 📋 CRM Activities — Full Activity Tracking *(NEW)*
 
@@ -218,7 +239,8 @@ Global search across all CRM entities from a single search bar — grouped resul
 11. ✅ AI enrichment — E2B sandboxed agent (real browser + Claude Sonnet) for target/contact enrichment; C-level contact discovery; 3-tier API key management (ENV → admin → user)
 12. ✅ Audit log & history — soft delete + full field-level change trail on all CRM entities; global admin audit log page
 13. ✅ CRM Activities — notes, calls, emails, meetings, tasks linked to any CRM entity; paginated feed on all detail pages
-14. 🔄 More AI powered features — daily summary of tasks and projects
+14. ✅ Invoices module — full invoicing workflow with line items, tax engine, multi-currency, invoice series, payments, PDF export, and email delivery
+15. 🔄 More AI powered features — daily summary of tasks and projects
 15. 📋 Email campaigns management — integration with MailChimp and Listmonk
 16. 📋 Testing expansion — Jest + Playwright coverage (contributions welcome!)
 17. 🔄 Fix all TypeScript `any` types — ongoing cleanup

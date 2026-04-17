@@ -14,6 +14,7 @@ interface LineItemValues {
 interface TotalsPanelProps {
   lineItems: LineItemValues[];
   currency: string;
+  locale: string;
 }
 
 function computeLineTotals(line: LineItemValues) {
@@ -25,7 +26,7 @@ function computeLineTotals(line: LineItemValues) {
   return { subtotal, vat, total };
 }
 
-export function TotalsPanel({ lineItems, currency }: TotalsPanelProps) {
+export function TotalsPanel({ lineItems, currency, locale }: TotalsPanelProps) {
   const totals = useMemo(() => {
     let subtotal = 0;
     let vatTotal = 0;
@@ -62,7 +63,7 @@ export function TotalsPanel({ lineItems, currency }: TotalsPanelProps) {
   }, [lineItems]);
 
   const fmt = (n: number) =>
-    new Intl.NumberFormat(undefined, {
+    new Intl.NumberFormat(locale, {
       style: "currency",
       currency: currency || "CZK",
       minimumFractionDigits: 2,

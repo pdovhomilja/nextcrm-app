@@ -56,7 +56,7 @@ export function InvoiceActions({
       if (action === "duplicate") {
         const result = await res.json();
         toast.success("Invoice duplicated");
-        router.push(`/invoices/${result.id}`);
+        router.push(`/invoices/${result.data.id}`);
       } else {
         toast.success(
           action === "issue" ? "Invoice issued" : "Invoice cancelled"

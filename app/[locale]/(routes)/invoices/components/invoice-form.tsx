@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,8 @@ import {
 import { LineItemsEditor, LineItemRow } from "./line-items-editor";
 import { TotalsPanel } from "./totals-panel";
 import { INVOICE_TYPES } from "@/types/invoice";
+import { createInvoice } from "@/actions/invoices/create-invoice";
+import { updateInvoice } from "@/actions/invoices/update-invoice";
 
 interface Account {
   id: string;
@@ -98,6 +101,7 @@ export function InvoiceForm({
   initialData,
 }: InvoiceFormProps) {
   const router = useRouter();
+  const locale = useLocale();
   const [saving, setSaving] = useState(false);
   const isEdit = !!initialData;
 
@@ -213,23 +217,10 @@ export function InvoiceForm({
           })),
       };
 
-      const url = isEdit
-        ? `/api/invoices/${initialData.id}`
-        : "/api/invoices";
-      const method = isEdit ? "PATCH" : "POST";
+      const result = isEdit
+        ? await updateInvoice(initialData.id, body)
+        : await createInvoice(body);
 
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text);
-      }
-
-      const result = await res.json();
       toast.success(isEdit ? "Invoice updated" : "Invoice created");
       router.push(`/invoices/${result.id}`);
       router.refresh();
@@ -421,7 +412,7 @@ export function InvoiceForm({
       </div>
 
       <div className="space-y-4">
-        <TotalsPanel lineItems={totalsInput} currency={currency} />
+        <TotalsPanel lineItems={totalsInput} currency={currency} locale={locale} />
       </div>
     </div>
   );

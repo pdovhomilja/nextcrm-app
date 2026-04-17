@@ -58,3 +58,29 @@ This file is the authoritative guide for AI agents (Claude Code and other LLM ag
 | receiving-code-review          | `.claude/skills/receiving-code-review/`          | Flexible |
 
 ---
+
+## 3. Prisma Decimal Serialization
+
+**Problem**: Prisma returns `Decimal` objects for decimal/numeric columns. These are **not serializable** across the React Server Action boundary or when passing data to Client Components. Symptoms include: silent failures, `undefined` return values, hydration mismatches, or broken `router.push()` after a server action call.
+
+**Solution**: Always use `serializeDecimals()` from `lib/serialize-decimals.ts`.
+
+```ts
+import { serializeDecimals } from "@/lib/serialize-decimals";
+
+// Single object — wraps Prisma result before returning from server actions
+return serializeDecimals(invoice);
+
+// Lists — use serializeDecimalsList for arrays
+import { serializeDecimalsList } from "@/lib/serialize-decimals";
+return serializeDecimalsList(invoices);
+```
+
+**When to apply**:
+- Every server action (`"use server"`) that returns a Prisma object containing Decimal fields
+- Every Server Component that passes Prisma objects with Decimal fields as props to Client Components
+- Any data crossing the server → client boundary where the Prisma model has `Decimal` columns
+
+**Do NOT** strip returns to `{ id }` only — use `serializeDecimals()` so the full object remains available to the caller.
+
+---

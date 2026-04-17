@@ -21,11 +21,12 @@ interface Payment {
 interface PaymentListProps {
   payments: Payment[];
   currency: string;
+  locale: string;
 }
 
-export function PaymentList({ payments, currency }: PaymentListProps) {
+export function PaymentList({ payments, currency, locale }: PaymentListProps) {
   const fmt = (n: string) =>
-    new Intl.NumberFormat(undefined, {
+    new Intl.NumberFormat(locale, {
       style: "currency",
       currency: currency || "CZK",
       minimumFractionDigits: 2,
@@ -54,7 +55,7 @@ export function PaymentList({ payments, currency }: PaymentListProps) {
         {payments.map((p) => (
           <TableRow key={p.id}>
             <TableCell>
-              {new Date(p.paidAt).toLocaleDateString()}
+              {new Date(p.paidAt).toLocaleDateString(locale)}
             </TableCell>
             <TableCell className="font-mono">{fmt(p.amount)}</TableCell>
             <TableCell>{p.method ?? "-"}</TableCell>

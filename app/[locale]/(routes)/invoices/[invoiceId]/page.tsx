@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -21,15 +21,15 @@ interface Props {
   params: Promise<{ invoiceId: string }>;
 }
 
-function formatDate(d: Date | string | null) {
+function formatDate(d: Date | string | null, locale: string) {
   if (!d) return "-";
-  return new Date(d).toLocaleDateString();
+  return new Date(d).toLocaleDateString(locale);
 }
 
-function formatCurrency(amount: string | number, currency: string) {
+function formatCurrency(amount: string | number, currency: string, locale: string) {
   const num = typeof amount === "string" ? parseFloat(amount) : amount;
   if (isNaN(num)) return String(amount);
-  return new Intl.NumberFormat(undefined, {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: currency || "CZK",
     minimumFractionDigits: 2,
@@ -38,6 +38,7 @@ function formatCurrency(amount: string | number, currency: string) {
 
 export default async function InvoiceDetailPage({ params }: Props) {
   const { invoiceId } = await params;
+  const locale = await getLocale();
   const t = await getTranslations("InvoicesPage");
   const invoice = await getInvoiceById(invoiceId);
 
@@ -115,13 +116,13 @@ export default async function InvoiceDetailPage({ params }: Props) {
               <span className="text-muted-foreground">
                 {t("table.issueDate")}
               </span>
-              <span>{formatDate(invoice.issueDate)}</span>
+              <span>{formatDate(invoice.issueDate, locale)}</span>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <span className="text-muted-foreground">
                 {t("table.dueDate")}
               </span>
-              <span>{formatDate(invoice.dueDate)}</span>
+              <span>{formatDate(invoice.dueDate, locale)}</span>
             </div>
             {invoice.variableSymbol && (
               <div className="grid grid-cols-2 gap-2">
@@ -153,7 +154,8 @@ export default async function InvoiceDetailPage({ params }: Props) {
               <span className="font-mono">
                 {formatCurrency(
                   invoice.subtotal.toString(),
-                  invoice.currency
+                  invoice.currency,
+                  locale
                 )}
               </span>
             </div>
@@ -164,7 +166,8 @@ export default async function InvoiceDetailPage({ params }: Props) {
                   -
                   {formatCurrency(
                     invoice.discountTotal.toString(),
-                    invoice.currency
+                    invoice.currency,
+                    locale
                   )}
                 </span>
               </div>
@@ -174,7 +177,8 @@ export default async function InvoiceDetailPage({ params }: Props) {
               <span className="font-mono">
                 {formatCurrency(
                   invoice.vatTotal.toString(),
-                  invoice.currency
+                  invoice.currency,
+                  locale
                 )}
               </span>
             </div>
@@ -184,7 +188,8 @@ export default async function InvoiceDetailPage({ params }: Props) {
               <span className="font-mono">
                 {formatCurrency(
                   invoice.grandTotal.toString(),
-                  invoice.currency
+                  invoice.currency,
+                  locale
                 )}
               </span>
             </div>
@@ -193,7 +198,8 @@ export default async function InvoiceDetailPage({ params }: Props) {
               <span className="font-mono text-green-600">
                 {formatCurrency(
                   invoice.paidTotal.toString(),
-                  invoice.currency
+                  invoice.currency,
+                  locale
                 )}
               </span>
             </div>
@@ -202,7 +208,8 @@ export default async function InvoiceDetailPage({ params }: Props) {
               <span className="font-mono">
                 {formatCurrency(
                   invoice.balanceDue.toString(),
-                  invoice.currency
+                  invoice.currency,
+                  locale
                 )}
               </span>
             </div>
@@ -285,7 +292,8 @@ export default async function InvoiceDetailPage({ params }: Props) {
                   <TableCell className="text-right font-mono">
                     {formatCurrency(
                       li.unitPrice.toString(),
-                      invoice.currency
+                      invoice.currency,
+                      locale
                     )}
                   </TableCell>
                   <TableCell className="text-right">
@@ -301,7 +309,8 @@ export default async function InvoiceDetailPage({ params }: Props) {
                   <TableCell className="text-right font-mono font-medium">
                     {formatCurrency(
                       li.lineTotal.toString(),
-                      invoice.currency
+                      invoice.currency,
+                      locale
                     )}
                   </TableCell>
                 </TableRow>
@@ -354,6 +363,7 @@ export default async function InvoiceDetailPage({ params }: Props) {
           <PaymentList
             payments={JSON.parse(JSON.stringify(invoice.payments))}
             currency={invoice.currency}
+            locale={locale}
           />
         </CardContent>
       </Card>

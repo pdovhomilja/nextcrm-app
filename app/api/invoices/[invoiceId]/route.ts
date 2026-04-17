@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-server";
 import { getUser } from "@/actions/get-user";
 import { prismadb } from "@/lib/prisma";
-import { updateInvoice } from "@/actions/invoices/update-invoice";
 
 export async function GET(
   _request: NextRequest,
@@ -36,28 +35,6 @@ export async function GET(
   }
 
   return NextResponse.json({ data: invoice });
-}
-
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ invoiceId: string }> }
-) {
-  const { invoiceId } = await params;
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  try {
-    const body = await request.json();
-    const invoice = await updateInvoice(invoiceId, body);
-    return NextResponse.json({ data: invoice });
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message ?? "Failed to update invoice" },
-      { status: 400 }
-    );
-  }
 }
 
 export async function DELETE(

@@ -5,6 +5,7 @@ import { getUser } from "@/actions/get-user";
 import { Decimal } from "decimal.js";
 import { computeInvoiceTotals, computeLineTotal } from "@/lib/invoices/totals";
 import { createInvoiceSchema } from "@/types/invoice";
+import { serializeDecimals } from "@/lib/serialize-decimals";
 
 export async function createInvoice(raw: unknown) {
   const user = await getUser();
@@ -33,7 +34,7 @@ export async function createInvoice(raw: unknown) {
   }));
   const totals = computeInvoiceTotals(lineInputs);
 
-  return prismadb.invoices.create({
+  const invoice = await prismadb.invoices.create({
     data: {
       type: input.type,
       status: "DRAFT",
@@ -77,4 +78,6 @@ export async function createInvoice(raw: unknown) {
       },
     },
   });
+
+  return serializeDecimals(invoice);
 }

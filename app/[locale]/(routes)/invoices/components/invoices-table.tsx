@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useLocale } from "next-intl";
 import Link from "next/link";
 import {
   Table,
@@ -44,15 +45,15 @@ interface InvoicesTableProps {
   };
 }
 
-function formatDate(d: string | null) {
+function formatDate(d: string | null, locale: string) {
   if (!d) return "-";
-  return new Date(d).toLocaleDateString();
+  return new Date(d).toLocaleDateString(locale);
 }
 
-function formatCurrency(amount: string, currency: string) {
+function formatCurrency(amount: string, currency: string, locale: string) {
   const num = parseFloat(amount);
   if (isNaN(num)) return amount;
-  return new Intl.NumberFormat(undefined, {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
     minimumFractionDigits: 2,
@@ -64,6 +65,7 @@ export function InvoicesTable({
   statusLabels,
   tableLabels,
 }: InvoicesTableProps) {
+  const locale = useLocale();
   const [sortField, setSortField] = useState<SortField>("issueDate");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
@@ -167,10 +169,10 @@ export function InvoicesTable({
               </Link>
             </TableCell>
             <TableCell>{inv.account?.name ?? "-"}</TableCell>
-            <TableCell>{formatDate(inv.issueDate)}</TableCell>
-            <TableCell>{formatDate(inv.dueDate)}</TableCell>
+            <TableCell>{formatDate(inv.issueDate, locale)}</TableCell>
+            <TableCell>{formatDate(inv.dueDate, locale)}</TableCell>
             <TableCell className="font-mono">
-              {formatCurrency(inv.grandTotal, inv.currency)}
+              {formatCurrency(inv.grandTotal, inv.currency, locale)}
             </TableCell>
             <TableCell>
               <StatusBadge status={inv.status} labels={statusLabels} />
