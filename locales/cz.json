@@ -39,7 +39,10 @@
     "tasks": "Úkoly",
     "myTasks": "Moje úkoly",
     "documents": "Dokumenty",
-    "storage": "Úložiště"
+    "storage": "Úložiště",
+    "invoices": "Faktury",
+    "campaigns": "Kampaně",
+    "targets": "Cíle"
   },
   "RegisterComponent": {
     "cardTitle": "Vytvořit nový účet",

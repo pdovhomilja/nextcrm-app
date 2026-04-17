@@ -40,7 +40,10 @@
     "tasks": "Tasks",
     "myTasks": "My tasks",
     "documents": "Documents",
-    "storage": "Storage"
+    "storage": "Storage",
+    "invoices": "Invoices",
+    "campaigns": "Campaigns",
+    "targets": "Targets"
   },
   "RegisterComponent": {
     "cardTitle": "Create new account",

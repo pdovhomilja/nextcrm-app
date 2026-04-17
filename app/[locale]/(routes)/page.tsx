@@ -4,12 +4,13 @@ import {
   CoinsIcon,
   Contact,
   DollarSignIcon,
-  FactoryIcon,
   FilePenLine,
+  FileText,
   HeartHandshakeIcon,
   LandmarkIcon,
+  Megaphone,
+  Target,
   UserIcon,
-  Users2Icon,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -22,7 +23,9 @@ import {
   getTasksCount,
   getUsersTasksCount,
 } from "@/actions/dashboard/get-tasks-count";
-import { getEmployees } from "@/actions/get-empoloyees";
+import { getInvoicesCount } from "@/actions/dashboard/get-invoices-count";
+import { getCampaignsCount } from "@/actions/dashboard/get-campaigns-count";
+import { getTargetsCount } from "@/actions/dashboard/get-targets-count";
 import { getLeadsCount } from "@/actions/dashboard/get-leads-count";
 import { getBoardsCount } from "@/actions/dashboard/get-boards-count";
 import { getStorageSize } from "@/actions/documents/get-storage-size";
@@ -56,7 +59,9 @@ const DashboardPage = async () => {
   const dict = await getTranslations("DashboardPage");
   const leads = await getLeadsCount();
   const tasks = await getTasksCount();
-  const employees = await getEmployees();
+  const invoices = await getInvoicesCount();
+  const campaigns = await getCampaignsCount();
+  const targets = await getTargetsCount();
   const storage = await getStorageSize();
   const projects = await getBoardsCount();
   const contacts = await getContactCount();
@@ -112,10 +117,22 @@ const DashboardPage = async () => {
           content={users}
         />
         <DashboardCard
-          href="/employees"
-          title="Employees"
-          IconComponent={Users2Icon}
-          content={employees.length}
+          href="/invoices"
+          title={dict("invoices")}
+          IconComponent={FileText}
+          content={invoices}
+        />
+        <DashboardCard
+          href="/campaigns"
+          title={dict("campaigns")}
+          IconComponent={Megaphone}
+          content={campaigns}
+        />
+        <DashboardCard
+          href="/crm/targets"
+          title={dict("targets")}
+          IconComponent={Target}
+          content={targets}
         />
         <DashboardCard
           href="/crm/accounts"

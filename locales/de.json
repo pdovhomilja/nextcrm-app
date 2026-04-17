@@ -38,7 +38,10 @@
     "tasks": "Aufgaben",
     "myTasks": "Meine Aufgaben",
     "documents": "Dokumente",
-    "storage": "Speicher"
+    "storage": "Speicher",
+    "invoices": "Rechnungen",
+    "campaigns": "Kampagnen",
+    "targets": "Ziele"
   },
   "RegisterComponent": {
     "cardTitle": "Neuen Account erstellen",
