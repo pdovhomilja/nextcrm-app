@@ -15,6 +15,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Send } from "lucide-react";
+import { sendInvoiceEmail } from "@/actions/invoices/send-invoice-email";
 
 interface SendEmailDialogProps {
   invoiceId: string;
@@ -39,16 +40,12 @@ export function SendEmailDialog({
     }
     setSending(true);
     try {
-      const res = await fetch(`/api/invoices/${invoiceId}/send`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          to,
-          subject: subject || undefined,
-          message: message || undefined,
-        }),
+      await sendInvoiceEmail({
+        invoiceId,
+        to,
+        subject: subject || undefined,
+        message: message || undefined,
       });
-      if (!res.ok) throw new Error(await res.text());
       toast.success("Invoice sent by email");
       setOpen(false);
       router.refresh();

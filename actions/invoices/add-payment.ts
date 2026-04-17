@@ -5,6 +5,7 @@ import { getUser } from "@/actions/get-user";
 import { Decimal } from "decimal.js";
 import { addPaymentSchema } from "@/types/invoice";
 import { canAddPayment, type InvoiceStatus } from "@/lib/invoices/permissions";
+import { serializeDecimals } from "@/lib/serialize-decimals";
 
 export async function addPayment(raw: unknown) {
   const user = await getUser();
@@ -60,6 +61,6 @@ export async function addPayment(raw: unknown) {
       },
     });
 
-    return updated;
+    return serializeDecimals(updated);
   });
 }

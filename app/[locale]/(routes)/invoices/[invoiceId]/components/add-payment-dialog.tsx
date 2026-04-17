@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { addPayment } from "@/actions/invoices/add-payment";
 
 const PAYMENT_METHODS = [
   "Bank Transfer",
@@ -55,19 +56,14 @@ export function AddPaymentDialog({
   const handleSubmit = async () => {
     setSaving(true);
     try {
-      const res = await fetch(`/api/invoices/${invoiceId}/payments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          invoiceId,
-          amount: parseFloat(amount),
-          paidAt: new Date(paidAt).toISOString(),
-          method,
-          reference: reference || null,
-          note: note || null,
-        }),
+      await addPayment({
+        invoiceId,
+        amount: parseFloat(amount),
+        paidAt: new Date(paidAt).toISOString(),
+        method,
+        reference: reference || null,
+        note: note || null,
       });
-      if (!res.ok) throw new Error(await res.text());
       toast.success("Payment recorded");
       setOpen(false);
       router.refresh();

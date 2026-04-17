@@ -2,6 +2,7 @@
 
 import { prismadb } from "@/lib/prisma";
 import { getUser } from "@/actions/get-user";
+import { serializeDecimals } from "@/lib/serialize-decimals";
 
 export async function duplicateInvoice(invoiceId: string) {
   const user = await getUser();
@@ -11,7 +12,7 @@ export async function duplicateInvoice(invoiceId: string) {
     include: { lineItems: { orderBy: { position: "asc" } } },
   });
 
-  return prismadb.invoices.create({
+  const invoice = await prismadb.invoices.create({
     data: {
       type: source.type,
       status: "DRAFT",
@@ -56,4 +57,6 @@ export async function duplicateInvoice(invoiceId: string) {
       },
     },
   });
+
+  return serializeDecimals(invoice);
 }

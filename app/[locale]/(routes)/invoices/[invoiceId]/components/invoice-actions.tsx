@@ -14,6 +14,9 @@ import {
   Ban,
   CheckCircle,
 } from "lucide-react";
+import { issueInvoice } from "@/actions/invoices/issue-invoice";
+import { cancelInvoice } from "@/actions/invoices/cancel-invoice";
+import { duplicateInvoice } from "@/actions/invoices/duplicate-invoice";
 
 interface InvoiceActionsProps {
   invoiceId: string;
@@ -42,26 +45,21 @@ export function InvoiceActions({
   ].includes(status);
   const canSend = ["ISSUED", "SENT"].includes(status);
 
-  const handleAction = async (
-    action: "issue" | "cancel" | "duplicate",
-    endpoint: string
-  ) => {
+  const handleAction = async (action: "issue" | "cancel" | "duplicate") => {
     setLoading(action);
     try {
-      const res = await fetch(`/api/invoices/${invoiceId}/${endpoint}`, {
-        method: "POST",
-      });
-      if (!res.ok) throw new Error(await res.text());
-
-      if (action === "duplicate") {
-        const result = await res.json();
-        toast.success("Invoice duplicated");
-        router.push(`/invoices/${result.data.id}`);
-      } else {
-        toast.success(
-          action === "issue" ? "Invoice issued" : "Invoice cancelled"
-        );
+      if (action === "issue") {
+        await issueInvoice({ invoiceId });
+        toast.success("Invoice issued");
         router.refresh();
+      } else if (action === "cancel") {
+        await cancelInvoice(invoiceId);
+        toast.success("Invoice cancelled");
+        router.refresh();
+      } else {
+        const result = await duplicateInvoice(invoiceId);
+        toast.success("Invoice duplicated");
+        router.push(`/invoices/${result.id}`);
       }
     } catch {
       toast.error(`Failed to ${action} invoice`);
@@ -83,7 +81,7 @@ export function InvoiceActions({
           <Button
             variant="default"
             size="sm"
-            onClick={() => handleAction("issue", "issue")}
+            onClick={() => handleAction("issue")}
             disabled={loading === "issue"}
           >
             <CheckCircle className="mr-2 h-4 w-4" />
@@ -94,7 +92,7 @@ export function InvoiceActions({
             size="sm"
             onClick={() => {
               if (confirm("Cancel this draft invoice?")) {
-                handleAction("cancel", "cancel");
+                handleAction("cancel");
               }
             }}
             disabled={loading === "cancel"}
@@ -123,7 +121,7 @@ export function InvoiceActions({
       <Button
         variant="outline"
         size="sm"
-        onClick={() => handleAction("duplicate", "duplicate")}
+        onClick={() => handleAction("duplicate")}
         disabled={loading === "duplicate"}
       >
         <Copy className="mr-2 h-4 w-4" />

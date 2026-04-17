@@ -11,6 +11,7 @@ import { issueInvoiceSchema } from "@/types/invoice";
 import { renderInvoicePdf } from "@/lib/invoices/pdf/render";
 import { uploadInvoicePdf } from "@/lib/invoices/storage";
 import type { InvoicePdfData, PdfParty } from "@/lib/invoices/pdf/templates/default-invoice";
+import { serializeDecimals } from "@/lib/serialize-decimals";
 
 export async function issueInvoice(raw: unknown) {
   const user = await getUser();
@@ -195,5 +196,5 @@ export async function issueInvoice(raw: unknown) {
     // Do NOT fail — invoice is legally issued
   }
 
-  return result;
+  return serializeDecimals(result);
 }
