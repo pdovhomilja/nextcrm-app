@@ -17,14 +17,10 @@ import {
 } from "@/components/ui/select";
 import { LineItemsEditor, LineItemRow } from "./line-items-editor";
 import { TotalsPanel } from "./totals-panel";
+import { AccountSearchCombobox } from "@/components/ui/account-search-combobox";
 import { INVOICE_TYPES } from "@/types/invoice";
 import { createInvoice } from "@/actions/invoices/create-invoice";
 import { updateInvoice } from "@/actions/invoices/update-invoice";
-
-interface Account {
-  id: string;
-  name: string;
-}
 
 interface Product {
   id: string;
@@ -58,7 +54,6 @@ interface Settings {
 }
 
 interface InvoiceFormProps {
-  accounts: Account[];
   products: Product[];
   taxRates: TaxRate[];
   series: Series[];
@@ -91,7 +86,6 @@ interface InvoiceFormProps {
 }
 
 export function InvoiceForm({
-  accounts,
   products,
   taxRates,
   series,
@@ -257,18 +251,11 @@ export function InvoiceForm({
 
           <div className="space-y-2">
             <Label>{l.account ?? "Account"}</Label>
-            <Select value={accountId} onValueChange={setAccountId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select account..." />
-              </SelectTrigger>
-              <SelectContent>
-                {accounts.map((a) => (
-                  <SelectItem key={a.id} value={a.id}>
-                    {a.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <AccountSearchCombobox
+              value={accountId}
+              onChange={setAccountId}
+              placeholder="Select account..."
+            />
           </div>
 
           <div className="space-y-2">

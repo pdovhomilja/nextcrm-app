@@ -6,12 +6,8 @@ import { InvoiceForm } from "../components/invoice-form";
 export default async function NewInvoicePage() {
   const t = await getTranslations("InvoicesPage");
 
-  const [accounts, products, taxRates, series, currencies, settings] =
+  const [products, taxRates, series, currencies, settings] =
     await Promise.all([
-      prismadb.crm_Accounts.findMany({
-        select: { id: true, name: true },
-        orderBy: { name: "asc" },
-      }),
       prismadb.crm_Products.findMany({
         select: { id: true, name: true },
         where: { status: "ACTIVE" },
@@ -59,7 +55,6 @@ export default async function NewInvoicePage() {
   return (
     <Container title={t("new")} description={t("description")}>
       <InvoiceForm
-        accounts={JSON.parse(JSON.stringify(accounts))}
         products={JSON.parse(JSON.stringify(products))}
         taxRates={JSON.parse(JSON.stringify(taxRates))}
         series={JSON.parse(JSON.stringify(series))}
