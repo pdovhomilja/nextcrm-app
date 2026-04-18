@@ -162,7 +162,8 @@
     "updateSuccess": "Account updated successfully",
     "errorDescription": "Something went wrong. Please try again.",
     "nameRequired": "Account name is required",
-    "emailInvalid": "Please enter a valid email address"
+    "emailInvalid": "Please enter a valid email address",
+    "websiteInvalid": "Website must be a valid URL"
   },
   "CrmContactForm": {
     "firstName": "First name",

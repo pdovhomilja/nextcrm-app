@@ -39,28 +39,28 @@ export function NewAccountForm({ industries, onFinish }: Props) {
 
   const formSchema = z.object({
     name: z.string().min(1, t("nameRequired")).max(100),
-    office_phone: z.string().optional(),
-    website: z.string().optional(),
-    fax: z.string().optional(),
-    company_id: z.string().min(5).max(10),
+    office_phone: z.string().max(50).optional(),
+    website: z.string().url(t("websiteInvalid")).optional().or(z.literal("")),
+    fax: z.string().max(50).optional(),
+    company_id: z.string().max(20).optional(),
     vat: z.string().max(20).optional(),
-    email: z.string().email(t("emailInvalid")),
-    billing_street: z.string().min(3).max(50),
-    billing_postal_code: z.string().min(2).max(10),
-    billing_city: z.string().min(3).max(50),
-    billing_state: z.string().min(3).max(50).optional(),
-    billing_country: z.string().min(3).max(50),
-    shipping_street: z.string().optional(),
-    shipping_postal_code: z.string().optional(),
-    shipping_city: z.string().optional(),
-    shipping_state: z.string().optional(),
-    shipping_country: z.string().optional(),
-    description: z.string().min(3).max(1000).optional(),
-    assigned_to: z.string().min(3).max(50),
-    status: z.string().min(3).max(50).optional(),
-    annual_revenue: z.string().min(3).max(50).optional(),
-    member_of: z.string().min(3).max(50).optional(),
-    industry: z.string().min(3).max(50),
+    email: z.string().email(t("emailInvalid")).optional().or(z.literal("")),
+    billing_street: z.string().max(100).optional(),
+    billing_postal_code: z.string().max(20).optional(),
+    billing_city: z.string().max(100).optional(),
+    billing_state: z.string().max(100).optional(),
+    billing_country: z.string().max(100).optional(),
+    shipping_street: z.string().max(100).optional(),
+    shipping_postal_code: z.string().max(20).optional(),
+    shipping_city: z.string().max(100).optional(),
+    shipping_state: z.string().max(100).optional(),
+    shipping_country: z.string().max(100).optional(),
+    description: z.string().max(1000).optional(),
+    assigned_to: z.string().optional(),
+    status: z.string().optional(),
+    annual_revenue: z.string().optional(),
+    member_of: z.string().max(100).optional(),
+    industry: z.string().optional(),
   });
 
   type NewAccountFormValues = z.infer<typeof formSchema>;
@@ -91,7 +91,9 @@ export function NewAccountForm({ industries, onFinish }: Props) {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("accountName")}</FormLabel>
+                  <FormLabel>
+                    {t("accountName")} <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input
                       disabled={form.formState.isSubmitting}

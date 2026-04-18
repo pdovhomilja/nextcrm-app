@@ -57,29 +57,29 @@ export function UpdateAccountForm({
 
   const formSchema = z.object({
     id: z.uuid(),
-    name: z.string().min(1, t("nameRequired")).max(80),
-    office_phone: z.string().nullable().optional(),
-    website: z.string().nullable().optional(),
-    fax: z.string().nullable().optional(),
-    company_id: z.string().min(5).max(10),
-    vat: z.string().min(5).max(20).nullable().optional(),
-    email: z.string().email(t("emailInvalid")),
-    billing_street: z.string().min(3).max(50),
-    billing_postal_code: z.string().min(2).max(10),
-    billing_city: z.string().min(3).max(50),
-    billing_state: z.string().min(3).max(50).nullable().optional(),
-    billing_country: z.string().min(3).max(50),
-    shipping_street: z.string().nullable().optional(),
-    shipping_postal_code: z.string().nullable().optional(),
-    shipping_city: z.string().nullable().optional(),
-    shipping_state: z.string().nullable().optional(),
-    shipping_country: z.string().nullable().optional(),
-    description: z.string().min(3).max(250).nullable().optional(),
-    assigned_to: z.string().min(3).max(50),
-    status: z.string().min(3).max(50).nullable().optional(),
-    annual_revenue: z.string().min(3).max(50).nullable().optional(),
-    member_of: z.string().min(3).max(50).nullable().optional(),
-    industry: z.string().min(3).max(50),
+    name: z.string().min(1, t("nameRequired")).max(100),
+    office_phone: z.string().max(50).optional().nullable(),
+    website: z.string().url(t("websiteInvalid")).optional().nullable().or(z.literal("")),
+    fax: z.string().max(50).optional().nullable(),
+    company_id: z.string().max(20).optional().nullable(),
+    vat: z.string().max(20).optional().nullable(),
+    email: z.string().email(t("emailInvalid")).optional().nullable().or(z.literal("")),
+    billing_street: z.string().max(100).optional().nullable(),
+    billing_postal_code: z.string().max(20).optional().nullable(),
+    billing_city: z.string().max(100).optional().nullable(),
+    billing_state: z.string().max(100).optional().nullable(),
+    billing_country: z.string().max(100).optional().nullable(),
+    shipping_street: z.string().max(100).optional().nullable(),
+    shipping_postal_code: z.string().max(20).optional().nullable(),
+    shipping_city: z.string().max(100).optional().nullable(),
+    shipping_state: z.string().max(100).optional().nullable(),
+    shipping_country: z.string().max(100).optional().nullable(),
+    description: z.string().max(1000).optional().nullable(),
+    assigned_to: z.string().optional().nullable(),
+    status: z.string().optional().nullable(),
+    annual_revenue: z.string().optional().nullable(),
+    member_of: z.string().max(100).optional().nullable(),
+    industry: z.string().optional().nullable(),
   });
 
   type NewAccountFormValues = z.infer<typeof formSchema>;
@@ -122,7 +122,10 @@ export function UpdateAccountForm({
   });
 
   const onSubmit = async (data: NewAccountFormValues) => {
-    const result = await updateAccount(data);
+    const payload = Object.fromEntries(
+      Object.entries(data).map(([k, v]) => [k, v === null ? undefined : v])
+    ) as Parameters<typeof updateAccount>[0];
+    const result = await updateAccount(payload);
     if (result?.error) {
       form.setError("root.serverError", { message: result.error });
     } else {
@@ -156,7 +159,7 @@ export function UpdateAccountForm({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("accountName")}</FormLabel>
+                  <FormLabel>{t("accountName")} <span className="text-destructive">*</span></FormLabel>
                   <FormControl>
                     <Input
                       disabled={form.formState.isSubmitting}
