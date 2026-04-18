@@ -164,7 +164,8 @@
     "updateSuccess": "Firma úspěšně aktualizována",
     "errorDescription": "Něco se pokazilo. Zkuste to prosím znovu.",
     "nameRequired": "Název firmy je povinný",
-    "emailInvalid": "Zadejte platnou e-mailovou adresu"
+    "emailInvalid": "Zadejte platnou e-mailovou adresu",
+    "websiteInvalid": "Webová stránka musí být platná URL"
   },
   "CrmContactForm": {
     "firstName": "Jméno",
