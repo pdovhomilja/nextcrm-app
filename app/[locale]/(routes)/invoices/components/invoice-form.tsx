@@ -216,7 +216,7 @@ export function InvoiceForm({
         : await createInvoice(body);
 
       toast.success(isEdit ? "Invoice updated" : "Invoice created");
-      router.push(isEdit ? `/invoices/${result.id}` : "/invoices");
+      router.push(`/invoices/${result.id}`);
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to save invoice"
