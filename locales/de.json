@@ -160,7 +160,8 @@
     "updateSuccess": "Unternehmen erfolgreich aktualisiert",
     "errorDescription": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
     "nameRequired": "Unternehmensname ist erforderlich",
-    "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein"
+    "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
+    "websiteInvalid": "Webseite muss eine gültige URL sein"
   },
   "CrmContactForm": {
     "firstName": "Vorname",
