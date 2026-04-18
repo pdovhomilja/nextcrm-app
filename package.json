@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma migrate deploy && next build",
+    "build": "chmod +x ./node_modules/.pnpm/@prisma+engines@7.6.0/node_modules/@prisma/engines/schema-engine-debian-openssl-1.1.x && prisma generate && prisma migrate deploy && next build",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
     "migrate:mongo-to-postgres": "pnpm exec tsx scripts/migrate-mongo-to-postgres.ts",
