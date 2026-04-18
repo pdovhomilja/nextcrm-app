@@ -84,3 +84,36 @@ return serializeDecimalsList(invoices);
 **Do NOT** strip returns to `{ id }` only — use `serializeDecimals()` so the full object remains available to the caller.
 
 ---
+
+## 4. Git Workflow & Release Management
+
+This project uses a **trunk-based flow with `dev` as the integration branch** and `main` as the release branch. There are no long-lived feature branches.
+
+### Branches
+
+- **`dev`** — integration branch. All local development happens directly here. Deployed to the **remote dev environment** for integration testing.
+- **`main`** — release branch. Deployed to production. Updated only via PR from `dev`.
+
+### Development loop
+
+1. **Work locally on `dev`** — commit feature, fix, and refactor work directly to the `dev` branch. Do not create feature branches for routine work.
+2. **Push to `origin/dev`** — triggers the remote dev deployment. Verify the feature works end-to-end in the deployed dev environment, not just locally.
+3. **Open PR `dev → main`** — only after remote dev is green. This PR is the release gate.
+
+```bash
+# After work is committed locally on dev:
+git push origin dev
+
+# After validating remote dev deploy:
+gh pr create --base main --head dev --title "<type>: <summary>" --body "..."
+```
+
+### Rules for agents
+
+- **Default base branch for PRs is `main`**, head branch is `dev`. Do NOT use `--base dev` unless the user explicitly asks for a feature-branch-style PR.
+- **Never force-push `dev` or `main`.** If mistakes land on `dev`, create a follow-up commit.
+- **Never commit directly to `main`.** Changes reach `main` only via a reviewed `dev → main` PR.
+- **Release automation**: `release-please` runs on `main` to manage version bumps and changelog generation. Do not manually edit `CHANGELOG.md` or `package.json` version fields.
+- When the user says "create a PR" without further context, assume `dev → main`.
+
+---
