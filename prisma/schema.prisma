@@ -57,6 +57,7 @@ model crm_Accounts {
   embedding          crm_Embeddings_Accounts?
   emails             EmailsToAccounts[]
   accountProducts    crm_AccountProducts[]
+  invoices           Invoices[]
 
   @@index([assigned_to])
   @@index([industry])
@@ -970,6 +971,10 @@ model Users {
   report_schedules             crm_Report_Schedule[] @relation("report_schedules")
   sessions                     Session[]
   authAccounts                 Account[]
+  createdInvoices              Invoices[]           @relation("InvoiceCreatedBy")
+  invoicePayments              Invoice_Payments[]    @relation("InvoicePaymentCreatedBy")
+  invoiceAttachments           Invoice_Attachments[] @relation("InvoiceAttachmentUploadedBy")
+  invoiceActivity              Invoice_Activity[]    @relation("InvoiceActivityActor")
 
   @@index([email])
   @@index([userStatus])
@@ -1593,6 +1598,7 @@ model crm_Products {
   accountProducts crm_AccountProducts[]
   opportunityLineItems crm_OpportunityLineItems[]
   contractLineItems    crm_ContractLineItems[]
+  invoiceLineItems     Invoice_LineItems[]
 
   @@index([status])
   @@index([type])
@@ -1689,4 +1695,213 @@ model crm_ContractLineItems {
 
   @@index([contractId])
   @@index([productId])
+}
+
+enum Invoice_Status {
+  DRAFT
+  ISSUED
+  SENT
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+  DISPUTED
+  REFUNDED
+  WRITTEN_OFF
+}
+
+enum Invoice_Type {
+  INVOICE
+  CREDIT_NOTE
+  PROFORMA
+}
+
+model Invoices {
+  id                    String           @id @default(uuid()) @db.Uuid
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  createdBy             String           @db.Uuid
+  createdByUser         Users            @relation("InvoiceCreatedBy", fields: [createdBy], references: [id])
+
+  type                  Invoice_Type     @default(INVOICE)
+  status                Invoice_Status   @default(DRAFT)
+
+  number                String?
+  numberOverridden      Boolean          @default(false)
+  seriesId              String?          @db.Uuid
+  series                Invoice_Series?  @relation(fields: [seriesId], references: [id])
+
+  accountId             String           @db.Uuid
+  account               crm_Accounts     @relation(fields: [accountId], references: [id])
+  billingSnapshot       Json?
+
+  issueDate             DateTime?
+  taxableSupplyDate     DateTime?
+  dueDate               DateTime?
+
+  currency              String           @db.VarChar(3)
+  currencyRef           Invoice_Currencies @relation("InvoiceCurrency", fields: [currency], references: [code], onDelete: Restrict)
+  baseCurrency          String?          @db.VarChar(3)
+  fxRateToBase          Decimal?         @db.Decimal(18, 8)
+
+  subtotal              Decimal          @default(0) @db.Decimal(14, 2)
+  discountTotal         Decimal          @default(0) @db.Decimal(14, 2)
+  vatTotal              Decimal          @default(0) @db.Decimal(14, 2)
+  grandTotal            Decimal          @default(0) @db.Decimal(14, 2)
+  paidTotal             Decimal          @default(0) @db.Decimal(14, 2)
+  balanceDue            Decimal          @default(0) @db.Decimal(14, 2)
+
+  bankName              String?
+  bankAccount           String?
+  iban                  String?
+  swift                 String?
+  variableSymbol        String?
+
+  publicNotes           String?
+  internalNotes         String?
+
+  originalInvoiceId     String?          @db.Uuid
+  originalInvoice       Invoices?        @relation("CreditNoteOf", fields: [originalInvoiceId], references: [id])
+  creditNotes           Invoices[]       @relation("CreditNoteOf")
+
+  pdfStorageKey         String?
+  pdfGeneratedAt        DateTime?
+
+  searchVector          Unsupported("tsvector")?  @map("search_vector")
+
+  lineItems             Invoice_LineItems[]
+  payments              Invoice_Payments[]
+  activity              Invoice_Activity[]
+  attachments           Invoice_Attachments[]
+
+  @@unique([seriesId, number])
+  @@index([accountId])
+  @@index([status])
+  @@index([issueDate])
+  @@index([dueDate])
+  @@index([createdBy])
+  @@index([originalInvoiceId])
+}
+
+model Invoice_LineItems {
+  id              String     @id @default(uuid()) @db.Uuid
+  invoiceId       String     @db.Uuid
+  invoice         Invoices   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  position        Int
+  productId       String?    @db.Uuid
+  product         crm_Products? @relation(fields: [productId], references: [id])
+  description     String
+  quantity        Decimal    @db.Decimal(14, 4)
+  unitPrice       Decimal    @db.Decimal(14, 4)
+  discountPercent Decimal    @default(0) @db.Decimal(5, 2)
+  taxRateId       String?    @db.Uuid
+  taxRate         Invoice_TaxRates? @relation(fields: [taxRateId], references: [id])
+  taxRateSnapshot Decimal?   @db.Decimal(5, 2)
+  lineSubtotal    Decimal    @db.Decimal(14, 2)
+  lineVat         Decimal    @db.Decimal(14, 2)
+  lineTotal       Decimal    @db.Decimal(14, 2)
+
+  @@index([invoiceId])
+  @@index([productId])
+  @@index([taxRateId])
+}
+
+model Invoice_Payments {
+  id          String   @id @default(uuid()) @db.Uuid
+  invoiceId   String   @db.Uuid
+  invoice     Invoices @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  paidAt      DateTime
+  amount      Decimal  @db.Decimal(14, 2)
+  method      String?
+  reference   String?
+  note        String?
+  createdBy   String   @db.Uuid
+  createdByUser Users  @relation("InvoicePaymentCreatedBy", fields: [createdBy], references: [id], onDelete: Restrict)
+  createdAt   DateTime @default(now())
+
+  @@index([invoiceId])
+}
+
+model Invoice_Attachments {
+  id              String   @id @default(uuid()) @db.Uuid
+  invoiceId       String   @db.Uuid
+  invoice         Invoices @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  storageKey      String
+  filename        String
+  mimeType        String
+  size            Int
+  uploadedBy      String   @db.Uuid
+  uploadedByUser  Users    @relation("InvoiceAttachmentUploadedBy", fields: [uploadedBy], references: [id], onDelete: Restrict)
+  uploadedAt      DateTime @default(now())
+  isPrimaryPdf    Boolean  @default(false)
+
+  @@index([invoiceId])
+}
+
+model Invoice_Activity {
+  id          String   @id @default(uuid()) @db.Uuid
+  invoiceId   String   @db.Uuid
+  invoice     Invoices @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  actorId     String   @db.Uuid
+  actor       Users    @relation("InvoiceActivityActor", fields: [actorId], references: [id], onDelete: Restrict)
+  action      String
+  meta        Json?
+  createdAt   DateTime @default(now())
+
+  @@index([invoiceId])
+}
+
+model Invoice_TaxRates {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  rate        Decimal  @db.Decimal(5, 2)
+  isDefault   Boolean  @default(false)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  lineItems   Invoice_LineItems[]
+  defaultForSettings Invoice_Settings[]
+}
+
+model Invoice_Series {
+  id              String   @id @default(uuid()) @db.Uuid
+  name            String
+  prefixTemplate  String
+  resetPolicy     String   @default("YEARLY")
+  currentYear     Int?
+  counter         Int      @default(0)
+  isDefault       Boolean  @default(false)
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  invoices        Invoices[]
+  defaultForSettings Invoice_Settings[]
+}
+
+model Invoice_Currencies {
+  code        String   @id @db.VarChar(3)
+  name        String
+  symbol      String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  invoices    Invoices[] @relation("InvoiceCurrency")
+}
+
+model Invoice_Settings {
+  id                  String   @id @default(uuid()) @db.Uuid
+  baseCurrency        String   @db.VarChar(3)
+  defaultSeriesId     String?  @db.Uuid
+  defaultSeries       Invoice_Series? @relation(fields: [defaultSeriesId], references: [id], onDelete: SetNull)
+  defaultTaxRateId    String?  @db.Uuid
+  defaultTaxRate      Invoice_TaxRates? @relation(fields: [defaultTaxRateId], references: [id], onDelete: SetNull)
+  defaultDueDays      Int      @default(14)
+  bankName            String?
+  bankAccount         String?
+  iban                String?
+  swift               String?
+  footerText          String?
+  updatedAt           DateTime @updatedAt
 }

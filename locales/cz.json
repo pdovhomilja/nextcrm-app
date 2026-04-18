@@ -21,6 +21,7 @@
     "tasks": "Úkoly",
     "reports": "Reporty",
     "documents": "Dokumenty",
+    "invoices": "Faktury",
     "storage": "Úložiště",
     "settings": "Nastavení"
   },
@@ -38,7 +39,10 @@
     "tasks": "Úkoly",
     "myTasks": "Moje úkoly",
     "documents": "Dokumenty",
-    "storage": "Úložiště"
+    "storage": "Úložiště",
+    "invoices": "Faktury",
+    "campaigns": "Kampaně",
+    "targets": "Cíle"
   },
   "RegisterComponent": {
     "cardTitle": "Vytvořit nový účet",
@@ -594,6 +598,121 @@
     "savedReports": {
       "placeholder": "Saved reports...",
       "shared": "shared"
+    }
+  },
+  "InvoicesPage": {
+    "title": "Faktury",
+    "description": "Správa faktur, plateb a fakturace",
+    "new": "Nová faktura",
+    "search": "Hledat faktury...",
+    "status": {
+      "DRAFT": "Koncept",
+      "ISSUED": "Vystavena",
+      "SENT": "Odeslána",
+      "PARTIALLY_PAID": "Částečně zaplacena",
+      "PAID": "Zaplacena",
+      "OVERDUE": "Po splatnosti",
+      "CANCELLED": "Zrušena",
+      "DISPUTED": "Reklamace",
+      "REFUNDED": "Vrácena",
+      "WRITTEN_OFF": "Odepsána"
+    },
+    "table": {
+      "number": "Číslo",
+      "account": "Společnost",
+      "issueDate": "Vystaveno",
+      "dueDate": "Splatnost",
+      "total": "Celkem",
+      "status": "Stav",
+      "type": "Typ",
+      "currency": "Měna"
+    },
+    "form": {
+      "account": "Společnost",
+      "currency": "Měna",
+      "series": "Fakturační řada",
+      "dueDate": "Datum splatnosti",
+      "type": "Typ",
+      "lineItems": "Položky",
+      "addLine": "Přidat položku",
+      "product": "Produkt",
+      "description": "Popis",
+      "quantity": "Množství",
+      "unitPrice": "Jednotková cena",
+      "discount": "Sleva %",
+      "taxRate": "Sazba DPH",
+      "total": "Celkem",
+      "publicNotes": "Veřejné poznámky",
+      "internalNotes": "Interní poznámky",
+      "save": "Uložit koncept",
+      "issue": "Vystavit fakturu",
+      "bankName": "Název banky",
+      "iban": "IBAN",
+      "swift": "SWIFT",
+      "variableSymbol": "Variabilní symbol"
+    },
+    "actions": {
+      "issue": "Vystavit",
+      "cancel": "Zrušit",
+      "duplicate": "Duplikovat",
+      "send": "Odeslat e-mailem",
+      "downloadPdf": "Stáhnout PDF",
+      "addPayment": "Přidat platbu",
+      "edit": "Upravit",
+      "delete": "Smazat"
+    },
+    "payment": {
+      "amount": "Částka",
+      "date": "Datum",
+      "method": "Způsob platby",
+      "reference": "Reference",
+      "note": "Poznámka"
+    }
+  },
+  "InvoicesAdminPage": {
+    "title": "Nastavení faktur",
+    "description": "Konfigurace výchozích hodnot a možností fakturace",
+    "taxRates": {
+      "title": "Sazby DPH",
+      "name": "Název",
+      "rate": "Sazba %",
+      "isDefault": "Výchozí",
+      "active": "Aktivní",
+      "add": "Přidat sazbu DPH",
+      "edit": "Upravit sazbu DPH",
+      "delete": "Smazat sazbu DPH"
+    },
+    "series": {
+      "title": "Fakturační řady",
+      "name": "Název",
+      "prefix": "Šablona prefixu",
+      "resetPolicy": "Politika resetování",
+      "isDefault": "Výchozí",
+      "active": "Aktivní",
+      "add": "Přidat řadu",
+      "edit": "Upravit řadu",
+      "delete": "Smazat řadu"
+    },
+    "currencies": {
+      "title": "Měny faktur",
+      "code": "Kód",
+      "name": "Název",
+      "symbol": "Symbol",
+      "active": "Aktivní",
+      "add": "Přidat měnu"
+    },
+    "settings": {
+      "title": "Obecné nastavení",
+      "baseCurrency": "Základní měna",
+      "defaultSeries": "Výchozí řada",
+      "defaultTaxRate": "Výchozí sazba DPH",
+      "defaultDueDays": "Výchozí splatnost (dny)",
+      "bankName": "Název banky",
+      "bankAccount": "Číslo účtu",
+      "iban": "IBAN",
+      "swift": "SWIFT",
+      "footerText": "Text patičky",
+      "save": "Uložit nastavení"
     }
   },
   "CommandComponent": {

@@ -18,6 +18,7 @@ import getProjectsMenuItem from "./menu-items/Projects";
 import getEmailsMenuItem from "./menu-items/Emails";
 import getReportsMenuItem from "./menu-items/Reports";
 import getDocumentsMenuItem from "./menu-items/Documents";
+import getInvoicesMenuItem from "./menu-items/Invoices";
 import getAdministrationMenuItem from "./menu-items/Administration";
 import getCampaignsMenuItem from "./menu-items/Campaigns";
 
@@ -104,6 +105,7 @@ export function AppSidebar({
     getEmailsMenuItem({ title: dict?.emails || "Emails" }),
     getReportsMenuItem({ title: dict?.reports || "Reports" }),
     getDocumentsMenuItem({ title: dict?.documents || "Documents" }),
+    getInvoicesMenuItem({ title: dict?.invoices || "Invoices" }),
   ];
 
   // Administration: admin users only

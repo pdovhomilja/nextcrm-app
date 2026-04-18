@@ -38,7 +38,10 @@
     "tasks": "Завдання",
     "myTasks": "Мої завдання",
     "documents": "Документи",
-    "storage": "Зберігання"
+    "storage": "Зберігання",
+    "invoices": "Рахунк��",
+    "campaigns": "Кампанії",
+    "targets": "Цілі"
   },
   "RegisterComponent": {
     "cardTitle": "Створити новий обліковий запис",
