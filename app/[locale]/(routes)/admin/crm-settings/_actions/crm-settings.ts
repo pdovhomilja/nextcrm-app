@@ -53,7 +53,7 @@ export async function getConfigValues(configType: CrmConfigType): Promise<Config
 export async function createConfigValue(configType: CrmConfigType, name: string): Promise<void> {
   const parsed = nameSchema.parse(name);
   const { model } = configMap[configType];
-  await (model() as any).create({ data: { name: parsed } });
+  await (model() as any).create({ data: { name: parsed, v: 0 } });
   revalidatePath("/", "layout");
 }
 
