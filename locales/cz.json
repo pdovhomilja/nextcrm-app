@@ -694,14 +694,6 @@
       "edit": "Upravit řadu",
       "delete": "Smazat řadu"
     },
-    "currencies": {
-      "title": "Měny faktur",
-      "code": "Kód",
-      "name": "Název",
-      "symbol": "Symbol",
-      "active": "Aktivní",
-      "add": "Přidat měnu"
-    },
     "settings": {
       "title": "Obecné nastavení",
       "baseCurrency": "Základní měna",

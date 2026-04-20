@@ -573,6 +573,7 @@ model Currency {
   contracts     crm_Contracts[]
   products        crm_Products[]
   accountProducts crm_AccountProducts[]
+  invoices        Invoices[]          @relation("InvoiceCurrency")
 }
 
 model ExchangeRate {
@@ -1740,7 +1741,7 @@ model Invoices {
   dueDate               DateTime?
 
   currency              String           @db.VarChar(3)
-  currencyRef           Invoice_Currencies @relation("InvoiceCurrency", fields: [currency], references: [code], onDelete: Restrict)
+  currencyRef           Currency         @relation("InvoiceCurrency", fields: [currency], references: [code], onDelete: Restrict)
   baseCurrency          String?          @db.VarChar(3)
   fxRateToBase          Decimal?         @db.Decimal(18, 8)
 
@@ -1878,16 +1879,6 @@ model Invoice_Series {
 
   invoices        Invoices[]
   defaultForSettings Invoice_Settings[]
-}
-
-model Invoice_Currencies {
-  code        String   @id @db.VarChar(3)
-  name        String
-  symbol      String?
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-
-  invoices    Invoices[] @relation("InvoiceCurrency")
 }
 
 model Invoice_Settings {

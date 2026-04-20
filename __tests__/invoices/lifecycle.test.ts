@@ -155,12 +155,12 @@ beforeAll(async () => {
   let settings = await prismadb.invoice_Settings.findFirst();
   if (!settings) {
     // Find a base currency
-    let currency = await prismadb.invoice_Currencies.findFirst({
-      where: { active: true },
+    let currency = await prismadb.currency.findFirst({
+      where: { isEnabled: true },
     });
     if (!currency) {
-      currency = await prismadb.invoice_Currencies.create({
-        data: { code: "USD", name: "US Dollar", symbol: "$", active: true },
+      currency = await prismadb.currency.create({
+        data: { code: "USD", name: "US Dollar", symbol: "$", isEnabled: true },
       });
     }
     await prismadb.invoice_Settings.create({

@@ -37,8 +37,8 @@ export default async function EditInvoicePage({ params }: Props) {
         where: { active: true },
         orderBy: { name: "asc" },
       }),
-      prismadb.invoice_Currencies.findMany({
-        where: { active: true },
+      prismadb.currency.findMany({
+        where: { isEnabled: true },
         orderBy: { code: "asc" },
       }),
       prismadb.invoice_Settings.findFirst(),
