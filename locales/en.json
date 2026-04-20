@@ -711,14 +711,6 @@
       "edit": "Edit Series",
       "delete": "Delete Series"
     },
-    "currencies": {
-      "title": "Invoice Currencies",
-      "code": "Code",
-      "name": "Name",
-      "symbol": "Symbol",
-      "active": "Active",
-      "add": "Add Currency"
-    },
     "settings": {
       "title": "General Settings",
       "baseCurrency": "Base Currency",

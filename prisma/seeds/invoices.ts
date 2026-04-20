@@ -7,19 +7,6 @@ const TAX_RATE_21_ID = "00000000-0000-4000-a000-000000000010";
 const TAX_RATE_12_ID = "00000000-0000-4000-a000-000000000011";
 const TAX_RATE_0_ID = "00000000-0000-4000-a000-000000000012";
 
-const CURRENCIES = [
-  { code: "USD", name: "US Dollar", symbol: "$" },
-  { code: "EUR", name: "Euro", symbol: "\u20ac" },
-  { code: "CZK", name: "Czech Koruna", symbol: "K\u010d" },
-  { code: "GBP", name: "British Pound", symbol: "\u00a3" },
-  { code: "CHF", name: "Swiss Franc", symbol: "Fr" },
-  { code: "CAD", name: "Canadian Dollar", symbol: "CA$" },
-  { code: "AUD", name: "Australian Dollar", symbol: "A$" },
-  { code: "JPY", name: "Japanese Yen", symbol: "\u00a5" },
-  { code: "PLN", name: "Polish Zloty", symbol: "z\u0142" },
-  { code: "SEK", name: "Swedish Krona", symbol: "kr" },
-];
-
 const TAX_RATES = [
   { id: TAX_RATE_21_ID, name: "Standard 21%", rate: 21, isDefault: true },
   { id: TAX_RATE_12_ID, name: "Reduced 12%", rate: 12, isDefault: false },
@@ -27,15 +14,6 @@ const TAX_RATES = [
 ];
 
 export async function seedInvoices(prisma: PrismaClient) {
-  console.log("Seeding invoice currencies...");
-  for (const c of CURRENCIES) {
-    await prisma.invoice_Currencies.upsert({
-      where: { code: c.code },
-      update: { name: c.name, symbol: c.symbol },
-      create: { code: c.code, name: c.name, symbol: c.symbol },
-    });
-  }
-
   console.log("Seeding invoice series...");
   await prisma.invoice_Series.upsert({
     where: { id: SERIES_ID },

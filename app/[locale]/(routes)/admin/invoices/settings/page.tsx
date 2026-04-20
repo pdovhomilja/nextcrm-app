@@ -5,8 +5,8 @@ import { InvoiceSettingsForm } from "./_components/InvoiceSettingsForm";
 export default async function InvoiceSettingsPage() {
   const [settings, currencies, series, taxRates] = await Promise.all([
     prismadb.invoice_Settings.findFirst(),
-    prismadb.invoice_Currencies.findMany({
-      where: { active: true },
+    prismadb.currency.findMany({
+      where: { isEnabled: true },
       orderBy: { code: "asc" },
     }),
     prismadb.invoice_Series.findMany({
