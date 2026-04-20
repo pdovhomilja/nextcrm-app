@@ -5,6 +5,15 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.2](https://github.com/pdovhomilja/nextcrm-app/compare/v0.10.1...v0.10.2) (2026-04-20)
+
+
+### Bug Fixes
+
+* **crm-settings:** allow creating industry, opportunity type, and sales stage values ([dc111f0](https://github.com/pdovhomilja/nextcrm-app/commit/dc111f03541e3724e1483e832f39dbc0411b58fd))
+* **invoices:** consolidate Invoice_Currencies into shared Currency table ([43f3814](https://github.com/pdovhomilja/nextcrm-app/commit/43f3814a57973d18a7d687ee153a7b108231f68b))
+* **invoices:** consolidate Invoice_Currencies into shared Currency table ([2c6820d](https://github.com/pdovhomilja/nextcrm-app/commit/2c6820d65e440906472f498b490f7c9fbdd73ea3))
+
 ## [0.10.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.10.0...v0.10.1) (2026-04-19)
 
 
