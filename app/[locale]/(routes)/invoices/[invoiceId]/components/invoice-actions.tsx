@@ -13,10 +13,12 @@ import {
   FileDown,
   Ban,
   CheckCircle,
+  RefreshCw,
 } from "lucide-react";
 import { issueInvoice } from "@/actions/invoices/issue-invoice";
 import { cancelInvoice } from "@/actions/invoices/cancel-invoice";
 import { duplicateInvoice } from "@/actions/invoices/duplicate-invoice";
+import { regenerateInvoicePdf } from "@/actions/invoices/regenerate-pdf";
 
 interface InvoiceActionsProps {
   invoiceId: string;
@@ -66,6 +68,18 @@ export function InvoiceActions({
     } finally {
       setLoading(null);
     }
+  };
+
+  const handleRegenerate = async () => {
+    setLoading("regenerate");
+    const res = await regenerateInvoicePdf(invoiceId);
+    if (res.ok) {
+      toast.success("PDF regenerated");
+      router.refresh();
+    } else {
+      toast.error(res.error);
+    }
+    setLoading(null);
   };
 
   return (
@@ -138,6 +152,19 @@ export function InvoiceActions({
           Download PDF
         </Button>
       </a>
+
+      {!isDraft && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRegenerate}
+          disabled={loading === "regenerate"}
+          title="Re-render PDF using current company settings"
+        >
+          <RefreshCw className="mr-2 h-4 w-4" />
+          {loading === "regenerate" ? "Regenerating..." : "Regenerate PDF"}
+        </Button>
+      )}
     </div>
   );
 }

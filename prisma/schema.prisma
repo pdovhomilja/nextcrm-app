@@ -1894,5 +1894,16 @@ model Invoice_Settings {
   iban                String?
   swift               String?
   footerText          String?
+  companyName         String?
+  companyAddress      String?
+  companyCity         String?
+  companyZip          String?
+  companyCountry      String?
+  companyVatId        String?
+  companyTaxId        String?
+  companyRegNo        String?
+  companyEmail        String?
+  companyPhone        String?
+  companyWebsite      String?
   updatedAt           DateTime @updatedAt
 }

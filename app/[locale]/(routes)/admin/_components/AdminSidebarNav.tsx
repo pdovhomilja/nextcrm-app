@@ -3,15 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Key, Users, Settings, SlidersHorizontal, ClipboardList, Coins } from "lucide-react";
+import { Key, Users, Settings, SlidersHorizontal, ClipboardList, Coins, FileText } from "lucide-react";
 
 const navItems = [
-  { label: "LLM Keys",     href: "/admin/llm-keys",    icon: Key },
+  { label: "LLM Keys",     href: "/admin/llm-keys",     icon: Key },
   { label: "Users",        href: "/admin/users",        icon: Users },
   { label: "Services",     href: "/admin/services",     icon: Settings },
   { label: "CRM Settings", href: "/admin/crm-settings", icon: SlidersHorizontal },
   { label: "Audit Log",    href: "/admin/audit-log",    icon: ClipboardList },
-  { label: "Currencies",   href: "/admin/currencies",  icon: Coins },
+  { label: "Currencies",   href: "/admin/currencies",   icon: Coins },
+  { label: "Invoices",     href: "/admin/invoices",     icon: FileText },
 ];
 
 export function AdminSidebarNav() {
