@@ -5,6 +5,14 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.3](https://github.com/pdovhomilja/nextcrm-app/compare/v0.10.2...v0.10.3) (2026-04-21)
+
+
+### Bug Fixes
+
+* **invoices:** add supplier company details, PDF regeneration, admin route guard ([31e2b29](https://github.com/pdovhomilja/nextcrm-app/commit/31e2b29c0d99d5a86429eeb5b03de38c45586cd2))
+* **invoices:** supplier company details, PDF regeneration, admin route guard ([4c45b8e](https://github.com/pdovhomilja/nextcrm-app/commit/4c45b8e48ca60741c39d54ff2744a93242e1fabe))
+
 ## [0.10.2](https://github.com/pdovhomilja/nextcrm-app/compare/v0.10.1...v0.10.2) (2026-04-20)
 
 
