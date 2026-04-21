@@ -139,10 +139,19 @@ export async function issueInvoice(raw: unknown) {
       regId: result.account.company_id ?? undefined,
     };
 
-    // Supplier info — use settings bank info as a basic supplier reference
+    // Supplier info — use company details from Invoice_Settings (fallback to app name)
     const settings = await prismadb.invoice_Settings.findFirst();
     const supplier: PdfParty = {
-      name: process.env.NEXT_PUBLIC_APP_NAME ?? "NextCRM",
+      name:
+        settings?.companyName ??
+        process.env.NEXT_PUBLIC_APP_NAME ??
+        "NextCRM",
+      street: settings?.companyAddress ?? undefined,
+      city: settings?.companyCity ?? undefined,
+      zip: settings?.companyZip ?? undefined,
+      country: settings?.companyCountry ?? undefined,
+      vatId: settings?.companyVatId ?? undefined,
+      regId: settings?.companyRegNo ?? undefined,
     };
 
     const pdfData: InvoicePdfData = {

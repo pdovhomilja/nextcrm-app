@@ -1,5 +1,13 @@
 -- Clean up failed migration record from previous attempt (if exists)
-DELETE FROM "_prisma_migrations" WHERE "migration_name" = '20260404120000_add_currency_support';
+-- Guarded: the shadow DB may not have _prisma_migrations yet when replaying.
+DO $$ BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = '_prisma_migrations'
+  ) THEN
+    DELETE FROM "_prisma_migrations" WHERE "migration_name" = '20260404120000_add_currency_support';
+  END IF;
+END $$;
 
 -- CreateEnum (idempotent)
 DO $$ BEGIN CREATE TYPE "ExchangeRateSource" AS ENUM ('MANUAL', 'ECB'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;

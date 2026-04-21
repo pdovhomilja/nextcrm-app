@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { saveInvoiceSettings } from "../_actions/invoice-settings";
+import type { InvoiceSettingsInput, FieldErrors } from "../_actions/invoice-settings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,6 +44,17 @@ interface Settings {
   iban: string | null;
   swift: string | null;
   footerText: string | null;
+  companyName: string | null;
+  companyAddress: string | null;
+  companyCity: string | null;
+  companyZip: string | null;
+  companyCountry: string | null;
+  companyVatId: string | null;
+  companyTaxId: string | null;
+  companyRegNo: string | null;
+  companyEmail: string | null;
+  companyPhone: string | null;
+  companyWebsite: string | null;
 }
 
 interface Props {
@@ -58,7 +71,14 @@ export function InvoiceSettingsForm({
   taxRates,
 }: Props) {
   const router = useRouter();
-  const [saving, setSaving] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const clearError = (field: string) =>
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const { [field]: _, ...rest } = prev;
+      return rest;
+    });
 
   const [baseCurrency, setBaseCurrency] = useState(
     settings?.baseCurrency ?? "CZK"
@@ -79,37 +99,206 @@ export function InvoiceSettingsForm({
   const [iban, setIban] = useState(settings?.iban ?? "");
   const [swift, setSwift] = useState(settings?.swift ?? "");
   const [footerText, setFooterText] = useState(settings?.footerText ?? "");
+  const [companyName, setCompanyName] = useState(settings?.companyName ?? "");
+  const [companyAddress, setCompanyAddress] = useState(settings?.companyAddress ?? "");
+  const [companyCity, setCompanyCity] = useState(settings?.companyCity ?? "");
+  const [companyZip, setCompanyZip] = useState(settings?.companyZip ?? "");
+  const [companyCountry, setCompanyCountry] = useState(settings?.companyCountry ?? "");
+  const [companyVatId, setCompanyVatId] = useState(settings?.companyVatId ?? "");
+  const [companyTaxId, setCompanyTaxId] = useState(settings?.companyTaxId ?? "");
+  const [companyRegNo, setCompanyRegNo] = useState(settings?.companyRegNo ?? "");
+  const [companyEmail, setCompanyEmail] = useState(settings?.companyEmail ?? "");
+  const [companyPhone, setCompanyPhone] = useState(settings?.companyPhone ?? "");
+  const [companyWebsite, setCompanyWebsite] = useState(settings?.companyWebsite ?? "");
 
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const res = await fetch("/api/admin/invoices/settings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          baseCurrency,
-          defaultSeriesId: defaultSeriesId || null,
-          defaultTaxRateId: defaultTaxRateId || null,
-          defaultDueDays: parseInt(defaultDueDays) || 14,
-          bankName: bankName || null,
-          bankAccount: bankAccount || null,
-          iban: iban || null,
-          swift: swift || null,
-          footerText: footerText || null,
-        }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      toast.success("Settings saved");
-      router.refresh();
-    } catch {
-      toast.error("Failed to save settings");
-    } finally {
-      setSaving(false);
-    }
+  const handleSave = () => {
+    const payload: InvoiceSettingsInput = {
+      baseCurrency,
+      defaultSeriesId: defaultSeriesId || null,
+      defaultTaxRateId: defaultTaxRateId || null,
+      defaultDueDays: parseInt(defaultDueDays) || 14,
+      bankName: bankName || null,
+      bankAccount: bankAccount || null,
+      iban: iban || null,
+      swift: swift || null,
+      footerText: footerText || null,
+      companyName,
+      companyAddress,
+      companyCity,
+      companyZip,
+      companyCountry,
+      companyRegNo,
+      companyVatId: companyVatId || null,
+      companyTaxId: companyTaxId || null,
+      companyEmail: companyEmail || null,
+      companyPhone: companyPhone || null,
+      companyWebsite: companyWebsite || null,
+    };
+
+    setErrors({});
+    startTransition(async () => {
+      const res = await saveInvoiceSettings(payload);
+      if (res.ok) {
+        toast.success("Settings saved");
+        router.refresh();
+      } else {
+        toast.error(res.error);
+        if (res.fieldErrors) setErrors(res.fieldErrors);
+      }
+    });
   };
 
   return (
     <div className="space-y-6 max-w-2xl">
+      <div className="space-y-4">
+        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+          Company Details
+        </h3>
+        <div className="space-y-2">
+          <Label>Company Name <span className="text-destructive">*</span></Label>
+          <Input
+            value={companyName}
+            onChange={(e) => {
+              setCompanyName(e.target.value);
+              clearError("companyName");
+            }}
+            placeholder="e.g. Acme s.r.o."
+            aria-invalid={!!errors.companyName}
+          />
+          {errors.companyName && (
+            <p className="text-xs text-destructive">{errors.companyName}</p>
+          )}
+        </div>
+        <div className="space-y-2">
+          <Label>Street Address <span className="text-destructive">*</span></Label>
+          <Input
+            value={companyAddress}
+            onChange={(e) => {
+              setCompanyAddress(e.target.value);
+              clearError("companyAddress");
+            }}
+            placeholder="e.g. Wenceslas Square 1"
+            aria-invalid={!!errors.companyAddress}
+          />
+          {errors.companyAddress && (
+            <p className="text-xs text-destructive">{errors.companyAddress}</p>
+          )}
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label>City <span className="text-destructive">*</span></Label>
+            <Input
+              value={companyCity}
+              onChange={(e) => {
+                setCompanyCity(e.target.value);
+                clearError("companyCity");
+              }}
+              aria-invalid={!!errors.companyCity}
+            />
+            {errors.companyCity && (
+              <p className="text-xs text-destructive">{errors.companyCity}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label>ZIP / Postal Code <span className="text-destructive">*</span></Label>
+            <Input
+              value={companyZip}
+              onChange={(e) => {
+                setCompanyZip(e.target.value);
+                clearError("companyZip");
+              }}
+              aria-invalid={!!errors.companyZip}
+            />
+            {errors.companyZip && (
+              <p className="text-xs text-destructive">{errors.companyZip}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label>Country <span className="text-destructive">*</span></Label>
+            <Input
+              value={companyCountry}
+              onChange={(e) => {
+                setCompanyCountry(e.target.value);
+                clearError("companyCountry");
+              }}
+              placeholder="e.g. Czech Republic"
+              aria-invalid={!!errors.companyCountry}
+            />
+            {errors.companyCountry && (
+              <p className="text-xs text-destructive">{errors.companyCountry}</p>
+            )}
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label>VAT ID (DIČ)</Label>
+            <Input
+              value={companyVatId}
+              onChange={(e) => setCompanyVatId(e.target.value)}
+              placeholder="e.g. CZ12345678"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Tax ID</Label>
+            <Input
+              value={companyTaxId}
+              onChange={(e) => setCompanyTaxId(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Registration No. (IČO) <span className="text-destructive">*</span></Label>
+            <Input
+              value={companyRegNo}
+              onChange={(e) => {
+                setCompanyRegNo(e.target.value);
+                clearError("companyRegNo");
+              }}
+              placeholder="e.g. 12345678"
+              aria-invalid={!!errors.companyRegNo}
+            />
+            {errors.companyRegNo && (
+              <p className="text-xs text-destructive">{errors.companyRegNo}</p>
+            )}
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label>Email</Label>
+            <Input
+              type="email"
+              value={companyEmail}
+              onChange={(e) => {
+                setCompanyEmail(e.target.value);
+                clearError("companyEmail");
+              }}
+              aria-invalid={!!errors.companyEmail}
+            />
+            {errors.companyEmail && (
+              <p className="text-xs text-destructive">{errors.companyEmail}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label>Phone</Label>
+            <Input
+              value={companyPhone}
+              onChange={(e) => setCompanyPhone(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Website</Label>
+            <Input
+              value={companyWebsite}
+              onChange={(e) => setCompanyWebsite(e.target.value)}
+              placeholder="e.g. https://acme.com"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-4 pt-4 border-t">
+        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+          Invoice Defaults
+        </h3>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Base Currency</Label>
@@ -220,8 +409,10 @@ export function InvoiceSettingsForm({
         />
       </div>
 
-      <Button onClick={handleSave} disabled={saving}>
-        {saving ? "Saving..." : "Save Settings"}
+      </div>
+
+      <Button onClick={handleSave} disabled={isPending}>
+        {isPending ? "Saving..." : "Save Settings"}
       </Button>
     </div>
   );
