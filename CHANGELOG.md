@@ -5,6 +5,13 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.10.3...v0.11.0) (2026-04-23)
+
+
+### Features
+
+* **crm:** show invoices on account detail page ([a207314](https://github.com/pdovhomilja/nextcrm-app/commit/a207314aded4b706b6fca9b537a603cbb55a9972))
+
 ## [0.10.3](https://github.com/pdovhomilja/nextcrm-app/compare/v0.10.2...v0.10.3) (2026-04-21)
 
 
