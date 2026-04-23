@@ -14,11 +14,14 @@ import { getAccountProducts } from "@/actions/crm/account-products/get-account-p
 import { getProductsFull } from "@/actions/crm/products/get-products";
 import { serializeDecimalsList } from "@/lib/serialize-decimals";
 import { getAccountsTasks } from "@/actions/crm/account/get-tasks";
+import { getInvoicesByAccountId } from "@/actions/invoices/get-invoices-by-accountId";
+import { getTranslations } from "next-intl/server";
 
 import OpportunitiesView from "../../components/OpportunitiesView";
 import LeadsView from "../../components/LeadsView";
 import ContactsView from "../../components/ContactsView";
 import DocumentsView from "../../components/DocumentsView";
+import InvoicesView from "../../components/InvoicesView";
 
 import {
   Documents,
@@ -57,6 +60,30 @@ const AccountDetailPage = async (props: AccountDetailPageProps) => {
   const leads: crm_Leads[] = await getLeadsByAccountId(accountId);
   const documents: Documents[] = await getDocumentsByAccountId(accountId);
   const tasks: crm_Accounts_Tasks[] = await getAccountsTasks(accountId);
+  const invoices = await getInvoicesByAccountId(accountId);
+  const t = await getTranslations("InvoicesPage");
+  const invoiceStatusLabels: Record<string, string> = {
+    DRAFT: t("status.DRAFT"),
+    ISSUED: t("status.ISSUED"),
+    SENT: t("status.SENT"),
+    PARTIALLY_PAID: t("status.PARTIALLY_PAID"),
+    PAID: t("status.PAID"),
+    OVERDUE: t("status.OVERDUE"),
+    CANCELLED: t("status.CANCELLED"),
+    DISPUTED: t("status.DISPUTED"),
+    REFUNDED: t("status.REFUNDED"),
+    WRITTEN_OFF: t("status.WRITTEN_OFF"),
+  };
+  const invoiceTableLabels = {
+    number: t("table.number"),
+    account: t("table.account"),
+    issueDate: t("table.issueDate"),
+    dueDate: t("table.dueDate"),
+    total: t("table.total"),
+    status: t("table.status"),
+    type: t("table.type"),
+    currency: t("table.currency"),
+  };
   const crmData = await getAllCrmData();
   const accountProducts = serializeDecimalsList(
     await getAccountProducts(accountId)
@@ -103,6 +130,12 @@ const AccountDetailPage = async (props: AccountDetailPageProps) => {
               activeProducts={activeProducts}
             />
             <DocumentsView data={documents} accountId={accountId} />
+            <InvoicesView
+              data={JSON.parse(JSON.stringify(invoices))}
+              accountId={accountId}
+              statusLabels={invoiceStatusLabels}
+              tableLabels={invoiceTableLabels}
+            />
           </div>
         </TabsContent>
         <TabsContent value="history">
