@@ -18,7 +18,7 @@ export const admin = ac.newRole({
   settings: ["read", "update"],
 });
 
-export const member = ac.newRole({
+export const manager = ac.newRole({
   user: ["read"],
   crm: ["create", "read", "update", "delete"],
   project: ["create", "read", "update", "delete"],
@@ -26,7 +26,7 @@ export const member = ac.newRole({
   settings: ["read"],
 });
 
-export const viewer = ac.newRole({
+export const user = ac.newRole({
   user: ["read"],
   crm: ["read"],
   project: ["read"],
