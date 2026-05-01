@@ -4,6 +4,18 @@ import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { ExchangeRateSource } from "@prisma/client";
+import { requireRole, AuthenticationError, AuthorizationError } from "@/lib/authz";
+
+async function ensureAdmin(): Promise<{ error: string } | null> {
+  try {
+    await requireRole(["admin"]);
+    return null;
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
+}
 
 export type CurrencyValue = {
   code: string;
@@ -36,6 +48,8 @@ const rateSchema = z.object({
 });
 
 export async function getCurrencies(): Promise<CurrencyValue[]> {
+  const denied = await ensureAdmin();
+  if (denied) throw new Error(denied.error);
   const currencies = await prismadb.currency.findMany({ orderBy: { code: "asc" } });
   return currencies.map((c) => ({
     code: c.code,
@@ -47,6 +61,8 @@ export async function getCurrencies(): Promise<CurrencyValue[]> {
 }
 
 export async function getExchangeRatesAdmin(): Promise<ExchangeRateValue[]> {
+  const denied = await ensureAdmin();
+  if (denied) throw new Error(denied.error);
   const rates = await prismadb.exchangeRate.findMany({
     orderBy: [{ fromCurrency: "asc" }, { toCurrency: "asc" }],
   });
@@ -62,17 +78,23 @@ export async function getExchangeRatesAdmin(): Promise<ExchangeRateValue[]> {
 }
 
 export async function createCurrency(data: { code: string; name: string; symbol: string }) {
+  const denied = await ensureAdmin();
+  if (denied) throw new Error(denied.error);
   const parsed = currencySchema.parse(data);
   await prismadb.currency.create({ data: { ...parsed, isEnabled: true, isDefault: false } });
   revalidatePath("/", "layout");
 }
 
 export async function toggleCurrency(code: string, isEnabled: boolean) {
+  const denied = await ensureAdmin();
+  if (denied) throw new Error(denied.error);
   await prismadb.currency.update({ where: { code }, data: { isEnabled } });
   revalidatePath("/", "layout");
 }
 
 export async function setDefaultCurrency(code: string) {
+  const denied = await ensureAdmin();
+  if (denied) throw new Error(denied.error);
   await prismadb.$transaction([
     prismadb.currency.updateMany({ data: { isDefault: false } }),
     prismadb.currency.update({ where: { code }, data: { isDefault: true, isEnabled: true } }),
@@ -90,6 +112,8 @@ export async function updateExchangeRate(data: {
   toCurrency: string;
   rate: string;
 }) {
+  const denied = await ensureAdmin();
+  if (denied) throw new Error(denied.error);
   const parsed = rateSchema.parse(data);
   await prismadb.exchangeRate.upsert({
     where: {
@@ -115,6 +139,8 @@ export async function updateExchangeRate(data: {
 }
 
 export async function getEcbAutoUpdate(): Promise<boolean> {
+  const denied = await ensureAdmin();
+  if (denied) throw new Error(denied.error);
   const setting = await prismadb.crm_SystemSettings.findUnique({
     where: { key: "ecb_auto_update" },
   });
@@ -122,6 +148,8 @@ export async function getEcbAutoUpdate(): Promise<boolean> {
 }
 
 export async function setEcbAutoUpdate(enabled: boolean) {
+  const denied = await ensureAdmin();
+  if (denied) throw new Error(denied.error);
   await prismadb.crm_SystemSettings.upsert({
     where: { key: "ecb_auto_update" },
     update: { value: enabled ? "true" : "false" },
