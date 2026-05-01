@@ -3,7 +3,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { emailOTP, testUtils } from "better-auth/plugins";
 import { admin as adminPlugin } from "better-auth/plugins";
 import { prismadb } from "@/lib/prisma";
-import { ac, admin, member, viewer } from "@/lib/auth-permissions";
+import { ac, admin, manager, user } from "@/lib/auth-permissions";
 import { newUserNotify } from "@/lib/new-user-notify";
 import resendHelper from "@/lib/resend";
 
@@ -34,7 +34,7 @@ export const auth = betterAuth({
     additionalFields: {
       role: {
         type: "string",
-        defaultValue: "member",
+        defaultValue: "user",
         input: false,
       },
       userStatus: {
@@ -93,8 +93,8 @@ export const auth = betterAuth({
       : []),
     adminPlugin({
       ac,
-      roles: { admin, member, viewer },
-      defaultRole: "member",
+      roles: { admin, manager, user },
+      defaultRole: "user",
     }),
   ],
 
