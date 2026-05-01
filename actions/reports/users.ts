@@ -40,7 +40,7 @@ export async function getUsersByRole(filters: ReportFilters): Promise<ChartDataP
   });
   const roleCounts: Record<string, number> = {};
   for (const u of users) {
-    const role = u.role ?? "member";
+    const role = u.role ?? "user";
     roleCounts[role] = (roleCounts[role] || 0) + 1;
   }
   return Object.entries(roleCounts).map(([name, Number]) => ({

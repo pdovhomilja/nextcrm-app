@@ -1,27 +1,28 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { APP_ROLES, AppRole, requireRole, AuthorizationError } from "@/lib/authz";
 
-const VALID_ROLES = ["admin", "member", "viewer"] as const;
-type Role = (typeof VALID_ROLES)[number];
-
-export const setUserRole = async (userId: string, role: Role) => {
-  const session = await getSession();
-  if (!session) return { error: "Unauthorized" };
-  if (session.user.role !== "admin") return { error: "Forbidden" };
+export const setUserRole = async (userId: string, role: AppRole) => {
+  let actor;
+  try {
+    actor = await requireRole(["admin"]);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    return { error: "Unauthorized" };
+  }
 
   if (!userId) return { error: "userId is required" };
-  if (!VALID_ROLES.includes(role)) return { error: "Invalid role" };
+  if (!APP_ROLES.includes(role)) return { error: "Invalid role" };
 
-  if (userId === session.user.id && role !== "admin") {
+  if (userId === actor.id && role !== "admin") {
     return { error: "Cannot remove your own admin role" };
   }
 
   try {
     const user = await prismadb.users.update({
       where: { id: userId },
-      data: { role },
+      data: { role, is_admin: role === "admin" },
       select: {
         id: true,
         name: true,

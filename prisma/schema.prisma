@@ -925,7 +925,7 @@ model Users {
   emailVerified    Boolean      @default(false)
   image            String?
   is_account_admin Boolean      @default(false)
-  role             String       @default("member")
+  role             String       @default("user")
   is_admin         Boolean      @default(false)
   created_on       DateTime     @default(now())
   updated_at       DateTime?    @updatedAt
