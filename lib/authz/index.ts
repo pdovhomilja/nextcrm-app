@@ -13,3 +13,7 @@ export {
   isAdmin,
   isManagerOrAdmin,
 } from "./session";
+export {
+  tryScopedUpdateContact,
+  tryScopedUpdateTarget,
+} from "./scopes/crm";
