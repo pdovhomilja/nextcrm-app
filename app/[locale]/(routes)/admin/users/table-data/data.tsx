@@ -24,13 +24,13 @@ export const roles = [
     icon: PlayIcon,
   },
   {
-    value: "member",
-    label: "Member",
+    value: "manager",
+    label: "Manager",
     icon: PauseIcon,
   },
   {
-    value: "viewer",
-    label: "Viewer",
+    value: "user",
+    label: "User",
     icon: StopIcon,
   },
 ];

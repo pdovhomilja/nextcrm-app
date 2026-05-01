@@ -43,7 +43,7 @@ export const inviteUser = async (data: {
         email,
         userStatus: "ACTIVE",
         userLanguage: language as Language,
-        role: "member",
+        role: "user",
       },
       select: {
         id: true,
