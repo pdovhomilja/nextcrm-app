@@ -1,19 +1,33 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import InviteUserEmail from "@/emails/InviteUser";
 import resendHelper from "@/lib/resend";
 import { revalidatePath } from "next/cache";
 import { Language } from "@prisma/client";
+import {
+  requireRole,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export const inviteUser = async (data: {
   name: string;
   email: string;
   language: string;
 }) => {
-  const session = await getSession();
-  if (!session) return { error: "Unauthorized" };
-  if (session.user.role !== "admin") return { error: "Forbidden" };
+  let actor;
+  try {
+    actor = await requireRole(["admin"]);
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
+
+  const inviter = await prismadb.users.findUnique({
+    where: { id: actor.id },
+    select: { name: true },
+  });
 
   const { name, email, language } = data;
 
@@ -66,7 +80,7 @@ export const inviteUser = async (data: {
       to: user.email,
       subject: `You have been invited to ${process.env.NEXT_PUBLIC_APP_NAME}`,
       react: InviteUserEmail({
-        invitedByUsername: session.user?.name || "admin",
+        invitedByUsername: inviter?.name || "admin",
         username: user.name!,
         userLanguage: language,
       }),

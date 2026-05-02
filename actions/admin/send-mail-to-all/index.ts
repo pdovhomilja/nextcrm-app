@@ -1,6 +1,4 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
-
 import { render } from "@react-email/render";
 
 import { SendMailToAll } from "./schema";
@@ -11,21 +9,23 @@ import resendHelper from "@/lib/resend";
 import { createSafeAction } from "@/lib/create-safe-action";
 import MessageToAllUsers from "@/emails/admin/MessageToAllUser";
 import sendEmail from "@/lib/sendmail";
+import {
+  requireRole,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
-  const session = await getSession();
-
-  if (!session) {
-    return {
-      error: "You must be authenticated.",
-    };
-  }
-
-  //Only admin can send mail to all users
-  if (session.user.role !== "admin") {
-    return {
-      error: "You are not authorized to perform this action.",
-    };
+  try {
+    await requireRole(["admin"]);
+  } catch (e) {
+    if (e instanceof AuthenticationError) {
+      return { error: "You must be authenticated." };
+    }
+    if (e instanceof AuthorizationError) {
+      return { error: "You are not authorized to perform this action." };
+    }
+    throw e;
   }
 
   const resend = await resendHelper();
