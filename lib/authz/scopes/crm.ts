@@ -146,6 +146,32 @@ export async function filterAuthorizedContactIds(
   return rows.map((r: { id: string }) => r.id);
 }
 
+export async function assertCanCancelContactEnrichment(
+  user: AuthzUser,
+  enrichmentId: string,
+): Promise<void> {
+  const row = (await prismadb.crm_Contact_Enrichment.findUnique({
+    where: { id: enrichmentId },
+    select: { id: true, triggeredBy: true },
+  })) as { id: string; triggeredBy: string | null } | null;
+  if (!row) throw new AuthorizationError();
+  if (user.role === "admin" || user.role === "manager") return;
+  if (row.triggeredBy !== user.id) throw new AuthorizationError();
+}
+
+export async function assertCanCancelTargetEnrichment(
+  user: AuthzUser,
+  enrichmentId: string,
+): Promise<void> {
+  const row = (await prismadb.crm_Target_Enrichment.findUnique({
+    where: { id: enrichmentId },
+    select: { id: true, triggeredBy: true },
+  })) as { id: string; triggeredBy: string | null } | null;
+  if (!row) throw new AuthorizationError();
+  if (user.role === "admin" || user.role === "manager") return;
+  if (row.triggeredBy !== user.id) throw new AuthorizationError();
+}
+
 export async function filterAuthorizedTargetIds(
   user: AuthzUser,
   targetIds: string[],
