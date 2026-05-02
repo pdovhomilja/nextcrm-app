@@ -195,7 +195,7 @@ export function accountUserScopeOR(userId: string) {
     { assigned_to: userId },
     { createdBy: userId },
     { watchers: { some: { user_id: userId } } },
-  ] as const;
+  ];
 }
 
 // Build a Prisma where for "this user can read this account".
