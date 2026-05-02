@@ -17,3 +17,9 @@ export {
   tryScopedUpdateContact,
   tryScopedUpdateTarget,
 } from "./scopes/crm";
+export {
+  assertCanReadContact,
+  assertCanWriteContact,
+  assertCanReadTarget,
+  assertCanWriteTarget,
+} from "./scopes/crm";
