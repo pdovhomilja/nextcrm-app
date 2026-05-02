@@ -371,3 +371,36 @@ export async function assertCanReadTargetList(
   });
   if (!row) throw new AuthorizationError();
 }
+
+// ---------------------------------------------------------------------------
+// D3.T3: Activity / audit dispatch helper.
+// Resolves an entityType string to the matching assertCanRead* helper.
+// Used by activity-feed (T4) and audit-log-by-entity (T5).
+// Unknown entity types: managers/admins pass; users are denied.
+// ---------------------------------------------------------------------------
+export async function assertCanReadActivityForEntity(
+  user: AuthzUser,
+  entityType: string,
+  entityId: string,
+): Promise<void> {
+  switch (entityType.toLowerCase()) {
+    case "account":
+      return assertCanReadAccount(user, entityId);
+    case "lead":
+      return assertCanReadLead(user, entityId);
+    case "contact":
+      return assertCanReadContact(user, entityId);
+    case "opportunity":
+      return assertCanReadOpportunity(user, entityId);
+    case "contract":
+      return assertCanReadContract(user, entityId);
+    case "target":
+      return assertCanReadTarget(user, entityId);
+    case "target_list":
+    case "targetlist":
+      return assertCanReadTargetList(user, entityId);
+    default:
+      if (user.role === "user") throw new AuthorizationError();
+      return;
+  }
+}
