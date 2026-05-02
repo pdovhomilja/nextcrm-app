@@ -2,8 +2,8 @@ import { AuthorizationError } from "../errors";
 
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
-    crm_Contacts: { findFirst: jest.fn() },
-    crm_Targets: { findFirst: jest.fn() },
+    crm_Contacts: { findFirst: jest.fn(), findMany: jest.fn() },
+    crm_Targets: { findFirst: jest.fn(), findMany: jest.fn() },
   },
 }));
 
@@ -13,6 +13,8 @@ import {
   assertCanWriteContact,
   assertCanReadTarget,
   assertCanWriteTarget,
+  filterAuthorizedContactIds,
+  filterAuthorizedTargetIds,
 } from "../scopes/crm";
 
 const findContact = prismadb.crm_Contacts.findFirst as jest.MockedFunction<
@@ -132,5 +134,62 @@ describe("assertCanWriteTarget", () => {
     await expect(
       assertCanWriteTarget({ id: "u3", role: "user" }, "t1"),
     ).rejects.toBeInstanceOf(AuthorizationError);
+  });
+});
+
+describe("filterAuthorizedContactIds", () => {
+  it("admin: returns all input ids that exist (queries with bare where)", async () => {
+    (prismadb.crm_Contacts.findMany as jest.Mock) =
+      jest.fn().mockResolvedValue([{ id: "a" }, { id: "b" }]);
+    const out = await filterAuthorizedContactIds(
+      { id: "u", role: "admin" },
+      ["a", "b", "c"],
+    );
+    expect(out).toEqual(["a", "b"]);
+    expect(prismadb.crm_Contacts.findMany).toHaveBeenCalledWith({
+      where: { id: { in: ["a", "b", "c"] } },
+      select: { id: true },
+    });
+  });
+
+  it("user: scoped where with OR clauses", async () => {
+    (prismadb.crm_Contacts.findMany as jest.Mock) =
+      jest.fn().mockResolvedValue([{ id: "a" }]);
+    await filterAuthorizedContactIds(
+      { id: "u3", role: "user" },
+      ["a", "b"],
+    );
+    const arg = (prismadb.crm_Contacts.findMany as jest.Mock).mock.calls[0][0];
+    expect(arg.where).toMatchObject({
+      id: { in: ["a", "b"] },
+      OR: expect.arrayContaining([
+        { assigned_to: "u3" },
+        { created_by: "u3" },
+        { createdBy: "u3" },
+      ]),
+    });
+  });
+
+  it("returns empty array when input is empty (no DB call)", async () => {
+    const fn = jest.fn();
+    (prismadb.crm_Contacts.findMany as jest.Mock) = fn;
+    const out = await filterAuthorizedContactIds(
+      { id: "u", role: "user" },
+      [],
+    );
+    expect(out).toEqual([]);
+    expect(fn).not.toHaveBeenCalled();
+  });
+});
+
+describe("filterAuthorizedTargetIds", () => {
+  it("user: scoped to created_by", async () => {
+    (prismadb.crm_Targets.findMany as jest.Mock) =
+      jest.fn().mockResolvedValue([{ id: "t1" }]);
+    await filterAuthorizedTargetIds({ id: "u3", role: "user" }, ["t1", "t2"]);
+    expect(prismadb.crm_Targets.findMany).toHaveBeenCalledWith({
+      where: { id: { in: ["t1", "t2"] }, created_by: "u3" },
+      select: { id: true },
+    });
   });
 });

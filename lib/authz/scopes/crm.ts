@@ -122,3 +122,42 @@ export async function assertCanWriteTarget(
   const row = await findTargetInScope(user, targetId);
   if (!row) throw new AuthorizationError();
 }
+
+export async function filterAuthorizedContactIds(
+  user: AuthzUser,
+  contactIds: string[],
+): Promise<string[]> {
+  if (contactIds.length === 0) return [];
+  const baseWhere =
+    user.role === "admin" || user.role === "manager"
+      ? { id: { in: contactIds } }
+      : {
+          id: { in: contactIds },
+          OR: [
+            { assigned_to: user.id },
+            { created_by: user.id },
+            { createdBy: user.id },
+          ],
+        };
+  const rows = await prismadb.crm_Contacts.findMany({
+    where: baseWhere,
+    select: { id: true },
+  });
+  return rows.map((r: { id: string }) => r.id);
+}
+
+export async function filterAuthorizedTargetIds(
+  user: AuthzUser,
+  targetIds: string[],
+): Promise<string[]> {
+  if (targetIds.length === 0) return [];
+  const baseWhere =
+    user.role === "admin" || user.role === "manager"
+      ? { id: { in: targetIds } }
+      : { id: { in: targetIds }, created_by: user.id };
+  const rows = await prismadb.crm_Targets.findMany({
+    where: baseWhere,
+    select: { id: true },
+  });
+  return rows.map((r: { id: string }) => r.id);
+}

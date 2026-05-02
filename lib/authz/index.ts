@@ -23,3 +23,7 @@ export {
   assertCanReadTarget,
   assertCanWriteTarget,
 } from "./scopes/crm";
+export {
+  filterAuthorizedContactIds,
+  filterAuthorizedTargetIds,
+} from "./scopes/crm";
