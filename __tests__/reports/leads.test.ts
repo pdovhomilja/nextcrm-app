@@ -7,6 +7,7 @@ jest.mock("@/lib/prisma", () => ({
 }));
 
 import { prismadb } from "@/lib/prisma";
+import { getReportScope } from "@/lib/authz/scopes/report-scope";
 import { getNewLeads, getLeadSources, getConversionRate, getNewContacts, getContactsByAccount } from "@/actions/reports/leads";
 import type { ReportFilters } from "@/actions/reports/types";
 
@@ -56,6 +57,18 @@ describe("leads report actions", () => {
       ]);
       const result = await getNewContacts(baseFilters);
       expect(result).toEqual([{ name: "2025-02", Number: 2 }]);
+    });
+  });
+
+  describe("scope application", () => {
+    it("applies user scope to leads query", async () => {
+      (prismadb.crm_Leads.findMany as jest.Mock).mockResolvedValue([]);
+      const scope = getReportScope({ id: "u4", role: "user" });
+      await getNewLeads(baseFilters, scope);
+      const arg = (prismadb.crm_Leads.findMany as jest.Mock).mock.calls.at(-1)![0];
+      expect(arg.where.OR).toEqual(
+        expect.arrayContaining([{ assigned_to: "u4" }, { createdBy: "u4" }]),
+      );
     });
   });
 

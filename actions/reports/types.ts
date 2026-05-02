@@ -1,3 +1,5 @@
+export type { ReportScope } from "@/lib/authz/scopes/report-scope";
+
 export type ReportCategory = "sales" | "leads" | "accounts" | "activity" | "campaigns" | "users";
 
 export const REPORT_CATEGORIES: ReportCategory[] = ["sales", "leads", "accounts", "activity", "campaigns", "users"];
