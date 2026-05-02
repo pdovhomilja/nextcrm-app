@@ -3,7 +3,11 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prismadb } from "@/lib/prisma";
-import { getUser } from "@/actions/get-user";
+import {
+  requireRole,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 const requiredStr = (label: string, max: number) =>
   z.string().trim().min(1, `${label} is required`).max(max, `${label} must be ≤ ${max} chars`);
@@ -63,13 +67,13 @@ export type ActionResult<T = unknown> =
 export async function saveInvoiceSettings(
   input: InvoiceSettingsInput
 ): Promise<ActionResult> {
-  let user;
   try {
-    user = await getUser();
-  } catch {
-    return { ok: false, error: "Unauthorized" };
+    await requireRole(["admin"]);
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { ok: false, error: "Unauthorized" };
+    if (e instanceof AuthorizationError) return { ok: false, error: "Forbidden" };
+    throw e;
   }
-  if (!user.is_admin) return { ok: false, error: "Forbidden" };
 
   const parsed = settingsSchema.safeParse(input);
   if (!parsed.success) {
