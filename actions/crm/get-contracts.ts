@@ -2,10 +2,25 @@
 
 import { cache } from "react";
 import { prismadb } from "@/lib/prisma";
+import {
+  requireAuthenticated,
+  contractReadScopeWhere,
+  assertCanReadAccount,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export const getContractsWithIncludes = cache(async () => {
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return [];
+    throw e;
+  }
+
   const data = await prismadb.crm_Contracts.findMany({
-    where: { deletedAt: null },
+    where: { ...contractReadScopeWhere(user) },
     include: {
       assigned_to_user: {
         select: {
@@ -26,10 +41,25 @@ export const getContractsWithIncludes = cache(async () => {
 });
 
 export const getContractsByAccountId = async (accountId: string) => {
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return [];
+    throw e;
+  }
+
+  try {
+    await assertCanReadAccount(user, accountId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return [];
+    throw e;
+  }
+
   const data = await prismadb.crm_Contracts.findMany({
     where: {
       account: accountId,
-      deletedAt: null,
+      ...contractReadScopeWhere(user),
     },
     include: {
       assigned_to_user: {
