@@ -188,6 +188,41 @@ export async function filterAuthorizedTargetIds(
   return rows.map((r: { id: string }) => r.id);
 }
 
+// Internal: the OR clauses describing user-level account ownership.
+// Exported via accountReadScopeWhere; D2 will reuse for nested linked-account scope.
+export function accountUserScopeOR(userId: string) {
+  return [
+    { assigned_to: userId },
+    { createdBy: userId },
+    { watchers: { some: { user_id: userId } } },
+  ] as const;
+}
+
+// Build a Prisma where for "this user can read this account".
+// Manager/admin: { deletedAt: null }
+// User:           { deletedAt: null, OR: accountUserScopeOR(user.id) }
+export function accountReadScopeWhere(user: AuthzUser) {
+  if (user.role === "admin" || user.role === "manager") {
+    return { deletedAt: null };
+  }
+  return {
+    deletedAt: null,
+    OR: accountUserScopeOR(user.id),
+  };
+}
+
+// Throws AuthorizationError if user can't read this account.
+export async function assertCanReadAccount(
+  user: AuthzUser,
+  accountId: string,
+): Promise<void> {
+  const row = await prismadb.crm_Accounts.findFirst({
+    where: { id: accountId, ...accountReadScopeWhere(user) },
+    select: { id: true },
+  });
+  if (!row) throw new AuthorizationError();
+}
+
 export async function assertCanWriteAccount(
   user: AuthzUser,
   accountId: string,
@@ -197,11 +232,7 @@ export async function assertCanWriteAccount(
       ? { id: accountId }
       : {
           id: accountId,
-          OR: [
-            { assigned_to: user.id },
-            { createdBy: user.id },
-            { watchers: { some: { user_id: user.id } } },
-          ],
+          OR: accountUserScopeOR(user.id),
         };
   const row = await prismadb.crm_Accounts.findFirst({
     where,
