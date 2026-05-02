@@ -1,14 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth-server";
 import { inngest } from "@/inngest/client";
 import { getApiKey } from "@/lib/api-keys";
 import { FIELD_MAP } from "@/lib/enrichment/presets/target-fields";
 import type { EnrichmentField } from "@/lib/enrichment/types";
+import {
+  requireAuthenticated,
+  filterAuthorizedTargetIds,
+  unauthorizedResponse,
+  forbiddenResponse,
+  AuthenticationError,
+} from "@/lib/authz";
 
 export async function POST(request: NextRequest) {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return unauthorizedResponse();
+    throw e;
   }
 
   const { targetIds, fields } = await request.json();
@@ -33,15 +42,20 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const firecrawlApiKey = await getApiKey("FIRECRAWL", session.user.id);
-  const openaiApiKey = await getApiKey("OPENAI", session.user.id);
+  const firecrawlApiKey = await getApiKey("FIRECRAWL", user.id);
+  const openaiApiKey = await getApiKey("OPENAI", user.id);
   if (!firecrawlApiKey || !openaiApiKey) {
     return NextResponse.json({ error: "NO_API_KEY" }, { status: 402 });
   }
 
+  const authorized = await filterAuthorizedTargetIds(user, targetIds);
+  if (authorized.length !== targetIds.length) {
+    return forbiddenResponse();
+  }
+
   await inngest.send({
     name: "enrich/targets.bulk",
-    data: { targetIds, fields, triggeredBy: session.user.id },
+    data: { targetIds, fields, triggeredBy: user.id },
   });
 
   return NextResponse.json({ success: true, count: targetIds.length });
