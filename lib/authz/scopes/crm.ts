@@ -344,3 +344,30 @@ export async function assertCanReadContract(
   });
   if (!row) throw new AuthorizationError();
 }
+
+// ---------------------------------------------------------------------------
+// D3.T1: Target + Target-list read-scope helpers.
+// crm_Targets has NO deletedAt (hard delete); crm_TargetLists HAS deletedAt.
+// assertCanReadTarget (B1) is reused as-is for the per-row target check.
+// ---------------------------------------------------------------------------
+
+export function targetReadScopeWhere(user: AuthzUser) {
+  if (user.role === "admin" || user.role === "manager") return {};
+  return { created_by: user.id };
+}
+
+export function targetListReadScopeWhere(user: AuthzUser) {
+  if (user.role === "admin" || user.role === "manager") return { deletedAt: null };
+  return { deletedAt: null, created_by: user.id };
+}
+
+export async function assertCanReadTargetList(
+  user: AuthzUser,
+  listId: string,
+): Promise<void> {
+  const row = await prismadb.crm_TargetLists.findFirst({
+    where: { id: listId, ...targetListReadScopeWhere(user) },
+    select: { id: true },
+  });
+  if (!row) throw new AuthorizationError();
+}
