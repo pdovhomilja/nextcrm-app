@@ -1,14 +1,21 @@
 "use server";
 
 import { prismadb } from "@/lib/prisma";
-import { getUser } from "@/actions/get-user";
+import {
+  requireRole,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 import { Decimal } from "decimal.js";
 
 export async function deletePayment(paymentId: string) {
-  const user = await getUser();
-
-  if (!user.is_admin) {
-    throw new Error("Only admins can delete payments");
+  let user;
+  try {
+    user = await requireRole(["admin"]);
+  } catch (e) {
+    if (e instanceof AuthenticationError) throw new Error("Unauthorized");
+    if (e instanceof AuthorizationError) throw new Error("Only admins can delete payments");
+    throw e;
   }
 
   return prismadb.$transaction(async (tx) => {
