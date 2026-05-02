@@ -9,20 +9,28 @@ import * as accountsActions from "@/actions/reports/accounts";
 import * as activityActions from "@/actions/reports/activity";
 import * as campaignsActions from "@/actions/reports/campaigns";
 import * as usersActions from "@/actions/reports/users";
+import { getReportScope } from "@/lib/authz/scopes/report-scope";
+import type { ReportScope } from "@/lib/authz/scopes/report-scope";
+import { mapLegacyRole } from "@/lib/authz/roles";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-async function getReportData(category: string, filters: any) {
+export async function getReportData(category: string, filters: any, scope: ReportScope) {
   switch (category) {
-    case "sales": return { data: await salesActions.getOppsByMonth(filters), headers: ["Month", "Opportunities"] as [string, string] };
-    case "leads": return { data: await leadsActions.getNewLeads(filters), headers: ["Month", "Leads"] as [string, string] };
-    case "accounts": return { data: await accountsActions.getNewAccounts(filters), headers: ["Month", "Accounts"] as [string, string] };
-    case "activity": return { data: await activityActions.getTasksByAssignee(filters), headers: ["Assignee", "Tasks"] as [string, string] };
+    case "sales": return { data: await salesActions.getOppsByMonth(filters, scope), headers: ["Month", "Opportunities"] as [string, string] };
+    case "leads": return { data: await leadsActions.getNewLeads(filters, scope), headers: ["Month", "Leads"] as [string, string] };
+    case "accounts": return { data: await accountsActions.getNewAccounts(filters, scope), headers: ["Month", "Accounts"] as [string, string] };
+    case "activity": return { data: await activityActions.getTasksByAssignee(filters, scope), headers: ["Assignee", "Tasks"] as [string, string] };
     case "campaigns": {
-      const perf = await campaignsActions.getCampaignPerformance(filters);
+      const perf = await campaignsActions.getCampaignPerformance(filters, scope);
       return { data: [{ name: "Sent", Number: perf.sent }, { name: "Opened", Number: perf.opened }, { name: "Clicked", Number: perf.clicked }], headers: ["Metric", "Count"] as [string, string] };
     }
-    case "users": return { data: await usersActions.getUserGrowth(filters), headers: ["Month", "Users"] as [string, string] };
+    case "users": {
+      if (!scope.allowUserDirectory) {
+        return { data: [], headers: ["Month", "Users"] as [string, string] };
+      }
+      return { data: await usersActions.getUserGrowth(filters), headers: ["Month", "Users"] as [string, string] };
+    }
     default: return { data: [], headers: ["Name", "Value"] as [string, string] };
   }
 }
@@ -55,10 +63,22 @@ export const reportSendScheduled = inngest.createFunction(
 
     for (const schedule of dueSchedules) {
       await step.run(`send-report-${schedule.id}`, async () => {
+        const owner = await prismadb.users.findUnique({
+          where: { id: schedule.createdBy },
+          select: { id: true, role: true, userStatus: true },
+        });
+        if (!owner || owner.userStatus !== "ACTIVE") {
+          console.warn(
+            `[reportSendScheduled] skipping schedule ${schedule.id}: owner ${schedule.createdBy} missing or not ACTIVE`
+          );
+          return;
+        }
+        const scope = getReportScope({ id: owner.id, role: mapLegacyRole(owner.role) });
+
         const filtersRaw = schedule.reportConfig.filters as Record<string, string>;
         const params = new URLSearchParams(filtersRaw);
         const filters = parseSearchParamsToFilters(params);
-        const { data, headers } = await getReportData(schedule.reportConfig.category, filters);
+        const { data, headers } = await getReportData(schedule.reportConfig.category, filters, scope);
 
         const attachments: { filename: string; content: string | Buffer }[] = [];
 
