@@ -32,3 +32,5 @@ export {
   assertCanCancelTargetEnrichment,
 } from "./scopes/crm";
 export { assertCanWriteAccount } from "./scopes/crm";
+export type { ReportScope } from "./scopes/report-scope";
+export { getReportScope } from "./scopes/report-scope";
