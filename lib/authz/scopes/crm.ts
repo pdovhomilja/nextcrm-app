@@ -56,8 +56,8 @@ export async function tryScopedUpdateTarget(
   return result.count > 0;
 }
 
-// Read scope mirrors write scope in Phase B1.
-// Phase D may add separate read-only ownership rules (e.g., watchers).
+// Phase B1 write scope helper (kept for assertCanWriteContact).
+// Read path now uses contactReadScopeWhere (D2) which adds linked-account scope.
 async function findContactInScope(user: AuthzUser, contactId: string) {
   if (user.role === "admin" || user.role === "manager") {
     return prismadb.crm_Contacts.findFirst({
@@ -95,7 +95,10 @@ export async function assertCanReadContact(
   user: AuthzUser,
   contactId: string,
 ): Promise<void> {
-  const row = await findContactInScope(user, contactId);
+  const row = await prismadb.crm_Contacts.findFirst({
+    where: { id: contactId, ...contactReadScopeWhere(user) },
+    select: { id: true },
+  });
   if (!row) throw new AuthorizationError();
 }
 
@@ -236,6 +239,107 @@ export async function assertCanWriteAccount(
         };
   const row = await prismadb.crm_Accounts.findFirst({
     where,
+    select: { id: true },
+  });
+  if (!row) throw new AuthorizationError();
+}
+
+// ---------------------------------------------------------------------------
+// D2: Entity read-scope helpers (Lead / Contact / Opportunity / Contract)
+// All four reuse accountUserScopeOR for the nested linked-account branch.
+// ---------------------------------------------------------------------------
+
+// crm_Leads → crm_Accounts via `assigned_accounts` (FK accountsIDs).
+export function leadReadScopeWhere(user: AuthzUser) {
+  if (user.role === "admin" || user.role === "manager") {
+    return { deletedAt: null };
+  }
+  return {
+    deletedAt: null,
+    OR: [
+      { assigned_to: user.id },
+      { createdBy: user.id },
+      { assigned_accounts: { OR: accountUserScopeOR(user.id) } },
+    ],
+  };
+}
+
+// crm_Contacts → crm_Accounts via `assigned_accounts` (FK accountsIDs).
+// Includes legacy created_by + createdBy because both columns exist.
+export function contactReadScopeWhere(user: AuthzUser) {
+  if (user.role === "admin" || user.role === "manager") {
+    return { deletedAt: null };
+  }
+  return {
+    deletedAt: null,
+    OR: [
+      { assigned_to: user.id },
+      { created_by: user.id },
+      { createdBy: user.id },
+      { assigned_accounts: { OR: accountUserScopeOR(user.id) } },
+    ],
+  };
+}
+
+// crm_Opportunities → crm_Accounts via `assigned_account` (FK account).
+export function opportunityReadScopeWhere(user: AuthzUser) {
+  if (user.role === "admin" || user.role === "manager") {
+    return { deletedAt: null };
+  }
+  return {
+    deletedAt: null,
+    OR: [
+      { assigned_to: user.id },
+      { created_by: user.id },
+      { createdBy: user.id },
+      { assigned_account: { OR: accountUserScopeOR(user.id) } },
+    ],
+  };
+}
+
+// crm_Contracts → crm_Accounts via `assigned_account` (FK account).
+export function contractReadScopeWhere(user: AuthzUser) {
+  if (user.role === "admin" || user.role === "manager") {
+    return { deletedAt: null };
+  }
+  return {
+    deletedAt: null,
+    OR: [
+      { assigned_to: user.id },
+      { createdBy: user.id },
+      { assigned_account: { OR: accountUserScopeOR(user.id) } },
+    ],
+  };
+}
+
+export async function assertCanReadLead(
+  user: AuthzUser,
+  leadId: string,
+): Promise<void> {
+  const row = await prismadb.crm_Leads.findFirst({
+    where: { id: leadId, ...leadReadScopeWhere(user) },
+    select: { id: true },
+  });
+  if (!row) throw new AuthorizationError();
+}
+
+export async function assertCanReadOpportunity(
+  user: AuthzUser,
+  opportunityId: string,
+): Promise<void> {
+  const row = await prismadb.crm_Opportunities.findFirst({
+    where: { id: opportunityId, ...opportunityReadScopeWhere(user) },
+    select: { id: true },
+  });
+  if (!row) throw new AuthorizationError();
+}
+
+export async function assertCanReadContract(
+  user: AuthzUser,
+  contractId: string,
+): Promise<void> {
+  const row = await prismadb.crm_Contracts.findFirst({
+    where: { id: contractId, ...contractReadScopeWhere(user) },
     select: { id: true },
   });
   if (!row) throw new AuthorizationError();

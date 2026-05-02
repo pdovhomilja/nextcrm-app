@@ -27,22 +27,22 @@ const findTarget = prismadb.crm_Targets.findFirst as jest.MockedFunction<
 beforeEach(() => jest.clearAllMocks());
 
 describe("assertCanReadContact", () => {
-  it("admin: bare where, resolves on hit", async () => {
+  it("admin: where with deletedAt:null, resolves on hit", async () => {
     findContact.mockResolvedValue({ id: "c1" } as any);
     await expect(
       assertCanReadContact({ id: "u", role: "admin" }, "c1"),
     ).resolves.toBeUndefined();
     expect(findContact).toHaveBeenCalledWith({
-      where: { id: "c1" },
+      where: { id: "c1", deletedAt: null },
       select: { id: true },
     });
   });
 
-  it("manager: bare where, resolves on hit", async () => {
+  it("manager: where with deletedAt:null, resolves on hit", async () => {
     findContact.mockResolvedValue({ id: "c1" } as any);
     await assertCanReadContact({ id: "u", role: "manager" }, "c1");
     expect(findContact).toHaveBeenCalledWith({
-      where: { id: "c1" },
+      where: { id: "c1", deletedAt: null },
       select: { id: true },
     });
   });
@@ -59,6 +59,25 @@ describe("assertCanReadContact", () => {
         { createdBy: "u3" },
       ]),
     });
+  });
+
+  it("user: scoped where ALSO contains linked-account branch (D2 upgrade)", async () => {
+    findContact.mockResolvedValue({ id: "c1" } as any);
+    await assertCanReadContact({ id: "u3", role: "user" }, "c1");
+    const arg = findContact.mock.calls[0][0]!;
+    expect((arg.where as any).OR).toEqual(
+      expect.arrayContaining([
+        {
+          assigned_accounts: {
+            OR: expect.arrayContaining([
+              { assigned_to: "u3" },
+              { createdBy: "u3" },
+              { watchers: { some: { user_id: "u3" } } },
+            ]),
+          },
+        },
+      ]),
+    );
   });
 
   it("throws AuthorizationError when no row", async () => {
