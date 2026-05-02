@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { prismadb } from "@/lib/prisma";
 import { getUser } from "@/actions/get-user";
+import { mapLegacyRole } from "@/lib/authz";
+import { canReadInvoice, type InvoiceStatus } from "@/lib/invoices/permissions";
 import { renderInvoicePdf } from "@/lib/invoices/pdf/render";
 import { uploadInvoicePdf } from "@/lib/invoices/storage";
 import { buildInvoicePdfData } from "@/lib/invoices/pdf/build-pdf-data";
@@ -33,8 +35,13 @@ export async function regenerateInvoicePdf(
       },
     });
 
-    // Permission: admin OR the creator of the invoice
-    if (!user.is_admin && invoice.createdBy !== user.id) {
+    // Permission: manager/admin OR the creator of the invoice
+    if (
+      !canReadInvoice(
+        { status: invoice.status as InvoiceStatus, createdBy: invoice.createdBy },
+        { id: user.id, role: mapLegacyRole(user.role) },
+      )
+    ) {
       return { ok: false, error: "Forbidden" };
     }
 
