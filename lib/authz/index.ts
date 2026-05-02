@@ -26,6 +26,9 @@ export {
 export {
   filterAuthorizedContactIds,
   filterAuthorizedTargetIds,
+  filterAuthorizedAccountIds,
+  filterAuthorizedLeadIds,
+  filterAuthorizedOpportunityIds,
 } from "./scopes/crm";
 export {
   assertCanCancelContactEnrichment,

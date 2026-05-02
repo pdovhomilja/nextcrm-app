@@ -131,19 +131,44 @@ export async function filterAuthorizedContactIds(
   contactIds: string[],
 ): Promise<string[]> {
   if (contactIds.length === 0) return [];
-  const baseWhere =
-    user.role === "admin" || user.role === "manager"
-      ? { id: { in: contactIds } }
-      : {
-          id: { in: contactIds },
-          OR: [
-            { assigned_to: user.id },
-            { created_by: user.id },
-            { createdBy: user.id },
-          ],
-        };
   const rows = await prismadb.crm_Contacts.findMany({
-    where: baseWhere,
+    where: { id: { in: contactIds }, ...contactReadScopeWhere(user) },
+    select: { id: true },
+  });
+  return rows.map((r: { id: string }) => r.id);
+}
+
+export async function filterAuthorizedAccountIds(
+  user: AuthzUser,
+  accountIds: string[],
+): Promise<string[]> {
+  if (accountIds.length === 0) return [];
+  const rows = await prismadb.crm_Accounts.findMany({
+    where: { id: { in: accountIds }, ...accountReadScopeWhere(user) },
+    select: { id: true },
+  });
+  return rows.map((r: { id: string }) => r.id);
+}
+
+export async function filterAuthorizedLeadIds(
+  user: AuthzUser,
+  leadIds: string[],
+): Promise<string[]> {
+  if (leadIds.length === 0) return [];
+  const rows = await prismadb.crm_Leads.findMany({
+    where: { id: { in: leadIds }, ...leadReadScopeWhere(user) },
+    select: { id: true },
+  });
+  return rows.map((r: { id: string }) => r.id);
+}
+
+export async function filterAuthorizedOpportunityIds(
+  user: AuthzUser,
+  opportunityIds: string[],
+): Promise<string[]> {
+  if (opportunityIds.length === 0) return [];
+  const rows = await prismadb.crm_Opportunities.findMany({
+    where: { id: { in: opportunityIds }, ...opportunityReadScopeWhere(user) },
     select: { id: true },
   });
   return rows.map((r: { id: string }) => r.id);

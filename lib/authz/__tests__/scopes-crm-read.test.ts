@@ -157,7 +157,7 @@ describe("assertCanWriteTarget", () => {
 });
 
 describe("filterAuthorizedContactIds", () => {
-  it("admin: returns all input ids that exist (queries with bare where)", async () => {
+  it("admin: returns all input ids that exist (queries with deletedAt:null)", async () => {
     (prismadb.crm_Contacts.findMany as jest.Mock) =
       jest.fn().mockResolvedValue([{ id: "a" }, { id: "b" }]);
     const out = await filterAuthorizedContactIds(
@@ -166,12 +166,12 @@ describe("filterAuthorizedContactIds", () => {
     );
     expect(out).toEqual(["a", "b"]);
     expect(prismadb.crm_Contacts.findMany).toHaveBeenCalledWith({
-      where: { id: { in: ["a", "b", "c"] } },
+      where: { id: { in: ["a", "b", "c"] }, deletedAt: null },
       select: { id: true },
     });
   });
 
-  it("user: scoped where with OR clauses", async () => {
+  it("user: scoped where with OR clauses (D2 upgrade includes linked-account)", async () => {
     (prismadb.crm_Contacts.findMany as jest.Mock) =
       jest.fn().mockResolvedValue([{ id: "a" }]);
     await filterAuthorizedContactIds(
@@ -181,10 +181,20 @@ describe("filterAuthorizedContactIds", () => {
     const arg = (prismadb.crm_Contacts.findMany as jest.Mock).mock.calls[0][0];
     expect(arg.where).toMatchObject({
       id: { in: ["a", "b"] },
+      deletedAt: null,
       OR: expect.arrayContaining([
         { assigned_to: "u3" },
         { created_by: "u3" },
         { createdBy: "u3" },
+        {
+          assigned_accounts: {
+            OR: expect.arrayContaining([
+              { assigned_to: "u3" },
+              { createdBy: "u3" },
+              { watchers: { some: { user_id: "u3" } } },
+            ]),
+          },
+        },
       ]),
     });
   });
