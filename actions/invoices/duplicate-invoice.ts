@@ -1,16 +1,44 @@
 "use server";
 
 import { prismadb } from "@/lib/prisma";
-import { getUser } from "@/actions/get-user";
+import {
+  requireAuthenticated,
+  assertCanWriteAccount,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
+import { canReadInvoice, type InvoiceStatus } from "@/lib/invoices/permissions";
 import { serializeDecimals } from "@/lib/serialize-decimals";
 
 export async function duplicateInvoice(invoiceId: string) {
-  const user = await getUser();
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) throw new Error("Unauthorized");
+    throw e;
+  }
 
   const source = await prismadb.invoices.findUniqueOrThrow({
     where: { id: invoiceId },
     include: { lineItems: { orderBy: { position: "asc" } } },
   });
+
+  if (
+    !canReadInvoice(
+      { status: source.status as InvoiceStatus, createdBy: source.createdBy },
+      { id: user.id, role: user.role },
+    )
+  ) {
+    throw new Error("Forbidden");
+  }
+
+  try {
+    await assertCanWriteAccount(user, source.accountId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) throw new Error("Forbidden");
+    throw e;
+  }
 
   const invoice = await prismadb.invoices.create({
     data: {

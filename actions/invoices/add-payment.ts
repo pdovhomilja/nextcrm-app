@@ -5,6 +5,7 @@ import { getUser } from "@/actions/get-user";
 import { Decimal } from "decimal.js";
 import { addPaymentSchema } from "@/types/invoice";
 import { canAddPayment, type InvoiceStatus } from "@/lib/invoices/permissions";
+import { mapLegacyRole } from "@/lib/authz";
 import { serializeDecimals } from "@/lib/serialize-decimals";
 
 export async function addPayment(raw: unknown) {
@@ -20,7 +21,7 @@ export async function addPayment(raw: unknown) {
     if (
       !canAddPayment(
         { status: invoice.status as InvoiceStatus, createdBy: invoice.createdBy },
-        { id: user.id, isAdmin: user.is_admin }
+        { id: user.id, role: mapLegacyRole(user.role) }
       )
     ) {
       throw new Error("Cannot add payment to this invoice");

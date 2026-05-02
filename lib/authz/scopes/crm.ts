@@ -187,3 +187,25 @@ export async function filterAuthorizedTargetIds(
   });
   return rows.map((r: { id: string }) => r.id);
 }
+
+export async function assertCanWriteAccount(
+  user: AuthzUser,
+  accountId: string,
+): Promise<void> {
+  const where =
+    user.role === "admin" || user.role === "manager"
+      ? { id: accountId }
+      : {
+          id: accountId,
+          OR: [
+            { assigned_to: user.id },
+            { createdBy: user.id },
+            { watchers: { some: { user_id: user.id } } },
+          ],
+        };
+  const row = await prismadb.crm_Accounts.findFirst({
+    where,
+    select: { id: true },
+  });
+  if (!row) throw new AuthorizationError();
+}

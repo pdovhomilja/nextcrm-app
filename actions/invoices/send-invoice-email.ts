@@ -2,6 +2,8 @@
 
 import { prismadb } from "@/lib/prisma";
 import { getUser } from "@/actions/get-user";
+import { mapLegacyRole } from "@/lib/authz";
+import { canReadInvoice, type InvoiceStatus } from "@/lib/invoices/permissions";
 import resendHelper from "@/lib/resend";
 import { getInvoicePdfStream } from "@/lib/invoices/storage";
 import { InvoiceEmail } from "@/emails/InvoiceEmail";
@@ -29,7 +31,12 @@ export async function sendInvoiceEmail(input: SendInvoiceEmailInput) {
     },
   });
 
-  if (invoice.createdBy !== user.id && !user.is_admin) {
+  if (
+    !canReadInvoice(
+      { status: invoice.status as InvoiceStatus, createdBy: invoice.createdBy },
+      { id: user.id, role: mapLegacyRole(user.role) },
+    )
+  ) {
     throw new Error("Forbidden");
   }
 

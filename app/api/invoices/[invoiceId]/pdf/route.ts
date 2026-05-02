@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth-server";
+import {
+  requireAuthenticated,
+  unauthorizedResponse,
+  notFoundOrForbiddenResponse,
+  AuthenticationError,
+} from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
+import { canReadInvoice, type InvoiceStatus } from "@/lib/invoices/permissions";
 import { getInvoicePdfPresignedUrl } from "@/lib/invoices/storage";
 
 export async function GET(
@@ -8,24 +14,33 @@ export async function GET(
   { params }: { params: Promise<{ invoiceId: string }> }
 ) {
   const { invoiceId } = await params;
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return unauthorizedResponse();
+    throw e;
   }
 
   const invoice = await prismadb.invoices.findUnique({
     where: { id: invoiceId },
-    select: { pdfStorageKey: true },
+    select: { createdBy: true, status: true, pdfStorageKey: true },
   });
+  if (!invoice) return notFoundOrForbiddenResponse();
 
-  if (!invoice) {
-    return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
+  if (
+    !canReadInvoice(
+      { status: invoice.status as InvoiceStatus, createdBy: invoice.createdBy },
+      { id: user.id, role: user.role },
+    )
+  ) {
+    return notFoundOrForbiddenResponse();
   }
 
   if (!invoice.pdfStorageKey) {
     return NextResponse.json(
       { error: "PDF not yet generated. Issue the invoice first." },
-      { status: 404 }
+      { status: 404 },
     );
   }
 

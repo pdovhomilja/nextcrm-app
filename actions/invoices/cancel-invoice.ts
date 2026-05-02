@@ -3,6 +3,7 @@
 import { prismadb } from "@/lib/prisma";
 import { getUser } from "@/actions/get-user";
 import { canCancelInvoice, type InvoiceStatus } from "@/lib/invoices/permissions";
+import { mapLegacyRole } from "@/lib/authz";
 import { serializeDecimals } from "@/lib/serialize-decimals";
 
 export async function cancelInvoice(invoiceId: string) {
@@ -16,7 +17,7 @@ export async function cancelInvoice(invoiceId: string) {
   if (
     !canCancelInvoice(
       { status: invoice.status as InvoiceStatus, createdBy: invoice.createdBy },
-      { id: user.id, isAdmin: user.is_admin }
+      { id: user.id, role: mapLegacyRole(user.role) }
     )
   ) {
     throw new Error("Cannot cancel this invoice");

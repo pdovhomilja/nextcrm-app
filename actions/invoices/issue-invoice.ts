@@ -5,6 +5,7 @@ import { getUser } from "@/actions/get-user";
 import { Decimal } from "decimal.js";
 import { computeInvoiceTotals } from "@/lib/invoices/totals";
 import { canIssueInvoice, type InvoiceStatus } from "@/lib/invoices/permissions";
+import { mapLegacyRole } from "@/lib/authz";
 import { consumeNextNumber } from "@/lib/invoices/numbering";
 import { fetchFxRate } from "@/lib/invoices/fx";
 import { issueInvoiceSchema } from "@/types/invoice";
@@ -29,7 +30,7 @@ export async function issueInvoice(raw: unknown) {
   if (
     !canIssueInvoice(
       { status: invoice.status as InvoiceStatus, createdBy: invoice.createdBy },
-      { id: user.id, isAdmin: user.is_admin }
+      { id: user.id, role: mapLegacyRole(user.role) }
     )
   ) {
     throw new Error("Cannot issue this invoice");

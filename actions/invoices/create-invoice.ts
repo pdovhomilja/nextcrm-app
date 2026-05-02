@@ -1,15 +1,33 @@
 "use server";
 
 import { prismadb } from "@/lib/prisma";
-import { getUser } from "@/actions/get-user";
+import {
+  requireAuthenticated,
+  assertCanWriteAccount,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 import { Decimal } from "decimal.js";
 import { computeInvoiceTotals, computeLineTotal } from "@/lib/invoices/totals";
 import { createInvoiceSchema } from "@/types/invoice";
 import { serializeDecimals } from "@/lib/serialize-decimals";
 
 export async function createInvoice(raw: unknown) {
-  const user = await getUser();
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) throw new Error("Unauthorized");
+    throw e;
+  }
   const input = createInvoiceSchema.parse(raw);
+
+  try {
+    await assertCanWriteAccount(user, input.accountId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) throw new Error("Forbidden");
+    throw e;
+  }
 
   const taxRates = await prismadb.invoice_TaxRates.findMany({
     where: {
