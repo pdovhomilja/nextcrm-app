@@ -347,13 +347,13 @@ export async function assertCanReadContract(
 
 // ---------------------------------------------------------------------------
 // D3.T1: Target + Target-list read-scope helpers.
-// crm_Targets has NO deletedAt (hard delete); crm_TargetLists HAS deletedAt.
+// Both crm_Targets and crm_TargetLists support soft-delete (deletedAt).
 // assertCanReadTarget (B1) is reused as-is for the per-row target check.
 // ---------------------------------------------------------------------------
 
 export function targetReadScopeWhere(user: AuthzUser) {
-  if (user.role === "admin" || user.role === "manager") return {};
-  return { created_by: user.id };
+  if (user.role === "admin" || user.role === "manager") return { deletedAt: null };
+  return { deletedAt: null, created_by: user.id };
 }
 
 export function targetListReadScopeWhere(user: AuthzUser) {

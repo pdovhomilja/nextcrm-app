@@ -25,21 +25,20 @@ describe("getTargets scope", () => {
     expect(prismadb.crm_Targets.findMany).not.toHaveBeenCalled();
   });
 
-  it("user role: where = { created_by: u1 } (no deletedAt — hard delete model)", async () => {
+  it("user role: where = { deletedAt: null, created_by: u1 }", async () => {
     mockUser("user", "u1");
     (prismadb.crm_Targets.findMany as jest.Mock).mockResolvedValue([]);
     await getTargets();
     const call = (prismadb.crm_Targets.findMany as jest.Mock).mock.calls[0][0];
-    expect(call.where.created_by).toBe("u1");
-    expect(call.where.deletedAt).toBeUndefined();
+    expect(call.where).toMatchObject({ deletedAt: null, created_by: "u1" });
   });
 
-  it("manager: where = {} (no scope, no deletedAt)", async () => {
+  it("manager: where = { deletedAt: null }", async () => {
     mockUser("manager", "m1");
     (prismadb.crm_Targets.findMany as jest.Mock).mockResolvedValue([]);
     await getTargets();
     const call = (prismadb.crm_Targets.findMany as jest.Mock).mock.calls[0][0];
-    expect(call.where).toEqual({});
+    expect(call.where).toEqual({ deletedAt: null });
   });
 
   it("returns rows from prisma", async () => {

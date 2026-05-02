@@ -20,12 +20,13 @@ const findList = prismadb.crm_TargetLists.findFirst as jest.MockedFunction<
 beforeEach(() => jest.clearAllMocks());
 
 describe("targetReadScopeWhere", () => {
-  it("admin/manager → {} (no deletedAt; crm_Targets is hard-delete)", () => {
-    expect(targetReadScopeWhere({ id: "x", role: "admin" })).toEqual({});
-    expect(targetReadScopeWhere({ id: "x", role: "manager" })).toEqual({});
+  it("admin/manager → { deletedAt: null }", () => {
+    expect(targetReadScopeWhere({ id: "x", role: "admin" })).toEqual({ deletedAt: null });
+    expect(targetReadScopeWhere({ id: "x", role: "manager" })).toEqual({ deletedAt: null });
   });
-  it("user → { created_by: user.id }", () => {
+  it("user → { deletedAt: null, created_by: user.id }", () => {
     expect(targetReadScopeWhere({ id: "u1", role: "user" })).toEqual({
+      deletedAt: null,
       created_by: "u1",
     });
   });
