@@ -17,3 +17,17 @@ export {
   tryScopedUpdateContact,
   tryScopedUpdateTarget,
 } from "./scopes/crm";
+export {
+  assertCanReadContact,
+  assertCanWriteContact,
+  assertCanReadTarget,
+  assertCanWriteTarget,
+} from "./scopes/crm";
+export {
+  filterAuthorizedContactIds,
+  filterAuthorizedTargetIds,
+} from "./scopes/crm";
+export {
+  assertCanCancelContactEnrichment,
+  assertCanCancelTargetEnrichment,
+} from "./scopes/crm";

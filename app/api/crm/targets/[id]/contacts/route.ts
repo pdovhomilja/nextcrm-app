@@ -1,15 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
+import {
+  requireAuthenticated,
+  assertCanWriteTarget,
+  unauthorizedResponse,
+  notFoundOrForbiddenResponse,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getSession();
-  if (!session) return new NextResponse("Unauthorized", { status: 401 });
-
   const { id: targetId } = await params;
+
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return unauthorizedResponse();
+    throw e;
+  }
+  try {
+    await assertCanWriteTarget(user, targetId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return notFoundOrForbiddenResponse();
+    throw e;
+  }
+
   const { name, email, phone, linkedinUrl } = await request.json() as {
     name?: string; email?: string; phone?: string; linkedinUrl?: string;
   };

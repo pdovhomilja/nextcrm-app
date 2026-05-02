@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { AgentEnrichmentStrategy } from "@/lib/enrichment/strategies/agent-enrichment-strategy";
 import type { EnrichmentField } from "@/lib/enrichment/types";
 import type { StoredEnrichmentResult } from "@/lib/enrichment/types/stored-result";
 import { validateEnrichRequest } from "./validate";
 import { getApiKey } from "@/lib/api-keys";
+import {
+  requireAuthenticated,
+  assertCanWriteContact,
+  assertCanCancelContactEnrichment,
+  unauthorizedResponse,
+  notFoundOrForbiddenResponse,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export const runtime = "nodejs";
 
@@ -14,15 +22,12 @@ export const runtime = "nodejs";
 const activeSessions = new Map<string, { controller: AbortController; enrichmentId: string }>();
 
 export async function POST(request: NextRequest) {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const firecrawlApiKey = await getApiKey("FIRECRAWL", session.user.id);
-  const openaiApiKey = await getApiKey("OPENAI", session.user.id);
-  if (!firecrawlApiKey || !openaiApiKey) {
-    return NextResponse.json({ error: "NO_API_KEY" }, { status: 402 });
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return unauthorizedResponse();
+    throw e;
   }
 
   const body = await request.json();
@@ -31,6 +36,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: validationError }, { status: 400 });
   }
   const { contactId, fields } = body as { contactId: string; fields: EnrichmentField[] };
+
+  try {
+    await assertCanWriteContact(user, contactId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return notFoundOrForbiddenResponse();
+    throw e;
+  }
+
+  const firecrawlApiKey = await getApiKey("FIRECRAWL", user.id);
+  const openaiApiKey = await getApiKey("OPENAI", user.id);
+  if (!firecrawlApiKey || !openaiApiKey) {
+    return NextResponse.json({ error: "NO_API_KEY" }, { status: 402 });
+  }
 
   const contact = await prismadb.crm_Contacts.findUnique({
     where: { id: contactId },
@@ -52,7 +70,7 @@ export async function POST(request: NextRequest) {
       contactId,
       status: "RUNNING",
       fields: fields.map((f) => f.name),
-      triggeredBy: session.user.id,
+      triggeredBy: user.id,
     },
   });
 
@@ -124,6 +142,14 @@ export async function POST(request: NextRequest) {
 // ---- CANCEL ENDPOINT (DELETE /api/crm/contacts/enrich?sessionId=...) ----
 // Called by the drawer's Cancel button. Also triggered server-side via request.signal abort on disconnect.
 export async function DELETE(request: NextRequest) {
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return unauthorizedResponse();
+    throw e;
+  }
+
   const sessionId = new URL(request.url).searchParams.get("sessionId");
   if (!sessionId) {
     return NextResponse.json({ error: "sessionId required" }, { status: 400 });
@@ -131,7 +157,14 @@ export async function DELETE(request: NextRequest) {
 
   const entry = activeSessions.get(sessionId);
   if (!entry) {
-    return NextResponse.json({ error: "Session not found or already complete" }, { status: 404 });
+    return notFoundOrForbiddenResponse();
+  }
+
+  try {
+    await assertCanCancelContactEnrichment(user, entry.enrichmentId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return notFoundOrForbiddenResponse();
+    throw e;
   }
 
   entry.controller.abort();
