@@ -31,3 +31,4 @@ export {
   assertCanCancelContactEnrichment,
   assertCanCancelTargetEnrichment,
 } from "./scopes/crm";
+export { assertCanWriteAccount } from "./scopes/crm";
