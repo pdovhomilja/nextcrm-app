@@ -1,10 +1,11 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import {
   generateEmbedding,
   toVectorLiteral,
 } from "@/inngest/lib/embedding-utils";
+import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
+import { getReportScope } from "@/lib/authz/scopes/report-scope";
 
 export interface SearchResult {
   id: string;
@@ -46,10 +47,17 @@ export async function unifiedSearch(
   query: string,
   locale: string = "en"
 ): Promise<UnifiedSearchResults | { error: string }> {
-  const session = await getSession();
-  if (!session) return { error: "Unauthorized" };
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
   if (!query || query.trim().length < 2)
     return { error: "Query must be at least 2 characters" };
+
+  const scope = getReportScope(user);
 
   // Generate embedding — fall back to keyword-only on failure (silent)
   let queryVec: string | null = null;
@@ -82,10 +90,15 @@ export async function unifiedSearch(
       prismadb.crm_Accounts.findMany({
         where: {
           deletedAt: null,
-          OR: [
-            { name: { contains: query, mode: "insensitive" } },
-            { description: { contains: query, mode: "insensitive" } },
-            { email: { contains: query, mode: "insensitive" } },
+          AND: [
+            scope.account,
+            {
+              OR: [
+                { name: { contains: query, mode: "insensitive" } },
+                { description: { contains: query, mode: "insensitive" } },
+                { email: { contains: query, mode: "insensitive" } },
+              ],
+            },
           ],
         },
         take: 10,
@@ -94,10 +107,15 @@ export async function unifiedSearch(
       prismadb.crm_Contacts.findMany({
         where: {
           deletedAt: null,
-          OR: [
-            { first_name: { contains: query, mode: "insensitive" } },
-            { last_name: { contains: query, mode: "insensitive" } },
-            { email: { contains: query, mode: "insensitive" } },
+          AND: [
+            scope.contact,
+            {
+              OR: [
+                { first_name: { contains: query, mode: "insensitive" } },
+                { last_name: { contains: query, mode: "insensitive" } },
+                { email: { contains: query, mode: "insensitive" } },
+              ],
+            },
           ],
         },
         take: 10,
@@ -106,11 +124,16 @@ export async function unifiedSearch(
       prismadb.crm_Leads.findMany({
         where: {
           deletedAt: null,
-          OR: [
-            { firstName: { contains: query, mode: "insensitive" } },
-            { lastName: { contains: query, mode: "insensitive" } },
-            { company: { contains: query, mode: "insensitive" } },
-            { email: { contains: query, mode: "insensitive" } },
+          AND: [
+            scope.lead,
+            {
+              OR: [
+                { firstName: { contains: query, mode: "insensitive" } },
+                { lastName: { contains: query, mode: "insensitive" } },
+                { company: { contains: query, mode: "insensitive" } },
+                { email: { contains: query, mode: "insensitive" } },
+              ],
+            },
           ],
         },
         take: 10,
@@ -119,9 +142,14 @@ export async function unifiedSearch(
       prismadb.crm_Opportunities.findMany({
         where: {
           deletedAt: null,
-          OR: [
-            { name: { contains: query, mode: "insensitive" } },
-            { description: { contains: query, mode: "insensitive" } },
+          AND: [
+            scope.opportunity,
+            {
+              OR: [
+                { name: { contains: query, mode: "insensitive" } },
+                { description: { contains: query, mode: "insensitive" } },
+              ],
+            },
           ],
         },
         take: 10,
@@ -139,25 +167,32 @@ export async function unifiedSearch(
       }),
       prismadb.tasks.findMany({
         where: {
-          OR: [
-            { title: { contains: query, mode: "insensitive" } },
-            { content: { contains: query, mode: "insensitive" } },
+          AND: [
+            scope.task,
+            {
+              OR: [
+                { title: { contains: query, mode: "insensitive" } },
+                { content: { contains: query, mode: "insensitive" } },
+              ],
+            },
           ],
         },
         take: 10,
         select: { id: true, title: true, taskStatus: true },
       }),
-      prismadb.users.findMany({
-        where: {
-          OR: [
-            { name: { contains: query, mode: "insensitive" } },
-            { email: { contains: query, mode: "insensitive" } },
-            { username: { contains: query, mode: "insensitive" } },
-          ],
-        },
-        take: 10,
-        select: { id: true, name: true, email: true },
-      }),
+      scope.allowUserDirectory
+        ? prismadb.users.findMany({
+            where: {
+              OR: [
+                { name: { contains: query, mode: "insensitive" } },
+                { email: { contains: query, mode: "insensitive" } },
+                { username: { contains: query, mode: "insensitive" } },
+              ],
+            },
+            take: 10,
+            select: { id: true, name: true, email: true },
+          })
+        : Promise.resolve([] as { id: string; name: string | null; email: string | null }[]),
       prismadb.documents.findMany({
         where: {
           parent_document_id: null,
@@ -245,19 +280,35 @@ export async function unifiedSearch(
     const [extraAccounts, extraContacts, extraLeads, extraOpportunities] =
       await Promise.all([
         prismadb.crm_Accounts.findMany({
-          where: { deletedAt: null, id: { in: semAccounts.map((r) => r.id).filter((id) => !kwAccountIds.has(id)) } },
+          where: {
+            deletedAt: null,
+            id: { in: semAccounts.map((r) => r.id).filter((id) => !kwAccountIds.has(id)) },
+            AND: [scope.account],
+          },
           select: { id: true, name: true, email: true },
         }),
         prismadb.crm_Contacts.findMany({
-          where: { deletedAt: null, id: { in: semContacts.map((r) => r.id).filter((id) => !kwContactIds.has(id)) } },
+          where: {
+            deletedAt: null,
+            id: { in: semContacts.map((r) => r.id).filter((id) => !kwContactIds.has(id)) },
+            AND: [scope.contact],
+          },
           select: { id: true, first_name: true, last_name: true, email: true },
         }),
         prismadb.crm_Leads.findMany({
-          where: { deletedAt: null, id: { in: semLeads.map((r) => r.id).filter((id) => !kwLeadIds.has(id)) } },
+          where: {
+            deletedAt: null,
+            id: { in: semLeads.map((r) => r.id).filter((id) => !kwLeadIds.has(id)) },
+            AND: [scope.lead],
+          },
           select: { id: true, firstName: true, lastName: true, company: true, email: true },
         }),
         prismadb.crm_Opportunities.findMany({
-          where: { deletedAt: null, id: { in: semOpportunities.map((r) => r.id).filter((id) => !kwOpportunityIds.has(id)) } },
+          where: {
+            deletedAt: null,
+            id: { in: semOpportunities.map((r) => r.id).filter((id) => !kwOpportunityIds.has(id)) },
+            AND: [scope.opportunity],
+          },
           select: { id: true, name: true, status: true },
         }),
       ]);

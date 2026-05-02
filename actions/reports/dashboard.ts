@@ -2,6 +2,10 @@ import { prismadb } from "@/lib/prisma";
 import type { ReportFilters, KPIData } from "./types";
 import { getExchangeRates, convertAmount } from "@/lib/currency";
 import { Decimal } from "@prisma/client/runtime/client";
+import type { ReportScope } from "@/lib/authz/scopes/report-scope";
+import { getReportScope } from "@/lib/authz/scopes/report-scope";
+
+const DEFAULT_SCOPE: ReportScope = getReportScope({ id: "", role: "manager" });
 
 function calcChange(current: number, previous: number): number {
   if (previous === 0) return current > 0 ? 100 : 0;
@@ -16,7 +20,11 @@ function prevPeriod(filters: ReportFilters): { dateFrom: Date; dateTo: Date } {
   };
 }
 
-export async function getDashboardKPIs(filters: ReportFilters, displayCurrency: string = "EUR"): Promise<KPIData[]> {
+export async function getDashboardKPIs(
+  filters: ReportFilters,
+  displayCurrency: string = "EUR",
+  scope: ReportScope = DEFAULT_SCOPE,
+): Promise<KPIData[]> {
   const prev = prevPeriod(filters);
   const rates = await getExchangeRates();
 
@@ -46,44 +54,44 @@ export async function getDashboardKPIs(filters: ReportFilters, displayCurrency: 
   ] = await Promise.all([
     // totalRevenue
     prismadb.crm_Opportunities.findMany({
-      where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null, status: "CLOSED" },
+      where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null, status: "CLOSED", ...scope.opportunity },
       select: { budget: true, currency: true },
     }),
     prismadb.crm_Opportunities.findMany({
-      where: { created_on: { gte: prev.dateFrom, lte: prev.dateTo }, deletedAt: null, status: "CLOSED" },
+      where: { created_on: { gte: prev.dateFrom, lte: prev.dateTo }, deletedAt: null, status: "CLOSED", ...scope.opportunity },
       select: { budget: true, currency: true },
     }),
     // pipelineValue
     prismadb.crm_Opportunities.findMany({
-      where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null, status: "ACTIVE" },
+      where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null, status: "ACTIVE", ...scope.opportunity },
       select: { budget: true, currency: true },
     }),
     prismadb.crm_Opportunities.findMany({
-      where: { created_on: { gte: prev.dateFrom, lte: prev.dateTo }, deletedAt: null, status: "ACTIVE" },
+      where: { created_on: { gte: prev.dateFrom, lte: prev.dateTo }, deletedAt: null, status: "ACTIVE", ...scope.opportunity },
       select: { budget: true, currency: true },
     }),
     // newLeads
     prismadb.crm_Leads.count({
-      where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null },
+      where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null, ...scope.lead },
     }),
     prismadb.crm_Leads.count({
-      where: { createdAt: { gte: prev.dateFrom, lte: prev.dateTo }, deletedAt: null },
+      where: { createdAt: { gte: prev.dateFrom, lte: prev.dateTo }, deletedAt: null, ...scope.lead },
     }),
     // conversionRate: closed opps count
     prismadb.crm_Opportunities.count({
-      where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null, status: "CLOSED" },
+      where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null, status: "CLOSED", ...scope.opportunity },
     }),
     prismadb.crm_Opportunities.count({
-      where: { created_on: { gte: prev.dateFrom, lte: prev.dateTo }, deletedAt: null, status: "CLOSED" },
+      where: { created_on: { gte: prev.dateFrom, lte: prev.dateTo }, deletedAt: null, status: "CLOSED", ...scope.opportunity },
     }),
     // newContacts (crm_Contacts has created_on, no deletedAt)
     prismadb.crm_Contacts.count({
-      where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo } },
+      where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, ...scope.contact },
     }),
     prismadb.crm_Contacts.count({
-      where: { created_on: { gte: prev.dateFrom, lte: prev.dateTo } },
+      where: { created_on: { gte: prev.dateFrom, lte: prev.dateTo }, ...scope.contact },
     }),
-    // activeUsers (status = ACTIVE, not date-filtered)
+    // activeUsers (status = ACTIVE, not date-filtered) - global; manager/admin only typically read this KPI
     prismadb.users.count({
       where: { userStatus: "ACTIVE" },
     }),
@@ -92,19 +100,19 @@ export async function getDashboardKPIs(filters: ReportFilters, displayCurrency: 
     }),
     // tasks total
     prismadb.tasks.count({
-      where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo } },
+      where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, ...scope.task },
     }),
     prismadb.tasks.count({
-      where: { createdAt: { gte: prev.dateFrom, lte: prev.dateTo } },
+      where: { createdAt: { gte: prev.dateFrom, lte: prev.dateTo }, ...scope.task },
     }),
     // open tasks (ACTIVE = not completed)
     prismadb.tasks.count({
-      where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, taskStatus: "ACTIVE" },
+      where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, taskStatus: "ACTIVE", ...scope.task },
     }),
     prismadb.tasks.count({
-      where: { createdAt: { gte: prev.dateFrom, lte: prev.dateTo }, taskStatus: "ACTIVE" },
+      where: { createdAt: { gte: prev.dateFrom, lte: prev.dateTo }, taskStatus: "ACTIVE", ...scope.task },
     }),
-    // campaignsSent
+    // campaignsSent (sends have no direct scope; manager/admin = no-op)
     prismadb.crm_campaign_sends.count({
       where: { sent_at: { gte: filters.dateFrom, lte: filters.dateTo } },
     }),
@@ -113,12 +121,12 @@ export async function getDashboardKPIs(filters: ReportFilters, displayCurrency: 
     }),
     // newAccounts
     prismadb.crm_Accounts.count({
-      where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null },
+      where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null, ...scope.account },
     }),
     prismadb.crm_Accounts.count({
-      where: { createdAt: { gte: prev.dateFrom, lte: prev.dateTo }, deletedAt: null },
+      where: { createdAt: { gte: prev.dateFrom, lte: prev.dateTo }, deletedAt: null, ...scope.account },
     }),
-    // contractsExpiring
+    // contractsExpiring (no direct scope; manager/admin = no-op)
     prismadb.crm_Contracts.count({
       where: { endDate: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null },
     }),
