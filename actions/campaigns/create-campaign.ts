@@ -1,6 +1,12 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
+import {
+  requireAuthenticated,
+  assertCanReadTemplate,
+  targetListReadScopeWhere,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 type StepInput = {
   order: number;
@@ -20,7 +26,36 @@ export const createCampaign = async (data: {
   steps: StepInput[];
   scheduled_at?: Date;
 }) => {
-  const session = await getSession();
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
+
+  if (data.template_id) {
+    try {
+      await assertCanReadTemplate(user, data.template_id);
+    } catch (e) {
+      if (e instanceof AuthorizationError) return { error: "Forbidden" };
+      throw e;
+    }
+  }
+
+  if (data.target_list_ids?.length) {
+    const accessible = await prismadb.crm_TargetLists.findMany({
+      where: {
+        id: { in: data.target_list_ids },
+        ...targetListReadScopeWhere(user),
+      },
+      select: { id: true },
+    });
+    if (accessible.length !== data.target_list_ids.length) {
+      return { error: "Forbidden" };
+    }
+  }
+
   const { target_list_ids, steps, ...campaignData } = data;
 
   return prismadb.crm_campaigns.create({
@@ -28,7 +63,7 @@ export const createCampaign = async (data: {
       ...campaignData,
       v: 0,
       status: data.scheduled_at ? "scheduled" : "draft",
-      created_by: session?.user?.id ?? null,
+      created_by: user.id,
       target_lists: {
         create: target_list_ids.map((id) => ({ target_list_id: id })),
       },
