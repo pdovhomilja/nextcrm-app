@@ -131,19 +131,44 @@ export async function filterAuthorizedContactIds(
   contactIds: string[],
 ): Promise<string[]> {
   if (contactIds.length === 0) return [];
-  const baseWhere =
-    user.role === "admin" || user.role === "manager"
-      ? { id: { in: contactIds } }
-      : {
-          id: { in: contactIds },
-          OR: [
-            { assigned_to: user.id },
-            { created_by: user.id },
-            { createdBy: user.id },
-          ],
-        };
   const rows = await prismadb.crm_Contacts.findMany({
-    where: baseWhere,
+    where: { id: { in: contactIds }, ...contactReadScopeWhere(user) },
+    select: { id: true },
+  });
+  return rows.map((r: { id: string }) => r.id);
+}
+
+export async function filterAuthorizedAccountIds(
+  user: AuthzUser,
+  accountIds: string[],
+): Promise<string[]> {
+  if (accountIds.length === 0) return [];
+  const rows = await prismadb.crm_Accounts.findMany({
+    where: { id: { in: accountIds }, ...accountReadScopeWhere(user) },
+    select: { id: true },
+  });
+  return rows.map((r: { id: string }) => r.id);
+}
+
+export async function filterAuthorizedLeadIds(
+  user: AuthzUser,
+  leadIds: string[],
+): Promise<string[]> {
+  if (leadIds.length === 0) return [];
+  const rows = await prismadb.crm_Leads.findMany({
+    where: { id: { in: leadIds }, ...leadReadScopeWhere(user) },
+    select: { id: true },
+  });
+  return rows.map((r: { id: string }) => r.id);
+}
+
+export async function filterAuthorizedOpportunityIds(
+  user: AuthzUser,
+  opportunityIds: string[],
+): Promise<string[]> {
+  if (opportunityIds.length === 0) return [];
+  const rows = await prismadb.crm_Opportunities.findMany({
+    where: { id: { in: opportunityIds }, ...opportunityReadScopeWhere(user) },
     select: { id: true },
   });
   return rows.map((r: { id: string }) => r.id);
@@ -343,4 +368,64 @@ export async function assertCanReadContract(
     select: { id: true },
   });
   if (!row) throw new AuthorizationError();
+}
+
+// ---------------------------------------------------------------------------
+// D3.T1: Target + Target-list read-scope helpers.
+// Both crm_Targets and crm_TargetLists support soft-delete (deletedAt).
+// assertCanReadTarget (B1) is reused as-is for the per-row target check.
+// ---------------------------------------------------------------------------
+
+export function targetReadScopeWhere(user: AuthzUser) {
+  if (user.role === "admin" || user.role === "manager") return { deletedAt: null };
+  return { deletedAt: null, created_by: user.id };
+}
+
+export function targetListReadScopeWhere(user: AuthzUser) {
+  if (user.role === "admin" || user.role === "manager") return { deletedAt: null };
+  return { deletedAt: null, created_by: user.id };
+}
+
+export async function assertCanReadTargetList(
+  user: AuthzUser,
+  listId: string,
+): Promise<void> {
+  const row = await prismadb.crm_TargetLists.findFirst({
+    where: { id: listId, ...targetListReadScopeWhere(user) },
+    select: { id: true },
+  });
+  if (!row) throw new AuthorizationError();
+}
+
+// ---------------------------------------------------------------------------
+// D3.T3: Activity / audit dispatch helper.
+// Resolves an entityType string to the matching assertCanRead* helper.
+// Used by activity-feed (T4) and audit-log-by-entity (T5).
+// Unknown entity types: managers/admins pass; users are denied.
+// ---------------------------------------------------------------------------
+export async function assertCanReadActivityForEntity(
+  user: AuthzUser,
+  entityType: string,
+  entityId: string,
+): Promise<void> {
+  switch (entityType.toLowerCase()) {
+    case "account":
+      return assertCanReadAccount(user, entityId);
+    case "lead":
+      return assertCanReadLead(user, entityId);
+    case "contact":
+      return assertCanReadContact(user, entityId);
+    case "opportunity":
+      return assertCanReadOpportunity(user, entityId);
+    case "contract":
+      return assertCanReadContract(user, entityId);
+    case "target":
+      return assertCanReadTarget(user, entityId);
+    case "target_list":
+    case "targetlist":
+      return assertCanReadTargetList(user, entityId);
+    default:
+      if (user.role === "user") throw new AuthorizationError();
+      return;
+  }
 }

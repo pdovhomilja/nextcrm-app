@@ -1,11 +1,31 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
+import {
+  requireAuthenticated,
+  assertCanReadActivityForEntity,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export const getAuditLogByEntity = async (
   entityType: string,
   entityId: string,
   cursor?: string
 ) => {
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { data: [], nextCursor: null };
+    throw e;
+  }
+  try {
+    await assertCanReadActivityForEntity(user, entityType, entityId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { data: [], nextCursor: null };
+    throw e;
+  }
+
   const take = 25;
 
   const entries = await (prismadb as any).crm_AuditLog.findMany({

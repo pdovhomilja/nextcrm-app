@@ -26,6 +26,9 @@ export {
 export {
   filterAuthorizedContactIds,
   filterAuthorizedTargetIds,
+  filterAuthorizedAccountIds,
+  filterAuthorizedLeadIds,
+  filterAuthorizedOpportunityIds,
 } from "./scopes/crm";
 export {
   assertCanCancelContactEnrichment,
@@ -46,5 +49,11 @@ export {
   assertCanReadOpportunity,
   assertCanReadContract,
 } from "./scopes/crm";
+export {
+  targetReadScopeWhere,
+  targetListReadScopeWhere,
+  assertCanReadTargetList,
+} from "./scopes/crm";
+export { assertCanReadActivityForEntity } from "./scopes/crm";
 export type { ReportScope } from "./scopes/report-scope";
 export { getReportScope } from "./scopes/report-scope";

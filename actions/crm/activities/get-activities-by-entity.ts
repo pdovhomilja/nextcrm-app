@@ -1,5 +1,11 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
+import {
+  requireAuthenticated,
+  assertCanReadActivityForEntity,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 const PAGE_SIZE = 25;
 
@@ -26,6 +32,19 @@ export const getActivitiesByEntity = async (
   entityId: string,
   cursor?: ActivityCursor
 ): Promise<{ data: ActivityWithLinks[]; nextCursor: ActivityCursor | null }> => {
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { data: [], nextCursor: null };
+    throw e;
+  }
+  try {
+    await assertCanReadActivityForEntity(user, entityType, entityId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { data: [], nextCursor: null };
+    throw e;
+  }
   try {
     // Use `as any` for both models — same pattern as crm_AuditLog throughout the codebase
     // (Prisma client cache may not include new models until IDE restarts)

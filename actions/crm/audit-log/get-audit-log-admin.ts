@@ -1,6 +1,10 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
+import {
+  requireRole,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 interface AuditLogAdminFilters {
   entityType?: string;
@@ -12,9 +16,13 @@ interface AuditLogAdminFilters {
 }
 
 export const getAuditLogAdmin = async (filters: AuditLogAdminFilters = {}) => {
-  const session = await getSession();
-  if (!session) return { error: "Unauthorized" };
-  if (session.user.role !== "admin") return { error: "Forbidden" };
+  try {
+    await requireRole(["admin"]);
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
 
   const { entityType, action, userId, dateFrom, dateTo, page = 1 } = filters;
   const take = 50;
