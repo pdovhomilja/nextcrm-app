@@ -398,6 +398,94 @@ export async function assertCanReadTargetList(
 }
 
 // ---------------------------------------------------------------------------
+// E3.T1: Document read/write scope helpers (linked-entity aware).
+// Documents have multi-faceted ownership: created_by_user, createdBy (legacy),
+// assigned_user, visibility="public", plus link junctions to
+// accounts/leads/contacts/opportunities. User scope unions all of these;
+// manager/admin get bare deletedAt-only read.
+// ---------------------------------------------------------------------------
+
+export function documentReadScopeWhere(user: AuthzUser) {
+  if (user.role === "admin" || user.role === "manager") {
+    return { deletedAt: null };
+  }
+  return {
+    deletedAt: null,
+    OR: [
+      { created_by_user: user.id },
+      { createdBy: user.id }, // legacy duplicate
+      { assigned_user: user.id },
+      { visibility: "public" },
+      // Linked-entity scope (junction relations)
+      { accounts: { some: { account: { OR: accountUserScopeOR(user.id) } } } },
+      {
+        leads: {
+          some: {
+            lead: { OR: [{ assigned_to: user.id }, { createdBy: user.id }] },
+          },
+        },
+      },
+      {
+        contacts: {
+          some: {
+            contact: {
+              OR: [
+                { assigned_to: user.id },
+                { created_by: user.id },
+                { createdBy: user.id },
+              ],
+            },
+          },
+        },
+      },
+      {
+        opportunities: {
+          some: {
+            opportunity: {
+              OR: [
+                { assigned_to: user.id },
+                { created_by: user.id },
+                { createdBy: user.id },
+              ],
+            },
+          },
+        },
+      },
+    ],
+  };
+}
+
+export async function assertCanReadDocument(
+  user: AuthzUser,
+  documentId: string,
+): Promise<void> {
+  const row = await prismadb.Documents.findFirst({
+    where: { id: documentId, ...documentReadScopeWhere(user) },
+    select: { id: true },
+  });
+  if (!row) throw new AuthorizationError();
+}
+
+export async function assertCanWriteDocument(
+  user: AuthzUser,
+  documentId: string,
+): Promise<void> {
+  return assertCanReadDocument(user, documentId);
+}
+
+export async function filterAuthorizedDocumentIds(
+  user: AuthzUser,
+  documentIds: string[],
+): Promise<string[]> {
+  if (documentIds.length === 0) return [];
+  const rows = await prismadb.Documents.findMany({
+    where: { id: { in: documentIds }, ...documentReadScopeWhere(user) },
+    select: { id: true },
+  });
+  return rows.map((r: { id: string }) => r.id);
+}
+
+// ---------------------------------------------------------------------------
 // D3.T3: Activity / audit dispatch helper.
 // Resolves an entityType string to the matching assertCanRead* helper.
 // Used by activity-feed (T4) and audit-log-by-entity (T5).
