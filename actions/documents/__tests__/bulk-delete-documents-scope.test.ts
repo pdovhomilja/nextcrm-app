@@ -6,7 +6,6 @@ jest.mock("@/lib/prisma", () => ({
       findMany: jest.fn(),
       deleteMany: jest.fn(),
     },
-    Documents: { findMany: jest.fn() },
   },
 }));
 jest.mock("@/lib/minio", () => ({

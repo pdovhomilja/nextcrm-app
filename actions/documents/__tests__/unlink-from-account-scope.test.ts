@@ -3,7 +3,7 @@ jest.mock("@/lib/prisma", () => ({
   prismadb: {
     users: { findUnique: jest.fn() },
     documentsToAccounts: { delete: jest.fn() },
-    Documents: { findFirst: jest.fn() },
+    documents: { findFirst: jest.fn() },
     crm_Accounts: { findFirst: jest.fn() },
   },
 }));
