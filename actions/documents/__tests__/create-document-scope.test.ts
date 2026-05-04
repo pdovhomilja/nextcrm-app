@@ -2,8 +2,7 @@ jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
     users: { findUnique: jest.fn() },
-    documents: { create: jest.fn() },
-    Documents: { findFirst: jest.fn() },
+    documents: { create: jest.fn(), findFirst: jest.fn() },
     crm_Accounts: { findFirst: jest.fn() },
   },
 }));

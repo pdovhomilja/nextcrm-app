@@ -1,24 +1,21 @@
 import { prismadb } from "@/lib/prisma";
 import { junctionTableHelpers } from "@/lib/junction-helpers";
+import {
+  requireAuthenticated,
+  boardReadScopeWhere,
+  AuthenticationError,
+} from "@/lib/authz";
 
-export const getBoards = async (userId: string) => {
-  if (!userId) {
-    return null;
+export const getBoards = async (_userId?: string) => {
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return [];
+    throw e;
   }
   const data = await prismadb.boards.findMany({
-    where: {
-      deletedAt: null,
-      OR: [
-        {
-          user: userId,
-        },
-        {
-          visibility: "public",
-        },
-        // Find boards where user is a watcher using BoardWatchers junction table
-        junctionTableHelpers.watchedByUser(userId),
-      ],
-    },
+    where: boardReadScopeWhere(user),
     include: {
       assigned_user: {
         select: {

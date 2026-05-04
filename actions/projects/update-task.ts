@@ -4,6 +4,12 @@ import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import UpdatedTaskFromProject from "@/emails/UpdatedTaskFromProject";
 import resendHelper from "@/lib/resend";
+import {
+  requireAuthenticated,
+  assertCanWriteBoard,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export const updateTask = async (data: {
   taskId: string;
@@ -15,6 +21,14 @@ export const updateTask = async (data: {
   content: string;
   dueDateAt?: Date;
 }) => {
+  let authzUser;
+  try {
+    authzUser = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
+
   const session = await getSession();
   if (!session) return { error: "Unauthorized" };
 
@@ -24,6 +38,22 @@ export const updateTask = async (data: {
   if (!taskId) return { error: "Missing task ID" };
   if (!title || !user || !priority || !content) {
     return { error: "Missing one of the task data" };
+  }
+
+  const existing = await prismadb.tasks.findUnique({
+    where: { id: taskId },
+    select: {
+      assigned_section: { select: { board_relation: { select: { id: true } } } },
+    },
+  });
+  const parentBoardId = existing?.assigned_section?.board_relation?.id;
+  if (!parentBoardId) return { error: "Not found" };
+
+  try {
+    await assertCanWriteBoard(authzUser, parentBoardId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
   }
 
   try {

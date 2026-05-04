@@ -5,8 +5,8 @@ jest.mock("@/lib/prisma", () => ({
     documents: {
       findUnique: jest.fn(),
       delete: jest.fn(),
+      findFirst: jest.fn(),
     },
-    Documents: { findFirst: jest.fn() },
   },
 }));
 jest.mock("@/lib/minio", () => ({

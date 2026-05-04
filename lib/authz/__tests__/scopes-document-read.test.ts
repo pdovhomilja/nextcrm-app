@@ -2,7 +2,7 @@ import { AuthorizationError } from "../errors";
 
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
-    Documents: { findFirst: jest.fn(), findMany: jest.fn() },
+    documents: { findFirst: jest.fn(), findMany: jest.fn() },
   },
 }));
 

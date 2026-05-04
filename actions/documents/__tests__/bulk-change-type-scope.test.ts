@@ -2,8 +2,7 @@ jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
     users: { findUnique: jest.fn() },
-    documents: { updateMany: jest.fn() },
-    Documents: { findMany: jest.fn() },
+    documents: { updateMany: jest.fn(), findMany: jest.fn() },
   },
 }));
 jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));

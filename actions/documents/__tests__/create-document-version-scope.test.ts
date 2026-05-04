@@ -8,8 +8,8 @@ jest.mock("@/lib/prisma", () => {
         findUnique: jest.fn(),
         create: jest.fn(),
         update: jest.fn(),
+        findFirst: jest.fn(),
       },
-      Documents: { findFirst: jest.fn() },
       $transaction: tx,
     },
   };

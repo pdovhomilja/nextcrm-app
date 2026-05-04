@@ -574,3 +574,91 @@ export async function assertCanWriteTemplate(
 ): Promise<void> {
   return assertCanReadTemplate(user, id);
 }
+
+// ---------------------------------------------------------------------------
+// E4.T1: Board + task scope helpers (Projects module).
+// Boards: owner (`user`) + sharedWith uuid[] + visibility="public" + watchers junction.
+// Tasks:  scope by parent board via assigned_section.board_relation.
+// Write: board owner only (or manager/admin); task assignees get write bypass
+//        for status-only updates (per plan; route enforces field whitelist).
+// ---------------------------------------------------------------------------
+
+export function boardReadScopeWhere(user: AuthzUser) {
+  if (user.role === "admin" || user.role === "manager") {
+    return { deletedAt: null };
+  }
+  return {
+    deletedAt: null,
+    OR: [
+      { user: user.id },
+      { sharedWith: { has: user.id } },
+      { visibility: "public" },
+      { watchers: { some: { user_id: user.id } } },
+    ],
+  };
+}
+
+export function boardWriteScopeWhere(user: AuthzUser) {
+  if (user.role === "admin" || user.role === "manager") {
+    return { deletedAt: null };
+  }
+  return { deletedAt: null, user: user.id };
+}
+
+export async function assertCanReadBoard(
+  user: AuthzUser,
+  boardId: string,
+): Promise<void> {
+  const row = await prismadb.boards.findFirst({
+    where: { id: boardId, ...boardReadScopeWhere(user) },
+    select: { id: true },
+  });
+  if (!row) throw new AuthorizationError();
+}
+
+export async function assertCanWriteBoard(
+  user: AuthzUser,
+  boardId: string,
+): Promise<void> {
+  const row = await prismadb.boards.findFirst({
+    where: { id: boardId, ...boardWriteScopeWhere(user) },
+    select: { id: true },
+  });
+  if (!row) throw new AuthorizationError();
+}
+
+export async function assertCanReadTask(
+  user: AuthzUser,
+  taskId: string,
+): Promise<void> {
+  const task = await prismadb.tasks.findUnique({
+    where: { id: taskId },
+    select: {
+      assigned_section: {
+        select: { board_relation: { select: { id: true } } },
+      },
+    },
+  });
+  const boardId = task?.assigned_section?.board_relation?.id;
+  if (!boardId) throw new AuthorizationError();
+  return assertCanReadBoard(user, boardId);
+}
+
+export async function assertCanWriteTask(
+  user: AuthzUser,
+  taskId: string,
+): Promise<void> {
+  const task = await prismadb.tasks.findUnique({
+    where: { id: taskId },
+    select: {
+      user: true,
+      assigned_section: {
+        select: { board_relation: { select: { id: true } } },
+      },
+    },
+  });
+  const boardId = task?.assigned_section?.board_relation?.id;
+  if (!boardId) throw new AuthorizationError();
+  if (user.role === "user" && task?.user === user.id) return;
+  return assertCanWriteBoard(user, boardId);
+}

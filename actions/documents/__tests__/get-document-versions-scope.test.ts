@@ -6,8 +6,7 @@ jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
     users: { findUnique: jest.fn() },
-    documents: { findMany: jest.fn() },
-    Documents: { findFirst: jest.fn() },
+    documents: { findMany: jest.fn(), findFirst: jest.fn() },
   },
 }));
 

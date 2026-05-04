@@ -4,6 +4,12 @@ import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import NewTaskFromProject from "@/emails/NewTaskFromProject";
 import resendHelper from "@/lib/resend";
+import {
+  requireAuthenticated,
+  assertCanWriteBoard,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export const createTaskInBoard = async (data: {
   boardId: string;
@@ -14,12 +20,27 @@ export const createTaskInBoard = async (data: {
   user?: string;
   dueDateAt?: Date;
 }) => {
+  let authzUser;
+  try {
+    authzUser = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
+
   const session = await getSession();
   if (!session) return { error: "Unauthorized" };
 
   const { boardId, section, title, priority, content, user, dueDateAt } = data;
 
   if (!section) return { error: "Missing section ID" };
+
+  try {
+    await assertCanWriteBoard(authzUser, boardId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
 
   // Quick-add path: no title/user/priority/content - create a blank task
   if (!title || !user || !priority || !content) {
