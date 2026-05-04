@@ -1,6 +1,11 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
+import {
+  requireAuthenticated,
+  assertCanWriteAccount,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 import { AssignProduct } from "./schema";
 import { InputType, ReturnType } from "./types";
 import { createSafeAction } from "@/lib/create-safe-action";
@@ -9,13 +14,24 @@ import { getSnapshotRate, getDefaultCurrency } from "@/lib/currency";
 import { revalidatePath } from "next/cache";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
-  const session = await getSession();
-  if (!session?.user?.id) {
-    return { error: "Unauthorized" };
+  const { accountId, productId, quantity, custom_price, currency, status, start_date, end_date, renewal_date, notes } = data;
+
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
   }
 
-  const userId = session.user.id;
-  const { accountId, productId, quantity, custom_price, currency, status, start_date, end_date, renewal_date, notes } = data;
+  try {
+    await assertCanWriteAccount(user, accountId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
+
+  const userId = user.id;
 
   try {
     const product = await prismadb.crm_Products.findUnique({ where: { id: productId } });
