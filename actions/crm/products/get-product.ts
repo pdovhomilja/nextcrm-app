@@ -1,7 +1,14 @@
 import { cache } from "react";
 import { prismadb } from "@/lib/prisma";
+import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
 
 export const getProduct = cache(async (id: string) => {
+  try {
+    await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return null;
+    throw e;
+  }
   const product = await prismadb.crm_Products.findUnique({
     where: { id },
     include: {
