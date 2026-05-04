@@ -459,7 +459,7 @@ export async function assertCanReadDocument(
   user: AuthzUser,
   documentId: string,
 ): Promise<void> {
-  const row = await prismadb.Documents.findFirst({
+  const row = await prismadb.documents.findFirst({
     where: { id: documentId, ...documentReadScopeWhere(user) },
     select: { id: true },
   });
@@ -478,7 +478,7 @@ export async function filterAuthorizedDocumentIds(
   documentIds: string[],
 ): Promise<string[]> {
   if (documentIds.length === 0) return [];
-  const rows = await prismadb.Documents.findMany({
+  const rows = await prismadb.documents.findMany({
     where: { id: { in: documentIds }, ...documentReadScopeWhere(user) },
     select: { id: true },
   });

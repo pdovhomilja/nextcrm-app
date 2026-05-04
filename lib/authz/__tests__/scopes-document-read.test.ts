@@ -14,11 +14,11 @@ import {
   filterAuthorizedDocumentIds,
 } from "../scopes/crm";
 
-const findDoc = prismadb.Documents.findFirst as jest.MockedFunction<
-  typeof prismadb.Documents.findFirst
+const findDoc = prismadb.documents.findFirst as jest.MockedFunction<
+  typeof prismadb.documents.findFirst
 >;
-const findManyDoc = prismadb.Documents.findMany as jest.MockedFunction<
-  typeof prismadb.Documents.findMany
+const findManyDoc = prismadb.documents.findMany as jest.MockedFunction<
+  typeof prismadb.documents.findMany
 >;
 
 beforeEach(() => jest.clearAllMocks());

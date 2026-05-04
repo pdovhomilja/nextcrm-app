@@ -33,7 +33,7 @@ describe("getDocumentVersions scope", () => {
   it("out-of-scope (assertCanReadDocument throws): returns []", async () => {
     mockUser("user", "u1");
     // assertCanReadDocument: parent lookup returns null → AuthorizationError
-    (prismadb.Documents.findFirst as jest.Mock).mockResolvedValue(null);
+    (prismadb.documents.findFirst as jest.Mock).mockResolvedValue(null);
     const res = await getDocumentVersions("d1");
     expect(res).toEqual([]);
     expect(prismadb.documents.findMany).not.toHaveBeenCalled();
@@ -41,7 +41,7 @@ describe("getDocumentVersions scope", () => {
 
   it("in-scope: returns version rows", async () => {
     mockUser("user", "u1");
-    (prismadb.Documents.findFirst as jest.Mock).mockResolvedValue({ id: "d1" });
+    (prismadb.documents.findFirst as jest.Mock).mockResolvedValue({ id: "d1" });
     const rows = [{ id: "d1", version: 2 }, { id: "v1", version: 1 }];
     (prismadb.documents.findMany as jest.Mock).mockResolvedValue(rows);
     const res = await getDocumentVersions("d1");
@@ -50,7 +50,7 @@ describe("getDocumentVersions scope", () => {
 
   it("manager: assertCanReadDocument hits → returns versions", async () => {
     mockUser("manager", "m1");
-    (prismadb.Documents.findFirst as jest.Mock).mockResolvedValue({ id: "d1" });
+    (prismadb.documents.findFirst as jest.Mock).mockResolvedValue({ id: "d1" });
     (prismadb.documents.findMany as jest.Mock).mockResolvedValue([]);
     const res = await getDocumentVersions("d1");
     expect(res).toEqual([]);

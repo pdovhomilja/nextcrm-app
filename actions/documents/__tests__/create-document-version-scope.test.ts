@@ -47,14 +47,14 @@ describe("createDocumentVersion auth", () => {
 
   it("user out-of-scope parent: throws Forbidden", async () => {
     mockUser("user", "u1");
-    (prismadb.Documents.findFirst as jest.Mock).mockResolvedValue(null);
+    (prismadb.documents.findFirst as jest.Mock).mockResolvedValue(null);
     await expect(createDocumentVersion(baseInput)).rejects.toThrow("Forbidden");
     expect(prismadb.$transaction).not.toHaveBeenCalled();
   });
 
   it("user in-scope owner: creates new version with createdBy=user.id", async () => {
     mockUser("user", "u1");
-    (prismadb.Documents.findFirst as jest.Mock).mockResolvedValue({ id: "p1" });
+    (prismadb.documents.findFirst as jest.Mock).mockResolvedValue({ id: "p1" });
     (prismadb.documents.findUnique as jest.Mock).mockResolvedValue({
       id: "p1",
       document_name: "n",
@@ -69,7 +69,7 @@ describe("createDocumentVersion auth", () => {
 
   it("manager: bypasses OR scope and creates new version", async () => {
     mockUser("manager", "m1");
-    (prismadb.Documents.findFirst as jest.Mock).mockResolvedValue({ id: "p1" });
+    (prismadb.documents.findFirst as jest.Mock).mockResolvedValue({ id: "p1" });
     (prismadb.documents.findUnique as jest.Mock).mockResolvedValue({
       id: "p1",
       document_name: "n",
@@ -78,7 +78,7 @@ describe("createDocumentVersion auth", () => {
     });
     (prismadb.$transaction as jest.Mock).mockResolvedValue([{ id: "d3" }, {}]);
     await createDocumentVersion(baseInput);
-    const where = (prismadb.Documents.findFirst as jest.Mock).mock.calls[0][0].where;
+    const where = (prismadb.documents.findFirst as jest.Mock).mock.calls[0][0].where;
     expect(where.OR).toBeUndefined();
   });
 });

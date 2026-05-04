@@ -76,8 +76,8 @@ describe("searchDocuments scope", () => {
       { id: "v4", similarity: 0.81 },
       { id: "v5", similarity: 0.75 },
     ]);
-    // filterAuthorizedDocumentIds is implemented via prismadb.Documents.findMany — return only v1, v3
-    (prismadb.Documents.findMany as jest.Mock).mockResolvedValue([
+    // filterAuthorizedDocumentIds is implemented via prismadb.documents.findMany — return only v1, v3
+    (prismadb.documents.findMany as jest.Mock).mockResolvedValue([
       { id: "v1" },
       { id: "v3" },
     ]);

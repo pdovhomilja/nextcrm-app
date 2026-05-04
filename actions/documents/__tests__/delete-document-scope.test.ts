@@ -37,14 +37,14 @@ describe("deleteDocument auth", () => {
 
   it("user out-of-scope: throws Forbidden", async () => {
     mockUser("user", "u1");
-    (prismadb.Documents.findFirst as jest.Mock).mockResolvedValue(null);
+    (prismadb.documents.findFirst as jest.Mock).mockResolvedValue(null);
     await expect(deleteDocument("d1")).rejects.toThrow("Forbidden");
     expect(prismadb.documents.delete).not.toHaveBeenCalled();
   });
 
   it("user in-scope owner: deletes document and applies minio cleanup", async () => {
     mockUser("user", "u1");
-    (prismadb.Documents.findFirst as jest.Mock).mockResolvedValue({ id: "d1" });
+    (prismadb.documents.findFirst as jest.Mock).mockResolvedValue({ id: "d1" });
     (prismadb.documents.findUnique as jest.Mock).mockResolvedValue({
       id: "d1",
       key: "k1",
@@ -56,14 +56,14 @@ describe("deleteDocument auth", () => {
 
   it("manager: bypasses OR scope and deletes", async () => {
     mockUser("manager", "m1");
-    (prismadb.Documents.findFirst as jest.Mock).mockResolvedValue({ id: "d1" });
+    (prismadb.documents.findFirst as jest.Mock).mockResolvedValue({ id: "d1" });
     (prismadb.documents.findUnique as jest.Mock).mockResolvedValue({
       id: "d1",
       key: null,
     });
     (prismadb.documents.delete as jest.Mock).mockResolvedValue({});
     await deleteDocument("d1");
-    const where = (prismadb.Documents.findFirst as jest.Mock).mock.calls[0][0].where;
+    const where = (prismadb.documents.findFirst as jest.Mock).mock.calls[0][0].where;
     expect(where.OR).toBeUndefined();
   });
 });

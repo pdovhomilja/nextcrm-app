@@ -37,7 +37,7 @@ describe("bulkLinkToAccount auth", () => {
   it("403: account ok but partial unauthorized doc → fail-closed", async () => {
     mockUser("user", "u1");
     (prismadb.crm_Accounts.findFirst as jest.Mock).mockResolvedValue({ id: "a1" });
-    (prismadb.Documents.findMany as jest.Mock).mockResolvedValue([{ id: "d1" }]);
+    (prismadb.documents.findMany as jest.Mock).mockResolvedValue([{ id: "d1" }]);
     await expect(bulkLinkToAccount(["d1", "d2"], "a1")).rejects.toThrow("Forbidden");
     expect(prismadb.documentsToAccounts.createMany).not.toHaveBeenCalled();
   });
@@ -45,7 +45,7 @@ describe("bulkLinkToAccount auth", () => {
   it("200: all authorized → createMany junction rows", async () => {
     mockUser("user", "u1");
     (prismadb.crm_Accounts.findFirst as jest.Mock).mockResolvedValue({ id: "a1" });
-    (prismadb.Documents.findMany as jest.Mock).mockResolvedValue([
+    (prismadb.documents.findMany as jest.Mock).mockResolvedValue([
       { id: "d1" },
       { id: "d2" },
     ]);
@@ -63,7 +63,7 @@ describe("bulkLinkToAccount auth", () => {
   it("manager: bypasses OR scope and links", async () => {
     mockUser("manager", "m1");
     (prismadb.crm_Accounts.findFirst as jest.Mock).mockResolvedValue({ id: "a1" });
-    (prismadb.Documents.findMany as jest.Mock).mockResolvedValue([{ id: "d1" }]);
+    (prismadb.documents.findMany as jest.Mock).mockResolvedValue([{ id: "d1" }]);
     (prismadb.documentsToAccounts.createMany as jest.Mock).mockResolvedValue({ count: 1 });
     await bulkLinkToAccount(["d1"], "a1");
     const acctWhere = (prismadb.crm_Accounts.findFirst as jest.Mock).mock.calls[0][0].where;
