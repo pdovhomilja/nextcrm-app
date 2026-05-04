@@ -12,7 +12,8 @@ export function transformUsers(mongoRecord: any, uuidMapper: any): any {
   const newUuid = uuidMapper.generateAndMapUuid(mongoRecord._id);
 
   const isAdmin = toBoolean(mongoRecord.is_admin);
-  const role = isAdmin ? "admin" : "member";
+  const isAccountAdmin = toBoolean(mongoRecord.is_account_admin);
+  const role = isAdmin ? "admin" : isAccountAdmin ? "manager" : "user";
 
   return {
     id: newUuid,
@@ -20,8 +21,6 @@ export function transformUsers(mongoRecord: any, uuidMapper: any): any {
     account_name: nullableString(mongoRecord.account_name),
     avatar: nullableString(mongoRecord.avatar),
     email: mongoRecord.email, // Required field
-    is_account_admin: toBoolean(mongoRecord.is_account_admin),
-    is_admin: isAdmin,
     role,
     created_on: convertDateToISO(mongoRecord.created_on) || new Date().toISOString(),
     lastLoginAt: convertDateToISO(mongoRecord.lastLoginAt),

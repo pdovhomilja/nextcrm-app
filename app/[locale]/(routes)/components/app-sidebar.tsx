@@ -38,7 +38,7 @@ import getCampaignsMenuItem from "./menu-items/Campaigns";
  * - Task 2.4: Added Projects module navigation (simple item with module filtering)
  * - Task 2.5: Added Emails module navigation (simple item with module filtering)
  * - Task 2.6: Added remaining module navigation items (Employees, Reports, Documents, Databox)
- * - Task 2.7: Added Administration menu with role-based visibility (is_admin check)
+ * - Task 2.7: Added Administration menu with role-based visibility (role === "admin")
  * - NavMain component renders all enabled module navigation items
  * - Module filtering ensures only enabled modules appear in navigation
  * - Role-based visibility: Administration only shows for admin users
