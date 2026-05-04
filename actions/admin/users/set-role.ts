@@ -22,7 +22,7 @@ export const setUserRole = async (userId: string, role: AppRole) => {
   try {
     const user = await prismadb.users.update({
       where: { id: userId },
-      data: { role, is_admin: role === "admin" },
+      data: { role },
       select: {
         id: true,
         name: true,
