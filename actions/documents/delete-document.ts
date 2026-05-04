@@ -1,15 +1,32 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
+import {
+  requireAuthenticated,
+  assertCanWriteDocument,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 import { prismadb } from "@/lib/prisma";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { minioClient, MINIO_BUCKET } from "@/lib/minio";
 
 export async function deleteDocument(documentId: string) {
-  const session = await getSession();
-  if (!session) throw new Error("Unauthenticated");
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) throw new Error("Unauthenticated");
+    throw e;
+  }
 
   if (!documentId) throw new Error("Document ID is required");
+
+  try {
+    await assertCanWriteDocument(user, documentId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) throw new Error("Forbidden");
+    throw e;
+  }
 
   const document = await prismadb.documents.findUnique({
     where: { id: documentId },

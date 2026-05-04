@@ -63,5 +63,11 @@ export {
   assertCanReadTemplate,
   assertCanWriteTemplate,
 } from "./scopes/crm";
+export {
+  documentReadScopeWhere,
+  assertCanReadDocument,
+  assertCanWriteDocument,
+  filterAuthorizedDocumentIds,
+} from "./scopes/crm";
 export type { ReportScope } from "./scopes/report-scope";
 export { getReportScope } from "./scopes/report-scope";

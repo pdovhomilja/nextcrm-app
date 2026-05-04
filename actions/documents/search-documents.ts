@@ -1,5 +1,10 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
+import {
+  requireAuthenticated,
+  documentReadScopeWhere,
+  filterAuthorizedDocumentIds,
+  AuthenticationError,
+} from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
 import {
   generateEmbedding,
@@ -17,17 +22,28 @@ export interface DocumentSearchResult {
 export async function searchDocuments(
   query: string
 ): Promise<DocumentSearchResult[]> {
-  const session = await getSession();
-  if (!session) return [];
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return [];
+    throw e;
+  }
   if (!query || query.trim().length < 2) return [];
 
-  // Keyword search
+  // Keyword search — scope OR (visibility/ownership) goes at top level;
+  // user-supplied search OR moves into AND so it cannot replace the scope OR.
   const kwResults = await prismadb.documents.findMany({
     where: {
       parent_document_id: null,
-      OR: [
-        { document_name: { contains: query, mode: "insensitive" } },
-        { summary: { contains: query, mode: "insensitive" } },
+      ...documentReadScopeWhere(user),
+      AND: [
+        {
+          OR: [
+            { document_name: { contains: query, mode: "insensitive" } },
+            { summary: { contains: query, mode: "insensitive" } },
+          ],
+        },
       ],
     },
     take: 5,
@@ -40,13 +56,15 @@ export async function searchDocuments(
     },
   });
 
-  // Semantic search
+  // Semantic search via raw pgvector. Apply post-filter for authz.
   let semResults: { id: string; similarity: number }[] = [];
   try {
     const embedding = await generateEmbedding(query.trim());
     const vec = toVectorLiteral(embedding);
 
-    semResults = await prismadb.$queryRaw<{ id: string; similarity: number }[]>`
+    const rawResults = await prismadb.$queryRaw<
+      { id: string; similarity: number }[]
+    >`
       SELECT d.id, 1 - (e.embedding <=> ${vec}::vector) AS similarity
       FROM "Documents" d
       LEFT JOIN "crm_Embeddings_Documents" e ON e.document_id = d.id
@@ -54,6 +72,14 @@ export async function searchDocuments(
         AND 1 - (e.embedding <=> ${vec}::vector) > 0.7
       ORDER BY e.embedding <=> ${vec}::vector
       LIMIT 5`;
+
+    const allowedIds = new Set(
+      await filterAuthorizedDocumentIds(
+        user,
+        rawResults.map((r) => r.id),
+      ),
+    );
+    semResults = rawResults.filter((r) => allowedIds.has(r.id));
   } catch {
     // Fall back to keyword-only
   }
