@@ -202,7 +202,11 @@ git commit -m "refactor(schema): drop legacy is_admin and is_account_admin colum
 
 ---
 
-## Task 5: Reconcile dual `created_by` / `createdBy` on `crm_Opportunities` and `crm_Contacts`
+## Task 5: Reconcile dual `created_by` / `createdBy` on `crm_Opportunities` and `crm_Contacts` — DEFERRED
+
+**Status:** Deferred from Phase F during execution. Both models also carry a Prisma relation field keyed to `created_by` (`crate_by_user` on `crm_Contacts`, `created_by_user` on `crm_Opportunities`) that is used by many GET endpoints via Prisma `include`. Dropping the column requires dropping the relation and updating every caller — a much larger refactor than originally scoped. Follow-up plan to be written separately.
+
+### Original task (preserved for the follow-up plan)
 
 **Decision:** keep `createdBy` (camelCase) as canonical to match the rest of the schema (Boards, Tasks, Invoices, Products, etc. — all already `createdBy`). Drop `created_by` after backfilling missing values into `createdBy`.
 
