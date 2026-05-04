@@ -1,18 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getUser } from "@/actions/get-user";
+import {
+  requireRole,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
+
+async function ensureAdmin(): Promise<NextResponse | null> {
+  try {
+    await requireRole(["admin"]);
+    return null;
+  } catch (e) {
+    if (e instanceof AuthorizationError)
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (e instanceof AuthenticationError)
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    throw e;
+  }
+}
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  try {
-    const user = await getUser();
-    if (!user.is_admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = await ensureAdmin();
+  if (denied) return denied;
 
   const body = await request.json();
   const taxRate = await prismadb.invoice_TaxRates.update({
@@ -33,12 +46,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  try {
-    const user = await getUser();
-    if (!user.is_admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = await ensureAdmin();
+  if (denied) return denied;
 
   await prismadb.invoice_TaxRates.delete({ where: { id } });
   return NextResponse.json({ success: true });

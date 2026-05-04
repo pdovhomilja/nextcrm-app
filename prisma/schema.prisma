@@ -916,6 +916,12 @@ enum ActiveStatus {
   PENDING
 }
 
+enum AppRole {
+  user
+  manager
+  admin
+}
+
 model Users {
   id               String       @id @default(uuid()) @db.Uuid
   v                Int          @default(0) @map("__v")
@@ -924,9 +930,7 @@ model Users {
   email            String       @unique
   emailVerified    Boolean      @default(false)
   image            String?
-  is_account_admin Boolean      @default(false)
-  role             String       @default("user")
-  is_admin         Boolean      @default(false)
+  role             AppRole      @default(user)
   created_on       DateTime     @default(now())
   updated_at       DateTime?    @updatedAt
   lastLoginAt      DateTime?
@@ -980,8 +984,7 @@ model Users {
   @@index([email])
   @@index([userStatus])
   @@index([userLanguage])
-  @@index([is_admin])
-  @@index([is_account_admin])
+  @@index([role])
   @@index([created_on])
   @@index([lastLoginAt])
 }
