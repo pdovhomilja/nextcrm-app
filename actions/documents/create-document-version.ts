@@ -1,5 +1,10 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
+import {
+  requireAuthenticated,
+  assertCanWriteDocument,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { inngest } from "@/inngest/client";
@@ -14,8 +19,20 @@ interface CreateVersionInput {
 }
 
 export async function createDocumentVersion(input: CreateVersionInput) {
-  const session = await getSession();
-  if (!session) throw new Error("Unauthorized");
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) throw new Error("Unauthorized");
+    throw e;
+  }
+
+  try {
+    await assertCanWriteDocument(user, input.parentDocumentId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) throw new Error("Forbidden");
+    throw e;
+  }
 
   const parent = await prismadb.documents.findUnique({
     where: { id: input.parentDocumentId },
@@ -39,8 +56,8 @@ export async function createDocumentVersion(input: CreateVersionInput) {
         processing_status: "PENDING",
         version: newVersion,
         parent_document_id: input.parentDocumentId,
-        createdBy: session.user.id,
-        assigned_user: session.user.id,
+        createdBy: user.id,
+        assigned_user: user.id,
       },
     }),
     prismadb.documents.update({
