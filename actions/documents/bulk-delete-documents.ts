@@ -1,13 +1,30 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
+import {
+  requireAuthenticated,
+  filterAuthorizedDocumentIds,
+  AuthenticationError,
+} from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { minioClient, MINIO_BUCKET } from "@/lib/minio";
 
 export async function bulkDeleteDocuments(documentIds: string[]) {
-  const session = await getSession();
-  if (!session) throw new Error("Unauthorized");
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) throw new Error("Unauthenticated");
+    throw e;
+  }
+
+  if (!documentIds || documentIds.length === 0) return;
+
+  // Fail-closed: if any id is not authorized, reject the whole request.
+  const allowed = await filterAuthorizedDocumentIds(user, documentIds);
+  if (allowed.length !== documentIds.length) {
+    throw new Error("Forbidden");
+  }
 
   const documents = await prismadb.documents.findMany({
     where: { id: { in: documentIds } },
