@@ -429,3 +429,60 @@ export async function assertCanReadActivityForEntity(
       return;
   }
 }
+
+// ---------------------------------------------------------------------------
+// E2.T1: Campaign + campaign-template read/write scope helpers.
+// crm_campaigns soft-deletes via `status: "deleted"` (string field).
+// crm_campaign_templates uses `deletedAt: null` like other CRM entities.
+// Write helpers delegate to read for now; can split later if needed.
+// ---------------------------------------------------------------------------
+
+export function campaignReadScopeWhere(user: AuthzUser) {
+  if (user.role === "admin" || user.role === "manager") {
+    return { status: { not: "deleted" } };
+  }
+  return { status: { not: "deleted" }, created_by: user.id };
+}
+
+export function campaignTemplateReadScopeWhere(user: AuthzUser) {
+  if (user.role === "admin" || user.role === "manager") {
+    return { deletedAt: null };
+  }
+  return { deletedAt: null, created_by: user.id };
+}
+
+export async function assertCanReadCampaign(
+  user: AuthzUser,
+  id: string,
+): Promise<void> {
+  const row = await prismadb.crm_campaigns.findFirst({
+    where: { id, ...campaignReadScopeWhere(user) },
+    select: { id: true },
+  });
+  if (!row) throw new AuthorizationError();
+}
+
+export async function assertCanWriteCampaign(
+  user: AuthzUser,
+  id: string,
+): Promise<void> {
+  return assertCanReadCampaign(user, id);
+}
+
+export async function assertCanReadTemplate(
+  user: AuthzUser,
+  id: string,
+): Promise<void> {
+  const row = await prismadb.crm_campaign_templates.findFirst({
+    where: { id, ...campaignTemplateReadScopeWhere(user) },
+    select: { id: true },
+  });
+  if (!row) throw new AuthorizationError();
+}
+
+export async function assertCanWriteTemplate(
+  user: AuthzUser,
+  id: string,
+): Promise<void> {
+  return assertCanReadTemplate(user, id);
+}
