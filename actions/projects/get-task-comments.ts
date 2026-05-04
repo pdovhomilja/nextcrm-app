@@ -1,4 +1,10 @@
 import { prismadb } from "@/lib/prisma";
+import {
+  requireAuthenticated,
+  assertCanReadTask,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 /**
  * Fetch comments for a Projects task (`Tasks` model).
@@ -8,6 +14,21 @@ import { prismadb } from "@/lib/prisma";
  * through this function.
  */
 export const getTaskComments = async (taskId: string) => {
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return [];
+    throw e;
+  }
+
+  try {
+    await assertCanReadTask(user, taskId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return [];
+    throw e;
+  }
+
   const data = await prismadb.tasksComments.findMany({
     where: {
       task: taskId,

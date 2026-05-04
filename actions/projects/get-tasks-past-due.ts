@@ -1,97 +1,103 @@
 import { prismadb } from "@/lib/prisma";
-import { getSession } from "@/lib/auth-server";
+import {
+  requireAuthenticated,
+  AuthenticationError,
+} from "@/lib/authz";
 import dayjs from "dayjs";
 
 export const getTasksPastDue = async () => {
-  const session = await getSession();
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return undefined;
+    throw e;
+  }
   const today = dayjs().startOf("day");
   const nextWeek = dayjs().add(7, "day").startOf("day");
-  if (session) {
-    const getTaskPastDue = await prismadb.tasks.findMany({
-      where: {
-        AND: [
-          {
-            user: session.user.id,
-          },
-          {
-            dueDateAt: {
-              lte: new Date(),
-            },
-          },
-          {
-            taskStatus: {
-              not: "COMPLETE",
-            },
-          },
-        ],
-      },
-      include: {
-        comments: {
-          select: {
-            id: true,
-            comment: true,
-            createdAt: true,
-            assigned_user: {
-              select: {
-                id: true,
-                name: true,
-                avatar: true,
-              },
-            },
-          },
-          orderBy: {
-            createdAt: "desc",
+  // user role: restrict to own tasks. manager/admin: global.
+  const userScope =
+    user.role === "user" ? [{ user: user.id }] : [];
+
+  const getTaskPastDue = await prismadb.tasks.findMany({
+    where: {
+      AND: [
+        ...userScope,
+        {
+          dueDateAt: {
+            lte: new Date(),
           },
         },
-      },
-    });
-
-    const getTaskPastDueInSevenDays = await prismadb.tasks.findMany({
-      where: {
-        AND: [
-          {
-            user: session.user.id,
-          },
-          {
-            dueDateAt: {
-              //lte: dayjs().add(7, "day").toDate(),
-              gt: today.toDate(), // Due date is greater than or equal to today
-              lt: nextWeek.toDate(), // Due date is less than next week (not including today)
-            },
-          },
-          {
-            taskStatus: {
-              not: "COMPLETE",
-            },
-          },
-        ],
-      },
-      include: {
-        comments: {
-          select: {
-            id: true,
-            comment: true,
-            createdAt: true,
-            assigned_user: {
-              select: {
-                id: true,
-                name: true,
-                avatar: true,
-              },
-            },
-          },
-          orderBy: {
-            createdAt: "desc",
+        {
+          taskStatus: {
+            not: "COMPLETE",
           },
         },
+      ],
+    },
+    include: {
+      comments: {
+        select: {
+          id: true,
+          comment: true,
+          createdAt: true,
+          assigned_user: {
+            select: {
+              id: true,
+              name: true,
+              avatar: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
       },
-    });
+    },
+  });
 
-    const data = {
-      getTaskPastDue,
-      getTaskPastDueInSevenDays,
-    };
+  const getTaskPastDueInSevenDays = await prismadb.tasks.findMany({
+    where: {
+      AND: [
+        ...userScope,
+        {
+          dueDateAt: {
+            gt: today.toDate(),
+            lt: nextWeek.toDate(),
+          },
+        },
+        {
+          taskStatus: {
+            not: "COMPLETE",
+          },
+        },
+      ],
+    },
+    include: {
+      comments: {
+        select: {
+          id: true,
+          comment: true,
+          createdAt: true,
+          assigned_user: {
+            select: {
+              id: true,
+              name: true,
+              avatar: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
+    },
+  });
 
-    return data;
-  }
+  const data = {
+    getTaskPastDue,
+    getTaskPastDueInSevenDays,
+  };
+
+  return data;
 };
