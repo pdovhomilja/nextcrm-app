@@ -1,10 +1,28 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
+import {
+  requireAuthenticated,
+  assertCanReadDocument,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
 
 export async function getDocumentVersions(documentId: string) {
-  const session = await getSession();
-  if (!session) throw new Error("Unauthorized");
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return [];
+    throw e;
+  }
+
+  // Versions inherit parent permissions: assert read on parent first.
+  try {
+    await assertCanReadDocument(user, documentId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return [];
+    throw e;
+  }
 
   const versions = await prismadb.documents.findMany({
     where: {
