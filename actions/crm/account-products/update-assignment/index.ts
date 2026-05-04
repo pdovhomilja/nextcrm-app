@@ -1,6 +1,11 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
+import {
+  requireAuthenticated,
+  assertCanWriteAccount,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 import { UpdateAssignment } from "./schema";
 import { InputType, ReturnType } from "./types";
 import { createSafeAction } from "@/lib/create-safe-action";
@@ -8,19 +13,30 @@ import { writeAuditLog, diffObjects } from "@/lib/audit-log";
 import { revalidatePath } from "next/cache";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
-  const session = await getSession();
-  if (!session?.user?.id) {
-    return { error: "Unauthorized" };
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
   }
 
-  const userId = session.user.id;
+  const userId = user.id;
   const { id, ...updateData } = data;
 
+  const existing = await prismadb.crm_AccountProducts.findUnique({ where: { id } });
+  if (!existing) {
+    return { error: "Assignment not found" };
+  }
+
   try {
-    const existing = await prismadb.crm_AccountProducts.findUnique({ where: { id } });
-    if (!existing) {
-      return { error: "Assignment not found" };
-    }
+    await assertCanWriteAccount(user, existing.accountId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
+
+  try {
 
     const startDate = updateData.start_date ?? existing.start_date;
     if (updateData.end_date && updateData.end_date <= startDate) {

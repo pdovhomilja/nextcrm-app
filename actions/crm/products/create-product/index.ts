@@ -1,19 +1,23 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { CreateProduct } from "./schema";
 import { InputType, ReturnType } from "./types";
 import { createSafeAction } from "@/lib/create-safe-action";
 import { writeAuditLog } from "@/lib/audit-log";
 import { revalidatePath } from "next/cache";
+import { requireRole, AuthenticationError, AuthorizationError } from "@/lib/authz";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
-  const session = await getSession();
-  if (!session?.user?.id) {
-    return { error: "Unauthorized" };
+  let actor;
+  try {
+    actor = await requireRole(["manager", "admin"]);
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
   }
 
-  const userId = session.user.id;
+  const userId = actor.id;
   const {
     name, description, sku, type, status, unit_price, unit_cost,
     currency, tax_rate, unit, is_recurring, billing_period, categoryId,

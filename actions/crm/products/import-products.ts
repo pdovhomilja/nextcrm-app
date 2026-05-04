@@ -1,9 +1,9 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import Papa from "papaparse";
 import { writeAuditLog } from "@/lib/audit-log";
 import { revalidatePath } from "next/cache";
+import { requireRole, AuthenticationError, AuthorizationError } from "@/lib/authz";
 
 const REQUIRED_FIELDS = ["name", "type", "unit_price", "currency"];
 const MAX_ROWS = 500;
@@ -11,10 +11,16 @@ const MAX_ROWS = 500;
 export async function importProducts(
   formData: FormData
 ): Promise<{ imported: number; skipped: number; errors: string[] }> {
-  const session = await getSession();
-  if (!session?.user?.id) throw new Error("Unauthorized");
+  let actor;
+  try {
+    actor = await requireRole(["manager", "admin"]);
+  } catch (e) {
+    if (e instanceof AuthenticationError) throw new Error("Unauthorized");
+    if (e instanceof AuthorizationError) throw new Error("Forbidden");
+    throw e;
+  }
 
-  const userId = session.user.id;
+  const userId = actor.id;
   const file = formData.get("file") as File | null;
   if (!file) throw new Error("No file provided");
 
