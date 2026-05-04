@@ -1,13 +1,17 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/audit-log";
 import { revalidatePath } from "next/cache";
+import { requireRole, AuthenticationError, AuthorizationError } from "@/lib/authz";
 
 export const deleteProduct = async (id: string) => {
-  const session = await getSession();
-  if (!session?.user?.id) {
-    return { error: "Unauthorized" };
+  let actor;
+  try {
+    actor = await requireRole(["manager", "admin"]);
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
   }
 
   try {
@@ -15,7 +19,7 @@ export const deleteProduct = async (id: string) => {
       where: { id },
       data: {
         deletedAt: new Date(),
-        deletedBy: session.user.id,
+        deletedBy: actor.id,
       },
     });
 
@@ -24,7 +28,7 @@ export const deleteProduct = async (id: string) => {
       entityId: id,
       action: "deleted",
       changes: null,
-      userId: session.user.id,
+      userId: actor.id,
     });
 
     revalidatePath("/[locale]/(routes)/crm/products", "page");
