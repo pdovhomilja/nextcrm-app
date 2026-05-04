@@ -916,6 +916,12 @@ enum ActiveStatus {
   PENDING
 }
 
+enum AppRole {
+  user
+  manager
+  admin
+}
+
 model Users {
   id               String       @id @default(uuid()) @db.Uuid
   v                Int          @default(0) @map("__v")
@@ -925,7 +931,7 @@ model Users {
   emailVerified    Boolean      @default(false)
   image            String?
   is_account_admin Boolean      @default(false)
-  role             String       @default("user")
+  role             AppRole      @default(user)
   is_admin         Boolean      @default(false)
   created_on       DateTime     @default(now())
   updated_at       DateTime?    @updatedAt
