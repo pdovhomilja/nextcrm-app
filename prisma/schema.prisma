@@ -202,7 +202,6 @@ model crm_Opportunities {
   campaign         String?                 @db.Uuid
   close_date       DateTime?
   contact          String?                 @db.Uuid
-  created_by       String?                 @db.Uuid
   createdBy        String?                 @db.Uuid
   created_on       DateTime?               @default(now())
   createdAt        DateTime                @default(now())
@@ -223,7 +222,7 @@ model crm_Opportunities {
   assigned_type        crm_Opportunities_Type?         @relation(fields: [type], references: [id])
   assigned_sales_stage crm_Opportunities_Sales_Stages? @relation("assinged_sales_stage", fields: [sales_stage], references: [id])
   assigned_to_user     Users?                          @relation("assigned_to_user_relation", fields: [assigned_to], references: [id])
-  created_by_user      Users?                          @relation("created_by_user_relation", fields: [created_by], references: [id])
+  created_by_user      Users?                          @relation("created_by_user_relation", fields: [createdBy], references: [id])
   assigned_account     crm_Accounts?                   @relation(fields: [account], references: [id])
   assigned_campaings   crm_campaigns?                  @relation(fields: [campaign], references: [id])
   assigned_currency    Currency?                       @relation(fields: [currency], references: [code])
@@ -238,7 +237,7 @@ model crm_Opportunities {
   @@index([assigned_to])
   @@index([campaign])
   @@index([contact])
-  @@index([created_by])
+  @@index([createdBy])
   @@index([sales_stage])
   @@index([type])
   @@index([status])
@@ -450,7 +449,6 @@ model crm_Contacts {
   account          String?   @db.Uuid
   assigned_to      String?   @db.Uuid
   birthday         String?
-  created_by       String?   @db.Uuid
   createdBy        String?   @db.Uuid
   created_on       DateTime? @default(now())
   cratedAt         DateTime? @default(now())
@@ -481,7 +479,7 @@ model crm_Contacts {
   notes            String[]
 
   assigned_to_user  Users?                    @relation("assigned_contacts", fields: [assigned_to], references: [id])
-  crate_by_user     Users?                    @relation("created_contacts", fields: [created_by], references: [id])
+  crate_by_user     Users?                    @relation("created_contacts", fields: [createdBy], references: [id])
   accountsIDs       String?                   @db.Uuid
   assigned_accounts crm_Accounts?             @relation(fields: [accountsIDs], references: [id])
   opportunities     ContactsToOpportunities[]
@@ -495,7 +493,6 @@ model crm_Contacts {
   deletedBy             String?   @db.Uuid
 
   @@index([assigned_to])
-  @@index([created_by])
   @@index([accountsIDs])
   @@index([createdBy])
   @@index([updatedBy])

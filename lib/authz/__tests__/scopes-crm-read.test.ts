@@ -55,7 +55,6 @@ describe("assertCanReadContact", () => {
       id: "c1",
       OR: expect.arrayContaining([
         { assigned_to: "u3" },
-        { created_by: "u3" },
         { createdBy: "u3" },
       ]),
     });
@@ -97,7 +96,6 @@ describe("assertCanWriteContact", () => {
       id: "c1",
       OR: expect.arrayContaining([
         { assigned_to: "u3" },
-        { created_by: "u3" },
         { createdBy: "u3" },
       ]),
     });
@@ -184,7 +182,6 @@ describe("filterAuthorizedContactIds", () => {
       deletedAt: null,
       OR: expect.arrayContaining([
         { assigned_to: "u3" },
-        { created_by: "u3" },
         { createdBy: "u3" },
         {
           assigned_accounts: {

@@ -58,7 +58,7 @@ export async function convertTarget(
           social_instagram: target.social_instagram ?? undefined,
           social_facebook: target.social_facebook ?? undefined,
           accountsIDs: acct.id,
-          created_by: (session.user as any).id,
+          createdBy: (session.user as any).id,
         },
       });
 

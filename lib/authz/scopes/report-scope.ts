@@ -24,7 +24,7 @@ export function getReportScope(user: AuthzUser): ReportScope {
   if (user.role === "admin" || user.role === "manager") return EMPTY;
   return {
     opportunity: {
-      OR: [{ assigned_to: user.id }, { created_by: user.id }],
+      OR: [{ assigned_to: user.id }, { createdBy: user.id }],
     },
     lead: { OR: [{ assigned_to: user.id }, { createdBy: user.id }] },
     account: {
@@ -37,7 +37,6 @@ export function getReportScope(user: AuthzUser): ReportScope {
     contact: {
       OR: [
         { assigned_to: user.id },
-        { created_by: user.id },
         { createdBy: user.id },
       ],
     },

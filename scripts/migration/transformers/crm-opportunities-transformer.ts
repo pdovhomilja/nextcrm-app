@@ -19,8 +19,9 @@ export function transformCrmOpportunities(mongoRecord: any, uuidMapper: any): an
     campaign: uuidMapper.transformForeignKey(mongoRecord.campaign),
     close_date: convertDateToISO(mongoRecord.close_date),
     contact: uuidMapper.transformForeignKey(mongoRecord.contact),
-    created_by: uuidMapper.transformForeignKey(mongoRecord.created_by),
-    createdBy: uuidMapper.transformForeignKey(mongoRecord.createdBy),
+    createdBy: uuidMapper.transformForeignKey(
+      mongoRecord.createdBy ?? mongoRecord.created_by,
+    ),
     created_on: convertDateToISO(mongoRecord.created_on),
     createdAt: convertDateToISO(mongoRecord.createdAt) || new Date().toISOString(),
     last_activity: convertDateToISO(mongoRecord.last_activity),

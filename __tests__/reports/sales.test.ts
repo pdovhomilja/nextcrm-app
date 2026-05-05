@@ -115,7 +115,7 @@ describe("sales report actions", () => {
       await getRevenue(baseFilters, "USD", scope);
       const arg = (prismadb.crm_Opportunities.findMany as jest.Mock).mock.calls.at(-1)![0];
       expect(arg.where.OR).toEqual(
-        expect.arrayContaining([{ assigned_to: "u3" }, { created_by: "u3" }]),
+        expect.arrayContaining([{ assigned_to: "u3" }, { createdBy: "u3" }]),
       );
     });
   });

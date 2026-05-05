@@ -65,7 +65,6 @@ describe("documentReadScopeWhere", () => {
               contact: {
                 OR: [
                   { assigned_to: "u1" },
-                  { created_by: "u1" },
                   { createdBy: "u1" },
                 ],
               },
@@ -78,7 +77,6 @@ describe("documentReadScopeWhere", () => {
               opportunity: {
                 OR: [
                   { assigned_to: "u1" },
-                  { created_by: "u1" },
                   { createdBy: "u1" },
                 ],
               },

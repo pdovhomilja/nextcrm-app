@@ -55,7 +55,7 @@ export const createOpportunity = async (data: {
         campaign: campaign || undefined,
         close_date,
         contact: contact || undefined,
-        created_by: userId,
+        createdBy: userId,
         last_activity_by: userId,
         updatedBy: userId,
         currency: currency || undefined,

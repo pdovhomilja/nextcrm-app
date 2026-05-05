@@ -24,7 +24,7 @@ describe("getReportScope", () => {
     expect(s.opportunity).toMatchObject({
       OR: expect.arrayContaining([
         { assigned_to: "u1" },
-        { created_by: "u1" },
+        { createdBy: "u1" },
       ]),
     });
     expect(s.lead).toMatchObject({
@@ -40,7 +40,6 @@ describe("getReportScope", () => {
     expect(s.contact).toMatchObject({
       OR: expect.arrayContaining([
         { assigned_to: "u1" },
-        { created_by: "u1" },
         { createdBy: "u1" },
       ]),
     });

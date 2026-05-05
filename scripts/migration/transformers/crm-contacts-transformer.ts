@@ -18,8 +18,9 @@ export function transformCrmContacts(mongoRecord: any, uuidMapper: any): any {
     account: nullableString(mongoRecord.account),
     assigned_to: uuidMapper.transformForeignKey(mongoRecord.assigned_to),
     birthday: nullableString(mongoRecord.birthday),
-    created_by: uuidMapper.transformForeignKey(mongoRecord.created_by),
-    createdBy: uuidMapper.transformForeignKey(mongoRecord.createdBy),
+    createdBy: uuidMapper.transformForeignKey(
+      mongoRecord.createdBy ?? mongoRecord.created_by,
+    ),
     created_on: convertDateToISO(mongoRecord.created_on),
     cratedAt: convertDateToISO(mongoRecord.cratedAt) || convertDateToISO(mongoRecord.created_on),
     last_activity: convertDateToISO(mongoRecord.last_activity) || new Date().toISOString(),

@@ -50,7 +50,6 @@ describe("getOpportunitiesFullByContactId scope", () => {
     expect(call.where.OR).toEqual(
       expect.arrayContaining([
         { assigned_to: "u1" },
-        { created_by: "u1" },
         { createdBy: "u1" },
       ]),
     );
