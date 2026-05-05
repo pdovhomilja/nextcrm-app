@@ -12,6 +12,17 @@ UPDATE "crm_Contacts"
    SET "createdBy" = "created_by"
  WHERE "createdBy" IS NULL AND "created_by" IS NOT NULL;
 
+-- Defensive: scrub orphan FK references that the legacy ON DELETE SET NULL
+-- did not catch. Some rows (notably those imported from MongoDB before the
+-- FK existed) point at user ids that no longer exist in "Users". Without
+-- this scrub the new FK ADD below fails with 23503.
+UPDATE "crm_Contacts"
+   SET "createdBy" = NULL
+ WHERE "createdBy" IS NOT NULL
+   AND NOT EXISTS (
+     SELECT 1 FROM "Users" WHERE "id" = "crm_Contacts"."createdBy"
+   );
+
 ALTER TABLE "crm_Contacts" DROP CONSTRAINT IF EXISTS "crm_Contacts_created_by_fkey";
 
 ALTER TABLE "crm_Contacts"
@@ -28,6 +39,14 @@ ALTER TABLE "crm_Contacts" DROP COLUMN "created_by";
 UPDATE "crm_Opportunities"
    SET "createdBy" = "created_by"
  WHERE "createdBy" IS NULL AND "created_by" IS NOT NULL;
+
+-- Same defensive scrub as above for opportunities.
+UPDATE "crm_Opportunities"
+   SET "createdBy" = NULL
+ WHERE "createdBy" IS NOT NULL
+   AND NOT EXISTS (
+     SELECT 1 FROM "Users" WHERE "id" = "crm_Opportunities"."createdBy"
+   );
 
 ALTER TABLE "crm_Opportunities" DROP CONSTRAINT IF EXISTS "crm_Opportunities_created_by_fkey";
 
