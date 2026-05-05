@@ -75,7 +75,7 @@ describe("GET /api/reports/export", () => {
     expect(passedScope.opportunity).toMatchObject({
       OR: expect.arrayContaining([
         { assigned_to: "u1" },
-        { created_by: "u1" },
+        { createdBy: "u1" },
       ]),
     });
   });

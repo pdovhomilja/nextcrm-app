@@ -13,13 +13,11 @@ function contactScopedWhere(user: AuthzUser, contactId: string): ContactWhere {
   if (user.role === "admin" || user.role === "manager") {
     return { id: contactId };
   }
-  // user role: own contact (assigned, created_by, or legacy createdBy).
-  // TODO(phase-4): include linked account scope (assigned/creator/watcher).
+  // user role: own contact (assigned or creator).
   return {
     id: contactId,
     OR: [
       { assigned_to: user.id },
-      { created_by: user.id },
       { createdBy: user.id },
     ],
   };
@@ -70,7 +68,6 @@ async function findContactInScope(user: AuthzUser, contactId: string) {
       id: contactId,
       OR: [
         { assigned_to: user.id },
-        { created_by: user.id },
         { createdBy: user.id },
       ],
     },
@@ -290,7 +287,6 @@ export function leadReadScopeWhere(user: AuthzUser) {
 }
 
 // crm_Contacts → crm_Accounts via `assigned_accounts` (FK accountsIDs).
-// Includes legacy created_by + createdBy because both columns exist.
 export function contactReadScopeWhere(user: AuthzUser) {
   if (user.role === "admin" || user.role === "manager") {
     return { deletedAt: null };
@@ -299,7 +295,6 @@ export function contactReadScopeWhere(user: AuthzUser) {
     deletedAt: null,
     OR: [
       { assigned_to: user.id },
-      { created_by: user.id },
       { createdBy: user.id },
       { assigned_accounts: { OR: accountUserScopeOR(user.id) } },
     ],
@@ -315,7 +310,6 @@ export function opportunityReadScopeWhere(user: AuthzUser) {
     deletedAt: null,
     OR: [
       { assigned_to: user.id },
-      { created_by: user.id },
       { createdBy: user.id },
       { assigned_account: { OR: accountUserScopeOR(user.id) } },
     ],
@@ -431,7 +425,6 @@ export function documentReadScopeWhere(user: AuthzUser) {
             contact: {
               OR: [
                 { assigned_to: user.id },
-                { created_by: user.id },
                 { createdBy: user.id },
               ],
             },
@@ -444,7 +437,6 @@ export function documentReadScopeWhere(user: AuthzUser) {
             opportunity: {
               OR: [
                 { assigned_to: user.id },
-                { created_by: user.id },
                 { createdBy: user.id },
               ],
             },

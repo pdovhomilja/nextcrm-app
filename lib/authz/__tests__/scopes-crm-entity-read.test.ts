@@ -71,13 +71,12 @@ describe("contactReadScopeWhere", () => {
       deletedAt: null,
     });
   });
-  it("user → deletedAt + legacy OR + linked-account scope", () => {
+  it("user → deletedAt + creator OR + linked-account scope", () => {
     const w = contactReadScopeWhere({ id: "u1", role: "user" }) as any;
     expect(w.deletedAt).toBeNull();
     expect(w.OR).toEqual(
       expect.arrayContaining([
         { assigned_to: "u1" },
-        { created_by: "u1" },
         { createdBy: "u1" },
         { assigned_accounts: linkedAccountOR("u1") },
       ]),
@@ -94,13 +93,12 @@ describe("opportunityReadScopeWhere", () => {
       deletedAt: null,
     });
   });
-  it("user → deletedAt + legacy OR + assigned_account linked scope", () => {
+  it("user → deletedAt + creator OR + assigned_account linked scope", () => {
     const w = opportunityReadScopeWhere({ id: "u1", role: "user" }) as any;
     expect(w.deletedAt).toBeNull();
     expect(w.OR).toEqual(
       expect.arrayContaining([
         { assigned_to: "u1" },
-        { created_by: "u1" },
         { createdBy: "u1" },
         { assigned_account: linkedAccountOR("u1") },
       ]),
@@ -177,7 +175,6 @@ describe("assertCanReadOpportunity", () => {
     expect((arg.where as any).OR).toEqual(
       expect.arrayContaining([
         { assigned_to: "u1" },
-        { created_by: "u1" },
         { createdBy: "u1" },
         { assigned_account: linkedAccountOR("u1") },
       ]),

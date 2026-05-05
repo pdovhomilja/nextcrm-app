@@ -62,7 +62,7 @@ describe("getDashboardKPIs", () => {
       await getDashboardKPIs(baseFilters, "EUR", scope);
       const arg = (prismadb.crm_Opportunities.findMany as jest.Mock).mock.calls[0][0];
       expect(arg.where.OR).toEqual(
-        expect.arrayContaining([{ assigned_to: "u8" }, { created_by: "u8" }]),
+        expect.arrayContaining([{ assigned_to: "u8" }, { createdBy: "u8" }]),
       );
       const leadArg = (prismadb.crm_Leads.count as jest.Mock).mock.calls[0][0];
       expect(leadArg.where.OR).toEqual(

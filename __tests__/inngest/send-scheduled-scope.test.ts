@@ -67,7 +67,7 @@ describe("send-scheduled scope dispatch", () => {
   it("forwards user-role scope to category dispatcher (sales)", async () => {
     const scope = getReportScope({ id: "user-123", role: "user" });
     expect(scope.opportunity).toEqual({
-      OR: [{ assigned_to: "user-123" }, { created_by: "user-123" }],
+      OR: [{ assigned_to: "user-123" }, { createdBy: "user-123" }],
     });
 
     await getReportData("sales", baseFilters, scope);
@@ -77,7 +77,7 @@ describe("send-scheduled scope dispatch", () => {
     expect(call[0]).toBe(baseFilters);
     expect(call[1]).toBe(scope);
     expect(call[1].opportunity).toEqual({
-      OR: [{ assigned_to: "user-123" }, { created_by: "user-123" }],
+      OR: [{ assigned_to: "user-123" }, { createdBy: "user-123" }],
     });
     expect(call[1].allowUserDirectory).toBe(false);
   });

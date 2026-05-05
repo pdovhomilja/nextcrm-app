@@ -37,7 +37,6 @@ describe("getContacts scope", () => {
     expect(call.where.deletedAt).toBeNull();
     expect(call.where.OR).toEqual([
       { assigned_to: "u1" },
-      { created_by: "u1" },
       { createdBy: "u1" },
       {
         assigned_accounts: {

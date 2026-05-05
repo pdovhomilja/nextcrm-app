@@ -49,7 +49,6 @@ describe("tryScopedUpdateContact", () => {
       id: "c1",
       OR: expect.arrayContaining([
         { assigned_to: "u3" },
-        { created_by: "u3" },
         { createdBy: "u3" },
       ]),
     });
