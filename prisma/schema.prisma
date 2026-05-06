@@ -138,9 +138,9 @@ model Task {
   boardSectionId String
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
-  assignedTo     User           @relation("AssignedTasks", fields: [assignedToId], references: [id])
-  boardSection   BoardSection   @relation(fields: [boardSectionId], references: [id])
-  createdBy      User           @relation("CreatedTasks", fields: [createdById], references: [id])
+  assignedTo     User           @relation("AssignedTasks", fields: [assignedToId], references: [id], onDelete: Cascade)
+  boardSection   BoardSection   @relation(fields: [boardSectionId], references: [id], onDelete: Cascade)
+  createdBy      User           @relation("CreatedTasks", fields: [createdById], references: [id], onDelete: Cascade)
   history        TaskHistory[]
   documents      Document[]
   embedding      TaskEmbedding?
@@ -171,8 +171,8 @@ model BoardSection {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   boardId   String
-  board     Board    @relation(fields: [boardId], references: [id])
-  tasks     Task[]
+  board         Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  tasks         Task[]
 }
 
 model TaskHistory {
@@ -218,7 +218,7 @@ model AIConversation {
   context   Json?
   createdAt DateTime             @default(now())
   updatedAt DateTime             @updatedAt
-  user      User                 @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages  AIMessage[]
   summary   ConversationSummary?
 
@@ -234,10 +234,10 @@ model AIMessage {
   content        String
   metadata       Json?
   createdAt      DateTime       @default(now())
-  conversation   AIConversation @relation(fields: [conversationId], references: [id])
-
-  @@map("ai_messages")
-}
+  conversation   AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+ 
+   @@map("ai_messages")
+ }
 
 model Document {
   id            String              @id @default(cuid())
@@ -256,9 +256,9 @@ model Document {
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
   embeddings    DocumentEmbedding[]
-  board         Board?              @relation(fields: [boardId], references: [id])
-  task          Task?               @relation(fields: [taskId], references: [id])
-  user          User                @relation(fields: [uploadedBy], references: [id])
+  task          Task?               @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  board         Board?              @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  user          User                @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
 
   @@index([companyId])
   @@index([uploadedBy])
@@ -307,7 +307,7 @@ model SecurityAuditLog {
   userAgent String?
   risk      String
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([action])
@@ -327,9 +327,9 @@ model AIGeneratedBoardRequest {
   boardId        String?
   createdAt      DateTime             @default(now())
   updatedAt      DateTime             @updatedAt
-  generatedBoard Board?               @relation("AIGeneratedBoard", fields: [boardId], references: [id])
-  user           User                 @relation("AIBoardRequests", fields: [userId], references: [id])
-  company        Company              @relation(fields: [companyId], references: [id])
+  generatedBoard Board?               @relation("AIGeneratedBoard", fields: [boardId], references: [id], onDelete: Cascade)
+  user           User                 @relation("AIBoardRequests", fields: [userId], references: [id], onDelete: Cascade)
+  company        Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([companyId])
