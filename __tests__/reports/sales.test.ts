@@ -12,6 +12,7 @@ jest.mock("@/lib/prisma", () => ({
 }));
 
 import { prismadb } from "@/lib/prisma";
+import { getReportScope } from "@/lib/authz/scopes/report-scope";
 import {
   getRevenue,
   getPipelineValue,
@@ -104,6 +105,18 @@ describe("sales report actions", () => {
         .mockResolvedValueOnce(5);
       const result = await getWinLossRate(baseFilters);
       expect(result).toEqual({ won: 10, total: 5, rate: 200 });
+    });
+  });
+
+  describe("scope application", () => {
+    it("applies user scope to opportunities query", async () => {
+      (prismadb.crm_Opportunities.findMany as jest.Mock).mockResolvedValue([]);
+      const scope = getReportScope({ id: "u3", role: "user" });
+      await getRevenue(baseFilters, "USD", scope);
+      const arg = (prismadb.crm_Opportunities.findMany as jest.Mock).mock.calls.at(-1)![0];
+      expect(arg.where.OR).toEqual(
+        expect.arrayContaining([{ assigned_to: "u3" }, { createdBy: "u3" }]),
+      );
     });
   });
 

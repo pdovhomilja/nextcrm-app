@@ -7,7 +7,8 @@ jest.mock("@/lib/prisma", () => ({
 }));
 
 import { prismadb } from "@/lib/prisma";
-import { getCampaignPerformance, getTopTemplates, getTargetListGrowth } from "@/actions/reports/campaigns";
+import { getReportScope } from "@/lib/authz/scopes/report-scope";
+import { getCampaignPerformance, getCampaignROI, getTopTemplates, getTargetListGrowth } from "@/actions/reports/campaigns";
 import type { ReportFilters } from "@/actions/reports/types";
 
 const baseFilters: ReportFilters = { dateFrom: new Date("2025-01-01"), dateTo: new Date("2025-12-31") };
@@ -40,6 +41,16 @@ describe("campaigns report actions", () => {
       ]);
       const result = await getTopTemplates(baseFilters);
       expect(result).toEqual([{ name: "Welcome", Number: 50 }, { name: "Follow-up", Number: 30 }]);
+    });
+  });
+
+  describe("scope application", () => {
+    it("applies user scope to campaigns query", async () => {
+      (prismadb.crm_campaigns.findMany as jest.Mock).mockResolvedValue([]);
+      const scope = getReportScope({ id: "u7", role: "user" });
+      await getCampaignROI(baseFilters, scope);
+      const arg = (prismadb.crm_campaigns.findMany as jest.Mock).mock.calls.at(-1)![0];
+      expect(arg.where.created_by).toBe("u7");
     });
   });
 

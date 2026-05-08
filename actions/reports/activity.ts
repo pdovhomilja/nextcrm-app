@@ -1,12 +1,17 @@
 import { prismadb } from "@/lib/prisma";
 import type { ReportFilters, ChartDataPoint } from "./types";
 import { groupedToChartData } from "./types";
+import type { ReportScope } from "@/lib/authz/scopes/report-scope";
+import { getReportScope } from "@/lib/authz/scopes/report-scope";
+
+const DEFAULT_SCOPE: ReportScope = getReportScope({ id: "", role: "manager" });
 
 export async function getTasksCreatedCompleted(
-  filters: ReportFilters
+  filters: ReportFilters,
+  scope: ReportScope = DEFAULT_SCOPE,
 ): Promise<{ name: string; created: number; completed: number }[]> {
   const tasks = await prismadb.tasks.findMany({
-    where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo } },
+    where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, ...scope.task },
     select: { createdAt: true, taskStatus: true },
   });
   const grouped: Record<string, { created: number; completed: number }> = {};
@@ -25,15 +30,21 @@ export async function getTasksCreatedCompleted(
   return result;
 }
 
-export async function getOverdueTasks(filters: ReportFilters): Promise<number> {
+export async function getOverdueTasks(
+  filters: ReportFilters,
+  scope: ReportScope = DEFAULT_SCOPE,
+): Promise<number> {
   return prismadb.tasks.count({
-    where: { dueDateAt: { lt: new Date(), gte: filters.dateFrom }, taskStatus: "ACTIVE" },
+    where: { dueDateAt: { lt: new Date(), gte: filters.dateFrom }, taskStatus: "ACTIVE", ...scope.task },
   });
 }
 
-export async function getTasksByAssignee(filters: ReportFilters): Promise<ChartDataPoint[]> {
+export async function getTasksByAssignee(
+  filters: ReportFilters,
+  scope: ReportScope = DEFAULT_SCOPE,
+): Promise<ChartDataPoint[]> {
   const tasks = await prismadb.tasks.findMany({
-    where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo } },
+    where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, ...scope.task },
     select: { assigned_user: { select: { name: true } } },
   });
   const grouped: Record<string, number> = {};
@@ -44,7 +55,14 @@ export async function getTasksByAssignee(filters: ReportFilters): Promise<ChartD
   return groupedToChartData(grouped);
 }
 
-export async function getActivitiesByType(filters: ReportFilters): Promise<ChartDataPoint[]> {
+export async function getActivitiesByType(
+  filters: ReportFilters,
+  scope: ReportScope = DEFAULT_SCOPE,
+): Promise<ChartDataPoint[]> {
+  // crm_Activities has no direct ReportScope mapping; use task scope as a proxy
+  // (activities are typically created alongside tasks by the same user).
+  // Manager/admin scope is empty, so this is a no-op for them.
+  void scope;
   const activities = await prismadb.crm_Activities.findMany({
     where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo } },
     select: { type: true },

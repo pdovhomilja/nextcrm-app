@@ -6,6 +6,11 @@ import { Decimal } from "decimal.js";
 import { computeInvoiceTotals, computeLineTotal } from "@/lib/invoices/totals";
 import { updateInvoiceSchema } from "@/types/invoice";
 import { canEditInvoice, type InvoiceStatus } from "@/lib/invoices/permissions";
+import {
+  mapLegacyRole,
+  assertCanWriteAccount,
+  AuthorizationError,
+} from "@/lib/authz";
 import { serializeDecimals } from "@/lib/serialize-decimals";
 
 export async function updateInvoice(invoiceId: string, raw: unknown) {
@@ -20,10 +25,22 @@ export async function updateInvoice(invoiceId: string, raw: unknown) {
   if (
     !canEditInvoice(
       { status: existing.status as InvoiceStatus, createdBy: existing.createdBy },
-      { id: user.id, isAdmin: user.is_admin }
+      { id: user.id, role: mapLegacyRole(user.role) }
     )
   ) {
     throw new Error("Cannot edit this invoice");
+  }
+
+  if ("accountId" in (input as Record<string, unknown>) && (input as { accountId?: string }).accountId) {
+    try {
+      await assertCanWriteAccount(
+        { id: user.id, role: mapLegacyRole(user.role) },
+        (input as { accountId: string }).accountId,
+      );
+    } catch (e) {
+      if (e instanceof AuthorizationError) throw new Error("Forbidden");
+      throw e;
+    }
   }
 
   // If lineItems provided, recompute totals

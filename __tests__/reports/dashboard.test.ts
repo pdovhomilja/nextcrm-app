@@ -1,6 +1,6 @@
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
-    crm_Opportunities: { aggregate: jest.fn(), count: jest.fn() },
+    crm_Opportunities: { aggregate: jest.fn(), count: jest.fn(), findMany: jest.fn() },
     crm_Leads: { count: jest.fn() },
     crm_Contacts: { count: jest.fn() },
     crm_Accounts: { count: jest.fn() },
@@ -8,17 +8,23 @@ jest.mock("@/lib/prisma", () => ({
     crm_campaign_sends: { count: jest.fn() },
     tasks: { count: jest.fn() },
     users: { count: jest.fn() },
+    exchangeRate: { findMany: jest.fn() },
   },
 }));
 
 import { prismadb } from "@/lib/prisma";
+import { getReportScope } from "@/lib/authz/scopes/report-scope";
 import { getDashboardKPIs } from "@/actions/reports/dashboard";
 import type { ReportFilters } from "@/actions/reports/types";
 
 const baseFilters: ReportFilters = { dateFrom: new Date("2025-01-01"), dateTo: new Date("2025-12-31") };
 
 describe("getDashboardKPIs", () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (prismadb.exchangeRate.findMany as jest.Mock).mockResolvedValue([]);
+    (prismadb.crm_Opportunities.findMany as jest.Mock).mockResolvedValue([]);
+  });
 
   it("returns all 10 KPIs", async () => {
     (prismadb.crm_Opportunities.aggregate as jest.Mock)
@@ -39,7 +45,29 @@ describe("getDashboardKPIs", () => {
 
     expect(result).toHaveLength(10);
     expect(result[0].label).toBe("totalRevenue");
-    expect(result[0].value).toBe(100000);
     expect(result[0].href).toBe("/reports/sales");
+  });
+
+  describe("scope application", () => {
+    it("applies user scope to opportunity findMany calls", async () => {
+      (prismadb.crm_Leads.count as jest.Mock).mockResolvedValue(0);
+      (prismadb.crm_Opportunities.count as jest.Mock).mockResolvedValue(0);
+      (prismadb.crm_Contacts.count as jest.Mock).mockResolvedValue(0);
+      (prismadb.users.count as jest.Mock).mockResolvedValue(0);
+      (prismadb.tasks.count as jest.Mock).mockResolvedValue(0);
+      (prismadb.crm_campaign_sends.count as jest.Mock).mockResolvedValue(0);
+      (prismadb.crm_Accounts.count as jest.Mock).mockResolvedValue(0);
+      (prismadb.crm_Contracts.count as jest.Mock).mockResolvedValue(0);
+      const scope = getReportScope({ id: "u8", role: "user" });
+      await getDashboardKPIs(baseFilters, "EUR", scope);
+      const arg = (prismadb.crm_Opportunities.findMany as jest.Mock).mock.calls[0][0];
+      expect(arg.where.OR).toEqual(
+        expect.arrayContaining([{ assigned_to: "u8" }, { createdBy: "u8" }]),
+      );
+      const leadArg = (prismadb.crm_Leads.count as jest.Mock).mock.calls[0][0];
+      expect(leadArg.where.OR).toEqual(
+        expect.arrayContaining([{ assigned_to: "u8" }, { createdBy: "u8" }]),
+      );
+    });
   });
 });

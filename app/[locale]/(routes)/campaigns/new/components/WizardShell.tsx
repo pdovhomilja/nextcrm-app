@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { createCampaign } from "@/actions/campaigns/create-campaign";
 import { scheduleCampaign } from "@/actions/campaigns/schedule-campaign";
 import { sendCampaignNow } from "@/actions/campaigns/send-campaign-now";
@@ -89,6 +90,11 @@ export function WizardShell({
         steps: allSteps,
         scheduled_at: merged.send_now ? undefined : merged.scheduled_at,
       });
+
+      if ("error" in campaign) {
+        toast.error(String(campaign.error));
+        return;
+      }
 
       if (merged.send_now) {
         await sendCampaignNow(campaign.id);

@@ -1,17 +1,29 @@
+jest.mock("@/lib/auth-server", () => ({
+  getSession: jest.fn().mockResolvedValue({ user: { id: "admin-1" } }),
+}));
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
-    users: { findMany: jest.fn(), count: jest.fn() },
+    users: {
+      findMany: jest.fn(),
+      count: jest.fn(),
+      findUnique: jest.fn().mockResolvedValue({ id: "admin-1", role: "admin" }),
+    },
   },
 }));
 
 import { prismadb } from "@/lib/prisma";
+import { getSession } from "@/lib/auth-server";
 import { getActiveUsersByYear, getActiveUsersLifetime, getUserGrowth, getUsersByRole } from "@/actions/reports/users";
 import type { ReportFilters } from "@/actions/reports/types";
 
 const baseFilters: ReportFilters = { dateFrom: new Date("2025-01-01"), dateTo: new Date("2025-12-31") };
 
 describe("users report actions", () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (getSession as jest.Mock).mockResolvedValue({ user: { id: "admin-1" } });
+    (prismadb.users.findUnique as jest.Mock).mockResolvedValue({ id: "admin-1", role: "admin" });
+  });
 
   describe("getActiveUsersByYear", () => {
     it("returns active user count grouped by year", async () => {

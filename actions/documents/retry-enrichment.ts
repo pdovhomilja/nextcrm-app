@@ -1,12 +1,29 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
+import {
+  requireAuthenticated,
+  assertCanWriteDocument,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
 import { inngest } from "@/inngest/client";
 import { revalidatePath } from "next/cache";
 
 export async function retryEnrichment(documentId: string) {
-  const session = await getSession();
-  if (!session) throw new Error("Unauthorized");
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) throw new Error("Unauthorized");
+    throw e;
+  }
+
+  try {
+    await assertCanWriteDocument(user, documentId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) throw new Error("Forbidden");
+    throw e;
+  }
 
   await prismadb.documents.update({
     where: { id: documentId },

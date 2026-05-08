@@ -1,17 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth-server";
-import { prismadb } from "@/lib/prisma";
 import { FIELD_MAP } from "@/lib/enrichment/presets/target-fields";
-
+import {
+  requireAuthenticated,
+  unauthorizedResponse,
+  notFoundOrForbiddenResponse,
+  AuthenticationError,
+  tryScopedUpdateTarget,
+} from "@/lib/authz";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return unauthorizedResponse();
+    throw e;
   }
 
   const { enrichmentFields } = await request.json();
@@ -29,11 +37,8 @@ export async function PATCH(
     return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
   }
 
-  const target = await prismadb.crm_Targets.update({
-    where: { id },
-    data: { ...updates, updatedBy: session.user.id },
-    select: { id: true },
-  });
+  const ok = await tryScopedUpdateTarget(user, id, updates);
+  if (!ok) return notFoundOrForbiddenResponse();
 
-  return NextResponse.json({ success: true, id: target.id });
+  return NextResponse.json({ success: true, id });
 }

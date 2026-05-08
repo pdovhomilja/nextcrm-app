@@ -22,7 +22,7 @@ const TEST_USER_ID_PLACEHOLDER = "00000000-0000-4000-a000-000000000001";
 
 const mockGetUser = jest.fn().mockResolvedValue({
   id: TEST_USER_ID_PLACEHOLDER,
-  is_admin: true,
+  role: "admin",
   name: "Test User",
   email: "test@example.com",
   userLanguage: "en",
@@ -115,7 +115,7 @@ beforeAll(async () => {
   if (existingUser) {
     mockGetUser.mockResolvedValue({
       id: existingUser.id,
-      is_admin: true,
+      role: "admin",
       name: existingUser.name ?? "Test User",
       email: existingUser.email ?? "test@example.com",
       userLanguage: "en",

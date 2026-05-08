@@ -1,8 +1,21 @@
 import { prismadb } from "@/lib/prisma";
+import {
+  requireAuthenticated,
+  opportunityReadScopeWhere,
+  AuthenticationError,
+} from "@/lib/authz";
 
 export const getOpportunities = async () => {
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return [];
+    throw e;
+  }
+
   const data = await prismadb.crm_Opportunities.findMany({
-    where: { deletedAt: null },
+    where: { ...opportunityReadScopeWhere(user) },
     include: {
       // Include assigned user (uses "assigned_to_user_relation")
       assigned_to_user: {

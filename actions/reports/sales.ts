@@ -3,6 +3,10 @@ import type { ReportFilters, ChartDataPoint } from "./types";
 import { groupedToChartData } from "./types";
 import { getExchangeRates, convertAmount } from "@/lib/currency";
 import { Decimal } from "@prisma/client/runtime/client";
+import type { ReportScope } from "@/lib/authz/scopes/report-scope";
+import { getReportScope } from "@/lib/authz/scopes/report-scope";
+
+const DEFAULT_SCOPE: ReportScope = getReportScope({ id: "", role: "manager" });
 
 function dateRangeWhere(filters: ReportFilters) {
   return {
@@ -11,9 +15,13 @@ function dateRangeWhere(filters: ReportFilters) {
   };
 }
 
-export async function getRevenue(filters: ReportFilters, displayCurrency: string): Promise<number> {
+export async function getRevenue(
+  filters: ReportFilters,
+  displayCurrency: string,
+  scope: ReportScope = DEFAULT_SCOPE,
+): Promise<number> {
   const opps = await prismadb.crm_Opportunities.findMany({
-    where: { ...dateRangeWhere(filters), status: "CLOSED" },
+    where: { ...dateRangeWhere(filters), status: "CLOSED", ...scope.opportunity },
     select: { budget: true, currency: true },
   });
   const rates = await getExchangeRates();
@@ -27,9 +35,13 @@ export async function getRevenue(filters: ReportFilters, displayCurrency: string
   return total.toNumber();
 }
 
-export async function getPipelineValue(filters: ReportFilters, displayCurrency: string): Promise<number> {
+export async function getPipelineValue(
+  filters: ReportFilters,
+  displayCurrency: string,
+  scope: ReportScope = DEFAULT_SCOPE,
+): Promise<number> {
   const opps = await prismadb.crm_Opportunities.findMany({
-    where: { ...dateRangeWhere(filters), status: "ACTIVE" },
+    where: { ...dateRangeWhere(filters), status: "ACTIVE", ...scope.opportunity },
     select: { budget: true, currency: true },
   });
   const rates = await getExchangeRates();
@@ -43,9 +55,12 @@ export async function getPipelineValue(filters: ReportFilters, displayCurrency: 
   return total.toNumber();
 }
 
-export async function getOppsByStage(filters: ReportFilters): Promise<ChartDataPoint[]> {
+export async function getOppsByStage(
+  filters: ReportFilters,
+  scope: ReportScope = DEFAULT_SCOPE,
+): Promise<ChartDataPoint[]> {
   const opps = await prismadb.crm_Opportunities.findMany({
-    where: dateRangeWhere(filters),
+    where: { ...dateRangeWhere(filters), ...scope.opportunity },
     select: { assigned_sales_stage: { select: { name: true } } },
   });
   const grouped: Record<string, number> = {};
@@ -56,9 +71,12 @@ export async function getOppsByStage(filters: ReportFilters): Promise<ChartDataP
   return groupedToChartData(grouped);
 }
 
-export async function getOppsByMonth(filters: ReportFilters): Promise<ChartDataPoint[]> {
+export async function getOppsByMonth(
+  filters: ReportFilters,
+  scope: ReportScope = DEFAULT_SCOPE,
+): Promise<ChartDataPoint[]> {
   const opps = await prismadb.crm_Opportunities.findMany({
-    where: dateRangeWhere(filters),
+    where: { ...dateRangeWhere(filters), ...scope.opportunity },
     select: { created_on: true },
   });
   const grouped: Record<string, number> = {};
@@ -72,20 +90,25 @@ export async function getOppsByMonth(filters: ReportFilters): Promise<ChartDataP
 }
 
 export async function getWinLossRate(
-  filters: ReportFilters
+  filters: ReportFilters,
+  scope: ReportScope = DEFAULT_SCOPE,
 ): Promise<{ won: number; total: number; rate: number }> {
   const won = await prismadb.crm_Opportunities.count({
-    where: { ...dateRangeWhere(filters), status: "CLOSED" },
+    where: { ...dateRangeWhere(filters), status: "CLOSED", ...scope.opportunity },
   });
   const total = await prismadb.crm_Opportunities.count({
-    where: { ...dateRangeWhere(filters), status: { in: ["CLOSED", "INACTIVE"] } },
+    where: { ...dateRangeWhere(filters), status: { in: ["CLOSED", "INACTIVE"] }, ...scope.opportunity },
   });
   return { won, total, rate: total > 0 ? Math.round((won / total) * 100) : 0 };
 }
 
-export async function getAvgDealSize(filters: ReportFilters, displayCurrency: string): Promise<number> {
+export async function getAvgDealSize(
+  filters: ReportFilters,
+  displayCurrency: string,
+  scope: ReportScope = DEFAULT_SCOPE,
+): Promise<number> {
   const opps = await prismadb.crm_Opportunities.findMany({
-    where: { ...dateRangeWhere(filters), status: "CLOSED" },
+    where: { ...dateRangeWhere(filters), status: "CLOSED", ...scope.opportunity },
     select: { budget: true, currency: true },
   });
   if (opps.length === 0) return 0;
@@ -100,9 +123,12 @@ export async function getAvgDealSize(filters: ReportFilters, displayCurrency: st
   return total.div(opps.length).toDecimalPlaces(2).toNumber();
 }
 
-export async function getSalesCycleLength(filters: ReportFilters): Promise<number> {
+export async function getSalesCycleLength(
+  filters: ReportFilters,
+  scope: ReportScope = DEFAULT_SCOPE,
+): Promise<number> {
   const opps = await prismadb.crm_Opportunities.findMany({
-    where: { ...dateRangeWhere(filters), status: "CLOSED", close_date: { not: null } },
+    where: { ...dateRangeWhere(filters), status: "CLOSED", close_date: { not: null }, ...scope.opportunity },
     select: { created_on: true, close_date: true },
   });
   if (opps.length === 0) return 0;

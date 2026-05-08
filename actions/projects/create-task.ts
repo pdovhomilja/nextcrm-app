@@ -4,6 +4,12 @@ import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import NewTaskFromProject from "@/emails/NewTaskFromProject";
 import resendHelper from "@/lib/resend";
+import {
+  requireAuthenticated,
+  assertCanWriteBoard,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export const createTask = async (data: {
   title: string;
@@ -14,6 +20,14 @@ export const createTask = async (data: {
   dueDateAt?: Date;
   account?: string;
 }) => {
+  let authzUser;
+  try {
+    authzUser = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
+
   const session = await getSession();
   if (!session) return { error: "Unauthorized" };
 
@@ -21,6 +35,13 @@ export const createTask = async (data: {
 
   if (!title || !user || !board || !priority || !content) {
     return { error: "Missing one of the task data" };
+  }
+
+  try {
+    await assertCanWriteBoard(authzUser, board);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
   }
 
   try {

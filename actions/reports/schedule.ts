@@ -1,31 +1,54 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
-
 import { prismadb } from "@/lib/prisma";
+import { requireAuthenticated, isManagerOrAdmin, AuthorizationError } from "@/lib/authz";
 import type { ExportFormat } from "./types";
 
-async function getUserId(): Promise<string> {
-  const session = await getSession();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  return session.user.id;
-}
-
 export async function createSchedule(input: { reportConfigId: string; cronExpression: string; recipients: string[]; format: ExportFormat }) {
-  const userId = await getUserId();
-  return prismadb.crm_Report_Schedule.create({ data: { reportConfigId: input.reportConfigId, cronExpression: input.cronExpression, recipients: input.recipients, format: input.format, createdBy: userId } });
+  const user = await requireAuthenticated();
+  // Verify the user can read the referenced config (own OR shared OR manager/admin)
+  const cfg = await prismadb.crm_Report_Config.findUnique({ where: { id: input.reportConfigId } });
+  if (!cfg) throw new Error("Not found");
+  if (!isManagerOrAdmin(user) && cfg.createdBy !== user.id && !cfg.isShared) {
+    throw new AuthorizationError();
+  }
+  return prismadb.crm_Report_Schedule.create({
+    data: {
+      reportConfigId: input.reportConfigId,
+      cronExpression: input.cronExpression,
+      recipients: input.recipients,
+      format: input.format,
+      createdBy: user.id,
+    },
+  });
 }
 
 export async function listSchedules() {
-  const userId = await getUserId();
-  return prismadb.crm_Report_Schedule.findMany({ where: { createdBy: userId }, include: { reportConfig: true }, orderBy: { createdAt: "desc" } });
+  const user = await requireAuthenticated();
+  const where = isManagerOrAdmin(user) ? {} : { createdBy: user.id };
+  return prismadb.crm_Report_Schedule.findMany({
+    where,
+    include: { reportConfig: true },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
+async function loadAndAuthorizeSchedule(scheduleId: string, user: { id: string; role: string }) {
+  const sched = await prismadb.crm_Report_Schedule.findUnique({ where: { id: scheduleId } });
+  if (!sched) throw new Error("Not found");
+  if (user.role !== "admin" && user.role !== "manager" && sched.createdBy !== user.id) {
+    throw new AuthorizationError();
+  }
+  return sched;
 }
 
 export async function updateSchedule(scheduleId: string, data: { cronExpression?: string; recipients?: string[]; format?: ExportFormat; isActive?: boolean }) {
-  const userId = await getUserId();
-  return prismadb.crm_Report_Schedule.update({ where: { id: scheduleId, createdBy: userId }, data });
+  const user = await requireAuthenticated();
+  await loadAndAuthorizeSchedule(scheduleId, user);
+  return prismadb.crm_Report_Schedule.update({ where: { id: scheduleId }, data });
 }
 
 export async function deleteSchedule(scheduleId: string) {
-  const userId = await getUserId();
-  return prismadb.crm_Report_Schedule.delete({ where: { id: scheduleId, createdBy: userId } });
+  const user = await requireAuthenticated();
+  await loadAndAuthorizeSchedule(scheduleId, user);
+  return prismadb.crm_Report_Schedule.delete({ where: { id: scheduleId } });
 }

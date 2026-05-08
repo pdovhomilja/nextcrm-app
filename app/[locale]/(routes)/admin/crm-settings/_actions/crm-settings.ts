@@ -3,6 +3,18 @@
 import { z } from "zod";
 import { prismadb as prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { requireRole, AuthenticationError, AuthorizationError } from "@/lib/authz";
+
+async function ensureAdmin(): Promise<{ error: string } | null> {
+  try {
+    await requireRole(["admin"]);
+    return null;
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
+}
 
 export type CrmConfigType =
   | "industry"
@@ -38,6 +50,8 @@ const fkField: Record<CrmConfigType, string | null> = {
 };
 
 export async function getConfigValues(configType: CrmConfigType): Promise<ConfigValue[]> {
+  const denied = await ensureAdmin();
+  if (denied) throw new Error(denied.error);
   const { model, countRelation } = configMap[configType];
   const rows = await (model() as any).findMany({
     include: { _count: { select: { [countRelation]: true } } },
@@ -51,6 +65,8 @@ export async function getConfigValues(configType: CrmConfigType): Promise<Config
 }
 
 export async function createConfigValue(configType: CrmConfigType, name: string): Promise<void> {
+  const denied = await ensureAdmin();
+  if (denied) throw new Error(denied.error);
   const parsed = nameSchema.parse(name);
   const { model } = configMap[configType];
   await (model() as any).create({ data: { name: parsed, v: 0 } });
@@ -62,6 +78,8 @@ export async function updateConfigValue(
   id: string,
   name: string
 ): Promise<void> {
+  const denied = await ensureAdmin();
+  if (denied) throw new Error(denied.error);
   const parsed = nameSchema.parse(name);
   const { model } = configMap[configType];
   await (model() as any).update({ where: { id }, data: { name: parsed } });
@@ -73,6 +91,8 @@ export async function deleteConfigValue(
   id: string,
   replacementId?: string
 ): Promise<void> {
+  const denied = await ensureAdmin();
+  if (denied) throw new Error(denied.error);
   if (replacementId !== undefined && replacementId === id) {
     throw new Error("replacementId must differ from id");
   }

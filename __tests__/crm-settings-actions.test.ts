@@ -1,6 +1,11 @@
+jest.mock("@/lib/auth-server", () => ({
+  getSession: jest.fn().mockResolvedValue({ user: { id: "admin-1" } }),
+}));
+
 // Jest runs in node environment — mock Prisma
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
+    users: { findUnique: jest.fn().mockResolvedValue({ id: "admin-1", role: "admin" }) },
     crm_Industry_Type: {
       findMany: jest.fn(),
       create: jest.fn(),

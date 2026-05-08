@@ -1,14 +1,24 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
+import {
+  requireAuthenticated,
+  documentReadScopeWhere,
+  AuthenticationError,
+} from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
 
 export const getDocuments = async () => {
-  const session = await getSession();
-  if (!session) return [];
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return [];
+    throw e;
+  }
 
   const documents = await prismadb.documents.findMany({
     where: {
       parent_document_id: null, // Only show root documents, not old versions
+      ...documentReadScopeWhere(user),
     },
     orderBy: { date_created: "desc" },
     include: {

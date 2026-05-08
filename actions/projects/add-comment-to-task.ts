@@ -5,17 +5,49 @@ import { junctionTableHelpers } from "@/lib/junction-helpers";
 import { revalidatePath } from "next/cache";
 import NewTaskCommentEmail from "@/emails/NewTaskComment";
 import resendHelper from "@/lib/resend";
+import {
+  requireAuthenticated,
+  assertCanWriteBoard,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export const addCommentToTask = async (data: {
   taskId: string;
   comment: string;
 }) => {
+  let authzUser;
+  try {
+    authzUser = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
+
   const session = await getSession();
   if (!session) return { error: "Unauthorized" };
 
   const { taskId, comment } = data;
   if (!taskId) return { error: "Missing task ID" };
   if (!comment) return { error: "Missing comment" };
+
+  // Resolve parent board (if any) via assigned_section relation for scope check.
+  const taskBoardLookup = await prismadb.tasks.findUnique({
+    where: { id: taskId },
+    select: {
+      assigned_section: { select: { board_relation: { select: { id: true } } } },
+    },
+  });
+  const parentBoardId =
+    taskBoardLookup?.assigned_section?.board_relation?.id;
+  if (parentBoardId) {
+    try {
+      await assertCanWriteBoard(authzUser, parentBoardId);
+    } catch (e) {
+      if (e instanceof AuthorizationError) return { error: "Forbidden" };
+      throw e;
+    }
+  }
 
   try {
     const task = await prismadb.tasks.findUnique({

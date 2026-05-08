@@ -6,6 +6,7 @@ jest.mock("@/lib/prisma", () => ({
 }));
 
 import { prismadb } from "@/lib/prisma";
+import { getReportScope } from "@/lib/authz/scopes/report-scope";
 import { getTasksCreatedCompleted, getOverdueTasks, getTasksByAssignee, getActivitiesByType } from "@/actions/reports/activity";
 import type { ReportFilters } from "@/actions/reports/types";
 
@@ -46,6 +47,16 @@ describe("activity report actions", () => {
       ]);
       const result = await getTasksByAssignee(baseFilters);
       expect(result).toEqual([{ name: "Alice", Number: 2 }, { name: "Bob", Number: 1 }]);
+    });
+  });
+
+  describe("scope application", () => {
+    it("applies user scope to tasks query", async () => {
+      (prismadb.tasks.findMany as jest.Mock).mockResolvedValue([]);
+      const scope = getReportScope({ id: "u6", role: "user" });
+      await getTasksCreatedCompleted(baseFilters, scope);
+      const arg = (prismadb.tasks.findMany as jest.Mock).mock.calls.at(-1)![0];
+      expect(arg.where.user).toBe("u6");
     });
   });
 

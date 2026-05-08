@@ -1,8 +1,19 @@
 import { prismadb } from "@/lib/prisma";
+import { requireRole, AuthorizationError } from "@/lib/authz";
 import type { ReportFilters, ChartDataPoint } from "./types";
 import { groupedToChartData } from "./types";
 
+async function ensureManagerOrAdmin() {
+  try {
+    await requireRole(["manager", "admin"]);
+  } catch (e) {
+    if (e instanceof AuthorizationError) throw new Error("Forbidden");
+    throw e;
+  }
+}
+
 export async function getActiveUsersByYear(): Promise<ChartDataPoint[]> {
+  await ensureManagerOrAdmin();
   const users = await prismadb.users.findMany({
     where: { userStatus: "ACTIVE" },
     select: { created_on: true },
@@ -16,10 +27,12 @@ export async function getActiveUsersByYear(): Promise<ChartDataPoint[]> {
 }
 
 export async function getActiveUsersLifetime(): Promise<number> {
+  await ensureManagerOrAdmin();
   return prismadb.users.count({ where: { userStatus: "ACTIVE" } });
 }
 
 export async function getUserGrowth(filters: ReportFilters): Promise<ChartDataPoint[]> {
+  await ensureManagerOrAdmin();
   const users = await prismadb.users.findMany({
     where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo } },
     select: { created_on: true },
@@ -34,13 +47,14 @@ export async function getUserGrowth(filters: ReportFilters): Promise<ChartDataPo
 }
 
 export async function getUsersByRole(filters: ReportFilters): Promise<ChartDataPoint[]> {
+  await ensureManagerOrAdmin();
   const users = await prismadb.users.findMany({
     where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo } },
     select: { role: true },
   });
   const roleCounts: Record<string, number> = {};
   for (const u of users) {
-    const role = u.role ?? "member";
+    const role = u.role ?? "user";
     roleCounts[role] = (roleCounts[role] || 0) + 1;
   }
   return Object.entries(roleCounts).map(([name, Number]) => ({

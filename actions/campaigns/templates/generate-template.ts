@@ -1,6 +1,6 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { getApiKey } from "@/lib/api-keys";
+import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
 
 export const generateTemplate = async (
   prompt: string
@@ -9,10 +9,15 @@ export const generateTemplate = async (
   json: object;
   subject: string;
 }> => {
-  const session = await getSession();
-  if (!session?.user?.id) throw new Error("Unauthorized");
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) throw new Error("Unauthorized");
+    throw e;
+  }
 
-  const apiKey = await getApiKey("OPENAI", session.user.id);
+  const apiKey = await getApiKey("OPENAI", user.id);
   if (!apiKey)
     throw new Error(
       "No OpenAI API key configured. Add one in Profile → LLMs."

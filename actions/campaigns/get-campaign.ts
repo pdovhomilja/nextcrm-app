@@ -1,7 +1,28 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
+import {
+  requireAuthenticated,
+  assertCanReadCampaign,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export const getCampaign = async (id: string) => {
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return null;
+    throw e;
+  }
+
+  try {
+    await assertCanReadCampaign(user, id);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return null;
+    throw e;
+  }
+
   return prismadb.crm_campaigns.findUnique({
     where: { id },
     include: {

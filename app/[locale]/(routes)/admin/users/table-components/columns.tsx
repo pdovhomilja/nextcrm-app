@@ -79,7 +79,7 @@ export const columns: ColumnDef<AdminUser>[] = [
     ),
 
     cell: ({ row }) => (
-      <div className="">{row.original.role ?? "member"}</div>
+      <div className="">{row.original.role ?? "user"}</div>
     ),
     enableSorting: true,
     enableHiding: true,

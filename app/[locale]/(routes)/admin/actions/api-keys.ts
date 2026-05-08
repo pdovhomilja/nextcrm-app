@@ -1,10 +1,23 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
-
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { encrypt, decrypt } from "@/lib/email-crypto";
 import { ApiKeyProvider } from "@prisma/client";
+import {
+  requireRole,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
+
+async function ensureAdmin(): Promise<void> {
+  try {
+    await requireRole(["admin"]);
+  } catch (e) {
+    if (e instanceof AuthenticationError) throw new Error("Unauthorized");
+    if (e instanceof AuthorizationError) throw new Error("Forbidden");
+    throw e;
+  }
+}
 
 const PROVIDER_ENV_MAP: Record<ApiKeyProvider, string> = {
   OPENAI: "OPENAI_API_KEY",
@@ -20,8 +33,7 @@ export type ProviderStatus = {
 };
 
 export async function getSystemApiKeys(): Promise<ProviderStatus[]> {
-  const session = await getSession();
-  if (!session || session.user.role !== "admin") throw new Error("Unauthorized");
+  await ensureAdmin();
 
   const providers = Object.values(ApiKeyProvider) as ApiKeyProvider[];
 
@@ -59,8 +71,7 @@ export async function upsertSystemApiKey(
   provider: ApiKeyProvider,
   key: string
 ): Promise<void> {
-  const session = await getSession();
-  if (!session || session.user.role !== "admin") throw new Error("Unauthorized");
+  await ensureAdmin();
 
   const encryptedKey = encrypt(key);
 
@@ -81,8 +92,7 @@ export async function upsertSystemApiKey(
 }
 
 export async function deleteSystemApiKey(provider: ApiKeyProvider): Promise<void> {
-  const session = await getSession();
-  if (!session || session.user.role !== "admin") throw new Error("Unauthorized");
+  await ensureAdmin();
 
   await prismadb.apiKeys.deleteMany({
     where: { scope: "SYSTEM", provider },

@@ -1,5 +1,9 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
+import {
+  requireAuthenticated,
+  documentReadScopeWhere,
+  AuthenticationError,
+} from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
 
 interface DuplicateResult {
@@ -13,11 +17,19 @@ interface DuplicateResult {
 }
 
 export async function checkDuplicate(contentHash: string): Promise<DuplicateResult> {
-  const session = await getSession();
-  if (!session) throw new Error("Unauthorized");
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { isDuplicate: false };
+    throw e;
+  }
 
   const existing = await prismadb.documents.findFirst({
-    where: { content_hash: contentHash },
+    where: {
+      content_hash: contentHash,
+      ...documentReadScopeWhere(user),
+    },
     select: {
       id: true,
       document_name: true,

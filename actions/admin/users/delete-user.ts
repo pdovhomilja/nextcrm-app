@@ -1,13 +1,20 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import {
+  requireRole,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export const deleteUser = async (userId: string) => {
-  const session = await getSession();
-  if (!session) return { error: "Unauthorized" };
-
-  if (session.user.role !== "admin") return { error: "Forbidden" };
+  try {
+    await requireRole(["admin"]);
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
 
   if (!userId) return { error: "userId is required" };
 
@@ -21,8 +28,7 @@ export const deleteUser = async (userId: string) => {
         username: true,
         account_name: true,
         avatar: true,
-        is_admin: true,
-        is_account_admin: true,
+        role: true,
         userLanguage: true,
         userStatus: true,
         lastLoginAt: true,

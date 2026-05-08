@@ -126,16 +126,12 @@ async function main() {
     where: { email: testUserEmail },
     update: {
       userStatus: "ACTIVE",
-      is_admin: true,
-      is_account_admin: true,
       role: "admin",
     },
     create: {
       email: testUserEmail,
       name: "Test User",
       userStatus: "ACTIVE",
-      is_admin: true,
-      is_account_admin: true,
       role: "admin",
     },
   });

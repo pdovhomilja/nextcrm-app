@@ -3,6 +3,7 @@ jest.mock("@/lib/prisma", () => ({
 }));
 
 import { prismadb } from "@/lib/prisma";
+import { getReportScope } from "@/lib/authz/scopes/report-scope";
 import { getNewAccounts, getAccountsByIndustry, getTopAccountsByRevenue, getAccountsBySize } from "@/actions/reports/accounts";
 import type { ReportFilters } from "@/actions/reports/types";
 
@@ -51,6 +52,22 @@ describe("accounts report actions", () => {
         { name: "Big Corp", Number: 1000000 },
         { name: "Small LLC", Number: 50000 },
       ]);
+    });
+  });
+
+  describe("scope application", () => {
+    it("applies user scope to accounts query", async () => {
+      (prismadb.crm_Accounts.findMany as jest.Mock).mockResolvedValue([]);
+      const scope = getReportScope({ id: "u5", role: "user" });
+      await getNewAccounts(baseFilters, scope);
+      const arg = (prismadb.crm_Accounts.findMany as jest.Mock).mock.calls.at(-1)![0];
+      expect(arg.where.OR).toEqual(
+        expect.arrayContaining([
+          { assigned_to: "u5" },
+          { createdBy: "u5" },
+          { watchers: { some: { user_id: "u5" } } },
+        ]),
+      );
     });
   });
 

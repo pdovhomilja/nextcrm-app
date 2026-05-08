@@ -1,21 +1,36 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth-server";
+import {
+  requireAuthenticated,
+  assertCanWriteTarget,
+  unauthorizedResponse,
+  notFoundOrForbiddenResponse,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 import { inngest } from "@/inngest/client";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await getSession();
-  if (!session) return new NextResponse("Unauthorized", { status: 401 });
-
-  const { id: targetId } = await params;
-  const body = await request.json().catch(() => ({})) as { force?: boolean };
-
+  const { id } = await params;
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return unauthorizedResponse();
+    throw e;
+  }
+  try {
+    await assertCanWriteTarget(user, id);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return notFoundOrForbiddenResponse();
+    throw e;
+  }
+  const body = await request.json().catch(() => ({}));
   await inngest.send({
     name: "enrich/target.run",
-    data: { targetId, triggeredBy: session.user.id, force: body.force ?? false },
+    data: { targetId: id, triggeredBy: user.id, force: body.force ?? false },
   });
-
   return NextResponse.json({ queued: true });
 }

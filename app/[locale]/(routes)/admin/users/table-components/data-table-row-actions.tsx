@@ -97,7 +97,7 @@ export function DataTableRowActions<TData>({
     }
   };
 
-  const onSetRole = async (role: "admin" | "member" | "viewer") => {
+  const onSetRole = async (role: "admin" | "manager" | "user") => {
     try {
       setLoading(true);
       const result = await setUserRole(data.id, role);
@@ -154,11 +154,11 @@ export function DataTableRowActions<TData>({
               <DropdownMenuItem onClick={() => onSetRole("admin")}>
                 Admin
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onSetRole("member")}>
-                Member
+              <DropdownMenuItem onClick={() => onSetRole("manager")}>
+                Manager
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onSetRole("viewer")}>
-                Viewer
+              <DropdownMenuItem onClick={() => onSetRole("user")}>
+                User
               </DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>

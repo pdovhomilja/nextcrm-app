@@ -1,6 +1,27 @@
 import { prismadb } from "@/lib/prisma";
+import {
+  requireAuthenticated,
+  assertCanReadContact,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export const getContact = async (contactId: string) => {
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return null;
+    throw e;
+  }
+
+  try {
+    await assertCanReadContact(user, contactId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return null;
+    throw e;
+  }
+
   const data = await prismadb.crm_Contacts.findFirst({
     where: {
       id: contactId,
