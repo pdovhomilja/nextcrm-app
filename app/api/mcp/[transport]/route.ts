@@ -31,6 +31,9 @@ const handler = createMcpHandler(
   },
   {
     capabilities: { tools: {} },
+  },
+  {
+    basePath: "/api/mcp",
   }
 );
 

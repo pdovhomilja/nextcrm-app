@@ -9,12 +9,33 @@ Use the NextCRM MCP server to read and write CRM data. This skill documents all 
 
 ## Connection Setup
 
-Add this to your MCP client configuration:
+The server supports two MCP transports. Pick one — most modern clients (Claude Code, Cursor) work with either.
+
+### Option A — Streamable HTTP (recommended)
+
+Single POST endpoint. Simpler, the current MCP spec default.
 
 ```json
 {
   "mcpServers": {
     "nextcrm": {
+      "type": "http",
+      "url": "https://YOUR_NEXTCRM_URL/api/mcp/mcp",
+      "headers": { "Authorization": "Bearer YOUR_API_TOKEN" }
+    }
+  }
+}
+```
+
+### Option B — SSE (legacy, for older clients)
+
+Two endpoints: a GET SSE stream and a POST message channel. The client opens `/api/mcp/sse`, the server announces the matching `/api/mcp/message?sessionId=…` endpoint over the stream, and the client POSTs JSON-RPC there.
+
+```json
+{
+  "mcpServers": {
+    "nextcrm": {
+      "type": "sse",
       "url": "https://YOUR_NEXTCRM_URL/api/mcp/sse",
       "headers": { "Authorization": "Bearer YOUR_API_TOKEN" }
     }
@@ -22,10 +43,14 @@ Add this to your MCP client configuration:
 }
 ```
 
-- Replace `YOUR_NEXTCRM_URL` with your NextCRM instance URL
+You only configure the `/sse` URL — the client discovers the message endpoint automatically.
+
+### Notes
+
+- Replace `YOUR_NEXTCRM_URL` with your NextCRM instance URL (e.g. `http://localhost:3000` for local dev)
 - Replace `YOUR_API_TOKEN` with a token generated from Profile > Developer > API Tokens
 - Token prefix: `nxtc__`
-- Both SSE (`/api/mcp/sse`) and HTTP (`/api/mcp/http`) transports are supported
+- Some clients omit the `type` field and infer the transport from the URL — both forms above include it explicitly for clarity
 
 ## Authentication
 
