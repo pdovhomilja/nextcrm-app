@@ -136,19 +136,22 @@ NextCRM now ships with a built-in [Model Context Protocol](https://modelcontextp
 
 **Authentication:** Generate Bearer tokens (`nxtc__...`) from your profile page. Tokens are SHA-256 hashed — the raw value is shown only once and never stored.
 
-**Connect your MCP client:**
+**Connect your MCP client** (streamable HTTP — recommended):
 ```json
 {
   "mcpServers": {
     "nextcrm": {
-      "url": "https://your-nextcrm.com/api/mcp/sse",
+      "type": "http",
+      "url": "https://your-nextcrm.com/api/mcp/mcp",
       "headers": { "Authorization": "Bearer nxtc__your_token_here" }
     }
   }
 }
 ```
 
-Both SSE (`/api/mcp/sse`) and HTTP (`/api/mcp/http`) transports are supported.
+The server supports both MCP transports defined by `mcp-handler`:
+- **Streamable HTTP** at `/api/mcp/mcp` — single POST endpoint, current MCP spec default
+- **SSE (legacy)** at `/api/mcp/sse` — GET stream paired with POSTs to `/api/mcp/message` (client auto-discovers the message endpoint)
 
 **Claude Code Skill:** Download the [SKILL.md](/en/profile?tab=developer) from your Developer profile tab for a ready-to-use Claude Code skill with full tool documentation.
 
@@ -202,7 +205,7 @@ Global search across all CRM entities from a single search bar — grouped resul
 - [Vercel AI SDK 6.x](https://sdk.vercel.ai/) – Unified AI interface
 - [pgvector](https://github.com/pgvector/pgvector) – PostgreSQL vector extension for similarity search (HNSW indexes)
 - [E2B](https://e2b.dev/) – Cloud sandboxes with real Chrome browser for AI-driven web research and contact enrichment
-- [MCP Server](https://modelcontextprotocol.io/) – 127 tools across 15 modules via `@vercel/mcp-adapter`, Bearer token auth, SSE + HTTP transports
+- [MCP Server](https://modelcontextprotocol.io/) – 127 tools across 15 modules via `mcp-handler` (Vercel MCP adapter), Bearer token auth, streamable HTTP (`/api/mcp/mcp`) + legacy SSE (`/api/mcp/sse`) transports
 
 ### Data fetching
 
