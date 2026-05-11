@@ -5,6 +5,14 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.12.0...v0.12.1) (2026-05-11)
+
+
+### Bug Fixes
+
+* **mcp:** set basePath so /api/mcp/{mcp,sse} actually route ([16fb5be](https://github.com/pdovhomilja/nextcrm-app/commit/16fb5be137fb54b5de324f659dd8b48881004aad))
+* **mcp:** set basePath so /api/mcp/{mcp,sse} actually route ([3c36be2](https://github.com/pdovhomilja/nextcrm-app/commit/3c36be22658d27092606e32dea3d083fcc0b1bfd))
+
 ## [0.12.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.11.1...v0.12.0) (2026-05-08)
 
 
