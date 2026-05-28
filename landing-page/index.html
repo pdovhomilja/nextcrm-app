@@ -22,7 +22,6 @@
     <meta property="twitter:domain" content="nextcrm.io" />
     <meta property="twitter:url" content="https://www.nextcrm.io" />
     <meta name="twitter:title" content="NextCRM" />
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <meta
       name="twitter:description"
       content="NextCRM es un CRM de código abierto construido sobre NextJS. Stack tecnológico: NextJS con TypeScript, MongoDB, TailwindCSS, React, Prisma, shadCN, resend.com, react.email y más."
@@ -33,6 +32,32 @@
       name="description"
       content="NextCRM es un CRM de código abierto construido sobre NextJS. Stack tecnológico: NextJS con TypeScript, MongoDB, TailwindCSS, React, Prisma, shadCN, resend.com, react.email, OpenAI y más."
     />
+    <style>
+      html {
+        font-size: 62.5%;
+      }
+      body {
+        font-size: 1.6rem;
+      }
+      h1 {
+        font-size: 3.2rem;
+      }
+      h2 {
+        font-size: 2.4rem;
+      }
+      h3 {
+        font-size: 1.8rem;
+      }
+      p,
+      li {
+        font-size: 1.6rem;
+      }
+      small,
+      .text-sm {
+        font-size: 1.4rem;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   </head>
   <body>
     <div class="flex justify-center">
@@ -73,15 +98,35 @@
         <div class="mx-auto max-w-[120rem] px-8 pt-[6.4rem]">
           <div class="text-center">
             <h1
-              style="background: linear-gradient(to right bottom, rgb(255, 255, 255) 30%, rgba(255, 255, 255, 0.38)); -webkit-background-clip: text; color: transparent; margin-top: 1.5rem; margin-bottom: 1.5rem; font-size: 3.75rem; line-height: 1; padding-top: 2.5rem; padding-bottom: 2.5rem;"
+              style="
+                background: linear-gradient(
+                  to right bottom,
+                  rgb(255, 255, 255) 30%,
+                  rgba(255, 255, 255, 0.38)
+                );
+                -webkit-background-clip: text;
+                color: transparent;
+                margin-top: 1.5rem;
+                margin-bottom: 1.5rem;
+                font-weight: 800;
+                font-size: 5rem;
+                padding-top: 2.5rem;
+                padding-bottom: 2.5rem;
+              "
             >
               NextCRM:<br class="hidden md:block" />
               Nuestro Proyecto de Pruebas
             </h1>
             <p
-              style="margin-bottom: 3rem; font-size: 1.125rem; line-height: 1.75rem; color: rgb(148, 163, 184);"
+              style="
+                margin-bottom: 3rem;
+                font-size: 1.6rem;
+                color: rgb(148, 163, 184);
+              "
             >
-              Una aplicación CRM real y completa donde aplicamos<br class="hidden md:block" />
+              Una aplicación CRM real y completa donde aplicamos<br
+                class="hidden md:block"
+              />
               técnicas de pruebas de software en un entorno de producción.
             </p>
             <div class="mt-[12.8rem] [perspective:2000px]">
@@ -130,64 +175,197 @@
     </main>
 
     <!-- SECCION: POR QUE ELEGIMOS NEXTCRM -->
-    <section style="background: linear-gradient(to bottom, rgb(15, 23, 42), rgb(2, 6, 23)); padding-top: 8rem; padding-bottom: 8rem;">
-      <div style="max-width: 120rem; margin-left: auto; margin-right: auto; padding-left: 2rem; padding-right: 2rem;">
-        <div style="text-align: center; margin-bottom: 4rem;">
-          <h2 style="font-size: 2.25rem; line-height: 2.5rem; font-weight: 700; margin-bottom: 1.5rem; color: white;">
+    <section
+      style="
+        background: linear-gradient(to bottom, rgb(15, 23, 42), rgb(2, 6, 23));
+        padding-top: 8rem;
+        padding-bottom: 8rem;
+      "
+    >
+      <div
+        style="
+          max-width: 120rem;
+          margin-left: auto;
+          margin-right: auto;
+          padding-left: 2rem;
+          padding-right: 2rem;
+        "
+      >
+        <div style="text-align: center; margin-bottom: 4rem">
+          <h2
+            style="
+              font-size: 5rem;
+              font-weight: 700;
+              margin-bottom: 1.5rem;
+              color: white;
+            "
+          >
             ¿Por qué elegimos NextCRM?
           </h2>
-          <p style="font-size: 1.125rem; line-height: 1.75rem; color: rgb(148, 163, 184); max-width: 48rem; margin-left: auto; margin-right: auto;">
-            Seleccionamos NextCRM como nuestro proyecto de pruebas porque representa un sistema real,
-            completo y desafiante que nos permite aplicar todo lo aprendido sobre testing de software.
+          <p
+            style="
+              font-size: 1.6rem;
+              color: rgb(148, 163, 184);
+              max-width: 48rem;
+              margin-left: auto;
+              margin-right: auto;
+            "
+          >
+            Seleccionamos NextCRM como nuestro proyecto de pruebas porque
+            representa un sistema real, completo y desafiante que nos permite
+            aplicar todo lo aprendido sobre testing de software.
           </p>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 2rem; margin-bottom: 4rem;">
-          <div style="border-radius: 0.75rem; border: 1px solid rgba(255,255,255,0.1); background-color: rgba(255,255,255,0.01); padding: 2rem; backdrop-filter: blur(12px);">
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-              <span style="font-size: 1.5rem; line-height: 2rem;">🎯</span>
-              <h3 style="font-size: 1.25rem; line-height: 1.75rem; font-weight: 500; color: white;">Aplicación Real y Completa</h3>
+        <div
+          style="
+            display: grid;
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+          "
+        >
+          <div
+            style="
+              border-radius: 0.75rem;
+              border: 1px solid rgba(255, 255, 255, 0.1);
+              background-color: rgba(255, 255, 255, 0.01);
+              padding: 2rem;
+              backdrop-filter: blur(12px);
+            "
+          >
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                margin-bottom: 1rem;
+              "
+            >
+              <span style="font-size: 1.6rem">🎯</span>
+              <h3 style="font-size: 1.8rem; font-weight: 500; color: white">
+                Aplicación Real y Completa
+              </h3>
             </div>
-            <p style="color: rgb(148, 163, 184); margin-bottom: 1rem; font-size: 0.875rem; line-height: 1.25rem;">
-              A diferencia de proyectos académicos o ejemplos de tutorial, NextCRM es una aplicación CRM 
-              funcional con múltiples módulos interconectados: facturas, contactos, oportunidades, 
-              actividades, auditoría y más. Esto nos permite probar integraciones reales entre componentes.
+            <p
+              style="
+                color: rgb(148, 163, 184);
+                margin-bottom: 1rem;
+                font-size: 1.4rem;
+              "
+            >
+              A diferencia de proyectos académicos o ejemplos de tutorial,
+              NextCRM es una aplicación CRM funcional con múltiples módulos
+              interconectados: facturas, contactos, oportunidades, actividades,
+              auditoría y más. Esto nos permite probar integraciones reales
+              entre componentes.
             </p>
           </div>
 
-          <div style="border-radius: 0.75rem; border: 1px solid rgba(255,255,255,0.1); background-color: rgba(255,255,255,0.01); padding: 2rem; backdrop-filter: blur(12px);">
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-              <span style="font-size: 1.5rem; line-height: 2rem;">🔧</span>
-              <h3 style="font-size: 1.25rem; line-height: 1.75rem; font-weight: 500; color: white;">Stack Tecnológico Moderno</h3>
+          <div
+            style="
+              border-radius: 0.75rem;
+              border: 1px solid rgba(255, 255, 255, 0.1);
+              background-color: rgba(255, 255, 255, 0.01);
+              padding: 2rem;
+              backdrop-filter: blur(12px);
+            "
+          >
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                margin-bottom: 1rem;
+              "
+            >
+              <span style="font-size: 1.6rem">🔧</span>
+              <h3 style="font-size: 1.8rem; font-weight: 500; color: white">
+                Stack Tecnológico Moderno
+              </h3>
             </div>
-            <p style="color: rgb(148, 163, 184); margin-bottom: 1rem; font-size: 0.875rem; line-height: 1.25rem;">
-              Construido con Next.js 14, TypeScript, Prisma, PostgreSQL, TailwindCSS y más. Este stack 
-              moderno nos permite explorar pruebas en un entorno de desarrollo actual, incluyendo 
-              server actions, React Server Components y manejo de datos con ORM.
+            <p
+              style="
+                color: rgb(148, 163, 184);
+                margin-bottom: 1rem;
+                font-size: 1.4rem;
+              "
+            >
+              Construido con Next.js 14, TypeScript, Prisma, PostgreSQL,
+              TailwindCSS y más. Este stack moderno nos permite explorar pruebas
+              en un entorno de desarrollo actual, incluyendo server actions,
+              React Server Components y manejo de datos con ORM.
             </p>
           </div>
 
-          <div style="border-radius: 0.75rem; border: 1px solid rgba(255,255,255,0.1); background-color: rgba(255,255,255,0.01); padding: 2rem; backdrop-filter: blur(12px);">
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-              <span style="font-size: 1.5rem; line-height: 2rem;">📊</span>
-              <h3 style="font-size: 1.25rem; line-height: 1.75rem; font-weight: 500; color: white;">Datos y Flujos de Negocio Reales</h3>
+          <div
+            style="
+              border-radius: 0.75rem;
+              border: 1px solid rgba(255, 255, 255, 0.1);
+              background-color: rgba(255, 255, 255, 0.01);
+              padding: 2rem;
+              backdrop-filter: blur(12px);
+            "
+          >
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                margin-bottom: 1rem;
+              "
+            >
+              <span style="font-size: 1.6rem">📊</span>
+              <h3 style="font-size: 1.8rem; font-weight: 500; color: white">
+                Datos y Flujos de Negocio Reales
+              </h3>
             </div>
-            <p style="color: rgb(148, 163, 184); margin-bottom: 1rem; font-size: 0.875rem; line-height: 1.25rem;">
-              Incluye flujos de trabajo completos: creación de facturas con ciclos de estado, 
-              enriquecimiento de datos con IA, búsqueda semántica, y gestión de permisos. 
-              Cada flujo representa un caso de prueba valioso.
+            <p
+              style="
+                color: rgb(148, 163, 184);
+                margin-bottom: 1rem;
+                font-size: 1.4rem;
+              "
+            >
+              Incluye flujos de trabajo completos: creación de facturas con
+              ciclos de estado, enriquecimiento de datos con IA, búsqueda
+              semántica, y gestión de permisos. Cada flujo representa un caso de
+              prueba valioso.
             </p>
           </div>
 
-          <div style="border-radius: 0.75rem; border: 1px solid rgba(255,255,255,0.1); background-color: rgba(255,255,255,0.01); padding: 2rem; backdrop-filter: blur(12px);">
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-              <span style="font-size: 1.5rem; line-height: 2rem;">🧪</span>
-              <h3 style="font-size: 1.25rem; line-height: 1.75rem; font-weight: 500; color: white;">Ideal para Pruebas de Integración</h3>
+          <div
+            style="
+              border-radius: 0.75rem;
+              border: 1px solid rgba(255, 255, 255, 0.1);
+              background-color: rgba(255, 255, 255, 0.01);
+              padding: 2rem;
+              backdrop-filter: blur(12px);
+            "
+          >
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                margin-bottom: 1rem;
+              "
+            >
+              <span style="font-size: 1.6rem">🧪</span>
+              <h3 style="font-size: 1.8rem; font-weight: 500; color: white">
+                Ideal para Pruebas de Integración
+              </h3>
             </div>
-            <p style="color: rgb(148, 163, 184); margin-bottom: 1rem; font-size: 0.875rem; line-height: 1.25rem;">
-              La arquitectura con server actions, API routes y MCP server nos permite diseñar 
-              pruebas de integración entre frontend, backend y servicios externos (OpenAI, Resend, 
-              Inngest) en un único codebase.
+            <p
+              style="
+                color: rgb(148, 163, 184);
+                margin-bottom: 1rem;
+                font-size: 1.4rem;
+              "
+            >
+              La arquitectura con server actions, API routes y MCP server nos
+              permite diseñar pruebas de integración entre frontend, backend y
+              servicios externos (OpenAI, Resend, Inngest) en un único codebase.
             </p>
           </div>
         </div>
@@ -195,187 +373,168 @@
     </section>
 
     <!-- SECCION: IMPORTANCIA DE LAS PRUEBAS -->
-    <section style="background: rgb(2, 6, 23); padding-top: 8rem; padding-bottom: 8rem;">
-      <div style="max-width: 120rem; margin-left: auto; margin-right: auto; padding-left: 2rem; padding-right: 2rem;">
-        <div style="text-align: center; margin-bottom: 4rem;">
-          <h2 style="font-size: 2.25rem; line-height: 2.5rem; font-weight: 700; margin-bottom: 1.5rem; color: white;">
+    <section
+      style="background: rgb(2, 6, 23); padding-top: 8rem; padding-bottom: 8rem"
+    >
+      <div
+        style="
+          max-width: 120rem;
+          margin-left: auto;
+          margin-right: auto;
+          padding-left: 2rem;
+          padding-right: 2rem;
+        "
+      >
+        <div style="text-align: center; margin-bottom: 4rem">
+          <h2
+            style="
+              font-size: 4rem;
+              font-weight: 800;
+              margin-bottom: 1.5rem;
+              color: white;
+            "
+          >
             ¿Por qué son necesarias las pruebas de software?
           </h2>
-          <p style="font-size: 1.125rem; line-height: 1.75rem; color: rgb(148, 163, 184); max-width: 48rem; margin-left: auto; margin-right: auto;">
-            Las pruebas no son solo una fase del desarrollo — son una inversión en calidad, 
-            confianza y mantenibilidad del software.
+          <p
+            style="
+              font-size: 1.6rem;
+              color: rgb(148, 163, 184);
+              max-width: 48rem;
+              margin-left: auto;
+              margin-right: auto;
+            "
+          >
+            Las pruebas no son solo una fase del desarrollo — son una inversión
+            en calidad, confianza y mantenibilidad del software.
           </p>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 2rem;">
-          <div style="border-radius: 0.75rem; border: 1px solid rgba(255,255,255,0.1); background-color: rgba(255,255,255,0.01); padding: 2rem; backdrop-filter: blur(12px);">
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-              <span style="font-size: 1.5rem; line-height: 2rem;">🛡️</span>
-              <h3 style="font-size: 1.25rem; line-height: 1.75rem; font-weight: 500; color: white;">Garantiza Calidad</h3>
+        <div
+          style="
+            display: grid;
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+            gap: 2rem;
+          "
+        >
+          <div
+            style="
+              border-radius: 0.75rem;
+              border: 1px solid rgba(255, 255, 255, 0.1);
+              background-color: rgba(255, 255, 255, 0.01);
+              padding: 2rem;
+              backdrop-filter: blur(12px);
+            "
+          >
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                margin-bottom: 1rem;
+              "
+            >
+              <span style="font-size: 1.6rem">🛡️</span>
+              <h3 style="font-size: 1.8rem; font-weight: 500; color: white">
+                Garantiza Calidad
+              </h3>
             </div>
-            <p style="color: rgb(148, 163, 184); font-size: 0.875rem; line-height: 1.25rem;">
-              Un CRM maneja datos críticos del negocio: clientes, facturas, oportunidades. 
-              Un error puede costar dinero real. Las pruebas detectan defectos antes de que 
-              lleguen a producción, protegiendo la integridad de los datos y la reputación 
-              de la empresa.
+            <p style="color: rgb(148, 163, 184); font-size: 1.4rem">
+              Un CRM maneja datos críticos del negocio: clientes, facturas,
+              oportunidades. Un error puede costar dinero real. Las pruebas
+              detectan defectos antes de que lleguen a producción, protegiendo
+              la integridad de los datos y la reputación de la empresa.
             </p>
           </div>
 
-          <div style="border-radius: 0.75rem; border: 1px solid rgba(255,255,255,0.1); background-color: rgba(255,255,255,0.01); padding: 2rem; backdrop-filter: blur(12px);">
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-              <span style="font-size: 1.5rem; line-height: 2rem;">🔄</span>
-              <h3 style="font-size: 1.25rem; line-height: 1.75rem; font-weight: 500; color: white;">Facilita el Mantenimiento</h3>
+          <div
+            style="
+              border-radius: 0.75rem;
+              border: 1px solid rgba(255, 255, 255, 0.1);
+              background-color: rgba(255, 255, 255, 0.01);
+              padding: 2rem;
+              backdrop-filter: blur(12px);
+            "
+          >
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                margin-bottom: 1rem;
+              "
+            >
+              <span style="font-size: 1.6rem">🔄</span>
+              <h3 style="font-size: 1.8rem; font-weight: 500; color: white">
+                Facilita el Mantenimiento
+              </h3>
             </div>
-            <p style="color: rgb(148, 163, 184); font-size: 0.875rem; line-height: 1.25rem;">
-              El código de NextCRM evoluciona constantemente con nuevas funcionalidades. 
-              Una suite de pruebas bien diseñada permite refactorizar con confianza, 
-              agregar features sin miedo a romper lo existente, y documentar el comportamiento 
-              esperado del sistema.
+            <p style="color: rgb(148, 163, 184); font-size: 1.4rem">
+              El código de NextCRM evoluciona constantemente con nuevas
+              funcionalidades. Una suite de pruebas bien diseñada permite
+              refactorizar con confianza, agregar features sin miedo a romper lo
+              existente, y documentar el comportamiento esperado del sistema.
             </p>
           </div>
 
-          <div style="border-radius: 0.75rem; border: 1px solid rgba(255,255,255,0.1); background-color: rgba(255,255,255,0.01); padding: 2rem; backdrop-filter: blur(12px);">
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-              <span style="font-size: 1.5rem; line-height: 2rem;">⚡</span>
-              <h3 style="font-size: 1.25rem; line-height: 1.75rem; font-weight: 500; color: white;">Ahorra Tiempo y Costos</h3>
+          <div
+            style="
+              border-radius: 0.75rem;
+              border: 1px solid rgba(255, 255, 255, 0.1);
+              background-color: rgba(255, 255, 255, 0.01);
+              padding: 2rem;
+              backdrop-filter: blur(12px);
+            "
+          >
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                margin-bottom: 1rem;
+              "
+            >
+              <span style="font-size: 1.6rem">⚡</span>
+              <h3 style="font-size: 1.8rem; font-weight: 500; color: white">
+                Ahorra Tiempo y Costos
+              </h3>
             </div>
-            <p style="color: rgb(148, 163, 184); font-size: 0.875rem; line-height: 1.25rem;">
-              Detectar un bug en producción es 10-100 veces más costoso que encontrarlo 
-              durante el desarrollo. Las pruebas automatizadas ejecutan cientos de escenarios 
-              en segundos, algo imposible de hacer manualmente en cada release.
+            <p style="color: rgb(148, 163, 184); font-size: 1.4rem">
+              Detectar un bug en producción es 10-100 veces más costoso que
+              encontrarlo durante el desarrollo. Las pruebas automatizadas
+              ejecutan cientos de escenarios en segundos, algo imposible de
+              hacer manualmente en cada release.
             </p>
           </div>
 
-          <div style="border-radius: 0.75rem; border: 1px solid rgba(255,255,255,0.1); background-color: rgba(255,255,255,0.01); padding: 2rem; backdrop-filter: blur(12px);">
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-              <span style="font-size: 1.5rem; line-height: 2rem;">🤝</span>
-              <h3 style="font-size: 1.25rem; line-height: 1.75rem; font-weight: 500; color: white;">Mejora la Colaboración</h3>
+          <div
+            style="
+              border-radius: 0.75rem;
+              border: 1px solid rgba(255, 255, 255, 0.1);
+              background-color: rgba(255, 255, 255, 0.01);
+              padding: 2rem;
+              backdrop-filter: blur(12px);
+            "
+          >
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                margin-bottom: 1rem;
+              "
+            >
+              <span style="font-size: 1.6rem">🤝</span>
+              <h3 style="font-size: 1.8rem; font-weight: 500; color: white">
+                Mejora la Colaboración
+              </h3>
             </div>
-            <p style="color: rgb(148, 163, 184); font-size: 0.875rem; line-height: 1.25rem;">
-              Las pruebas sirven como documentación ejecutable. Un nuevo desarrollador puede 
-              entender el sistema leyendo los tests. En nuestro grupo de pruebas, nos permite 
-              trabajar en paralelo sobre diferentes módulos sin conflictos.
+            <p style="color: rgb(148, 163, 184); font-size: 1.4rem">
+              Las pruebas sirven como documentación ejecutable. Un nuevo
+              desarrollador puede entender el sistema leyendo los tests. En
+              nuestro grupo de pruebas, nos permite trabajar en paralelo sobre
+              diferentes módulos sin conflictos.
             </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SECCION: TIPOS DE PRUEBAS -->
-    <section style="background: linear-gradient(to bottom, rgb(2, 6, 23), rgb(15, 23, 42)); padding-top: 8rem; padding-bottom: 8rem;">
-      <div style="max-width: 120rem; margin-left: auto; margin-right: auto; padding-left: 2rem; padding-right: 2rem;">
-        <div style="text-align: center; margin-bottom: 4rem;">
-          <h2 style="font-size: 2.25rem; line-height: 2.5rem; font-weight: 700; margin-bottom: 1.5rem; color: white;">
-            Tipos de Pruebas que Realizamos
-          </h2>
-          <p style="font-size: 1.125rem; line-height: 1.75rem; color: rgb(148, 163, 184); max-width: 48rem; margin-left: auto; margin-right: auto;">
-            Aplicamos diferentes niveles y tipos de pruebas para garantizar la calidad 
-            integral de NextCRM.
-          </p>
-        </div>
-
-        <div style="display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 2rem; margin-bottom: 4rem;">
-          <div style="border-radius: 0.75rem; border: 1px solid rgba(255,255,255,0.1); background-color: rgba(255,255,255,0.01); padding: 2rem; backdrop-filter: blur(12px);">
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-              <span style="font-size: 1.5rem; line-height: 2rem;">🔬</span>
-              <h3 style="font-size: 1.25rem; line-height: 1.75rem; font-weight: 500; color: white;">Pruebas Unitarias</h3>
-            </div>
-            <p style="color: rgb(148, 163, 184); margin-bottom: 1rem; font-size: 0.875rem; line-height: 1.25rem;">
-              Verificamos funciones individuales en aislamiento: cálculos de totales de facturas, 
-              validaciones de formularios con Zod, utilidades de formato de fechas y monedas. 
-              Cada función crítica tiene su test unitario con Jest y Vitest.
-            </p>
-            <ul style="color: rgb(100, 116, 139); font-size: 0.875rem; line-height: 1.25rem; list-style: none; padding: 0;">
-              <li style="margin-bottom: 0.5rem;"><span style="color: rgb(56, 189, 248);">—</span> Cálculo de impuestos y descuentos en facturas</li>
-              <li style="margin-bottom: 0.5rem;"><span style="color: rgb(56, 189, 248);">—</span> Validaciones de esquemas con Zod</li>
-              <li style="margin-bottom: 0.5rem;"><span style="color: rgb(56, 189, 248);">—</span> Helpers de fecha y moneda multi-local</li>
-              <li><span style="color: rgb(56, 189, 248);">—</span> Diffs de auditoría (diffObjects)</li>
-            </ul>
-          </div>
-
-          <div style="border-radius: 0.75rem; border: 1px solid rgba(255,255,255,0.1); background-color: rgba(255,255,255,0.01); padding: 2rem; backdrop-filter: blur(12px);">
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-              <span style="font-size: 1.5rem; line-height: 2rem;">🔗</span>
-              <h3 style="font-size: 1.25rem; line-height: 1.75rem; font-weight: 500; color: white;">Pruebas de Integración</h3>
-            </div>
-            <p style="color: rgb(148, 163, 184); margin-bottom: 1rem; font-size: 0.875rem; line-height: 1.25rem;">
-              Probamos que los módulos funcionen juntos correctamente: server actions con Prisma, 
-              API routes con servicios externos, y flujos completos de negocio.
-            </p>
-            <ul style="color: rgb(100, 116, 139); font-size: 0.875rem; line-height: 1.25rem; list-style: none; padding: 0;">
-              <li style="margin-bottom: 0.5rem;"><span style="color: rgb(56, 189, 248);">—</span> Server actions con base de datos (Prisma)</li>
-              <li style="margin-bottom: 0.5rem;"><span style="color: rgb(56, 189, 248);">—</span> API de facturas con generación de PDF</li>
-              <li style="margin-bottom: 0.5rem;"><span style="color: rgb(56, 189, 248);">—</span> MCP server con autenticación Bearer</li>
-              <li><span style="color: rgb(56, 189, 248);">—</span> Webhooks de Inngest para procesamiento async</li>
-            </ul>
-          </div>
-
-          <div style="border-radius: 0.75rem; border: 1px solid rgba(255,255,255,0.1); background-color: rgba(255,255,255,0.01); padding: 2rem; backdrop-filter: blur(12px);">
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-              <span style="font-size: 1.5rem; line-height: 2rem;">🖱️</span>
-              <h3 style="font-size: 1.25rem; line-height: 1.75rem; font-weight: 500; color: white;">Pruebas End-to-End (E2E)</h3>
-            </div>
-            <p style="color: rgb(148, 163, 184); margin-bottom: 1rem; font-size: 0.875rem; line-height: 1.25rem;">
-              Simulamos usuarios reales navegando la aplicación con Playwright. Probamos flujos 
-              completos desde el login hasta la generación de una factura en PDF.
-            </p>
-            <ul style="color: rgb(100, 116, 139); font-size: 0.875rem; line-height: 1.25rem; list-style: none; padding: 0;">
-              <li style="margin-bottom: 0.5rem;"><span style="color: rgb(56, 189, 248);">—</span> Flujo completo de creación de factura</li>
-              <li style="margin-bottom: 0.5rem;"><span style="color: rgb(56, 189, 248);">—</span> Gestión de contactos y oportunidades</li>
-              <li style="margin-bottom: 0.5rem;"><span style="color: rgb(56, 189, 248);">—</span> Panel de administración y configuración</li>
-              <li><span style="color: rgb(56, 189, 248);">—</span> Responsive design en múltiples viewports</li>
-            </ul>
-          </div>
-
-          <div style="border-radius: 0.75rem; border: 1px solid rgba(255,255,255,0.1); background-color: rgba(255,255,255,0.01); padding: 2rem; backdrop-filter: blur(12px);">
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-              <span style="font-size: 1.5rem; line-height: 2rem;">🎭</span>
-              <h3 style="font-size: 1.25rem; line-height: 1.75rem; font-weight: 500; color: white;">Pruebas de Componentes (UI)</h3>
-            </div>
-            <p style="color: rgb(148, 163, 184); margin-bottom: 1rem; font-size: 0.875rem; line-height: 1.25rem;">
-              Verificamos que cada componente React renderice correctamente con diferentes estados 
-              y props. Testing Library nos permite probar el comportamiento desde la perspectiva del usuario.
-            </p>
-            <ul style="color: rgb(100, 116, 139); font-size: 0.875rem; line-height: 1.25rem; list-style: none; padding: 0;">
-              <li style="margin-bottom: 0.5rem;"><span style="color: rgb(56, 189, 248);">—</span> Tablas de datos con paginación</li>
-              <li style="margin-bottom: 0.5rem;"><span style="color: rgb(56, 189, 248);">—</span> Formularios con validación (shadcn/ui)</li>
-              <li style="margin-bottom: 0.5rem;"><span style="color: rgb(56, 189, 248);">—</span> Modales y sheets interactivos</li>
-              <li><span style="color: rgb(56, 189, 248);">—</span> Gráficos y visualizaciones de datos</li>
-            </ul>
-          </div>
-
-          <div style="border-radius: 0.75rem; border: 1px solid rgba(255,255,255,0.1); background-color: rgba(255,255,255,0.01); padding: 2rem; backdrop-filter: blur(12px);">
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-              <span style="font-size: 1.5rem; line-height: 2rem;">🔒</span>
-              <h3 style="font-size: 1.25rem; line-height: 1.75rem; font-weight: 500; color: white;">Pruebas de Seguridad</h3>
-            </div>
-            <p style="color: rgb(148, 163, 184); margin-bottom: 1rem; font-size: 0.875rem; line-height: 1.25rem;">
-              Validamos la protección de datos sensibles: cifrado de claves API, control de 
-              permisos por rol, y prevención de vulnerabilidades comunes como XSS e inyección SQL.
-            </p>
-            <ul style="color: rgb(100, 116, 139); font-size: 0.875rem; line-height: 1.25rem; list-style: none; padding: 0;">
-              <li style="margin-bottom: 0.5rem;"><span style="color: rgb(56, 189, 248);">—</span> Cifrado AES-256-GCM de claves API</li>
-              <li style="margin-bottom: 0.5rem;"><span style="color: rgb(56, 189, 248);">—</span> Guardas de permisos en server actions</li>
-              <li style="margin-bottom: 0.5rem;"><span style="color: rgb(56, 189, 248);">—</span> Sanitización de inputs con Zod</li>
-              <li><span style="color: rgb(56, 189, 248);">—</span> Autenticación Bearer para MCP</li>
-            </ul>
-          </div>
-
-          <div style="border-radius: 0.75rem; border: 1px solid rgba(255,255,255,0.1); background-color: rgba(255,255,255,0.01); padding: 2rem; backdrop-filter: blur(12px);">
-            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-              <span style="font-size: 1.5rem; line-height: 2rem;">⚡</span>
-              <h3 style="font-size: 1.25rem; line-height: 1.75rem; font-weight: 500; color: white;">Pruebas de Performance</h3>
-            </div>
-            <p style="color: rgb(148, 163, 184); margin-bottom: 1rem; font-size: 0.875rem; line-height: 1.25rem;">
-              Medimos tiempos de respuesta, uso de memoria y rendimiento de consultas. 
-              NextCRM maneja grandes volúmenes de datos, por lo que la optimización es crítica.
-            </p>
-            <ul style="color: rgb(100, 116, 139); font-size: 0.875rem; line-height: 1.25rem; list-style: none; padding: 0;">
-              <li style="margin-bottom: 0.5rem;"><span style="color: rgb(56, 189, 248);">—</span> Tiempos de carga de páginas con Web Vitals</li>
-              <li style="margin-bottom: 0.5rem;"><span style="color: rgb(56, 189, 248);">—</span> Rendimiento de consultas Prisma</li>
-              <li style="margin-bottom: 0.5rem;"><span style="color: rgb(56, 189, 248);">—</span> Búsqueda vectorial con HNSW indexes</li>
-              <li><span style="color: rgb(56, 189, 248);">—</span> Paginación eficiente en grandes datasets</li>
-            </ul>
           </div>
         </div>
       </div>
@@ -388,7 +547,7 @@
             Áreas de Prueba
           </h2>
           <p class="text-lg text-primary-text md:text-xl max-w-3xl mx-auto">
-            Las funcionalidades de NextCRM que analizamos y validamos como parte 
+            Las funcionalidades de NextCRM que analizamos y validamos como parte
             de nuestro proyecto de pruebas.
           </p>
         </div>
@@ -398,8 +557,7 @@
             class="rounded-xl border border-transparent-white bg-white bg-opacity-[0.01] p-8 backdrop-blur-[12px]"
           >
             <div class="flex items-center gap-3 mb-4">
-              <span class="text-2xl">🧾</span>
-              <h3 class="text-2xl font-medium">Módulo de Facturas</h3>
+              <h3 class="text-4xl font-bold mb-20">Módulo de Facturas</h3>
               <span
                 class="ml-auto px-3 py-1 text-xs rounded-full bg-primary-gradient"
                 >NUEVO</span
@@ -465,8 +623,7 @@
             class="rounded-xl border border-transparent-white bg-white bg-opacity-[0.01] p-8 backdrop-blur-[12px]"
           >
             <div class="flex items-center gap-3 mb-4">
-              <span class="text-2xl">📋</span>
-              <h3 class="text-2xl font-medium">Actividades CRM</h3>
+              <h3 class="text-4xl font-bold mb-20">Actividades CRM</h3>
               <span
                 class="ml-auto px-3 py-1 text-xs rounded-full bg-primary-gradient"
                 >NUEVO</span
@@ -476,9 +633,9 @@
               class="text-primary-text mb-6"
               style="font-size: 18px; margin-bottom: 20px"
             >
-              Probamos el seguimiento de actividades en entidades CRM,
-              validando feeds paginados, vinculación multi-entidad y
-              revalidación en tiempo real tras mutaciones.
+              Probamos el seguimiento de actividades en entidades CRM, validando
+              feeds paginados, vinculación multi-entidad y revalidación en
+              tiempo real tras mutaciones.
             </p>
             <ul class="space-y-3 text-sm text-grey">
               <li class="flex items-start gap-2">
@@ -508,8 +665,7 @@
             class="rounded-xl border border-transparent-white bg-white bg-opacity-[0.01] p-8 backdrop-blur-[12px]"
           >
             <div class="flex items-center gap-3 mb-4">
-              <span class="text-2xl">🕵️</span>
-              <h3 class="text-2xl font-medium">
+              <h3 class="text-4xl font-bold mb-20">
                 Registro de Auditoría e Historial
               </h3>
               <span
@@ -521,8 +677,8 @@
               class="text-primary-text mb-6"
               style="font-size: 18px; margin-bottom: 20px"
             >
-              Verificamos el historial completo de cambios por entidad,
-              probando borrado lógico, restauración de registros y diffs JSON
+              Verificamos el historial completo de cambios por entidad, probando
+              borrado lógico, restauración de registros y diffs JSON
               estructurados con comparación antes/después.
             </p>
             <ul class="space-y-3 text-sm text-grey">
@@ -553,8 +709,7 @@
             class="rounded-xl border border-transparent-white bg-white bg-opacity-[0.01] p-8 backdrop-blur-[12px]"
           >
             <div class="flex items-center gap-3 mb-4">
-              <span class="text-2xl">🧠</span>
-              <h3 class="text-2xl font-medium">Enriquecimiento con IA</h3>
+              <h3 class="text-4xl font-bold mb-20">Enriquecimiento con IA</h3>
               <span
                 class="ml-auto px-3 py-1 text-xs rounded-full bg-primary-gradient"
                 >NUEVO</span
@@ -564,9 +719,9 @@
               class="text-primary-text mb-6"
               style="font-size: 18px; margin-bottom: 20px"
             >
-              Probamos el enriquecimiento con IA vía sandbox E2B,
-              validando puntuación de confianza, cifrado AES-256-GCM de claves
-              y degradación elegante ante fallos.
+              Probamos el enriquecimiento con IA vía sandbox E2B, validando
+              puntuación de confianza, cifrado AES-256-GCM de claves y
+              degradación elegante ante fallos.
             </p>
             <ul class="space-y-3 text-sm text-grey">
               <li class="flex items-start gap-2">
@@ -608,8 +763,7 @@
             class="rounded-xl border border-transparent-white bg-white bg-opacity-[0.01] p-8 backdrop-blur-[12px]"
           >
             <div class="flex items-center gap-3 mb-4">
-              <span class="text-2xl">🤖</span>
-              <h3 class="text-2xl font-medium">Servidor MCP</h3>
+              <h3 class="text-4xl font-bold mb-20">Servidor MCP</h3>
               <span
                 class="ml-auto px-3 py-1 text-xs rounded-full bg-primary-gradient"
                 >NUEVO</span
@@ -653,8 +807,7 @@
             class="rounded-xl border border-transparent-white bg-white bg-opacity-[0.01] p-8 backdrop-blur-[12px]"
           >
             <div class="flex items-center gap-3 mb-4">
-              <span class="text-2xl">🔍</span>
-              <h3 class="text-2xl font-medium">Búsqueda Vectorial</h3>
+              <h3 class="text-4xl font-bold mb-20">Búsqueda Vectorial</h3>
               <span
                 class="ml-auto px-3 py-1 text-xs rounded-full bg-primary-gradient"
                 >NUEVO</span
