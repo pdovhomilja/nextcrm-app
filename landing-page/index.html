@@ -114,8 +114,8 @@
                 padding-bottom: 2.5rem;
               "
             >
-              NextCRM:<br class="hidden md:block" />
-              Nuestro Proyecto de Pruebas
+              CRM Core Activities:<br class="hidden md:block" />
+              Proyecto de Pruebas Unitarias
             </h1>
             <p
               style="
@@ -124,10 +124,13 @@
                 color: rgb(148, 163, 184);
               "
             >
-              Una aplicación CRM real y completa donde aplicamos<br
+              En este proyecto aplicamos técnicas de pruebas de software<br
                 class="hidden md:block"
               />
-              técnicas de pruebas de software en un entorno de producción.
+              sobre el módulo CRM Activities: server actions, componentes UI,<br
+                class="hidden md:block"
+              />
+              paginación con cursor y revalidación de paths.
             </p>
             <div class="mt-[12.8rem] [perspective:2000px]">
               <div
@@ -200,7 +203,7 @@
               color: white;
             "
           >
-            ¿Por qué elegimos NextCRM?
+            ¿Por qué el módulo CRM Activities?
           </h2>
           <p
             style="
@@ -211,9 +214,9 @@
               margin-right: auto;
             "
           >
-            Seleccionamos NextCRM como nuestro proyecto de pruebas porque
-            representa un sistema real, completo y desafiante que nos permite
-            aplicar todo lo aprendido sobre testing de software.
+            Elegimos el módulo CRM Activities porque combina patrones complejos
+            en un alcance manejable: server actions, componentes React, paginación
+            con cursor y relaciones N:M entre entidades.
           </p>
         </div>
 
@@ -244,7 +247,7 @@
             >
               <span style="font-size: 1.6rem">🎯</span>
               <h3 style="font-size: 1.8rem; font-weight: 500; color: white">
-                Aplicación Real y Completa
+                Patrones Complejos en Módulo Aislado
               </h3>
             </div>
             <p
@@ -254,11 +257,10 @@
                 font-size: 1.4rem;
               "
             >
-              A diferencia de proyectos académicos o ejemplos de tutorial,
-              NextCRM es una aplicación CRM funcional con múltiples módulos
-              interconectados: facturas, contactos, oportunidades, actividades,
-              auditoría y más. Esto nos permite probar integraciones reales
-              entre componentes.
+              El módulo Activities combina múltiples patrones de prueba: server
+              actions con validación, componentes UI con estado local, paginación
+              cursor compuesto y relaciones N:M. Esto lo hace ideal para demostrar
+              competencias de testing.
             </p>
           </div>
 
@@ -291,10 +293,10 @@
                 font-size: 1.4rem;
               "
             >
-              Construido con Next.js 14, TypeScript, Prisma, PostgreSQL,
-              TailwindCSS y más. Este stack moderno nos permite explorar pruebas
-              en un entorno de desarrollo actual, incluyendo server actions,
-              React Server Components y manejo de datos con ORM.
+              Next.js 14 con Server Actions, TypeScript, Prisma y React Testing
+              Library. Permite probar patrones reales de desarrollo actual:
+              acciones de servidor, componentes de servidor y manejo de datos con
+              ORM.
             </p>
           </div>
 
@@ -317,7 +319,7 @@
             >
               <span style="font-size: 1.6rem">📊</span>
               <h3 style="font-size: 1.8rem; font-weight: 500; color: white">
-                Datos y Flujos de Negocio Reales
+                Flujo de Negocio Completo
               </h3>
             </div>
             <p
@@ -327,10 +329,10 @@
                 font-size: 1.4rem;
               "
             >
-              Incluye flujos de trabajo completos: creación de facturas con
-              ciclos de estado, enriquecimiento de datos con IA, búsqueda
-              semántica, y gestión de permisos. Cada flujo representa un caso de
-              prueba valioso.
+              El módulo Activities incluye flujos reales: seguimiento de
+              interacciones con clientes, vinculación multi-entidad (Accounts,
+              Contacts, Leads, Opportunities, Contracts) y trazabilidad de
+              cambios. Cada flujo representa un caso de prueba valioso.
             </p>
           </div>
 
@@ -353,7 +355,7 @@
             >
               <span style="font-size: 1.6rem">🧪</span>
               <h3 style="font-size: 1.8rem; font-weight: 500; color: white">
-                Ideal para Pruebas de Integración
+                Alcance Aislado y Medible
               </h3>
             </div>
             <p
@@ -363,9 +365,10 @@
                 font-size: 1.4rem;
               "
             >
-              La arquitectura con server actions, API routes y MCP server nos
-              permite diseñar pruebas de integración entre frontend, backend y
-              servicios externos (OpenAI, Resend, Inngest) en un único codebase.
+              Concentramos el proyecto en el módulo CRM Activities: 4 server
+              actions, 3 componentes UI, 5 wrappers de entidad y el modelo de datos.
+              Esto permite un alcance preciso para pruebas unitarias con resultados
+              claros y medibles.
             </p>
           </div>
         </div>
@@ -544,11 +547,11 @@
       <div class="mx-auto max-w-[120rem] px-8">
         <div class="text-center mb-16 gap-6 grid">
           <h2 class="text-gradient font-bold text-6xl md:text-6xl mb-6">
-            Áreas de Prueba
+            Módulos CRM Core bajo Prueba
           </h2>
           <p class="text-lg text-primary-text md:text-xl max-w-3xl mx-auto">
-            Las funcionalidades de NextCRM que analizamos y validamos como parte
-            de nuestro proyecto de pruebas.
+            Los componentes del módulo CRM Activities que analizamos y validamos:
+            Server Actions, Componentes UI y Wrappers por entidad.
           </p>
         </div>
 
@@ -557,64 +560,44 @@
             class="rounded-xl border border-transparent-white bg-white bg-opacity-[0.01] p-8 backdrop-blur-[12px]"
           >
             <div class="flex items-center gap-3 mb-4">
-              <h3 class="text-4xl font-bold mb-20">Módulo de Facturas</h3>
+              <h3 class="text-4xl font-bold mb-20">Server Actions</h3>
               <span
                 class="ml-auto px-3 py-1 text-xs rounded-full bg-primary-gradient"
-                >NUEVO</span
+                >CORE</span
               >
             </div>
             <p
-              class="text-primary-text mb-10"
+              class="text-primary-text mb-6"
               style="font-size: 18px; margin-bottom: 20px"
             >
-              Validamos el sistema de facturación completo — flujos de creación,
-              emisión, pago y cancelación. Probamos cálculos de impuestos,
-              multi-moneda y generación de PDF para garantizar precisión.
+              Validamos las 4 acciones de servidor del módulo Activities: consulta
+              con paginación, creación con vínculos, actualización con gestión de
+              links múltiples y eliminación lógica.
             </p>
             <ul class="space-y-3 text-sm text-grey">
               <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Tipos de factura: Factura,
-                Nota de Crédito, Proforma y Recibo
+                <span class="text-primary">—</span> getActivitiesByEntity: feed con
+                paginación por cursor compuesto (date, id)
               </li>
               <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Líneas de artículo con
-                cantidad, precio unitario, descuento % y totales automáticos
+                <span class="text-primary">—</span> createActivity: creación + vínculos
+                crm_ActivityLinks + revalidatePath
               </li>
               <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Motor fiscal configurable
-                (IVA, GST) con desglose por línea
+                <span class="text-primary">—</span> updateActivity: replace links +
+                revalidatePath múltiple (old + new paths)
               </li>
               <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Series de facturas
-                auto-numeradas con prefijo/sufijo
+                <span class="text-primary">—</span> deleteActivity: soft-delete
+                (deletedAt) + revalidatePath por link
               </li>
               <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Multi-moneda con formato
-                localizado
+                <span class="text-primary">—</span> Paginación cursor compuesto
+                { date: ISO string, id: uuid } para orden estable
               </li>
               <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Ciclo de estados: BORRADOR →
-                EMITIDA → PAGADA / PARCIALMENTE_PAGADA / CANCELADA
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Registro de pagos
-                parciales/totales con seguimiento de saldo
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Duplicado y cancelado con un
-                clic, con trazabilidad de auditoría
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Envío por email vía Resend
-                con plantillas de React Email
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Generación de PDF en el
-                servidor
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> i18n completo (Inglés y
-                Checo)
+                <span class="text-primary">—</span> Revalidación multi-path en
+                mutaciones que afectan múltiples entidades
               </li>
             </ul>
           </div>
@@ -623,40 +606,44 @@
             class="rounded-xl border border-transparent-white bg-white bg-opacity-[0.01] p-8 backdrop-blur-[12px]"
           >
             <div class="flex items-center gap-3 mb-4">
-              <h3 class="text-4xl font-bold mb-20">Actividades CRM</h3>
+              <h3 class="text-4xl font-bold mb-20">Componentes UI</h3>
               <span
                 class="ml-auto px-3 py-1 text-xs rounded-full bg-primary-gradient"
-                >NUEVO</span
+                >CORE</span
               >
             </div>
             <p
               class="text-primary-text mb-6"
               style="font-size: 18px; margin-bottom: 20px"
             >
-              Probamos el seguimiento de actividades en entidades CRM, validando
-              feeds paginados, vinculación multi-entidad y revalidación en
-              tiempo real tras mutaciones.
+              Probamos los 3 componentes React del módulo: ActivitiesView (feed con
+              paginación), ActivityForm (sheet create/edit) y ActivityEntry (fila
+              con acciones inline).
             </p>
             <ul class="space-y-3 text-sm text-grey">
               <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Tipos de actividad: Notas,
-                Llamadas, Emails, Reuniones, Tareas
+                <span class="text-primary">—</span> ActivitiesView: feed con estado
+                local, paginación "Load more", callbacks optimistas
               </li>
               <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Crear/editar/eliminar inline
-                en cada página de detalle de entidad
+                <span class="text-primary">—</span> ActivityForm: Sheet create/edit,
+                validación, auto-status por tipo, metadata JSONB
               </li>
               <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Paginación por cursor
-                compuesto para orden estable
+                <span class="text-primary">—</span> ActivityEntry: fila con
+                icono/tipo, badge/estado, tooltip timestamp, edit/delete inline
               </li>
               <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Registros vinculados vía
-                crm_ActivityLinks (adjuntos multi-entidad)
+                <span class="text-primary">—</span> Tipos de actividad: call,
+                meeting, note, email
               </li>
               <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Revalidación de ruta en
-                tiempo real tras cada mutación
+                <span class="text-primary">—</span> Estados: scheduled,
+                completed, cancelled
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-primary">—</span> Metadata JSONB para datos
+                específicos del tipo
               </li>
             </ul>
           </div>
@@ -666,41 +653,45 @@
           >
             <div class="flex items-center gap-3 mb-4">
               <h3 class="text-4xl font-bold mb-20">
-                Registro de Auditoría e Historial
+                Wrappers ActivitiesSection
               </h3>
               <span
                 class="ml-auto px-3 py-1 text-xs rounded-full bg-primary-gradient"
-                >NUEVO</span
+                >CORE</span
               >
             </div>
             <p
               class="text-primary-text mb-6"
               style="font-size: 18px; margin-bottom: 20px"
             >
-              Verificamos el historial completo de cambios por entidad, probando
-              borrado lógico, restauración de registros y diffs JSON
-              estructurados con comparación antes/después.
+              Validamos los 5 wrappers ActivitiesSection que conectan cada entidad
+              CRM con el módulo de actividades: Accounts, Contacts, Leads,
+              Opportunities y Contracts.
             </p>
             <ul class="space-y-3 text-sm text-grey">
               <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Línea temporal por entidad
-                de todos los cambios de campos
+                <span class="text-primary">—</span> ActivitiesSection.tsx para
+                Accounts (crm/accounts/[accountId])
               </li>
               <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Borrado lógico con columna
-                deletedAt que preserva datos
+                <span class="text-primary">—</span> ActivitiesSection.tsx para
+                Contacts (crm/contacts/[contactId])
               </li>
               <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Registro de auditoría global
-                filtrable en /admin/audit-log
+                <span class="text-primary">—</span> ActivitiesSection.tsx para Leads
+                (crm/leads/[leadId])
               </li>
               <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Restauración de registros
-                eliminados lógicamente
+                <span class="text-primary">—</span> ActivitiesSection.tsx para
+                Opportunities (crm/opportunities/[opportunityId])
               </li>
               <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Diffs JSON estructurados con
-                comparación antes/después
+                <span class="text-primary">—</span> ActivitiesSection.tsx para
+                Contracts (crm/contracts/[contractId])
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-primary">—</span> Fetch server + render
+                ActivitiesView (stateless, solo fetch + render)
               </li>
             </ul>
           </div>
@@ -709,141 +700,44 @@
             class="rounded-xl border border-transparent-white bg-white bg-opacity-[0.01] p-8 backdrop-blur-[12px]"
           >
             <div class="flex items-center gap-3 mb-4">
-              <h3 class="text-4xl font-bold mb-20">Enriquecimiento con IA</h3>
+              <h3 class="text-4xl font-bold mb-20">Modelo de Datos</h3>
               <span
                 class="ml-auto px-3 py-1 text-xs rounded-full bg-primary-gradient"
-                >NUEVO</span
+                >CORE</span
               >
             </div>
             <p
               class="text-primary-text mb-6"
               style="font-size: 18px; margin-bottom: 20px"
             >
-              Probamos el enriquecimiento con IA vía sandbox E2B, validando
-              puntuación de confianza, cifrado AES-256-GCM de claves y
-              degradación elegante ante fallos.
+              Verificamos el esquema Prisma del módulo Activities: crm_Activity, 
+              crm_ActivityLink, y las relaciones N:M con entidades CRM.
             </p>
             <ul class="space-y-3 text-sm text-grey">
               <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Sandbox Linux completo con
-                navegador Chrome real
+                <span class="text-primary">—</span> crm_Activity: id, type, status,
+                title, description, date, metadata (JSONB), createdAt, updatedAt,
+                deletedAt (soft-delete)
               </li>
               <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Claude Sonnet 4.6 impulsa la
-                investigación con bucle de herramientas
+                <span class="text-primary">—</span> crm_ActivityLink: entityType,
+                entityId para vínculos N:M
               </li>
               <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Descubrimiento de contactos
-                C-level desde solo el nombre de empresa
+                <span class="text-primary">—</span> Entidades vinculadas: Account,
+                Contact, Lead, Opportunity, Contract
               </li>
               <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Estrategia consciente del
-                contexto omitiendo investigación innecesaria
+                <span class="text-primary">—</span> Soft-delete via deletedAt
+                timestamp
               </li>
               <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Puntuación de confianza
-                (descartado por debajo de 0.6)
+                <span class="text-primary">—</span> Índices para paginación cursor
+                compuesto
               </li>
               <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Prioridad de claves API en 3
-                niveles: ENV → Admin → Perfil de usuario
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Cifrado AES-256-GCM en
-                reposo para todas las claves
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Degradación elegante con
-                diálogos informativos
-              </li>
-            </ul>
-          </div>
-
-          <div
-            class="rounded-xl border border-transparent-white bg-white bg-opacity-[0.01] p-8 backdrop-blur-[12px]"
-          >
-            <div class="flex items-center gap-3 mb-4">
-              <h3 class="text-4xl font-bold mb-20">Servidor MCP</h3>
-              <span
-                class="ml-auto px-3 py-1 text-xs rounded-full bg-primary-gradient"
-                >NUEVO</span
-              >
-            </div>
-            <p
-              class="text-primary-text mb-6"
-              style="font-size: 18px; margin-bottom: 20px"
-            >
-              Validamos el servidor MCP con 127 herramientas en 15 módulos,
-              probando autenticación Bearer, transporte HTTP streamable y
-              compatibilidad SSE legacy.
-            </p>
-            <ul class="space-y-3 text-sm text-grey">
-              <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> 127 herramientas: Cuentas,
-                Contactos, Leads, Oportunidades, Targets, Productos, Contratos,
-                Actividades, Documentos, Listas de Targets, Enriquecimiento,
-                Cuentas de Email, Campañas, Proyectos, Reportes
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Tokens Bearer con hash
-                SHA-256 (nxtc__...)
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Transporte HTTP streamable
-                (default del spec MCP)
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Soporte de transporte SSE
-                legacy
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> SKILL.md para Claude Code
-                incluido
-              </li>
-            </ul>
-          </div>
-
-          <div
-            class="rounded-xl border border-transparent-white bg-white bg-opacity-[0.01] p-8 backdrop-blur-[12px]"
-          >
-            <div class="flex items-center gap-3 mb-4">
-              <h3 class="text-4xl font-bold mb-20">Búsqueda Vectorial</h3>
-              <span
-                class="ml-auto px-3 py-1 text-xs rounded-full bg-primary-gradient"
-                >NUEVO</span
-              >
-            </div>
-            <p
-              class="text-primary-text mb-6"
-              style="font-size: 18px; margin-bottom: 20px"
-            >
-              Probamos búsqueda semántica con embeddings OpenAI, índices HNSW
-              para ANN rápida y backfill de registros existentes.
-            </p>
-            <ul class="space-y-3 text-sm text-grey">
-              <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> OpenAI
-                text-embedding-3-small vía jobs de Inngest
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Resultados unificados de
-                búsqueda por palabra clave + semántica
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Botón "Encontrar Similares"
-                en cada página de detalle
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Función de backfill para
-                registros existentes
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Auto-embed al
-                crear/actualizar
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="text-primary">—</span> Índices HNSW para búsqueda
-                ANN rápida
+                <span class="text-primary">—</span> Authorization: permisos
+                lectura/escritura por rol
               </li>
             </ul>
           </div>
