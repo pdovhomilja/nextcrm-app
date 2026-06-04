@@ -1,0 +1,61 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nextcrm
+      POSTGRES_PASSWORD: nextcrm_dev
+      POSTGRES_DB: nextcrm
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - nextcrm
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nextcrm"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: nextcrm
+      MINIO_ROOT_PASSWORD: minio_dev_password
+    volumes:
+      - minio_data:/data
+    networks:
+      - nextcrm
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+  inngest:
+    image: inngest/inngest:latest
+    restart: unless-stopped
+    command: inngest dev -u http://localhost:3000/api/inngest
+    networks:
+      - nextcrm
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8288/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "8288:8288"
+
+volumes:
+  postgres_data:
+  minio_data:
+
+networks:
+  nextcrm:
+    driver: bridge
