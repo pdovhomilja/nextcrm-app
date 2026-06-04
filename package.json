@@ -203,9 +203,9 @@
       "bcrypt",
       "canvas",
       "esbuild",
-      "msgpackr-extract",
       "msw",
       "prisma",
+      "protobufjs",
       "sharp",
       "unrs-resolver"
     ]
