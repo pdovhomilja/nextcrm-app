@@ -1,0 +1,31 @@
+name: Unit Tests
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+
+    env:
+      NODE_ENV: testing
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm dotenv -e .env.test -- pnpm prisma generate
+
+      - run: pnpm dotenv -e .env.test -- pnpm test
