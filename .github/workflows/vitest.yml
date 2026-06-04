@@ -1,4 +1,4 @@
-name: Vitest
+name: Unit Tests
 
 on:
   pull_request:
@@ -6,8 +6,11 @@ on:
 
 jobs:
   test:
-    name: Run Vitest
+    name: Run Unit Tests
     runs-on: ubuntu-latest
+
+    env:
+      NODE_ENV: testing
 
     steps:
       - uses: actions/checkout@v4
@@ -23,6 +26,6 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm prisma generate
+      - run: pnpm dotenv -e .env.test -- pnpm prisma generate
 
-      - run: pnpm test
+      - run: pnpm dotenv -e .env.test -- pnpm test
