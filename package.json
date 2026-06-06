@@ -10,10 +10,10 @@
     "dev": "next dev",
     "build": "prisma generate && prisma migrate deploy && next build",
     "start": "next start",
-    "lint": "eslint . --max-warnings=0",
+    "lint": "biome check --write",
     "migrate:mongo-to-postgres": "pnpm exec tsx scripts/migrate-mongo-to-postgres.ts",
     "validate:migration": "pnpm exec tsx scripts/validate-migration.ts",
-    "test": "jest",
+    "test": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
@@ -129,6 +129,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.16",
     "@playwright/test": "^1.58.2",
     "@types/bcrypt": "^6.0.0",
     "@types/bcryptjs": "^3.0.0",
@@ -142,7 +143,9 @@
     "@types/pg": "^8.16.0",
     "@types/react": "npm:types-react@19.0.0-rc.1",
     "@types/react-dom": "npm:types-react-dom@19.0.0-rc.1",
+    "@vitest/coverage-v8": "^4.1.8",
     "dotenv": "^17.3.1",
+    "dotenv-cli": "^11.0.0",
     "jest": "^30.3.0",
     "jest-environment-node": "^30.3.0",
     "prisma": "^7.6.0",
@@ -150,7 +153,8 @@
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.8"
   },
   "pnpm": {
     "overrides": {
@@ -203,9 +207,9 @@
       "bcrypt",
       "canvas",
       "esbuild",
-      "msgpackr-extract",
       "msw",
       "prisma",
+      "protobufjs",
       "sharp",
       "unrs-resolver"
     ]
