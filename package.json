@@ -144,6 +144,7 @@
     "@types/react": "npm:types-react@19.0.0-rc.1",
     "@types/react-dom": "npm:types-react-dom@19.0.0-rc.1",
     "@vitest/coverage-v8": "^4.1.8",
+    "@vitest/ui": "4.1.8",
     "dotenv": "^17.3.1",
     "dotenv-cli": "^11.0.0",
     "jest": "^30.3.0",
