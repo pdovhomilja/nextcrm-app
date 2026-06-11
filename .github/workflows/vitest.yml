@@ -32,7 +32,7 @@ jobs:
 
       - run: pnpm dotenv -e .env.test -- pnpm prisma generate
 
-      - run: pnpm dotenv -e .env.test -- pnpm test
+      - run: pnpm dotenv -e .env.test -- pnpm run test --coverage --run
 
       - name: Report Coverage
         if: always()
