@@ -8,7 +8,9 @@ const handler = createMcpHandler(
       server.tool(tool.name, tool.description, tool.schema.shape, async (args: Record<string, unknown>) => {
         try {
           const mcpUser = await getMcpUser();
-          const result = await tool.handler(args as any, mcpUser.id);
+          // Pass userId (2nd arg, used by owner-scoped CRM tools) and the full
+          // authz user (3rd arg, used by role-aware campaign tools — GHSA-c9vg-c532-ppqx).
+          const result = await (tool.handler as any)(args as any, mcpUser.id, mcpUser);
           return {
             content: [{ type: "text" as const, text: JSON.stringify(result) }],
           };

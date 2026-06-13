@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
 import { inngest } from "@/inngest/client";
+import type { AuthzUser } from "@/lib/authz";
+import {
+  campaignReadScopeWhere,
+  campaignTemplateReadScopeWhere,
+} from "@/lib/authz/scopes/crm";
 import {
   paginationSchema,
   paginationArgs,
@@ -11,18 +16,31 @@ import {
   softDeleteData,
 } from "../helpers";
 
+// Object-level authorization for campaign tools (GHSA-c9vg-c532-ppqx).
+// Normal users are scoped to campaigns/templates they created; managers and
+// admins see all. Out-of-scope access returns NOT_FOUND (no existence leak),
+// consistent with the owner-scoped CRM tools.
+async function assertCampaignInScope(user: AuthzUser, campaignId: string): Promise<void> {
+  const row = await prismadb.crm_campaigns.findFirst({
+    where: { id: campaignId, ...campaignReadScopeWhere(user) },
+    select: { id: true },
+  });
+  if (!row) notFound("Campaign");
+}
+
 export const campaignTools = [
   // ── Campaigns CRUD ────────────────────────────────────
   {
     name: "campaigns_list",
-    description: "List campaigns (org-wide)",
+    description: "List campaigns the caller is allowed to see",
     schema: z.object({
       status: z.enum(["draft", "scheduled", "sending", "sent", "paused"]).optional(),
       ...paginationSchema,
     }),
-    async handler(args: { status?: string; limit: number; offset: number }, _userId: string) {
+    async handler(args: { status?: string; limit: number; offset: number }, _userId: string, user: AuthzUser) {
       const where: any = {
         deletedAt: null,
+        ...campaignReadScopeWhere(user),
         ...(args.status && { status: args.status }),
       };
       const [data, total] = await Promise.all([
@@ -41,9 +59,9 @@ export const campaignTools = [
     name: "campaigns_get",
     description: "Get a campaign by ID with steps and stats summary",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, _userId: string) {
+    async handler(args: { id: string }, _userId: string, user: AuthzUser) {
       const campaign = await prismadb.crm_campaigns.findFirst({
-        where: { id: args.id, deletedAt: null },
+        where: { id: args.id, deletedAt: null, ...campaignReadScopeWhere(user) },
         include: {
           steps: { orderBy: { order: "asc" }, include: { template: true } },
           target_lists: { include: { target_list: true } },
@@ -94,9 +112,9 @@ export const campaignTools = [
       reply_to: z.string().email().optional(),
       template_id: z.string().uuid().optional(),
     }),
-    async handler(args: Record<string, any>, _userId: string) {
+    async handler(args: Record<string, any>, _userId: string, user: AuthzUser) {
       const existing = await prismadb.crm_campaigns.findFirst({
-        where: { id: args.id, deletedAt: null },
+        where: { id: args.id, deletedAt: null, ...campaignReadScopeWhere(user) },
       });
       if (!existing) notFound("Campaign");
       if (existing.status === "sending") conflict("Cannot update a campaign that is currently sending");
@@ -109,9 +127,9 @@ export const campaignTools = [
     name: "campaigns_delete",
     description: "Soft-delete a campaign (sets deletedAt timestamp)",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, userId: string) {
+    async handler(args: { id: string }, userId: string, user: AuthzUser) {
       const existing = await prismadb.crm_campaigns.findFirst({
-        where: { id: args.id, deletedAt: null },
+        where: { id: args.id, deletedAt: null, ...campaignReadScopeWhere(user) },
       });
       if (!existing) notFound("Campaign");
       if (existing.status === "sending") conflict("Cannot delete a campaign that is currently sending");
@@ -128,9 +146,9 @@ export const campaignTools = [
     name: "campaigns_send",
     description: "Trigger sending a campaign. Campaign must be in draft or scheduled status.",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, _userId: string) {
+    async handler(args: { id: string }, _userId: string, user: AuthzUser) {
       const campaign = await prismadb.crm_campaigns.findFirst({
-        where: { id: args.id, deletedAt: null },
+        where: { id: args.id, deletedAt: null, ...campaignReadScopeWhere(user) },
       });
       if (!campaign) notFound("Campaign");
       if (!["draft", "scheduled"].includes(campaign.status ?? "")) {
@@ -149,9 +167,9 @@ export const campaignTools = [
     name: "campaigns_pause",
     description: "Pause an active/sending campaign",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, _userId: string) {
+    async handler(args: { id: string }, _userId: string, user: AuthzUser) {
       const campaign = await prismadb.crm_campaigns.findFirst({
-        where: { id: args.id },
+        where: { id: args.id, ...campaignReadScopeWhere(user) },
       });
       if (!campaign) notFound("Campaign");
       if (campaign.status !== "sending") conflict(`Cannot pause campaign in status: ${campaign.status}`);
@@ -163,9 +181,9 @@ export const campaignTools = [
     name: "campaigns_resume",
     description: "Resume a paused campaign",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, _userId: string) {
+    async handler(args: { id: string }, _userId: string, user: AuthzUser) {
       const campaign = await prismadb.crm_campaigns.findFirst({
-        where: { id: args.id },
+        where: { id: args.id, ...campaignReadScopeWhere(user) },
       });
       if (!campaign) notFound("Campaign");
       if (campaign.status !== "paused") conflict(`Cannot resume campaign in status: ${campaign.status}`);
@@ -178,10 +196,10 @@ export const campaignTools = [
   // ── Templates ─────────────────────────────────────────
   {
     name: "campaigns_list_templates",
-    description: "List campaign email templates (org-wide)",
+    description: "List campaign email templates the caller is allowed to see",
     schema: z.object({ ...paginationSchema }),
-    async handler(args: { limit: number; offset: number }, _userId: string) {
-      const where = { deletedAt: null };
+    async handler(args: { limit: number; offset: number }, _userId: string, user: AuthzUser) {
+      const where = { ...campaignTemplateReadScopeWhere(user) };
       const [data, total] = await Promise.all([
         prismadb.crm_campaign_templates.findMany({
           where,
@@ -197,8 +215,10 @@ export const campaignTools = [
     name: "campaigns_get_template",
     description: "Get a campaign template by ID",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, _userId: string) {
-      const template = await prismadb.crm_campaign_templates.findFirst({ where: { id: args.id, deletedAt: null } });
+    async handler(args: { id: string }, _userId: string, user: AuthzUser) {
+      const template = await prismadb.crm_campaign_templates.findFirst({
+        where: { id: args.id, ...campaignTemplateReadScopeWhere(user) },
+      });
       if (!template) notFound("Template");
       return itemResponse(template);
     },
@@ -241,8 +261,10 @@ export const campaignTools = [
       content_html: z.string().optional(),
       content_json: z.any().optional(),
     }),
-    async handler(args: Record<string, any>, _userId: string) {
-      const existing = await prismadb.crm_campaign_templates.findFirst({ where: { id: args.id, deletedAt: null } });
+    async handler(args: Record<string, any>, _userId: string, user: AuthzUser) {
+      const existing = await prismadb.crm_campaign_templates.findFirst({
+        where: { id: args.id, ...campaignTemplateReadScopeWhere(user) },
+      });
       if (!existing) notFound("Template");
       const { id, ...updateData } = args;
       const template = await prismadb.crm_campaign_templates.update({ where: { id }, data: updateData });
@@ -253,8 +275,10 @@ export const campaignTools = [
     name: "campaigns_delete_template",
     description: "Soft-delete a campaign template (sets deletedAt timestamp)",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, userId: string) {
-      const existing = await prismadb.crm_campaign_templates.findFirst({ where: { id: args.id, deletedAt: null } });
+    async handler(args: { id: string }, userId: string, user: AuthzUser) {
+      const existing = await prismadb.crm_campaign_templates.findFirst({
+        where: { id: args.id, ...campaignTemplateReadScopeWhere(user) },
+      });
       if (!existing) notFound("Template");
       await prismadb.crm_campaign_templates.update({
         where: { id: args.id },
@@ -278,10 +302,11 @@ export const campaignTools = [
     }),
     async handler(
       args: { campaign_id: string; order: number; template_id: string; subject: string; delay_days: number; send_to: string },
-      _userId: string
+      _userId: string,
+      user: AuthzUser
     ) {
       const campaign = await prismadb.crm_campaigns.findFirst({
-        where: { id: args.campaign_id, deletedAt: null },
+        where: { id: args.campaign_id, deletedAt: null, ...campaignReadScopeWhere(user) },
       });
       if (!campaign) notFound("Campaign");
       const step = await prismadb.crm_campaign_steps.create({ data: args });
@@ -299,9 +324,10 @@ export const campaignTools = [
       delay_days: z.number().int().min(0).optional(),
       send_to: z.enum(["all", "non_openers"]).optional(),
     }),
-    async handler(args: Record<string, any>, _userId: string) {
+    async handler(args: Record<string, any>, _userId: string, user: AuthzUser) {
       const existing = await prismadb.crm_campaign_steps.findUnique({ where: { id: args.id } });
       if (!existing) notFound("CampaignStep");
+      await assertCampaignInScope(user, existing.campaign_id);
       const { id, ...updateData } = args;
       const step = await prismadb.crm_campaign_steps.update({ where: { id }, data: updateData });
       return itemResponse(step);
@@ -311,9 +337,10 @@ export const campaignTools = [
     name: "campaigns_delete_step",
     description: "Delete a campaign step by ID (hard delete — step has no status field)",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, _userId: string) {
+    async handler(args: { id: string }, _userId: string, user: AuthzUser) {
       const existing = await prismadb.crm_campaign_steps.findUnique({ where: { id: args.id } });
       if (!existing) notFound("CampaignStep");
+      await assertCampaignInScope(user, existing.campaign_id);
       await prismadb.crm_campaign_steps.delete({ where: { id: args.id } });
       return itemResponse({ id: args.id, deleted: true });
     },
@@ -327,9 +354,9 @@ export const campaignTools = [
       campaign_id: z.string().uuid(),
       target_list_id: z.string().uuid(),
     }),
-    async handler(args: { campaign_id: string; target_list_id: string }, _userId: string) {
+    async handler(args: { campaign_id: string; target_list_id: string }, _userId: string, user: AuthzUser) {
       const campaign = await prismadb.crm_campaigns.findFirst({
-        where: { id: args.campaign_id, deletedAt: null },
+        where: { id: args.campaign_id, deletedAt: null, ...campaignReadScopeWhere(user) },
       });
       if (!campaign) notFound("Campaign");
       await prismadb.campaignToTargetLists.create({
@@ -345,7 +372,8 @@ export const campaignTools = [
       campaign_id: z.string().uuid(),
       target_list_id: z.string().uuid(),
     }),
-    async handler(args: { campaign_id: string; target_list_id: string }, _userId: string) {
+    async handler(args: { campaign_id: string; target_list_id: string }, _userId: string, user: AuthzUser) {
+      await assertCampaignInScope(user, args.campaign_id);
       await prismadb.campaignToTargetLists.delete({
         where: {
           campaign_id_target_list_id: {
@@ -363,9 +391,9 @@ export const campaignTools = [
     name: "campaigns_get_stats",
     description: "Get send/open/click/unsubscribe stats for a campaign",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, _userId: string) {
+    async handler(args: { id: string }, _userId: string, user: AuthzUser) {
       const campaign = await prismadb.crm_campaigns.findFirst({
-        where: { id: args.id, deletedAt: null },
+        where: { id: args.id, deletedAt: null, ...campaignReadScopeWhere(user) },
       });
       if (!campaign) notFound("Campaign");
       const sends = await prismadb.crm_campaign_sends.findMany({
