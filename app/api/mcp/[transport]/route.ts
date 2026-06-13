@@ -18,6 +18,7 @@ const handler = createMcpHandler(
           const msg: string = err.message ?? "Unknown error";
           const code =
             msg === "NOT_FOUND" ? "NOT_FOUND"
+            : msg === "FORBIDDEN" ? "FORBIDDEN"
             : msg === "Unauthorized" ? "UNAUTHORIZED"
             : msg.startsWith("CONFLICT:") ? "INVALID_REQUEST"
             : msg.startsWith("VALIDATION_ERROR:") ? "INVALID_PARAMS"
