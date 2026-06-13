@@ -1,12 +1,20 @@
 import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
+import type { AuthzUser } from "@/lib/authz";
 import {
   paginationSchema,
   paginationArgs,
   listResponse,
   itemResponse,
   notFound,
+  forbidden,
 } from "../helpers";
+
+// The product catalog is org-wide; writes are manager/admin-only, matching the
+// server actions' requireRole(["manager", "admin"]) (GHSA-wv63-cq38-qg58).
+function assertCanManageProducts(user: AuthzUser): void {
+  if (user.role !== "manager" && user.role !== "admin") forbidden();
+}
 
 export const crmProductTools = [
   {
@@ -81,8 +89,10 @@ export const crmProductTools = [
         billing_period?: string;
         categoryId?: string;
       },
-      userId: string
+      userId: string,
+      user: AuthzUser
     ) {
+      assertCanManageProducts(user);
       const product = await prismadb.crm_Products.create({
         data: {
           name: args.name,
@@ -124,7 +134,8 @@ export const crmProductTools = [
       billing_period: z.enum(["MONTHLY", "QUARTERLY", "SEMIANNUALLY", "ANNUALLY"]).optional(),
       categoryId: z.string().uuid().optional(),
     }),
-    async handler(args: Record<string, any>, userId: string) {
+    async handler(args: Record<string, any>, userId: string, user: AuthzUser) {
+      assertCanManageProducts(user);
       const existing = await prismadb.crm_Products.findFirst({
         where: { id: args.id, deletedAt: null },
       });
@@ -141,7 +152,8 @@ export const crmProductTools = [
     name: "crm_delete_product",
     description: "Soft-delete a CRM product (sets deletedAt timestamp)",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, userId: string) {
+    async handler(args: { id: string }, userId: string, user: AuthzUser) {
+      assertCanManageProducts(user);
       const existing = await prismadb.crm_Products.findFirst({
         where: { id: args.id, deletedAt: null },
       });

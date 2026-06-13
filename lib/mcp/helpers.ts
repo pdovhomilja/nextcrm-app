@@ -43,6 +43,10 @@ export function notFound(_entity: string): never {
   throw new Error("NOT_FOUND");
 }
 
+export function forbidden(): never {
+  throw new Error("FORBIDDEN");
+}
+
 export function conflict(msg: string): never {
   throw new Error(`CONFLICT: ${msg}`);
 }
