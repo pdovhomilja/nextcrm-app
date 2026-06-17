@@ -72,7 +72,7 @@ export const auth = betterAuth({
         try {
           const resend = await resendHelper();
           await resend.emails.send({
-            from: `${process.env.NEXT_PUBLIC_APP_NAME} <${process.env.EMAIL_FROM}>`,
+            from: `${process.env.NEXT_PUBLIC_APP_NAME || "MuseCRM"} <${process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM}>`,
             to: email,
             subject: `Your verification code: ${otp}`,
             text: `Your one-time verification code is: ${otp}\n\nThis code expires in 5 minutes.\n\nIf you did not request this, please ignore this email.`,
