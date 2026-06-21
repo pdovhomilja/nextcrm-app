@@ -87,8 +87,12 @@ export const auth = betterAuth({
         }
       },
     }),
-    // testUtils captures OTPs for E2E testing — only enabled in non-production
-    ...(process.env.NODE_ENV !== "production"
+    // testUtils captures OTPs for E2E testing — only enabled in non-production.
+    // The integration suite opts out via INTEGRATION_USE_HTTP_AUTH because the
+    // plugin keeps an in-memory store that goes out of sync with the database
+    // when multiple signInAs calls happen in a single run.
+    ...(process.env.NODE_ENV !== "production" &&
+    process.env.INTEGRATION_USE_HTTP_AUTH !== "true"
       ? [testUtils({ captureOTP: true })]
       : []),
     adminPlugin({
