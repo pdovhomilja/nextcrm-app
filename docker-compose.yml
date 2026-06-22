@@ -49,11 +49,11 @@ services:
     command: inngest dev -u http://app:3000/api/inngest
     networks:
       - nextcrm
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8288/health"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8288/health"]
+    #   interval: 5s
+    #   timeout: 5s
+    #   retries: 5
     # Uncomment to expose Inngest dashboard to host:
     # ports:
     #   - "8288:8288"
@@ -127,7 +127,7 @@ services:
       minio:
         condition: service_healthy
       inngest:
-        condition: service_healthy
+        condition: service_started
     networks:
       - nextcrm
     healthcheck:
