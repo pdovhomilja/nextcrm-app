@@ -1,3 +1,10 @@
+-- Remove legacy invoice artifacts from the old Rossum/MongoDB era that
+-- still exist in the 0_init baseline but are no longer part of the
+-- Prisma schema. The new invoice module reuses the "Invoices" name.
+DROP TABLE IF EXISTS "DocumentsToInvoices" CASCADE;
+DROP TABLE IF EXISTS "Invoices" CASCADE;
+DROP TABLE IF EXISTS "invoice_States" CASCADE;
+
 -- CreateEnum
 CREATE TYPE "Invoice_Status" AS ENUM ('DRAFT', 'ISSUED', 'SENT', 'PARTIALLY_PAID', 'PAID', 'OVERDUE', 'CANCELLED', 'DISPUTED', 'REFUNDED', 'WRITTEN_OFF');
 
