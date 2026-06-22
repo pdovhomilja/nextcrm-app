@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-enum crm_Contracts_Status {
+export enum crm_Contracts_Status {
   NOTSTARTED = "NOTSTARTED",
   INPROGRESS = "INPROGRESS",
   SIGNED = "SIGNED",
