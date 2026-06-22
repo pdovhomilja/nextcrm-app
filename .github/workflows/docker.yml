@@ -29,31 +29,39 @@ jobs:
 
       - name: Compute next version
         id: version
+        shell: bash
         run: |
           set -euo pipefail
 
-          existing=$(git ls-remote --tags origin \
-            | awk '{print $2}' \
-            | sed 's#refs/tags/##' \
-            | grep -E '^v0\.[0-9]+$' \
-            | sed 's/^v//' \
-            | sort -V \
-            | tail -n 1)
+          existing=$(
+            git ls-remote --tags origin \
+              | awk '{print $2}' \
+              | sed 's#refs/tags/##' \
+              | awk '/^v0\.[0-9]+$/ { sub(/^v/, ""); print }' \
+              | sort -V \
+              | tail -n 1
+          )
 
-          if [ -z "$existing" ]; then
+          echo "Latest version found: ${existing:-none}"
+
+          if [[ -z "$existing" ]]; then
             next_minor=1
           else
             major="${existing%%.*}"
             minor="${existing##*.}"
-            if [ "$major" != "0" ]; then
+
+            if [[ "$major" != "0" ]]; then
               echo "::error::Unexpected major version '$major', aborting."
               exit 1
             fi
+
             next_minor=$((10#$minor + 1))
           fi
 
-          echo "next_version=0.${next_minor}" >> "$GITHUB_OUTPUT"
-          echo "Resolved next version: 0.${next_minor}"
+          next_version="0.${next_minor}"
+
+          echo "next_version=$next_version" >> "$GITHUB_OUTPUT"
+          echo "Resolved next version: $next_version"
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
