@@ -13,7 +13,19 @@ import { getReportScope } from "@/lib/authz/scopes/report-scope";
 import type { ReportScope } from "@/lib/authz/scopes/report-scope";
 import { mapLegacyRole } from "@/lib/authz/roles";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resendClient: Resend | null = null;
+function getResendClient(): Resend {
+  if (!resendClient) {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      throw new Error(
+        "RESEND_API_KEY is not set. Configure it in your environment to send scheduled reports."
+      );
+    }
+    resendClient = new Resend(apiKey);
+  }
+  return resendClient;
+}
 
 export async function getReportData(category: string, filters: any, scope: ReportScope) {
   switch (category) {
@@ -94,7 +106,7 @@ export const reportSendScheduled = inngest.createFunction(
           attachments.push({ filename: `${schedule.reportConfig.category}-report.pdf`, content: pdfBuffer });
         }
 
-        await resend.emails.send({
+        await getResendClient().emails.send({
           from: process.env.RESEND_FROM_EMAIL!,
           to: schedule.recipients as string[],
           subject: `Report: ${schedule.reportConfig.name}`,
