@@ -49,7 +49,9 @@ vi.mock("papaparse", () => ({
       const data = rows.map((row: string) => {
         const values = row.split(",");
         const obj: Record<string, string> = {};
-        headers.forEach((h: string, i: number) => (obj[h.trim()] = values[i]?.trim() || ""));
+        headers.forEach((h: string, i: number) => {
+          obj[h.trim()] = values[i]?.trim() || "";
+        });
         return obj;
       });
       return { data };
