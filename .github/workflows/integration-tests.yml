@@ -1,0 +1,133 @@
+name: Integration Tests
+
+on:
+  pull_request:
+    paths:
+      - "actions/**"
+      - "app/**"
+      - "lib/**"
+      - "prisma/**"
+      - "tests/integration/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "vitest.integration.config.js"
+      - "env.integration.setup.ts"
+      - "proxy.ts"
+  push:
+    branches: ["dev", "main"]
+  workflow_dispatch:
+
+# Integration tests run a real Postgres + Better Auth dev server. They share
+# state via fixtures and are intentionally sequential (singleFork). Expect
+# 8–12 min total.
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Run Integration Tests
+    runs-on: ubuntu-latest
+
+    env:
+      NODE_ENV: test
+      INTEGRATION_USE_HTTP_AUTH: "true"
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: nextcrm
+          POSTGRES_PASSWORD: nextcrm_dev
+          POSTGRES_DB: nextcrm
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nextcrm"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      minio:
+        image: minio/minio:latest
+        env:
+          MINIO_ROOT_USER: nextcrm
+          MINIO_ROOT_PASSWORD: minio_dev_password
+        ports:
+          - 9000:9000
+          - 9001:9001
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/minio/health/live"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      inngest:
+        image: inngest/inngest:latest
+        ports:
+          - 8288:8288
+        options: >-
+          --health-cmd "curl -f http://localhost:8288/health"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm dotenv -e .env.integration -- pnpm prisma generate
+
+      - name: Apply Prisma migrations
+        run: pnpm dotenv -e .env.integration -- pnpm prisma migrate deploy
+
+      - name: Seed test admin
+        run: pnpm dotenv -e .env.integration -- pnpm prisma db seed
+
+      # Build the Next app once. Server Actions are compiled to RSC payloads
+      # and exercised over HTTP by the integration suite, so a real build is
+      # required (not `next dev`).
+      - name: Build Next app
+        run: pnpm dotenv -e .env.integration -- pnpm run build
+
+      - name: Start Next.js server
+        run: |
+          pnpm dotenv -e .env.integration -- pnpm start &
+          # Wait for readiness on the better-auth health endpoint.
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3000/api/auth/get-session >/dev/null 2>&1; then
+              echo "Next.js ready after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Next.js failed to start in 30s"
+          exit 1
+
+      - name: Run integration tests
+        run: pnpm dotenv -e .env.integration -- pnpm run test:integration
+
+      - name: Upload Vitest reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-vitest-report
+          path: |
+            tests/integration/coverage
+            tests/integration/junit.xml
+          if-no-files-found: ignore
+          retention-days: 7
