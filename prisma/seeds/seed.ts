@@ -17,6 +17,7 @@ import leadTypesData from "../initial-data/crm_Lead_Types.json";
 
 import { seedCurrencies } from "./currencies";
 import { seedInvoices } from "./invoices";
+import { seedCrmFixtures } from "./fixtures";
 
 const connectionString = process.env.DATABASE_URL!;
 const pool = new Pool({ connectionString });
@@ -142,6 +143,11 @@ async function main() {
 
   // Invoice module defaults
   await seedInvoices(prisma);
+
+  // CRM base fixtures (gated by INTEGRATION_FIXTURES=true). Required by
+  // tests/integration per §3.4.2 of "Diseño de Pruebas de Integración".
+  // Activated automatically by the integration env file; safe no-op otherwise.
+  await seedCrmFixtures(prisma, testUserEmail);
 
   console.log("-------- Seed DB completed --------");
 }
