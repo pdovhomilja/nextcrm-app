@@ -1,17 +1,7 @@
 name: Unit Tests
 
 on:
-  pull_request:
-    paths:
-      - "actions/**"
-      - "lib/**"
-      - "tests/units/**"
-      - "package.json"
-      - "pnpm-lock.yaml"
-      - "vitest.config.js"
-      - "prisma/schema.prisma"
-  push:
-    branches: ["dev", "main"]
+  workflow_call:
 
 jobs:
   test:
@@ -48,4 +38,3 @@ jobs:
         uses: davelosert/vitest-coverage-report-action@v2
         with:
           file-coverage-mode: all
-

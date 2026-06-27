@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { auth, isTestOrDev } from "@/lib/auth";
 import { prismadb } from "@/lib/prisma";
 
 // Test-only endpoint to retrieve captured OTPs for E2E testing.
@@ -12,7 +12,7 @@ import { prismadb } from "@/lib/prisma";
 //    server where NODE_ENV=production disables the testUtils plugin
 //    but the suite still needs the OTP to drive the flow.
 export async function GET(request: NextRequest) {
-  if (process.env.NODE_ENV === "production") {
+  if (process.env.NODE_ENV === "production" && !isTestOrDev) {
     return NextResponse.json({ error: "Not available" }, { status: 404 });
   }
 

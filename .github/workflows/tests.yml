@@ -13,13 +13,11 @@ on:
       - "vitest*.config.js"
       - "env.*.setup.ts"
       - "proxy.ts"
-  push:
-    branches: ["dev", "main"]
-  workflow_dispatch:
 
-# Aggregate gate. Runs unit + integration in parallel. Both must succeed for
-# the PR to be mergeable. Replaces the implicit "unit tests only" gate that
-# existed before integration coverage was added.
+  push:
+    branches: ["dev", "main", "dev-*"]
+
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -31,17 +29,7 @@ concurrency:
 
 jobs:
   unit:
-    name: Unit
     uses: ./.github/workflows/unit-tests.yml
-    with: {}
-    permissions:
-      contents: read
-      pull-requests: write
 
   integration:
-    name: Integration
     uses: ./.github/workflows/integration-tests.yml
-    with: {}
-    permissions:
-      contents: read
-      pull-requests: write

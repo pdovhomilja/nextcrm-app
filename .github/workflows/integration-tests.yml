@@ -1,25 +1,7 @@
 name: Integration Tests
 
 on:
-  pull_request:
-    paths:
-      - "actions/**"
-      - "app/**"
-      - "lib/**"
-      - "prisma/**"
-      - "tests/integration/**"
-      - "package.json"
-      - "pnpm-lock.yaml"
-      - "vitest.integration.config.js"
-      - "env.integration.setup.ts"
-      - "proxy.ts"
-  push:
-    branches: ["dev", "main"]
-  workflow_dispatch:
-
-# Integration tests run a real Postgres + Better Auth dev server. They share
-# state via fixtures and are intentionally sequential (singleFork). Expect
-# 8–12 min total.
+  workflow_call:
 
 permissions:
   contents: read
@@ -52,6 +34,7 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
+
       minio:
         image: minio/minio:latest
         env:
@@ -60,20 +43,18 @@ jobs:
         ports:
           - 9000:9000
           - 9001:9001
+        command: server /data --console-address ":9001"
         options: >-
           --health-cmd "curl -f http://localhost:9000/minio/health/live"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
+
       inngest:
         image: inngest/inngest:latest
         ports:
           - 8288:8288
-        options: >-
-          --health-cmd "curl -f http://localhost:8288/health"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
+        command: inngest dev -u http://localhost:3000/api/inngest
 
     steps:
       - uses: actions/checkout@v4
@@ -98,16 +79,12 @@ jobs:
       - name: Seed test admin
         run: pnpm dotenv -e .env.integration -- pnpm prisma db seed
 
-      # Build the Next app once. Server Actions are compiled to RSC payloads
-      # and exercised over HTTP by the integration suite, so a real build is
-      # required (not `next dev`).
       - name: Build Next app
         run: pnpm dotenv -e .env.integration -- pnpm run build
 
       - name: Start Next.js server
         run: |
           pnpm dotenv -e .env.integration -- pnpm start &
-          # Wait for readiness on the better-auth health endpoint.
           for i in $(seq 1 30); do
             if curl -fsS http://localhost:3000/api/auth/get-session >/dev/null 2>&1; then
               echo "Next.js ready after ${i}s"
@@ -119,7 +96,18 @@ jobs:
           exit 1
 
       - name: Run integration tests
-        run: pnpm dotenv -e .env.integration -- pnpm run test:integration
+        run: pnpm dotenv -e .env.integration -- pnpm run test:integration --reporter=json --outputFile=results.json
+
+      - name: Generate integration tests report
+        if: always()
+        run: node scripts/generate-integration-report.js
+
+      - name: Publish integration tests report to summary
+        if: always()
+        run: |
+          if [ -f integration-report.md ]; then
+            cat integration-report.md >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Upload Vitest reports
         if: always()
@@ -127,7 +115,7 @@ jobs:
         with:
           name: integration-vitest-report
           path: |
-            tests/integration/coverage
-            tests/integration/junit.xml
+            results.json
+            integration-report.md
           if-no-files-found: ignore
           retention-days: 7
