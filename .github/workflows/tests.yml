@@ -13,8 +13,10 @@ on:
       - "vitest*.config.js"
       - "env.*.setup.ts"
       - "proxy.ts"
+
   push:
     branches: ["dev", "main", "dev-*"]
+
   workflow_dispatch:
 
 permissions:
