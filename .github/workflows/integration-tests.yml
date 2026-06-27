@@ -71,11 +71,6 @@ jobs:
         ports:
           - 8288:8288
         command: inngest dev -u http://localhost:3000/api/inngest
-        options: >-
-          --health-cmd "curl -f http://localhost:8288/health"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
 
     steps:
       - uses: actions/checkout@v4
