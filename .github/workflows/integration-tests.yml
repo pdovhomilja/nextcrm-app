@@ -13,8 +13,10 @@ on:
       - "vitest.integration.config.js"
       - "env.integration.setup.ts"
       - "proxy.ts"
+
   push:
     branches: ["dev", "main", "dev-*"]
+
   workflow_dispatch:
 
 permissions:
@@ -57,8 +59,8 @@ jobs:
         ports:
           - 9000:9000
           - 9001:9001
+        command: server /data --console-address ":9001"
         options: >-
-          server /data --console-address ":9001"
           --health-cmd "curl -f http://localhost:9000/minio/health/live"
           --health-interval 5s
           --health-timeout 5s
@@ -68,8 +70,8 @@ jobs:
         image: inngest/inngest:latest
         ports:
           - 8288:8288
+        command: inngest dev -u http://localhost:3000/api/inngest
         options: >-
-          inngest dev -u http://localhost:3000/api/inngest
           --health-cmd "curl -f http://localhost:8288/health"
           --health-interval 5s
           --health-timeout 5s
