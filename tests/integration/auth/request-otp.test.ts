@@ -4,7 +4,7 @@ import { getCapturedOtp, http, requestSignInOtp, signInAsAdmin } from "../helper
 
 const EMAIL = process.env.TEST_USER_EMAIL ?? "admin@example.com";
 
-describe("PIA-001 request OTP for registered email", () => {
+describe("request OTP for registered email", () => {
   let sessionCookie: string | null = null;
 
   beforeAll(async () => {

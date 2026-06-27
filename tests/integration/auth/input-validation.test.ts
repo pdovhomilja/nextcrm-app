@@ -3,7 +3,7 @@ import { http } from "../helpers/auth";
 
 const EMAIL = process.env.TEST_USER_EMAIL ?? "admin@example.com";
 
-describe("PIA-001b input validation for send-verification-otp", () => {
+describe("input validation for send-verification-otp", () => {
   it("rejects an obviously invalid email with 400", {
     meta: {
       id: "PIA-004",

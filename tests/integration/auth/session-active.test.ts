@@ -6,7 +6,7 @@ import { http, type IntegrationSession, signInAsAdmin } from "../helpers/auth";
 const BASE_URL = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
 const EMAIL = process.env.TEST_USER_EMAIL ?? "admin@example.com";
 
-describe("PIA-004 active session validates on protected endpoint", () => {
+describe("active session validates on protected endpoint", () => {
   let session: IntegrationSession;
 
   beforeAll(async () => {

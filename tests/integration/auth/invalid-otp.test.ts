@@ -5,7 +5,7 @@ import { getCapturedOtp, http, requestSignInOtp } from "../helpers/auth";
 
 const EMAIL = process.env.TEST_USER_EMAIL ?? "admin@example.com";
 
-describe("PIA-003 reject invalid OTP", () => {
+describe("reject invalid OTP", () => {
   let sessionsBefore: number;
 
   beforeAll(async () => {
