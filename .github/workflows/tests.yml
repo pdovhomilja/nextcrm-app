@@ -14,7 +14,7 @@ on:
       - "env.*.setup.ts"
       - "proxy.ts"
   push:
-    branches: ["dev", "main"]
+    branches: ["dev", "main", "dev-*"]
   workflow_dispatch:
 
 permissions:

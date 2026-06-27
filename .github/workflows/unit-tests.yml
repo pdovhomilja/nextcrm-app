@@ -11,7 +11,7 @@ on:
       - "vitest.config.js"
       - "prisma/schema.prisma"
   push:
-    branches: ["dev", "main"]
+    branches: ["dev", "main", "dev-*"]
 
 jobs:
   test:
@@ -48,4 +48,3 @@ jobs:
         uses: davelosert/vitest-coverage-report-action@v2
         with:
           file-coverage-mode: all
-
