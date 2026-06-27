@@ -9,7 +9,19 @@ import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { minioClient, MINIO_BUCKET } from "@/lib/minio";
 import OpenAI from "openai";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+let openaiClient: OpenAI | null = null;
+function getOpenAIClient(): OpenAI {
+  if (!openaiClient) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error(
+        "OPENAI_API_KEY is not set. Configure it in your environment to enrich documents."
+      );
+    }
+    openaiClient = new OpenAI({ apiKey });
+  }
+  return openaiClient;
+}
 
 const CHUNK_SIZE = 512; // tokens (approx 4 chars per token)
 const CHUNK_OVERLAP = 50;
@@ -171,7 +183,7 @@ export const enrichDocument = inngest.createFunction(
     // Step 3: Generate summary
     const summary = await step.run("generate-summary", async () => {
       const truncated = contentText.slice(0, 12000); // ~3000 tokens for summary input
-      const response = await openai.chat.completions.create({
+      const response = await getOpenAIClient().chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
           {
@@ -194,7 +206,7 @@ export const enrichDocument = inngest.createFunction(
     // Step 4: AI classification
     await step.run("ai-classify", async () => {
       const truncated = contentText.slice(0, 4000);
-      const response = await openai.chat.completions.create({
+      const response = await getOpenAIClient().chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
           {

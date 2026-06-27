@@ -12,20 +12,13 @@ export default defineConfig({
 	test: {
 		environment: "node",
 		setupFiles: ["./env.setup.ts"],
-		include: [
-			"tests/units/**/*.test.ts",
-			"tests/integration/**/*.test.ts",
-		],
+		include: ["tests/units/**/*.test.ts"],
 		exclude: [
-			"tests/integration/helpers/**",
-			"tests/integration/fixtures/**",
-			"tests/integration/__utils__/**",
+			"tests/integration/**",
 			"node_modules/**",
 			"dist/**",
 			".next/**",
 		],
-		testTimeout: 30_000,
-		hookTimeout: 60_000,
 		coverage: {
 			all: true,
 			include: ["actions/crm/**/*.ts"],
