@@ -4,7 +4,7 @@ import { http, type IntegrationSession, signInAsAdmin } from "../helpers/auth";
 
 const EMAIL = process.env.TEST_USER_EMAIL ?? "admin@example.com";
 
-describe("PIA-002 verify valid OTP and obtain session cookie", () => {
+describe("verify valid OTP and obtain session cookie", () => {
   let session: IntegrationSession;
 
   beforeAll(async () => {

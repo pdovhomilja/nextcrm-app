@@ -62,23 +62,85 @@ function generateReport() {
     return String(val);
   }
 
-  let report = '# Informe de Pruebas de Integración\n\n';
+  // Calculate statistics per module
+  const stats = {};
+  Object.keys(modules).forEach(moduleKey => {
+    let total = 0;
+    let passed = 0;
+    let failed = 0;
+    const suites = modules[moduleKey];
+    Object.keys(suites).forEach(suiteName => {
+      suites[suiteName].forEach(test => {
+        total++;
+        if (test.status === 'passed') {
+          passed++;
+        } else {
+          failed++;
+        }
+      });
+    });
+    stats[moduleKey] = { total, passed, failed };
+  });
+
+  const moduleOrder = [
+    'auth',
+    'accounts',
+    'contacts',
+    'leads',
+    'opportunities',
+    'contracts',
+    'activities',
+    'audit-log',
+    'soft-delete'
+  ];
 
   const orderedModuleKeys = Object.keys(modules).sort((a, b) => {
-    if (a === 'auth') return -1;
-    if (b === 'auth') return 1;
-    if (a === 'accounts') return -1;
-    if (b === 'accounts') return 1;
+    const idxA = moduleOrder.indexOf(a);
+    const idxB = moduleOrder.indexOf(b);
+    if (idxA !== -1 && idxB !== -1) {
+      return idxA - idxB;
+    }
+    if (idxA !== -1) return -1;
+    if (idxB !== -1) return 1;
     return a.localeCompare(b);
   });
 
+  let report = '# Informe de Pruebas de Integración\n\n';
+  report += '## Resumen de Ejecución\n\n';
+  report += '| Módulo | Pruebas Totales | Pasadas | Falladas |\n';
+  report += '| :--- | :---: | :---: | :---: |\n';
+
+  let grandTotal = 0;
+  let grandPassed = 0;
+  let grandFailed = 0;
+
   orderedModuleKeys.forEach(moduleKey => {
-    const info = moduleMap[moduleKey] || { title: moduleKey + ' module', code: moduleKey.toUpperCase() };
+    const info = moduleMap[moduleKey] || {
+      title: moduleKey.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') + ' module',
+      code: moduleKey.toUpperCase()
+    };
+    const s = stats[moduleKey] || { total: 0, passed: 0, failed: 0 };
+    report += `| **${info.title}** | ${s.total} | ${s.passed} | ${s.failed} |\n`;
+
+    grandTotal += s.total;
+    grandPassed += s.passed;
+    grandFailed += s.failed;
+  });
+
+  report += `| **Total** | **${grandTotal}** | **${grandPassed}** | **${grandFailed}** |\n\n`;
+  report += '---\n\n';
+
+  orderedModuleKeys.forEach(moduleKey => {
+    const info = moduleMap[moduleKey] || {
+      title: moduleKey.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') + ' module',
+      code: moduleKey.toUpperCase()
+    };
     report += `## ${info.title}: ${info.code}\n\n`;
 
     const suites = modules[moduleKey];
     Object.keys(suites).forEach(suiteName => {
-      report += `### ${suiteName}\n\n`;
+      const cleanSuiteName = suiteName.replace(/^PI[A-Z]+-\d+[a-z]?\s+/, '');
+      report += `### ${capitalize(cleanSuiteName)}\n\n`;
 
       suites[suiteName].forEach(test => {
         const meta = test.meta || {};
