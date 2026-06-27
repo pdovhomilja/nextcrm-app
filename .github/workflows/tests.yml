@@ -17,10 +17,6 @@ on:
     branches: ["dev", "main"]
   workflow_dispatch:
 
-# Aggregate gate. Runs unit + integration in parallel. Both must succeed for
-# the PR to be mergeable. Replaces the implicit "unit tests only" gate that
-# existed before integration coverage was added.
-
 permissions:
   contents: read
   pull-requests: write
@@ -31,17 +27,7 @@ concurrency:
 
 jobs:
   unit:
-    name: Unit
     uses: ./.github/workflows/unit-tests.yml
-    with: {}
-    permissions:
-      contents: read
-      pull-requests: write
 
   integration:
-    name: Integration
     uses: ./.github/workflows/integration-tests.yml
-    with: {}
-    permissions:
-      contents: read
-      pull-requests: write
