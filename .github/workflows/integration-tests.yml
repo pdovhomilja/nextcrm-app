@@ -17,10 +17,6 @@ on:
     branches: ["dev", "main"]
   workflow_dispatch:
 
-# Integration tests run a real Postgres + Better Auth dev server. They share
-# state via fixtures and are intentionally sequential (singleFork). Expect
-# 8–12 min total.
-
 permissions:
   contents: read
   pull-requests: write
@@ -52,6 +48,7 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
+
       minio:
         image: minio/minio:latest
         env:
@@ -61,15 +58,18 @@ jobs:
           - 9000:9000
           - 9001:9001
         options: >-
+          server /data --console-address ":9001"
           --health-cmd "curl -f http://localhost:9000/minio/health/live"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
+
       inngest:
         image: inngest/inngest:latest
         ports:
           - 8288:8288
         options: >-
+          inngest dev -u http://localhost:3000/api/inngest
           --health-cmd "curl -f http://localhost:8288/health"
           --health-interval 5s
           --health-timeout 5s
@@ -98,16 +98,12 @@ jobs:
       - name: Seed test admin
         run: pnpm dotenv -e .env.integration -- pnpm prisma db seed
 
-      # Build the Next app once. Server Actions are compiled to RSC payloads
-      # and exercised over HTTP by the integration suite, so a real build is
-      # required (not `next dev`).
       - name: Build Next app
         run: pnpm dotenv -e .env.integration -- pnpm run build
 
       - name: Start Next.js server
         run: |
           pnpm dotenv -e .env.integration -- pnpm start &
-          # Wait for readiness on the better-auth health endpoint.
           for i in $(seq 1 30); do
             if curl -fsS http://localhost:3000/api/auth/get-session >/dev/null 2>&1; then
               echo "Next.js ready after ${i}s"
