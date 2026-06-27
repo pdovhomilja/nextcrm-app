@@ -28,7 +28,16 @@ describe("PIA-003 reject invalid OTP", () => {
 
   afterAll(() => {});
 
-  it("rejects an OTP that does not match the captured value", async () => {
+  it("rejects an OTP that does not match the captured value", {
+    meta: {
+      id: "PIA-009",
+      endpoint: "POST api/auth/sign-in/email-otp",
+      objective: "Verificar que el sistema rechace el inicio de sesión y no genere una cookie cuando se proporciona un código de verificación que no coincide con el generado",
+      expectedStatus: 400,
+      body: { email: EMAIL, otp: "incorrecto" },
+      notes: "Rechazo de código de verificación incorrecto"
+    }
+  }, async () => {
     const realOtp = await getCapturedOtp(EMAIL);
     expect(realOtp).not.toBeNull();
     const bogus = realOtp === "000000" ? "111111" : "000000";
@@ -51,7 +60,16 @@ describe("PIA-003 reject invalid OTP", () => {
     expect(sessionsAfter, "no session row should be persisted for a failed sign-in").toBe(sessionsBefore);
   });
 
-  it("rejects a non-numeric OTP with 400", async () => {
+  it("rejects a non-numeric OTP with 400", {
+    meta: {
+      id: "PIA-010",
+      endpoint: "POST api/auth/sign-in/email-otp",
+      objective: "Verificar que el sistema rechace la solicitud con código cuatrocientos cuando el código de verificación contiene caracteres no numéricos",
+      expectedStatus: 400,
+      body: { email: EMAIL, otp: "abcdef" },
+      notes: "Validación de formato de código no numérico"
+    }
+  }, async () => {
     const resp = await http().post("api/auth/sign-in/email-otp", {
       json: { email: EMAIL, otp: "abcdef" },
       throwHttpErrors: false,
@@ -59,7 +77,16 @@ describe("PIA-003 reject invalid OTP", () => {
     expect(resp.status).toBeGreaterThanOrEqual(400);
   });
 
-  it("rejects an empty OTP with 400", async () => {
+  it("rejects an empty OTP with 400", {
+    meta: {
+      id: "PIA-011",
+      endpoint: "POST api/auth/sign-in/email-otp",
+      objective: "Verificar que el sistema rechace la solicitud con código cuatrocientos cuando el código de verificación se envía vacío",
+      expectedStatus: 400,
+      body: { email: EMAIL, otp: "" },
+      notes: "Validación de campo de código de verificación vacío"
+    }
+  }, async () => {
     const resp = await http().post("api/auth/sign-in/email-otp", {
       json: { email: EMAIL, otp: "" },
       throwHttpErrors: false,

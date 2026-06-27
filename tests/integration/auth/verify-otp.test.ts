@@ -15,7 +15,16 @@ describe("PIA-002 verify valid OTP and obtain session cookie", () => {
     void session;
   });
 
-  it("get-session returns the user matching the email", async () => {
+  it("get-session returns the user matching the email", {
+    meta: {
+      id: "PIA-006",
+      endpoint: "GET api/auth/get-session",
+      objective: "Verificar que el endpoint de obtención de sesión retorne la información del usuario correspondiente a la cookie de sesión provista",
+      expectedStatus: 200,
+      params: "Encabezado de cookie de sesión activa",
+      notes: "Retorno de sesión válida"
+    }
+  }, async () => {
     const me = await http()
       .get("api/auth/get-session", {
         headers: { cookie: session.cookie },
@@ -25,7 +34,16 @@ describe("PIA-002 verify valid OTP and obtain session cookie", () => {
     expect(me.user?.id).toBe(session.userId);
   });
 
-  it("returns the same user on a second get-session call (session is reusable)", async () => {
+  it("returns the same user on a second get-session call (session is reusable)", {
+    meta: {
+      id: "PIA-007",
+      endpoint: "GET api/auth/get-session",
+      objective: "Validar que la sesión de usuario sea reutilizable en múltiples llamadas consecutivas",
+      expectedStatus: 200,
+      params: "Encabezado de cookie de sesión activa",
+      notes: "Reutilización exitosa de la cookie de sesión"
+    }
+  }, async () => {
     const me = await http()
       .get("api/auth/get-session", {
         headers: { cookie: session.cookie },
@@ -34,7 +52,15 @@ describe("PIA-002 verify valid OTP and obtain session cookie", () => {
     expect(me.user?.id).toBe(session.userId);
   });
 
-  it("persists a session row in the database", async () => {
+  it("persists a session row in the database", {
+    meta: {
+      id: "PIA-008",
+      endpoint: "GET api/auth/get-session",
+      objective: "Confirmar la existencia de un registro activo de sesión en la base de datos para el usuario autenticado",
+      expectedStatus: "Registro de sesión activo",
+      notes: "Verificación a nivel de persistencia de sesiones"
+    }
+  }, async () => {
     const rows = await prismadb.session.findMany({
       where: { userId: session.userId },
       select: { id: true, userId: true, expiresAt: true },
