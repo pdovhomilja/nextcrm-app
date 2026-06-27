@@ -9,6 +9,11 @@ import resendHelper from "@/lib/resend";
 
 const isDemo = process.env.NEXT_PUBLIC_APP_URL === "https://demo.nextcrm.io";
 
+export const isTestOrDev =
+  process.env.NODE_ENV !== "production" ||
+  process.env.IS_TESTING === "true" ||
+  process.env.BETTER_AUTH_SECRET === "dev-secret-do-not-use-in-production";
+
 export const auth = betterAuth({
   database: prismaAdapter(prismadb, { provider: "postgresql" }),
   secret: process.env.BETTER_AUTH_SECRET,
@@ -17,6 +22,9 @@ export const auth = betterAuth({
     database: {
       generateId: "uuid",
     },
+  },
+  rateLimit: {
+    enabled: !isTestOrDev,
   },
 
   session: {
@@ -79,7 +87,7 @@ export const auth = betterAuth({
           });
         } catch (e) {
           // In dev/test, email sending may fail — OTP is captured by testUtils plugin
-          if (process.env.NODE_ENV !== "production") {
+          if (isTestOrDev) {
             console.log(`[Auth] OTP email send failed for ${email}, but captured by testUtils`);
           } else {
             throw e;
