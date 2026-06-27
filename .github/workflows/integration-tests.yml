@@ -96,7 +96,18 @@ jobs:
           exit 1
 
       - name: Run integration tests
-        run: pnpm dotenv -e .env.integration -- pnpm run test:integration
+        run: pnpm dotenv -e .env.integration -- pnpm run test:integration --reporter=json --outputFile=results.json
+
+      - name: Generate integration tests report
+        if: always()
+        run: node scripts/generate-integration-report.js
+
+      - name: Publish integration tests report to summary
+        if: always()
+        run: |
+          if [ -f integration-report.md ]; then
+            cat integration-report.md >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Upload Vitest reports
         if: always()
@@ -104,7 +115,7 @@ jobs:
         with:
           name: integration-vitest-report
           path: |
-            tests/integration/coverage
-            tests/integration/junit.xml
+            results.json
+            integration-report.md
           if-no-files-found: ignore
           retention-days: 7
