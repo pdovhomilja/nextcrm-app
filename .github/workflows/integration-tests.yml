@@ -1,23 +1,7 @@
 name: Integration Tests
 
 on:
-  pull_request:
-    paths:
-      - "actions/**"
-      - "app/**"
-      - "lib/**"
-      - "prisma/**"
-      - "tests/integration/**"
-      - "package.json"
-      - "pnpm-lock.yaml"
-      - "vitest.integration.config.js"
-      - "env.integration.setup.ts"
-      - "proxy.ts"
-
-  push:
-    branches: ["dev", "main", "dev-*"]
-
-  workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read

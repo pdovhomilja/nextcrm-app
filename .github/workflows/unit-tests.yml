@@ -1,17 +1,7 @@
 name: Unit Tests
 
 on:
-  pull_request:
-    paths:
-      - "actions/**"
-      - "lib/**"
-      - "tests/units/**"
-      - "package.json"
-      - "pnpm-lock.yaml"
-      - "vitest.config.js"
-      - "prisma/schema.prisma"
-  push:
-    branches: ["dev", "main", "dev-*"]
+  workflow_call:
 
 jobs:
   test:
