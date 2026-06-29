@@ -1,5 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { deleteAccount } from "@/actions/crm/accounts/delete-account";
 import { deleteContact } from "@/actions/crm/contacts/delete-contact";
+import { restoreContact } from "@/actions/crm/contacts/restore-contact";
 import { getContact } from "@/actions/crm/get-contact";
 import { prismadb } from "@/lib/prisma";
 import { setSessionCookie } from "../__utils__/setup";
@@ -29,8 +31,8 @@ describe("soft-delete contact", () => {
       objective: "Validar que la eliminación lógica registre el momento y el usuario que realiza la baja del contacto",
       expectedStatus: "Fecha y usuario de eliminación registrados",
       params: { id: "ctx.contact.id" },
-      notes: "Eliminación lógica exitosa"
-    }
+      notes: "Eliminación lógica exitosa",
+    },
   }, async () => {
     const row = await prismadb.crm_Contacts.findUnique({
       where: { id: ctx.contact.id },
@@ -45,10 +47,11 @@ describe("soft-delete contact", () => {
     meta: {
       id: "PICO-011",
       endpoint: "Server Action: deleteContact",
-      objective: "Validar que la eliminación lógica escriba un registro de auditoría con la acción de eliminado para el contacto",
+      objective:
+        "Validar que la eliminación lógica escriba un registro de auditoría con la acción de eliminado para el contacto",
       expectedStatus: "Entrada de auditoría creada con éxito",
-      notes: "Auditoría de eliminación lógica"
-    }
+      notes: "Auditoría de eliminación lógica",
+    },
   }, async () => {
     const log = await prismadb.crm_AuditLog.findFirst({
       where: { entityType: "contact", entityId: ctx.contact.id, action: "deleted" },
@@ -66,12 +69,35 @@ describe("soft-delete contact", () => {
     meta: {
       id: "PICO-012",
       endpoint: "Server Action: deleteContact",
-      objective: "Verificar que el contacto eliminado lógicamente no pueda ser recuperado por consultas directas activas",
+      objective:
+        "Verificar que el contacto eliminado lógicamente no pueda ser recuperado por consultas directas activas",
       expectedStatus: "Retorno nulo al buscar contacto eliminado",
-      notes: "Validación de exclusión activa de contacto eliminado"
-    }
+      notes: "Validación de exclusión activa de contacto eliminado",
+    },
   }, async () => {
     const result = await getContact(ctx.contact.id);
     expect(result).toBeNull();
+  });
+
+  it("rejects restoring contact if its associated account is soft-deleted", {
+    meta: {
+      id: "PICO-018",
+      endpoint: "Server Action: restoreContact",
+      objective:
+        "Verificar que el sistema rechace restaurar un contacto si su cuenta asociada está eliminada lógicamente",
+      expectedStatus: "Error de validación: cuenta asociada está borrada",
+      notes: "Error de integridad referencial: restauración con relación rota",
+    },
+  }, async () => {
+    const delAccountResult = await deleteAccount(ctx.account.id);
+    expect(delAccountResult.success).toBe(true);
+
+    await prismadb.users.update({
+      where: { id: ctx.ownerId },
+      data: { role: "admin" },
+    });
+
+    const restoreResult = await restoreContact(ctx.contact.id);
+    expect(restoreResult.error).toBeDefined();
   });
 });

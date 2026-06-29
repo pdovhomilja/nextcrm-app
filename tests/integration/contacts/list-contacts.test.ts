@@ -40,8 +40,8 @@ describe("list contacts by account", () => {
       objective: "Confirmar que la consulta retorne los contactos activos que pertenecen a la cuenta especificada",
       expectedStatus: "Listado de contactos activos de la cuenta",
       params: { accountId: "ctx.account.id" },
-      notes: "Validación de presencia de contactos asociados"
-    }
+      notes: "Validación de presencia de contactos asociados",
+    },
   }, async () => {
     const result = await getContactsByAccountId(ctx.account.id);
     expect(Array.isArray(result)).toBe(true);
@@ -54,10 +54,11 @@ describe("list contacts by account", () => {
     meta: {
       id: "PICO-014",
       endpoint: "Server Action: getContactsByAccountId",
-      objective: "Validar que los contactos de la cuenta que fueron eliminados lógicamente sean omitidos del listado retornado",
+      objective:
+        "Validar que los contactos de la cuenta que fueron eliminados lógicamente sean omitidos del listado retornado",
       expectedStatus: "Contactos eliminados lógicamente ausentes en el listado",
-      notes: "Validación de filtrado de eliminación lógica para contactos"
-    }
+      notes: "Validación de filtrado de eliminación lógica para contactos",
+    },
   }, async () => {
     const result = await getContactsByAccountId(ctx.account.id);
     const found = result.find((c) => c.id === softDeletedId);
