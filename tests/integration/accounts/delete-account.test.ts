@@ -31,8 +31,8 @@ describe("soft-delete account", () => {
       objective: "Validar que la eliminación lógica registre el momento y el usuario que realiza la baja de la cuenta",
       expectedStatus: "Fecha y usuario de eliminación registrados",
       params: { id: "ctx.account.id" },
-      notes: "Eliminación lógica exitosa"
-    }
+      notes: "Eliminación lógica exitosa",
+    },
   }, async () => {
     const row = await prismadb.crm_Accounts.findUnique({
       where: { id: ctx.account.id },
@@ -49,8 +49,8 @@ describe("soft-delete account", () => {
       endpoint: "Server Action: deleteAccount",
       objective: "Validar que la eliminación lógica escriba un registro de auditoría con la acción de eliminado",
       expectedStatus: "Entrada de auditoría creada con éxito",
-      notes: "Auditoría de eliminación lógica"
-    }
+      notes: "Auditoría de eliminación lógica",
+    },
   }, async () => {
     const log = await prismadb.crm_AuditLog.findFirst({
       where: { entityType: "account", entityId: ctx.account.id, action: "deleted" },
@@ -70,10 +70,23 @@ describe("soft-delete account", () => {
       endpoint: "Server Action: deleteAccount",
       objective: "Verificar que la cuenta eliminada lógicamente no pueda ser recuperada por consultas directas activas",
       expectedStatus: "Retorno nulo al buscar cuenta eliminada",
-      notes: "Validación de exclusión activa de cuenta eliminada"
-    }
+      notes: "Validación de exclusión activa de cuenta eliminada",
+    },
   }, async () => {
     const result = await getAccountById(ctx.account.id);
     expect(result).toBeNull();
+  });
+
+  it("rejects deleting an already deleted account", {
+    meta: {
+      id: "PIAC-028",
+      endpoint: "Server Action: deleteAccount",
+      objective: "Verificar que el sistema rechace la eliminación de una cuenta que ya ha sido eliminada",
+      expectedStatus: "Error de conflicto: cuenta ya eliminada o 404",
+      notes: "Error de integridad referencial: cuenta inexistente o eliminada",
+    },
+  }, async () => {
+    const result = await deleteAccount(ctx.account.id);
+    expect(result.error).toBeDefined();
   });
 });

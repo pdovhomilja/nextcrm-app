@@ -23,11 +23,12 @@ describe("watch / unwatch account", () => {
     meta: {
       id: "PIAC-017",
       endpoint: "Server Action: watchAccount",
-      objective: "Validar que la acción de observar cuenta registre correctamente la relación en la tabla de observadores de cuentas",
+      objective:
+        "Validar que la acción de observar cuenta registre correctamente la relación en la tabla de observadores de cuentas",
       expectedStatus: "Registro creado en AccountWatchers",
       body: { account_id: "ctx.account.id" },
-      notes: "Registro exitoso de observación de cuenta"
-    }
+      notes: "Registro exitoso de observación de cuenta",
+    },
   }, async () => {
     const result = await watchAccount(ctx.account.id);
     expect(result.error, `unexpected error: ${result.error}`).toBeUndefined();
@@ -51,11 +52,12 @@ describe("watch / unwatch account", () => {
     meta: {
       id: "PIAC-018",
       endpoint: "Server Action: unwatchAccount",
-      objective: "Validar que la acción de dejar de observar cuenta elimine correctamente el registro de la tabla de observadores de cuentas",
+      objective:
+        "Validar que la acción de dejar de observar cuenta elimine correctamente el registro de la tabla de observadores de cuentas",
       expectedStatus: "Registro eliminado de AccountWatchers",
       body: { account_id: "ctx.account.id" },
-      notes: "Remoción exitosa de observación de cuenta"
-    }
+      notes: "Remoción exitosa de observación de cuenta",
+    },
   }, async () => {
     const result = await unwatchAccount(ctx.account.id);
     expect(result.error, `unexpected error: ${result.error}`).toBeUndefined();
@@ -70,5 +72,22 @@ describe("watch / unwatch account", () => {
       },
     });
     expect(row).toBeNull();
+  });
+
+  it("rejects watching an account already being watched", {
+    meta: {
+      id: "PIAC-030",
+      endpoint: "Server Action: watchAccount",
+      objective:
+        "Verificar que el sistema rechace registrar la observación de una cuenta si ya se encuentra siendo observada por el mismo usuario",
+      expectedStatus: "Error de conflicto: ya se está observando o 409",
+      notes: "Restricción de unicidad: relación duplicada",
+    },
+  }, async () => {
+    const firstResult = await watchAccount(ctx.account.id);
+    expect(firstResult.success).toBe(true);
+
+    const secondResult = await watchAccount(ctx.account.id);
+    expect(secondResult.error).toBeDefined();
   });
 });

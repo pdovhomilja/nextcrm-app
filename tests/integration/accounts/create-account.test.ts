@@ -40,11 +40,19 @@ describe("create account with valid data", () => {
     meta: {
       id: "PIAC-001",
       endpoint: "Server Action: createAccount",
-      objective: "Verificar que la acción de servidor retorne un identificador válido al crear una cuenta con datos correctos",
+      objective:
+        "Verificar que la acción de servidor retorne un identificador válido al crear una cuenta con datos correctos",
       expectedStatus: "Identificador de cuenta generado",
-      body: { name: "PIAC-001 + timestamp", office_phone: "+51 1 555 0100", email: "piac001@example.test", website: "https://piac001.example.test", billing_city: "Lima", billing_country: "Peru" },
-      notes: "Creación exitosa de cuenta"
-    }
+      body: {
+        name: "PIAC-001 + timestamp",
+        office_phone: "+51 1 555 0100",
+        email: "piac001@example.test",
+        website: "https://piac001.example.test",
+        billing_city: "Lima",
+        billing_country: "Peru",
+      },
+      notes: "Creación exitosa de cuenta",
+    },
   }, () => {
     expect(createdId).toBeTruthy();
   });
@@ -53,10 +61,11 @@ describe("create account with valid data", () => {
     meta: {
       id: "PIAC-002",
       endpoint: "Server Action: createAccount",
-      objective: "Validar que el registro de la cuenta creada se almacene correctamente en la base de datos con los valores provistos",
+      objective:
+        "Validar que el registro de la cuenta creada se almacene correctamente en la base de datos con los valores provistos",
       expectedStatus: "Fila persistida en crm_Accounts",
-      notes: "Persistencia correcta en base de datos"
-    }
+      notes: "Persistencia correcta en base de datos",
+    },
   }, async () => {
     const row = await prismadb.crm_Accounts.findUnique({
       where: { id: createdId ?? "" },
@@ -73,10 +82,11 @@ describe("create account with valid data", () => {
     meta: {
       id: "PIAC-003",
       endpoint: "Server Action: createAccount",
-      objective: "Validar que se registre una entrada en el registro de auditoría con la acción de creación correspondiente",
+      objective:
+        "Validar que se registre una entrada en el registro de auditoría con la acción de creación correspondiente",
       expectedStatus: "Entrada de auditoría creada",
-      notes: "Auditoría de creación exitosa"
-    }
+      notes: "Auditoría de creación exitosa",
+    },
   }, async () => {
     const log = await prismadb.crm_AuditLog.findFirst({
       where: { entityType: "account", entityId: createdId ?? "", action: "created" },
@@ -92,11 +102,27 @@ describe("create account with valid data", () => {
       endpoint: "Server Action: createAccount",
       objective: "Verificar el envío del evento de cuenta guardada a través del despachador de eventos Inngest",
       expectedStatus: "Evento despachado correctamente",
-      notes: "Validación de eventos en modo de simulación"
-    }
+      notes: "Validación de eventos en modo de simulación",
+    },
   }, () => {
     const calls = inngestSpy.send.mock.calls.filter((c) => (c[0] as { name?: string })?.name === "crm/account.saved");
     expect(calls.length).toBeGreaterThan(0);
     expect((calls[0]?.[0] as { data?: { record_id?: string } })?.data?.record_id).toBe(createdId);
+  });
+
+  it("rejects creation with duplicate corporate email", {
+    meta: {
+      id: "PIAC-026",
+      endpoint: "Server Action: createAccount",
+      objective: "Verificar que el sistema rechace la creación de una cuenta con un correo corporativo duplicado",
+      expectedStatus: "Error de conflicto: correo duplicado",
+      notes: "Restricción de unicidad: correo duplicado",
+    },
+  }, async () => {
+    const result = await createAccount({
+      name: "Duplicate Email Account",
+      email: "piac001@example.test",
+    });
+    expect(result.error).toBeDefined();
   });
 });

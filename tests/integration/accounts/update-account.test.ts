@@ -33,11 +33,12 @@ describe("update existing account", () => {
     meta: {
       id: "PIAC-008",
       endpoint: "Server Action: updateAccount",
-      objective: "Validar que la acción de servidor persista los nuevos valores modificados de la cuenta en la base de datos",
+      objective:
+        "Validar que la acción de servidor persista los nuevos valores modificados de la cuenta en la base de datos",
       expectedStatus: "Valores actualizados en base de datos",
       body: { id: "ctx.account.id", name: "NEW_NAME", office_phone: "NEW_PHONE", billing_city: "Arequipa" },
-      notes: "Persistencia correcta de cambios"
-    }
+      notes: "Persistencia correcta de cambios",
+    },
   }, async () => {
     const row = await prismadb.crm_Accounts.findUnique({
       where: { id: ctx.account.id },
@@ -53,10 +54,11 @@ describe("update existing account", () => {
     meta: {
       id: "PIAC-009",
       endpoint: "Server Action: updateAccount",
-      objective: "Validar que la actualización de la cuenta genere un registro de auditoría detallando los cambios realizados en cada campo",
+      objective:
+        "Validar que la actualización de la cuenta genere un registro de auditoría detallando los cambios realizados en cada campo",
       expectedStatus: "Registro de auditoría generado con los cambios",
-      notes: "Auditoría de actualización detallada"
-    }
+      notes: "Auditoría de actualización detallada",
+    },
   }, async () => {
     const log = await prismadb.crm_AuditLog.findFirst({
       where: { entityType: "account", entityId: ctx.account.id, action: "updated" },

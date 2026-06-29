@@ -37,11 +37,12 @@ describe("get account by id", () => {
     meta: {
       id: "PIAC-005",
       endpoint: "Server Action: getAccountById",
-      objective: "Verificar que se retorne la información de la cuenta activa al solicitarla por un identificador existente",
+      objective:
+        "Verificar que se retorne la información de la cuenta activa al solicitarla por un identificador existente",
       expectedStatus: "Datos de cuenta recuperados exitosamente",
       params: { id: "ctx.account.id" },
-      notes: "Recuperación exitosa de cuenta activa"
-    }
+      notes: "Recuperación exitosa de cuenta activa",
+    },
   }, async () => {
     const result = await getAccountById(ctx.account.id);
     expect(result).not.toBeNull();
@@ -53,11 +54,12 @@ describe("get account by id", () => {
     meta: {
       id: "PIAC-006",
       endpoint: "Server Action: getAccountById",
-      objective: "Verificar que la acción de servidor retorne nulo al solicitar una cuenta con un identificador inexistente",
+      objective:
+        "Verificar que la acción de servidor retorne nulo al solicitar una cuenta con un identificador inexistente",
       expectedStatus: "Retorno nulo",
       params: { id: "00000000-0000-0000-0000-000000000999" },
-      notes: "Búsqueda de cuenta inexistente"
-    }
+      notes: "Búsqueda de cuenta inexistente",
+    },
   }, async () => {
     const result = await getAccountById("00000000-0000-0000-0000-000000000999");
     expect(result).toBeNull();
@@ -67,11 +69,12 @@ describe("get account by id", () => {
     meta: {
       id: "PIAC-007",
       endpoint: "Server Action: getAccountById",
-      objective: "Verificar que la acción de servidor retorne nulo al solicitar una cuenta que ha sido eliminada lógicamente",
+      objective:
+        "Verificar que la acción de servidor retorne nulo al solicitar una cuenta que ha sido eliminada lógicamente",
       expectedStatus: "Retorno nulo",
       params: { id: "softDeletedId" },
-      notes: "Exclusión de cuentas eliminadas lógicamente"
-    }
+      notes: "Exclusión de cuentas eliminadas lógicamente",
+    },
   }, async () => {
     const result = await getAccountById(softDeletedId);
     expect(result).toBeNull();

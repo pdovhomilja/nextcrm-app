@@ -34,11 +34,12 @@ describe("restore account with admin role", () => {
     meta: {
       id: "PIAC-013",
       endpoint: "Server Action: restoreAccount",
-      objective: "Validar que la restauración de la cuenta por un usuario administrador retorne éxito y limpie los campos de eliminación lógica",
+      objective:
+        "Validar que la restauración de la cuenta por un usuario administrador retorne éxito y limpie los campos de eliminación lógica",
       expectedStatus: "Campos de eliminación lógica reseteados a nulo",
       params: { id: "ctx.account.id" },
-      notes: "Restauración exitosa de cuenta"
-    }
+      notes: "Restauración exitosa de cuenta",
+    },
   }, async () => {
     const result = await restoreAccount(ctx.account.id);
     expect(result.error, `unexpected error: ${result.error}`).toBeUndefined();
@@ -56,10 +57,11 @@ describe("restore account with admin role", () => {
     meta: {
       id: "PIAC-014",
       endpoint: "Server Action: restoreAccount",
-      objective: "Validar que la restauración de la cuenta escriba un registro de auditoría con la acción de restaurado",
+      objective:
+        "Validar que la restauración de la cuenta escriba un registro de auditoría con la acción de restaurado",
       expectedStatus: "Entrada de auditoría de restauración creada con éxito",
-      notes: "Auditoría de restauración de cuenta"
-    }
+      notes: "Auditoría de restauración de cuenta",
+    },
   }, async () => {
     const log = await prismadb.crm_AuditLog.findFirst({
       where: { entityType: "account", entityId: ctx.account.id, action: "restored" },
@@ -76,8 +78,8 @@ describe("restore account with admin role", () => {
       endpoint: "Server Action: restoreAccount",
       objective: "Confirmar que la cuenta restaurada vuelva a estar visible para consultas activas ordinarias",
       expectedStatus: "Cuenta visible para búsquedas activas",
-      notes: "Validación de visibilidad de cuenta activa"
-    }
+      notes: "Validación de visibilidad de cuenta activa",
+    },
   }, async () => {
     const result = await getAccountById(ctx.account.id);
     expect(result).not.toBeNull();
@@ -88,10 +90,11 @@ describe("restore account with admin role", () => {
     meta: {
       id: "PIAC-016",
       endpoint: "Server Action: restoreAccount",
-      objective: "Verificar que el sistema rechace la restauración de la cuenta y mantenga su estado eliminado cuando el usuario no posee el rol de administrador",
+      objective:
+        "Verificar que el sistema rechace la restauración de la cuenta y mantenga su estado eliminado cuando el usuario no posee el rol de administrador",
       expectedStatus: "Error Forbidden y estado eliminado persistente",
-      notes: "Restricción de seguridad por rol de usuario"
-    }
+      notes: "Restricción de seguridad por rol de usuario",
+    },
   }, async () => {
     const before = await prismadb.users.findUnique({
       where: { id: ctx.ownerId },
@@ -117,5 +120,23 @@ describe("restore account with admin role", () => {
       select: { deletedAt: true },
     });
     expect(row?.deletedAt).not.toBeNull();
+  });
+
+  it("rejects restoring an account that is not deleted", {
+    meta: {
+      id: "PIAC-029",
+      endpoint: "Server Action: restoreAccount",
+      objective: "Verificar que el sistema rechace la restauración de una cuenta que no está eliminada",
+      expectedStatus: "Error de validación: cuenta no eliminada o 400",
+      notes: "Violación de regla de negocio: restaurar recurso activo",
+    },
+  }, async () => {
+    await prismadb.crm_Accounts.update({
+      where: { id: ctx.account.id },
+      data: { deletedAt: null, deletedBy: null },
+    });
+
+    const result = await restoreAccount(ctx.account.id);
+    expect(result.error).toBeDefined();
   });
 });
