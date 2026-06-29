@@ -41,10 +41,11 @@ describe("verify update audit log with diff changes", () => {
     meta: {
       id: "PIAL-002",
       endpoint: "Server Action: updateAccount",
-      objective: "Validar que la actualización de una cuenta registre en la auditoría el detalle específico de los valores anteriores y nuevos para cada campo modificado",
+      objective:
+        "Validar que la actualización de una cuenta registre en la auditoría el detalle específico de los valores anteriores y nuevos para cada campo modificado",
       expectedStatus: "Registro de auditoría de actualización con historial de cambios persistido",
-      notes: "Registro automático de diferencias en la actualización"
-    }
+      notes: "Registro automático de diferencias en la actualización",
+    },
   }, async () => {
     expect(accountId).toBeTruthy();
     const log = await prismadb.crm_AuditLog.findFirst({

@@ -34,10 +34,11 @@ describe("verify creation audit log", () => {
     meta: {
       id: "PIAL-001",
       endpoint: "Server Action: createAccount",
-      objective: "Validar que la creación de una cuenta registre correctamente una entrada de auditoría con la acción de creado en la base de datos",
+      objective:
+        "Validar que la creación de una cuenta registre correctamente una entrada de auditoría con la acción de creado en la base de datos",
       expectedStatus: "Registro de auditoría de creación persistido",
-      notes: "Registro automático de auditoría al crear entidad"
-    }
+      notes: "Registro automático de auditoría al crear entidad",
+    },
   }, async () => {
     expect(accountId).toBeTruthy();
     const log = await prismadb.crm_AuditLog.findFirst({
