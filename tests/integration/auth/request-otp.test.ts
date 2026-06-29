@@ -20,10 +20,11 @@ describe("request OTP for registered email", () => {
     meta: {
       id: "PIA-001",
       endpoint: "POST api/auth/email-otp/send-verification-otp",
-      objective: "Verificar que el sistema retorne un código de estado doscientos cuando se envía una solicitud válida con una dirección de correo electrónico registrada y el tipo de operación de inicio de sesión",
+      objective:
+        "Verificar que el sistema retorne un código de estado doscientos cuando se envía una solicitud válida con una dirección de correo electrónico registrada y el tipo de operación de inicio de sesión",
       expectedStatus: 200,
       body: { email: EMAIL, type: "sign-in" },
-      notes: "Solicitud exitosa de envío de código de verificación de un solo uso"
+      notes: "Solicitud exitosa de envío de código de verificación de un solo uso",
     },
   }, async () => {
     const resp = await http().post("api/auth/email-otp/send-verification-otp", {
@@ -40,8 +41,8 @@ describe("request OTP for registered email", () => {
       endpoint: "POST api/auth/email-otp/send-verification-otp",
       objective: "Confirmar la captura del código de verificación a través de la herramienta auxiliar de pruebas",
       expectedStatus: "Código obtenido exitosamente",
-      notes: "Paso intermedio para validar el funcionamiento del flujo de autenticación"
-    }
+      notes: "Paso intermedio para validar el funcionamiento del flujo de autenticación",
+    },
   }, async () => {
     await requestSignInOtp(EMAIL);
     let otp: string | null = null;
@@ -59,8 +60,8 @@ describe("request OTP for registered email", () => {
       endpoint: "POST api/auth/email-otp/send-verification-otp",
       objective: "Validar la persistencia y la fecha de expiración del registro de verificación en la base de datos",
       expectedStatus: "Registro persistido de forma correcta",
-      notes: "Verificación a nivel de persistencia de datos"
-    }
+      notes: "Verificación a nivel de persistencia de datos",
+    },
   }, async () => {
     await requestSignInOtp(EMAIL);
 

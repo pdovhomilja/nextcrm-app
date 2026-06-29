@@ -19,11 +19,12 @@ describe("verify valid OTP and obtain session cookie", () => {
     meta: {
       id: "PIA-006",
       endpoint: "GET api/auth/get-session",
-      objective: "Verificar que el endpoint de obtención de sesión retorne la información del usuario correspondiente a la cookie de sesión provista",
+      objective:
+        "Verificar que el endpoint de obtención de sesión retorne la información del usuario correspondiente a la cookie de sesión provista",
       expectedStatus: 200,
       params: "Encabezado de cookie de sesión activa",
-      notes: "Retorno de sesión válida"
-    }
+      notes: "Retorno de sesión válida",
+    },
   }, async () => {
     const me = await http()
       .get("api/auth/get-session", {
@@ -41,8 +42,8 @@ describe("verify valid OTP and obtain session cookie", () => {
       objective: "Validar que la sesión de usuario sea reutilizable en múltiples llamadas consecutivas",
       expectedStatus: 200,
       params: "Encabezado de cookie de sesión activa",
-      notes: "Reutilización exitosa de la cookie de sesión"
-    }
+      notes: "Reutilización exitosa de la cookie de sesión",
+    },
   }, async () => {
     const me = await http()
       .get("api/auth/get-session", {
@@ -56,10 +57,11 @@ describe("verify valid OTP and obtain session cookie", () => {
     meta: {
       id: "PIA-008",
       endpoint: "GET api/auth/get-session",
-      objective: "Confirmar la existencia de un registro activo de sesión en la base de datos para el usuario autenticado",
+      objective:
+        "Confirmar la existencia de un registro activo de sesión en la base de datos para el usuario autenticado",
       expectedStatus: "Registro de sesión activo",
-      notes: "Verificación a nivel de persistencia de sesiones"
-    }
+      notes: "Verificación a nivel de persistencia de sesiones",
+    },
   }, async () => {
     const rows = await prismadb.session.findMany({
       where: { userId: session.userId },
