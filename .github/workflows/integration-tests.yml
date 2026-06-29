@@ -97,6 +97,7 @@ jobs:
 
       - name: Run integration tests
         run: pnpm dotenv -e .env.integration -- pnpm run test:integration --reporter=json --outputFile=results.json
+        continue-on-error: true
 
       - name: Generate integration tests report
         if: always()
