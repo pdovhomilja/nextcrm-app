@@ -35,8 +35,8 @@ describe("change activity status", () => {
       objective: "Validar que la acción de servidor permita cambiar el estado de la actividad a completado",
       expectedStatus: "Estado completado guardado en la base de datos",
       body: { id: "activityId", status: "completed" },
-      notes: "Cambio de estado a completado"
-    }
+      notes: "Cambio de estado a completado",
+    },
   }, async () => {
     const updateResult = await updateActivity({
       id: activityId,
@@ -58,8 +58,8 @@ describe("change activity status", () => {
       objective: "Validar que la acción de servidor permita cambiar el estado de la actividad a cancelado",
       expectedStatus: "Estado cancelado guardado en la base de datos",
       body: { id: "activityId", status: "cancelled" },
-      notes: "Cambio de estado a cancelado"
-    }
+      notes: "Cambio de estado a cancelado",
+    },
   }, async () => {
     const updateResult = await updateActivity({
       id: activityId,

@@ -64,8 +64,8 @@ describe("get activity by entity", () => {
       objective: "Confirmar que la consulta retorne las actividades activas asociadas a la entidad especificada",
       expectedStatus: "Listado de actividades activas vinculadas",
       params: { entityType: "account", entityId: "ctx.account.id" },
-      notes: "Validación de recuperación de actividades"
-    }
+      notes: "Validación de recuperación de actividades",
+    },
   }, async () => {
     const result = await getActivitiesByEntity("account", ctx.account.id);
     expect(result.data).toBeDefined();
@@ -77,10 +77,11 @@ describe("get activity by entity", () => {
     meta: {
       id: "PIACT-006",
       endpoint: "Server Action: getActivitiesByEntity",
-      objective: "Validar que las actividades asociadas a la entidad que fueron eliminadas lógicamente sean omitidas de los resultados",
+      objective:
+        "Validar que las actividades asociadas a la entidad que fueron eliminadas lógicamente sean omitidas de los resultados",
       expectedStatus: "Actividades eliminadas lógicamente ausentes en el listado",
-      notes: "Validación de filtrado de eliminación lógica para actividades"
-    }
+      notes: "Validación de filtrado de eliminación lógica para actividades",
+    },
   }, async () => {
     const result = await getActivitiesByEntity("account", ctx.account.id);
     const ids = result.data.map((act) => act.id);
@@ -91,11 +92,12 @@ describe("get activity by entity", () => {
     meta: {
       id: "PIACT-007",
       endpoint: "Server Action: getActivitiesByEntity",
-      objective: "Verificar que la consulta retorne una estructura vacía sin cursor al solicitar actividades para un identificador de entidad inexistente",
+      objective:
+        "Verificar que la consulta retorne una estructura vacía sin cursor al solicitar actividades para un identificador de entidad inexistente",
       expectedStatus: "Listado vacío y cursor nulo",
       params: { entityType: "account", entityId: "00000000-0000-0000-0000-000000000999" },
-      notes: "Búsqueda en entidad inexistente"
-    }
+      notes: "Búsqueda en entidad inexistente",
+    },
   }, async () => {
     const result = await getActivitiesByEntity("account", "00000000-0000-0000-0000-000000000999");
     expect(result.data).toEqual([]);

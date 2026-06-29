@@ -40,11 +40,12 @@ describe("update activity details and links", () => {
     meta: {
       id: "PIACT-008",
       endpoint: "Server Action: updateActivity",
-      objective: "Validar que la acción de servidor persista los nuevos valores modificados de la actividad en la base de datos",
+      objective:
+        "Validar que la acción de servidor persista los nuevos valores modificados de la actividad en la base de datos",
       expectedStatus: "Valores actualizados en crm_Activities",
       body: { id: "activityId", title: "PIACT-004 Updated Title", status: "completed" },
-      notes: "Persistencia correcta de cambios"
-    }
+      notes: "Persistencia correcta de cambios",
+    },
   }, async () => {
     const row = await prismadb.crm_Activities.findUnique({
       where: { id: activityId },
@@ -58,10 +59,11 @@ describe("update activity details and links", () => {
     meta: {
       id: "PIACT-009",
       endpoint: "Server Action: updateActivity",
-      objective: "Validar que la actualización de la actividad remueva los enlaces anteriores y asocie los nuevos enlaces provistos",
+      objective:
+        "Validar que la actualización de la actividad remueva los enlaces anteriores y asocie los nuevos enlaces provistos",
       expectedStatus: "Enlaces actualizados en crm_ActivityLinks",
-      notes: "Reemplazo de enlaces de actividad"
-    }
+      notes: "Reemplazo de enlaces de actividad",
+    },
   }, async () => {
     const links = await prismadb.crm_ActivityLinks.findMany({
       where: { activityId },
