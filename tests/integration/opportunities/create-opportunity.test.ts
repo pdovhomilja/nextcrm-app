@@ -41,11 +41,18 @@ describe("create opportunity with valid data", () => {
     meta: {
       id: "PIOP-001",
       endpoint: "Server Action: createOpportunity",
-      objective: "Verificar que la acción de servidor retorne un identificador válido al crear una oportunidad comercial con datos correctos",
+      objective:
+        "Verificar que la acción de servidor retorne un identificador válido al crear una oportunidad comercial con datos correctos",
       expectedStatus: "Identificador de oportunidad generado",
-      body: { name: "PIOP-001 Test Opportunity", account: "ctx.account.id", sales_stage: "ctx.stageId", budget: "15000.00", expected_revenue: "1500.00" },
-      notes: "Creación exitosa de oportunidad"
-    }
+      body: {
+        name: "PIOP-001 Test Opportunity",
+        account: "ctx.account.id",
+        sales_stage: "ctx.stageId",
+        budget: "15000.00",
+        expected_revenue: "1500.00",
+      },
+      notes: "Creación exitosa de oportunidad",
+    },
   }, () => {
     expect(createdId).toBeTruthy();
   });
@@ -54,10 +61,11 @@ describe("create opportunity with valid data", () => {
     meta: {
       id: "PIOP-002",
       endpoint: "Server Action: createOpportunity",
-      objective: "Validar que la oportunidad creada se almacene correctamente en la base de datos con los valores provistos",
+      objective:
+        "Validar que la oportunidad creada se almacene correctamente en la base de datos con los valores provistos",
       expectedStatus: "Oportunidad persistida en crm_Opportunities",
-      notes: "Persistencia correcta de la oportunidad en base de datos"
-    }
+      notes: "Persistencia correcta de la oportunidad en base de datos",
+    },
   }, async () => {
     const row = await prismadb.crm_Opportunities.findUnique({
       where: { id: createdId ?? "" },
@@ -75,10 +83,11 @@ describe("create opportunity with valid data", () => {
     meta: {
       id: "PIOP-003",
       endpoint: "Server Action: createOpportunity",
-      objective: "Validar que se registre una entrada en el registro de auditoría con la acción de creación correspondiente a la oportunidad",
+      objective:
+        "Validar que se registre una entrada en el registro de auditoría con la acción de creación correspondiente a la oportunidad",
       expectedStatus: "Entrada de auditoría creada",
-      notes: "Auditoría de creación de oportunidad"
-    }
+      notes: "Auditoría de creación de oportunidad",
+    },
   }, async () => {
     const log = await prismadb.crm_AuditLog.findFirst({
       where: { entityType: "opportunity", entityId: createdId ?? "", action: "created" },
@@ -94,8 +103,8 @@ describe("create opportunity with valid data", () => {
       endpoint: "Server Action: createOpportunity",
       objective: "Verificar el envío del evento de oportunidad guardada a través del despachador de eventos Inngest",
       expectedStatus: "Evento despachado correctamente",
-      notes: "Validación de eventos en modo de simulación"
-    }
+      notes: "Validación de eventos en modo de simulación",
+    },
   }, () => {
     const calls = inngestSpy.send.mock.calls.filter(
       (c) => (c[0] as { name?: string })?.name === "crm/opportunity.saved",

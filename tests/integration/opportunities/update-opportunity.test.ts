@@ -34,11 +34,12 @@ describe("update existing opportunity", () => {
     meta: {
       id: "PIOP-008",
       endpoint: "Server Action: updateOpportunity",
-      objective: "Validar que la acción de servidor persista los nuevos valores modificados de la oportunidad en la base de datos",
+      objective:
+        "Validar que la acción de servidor persista los nuevos valores modificados de la oportunidad en la base de datos",
       expectedStatus: "Valores actualizados en base de datos",
       body: { id: "ctx.opportunity.id", name: "NEW_NAME", budget: "NEW_BUDGET" },
-      notes: "Persistencia correcta de cambios"
-    }
+      notes: "Persistencia correcta de cambios",
+    },
   }, async () => {
     const row = await prismadb.crm_Opportunities.findUnique({
       where: { id: ctx.opportunity.id },
@@ -53,10 +54,11 @@ describe("update existing opportunity", () => {
     meta: {
       id: "PIOP-009",
       endpoint: "Server Action: updateOpportunity",
-      objective: "Validar que la actualización de la oportunidad genere un registro de auditoría detallando los cambios realizados en cada campo",
+      objective:
+        "Validar que la actualización de la oportunidad genere un registro de auditoría detallando los cambios realizados en cada campo",
       expectedStatus: "Registro de auditoría generado con los cambios",
-      notes: "Auditoría de actualización detallada"
-    }
+      notes: "Auditoría de actualización detallada",
+    },
   }, async () => {
     const log = await prismadb.crm_AuditLog.findFirst({
       where: { entityType: "opportunity", entityId: ctx.opportunity.id, action: "updated" },

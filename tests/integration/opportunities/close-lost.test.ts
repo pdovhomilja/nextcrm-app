@@ -41,11 +41,12 @@ describe("close opportunity as lost", () => {
     meta: {
       id: "PIOP-014",
       endpoint: "Server Action: updateOpportunity",
-      objective: "Validar que la oportunidad comercial pueda cerrarse como perdida estableciendo su etapa correspondiente",
+      objective:
+        "Validar que la oportunidad comercial pueda cerrarse como perdida estableciendo su etapa correspondiente",
       expectedStatus: "Etapa establecida en Closed Lost",
       body: { id: "ctx.opportunity.id", sales_stage: "lostStageId" },
-      notes: "Cierre exitoso como perdida"
-    }
+      notes: "Cierre exitoso como perdida",
+    },
   }, async () => {
     const row = await prismadb.crm_Opportunities.findUnique({
       where: { id: ctx.opportunity.id },
@@ -58,10 +59,11 @@ describe("close opportunity as lost", () => {
     meta: {
       id: "PIOP-015",
       endpoint: "Server Action: updateOpportunity",
-      objective: "Validar que el cierre de la oportunidad como perdida escriba una entrada en la auditoría registrando el cambio de etapa",
+      objective:
+        "Validar que el cierre de la oportunidad como perdida escriba una entrada en la auditoría registrando el cambio de etapa",
       expectedStatus: "Auditoría de etapa Closed Lost registrada con éxito",
-      notes: "Auditoría de oportunidad perdida"
-    }
+      notes: "Auditoría de oportunidad perdida",
+    },
   }, async () => {
     const log = await prismadb.crm_AuditLog.findFirst({
       where: { entityType: "opportunity", entityId: ctx.opportunity.id, action: "updated" },

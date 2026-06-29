@@ -41,11 +41,12 @@ describe("close opportunity as won", () => {
     meta: {
       id: "PIOP-012",
       endpoint: "Server Action: updateOpportunity",
-      objective: "Validar que la oportunidad comercial pueda cerrarse como ganada estableciendo su etapa correspondiente",
+      objective:
+        "Validar que la oportunidad comercial pueda cerrarse como ganada estableciendo su etapa correspondiente",
       expectedStatus: "Etapa establecida en Closed Won",
       body: { id: "ctx.opportunity.id", sales_stage: "wonStageId" },
-      notes: "Cierre exitoso como ganada"
-    }
+      notes: "Cierre exitoso como ganada",
+    },
   }, async () => {
     const row = await prismadb.crm_Opportunities.findUnique({
       where: { id: ctx.opportunity.id },
@@ -58,10 +59,11 @@ describe("close opportunity as won", () => {
     meta: {
       id: "PIOP-013",
       endpoint: "Server Action: updateOpportunity",
-      objective: "Validar que el cierre de la oportunidad como ganada escriba una entrada en la auditoría registrando el cambio de etapa",
+      objective:
+        "Validar que el cierre de la oportunidad como ganada escriba una entrada en la auditoría registrando el cambio de etapa",
       expectedStatus: "Auditoría de etapa Closed Won registrada con éxito",
-      notes: "Auditoría de oportunidad ganada"
-    }
+      notes: "Auditoría de oportunidad ganada",
+    },
   }, async () => {
     const log = await prismadb.crm_AuditLog.findFirst({
       where: { entityType: "opportunity", entityId: ctx.opportunity.id, action: "updated" },

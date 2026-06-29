@@ -40,11 +40,12 @@ describe("get opportunity by id", () => {
     meta: {
       id: "PIOP-005",
       endpoint: "Server Action: getOpportunity",
-      objective: "Verificar que se retorne la información de la oportunidad activa al solicitarla por un identificador existente",
+      objective:
+        "Verificar que se retorne la información de la oportunidad activa al solicitarla por un identificador existente",
       expectedStatus: "Datos de la oportunidad recuperados exitosamente",
       params: { id: "ctx.opportunity.id" },
-      notes: "Recuperación exitosa de oportunidad activa"
-    }
+      notes: "Recuperación exitosa de oportunidad activa",
+    },
   }, async () => {
     const result = await getOpportunity(ctx.opportunity.id);
     expect(result).not.toBeNull();
@@ -56,11 +57,12 @@ describe("get opportunity by id", () => {
     meta: {
       id: "PIOP-006",
       endpoint: "Server Action: getOpportunity",
-      objective: "Verificar que la acción de servidor retorne nulo al solicitar una oportunidad con un identificador inexistente",
+      objective:
+        "Verificar que la acción de servidor retorne nulo al solicitar una oportunidad con un identificador inexistente",
       expectedStatus: "Retorno nulo",
       params: { id: "00000000-0000-0000-0000-000000000999" },
-      notes: "Búsqueda de oportunidad inexistente"
-    }
+      notes: "Búsqueda de oportunidad inexistente",
+    },
   }, async () => {
     const result = await getOpportunity("00000000-0000-0000-0000-000000000999");
     expect(result).toBeNull();
@@ -70,11 +72,12 @@ describe("get opportunity by id", () => {
     meta: {
       id: "PIOP-007",
       endpoint: "Server Action: getOpportunity",
-      objective: "Verificar que la acción de servidor retorne nulo al solicitar una oportunidad que ha sido eliminada lógicamente",
+      objective:
+        "Verificar que la acción de servidor retorne nulo al solicitar una oportunidad que ha sido eliminada lógicamente",
       expectedStatus: "Retorno nulo",
       params: { id: "softDeletedId" },
-      notes: "Exclusión de oportunidades eliminadas lógicamente"
-    }
+      notes: "Exclusión de oportunidades eliminadas lógicamente",
+    },
   }, async () => {
     const result = await getOpportunity(softDeletedId);
     expect(result).toBeNull();
