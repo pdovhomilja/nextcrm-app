@@ -54,11 +54,12 @@ describe("convert target to account and contact", () => {
     meta: {
       id: "PILE-013",
       endpoint: "Server Action: convertTarget",
-      objective: "Verificar que la conversión de un target retorne los identificadores correctos para la cuenta y contacto generados",
+      objective:
+        "Verificar que la conversión de un target retorne los identificadores correctos para la cuenta y contacto generados",
       expectedStatus: "Identificadores de cuenta y contacto retornados",
       params: { id: "targetId" },
-      notes: "Conversión de target exitosa"
-    }
+      notes: "Conversión de target exitosa",
+    },
   }, () => {
     expect(accountId).toBeTruthy();
     expect(contactId).toBeTruthy();
@@ -68,10 +69,11 @@ describe("convert target to account and contact", () => {
     meta: {
       id: "PILE-014",
       endpoint: "Server Action: convertTarget",
-      objective: "Validar que el proceso de conversión de target cree y persista la cuenta con los datos de la compañía correspondientes",
+      objective:
+        "Validar que el proceso de conversión de target cree y persista la cuenta con los datos de la compañía correspondientes",
       expectedStatus: "Cuenta persistida en la base de datos",
-      notes: "Persistencia de cuenta convertida"
-    }
+      notes: "Persistencia de cuenta convertida",
+    },
   }, async () => {
     const acc = await prismadb.crm_Accounts.findUnique({
       where: { id: accountId ?? "" },
@@ -86,10 +88,11 @@ describe("convert target to account and contact", () => {
     meta: {
       id: "PILE-015",
       endpoint: "Server Action: convertTarget",
-      objective: "Validar que el proceso de conversión de target cree y persista el contacto asociado a la cuenta creada",
+      objective:
+        "Validar que el proceso de conversión de target cree y persista el contacto asociado a la cuenta creada",
       expectedStatus: "Contacto persistido y enlazado a la cuenta",
-      notes: "Persistencia y enlace de contacto convertido"
-    }
+      notes: "Persistencia y enlace de contacto convertido",
+    },
   }, async () => {
     const cnt = await prismadb.crm_Contacts.findUnique({
       where: { id: contactId ?? "" },
@@ -106,10 +109,11 @@ describe("convert target to account and contact", () => {
     meta: {
       id: "PILE-016",
       endpoint: "Server Action: convertTarget",
-      objective: "Validar que se registren los identificadores de cuenta y contacto en la fila del target convertido para trazabilidad del estado",
+      objective:
+        "Validar que se registren los identificadores de cuenta y contacto en la fila del target convertido para trazabilidad del estado",
       expectedStatus: "Target actualizado con identificadores de conversión",
-      notes: "Trazabilidad de la conversión de target registrada"
-    }
+      notes: "Trazabilidad de la conversión de target registrada",
+    },
   }, async () => {
     const tgt = await prismadb.crm_Targets.findUnique({
       where: { id: targetId },
@@ -118,5 +122,60 @@ describe("convert target to account and contact", () => {
     expect(tgt?.converted_at).not.toBeNull();
     expect(tgt?.converted_account_id).toBe(accountId);
     expect(tgt?.converted_contact_id).toBe(contactId);
+  });
+
+  it("rejects conversion of an already converted target", {
+    meta: {
+      id: "PILE-021",
+      endpoint: "Server Action: convertTarget",
+      objective: "Verificar que el sistema rechace convertir un target que ya fue marcado como convertido previamente",
+      expectedStatus: "Error de validación: target ya convertido",
+      notes: "Violación de regla de negocio: reconversión de recurso",
+    },
+  }, async () => {
+    const result = await convertTarget(targetId);
+    if ("error" in result) {
+      expect(result.error).toBeDefined();
+    } else {
+      expect.fail("Expected convertTarget to fail, but it succeeded");
+    }
+  });
+
+  it("rejects conversion of a non-existent or deleted target", {
+    meta: {
+      id: "PILE-022",
+      endpoint: "Server Action: convertTarget",
+      objective: "Verificar que el sistema rechace la conversión si el target no existe o está eliminado lógicamente",
+      expectedStatus: "Error: Target no encontrado o 404",
+      notes: "Error de integridad referencial: target inexistente o eliminado",
+    },
+  }, async () => {
+    const resultNonExistent = await convertTarget("00000000-0000-0000-0000-000000000000");
+    if ("error" in resultNonExistent) {
+      expect(resultNonExistent.error).toBeDefined();
+    } else {
+      expect.fail("Expected convertTarget to fail for non-existent target, but it succeeded");
+    }
+
+    const suffix = uniqueSuffix("pile005-del");
+    const deletedTarget = await prismadb.crm_Targets.create({
+      data: {
+        first_name: "Deleted",
+        last_name: `Target-${suffix}`,
+        company: `Company-${suffix}`,
+        deletedAt: new Date(),
+        created_by: ctx.ownerId,
+        updatedBy: ctx.ownerId,
+      },
+    });
+
+    const resultDeleted = await convertTarget(deletedTarget.id);
+    await prismadb.crm_Targets.delete({ where: { id: deletedTarget.id } });
+
+    if ("error" in resultDeleted) {
+      expect(resultDeleted.error).toBeDefined();
+    } else {
+      expect.fail("Expected convertTarget to fail for deleted target, but it succeeded");
+    }
   });
 });
