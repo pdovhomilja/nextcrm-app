@@ -43,11 +43,12 @@ describe("update existing contract", () => {
     meta: {
       id: "PICT-006",
       endpoint: "Server Action: updateContract",
-      objective: "Validar que la acción de servidor persista los nuevos valores modificados del contrato en la base de datos",
+      objective:
+        "Validar que la acción de servidor persista los nuevos valores modificados del contrato en la base de datos",
       expectedStatus: "Valores actualizados en base de datos",
       body: { id: "ctx.contract.id", title: "NEW_TITLE", value: "NEW_VALUE" },
-      notes: "Persistencia correcta de cambios"
-    }
+      notes: "Persistencia correcta de cambios",
+    },
   }, async () => {
     const row = await prismadb.crm_Contracts.findUnique({
       where: { id: ctx.contract.id },
@@ -62,10 +63,11 @@ describe("update existing contract", () => {
     meta: {
       id: "PICT-007",
       endpoint: "Server Action: updateContract",
-      objective: "Validar que la actualización del contrato genere un registro de auditoría detallando los cambios realizados en cada campo",
+      objective:
+        "Validar que la actualización del contrato genere un registro de auditoría detallando los cambios realizados en cada campo",
       expectedStatus: "Registro de auditoría generado con los cambios",
-      notes: "Auditoría de actualización detallada"
-    }
+      notes: "Auditoría de actualización detallada",
+    },
   }, async () => {
     const log = await prismadb.crm_AuditLog.findFirst({
       where: { entityType: "contract", entityId: ctx.contract.id, action: "updated" },

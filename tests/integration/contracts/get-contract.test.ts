@@ -37,11 +37,12 @@ describe("get contract by id", () => {
     meta: {
       id: "PICT-003",
       endpoint: "Server Action: getContract",
-      objective: "Verificar que se retorne la información del contrato activo al solicitarlo por un identificador existente",
+      objective:
+        "Verificar que se retorne la información del contrato activo al solicitarlo por un identificador existente",
       expectedStatus: "Datos del contrato recuperados exitosamente",
       params: { id: "ctx.contract.id" },
-      notes: "Recuperación exitosa de contrato activo"
-    }
+      notes: "Recuperación exitosa de contrato activo",
+    },
   }, async () => {
     const result = await getContract(ctx.contract.id);
     expect(result).not.toBeNull();
@@ -53,11 +54,12 @@ describe("get contract by id", () => {
     meta: {
       id: "PICT-004",
       endpoint: "Server Action: getContract",
-      objective: "Verificar que la acción de servidor retorne nulo al solicitar un contrato con un identificador inexistente",
+      objective:
+        "Verificar que la acción de servidor retorne nulo al solicitar un contrato con un identificador inexistente",
       expectedStatus: "Retorno nulo",
       params: { id: "00000000-0000-0000-0000-000000000999" },
-      notes: "Búsqueda de contrato inexistente"
-    }
+      notes: "Búsqueda de contrato inexistente",
+    },
   }, async () => {
     const result = await getContract("00000000-0000-0000-0000-000000000999");
     expect(result).toBeNull();
@@ -67,11 +69,12 @@ describe("get contract by id", () => {
     meta: {
       id: "PICT-005",
       endpoint: "Server Action: getContract",
-      objective: "Verificar que la acción de servidor retorne nulo al solicitar un contrato que ha sido eliminado lógicamente",
+      objective:
+        "Verificar que la acción de servidor retorne nulo al solicitar un contrato que ha sido eliminado lógicamente",
       expectedStatus: "Retorno nulo",
       params: { id: "softDeletedId" },
-      notes: "Exclusión de contratos eliminados lógicamente"
-    }
+      notes: "Exclusión de contratos eliminados lógicamente",
+    },
   }, async () => {
     const result = await getContract(softDeletedId);
     expect(result).toBeNull();

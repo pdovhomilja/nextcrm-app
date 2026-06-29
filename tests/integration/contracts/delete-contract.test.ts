@@ -30,8 +30,8 @@ describe("delete contract (soft delete)", () => {
       objective: "Validar que la eliminación lógica registre el momento y el usuario que realiza la baja del contrato",
       expectedStatus: "Fecha y usuario de eliminación registrados",
       params: { id: "ctx.contract.id" },
-      notes: "Eliminación lógica exitosa"
-    }
+      notes: "Eliminación lógica exitosa",
+    },
   }, async () => {
     const row = await prismadb.crm_Contracts.findUnique({
       where: { id: ctx.contract.id },
@@ -45,10 +45,11 @@ describe("delete contract (soft delete)", () => {
     meta: {
       id: "PICT-012",
       endpoint: "Server Action: deleteContract",
-      objective: "Verificar que el contrato eliminado lógicamente no pueda ser recuperado por consultas directas activas",
+      objective:
+        "Verificar que el contrato eliminado lógicamente no pueda ser recuperado por consultas directas activas",
       expectedStatus: "Retorno nulo al buscar contrato eliminado",
-      notes: "Validación de exclusión activa de contrato eliminado"
-    }
+      notes: "Validación de exclusión activa de contrato eliminado",
+    },
   }, async () => {
     const contract = await getContract(ctx.contract.id);
     expect(contract).toBeNull();
@@ -58,10 +59,11 @@ describe("delete contract (soft delete)", () => {
     meta: {
       id: "PICT-013",
       endpoint: "Server Action: deleteContract",
-      objective: "Validar que la eliminación lógica escriba un registro de auditoría con la acción de eliminado para el contrato",
+      objective:
+        "Validar que la eliminación lógica escriba un registro de auditoría con la acción de eliminado para el contrato",
       expectedStatus: "Entrada de auditoría creada con éxito",
-      notes: "Auditoría de eliminación lógica"
-    }
+      notes: "Auditoría de eliminación lógica",
+    },
   }, async () => {
     const log = await prismadb.crm_AuditLog.findFirst({
       where: { entityType: "contract", entityId: ctx.contract.id, action: "deleted" },
