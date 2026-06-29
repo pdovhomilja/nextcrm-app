@@ -185,4 +185,44 @@ describe("assignProduct", () => {
 
     expect(res).toEqual({ data: { id: "ap1" } });
   });
+
+  it("rejects assignment with decimal quantity", async () => {
+    const res = await assignProduct({
+      ...baseAssignData,
+      quantity: 1.5,
+    });
+    expect(res.error).toBeDefined();
+  });
+
+  it("rejects assignment with non-numeric custom_price", async () => {
+    const res = await assignProduct({
+      ...baseAssignData,
+      custom_price: "not-a-number",
+    });
+    expect(res.error).toBeDefined();
+  });
+
+  it("rejects assignment with quantity equal to 0 or negative", async () => {
+    const resZero = await assignProduct({
+      ...baseAssignData,
+      quantity: 0,
+    });
+    expect(resZero.error).toBeDefined();
+
+    const resNegative = await assignProduct({
+      ...baseAssignData,
+      quantity: -2,
+    });
+    expect(resNegative.error).toBeDefined();
+  });
+
+  it("rejects assignment when renewal_date is after end_date", async () => {
+    const res = await assignProduct({
+      ...baseAssignData,
+      start_date: new Date("2024-01-01"),
+      end_date: new Date("2024-02-01"),
+      renewal_date: new Date("2024-03-01"),
+    });
+    expect(res.error).toBeDefined();
+  });
 });

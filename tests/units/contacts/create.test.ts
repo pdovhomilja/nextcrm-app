@@ -156,4 +156,16 @@ describe("createContact", () => {
     const res = await createContact({ last_name: "Doe" });
     expect(res).toEqual({ error: "Failed to create contact" });
   });
+
+  it("rejects creation with inconsistent birthday dates (e.g. Feb 31)", async () => {
+    const result = await createContact({
+      first_name: "Inconsistent",
+      last_name: "Date Contact",
+      birthday_day: "31",
+      birthday_month: "02",
+      birthday_year: "2000",
+    });
+    expect(result.error).toBeDefined();
+    expect(prismadb.crm_Contacts.create).not.toHaveBeenCalled();
+  });
 });

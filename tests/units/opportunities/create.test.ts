@@ -155,4 +155,58 @@ describe("createOpportunity", () => {
     const res = await createOpportunity({ name: "Op" });
     expect(res).toEqual({ error: "Failed to create opportunity" });
   });
+
+  it("rejects creation with non-numeric budget (NaN Injection)", async () => {
+    const res = await createOpportunity({
+      name: "NaN Budget Opportunity",
+      account: "a1",
+      sales_stage: "stage-1",
+      budget: "not-a-number",
+    });
+    expect(res.error).toBeDefined();
+    expect(prismadb.crm_Opportunities.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects creation with negative budget", async () => {
+    const res = await createOpportunity({
+      name: "Negative Budget Opportunity",
+      account: "a1",
+      sales_stage: "stage-1",
+      budget: "-5000.00",
+    });
+    expect(res.error).toBeDefined();
+    expect(prismadb.crm_Opportunities.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects creation with negative expected_revenue", async () => {
+    const res = await createOpportunity({
+      name: "Negative Revenue Opportunity",
+      account: "a1",
+      sales_stage: "stage-1",
+      expected_revenue: "-1000.00",
+    });
+    expect(res.error).toBeDefined();
+    expect(prismadb.crm_Opportunities.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects creation with invalid sales_stage value", async () => {
+    const res = await createOpportunity({
+      name: "Invalid Stage Opportunity",
+      account: "a1",
+      sales_stage: "INVALID_STAGE_VALUE",
+    });
+    expect(res.error).toBeDefined();
+    expect(prismadb.crm_Opportunities.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects creation with close_date in the far past", async () => {
+    const res = await createOpportunity({
+      name: "Past Close Date Opportunity",
+      account: "a1",
+      sales_stage: "stage-1",
+      close_date: new Date("2000-01-01"),
+    });
+    expect(res.error).toBeDefined();
+    expect(prismadb.crm_Opportunities.create).not.toHaveBeenCalled();
+  });
 });
