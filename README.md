@@ -252,14 +252,19 @@ Global search across all CRM entities from a single search bar — grouped resul
 
 We use [resend.com](https://resend.com) + [react.email](https://react.email) as primary email sender and email templates.
 
-### Optional: Mailtrap Sandbox for Email Testing
+### Mailtrap (Email API/SMTP)
 
-If you want to test email-sending features (OTP login, invoice emails, notifications) without risk of delivering to real inboxes, you can use [Mailtrap's Sandbox API](https://mailtrap.io) instead of Resend during local development.
+NextCRM supports [Mailtrap](https://mailtrap.io) as an alternative email provider to Resend, for both production sending and safe dev/staging testing through a single API.
 
-1. Sign up at [mailtrap.io](https://mailtrap.io) and create a Sandbox inbox.
-2. Copy your Sandbox API token.
+**Sending emails (production):**
+
+1. Sign up at [mailtrap.io](https://mailtrap.io) and create a Sending domain.
+2. Copy your API token.
 3. Add it to your `.env.local`: MAILTRAP_API_KEY=
-4. All test emails will appear in your Mailtrap inbox instead of attempting real delivery, useful for verifying OTP, password reset, and invoice emails safely in dev/staging.
+
+**Testing emails (dev/staging, optional):**
+
+Use a Mailtrap Sandbox inbox instead of a production domain during development, so test emails (OTP, invoices, notifications) never reach real inboxes.
 
 ## Reports
 
