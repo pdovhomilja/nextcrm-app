@@ -20,3 +20,24 @@ export default async function mailtrapHelper() {
 
   return client;
 }
+
+export async function sendMailtrapEmail({
+  from,
+  to,
+  subject,
+  html,
+}: {
+  from: string;
+  to: string;
+  subject: string;
+  html: string;
+}) {
+  const client = await mailtrapHelper();
+
+  return client.send({
+    from: { email: from },
+    to: [{ email: to }],
+    subject,
+    html,
+  });
+}
