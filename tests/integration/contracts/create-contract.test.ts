@@ -139,7 +139,7 @@ describe("create contract with valid data", () => {
       assigned_to: ctx.ownerId,
       currency: "US",
     });
-    expect(result.error).toBeDefined();
+    expect(result.fieldErrors?.currency).toBeDefined();
   });
 
   it("rejects creation when endDate is before startDate", {

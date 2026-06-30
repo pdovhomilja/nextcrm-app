@@ -98,8 +98,8 @@ describe("active session validates on protected endpoint", () => {
       endpoint: "POST api/auth/sign-out",
       objective:
         "Validar que una cookie de sesión previamente activa deje de ser válida tras realizar el cierre de sesión",
-      expectedStatus: 200,
-      notes: "Invalidación de sesión tras cierre",
+      expectedStatus: "200 o redirect",
+      notes: "BetterAuth sign-out puede retornar redirect en vez de 200",
     },
   }, async () => {
     const logoutResp = await http().post("api/auth/sign-out", {

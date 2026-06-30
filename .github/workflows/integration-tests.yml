@@ -71,20 +71,20 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
-        run: pnpm dotenv -e .env.integration -- pnpm prisma generate
+        run: pnpm dotenv -e .env.test -- pnpm prisma generate
 
       - name: Apply Prisma migrations
-        run: pnpm dotenv -e .env.integration -- pnpm prisma migrate deploy
+        run: pnpm dotenv -e .env.test -- pnpm prisma migrate deploy
 
       - name: Seed test admin
-        run: pnpm dotenv -e .env.integration -- pnpm prisma db seed
+        run: pnpm dotenv -e .env.test -- pnpm prisma db seed
 
       - name: Build Next app
-        run: pnpm dotenv -e .env.integration -- pnpm run build
+        run: pnpm dotenv -e .env.test -- pnpm run build
 
       - name: Start Next.js server
         run: |
-          pnpm dotenv -e .env.integration -- pnpm start &
+          pnpm dotenv -e .env.test -- pnpm start &
           for i in $(seq 1 30); do
             if curl -fsS http://localhost:3000/api/auth/get-session >/dev/null 2>&1; then
               echo "Next.js ready after ${i}s"
@@ -96,7 +96,7 @@ jobs:
           exit 1
 
       - name: Run integration tests
-        run: pnpm dotenv -e .env.integration -- pnpm run test:integration --reporter=json --outputFile=results.json
+        run: pnpm dotenv -e .env.test -- pnpm run test:integration --reporter=json --outputFile=results.json
         continue-on-error: true
 
       - name: Generate integration tests report

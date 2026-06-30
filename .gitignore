@@ -63,6 +63,8 @@ backups/
 # Playwright
 test-results/
 playwright*/
+tests/.auth/
+.playwright-mcp
 tsx-*
 
 #jest

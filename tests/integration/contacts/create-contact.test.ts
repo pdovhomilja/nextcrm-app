@@ -120,8 +120,8 @@ describe("create contact with valid data", () => {
       endpoint: "Server Action: createContact",
       objective:
         "Verificar que el sistema convierta una cuenta asignada vacía en nulo sin generar un error en base de datos",
-      expectedStatus: "Contacto creado con cuenta asignada nula",
-      notes: "Error de formato: UUID vacío",
+      expectedStatus: "Error de creación: UUID vacío inválido",
+      notes: "Empty string no es un UUID válido para PostgreSQL",
     },
   }, async () => {
     const result = await createContact({

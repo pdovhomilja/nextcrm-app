@@ -127,7 +127,7 @@ describe("restore account with admin role", () => {
       id: "PIAC-029",
       endpoint: "Server Action: restoreAccount",
       objective: "Verificar que el sistema rechace la restauración de una cuenta que no está eliminada",
-      expectedStatus: "Error de validación: cuenta no eliminada o 400",
+      expectedStatus: "Error de validación: cuenta no eliminada",
       notes: "Violación de regla de negocio: restaurar recurso activo",
     },
   }, async () => {
