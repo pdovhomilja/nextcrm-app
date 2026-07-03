@@ -1,6 +1,5 @@
 import { test } from "@playwright/test";
 
-
 test.describe("Opportunities - CRUD", () => {
   test.skip("PEOP-001: crear oportunidad", async () => {});
   test.skip("PEOP-002: editar oportunidad", async () => {});
