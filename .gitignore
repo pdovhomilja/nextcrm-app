@@ -63,7 +63,7 @@ backups/
 # Playwright
 test-results/
 playwright*/
-tests/.auth/
+tests/**/.auth/
 .playwright-mcp
 tsx-*
 

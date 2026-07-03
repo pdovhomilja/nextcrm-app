@@ -92,7 +92,7 @@ describe("create activity linked to a single entity", () => {
       title: "Ghost Entity Act",
       date: new Date(),
       status: "completed",
-      links: [{ entityType: "account", entityId: "00000000-0000-0000-0000-000000000000" }],
+      links: [{ entityType: "account", entityId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890" }],
     });
     expect(resultNonExistent.error).toBeDefined();
 

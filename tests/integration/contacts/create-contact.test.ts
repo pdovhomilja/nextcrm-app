@@ -149,7 +149,7 @@ describe("create contact with valid data", () => {
     const result = await createContact({
       first_name: "GhostAccount",
       last_name: "Contact",
-      assigned_account: "00000000-0000-0000-0000-000000000000",
+      assigned_account: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     });
     expect(result.error).toBeDefined();
   });

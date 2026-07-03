@@ -150,7 +150,7 @@ describe("convert target to account and contact", () => {
       notes: "Error de integridad referencial: target inexistente o eliminado",
     },
   }, async () => {
-    const resultNonExistent = await convertTarget("00000000-0000-0000-0000-000000000000");
+    const resultNonExistent = await convertTarget("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
     if ("error" in resultNonExistent) {
       expect(resultNonExistent.error).toBeDefined();
     } else {

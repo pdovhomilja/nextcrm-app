@@ -138,6 +138,38 @@ async function main() {
   });
   console.log(`Test user seeded: ${testUserEmail}`);
 
+  const managerEmail = "manager@example.com";
+  await prisma.users.upsert({
+    where: { email: managerEmail },
+    update: {
+      userStatus: "ACTIVE",
+      role: "manager",
+    },
+    create: {
+      email: managerEmail,
+      name: "Manager User",
+      userStatus: "ACTIVE",
+      role: "manager",
+    },
+  });
+  console.log(`Manager user seeded: ${managerEmail}`);
+
+  const regularUserEmail = "user@example.com";
+  await prisma.users.upsert({
+    where: { email: regularUserEmail },
+    update: {
+      userStatus: "ACTIVE",
+      role: "user",
+    },
+    create: {
+      email: regularUserEmail,
+      name: "Regular User",
+      userStatus: "ACTIVE",
+      role: "user",
+    },
+  });
+  console.log(`Regular user seeded: ${regularUserEmail}`);
+
   // Currencies and Exchange Rates
   await seedCurrencies(prisma);
 
