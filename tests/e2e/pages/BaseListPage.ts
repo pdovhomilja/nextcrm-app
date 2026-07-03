@@ -17,7 +17,7 @@ export abstract class BaseListPage {
   }
 
   static async create(page: Page): Promise<BaseListPage> {
-    const instance = new (this as any)(page);
+    const instance = new (BaseListPage as any)(page);
     await instance.validateRoute();
     await instance.table.waitFor({ state: "visible", timeout: 10_000 });
     return instance;

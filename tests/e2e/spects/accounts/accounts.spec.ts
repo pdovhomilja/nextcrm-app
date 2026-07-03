@@ -166,5 +166,4 @@ test.describe("Accounts - Borrado Lógico", () => {
     await list.search(data.name);
     await list.expectNotVisible(data.name);
   });
-
 });

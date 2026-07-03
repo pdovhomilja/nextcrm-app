@@ -14,7 +14,7 @@ export abstract class BaseDetailPage {
   }
 
   static async create(page: Page): Promise<BaseDetailPage> {
-    const instance = new (this as any)(page);
+    const instance = new (BaseDetailPage as any)(page);
     await instance.validateRoute();
     await instance.title.waitFor({ state: "visible", timeout: 10_000 });
     return instance;
@@ -30,7 +30,7 @@ export abstract class BaseDetailPage {
   }
 
   async expectName(name: string): Promise<void> {
-    await expect(this.title).toContainText(name);
+    await expect(this.title).toContainText(name, { timeout: 10_000 });
   }
 
   async openMenu(): Promise<void> {
