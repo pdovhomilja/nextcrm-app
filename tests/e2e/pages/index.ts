@@ -1,11 +1,15 @@
 export * from "./accounts";
+export * from "./activities";
+export * from "./admin";
 export { BaseDetailPage } from "./BaseDetailPage";
 export { BaseFormPage } from "./BaseFormPage";
 export { BaseListPage } from "./BaseListPage";
+export * from "./common";
 export * from "./contacts";
 export * from "./contracts";
 export * from "./leads";
 export * from "./opportunities";
 export * from "./products";
-export * from "./targets";
 export * from "./target-lists";
+export * from "./targets";
+export * from "./tasks";
