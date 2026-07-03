@@ -15,6 +15,7 @@ test.describe("Contacts - CRUD", () => {
     });
 
     const list = await ContactListPage.create(page);
+    await list.search(contactData.last_name);
     await list.expectVisible(contactData.last_name);
 
     await list.clickRow(contactData.last_name);

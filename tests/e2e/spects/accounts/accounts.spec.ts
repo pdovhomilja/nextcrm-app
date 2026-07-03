@@ -31,6 +31,7 @@ test.describe("Accounts - CRUD", () => {
   test("PEA-002: editar cuenta existente y verificar cambio", async ({ page }) => {
     const data = await createAccount(page);
     const list = await AccountListPage.create(page);
+    await list.search(data.name);
 
     await list.expectVisible(data.name);
     await list.clickRow(data.name);
