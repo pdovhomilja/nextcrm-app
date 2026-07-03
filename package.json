@@ -13,16 +13,18 @@
     "lint": "biome check --write",
     "migrate:mongo-to-postgres": "pnpm exec tsx scripts/migrate-mongo-to-postgres.ts",
     "validate:migration": "pnpm exec tsx scripts/validate-migration.ts",
+    "test:db:reset": "pnpm dotenv -e .env.test -- pnpm prisma migrate reset --force && pnpm dotenv -e .env.test -- pnpm prisma db seed",
     "test": "vitest --config vitest.config.js",
     "test:unit": "vitest --config vitest.unit.config.js run",
     "test:unit:watch": "vitest --config vitest.unit.config.js",
     "test:integration": "vitest --config vitest.integration.config.js run",
     "test:integration:watch": "vitest --config vitest.integration.config.js",
     "test:all": "pnpm run test:unit && pnpm run test:integration",
-    "test:e2e": "playwright test",
+    "test:e2e": "rm -rf test-results && playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
-    "test:e2e:debug": "playwright test --debug"
+    "test:e2e:debug": "playwright test --debug",
+    "test:server": "dotenv -e .env.test -- pnpm prisma migrate deploy && dotenv -e .env.test -- pnpm prisma db seed && dotenv -e .env.test -- pnpm build && dotenv -e .env.test -- pnpm start"
   },
   "prisma": {
     "seed": "ts-node ./prisma/seeds/seed.ts"

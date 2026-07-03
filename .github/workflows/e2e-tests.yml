@@ -1,4 +1,4 @@
-name: Integration Tests
+name: E2E Tests
 
 on:
   workflow_call:
@@ -8,17 +8,19 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: integration-${{ github.ref }}
+  group: e2e-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  test:
-    name: Run Integration Tests
+  e2e:
+    name: Run E2E Tests
     runs-on: ubuntu-latest
 
     env:
       NODE_ENV: test
       INTEGRATION_USE_HTTP_AUTH: "true"
+      INTEGRATION_FIXTURES: "true"
+      IS_TESTING: "true"
 
     services:
       postgres:
@@ -54,7 +56,7 @@ jobs:
         image: inngest/inngest:latest
         ports:
           - 8288:8288
-        command: inngest dev -u http://localhost:3000/api/inngest
+        command: inngest dev -u http://localhost:3001/api/inngest
 
     steps:
       - uses: actions/checkout@v4
@@ -70,23 +72,26 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
+
       - name: Generate Prisma client
         run: pnpm dotenv -e .env.test -- pnpm prisma generate
 
       - name: Apply Prisma migrations
         run: pnpm dotenv -e .env.test -- pnpm prisma migrate deploy
 
-      - name: Seed test admin
+      - name: Seed test data
         run: pnpm dotenv -e .env.test -- pnpm prisma db seed
 
-      - name: Build Next app
+      - name: Build Next.js app
         run: pnpm dotenv -e .env.test -- pnpm run build
 
       - name: Start Next.js server
         run: |
-          pnpm dotenv -e .env.test -- pnpm start &
+          pnpm dotenv -e .env.test -- pnpm start -- -p 3001 &
           for i in $(seq 1 30); do
-            if curl -fsS http://localhost:3000/api/auth/get-session >/dev/null 2>&1; then
+            if curl -fsS http://localhost:3001/api/auth/get-session >/dev/null 2>&1; then
               echo "Next.js ready after ${i}s"
               exit 0
             fi
@@ -95,28 +100,20 @@ jobs:
           echo "Next.js failed to start in 30s"
           exit 1
 
-      - name: Run integration tests
-        run: pnpm dotenv -e .env.test -- pnpm run test:integration --reporter=json --outputFile=results.json
+      - name: Run E2E tests
+        run: pnpm test:e2e
         continue-on-error: true
 
-      - name: Generate integration tests report
-        if: always()
-        run: node scripts/generate-integration-report.js
-
-      - name: Publish integration tests report to summary
-        if: always()
-        run: |
-          if [ -f integration-report.md ]; then
-            cat integration-report.md >> $GITHUB_STEP_SUMMARY
-          fi
-
-      - name: Upload Vitest reports
+      - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: integration-vitest-report
-          path: |
-            results.json
-            integration-report.md
-          if-no-files-found: ignore
-          retention-days: 7
+          name: playwright-report
+          path: playwright-report/
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results/
