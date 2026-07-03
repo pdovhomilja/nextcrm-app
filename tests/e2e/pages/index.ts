@@ -8,3 +8,4 @@ export * from "./leads";
 export * from "./opportunities";
 export * from "./products";
 export * from "./targets";
+export * from "./target-lists";
