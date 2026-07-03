@@ -89,7 +89,7 @@ jobs:
 
       - name: Start Next.js server
         run: |
-          pnpm dotenv -e .env.test -- pnpm start -- -p 3001 &
+          pnpm dotenv -e .env.test -- pnpm start &
           for i in $(seq 1 30); do
             if curl -fsS http://localhost:3001/api/auth/get-session >/dev/null 2>&1; then
               echo "Next.js ready after ${i}s"
