@@ -4,7 +4,7 @@ on:
   workflow_call:
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
 
 concurrency:
@@ -89,7 +89,7 @@ jobs:
 
       - name: Start Next.js server
         run: |
-          pnpm dotenv -e .env.test -- pnpm start &
+          pnpm dotenv -e .env.test -- node .next/standalone/server.js &
           for i in $(seq 1 30); do
             if curl -fsS http://localhost:3001/api/auth/get-session >/dev/null 2>&1; then
               echo "Next.js ready after ${i}s"
@@ -104,16 +104,13 @@ jobs:
         run: pnpm test:e2e
         continue-on-error: true
 
-      - name: Upload Playwright report
+      - name: Deploy Playwright report to GitHub Pages
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          name: playwright-report
-          path: playwright-report/
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: test-results/
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: playwright-report
+          destination_dir: reports/${{ github.run_id }}
+          keep_files: true
+          user_name: "github-actions[bot]"
+          user_email: "github-actions[bot]@users.noreply.github.com"
