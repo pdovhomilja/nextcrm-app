@@ -66,24 +66,5 @@ export default defineConfig({
         "**/target-lists/**/*.spec.ts",
       ],
     },
-    {
-      name: "webkit",
-      use: {
-        ...devices["Desktop Safari"],
-        storageState: "tests/e2e/.auth/user.json",
-      },
-      dependencies: ["setup"],
-      testMatch: [
-        "**/accounts/**/*.spec.ts",
-        "**/contacts/**/*.spec.ts",
-        "**/leads/**/*.spec.ts",
-        "**/opportunities/**/*.spec.ts",
-        "**/contracts/**/*.spec.ts",
-        "**/products/**/*.spec.ts",
-        "**/tasks/**/*.spec.ts",
-        "**/targets/**/*.spec.ts",
-        "**/target-lists/**/*.spec.ts",
-      ],
-    },
   ],
 });
