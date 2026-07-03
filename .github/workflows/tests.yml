@@ -35,4 +35,4 @@ jobs:
     uses: ./.github/workflows/integration-tests.yml
 
   e2e:
-    uses: .//.github/workflows/e2e-tests.yml
+    uses: ./.github/workflows/e2e-tests.yml
