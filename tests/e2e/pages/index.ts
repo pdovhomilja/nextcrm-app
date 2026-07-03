@@ -5,3 +5,4 @@ export { BaseListPage } from "./BaseListPage";
 export * from "./contacts";
 export * from "./leads";
 export * from "./opportunities";
+export * from "./contracts";
