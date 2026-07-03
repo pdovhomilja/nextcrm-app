@@ -12,7 +12,7 @@ export class Modal {
     this.overlay = page.locator("[role='dialog'], .modal-overlay, [data-state='open']").first();
     this.dialog = page.locator("[role='dialog'], .modal-content, .sheet-content").first();
     this.confirmButton = this.dialog.locator(
-      "button:has-text('Save'), button:has-text('Confirm'), button:has-text('Delete')",
+      "button:has-text('Save'), button:has-text('Confirm'), button:has-text('Delete'), button:has-text('Continue')",
     );
     this.cancelButton = this.dialog.locator("button:has-text('Cancel'), button:has-text('Close')");
   }
