@@ -8,6 +8,7 @@ import { InputType, ReturnType } from "./types";
 import { createSafeAction } from "@/lib/create-safe-action";
 import { writeAuditLog } from "@/lib/audit-log";
 import { getSnapshotRate, getDefaultCurrency } from "@/lib/currency";
+import { revalidatePath } from "next/cache";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
   const session = await getSession();
@@ -80,6 +81,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
       changes: null,
       userId: user.id,
     });
+    revalidatePath("/[locale]/crm/contracts", "page");
   } catch (error) {
     console.log(error);
     return {
