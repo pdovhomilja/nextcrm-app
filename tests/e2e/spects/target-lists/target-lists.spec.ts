@@ -1,34 +1,20 @@
 import { test } from "@playwright/test";
-import { TargetListFactory } from "../../data/factories";
+import { createTargetList } from "../../flows/target-lists";
 import { unique } from "../../helpers/random";
-import { TargetListFormPage, TargetListListPage } from "../../pages/target-lists";
+import { TargetListListPage } from "../../pages/target-lists";
 
 test.describe("Target Lists - CRUD", () => {
-  test("PETL-001: crear lista de targets", async ({ page }) => {
-    const data = TargetListFactory.build({ name: unique("TargetList E2E") });
+  test("PE-TL-001: crear lista de targets", async ({ page }) => {
+    const data = await createTargetList(page, { name: unique("TargetList E2E") });
 
-    await TargetListListPage.from(page).open();
     const list = await TargetListListPage.create(page);
-    await list.clickNew();
-
-    const form = await TargetListFormPage.create(page);
-    await form.fill({ name: data.name });
-    await form.save();
-
     await list.expectVisible(data.name);
   });
 
-  test("PETL-002: eliminar lista", async ({ page }) => {
-    const data = TargetListFactory.build({ name: unique("TargetList Delete E2E") });
+  test("PE-TL-003: eliminar lista de targets y verificar que desaparece", async ({ page }) => {
+    const data = await createTargetList(page, { name: unique("TargetList Del E2E") });
 
-    await TargetListListPage.from(page).open();
     const list = await TargetListListPage.create(page);
-    await list.clickNew();
-
-    const form = await TargetListFormPage.create(page);
-    await form.fill({ name: data.name });
-    await form.save();
-
     await list.expectVisible(data.name);
 
     await list.clickRowMenu(data.name);

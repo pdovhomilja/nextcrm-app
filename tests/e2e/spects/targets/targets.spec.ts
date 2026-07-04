@@ -1,11 +1,10 @@
 import { test } from "@playwright/test";
-import { Modal } from "../../components/Modal";
 import { createTarget } from "../../flows/targets";
 import { unique } from "../../helpers/random";
 import { TargetFormPage, TargetListPage } from "../../pages/targets";
 
 test.describe("Targets - CRUD", () => {
-  test("PETG-001: crear target", async ({ page }) => {
+  test("PE-TG-001: crear target", async ({ page }) => {
     const data = await createTarget(page, {
       last_name: unique("Target E2E"),
       company: unique("TargetCorp E2E"),
@@ -15,7 +14,7 @@ test.describe("Targets - CRUD", () => {
     await list.expectVisible(data.last_name);
   });
 
-  test("PETG-002: editar target", async ({ page }) => {
+  test("PE-TG-002: editar target", async ({ page }) => {
     const data = await createTarget(page, {
       last_name: unique("Target Edit E2E"),
       company: unique("TargetCorp Edit"),
@@ -36,7 +35,7 @@ test.describe("Targets - CRUD", () => {
     await list.expectVisible(editedName);
   });
 
-  test("PETG-003: eliminar target", async ({ page }) => {
+  test("PE-TG-003: eliminar target y verificar que desaparece de la lista", async ({ page }) => {
     const data = await createTarget(page, {
       last_name: unique("Target Delete E2E"),
       company: unique("TargetCorp Delete"),
@@ -44,19 +43,19 @@ test.describe("Targets - CRUD", () => {
 
     const list = await TargetListPage.create(page);
     await list.expectVisible(data.last_name);
-    await list.searchInput.fill(data.last_name);
+    await list.search(data.last_name);
 
     await list.clickRowMenu(data.last_name);
     await list.clickDelete();
-
-    const modal = new Modal(page);
-    await modal.confirm();
+    await list.confirmDelete();
 
     await list.open();
     await list.expectNotVisible(data.last_name);
   });
+});
 
-  test("PETG-004: rechazar target sin last_name ni company", async ({ page }) => {
+test.describe("Targets - Validaciones", () => {
+  test("PE-TG-004: rechazar target sin last_name ni company", async ({ page }) => {
     await TargetListPage.from(page).open();
     const list = await TargetListPage.create(page);
     await list.clickNew();
@@ -64,7 +63,6 @@ test.describe("Targets - CRUD", () => {
     const form = await TargetFormPage.create(page);
     await form.fill({ last_name: "", company: "" });
     await form.saveExpectError();
-
     await form.expectError("last name");
   });
 });
