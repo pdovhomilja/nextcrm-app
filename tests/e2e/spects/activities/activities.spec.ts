@@ -1,34 +1,43 @@
-import { test, expect } from "@playwright/test";
+import { test } from "@playwright/test";
 import { createAccount } from "../../flows/accounts";
-import { AccountDetailPage, AccountListPage } from "../../pages/accounts";
+import { createActivity } from "../../flows/activities";
 import { unique } from "../../helpers/random";
+import { AccountListPage } from "../../pages/accounts";
+import { ActivityFeedPage, ActivityFormPage } from "../../pages/activities";
 
-test.describe("Activities - Validaciones", () => {
-  test("PEAC-001: rechazar title vacío en actividad", async ({ page }) => {
-    const account = await createAccount(page, { name: unique("Cuenta Activity E2E") });
+test.describe("Activities - CRUD", () => {
+  test("PE-AC-001: crear actividad y verificar en feed", async ({ page }) => {
+    const account = await createAccount(page, { name: unique("CuentaActivity") });
+    const data = await createActivity(page, account.name, {
+      title: unique("Actividad E2E"),
+      type: "call",
+      status: "Completed",
+    });
 
     await AccountListPage.from(page).open();
     const list = await AccountListPage.create(page);
     await list.clickRow(account.name);
 
-    const detail = await AccountDetailPage.create(page);
+    const feed = new ActivityFeedPage(page);
+    await feed.expectActivityVisible(data.title);
+  });
+});
 
-    const logButton = page.getByRole("button", { name: "Log activity" });
-    await expect(logButton).toBeVisible({ timeout: 10_000 });
-    await logButton.click();
+test.describe("Activities - Validaciones", () => {
+  test("PE-AC-002: rechazar title vacío en actividad", async ({ page }) => {
+    const account = await createAccount(page, { name: unique("Cuenta Activity Valid") });
 
-    const dialog = page.getByRole("dialog");
-    await dialog.waitFor({ state: "visible", timeout: 10_000 });
+    await AccountListPage.from(page).open();
+    const list = await AccountListPage.create(page);
+    await list.clickRow(account.name);
 
-    const titleInput = dialog.getByRole("textbox", { name: /title/i });
-    await titleInput.fill(" ");
+    const feed = new ActivityFeedPage(page);
+    await feed.clickLogActivity();
 
-    const dateInput = dialog.locator("input[type='datetime-local']");
-    await dateInput.fill("2026-07-03T15:00");
+    const form = await ActivityFormPage.create(page);
+    await form.fill({ title: " ", date: "2026-07-03T15:00" });
+    await form.save();
 
-    const submitBtn = dialog.getByRole("button", { name: /log activity/i });
-    await submitBtn.click();
-
-    await expect(page.getByText("Title is required")).toBeVisible({ timeout: 5_000 });
+    await feed.expectValidationError("Title is required");
   });
 });
