@@ -39,7 +39,7 @@ yarn-error.log*
 .env
 .env.test.coolify
 
-tests-adelantado
+# tests-adelantado
 
 # vercel
 .vercel

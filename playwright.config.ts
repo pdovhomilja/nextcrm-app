@@ -29,12 +29,17 @@ export default defineConfig({
       testMatch: /auth\.setup\.ts/,
     },
     {
+      name: "setup-roles",
+      testMatch: /auth-roles\.setup\.ts/,
+      dependencies: ["setup"],
+    },
+    {
       name: "chromium",
       use: {
         ...devices["Desktop Chrome"],
         storageState: "tests/e2e/.auth/user.json",
       },
-      dependencies: ["setup"],
+      dependencies: ["setup", "setup-roles"],
       testMatch: [
         "**/accounts/**/*.spec.ts",
         "**/contacts/**/*.spec.ts",
@@ -45,6 +50,11 @@ export default defineConfig({
         "**/tasks/**/*.spec.ts",
         "**/targets/**/*.spec.ts",
         "**/target-lists/**/*.spec.ts",
+        "**/activities/**/*.spec.ts",
+        "**/audit/**/*.spec.ts",
+        "**/full-cycle/**/*.spec.ts",
+        "**/roles/**/*.spec.ts",
+        "**/account-products/**/*.spec.ts",
       ],
     },
     {
