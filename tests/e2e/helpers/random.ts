@@ -2,7 +2,7 @@ let counter = 0;
 
 export function unique(prefix: string): string {
   counter++;
-  return `${prefix}-${Date.now()}-${counter}`;
+  return `${prefix}-${String(Date.now()).slice(6)}-${counter}`;
 }
 
 export function randomEmail(domain = "e2e-test.com"): string {

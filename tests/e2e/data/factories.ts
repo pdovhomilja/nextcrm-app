@@ -1,6 +1,5 @@
 import { futureDate, randomCurrency, randomEmail, randomInt, unique } from "../helpers/random";
 
-// ─── Base Factory Pattern ───────────────────────────────────────────────────
 
 interface Factory<T> {
   build(overrides?: Partial<T>): T;
@@ -14,7 +13,6 @@ function createFactory<T>(defaults: () => T): Factory<T> {
   };
 }
 
-// ─── Account ────────────────────────────────────────────────────────────────
 
 export interface AccountData {
   name: string;
@@ -40,7 +38,6 @@ export const AccountFactory = createFactory<AccountData>(() => ({
   billing_country: "Argentina",
 }));
 
-// ─── Contact ────────────────────────────────────────────────────────────────
 
 export interface ContactData {
   last_name: string;
@@ -70,7 +67,6 @@ export const ContactFactory = createFactory<ContactData>(() => ({
   assigned_account: "Empresa Demo SAC",
 }));
 
-// ─── Lead ───────────────────────────────────────────────────────────────────
 
 export interface LeadData {
   last_name: string;
@@ -92,7 +88,6 @@ export const LeadFactory = createFactory<LeadData>(() => ({
   description: "Lead creado por factory E2E",
 }));
 
-// ─── Opportunity ────────────────────────────────────────────────────────────
 
 export interface OpportunityData {
   name: string;
@@ -112,7 +107,6 @@ export const OpportunityFactory = createFactory<OpportunityData>(() => ({
   next_step: "Demo técnica",
 }));
 
-// ─── Contract ───────────────────────────────────────────────────────────────
 
 export interface ContractData {
   title: string;
@@ -128,7 +122,6 @@ export const ContractFactory = createFactory<ContractData>(() => ({
   description: "Contrato creado por factory E2E",
 }));
 
-// ─── Product ────────────────────────────────────────────────────────────────
 
 export interface ProductData {
   name: string;
@@ -146,7 +139,6 @@ export const ProductFactory = createFactory<ProductData>(() => ({
   type: "PRODUCT",
 }));
 
-// ─── Activity ───────────────────────────────────────────────────────────────
 
 export interface ActivityData {
   type: "call" | "meeting" | "email" | "note";
@@ -172,7 +164,6 @@ export const ActivityFactory = createFactory<ActivityData>(() => ({
   email_subject: "Asunto del email",
 }));
 
-// ─── Task ───────────────────────────────────────────────────────────────────
 
 export interface TaskData {
   title: string;
@@ -186,7 +177,6 @@ export const TaskFactory = createFactory<TaskData>(() => ({
   priority: "high",
 }));
 
-// ─── Target ─────────────────────────────────────────────────────────────────
 
 export interface TargetData {
   last_name: string;
@@ -200,7 +190,6 @@ export const TargetFactory = createFactory<TargetData>(() => ({
   email: randomEmail(),
 }));
 
-// ─── Target List ────────────────────────────────────────────────────────────
 
 export interface TargetListData {
   name: string;
