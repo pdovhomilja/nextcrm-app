@@ -156,7 +156,7 @@ export const ActivityFactory = createFactory<ActivityData>(() => ({
   type: "call",
   title: unique("Activity"),
   description: "Actividad creada por factory E2E",
-  date: new Date().toISOString().split("T")[0],
+  date: new Date().toISOString().slice(0, 16),
   time: "14:30",
   duration: "30",
   status: "Completed",
@@ -169,12 +169,14 @@ export interface TaskData {
   title: string;
   content: string;
   priority: string;
+  assignedTo: string;
 }
 
 export const TaskFactory = createFactory<TaskData>(() => ({
   title: unique("Task"),
   content: "Contenido de la tarea E2E",
   priority: "high",
+  assignedTo: "Test User",
 }));
 
 

@@ -4,25 +4,32 @@ export class ActivityFormPage {
   readonly page: Page;
   readonly typeSelect: Locator;
   readonly titleInput: Locator;
-  readonly descriptionInput: Locator;
   readonly dateInput: Locator;
-  readonly timeInput: Locator;
-  readonly durationInput: Locator;
   readonly statusSelect: Locator;
-  readonly outcomeInput: Locator;
+  readonly descriptionInput: Locator;
   readonly submitButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
-    this.typeSelect = page.getByRole("combobox", { name: /type/i });
-    this.titleInput = page.getByRole("textbox", { name: /title/i });
-    this.descriptionInput = page.getByRole("textbox", { name: /description/i });
-    this.dateInput = page.getByRole("textbox", { name: /date/i });
-    this.timeInput = page.getByRole("textbox", { name: /time/i });
-    this.durationInput = page.getByRole("textbox", { name: /duration/i });
-    this.statusSelect = page.getByRole("combobox", { name: /status/i });
-    this.outcomeInput = page.getByRole("textbox", { name: /outcome/i });
-    this.submitButton = page.getByRole("button", { name: /save|create|log/i });
+    this.typeSelect = page.locator("#activity-type");
+    this.titleInput = page.locator("#activity-title");
+    this.dateInput = page.locator("#activity-date");
+    this.statusSelect = page.locator("#activity-status");
+    this.descriptionInput = page.locator("#activity-description");
+    this.submitButton = page.getByRole("button", { name: /log activity|save changes/i });
+  }
+
+  static async create(page: Page): Promise<ActivityFormPage> {
+    const instance = new ActivityFormPage(page);
+    await instance.validateFormVisible();
+    return instance;
+  }
+
+  async validateFormVisible(): Promise<void> {
+    await this.page
+      .locator("[data-state='open'][role='dialog'], [data-state='open'][data-slot='sheet']")
+      .first()
+      .waitFor({ state: "visible", timeout: 10_000 });
   }
 
   async fill(data: {
@@ -30,19 +37,19 @@ export class ActivityFormPage {
     title?: string;
     description?: string;
     date?: string;
-    time?: string;
-    duration?: string;
     status?: string;
-    outcome?: string;
   }): Promise<void> {
-    if (data.type) await this.typeSelect.selectOption(data.type);
+    if (data.type) {
+      await this.typeSelect.click();
+      await this.page.getByRole("option", { name: new RegExp(data.type, "i") }).first().click();
+    }
     if (data.title) await this.titleInput.fill(data.title);
-    if (data.description) await this.descriptionInput.fill(data.description);
     if (data.date) await this.dateInput.fill(data.date);
-    if (data.time) await this.timeInput.fill(data.time);
-    if (data.duration) await this.durationInput.fill(data.duration);
-    if (data.status) await this.statusSelect.selectOption(data.status);
-    if (data.outcome) await this.outcomeInput.fill(data.outcome);
+    if (data.status) {
+      await this.statusSelect.click();
+      await this.page.getByRole("option", { name: new RegExp(data.status, "i") }).first().click();
+    }
+    if (data.description) await this.descriptionInput.fill(data.description);
   }
 
   async save(): Promise<void> {
@@ -51,5 +58,12 @@ export class ActivityFormPage {
 
   async expectError(message: string): Promise<void> {
     await expect(this.page.locator(`text=${message}`).first()).toBeVisible({ timeout: 5_000 });
+  }
+
+  async expectFormClosed(): Promise<void> {
+    await this.page
+      .locator("[data-state='open'][role='dialog'], [data-state='open'][data-slot='sheet']")
+      .first()
+      .waitFor({ state: "hidden", timeout: 10_000 });
   }
 }
