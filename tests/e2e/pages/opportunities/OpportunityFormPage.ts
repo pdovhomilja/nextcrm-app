@@ -16,11 +16,11 @@ export class OpportunityFormPage extends BaseFormPage {
 
   private constructor(page: Page) {
     super(page);
-    this.nameInput = page.getByRole("textbox", { name: "Name" });
-    this.budgetInput = page.getByRole("textbox", { name: "Budget" });
+    this.nameInput = page.getByRole("textbox", { name: /opportunity name/i });
+    this.budgetInput = page.getByRole("spinbutton", { name: /budget/i });
     this.currencyTrigger = page.getByRole("combobox", { name: /currency/i });
     this.closeDateTrigger = page.getByRole("button", { name: /close date/i });
-    this.descriptionInput = page.getByRole("textbox", { name: "Description" });
+    this.descriptionInput = page.getByRole("textbox", { name: /description/i });
     this.nextStepInput = page.getByRole("textbox", { name: /next step/i });
     this.submitButton = page.getByRole("button", { name: /create|update/i });
   }

@@ -14,7 +14,7 @@ export function randomInt(min: number, max: number): number {
 }
 
 export function randomCurrency(): string {
-  const currencies = ["USD", "EUR", "ARS", "GBP", "CLP"];
+  const currencies = ["USD", "EUR", "CZK"];
   return currencies[randomInt(0, currencies.length - 1)];
 }
 
