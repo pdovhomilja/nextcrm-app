@@ -47,8 +47,11 @@ export class TaskFormPage extends BaseFormPage {
   async selectAssignedUser(name: string): Promise<void> {
     const trigger = this.page.getByRole("combobox").filter({ hasText: "Select assigned user" });
     await trigger.click();
-    const option = this.page.getByRole("option", { name }).first();
-    await option.waitFor({ state: "visible", timeout: 10_000 });
+    const searchInput = this.page.locator("[cmdk-input]");
+    await searchInput.waitFor({ state: "visible", timeout: 5_000 });
+    await searchInput.fill(name);
+    const option = this.page.locator("[cmdk-item]").filter({ hasText: name }).first();
+    await option.waitFor({ state: "visible", timeout: 5_000 });
     await option.click();
   }
 
