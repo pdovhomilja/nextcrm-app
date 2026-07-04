@@ -58,8 +58,17 @@ export class AuditLogPage {
     await expect(row.first()).not.toBeVisible({ timeout: 5_000 });
   }
 
-  async clickRestore(entityName: string): Promise<void> {
-    const row = this.table.locator("tr").filter({ hasText: entityName }).filter({ hasText: "deleted" }).first();
+  async expectAccountCreated(): Promise<void> {
+    const row = this.table
+      .locator("tr, [role='row']")
+      .filter({ hasText: "Account" })
+      .filter({ hasText: "created" })
+      .first();
+    await expect(row).toBeVisible({ timeout: 10_000 });
+  }
+
+  async clickRestoreFirst(): Promise<void> {
+    const row = this.table.locator("tr").filter({ hasText: "deleted" }).first();
     await row.getByRole("button", { name: "Restore" }).click();
   }
 

@@ -22,6 +22,10 @@ export class AccountDetailPage extends BaseDetailPage {
     await this.page.getByRole("menuitem", { name: "Update" }).click();
   }
 
+  async clickDelete(): Promise<void> {
+    await this.page.getByRole("menuitem", { name: "Delete" }).click();
+  }
+
   async clickNewTask(): Promise<void> {
     const tasksSection = this.page.locator("text=Tasks").locator("..");
     await tasksSection.getByRole("button", { name: "+" }).click();
