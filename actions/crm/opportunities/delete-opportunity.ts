@@ -22,7 +22,7 @@ export const deleteOpportunity = async (opportunityId: string) => {
       changes: null,
       userId: session.user.id,
     });
-    revalidatePath("/[locale]/(routes)/crm/opportunities", "page");
+    revalidatePath("/[locale]/crm/opportunities", "page");
     return { success: true };
   } catch (error) {
     console.log("[DELETE_OPPORTUNITY]", error);

@@ -82,7 +82,7 @@ export const updateOpportunity = async (data: {
       userId: session.user.id,
     });
     void inngest.send({ name: "crm/opportunity.saved", data: { record_id: opportunity.id } });
-    revalidatePath("/[locale]/(routes)/crm/opportunities", "page");
+    revalidatePath("/[locale]/crm/opportunities", "page");
     return { data: serialize(opportunity) };
   } catch (error) {
     console.log("[UPDATE_OPPORTUNITY]", error);
