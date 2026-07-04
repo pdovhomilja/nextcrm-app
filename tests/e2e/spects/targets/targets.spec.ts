@@ -7,8 +7,8 @@ import { TargetFormPage, TargetListPage } from "../../pages/targets";
 test.describe("Targets - CRUD", () => {
   test("PETG-001: crear target", async ({ page }) => {
     const data = await createTarget(page, {
-      last_name: unique("Tgt"),
-      company: unique("TgtCorp"),
+      last_name: unique("Target E2E"),
+      company: unique("TargetCorp E2E"),
     });
 
     const list = await TargetListPage.create(page);
@@ -17,8 +17,8 @@ test.describe("Targets - CRUD", () => {
 
   test("PETG-002: editar target", async ({ page }) => {
     const data = await createTarget(page, {
-      last_name: unique("TgtEd"),
-      company: unique("TgtCorp Ed"),
+      last_name: unique("Target Edit E2E"),
+      company: unique("TargetCorp Edit"),
     });
 
     const list = await TargetListPage.create(page);
@@ -28,7 +28,7 @@ test.describe("Targets - CRUD", () => {
     await list.clickMenuItem("Update");
 
     const form = await TargetFormPage.create(page);
-    const editedName = unique("TgtMod");
+    const editedName = unique("Target Editado");
     await form.fill({ last_name: editedName });
     await form.save();
 
@@ -38,8 +38,8 @@ test.describe("Targets - CRUD", () => {
 
   test("PETG-003: eliminar target", async ({ page }) => {
     const data = await createTarget(page, {
-      last_name: unique("TgtDel"),
-      company: unique("TgtCorp Del"),
+      last_name: unique("Target Delete E2E"),
+      company: unique("TargetCorp Delete"),
     });
 
     const list = await TargetListPage.create(page);

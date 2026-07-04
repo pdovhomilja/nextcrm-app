@@ -6,8 +6,8 @@ import { ProductFormPage, ProductListPage } from "../../pages/products";
 test.describe("Products - CRUD", () => {
   test("PEPR-001: crear producto", async ({ page }) => {
     const data = await createProduct(page, {
-      name: unique("Soft Lic"),
-      sku: unique("SKU"),
+      name: unique("Software License E2E"),
+      sku: unique("E2E-PROD"),
       unit_price: "299.99",
       currency: "USD",
       type: "PRODUCT",
@@ -16,6 +16,8 @@ test.describe("Products - CRUD", () => {
     const list = await ProductListPage.create(page);
     await list.expectVisible(data.name);
   });
+
+
 });
 
 test.describe("Products - Validaciones", () => {
