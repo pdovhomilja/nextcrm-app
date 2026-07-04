@@ -1,4 +1,5 @@
 import { expect, type Page } from "@playwright/test";
+import { safeGoto } from "../../helpers/wait";
 
 export class SalesReportPage {
   static readonly urlPattern = /\/reports\/sales/;
@@ -14,7 +15,7 @@ export class SalesReportPage {
   }
 
   async open(): Promise<void> {
-    await this.page.goto("/en/reports/sales");
+    await safeGoto(this.page, "/en/reports/sales");
     await this.page.waitForLoadState("domcontentloaded");
   }
 

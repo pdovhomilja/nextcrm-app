@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import { safeGoto } from "../../helpers/wait";
 
 export class AuditLogPage {
   static readonly urlPattern = /\/admin\/audit-log/;
@@ -37,14 +38,14 @@ export class AuditLogPage {
   }
 
   async open(): Promise<void> {
-    await this.page.goto("/en/admin/audit-log");
+    await safeGoto(this.page, "/en/admin/audit-log");
     await this.validateRoute();
     await this.table.waitFor({ state: "visible", timeout: 10_000 });
   }
 
   async openFiltered(entityType: string, action: string): Promise<void> {
     const params = new URLSearchParams({ entityType, action });
-    await this.page.goto(`/en/admin/audit-log?${params.toString()}`);
+    await safeGoto(this.page, `/en/admin/audit-log?${params.toString()}`);
     await this.table.waitFor({ state: "visible", timeout: 10_000 });
   }
 

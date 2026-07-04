@@ -1,5 +1,17 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
+export async function safeGoto(page: Page, url: string, retries = 2): Promise<void> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      await page.goto(url, { waitUntil: "domcontentloaded" });
+      return;
+    } catch (error) {
+      if (attempt === retries) throw error;
+      await page.waitForTimeout(500);
+    }
+  }
+}
+
 export async function waitForToast(page: Page, text?: string): Promise<Locator> {
   const toast = page.locator("[data-sonner-toast], [role='status'], .toast");
   await toast.first().waitFor({ state: "visible", timeout: 10_000 });

@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import { safeGoto } from "../../helpers/wait";
 
 export class LoginPage {
   readonly page: Page;
@@ -16,7 +17,7 @@ export class LoginPage {
   }
 
   async open(): Promise<void> {
-    await this.page.goto("/en/sign-in");
+    await safeGoto(this.page, "/en/sign-in");
     await this.emailInput.waitFor({ state: "visible", timeout: 10_000 });
   }
 

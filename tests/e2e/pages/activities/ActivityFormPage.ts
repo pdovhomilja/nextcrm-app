@@ -41,13 +41,19 @@ export class ActivityFormPage {
   }): Promise<void> {
     if (data.type) {
       await this.typeSelect.click();
-      await this.page.getByRole("option", { name: new RegExp(data.type, "i") }).first().click();
+      await this.page
+        .getByRole("option", { name: new RegExp(data.type, "i") })
+        .first()
+        .click();
     }
     if (data.title) await this.titleInput.fill(data.title);
     if (data.date) await this.dateInput.fill(data.date);
     if (data.status) {
       await this.statusSelect.click();
-      await this.page.getByRole("option", { name: new RegExp(data.status, "i") }).first().click();
+      await this.page
+        .getByRole("option", { name: new RegExp(data.status, "i") })
+        .first()
+        .click();
     }
     if (data.description) await this.descriptionInput.fill(data.description);
   }

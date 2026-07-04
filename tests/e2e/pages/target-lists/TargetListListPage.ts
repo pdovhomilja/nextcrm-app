@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { safeGoto } from "../../helpers/wait";
 import { BaseListPage } from "../BaseListPage";
 
 export class TargetListListPage extends BaseListPage {
@@ -19,7 +20,7 @@ export class TargetListListPage extends BaseListPage {
   }
 
   async open(): Promise<void> {
-    await this.page.goto("/en/campaigns/target-lists");
+    await safeGoto(this.page, "/en/campaigns/target-lists");
     await this.page
       .getByRole("table")
       .or(this.page.getByText(/No .* found/))

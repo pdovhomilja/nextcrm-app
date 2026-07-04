@@ -4,7 +4,11 @@ export class ActivityFeedPage {
   readonly page: Page;
   readonly logButton: Locator;
 
-  constructor(page: Page) {
+  static create(page: Page): ActivityFeedPage {
+    return new ActivityFeedPage(page);
+  }
+
+  private constructor(page: Page) {
     this.page = page;
     this.logButton = page.getByRole("button", { name: "Log activity" });
   }

@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { safeGoto } from "../../helpers/wait";
 import { BaseListPage } from "../BaseListPage";
 
 export class ContactListPage extends BaseListPage {
@@ -19,7 +20,7 @@ export class ContactListPage extends BaseListPage {
   }
 
   async open(): Promise<void> {
-    await this.page.goto("/en/crm/contacts");
+    await safeGoto(this.page, "/en/crm/contacts");
     await this.page.waitForURL(ContactListPage.urlPattern, { timeout: 10_000 });
     await this.table.waitFor({ state: "visible", timeout: 10_000 });
   }

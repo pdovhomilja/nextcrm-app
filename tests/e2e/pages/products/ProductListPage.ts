@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { safeGoto } from "../../helpers/wait";
 import { BaseListPage } from "../BaseListPage";
 
 export class ProductListPage extends BaseListPage {
@@ -23,7 +24,7 @@ export class ProductListPage extends BaseListPage {
   }
 
   async open(): Promise<void> {
-    await this.page.goto("/en/crm/products");
+    await safeGoto(this.page, "/en/crm/products");
     await this.page
       .getByRole("table")
       .or(this.page.getByText(/No products found/))
