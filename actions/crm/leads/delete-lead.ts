@@ -22,7 +22,7 @@ export const deleteLead = async (leadId: string) => {
       changes: null,
       userId: session.user.id,
     });
-    revalidatePath("/[locale]/(routes)/crm/leads", "page");
+    revalidatePath("/[locale]/crm/leads", "page");
     return { success: true };
   } catch (error) {
     console.log("[DELETE_LEAD]", error);

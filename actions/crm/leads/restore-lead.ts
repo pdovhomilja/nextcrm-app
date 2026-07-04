@@ -22,8 +22,8 @@ export const restoreLead = async (leadId: string) => {
       changes: null,
       userId: session.user.id,
     });
-    revalidatePath("/[locale]/(routes)/crm/leads", "page");
-    revalidatePath("/[locale]/(routes)/admin/audit-log", "page");
+    revalidatePath("/[locale]/crm/leads", "page");
+    revalidatePath("/[locale]/admin/audit-log", "page");
     return { success: true };
   } catch (error) {
     console.log("[RESTORE_LEAD]", error);

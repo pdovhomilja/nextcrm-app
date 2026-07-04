@@ -94,6 +94,12 @@ export const createColumns = (
         </div>
       </Link>
     ),
+    filterFn: (row, id, value) => {
+      const firstName = (row.getValue("firstName") as string ?? "").toLowerCase();
+      const lastName = (row.original.lastName as string ?? "").toLowerCase();
+      const search = (value as string).toLowerCase();
+      return firstName.includes(search) || lastName.includes(search);
+    },
     enableSorting: false,
     enableHiding: true,
   },

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ type NewTaskFormProps = {
 export function NewLeadForm({ accounts, leadSources, leadStatuses, leadTypes, onFinish }: NewTaskFormProps) {
   const t = useTranslations("CrmLeadForm");
   const c = useTranslations("Common");
+  const router = useRouter();
 
   const formSchema = z.object({
     first_name: z.string().optional(),
@@ -89,6 +91,7 @@ export function NewLeadForm({ accounts, leadSources, leadStatuses, leadTypes, on
     } else {
       toast.success(t("createSuccess"));
       form.reset();
+      router.refresh();
       onFinish?.();
     }
   };
