@@ -18,7 +18,7 @@ test.describe("Activities - CRUD", () => {
     const list = await AccountListPage.create(page);
     await list.clickRow(account.name);
 
-    const feed = new ActivityFeedPage(page);
+    const feed = ActivityFeedPage.create(page);
     await feed.expectActivityVisible(data.title);
   });
 });
@@ -31,7 +31,7 @@ test.describe("Activities - Validaciones", () => {
     const list = await AccountListPage.create(page);
     await list.clickRow(account.name);
 
-    const feed = new ActivityFeedPage(page);
+    const feed = ActivityFeedPage.create(page);
     await feed.clickLogActivity();
 
     const form = await ActivityFormPage.create(page);
