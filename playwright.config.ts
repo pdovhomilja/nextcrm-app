@@ -54,7 +54,6 @@ export default defineConfig({
         "**/audit/**/*.spec.ts",
         "**/full-cycle/**/*.spec.ts",
         "**/roles/**/*.spec.ts",
-        "**/account-products/**/*.spec.ts",
       ],
     },
     {
@@ -63,7 +62,7 @@ export default defineConfig({
         ...devices["Desktop Firefox"],
         storageState: "tests/e2e/.auth/user.json",
       },
-      dependencies: ["setup"],
+      dependencies: ["setup", "setup-roles"],
       testMatch: [
         "**/accounts/**/*.spec.ts",
         "**/contacts/**/*.spec.ts",
@@ -74,6 +73,10 @@ export default defineConfig({
         "**/tasks/**/*.spec.ts",
         "**/targets/**/*.spec.ts",
         "**/target-lists/**/*.spec.ts",
+        "**/activities/**/*.spec.ts",
+        "**/audit/**/*.spec.ts",
+        "**/full-cycle/**/*.spec.ts",
+        "**/roles/**/*.spec.ts",
       ],
     },
   ],
