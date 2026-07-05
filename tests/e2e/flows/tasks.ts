@@ -3,11 +3,7 @@ import { type TaskData, TaskFactory } from "../data/factories";
 import { AccountDetailPage, AccountListPage } from "../pages/accounts";
 import { TaskFormPage } from "../pages/tasks";
 
-export async function createTask(
-  page: Page,
-  accountName: string,
-  overrides?: Partial<TaskData>,
-): Promise<TaskData> {
+export async function createTask(page: Page, accountName: string, overrides?: Partial<TaskData>): Promise<TaskData> {
   const data = TaskFactory.build(overrides);
 
   await AccountListPage.from(page).open();

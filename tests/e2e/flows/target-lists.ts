@@ -2,10 +2,7 @@ import type { Page } from "@playwright/test";
 import { type TargetListData, TargetListFactory } from "../data/factories";
 import { TargetListFormPage, TargetListListPage } from "../pages/target-lists";
 
-export async function createTargetList(
-  page: Page,
-  overrides?: Partial<TargetListData>,
-): Promise<TargetListData> {
+export async function createTargetList(page: Page, overrides?: Partial<TargetListData>): Promise<TargetListData> {
   const data = TargetListFactory.build(overrides);
 
   await TargetListListPage.from(page).open();

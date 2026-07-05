@@ -1,6 +1,5 @@
 import { futureDate, randomCurrency, randomEmail, randomInt, unique } from "../helpers/random";
 
-
 interface Factory<T> {
   build(overrides?: Partial<T>): T;
 }
@@ -12,7 +11,6 @@ function createFactory<T>(defaults: () => T): Factory<T> {
     },
   };
 }
-
 
 export interface AccountData {
   name: string;
@@ -37,7 +35,6 @@ export const AccountFactory = createFactory<AccountData>(() => ({
   billing_city: "Buenos Aires",
   billing_country: "Argentina",
 }));
-
 
 export interface ContactData {
   last_name: string;
@@ -67,7 +64,6 @@ export const ContactFactory = createFactory<ContactData>(() => ({
   assigned_account: "Empresa Demo SAC",
 }));
 
-
 export interface LeadData {
   last_name: string;
   first_name: string;
@@ -88,7 +84,6 @@ export const LeadFactory = createFactory<LeadData>(() => ({
   description: "Lead creado por factory E2E",
 }));
 
-
 export interface OpportunityData {
   name: string;
   budget: string;
@@ -107,7 +102,6 @@ export const OpportunityFactory = createFactory<OpportunityData>(() => ({
   next_step: "Demo técnica",
 }));
 
-
 export interface ContractData {
   title: string;
   value: string;
@@ -121,7 +115,6 @@ export const ContractFactory = createFactory<ContractData>(() => ({
   currency: randomCurrency(),
   description: "Contrato creado por factory E2E",
 }));
-
 
 export interface ProductData {
   name: string;
@@ -138,7 +131,6 @@ export const ProductFactory = createFactory<ProductData>(() => ({
   currency: randomCurrency(),
   type: "PRODUCT",
 }));
-
 
 export interface ActivityData {
   type: "call" | "meeting" | "email" | "note";
@@ -164,7 +156,6 @@ export const ActivityFactory = createFactory<ActivityData>(() => ({
   email_subject: "Asunto del email",
 }));
 
-
 export interface TaskData {
   title: string;
   content: string;
@@ -179,7 +170,6 @@ export const TaskFactory = createFactory<TaskData>(() => ({
   assignedTo: "Test User",
 }));
 
-
 export interface TargetData {
   last_name: string;
   company: string;
@@ -191,7 +181,6 @@ export const TargetFactory = createFactory<TargetData>(() => ({
   company: unique("TargetCorp"),
   email: randomEmail(),
 }));
-
 
 export interface TargetListData {
   name: string;

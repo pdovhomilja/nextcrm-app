@@ -1,7 +1,7 @@
+import fs from "node:fs";
+import path from "node:path";
 import { chromium, test as setup } from "@playwright/test";
 import { getOtp, injectCookie, requestOtp, verifyOtp } from "./helpers/api";
-import fs from "fs";
-import path from "path";
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:3001";
 

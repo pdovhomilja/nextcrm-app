@@ -1,8 +1,8 @@
 import { test } from "@playwright/test";
 import { createAccount } from "../../flows/accounts";
+import { unique } from "../../helpers/random";
 import { AccountListPage } from "../../pages/accounts";
 import { AuditLogPage } from "../../pages/admin";
-import { unique } from "../../helpers/random";
 
 test.describe("Borrado Lógico - Transversal", () => {
   test("PE-AU-001: ciclo completo crear - eliminar cuenta", async ({ page }) => {
