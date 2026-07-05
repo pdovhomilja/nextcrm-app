@@ -11,7 +11,7 @@ test.describe("Target Lists - CRUD", () => {
     await list.expectVisible(data.name);
   });
 
-  test("PE-TL-003: eliminar lista de targets y verificar que desaparece", async ({ page }) => {
+  test("PE-TL-002: eliminar lista de targets y verificar que desaparece", async ({ page }) => {
     const data = await createTargetList(page, { name: unique("TargetList Del E2E") });
 
     const list = await TargetListListPage.create(page);
