@@ -31,11 +31,12 @@ describe("update existing lead", () => {
     meta: {
       id: "PILE-008",
       endpoint: "Server Action: updateLead",
-      objective: "Validar que la acción de servidor persista los nuevos valores modificados del lead en la base de datos",
+      objective:
+        "Validar que la acción de servidor persista los nuevos valores modificados del lead en la base de datos",
       expectedStatus: "Valores actualizados en base de datos",
       body: { id: "ctx.lead.id", firstName: "NEW_FIRST_NAME", company: "NEW_COMPANY" },
-      notes: "Persistencia correcta de cambios"
-    }
+      notes: "Persistencia correcta de cambios",
+    },
   }, async () => {
     const row = await prismadb.crm_Leads.findUnique({
       where: { id: ctx.lead.id },
@@ -50,10 +51,11 @@ describe("update existing lead", () => {
     meta: {
       id: "PILE-009",
       endpoint: "Server Action: updateLead",
-      objective: "Validar que la actualización del lead genere un registro de auditoría detallando los cambios realizados en cada campo",
+      objective:
+        "Validar que la actualización del lead genere un registro de auditoría detallando los cambios realizados en cada campo",
       expectedStatus: "Registro de auditoría generado con los cambios",
-      notes: "Auditoría de actualización detallada"
-    }
+      notes: "Auditoría de actualización detallada",
+    },
   }, async () => {
     const log = await prismadb.crm_AuditLog.findFirst({
       where: { entityType: "lead", entityId: ctx.lead.id, action: "updated" },

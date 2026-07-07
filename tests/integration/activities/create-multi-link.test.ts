@@ -38,11 +38,22 @@ describe("create activity linked to multiple entities simultaneously", () => {
     meta: {
       id: "PIACT-003",
       endpoint: "Server Action: createActivity",
-      objective: "Validar que la acción de servidor persista la actividad de tipo reunión vinculada a múltiples entidades en la base de datos",
+      objective:
+        "Validar que la acción de servidor persista la actividad de tipo reunión vinculada a múltiples entidades en la base de datos",
       expectedStatus: "Actividad de tipo reunión guardada con éxito",
-      body: { type: "meeting", title: "PIACT-002 Test Meeting", description: "PIACT-002 Description", status: "scheduled", links: [{ entityType: "account", entityId: "ctx.account.id" }, { entityType: "contact", entityId: "ctx.contact.id" }, { entityType: "opportunity", entityId: "ctx.opportunity.id" }] },
-      notes: "Persistencia exitosa de reunión"
-    }
+      body: {
+        type: "meeting",
+        title: "PIACT-002 Test Meeting",
+        description: "PIACT-002 Description",
+        status: "scheduled",
+        links: [
+          { entityType: "account", entityId: "ctx.account.id" },
+          { entityType: "contact", entityId: "ctx.contact.id" },
+          { entityType: "opportunity", entityId: "ctx.opportunity.id" },
+        ],
+      },
+      notes: "Persistencia exitosa de reunión",
+    },
   }, async () => {
     expect(createdActivityId).toBeTruthy();
     const row = await prismadb.crm_Activities.findUnique({
@@ -56,10 +67,11 @@ describe("create activity linked to multiple entities simultaneously", () => {
     meta: {
       id: "PIACT-004",
       endpoint: "Server Action: createActivity",
-      objective: "Validar que se registren correctamente las relaciones de la actividad con la cuenta, contacto y oportunidad en la tabla de enlaces",
+      objective:
+        "Validar que se registren correctamente las relaciones de la actividad con la cuenta, contacto y oportunidad en la tabla de enlaces",
       expectedStatus: "Múltiples enlaces de actividad persistidos",
-      notes: "Registro correcto de múltiples enlaces"
-    }
+      notes: "Registro correcto de múltiples enlaces",
+    },
   }, async () => {
     expect(createdActivityId).toBeTruthy();
     const links = await prismadb.crm_ActivityLinks.findMany({

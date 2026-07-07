@@ -38,11 +38,19 @@ describe("add line item to contract", () => {
     meta: {
       id: "PICT-008",
       endpoint: "Server Action: addContractLineItem",
-      objective: "Validar que la acción de servidor registre correctamente la partida de contrato con los cálculos de totales correspondientes",
+      objective:
+        "Validar que la acción de servidor registre correctamente la partida de contrato con los cálculos de totales correspondientes",
       expectedStatus: "Partida de contrato persistida con totales correctos",
-      body: { contractId: "ctx.contract.id", productId: "ctx.product.id", quantity: 2, unit_price: "150.00", discount_type: "PERCENTAGE", discount_value: "10.00" },
-      notes: "Persistencia correcta de partida de contrato"
-    }
+      body: {
+        contractId: "ctx.contract.id",
+        productId: "ctx.product.id",
+        quantity: 2,
+        unit_price: "150.00",
+        discount_type: "PERCENTAGE",
+        discount_value: "10.00",
+      },
+      notes: "Persistencia correcta de partida de contrato",
+    },
   }, async () => {
     expect(createdLineItemId).toBeTruthy();
     const item = await prismadb.crm_ContractLineItems.findUnique({
@@ -62,10 +70,11 @@ describe("add line item to contract", () => {
     meta: {
       id: "PICT-009",
       endpoint: "Server Action: addContractLineItem",
-      objective: "Validar que la adición de una partida actualice de forma acumulativa el valor total del contrato padre",
+      objective:
+        "Validar que la adición de una partida actualice de forma acumulativa el valor total del contrato padre",
       expectedStatus: "Valor total del contrato padre actualizado",
-      notes: "Recalculo de valor total de contrato"
-    }
+      notes: "Recalculo de valor total de contrato",
+    },
   }, async () => {
     const parent = await prismadb.crm_Contracts.findUnique({
       where: { id: ctx.contract.id },
@@ -78,10 +87,11 @@ describe("add line item to contract", () => {
     meta: {
       id: "PICT-010",
       endpoint: "Server Action: addContractLineItem",
-      objective: "Validar que se registre una entrada en la auditoría con la acción de creación correspondiente a la partida de contrato",
+      objective:
+        "Validar que se registre una entrada en la auditoría con la acción de creación correspondiente a la partida de contrato",
       expectedStatus: "Entrada de auditoría creada para la partida de contrato",
-      notes: "Auditoría de creación de partida de contrato"
-    }
+      notes: "Auditoría de creación de partida de contrato",
+    },
   }, async () => {
     expect(createdLineItemId).toBeTruthy();
     const log = await prismadb.crm_AuditLog.findFirst({

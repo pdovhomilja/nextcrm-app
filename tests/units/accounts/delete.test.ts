@@ -80,4 +80,10 @@ describe("deleteAccount", () => {
     const res = await deleteAccount("a1");
     expect(res).toEqual({ error: "Failed to delete account" });
   });
+
+  it("rejects deletion with malformed UUID", async () => {
+    const res = await deleteAccount("not-a-uuid");
+    expect(res.error).toBeDefined();
+    expect(prismadb.crm_Accounts.update).not.toHaveBeenCalled();
+  });
 });

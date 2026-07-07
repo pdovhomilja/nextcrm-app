@@ -38,8 +38,8 @@ describe("list leads", () => {
       endpoint: "Server Action: getLeads",
       objective: "Confirmar que la consulta retorne los leads activos en el sistema incluyendo el lead del fixture",
       expectedStatus: "Listado de leads activos con el lead del fixture incluido",
-      notes: "Validación de presencia de leads activos"
-    }
+      notes: "Validación de presencia de leads activos",
+    },
   }, async () => {
     const result = await getLeads();
     expect(Array.isArray(result)).toBe(true);
@@ -54,8 +54,8 @@ describe("list leads", () => {
       endpoint: "Server Action: getLeads",
       objective: "Validar que los leads que fueron eliminados lógicamente sean omitidos del listado retornado",
       expectedStatus: "Leads eliminados lógicamente ausentes en el listado",
-      notes: "Validación de filtrado de eliminación lógica para leads"
-    }
+      notes: "Validación de filtrado de eliminación lógica para leads",
+    },
   }, async () => {
     const result = await getLeads();
     const found = result.find((l) => l.id === softDeletedId);

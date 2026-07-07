@@ -52,33 +52,34 @@ export async function seedCrmFixtures(
 		);
 	}
 	const ownerId = admin.id;
-
-	// --- 1) Account ---------------------------------------------------------
 	const accountName = "Empresa Demo SAC";
-	const account = await prisma.crm_Accounts.upsert({
-		where: { id: "00000000-0000-0000-0000-000000000000" },
-		update: {},
-		create: {
-			id: "00000000-0000-0000-0000-000000000000",
-			v: 0,
-			name: accountName,
-			email: "contacto@empresademosac.test",
-			office_phone: "+51 1 555 0001",
-			website: "https://empresademosac.test",
-			billing_city: "Lima",
-			billing_country: "Peru",
-			shipping_city: "Lima",
-			shipping_country: "Peru",
-			status: "Active",
-			type: "Customer",
-			description: "Cuenta base semblada por seed de fixtures de integración",
-			assigned_to: ownerId,
-			createdBy: ownerId,
-			updatedBy: ownerId,
-		},
+	const existingAccount = await prisma.crm_Accounts.findFirst({
+		where: { name: accountName },
+		select: { id: true },
 	});
+	const account =
+		existingAccount ??
+		(await prisma.crm_Accounts.create({
+			data: {
+				id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+				v: 0,
+				name: accountName,
+				email: "contacto@empresademosac.test",
+				office_phone: "+51 1 555 0001",
+				website: "https://empresademosac.test",
+				billing_city: "Lima",
+				billing_country: "Peru",
+				shipping_city: "Lima",
+				shipping_country: "Peru",
+				status: "Active",
+				type: "Customer",
+				description: "Cuenta base semblada por seed de fixtures de integración",
+				assigned_to: ownerId,
+				createdBy: ownerId,
+				updatedBy: ownerId,
+			},
+		}));
 
-	// --- 2) Contact ---------------------------------------------------------
 	const existingContact = await prisma.crm_Contacts.findFirst({
 		where: { accountsIDs: account.id, first_name: "Juan", last_name: "Pérez" },
 		select: { id: true },

@@ -288,27 +288,12 @@ Available soon at: http://docs.nextcrm.io
 
    ```sh
    cp .env.example .env
+   nano .env  # set DATABASE_URL, BETTER_AUTH_SECRET, and optional API keys
    ```
 
-   ```sh
-   cp .env.local.example .env.local
-   ```
-
-   **.env**
-
-   > > - You will need a PostgreSQL connection string for Prisma ORM
-   > > - Example: `DATABASE_URL="postgresql://user:pass@localhost:5432/nextcrm?schema=public"`
-   > > - Requires PostgreSQL 17+ with the **pgvector** extension enabled
-
-   **.env.local**
-
-   > > - BETTER_AUTH_SECRET - for auth
-   > > - uploadthings - for storing files
-   > > - openAI - for embeddings and project management assistant *(optional — can be set via admin panel instead)*
-   > > - Firecrawl - for contact/target enrichment *(optional — can be set via admin panel instead)*
-   > > - SMTP and IMAP for emails
-   > > - Inngest - for background embedding jobs
-   > > - `EMAIL_ENCRYPTION_KEY` - required for encrypting API keys stored in the database
+   > - You will need a PostgreSQL connection string for Prisma ORM
+   > - Example: `DATABASE_URL="postgresql://user:pass@localhost:5432/nextcrm?schema=public"`
+   > - Requires PostgreSQL 17+ with the **pgvector** extension enabled
 
 1. Init Prisma
 
@@ -342,7 +327,7 @@ The fastest way to run NextCRM is with Docker Compose. The provided `docker-comp
 ```sh
 git clone https://github.com/pdovhomilja/nextcrm-app.git
 cd nextcrm-app
-cp .env.docker .env
+cp .env.example .env
 nano .env                # set ADMIN_EMAIL to a real email you own
 docker compose up -d
 ```
@@ -368,7 +353,7 @@ Only port `3000` is exposed to the host. Everything else stays on the internal D
 You **never edit `Dockerfile` or `docker-compose.yml`** to add your secrets. Instead, create a `.env` file in the project root — Docker Compose reads it automatically and injects the values into the container.
 
 ```sh
-cp .env.docker .env
+cp .env.example .env
 nano .env       # set ADMIN_EMAIL, internal service passwords, and any optional API keys
 docker compose up -d
 ```
@@ -376,7 +361,7 @@ docker compose up -d
 > [!WARNING]
 > The bundled Postgres and MinIO containers ship with a placeholder password (`changeme`) so the stack works on first run. The internal services are not exposed to the host network — only the app on port 3000 is reachable — so this is safe for local experimentation. **For any deployment beyond your laptop**, set strong values for `POSTGRES_PASSWORD` and `MINIO_ROOT_PASSWORD` in your `.env` file before starting the stack.
 
-The `.env.docker` file lists every supported variable with comments. Beyond the internal service passwords, you only need to add values for **optional external integrations** you want to enable:
+The `.env.example` file lists every supported variable with comments. Beyond the internal service passwords, you only need to add values for **optional external integrations** you want to enable:
 
 ```bash
 # Example .env

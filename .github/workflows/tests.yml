@@ -20,12 +20,12 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
 
 concurrency:
   group: tests-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   unit:
@@ -33,3 +33,6 @@ jobs:
 
   integration:
     uses: ./.github/workflows/integration-tests.yml
+
+  e2e:
+    uses: ./.github/workflows/e2e-tests.yml

@@ -1,6 +1,6 @@
 import { prismadb } from "@/lib/prisma";
 
-export const FIXTURE_ACCOUNT_ID = "00000000-0000-0000-0000-000000000000";
+export const FIXTURE_ACCOUNT_ID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
 
 export function uniqueSuffix(tag: string): string {
   return `${tag}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;

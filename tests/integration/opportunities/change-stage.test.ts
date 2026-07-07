@@ -41,11 +41,12 @@ describe("change pipeline stage of opportunity", () => {
     meta: {
       id: "PIOP-010",
       endpoint: "Server Action: updateOpportunity",
-      objective: "Validar que la acción de servidor actualice correctamente la etapa de venta de la oportunidad comercial",
+      objective:
+        "Validar que la acción de servidor actualice correctamente la etapa de venta de la oportunidad comercial",
       expectedStatus: "Etapa de venta actualizada en la base de datos",
       body: { id: "ctx.opportunity.id", sales_stage: "newStageId" },
-      notes: "Cambio de etapa de venta exitoso"
-    }
+      notes: "Cambio de etapa de venta exitoso",
+    },
   }, async () => {
     const row = await prismadb.crm_Opportunities.findUnique({
       where: { id: ctx.opportunity.id },
@@ -58,10 +59,11 @@ describe("change pipeline stage of opportunity", () => {
     meta: {
       id: "PIOP-011",
       endpoint: "Server Action: updateOpportunity",
-      objective: "Validar que el cambio de etapa de venta registre una entrada de auditoría específica para el campo de la etapa",
+      objective:
+        "Validar que el cambio de etapa de venta registre una entrada de auditoría específica para el campo de la etapa",
       expectedStatus: "Auditoría de cambio de etapa creada con éxito",
-      notes: "Auditoría de cambio de etapa comercial"
-    }
+      notes: "Auditoría de cambio de etapa comercial",
+    },
   }, async () => {
     const log = await prismadb.crm_AuditLog.findFirst({
       where: { entityType: "opportunity", entityId: ctx.opportunity.id, action: "updated" },

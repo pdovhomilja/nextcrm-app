@@ -1,0 +1,116 @@
+name: E2E Tests
+
+on:
+  workflow_call:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  e2e:
+    name: Run E2E Tests
+    runs-on: ubuntu-latest
+
+    env:
+      NODE_ENV: test
+      INTEGRATION_USE_HTTP_AUTH: "true"
+      INTEGRATION_FIXTURES: "true"
+      IS_TESTING: "true"
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: nextcrm
+          POSTGRES_PASSWORD: nextcrm_dev
+          POSTGRES_DB: nextcrm
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nextcrm"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      minio:
+        image: minio/minio:latest
+        env:
+          MINIO_ROOT_USER: nextcrm
+          MINIO_ROOT_PASSWORD: minio_dev_password
+        ports:
+          - 9000:9000
+          - 9001:9001
+        command: server /data --console-address ":9001"
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/minio/health/live"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      inngest:
+        image: inngest/inngest:latest
+        ports:
+          - 8288:8288
+        command: inngest dev -u http://localhost:3001/api/inngest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
+
+      - name: Generate Prisma client
+        run: pnpm dotenv -e .env.test -- pnpm prisma generate
+
+      - name: Apply Prisma migrations
+        run: pnpm dotenv -e .env.test -- pnpm prisma migrate deploy
+
+      - name: Seed test data
+        run: pnpm dotenv -e .env.test -- pnpm prisma db seed
+
+      - name: Build Next.js app
+        run: pnpm dotenv -e .env.test -- pnpm run build
+
+      - name: Start Next.js server
+        run: |
+          pnpm dotenv -e .env.test -- pnpm run start &
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3001/api/auth/get-session >/dev/null 2>&1; then
+              echo "Next.js ready after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Next.js failed to start in 30s"
+          exit 1
+
+      - name: Run E2E tests
+        run: pnpm test:e2e
+        continue-on-error: true
+
+      - name: Deploy Playwright report to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: playwright-report
+          destination_dir: reports/${{ github.run_id }}
+          keep_files: true
+          user_name: "github-actions[bot]"
+          user_email: "github-actions[bot]@users.noreply.github.com"

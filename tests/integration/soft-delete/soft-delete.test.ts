@@ -38,11 +38,12 @@ describe("soft delete active entity", () => {
     meta: {
       id: "PISD-001",
       endpoint: "Server Action: deleteAccount",
-      objective: "Validar que la acción de eliminación lógica establezca la fecha y el usuario correspondiente en la entidad dentro de la base de datos",
+      objective:
+        "Validar que la acción de eliminación lógica establezca la fecha y el usuario correspondiente en la entidad dentro de la base de datos",
       expectedStatus: "Campos deletedAt y deletedBy rellenados en base de datos",
       params: { id: "accountId" },
-      notes: "Validación de metadatos de eliminación lógica"
-    }
+      notes: "Validación de metadatos de eliminación lógica",
+    },
   }, async () => {
     expect(accountId).toBeTruthy();
     const row = await prismadb.crm_Accounts.findUnique({

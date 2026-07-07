@@ -44,11 +44,12 @@ describe("restore soft deleted entity", () => {
     meta: {
       id: "PISD-003",
       endpoint: "Server Action: restoreAccount",
-      objective: "Validar que la restauración de la cuenta limpie la fecha y el usuario que realizó la baja lógica en la base de datos",
+      objective:
+        "Validar que la restauración de la cuenta limpie la fecha y el usuario que realizó la baja lógica en la base de datos",
       expectedStatus: "Campos deletedAt y deletedBy reseteados a nulo",
       params: { id: "accountId" },
-      notes: "Restauración exitosa de entidad"
-    }
+      notes: "Restauración exitosa de entidad",
+    },
   }, async () => {
     expect(accountId).toBeTruthy();
     const row = await prismadb.crm_Accounts.findUnique({
@@ -65,8 +66,8 @@ describe("restore soft deleted entity", () => {
       endpoint: "Server Action: restoreAccount",
       objective: "Validar que la cuenta restaurada vuelva a aparecer en el listado general de cuentas activas",
       expectedStatus: "Cuenta restaurada presente en el listado",
-      notes: "Validación de visibilidad de entidad restaurada"
-    }
+      notes: "Validación de visibilidad de entidad restaurada",
+    },
   }, async () => {
     expect(accountId).toBeTruthy();
     const list = await getAccounts();

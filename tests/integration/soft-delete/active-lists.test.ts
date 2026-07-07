@@ -39,10 +39,11 @@ describe("filter soft deleted entities from active lists", () => {
     meta: {
       id: "PISD-002",
       endpoint: "Server Action: getAccounts",
-      objective: "Validar que el listado general de cuentas excluya aquellas que han sido dadas de baja de forma lógica",
+      objective:
+        "Validar que el listado general de cuentas excluya aquellas que han sido dadas de baja de forma lógica",
       expectedStatus: "Cuenta eliminada lógicamente ausente en el listado",
-      notes: "Validación de exclusión lógica en consultas generales"
-    }
+      notes: "Validación de exclusión lógica en consultas generales",
+    },
   }, async () => {
     expect(accountId).toBeTruthy();
     const list = await getAccounts();

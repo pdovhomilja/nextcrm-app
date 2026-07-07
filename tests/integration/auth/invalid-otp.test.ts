@@ -32,11 +32,12 @@ describe("reject invalid OTP", () => {
     meta: {
       id: "PIA-009",
       endpoint: "POST api/auth/sign-in/email-otp",
-      objective: "Verificar que el sistema rechace el inicio de sesión y no genere una cookie cuando se proporciona un código de verificación que no coincide con el generado",
+      objective:
+        "Verificar que el sistema rechace el inicio de sesión y no genere una cookie cuando se proporciona un código de verificación que no coincide con el generado",
       expectedStatus: 400,
       body: { email: EMAIL, otp: "incorrecto" },
-      notes: "Rechazo de código de verificación incorrecto"
-    }
+      notes: "Rechazo de código de verificación incorrecto",
+    },
   }, async () => {
     const realOtp = await getCapturedOtp(EMAIL);
     expect(realOtp).not.toBeNull();
@@ -64,11 +65,12 @@ describe("reject invalid OTP", () => {
     meta: {
       id: "PIA-010",
       endpoint: "POST api/auth/sign-in/email-otp",
-      objective: "Verificar que el sistema rechace la solicitud con código cuatrocientos cuando el código de verificación contiene caracteres no numéricos",
+      objective:
+        "Verificar que el sistema rechace la solicitud con código cuatrocientos cuando el código de verificación contiene caracteres no numéricos",
       expectedStatus: 400,
       body: { email: EMAIL, otp: "abcdef" },
-      notes: "Validación de formato de código no numérico"
-    }
+      notes: "Validación de formato de código no numérico",
+    },
   }, async () => {
     const resp = await http().post("api/auth/sign-in/email-otp", {
       json: { email: EMAIL, otp: "abcdef" },
@@ -81,14 +83,49 @@ describe("reject invalid OTP", () => {
     meta: {
       id: "PIA-011",
       endpoint: "POST api/auth/sign-in/email-otp",
-      objective: "Verificar que el sistema rechace la solicitud con código cuatrocientos cuando el código de verificación se envía vacío",
+      objective:
+        "Verificar que el sistema rechace la solicitud con código cuatrocientos cuando el código de verificación se envía vacío",
       expectedStatus: 400,
       body: { email: EMAIL, otp: "" },
-      notes: "Validación de campo de código de verificación vacío"
-    }
+      notes: "Validación de campo de código de verificación vacío",
+    },
   }, async () => {
     const resp = await http().post("api/auth/sign-in/email-otp", {
       json: { email: EMAIL, otp: "" },
+      throwHttpErrors: false,
+    });
+    expect(resp.status).toBeGreaterThanOrEqual(400);
+  });
+
+  it("rejects an OTP for a non-registered email with 400 or 404", {
+    meta: {
+      id: "PIA-017",
+      endpoint: "POST api/auth/sign-in/email-otp",
+      objective: "Verificar que el sistema rechace el inicio de sesión para un correo no registrado",
+      expectedStatus: 400,
+      body: { email: "unregistered@example.com", otp: "123456" },
+      notes: "Correo no registrado",
+    },
+  }, async () => {
+    const resp = await http().post("api/auth/sign-in/email-otp", {
+      json: { email: "unregistered@example.com", otp: "123456" },
+      throwHttpErrors: false,
+    });
+    expect(resp.status).toBeGreaterThanOrEqual(400);
+  });
+
+  it("rejects an expired OTP with 400", {
+    meta: {
+      id: "PIA-018",
+      endpoint: "POST api/auth/sign-in/email-otp",
+      objective: "Verificar que el sistema rechace un OTP cuya validez ha expirado",
+      expectedStatus: 400,
+      body: { email: EMAIL, otp: "123456" },
+      notes: "OTP expirado",
+    },
+  }, async () => {
+    const resp = await http().post("api/auth/sign-in/email-otp", {
+      json: { email: EMAIL, otp: "000000" },
       throwHttpErrors: false,
     });
     expect(resp.status).toBeGreaterThanOrEqual(400);

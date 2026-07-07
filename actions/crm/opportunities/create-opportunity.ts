@@ -99,7 +99,7 @@ export const createOpportunity = async (data: {
       userId: session.user.id,
     });
     void inngest.send({ name: "crm/opportunity.saved", data: { record_id: opportunity.id } });
-    revalidatePath("/[locale]/(routes)/crm/opportunities", "page");
+    revalidatePath("/[locale]/crm/opportunities", "page");
     return { data: opportunity };
   } catch (error) {
     console.log("[CREATE_OPPORTUNITY]", error);

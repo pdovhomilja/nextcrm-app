@@ -41,11 +41,12 @@ describe("filter audit logs", () => {
     meta: {
       id: "PIAL-003",
       endpoint: "Server Action: getAuditLogByEntity",
-      objective: "Verificar que la consulta por tipo e identificador de entidad retorne exactamente el historial correspondiente",
+      objective:
+        "Verificar que la consulta por tipo e identificador de entidad retorne exactamente el historial correspondiente",
       expectedStatus: "Historial de auditoría para la entidad específica retornado",
       params: { entityType: "account", entityId: "accountId" },
-      notes: "Filtrado de auditoría por entidad"
-    }
+      notes: "Filtrado de auditoría por entidad",
+    },
   }, async () => {
     expect(accountId).toBeTruthy();
     const result = await getAuditLogByEntity("account", accountId ?? "");
@@ -61,11 +62,12 @@ describe("filter audit logs", () => {
     meta: {
       id: "PIAL-004",
       endpoint: "Server Action: getAuditLogAdmin",
-      objective: "Verificar que la consulta administrativa de auditoría retorne correctamente los registros filtrados por tipo de entidad y usuario",
+      objective:
+        "Verificar que la consulta administrativa de auditoría retorne correctamente los registros filtrados por tipo de entidad y usuario",
       expectedStatus: "Listado administrativo de auditoría retornado",
       body: { entityType: "account", userId: "session.userId" },
-      notes: "Consulta administrativa global de auditoría"
-    }
+      notes: "Consulta administrativa global de auditoría",
+    },
   }, async () => {
     expect(accountId).toBeTruthy();
     const result = await getAuditLogAdmin({

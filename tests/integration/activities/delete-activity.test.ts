@@ -37,11 +37,12 @@ describe("delete activity (soft delete)", () => {
     meta: {
       id: "PIACT-014",
       endpoint: "Server Action: deleteActivity",
-      objective: "Validar que la eliminación lógica de la actividad registre el momento y el usuario que realiza la baja",
+      objective:
+        "Validar que la eliminación lógica de la actividad registre el momento y el usuario que realiza la baja",
       expectedStatus: "Fecha y usuario de eliminación registrados en crm_Activities",
       params: { id: "activityId" },
-      notes: "Eliminación lógica exitosa"
-    }
+      notes: "Eliminación lógica exitosa",
+    },
   }, async () => {
     const row = await prismadb.crm_Activities.findUnique({
       where: { id: activityId },
@@ -55,10 +56,11 @@ describe("delete activity (soft delete)", () => {
     meta: {
       id: "PIACT-015",
       endpoint: "Server Action: deleteActivity",
-      objective: "Verificar que la actividad eliminada lógicamente no se muestre al solicitar el listado de actividades de la entidad",
+      objective:
+        "Verificar que la actividad eliminada lógicamente no se muestre al solicitar el listado de actividades de la entidad",
       expectedStatus: "Actividad eliminada ausente en el listado",
-      notes: "Validación de exclusión activa de actividad eliminada"
-    }
+      notes: "Validación de exclusión activa de actividad eliminada",
+    },
   }, async () => {
     const result = await getActivitiesByEntity("account", ctx.account.id);
     const ids = result.data.map((a) => a.id);

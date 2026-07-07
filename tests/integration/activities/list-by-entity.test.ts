@@ -44,10 +44,11 @@ describe("list activities by entity", () => {
     meta: {
       id: "PIACT-012",
       endpoint: "Server Action: getActivitiesByEntity",
-      objective: "Confirmar que el listado de actividades de una entidad retorne ordenado en sentido descendente por fecha",
+      objective:
+        "Confirmar que el listado de actividades de una entidad retorne ordenado en sentido descendente por fecha",
       expectedStatus: "Listado de actividades ordenadas por fecha de forma descendente",
-      notes: "Validación de ordenamiento de actividades"
-    }
+      notes: "Validación de ordenamiento de actividades",
+    },
   }, async () => {
     const result = await getActivitiesByEntity("account", ctx.account.id);
     expect(result.data.length).toBeGreaterThanOrEqual(2);
@@ -64,10 +65,11 @@ describe("list activities by entity", () => {
     meta: {
       id: "PIACT-013",
       endpoint: "Server Action: getActivitiesByEntity",
-      objective: "Validar que la consulta de actividades filtre y excluya aquellas actividades vinculadas a otras entidades diferentes",
+      objective:
+        "Validar que la consulta de actividades filtre y excluya aquellas actividades vinculadas a otras entidades diferentes",
       expectedStatus: "Actividades de otras entidades excluidas del listado",
-      notes: "Validación de asilamiento de consultas de actividades"
-    }
+      notes: "Validación de asilamiento de consultas de actividades",
+    },
   }, async () => {
     const suffix = uniqueSuffix("piact006-other");
     const otherAccount = await prismadb.crm_Accounts.create({

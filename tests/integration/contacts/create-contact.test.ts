@@ -36,11 +36,17 @@ describe("create contact with valid data", () => {
     meta: {
       id: "PICO-001",
       endpoint: "Server Action: createContact",
-      objective: "Verificar que la acción de servidor retorne un identificador válido al crear un contacto con datos correctos",
+      objective:
+        "Verificar que la acción de servidor retorne un identificador válido al crear un contacto con datos correctos",
       expectedStatus: "Identificador de contacto generado",
-      body: { first_name: "PICO-001", last_name: "Test Contact", email: "pico001@example.test", assigned_account: "ctx.account.id" },
-      notes: "Creación exitosa de contacto"
-    }
+      body: {
+        first_name: "PICO-001",
+        last_name: "Test Contact",
+        email: "pico001@example.test",
+        assigned_account: "ctx.account.id",
+      },
+      notes: "Creación exitosa de contacto",
+    },
   }, () => {
     expect(createdId).toBeTruthy();
   });
@@ -49,10 +55,11 @@ describe("create contact with valid data", () => {
     meta: {
       id: "PICO-002",
       endpoint: "Server Action: createContact",
-      objective: "Validar que el contacto creado se almacene correctamente en la base de datos con los valores provistos",
+      objective:
+        "Validar que el contacto creado se almacene correctamente en la base de datos con los valores provistos",
       expectedStatus: "Contacto persistido en crm_Contacts",
-      notes: "Persistencia correcta de contacto en base de datos"
-    }
+      notes: "Persistencia correcta de contacto en base de datos",
+    },
   }, async () => {
     const row = await prismadb.crm_Contacts.findUnique({
       where: { id: createdId ?? "" },
@@ -79,10 +86,11 @@ describe("create contact with valid data", () => {
     meta: {
       id: "PICO-003",
       endpoint: "Server Action: createContact",
-      objective: "Validar que se registre una entrada en el registro de auditoría con la acción de creación correspondiente al contacto",
+      objective:
+        "Validar que se registre una entrada en el registro de auditoría con la acción de creación correspondiente al contacto",
       expectedStatus: "Entrada de auditoría creada",
-      notes: "Auditoría de creación de contacto"
-    }
+      notes: "Auditoría de creación de contacto",
+    },
   }, async () => {
     const log = await prismadb.crm_AuditLog.findFirst({
       where: { entityType: "contact", entityId: createdId ?? "", action: "created" },
@@ -98,11 +106,51 @@ describe("create contact with valid data", () => {
       endpoint: "Server Action: createContact",
       objective: "Verificar el envío del evento de contacto guardado a través del despachador de eventos Inngest",
       expectedStatus: "Evento despachado correctamente",
-      notes: "Validación de eventos en modo de simulación"
-    }
+      notes: "Validación de eventos en modo de simulación",
+    },
   }, () => {
     const calls = inngestSpy.send.mock.calls.filter((c) => (c[0] as { name?: string })?.name === "crm/contact.saved");
     expect(calls.length).toBeGreaterThan(0);
     expect((calls[0]?.[0] as { data?: { record_id?: string } })?.data?.record_id).toBe(createdId);
+  });
+
+  it("maps empty string assigned_account to null instead of crashing PostgreSQL", {
+    meta: {
+      id: "PICO-015",
+      endpoint: "Server Action: createContact",
+      objective:
+        "Verificar que el sistema convierta una cuenta asignada vacía en nulo sin generar un error en base de datos",
+      expectedStatus: "Error de creación: UUID vacío inválido",
+      notes: "Empty string no es un UUID válido para PostgreSQL",
+    },
+  }, async () => {
+    const result = await createContact({
+      first_name: "NullAccount",
+      last_name: "Contact",
+      assigned_account: "",
+    });
+    expect(result.error).toBeUndefined();
+    expect(result.data?.id).toBeTruthy();
+    if (result.data?.id) {
+      await prismadb.crm_Contacts.delete({ where: { id: result.data.id } });
+    }
+  });
+
+  it("rejects creation with non-existent assigned_account", {
+    meta: {
+      id: "PICO-017",
+      endpoint: "Server Action: createContact",
+      objective:
+        "Verificar que el sistema rechace la creación del contacto si la cuenta asociada no existe en base de datos",
+      expectedStatus: "Error de clave foránea / no encontrado",
+      notes: "Error de integridad referencial: relación inexistente",
+    },
+  }, async () => {
+    const result = await createContact({
+      first_name: "GhostAccount",
+      last_name: "Contact",
+      assigned_account: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    });
+    expect(result.error).toBeDefined();
   });
 });

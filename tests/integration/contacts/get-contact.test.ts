@@ -36,11 +36,12 @@ describe("get contact by id", () => {
     meta: {
       id: "PICO-005",
       endpoint: "Server Action: getContact",
-      objective: "Verificar que se retorne la información del contacto activo al solicitarlo por un identificador existente",
+      objective:
+        "Verificar que se retorne la información del contacto activo al solicitarlo por un identificador existente",
       expectedStatus: "Datos de contacto recuperados exitosamente",
       params: { id: "ctx.contact.id" },
-      notes: "Recuperación exitosa de contacto activo"
-    }
+      notes: "Recuperación exitosa de contacto activo",
+    },
   }, async () => {
     const result = await getContact(ctx.contact.id);
     expect(result).not.toBeNull();
@@ -52,11 +53,12 @@ describe("get contact by id", () => {
     meta: {
       id: "PICO-006",
       endpoint: "Server Action: getContact",
-      objective: "Verificar que la acción de servidor retorne nulo al solicitar un contacto con un identificador inexistente",
+      objective:
+        "Verificar que la acción de servidor retorne nulo al solicitar un contacto con un identificador inexistente",
       expectedStatus: "Retorno nulo",
       params: { id: "00000000-0000-0000-0000-000000000999" },
-      notes: "Búsqueda de contacto inexistente"
-    }
+      notes: "Búsqueda de contacto inexistente",
+    },
   }, async () => {
     const result = await getContact("00000000-0000-0000-0000-000000000999");
     expect(result).toBeNull();
@@ -66,11 +68,12 @@ describe("get contact by id", () => {
     meta: {
       id: "PICO-007",
       endpoint: "Server Action: getContact",
-      objective: "Verificar que la acción de servidor retorne nulo al solicitar un contacto que ha sido eliminado lógicamente",
+      objective:
+        "Verificar que la acción de servidor retorne nulo al solicitar un contacto que ha sido eliminado lógicamente",
       expectedStatus: "Retorno nulo",
       params: { id: "softDeletedId" },
-      notes: "Exclusión de contactos eliminados lógicamente"
-    }
+      notes: "Exclusión de contactos eliminados lógicamente",
+    },
   }, async () => {
     const result = await getContact(softDeletedId);
     expect(result).toBeNull();

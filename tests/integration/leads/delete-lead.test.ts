@@ -29,8 +29,8 @@ describe("soft-delete lead", () => {
       objective: "Validar que la eliminación lógica registre el momento y el usuario que realiza la baja del lead",
       expectedStatus: "Fecha y usuario de eliminación registrados",
       params: { id: "ctx.lead.id" },
-      notes: "Eliminación lógica exitosa"
-    }
+      notes: "Eliminación lógica exitosa",
+    },
   }, async () => {
     const row = await prismadb.crm_Leads.findUnique({
       where: { id: ctx.lead.id },
@@ -45,10 +45,11 @@ describe("soft-delete lead", () => {
     meta: {
       id: "PILE-011",
       endpoint: "Server Action: deleteLead",
-      objective: "Validar que la eliminación lógica escriba un registro de auditoría con la acción de eliminado para el lead",
+      objective:
+        "Validar que la eliminación lógica escriba un registro de auditoría con la acción de eliminado para el lead",
       expectedStatus: "Entrada de auditoría creada con éxito",
-      notes: "Auditoría de eliminación lógica"
-    }
+      notes: "Auditoría de eliminación lógica",
+    },
   }, async () => {
     const log = await prismadb.crm_AuditLog.findFirst({
       where: { entityType: "lead", entityId: ctx.lead.id, action: "deleted" },
@@ -68,8 +69,8 @@ describe("soft-delete lead", () => {
       endpoint: "Server Action: deleteLead",
       objective: "Verificar que el lead eliminado lógicamente no pueda ser recuperado por consultas directas activas",
       expectedStatus: "Retorno nulo al buscar lead eliminado",
-      notes: "Validación de exclusión activa de lead eliminado"
-    }
+      notes: "Validación de exclusión activa de lead eliminado",
+    },
   }, async () => {
     const result = await getLead(ctx.lead.id);
     expect(result).toBeNull();

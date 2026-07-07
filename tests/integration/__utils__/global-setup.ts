@@ -2,11 +2,11 @@ import { execSync } from "node:child_process";
 import { config } from "dotenv";
 import { Client } from "pg";
 
-config({ path: ".env.integration", override: true });
+config({ path: ".env.test", override: true });
 
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) {
-  throw new Error("[integration global-setup] DATABASE_URL is not set. Did .env.integration load?");
+  throw new Error("[integration global-setup] DATABASE_URL is not set. Did .env.test load?");
 }
 
 function sh(command: string): void {

@@ -37,10 +37,11 @@ describe("list accounts", () => {
     meta: {
       id: "PIAC-019",
       endpoint: "Server Action: getAccounts",
-      objective: "Verificar que la acción de servidor retorne un listado de cuentas ordenadas alfabéticamente de forma ascendente por su nombre",
+      objective:
+        "Verificar que la acción de servidor retorne un listado de cuentas ordenadas alfabéticamente de forma ascendente por su nombre",
       expectedStatus: "Listado de cuentas ordenadas",
-      notes: "Validación de ordenamiento ascendente"
-    }
+      notes: "Validación de ordenamiento ascendente",
+    },
   }, async () => {
     const result = await getAccounts();
     expect(result.error, `unexpected error: ${result.error}`).toBeUndefined();
@@ -57,8 +58,8 @@ describe("list accounts", () => {
       endpoint: "Server Action: getAccounts",
       objective: "Confirmar que la consulta liste la cuenta creada en los datos del entorno de pruebas",
       expectedStatus: "Cuenta de fixture incluida en el listado",
-      notes: "Validación de presencia de datos activos"
-    }
+      notes: "Validación de presencia de datos activos",
+    },
   }, async () => {
     const result = await getAccounts();
     const found = (result.data ?? []).find((a) => a.id === ctx.account.id);
@@ -71,8 +72,8 @@ describe("list accounts", () => {
       endpoint: "Server Action: getAccounts",
       objective: "Validar que las cuentas eliminadas lógicamente sean omitidas del listado general de cuentas",
       expectedStatus: "Cuentas eliminadas lógicamente ausentes en el listado",
-      notes: "Validación de filtrado de eliminación lógica"
-    }
+      notes: "Validación de filtrado de eliminación lógica",
+    },
   }, async () => {
     const result = await getAccounts();
     const found = (result.data ?? []).find((a) => a.id === softDeletedId);

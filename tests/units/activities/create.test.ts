@@ -154,4 +154,57 @@ describe("createActivity", () => {
 
     expect(res).toEqual({ error: "Failed to create activity" });
   });
+
+  it("rejects creation with invalid type or status outside enum values", async () => {
+    const resultType = await createActivity({
+      type: "invalid_type" as string as "call",
+      title: "Invalid Type Act",
+      date: new Date(),
+      status: "scheduled",
+      links: [],
+    });
+    expect(resultType.error).toBeDefined();
+
+    const resultStatus = await createActivity({
+      type: "note",
+      title: "Invalid Status Act",
+      date: new Date(),
+      status: "invalid_status" as string as "scheduled",
+      links: [],
+    });
+    expect(resultStatus.error).toBeDefined();
+  });
+
+  it("rejects creation with negative or decimal duration", async () => {
+    const resultNegative = await createActivity({
+      type: "note",
+      title: "Negative Duration Act",
+      date: new Date(),
+      status: "completed",
+      duration: -30,
+      links: [],
+    });
+    expect(resultNegative.error).toBeDefined();
+
+    const resultDecimal = await createActivity({
+      type: "note",
+      title: "Decimal Duration Act",
+      date: new Date(),
+      status: "completed",
+      duration: 15.5,
+      links: [],
+    });
+    expect(resultDecimal.error).toBeDefined();
+  });
+
+  it("rejects creation with empty links array", async () => {
+    const result = await createActivity({
+      type: "note",
+      title: "Empty Links Act",
+      date: new Date(),
+      status: "completed",
+      links: [],
+    });
+    expect(result.error).toBeDefined();
+  });
 });

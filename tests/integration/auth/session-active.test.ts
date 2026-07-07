@@ -17,11 +17,12 @@ describe("active session validates on protected endpoint", () => {
     meta: {
       id: "PIA-012",
       endpoint: "GET api/auth/get-session",
-      objective: "Verificar que el endpoint protegido devuelva la información del usuario autenticado al presentar una cookie de sesión válida",
+      objective:
+        "Verificar que el endpoint protegido devuelva la información del usuario autenticado al presentar una cookie de sesión válida",
       expectedStatus: 200,
       params: "Encabezado de cookie de sesión activa",
-      notes: "Validación exitosa de sesión activa"
-    }
+      notes: "Validación exitosa de sesión activa",
+    },
   }, async () => {
     const me = await http()
       .get("api/auth/get-session", {
@@ -37,11 +38,12 @@ describe("active session validates on protected endpoint", () => {
     meta: {
       id: "PIA-013",
       endpoint: "GET api/auth/get-session",
-      objective: "Validar que el endpoint protegido retorne un valor nulo para el usuario al presentar una cookie de sesión inválida o alterada",
+      objective:
+        "Validar que el endpoint protegido retorne un valor nulo para el usuario al presentar una cookie de sesión inválida o alterada",
       expectedStatus: 200,
       params: "Encabezado de cookie de sesión inválida",
-      notes: "Retorno nulo para sesión inexistente"
-    }
+      notes: "Retorno nulo para sesión inexistente",
+    },
   }, async () => {
     const resp = await http().get("api/auth/get-session", {
       headers: {
@@ -58,11 +60,12 @@ describe("active session validates on protected endpoint", () => {
     meta: {
       id: "PIA-014",
       endpoint: "GET /sign-in",
-      objective: "Verificar que la página de inicio de sesión sea accesible con una cookie válida sin provocar bucles de redirección",
+      objective:
+        "Verificar que la página de inicio de sesión sea accesible con una cookie válida sin provocar bucles de redirección",
       expectedStatus: "Doscientos o trescientos siete",
       params: "Encabezado de cookie de sesión activa",
-      notes: "Compatibilidad de la sesión activa con la página de acceso"
-    }
+      notes: "Compatibilidad de la sesión activa con la página de acceso",
+    },
   }, async () => {
     const resp = await ky.get(`${BASE_URL}/sign-in`, {
       headers: { cookie: session.cookie },
@@ -75,10 +78,11 @@ describe("active session validates on protected endpoint", () => {
     meta: {
       id: "PIA-015",
       endpoint: "GET api/auth/get-session",
-      objective: "Confirmar en la base de datos que el usuario autenticado posee el estado activo según el contrato establecido",
+      objective:
+        "Confirmar en la base de datos que el usuario autenticado posee el estado activo según el contrato establecido",
       expectedStatus: "Estado activo en base de datos",
-      notes: "Validación de estado del registro de usuario"
-    }
+      notes: "Validación de estado del registro de usuario",
+    },
   }, async () => {
     const user = await prismadb.users.findUnique({
       where: { email: EMAIL },
@@ -86,5 +90,30 @@ describe("active session validates on protected endpoint", () => {
     });
     expect(user, `user ${EMAIL} must exist after signInAsAdmin`).not.toBeNull();
     expect(user?.userStatus, "userStatus must be ACTIVE per seed contract").toBe("ACTIVE");
+  });
+
+  it("get-session returns null for a signed-out/closed session", {
+    meta: {
+      id: "PIA-019",
+      endpoint: "POST api/auth/sign-out",
+      objective:
+        "Validar que una cookie de sesión previamente activa deje de ser válida tras realizar el cierre de sesión",
+      expectedStatus: "200 o redirect",
+      notes: "BetterAuth sign-out puede retornar redirect en vez de 200",
+    },
+  }, async () => {
+    const logoutResp = await http().post("api/auth/sign-out", {
+      headers: { cookie: session.cookie },
+      throwHttpErrors: false,
+    });
+    expect(logoutResp.status).toBe(200);
+
+    const me = await http()
+      .get("api/auth/get-session", {
+        headers: { cookie: session.cookie },
+        throwHttpErrors: false,
+      })
+      .json<{ user?: unknown }>();
+    expect(me.user ?? null).toBeNull();
   });
 });

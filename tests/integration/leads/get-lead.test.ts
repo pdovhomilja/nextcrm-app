@@ -36,11 +36,12 @@ describe("get lead by id", () => {
     meta: {
       id: "PILE-005",
       endpoint: "Server Action: getLead",
-      objective: "Verificar que se retorne la información del lead activo al solicitarlo por un identificador existente",
+      objective:
+        "Verificar que se retorne la información del lead activo al solicitarlo por un identificador existente",
       expectedStatus: "Datos de lead recuperados exitosamente",
       params: { id: "ctx.lead.id" },
-      notes: "Recuperación exitosa de lead activo"
-    }
+      notes: "Recuperación exitosa de lead activo",
+    },
   }, async () => {
     const result = await getLead(ctx.lead.id);
     expect(result).not.toBeNull();
@@ -52,11 +53,12 @@ describe("get lead by id", () => {
     meta: {
       id: "PILE-006",
       endpoint: "Server Action: getLead",
-      objective: "Verificar que la acción de servidor retorne nulo al solicitar un lead con un identificador inexistente",
+      objective:
+        "Verificar que la acción de servidor retorne nulo al solicitar un lead con un identificador inexistente",
       expectedStatus: "Retorno nulo",
       params: { id: "00000000-0000-0000-0000-000000000999" },
-      notes: "Búsqueda de lead inexistente"
-    }
+      notes: "Búsqueda de lead inexistente",
+    },
   }, async () => {
     const result = await getLead("00000000-0000-0000-0000-000000000999");
     expect(result).toBeNull();
@@ -66,11 +68,12 @@ describe("get lead by id", () => {
     meta: {
       id: "PILE-007",
       endpoint: "Server Action: getLead",
-      objective: "Verificar que la acción de servidor retorne nulo al solicitar un lead que ha sido eliminado lógicamente",
+      objective:
+        "Verificar que la acción de servidor retorne nulo al solicitar un lead que ha sido eliminado lógicamente",
       expectedStatus: "Retorno nulo",
       params: { id: "softDeletedId" },
-      notes: "Exclusión de leads eliminados lógicamente"
-    }
+      notes: "Exclusión de leads eliminados lógicamente",
+    },
   }, async () => {
     const result = await getLead(softDeletedId);
     expect(result).toBeNull();

@@ -155,4 +155,32 @@ describe("createAccount", () => {
     const res = await createAccount({ name: "Acme" });
     expect(res).toEqual({ error: "Failed to create account" });
   });
+
+  it("rejects creation with invalid email format", async () => {
+    const res = await createAccount({
+      name: "Invalid Email Account",
+      email: "not-an-email-at-all",
+    });
+    expect(res.error).toBeDefined();
+    expect(prismadb.crm_Accounts.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects creation with invalid characters in office_phone", async () => {
+    const res = await createAccount({
+      name: "Invalid Phone Account",
+      office_phone: "INVALID_PHONE_###$$$",
+    });
+    expect(res.error).toBeDefined();
+    expect(prismadb.crm_Accounts.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects creation when billing_city exceeds 255 characters", async () => {
+    const longCity = "a".repeat(256);
+    const res = await createAccount({
+      name: "Overflow Account",
+      billing_city: longCity,
+    });
+    expect(res.error).toBeDefined();
+    expect(prismadb.crm_Accounts.create).not.toHaveBeenCalled();
+  });
 });

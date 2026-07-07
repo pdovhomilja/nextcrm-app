@@ -30,11 +30,12 @@ describe("update existing contact", () => {
     meta: {
       id: "PICO-008",
       endpoint: "Server Action: updateContact",
-      objective: "Validar que la acción de servidor persista los nuevos valores modificados del contacto en la base de datos",
+      objective:
+        "Validar que la acción de servidor persista los nuevos valores modificados del contacto en la base de datos",
       expectedStatus: "Valores actualizados en base de datos",
       body: { id: "ctx.contact.id", first_name: "NEW_FIRST_NAME", email: "NEW_EMAIL" },
-      notes: "Persistencia correcta de cambios"
-    }
+      notes: "Persistencia correcta de cambios",
+    },
   }, async () => {
     const row = await prismadb.crm_Contacts.findUnique({
       where: { id: ctx.contact.id },
@@ -49,10 +50,11 @@ describe("update existing contact", () => {
     meta: {
       id: "PICO-009",
       endpoint: "Server Action: updateContact",
-      objective: "Validar que la actualización del contacto genere un registro de auditoría detallando los cambios realizados en cada campo",
+      objective:
+        "Validar que la actualización del contacto genere un registro de auditoría detallando los cambios realizados en cada campo",
       expectedStatus: "Registro de auditoría generado con los cambios",
-      notes: "Auditoría de actualización detallada"
-    }
+      notes: "Auditoría de actualización detallada",
+    },
   }, async () => {
     const log = await prismadb.crm_AuditLog.findFirst({
       where: { entityType: "contact", entityId: ctx.contact.id, action: "updated" },

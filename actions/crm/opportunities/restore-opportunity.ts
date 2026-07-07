@@ -22,8 +22,8 @@ export const restoreOpportunity = async (opportunityId: string) => {
       changes: null,
       userId: session.user.id,
     });
-    revalidatePath("/[locale]/(routes)/crm/opportunities", "page");
-    revalidatePath("/[locale]/(routes)/admin/audit-log", "page");
+    revalidatePath("/[locale]/crm/opportunities", "page");
+    revalidatePath("/[locale]/admin/audit-log", "page");
     return { success: true };
   } catch (error) {
     console.log("[RESTORE_OPPORTUNITY]", error);

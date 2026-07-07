@@ -181,4 +181,14 @@ describe("createLead", () => {
     const res = await createLead({ last_name: "Doe" });
     expect(res).toEqual({ error: "Failed to create lead" });
   });
+
+  it("rejects creation with last_name of 1 character if invalid", async () => {
+    const res = await createLead({
+      first_name: "ShortName",
+      last_name: "X",
+      company: "Company",
+    });
+    expect(res.error).toBeDefined();
+    expect(prismadb.crm_Leads.create).not.toHaveBeenCalled();
+  });
 });
