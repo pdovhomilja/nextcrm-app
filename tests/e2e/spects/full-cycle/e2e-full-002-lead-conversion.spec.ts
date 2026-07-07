@@ -63,7 +63,7 @@ test.describe("E2E-FULL-002: Conversión de Lead (Admin)", () => {
     await accountList2.clickRow(accountData.name);
     await AccountDetailPage.create(page);
 
-    const feed = new ActivityFeedPage(page);
+    const feed = ActivityFeedPage.create(page);
     await feed.expectActivityVisible(activityData.title);
   });
 });

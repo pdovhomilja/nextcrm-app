@@ -15,13 +15,13 @@ export async function createActivity(
   await list.clickRow(accountName);
 
   await AccountDetailPage.create(page);
-  const feed = new ActivityFeedPage(page);
+  const feed = ActivityFeedPage.create(page);
   await feed.clickLogActivity();
 
   const dialog = page.getByRole("dialog");
   await dialog.waitFor({ state: "visible", timeout: 10_000 });
 
-  const form = new ActivityFormPage(page);
+  const form = await ActivityFormPage.create(page);
   await form.fill(data);
   await form.save();
 

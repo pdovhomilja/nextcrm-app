@@ -26,7 +26,7 @@ test.describe("E2E-FULL-005: Actividades y tareas en Account", () => {
     await accountList.clickRow(accountData.name);
     await AccountDetailPage.create(page);
 
-    const feed = new ActivityFeedPage(page);
+    const feed = ActivityFeedPage.create(page);
     await feed.expectActivityVisible(activityData.title);
 
     const _taskData = await createTask(page, accountData.name, {
