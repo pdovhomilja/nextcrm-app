@@ -35,7 +35,10 @@ describe("unsubscribe global opt-out", () => {
     expect(prismadb.crm_Targets.updateMany).toHaveBeenCalledWith({
       where: {
         do_not_email: false,
-        OR: [{ id: "t-1" }, { email: "jane@acme.com" }],
+        OR: [
+          { id: "t-1" },
+          { email: { equals: "jane@acme.com", mode: "insensitive" } },
+        ],
       },
       data: { do_not_email: true, do_not_email_at: expect.any(Date) },
     });
@@ -73,6 +76,33 @@ describe("unsubscribe global opt-out", () => {
     );
 
     expect(res.status).toBe(200);
+  });
+
+  it("matches suppression by email case-insensitively", async () => {
+    (prismadb.crm_campaign_sends.findUnique as jest.Mock).mockResolvedValue({
+      id: "send-1",
+      target_id: "t-1",
+      email: "Jane@Acme.COM",
+      unsubscribed_at: null,
+    });
+    (prismadb.crm_campaign_sends.update as jest.Mock).mockResolvedValue({});
+    (prismadb.crm_Targets.updateMany as jest.Mock).mockResolvedValue({ count: 2 });
+
+    const res = await GET(
+      new NextRequest("http://localhost/api/campaigns/unsubscribe?token=tok-1")
+    );
+
+    expect(res.status).toBe(200);
+    expect(prismadb.crm_Targets.updateMany).toHaveBeenCalledWith({
+      where: {
+        do_not_email: false,
+        OR: [
+          { id: "t-1" },
+          { email: { equals: "Jane@Acme.COM", mode: "insensitive" } },
+        ],
+      },
+      data: { do_not_email: true, do_not_email_at: expect.any(Date) },
+    });
   });
 
   it("does not touch targets for an unknown token", async () => {

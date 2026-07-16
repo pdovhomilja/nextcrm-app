@@ -75,12 +75,17 @@ export async function importTargets(
     const emails = valid.map((v) => v.email).filter(Boolean) as string[];
     if (emails.length > 0) {
       const suppressed = await prismadb.crm_Targets.findMany({
-        where: { do_not_email: true, email: { in: emails } },
+        where: {
+          do_not_email: true,
+          email: { in: emails, mode: "insensitive" },
+        },
         select: { email: true },
       });
-      const suppressedEmails = new Set(suppressed.map((s) => s.email));
+      const suppressedEmails = new Set(
+        suppressed.map((s) => (s.email ?? "").toLowerCase())
+      );
       for (const row of valid) {
-        if (row.email && suppressedEmails.has(row.email)) {
+        if (row.email && suppressedEmails.has(row.email.toLowerCase())) {
           row.do_not_email = true;
           row.do_not_email_at = new Date();
         }

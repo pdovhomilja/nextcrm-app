@@ -2,6 +2,7 @@ import { inngest } from "@/inngest/client";
 import { prismadb } from "@/lib/prisma";
 import { Resend } from "resend";
 import { resolveMergeTags } from "@/lib/campaigns/merge-tags";
+import { sendStepSkipReason } from "@/lib/campaigns/recipient-filters";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -30,6 +31,9 @@ export const campaignSendStep = inngest.createFunction(
 
     if (!sendRecord) return { skipped: true, reason: "send record not found" };
     if (sendRecord.campaign.status === "paused") return { skipped: true, reason: "paused" };
+
+    const skipReason = sendStepSkipReason(sendRecord);
+    if (skipReason) return { skipped: true, reason: skipReason };
 
     const html = resolveMergeTags(sendRecord.step.template.content_html, sendRecord.target);
 

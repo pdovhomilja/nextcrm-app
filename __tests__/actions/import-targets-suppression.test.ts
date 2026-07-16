@@ -39,6 +39,31 @@ describe("importTargets suppression inheritance", () => {
     expect(fresh.do_not_email).toBeUndefined();
   });
 
+  it("matches suppression case-insensitively", async () => {
+    (prismadb.crm_Targets.findMany as jest.Mock).mockResolvedValue([
+      { email: "jane@acme.com" },
+    ]);
+
+    await importTargets(
+      makeFormData("email,last_name\nJane@Acme.COM,Doe\nfresh@acme.com,Roe")
+    );
+
+    expect(prismadb.crm_Targets.findMany).toHaveBeenCalledWith({
+      where: {
+        do_not_email: true,
+        email: { in: ["Jane@Acme.COM", "fresh@acme.com"], mode: "insensitive" },
+      },
+      select: { email: true },
+    });
+
+    const rows = (prismadb.crm_Targets.createMany as jest.Mock).mock.calls[0][0].data;
+    const suppressed = rows.find((r: any) => r.email === "Jane@Acme.COM");
+    const fresh = rows.find((r: any) => r.email === "fresh@acme.com");
+    expect(suppressed.do_not_email).toBe(true);
+    expect(suppressed.do_not_email_at).toEqual(expect.any(Date));
+    expect(fresh.do_not_email).toBeUndefined();
+  });
+
   it("skips the suppression lookup when no rows have emails", async () => {
     await importTargets(makeFormData("last_name\nDoe"));
     expect(prismadb.crm_Targets.findMany).not.toHaveBeenCalled();

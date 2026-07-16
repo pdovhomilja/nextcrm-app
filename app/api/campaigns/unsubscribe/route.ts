@@ -30,7 +30,10 @@ export async function GET(req: NextRequest) {
     await prismadb.crm_Targets.updateMany({
       where: {
         do_not_email: false,
-        OR: [{ id: send.target_id }, { email: send.email }],
+        OR: [
+          { id: send.target_id },
+          { email: { equals: send.email, mode: "insensitive" } },
+        ],
       },
       data: { do_not_email: true, do_not_email_at: new Date() },
     });

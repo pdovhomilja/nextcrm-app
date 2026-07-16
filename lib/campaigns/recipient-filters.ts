@@ -23,3 +23,16 @@ export function eligibleFollowUpSendsWhere(step0Id: string, sendTo: string | nul
     ...(sendTo === "non_openers" ? { opened_at: null } : {}),
   } satisfies Prisma.crm_campaign_sendsWhereInput;
 }
+
+// Last-gate guard used by campaign send-step just before dispatching to Resend.
+// Returns a skip reason, or null when the send may proceed.
+export function sendStepSkipReason(sendRecord: {
+  status: string;
+  unsubscribed_at: Date | string | null;
+  target?: { do_not_email: boolean } | null;
+}): string | null {
+  if (sendRecord.status === "sent") return "already sent";
+  if (sendRecord.unsubscribed_at) return "recipient unsubscribed";
+  if (sendRecord.target?.do_not_email) return "recipient globally suppressed";
+  return null;
+}
