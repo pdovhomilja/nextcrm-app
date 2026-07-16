@@ -201,6 +201,7 @@ model crm_Opportunities {
   budget           Decimal                 @default(0) @db.Decimal(18, 2)
   campaign         String?                 @db.Uuid
   close_date       DateTime?
+  delivery_deadline DateTime?
   contact          String?                 @db.Uuid
   createdBy        String?                 @db.Uuid
   created_on       DateTime?               @default(now())
@@ -1225,6 +1226,8 @@ model crm_Targets {
   social_instagram String?
   social_facebook  String?
   status           Boolean   @default(true)
+  do_not_email     Boolean   @default(false)
+  do_not_email_at  DateTime?
   tags             String[]
   notes            String[]
   created_by       String?   @db.Uuid
@@ -1262,6 +1265,7 @@ model crm_Targets {
   @@index([status])
   @@index([created_on])
   @@index([converted_account_id])
+  @@index([do_not_email])
   @@index([converted_contact_id])
   @@index([deletedAt])
 }
