@@ -56,6 +56,25 @@ describe("unsubscribe global opt-out", () => {
     expect(prismadb.crm_Targets.updateMany).toHaveBeenCalledTimes(1);
   });
 
+  it("still returns 200 when the global suppression write fails", async () => {
+    (prismadb.crm_campaign_sends.findUnique as jest.Mock).mockResolvedValue({
+      id: "send-1",
+      target_id: "t-1",
+      email: "jane@acme.com",
+      unsubscribed_at: null,
+    });
+    (prismadb.crm_campaign_sends.update as jest.Mock).mockResolvedValue({});
+    (prismadb.crm_Targets.updateMany as jest.Mock).mockRejectedValue(
+      new Error("DB unavailable")
+    );
+
+    const res = await GET(
+      new NextRequest("http://localhost/api/campaigns/unsubscribe?token=tok-1")
+    );
+
+    expect(res.status).toBe(200);
+  });
+
   it("does not touch targets for an unknown token", async () => {
     (prismadb.crm_campaign_sends.findUnique as jest.Mock).mockResolvedValue(null);
 
