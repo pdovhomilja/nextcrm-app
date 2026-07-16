@@ -1,6 +1,7 @@
 import { inngest } from "@/inngest/client";
 import { prismadb } from "@/lib/prisma";
 import { randomUUID } from "crypto";
+import { eligibleFollowUpSendsWhere } from "@/lib/campaigns/recipient-filters";
 
 export const campaignProcessFollowUp = inngest.createFunction(
   {
@@ -36,12 +37,7 @@ export const campaignProcessFollowUp = inngest.createFunction(
 
     const eligibleTargets = await step.run("filter-recipients", async () => {
       return prismadb.crm_campaign_sends.findMany({
-        where: {
-          step_id: step0.id,
-          status: { in: ["sent", "delivered"] },
-          unsubscribed_at: null,
-          ...(followUpStep.send_to === "non_openers" ? { opened_at: null } : {}),
-        },
+        where: eligibleFollowUpSendsWhere(step0.id, followUpStep.send_to),
         select: { target_id: true, email: true },
       });
     });

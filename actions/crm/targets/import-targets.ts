@@ -74,6 +74,22 @@ export async function importTargets(
   });
 
   if (valid.length > 0) {
+    // Inherit global suppression: a re-imported address that previously
+    // unsubscribed must never become emailable again via import.
+    const emails = valid.map((v) => v.email).filter(Boolean) as string[];
+    if (emails.length > 0) {
+      const suppressed = await prismadb.crm_Targets.findMany({
+        where: { do_not_email: true, email: { in: emails } },
+        select: { email: true },
+      });
+      const suppressedEmails = new Set(suppressed.map((s) => s.email));
+      for (const row of valid) {
+        if (row.email && suppressedEmails.has(row.email)) {
+          row.do_not_email = true;
+          row.do_not_email_at = new Date();
+        }
+      }
+    }
     await prismadb.crm_Targets.createMany({ data: valid, skipDuplicates: true });
   }
 

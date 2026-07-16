@@ -1,6 +1,7 @@
 import { inngest } from "@/inngest/client";
 import { prismadb } from "@/lib/prisma";
 import { randomUUID } from "crypto";
+import { subscribedTargetsInclude } from "@/lib/campaigns/recipient-filters";
 
 export const campaignScheduleSend = inngest.createFunction(
   {
@@ -41,9 +42,7 @@ export const campaignScheduleSend = inngest.createFunction(
         where: {
           campaign_lists: { some: { campaign_id: campaignId } },
         },
-        include: {
-          targets: { include: { target: { select: { id: true, email: true } } } },
-        },
+        include: subscribedTargetsInclude(),
       });
 
       const seen = new Set<string>();
