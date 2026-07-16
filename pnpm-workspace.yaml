@@ -40,20 +40,17 @@ overrides:
   "ip-address@<10.1.1": ">=10.1.1"
   "postcss@<8.5.10": ">=8.5.10"
 
-onlyBuiltDependencies:
-  - "@parcel/watcher"
-  - "@prisma/engines"
-  - "@swc/core"
-  - aws-crt
-  - bcrypt
-  - canvas
-  - esbuild
-  - msgpackr-extract
-  - msw
-  - prisma
-  - sharp
-  - unrs-resolver
-
 allowBuilds:
+  "@parcel/watcher": true
+  "@prisma/engines": true
+  "@swc/core": true
   aws-crt: true
+  bcrypt: true
   canvas: false
+  esbuild: true
+  msgpackr-extract: true
+  msw: true
+  prisma: true
+  protobufjs: false
+  sharp: true
+  unrs-resolver: true
