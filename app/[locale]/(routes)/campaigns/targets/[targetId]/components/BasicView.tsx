@@ -23,6 +23,7 @@ import Link from "next/link";
 import { EnvelopeClosedIcon } from "@radix-ui/react-icons";
 import { Badge } from "@/components/ui/badge";
 import { EnrichButton } from "./EnrichButton";
+import ConvertToDealButton from "./ConvertToDealButton";
 import { TargetContactsTable } from "./TargetContactsTable";
 
 interface TargetContact {
@@ -56,6 +57,7 @@ export async function BasicView({ data }: TargetBasicViewProps) {
             </div>
             <div className="flex items-center gap-2">
               <EnrichButton targetId={data.id} />
+              <ConvertToDealButton targetId={data.id} />
               <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
             </div>
           </div>
