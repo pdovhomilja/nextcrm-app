@@ -83,6 +83,7 @@
     "entities": "^7.0.1",
     "eslint": "^9.39.3",
     "eslint-config-next": "16.1.6",
+    "exceljs": "^4.4.0",
     "form-data": "^4.0.5",
     "geist": "^1.7.0",
     "imap": "^0.8.19",

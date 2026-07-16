@@ -2,7 +2,7 @@
 import { getSession } from "@/lib/auth-server";
 
 import { prismadb } from "@/lib/prisma";
-import Papa from "papaparse";
+import { parseSpreadsheetFile } from "@/lib/spreadsheet/parse";
 
 export async function importTargets(
   formData: FormData
@@ -16,11 +16,7 @@ export async function importTargets(
   const mappingRaw = formData.get("mapping") as string | null;
   const mapping: Record<string, string> = mappingRaw ? JSON.parse(mappingRaw) : {};
 
-  const text = await file.text();
-  const { data } = Papa.parse<Record<string, string>>(text, {
-    header: true,
-    skipEmptyLines: true,
-  });
+  const data = await parseSpreadsheetFile(file);
 
   const valid: any[] = [];
   const errors: string[] = [];
