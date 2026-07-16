@@ -4,7 +4,7 @@ jest.mock("@/lib/prisma", () => ({
     crm_Targets: { findFirst: jest.fn() },
     crm_campaign_sends: { findFirst: jest.fn() },
     crm_Opportunities_Sales_Stages: { findFirst: jest.fn() },
-    crm_Opportunities: { create: jest.fn() },
+    crm_Opportunities: { create: jest.fn(), findFirst: jest.fn() },
   },
 }));
 jest.mock("@/inngest/client", () => ({
@@ -52,6 +52,7 @@ describe("convertTargetToDeal", () => {
     (prismadb.crm_Opportunities_Sales_Stages.findFirst as jest.Mock).mockResolvedValue({
       id: "stage-presale",
     });
+    (prismadb.crm_Opportunities.findFirst as jest.Mock).mockResolvedValue(null);
     (prismadb.crm_Opportunities.create as jest.Mock).mockResolvedValue({ id: "opp-1" });
 
     const res = await convertTargetToDeal("t1");
@@ -75,6 +76,7 @@ describe("convertTargetToDeal", () => {
     });
     (prismadb.crm_campaign_sends.findFirst as jest.Mock).mockResolvedValue(null);
     (prismadb.crm_Opportunities_Sales_Stages.findFirst as jest.Mock).mockResolvedValue(null);
+    (prismadb.crm_Opportunities.findFirst as jest.Mock).mockResolvedValue(null);
     (prismadb.crm_Opportunities.create as jest.Mock).mockResolvedValue({ id: "opp-2" });
 
     const res = await convertTargetToDeal("t1");
@@ -83,5 +85,30 @@ describe("convertTargetToDeal", () => {
     const data = (prismadb.crm_Opportunities.create as jest.Mock).mock.calls[0][0].data;
     expect(data.campaign).toBeUndefined();
     expect(data.sales_stage).toBeUndefined();
+  });
+
+  it("returns the existing opportunity instead of creating a duplicate", async () => {
+    (convertTarget as jest.Mock).mockResolvedValue({ accountId: "a1", contactId: "c1" });
+    (prismadb.crm_Targets.findFirst as jest.Mock).mockResolvedValue({
+      id: "t1",
+      company: "Acme",
+      last_name: "Doe",
+    });
+    (prismadb.crm_Opportunities.findFirst as jest.Mock).mockResolvedValue({ id: "opp-existing" });
+
+    const res = await convertTargetToDeal("t1");
+
+    expect(res).toEqual({ accountId: "a1", contactId: "c1", opportunityId: "opp-existing" });
+    expect(prismadb.crm_Opportunities.create).not.toHaveBeenCalled();
+  });
+
+  it("returns a generic error instead of throwing when a lookup rejects", async () => {
+    (convertTarget as jest.Mock).mockResolvedValue({ accountId: "a1", contactId: "c1" });
+    (prismadb.crm_Targets.findFirst as jest.Mock).mockRejectedValue(new Error("db down"));
+
+    await expect(convertTargetToDeal("t1")).resolves.toEqual({
+      error: "Failed to create opportunity from target",
+    });
+    expect(prismadb.crm_Opportunities.create).not.toHaveBeenCalled();
   });
 });

@@ -18,22 +18,36 @@ export async function convertTargetToDeal(
   const converted = await convertTarget(targetId);
   if ("error" in converted) return converted;
 
-  const target = await prismadb.crm_Targets.findFirst({ where: { id: targetId } });
-  if (!target) return { error: "Target not found" };
-
-  // Campaign attribution: the campaign that last emailed this target, if any.
-  const lastSend = await prismadb.crm_campaign_sends.findFirst({
-    where: { target_id: targetId },
-    orderBy: { sent_at: "desc" },
-    select: { campaign_id: true },
-  });
-
-  // Entry stage = lowest order (the AQUNAMA runbook configures "Pre-Sale" as order 0).
-  const entryStage = await prismadb.crm_Opportunities_Sales_Stages.findFirst({
-    orderBy: { order: "asc" },
-  });
-
   try {
+    const target = await prismadb.crm_Targets.findFirst({
+      where: { id: targetId, deletedAt: null },
+    });
+    if (!target) return { error: "Target not found" };
+
+    // Idempotency: if an opportunity already exists for this account/contact
+    // (e.g. the button was clicked twice), return it instead of duplicating.
+    const existing = await prismadb.crm_Opportunities.findFirst({
+      where: {
+        account: converted.accountId,
+        contact: converted.contactId,
+        deletedAt: null,
+      },
+      select: { id: true },
+    });
+    if (existing) return { ...converted, opportunityId: existing.id };
+
+    // Campaign attribution: the campaign that last emailed this target, if any.
+    const lastSend = await prismadb.crm_campaign_sends.findFirst({
+      where: { target_id: targetId },
+      orderBy: { sent_at: "desc" },
+      select: { campaign_id: true },
+    });
+
+    // Entry stage = lowest order (the AQUNAMA runbook configures "Pre-Sale" as order 0).
+    const entryStage = await prismadb.crm_Opportunities_Sales_Stages.findFirst({
+      orderBy: { order: "asc" },
+    });
+
     const opportunity = await prismadb.crm_Opportunities.create({
       data: {
         name: `${target.company || target.last_name} — inbound`,

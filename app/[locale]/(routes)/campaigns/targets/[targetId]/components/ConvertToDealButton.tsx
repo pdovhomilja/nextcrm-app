@@ -21,6 +21,8 @@ const ConvertToDealButton = ({ targetId }: { targetId: string }) => {
         toast.success("Target converted — deal created.");
         router.push(`/crm/opportunities/${res.opportunityId}`);
       }
+    } catch (error) {
+      toast.error("Failed to convert target.");
     } finally {
       setIsLoading(false);
     }
