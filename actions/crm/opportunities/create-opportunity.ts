@@ -13,6 +13,7 @@ export const createOpportunity = async (data: {
   budget?: string;
   campaign?: string;
   close_date?: Date;
+  delivery_deadline?: Date;
   contact?: string;
   currency?: string;
   description?: string;
@@ -32,6 +33,7 @@ export const createOpportunity = async (data: {
     budget,
     campaign,
     close_date,
+    delivery_deadline,
     contact,
     currency,
     description,
@@ -54,6 +56,7 @@ export const createOpportunity = async (data: {
         budget: budget ? parseFloat(budget) : undefined,
         campaign: campaign || undefined,
         close_date,
+        delivery_deadline,
         contact: contact || undefined,
         createdBy: userId,
         last_activity_by: userId,
