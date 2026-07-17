@@ -7,6 +7,7 @@ import {
   opportunityReadScopeWhere,
   AuthenticationError,
 } from "@/lib/authz";
+import { serializeDecimalsList } from "@/lib/serialize-decimals";
 
 export const getOpportunitiesFull = cache(async () => {
   let user;
@@ -41,5 +42,5 @@ export const getOpportunitiesFull = cache(async () => {
     },
   });
 
-  return data;
+  return serializeDecimalsList(data);
 });
