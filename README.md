@@ -252,6 +252,20 @@ Global search across all CRM entities from a single search bar — grouped resul
 
 We use [resend.com](https://resend.com) + [react.email](https://react.email) as primary email sender and email templates.
 
+### Mailtrap (Email API/SMTP)
+
+NextCRM supports [Mailtrap](https://mailtrap.io) as an alternative email provider to Resend, for both production sending and safe dev/staging testing through a single API.
+
+**Sending emails (production):**
+
+1. Sign up at [mailtrap.io](https://mailtrap.io) and create a Sending domain.
+2. Copy your API token.
+3. Add it to your `.env.local`: MAILTRAP_API_KEY=
+
+**Testing emails (dev/staging, optional):**
+
+Use a Mailtrap Sandbox inbox instead of a production domain during development, so test emails (OTP, invoices, notifications) never reach real inboxes.
+
 ## Reports
 
 We use Tremor charts as a tool for creating charts in NextCRM
