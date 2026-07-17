@@ -26,7 +26,9 @@ export const createColumns = (
     ),
     cell: ({ row }) => (
       <div className="w-[80px]">
-        {moment(row.getValue("createdAt")).format("YY-MM-DD")}
+        {row.getValue("createdAt")
+          ? moment(row.getValue("createdAt")).format("YY-MM-DD")
+          : "—"}
       </div>
     ),
     enableSorting: false,
@@ -39,7 +41,9 @@ export const createColumns = (
     ),
     cell: ({ row }) => (
       <div className="w-[80px]">
-        {moment(row.getValue("updatedAt")).format("YY-MM-DD")}
+        {row.getValue("updatedAt")
+          ? moment(row.getValue("updatedAt")).format("YY-MM-DD")
+          : "—"}
       </div>
     ),
     enableSorting: false,
