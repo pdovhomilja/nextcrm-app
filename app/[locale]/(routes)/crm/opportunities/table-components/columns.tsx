@@ -55,7 +55,9 @@ export const createColumns = (config: OpportunityConfig): ColumnDef<Opportunity>
     ),
     cell: ({ row }) => (
       <div className="w-[80px]">
-        {moment(row.getValue("close_date")).format("YY-MM-DD")}
+        {row.getValue("close_date")
+          ? moment(row.getValue("close_date")).format("YY-MM-DD")
+          : "—"}
       </div>
     ),
     enableSorting: false,
