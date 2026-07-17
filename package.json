@@ -83,7 +83,7 @@
     "entities": "^7.0.1",
     "eslint": "^9.39.3",
     "eslint-config-next": "16.1.6",
-    "form-data": "^4.0.5",
+    "form-data": "^4.0.6",
     "geist": "^1.7.0",
     "imap": "^0.8.19",
     "inngest": "^4.0.2",
