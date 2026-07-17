@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+    branches: [dev, main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: typecheck / tests / build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        # Migrations run CREATE EXTENSION vector — plain postgres won't do.
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: nextcrm_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nextcrm_ci
+      # Dummy values so module-level env reads don't break `next build`.
+      # Nothing here is a real credential.
+      BETTER_AUTH_SECRET: ci-only-dummy-secret-not-used-anywhere
+      BETTER_AUTH_URL: http://localhost:3000
+      JWT_SECRET: ci-only-dummy-secret-not-used-anywhere
+      EMAIL_ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
+      EMAIL_FROM: ci@example.com
+      EMAIL_HOST: smtp.example.com
+      EMAIL_USERNAME: ci
+      EMAIL_PASSWORD: ci
+      NEXTAUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_NAME: NextCRM-CI
+      INNGEST_ID: nextcrm-ci
+      INNGEST_APP_NAME: NextCRM-CI
+      MINIO_ENDPOINT: http://localhost:9000
+      MINIO_PORT: "9000"
+      MINIO_BUCKET: ci
+      MINIO_USE_SSL: "false"
+      MINIO_ACCESS_KEY: ci
+      MINIO_SECRET_KEY: ci
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Node's bundled corepack is too old to launch pnpm 11
+      # (same workaround as nixpacks.toml uses for Coolify builds).
+      - name: Enable pnpm via current corepack
+        run: npm install -g corepack@latest && corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm exec prisma generate
+
+      - name: Typecheck
+        run: pnpm exec tsc --noEmit
+
+      - name: Apply migrations to a fresh database
+        run: pnpm exec prisma migrate deploy
+
+      - name: Unit & integration tests
+        run: pnpm exec jest --ci
+
+      - name: Production build (mirrors Coolify)
+        run: pnpm run build

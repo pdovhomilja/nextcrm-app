@@ -89,7 +89,7 @@ describe("createConfigValue", () => {
     (mockPrisma.crm_Contact_Types.create as jest.Mock).mockResolvedValue({});
     await createConfigValue("contactType", "Investor");
     expect(mockPrisma.crm_Contact_Types.create).toHaveBeenCalledWith({
-      data: { name: "Investor" },
+      data: { name: "Investor", v: 0 },
     });
   });
 
