@@ -5,6 +5,14 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.13.0...v0.13.1) (2026-07-17)
+
+
+### Fixed
+
+* **crm:** serialize Prisma Decimals in opportunities/contracts fetches (RSC boundary error) ([48a6bb0](https://github.com/pdovhomilja/nextcrm-app/commit/48a6bb0550d9fafc174c55911e5aff7215b794e3))
+* **crm:** serialize Prisma Decimals in opportunities/contracts list fetches ([ffba94a](https://github.com/pdovhomilja/nextcrm-app/commit/ffba94aebec29c2bdad101a6d6d6875073cc3583))
+
 ## [0.13.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.12.3...v0.13.0) (2026-07-17)
 
 
