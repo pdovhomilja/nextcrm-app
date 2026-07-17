@@ -142,7 +142,14 @@ async function main() {
 
   // Demo CRM dataset for e2e tests — the update/detail specs act on the
   // first table row and need at least one record per entity. Idempotent:
-  // created only when missing (matched by name/email).
+  // created only when missing (matched by name/email). Gated so a manual
+  // `prisma db seed` against a real database doesn't inject demo records:
+  // runs in CI (GitHub Actions sets CI=true) or with SEED_DEMO_DATA=1.
+  const seedDemoData =
+    process.env.CI === "true" || process.env.SEED_DEMO_DATA === "1";
+  if (!seedDemoData) {
+    console.log("Demo CRM dataset skipped (set SEED_DEMO_DATA=1 to include)");
+  } else {
   let demoAccount = await prisma.crm_Accounts.findFirst({
     where: { name: "Seed Demo Account" },
   });
@@ -243,6 +250,7 @@ async function main() {
     });
   }
   console.log("Demo CRM dataset seeded");
+  }
 
   // Currencies and Exchange Rates
   await seedCurrencies(prisma);
