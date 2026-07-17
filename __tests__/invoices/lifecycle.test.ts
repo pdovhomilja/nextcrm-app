@@ -152,7 +152,10 @@ beforeAll(async () => {
     series = await prismadb.invoice_Series.create({
       data: {
         name: "Test Series",
-        prefixTemplate: "INV-{YYYY}-",
+        // Must contain a {####} counter placeholder (formatNumber's syntax) —
+        // without it every issued invoice formats to the same number and
+        // collides on the (seriesId, number) unique constraint.
+        prefixTemplate: "INV-{YYYY}-{####}",
         resetPolicy: "YEARLY",
         counter: 0,
         active: true,

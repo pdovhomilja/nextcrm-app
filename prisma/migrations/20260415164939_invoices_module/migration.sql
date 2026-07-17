@@ -1,3 +1,9 @@
+-- The 0_init baseline (Dec 2025 Mongo->Postgres migration) carried a legacy
+-- standalone "Invoices" table that this module replaces. Databases replayed
+-- from scratch still have it at this point, so drop it first; databases that
+-- already ran this migration never re-execute this file.
+DROP TABLE IF EXISTS "Invoices" CASCADE;
+
 -- CreateEnum
 CREATE TYPE "Invoice_Status" AS ENUM ('DRAFT', 'ISSUED', 'SENT', 'PARTIALLY_PAID', 'PAID', 'OVERDUE', 'CANCELLED', 'DISPUTED', 'REFUNDED', 'WRITTEN_OFF');
 
