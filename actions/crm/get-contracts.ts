@@ -9,6 +9,7 @@ import {
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
+import { serializeDecimalsList } from "@/lib/serialize-decimals";
 
 export const getContractsWithIncludes = cache(async () => {
   let user;
@@ -37,7 +38,7 @@ export const getContractsWithIncludes = cache(async () => {
       createdAt: "desc",
     },
   });
-  return data;
+  return serializeDecimalsList(data);
 });
 
 export const getContractsByAccountId = async (accountId: string) => {
@@ -74,5 +75,5 @@ export const getContractsByAccountId = async (accountId: string) => {
       },
     },
   });
-  return data;
+  return serializeDecimalsList(data);
 };
