@@ -5,6 +5,14 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.3](https://github.com/pdovhomilja/nextcrm-app/compare/v0.13.2...v0.13.3) (2026-07-17)
+
+
+### Fixed
+
+* **ci:** make migration chain replayable on a fresh database ([2c34ebb](https://github.com/pdovhomilja/nextcrm-app/commit/2c34ebbe203ffa620535eaf3437d2db5ed067d15))
+* **crm:** drop empty currency on opportunity update; e2e round 2 ([bbac5ea](https://github.com/pdovhomilja/nextcrm-app/commit/bbac5ea7a9e57b66346101f678806a4cfc8766f1))
+
 ## [0.13.2](https://github.com/pdovhomilja/nextcrm-app/compare/v0.13.1...v0.13.2) (2026-07-17)
 
 
