@@ -122,20 +122,127 @@ async function main() {
 
   // Test User for E2E Testing
   const testUserEmail = process.env.TEST_USER_EMAIL || "test@nextcrm.app";
-  await prisma.users.upsert({
+  // Name must contain "a" — e2e helpers (selectUserInCombobox) type "a" to
+  // filter the assignee combobox and need this user to match.
+  const testUser = await prisma.users.upsert({
     where: { email: testUserEmail },
     update: {
+      name: "Playwright Admin",
       userStatus: "ACTIVE",
       role: "admin",
     },
     create: {
       email: testUserEmail,
-      name: "Test User",
+      name: "Playwright Admin",
       userStatus: "ACTIVE",
       role: "admin",
     },
   });
   console.log(`Test user seeded: ${testUserEmail}`);
+
+  // Demo CRM dataset for e2e tests — the update/detail specs act on the
+  // first table row and need at least one record per entity. Idempotent:
+  // created only when missing (matched by name/email).
+  let demoAccount = await prisma.crm_Accounts.findFirst({
+    where: { name: "Seed Demo Account" },
+  });
+  if (!demoAccount) {
+    demoAccount = await prisma.crm_Accounts.create({
+      data: {
+        v: 0,
+        name: "Seed Demo Account",
+        status: "Active",
+        email: "demo-account@nextcrm.app",
+        assigned_to: testUser.id,
+      },
+    });
+  }
+
+  let demoContact = await prisma.crm_Contacts.findFirst({
+    where: { last_name: "Demo Contact" },
+  });
+  if (!demoContact) {
+    demoContact = await prisma.crm_Contacts.create({
+      data: {
+        first_name: "Seed",
+        last_name: "Demo Contact",
+        email: "demo-contact@nextcrm.app",
+        accountsIDs: demoAccount.id,
+        assigned_to: testUser.id,
+      },
+    });
+  }
+
+  const demoLead = await prisma.crm_Leads.findFirst({
+    where: { lastName: "Demo Lead" },
+  });
+  if (!demoLead) {
+    await prisma.crm_Leads.create({
+      data: {
+        firstName: "Seed",
+        lastName: "Demo Lead",
+        company: "Seed Demo Company",
+        email: "demo-lead@nextcrm.app",
+        assigned_to: testUser.id,
+      },
+    });
+  }
+
+  const demoOpportunity = await prisma.crm_Opportunities.findFirst({
+    where: { name: "Seed Demo Opportunity" },
+  });
+  if (!demoOpportunity) {
+    const firstStage = await prisma.crm_Opportunities_Sales_Stages.findFirst({
+      orderBy: { order: "asc" },
+    });
+    const firstType = await prisma.crm_Opportunities_Type.findFirst({
+      orderBy: { order: "asc" },
+    });
+    await prisma.crm_Opportunities.create({
+      data: {
+        name: "Seed Demo Opportunity",
+        account: demoAccount.id,
+        contact: demoContact.id,
+        sales_stage: firstStage?.id,
+        type: firstType?.id,
+        budget: 10000,
+        expected_revenue: 8000,
+        close_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        assigned_to: testUser.id,
+        createdBy: testUser.id,
+        updatedBy: testUser.id,
+      },
+    });
+  }
+
+  const demoTarget = await prisma.crm_Targets.findFirst({
+    where: { email: "demo-target@nextcrm.app" },
+  });
+  if (!demoTarget) {
+    await prisma.crm_Targets.createMany({
+      data: [
+        {
+          last_name: "Demo Target One",
+          company: "Target Co One",
+          email: "demo-target@nextcrm.app",
+          created_by: testUser.id,
+        },
+        {
+          last_name: "Demo Target Two",
+          company: "Target Co Two",
+          email: "demo-target-2@nextcrm.app",
+          created_by: testUser.id,
+        },
+        {
+          last_name: "Demo Target Three",
+          company: "Target Co Three",
+          email: "demo-target-3@nextcrm.app",
+          created_by: testUser.id,
+        },
+      ],
+    });
+  }
+  console.log("Demo CRM dataset seeded");
 
   // Currencies and Exchange Rates
   await seedCurrencies(prisma);

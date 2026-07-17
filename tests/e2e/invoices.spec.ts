@@ -13,6 +13,8 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Invoices module", () => {
+  test.use({ storageState: "playwright/.auth/user.json" });
+
   test("navigates to invoices list from sidebar", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("link", { name: /invoices/i }).click();
