@@ -5,6 +5,14 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.2](https://github.com/pdovhomilja/nextcrm-app/compare/v0.13.1...v0.13.2) (2026-07-17)
+
+
+### Fixed
+
+* **crm:** align lead/contract table display schemas with DB nullability ([c1c8ef4](https://github.com/pdovhomilja/nextcrm-app/commit/c1c8ef42be008c4e4951efa336a5450b9fbaeb28))
+* **crm:** align table display schemas with DB nullability (close_date, leads, contracts) ([37cfbef](https://github.com/pdovhomilja/nextcrm-app/commit/37cfbefd7df79c36bfebb04cc8aaa01581002a1b))
+
 ## [0.13.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.13.0...v0.13.1) (2026-07-17)
 
 
