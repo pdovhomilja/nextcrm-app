@@ -28,18 +28,20 @@ const mockGetUser = jest.fn().mockResolvedValue({
   userLanguage: "en",
 });
 
+// Shared mutable session user — beforeAll swaps in a real DB user id so
+// requireAuthenticated() (getSession -> users.findUnique) resolves it.
+const mockSessionUser = {
+  id: TEST_USER_ID_PLACEHOLDER,
+  name: "Test User",
+  email: "test@example.com",
+};
+
 jest.mock("@/actions/get-user", () => ({
   getUser: (...args: unknown[]) => mockGetUser(...args),
 }));
 
 jest.mock("@/lib/auth-server", () => ({
-  getSession: jest.fn().mockResolvedValue({
-    user: {
-      id: TEST_USER_ID_PLACEHOLDER,
-      name: "Test User",
-      email: "test@example.com",
-    },
-  }),
+  getSession: jest.fn(async () => ({ user: mockSessionUser })),
 }));
 
 jest.mock("@/lib/invoices/fx", () => ({
@@ -110,17 +112,24 @@ function draftPayload(
  * ------------------------------------------------------------------ */
 
 beforeAll(async () => {
-  // Try to find a real user for the mock (avoids potential FK issues)
-  const existingUser = await prismadb.users.findFirst();
-  if (existingUser) {
-    mockGetUser.mockResolvedValue({
-      id: existingUser.id,
-      role: "admin",
-      name: existingUser.name ?? "Test User",
-      email: existingUser.email ?? "test@example.com",
-      userLanguage: "en",
+  // Use a real user for the mocks — requireAuthenticated() looks the session
+  // user up in the DB, so the id must exist. Create one on a fresh DB (CI).
+  let existingUser = await prismadb.users.findFirst({
+    where: { role: "admin" },
+  });
+  if (!existingUser) {
+    existingUser = await prismadb.users.create({
+      data: { email: "lifecycle-test@example.com", role: "admin" },
     });
   }
+  mockSessionUser.id = existingUser.id;
+  mockGetUser.mockResolvedValue({
+    id: existingUser.id,
+    role: "admin",
+    name: existingUser.name ?? "Test User",
+    email: existingUser.email ?? "test@example.com",
+    userLanguage: "en",
+  });
 
   // Ensure a test account exists
   let account = await prismadb.crm_Accounts.findFirst();
@@ -143,7 +152,10 @@ beforeAll(async () => {
     series = await prismadb.invoice_Series.create({
       data: {
         name: "Test Series",
-        prefixTemplate: "INV-{YYYY}-",
+        // Must contain a {####} counter placeholder (formatNumber's syntax) —
+        // without it every issued invoice formats to the same number and
+        // collides on the (seriesId, number) unique constraint.
+        prefixTemplate: "INV-{YYYY}-{####}",
         resetPolicy: "YEARLY",
         counter: 0,
         active: true,

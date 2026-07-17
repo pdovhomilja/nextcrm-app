@@ -65,8 +65,15 @@ describe("searchDocuments scope", () => {
 
   it("post-filters vector results via authorized id set", async () => {
     mockUser("user", "u1");
-    // keyword: empty
-    (prismadb.documents.findMany as jest.Mock).mockResolvedValueOnce([]);
+    // Call order in searchDocuments: (1) keyword findMany, (2) findMany
+    // inside filterAuthorizedDocumentIds, (3) extraDocs findMany by ids.
+    (prismadb.documents.findMany as jest.Mock)
+      .mockResolvedValueOnce([]) // 1: keyword — empty
+      .mockResolvedValueOnce([{ id: "v1" }, { id: "v3" }]) // 2: authz filter
+      .mockResolvedValueOnce([
+        { id: "v1", document_name: "v1", summary: null, document_system_type: null, accounts: [] },
+        { id: "v3", document_name: "v3", summary: null, document_system_type: null, accounts: [] },
+      ]); // 3: extraDocs
     // raw vector: 5 ids
     (prismadb.$queryRaw as jest.Mock).mockResolvedValue([
       { id: "v1", similarity: 0.9 },
@@ -75,24 +82,17 @@ describe("searchDocuments scope", () => {
       { id: "v4", similarity: 0.81 },
       { id: "v5", similarity: 0.75 },
     ]);
-    // filterAuthorizedDocumentIds is implemented via prismadb.documents.findMany — return only v1, v3
-    (prismadb.documents.findMany as jest.Mock).mockResolvedValue([
-      { id: "v1" },
-      { id: "v3" },
-    ]);
-    // 2nd findMany call (extraDocs lookup by ids) returns those two
-    (prismadb.documents.findMany as jest.Mock).mockResolvedValueOnce([
-      { id: "v1", document_name: "v1", summary: null, document_system_type: null, accounts: [] },
-      { id: "v3", document_name: "v3", summary: null, document_system_type: null, accounts: [] },
-    ]);
 
     const res = await searchDocuments("foo");
     const ids = res.map((r) => r.id);
     expect(ids).toEqual(expect.arrayContaining(["v1", "v3"]));
     expect(ids).not.toEqual(expect.arrayContaining(["v2", "v4", "v5"]));
 
-    // extraDocs query must use only the authorized ids
-    const extraCall = (prismadb.documents.findMany as jest.Mock).mock.calls[1][0];
+    // The authz filter query receives all candidate ids…
+    const filterCall = (prismadb.documents.findMany as jest.Mock).mock.calls[1][0];
+    expect(filterCall.where.id.in).toEqual(["v1", "v2", "v3", "v4", "v5"]);
+    // …and the extraDocs query must use only the authorized ids.
+    const extraCall = (prismadb.documents.findMany as jest.Mock).mock.calls[2][0];
     expect(extraCall.where.id.in).toEqual(["v1", "v3"]);
   });
 });

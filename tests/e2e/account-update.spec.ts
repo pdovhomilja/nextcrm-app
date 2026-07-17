@@ -58,7 +58,8 @@ test.describe("Update Account", () => {
     ).toBeVisible({ timeout: 5000 });
 
     // Update the account name
-    const nameInput = page.getByLabel("Account name", { exact: true });
+    // Not exact — the label carries a trailing required-asterisk ("Account name *")
+    const nameInput = page.getByLabel("Account name");
     await nameInput.clear();
     await nameInput.fill("Updated Account Name");
 
