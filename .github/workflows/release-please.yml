@@ -13,8 +13,12 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
+      # Do not set release-type here: it switches the action to simple mode,
+      # which ignores release-please-config.json and its changelog-sections.
+      # The release type is declared in that config file instead.
       - uses: googleapis/release-please-action@v4.4.0
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          release-type: node
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
