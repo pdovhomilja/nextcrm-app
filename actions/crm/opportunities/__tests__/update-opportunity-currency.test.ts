@@ -1,7 +1,7 @@
 jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
-    crm_Opportunities: { update: jest.fn() },
+    crm_Opportunities: { update: jest.fn(), findUnique: jest.fn() },
     users: { findFirst: jest.fn() },
   },
 }));
@@ -9,7 +9,10 @@ jest.mock("@/lib/sendmail", () => ({ __esModule: true, default: jest.fn() }));
 jest.mock("@/inngest/client", () => ({
   inngest: { send: jest.fn().mockResolvedValue({}) },
 }));
-jest.mock("@/lib/audit-log", () => ({ writeAuditLog: jest.fn() }));
+jest.mock("@/lib/audit-log", () => ({
+  writeAuditLog: jest.fn(),
+  diffObjects: jest.fn(() => ({})),
+}));
 jest.mock("@/lib/currency", () => ({
   getDefaultCurrency: jest.fn().mockResolvedValue("CZK"),
   getSnapshotRate: jest.fn().mockResolvedValue(null),
@@ -24,6 +27,7 @@ describe("updateOpportunity currency handling", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (getSession as jest.Mock).mockResolvedValue({ user: { id: "u1" } });
+    (prismadb.crm_Opportunities.findUnique as jest.Mock).mockResolvedValue({ id: "opp-1" });
     (prismadb.crm_Opportunities.update as jest.Mock).mockResolvedValue({ id: "opp-1" });
   });
 
