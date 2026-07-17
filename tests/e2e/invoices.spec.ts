@@ -17,7 +17,9 @@ test.describe("Invoices module", () => {
 
   test("navigates to invoices list from sidebar", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("link", { name: /invoices/i }).click();
+    // .first(): the dashboard can also contain an invoices link once data
+    // exists — both targets navigate to /invoices.
+    await page.getByRole("link", { name: /invoices/i }).first().click();
     await expect(page).toHaveURL(/\/invoices/);
     await expect(
       page.getByRole("heading", { name: /invoices/i })
