@@ -1,0 +1,9 @@
+# Coolify builds with nixpacks, whose node provider pins corepack@0.24.1 —
+# too old to launch pnpm 10/11 (ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING).
+# Current corepack reads the packageManager field and runs pnpm 11.
+# (npm install -g pnpm doesn't work here: the nix-provided pnpm 9 wins PATH.)
+[phases.install]
+cmds = [
+  "npm install -g corepack@latest && corepack enable",
+  "pnpm i --frozen-lockfile",
+]

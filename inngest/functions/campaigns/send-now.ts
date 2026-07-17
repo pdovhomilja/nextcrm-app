@@ -1,6 +1,7 @@
 import { inngest } from "@/inngest/client";
 import { prismadb } from "@/lib/prisma";
 import { randomUUID } from "crypto";
+import { subscribedTargetsInclude } from "@/lib/campaigns/recipient-filters";
 
 // Same logic as schedule-send but without sleepUntil
 export const campaignSendNow = inngest.createFunction(
@@ -20,7 +21,7 @@ export const campaignSendNow = inngest.createFunction(
     const targets = await step.run("resolve-recipients", async () => {
       const lists = await prismadb.crm_TargetLists.findMany({
         where: { campaign_lists: { some: { campaign_id: campaignId } } },
-        include: { targets: { include: { target: { select: { id: true, email: true } } } } },
+        include: subscribedTargetsInclude(),
       });
       const seen = new Set<string>();
       const unique: Array<{ id: string; email: string }> = [];

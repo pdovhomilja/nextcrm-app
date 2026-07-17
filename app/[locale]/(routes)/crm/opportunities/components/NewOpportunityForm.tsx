@@ -103,6 +103,7 @@ export function NewOpportunityForm({
     close_date: z.date({
       message: "A expected close date is required.",
     }),
+    delivery_deadline: z.date().optional(),
     description: z.string(),
     type: z.string(),
     sales_stage: z.string(),
@@ -146,6 +147,7 @@ export function NewOpportunityForm({
       form.reset({
         name: "",
         close_date: new Date(),
+        delivery_deadline: undefined,
         description: "",
         type: "",
         sales_stage: "",
@@ -193,6 +195,47 @@ export function NewOpportunityForm({
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>{t("closeDate")}</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-[240px] pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>{t("closeDatePlaceholder")}</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        //@ts-ignore
+                        //TODO: fix this
+                        onSelect={field.onChange}
+                        disabled={(date) => date < new Date("1900-01-01")}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="delivery_deadline"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Delivery deadline</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>

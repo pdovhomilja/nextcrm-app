@@ -2,7 +2,7 @@
 import { getSession } from "@/lib/auth-server";
 
 import { prismadb } from "@/lib/prisma";
-import Papa from "papaparse";
+import { parseSpreadsheetFile } from "@/lib/spreadsheet/parse";
 
 export async function importTargets(
   formData: FormData
@@ -16,11 +16,7 @@ export async function importTargets(
   const mappingRaw = formData.get("mapping") as string | null;
   const mapping: Record<string, string> = mappingRaw ? JSON.parse(mappingRaw) : {};
 
-  const text = await file.text();
-  const { data } = Papa.parse<Record<string, string>>(text, {
-    header: true,
-    skipEmptyLines: true,
-  });
+  const data = await parseSpreadsheetFile(file);
 
   const valid: any[] = [];
   const errors: string[] = [];
@@ -74,6 +70,27 @@ export async function importTargets(
   });
 
   if (valid.length > 0) {
+    // Inherit global suppression: a re-imported address that previously
+    // unsubscribed must never become emailable again via import.
+    const emails = valid.map((v) => v.email).filter(Boolean) as string[];
+    if (emails.length > 0) {
+      const suppressed = await prismadb.crm_Targets.findMany({
+        where: {
+          do_not_email: true,
+          email: { in: emails, mode: "insensitive" },
+        },
+        select: { email: true },
+      });
+      const suppressedEmails = new Set(
+        suppressed.map((s) => (s.email ?? "").toLowerCase())
+      );
+      for (const row of valid) {
+        if (row.email && suppressedEmails.has(row.email.toLowerCase())) {
+          row.do_not_email = true;
+          row.do_not_email_at = new Date();
+        }
+      }
+    }
     await prismadb.crm_Targets.createMany({ data: valid, skipDuplicates: true });
   }
 

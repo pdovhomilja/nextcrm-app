@@ -4,7 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { importTargets } from "@/actions/crm/targets/import-targets";
 import { suggestMapping } from "@/actions/crm/targets/suggest-mapping";
-import Papa from "papaparse";
+import { parseSpreadsheetFile } from "@/lib/spreadsheet/parse";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -90,21 +90,19 @@ const ImportTargetsModal = () => {
     if (!val) resetState();
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setSelectedFile(file);
-
-    Papa.parse<Record<string, string>>(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        const headers = results.meta.fields ?? [];
-        setCsvHeaders(headers);
-        setCsvRows(results.data);
-        fetchSuggestedMapping(headers);
-      },
-    });
+    try {
+      const rows = await parseSpreadsheetFile(file);
+      const headers = rows.length > 0 ? Object.keys(rows[0]) : [];
+      setCsvHeaders(headers);
+      setCsvRows(rows);
+      fetchSuggestedMapping(headers);
+    } catch {
+      toast.error("Could not parse the selected file.");
+    }
   };
 
   const fetchSuggestedMapping = useCallback(async (headers: string[]) => {
@@ -198,19 +196,19 @@ const ImportTargetsModal = () => {
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <Upload className="h-4 w-4 mr-2" />
-          Import CSV
+          Import CSV / Excel
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            Import Targets from CSV
+            Import Targets
             <span className="ml-2 text-sm font-normal text-muted-foreground">
               Step {step === "upload" ? 1 : step === "mapping" ? 2 : 3} of 3
             </span>
           </DialogTitle>
           <DialogDescription>
-            {step === "upload" && "Select a CSV file to import targets."}
+            {step === "upload" && "Select a CSV or Excel (.xlsx) file to import targets."}
             {step === "mapping" && "Map your CSV columns to target fields. AI has pre-filled suggestions — adjust as needed."}
             {step === "preview" && "Review the import summary before proceeding."}
           </DialogDescription>
@@ -223,7 +221,7 @@ const ImportTargetsModal = () => {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".csv"
+                accept=".csv,.xlsx"
                 onChange={handleFileChange}
                 className="hidden"
               />
@@ -231,7 +229,7 @@ const ImportTargetsModal = () => {
                 variant="outline"
                 onClick={() => fileInputRef.current?.click()}
               >
-                Select CSV file
+                Select file
               </Button>
               {selectedFile && (
                 <p className="mt-2 text-sm text-muted-foreground">
