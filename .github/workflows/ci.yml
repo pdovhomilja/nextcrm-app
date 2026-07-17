@@ -10,12 +10,80 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
-jobs:
-  checks:
-    name: typecheck / tests / build
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+# Inert dummy env shared by every job. Module-level code (OpenAI client in
+# /api/inngest, better-auth, minio, …) reads these at import, so typecheck,
+# tests and next build all need them present. Nothing here is a real
+# credential. DATABASE_URL points at the per-job postgres service where one
+# exists; in `fast` nothing connects (all unit tests mock prisma).
+env:
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nextcrm_ci
+  BETTER_AUTH_SECRET: ci-only-dummy-secret-not-used-anywhere
+  BETTER_AUTH_URL: http://localhost:3000
+  JWT_SECRET: ci-only-dummy-secret-not-used-anywhere
+  EMAIL_ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
+  EMAIL_FROM: ci@example.com
+  EMAIL_HOST: smtp.example.com
+  EMAIL_USERNAME: ci
+  EMAIL_PASSWORD: ci
+  NEXTAUTH_URL: http://localhost:3000
+  NEXT_PUBLIC_APP_URL: http://localhost:3000
+  NEXT_PUBLIC_APP_NAME: NextCRM-CI
+  INNGEST_ID: nextcrm-ci
+  INNGEST_APP_NAME: NextCRM-CI
+  INNGEST_EVENT_KEY: ci-dummy-event-key
+  INNGEST_SIGNING_KEY: ci-dummy-signing-key
+  INNGEST_BASE_URL: http://localhost:8288
+  MINIO_ENDPOINT: http://localhost:9000
+  MINIO_PORT: "9000"
+  MINIO_BUCKET: ci
+  MINIO_USE_SSL: "false"
+  MINIO_ACCESS_KEY: ci
+  MINIO_SECRET_KEY: ci
+  OPENAI_API_KEY: sk-ci-dummy-not-a-real-key
+  ANTHROPIC_API_KEY: sk-ant-ci-dummy-not-a-real-key
+  RESEND_API_KEY: re_ci_dummy_not_a_real_key
+  E2B_API_KEY: e2b_ci_dummy
+  FIRECRAWL_API_KEY: fc-ci-dummy
+  NEXTCRM_TOKEN: ci-dummy-token
+  GOOGLE_ID: ci-dummy
+  GOOGLE_SECRET: ci-dummy
+  GITHUB_ID: ci-dummy
+  GITHUB_SECRET: ci-dummy
+  IMAP_HOST: imap.example.com
+  IMAP_PORT: "993"
+  IMAP_USER: ci
+  IMAP_PASSWORD: ci
 
+jobs:
+  # Cheap gate with no services: a typo or failing unit test costs ~1 minute
+  # here instead of spinning up the database-backed jobs below.
+  fast:
+    name: Fast checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prisma generate
+      - name: Typecheck
+        run: pnpm exec tsc --noEmit
+      - name: Unit tests (DB-backed suites run in the integration job)
+        # Convention: suites that need a real database live under
+        # __tests__/invoices/ (currently only lifecycle.test.ts) and are
+        # excluded here — keep this pattern and the integration job's test
+        # list in sync when adding DB-backed suites.
+        run: pnpm exec jest --ci --testPathIgnorePatterns "__tests__/invoices/lifecycle"
+
+  integration:
+    name: Integration (fresh-DB migrations + DB suites)
+    needs: fast
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     services:
       postgres:
         # Migrations run CREATE EXTENSION vector — plain postgres won't do.
@@ -31,74 +99,46 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
-
-    env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nextcrm_ci
-      # Dummy values so module-level env reads don't break `next build`.
-      # Nothing here is a real credential.
-      BETTER_AUTH_SECRET: ci-only-dummy-secret-not-used-anywhere
-      BETTER_AUTH_URL: http://localhost:3000
-      JWT_SECRET: ci-only-dummy-secret-not-used-anywhere
-      EMAIL_ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
-      EMAIL_FROM: ci@example.com
-      EMAIL_HOST: smtp.example.com
-      EMAIL_USERNAME: ci
-      EMAIL_PASSWORD: ci
-      NEXTAUTH_URL: http://localhost:3000
-      NEXT_PUBLIC_APP_URL: http://localhost:3000
-      NEXT_PUBLIC_APP_NAME: NextCRM-CI
-      INNGEST_ID: nextcrm-ci
-      INNGEST_APP_NAME: NextCRM-CI
-      MINIO_ENDPOINT: http://localhost:9000
-      MINIO_PORT: "9000"
-      MINIO_BUCKET: ci
-      MINIO_USE_SSL: "false"
-      MINIO_ACCESS_KEY: ci
-      MINIO_SECRET_KEY: ci
-      OPENAI_API_KEY: sk-ci-dummy-not-a-real-key
-      ANTHROPIC_API_KEY: sk-ant-ci-dummy-not-a-real-key
-      RESEND_API_KEY: re_ci_dummy_not_a_real_key
-      E2B_API_KEY: e2b_ci_dummy
-      FIRECRAWL_API_KEY: fc-ci-dummy
-      NEXTCRM_TOKEN: ci-dummy-token
-      INNGEST_EVENT_KEY: ci-dummy-event-key
-      INNGEST_SIGNING_KEY: ci-dummy-signing-key
-      INNGEST_BASE_URL: http://localhost:8288
-      GOOGLE_ID: ci-dummy
-      GOOGLE_SECRET: ci-dummy
-      GITHUB_ID: ci-dummy
-      GITHUB_SECRET: ci-dummy
-      IMAP_HOST: imap.example.com
-      IMAP_PORT: "993"
-      IMAP_USER: ci
-      IMAP_PASSWORD: ci
-
     steps:
       - uses: actions/checkout@v4
-
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-
-      # Node's bundled corepack is too old to launch pnpm 11
-      # (same workaround as nixpacks.toml uses for Coolify builds).
-      - name: Enable pnpm via current corepack
-        run: npm install -g corepack@latest && corepack enable
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Generate Prisma client
-        run: pnpm exec prisma generate
-
-      - name: Typecheck
-        run: pnpm exec tsc --noEmit
-
-      - name: Apply migrations to a fresh database
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prisma generate
+      - name: Apply all migrations to a fresh database
         run: pnpm exec prisma migrate deploy
+      - name: Database-backed test suites
+        run: pnpm exec jest --ci __tests__/invoices/lifecycle.test.ts
 
-      - name: Unit & integration tests
-        run: pnpm exec jest --ci
-
-      - name: Production build (mirrors Coolify)
+  build:
+    name: Production build (mirrors Coolify)
+    needs: fast
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: nextcrm_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Production build (prisma generate + migrate deploy + next build)
         run: pnpm run build
