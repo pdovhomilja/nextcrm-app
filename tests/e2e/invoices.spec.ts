@@ -61,18 +61,20 @@ test.describe("Invoices module", () => {
     // TODO: Verify matching results appear in the table
   });
 
+  // Admin pages title their cards with shadcn CardTitle, which renders a
+  // <div> (no heading role) — match by text.
   test("navigates to admin invoice settings", async ({ page }) => {
     await page.goto("/admin/invoices/settings");
     await expect(
-      page.getByRole("heading", { name: /settings/i })
-    ).toBeVisible();
+      page.getByText("Invoice Settings").first()
+    ).toBeVisible({ timeout: 15000 });
   });
 
   test("manages tax rates in admin", async ({ page }) => {
     await page.goto("/admin/invoices/tax-rates");
     await expect(
-      page.getByRole("heading", { name: /tax rates/i })
-    ).toBeVisible();
+      page.getByText("Tax Rates").first()
+    ).toBeVisible({ timeout: 15000 });
     // TODO: Create a new tax rate
     // TODO: Verify it appears in the list
     // TODO: Toggle it inactive
@@ -81,8 +83,8 @@ test.describe("Invoices module", () => {
   test("manages invoice series in admin", async ({ page }) => {
     await page.goto("/admin/invoices/series");
     await expect(
-      page.getByRole("heading", { name: /series/i })
-    ).toBeVisible();
+      page.getByText("Invoice Series").first()
+    ).toBeVisible({ timeout: 15000 });
     // TODO: Create a new series
     // TODO: Verify it appears in the list
   });

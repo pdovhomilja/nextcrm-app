@@ -178,6 +178,19 @@ jobs:
       - run: pnpm exec prisma migrate deploy
       - name: Seed test data (admin user for auth.setup)
         run: pnpm exec prisma db seed
+      - name: Start Inngest dev server
+        # Campaign submit paths await inngest.send(); without a reachable
+        # event API at INNGEST_BASE_URL the server action throws and the
+        # wizard never redirects.
+        run: |
+          nohup npx --yes inngest-cli@latest dev --no-discovery -u http://localhost:3000/api/inngest > inngest-dev.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8288 > /dev/null && exit 0
+            sleep 2
+          done
+          echo "inngest-cli dev failed to become ready" >&2
+          cat inngest-dev.log >&2
+          exit 1
       - name: Run Playwright (chromium; setup project runs as its dependency)
         # Playwright's webServer starts `pnpm dev` — deliberately dev mode:
         # the OTP-capture auth flow (tests/auth.setup.ts -> /api/auth/test-otp

@@ -64,7 +64,7 @@ export const updateOpportunity = async (data: {
         delivery_deadline,
         contact: contact || undefined,
         updatedBy: userId,
-        currency,
+        currency: currency || undefined,
         description,
         expected_revenue: expected_revenue ? parseFloat(expected_revenue) : undefined,
         snapshot_rate: snapshotRate ? parseFloat(snapshotRate.toString()) : undefined,

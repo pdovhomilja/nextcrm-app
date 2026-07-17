@@ -27,8 +27,9 @@ test.describe("Reports Module", () => {
     await kpiLink.click();
     await page.waitForLoadState("networkidle", { timeout: 15000 });
 
-    // Should navigate to a sub-page
-    await expect(page).toHaveURL(/\/en\/reports\//);
+    // Should navigate to a sub-page (generous timeout: first dev-mode
+    // compile of the report sub-route can exceed the 5s default in CI)
+    await expect(page).toHaveURL(/\/en\/reports\//, { timeout: 20000 });
   });
 
   test("sales report page loads", async ({ page }) => {
