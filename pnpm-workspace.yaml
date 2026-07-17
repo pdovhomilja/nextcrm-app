@@ -1,4 +1,8 @@
 overrides:
+  # better-auth 1.6.13's kysely-adapter imports DEFAULT_MIGRATION_TABLE /
+  # DEFAULT_MIGRATION_LOCK_TABLE, removed in kysely 0.29 — pin to 0.28 line
+  # until better-auth ships a 0.29-compatible adapter.
+  "kysely": "^0.28.17"
   "@types/react": "npm:types-react@19.0.0-rc.1"
   "@types/react-dom": "npm:types-react-dom@19.0.0-rc.1"
   "tar@<=7.5.3": ">=7.5.4"
