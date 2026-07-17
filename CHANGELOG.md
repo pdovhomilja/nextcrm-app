@@ -5,6 +5,33 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.12.3...v0.13.0) (2026-07-17)
+
+
+### Added
+
+* add Mailtrap email provider helper ([562aeb9](https://github.com/pdovhomilja/nextcrm-app/commit/562aeb947f5f5c2038d29753176fb871562e19a7))
+* add Mailtrap sandbox email testing provider ([9dd0a7d](https://github.com/pdovhomilja/nextcrm-app/commit/9dd0a7db078334d418576c5eea1ccad04e8758d9))
+* add real sending capability to Mailtrap helper ([7229e90](https://github.com/pdovhomilja/nextcrm-app/commit/7229e903c494efed6aed4987066da8cbe079a0af))
+* AQUNAMA Phase 1 — global email opt-out, target-to-deal conversion, delivery deadline, XLSX import ([f8dacb3](https://github.com/pdovhomilja/nextcrm-app/commit/f8dacb3b3ab3e2c6626e8d9019233785d468f792))
+* **campaigns:** enforce global do_not_email across send pipeline and import ([4471454](https://github.com/pdovhomilja/nextcrm-app/commit/44714549f46acbe1f2f03ecc4b8f581180ce4887))
+* **campaigns:** unsubscribe sets global do_not_email suppression on targets ([6a97c5b](https://github.com/pdovhomilja/nextcrm-app/commit/6a97c5b43da924d4961e6d0648ab154d598f5c82))
+* **crm:** add delivery_deadline field to opportunities (PO-stage requirement) ([fba530b](https://github.com/pdovhomilja/nextcrm-app/commit/fba530b9354f2a3dc626300b380a6d00870902b5))
+* **crm:** add global do_not_email flag on targets and delivery_deadline on opportunities ([8a7c8a6](https://github.com/pdovhomilja/nextcrm-app/commit/8a7c8a6ff525d9f04ad3d9c2ed2ef2e25b62aab6))
+* **crm:** convert target to deal with campaign attribution and entry stage ([2d79035](https://github.com/pdovhomilja/nextcrm-app/commit/2d79035315263eaae9c1f009c3def7c76f74158b))
+* **crm:** support XLSX target imports via shared spreadsheet parser ([4dabb29](https://github.com/pdovhomilja/nextcrm-app/commit/4dabb29b2e0a35a2f150cc45c0dd0e2e96b61180))
+
+
+### Fixed
+
+* **campaigns:** case-insensitive suppression matching and send-step last-gate guard ([f9df822](https://github.com/pdovhomilja/nextcrm-app/commit/f9df822c230c5da8b1c2dbb31a2d53301e0b9b4e))
+* **campaigns:** keep unsubscribe confirmation on suppression write failure ([2bee7dc](https://github.com/pdovhomilja/nextcrm-app/commit/2bee7dc07fd15fc516592131476aa2fea561b77d))
+* **crm:** make target-to-deal conversion idempotent and honor error contract ([a27cf00](https://github.com/pdovhomilja/nextcrm-app/commit/a27cf00c1740c8f69cb0474dd1f365d1ff28670c))
+* **deploy:** pin pnpm 11 via packageManager so nixpacks doesn't build with pnpm 9 ([aedeab3](https://github.com/pdovhomilja/nextcrm-app/commit/aedeab33fd90f10f22e3c842daf8d59819b553b4))
+* **deploy:** use current corepack in nixpacks and migrate to pnpm 11 allowBuilds ([82ccda4](https://github.com/pdovhomilja/nextcrm-app/commit/82ccda4b2b577cb46cf9f911fbac7d34ee26ff7c))
+* **deps:** pin kysely 0.28 — restore main deployability (better-auth 1.6.13 adapter breakage) ([b7392ac](https://github.com/pdovhomilja/nextcrm-app/commit/b7392acc5d0e42ff0465e0db0b9a20c14deafbfd))
+* **deps:** pin kysely to 0.28 line — better-auth 1.6.13 adapter incompatible with kysely 0.29 ([284a305](https://github.com/pdovhomilja/nextcrm-app/commit/284a30519f12cc95a53bb56dbc43ac70f8629478))
+
 ## [0.12.3](https://github.com/pdovhomilja/nextcrm-app/compare/v0.12.2...v0.12.3) (2026-06-13)
 
 
