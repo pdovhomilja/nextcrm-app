@@ -55,6 +55,23 @@ jobs:
       MINIO_USE_SSL: "false"
       MINIO_ACCESS_KEY: ci
       MINIO_SECRET_KEY: ci
+      OPENAI_API_KEY: sk-ci-dummy-not-a-real-key
+      ANTHROPIC_API_KEY: sk-ant-ci-dummy-not-a-real-key
+      RESEND_API_KEY: re_ci_dummy_not_a_real_key
+      E2B_API_KEY: e2b_ci_dummy
+      FIRECRAWL_API_KEY: fc-ci-dummy
+      NEXTCRM_TOKEN: ci-dummy-token
+      INNGEST_EVENT_KEY: ci-dummy-event-key
+      INNGEST_SIGNING_KEY: ci-dummy-signing-key
+      INNGEST_BASE_URL: http://localhost:8288
+      GOOGLE_ID: ci-dummy
+      GOOGLE_SECRET: ci-dummy
+      GITHUB_ID: ci-dummy
+      GITHUB_SECRET: ci-dummy
+      IMAP_HOST: imap.example.com
+      IMAP_PORT: "993"
+      IMAP_USER: ci
+      IMAP_PASSWORD: ci
 
     steps:
       - uses: actions/checkout@v4
