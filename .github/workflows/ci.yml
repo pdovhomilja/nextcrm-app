@@ -144,13 +144,10 @@ jobs:
         run: pnpm run build
 
   e2e:
-    name: E2E (Playwright, non-blocking while stabilizing)
+    name: E2E (Playwright)
     needs: fast
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    # The suite has never run in CI before — keep it visible but not
-    # merge-blocking until it proves stable, then remove this line.
-    continue-on-error: true
     services:
       postgres:
         image: pgvector/pgvector:pg16
