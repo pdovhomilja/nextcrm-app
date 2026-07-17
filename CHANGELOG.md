@@ -5,6 +5,22 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.3](https://github.com/pdovhomilja/nextcrm-app/compare/v0.12.2...v0.12.3) (2026-06-13)
+
+
+### Bug Fixes
+
+* **security:** enforce manager/admin RBAC in MCP product tools (GHSA-wv63-cq38-qg58) ([02e7a22](https://github.com/pdovhomilja/nextcrm-app/commit/02e7a226e1363a060013cc16bb4d26d4c190bc27))
+* **security:** enforce manager/admin RBAC in MCP product tools (GHSA-wv63-cq38-qg58) ([1c41d58](https://github.com/pdovhomilja/nextcrm-app/commit/1c41d5832629f50e658fb64a884c98e846830549))
+
+## [0.12.2](https://github.com/pdovhomilja/nextcrm-app/compare/v0.12.1...v0.12.2) (2026-06-13)
+
+
+### Bug Fixes
+
+* **security:** enforce object-level authz in MCP campaign tools (GHSA-c9vg-c532-ppqx) ([d219b7b](https://github.com/pdovhomilja/nextcrm-app/commit/d219b7b47291e52cd200fba193f4da68c6dde75a))
+* **security:** enforce object-level authz in MCP campaign tools (GHSA-c9vg-c532-ppqx) ([88258b1](https://github.com/pdovhomilja/nextcrm-app/commit/88258b1cce63f42e9399b1ce9575a72dc89b72c5))
+
 ## [0.12.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.12.0...v0.12.1) (2026-05-11)
 
 
