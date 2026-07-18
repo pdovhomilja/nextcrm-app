@@ -10,16 +10,23 @@ export async function createAutoTask(opts: {
   opportunityId?: string | null;
   assigneeId: string | null;
   dueDateAt: Date;
+  /**
+   * Default dedup only checks OPEN tasks, so a later re-entry into a stage
+   * can create a fresh cadence. Recurring sweeps (renewals) instead dedup
+   * against tasks of ANY status — completing the task must not respawn it
+   * on the next sweep (their titles carry the cycle date for uniqueness).
+   */
+  dedupAnyStatus?: boolean;
 }): Promise<{ id: string } | null> {
-  const { title, content, accountId, opportunityId, assigneeId, dueDateAt } = opts;
+  const { title, content, accountId, opportunityId, assigneeId, dueDateAt, dedupAnyStatus } = opts;
   if (!assigneeId) return null;
 
-  // Idempotency: one open task per (title, deal) — reruns and overlapping
-  // schedules must not duplicate work items.
+  // Idempotency: one task per (title, deal/account) — reruns and
+  // overlapping schedules must not duplicate work items.
   const existing = await prismadb.crm_Accounts_Tasks.findFirst({
     where: {
       title,
-      taskStatus: { in: ["ACTIVE", "PENDING"] },
+      ...(dedupAnyStatus ? {} : { taskStatus: { in: ["ACTIVE", "PENDING"] } }),
       ...(opportunityId ? { opportunity_id: opportunityId } : { account: accountId }),
     },
     select: { id: true },

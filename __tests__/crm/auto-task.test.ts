@@ -71,3 +71,37 @@ describe("createAutoTask", () => {
     expect(res).toEqual({ id: "t1" });
   });
 });
+
+describe("createAutoTask dedupAnyStatus", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (prismadb.crm_Accounts_Tasks.findFirst as jest.Mock).mockResolvedValue(null);
+    (prismadb.crm_Accounts_Tasks.create as jest.Mock).mockResolvedValue({ id: "t2" });
+    (prismadb.users.findUnique as jest.Mock).mockResolvedValue({
+      id: "u1", email: "rep@x.cz", userLanguage: "en",
+    });
+    mockSend.mockResolvedValue({ data: { id: "r1" }, error: null });
+  });
+
+  it("omits the status filter so completed tasks also dedup", async () => {
+    await createAutoTask({
+      title: "Renewal 2026-08-15: contract \"X\"",
+      content: "x", accountId: "a1",
+      assigneeId: "u1", dueDateAt: new Date(),
+      dedupAnyStatus: true,
+    });
+    const where = (prismadb.crm_Accounts_Tasks.findFirst as jest.Mock).mock.calls[0][0].where;
+    expect(where.taskStatus).toBeUndefined();
+    expect(where.account).toBe("a1");
+  });
+
+  it("keeps the open-status filter by default", async () => {
+    await createAutoTask({
+      title: "Cadence 1/5: Call — confirm quote receipt",
+      content: "x", accountId: "a1", opportunityId: "o1",
+      assigneeId: "u1", dueDateAt: new Date(),
+    });
+    const where = (prismadb.crm_Accounts_Tasks.findFirst as jest.Mock).mock.calls[0][0].where;
+    expect(where.taskStatus).toEqual({ in: ["ACTIVE", "PENDING"] });
+  });
+});

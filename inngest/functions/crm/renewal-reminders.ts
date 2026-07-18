@@ -31,12 +31,15 @@ export const renewalReminders = inngest.createFunction(
     for (const c of contracts) {
       const result = await step.run(`contract-${c.id}`, async () => {
         const reminderDate = c.renewalReminderDate ? new Date(c.renewalReminderDate) : now;
+        // Date in the title = per-cycle uniqueness; dedupAnyStatus so a
+        // completed reminder is not respawned by next week's sweep.
         return createAutoTask({
-          title: `Renewal: contract "${c.title}"`,
+          title: `Renewal ${reminderDate.toISOString().slice(0, 10)}: contract "${c.title}"`,
           content: `Contract renewal reminder date is ${reminderDate.toDateString()}. Reach out about renewal terms.\n${process.env.NEXT_PUBLIC_APP_URL}/crm/contracts/${c.id}`,
           accountId: c.account,
           assigneeId: c.assigned_to,
           dueDateAt: reminderDate,
+          dedupAnyStatus: true,
         });
       });
       if (result) created += 1;
@@ -59,11 +62,12 @@ export const renewalReminders = inngest.createFunction(
       const result = await step.run(`product-${p.id}`, async () => {
         const renewalDate = p.renewal_date ? new Date(p.renewal_date) : now;
         return createAutoTask({
-          title: `Renewal: ${p.product?.name ?? "product"} @ ${p.account?.name ?? p.accountId}`,
+          title: `Renewal ${renewalDate.toISOString().slice(0, 10)}: ${p.product?.name ?? "product"} @ ${p.account?.name ?? p.accountId}`,
           content: `Product subscription renews on ${renewalDate.toDateString()}. Confirm renewal with the client.`,
           accountId: p.accountId,
           assigneeId: p.account?.assigned_to ?? null,
           dueDateAt: renewalDate,
+          dedupAnyStatus: true,
         });
       });
       if (result) created += 1;

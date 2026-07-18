@@ -45,9 +45,23 @@ export async function findRecycleCandidates(
   );
   if (finishedTargetIds.length === 0) return [];
 
+  // A target that finished an OLD sequence but has newer campaign activity
+  // (a send after the cutoff, or one still queued) is being actively worked
+  // in another sequence — do not recycle them out from under it.
+  const recentlyActive = await prismadb.crm_campaign_sends.findMany({
+    where: {
+      target_id: { in: finishedTargetIds },
+      OR: [{ sent_at: { gt: cutoff } }, { status: "queued" }],
+    },
+    select: { target_id: true },
+  });
+  const activeIds = new Set(recentlyActive.map((send) => send.target_id));
+  const quietTargetIds = finishedTargetIds.filter((id) => !activeIds.has(id));
+  if (quietTargetIds.length === 0) return [];
+
   const eligible = await prismadb.crm_Targets.findMany({
     where: {
-      id: { in: finishedTargetIds },
+      id: { in: quietTargetIds },
       do_not_email: false,
       converted_at: null,
       deletedAt: null,
