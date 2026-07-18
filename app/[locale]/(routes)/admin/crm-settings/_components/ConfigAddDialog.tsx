@@ -5,8 +5,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createConfigValue, type CrmConfigType } from "../_actions/crm-settings";
+import { STAGE_KINDS, type StageKind } from "@/lib/crm/stage-kinds";
 import { toast } from "sonner";
+
+const KIND_NONE = "__none__";
 
 interface Props {
   configType: CrmConfigType;
@@ -16,15 +20,23 @@ interface Props {
 export function ConfigAddDialog({ configType, label }: Props) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
+  const [stageKind, setStageKind] = useState<string>(KIND_NONE);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     try {
-      await createConfigValue(configType, name);
+      await createConfigValue(
+        configType,
+        name,
+        configType === "salesStage"
+          ? (stageKind === KIND_NONE ? null : (stageKind as StageKind))
+          : undefined
+      );
       toast.success(`${label} added`);
       setName("");
+      setStageKind(KIND_NONE);
       setOpen(false);
     } catch (err: any) {
       toast.error(err.message ?? "Failed to add");
@@ -49,6 +61,22 @@ export function ConfigAddDialog({ configType, label }: Props) {
             <Label htmlFor="name">Name</Label>
             <Input id="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={100} required />
           </div>
+          {configType === "salesStage" && (
+            <div className="space-y-1">
+              <Label>Automation trigger</Label>
+              <Select value={stageKind} onValueChange={setStageKind}>
+                <SelectTrigger>
+                  <SelectValue placeholder="None" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={KIND_NONE}>None</SelectItem>
+                  {STAGE_KINDS.map((k) => (
+                    <SelectItem key={k} value={k}>{k}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <Button type="submit" disabled={loading} className="w-full">
             {loading ? "Adding…" : "Add"}
           </Button>

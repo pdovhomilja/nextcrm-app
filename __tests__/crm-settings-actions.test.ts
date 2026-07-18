@@ -142,3 +142,36 @@ describe("deleteConfigValue", () => {
     );
   });
 });
+
+describe("salesStage stage kinds", () => {
+  it("creates a sales stage with a stage kind", async () => {
+    (mockPrisma.crm_Opportunities_Sales_Stages.create as jest.Mock).mockResolvedValue({});
+    await createConfigValue("salesStage", "Qualified Lead", "qualified");
+    expect(mockPrisma.crm_Opportunities_Sales_Stages.create).toHaveBeenCalledWith({
+      data: { name: "Qualified Lead", v: 0, stage_kind: "qualified" },
+    });
+  });
+
+  it("ignores stageKind for non-salesStage types", async () => {
+    (mockPrisma.crm_Contact_Types.create as jest.Mock).mockResolvedValue({});
+    await createConfigValue("contactType", "Investor", "qualified");
+    expect(mockPrisma.crm_Contact_Types.create).toHaveBeenCalledWith({
+      data: { name: "Investor", v: 0 },
+    });
+  });
+
+  it("updates a sales stage kind (null clears it)", async () => {
+    (mockPrisma.crm_Opportunities_Sales_Stages.update as jest.Mock).mockResolvedValue({});
+    await updateConfigValue("salesStage", "id-1", "Qualified Lead", null);
+    expect(mockPrisma.crm_Opportunities_Sales_Stages.update).toHaveBeenCalledWith({
+      where: { id: "id-1" },
+      data: { name: "Qualified Lead", stage_kind: null },
+    });
+  });
+
+  it("rejects an invalid stage kind", async () => {
+    await expect(
+      createConfigValue("salesStage", "X", "bogus" as any),
+    ).rejects.toThrow();
+  });
+});
