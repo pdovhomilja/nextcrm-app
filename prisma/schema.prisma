@@ -202,6 +202,8 @@ model crm_Opportunities {
   campaign         String?                 @db.Uuid
   close_date       DateTime?
   delivery_deadline DateTime?
+  /// Set whenever sales_stage changes; anchors cadence/care timers.
+  stage_entered_at  DateTime?
   contact          String?                 @db.Uuid
   createdBy        String?                 @db.Uuid
   created_on       DateTime?               @default(now())
@@ -231,6 +233,7 @@ model crm_Opportunities {
   contacts             ContactsToOpportunities[]
   embedding            crm_Embeddings_Opportunities?
   lineItems            crm_OpportunityLineItems[]
+  tasks                crm_Accounts_Tasks[]
   deletedAt            DateTime?
   deletedBy            String?   @db.Uuid
 
@@ -397,7 +400,30 @@ model crm_Opportunities_Sales_Stages {
   name                               String
   probability                        Int?
   order                              Int?
+  /// Automation trigger kind — connectable per stage in admin CRM settings.
+  /// One of: pre_sale | qualified | purchase_order | delivery | care. Null = no automation.
+  stage_kind                         String?
   assigned_opportunities_sales_stage crm_Opportunities[] @relation("assinged_sales_stage")
+}
+
+/// Instance-grade funnel timing settings (singleton row). Defaults are the
+/// AQUNAMA spec values; edited at Admin -> Funnel settings.
+model crm_FunnelSettings {
+  id                           String    @id @default(uuid()) @db.Uuid
+  kill_after_days              Int       @default(45)
+  recycle_after_days           Int       @default(90)
+  cadence_touch1_business_days Int       @default(3)
+  cadence_touch2_offset_days   Int       @default(7)
+  cadence_touch3_offset_days   Int       @default(10)
+  cadence_touch4_offset_days   Int       @default(15)
+  cadence_touch5_offset_days   Int       @default(45)
+  care_checkin_days            Int       @default(30)
+  care_referral_days           Int       @default(90)
+  care_quarter_interval_days   Int       @default(90)
+  care_quarter_count           Int       @default(8)
+  renewal_window_days          Int       @default(30)
+  updatedAt                    DateTime? @updatedAt
+  updatedBy                    String?   @db.Uuid
 }
 
 model crm_Opportunities_Type {
@@ -860,9 +886,11 @@ model crm_Accounts_Tasks {
   assigned_user Users?          @relation(fields: [user], references: [id])
 
   //CRM assigments
-  account      String?                       @db.Uuid
-  crm_accounts crm_Accounts?                 @relation(fields: [account], references: [id])
-  documents    DocumentsToCrmAccountsTasks[]
+  account        String?                       @db.Uuid
+  opportunity_id String?                       @db.Uuid
+  crm_accounts   crm_Accounts?                 @relation(fields: [account], references: [id])
+  opportunity    crm_Opportunities?            @relation(fields: [opportunity_id], references: [id])
+  documents      DocumentsToCrmAccountsTasks[]
 
   @@index([user])
   @@index([account])
@@ -873,6 +901,7 @@ model crm_Accounts_Tasks {
   @@index([dueDateAt])
   @@index([createdAt])
   @@index([account, taskStatus])
+  @@index([opportunity_id])
 }
 
 model tasksComments {

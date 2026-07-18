@@ -86,6 +86,32 @@ async function main() {
   }
   console.log("Opportunity Sales Stages seeded");
 
+  // Connect automation kinds to the runbook stages (idempotent; matches by
+  // name, skips stages an admin renamed — kinds are then set in admin UI).
+  // The base seed's `crm_Opportunities_Sales_Stages.json` uses this repo's
+  // legacy stage names rather than the AQUNAMA runbook names, so the mapping
+  // below only covers names whose automation intent is unambiguous; the
+  // rest stay unmapped and are set via Admin -> Funnel settings.
+  const stageKindByName: Record<string, string> = {
+    "Pre-Sale": "pre_sale",
+    "Qualified Lead": "qualified",
+    "Purchase Order": "purchase_order",
+    "Delivery": "delivery",
+    "Care": "care",
+    // Legacy demo-data stage names (see crm_Opportunities_Sales_Stages.json)
+    "New": "pre_sale",
+    "Need analysis": "qualified",
+    "Signing": "purchase_order",
+    "Realization of the project": "delivery",
+  };
+  for (const [name, kind] of Object.entries(stageKindByName)) {
+    await prisma.crm_Opportunities_Sales_Stages.updateMany({
+      where: { name, stage_kind: null },
+      data: { stage_kind: kind },
+    });
+  }
+  console.log("Sales stage kinds connected");
+
   // CRM Industry Types (no unique on name — use findFirst + create/update)
   for (const item of crmIndustryTypeData) {
     const existing = await prisma.crm_Industry_Type.findFirst({
