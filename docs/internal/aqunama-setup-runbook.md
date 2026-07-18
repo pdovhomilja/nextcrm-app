@@ -42,3 +42,30 @@ assigns lists to campaigns with `campaigns_assign_target_list`.
 - The 3-month recycle and 45-day kill rule are Phase 2 (automated);
   until then track them manually via the campaign stats and deal
   last-activity dates.
+
+## 7. Phase 2 automation (timers)
+
+After deploying Phase 2, connect the automation in **Admin → CRM settings →
+Sales stage**: each stage has an "Automation trigger" — set Pre-Sale →
+pre_sale, Qualified Lead → qualified, Purchase Order → purchase_order,
+Delivery → delivery, Care → care. Stages without a trigger are ignored by
+the timers (renaming a stage never breaks automation; the trigger does).
+
+All day counts below are the defaults — every one is editable at
+**Admin → Funnel Settings** (instance-wide; changes apply to future stage
+entries and the next timer runs).
+
+What runs automatically:
+- **Qualified entry** → 5-touch follow-up cadence as tasks for the deal's
+  rep (+3 business days call, +7d email, +10d email/call, day 15 and day
+  45 of the retention window). Leaves the stage → remaining touches cancel.
+- **45-day kill rule** (daily 06:00 UTC): Qualified deals with no client
+  activity (inbound synced email, logged activity) for 45 days are closed
+  as Lost and the rep is emailed. Reopen by setting status back to Active.
+- **Care entry** → +30d check-in, ~90d referral-ask, then quarterly tasks
+  (8 quarters).
+- **Recycle** (daily 06:30 UTC): targets whose sequence finished 90+ days
+  ago with no conversion land in the "Recycled" target list; admins get a
+  digest. Assign that list to a fresh campaign to re-try them.
+- **Renewals** (Mondays 07:00 UTC): contract reminder dates and product
+  renewal dates within 30 days become tasks for the account's rep.
