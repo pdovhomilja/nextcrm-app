@@ -20,6 +20,7 @@ import { campaignProcessFollowUp } from "@/inngest/functions/campaigns/process-f
 import { campaignSendNow } from "@/inngest/functions/campaigns/send-now";
 import { reportSendScheduled } from "@/inngest/functions/reports/send-scheduled";
 import { qualifiedCadence } from "@/inngest/functions/crm/qualified-cadence";
+import { killRule } from "@/inngest/functions/crm/kill-rule";
 import { enrichDocument } from "@/inngest/functions/documents/enrich-document";
 import { generateDocumentThumbnail } from "@/inngest/functions/documents/generate-thumbnail";
 import { syncExchangeRates } from "@/inngest/functions/ecb/sync-exchange-rates";
@@ -47,6 +48,7 @@ export const { GET, POST, PUT } = serve({
     campaignSendNow,
     reportSendScheduled,
     qualifiedCadence,
+    killRule,
     enrichDocument,
     generateDocumentThumbnail,
     syncExchangeRates,
