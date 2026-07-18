@@ -6,6 +6,7 @@ import sendEmail from "@/lib/sendmail";
 import { inngest } from "@/inngest/client";
 import { writeAuditLog } from "@/lib/audit-log";
 import { getSnapshotRate, getDefaultCurrency } from "@/lib/currency";
+import { handleStageTransition } from "@/lib/crm/stage-transition";
 
 export const createOpportunity = async (data: {
   account?: string;
@@ -68,9 +69,16 @@ export const createOpportunity = async (data: {
         name,
         next_step: next_step || undefined,
         sales_stage: sales_stage || undefined,
+        stage_entered_at: new Date(),
         status: "ACTIVE",
         type: type || undefined,
       },
+    });
+
+    await handleStageTransition({
+      opportunityId: opportunity.id,
+      fromStage: null,
+      toStage: opportunity.sales_stage ?? null,
     });
 
     if (assigned_to && assigned_to !== userId) {

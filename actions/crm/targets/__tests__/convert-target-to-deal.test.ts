@@ -4,7 +4,7 @@ jest.mock("@/lib/prisma", () => ({
     crm_Targets: { findFirst: jest.fn() },
     crm_campaign_sends: { findFirst: jest.fn() },
     crm_Opportunities_Sales_Stages: { findFirst: jest.fn() },
-    crm_Opportunities: { create: jest.fn(), findFirst: jest.fn() },
+    crm_Opportunities: { create: jest.fn(), findFirst: jest.fn(), update: jest.fn() },
   },
 }));
 jest.mock("@/inngest/client", () => ({
@@ -17,6 +17,7 @@ jest.mock("@/actions/crm/targets/convert-target", () => ({
 }));
 
 import { prismadb } from "@/lib/prisma";
+import { inngest } from "@/inngest/client";
 import { getSession } from "@/lib/auth-server";
 import { convertTarget } from "@/actions/crm/targets/convert-target";
 import { convertTargetToDeal } from "@/actions/crm/targets/convert-target-to-deal";
@@ -53,7 +54,10 @@ describe("convertTargetToDeal", () => {
       id: "stage-presale",
     });
     (prismadb.crm_Opportunities.findFirst as jest.Mock).mockResolvedValue(null);
-    (prismadb.crm_Opportunities.create as jest.Mock).mockResolvedValue({ id: "opp-1" });
+    (prismadb.crm_Opportunities.create as jest.Mock).mockResolvedValue({
+      id: "opp-1",
+      sales_stage: "stage-presale",
+    });
 
     const res = await convertTargetToDeal("t1");
 
@@ -65,6 +69,10 @@ describe("convertTargetToDeal", () => {
     expect(data.sales_stage).toBe("stage-presale");
     expect(data.assigned_to).toBe("u1");
     expect(data.status).toBe("ACTIVE");
+    expect(inngest.send).toHaveBeenCalledWith({
+      name: "crm/opportunity.stage-changed",
+      data: { record_id: "opp-1", to_stage: "stage-presale" },
+    });
   });
 
   it("works without any campaign send or configured stage", async () => {
