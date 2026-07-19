@@ -6,9 +6,53 @@ import { upsertCalendarEvent } from "@/lib/crm/calendar/sync";
 import type { calendar_v3 } from "googleapis";
 
 const WINDOW_DAYS = 60;
+
+const RATE_LIMIT_MARKERS = [
+  "ratelimitexceeded",
+  "userratelimitexceeded",
+  "quotaexceeded",
+];
+const REVOCATION_MARKERS = ["invalid_grant", "unauthorized_client"];
+
 // `error.code` as a numeric HTTP status comes from gaxios error construction
 // (verified against gaxios@7), which is what googleapis uses under the hood.
-const AUTH_ERROR_CODES = new Set([401, 403]);
+// Google's error surfaces vary by endpoint:
+// - The token endpoint returns HTTP 400 with `error: "invalid_grant"` (or
+//   "unauthorized_client") for a revoked/expired refresh token — that must
+//   deactivate the connection, even though 400 isn't an auth status.
+// - The Calendar API itself uses 401 for a rejected access token.
+// - The Calendar API also uses 403 for both real auth revocations (e.g.
+//   insufficientPermissions) AND transient rate-limit errors
+//   (rateLimitExceeded / userRateLimitExceeded / quotaExceeded), which must
+//   NOT deactivate the connection.
+export function isAuthRevocationError(error: unknown): boolean {
+  const err = error as {
+    code?: number;
+    status?: number;
+    message?: string;
+    response?: { data?: { error?: string | { message?: string; errors?: Array<{ reason?: string }> } } };
+  };
+
+  const status = err?.code ?? err?.status;
+  const message = (err?.message ?? "").toLowerCase();
+
+  const responseError = err?.response?.data?.error;
+  const responseErrorText =
+    typeof responseError === "string"
+      ? responseError
+      : [
+          responseError?.message ?? "",
+          ...(responseError?.errors?.map((e) => e.reason ?? "") ?? []),
+        ].join(" ");
+  const combined = `${message} ${responseErrorText}`.toLowerCase();
+
+  if (REVOCATION_MARKERS.some((marker) => combined.includes(marker))) return true;
+  if (status === 401) return true;
+  if (status === 403) {
+    return !RATE_LIMIT_MARKERS.some((marker) => combined.includes(marker));
+  }
+  return false;
+}
 
 export const googleCalendarSyncConnection = inngest.createFunction(
   {
@@ -81,13 +125,12 @@ export const googleCalendarSyncConnection = inngest.createFunction(
           counts[res.action] += 1;
         }
       } catch (error) {
-        const code = (error as { code?: number }).code;
         const message = error instanceof Error ? error.message : String(error);
         await prismadb.calendarConnection.update({
           where: { id: connection.id },
           data: {
             lastSyncError: message.slice(0, 500),
-            ...(code !== undefined && AUTH_ERROR_CODES.has(code) ? { isActive: false } : {}),
+            ...(isAuthRevocationError(error) ? { isActive: false } : {}),
           },
         });
         throw error;
