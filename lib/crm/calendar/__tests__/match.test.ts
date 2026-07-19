@@ -32,6 +32,11 @@ describe("matchCounterparty", () => {
       { entityType: "account", entityId: "a1" },
       { entityType: "opportunity", entityId: "o1" },
     ]);
+    expect(contacts).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ deletedAt: null }),
+      })
+    );
   });
 
   it("skips opportunity link when the account has several open deals", async () => {
@@ -56,6 +61,11 @@ describe("matchCounterparty", () => {
     expect(await matchCounterparty(["x@y.com"])).toEqual([
       { entityType: "lead", entityId: "l1" },
     ]);
+    expect(leads).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ deletedAt: null }),
+      })
+    );
   });
 
   it("returns [] when nothing matches", async () => {

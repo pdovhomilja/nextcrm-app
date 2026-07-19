@@ -8,6 +8,7 @@ export async function matchCounterparty(emails: string[]): Promise<EntityLink[]>
 
   const contact = await prismadb.crm_Contacts.findFirst({
     where: {
+      deletedAt: null,
       OR: [
         { email: { in: normalized, mode: "insensitive" } },
         { personal_email: { in: normalized, mode: "insensitive" } },
@@ -45,7 +46,7 @@ export async function matchCounterparty(emails: string[]): Promise<EntityLink[]>
   if (target) return [{ entityType: "target", entityId: target.id }];
 
   const lead = await prismadb.crm_Leads.findFirst({
-    where: { email: { in: normalized, mode: "insensitive" } },
+    where: { deletedAt: null, email: { in: normalized, mode: "insensitive" } },
     select: { id: true },
   });
   if (lead) return [{ entityType: "lead", entityId: lead.id }];
