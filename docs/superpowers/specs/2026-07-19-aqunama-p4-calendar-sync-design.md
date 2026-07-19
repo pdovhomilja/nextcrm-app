@@ -11,7 +11,7 @@
 - Google: reps are on a **Google Workspace domain** → OAuth consent screen is "Internal", `calendar.readonly` scope, no Google verification review needed.
 - Google inbound uses **Inngest polling** (15-min cron, incremental `syncToken`), mirroring `email-sync-all`. No push watch channels.
 - Unmatched attendee email: **Calendly → auto-create a Target** (source "Book-a-call"); **Google → skip the event entirely** (reps' internal/personal meetings must not pollute the CRM).
-- Synced meetings are `crm_Activities` rows, so they **restart the Phase 2 45-day kill clock** via `getLastClientActivity` with no Phase 2 changes.
+- Synced meetings are `crm_Activities` rows, so they **restart the Phase 2 45-day kill clock** via `getLastClientActivity` with no Phase 2 changes. (amended at final review: `getLastClientActivity` gained a `status != cancelled` filter so cancelled bookings don't suppress the kill clock)
 
 ## Architecture
 
