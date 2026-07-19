@@ -87,6 +87,7 @@
     "exceljs": "^4.4.0",
     "form-data": "^4.0.6",
     "geist": "^1.7.0",
+    "googleapis": "^173.0.0",
     "imap": "^0.8.19",
     "inngest": "^4.0.2",
     "input-otp": "^1.4.2",
