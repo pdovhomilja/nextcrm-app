@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { inngest } from "@/inngest/client";
 import { writeAuditLog } from "@/lib/audit-log";
 import { convertTarget } from "./convert-target";
+import { handleStageTransition } from "@/lib/crm/stage-transition";
 
 export async function convertTargetToDeal(
   targetId: string
@@ -55,6 +56,7 @@ export async function convertTargetToDeal(
         contact: converted.contactId,
         campaign: lastSend?.campaign_id ?? undefined,
         sales_stage: entryStage?.id ?? undefined,
+        stage_entered_at: new Date(),
         assigned_to: userId,
         createdBy: userId,
         updatedBy: userId,
@@ -62,6 +64,12 @@ export async function convertTargetToDeal(
         last_activity: new Date(),
         status: "ACTIVE",
       },
+    });
+
+    await handleStageTransition({
+      opportunityId: opportunity.id,
+      fromStage: null,
+      toStage: opportunity.sales_stage ?? null,
     });
 
     await writeAuditLog({

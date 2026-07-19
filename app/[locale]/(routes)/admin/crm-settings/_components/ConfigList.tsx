@@ -35,6 +35,9 @@ export function ConfigList({ configType, label, values }: Props) {
               {item.usageCount > 0 && (
                 <Badge variant="secondary">{item.usageCount} in use</Badge>
               )}
+              {item.stageKind && (
+                <Badge variant="outline">{item.stageKind}</Badge>
+              )}
             </div>
             <div className="flex gap-1">
               <Button size="icon" variant="ghost" onClick={() => setEditItem(item)}>
@@ -58,6 +61,7 @@ export function ConfigList({ configType, label, values }: Props) {
           configType={configType}
           id={editItem.id}
           currentName={editItem.name}
+          currentStageKind={editItem.stageKind ?? null}
           open={!!editItem}
           onOpenChange={(v) => { if (!v) setEditItem(null); }}
         />

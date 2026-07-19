@@ -10,6 +10,7 @@ const navItems = [
   { label: "Users",        href: "/admin/users",        icon: Users },
   { label: "Services",     href: "/admin/services",     icon: Settings },
   { label: "CRM Settings", href: "/admin/crm-settings", icon: SlidersHorizontal },
+  { label: "Funnel Settings", href: "/admin/funnel-settings", icon: SlidersHorizontal },
   { label: "Audit Log",    href: "/admin/audit-log",    icon: ClipboardList },
   { label: "Currencies",   href: "/admin/currencies",   icon: Coins },
   { label: "Invoices",     href: "/admin/invoices",     icon: FileText },

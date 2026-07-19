@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { inngest } from "@/inngest/client";
 import { writeAuditLog, diffObjects } from "@/lib/audit-log";
 import { getSnapshotRate, getDefaultCurrency } from "@/lib/currency";
+import { handleStageTransition } from "@/lib/crm/stage-transition";
 
 export const updateOpportunity = async (data: {
   id: string;
@@ -74,6 +75,11 @@ export const updateOpportunity = async (data: {
         status: "ACTIVE",
         type: type || undefined,
       },
+    });
+    await handleStageTransition({
+      opportunityId: opportunity.id,
+      fromStage: before?.sales_stage ?? null,
+      toStage: opportunity.sales_stage ?? null,
     });
     const serialize = (obj: any) => JSON.parse(JSON.stringify(obj, (_, v) => typeof v === "bigint" ? v.toString() : v));
     const changes = before ? diffObjects(serialize(before), serialize(opportunity)) : null;
