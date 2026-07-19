@@ -48,7 +48,13 @@ export async function POST(req: NextRequest) {
 
   const p = body.payload;
   const ev = p.scheduled_event;
-  if (!p.uri || !ev?.start_time) return NextResponse.json({ ok: true });
+  if (!p.uri || !ev?.start_time) {
+    console.warn(
+      "[calendly-webhook] dropping event with missing uri/start_time",
+      body.event
+    );
+    return NextResponse.json({ ok: true });
+  }
 
   await inngest.send({
     name: "crm/calendar.event.received",
