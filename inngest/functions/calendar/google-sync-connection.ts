@@ -6,6 +6,8 @@ import { upsertCalendarEvent } from "@/lib/crm/calendar/sync";
 import type { calendar_v3 } from "googleapis";
 
 const WINDOW_DAYS = 60;
+// `error.code` as a numeric HTTP status comes from gaxios error construction
+// (verified against gaxios@7), which is what googleapis uses under the hood.
 const AUTH_ERROR_CODES = new Set([401, 403]);
 
 export const googleCalendarSyncConnection = inngest.createFunction(
@@ -39,6 +41,8 @@ export const googleCalendarSyncConnection = inngest.createFunction(
         } while (pageToken);
       };
 
+      const counts = { created: 0, updated: 0, cancelled: 0, skipped: 0 };
+
       try {
         if (syncToken) {
           try {
@@ -60,6 +64,22 @@ export const googleCalendarSyncConnection = inngest.createFunction(
             timeMax: new Date(now + WINDOW_DAYS * 86400000).toISOString(),
           });
         }
+
+        // A retry after a mid-loop failure re-processes already-synced events from
+        // scratch, which is safe because upsertCalendarEvent is idempotent per
+        // (source, externalId).
+        for (const ev of items) {
+          const normalized = normalizeGoogleEvent(ev, {
+            connectionId: connection.id,
+            accountEmail: connection.accountEmail,
+          });
+          if ("skip" in normalized) {
+            counts.skipped += 1;
+            continue;
+          }
+          const res = await upsertCalendarEvent(normalized);
+          counts[res.action] += 1;
+        }
       } catch (error) {
         const code = (error as { code?: number }).code;
         const message = error instanceof Error ? error.message : String(error);
@@ -71,20 +91,6 @@ export const googleCalendarSyncConnection = inngest.createFunction(
           },
         });
         throw error;
-      }
-
-      const counts = { created: 0, updated: 0, cancelled: 0, skipped: 0 };
-      for (const ev of items) {
-        const normalized = normalizeGoogleEvent(ev, {
-          connectionId: connection.id,
-          accountEmail: connection.accountEmail,
-        });
-        if ("skip" in normalized) {
-          counts.skipped += 1;
-          continue;
-        }
-        const res = await upsertCalendarEvent(normalized);
-        counts[res.action] += 1;
       }
 
       await prismadb.calendarConnection.update({
