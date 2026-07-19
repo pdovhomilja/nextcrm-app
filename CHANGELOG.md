@@ -5,6 +5,13 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.14.0...v0.15.0) (2026-07-19)
+
+
+### Added
+
+* AQUNAMA Phase 3 — SOW/quote approval workflow + case-study flags ([43f95bf](https://github.com/pdovhomilja/nextcrm-app/commit/43f95bfdac390298c70751ff462143f4987a312d))
+
 ## [0.14.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.13.3...v0.14.0) (2026-07-19)
 
 
