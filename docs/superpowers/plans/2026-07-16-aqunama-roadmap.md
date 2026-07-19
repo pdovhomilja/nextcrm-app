@@ -27,7 +27,11 @@ The heart of the spec: automated funnel timing on Inngest.
 - **Renewal surfacing:** weekly cron emailing reps contracts/account-products with `renewal_date`/`renewalReminderDate` within 60 days.
 - **Prerequisite decision:** precise definition of "client activity" that restarts the 45-day clock.
 
-## Plan 3 — Minimal SOW/Quote Approval (gap G-04 + case-study flag from G-10) — stub
+## Plan 3 — Minimal SOW/Quote Approval ✅ implemented (2026-07-19)
+
+Full plan: `docs/superpowers/plans/2026-07-19-aqunama-p3-approval-workflow.md` — decisions: hard gate on Qualified entry; approvers = manager+admin; queue at /crm/approvals.
+
+Original stub (for reference):
 
 - **Data:** `approval_status` enum on `crm_Opportunities` (`none | pending_approval | approved | rejected`), `approved_by`/`approved_at`; `case_study_candidate` + `case_study_approved` on `crm_Accounts`.
 - **Flow:** rep attaches the SOW/quote document to the opportunity and requests approval → manager/admin (CSO) sees a pending-approvals view and approves/rejects (guarded by `isManagerOrAdmin`) → only approved deals can move to the Qualified stage (transition guard) → approval decisions audit-logged and email-notified.

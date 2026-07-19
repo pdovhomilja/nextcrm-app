@@ -1,6 +1,8 @@
 import Container from "@/app/[locale]/(routes)/components/ui/Container";
 import React from "react";
 import { BasicView } from "./components/BasicView";
+import CaseStudyCard from "./components/CaseStudyCard";
+import { getSession } from "@/lib/auth-server";
 import { FindSimilarButton } from "@/components/crm/find-similar-button";
 
 import { getAccount } from "@/actions/crm/get-account";
@@ -49,6 +51,8 @@ interface AccountDetailPageProps {
 const AccountDetailPage = async (props: AccountDetailPageProps) => {
   const params = await props.params;
   const { accountId } = params;
+  const session = await getSession();
+  const sessionUserRole = (session?.user as any)?.role ?? "user";
   const account: crm_Accounts | null = await getAccount(accountId);
   const opportunities: crm_Opportunities[] = serializeDecimalsList(
     await getOpportunitiesFullByAccountId(accountId)
@@ -108,6 +112,14 @@ const AccountDetailPage = async (props: AccountDetailPageProps) => {
         <TabsContent value="overview">
           <div className="space-y-5">
             <BasicView data={account} />
+            <CaseStudyCard
+              accountId={account.id}
+              candidate={account.case_study_candidate}
+              approved={account.case_study_approved}
+              canApprove={
+                sessionUserRole === "manager" || sessionUserRole === "admin"
+              }
+            />
             <ActivitiesSection accountId={account.id} />
             <FindSimilarButton entityType="account" recordId={accountId} />
             <AccountsTasksView data={tasks} account={account} />

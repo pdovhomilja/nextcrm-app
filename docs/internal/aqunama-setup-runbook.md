@@ -69,3 +69,15 @@ What runs automatically:
   digest. Assign that list to a fresh campaign to re-try them.
 - **Renewals** (Mondays 07:00 UTC): contract reminder dates and product
   renewal dates within 30 days become tasks for the account's rep.
+
+## 8. Phase 3: quote approvals & case studies
+
+- Reps: open the deal → **Request approval** (attach the SOW/quote to the
+  deal's documents first). The deal cannot move into the Qualified stage
+  until a manager/admin approves — the kanban/form will refuse with an
+  explanatory error.
+- Managers/admins (CSO): work the **CRM → Approvals** queue — approve, or
+  reject with a note (the rep is emailed either way). Re-request after
+  fixing a rejection.
+- Case studies: on the account detail, reps flag **case-study candidates**;
+  managers/admins approve them (spec §3.8).
