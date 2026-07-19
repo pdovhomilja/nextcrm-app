@@ -1,6 +1,6 @@
 // lib/crm/calendar/__tests__/sync.test.ts
-jest.mock("@/lib/prisma", () => ({
-  prismadb: {
+jest.mock("@/lib/prisma", () => {
+  const mock: Record<string, unknown> = {
     crm_CalendarEvents: {
       findUnique: jest.fn(),
       findMany: jest.fn(),
@@ -10,8 +10,10 @@ jest.mock("@/lib/prisma", () => ({
     crm_Activities: { create: jest.fn(), update: jest.fn() },
     crm_Targets: { create: jest.fn() },
     users: { findFirst: jest.fn() },
-  },
-}));
+  };
+  mock.$transaction = jest.fn(async (fn: (tx: unknown) => unknown) => fn(mock));
+  return { prismadb: mock };
+});
 jest.mock("../match", () => ({ matchCounterparty: jest.fn() }));
 
 import { prismadb } from "@/lib/prisma";
@@ -29,6 +31,7 @@ const updateActivity = prismadb.crm_Activities.update as jest.Mock;
 const createTarget = prismadb.crm_Targets.create as jest.Mock;
 const findUser = prismadb.users.findFirst as jest.Mock;
 const match = matchCounterparty as jest.Mock;
+const transaction = prismadb.$transaction as jest.Mock;
 
 function input(overrides: Partial<CalendarEventInput> = {}): CalendarEventInput {
   return {
@@ -84,6 +87,11 @@ describe("upsertCalendarEvent", () => {
         data: expect.objectContaining({ status: "cancelled" }),
       })
     );
+    expect(updateMapping).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: "cancelled" }),
+      })
+    );
   });
 
   it("updates activity date on reschedule", async () => {
@@ -98,6 +106,11 @@ describe("upsertCalendarEvent", () => {
     expect(updateActivity).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ date: new Date("2026-07-22T09:00:00Z") }),
+      })
+    );
+    expect(updateMapping).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ startAt: new Date("2026-07-22T09:00:00Z") }),
       })
     );
   });
@@ -162,5 +175,12 @@ describe("upsertCalendarEvent", () => {
         }),
       })
     );
+  });
+
+  it("treats a concurrent duplicate-create race as benign (P2002)", async () => {
+    match.mockResolvedValue([{ entityType: "contact", entityId: "c1" }]);
+    transaction.mockRejectedValueOnce(Object.assign(new Error("dup"), { code: "P2002" }));
+    const res = await upsertCalendarEvent(input());
+    expect(res).toEqual({ action: "skipped", reason: "concurrent-duplicate" });
   });
 });

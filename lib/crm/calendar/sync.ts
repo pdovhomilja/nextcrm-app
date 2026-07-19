@@ -29,13 +29,15 @@ export async function upsertCalendarEvent(input: CalendarEventInput): Promise<Up
 
   if (existing) {
     if (input.status === "cancelled" && existing.status !== "cancelled") {
-      await prismadb.crm_CalendarEvents.update({
-        where: { id: existing.id },
-        data: { status: "cancelled", rawPayload: (input.rawPayload as object) ?? undefined },
-      });
-      await prismadb.crm_Activities.update({
-        where: { id: existing.activityId },
-        data: { status: "cancelled" },
+      await prismadb.$transaction(async (tx) => {
+        await tx.crm_CalendarEvents.update({
+          where: { id: existing.id },
+          data: { status: "cancelled", rawPayload: (input.rawPayload as object) ?? undefined },
+        });
+        await tx.crm_Activities.update({
+          where: { id: existing.activityId },
+          data: { status: "cancelled" },
+        });
       });
       return { action: "cancelled", activityId: existing.activityId };
     }
@@ -43,18 +45,20 @@ export async function upsertCalendarEvent(input: CalendarEventInput): Promise<Up
       input.status === "scheduled" &&
       existing.startAt.getTime() !== input.startAt.getTime()
     ) {
-      await prismadb.crm_CalendarEvents.update({
-        where: { id: existing.id },
-        data: {
-          startAt: input.startAt,
-          endAt: input.endAt ?? null,
-          status: "scheduled",
-          rawPayload: (input.rawPayload as object) ?? undefined,
-        },
-      });
-      await prismadb.crm_Activities.update({
-        where: { id: existing.activityId },
-        data: { date: input.startAt, status: "scheduled" },
+      await prismadb.$transaction(async (tx) => {
+        await tx.crm_CalendarEvents.update({
+          where: { id: existing.id },
+          data: {
+            startAt: input.startAt,
+            endAt: input.endAt ?? null,
+            status: "scheduled",
+            rawPayload: (input.rawPayload as object) ?? undefined,
+          },
+        });
+        await tx.crm_Activities.update({
+          where: { id: existing.activityId },
+          data: { date: input.startAt, status: "scheduled" },
+        });
       });
       return { action: "updated", activityId: existing.activityId };
     }
@@ -81,23 +85,10 @@ export async function upsertCalendarEvent(input: CalendarEventInput): Promise<Up
   }
 
   const hostUserId = await resolveHostUserId(input.hostEmail);
-  let links: EntityLink[] = await matchCounterparty(input.counterpartyEmails);
+  const matched: EntityLink[] = await matchCounterparty(input.counterpartyEmails);
 
-  if (links.length === 0) {
-    if (input.source === "google") return { action: "skipped", reason: "no-match" };
-    // Calendly no-match: a booking from an unknown person is a new lead ->
-    // auto-create a Target (spec: source "Book-a-call").
-    const { first, last } = inviteeName(input);
-    const target = await prismadb.crm_Targets.create({
-      data: {
-        first_name: first,
-        last_name: last,
-        email: input.counterpartyEmails[0] ?? null,
-        tags: ["book-a-call"],
-        created_by: hostUserId,
-      },
-    });
-    links = [{ entityType: "target", entityId: target.id }];
+  if (matched.length === 0 && input.source === "google") {
+    return { action: "skipped", reason: "no-match" };
   }
 
   const durationMinutes =
@@ -105,33 +96,61 @@ export async function upsertCalendarEvent(input: CalendarEventInput): Promise<Up
       ? Math.max(0, Math.round((input.endAt.getTime() - input.startAt.getTime()) / 60000))
       : null;
 
-  const activity = await prismadb.crm_Activities.create({
-    data: {
-      type: "meeting",
-      title: input.title,
-      date: input.startAt,
-      duration: durationMinutes,
-      status: "scheduled",
-      metadata: { calendarSource: input.source },
-      createdBy: hostUserId,
-      links: { create: links },
-    },
-  });
+  try {
+    const activityId = await prismadb.$transaction(async (tx) => {
+      let links = matched;
+      if (links.length === 0) {
+        // Calendly no-match: a booking from an unknown person is a new lead ->
+        // auto-create a Target (spec: source "Book-a-call").
+        const { first, last } = inviteeName(input);
+        const target = await tx.crm_Targets.create({
+          data: {
+            first_name: first,
+            last_name: last,
+            email: input.counterpartyEmails[0] ?? null,
+            tags: ["book-a-call"],
+            created_by: hostUserId,
+          },
+        });
+        links = [{ entityType: "target", entityId: target.id }];
+      }
 
-  await prismadb.crm_CalendarEvents.create({
-    data: {
-      source: input.source,
-      externalId: input.externalId,
-      iCalUID: input.iCalUID ?? null,
-      connectionId: input.connectionId ?? null,
-      activityId: activity.id,
-      startAt: input.startAt,
-      endAt: input.endAt ?? null,
-      attendeeEmails: input.counterpartyEmails,
-      status: "scheduled",
-      rawPayload: (input.rawPayload as object) ?? undefined,
-    },
-  });
+      const activity = await tx.crm_Activities.create({
+        data: {
+          type: "meeting",
+          title: input.title,
+          date: input.startAt,
+          duration: durationMinutes,
+          status: "scheduled",
+          metadata: { calendarSource: input.source },
+          createdBy: hostUserId,
+          links: { create: links },
+        },
+      });
 
-  return { action: "created", activityId: activity.id };
+      await tx.crm_CalendarEvents.create({
+        data: {
+          source: input.source,
+          externalId: input.externalId,
+          iCalUID: input.iCalUID ?? null,
+          connectionId: input.connectionId ?? null,
+          activityId: activity.id,
+          startAt: input.startAt,
+          endAt: input.endAt ?? null,
+          attendeeEmails: input.counterpartyEmails,
+          status: "scheduled",
+          rawPayload: (input.rawPayload as object) ?? undefined,
+        },
+      });
+
+      return activity.id;
+    });
+
+    return { action: "created", activityId };
+  } catch (error) {
+    if ((error as { code?: string }).code === "P2002") {
+      return { action: "skipped", reason: "concurrent-duplicate" };
+    }
+    throw error;
+  }
 }
