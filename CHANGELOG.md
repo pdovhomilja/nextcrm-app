@@ -5,6 +5,28 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.13.3...v0.14.0) (2026-07-19)
+
+
+### Added
+
+* **admin:** connect automation trigger kinds to sales stages in CRM settings ([49847ba](https://github.com/pdovhomilja/nextcrm-app/commit/49847bab3a41f5617530de09edd4e79ad3193d69))
+* **admin:** instance-grade funnel timing settings page ([e94d1da](https://github.com/pdovhomilja/nextcrm-app/commit/e94d1da373c2e84b68d72bb6104aea3f39958c2c))
+* AQUNAMA Phase 2 — funnel timer & task engine (kill rule, cadence, care, recycle, renewals) ([8d2a866](https://github.com/pdovhomilja/nextcrm-app/commit/8d2a866c703f950defc6517cd4411cb05de32a25))
+* **crm:** 45-day kill rule cron with inbound-email/activity clock ([aa591a1](https://github.com/pdovhomilja/nextcrm-app/commit/aa591a142ccda15e2304ecdbd62c21405cea41fa))
+* **crm:** auto-task helper and 5-touch qualified follow-up cadence ([366af8a](https://github.com/pdovhomilja/nextcrm-app/commit/366af8a7d8debb1acd37d77cbac087ee5a1e4a60))
+* **crm:** care touchpoint engine (check-in, referral, quarterly) ([ab9aff8](https://github.com/pdovhomilja/nextcrm-app/commit/ab9aff8fc39061dd474a26b16a8488ebdfe3324f))
+* **crm:** configurable timer logic — business days, cadence/care schedules, kill predicate, settings loader ([cd956fc](https://github.com/pdovhomilja/nextcrm-app/commit/cd956fce0934aeb9865ae64496d6c27b0f23c6ce))
+* **crm:** emit crm/opportunity.stage-changed from all stage-writing actions ([413bd48](https://github.com/pdovhomilja/nextcrm-app/commit/413bd48d558574d297e24f24d0eb0bb8323c577c))
+* **crm:** stage_kind on sales stages, task-opportunity link, stage_entered_at ([8eff98c](https://github.com/pdovhomilja/nextcrm-app/commit/8eff98c4ea8b493ff7a3847450498caa3977fbae))
+* **crm:** target recycle cron with Recycled list and admin digest ([8c83243](https://github.com/pdovhomilja/nextcrm-app/commit/8c8324357bd011aae849daab8ec14b8930aeb3c8))
+* **crm:** weekly renewal reminder sweep for contracts and account products ([18da8de](https://github.com/pdovhomilja/nextcrm-app/commit/18da8de91bac437ca271cf4585aa94da96d4a905))
+
+
+### Fixed
+
+* **crm:** final-review fixes — protect re-engaged targets and completed renewals ([f2a7434](https://github.com/pdovhomilja/nextcrm-app/commit/f2a743412d657a8ac99782595790ab9e8b37c937))
+
 ## [0.13.3](https://github.com/pdovhomilja/nextcrm-app/compare/v0.13.2...v0.13.3) (2026-07-17)
 
 
