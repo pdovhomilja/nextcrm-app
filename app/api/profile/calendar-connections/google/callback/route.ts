@@ -3,7 +3,7 @@ import { google } from "googleapis";
 import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { encrypt } from "@/lib/email-crypto";
-import { getGoogleOAuthClient } from "@/lib/crm/calendar/google";
+import { getGoogleOAuthClient, scopeLevelFromGrantedScopes } from "@/lib/crm/calendar/google";
 
 const STATE_COOKIE = "gcal_oauth_state";
 const STATE_COOKIE_PATH = "/api/profile/calendar-connections/google";
@@ -42,6 +42,7 @@ export async function GET(req: NextRequest) {
       return redirectAndClearState(`${appUrl}/profile?tab=calendar&calendar=no-refresh-token`);
     }
     auth.setCredentials(tokens);
+    const scopeLevel = scopeLevelFromGrantedScopes(tokens.scope);
 
     const calendar = google.calendar({ version: "v3", auth });
     const primary = await calendar.calendarList.get({ calendarId: "primary" });
@@ -65,6 +66,7 @@ export async function GET(req: NextRequest) {
         isActive: true,
         lastSyncError: null,
         syncToken: null, // force a fresh full-window sync
+        scopeLevel,
       },
       create: {
         userId: session.user.id,
@@ -73,6 +75,7 @@ export async function GET(req: NextRequest) {
         refreshTokenEncrypted: encrypt(tokens.refresh_token),
         accessTokenEncrypted: tokens.access_token ? encrypt(tokens.access_token) : null,
         tokenExpiresAt: tokens.expiry_date ? new Date(tokens.expiry_date) : null,
+        scopeLevel,
       },
     });
 
