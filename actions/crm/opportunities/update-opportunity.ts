@@ -6,6 +6,7 @@ import { inngest } from "@/inngest/client";
 import { writeAuditLog, diffObjects } from "@/lib/audit-log";
 import { getSnapshotRate, getDefaultCurrency } from "@/lib/currency";
 import { handleStageTransition } from "@/lib/crm/stage-transition";
+import { qualifiedEntryBlockReason } from "@/lib/crm/approval-gate";
 
 export const updateOpportunity = async (data: {
   id: string;
@@ -54,6 +55,12 @@ export const updateOpportunity = async (data: {
       ? await getSnapshotRate(currency, defaultCurrency)
       : null;
     const before = await prismadb.crm_Opportunities.findUnique({ where: { id, deletedAt: null } });
+    const blockReason = await qualifiedEntryBlockReason({
+      fromStage: before?.sales_stage ?? null,
+      toStage: sales_stage || null,
+      approvalStatus: before?.approval_status ?? "NONE",
+    });
+    if (blockReason) return { error: blockReason };
     const opportunity = await prismadb.crm_Opportunities.update({
       where: { id },
       data: {

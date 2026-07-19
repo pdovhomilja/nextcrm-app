@@ -2,6 +2,7 @@ jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
     crm_Opportunities: { update: jest.fn(), findUnique: jest.fn() },
+    crm_Opportunities_Sales_Stages: { findUnique: jest.fn() },
     users: { findFirst: jest.fn() },
   },
 }));
@@ -43,5 +44,40 @@ describe("updateOpportunity currency handling", () => {
     await updateOpportunity({ id: "opp-1", name: "Deal", currency: "USD" } as any);
     const data = (prismadb.crm_Opportunities.update as jest.Mock).mock.calls[0][0].data;
     expect(data.currency).toBe("USD");
+  });
+});
+
+describe("updateOpportunity approval gate", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (getSession as jest.Mock).mockResolvedValue({ user: { id: "u1" } });
+    (prismadb.crm_Opportunities.findUnique as jest.Mock).mockResolvedValue({
+      id: "opp-1", sales_stage: "s-old", approval_status: "NONE",
+    });
+    (prismadb.crm_Opportunities.update as jest.Mock).mockResolvedValue({ id: "opp-1" });
+  });
+
+  it("blocks moving an unapproved deal into a qualified-kind stage", async () => {
+    (prismadb.crm_Opportunities_Sales_Stages.findUnique as jest.Mock).mockResolvedValue({
+      stage_kind: "qualified",
+    });
+    const res = await updateOpportunity({
+      id: "opp-1", name: "Deal", sales_stage: "s-qualified",
+    } as any);
+    expect(res.error).toContain("approval");
+    expect(prismadb.crm_Opportunities.update).not.toHaveBeenCalled();
+  });
+
+  it("allows the move when the deal is APPROVED", async () => {
+    (prismadb.crm_Opportunities.findUnique as jest.Mock).mockResolvedValue({
+      id: "opp-1", sales_stage: "s-old", approval_status: "APPROVED",
+    });
+    (prismadb.crm_Opportunities_Sales_Stages.findUnique as jest.Mock).mockResolvedValue({
+      stage_kind: "qualified",
+    });
+    const res = await updateOpportunity({
+      id: "opp-1", name: "Deal", sales_stage: "s-qualified",
+    } as any);
+    expect(res.error).toBeUndefined();
   });
 });
