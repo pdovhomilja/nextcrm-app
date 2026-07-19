@@ -24,6 +24,7 @@ import { killRule } from "@/inngest/functions/crm/kill-rule";
 import { careTasks } from "@/inngest/functions/crm/care-tasks";
 import { recycleTargets } from "@/inngest/functions/crm/recycle-targets";
 import { renewalReminders } from "@/inngest/functions/crm/renewal-reminders";
+import { calendarProcessEvent } from "@/inngest/functions/calendar/process-event";
 import { enrichDocument } from "@/inngest/functions/documents/enrich-document";
 import { generateDocumentThumbnail } from "@/inngest/functions/documents/generate-thumbnail";
 import { syncExchangeRates } from "@/inngest/functions/ecb/sync-exchange-rates";
@@ -55,6 +56,7 @@ export const { GET, POST, PUT } = serve({
     careTasks,
     recycleTargets,
     renewalReminders,
+    calendarProcessEvent,
     enrichDocument,
     generateDocumentThumbnail,
     syncExchangeRates,
