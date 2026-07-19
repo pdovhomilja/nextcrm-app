@@ -38,6 +38,9 @@ model crm_Accounts {
   shipping_state       String?
   shipping_street      String?
   status               String?   @default("Inactive")
+  /// Spec §3.8 case-study pipeline: rep flags the candidate, CSO approves.
+  case_study_candidate Boolean   @default(false)
+  case_study_approved  Boolean   @default(false)
   type                 String?   @default("Customer")
   vat                  String?
   website              String?
@@ -204,6 +207,12 @@ model crm_Opportunities {
   delivery_deadline DateTime?
   /// Set whenever sales_stage changes; anchors cadence/care timers.
   stage_entered_at  DateTime?
+  /// SOW/quote approval (spec §3.5: CSO approves before the quote is sent).
+  approval_status       crm_Approval_Status @default(NONE)
+  approval_requested_at DateTime?
+  approval_note         String?
+  approved_by           String?             @db.Uuid
+  approved_at           DateTime?
   contact          String?                 @db.Uuid
   createdBy        String?                 @db.Uuid
   created_on       DateTime?               @default(now())
@@ -249,6 +258,13 @@ model crm_Opportunities {
   @@index([close_date])
   @@index([status, sales_stage])
   @@index([deletedAt])
+}
+
+enum crm_Approval_Status {
+  NONE
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum crm_Opportunity_Status {
