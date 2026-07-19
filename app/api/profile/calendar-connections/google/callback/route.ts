@@ -5,6 +5,21 @@ import { prismadb } from "@/lib/prisma";
 import { encrypt } from "@/lib/email-crypto";
 import { getGoogleOAuthClient } from "@/lib/crm/calendar/google";
 
+const STATE_COOKIE = "gcal_oauth_state";
+const STATE_COOKIE_PATH = "/api/profile/calendar-connections/google";
+
+function redirectAndClearState(url: string) {
+  const res = NextResponse.redirect(url);
+  res.cookies.set(STATE_COOKIE, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 0,
+    path: STATE_COOKIE_PATH,
+  });
+  return res;
+}
+
 export async function GET(req: NextRequest) {
   const session = await getSession();
   if (!session?.user?.id) {
@@ -12,13 +27,19 @@ export async function GET(req: NextRequest) {
   }
   const code = req.nextUrl.searchParams.get("code");
   const appUrl = process.env.NEXT_PUBLIC_APP_URL!;
-  if (!code) return NextResponse.redirect(`${appUrl}/profile?calendar=error`);
+  if (!code) return redirectAndClearState(`${appUrl}/profile?calendar=error`);
+
+  const cookieState = req.cookies.get(STATE_COOKIE)?.value;
+  const queryState = req.nextUrl.searchParams.get("state");
+  if (!cookieState || !queryState || cookieState !== queryState) {
+    return redirectAndClearState(`${appUrl}/profile?calendar=state-mismatch`);
+  }
 
   try {
     const auth = getGoogleOAuthClient();
     const { tokens } = await auth.getToken(code);
     if (!tokens.refresh_token) {
-      return NextResponse.redirect(`${appUrl}/profile?calendar=no-refresh-token`);
+      return redirectAndClearState(`${appUrl}/profile?calendar=no-refresh-token`);
     }
     auth.setCredentials(tokens);
 
@@ -26,7 +47,7 @@ export async function GET(req: NextRequest) {
     const primary = await calendar.calendarList.get({ calendarId: "primary" });
     const accountEmail = primary.data.id;
     if (!accountEmail) {
-      return NextResponse.redirect(`${appUrl}/profile?calendar=error`);
+      return redirectAndClearState(`${appUrl}/profile?calendar=error`);
     }
 
     await prismadb.calendarConnection.upsert({
@@ -55,9 +76,12 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return NextResponse.redirect(`${appUrl}/profile?calendar=connected`);
+    return redirectAndClearState(`${appUrl}/profile?calendar=connected`);
   } catch (error) {
-    console.error("[google-calendar-callback]", error);
-    return NextResponse.redirect(`${appUrl}/profile?calendar=error`);
+    console.error(
+      "[google-calendar-callback]",
+      error instanceof Error ? error.message : String(error)
+    );
+    return redirectAndClearState(`${appUrl}/profile?calendar=error`);
   }
 }

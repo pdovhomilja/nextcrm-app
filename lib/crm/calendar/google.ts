@@ -19,11 +19,12 @@ export function getGoogleOAuthClient(): OAuth2Client {
   );
 }
 
-export function getGoogleAuthUrl(): string {
+export function getGoogleAuthUrl(state: string): string {
   return getGoogleOAuthClient().generateAuthUrl({
     access_type: "offline",
     prompt: "consent",
     scope: SCOPES,
+    state,
   });
 }
 
