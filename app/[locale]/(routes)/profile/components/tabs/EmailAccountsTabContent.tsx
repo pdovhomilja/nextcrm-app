@@ -1,6 +1,5 @@
 import { getEmailAccounts } from "@/actions/emails/accounts";
 import { EmailAccountsList } from "../EmailAccountsList";
-import { CalendarConnectionsList } from "../CalendarConnectionsList";
 
 export async function EmailAccountsTabContent() {
   const accounts = await getEmailAccounts();
@@ -12,7 +11,6 @@ export async function EmailAccountsTabContent() {
         </h3>
         <EmailAccountsList accounts={accounts} />
       </div>
-      <CalendarConnectionsList />
     </div>
   );
 }

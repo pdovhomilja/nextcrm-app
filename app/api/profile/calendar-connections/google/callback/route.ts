@@ -27,19 +27,19 @@ export async function GET(req: NextRequest) {
   }
   const code = req.nextUrl.searchParams.get("code");
   const appUrl = process.env.NEXT_PUBLIC_APP_URL!;
-  if (!code) return redirectAndClearState(`${appUrl}/profile?calendar=error`);
+  if (!code) return redirectAndClearState(`${appUrl}/profile?tab=calendar&calendar=error`);
 
   const cookieState = req.cookies.get(STATE_COOKIE)?.value;
   const queryState = req.nextUrl.searchParams.get("state");
   if (!cookieState || !queryState || cookieState !== queryState) {
-    return redirectAndClearState(`${appUrl}/profile?calendar=state-mismatch`);
+    return redirectAndClearState(`${appUrl}/profile?tab=calendar&calendar=state-mismatch`);
   }
 
   try {
     const auth = getGoogleOAuthClient();
     const { tokens } = await auth.getToken(code);
     if (!tokens.refresh_token) {
-      return redirectAndClearState(`${appUrl}/profile?calendar=no-refresh-token`);
+      return redirectAndClearState(`${appUrl}/profile?tab=calendar&calendar=no-refresh-token`);
     }
     auth.setCredentials(tokens);
 
@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
     const primary = await calendar.calendarList.get({ calendarId: "primary" });
     const accountEmail = primary.data.id;
     if (!accountEmail) {
-      return redirectAndClearState(`${appUrl}/profile?calendar=error`);
+      return redirectAndClearState(`${appUrl}/profile?tab=calendar&calendar=error`);
     }
 
     await prismadb.calendarConnection.upsert({
@@ -76,12 +76,12 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return redirectAndClearState(`${appUrl}/profile?calendar=connected`);
+    return redirectAndClearState(`${appUrl}/profile?tab=calendar&calendar=connected`);
   } catch (error) {
     console.error(
       "[google-calendar-callback]",
       error instanceof Error ? error.message : String(error)
     );
-    return redirectAndClearState(`${appUrl}/profile?calendar=error`);
+    return redirectAndClearState(`${appUrl}/profile?tab=calendar&calendar=error`);
   }
 }

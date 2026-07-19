@@ -287,6 +287,8 @@
       "preferencesDesc": "Customize your language and display settings",
       "developerDesc": "Manage API keys and developer integrations",
       "emailsDesc": "Manage your connected IMAP mailboxes",
+      "calendar": "Calendar",
+      "calendarDesc": "Manage your connected calendars",
       "llms": "LLMs",
       "llmsDesc": "Manage your LLM API keys"
     },

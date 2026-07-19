@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 type Connection = {
@@ -12,14 +13,43 @@ type Connection = {
   lastSyncError: string | null;
 };
 
+// Outcome of the Google OAuth callback, passed back as ?calendar=<result>.
+const CALLBACK_MESSAGES: Record<string, { tone: "success" | "error"; text: string }> = {
+  connected: { tone: "success", text: "Google Calendar connected." },
+  error: {
+    tone: "error",
+    text: "Connection failed — ask an admin to check the server logs for [google-calendar-callback].",
+  },
+  "state-mismatch": {
+    tone: "error",
+    text: "Sign-in verification failed (state mismatch). Please try connecting again.",
+  },
+  "no-refresh-token": {
+    tone: "error",
+    text: "Google did not return a refresh token. Remove this app's access at myaccount.google.com/permissions, then connect again.",
+  },
+};
+
 export function CalendarConnectionsList() {
+  const searchParams = useSearchParams();
+  const callbackResult = searchParams.get("calendar");
+  const banner = callbackResult ? CALLBACK_MESSAGES[callbackResult] ?? null : null;
+
   const [connections, setConnections] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/profile/calendar-connections");
-    if (res.ok) setConnections((await res.json()).connections);
-    setLoading(false);
+    try {
+      const res = await fetch("/api/profile/calendar-connections");
+      if (!res.ok) throw new Error(`Failed to load connections (${res.status})`);
+      setConnections((await res.json()).connections);
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load connections");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -27,12 +57,30 @@ export function CalendarConnectionsList() {
   }, [load]);
 
   async function disconnect(id: string) {
-    await fetch(`/api/profile/calendar-connections/${id}`, { method: "DELETE" });
-    await load();
+    try {
+      const res = await fetch(`/api/profile/calendar-connections/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error(`Disconnect failed (${res.status})`);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Disconnect failed");
+    }
   }
 
   return (
     <div className="space-y-3 rounded-lg border p-4">
+      {banner && (
+        <p
+          className={
+            banner.tone === "success"
+              ? "rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-600 dark:text-emerald-400"
+              : "rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          }
+        >
+          {banner.text}
+        </p>
+      )}
       <div className="flex items-center justify-between">
         <h3 className="font-medium">Calendar connections</h3>
         <Button asChild size="sm">
@@ -41,6 +89,7 @@ export function CalendarConnectionsList() {
           </a>
         </Button>
       </div>
+      {error && <p className="text-sm text-destructive">{error}</p>}
       {loading ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : connections.length === 0 ? (

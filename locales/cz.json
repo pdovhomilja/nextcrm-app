@@ -281,6 +281,8 @@
     "tabs": {
       "emails": "Email Accounts",
       "emailsDesc": "Manage your connected IMAP mailboxes",
+      "calendar": "Kalendář",
+      "calendarDesc": "Správa připojených kalendářů",
       "llms": "LLMs",
       "llmsDesc": "Spravujte své klíče LLM API"
     }
