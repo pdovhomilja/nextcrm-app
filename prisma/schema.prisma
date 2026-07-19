@@ -673,6 +673,7 @@ model crm_Activities {
   created_by_user Users?              @relation("activity_created_by", fields: [createdBy], references: [id])
   updated_by_user Users?              @relation("activity_updated_by", fields: [updatedBy], references: [id])
   links       crm_ActivityLinks[]
+  calendar_events crm_CalendarEvents[]
 
   @@index([date])
   @@index([type])
@@ -1006,6 +1007,7 @@ model Users {
   created_target_lists crm_TargetLists[]     @relation("created_target_lists")
   apiTokens            ApiToken[]
   emailAccounts        EmailAccount[]
+  calendarConnections  CalendarConnection[]
   emails               Email[]
   enrichments_triggered          crm_Contact_Enrichment[]  @relation("enrichment_triggered_by")
   target_enrichments_triggered   crm_Target_Enrichment[]   @relation("target_enrichment_triggered_by")
@@ -1525,6 +1527,61 @@ model EmailEmbedding {
   email Email @relation(fields: [emailId], references: [id], onDelete: Cascade)
 
   @@map("EmailEmbedding")
+}
+
+// ============================================
+// CALENDAR SYNC (AQUNAMA Phase 4)
+// ============================================
+
+enum CalendarProvider {
+  google
+}
+
+model CalendarConnection {
+  id                    String           @id @default(uuid()) @db.Uuid
+  userId                String           @db.Uuid
+  provider              CalendarProvider
+  accountEmail          String
+  accessTokenEncrypted  String?
+  refreshTokenEncrypted String
+  tokenExpiresAt        DateTime?
+  syncToken             String?
+  isActive              Boolean          @default(true)
+  lastSyncedAt          DateTime?
+  lastSyncError         String?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  user           Users               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  calendarEvents crm_CalendarEvents[]
+
+  @@unique([userId, provider, accountEmail])
+  @@index([userId])
+  @@index([isActive])
+}
+
+model crm_CalendarEvents {
+  id             String    @id @default(uuid()) @db.Uuid
+  source         String
+  externalId     String
+  iCalUID        String?
+  connectionId   String?   @db.Uuid
+  activityId     String    @db.Uuid
+  startAt        DateTime
+  endAt          DateTime?
+  attendeeEmails Json      @default("[]")
+  status         String    @default("scheduled")
+  rawPayload     Json?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  connection CalendarConnection? @relation(fields: [connectionId], references: [id], onDelete: SetNull)
+  activity   crm_Activities      @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@unique([source, externalId])
+  @@index([iCalUID])
+  @@index([activityId])
+  @@index([startAt])
 }
 
 model EmailsToContacts {

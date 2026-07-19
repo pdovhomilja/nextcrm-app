@@ -37,7 +37,11 @@ Original stub (for reference):
 - **Flow:** rep attaches the SOW/quote document to the opportunity and requests approval → manager/admin (CSO) sees a pending-approvals view and approves/rejects (guarded by `isManagerOrAdmin`) → only approved deals can move to the Qualified stage (transition guard) → approval decisions audit-logged and email-notified.
 - **Upgrade path:** a structured `crm_Quotes` entity with line items + PDF (reusing the invoice `@react-pdf/renderer` pipeline) stays available as a later enhancement; nothing in the minimal flow blocks it.
 
-## Plan 4 — Calendar: Full Two-Way Sync (gap G-05) — stub, largest single item
+## Plan 4 — Calendar Sync ✅ Milestones A+B implemented (2026-07-19)
+
+Full plan: `docs/superpowers/plans/2026-07-19-aqunama-p4-calendar-sync.md` — spec: `docs/superpowers/specs/2026-07-19-aqunama-p4-calendar-sync-design.md`. Decisions: A+B only (outbound two-way deferred); org-scope Calendly webhook; Workspace-internal Google OAuth, readonly scope, 15-min Inngest polling; unmatched Calendly invitees auto-create Targets; synced meetings restart the 45-day kill clock.
+
+Original stub (for reference):
 
 Decision was full sync (not webhook-only). Suggested internal milestones so value ships early:
 

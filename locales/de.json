@@ -277,6 +277,8 @@
     "tabs": {
       "emails": "Email Accounts",
       "emailsDesc": "Manage your connected IMAP mailboxes",
+      "calendar": "Kalender",
+      "calendarDesc": "Verbundene Kalender verwalten",
       "llms": "LLMs",
       "llmsDesc": "LLM API-Schlüssel verwalten"
     }

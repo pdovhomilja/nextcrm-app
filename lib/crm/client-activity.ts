@@ -26,6 +26,7 @@ export async function getLastClientActivity(opp: {
   const lastActivity = await prismadb.crm_Activities.findFirst({
     where: {
       deletedAt: null,
+      status: { not: "cancelled" },
       links: { some: { entityType: "opportunity", entityId: opp.id } },
     },
     orderBy: { date: "desc" },

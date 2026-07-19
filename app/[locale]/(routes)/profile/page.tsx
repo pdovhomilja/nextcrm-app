@@ -11,6 +11,7 @@ import { SecurityTabContent } from "./components/tabs/SecurityTabContent";
 import { PreferencesTabContent } from "./components/tabs/PreferencesTabContent";
 import { DeveloperTabContent } from "./components/tabs/DeveloperTabContent";
 import { EmailAccountsTabContent } from "./components/tabs/EmailAccountsTabContent";
+import { CalendarTabContent } from "./components/tabs/CalendarTabContent";
 import { LlmsTabContent } from "./components/tabs/LlmsTabContent";
 import { getUserApiKeys } from "./actions/api-keys";
 
@@ -35,6 +36,7 @@ const ProfilePage = async () => {
             preferencesContent={<PreferencesTabContent userId={data.id} />}
             developerContent={<DeveloperTabContent userId={data.id} />}
             emailsContent={<EmailAccountsTabContent />}
+            calendarContent={<CalendarTabContent />}
             llmsContent={<LlmsTabContent initialKeys={llmKeys} />}
           />
         </Suspense>
