@@ -22,6 +22,8 @@ import { Clapperboard } from "lucide-react";
 import { prismadb } from "@/lib/prisma";
 import { getAllCrmData } from "@/actions/crm/get-crm-data";
 import { OpportunityDetailActions } from "./OpportunityDetailActions";
+import RequestApprovalButton from "./RequestApprovalButton";
+import { Badge } from "@/components/ui/badge";
 import { formatCurrency, convertAmount, getExchangeRates, getDefaultCurrency } from "@/lib/currency";
 import { Decimal } from "@prisma/client/runtime/client";
 import { cookies } from "next/headers";
@@ -57,9 +59,25 @@ export async function BasicView({ data }: OppsViewProps) {
       <CardHeader className="pb-3">
         <div className="flex w-full justify-between">
           <div>
-            <CardTitle>{data.name}</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              {data.name}
+              {data.approval_status === "PENDING" && (
+                <Badge variant="secondary">Approval pending</Badge>
+              )}
+              {data.approval_status === "APPROVED" && <Badge>Approved</Badge>}
+              {data.approval_status === "REJECTED" && (
+                <Badge variant="destructive" title={data.approval_note ?? undefined}>
+                  Rejected
+                </Badge>
+              )}
+            </CardTitle>
             <CardDescription>ID:{data.id}</CardDescription>
           </div>
+          <div className="flex items-start gap-2">
+          {(data.approval_status === "NONE" ||
+            data.approval_status === "REJECTED") && (
+            <RequestApprovalButton opportunityId={data.id} />
+          )}
           <OpportunityDetailActions
             opportunity={serializeDecimals(data)}
             saleTypes={saleTypes}
@@ -67,6 +85,7 @@ export async function BasicView({ data }: OppsViewProps) {
             campaigns={campaigns}
             currencies={currencies.map((c: { code: string; name: string; symbol: string }) => ({ code: c.code, name: c.name, symbol: c.symbol }))}
           />
+          </div>
         </div>
       </CardHeader>
       <CardContent className="grid grid-cols-2 gap-1">

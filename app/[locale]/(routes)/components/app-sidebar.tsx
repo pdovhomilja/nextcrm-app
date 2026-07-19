@@ -91,7 +91,7 @@ export function AppSidebar({
 
   const navItems = [
     getDashboardMenuItem({ title: dict?.dashboard || "Dashboard" }),
-    getCrmMenuItem({ localizations: dict.crm }),
+    getCrmMenuItem({ localizations: dict.crm, role: session?.user?.role ?? undefined }),
     getCampaignsMenuItem({
       localizations: {
         title: "Campaigns",

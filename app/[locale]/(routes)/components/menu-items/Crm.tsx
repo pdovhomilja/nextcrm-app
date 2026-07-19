@@ -21,9 +21,11 @@ type Props = {
     contracts: string;
     products: string;
   };
+  /** Current user's role — the Approvals queue is manager/admin only. */
+  role?: string;
 };
 
-export const getCrmMenuItem = ({ localizations }: Props): NavItem => {
+export const getCrmMenuItem = ({ localizations, role }: Props): NavItem => {
   return {
     title: localizations.title,
     icon: Coins,
@@ -64,6 +66,9 @@ export const getCrmMenuItem = ({ localizations }: Props): NavItem => {
         title: localizations.products,
         url: "/crm/products",
       },
+      ...(role === "manager" || role === "admin"
+        ? [{ title: "Approvals", url: "/crm/approvals" }]
+        : []),
     ],
   };
 };
