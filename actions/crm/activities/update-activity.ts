@@ -1,7 +1,13 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
+import {
+  requireAuthenticated,
+  assertCanWriteActivity,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { emitCalendarOutbound } from "@/lib/crm/calendar/outbound-emit";
 
 const ENTITY_SLUGS: Record<string, string> = {
   account: "accounts",
@@ -22,10 +28,25 @@ export const updateActivity = async (data: {
   metadata?: Record<string, unknown>;
   links?: Array<{ entityType: string; entityId: string }>;
 }) => {
+  // Authorization runs OUTSIDE the try/catch below so a denial is never
+  // swallowed into the generic "Failed to update activity" branch.
+  let user;
   try {
-    const session = await getSession();
-    if (!session) return { error: "Unauthorized" };
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
+  try {
+    // A meeting update is pushed to the owner's Google Calendar with
+    // sendUpdates:"all" — an unauthorized edit mails a real customer.
+    await assertCanWriteActivity(user, data.id);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
 
+  try {
     // Fetch current links before update for revalidation
     const existingLinks = await (prismadb as any).crm_ActivityLinks.findMany({
       where: { activityId: data.id },
@@ -44,7 +65,7 @@ export const updateActivity = async (data: {
           ...(data.outcome !== undefined && { outcome: data.outcome }),
           ...(data.status !== undefined && { status: data.status }),
           ...(data.metadata !== undefined && { metadata: data.metadata }),
-          updatedBy: session.user.id,
+          updatedBy: user.id,
         },
       });
 
@@ -65,6 +86,13 @@ export const updateActivity = async (data: {
 
       return updated;
     });
+
+    if (activity.type === "meeting") {
+      await emitCalendarOutbound(
+        data.id,
+        data.status === "cancelled" ? "cancel" : "upsert"
+      );
+    }
 
     // Revalidate all affected entity pages (old + new links)
     const allLinks = [

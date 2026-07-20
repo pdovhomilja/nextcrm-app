@@ -13,6 +13,7 @@ export async function GET() {
       id: true,
       provider: true,
       accountEmail: true,
+      scopeLevel: true,
       isActive: true,
       lastSyncedAt: true,
       lastSyncError: true,

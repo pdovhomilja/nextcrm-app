@@ -3,7 +3,10 @@ import { google } from "googleapis";
 import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { encrypt } from "@/lib/email-crypto";
-import { getGoogleOAuthClient } from "@/lib/crm/calendar/google";
+import {
+  getGoogleOAuthClient,
+  scopeLevelFromGrantedScopes,
+} from "@/lib/crm/calendar/google";
 
 const STATE_COOKIE = "gcal_oauth_state";
 const STATE_COOKIE_PATH = "/api/profile/calendar-connections/google";
@@ -42,6 +45,7 @@ export async function GET(req: NextRequest) {
       return redirectAndClearState(`${appUrl}/profile?tab=calendar&calendar=no-refresh-token`);
     }
     auth.setCredentials(tokens);
+    const scopeLevel = scopeLevelFromGrantedScopes(tokens.scope);
 
     const calendar = google.calendar({ version: "v3", auth });
     const primary = await calendar.calendarList.get({ calendarId: "primary" });
@@ -65,6 +69,22 @@ export async function GET(req: NextRequest) {
         isActive: true,
         lastSyncError: null,
         syncToken: null, // force a fresh full-window sync
+        // INVARIANT: the stored `scopeLevel` always describes the refresh
+        // token stored alongside it in the same write. This update branch
+        // replaces `refreshTokenEncrypted` unconditionally, so `scopeLevel`
+        // MUST be replaced unconditionally too — deriving it from the scope
+        // Google actually granted. Suppressing the write to avoid a cosmetic
+        // downgrade would leave a row claiming "readwrite" while holding a
+        // readonly token; outbound sync selects on scopeLevel, so every push
+        // would 403 insufficientPermissions, which is not a per-event error
+        // and therefore deactivates the whole connection (killing inbound
+        // sync too). A truthful downgrade degrades cleanly to inbound-only.
+        //
+        // The accidental downgrade is prevented at its source instead: every
+        // entry point into /authorize carries the connection's existing level
+        // as `?level=`, so a re-auth requests at least what the row already
+        // has (see CalendarConnectionsList.tsx).
+        scopeLevel,
       },
       create: {
         userId: session.user.id,
@@ -73,6 +93,7 @@ export async function GET(req: NextRequest) {
         refreshTokenEncrypted: encrypt(tokens.refresh_token),
         accessTokenEncrypted: tokens.access_token ? encrypt(tokens.access_token) : null,
         tokenExpiresAt: tokens.expiry_date ? new Date(tokens.expiry_date) : null,
+        scopeLevel,
       },
     });
 

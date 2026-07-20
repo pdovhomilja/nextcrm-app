@@ -1546,6 +1546,7 @@ model CalendarConnection {
   refreshTokenEncrypted String
   tokenExpiresAt        DateTime?
   syncToken             String?
+  scopeLevel            String           @default("readonly")
   isActive              Boolean          @default(true)
   lastSyncedAt          DateTime?
   lastSyncError         String?

@@ -54,7 +54,7 @@ export {
   targetListReadScopeWhere,
   assertCanReadTargetList,
 } from "./scopes/crm";
-export { assertCanReadActivityForEntity } from "./scopes/crm";
+export { assertCanReadActivityForEntity, assertCanWriteActivity } from "./scopes/crm";
 export {
   campaignReadScopeWhere,
   campaignTemplateReadScopeWhere,

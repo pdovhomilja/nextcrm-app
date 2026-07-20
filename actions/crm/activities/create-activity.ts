@@ -2,6 +2,7 @@
 import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { emitCalendarOutbound } from "@/lib/crm/calendar/outbound-emit";
 
 const ENTITY_SLUGS: Record<string, string> = {
   account: "accounts",
@@ -53,6 +54,10 @@ export const createActivity = async (data: {
 
       return created;
     });
+
+    if (data.type === "meeting") {
+      await emitCalendarOutbound(activity.id, "upsert");
+    }
 
     const fullActivity = await (prismadb as any).crm_Activities.findUnique({
       where: { id: activity.id },

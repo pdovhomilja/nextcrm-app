@@ -27,6 +27,7 @@ import { renewalReminders } from "@/inngest/functions/crm/renewal-reminders";
 import { calendarProcessEvent } from "@/inngest/functions/calendar/process-event";
 import { googleCalendarSyncAll } from "@/inngest/functions/calendar/google-sync-all";
 import { googleCalendarSyncConnection } from "@/inngest/functions/calendar/google-sync-connection";
+import { calendarOutboundSync } from "@/inngest/functions/calendar/outbound-sync";
 import { enrichDocument } from "@/inngest/functions/documents/enrich-document";
 import { generateDocumentThumbnail } from "@/inngest/functions/documents/generate-thumbnail";
 import { syncExchangeRates } from "@/inngest/functions/ecb/sync-exchange-rates";
@@ -61,6 +62,7 @@ export const { GET, POST, PUT } = serve({
     calendarProcessEvent,
     googleCalendarSyncAll,
     googleCalendarSyncConnection,
+    calendarOutboundSync,
     enrichDocument,
     generateDocumentThumbnail,
     syncExchangeRates,

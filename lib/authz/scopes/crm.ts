@@ -654,3 +654,31 @@ export async function assertCanWriteTask(
   if (user.role === "user" && task?.user === user.id) return;
   return assertCanWriteBoard(user, boardId);
 }
+
+// ---------------------------------------------------------------------------
+// Activity write scope.
+//
+// CRM activity writers (update / soft-delete) now trigger customer-facing
+// email: a "meeting" activity is pushed to the owner's Google Calendar with
+// sendUpdates:"all", so an unauthorized mutation does not just corrupt a row,
+// it mails a real invitee. Gate the writers on ownership, with the usual
+// manager/admin escalation used elsewhere in this module.
+//
+// A missing (or already soft-deleted) activity throws AuthorizationError
+// rather than a distinct not-found, matching assertCanWriteTask above and
+// avoiding id enumeration.
+// ---------------------------------------------------------------------------
+
+export async function assertCanWriteActivity(
+  user: AuthzUser,
+  activityId: string,
+): Promise<void> {
+  const activity = await prismadb.crm_Activities.findFirst({
+    where: { id: activityId, deletedAt: null },
+    select: { createdBy: true },
+  });
+  if (!activity) throw new AuthorizationError();
+  if (activity.createdBy && activity.createdBy === user.id) return;
+  if (user.role === "manager" || user.role === "admin") return;
+  throw new AuthorizationError();
+}
