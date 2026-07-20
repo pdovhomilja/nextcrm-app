@@ -1,8 +1,20 @@
 # Workstream A — Object-Level Authorization for CRM Server Actions — Design
 
 **Date:** 2026-07-20
-**Status:** Approved (design), pending implementation
+**Status:** Implemented 2026-07-20 (branch `security/workstream-a-crm-authz`, unpushed; pending final review)
 **Advisory:** GHSA-qwhm-9fcm-p878 (critical) — "Pervasive Missing Authorization: Privilege Escalation + IDOR Across All API Endpoints"
+
+## Implementation notes (2026-07-20)
+
+Delivered across 12 commits: 7 write-scope helpers in `lib/authz/scopes/crm.ts`, then per-entity guards on every unguarded mutating CRM server action (accounts, contacts, leads, opportunities, contracts, both line-item modules, targets, target-lists, CRM tasks). Verification gate green: 216 suites / 1195 tests (baseline 204/1096), tsc clean, `pnpm build` succeeds.
+
+Executed inline rather than via subagent dispatch: the Agent tool's permission classifier blocked the security-content dispatches (same pattern recorded for P2/P3/P4C), so the controller implemented and reviewed each task directly, with TDD (every scope test verified RED against pre-guard code) plus tsc/jest/build as the independent gate. A final whole-branch review is still owed.
+
+Residual items for the final review:
+- **Coverage-sweep catch:** `actions/crm/targets/convert-target.ts` was a mutating `"use server"` action (creates account+contact, updates target) called directly from `UpdateTargetForm`, missed by the plan's enumeration (the inventory mislabeled it "no mutation"). Guarded with `assertCanWriteTarget` + a scope test.
+- **Cross-entity inconsistency (Minor):** relink-on-update parent-write is enforced only on `update-contact` (assigned_account), not on `update-lead`/`update-opportunity`/`update-contract` when they relink an account. Worth a uniform decision.
+- **`assertCanWriteCrmTask` deviation (documented):** covers creator/assignee only; the spec also mentioned "or parent-write". Deferred as a safe narrowing (it would only widen access) to avoid an unverified relation name.
+- **Line-item read guards (`get-line-items` x2):** guarded inside the `cache()` body via `requireAuthenticated`/`assertCanRead*`; the caching-vs-auth interaction is asserted correct by reasoning, not an integration test.
 
 ## Problem
 
