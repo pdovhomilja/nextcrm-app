@@ -4,7 +4,7 @@ jest.mock("@/inngest/client", () => ({
 
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
-    crm_Activities: { findUnique: jest.fn() },
+    crm_Activities: { findUnique: jest.fn(), update: jest.fn() },
     crm_CalendarEvents: {
       findMany: jest.fn(),
       findUnique: jest.fn(),
@@ -50,6 +50,7 @@ import { calendarOutboundSync } from "../outbound-sync";
 const registeredConfig = (inngest.createFunction as jest.Mock).mock.calls[0][0];
 
 const findActivity = prismadb.crm_Activities.findUnique as jest.Mock;
+const updateActivity = prismadb.crm_Activities.update as jest.Mock;
 const findMappingRows = prismadb.crm_CalendarEvents.findMany as jest.Mock;
 const findMappingByExternalId = prismadb.crm_CalendarEvents.findUnique as jest.Mock;
 const updateMapping = prismadb.crm_CalendarEvents.update as jest.Mock;
@@ -121,6 +122,7 @@ beforeEach(() => {
   // poller claiming the event for a different activity — override this.
   findMappingByExternalId.mockResolvedValue({ id: "map1", activityId: "act1" });
   updateMapping.mockResolvedValue({});
+  updateActivity.mockResolvedValue({});
   updateConnection.mockResolvedValue({});
   build.mockReturnValue(eventBody);
   resolveCounterparty.mockResolvedValue("jane@client.com");
@@ -585,7 +587,45 @@ describe("calendarOutboundSync", () => {
       expect(logged).toContain("act-duplicate");
       expect(logged).toContain("act1");
       expect(logged).toContain("gev1");
+      expect(logged).toContain("soft-deleted");
       errorLog.mockRestore();
+    });
+
+    it("soft-deletes the poller-created duplicate activity left behind by the repoint", async () => {
+      // The repoint leaves the duplicate with no mapping row. Alive, a rep
+      // editing it before its date passes would decide "insert" (mapping:
+      // null) and mail the customer a SECOND real invite for the same
+      // meeting. It is safe to soft-delete: never-pushed, and a
+      // known-provenance artifact of a race we just positively detected.
+      decide.mockReturnValue({ do: "insert" });
+      createMapping.mockRejectedValue(p2002());
+      findMappingByExternalId.mockResolvedValue({
+        id: "map-inbound",
+        activityId: "act-duplicate",
+      });
+      const errorLog = jest.spyOn(console, "error").mockImplementation(() => {});
+
+      const { result } = run("act1");
+      expect(await result).toEqual({ pushed: true, did: "insert" });
+
+      expect(updateActivity).toHaveBeenCalledWith({
+        where: { id: "act-duplicate" },
+        data: { deletedAt: expect.any(Date) },
+      });
+      // Never the activity we are pushing.
+      expect(updateActivity).not.toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: "act1" } })
+      );
+      errorLog.mockRestore();
+    });
+
+    it("does not soft-delete anything when the conflicting row is already ours", async () => {
+      decide.mockReturnValue({ do: "insert" });
+      createMapping.mockRejectedValue(p2002());
+      findMappingByExternalId.mockResolvedValue({ id: "map1", activityId: "act1" });
+      const { result } = run("act1");
+      await result;
+      expect(updateActivity).not.toHaveBeenCalled();
     });
 
     it("leaves the mapping alone when the conflicting row is already ours", async () => {

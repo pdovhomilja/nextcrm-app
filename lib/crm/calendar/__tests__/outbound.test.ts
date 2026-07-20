@@ -139,16 +139,64 @@ describe("decideOutboundAction", () => {
       ).toEqual({ do: "skip", reason: "already-completed" });
     });
 
-    it("skips a still-scheduled meeting whose date is in the past", () => {
+    it("still skips a completed meeting with a live mapping and a past date (the notes-after-the-fact case)", () => {
+      // The `already-completed` skip runs BEFORE any mapping/date branching,
+      // so narrowing the past-date skip to unmapped meetings cannot reopen the
+      // case that skip was written for.
       expect(
         decideOutboundAction({
           action: "upsert",
-          activity: { ...MEETING, date: new Date("2026-07-19T10:00:00Z") },
+          activity: {
+            ...MEETING,
+            status: "completed",
+            date: new Date("2026-07-19T10:00:00Z"),
+          },
           mapping: GOOGLE_MAPPING,
           hasWriteConnection: true,
           now: new Date("2026-07-20T09:00:00Z"),
         })
+      ).toEqual({ do: "skip", reason: "already-completed" });
+    });
+
+    it("skips inserting a never-pushed meeting whose date is in the past", () => {
+      expect(
+        decideOutboundAction({
+          action: "upsert",
+          activity: { ...MEETING, date: new Date("2026-07-19T10:00:00Z") },
+          mapping: null,
+          hasWriteConnection: true,
+          now: new Date("2026-07-20T09:00:00Z"),
+        })
       ).toEqual({ do: "skip", reason: "in-the-past" });
+    });
+
+    it("skips a past-dated meeting whose only mapping is cancelled history (nothing live to keep in sync)", () => {
+      expect(
+        decideOutboundAction({
+          action: "upsert",
+          activity: { ...MEETING, date: new Date("2026-07-19T10:00:00Z") },
+          mapping: { ...GOOGLE_MAPPING, status: "cancelled" },
+          hasWriteConnection: true,
+          now: new Date("2026-07-20T09:00:00Z"),
+        })
+      ).toEqual({ do: "skip", reason: "in-the-past" });
+    });
+
+    it("still PATCHES a live mapping when the meeting is back-dated into the past", () => {
+      // The customer is already holding an invite for the old (future) date.
+      // Skipping here would strand that invite: Google would keep advertising
+      // Aug 1 for a meeting the CRM now says is Jul 15. The "already happened"
+      // case this skip was written for — a rep logging notes after the fact —
+      // is a status/outcome edit and is caught by `already-completed` above.
+      expect(
+        decideOutboundAction({
+          action: "upsert",
+          activity: { ...MEETING, date: new Date("2026-07-15T10:00:00Z") },
+          mapping: GOOGLE_MAPPING,
+          hasWriteConnection: true,
+          now: new Date("2026-07-20T09:00:00Z"),
+        })
+      ).toEqual({ do: "patch", eventId: "ev1" });
     });
 
     it("still patches a meeting that is only just in the future", () => {

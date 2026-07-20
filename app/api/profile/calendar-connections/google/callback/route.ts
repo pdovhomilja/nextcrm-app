@@ -6,7 +6,6 @@ import { encrypt } from "@/lib/email-crypto";
 import {
   getGoogleOAuthClient,
   scopeLevelFromGrantedScopes,
-  scopeLevelUpsertFields,
 } from "@/lib/crm/calendar/google";
 
 const STATE_COOKIE = "gcal_oauth_state";
@@ -70,8 +69,22 @@ export async function GET(req: NextRequest) {
         isActive: true,
         lastSyncError: null,
         syncToken: null, // force a fresh full-window sync
-        // Upgrade-only: never downgrade an existing readwrite connection.
-        ...scopeLevelUpsertFields(scopeLevel),
+        // INVARIANT: the stored `scopeLevel` always describes the refresh
+        // token stored alongside it in the same write. This update branch
+        // replaces `refreshTokenEncrypted` unconditionally, so `scopeLevel`
+        // MUST be replaced unconditionally too — deriving it from the scope
+        // Google actually granted. Suppressing the write to avoid a cosmetic
+        // downgrade would leave a row claiming "readwrite" while holding a
+        // readonly token; outbound sync selects on scopeLevel, so every push
+        // would 403 insufficientPermissions, which is not a per-event error
+        // and therefore deactivates the whole connection (killing inbound
+        // sync too). A truthful downgrade degrades cleanly to inbound-only.
+        //
+        // The accidental downgrade is prevented at its source instead: every
+        // entry point into /authorize carries the connection's existing level
+        // as `?level=`, so a re-auth requests at least what the row already
+        // has (see CalendarConnectionsList.tsx).
+        scopeLevel,
       },
       create: {
         userId: session.user.id,

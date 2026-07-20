@@ -60,25 +60,39 @@ export function decideOutboundAction(input: {
   // Never push a meeting that has already happened. Both the insert and the
   // patch path call Google with sendUpdates:"all", so any push here mails
   // every attendee an invite (or an "Updated invitation") for an event in the
-  // past. Two distinct signals mean "already happened":
-  //   - status "completed": the explicit post-meeting write. `updateActivity`
-  //     accepts `outcome`, and logging a call outcome is the single most
-  //     common thing a rep does after a meeting.
-  //   - a date in the past: the same mistake for a meeting the rep simply
-  //     never got round to marking complete, plus back-dated meetings logged
-  //     after the fact, which must not generate an invite at all.
-  // Both are checked AFTER the cancellation branch above, so cancelling a
-  // meeting still tears the Google event down regardless of when it was.
+  // past. `status === "completed"` is the explicit post-meeting write:
+  // `updateActivity` accepts `outcome`, and logging a call outcome is the
+  // single most common thing a rep does after a meeting. Checked AFTER the
+  // cancellation branch above, so cancelling a meeting still tears the Google
+  // event down regardless of when it was.
   if (activity.status === "completed") return { do: "skip", reason: "already-completed" };
-  if (activity.date.getTime() < (input.now ?? new Date()).getTime()) {
-    return { do: "skip", reason: "in-the-past" };
-  }
 
   // A mapping whose row was left behind by a prior cancellation (see the
   // delete branch in outbound-sync.ts, which keeps the row as history rather
   // than deleting it) no longer refers to a live Google event — patching it
   // would 404. Treat it like there's no mapping at all.
-  if (!mapping || mapping.status === "cancelled") return { do: "insert" };
+  if (!mapping || mapping.status === "cancelled") {
+    // Nothing was ever pushed, so nothing on Google can diverge from the CRM.
+    // A past date here means a meeting the rep never got round to marking
+    // complete, or one back-dated and logged after the fact — creating an
+    // event for it would mail every attendee an invite to something that
+    // already happened. This skip is deliberately scoped to the no-mapping
+    // case: once a live Google event exists it must keep tracking the CRM
+    // (see below), including when a rep back-dates it.
+    if (activity.date.getTime() < (input.now ?? new Date()).getTime()) {
+      return { do: "skip", reason: "in-the-past" };
+    }
+    return { do: "insert" };
+  }
+
+  // A live mapping means the customer is already holding an invite for the
+  // OLD date. Skipping a past-dated edit here would strand that invite: move
+  // a meeting from Aug 1 to Jul 15 and Google would keep advertising Aug 1
+  // forever. Patch (or, via the cancellation branch above, delete) so Google
+  // never diverges from the CRM. This does not reopen the "rep logs notes on
+  // a meeting that already happened" case — that is a status/outcome edit,
+  // caught by the `already-completed` skip above and, being date-less,
+  // producing an identical patch body in any event.
 
   // Meetings organized by the customer are ingested by the inbound poller and
   // get a live google-sourced mapping like any other. Patching one is a

@@ -303,9 +303,9 @@ export const calendarOutboundSync = inngest.createFunction(
         console.error(
           `[calendar-outbound-sync] mapping conflict on google event ${inserted.id}: ` +
             `it was claimed by activity ${conflicting.activityId} while pushing activity ` +
-            `${activityId} (inbound poller raced the insert). Repointing the mapping to ` +
-            `${activityId}; activity ${conflicting.activityId} is a duplicate of this ` +
-            `meeting, is now unmapped, and needs manual review.`
+            `${activityId} (inbound poller raced the insert). Repointed the mapping to ` +
+            `${activityId} and soft-deleted activity ${conflicting.activityId}, which is a ` +
+            `duplicate of this meeting created by that race.`
         );
         await prismadb.crm_CalendarEvents.update({
           where: { id: conflicting.id },
@@ -318,6 +318,20 @@ export const calendarOutboundSync = inngest.createFunction(
             status: "scheduled",
             rawPayload: inserted.rawPayload,
           },
+        });
+        // The repoint above leaves the poller's duplicate activity with no
+        // mapping row at all. Left alive, a rep editing it before its date
+        // passes would hit decideOutboundAction with mapping: null -> insert,
+        // creating a SECOND real Google event and mailing the customer a
+        // second invite for the same meeting. Soft-deleting it is safe and
+        // not a guess: it has no mapping (so it is "never-pushed" — the
+        // teardown path skips it rather than deleting a live Google event),
+        // and it is a known-provenance artifact of a race we just positively
+        // detected, not an inferred duplicate. `deletedBy` stays null: this
+        // is a system reconciliation, not a user action.
+        await prismadb.crm_Activities.update({
+          where: { id: conflicting.activityId },
+          data: { deletedAt: new Date() },
         });
       }
     });

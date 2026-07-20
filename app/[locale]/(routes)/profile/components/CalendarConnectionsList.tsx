@@ -69,6 +69,20 @@ export function CalendarConnectionsList() {
     }
   }
 
+  // The OAuth callback writes the granted scope level verbatim, because the
+  // stored level must always describe the stored refresh token (a row claiming
+  // "readwrite" while holding a readonly token deactivates the whole
+  // connection on the first outbound 403). That makes it this button's job not
+  // to request LESS than the rep already has: clicking plain "Connect" to
+  // re-auth an account with two-way sync enabled must not come back with a
+  // readonly grant. Any existing readwrite connection therefore promotes the
+  // request to readwrite — matching is by account email server-side, and
+  // asking for write scope on a genuinely new second account is at worst a
+  // wider consent screen for a rep who has already opted into two-way sync.
+  const connectLevel = connections.some((c) => c.scopeLevel === "readwrite")
+    ? "readwrite"
+    : "readonly";
+
   return (
     <div className="space-y-3 rounded-lg border p-4">
       {banner && (
@@ -85,7 +99,7 @@ export function CalendarConnectionsList() {
       <div className="flex items-center justify-between">
         <h3 className="font-medium">Calendar connections</h3>
         <Button asChild size="sm">
-          <a href="/api/profile/calendar-connections/google/authorize">
+          <a href={`/api/profile/calendar-connections/google/authorize?level=${connectLevel}`}>
             Connect Google Calendar
           </a>
         </Button>
