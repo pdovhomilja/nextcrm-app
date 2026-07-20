@@ -65,10 +65,27 @@ case "$hostport" in
 esac
 
 case "$host" in
-  localhost | 127.0.0.1 | ::1 | "")
+  localhost | 127.0.0.1 | ::1)
     exit 0
     ;;
 esac
+
+if [ -z "$host" ]; then
+  # An empty host is reachable not just via genuine unix-socket URLs (which
+  # this project does not use anywhere — checked .env.example, .env.docker,
+  # .env.local.example and the codebase for "postgresql:///" and "host=";
+  # none found) but also via an unbracketed IPv6 authority such as
+  # "u:p@::1:5432/db" or a remote "u:p@::ffff:10.0.0.1:5432/db": the greedy
+  # ":"-split above consumes everything after the first colon, leaving host
+  # empty. A safety guard must fail closed on anything it cannot confidently
+  # parse, so an empty host blocks rather than passing.
+  echo "db guard: refusing to run. The host could not be determined from DATABASE_URL (from $source_desc)." >&2
+  echo "  This guard refuses rather than guessing when it cannot confidently parse the host." >&2
+  echo "  If this is meant to be local, use a bracketed IPv6 address (e.g. [::1]:5433) or the" >&2
+  echo "  standard local default below." >&2
+  echo '    DATABASE_URL="postgresql://nextcrm:nextcrm@localhost:5433/nextcrm"' >&2
+  exit 1
+fi
 
 # Never echo the URL itself — the remote one carries a password.
 echo "db guard: refusing to run. DATABASE_URL (from $source_desc) points at host '$host', not the local Docker Postgres." >&2
