@@ -81,3 +81,62 @@ What runs automatically:
   fixing a rejection.
 - Case studies: on the account detail, reps flag **case-study candidates**;
   managers/admins approve them (spec §3.8).
+
+## Local development against a local Postgres
+
+Local dev runs against a Dockerised Postgres, not the shared remote dev DB.
+
+```bash
+pnpm db:up        # start Postgres on localhost:5433
+pnpm db:migrate   # apply the migration chain (migrate deploy — never migrate dev)
+pnpm db:seed      # lookup tables + admin user + demo CRM dataset
+pnpm dev
+```
+
+`pnpm db:reset` destroys the volume and rebuilds from scratch. It touches only
+the postgres service — Inngest run history survives.
+
+To point the demo contact at a real inbox (for calendar invite testing):
+`SEED_CONTACT_EMAIL=you@example.com pnpm db:reset`. The override applies only to
+a freshly created contact, so it needs a reset rather than a bare re-seed.
+
+### Logging in without Resend
+
+Auth is passwordless (Better Auth email OTP). In dev the Resend send fails
+harmlessly and the code is captured by the `testUtils` plugin:
+
+```bash
+curl -X POST localhost:3000/api/auth/email-otp/send-verification-otp \
+  -H 'Content-Type: application/json' -d '{"email":"test@nextcrm.app","type":"sign-in"}'
+curl "localhost:3000/api/auth/test-otp?email=test@nextcrm.app"   # → {"otp":"123456"}
+```
+
+Paste the code into the sign-in form. The route is gated on
+`NODE_ENV !== "production"`.
+
+### Why local-only, and the trap it avoids
+
+`lib/email-crypto.ts` encrypts with `EMAIL_ENCRYPTION_KEY`, which differs
+between the deployed dev app and a local machine. Pointing local dev at the
+shared remote DB means any encrypted column written by the deployed app —
+notably `CalendarConnection.refreshTokenEncrypted` — fails to decrypt locally
+with `Unsupported state or unable to authenticate data`, an opaque AES-GCM
+auth-tag error that names neither keys nor environments. With a local database,
+writes and reads use the same key and the problem disappears.
+
+Corollary: do not re-run the Google Calendar OAuth connect flow from localhost
+while `.env` points at the remote DB — it re-encrypts the row with the local key
+and breaks the deployed app for that connection.
+
+### Reaching the remote dev DB
+
+`DATABASE_URL` lives in `.env` (not `.env.local` — the Prisma CLI does not read
+`.env.local`, so splitting them would point `migrate`/`seed` at remote). Both
+remote URLs are preserved there as commented lines; swap the comments to switch.
+
+### Testing Google Calendar sync locally
+
+Register `http://localhost:3000/api/profile/calendar-connections/google/callback`
+as an authorized redirect URI on the **`GOOGLE_CALENDAR_*`** OAuth client in
+Google Cloud — this is a different client from the `GOOGLE_ID`/`GOOGLE_SECRET`
+one used for login.
