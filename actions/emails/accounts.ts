@@ -3,6 +3,11 @@ import { getSession } from "@/lib/auth-server";
 
 import { prismadb } from "@/lib/prisma";
 import { encrypt } from "@/lib/email-crypto";
+import {
+  isAllowedImapPort,
+  isAllowedSmtpPort,
+  classifyMailError,
+} from "@/lib/email/imap-safety";
 import Imap from "imap";
 
 async function requireSession() {
@@ -56,8 +61,10 @@ export async function createEmailAccount(input: CreateInput) {
   if (!input.smtpHost?.trim()) throw new Error("SMTP host is required");
   if (!input.username?.trim()) throw new Error("Username is required");
   if (!input.password?.trim()) throw new Error("Password is required");
-  if (input.imapPort < 1 || input.imapPort > 65535) throw new Error("Invalid IMAP port");
-  if (input.smtpPort < 1 || input.smtpPort > 65535) throw new Error("Invalid SMTP port");
+  // Restrict to real mail ports so a stored account cannot be used to reach
+  // internal services (Postgres/MinIO/Inngest/metadata) on later connects.
+  if (!isAllowedImapPort(input.imapPort)) throw new Error("Unsupported IMAP port");
+  if (!isAllowedSmtpPort(input.smtpPort)) throw new Error("Unsupported SMTP port");
 
   const passwordEncrypted = encrypt(input.password);
   return prismadb.emailAccount.create({
@@ -105,6 +112,10 @@ export async function testEmailConnection(
 ): Promise<{ ok: boolean; error?: string }> {
   await requireSession();
 
+  if (!isAllowedImapPort(input.imapPort)) {
+    return { ok: false, error: "Unsupported IMAP port" };
+  }
+
   const connectionPromise = new Promise<{ ok: boolean; error?: string }>((resolve) => {
     const imap = new Imap({
       user: input.username,
@@ -122,7 +133,10 @@ export async function testEmailConnection(
       resolve({ ok: true });
     });
     imap.once("error", (err: Error) => {
-      resolve({ ok: false, error: err.message });
+      // Log the real error server-side; return a classified message so
+      // protocol/banner text cannot leak to the caller (SSRF oracle).
+      console.error("[testEmailConnection] IMAP error:", err.message);
+      resolve({ ok: false, error: classifyMailError(err) });
     });
     imap.connect();
   });
@@ -147,6 +161,10 @@ export async function listImapFolders(
 ): Promise<{ ok: true; folders: string[] } | { ok: false; error: string }> {
   await requireSession();
 
+  if (!isAllowedImapPort(input.imapPort)) {
+    return { ok: false, error: "Unsupported IMAP port" };
+  }
+
   return new Promise((resolve) => {
     const imap = new Imap({
       user: input.username,
@@ -162,7 +180,10 @@ export async function listImapFolders(
     imap.once("ready", () => {
       imap.getBoxes("", (err, boxes) => {
         imap.end();
-        if (err) return resolve({ ok: false, error: err.message });
+        if (err) {
+          console.error("[listImapFolders] getBoxes error:", err.message);
+          return resolve({ ok: false, error: classifyMailError(err) });
+        }
 
         const names: string[] = [];
         function walk(node: Imap.MailBoxes, prefix: string) {
@@ -177,7 +198,10 @@ export async function listImapFolders(
       });
     });
 
-    imap.once("error", (err: Error) => resolve({ ok: false, error: err.message }));
+    imap.once("error", (err: Error) => {
+      console.error("[listImapFolders] IMAP error:", err.message);
+      resolve({ ok: false, error: classifyMailError(err) });
+    });
     imap.connect();
 
     setTimeout(() => resolve({ ok: false, error: "Connection timed out" }), 10000);

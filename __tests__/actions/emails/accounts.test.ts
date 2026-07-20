@@ -90,6 +90,23 @@ describe("createEmailAccount", () => {
       createEmailAccount({ ...input, imapHost: "" })
     ).rejects.toThrow();
   });
+
+  it("rejects a non-mail IMAP port (SSRF port-scan hardening)", async () => {
+    mockGetSession.mockResolvedValue(AUTHED_SESSION);
+    // 5432 = internal Postgres. Old code accepted any 1..65535.
+    await expect(
+      createEmailAccount({ ...input, imapPort: 5432 })
+    ).rejects.toThrow("Unsupported IMAP port");
+    expect(prismadb.emailAccount.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects a non-mail SMTP port (SSRF port-scan hardening)", async () => {
+    mockGetSession.mockResolvedValue(AUTHED_SESSION);
+    await expect(
+      createEmailAccount({ ...input, smtpPort: 9000 })
+    ).rejects.toThrow("Unsupported SMTP port");
+    expect(prismadb.emailAccount.create).not.toHaveBeenCalled();
+  });
 });
 
 describe("deleteEmailAccount", () => {
@@ -141,5 +158,19 @@ describe("testEmailConnection", () => {
     await expect(
       testEmailConnection({ imapHost: "imap.example.com", imapPort: 993, imapSsl: true, username: "u", password: "p" })
     ).rejects.toThrow("Unauthorized");
+  });
+
+  it("rejects a non-mail port without attempting a connection", async () => {
+    mockGetSession.mockResolvedValue(AUTHED_SESSION);
+    // 5432 = internal Postgres; must be refused before any TCP dial so the
+    // action cannot be used as an internal port scanner.
+    const result = await testEmailConnection({
+      imapHost: "127.0.0.1",
+      imapPort: 5432,
+      imapSsl: false,
+      username: "u",
+      password: "p",
+    });
+    expect(result).toEqual({ ok: false, error: "Unsupported IMAP port" });
   });
 });
