@@ -8,6 +8,7 @@ type Connection = {
   id: string;
   provider: string;
   accountEmail: string;
+  scopeLevel: string;
   isActive: boolean;
   lastSyncedAt: string | null;
   lastSyncError: string | null;
@@ -101,6 +102,7 @@ export function CalendarConnectionsList() {
               <div>
                 <p className="text-sm font-medium">{c.accountEmail}</p>
                 <p className="text-xs text-muted-foreground">
+                  {c.scopeLevel === "readwrite" ? "Two-way · " : "Inbound only · "}
                   {c.isActive
                     ? c.lastSyncedAt
                       ? `Synced ${new Date(c.lastSyncedAt).toLocaleString()}`
@@ -109,9 +111,18 @@ export function CalendarConnectionsList() {
                 </p>
               </div>
               <div className="flex gap-2">
+                {c.isActive && c.scopeLevel !== "readwrite" && (
+                  <Button asChild size="sm" variant="secondary">
+                    <a href="/api/profile/calendar-connections/google/authorize?level=readwrite">
+                      Enable two-way sync
+                    </a>
+                  </Button>
+                )}
                 {!c.isActive && (
                   <Button asChild size="sm" variant="secondary">
-                    <a href="/api/profile/calendar-connections/google/authorize">Reconnect</a>
+                    <a href={`/api/profile/calendar-connections/google/authorize?level=${c.scopeLevel === "readwrite" ? "readwrite" : "readonly"}`}>
+                      Reconnect
+                    </a>
                   </Button>
                 )}
                 <Button size="sm" variant="destructive" onClick={() => disconnect(c.id)}>
