@@ -1,0 +1,45 @@
+# Local development support services for nextcrm-dev.
+#
+# This is NOT the full containerized stack — that lives in docker-compose.yml
+# and runs the app in Docker too. This file supports the workflow where you
+# run `pnpm dev` on the host and only the supporting services are containerized.
+#
+#   pnpm inngest:up     # start
+#   pnpm dev            # then run the app on the host
+#
+# Dashboard: http://localhost:8288
+
+name: nextcrm-dev
+
+services:
+  # --- Inngest Dev Server ---
+  inngest:
+    image: inngest/inngest:latest
+    container_name: nextcrm-dev-inngest
+    restart: unless-stopped
+    command:
+      - inngest
+      - dev
+      # Persist run/event history across restarts (writes to /.inngest/main.db).
+      - --persist
+      # Auto-discovery scans common ports (3000-3010, 8000, 8080, 5173, ...)
+      # and would register OTHER local projects' Inngest apps, then execute
+      # their functions from this server. Keep it off and sync only nextcrm.
+      - --no-discovery
+      - -u
+      - http://host.docker.internal:3000/api/inngest
+    ports:
+      # Dashboard + event API. The connect gateway (8289) is deliberately not
+      # published: the app uses HTTP serve (app/api/inngest/route.ts), not
+      # connect mode, and 8289 is already taken by another local project.
+      - "8288:8288"
+    volumes:
+      - inngest_data:/.inngest
+    extra_hosts:
+      # Redundant on Docker Desktop, required on Linux. Keeps the file portable.
+      - "host.docker.internal:host-gateway"
+    # No healthcheck: the image ships no HTTP client (no curl/wget/nc), and
+    # nothing depends on this service being ready.
+
+volumes:
+  inngest_data:

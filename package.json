@@ -9,6 +9,9 @@
   "packageManager": "pnpm@11.9.0",
   "scripts": {
     "dev": "next dev",
+    "inngest:up": "docker compose -f docker-compose.dev.yml up -d",
+    "inngest:down": "docker compose -f docker-compose.dev.yml down",
+    "inngest:logs": "docker compose -f docker-compose.dev.yml logs -f",
     "build": "prisma generate && prisma migrate deploy && next build",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
