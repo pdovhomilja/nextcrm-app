@@ -351,7 +351,7 @@ describe("calendarOutboundSync", () => {
     expect(findMappingRows).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { activityId: "act1" },
-        orderBy: { createdAt: "desc" },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       })
     );
   });
@@ -461,6 +461,38 @@ describe("calendarOutboundSync", () => {
     expect(await result).toEqual({ pushed: false, reason: "connection-mismatch" });
     expect(getClient).not.toHaveBeenCalled();
     expect(events.patch).not.toHaveBeenCalled();
+  });
+
+  it("skips a patch rather than substituting an unrelated account when the mapping's connectionId was nulled by a hard-deleted (disconnected) connection", async () => {
+    // Disconnecting a Google account hard-deletes the CalendarConnection row;
+    // the mapping's connectionId relation is onDelete: SetNull, so every
+    // mapping row that account ever created ends up with connectionId: null
+    // rather than a dangling stale id.
+    findMappingRows.mockResolvedValue([
+      { source: "google", externalId: "gev1", status: "scheduled", connectionId: null },
+    ]);
+    decide.mockReturnValue({ do: "patch", eventId: "gev1" });
+    const { result } = run("act1");
+    expect(await result).toEqual({ pushed: false, reason: "connection-mismatch" });
+    // The mapping-owned lookup must not even run (connectionId is null), and
+    // the fallback lookup that does run must not be treated as an
+    // authorization to patch — no Google client is constructed, no Google
+    // call is made.
+    expect(findConnection).toHaveBeenCalledTimes(1);
+    expect(getClient).not.toHaveBeenCalled();
+    expect(events.patch).not.toHaveBeenCalled();
+  });
+
+  it("skips a delete rather than substituting an unrelated account when the mapping's connectionId was nulled by a hard-deleted (disconnected) connection", async () => {
+    findMappingRows.mockResolvedValue([
+      { source: "google", externalId: "gev1", status: "scheduled", connectionId: null },
+    ]);
+    decide.mockReturnValue({ do: "delete", eventId: "gev1" });
+    const { result } = run("act1", "cancel");
+    expect(await result).toEqual({ pushed: false, reason: "connection-mismatch" });
+    expect(getClient).not.toHaveBeenCalled();
+    expect(events.delete).not.toHaveBeenCalled();
+    expect(updateManyMapping).not.toHaveBeenCalled();
   });
 
   it("still allows the fallback connection for a fresh insert even when an old mapping's connection no longer resolves", async () => {

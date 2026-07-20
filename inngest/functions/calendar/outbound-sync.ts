@@ -42,7 +42,7 @@ export const calendarOutboundSync = inngest.createFunction(
     const mappingRows = await prismadb.crm_CalendarEvents.findMany({
       where: { activityId },
       select: { source: true, externalId: true, status: true, connectionId: true },
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     });
     const mapping =
       mappingRows.find((row) => row.source === "calendly") ?? mappingRows[0] ?? null;
@@ -50,10 +50,19 @@ export const calendarOutboundSync = inngest.createFunction(
     let connection = null as Awaited<
       ReturnType<typeof prismadb.calendarConnection.findFirst>
     >;
-    // True only when the mapping named a specific connection and that
-    // connection no longer resolves (deactivated / downgraded to readonly)
-    // — i.e. we're about to substitute an unrelated account for the one that
-    // actually owns the mapping's externalId.
+    // True whenever the mapping is a google-sourced row and no mapping-owned
+    // connection was resolved — i.e. we're about to substitute an unrelated
+    // account for the one that actually owns the mapping's externalId. This
+    // covers both a stale connectionId (deactivated / downgraded to
+    // readonly) AND a null connectionId — disconnecting a Google account
+    // (`app/api/profile/calendar-connections/[id]/route.ts`) hard-deletes
+    // the connection row, and the mapping's `connectionId` relation is
+    // declared `onDelete: SetNull` in prisma/schema.prisma, so every mapping
+    // row that account ever created has its connectionId nulled rather than
+    // left dangling. Without this, a falsy connectionId would skip the
+    // mapping-owned lookup entirely and fall straight through to the
+    // fallback connection, silently patching/deleting the OLD account's
+    // event id against a newly reconnected account's calendar.
     let connectionIsUnrelatedSubstitute = false;
     if (activity?.createdBy) {
       const connectionWhere = {
@@ -77,7 +86,7 @@ export const calendarOutboundSync = inngest.createFunction(
           where: connectionWhere,
           orderBy: [{ createdAt: "asc" }, { id: "asc" }],
         });
-        connectionIsUnrelatedSubstitute = Boolean(mapping?.connectionId);
+        connectionIsUnrelatedSubstitute = mapping?.source === "google";
       }
     }
 
