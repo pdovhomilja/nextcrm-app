@@ -199,7 +199,11 @@ async function main() {
       data: {
         first_name: "Seed",
         last_name: "Demo Contact",
-        email: "demo-contact@nextcrm.app",
+        // Overridable so local calendar testing can direct invites to a real
+        // inbox. Only takes effect on a database where this contact does not
+        // yet exist (it is created, never updated) — i.e. after `pnpm db:reset`,
+        // not on a re-run of `db:seed` against an existing row.
+        email: process.env.SEED_CONTACT_EMAIL || "demo-contact@nextcrm.app",
         accountsIDs: demoAccount.id,
         assigned_to: testUser.id,
       },
