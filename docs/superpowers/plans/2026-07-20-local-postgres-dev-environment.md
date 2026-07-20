@@ -56,7 +56,10 @@ Insert this service after the `inngest` service block (before the top-level `vol
       POSTGRES_DB: nextcrm
     ports:
       # 5433 on the host: 5432 is left free for any system Postgres.
-      - "5433:5432"
+      # Bound to loopback only (not 0.0.0.0): credentials are the throwaway
+      # nextcrm/nextcrm pair above, so this must not be reachable from the
+      # LAN/VPN/any other network interface — only from this machine.
+      - "127.0.0.1:5433:5432"
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
     healthcheck:
@@ -111,8 +114,14 @@ Add these three entries to the `scripts` object, next to the existing `inngest:*
 ```json
     "db:up": "docker compose -f docker-compose.dev.yml up -d postgres",
     "db:down": "docker compose -f docker-compose.dev.yml stop postgres",
-    "db:wait": "until docker compose -f docker-compose.dev.yml exec -T postgres pg_isready -U nextcrm -d nextcrm >/dev/null 2>&1; do sleep 1; done",
+    "db:wait": "i=0; until docker compose -f docker-compose.dev.yml exec -T postgres pg_isready -U nextcrm -d nextcrm >/dev/null 2>&1; do i=$((i+1)); if [ \"$i\" -ge 60 ]; then echo 'db:wait: postgres did not become ready after 60 attempts (~90-120s: each attempt is a `docker compose exec` plus a 1s sleep) (container not running or not healthy) - run `pnpm db:up` and check `docker compose -f docker-compose.dev.yml ps postgres`' >&2; exit 1; fi; sleep 1; done",
 ```
+
+Note for the implementer: the retry loop must be **bounded**. An unbounded
+`until … sleep 1; done` hangs forever when the container is absent or crash-looping,
+and because `db:reset` chains `db:up && db:wait && db:migrate`, an unbounded wait
+turns a missing container into a silent hang instead of a failure. 60 attempts,
+a diagnostic on stderr, and a non-zero exit.
 
 - [ ] **Step 5: Start it and verify health**
 
@@ -391,7 +400,7 @@ sleep 1
 curl -s "http://localhost:3000/api/auth/test-otp?email=test@nextcrm.app"
 ```
 
-Expected: the second call returns JSON of the form `{"otp":"123456"}` with a six-digit code. The `pnpm dev` log will show `[Auth] OTP email send failed for test@nextcrm.app, but captured by testUtils` — that is the expected no-Resend path, not an error.
+Expected: the second call returns JSON of the form `{"otp":"123456"}` with a six-digit code — `testUtils({ captureOTP: true })` captures it independently of the send outcome. Note that with `RESEND_API_KEY` present in `.env.local` the send is a live Resend API call, so a real email is also delivered; the `[Auth] OTP email send failed …` log line in `lib/auth.ts` only appears if the SDK *throws*, which it does not for ordinary send errors.
 
 Then sign in through the browser at `http://localhost:3000` using that email and code, and confirm you land in the app as an admin.
 
@@ -440,8 +449,13 @@ Append this section to `docs/internal/aqunama-setup-runbook.md`:
 
 Local dev runs against a Dockerised Postgres, not the shared remote dev DB.
 
+Prerequisite: `.env` is gitignored, so a fresh clone has none. Create it with
+`DATABASE_URL="postgresql://nextcrm:nextcrm@localhost:5433/nextcrm"`. It must be
+`.env`, not `.env.local` — the Prisma CLI reads only `.env`.
+
 ```bash
-pnpm db:up        # start Postgres on localhost:5433
+pnpm db:up        # start Postgres on 127.0.0.1:5433
+pnpm db:wait      # required: db:up returns before initdb finishes on a first run
 pnpm db:migrate   # apply the migration chain (migrate deploy — never migrate dev)
 pnpm db:seed      # lookup tables + admin user + demo CRM dataset
 pnpm dev
@@ -452,12 +466,18 @@ the postgres service — Inngest run history survives.
 
 To point the demo contact at a real inbox (for calendar invite testing):
 `SEED_CONTACT_EMAIL=you@example.com pnpm db:reset`. The override applies only to
-a freshly created contact, so it needs a reset rather than a bare re-seed.
+a freshly created contact, so it needs a reset rather than a bare re-seed, and it
+puts a real inbox into the local database.
 
-### Logging in without Resend
+The shipped runbook section additionally documents the local-database guard
+(`scripts/assert-local-db.sh`), the `inngest:up`/`inngest:down` asymmetry, and the
+deliberate pg17-local / pg16-CI divergence. Treat the runbook as authoritative.
 
-Auth is passwordless (Better Auth email OTP). In dev the Resend send fails
-harmlessly and the code is captured by the `testUtils` plugin:
+### Logging in without waiting for email
+
+Auth is passwordless (Better Auth email OTP). With `RESEND_API_KEY` set in
+`.env.local`, local dev sends **real** OTP email — but you need not wait for it,
+because `testUtils({ captureOTP: true })` captures the code regardless:
 
 ```bash
 curl -X POST localhost:3000/api/auth/email-otp/send-verification-otp \

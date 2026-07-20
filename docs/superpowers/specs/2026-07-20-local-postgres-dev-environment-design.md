@@ -25,7 +25,7 @@ The goal is a local Postgres in Docker with seeded data, so local development an
 `docker-compose.dev.yml` already exists for exactly this workflow — its header states it supports running `pnpm dev` on the host with only supporting services containerised — and it already runs the Inngest dev server. Postgres joins it as a second service.
 
 - **Image:** `pgvector/pgvector:pg17`, matching `docker-compose.yml`. The `vector` extension is **required**: `prisma/migrations/20260320000000_add_pgvector_embeddings/migration.sql` runs `CREATE EXTENSION IF NOT EXISTS vector`, so a plain `postgres` image fails the migration replay. This is the only extension the 44-migration chain creates.
-- **Host port:** `5433` (verified free; `5432`, `5434`, `5435` also free — `55433` is taken by an unrelated project's container). Published, unlike `docker-compose.yml`'s Postgres, whose `ports:` block is deliberately commented out.
+- **Host port:** `5433`, published as `127.0.0.1:5433:5432` (verified free; `5432`, `5434`, `5435` also free — `55433` is taken by an unrelated project's container). Published, unlike `docker-compose.yml`'s Postgres, whose `ports:` block is deliberately commented out. The bind is **loopback-only, not `0.0.0.0`**: the credentials are the throwaway `nextcrm/nextcrm` pair, so a default all-interfaces publish would expose a trivially-credentialed database to the LAN and any connected VPN. Only this machine needs to reach it.
 - **Volume:** its own named volume, distinct from the full-stack compose's `postgres_data`, so the two workflows never share state.
 - **Healthcheck:** `pg_isready`, mirroring the existing service in `docker-compose.yml`.
 - **Credentials:** `nextcrm` / `nextcrm` / db `nextcrm`. Local throwaway values, not secrets.
@@ -54,9 +54,12 @@ Added to `package.json`, alongside the existing `inngest:*` scripts:
 |---|---|
 | `db:up` | `docker compose -f docker-compose.dev.yml up -d postgres` |
 | `db:down` | stop the service (volume retained) |
-| `db:migrate` | `prisma migrate deploy` |
-| `db:seed` | `SEED_DEMO_DATA=1 prisma db seed` |
-| `db:reset` | destroy volume → `db:up` → wait healthy → `db:migrate` → `db:seed` |
+| `db:guard` | `sh scripts/assert-local-db.sh` — refuses to proceed unless `DATABASE_URL` resolves to localhost |
+| `db:migrate` | `db:guard` → `prisma migrate deploy` |
+| `db:seed` | `db:guard` → `SEED_DEMO_DATA=1 prisma db seed` |
+| `db:reset` | `db:guard` → destroy volume → `db:up` → wait healthy → `db:migrate` → `db:seed` |
+
+The guard exists because these scripts inherit whatever `DATABASE_URL` is active, and remote access is achieved by swapping `.env`. `SEED_DEMO_DATA=1` deliberately defeats the seed's own "don't inject demo records into a real database" gate, so a stale remote `.env` would write demo CRM records and an admin user into the shared dev database. It resolves `DATABASE_URL` the way the Prisma CLI does (exported variable wins, else `.env`), and applies only to these pnpm scripts — CI invokes `pnpm exec prisma migrate deploy` / `pnpm exec prisma db seed` directly, and `build` invokes `prisma migrate deploy` directly.
 
 `migrate deploy`, never `migrate dev`: the project's standing rule (dev-DB drift). The chain replays clean on a fresh database, which CI already enforces against `pgvector/pgvector:pg16`.
 
@@ -76,7 +79,7 @@ Already seeded: lookup tables (opportunity types/stages, industries, contact typ
 
 No code changes. Auth is Better Auth with `emailAndPassword` disabled — passwordless email OTP or Google social login.
 
-In non-production, the Resend send failure is swallowed (`lib/auth.ts:80-87`) and the OTP is captured by `testUtils({ captureOTP: true })`. The repo already exposes `GET /api/auth/test-otp?email=<email>` (`app/api/auth/test-otp/route.ts`), unauthenticated and gated only on `NODE_ENV !== "production"`. `tests/auth.setup.ts` already automates this flow.
+The OTP is captured by `testUtils({ captureOTP: true })` independently of the send outcome. (Correction to an earlier reading of `lib/auth.ts:80-87`: that `catch` is effectively dead for send failures — the Resend SDK returns errors rather than throwing — and when `RESEND_API_KEY` is present in `.env.local`, `resendHelper()` returns a live client and local dev sends **real** OTP email. The capture path works either way, so no key and no mailbox are *required*, but one that is configured will be used.) The repo already exposes `GET /api/auth/test-otp?email=<email>` (`app/api/auth/test-otp/route.ts`), unauthenticated and gated only on `NODE_ENV !== "production"`. `tests/auth.setup.ts` already automates this flow.
 
 Local login:
 ```bash

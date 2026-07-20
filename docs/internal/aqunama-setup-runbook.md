@@ -86,24 +86,83 @@ What runs automatically:
 
 Local dev runs against a Dockerised Postgres, not the shared remote dev DB.
 
+**Prerequisite — create `.env`.** `.env` is gitignored, so a fresh clone has
+none and every Prisma command fails with `Environment variable not found:
+DATABASE_URL`. Create it (copy `.env.example`) with the local default:
+
 ```bash
-pnpm db:up        # start Postgres on localhost:5433
+DATABASE_URL="postgresql://nextcrm:nextcrm@localhost:5433/nextcrm"
+```
+
+`DATABASE_URL` belongs in `.env`, **not** `.env.local`: the Prisma CLI reads
+only `.env`, so a URL placed in `.env.local` is invisible to `migrate`/`seed`
+and those commands silently fall through to whatever `.env` holds. Everything
+else (API keys and so on) goes in `.env.local` as usual.
+
+```bash
+pnpm db:up        # start Postgres on 127.0.0.1:5433
+pnpm db:wait      # block until Postgres accepts connections — see note below
 pnpm db:migrate   # apply the migration chain (migrate deploy — never migrate dev)
 pnpm db:seed      # lookup tables + admin user + demo CRM dataset
 pnpm dev
 ```
+
+`pnpm db:wait` is not optional. `db:up` returns as soon as the container is
+*created*, not when Postgres is *ready*. On a first run the volume is empty, so
+the container runs `initdb` — several seconds with the socket closed — and
+`db:migrate` fails with `Can't reach database server at localhost:5433`.
 
 `pnpm db:reset` destroys the volume and rebuilds from scratch. It touches only
 the postgres service — Inngest run history survives.
 
 To point the demo contact at a real inbox (for calendar invite testing):
 `SEED_CONTACT_EMAIL=you@example.com pnpm db:reset`. The override applies only to
-a freshly created contact, so it needs a reset rather than a bare re-seed.
+a freshly created contact, so it needs a reset rather than a bare re-seed. Note
+that this deliberately writes a **real** inbox address into your local database —
+anything the app emails to the demo contact will actually reach you.
 
-### Logging in without Resend
+### The local-database guard
 
-Auth is passwordless (Better Auth email OTP). In dev the Resend send fails
-harmlessly and the code is captured by the `testUtils` plugin:
+`db:migrate`, `db:seed` and `db:reset` each run `scripts/assert-local-db.sh`
+first and refuse to proceed unless `DATABASE_URL` resolves to `localhost` /
+`127.0.0.1`. This exists because the remote-access instructions below have you
+swap `.env` to the shared remote URL: with a stale `.env`, `pnpm db:seed` would
+write the demo CRM records and the `test@nextcrm.app` admin user into the shared
+dev database (it sets `SEED_DEMO_DATA=1`, which defeats the seed's own guard),
+and `pnpm db:reset` would additionally replay migrations over known drift.
+
+The guard resolves `DATABASE_URL` the same way the Prisma CLI does — an exported
+environment variable wins, otherwise the value is read from `.env`. It affects
+only these pnpm scripts; CI calls `pnpm exec prisma migrate deploy` and
+`pnpm exec prisma db seed` directly, and `pnpm build` calls `prisma migrate
+deploy` directly, so none of them go through the guard.
+
+### Script asymmetries worth knowing
+
+- `pnpm inngest:up` passes no service name, so it starts **both** Inngest and
+  Postgres. `pnpm inngest:down` runs `docker compose down` and therefore
+  *removes* the Postgres container as well — but without `-v`, so the named
+  volumes survive and `pnpm db:up` brings the data back. This is asymmetric with
+  `pnpm db:down`, which only *stops* Postgres.
+- Never run `docker compose -f docker-compose.dev.yml down -v`: that destroys
+  `inngest_data` too and loses Inngest run history.
+
+### Deliberate divergence: Postgres 17 locally, 16 in CI
+
+`docker-compose.dev.yml` pins `pgvector/pgvector:pg17` while GitHub Actions uses
+`pgvector/pgvector:pg16`. Local development therefore validates the migration
+chain against a major version CI never exercises. This is a known, accepted
+choice — pg17 matches `docker-compose.yml` (the full containerised stack) — and
+not an oversight. If a migration ever behaves differently across the two, CI is
+the authority, since it mirrors what the deployment replays against.
+
+### Logging in without waiting for email
+
+Auth is passwordless (Better Auth email OTP). `RESEND_API_KEY` is normally set
+in `.env.local`, so `resendHelper()` returns a live client and local dev sends
+**real** OTP emails through Resend. You do not need to wait for them: the
+`testUtils({ captureOTP: true })` plugin captures the code regardless of whether
+the send succeeded, and the test-OTP route returns it directly:
 
 ```bash
 curl -X POST localhost:3000/api/auth/email-otp/send-verification-otp \
