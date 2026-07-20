@@ -15,6 +15,7 @@
     "db:up": "docker compose -f docker-compose.dev.yml up -d postgres",
     "db:down": "docker compose -f docker-compose.dev.yml stop postgres",
     "db:wait": "i=0; until docker compose -f docker-compose.dev.yml exec -T postgres pg_isready -U nextcrm -d nextcrm >/dev/null 2>&1; do i=$((i+1)); if [ \"$i\" -ge 60 ]; then echo 'db:wait: postgres did not become ready after 60s (container not running or not healthy) - run `pnpm db:up` and check `docker compose -f docker-compose.dev.yml ps postgres`' >&2; exit 1; fi; sleep 1; done",
+    "db:migrate": "prisma migrate deploy",
     "build": "prisma generate && prisma migrate deploy && next build",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
