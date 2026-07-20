@@ -36,15 +36,36 @@ if [ -z "$url" ]; then
   exit 1
 fi
 
-# postgresql://user:pass@host:port/db  ->  host
+# postgresql://user:pass@host:port/db?query  ->  host
+#
+# Strip the path and query string BEFORE splitting off the userinfo, so only
+# the authority section (userinfo@host:port) is ever considered when finding
+# the host. Otherwise a literal "@localhost" inside the query string (e.g.
+# ?application_name=a@localhost) would be greedily picked up by the userinfo
+# split as if it were part of the host, producing a false PASS against a
+# remote database.
 rest=${url#*://}
-rest=${rest##*@}
-hostport=${rest%%/*}
-hostport=${hostport%%\?*}
-host=${hostport%%:*}
+authority=${rest%%/*}
+authority=${authority%%\?*}
+# Greedy split on the LAST '@' within the authority section only. This is
+# what makes a literal '@' inside a password safe (e.g. user:p@ss@host).
+hostport=${authority##*@}
+
+# Bracketed IPv6 host, e.g. "[::1]:5433" or "[2001:db8::1]:5432". Must be
+# checked before the ":" port strip below, since an IPv6 address itself
+# contains colons.
+case "$hostport" in
+  \[*\]*)
+    host=${hostport#\[}
+    host=${host%%\]*}
+    ;;
+  *)
+    host=${hostport%%:*}
+    ;;
+esac
 
 case "$host" in
-  localhost | 127.0.0.1 | ::1 | "[::1]" | "")
+  localhost | 127.0.0.1 | ::1 | "")
     exit 0
     ;;
 esac

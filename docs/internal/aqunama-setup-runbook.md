@@ -158,11 +158,14 @@ the authority, since it mirrors what the deployment replays against.
 
 ### Logging in without waiting for email
 
-Auth is passwordless (Better Auth email OTP). `RESEND_API_KEY` is normally set
-in `.env.local`, so `resendHelper()` returns a live client and local dev sends
-**real** OTP emails through Resend. You do not need to wait for them: the
-`testUtils({ captureOTP: true })` plugin captures the code regardless of whether
-the send succeeded, and the test-OTP route returns it directly:
+Auth is passwordless (Better Auth email OTP). If `RESEND_API_KEY` is set in
+`.env.local`, `resendHelper()` returns a live client and local dev sends
+**real** OTP emails through Resend. If it is not set (e.g. a fresh clone that
+hasn't configured it yet), `resendHelper()` throws and the send fails
+harmlessly — the error is caught and logged. Either way you do not need to
+wait for an email: the `testUtils({ captureOTP: true })` plugin captures the
+code regardless of whether the send succeeded, and the test-OTP route returns
+it directly:
 
 ```bash
 curl -X POST localhost:3000/api/auth/email-otp/send-verification-otp \
