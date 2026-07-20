@@ -1,9 +1,15 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { inngest } from "@/inngest/client";
 import { writeAuditLog, diffObjects } from "@/lib/audit-log";
+import {
+  requireAuthenticated,
+  assertCanWriteContact,
+  assertCanWriteAccount,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export const updateContact = async (data: {
   id: string;
@@ -30,10 +36,6 @@ export const updateContact = async (data: {
   social_tiktok?: string | null;
   contact_type_id?: string;
 }) => {
-  const session = await getSession();
-  if (!session) return { error: "Unauthorized" };
-
-  const userId = session.user.id;
   const {
     id,
     assigned_to,
@@ -46,6 +48,23 @@ export const updateContact = async (data: {
   } = data;
 
   if (!id) return { error: "id is required" };
+
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
+  try {
+    await assertCanWriteContact(user, id);
+    // Parent-write: relinking the contact to an account requires write on it.
+    if (assigned_account) await assertCanWriteAccount(user, assigned_account);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
+  const userId = user.id;
 
   try {
     const before = await prismadb.crm_Contacts.findUnique({ where: { id, deletedAt: null } });
@@ -70,7 +89,7 @@ export const updateContact = async (data: {
       entityId: contact.id,
       action: "updated",
       changes,
-      userId: session.user.id,
+      userId: user.id,
     });
     void inngest.send({ name: "crm/contact.saved", data: { record_id: contact.id } });
     revalidatePath("/[locale]/(routes)/crm/contacts", "page");
