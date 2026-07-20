@@ -35,7 +35,7 @@ describe("decideOutboundAction", () => {
       decideOutboundAction({ action: "upsert", activity: { ...MEETING, type: "call" }, mapping: null, hasWriteConnection: true })
     ).toEqual({ do: "skip", reason: "not-a-meeting" });
     expect(
-      decideOutboundAction({ action: "upsert", activity: MEETING, mapping: { source: "calendly", externalId: "x" }, hasWriteConnection: true })
+      decideOutboundAction({ action: "upsert", activity: MEETING, mapping: { source: "calendly", externalId: "x", status: "scheduled" }, hasWriteConnection: true })
     ).toEqual({ do: "skip", reason: "calendly-owned" });
     expect(
       decideOutboundAction({ action: "upsert", activity: MEETING, mapping: null, hasWriteConnection: false })
@@ -47,13 +47,13 @@ describe("decideOutboundAction", () => {
       decideOutboundAction({ action: "upsert", activity: MEETING, mapping: null, hasWriteConnection: true })
     ).toEqual({ do: "insert" });
     expect(
-      decideOutboundAction({ action: "upsert", activity: MEETING, mapping: { source: "google", externalId: "ev1" }, hasWriteConnection: true })
+      decideOutboundAction({ action: "upsert", activity: MEETING, mapping: { source: "google", externalId: "ev1", status: "scheduled" }, hasWriteConnection: true })
     ).toEqual({ do: "patch", eventId: "ev1" });
   });
 
   it("cancel deletes when mapped to google, skips when never pushed", () => {
     expect(
-      decideOutboundAction({ action: "cancel", activity: MEETING, mapping: { source: "google", externalId: "ev1" }, hasWriteConnection: true })
+      decideOutboundAction({ action: "cancel", activity: MEETING, mapping: { source: "google", externalId: "ev1", status: "scheduled" }, hasWriteConnection: true })
     ).toEqual({ do: "delete", eventId: "ev1" });
     expect(
       decideOutboundAction({ action: "cancel", activity: MEETING, mapping: null, hasWriteConnection: true })
@@ -65,7 +65,7 @@ describe("decideOutboundAction", () => {
       decideOutboundAction({
         action: "upsert",
         activity: { ...MEETING, status: "cancelled" },
-        mapping: { source: "google", externalId: "ev1" },
+        mapping: { source: "google", externalId: "ev1", status: "scheduled" },
         hasWriteConnection: true,
       })
     ).toEqual({ do: "delete", eventId: "ev1" });
@@ -77,6 +77,31 @@ describe("decideOutboundAction", () => {
         hasWriteConnection: true,
       })
     ).toEqual({ do: "skip", reason: "never-pushed" });
+  });
+
+  it("treats an upsert against a cancelled mapping as a fresh insert (reschedule after cancellation)", () => {
+    // The delete branch in outbound-sync.ts leaves the mapping row as history
+    // with status "cancelled" rather than deleting it — that row no longer
+    // points at a live Google event, so patching it would 404.
+    expect(
+      decideOutboundAction({
+        action: "upsert",
+        activity: MEETING,
+        mapping: { source: "google", externalId: "ev1", status: "cancelled" },
+        hasWriteConnection: true,
+      })
+    ).toEqual({ do: "insert" });
+  });
+
+  it("still patches a mapping that remains scheduled", () => {
+    expect(
+      decideOutboundAction({
+        action: "upsert",
+        activity: MEETING,
+        mapping: { source: "google", externalId: "ev1", status: "scheduled" },
+        hasWriteConnection: true,
+      })
+    ).toEqual({ do: "patch", eventId: "ev1" });
   });
 
   it("skips upserts without a date", () => {

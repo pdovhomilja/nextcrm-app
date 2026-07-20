@@ -14,7 +14,7 @@ const DEFAULT_DURATION_MINUTES = 30;
 export function decideOutboundAction(input: {
   action: OutboundAction;
   activity: { type: string; date: Date | null; status: string; deletedAt: Date | null } | null;
-  mapping: { source: string; externalId: string } | null;
+  mapping: { source: string; externalId: string; status: string } | null;
   hasWriteConnection: boolean;
 }): OutboundDecision {
   const { action, activity, mapping, hasWriteConnection } = input;
@@ -32,7 +32,11 @@ export function decideOutboundAction(input: {
   }
 
   if (!activity.date) return { do: "skip", reason: "no-date" };
-  return mapping
+  // A mapping whose row was left behind by a prior cancellation (see the
+  // delete branch in outbound-sync.ts, which keeps the row as history rather
+  // than deleting it) no longer refers to a live Google event — patching it
+  // would 404. Treat it like there's no mapping at all.
+  return mapping && mapping.status !== "cancelled"
     ? { do: "patch", eventId: mapping.externalId }
     : { do: "insert" };
 }
