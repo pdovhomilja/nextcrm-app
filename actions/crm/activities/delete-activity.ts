@@ -2,6 +2,7 @@
 import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { emitCalendarOutbound } from "@/lib/crm/calendar/outbound-emit";
 
 const ENTITY_SLUGS: Record<string, string> = {
   account: "accounts",
@@ -21,7 +22,7 @@ export const deleteActivity = async (activityId: string) => {
       where: { activityId },
     });
 
-    await (prismadb as any).crm_Activities.update({
+    const deleted = await (prismadb as any).crm_Activities.update({
       where: { id: activityId },
       data: { deletedAt: new Date(), deletedBy: session.user.id },
     });
@@ -32,6 +33,10 @@ export const deleteActivity = async (activityId: string) => {
         `/[locale]/(routes)/crm/${ENTITY_SLUGS[link.entityType] ?? `${link.entityType}s`}/${link.entityId}`,
         "page"
       );
+    }
+
+    if (deleted.type === "meeting") {
+      await emitCalendarOutbound(activityId, "cancel");
     }
 
     return { success: true };

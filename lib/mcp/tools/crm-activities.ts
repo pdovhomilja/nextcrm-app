@@ -8,6 +8,7 @@ import {
   notFound,
   softDeleteData,
 } from "../helpers";
+import { emitCalendarOutbound } from "@/lib/crm/calendar/outbound-emit";
 
 const entityLinkSchema = z.object({
   entityType: z.enum(["account", "contact", "lead", "opportunity", "contract"]),
@@ -122,6 +123,9 @@ export const crmActivityTools = [
         },
         include: { links: true },
       });
+      if (activity.type === "meeting") {
+        await emitCalendarOutbound(activity.id, "upsert");
+      }
       return itemResponse(activity);
     },
   },
@@ -163,6 +167,9 @@ export const crmActivityTools = [
           updatedBy: userId,
         },
       });
+      if (activity.type === "meeting") {
+        await emitCalendarOutbound(args.id, args.status === "cancelled" ? "cancel" : "upsert");
+      }
       return itemResponse(activity);
     },
   },
@@ -179,6 +186,9 @@ export const crmActivityTools = [
         where: { id: args.id },
         data: softDeleteData(userId),
       });
+      if (activity.type === "meeting") {
+        await emitCalendarOutbound(args.id, "cancel");
+      }
       return itemResponse({ id: activity.id, deletedAt: activity.deletedAt });
     },
   },

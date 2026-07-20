@@ -2,6 +2,7 @@
 import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { emitCalendarOutbound } from "@/lib/crm/calendar/outbound-emit";
 
 const ENTITY_SLUGS: Record<string, string> = {
   account: "accounts",
@@ -93,6 +94,13 @@ export const updateActivity = async (data: {
         links: { select: { id: true, entityType: true, entityId: true } },
       },
     });
+
+    if (activity.type === "meeting") {
+      await emitCalendarOutbound(
+        data.id,
+        data.status === "cancelled" ? "cancel" : "upsert"
+      );
+    }
 
     return { data: fullActivity };
   } catch (error) {

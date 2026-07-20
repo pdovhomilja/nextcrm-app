@@ -2,6 +2,7 @@
 import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { emitCalendarOutbound } from "@/lib/crm/calendar/outbound-emit";
 
 const ENTITY_SLUGS: Record<string, string> = {
   account: "accounts",
@@ -67,6 +68,10 @@ export const createActivity = async (data: {
         `/[locale]/(routes)/crm/${ENTITY_SLUGS[link.entityType] ?? `${link.entityType}s`}/${link.entityId}`,
         "page"
       );
+    }
+
+    if (data.type === "meeting") {
+      await emitCalendarOutbound(activity.id, "upsert");
     }
 
     return { data: fullActivity };
