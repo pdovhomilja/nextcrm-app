@@ -1,27 +1,40 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import {
+  requireAuthenticated,
+  filterAuthorizedTargetIds,
+  AuthenticationError,
+} from "@/lib/authz";
 
 export const createTargetList = async (data: {
   name: string;
   description?: string;
   targetIds?: string[];
 }) => {
-  const session = await getSession();
-  if (!session) return { error: "Unauthorized" };
-
   const { name, description, targetIds = [] } = data;
   if (!name) return { error: "name is required" };
+
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
+
+  // Only seed the list with targets the caller can access.
+  const authorizedIds =
+    targetIds.length > 0 ? await filterAuthorizedTargetIds(user, targetIds) : [];
 
   try {
     const list = await prismadb.crm_TargetLists.create({
       data: {
         name,
         description,
-        created_by: (session.user as any).id,
+        created_by: user.id,
         targets: {
-          create: targetIds.map((id: string) => ({ target_id: id })),
+          create: authorizedIds.map((id: string) => ({ target_id: id })),
         },
       },
       include: { targets: true },

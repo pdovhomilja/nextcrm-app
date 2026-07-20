@@ -1,7 +1,12 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import {
+  requireAuthenticated,
+  assertCanWriteTargetList,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export const updateTargetList = async (data: {
   id: string;
@@ -9,11 +14,22 @@ export const updateTargetList = async (data: {
   description?: string;
   status?: boolean;
 }) => {
-  const session = await getSession();
-  if (!session) return { error: "Unauthorized" };
-
   const { id, name, description, status } = data;
   if (!id) return { error: "id is required" };
+
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
+  try {
+    await assertCanWriteTargetList(user, id);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
 
   try {
     const existing = await prismadb.crm_TargetLists.findFirst({ where: { id, deletedAt: null } });
