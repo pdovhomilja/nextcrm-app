@@ -1,5 +1,4 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { UpdateContractLineItem } from "./schema";
 import { InputType, ReturnType } from "./types";
@@ -7,15 +6,30 @@ import { createSafeAction } from "@/lib/create-safe-action";
 import { writeAuditLog } from "@/lib/audit-log";
 import { revalidatePath } from "next/cache";
 import { calculateLineTotal, sumLineTotals } from "@/lib/line-items";
+import {
+  requireAuthenticated,
+  assertCanWriteContractLineItem,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
-  const session = await getSession();
-  if (!session?.user?.id) {
-    return { error: "Unauthorized" };
-  }
-
-  const userId = session.user.id;
   const { id, ...updateData } = data;
+
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
+  try {
+    await assertCanWriteContractLineItem(user, id);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
+  const userId = user.id;
 
   try {
     const existing = await prismadb.crm_ContractLineItems.findUnique({ where: { id } });
