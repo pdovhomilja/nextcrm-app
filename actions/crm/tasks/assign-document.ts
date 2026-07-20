@@ -1,18 +1,34 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import {
+  requireAuthenticated,
+  assertCanWriteCrmTask,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export const assignDocumentToCrmTask = async (data: {
   documentId: string;
   taskId: string;
 }) => {
-  const session = await getSession();
-  if (!session) return { error: "Unauthorized" };
-
   const { documentId, taskId } = data;
   if (!documentId) return { error: "Missing document ID" };
   if (!taskId) return { error: "Missing task ID" };
+
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
+  try {
+    await assertCanWriteCrmTask(user, taskId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
 
   try {
     const task = await prismadb.crm_Accounts_Tasks.findUnique({
@@ -40,12 +56,23 @@ export const disconnectDocumentFromCrmTask = async (data: {
   documentId: string;
   taskId: string;
 }) => {
-  const session = await getSession();
-  if (!session) return { error: "Unauthorized" };
-
   const { documentId, taskId } = data;
   if (!documentId) return { error: "Missing document ID" };
   if (!taskId) return { error: "Missing task ID" };
+
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
+  try {
+    await assertCanWriteCrmTask(user, taskId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
 
   try {
     const task = await prismadb.crm_Accounts_Tasks.findUnique({
