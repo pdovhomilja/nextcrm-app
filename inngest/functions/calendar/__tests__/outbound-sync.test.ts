@@ -6,7 +6,7 @@ jest.mock("@/lib/prisma", () => ({
   prismadb: {
     crm_Activities: { findUnique: jest.fn() },
     crm_CalendarEvents: {
-      findFirst: jest.fn(),
+      findMany: jest.fn(),
       updateMany: jest.fn(),
       create: jest.fn(),
     },
@@ -48,7 +48,7 @@ import { calendarOutboundSync } from "../outbound-sync";
 const registeredConfig = (inngest.createFunction as jest.Mock).mock.calls[0][0];
 
 const findActivity = prismadb.crm_Activities.findUnique as jest.Mock;
-const findMapping = prismadb.crm_CalendarEvents.findFirst as jest.Mock;
+const findMappingRows = prismadb.crm_CalendarEvents.findMany as jest.Mock;
 const updateManyMapping = prismadb.crm_CalendarEvents.updateMany as jest.Mock;
 const createMapping = prismadb.crm_CalendarEvents.create as jest.Mock;
 const findConnection = prismadb.calendarConnection.findFirst as jest.Mock;
@@ -107,7 +107,7 @@ let events: { delete: jest.Mock; patch: jest.Mock; insert: jest.Mock };
 beforeEach(() => {
   jest.clearAllMocks();
   findActivity.mockResolvedValue(activity);
-  findMapping.mockResolvedValue(null);
+  findMappingRows.mockResolvedValue([]);
   findConnection.mockResolvedValue(connection);
   updateManyMapping.mockResolvedValue({});
   createMapping.mockResolvedValue({});
@@ -190,7 +190,9 @@ describe("calendarOutboundSync", () => {
     );
     expect(updateManyMapping).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { activityId: "act1" },
+        // Scoped to the exact row being patched — never to activityId alone,
+        // since an activity can carry more than one crm_CalendarEvents row.
+        where: { activityId: "act1", externalId: "gev1" },
         data: expect.objectContaining({
           status: "scheduled",
           attendeeEmails: ["jane@client.com"],
@@ -217,7 +219,9 @@ describe("calendarOutboundSync", () => {
     );
     expect(updateManyMapping).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { activityId: "act1" },
+        // Scoped to the exact row being cancelled — never to activityId
+        // alone, so an older cancelled-history row is never rewritten.
+        where: { activityId: "act1", externalId: "gev1" },
         data: { status: "cancelled" },
       })
     );
@@ -301,12 +305,14 @@ describe("calendarOutboundSync", () => {
   });
 
   it("prefers the connection owning the existing mapping over the deterministic default", async () => {
-    findMapping.mockResolvedValue({
-      source: "google",
-      externalId: "gev1",
-      status: "scheduled",
-      connectionId: "conn-owner",
-    });
+    findMappingRows.mockResolvedValue([
+      {
+        source: "google",
+        externalId: "gev1",
+        status: "scheduled",
+        connectionId: "conn-owner",
+      },
+    ]);
     findConnection.mockImplementation(async ({ where }: { where: { id?: string } }) => {
       if (where.id === "conn-owner") return { id: "conn-owner", userId: "user1", scopeLevel: "readwrite" };
       return connection;
@@ -326,7 +332,7 @@ describe("calendarOutboundSync", () => {
   });
 
   it("orders the fallback connection lookup deterministically", async () => {
-    findMapping.mockResolvedValue(null);
+    findMappingRows.mockResolvedValue([]);
     decide.mockReturnValue({ do: "insert" });
     const { result } = run("act1");
     await result;
@@ -335,5 +341,139 @@ describe("calendarOutboundSync", () => {
         orderBy: [{ createdAt: "asc" }, { id: "asc" }],
       })
     );
+  });
+
+  it("looks up mapping rows ordered by createdAt desc (multi-row-per-activity is the steady state)", async () => {
+    findMappingRows.mockResolvedValue([]);
+    decide.mockReturnValue({ do: "insert" });
+    const { result } = run("act1");
+    await result;
+    expect(findMappingRows).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { activityId: "act1" },
+        orderBy: { createdAt: "desc" },
+      })
+    );
+  });
+
+  it("a calendly row always wins the calendly-owned skip, regardless of row order", async () => {
+    // The google row is listed first (as if it were more recent) — the
+    // calendly row must still win the skip, since ownership can never be
+    // defeated by insertion/ordering accidents.
+    findMappingRows.mockResolvedValue([
+      { source: "google", externalId: "gev-old", status: "cancelled", connectionId: "conn1" },
+      { source: "calendly", externalId: "cal-ev1", status: "scheduled", connectionId: null },
+    ]);
+    decide.mockImplementation(({ mapping }) =>
+      mapping?.source === "calendly" ? { do: "skip", reason: "calendly-owned" } : { do: "insert" }
+    );
+    const { result } = run("act1");
+    expect(await result).toEqual({ pushed: false, reason: "calendly-owned" });
+  });
+
+  it("multi-row sequence: insert -> cancel -> reschedule -> edit does not duplicate-insert or resurrect the cancelled row", async () => {
+    // Step 1: insert creates row A (ev1, scheduled).
+    findMappingRows.mockResolvedValue([]);
+    decide.mockReturnValue({ do: "insert" });
+    events.insert.mockResolvedValue({ data: { id: "ev1", iCalUID: "ical-ev1" } });
+    let { result } = run("act1");
+    expect(await result).toEqual({ pushed: true, did: "insert" });
+    expect(createMapping).toHaveBeenCalledTimes(1);
+
+    const rowA = { source: "google", externalId: "ev1", status: "scheduled", connectionId: "conn1" };
+
+    // Step 2: cancel flips row A to cancelled.
+    jest.clearAllMocks();
+    findActivity.mockResolvedValue(activity);
+    findConnection.mockResolvedValue(connection);
+    updateManyMapping.mockResolvedValue({});
+    getClient.mockReturnValue({ events });
+    findMappingRows.mockResolvedValue([rowA]);
+    decide.mockReturnValue({ do: "delete", eventId: "ev1" });
+    events.delete.mockResolvedValue({});
+    ({ result } = run("act1", "cancel"));
+    expect(await result).toEqual({ pushed: true, did: "delete" });
+    expect(updateManyMapping).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { activityId: "act1", externalId: "ev1" } })
+    );
+    const rowACancelled = { ...rowA, status: "cancelled" };
+
+    // Step 3: reschedule inserts row B (ev2, scheduled). Row A stays cancelled
+    // history — findMany now returns both rows, most-recent (row B) first.
+    jest.clearAllMocks();
+    findActivity.mockResolvedValue(activity);
+    findConnection.mockResolvedValue(connection);
+    createMapping.mockResolvedValue({});
+    getClient.mockReturnValue({ events });
+    build.mockReturnValue(eventBody);
+    resolveCounterparty.mockResolvedValue("jane@client.com");
+    findMappingRows.mockResolvedValue([rowACancelled]);
+    decide.mockReturnValue({ do: "insert" });
+    events.insert.mockResolvedValue({ data: { id: "ev2", iCalUID: "ical-ev2" } });
+    ({ result } = run("act1"));
+    expect(await result).toEqual({ pushed: true, did: "insert" });
+    expect(createMapping).toHaveBeenCalledTimes(1);
+    expect(createMapping).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ externalId: "ev2" }) })
+    );
+
+    const rowB = { source: "google", externalId: "ev2", status: "scheduled", connectionId: "conn1" };
+
+    // Step 4: edit — findMany (ordered by createdAt desc) returns row B
+    // first. The decision must be "patch" against ev2, not a duplicate
+    // insert, and row A's cancelled history must not be touched/resurrected.
+    jest.clearAllMocks();
+    findActivity.mockResolvedValue(activity);
+    findConnection.mockResolvedValue(connection);
+    updateManyMapping.mockResolvedValue({});
+    getClient.mockReturnValue({ events });
+    build.mockReturnValue(eventBody);
+    resolveCounterparty.mockResolvedValue("jane@client.com");
+    findMappingRows.mockResolvedValue([rowB, rowACancelled]);
+    decide.mockImplementation(({ mapping }) => ({ do: "patch", eventId: mapping!.externalId }));
+    events.patch.mockResolvedValue({});
+    ({ result } = run("act1"));
+    expect(await result).toEqual({ pushed: true, did: "patch" });
+    expect(createMapping).not.toHaveBeenCalled();
+    expect(events.patch).toHaveBeenCalledWith(expect.objectContaining({ eventId: "ev2" }));
+    // Scoped update — row A (the cancelled history row) must never be
+    // touched by this patch's mapping write.
+    expect(updateManyMapping).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { activityId: "act1", externalId: "ev2" } })
+    );
+    expect(updateManyMapping).not.toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ externalId: "ev1" }) })
+    );
+  });
+
+  it("skips a patch/delete rather than substituting an unrelated account when the mapping's connection no longer resolves", async () => {
+    findMappingRows.mockResolvedValue([
+      { source: "google", externalId: "gev1", status: "scheduled", connectionId: "conn-stale" },
+    ]);
+    // The mapping-owned lookup (id: conn-stale) misses; only the fallback
+    // connection resolves.
+    findConnection.mockImplementation(async ({ where }: { where: { id?: string } }) => {
+      if (where.id === "conn-stale") return null;
+      return connection;
+    });
+    decide.mockReturnValue({ do: "patch", eventId: "gev1" });
+    const { result } = run("act1");
+    expect(await result).toEqual({ pushed: false, reason: "connection-mismatch" });
+    expect(getClient).not.toHaveBeenCalled();
+    expect(events.patch).not.toHaveBeenCalled();
+  });
+
+  it("still allows the fallback connection for a fresh insert even when an old mapping's connection no longer resolves", async () => {
+    findMappingRows.mockResolvedValue([
+      { source: "google", externalId: "gev-old", status: "cancelled", connectionId: "conn-stale" },
+    ]);
+    findConnection.mockImplementation(async ({ where }: { where: { id?: string } }) => {
+      if (where.id === "conn-stale") return null;
+      return connection;
+    });
+    decide.mockReturnValue({ do: "insert" });
+    const { result } = run("act1");
+    expect(await result).toEqual({ pushed: true, did: "insert" });
+    expect(getClient).toHaveBeenCalledWith(expect.objectContaining({ id: "conn1" }));
   });
 });

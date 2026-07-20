@@ -31,14 +31,30 @@ export const calendarOutboundSync = inngest.createFunction(
       where: { id: activityId },
       include: { links: { select: { entityType: true, entityId: true } } },
     });
-    const mapping = await prismadb.crm_CalendarEvents.findFirst({
+    // `crm_CalendarEvents` is unique on [source, externalId], not on
+    // activityId — insert -> cancel -> reschedule leaves a cancelled history
+    // row alongside a fresh live one, so more than one row per activity is
+    // the normal steady state, not an edge case. Order deterministically so
+    // the most recently created row wins the "which mapping is live" pick,
+    // but a calendly-owned row must win the "calendly-owned" skip regardless
+    // of insertion order — that skip must never be defeated by ordering, so
+    // it's resolved by an explicit search rather than relying on recency.
+    const mappingRows = await prismadb.crm_CalendarEvents.findMany({
       where: { activityId },
       select: { source: true, externalId: true, status: true, connectionId: true },
+      orderBy: { createdAt: "desc" },
     });
+    const mapping =
+      mappingRows.find((row) => row.source === "calendly") ?? mappingRows[0] ?? null;
 
     let connection = null as Awaited<
       ReturnType<typeof prismadb.calendarConnection.findFirst>
     >;
+    // True only when the mapping named a specific connection and that
+    // connection no longer resolves (deactivated / downgraded to readonly)
+    // — i.e. we're about to substitute an unrelated account for the one that
+    // actually owns the mapping's externalId.
+    let connectionIsUnrelatedSubstitute = false;
     if (activity?.createdBy) {
       const connectionWhere = {
         userId: activity.createdBy,
@@ -61,6 +77,7 @@ export const calendarOutboundSync = inngest.createFunction(
           where: connectionWhere,
           orderBy: [{ createdAt: "asc" }, { id: "asc" }],
         });
+        connectionIsUnrelatedSubstitute = Boolean(mapping?.connectionId);
       }
     }
 
@@ -71,6 +88,18 @@ export const calendarOutboundSync = inngest.createFunction(
       hasWriteConnection: connection !== null,
     });
     if (decision.do === "skip") return { pushed: false, reason: decision.reason };
+
+    // A patch/delete targets a specific pre-existing Google event id; acting
+    // on it via a different account's "primary" calendar is a guaranteed 404
+    // at best and conceptually wrong at worst. Insert has no such
+    // constraint (it's creating a brand-new event) and may keep the
+    // fallback connection.
+    if (
+      (decision.do === "patch" || decision.do === "delete") &&
+      connectionIsUnrelatedSubstitute
+    ) {
+      return { pushed: false, reason: "connection-mismatch" };
+    }
 
     // Narrowly scoped to the Google API call — a Prisma failure writing the
     // mapping is a different failure mode and must not be recorded as a
@@ -113,10 +142,14 @@ export const calendarOutboundSync = inngest.createFunction(
       }
 
       // Kept as history (not deleted) so a later reschedule can tell this
-      // mapping no longer points at a live Google event.
+      // mapping no longer points at a live Google event. Scoped to the exact
+      // row being acted on (activityId + externalId), never to activityId
+      // alone — an activity can carry multiple mapping rows (e.g. an older
+      // cancelled row plus the live one), and rewriting all of them would
+      // resurrect or clobber history that doesn't belong to this event.
       await step.run("mark-mapping-cancelled", async () => {
         await prismadb.crm_CalendarEvents.updateMany({
-          where: { activityId },
+          where: { activityId, externalId: decision.eventId },
           data: { status: "cancelled" },
         });
       });
@@ -152,9 +185,11 @@ export const calendarOutboundSync = inngest.createFunction(
         throw error;
       }
 
+      // Scoped to the exact row being patched (activityId + externalId), not
+      // to activityId alone — see the delete branch's comment above for why.
       await step.run("update-mapping-patch", async () => {
         await prismadb.crm_CalendarEvents.updateMany({
-          where: { activityId },
+          where: { activityId, externalId: decision.eventId },
           data: {
             startAt: activity!.date,
             endAt,
