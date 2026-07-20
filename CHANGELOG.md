@@ -5,6 +5,44 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.15.0...v0.16.0) (2026-07-19)
+
+
+### Added
+
+* **calendar:** CalendarConnection + crm_CalendarEvents models for Phase 4 sync ([816a5c0](https://github.com/pdovhomilja/nextcrm-app/commit/816a5c045f876f456418a0bd28a19fee62a73784))
+* **calendar:** Calendly admin settings page + org webhook subscription ([bdede85](https://github.com/pdovhomilja/nextcrm-app/commit/bdede854b6e26242f76cdd7ef16312605f293a3e))
+* **calendar:** Calendly settings storage + signed webhook endpoint ([f92c728](https://github.com/pdovhomilja/nextcrm-app/commit/f92c7283359dae3cdf63f4c7c9050de64fa04131))
+* **calendar:** Calendly webhook HMAC signature verification ([42d3142](https://github.com/pdovhomilja/nextcrm-app/commit/42d31424c7036187e7edd96741c7a7292306ea92))
+* **calendar:** counterparty email matcher (contact &gt; target &gt; lead) ([e942991](https://github.com/pdovhomilja/nextcrm-app/commit/e9429917eeb99ac3522dab7d79944bbdf37311b1))
+* **calendar:** dedicated Calendar tab on profile + OAuth result banner ([7240889](https://github.com/pdovhomilja/nextcrm-app/commit/724088999b2d139d6e09d993624df9c6441aaf94))
+* **calendar:** Google Calendar incremental polling sync via Inngest ([f70b663](https://github.com/pdovhomilja/nextcrm-app/commit/f70b66320de1b508f6207aa8f760496921cf4898))
+* **calendar:** Google Calendar OAuth connect flow (readonly scope) ([2e8b591](https://github.com/pdovhomilja/nextcrm-app/commit/2e8b59147bde47a176dee78da272591aecbd4d0d))
+* **calendar:** inngest processor for crm/calendar.event.received ([dc96cd1](https://github.com/pdovhomilja/nextcrm-app/commit/dc96cd1dcbedfe9a89c4eaf941c910ce330196bd))
+* **calendar:** profile UI for Google Calendar connections ([ea5e7c5](https://github.com/pdovhomilja/nextcrm-app/commit/ea5e7c5dc6bfed2ed7be97f7fe2b67ebcb3a1be3))
+* **calendar:** register calendar settings in admin sidebar ([7791ab2](https://github.com/pdovhomilja/nextcrm-app/commit/7791ab2d6ac62c1111a2ae1a875fdd1533b206d2))
+* **calendar:** shared idempotent calendar-event processor ([2e4aa70](https://github.com/pdovhomilja/nextcrm-app/commit/2e4aa70712cf45400544256bb0fe7a7b1160573d))
+* **crm:** AQUNAMA Phase 4 — calendar sync (Calendly + Google Calendar inbound) ([57fa4ec](https://github.com/pdovhomilja/nextcrm-app/commit/57fa4ec4c26b481c06a874db00a8f4f9503bfc93))
+
+
+### Fixed
+
+* **calendar:** classify Google auth-revocation vs rate-limit/token errors ([51cdbec](https://github.com/pdovhomilja/nextcrm-app/commit/51cdbecfbc5dbdcfcc6d4475ac2b8a51886ad345))
+* **calendar:** exception-safe Calendly subscription + shared authz in admin settings ([5a127ab](https://github.com/pdovhomilja/nextcrm-app/commit/5a127ab6db964a5d125ecd0ac366ff91e22064a9))
+* **calendar:** filter soft-deleted contacts/leads in matcher ([eba5ecd](https://github.com/pdovhomilja/nextcrm-app/commit/eba5ecd39595c6fbd32c4e0aec9d9071c423e3a2))
+* **calendar:** log dropped Calendly webhook events missing uri/start_time ([290f23f](https://github.com/pdovhomilja/nextcrm-app/commit/290f23f26d21672d7f5d05c29722a4674e2166a0))
+* **calendar:** OAuth state (CSRF) validation + narrowed error logging ([5978f82](https://github.com/pdovhomilja/nextcrm-app/commit/5978f82b072c2b1f2c7f06f542c6217a4a343695))
+* **calendar:** record lastSyncError for upsert-loop failures in google sync ([fc3dedd](https://github.com/pdovhomilja/nextcrm-app/commit/fc3deddd447c20b387755bf9f0001222d1fd7e47))
+* **calendar:** transactional upsert + P2002 race handling in calendar processor ([7b8c34a](https://github.com/pdovhomilja/nextcrm-app/commit/7b8c34a6a9f07b2713132df66d02df0735df87fe))
+* **crm:** exclude cancelled activities from the Phase 2 kill-clock query ([a2c8a2d](https://github.com/pdovhomilja/nextcrm-app/commit/a2c8a2dfdb2d01531e36116b4a37f75d6c740bb4))
+
+## [0.15.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.14.0...v0.15.0) (2026-07-19)
+
+
+### Added
+
+* AQUNAMA Phase 3 — SOW/quote approval workflow + case-study flags ([43f95bf](https://github.com/pdovhomilja/nextcrm-app/commit/43f95bfdac390298c70751ff462143f4987a312d))
+
 ## [0.14.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.13.3...v0.14.0) (2026-07-19)
 
 
