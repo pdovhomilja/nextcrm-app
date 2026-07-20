@@ -16,6 +16,9 @@ jest.mock("@/lib/prisma", () => ({
       findFirst: jest.fn(),
       update: jest.fn(),
     },
+    // The repoint + soft-delete pair is issued as one atomic batch; the mock
+    // just awaits the operations the way Prisma would.
+    $transaction: jest.fn((ops: Promise<unknown>[]) => Promise.all(ops)),
   },
 }));
 
@@ -58,6 +61,7 @@ const updateManyMapping = prismadb.crm_CalendarEvents.updateMany as jest.Mock;
 const createMapping = prismadb.crm_CalendarEvents.create as jest.Mock;
 const findConnection = prismadb.calendarConnection.findFirst as jest.Mock;
 const updateConnection = prismadb.calendarConnection.update as jest.Mock;
+const transaction = prismadb.$transaction as unknown as jest.Mock;
 const getClient = getCalendarClientForConnection as jest.Mock;
 const decide = decideOutboundAction as jest.Mock;
 const build = buildOutboundEvent as jest.Mock;
@@ -619,6 +623,27 @@ describe("calendarOutboundSync", () => {
       errorLog.mockRestore();
     });
 
+    it("issues the repoint and the soft-delete as ONE transaction", async () => {
+      // Two separate writes are not retry-safe: if the repoint commits and
+      // the soft-delete throws, the retried step sees the row as already
+      // ours and takes the early return, so the duplicate stays alive
+      // forever while the operator log claims it was soft-deleted.
+      decide.mockReturnValue({ do: "insert" });
+      createMapping.mockRejectedValue(p2002());
+      findMappingByExternalId.mockResolvedValue({
+        id: "map-inbound",
+        activityId: "act-duplicate",
+      });
+      const errorLog = jest.spyOn(console, "error").mockImplementation(() => {});
+
+      const { result } = run("act1");
+      await result;
+
+      expect(transaction).toHaveBeenCalledTimes(1);
+      expect(transaction.mock.calls[0][0]).toHaveLength(2);
+      errorLog.mockRestore();
+    });
+
     it("does not soft-delete anything when the conflicting row is already ours", async () => {
       decide.mockReturnValue({ do: "insert" });
       createMapping.mockRejectedValue(p2002());
@@ -656,7 +681,10 @@ describe("calendarOutboundSync", () => {
     await result;
     expect(findMappingRows).toHaveBeenCalledWith(
       expect.objectContaining({
-        select: expect.objectContaining({ rawPayload: true }),
+        // `startAt` feeds the past-meeting guard: it is what lets
+        // decideOutboundAction tell a genuine back-date from a notes edit on
+        // a meeting that already happened.
+        select: expect.objectContaining({ rawPayload: true, startAt: true }),
       })
     );
   });

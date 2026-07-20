@@ -43,11 +43,15 @@ export const calendarOutboundSync = inngest.createFunction(
       where: { activityId },
       // `rawPayload` carries the organizer of the underlying Google event,
       // which decideOutboundAction needs to avoid patching meetings the rep
-      // does not organize (403 forbiddenForNonOrganizer).
+      // does not organize (403 forbiddenForNonOrganizer). `startAt` is the
+      // date Google is currently advertising, which it needs to tell a
+      // genuine back-date (patch) from a notes edit on an already-past
+      // meeting (skip — patching would mail an "Updated invitation").
       select: {
         source: true,
         externalId: true,
         status: true,
+        startAt: true,
         connectionId: true,
         rawPayload: true,
       },
@@ -307,32 +311,42 @@ export const calendarOutboundSync = inngest.createFunction(
             `${activityId} and soft-deleted activity ${conflicting.activityId}, which is a ` +
             `duplicate of this meeting created by that race.`
         );
-        await prismadb.crm_CalendarEvents.update({
-          where: { id: conflicting.id },
-          data: {
-            activityId,
-            connectionId: connection!.id,
-            startAt: activity!.date,
-            endAt,
-            attendeeEmails: counterparty ? [counterparty] : [],
-            status: "scheduled",
-            rawPayload: inserted.rawPayload,
-          },
-        });
-        // The repoint above leaves the poller's duplicate activity with no
-        // mapping row at all. Left alive, a rep editing it before its date
-        // passes would hit decideOutboundAction with mapping: null -> insert,
-        // creating a SECOND real Google event and mailing the customer a
-        // second invite for the same meeting. Soft-deleting it is safe and
-        // not a guess: it has no mapping (so it is "never-pushed" — the
-        // teardown path skips it rather than deleting a live Google event),
-        // and it is a known-provenance artifact of a race we just positively
-        // detected, not an inferred duplicate. `deletedBy` stays null: this
-        // is a system reconciliation, not a user action.
-        await prismadb.crm_Activities.update({
-          where: { id: conflicting.activityId },
-          data: { deletedAt: new Date() },
-        });
+        // Both writes go in ONE transaction. Committing the repoint without
+        // the soft-delete is unrecoverable on retry: the retried step's
+        // `create` fails P2002 again, but `findUnique` now reports the row as
+        // ours, so the `conflicting.activityId === activityId` early return
+        // above fires and the soft-delete is never reattempted — leaving the
+        // duplicate alive (reopening the second-invite path) while the
+        // already-emitted operator log claims it was soft-deleted.
+        await prismadb.$transaction([
+          prismadb.crm_CalendarEvents.update({
+            where: { id: conflicting.id },
+            data: {
+              activityId,
+              connectionId: connection!.id,
+              startAt: activity!.date,
+              endAt,
+              attendeeEmails: counterparty ? [counterparty] : [],
+              status: "scheduled",
+              rawPayload: inserted.rawPayload,
+            },
+          }),
+          // The repoint above leaves the poller's duplicate activity with no
+          // mapping row at all. Left alive, a rep editing it before its date
+          // passes would hit decideOutboundAction with mapping: null ->
+          // insert, creating a SECOND real Google event and mailing the
+          // customer a second invite for the same meeting. Soft-deleting it
+          // is safe and not a guess: it has no mapping (so it is
+          // "never-pushed" — the teardown path skips it rather than deleting
+          // a live Google event), and it is a known-provenance artifact of a
+          // race we just positively detected, not an inferred duplicate.
+          // `deletedBy` stays null: this is a system reconciliation, not a
+          // user action.
+          prismadb.crm_Activities.update({
+            where: { id: conflicting.activityId },
+            data: { deletedAt: new Date() },
+          }),
+        ]);
       }
     });
     return { pushed: true, did: "insert" };

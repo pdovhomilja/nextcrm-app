@@ -36,6 +36,11 @@ export function decideOutboundAction(input: {
     source: string;
     externalId: string;
     status: string;
+    // The start time Google is currently advertising for this event. Needed to
+    // tell a genuine reschedule (startAt !== activity.date) from a non-date
+    // edit on an already-past meeting (startAt === activity.date) — see the
+    // live-mapping branch below.
+    startAt?: Date | null;
     rawPayload?: unknown;
   } | null;
   hasWriteConnection: boolean;
@@ -76,9 +81,9 @@ export function decideOutboundAction(input: {
     // A past date here means a meeting the rep never got round to marking
     // complete, or one back-dated and logged after the fact — creating an
     // event for it would mail every attendee an invite to something that
-    // already happened. This skip is deliberately scoped to the no-mapping
-    // case: once a live Google event exists it must keep tracking the CRM
-    // (see below), including when a rep back-dates it.
+    // already happened. Once a live Google event exists the rule is
+    // narrower — see the live-mapping branch below, which still patches a
+    // genuine back-date so the stranded invite gets corrected.
     if (activity.date.getTime() < (input.now ?? new Date()).getTime()) {
       return { do: "skip", reason: "in-the-past" };
     }
@@ -86,13 +91,31 @@ export function decideOutboundAction(input: {
   }
 
   // A live mapping means the customer is already holding an invite for the
-  // OLD date. Skipping a past-dated edit here would strand that invite: move
-  // a meeting from Aug 1 to Jul 15 and Google would keep advertising Aug 1
-  // forever. Patch (or, via the cancellation branch above, delete) so Google
-  // never diverges from the CRM. This does not reopen the "rep logs notes on
-  // a meeting that already happened" case — that is a status/outcome edit,
-  // caught by the `already-completed` skip above and, being date-less,
-  // producing an identical patch body in any event.
+  // date in `mapping.startAt`. Two very different edits reach this point with
+  // a past `activity.date`, and they are told apart by comparing that date
+  // with what Google is currently advertising:
+  //
+  //   * startAt !== activity.date — a genuine reschedule/back-date (Aug 1 ->
+  //     Jul 15). Skipping would strand the invite: Google would keep
+  //     advertising Aug 1 forever. Patch, so Google never diverges from the
+  //     CRM.
+  //   * startAt === activity.date — the date did not move, so this is some
+  //     other field changing on a meeting that already happened. The common
+  //     case is a rep typing debrief notes into the form's Notes field days
+  //     later. `already-completed` does NOT catch it: nothing auto-marks a
+  //     past meeting completed (the form's status auto-set is create-only),
+  //     so the row is still "scheduled", and the form submits `description`
+  //     and `title` on every edit — both land in the patch body via
+  //     `buildOutboundEvent`, so this is a real, non-empty patch that would
+  //     mail every attendee an "Updated invitation" for a meeting that is
+  //     already in the past. Skip it.
+  if (
+    activity.date.getTime() < (input.now ?? new Date()).getTime() &&
+    mapping.startAt != null &&
+    new Date(mapping.startAt).getTime() === activity.date.getTime()
+  ) {
+    return { do: "skip", reason: "in-the-past" };
+  }
 
   // Meetings organized by the customer are ingested by the inbound poller and
   // get a live google-sourced mapping like any other. Patching one is a

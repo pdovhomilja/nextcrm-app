@@ -182,21 +182,39 @@ describe("decideOutboundAction", () => {
       ).toEqual({ do: "skip", reason: "in-the-past" });
     });
 
-    it("still PATCHES a live mapping when the meeting is back-dated into the past", () => {
-      // The customer is already holding an invite for the old (future) date.
-      // Skipping here would strand that invite: Google would keep advertising
-      // Aug 1 for a meeting the CRM now says is Jul 15. The "already happened"
-      // case this skip was written for — a rep logging notes after the fact —
-      // is a status/outcome edit and is caught by `already-completed` above.
+    it("still PATCHES a live mapping when the meeting is genuinely back-dated into the past", () => {
+      // The customer is already holding an invite for the old (future) date
+      // recorded in mapping.startAt. Skipping here would strand that invite:
+      // Google would keep advertising Aug 1 for a meeting the CRM now says
+      // was Jul 15. The date MOVED, so this is a real reschedule.
       expect(
         decideOutboundAction({
           action: "upsert",
           activity: { ...MEETING, date: new Date("2026-07-15T10:00:00Z") },
-          mapping: GOOGLE_MAPPING,
+          mapping: { ...GOOGLE_MAPPING, startAt: new Date("2026-08-01T10:00:00Z") },
           hasWriteConnection: true,
           now: new Date("2026-07-20T09:00:00Z"),
         })
       ).toEqual({ do: "patch", eventId: "ev1" });
+    });
+
+    it("skips a non-date edit on a past meeting with a live mapping (rep logging debrief notes)", () => {
+      // The meeting happened on Jul 15 and the rep never touched the Status
+      // dropdown, so it is still "scheduled" — `already-completed` cannot
+      // catch this. On Jul 20 they type notes into the form's Notes field,
+      // which submits `description` (and `title`) into a real patch body.
+      // mapping.startAt still equals activity.date: the date did NOT move, so
+      // this is not a reschedule and Google must not mail the customer an
+      // "Updated invitation" for a meeting five days gone.
+      expect(
+        decideOutboundAction({
+          action: "upsert",
+          activity: { ...MEETING, status: "scheduled", date: new Date("2026-07-15T10:00:00Z") },
+          mapping: { ...GOOGLE_MAPPING, startAt: new Date("2026-07-15T10:00:00Z") },
+          hasWriteConnection: true,
+          now: new Date("2026-07-20T09:00:00Z"),
+        })
+      ).toEqual({ do: "skip", reason: "in-the-past" });
     });
 
     it("still patches a meeting that is only just in the future", () => {
