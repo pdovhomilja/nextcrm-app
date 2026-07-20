@@ -67,6 +67,13 @@ export const updateActivity = async (data: {
       return updated;
     });
 
+    if (activity.type === "meeting") {
+      await emitCalendarOutbound(
+        data.id,
+        data.status === "cancelled" ? "cancel" : "upsert"
+      );
+    }
+
     // Revalidate all affected entity pages (old + new links)
     const allLinks = [
       ...existingLinks,
@@ -94,13 +101,6 @@ export const updateActivity = async (data: {
         links: { select: { id: true, entityType: true, entityId: true } },
       },
     });
-
-    if (activity.type === "meeting") {
-      await emitCalendarOutbound(
-        data.id,
-        data.status === "cancelled" ? "cancel" : "upsert"
-      );
-    }
 
     return { data: fullActivity };
   } catch (error) {

@@ -168,7 +168,10 @@ export const crmActivityTools = [
         },
       });
       if (activity.type === "meeting") {
-        await emitCalendarOutbound(args.id, args.status === "cancelled" ? "cancel" : "upsert");
+        await emitCalendarOutbound(
+          args.id,
+          args.status === "cancelled" ? "cancel" : "upsert"
+        );
       }
       return itemResponse(activity);
     },

@@ -55,6 +55,10 @@ export const createActivity = async (data: {
       return created;
     });
 
+    if (data.type === "meeting") {
+      await emitCalendarOutbound(activity.id, "upsert");
+    }
+
     const fullActivity = await (prismadb as any).crm_Activities.findUnique({
       where: { id: activity.id },
       include: {
@@ -68,10 +72,6 @@ export const createActivity = async (data: {
         `/[locale]/(routes)/crm/${ENTITY_SLUGS[link.entityType] ?? `${link.entityType}s`}/${link.entityId}`,
         "page"
       );
-    }
-
-    if (data.type === "meeting") {
-      await emitCalendarOutbound(activity.id, "upsert");
     }
 
     return { data: fullActivity };
