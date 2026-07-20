@@ -5,6 +5,23 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.16.0...v0.17.0) (2026-07-20)
+
+
+### Added
+
+* **calendar:** emit outbound sync events from activity writers ([de3c34b](https://github.com/pdovhomilja/nextcrm-app/commit/de3c34b5ad903ab654930c7c5982949456737b4d))
+* **calendar:** two-way sync upgrade button + scope level in profile UI ([2cf2f1d](https://github.com/pdovhomilja/nextcrm-app/commit/2cf2f1d68ef5727bfd22c1213d242b9437012e66))
+
+
+### Fixed
+
+* **calendar:** close unrelated-connection guard gap for disconnected accounts ([1c13839](https://github.com/pdovhomilja/nextcrm-app/commit/1c138396ed6b2132509b3ca3ce6e4c3c0cb7556b))
+* **calendar:** harden outbound push against guest-list wipes, false revocations, and unauthorized writes ([03e3f60](https://github.com/pdovhomilja/nextcrm-app/commit/03e3f60e75aa6d577b2c76588c0c00b06d328d9c))
+* **calendar:** harden outbound sync emit against slow sends and fix write/emit ordering ([55845a1](https://github.com/pdovhomilja/nextcrm-app/commit/55845a1a7cf32d9c268775c2328f9c234c5e5be2))
+* **calendar:** keep stored scopeLevel truthful, kill race duplicates, patch back-dated meetings ([e0729cc](https://github.com/pdovhomilja/nextcrm-app/commit/e0729cc3920aa3415f5bde05140d3c14ac0a9da7))
+* **calendar:** stop notes edits on past meetings from emailing customers ([9eb4344](https://github.com/pdovhomilja/nextcrm-app/commit/9eb4344a52e5e1af8c0e1dfddc64f5d2eddaeb47))
+
 ## [0.16.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.15.0...v0.16.0) (2026-07-19)
 
 
