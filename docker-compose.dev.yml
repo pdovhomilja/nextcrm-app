@@ -58,7 +58,10 @@ services:
       POSTGRES_DB: nextcrm
     ports:
       # 5433 on the host: 5432 is left free for any system Postgres.
-      - "5433:5432"
+      # Bound to loopback only (not 0.0.0.0): credentials are the throwaway
+      # nextcrm/nextcrm pair above, so this must not be reachable from the
+      # LAN/VPN/any other network interface — only from this machine.
+      - "127.0.0.1:5433:5432"
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
     healthcheck:
