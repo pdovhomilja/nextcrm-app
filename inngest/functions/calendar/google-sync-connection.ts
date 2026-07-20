@@ -14,6 +14,22 @@ const RATE_LIMIT_MARKERS = [
 ];
 const REVOCATION_MARKERS = ["invalid_grant", "unauthorized_client"];
 
+// 403 reasons that mean "this account may not perform THIS operation on THIS
+// event" rather than "this account's grant is gone". They only occur on the
+// outbound write path (events.patch / events.delete against an event the rep
+// did not organize, or a calendar they only have reader access to). Treating
+// them as a revocation would deactivate an otherwise healthy connection and
+// silently kill sync in BOTH directions, so they are excluded alongside the
+// rate-limit markers. Genuine grant-level 403s (insufficientPermissions,
+// accessNotConfigured, …) still fall through and deactivate as before.
+const PER_EVENT_PERMISSION_MARKERS = [
+  "forbiddenfornonorganizer",
+  "forbidden for non-organizer",
+  "cannotchangeorganizer",
+  "cannotchangeownattendeestatus",
+  "requiredaccesslevel",
+];
+
 // `error.code` as a numeric HTTP status comes from gaxios error construction
 // (verified against gaxios@7), which is what googleapis uses under the hood.
 // Google's error surfaces vary by endpoint:
@@ -21,10 +37,12 @@ const REVOCATION_MARKERS = ["invalid_grant", "unauthorized_client"];
 //   "unauthorized_client") for a revoked/expired refresh token — that must
 //   deactivate the connection, even though 400 isn't an auth status.
 // - The Calendar API itself uses 401 for a rejected access token.
-// - The Calendar API also uses 403 for both real auth revocations (e.g.
-//   insufficientPermissions) AND transient rate-limit errors
-//   (rateLimitExceeded / userRateLimitExceeded / quotaExceeded), which must
-//   NOT deactivate the connection.
+// - The Calendar API also uses 403 for real auth revocations (e.g.
+//   insufficientPermissions), for transient rate-limit errors
+//   (rateLimitExceeded / userRateLimitExceeded / quotaExceeded), AND for
+//   per-event permission refusals on the outbound write path
+//   (forbiddenForNonOrganizer, …). Only the first must deactivate the
+//   connection; see PER_EVENT_PERMISSION_MARKERS below.
 export function isAuthRevocationError(error: unknown): boolean {
   const err = error as {
     code?: number;
@@ -49,7 +67,9 @@ export function isAuthRevocationError(error: unknown): boolean {
   if (REVOCATION_MARKERS.some((marker) => combined.includes(marker))) return true;
   if (status === 401) return true;
   if (status === 403) {
-    return !RATE_LIMIT_MARKERS.some((marker) => combined.includes(marker));
+    return ![...RATE_LIMIT_MARKERS, ...PER_EVENT_PERMISSION_MARKERS].some((marker) =>
+      combined.includes(marker)
+    );
   }
   return false;
 }

@@ -19,9 +19,13 @@ const leads = prismadb.crm_Leads.findFirst as jest.Mock;
 
 beforeEach(() => jest.clearAllMocks());
 
+// decideOutboundAction now refuses to push a meeting whose date has already
+// passed (see the "in-the-past" skip), so the shared fixture has to stay in
+// the future for the life of the test suite rather than a few days past the
+// day it was written.
 const MEETING = {
   type: "meeting",
-  date: new Date("2026-07-25T10:00:00Z"),
+  date: new Date("2099-07-25T10:00:00Z"),
   status: "scheduled",
   deletedAt: null,
 };
@@ -108,6 +112,137 @@ describe("decideOutboundAction", () => {
     expect(
       decideOutboundAction({ action: "upsert", activity: { ...MEETING, date: null }, mapping: null, hasWriteConnection: true })
     ).toEqual({ do: "skip", reason: "no-date" });
+  });
+
+  describe("already-happened meetings are never re-pushed", () => {
+    const GOOGLE_MAPPING = { source: "google", externalId: "ev1", status: "scheduled" };
+
+    it("skips a completed meeting instead of patching it (logging an outcome must not email the customer)", () => {
+      expect(
+        decideOutboundAction({
+          action: "upsert",
+          activity: { ...MEETING, status: "completed" },
+          mapping: GOOGLE_MAPPING,
+          hasWriteConnection: true,
+        })
+      ).toEqual({ do: "skip", reason: "already-completed" });
+    });
+
+    it("skips a completed meeting that was never pushed instead of inserting it", () => {
+      expect(
+        decideOutboundAction({
+          action: "upsert",
+          activity: { ...MEETING, status: "completed" },
+          mapping: null,
+          hasWriteConnection: true,
+        })
+      ).toEqual({ do: "skip", reason: "already-completed" });
+    });
+
+    it("skips a still-scheduled meeting whose date is in the past", () => {
+      expect(
+        decideOutboundAction({
+          action: "upsert",
+          activity: { ...MEETING, date: new Date("2026-07-19T10:00:00Z") },
+          mapping: GOOGLE_MAPPING,
+          hasWriteConnection: true,
+          now: new Date("2026-07-20T09:00:00Z"),
+        })
+      ).toEqual({ do: "skip", reason: "in-the-past" });
+    });
+
+    it("still patches a meeting that is only just in the future", () => {
+      expect(
+        decideOutboundAction({
+          action: "upsert",
+          activity: { ...MEETING, date: new Date("2026-07-20T10:00:00Z") },
+          mapping: GOOGLE_MAPPING,
+          hasWriteConnection: true,
+          now: new Date("2026-07-20T09:00:00Z"),
+        })
+      ).toEqual({ do: "patch", eventId: "ev1" });
+    });
+
+    it("still cancels a past or completed meeting (teardown must not be blocked)", () => {
+      expect(
+        decideOutboundAction({
+          action: "cancel",
+          activity: { ...MEETING, status: "completed", date: new Date("2026-07-19T10:00:00Z") },
+          mapping: GOOGLE_MAPPING,
+          hasWriteConnection: true,
+          now: new Date("2026-07-20T09:00:00Z"),
+        })
+      ).toEqual({ do: "delete", eventId: "ev1" });
+    });
+  });
+
+  describe("organizer guard", () => {
+    it("skips patching a meeting organized by the customer (403 forbiddenForNonOrganizer)", () => {
+      expect(
+        decideOutboundAction({
+          action: "upsert",
+          activity: MEETING,
+          mapping: {
+            source: "google",
+            externalId: "ev1",
+            status: "scheduled",
+            rawPayload: { organizer: { email: "jane@client.com" } },
+          },
+          hasWriteConnection: true,
+        })
+      ).toEqual({ do: "skip", reason: "not-organizer" });
+    });
+
+    it("patches a meeting the rep organizes (organizer.self === true)", () => {
+      expect(
+        decideOutboundAction({
+          action: "upsert",
+          activity: MEETING,
+          mapping: {
+            source: "google",
+            externalId: "ev1",
+            status: "scheduled",
+            rawPayload: { organizer: { email: "rep@acme.com", self: true } },
+          },
+          hasWriteConnection: true,
+        })
+      ).toEqual({ do: "patch", eventId: "ev1" });
+    });
+
+    it("treats an absent organizer as unknown and keeps patching (no regression for existing mappings)", () => {
+      expect(
+        decideOutboundAction({
+          action: "upsert",
+          activity: MEETING,
+          mapping: { source: "google", externalId: "ev1", status: "scheduled", rawPayload: {} },
+          hasWriteConnection: true,
+        })
+      ).toEqual({ do: "patch", eventId: "ev1" });
+      expect(
+        decideOutboundAction({
+          action: "upsert",
+          activity: MEETING,
+          mapping: { source: "google", externalId: "ev1", status: "scheduled", rawPayload: null },
+          hasWriteConnection: true,
+        })
+      ).toEqual({ do: "patch", eventId: "ev1" });
+    });
+
+    it("still cancels a customer-organized meeting (delete removes our own copy)", () => {
+      expect(
+        decideOutboundAction({
+          action: "cancel",
+          activity: MEETING,
+          mapping: {
+            source: "google",
+            externalId: "ev1",
+            status: "scheduled",
+            rawPayload: { organizer: { email: "jane@client.com" } },
+          },
+          hasWriteConnection: true,
+        })
+      ).toEqual({ do: "delete", eventId: "ev1" });
+    });
   });
 });
 

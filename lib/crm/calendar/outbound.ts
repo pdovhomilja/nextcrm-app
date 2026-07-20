@@ -11,11 +11,35 @@ export type OutboundDecision =
 
 const DEFAULT_DURATION_MINUTES = 30;
 
+// Google only sets `organizer.self` when the authenticated account IS the
+// organizer; a customer-organized meeting that lands on the rep's calendar
+// carries `organizer: { email: "jane@client.com" }` with no `self`. Writing to
+// such an event is rejected with 403 forbiddenForNonOrganizer, so the push has
+// to be skipped rather than attempted.
+//
+// An ABSENT `organizer` means "unknown", not "not mine": the payload we persist
+// for events we created ourselves is whatever `events.insert` returned, and
+// pre-existing mapping rows may predate this check entirely. Treat unknown as
+// organized-by-us so this guard only ever suppresses pushes we can positively
+// prove would fail.
+function isOrganizedBySelf(rawPayload: unknown): boolean {
+  const organizer = (rawPayload as { organizer?: { self?: boolean } } | null | undefined)
+    ?.organizer;
+  if (!organizer) return true;
+  return organizer.self === true;
+}
+
 export function decideOutboundAction(input: {
   action: OutboundAction;
   activity: { type: string; date: Date | null; status: string; deletedAt: Date | null } | null;
-  mapping: { source: string; externalId: string; status: string } | null;
+  mapping: {
+    source: string;
+    externalId: string;
+    status: string;
+    rawPayload?: unknown;
+  } | null;
   hasWriteConnection: boolean;
+  now?: Date;
 }): OutboundDecision {
   const { action, activity, mapping, hasWriteConnection } = input;
   if (!activity) return { do: "skip", reason: "not-found" };
@@ -32,13 +56,38 @@ export function decideOutboundAction(input: {
   }
 
   if (!activity.date) return { do: "skip", reason: "no-date" };
+
+  // Never push a meeting that has already happened. Both the insert and the
+  // patch path call Google with sendUpdates:"all", so any push here mails
+  // every attendee an invite (or an "Updated invitation") for an event in the
+  // past. Two distinct signals mean "already happened":
+  //   - status "completed": the explicit post-meeting write. `updateActivity`
+  //     accepts `outcome`, and logging a call outcome is the single most
+  //     common thing a rep does after a meeting.
+  //   - a date in the past: the same mistake for a meeting the rep simply
+  //     never got round to marking complete, plus back-dated meetings logged
+  //     after the fact, which must not generate an invite at all.
+  // Both are checked AFTER the cancellation branch above, so cancelling a
+  // meeting still tears the Google event down regardless of when it was.
+  if (activity.status === "completed") return { do: "skip", reason: "already-completed" };
+  if (activity.date.getTime() < (input.now ?? new Date()).getTime()) {
+    return { do: "skip", reason: "in-the-past" };
+  }
+
   // A mapping whose row was left behind by a prior cancellation (see the
   // delete branch in outbound-sync.ts, which keeps the row as history rather
   // than deleting it) no longer refers to a live Google event — patching it
   // would 404. Treat it like there's no mapping at all.
-  return mapping && mapping.status !== "cancelled"
-    ? { do: "patch", eventId: mapping.externalId }
-    : { do: "insert" };
+  if (!mapping || mapping.status === "cancelled") return { do: "insert" };
+
+  // Meetings organized by the customer are ingested by the inbound poller and
+  // get a live google-sourced mapping like any other. Patching one is a
+  // guaranteed 403 forbiddenForNonOrganizer.
+  if (!isOrganizedBySelf(mapping.rawPayload)) {
+    return { do: "skip", reason: "not-organizer" };
+  }
+
+  return { do: "patch", eventId: mapping.externalId };
 }
 
 export function buildOutboundEvent(

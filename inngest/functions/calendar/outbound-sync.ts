@@ -41,7 +41,16 @@ export const calendarOutboundSync = inngest.createFunction(
     // it's resolved by an explicit search rather than relying on recency.
     const mappingRows = await prismadb.crm_CalendarEvents.findMany({
       where: { activityId },
-      select: { source: true, externalId: true, status: true, connectionId: true },
+      // `rawPayload` carries the organizer of the underlying Google event,
+      // which decideOutboundAction needs to avoid patching meetings the rep
+      // does not organize (403 forbiddenForNonOrganizer).
+      select: {
+        source: true,
+        externalId: true,
+        status: true,
+        connectionId: true,
+        rawPayload: true,
+      },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     });
     const mapping =
@@ -178,6 +187,15 @@ export const calendarOutboundSync = inngest.createFunction(
     const endAt = new Date(body.end!.dateTime as string);
 
     if (decision.do === "patch") {
+      // `events.patch` treats a present `attendees` array as a FULL
+      // REPLACEMENT of Google's guest list, not a merge — and this call uses
+      // sendUpdates:"all". `buildOutboundEvent` only knows the single
+      // counterparty resolved from the CRM links, so sending it here would
+      // silently uninvite (and mail a cancellation to) every guest the rep
+      // added on the Google side after the event was created. Attendees are
+      // therefore set on INSERT only; the patch body omits the key entirely,
+      // which leaves Google's list untouched.
+      const { attendees: _attendeesOmittedOnPatch, ...patchBody } = body;
       try {
         await step.run("patch-google-event", async () => {
           const calendar = getCalendarClientForConnection(connection!);
@@ -185,7 +203,7 @@ export const calendarOutboundSync = inngest.createFunction(
             calendarId: "primary",
             eventId: decision.eventId,
             sendUpdates: "all",
-            requestBody: body,
+            requestBody: patchBody,
           });
           return null;
         });
@@ -256,7 +274,51 @@ export const calendarOutboundSync = inngest.createFunction(
         });
       } catch (error) {
         if ((error as { code?: string }).code !== "P2002") throw error;
-        // Concurrent duplicate mapping — benign; the event exists on Google.
+
+        // Someone else already owns the (google, externalId) row. That is only
+        // benign when the row is OURS — a replay of this step, or a genuine
+        // concurrent duplicate of this same push.
+        //
+        // The dangerous case is the inbound poller landing in the gap between
+        // the Google insert committing and this step committing (they are
+        // separate Inngest steps, so the gap is real): inbound finds no
+        // mapping, runs matchCounterparty itself, and creates a SECOND
+        // crm_Activities row plus the (google, eventId) mapping pointing at
+        // it. Swallowing that would leave OUR activity with no mapping at all,
+        // so the rep's next edit would decide "insert" again and send a second
+        // real invite email to the customer. Repoint the row at our activity
+        // instead — the Google event is provably ours, we created it moments
+        // ago — and log the now-orphaned duplicate loudly for an operator.
+        const conflicting = await prismadb.crm_CalendarEvents.findUnique({
+          where: {
+            source_externalId: { source: "google", externalId: inserted.id },
+          },
+          select: { id: true, activityId: true },
+        });
+        // Raced away between the failed create and this read: rethrow so the
+        // step retries rather than silently leaving the activity unmapped.
+        if (!conflicting) throw error;
+        if (conflicting.activityId === activityId) return;
+
+        console.error(
+          `[calendar-outbound-sync] mapping conflict on google event ${inserted.id}: ` +
+            `it was claimed by activity ${conflicting.activityId} while pushing activity ` +
+            `${activityId} (inbound poller raced the insert). Repointing the mapping to ` +
+            `${activityId}; activity ${conflicting.activityId} is a duplicate of this ` +
+            `meeting, is now unmapped, and needs manual review.`
+        );
+        await prismadb.crm_CalendarEvents.update({
+          where: { id: conflicting.id },
+          data: {
+            activityId,
+            connectionId: connection!.id,
+            startAt: activity!.date,
+            endAt,
+            attendeeEmails: counterparty ? [counterparty] : [],
+            status: "scheduled",
+            rawPayload: inserted.rawPayload,
+          },
+        });
       }
     });
     return { pushed: true, did: "insert" };

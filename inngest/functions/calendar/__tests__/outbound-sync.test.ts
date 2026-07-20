@@ -7,6 +7,8 @@ jest.mock("@/lib/prisma", () => ({
     crm_Activities: { findUnique: jest.fn() },
     crm_CalendarEvents: {
       findMany: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
       updateMany: jest.fn(),
       create: jest.fn(),
     },
@@ -49,6 +51,8 @@ const registeredConfig = (inngest.createFunction as jest.Mock).mock.calls[0][0];
 
 const findActivity = prismadb.crm_Activities.findUnique as jest.Mock;
 const findMappingRows = prismadb.crm_CalendarEvents.findMany as jest.Mock;
+const findMappingByExternalId = prismadb.crm_CalendarEvents.findUnique as jest.Mock;
+const updateMapping = prismadb.crm_CalendarEvents.update as jest.Mock;
 const updateManyMapping = prismadb.crm_CalendarEvents.updateMany as jest.Mock;
 const createMapping = prismadb.crm_CalendarEvents.create as jest.Mock;
 const findConnection = prismadb.calendarConnection.findFirst as jest.Mock;
@@ -111,6 +115,12 @@ beforeEach(() => {
   findConnection.mockResolvedValue(connection);
   updateManyMapping.mockResolvedValue({});
   createMapping.mockResolvedValue({});
+  // Default P2002 reconciliation lookup: the conflicting row is OUR row (a
+  // step replay / genuine concurrent duplicate of this same push), which is
+  // the benign case. Tests that exercise the dangerous case — the inbound
+  // poller claiming the event for a different activity — override this.
+  findMappingByExternalId.mockResolvedValue({ id: "map1", activityId: "act1" });
+  updateMapping.mockResolvedValue({});
   updateConnection.mockResolvedValue({});
   build.mockReturnValue(eventBody);
   resolveCounterparty.mockResolvedValue("jane@client.com");
@@ -493,6 +503,122 @@ describe("calendarOutboundSync", () => {
     expect(getClient).not.toHaveBeenCalled();
     expect(events.delete).not.toHaveBeenCalled();
     expect(updateManyMapping).not.toHaveBeenCalled();
+  });
+
+  describe("attendees are set on insert only", () => {
+    // Google's events.patch treats a present `attendees` array as a FULL
+    // REPLACEMENT of the guest list, not a merge, and the call uses
+    // sendUpdates:"all". The CRM only knows the single resolved counterparty,
+    // so sending it on a patch would uninvite every guest the rep added on
+    // the Google side and mail each of them a cancellation.
+    const bodyWithAttendees = {
+      ...eventBody,
+      attendees: [{ email: "jane@client.com" }],
+    };
+
+    it("omits the attendees key entirely from the patch body", async () => {
+      build.mockReturnValue(bodyWithAttendees);
+      decide.mockReturnValue({ do: "patch", eventId: "gev1" });
+      const { result } = run("act1");
+      await result;
+
+      const sent = events.patch.mock.calls[0][0].requestBody;
+      expect(sent).not.toHaveProperty("attendees");
+      expect(Object.keys(sent)).not.toContain("attendees");
+      // Everything else still goes through unchanged.
+      expect(sent).toEqual({
+        summary: eventBody.summary,
+        start: eventBody.start,
+        end: eventBody.end,
+      });
+      // And the object handed to buildOutboundEvent is not mutated.
+      expect(bodyWithAttendees.attendees).toEqual([{ email: "jane@client.com" }]);
+    });
+
+    it("does send attendees on the insert body", async () => {
+      build.mockReturnValue(bodyWithAttendees);
+      decide.mockReturnValue({ do: "insert" });
+      const { result } = run("act1");
+      await result;
+
+      const sent = events.insert.mock.calls[0][0].requestBody;
+      expect(sent).toHaveProperty("attendees", [{ email: "jane@client.com" }]);
+    });
+  });
+
+  describe("create-mapping P2002 reconciliation", () => {
+    const p2002 = () => Object.assign(new Error("dup"), { code: "P2002" });
+
+    it("repoints the mapping and logs loudly when the conflicting row belongs to a DIFFERENT activity", async () => {
+      // The inbound poller landed in the gap between the Google insert
+      // committing and create-mapping committing: it created its own
+      // duplicate activity plus the (google, gev1) mapping. Swallowing this
+      // would leave act1 unmapped, so the rep's next edit would insert a
+      // SECOND real Google event and mail a second invite.
+      decide.mockReturnValue({ do: "insert" });
+      createMapping.mockRejectedValue(p2002());
+      findMappingByExternalId.mockResolvedValue({
+        id: "map-inbound",
+        activityId: "act-duplicate",
+      });
+      const errorLog = jest.spyOn(console, "error").mockImplementation(() => {});
+
+      const { result } = run("act1");
+      expect(await result).toEqual({ pushed: true, did: "insert" });
+
+      expect(findMappingByExternalId).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { source_externalId: { source: "google", externalId: "gev1" } },
+        })
+      );
+      expect(updateMapping).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "map-inbound" },
+          data: expect.objectContaining({
+            activityId: "act1",
+            connectionId: "conn1",
+            status: "scheduled",
+          }),
+        })
+      );
+      const logged = errorLog.mock.calls[0].join(" ");
+      expect(logged).toContain("act-duplicate");
+      expect(logged).toContain("act1");
+      expect(logged).toContain("gev1");
+      errorLog.mockRestore();
+    });
+
+    it("leaves the mapping alone when the conflicting row is already ours", async () => {
+      decide.mockReturnValue({ do: "insert" });
+      createMapping.mockRejectedValue(p2002());
+      findMappingByExternalId.mockResolvedValue({ id: "map1", activityId: "act1" });
+      const { result } = run("act1");
+      expect(await result).toEqual({ pushed: true, did: "insert" });
+      expect(updateMapping).not.toHaveBeenCalled();
+    });
+
+    it("rethrows when the conflicting row vanished, rather than leaving the activity unmapped", async () => {
+      decide.mockReturnValue({ do: "insert" });
+      createMapping.mockRejectedValue(p2002());
+      findMappingByExternalId.mockResolvedValue(null);
+      const { result } = run("act1");
+      await expect(result).rejects.toThrow("dup");
+      expect(updateMapping).not.toHaveBeenCalled();
+      // A Prisma-side conflict is not a connection-level sync error.
+      expect(updateConnection).not.toHaveBeenCalled();
+    });
+  });
+
+  it("selects rawPayload on the mapping rows so the organizer guard has a signal", async () => {
+    findMappingRows.mockResolvedValue([]);
+    decide.mockReturnValue({ do: "insert" });
+    const { result } = run("act1");
+    await result;
+    expect(findMappingRows).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({ rawPayload: true }),
+      })
+    );
   });
 
   it("still allows the fallback connection for a fresh insert even when an old mapping's connection no longer resolves", async () => {

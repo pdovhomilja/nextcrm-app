@@ -3,7 +3,11 @@ import { google } from "googleapis";
 import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { encrypt } from "@/lib/email-crypto";
-import { getGoogleOAuthClient, scopeLevelFromGrantedScopes } from "@/lib/crm/calendar/google";
+import {
+  getGoogleOAuthClient,
+  scopeLevelFromGrantedScopes,
+  scopeLevelUpsertFields,
+} from "@/lib/crm/calendar/google";
 
 const STATE_COOKIE = "gcal_oauth_state";
 const STATE_COOKIE_PATH = "/api/profile/calendar-connections/google";
@@ -66,7 +70,8 @@ export async function GET(req: NextRequest) {
         isActive: true,
         lastSyncError: null,
         syncToken: null, // force a fresh full-window sync
-        scopeLevel,
+        // Upgrade-only: never downgrade an existing readwrite connection.
+        ...scopeLevelUpsertFields(scopeLevel),
       },
       create: {
         userId: session.user.id,

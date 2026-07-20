@@ -30,6 +30,23 @@ export function scopeLevelFromGrantedScopes(
   return scope?.split(" ").includes(SCOPE_EVENTS) ? "readwrite" : "readonly";
 }
 
+// Fields to merge into an EXISTING connection's row on re-auth.
+//
+// The plain "Connect Google Calendar" button links to /authorize with no
+// `level`, so it always requests readonly. Writing the granted level
+// unconditionally would silently downgrade a rep who had already enabled
+// two-way sync — outbound would just stop, with the profile label flipping to
+// "Inbound only" as the only signal. A re-auth may therefore only ever UPGRADE
+// the stored scope level, never downgrade it; dropping to readonly is an
+// explicit action (Disconnect), not an accident of which button was clicked.
+// Returning `{}` for a readonly grant leaves the stored value untouched, which
+// also covers someone hitting the /authorize URL directly.
+export function scopeLevelUpsertFields(
+  grantedLevel: CalendarScopeLevel
+): { scopeLevel: CalendarScopeLevel } | Record<string, never> {
+  return grantedLevel === "readwrite" ? { scopeLevel: grantedLevel } : {};
+}
+
 export function getGoogleAuthUrl(
   state: string,
   level: CalendarScopeLevel = "readonly"
