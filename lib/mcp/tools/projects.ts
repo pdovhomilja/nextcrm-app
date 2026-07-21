@@ -138,11 +138,8 @@ export const projectTools = [
       board: z.string().uuid(),
       title: z.string().min(1),
     }),
-    async handler(args: { board: string; title: string }, userId: string) {
-      const board = await prismadb.boards.findFirst({
-        where: { id: args.board, ...userBoardWhere(userId) },
-      });
-      if (!board) notFound("Board");
+    async handler(args: { board: string; title: string }, _userId: string, user: AuthzUser) {
+      await assertScopeOrNotFound(() => assertCanWriteBoard(user, args.board), "Board");
       const maxPos = await prismadb.sections.aggregate({
         where: { board: args.board },
         _max: { position: true },
@@ -166,9 +163,10 @@ export const projectTools = [
       title: z.string().min(1).optional(),
       position: z.number().int().optional(),
     }),
-    async handler(args: { id: string; title?: string; position?: number }, _userId: string) {
+    async handler(args: { id: string; title?: string; position?: number }, _userId: string, user: AuthzUser) {
       const existing = await prismadb.sections.findUnique({ where: { id: args.id } });
       if (!existing) notFound("Section");
+      await assertScopeOrNotFound(() => assertCanWriteBoard(user, existing.board), "Board");
       const { id, position, ...rest } = args;
       const section = await prismadb.sections.update({
         where: { id },
@@ -181,12 +179,13 @@ export const projectTools = [
     name: "projects_delete_section",
     description: "Delete a section (must be empty — no tasks)",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, _userId: string) {
+    async handler(args: { id: string }, _userId: string, user: AuthzUser) {
       const section = await prismadb.sections.findUnique({
         where: { id: args.id },
         include: { _count: { select: { tasks: true } } },
       });
       if (!section) notFound("Section");
+      await assertScopeOrNotFound(() => assertCanWriteBoard(user, section.board), "Board");
       if (section._count.tasks > 0) conflict("Cannot delete section with tasks. Move or delete tasks first.");
       await prismadb.sections.delete({ where: { id: args.id } });
       return itemResponse({ id: args.id, deleted: true });
