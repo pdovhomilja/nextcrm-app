@@ -1,7 +1,12 @@
 import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
 import type { AuthzUser } from "@/lib/authz";
-import { assertCanWriteBoard, boardReadScopeWhere } from "@/lib/authz";
+import {
+  assertCanWriteBoard,
+  boardReadScopeWhere,
+  assertCanReadTask,
+  assertCanWriteTask,
+} from "@/lib/authz";
 import {
   paginationSchema,
   paginationArgs,
@@ -12,16 +17,6 @@ import {
   softDeleteData,
   assertScopeOrNotFound,
 } from "../helpers";
-
-function userBoardWhere(userId: string) {
-  return {
-    deletedAt: null,
-    OR: [
-      { user: userId },
-      { sharedWith: { has: userId } },
-    ],
-  };
-}
 
 export const projectTools = [
   // ── Boards ────────────────────────────────────────────
@@ -205,20 +200,21 @@ export const projectTools = [
     }),
     async handler(
       args: { board?: string; section?: string; user?: string; status?: string; limit: number; offset: number },
-      userId: string
+      _userId: string,
+      user: AuthzUser
     ) {
       const where: any = {
         ...(args.section && { section: args.section }),
         ...(args.user && { user: args.user }),
         ...(args.status && { taskStatus: args.status as any }),
+        // Always constrain to tasks whose parent board the caller can read, and
+        // AND any requested board on top. This is the fix: a supplied board id
+        // can no longer bypass scoping (previously it did).
+        assigned_section: {
+          board_relation: boardReadScopeWhere(user),
+          ...(args.board && { board: args.board }),
+        },
       };
-      if (args.board) {
-        where.assigned_section = { board: args.board };
-      }
-      if (!args.board && !args.section) {
-        // Default: tasks in user's boards
-        where.assigned_section = { board_relation: userBoardWhere(userId) };
-      }
       const [data, total] = await Promise.all([
         prismadb.tasks.findMany({
           where,
@@ -234,7 +230,8 @@ export const projectTools = [
     name: "projects_get_task",
     description: "Get a task by ID with comments and documents",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, _userId: string) {
+    async handler(args: { id: string }, _userId: string, user: AuthzUser) {
+      await assertScopeOrNotFound(() => assertCanReadTask(user, args.id), "Task");
       const task = await prismadb.tasks.findUnique({
         where: { id: args.id },
         include: {
@@ -259,10 +256,12 @@ export const projectTools = [
     }),
     async handler(
       args: { title: string; content?: string; section: string; priority: string; dueDateAt?: string },
-      userId: string
+      _userId: string,
+      user: AuthzUser
     ) {
       const sec = await prismadb.sections.findUnique({ where: { id: args.section } });
       if (!sec) notFound("Section");
+      await assertScopeOrNotFound(() => assertCanWriteBoard(user, sec.board), "Board");
       const maxPos = await prismadb.tasks.aggregate({
         where: { section: args.section },
         _max: { position: true },
@@ -275,9 +274,9 @@ export const projectTools = [
           section: args.section,
           priority: args.priority,
           position: (maxPos._max.position ?? BigInt(0)) + BigInt(1000),
-          user: userId,
-          createdBy: userId,
-          updatedBy: userId,
+          user: user.id,
+          createdBy: user.id,
+          updatedBy: user.id,
           ...(args.dueDateAt && { dueDateAt: new Date(args.dueDateAt) }),
         },
       });
@@ -295,16 +294,15 @@ export const projectTools = [
       dueDateAt: z.string().datetime().optional(),
       taskStatus: z.enum(["ACTIVE", "PENDING", "COMPLETE"]).optional(),
     }),
-    async handler(args: Record<string, any>, userId: string) {
-      const existing = await prismadb.tasks.findUnique({ where: { id: args.id } });
-      if (!existing) notFound("Task");
+    async handler(args: Record<string, any>, _userId: string, user: AuthzUser) {
+      await assertScopeOrNotFound(() => assertCanWriteTask(user, args.id), "Task");
       const { id, dueDateAt, ...rest } = args;
       const task = await prismadb.tasks.update({
         where: { id },
         data: {
           ...rest,
           ...(dueDateAt !== undefined && { dueDateAt: new Date(dueDateAt) }),
-          updatedBy: userId,
+          updatedBy: user.id,
         },
       });
       return itemResponse(task);
@@ -318,17 +316,17 @@ export const projectTools = [
       section: z.string().uuid(),
       position: z.number().int().optional(),
     }),
-    async handler(args: { id: string; section: string; position?: number }, userId: string) {
-      const existing = await prismadb.tasks.findUnique({ where: { id: args.id } });
-      if (!existing) notFound("Task");
+    async handler(args: { id: string; section: string; position?: number }, _userId: string, user: AuthzUser) {
+      await assertScopeOrNotFound(() => assertCanWriteTask(user, args.id), "Task");
       const sec = await prismadb.sections.findUnique({ where: { id: args.section } });
       if (!sec) notFound("Section");
+      await assertScopeOrNotFound(() => assertCanWriteBoard(user, sec.board), "Board");
       const task = await prismadb.tasks.update({
         where: { id: args.id },
         data: {
           section: args.section,
           ...(args.position !== undefined && { position: BigInt(args.position) }),
-          updatedBy: userId,
+          updatedBy: user.id,
         },
       });
       return itemResponse(task);
@@ -338,12 +336,11 @@ export const projectTools = [
     name: "projects_delete_task",
     description: "Soft-delete a task (sets status to COMPLETE)",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, userId: string) {
-      const existing = await prismadb.tasks.findUnique({ where: { id: args.id } });
-      if (!existing) notFound("Task");
+    async handler(args: { id: string }, _userId: string, user: AuthzUser) {
+      await assertScopeOrNotFound(() => assertCanWriteTask(user, args.id), "Task");
       const task = await prismadb.tasks.update({
         where: { id: args.id },
-        data: { taskStatus: "COMPLETE", updatedBy: userId },
+        data: { taskStatus: "COMPLETE", updatedBy: user.id },
       });
       return itemResponse({ id: task.id, status: "COMPLETE" });
     },
