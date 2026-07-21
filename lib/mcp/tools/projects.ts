@@ -6,6 +6,7 @@ import {
   boardReadScopeWhere,
   assertCanReadTask,
   assertCanWriteTask,
+  assertCanReadDocument,
 } from "@/lib/authz";
 import {
   paginationSchema,
@@ -354,11 +355,10 @@ export const projectTools = [
       task: z.string().uuid(),
       comment: z.string().min(1),
     }),
-    async handler(args: { task: string; comment: string }, userId: string) {
-      const existing = await prismadb.tasks.findUnique({ where: { id: args.task } });
-      if (!existing) notFound("Task");
+    async handler(args: { task: string; comment: string }, _userId: string, user: AuthzUser) {
+      await assertScopeOrNotFound(() => assertCanWriteTask(user, args.task), "Task");
       const tc = await prismadb.tasksComments.create({
-        data: { v: 0, task: args.task, comment: args.comment, user: userId },
+        data: { v: 0, task: args.task, comment: args.comment, user: user.id },
       });
       return itemResponse(tc);
     },
@@ -370,7 +370,8 @@ export const projectTools = [
       task: z.string().uuid(),
       ...paginationSchema,
     }),
-    async handler(args: { task: string; limit: number; offset: number }, _userId: string) {
+    async handler(args: { task: string; limit: number; offset: number }, _userId: string, user: AuthzUser) {
+      await assertScopeOrNotFound(() => assertCanReadTask(user, args.task), "Task");
       const where = { task: args.task };
       const [data, total] = await Promise.all([
         prismadb.tasksComments.findMany({
@@ -393,7 +394,9 @@ export const projectTools = [
       task_id: z.string().uuid(),
       document_id: z.string().uuid(),
     }),
-    async handler(args: { task_id: string; document_id: string }, _userId: string) {
+    async handler(args: { task_id: string; document_id: string }, _userId: string, user: AuthzUser) {
+      await assertScopeOrNotFound(() => assertCanWriteTask(user, args.task_id), "Task");
+      await assertScopeOrNotFound(() => assertCanReadDocument(user, args.document_id), "Document");
       await prismadb.documentsToTasks.create({
         data: { task_id: args.task_id, document_id: args.document_id },
       });
