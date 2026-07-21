@@ -2,6 +2,7 @@ import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
 import type { AuthzUser } from "@/lib/authz";
 import {
+  assertCanReadBoard,
   assertCanWriteBoard,
   boardReadScopeWhere,
   assertCanReadTask,
@@ -412,14 +413,18 @@ export const projectTools = [
       board_id: z.string().uuid(),
       watch: z.boolean().default(true),
     }),
-    async handler(args: { board_id: string; watch: boolean }, userId: string) {
+    async handler(args: { board_id: string; watch: boolean }, _userId: string, user: AuthzUser) {
+      // Read gate: board watchers sit only in the read scope, so watching a
+      // readable board grants nothing new; deny self-granting read to a board
+      // the caller cannot see.
+      await assertScopeOrNotFound(() => assertCanReadBoard(user, args.board_id), "Board");
       if (args.watch) {
         await prismadb.boardWatchers.create({
-          data: { board_id: args.board_id, user_id: userId },
+          data: { board_id: args.board_id, user_id: user.id },
         }).catch(() => {}); // Already watching — ignore duplicate
       } else {
         await prismadb.boardWatchers.delete({
-          where: { board_id_user_id: { board_id: args.board_id, user_id: userId } },
+          where: { board_id_user_id: { board_id: args.board_id, user_id: user.id } },
         }).catch(() => {}); // Not watching — ignore
       }
       return itemResponse({ board_id: args.board_id, watching: args.watch });
