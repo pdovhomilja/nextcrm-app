@@ -8,6 +8,7 @@ import {
   isAllowedSmtpPort,
   classifyMailError,
 } from "@/lib/email/imap-safety";
+import { assertPublicHost, HostNotAllowedError } from "@/lib/net/host-guard";
 import Imap from "imap";
 
 async function requireSession() {
@@ -66,6 +67,16 @@ export async function createEmailAccount(input: CreateInput) {
   if (!isAllowedImapPort(input.imapPort)) throw new Error("Unsupported IMAP port");
   if (!isAllowedSmtpPort(input.smtpPort)) throw new Error("Unsupported SMTP port");
 
+  // Store-time SSRF defense: a private/internal mail host cannot even be saved,
+  // protecting the later connect sinks (sendEmail, background sync) at the source.
+  try {
+    await assertPublicHost(input.imapHost);
+    await assertPublicHost(input.smtpHost);
+  } catch (e) {
+    if (e instanceof HostNotAllowedError) throw new Error("Mail host is not allowed");
+    throw e;
+  }
+
   const passwordEncrypted = encrypt(input.password);
   return prismadb.emailAccount.create({
     data: {
@@ -116,15 +127,27 @@ export async function testEmailConnection(
     return { ok: false, error: "Unsupported IMAP port" };
   }
 
+  let pinned: { address: string; hostname: string };
+  try {
+    pinned = await assertPublicHost(input.imapHost);
+  } catch (e) {
+    if (e instanceof HostNotAllowedError) {
+      // Indistinguishable from a real unreachable host — no SSRF oracle.
+      return { ok: false, error: classifyMailError({ message: "ECONNREFUSED" } as Error) };
+    }
+    throw e;
+  }
+
   const connectionPromise = new Promise<{ ok: boolean; error?: string }>((resolve) => {
     const imap = new Imap({
       user: input.username,
       password: input.password,
-      host: input.imapHost,
+      host: pinned.address,
       port: input.imapPort,
       tls: input.imapSsl,
-      // tlsOptions: { rejectUnauthorized: false } intentionally disabled for self-signed cert support
-      tlsOptions: { rejectUnauthorized: false },
+      // Dial the validated IP; keep the hostname for TLS SNI. (rejectUnauthorized
+      // left as-is — TLS verification is a separate workstream.)
+      tlsOptions: { servername: pinned.hostname, rejectUnauthorized: false },
       authTimeout: 8000,
       connTimeout: 8000,
     });
@@ -165,14 +188,24 @@ export async function listImapFolders(
     return { ok: false, error: "Unsupported IMAP port" };
   }
 
+  let pinned: { address: string; hostname: string };
+  try {
+    pinned = await assertPublicHost(input.imapHost);
+  } catch (e) {
+    if (e instanceof HostNotAllowedError) {
+      return { ok: false, error: classifyMailError({ message: "ECONNREFUSED" } as Error) };
+    }
+    throw e;
+  }
+
   return new Promise((resolve) => {
     const imap = new Imap({
       user: input.username,
       password: input.password,
-      host: input.imapHost,
+      host: pinned.address,
       port: input.imapPort,
       tls: input.imapSsl,
-      tlsOptions: { rejectUnauthorized: false },
+      tlsOptions: { servername: pinned.hostname, rejectUnauthorized: false },
       authTimeout: 8000,
       connTimeout: 8000,
     });
