@@ -1,8 +1,22 @@
 # Workstream B — Object-Level Authorization for MCP Project Tools — Design
 
 **Date:** 2026-07-21
-**Status:** Approved (design), pending implementation
+**Status:** Implemented 2026-07-21 (branch `security/workstream-b-mcp-authz`, unpushed; pending final review)
 **Advisory:** GHSA-vq6p-3qj5-p666 (high) — "RBAC Bypass in MCP Project Tools Allows Shared Users to Tamper with Project Boards and Tasks"
+
+## Implementation notes (2026-07-21)
+
+Delivered across 7 commits: the `assertScopeOrNotFound` adapter + first-of-its-kind `lib/mcp/__tests__/` harness, then per-tool-group guards on all 18 `projects.ts` tools, plus deletion of `userBoardWhere`. Coverage sweep: 17/18 tools reference an assert/scope; `create_board` is intentionally auth-only. Gate green: 210 suites / 1133 tests, tsc clean, `pnpm build` succeeds. 66 MCP scope tests across 8 suites (6 new + 2 pre-existing kept green).
+
+Executed inline after the first task: the Agent classifier blocked the security-content subagent dispatches (same pattern as workstream A), so the controller implemented and reviewed each task with TDD (every scope test verified RED against pre-guard code) plus tsc/jest/build as the gate. A final whole-branch review is still owed.
+
+Two implementation lessons worth recording:
+- **helpers.ts must import `AuthorizationError` from the leaf `@/lib/authz/errors`, not the barrel `@/lib/authz`** — the barrel pulls in better-auth (ESM), which breaks any jest suite transitively importing helpers (it broke the two pre-existing MCP suites until fixed in Task 1).
+- **MCP scope tests must surface the real `AuthorizationError` via `jest.requireActual("@/lib/authz/errors")`** — a fresh `class extends Error` fails the adapter's `instanceof` check, so denials would not convert to `NOT_FOUND` and the tests would falsely fail (or, worse in production-shaped code, falsely pass).
+
+Residuals (unchanged from the design, for the final review):
+- **Task-assignee write breadth:** `assertCanWriteTask` grants a `role:"user"` assignee full write; a non-owner assignee can edit a task's title/content via `update_task`, not only its status. Matches the web surface; a field whitelist is a separate cross-surface refinement.
+- **`create_board` visibility:** any authenticated user may create a `visibility:"public"` board; unchanged by this work.
 
 ## Problem
 
