@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
+import type { AuthzUser } from "@/lib/authz";
+import { assertCanWriteBoard, boardReadScopeWhere } from "@/lib/authz";
 import {
   paginationSchema,
   paginationArgs,
@@ -8,6 +10,7 @@ import {
   notFound,
   conflict,
   softDeleteData,
+  assertScopeOrNotFound,
 } from "../helpers";
 
 function userBoardWhere(userId: string) {
@@ -26,8 +29,8 @@ export const projectTools = [
     name: "projects_list_boards",
     description: "List project boards the user owns or is shared with",
     schema: z.object({ ...paginationSchema }),
-    async handler(args: { limit: number; offset: number }, userId: string) {
-      const where = userBoardWhere(userId);
+    async handler(args: { limit: number; offset: number }, _userId: string, user: AuthzUser) {
+      const where = boardReadScopeWhere(user);
       const [data, total] = await Promise.all([
         prismadb.boards.findMany({
           where,
@@ -44,9 +47,9 @@ export const projectTools = [
     name: "projects_get_board",
     description: "Get a project board with its sections and tasks",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, userId: string) {
+    async handler(args: { id: string }, _userId: string, user: AuthzUser) {
       const board = await prismadb.boards.findFirst({
-        where: { id: args.id, ...userBoardWhere(userId) },
+        where: { id: args.id, ...boardReadScopeWhere(user) },
         include: {
           sections: {
             orderBy: { position: "asc" },
@@ -75,7 +78,8 @@ export const projectTools = [
     }),
     async handler(
       args: { title: string; description: string; icon?: string; visibility?: string },
-      userId: string
+      _userId: string,
+      user: AuthzUser
     ) {
       const board = await prismadb.boards.create({
         data: {
@@ -84,9 +88,9 @@ export const projectTools = [
           description: args.description,
           icon: args.icon,
           visibility: args.visibility,
-          user: userId,
-          createdBy: userId,
-          updatedBy: userId,
+          user: user.id,
+          createdBy: user.id,
+          updatedBy: user.id,
         },
       });
       return itemResponse(board);
@@ -102,15 +106,12 @@ export const projectTools = [
       icon: z.string().optional(),
       visibility: z.string().optional(),
     }),
-    async handler(args: Record<string, any>, userId: string) {
-      const existing = await prismadb.boards.findFirst({
-        where: { id: args.id, ...userBoardWhere(userId) },
-      });
-      if (!existing) notFound("Board");
+    async handler(args: Record<string, any>, _userId: string, user: AuthzUser) {
+      await assertScopeOrNotFound(() => assertCanWriteBoard(user, args.id), "Board");
       const { id, ...updateData } = args;
       const board = await prismadb.boards.update({
         where: { id },
-        data: { ...updateData, updatedBy: userId },
+        data: { ...updateData, updatedBy: user.id },
       });
       return itemResponse(board);
     },
@@ -119,14 +120,11 @@ export const projectTools = [
     name: "projects_delete_board",
     description: "Soft-delete a project board (sets deletedAt timestamp)",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, userId: string) {
-      const existing = await prismadb.boards.findFirst({
-        where: { id: args.id, ...userBoardWhere(userId) },
-      });
-      if (!existing) notFound("Board");
+    async handler(args: { id: string }, _userId: string, user: AuthzUser) {
+      await assertScopeOrNotFound(() => assertCanWriteBoard(user, args.id), "Board");
       const board = await prismadb.boards.update({
         where: { id: args.id },
-        data: softDeleteData(userId),
+        data: softDeleteData(user.id),
       });
       return itemResponse({ id: board.id, deletedAt: board.deletedAt });
     },
