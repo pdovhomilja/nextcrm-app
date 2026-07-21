@@ -1,8 +1,20 @@
 # Workstream C — SSRF Host-Guarding for IMAP/SMTP Sinks — Design
 
 **Date:** 2026-07-21
-**Status:** Approved (design), pending implementation
+**Status:** Implemented 2026-07-21 (branch `security/workstream-c-ssrf-hostguard`, forked from `security/quick-fixes-resend-imap`, unpushed; pending final review)
 **Advisory:** GHSA-f5r5-f2v5-74ww (critical) — "Server-Side Request Forgery (SSRF) in nextcrm-app"
+
+## Implementation notes (2026-07-21)
+
+Delivered across 5 commits: `lib/net/ip-rules.ts` (+ `ipaddr.js` 2.4.0), `lib/net/host-guard.ts` (`assertPublicHost`), and host-guarding on all four IMAP/SMTP sink call-sites. Gate green: 211 suites / 1159 tests, tsc clean, `pnpm build` succeeds. Coverage sweep: every `new Imap(`/`createTransport(` with an attacker-controllable host (`accounts.ts` test/discover, `messages.ts` send, `imap-utils.ts` connect) calls `assertPublicHost`; `lib/sendmail.ts` uses `process.env.EMAIL_HOST` (fixed) and is correctly unguarded.
+
+Executed inline (the Agent classifier blocked the security-content dispatches from task 1, as in workstreams A and B), with TDD (every guard test verified RED against pre-guard code) plus tsc/jest/build as the gate. A final whole-branch review is still owed.
+
+Two implementation notes:
+- **`203.0.113.9` (TEST-NET-3) is `reserved`, not public** — `ipaddr.js` correctly refuses RFC 5737 documentation ranges; the test table was corrected to reflect that the guard refuses reserved/documentation space too.
+- **nodemailer `servername`** is added via a typed spread (`...({ servername } as { servername: string })`) so the object literal keeps only well-known SMTP props and TS resolves the SMTP overload — a direct top-level `servername` tripped an excess-property/wrong-overload error that also broke `info.messageId`.
+
+`MAIL_ALLOW_PRIVATE_HOSTS=true` is the documented escape hatch for self-hosters whose mail server is on a private IP. TLS `rejectUnauthorized` deferred, as designed.
 
 ## Problem
 
