@@ -15,6 +15,7 @@ import {
   notFound,
   softDeleteData,
   assertScopeOrNotFound,
+  assertAssignableUser,
 } from "../helpers";
 
 // assertCanWriteContact intentionally ignores deletedAt (the server actions
@@ -158,6 +159,8 @@ export const crmContactTools = [
       position: z.string().optional(),
       // Pass an account id to link, explicit null to unlink. Omit to leave unchanged.
       account: z.string().uuid().nullable().optional(),
+      // Reassign the owner. Use crm_list_users to resolve a person to their ID.
+      assigned_to: z.string().uuid().nullable().optional(),
     }),
     async handler(
       args: {
@@ -169,13 +172,15 @@ export const crmContactTools = [
         mobile_phone?: string;
         position?: string;
         account?: string | null;
+        assigned_to?: string | null;
       },
       userId: string,
       user: AuthzUser
     ) {
       await assertWritableContact(user, args.id);
       if (args.account) await assertLinkableAccount(user, args.account);
-      const { id, account, ...updateData } = args;
+      if (args.assigned_to) await assertAssignableUser(args.assigned_to);
+      const { id, account, assigned_to, ...updateData } = args;
       const contact = await prismadb.crm_Contacts.update({
         where: { id },
         data: {
@@ -183,6 +188,7 @@ export const crmContactTools = [
           // `accountsIDs` is the real relation FK (crm_Contacts.assigned_accounts);
           // the legacy `account` column carries no relation, so the UI ignores it too.
           ...(account !== undefined && { accountsIDs: account }),
+          ...(assigned_to !== undefined && { assigned_to }),
           updatedBy: userId,
         },
       });
