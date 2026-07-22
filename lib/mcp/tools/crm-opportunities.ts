@@ -30,6 +30,17 @@ async function assertLinkableAccount(user: AuthzUser, accountId: string) {
   await assertScopeOrNotFound(() => assertCanWriteAccount(user, accountId), "Account");
 }
 
+// Reassignment targets must be a real, active user. The server action relies on
+// the FK constraint alone; checking here keeps the failure a clean NOT_FOUND
+// instead of a Prisma error, and stops work being parked on a disabled account.
+async function assertAssignableUser(assigneeId: string) {
+  const row = await prismadb.users.findFirst({
+    where: { id: assigneeId, userStatus: "ACTIVE" },
+    select: { id: true },
+  });
+  if (!row) notFound("User");
+}
+
 async function assertLinkableContact(user: AuthzUser, contactId: string) {
   const row = await prismadb.crm_Contacts.findFirst({
     where: { id: contactId, deletedAt: null },
@@ -156,6 +167,8 @@ export const crmOpportunityTools = [
       // Pass an id to link, explicit null to unlink. Omit to leave unchanged.
       account: z.string().uuid().nullable().optional(),
       contact: z.string().uuid().nullable().optional(),
+      // Reassign the owner. Use crm_list_users to resolve a person to their ID.
+      assigned_to: z.string().uuid().nullable().optional(),
     }),
     async handler(
       args: {
@@ -169,6 +182,7 @@ export const crmOpportunityTools = [
         next_step?: string;
         account?: string | null;
         contact?: string | null;
+        assigned_to?: string | null;
       },
       userId: string,
       user: AuthzUser
@@ -179,8 +193,18 @@ export const crmOpportunityTools = [
       );
       if (args.account) await assertLinkableAccount(user, args.account);
       if (args.contact) await assertLinkableContact(user, args.contact);
-      const { id, budget, expected_revenue, close_date, currency, account, contact, ...rest } =
-        args;
+      if (args.assigned_to) await assertAssignableUser(args.assigned_to);
+      const {
+        id,
+        budget,
+        expected_revenue,
+        close_date,
+        currency,
+        account,
+        contact,
+        assigned_to,
+        ...rest
+      } = args;
       const opp = await prismadb.crm_Opportunities.update({
         where: { id },
         data: {
@@ -191,6 +215,7 @@ export const crmOpportunityTools = [
           ...(close_date !== undefined && { close_date: new Date(close_date) }),
           ...(account !== undefined && { account }),
           ...(contact !== undefined && { contact }),
+          ...(assigned_to !== undefined && { assigned_to }),
           updatedBy: userId,
         },
       });
