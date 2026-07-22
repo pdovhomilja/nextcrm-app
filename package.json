@@ -133,7 +133,7 @@
     "react-youtube": "^10.1.0",
     "recharts": "2.15.4",
     "resend": "6.9.2",
-    "sharp": "^0.34.5",
+    "sharp": "^0.35.0",
     "sonner": "^2.0.7",
     "swr": "^2.4.0",
     "tailwind-merge": "^3.5.0",
