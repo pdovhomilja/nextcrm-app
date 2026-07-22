@@ -391,6 +391,101 @@ export async function assertCanReadTargetList(
   if (!row) throw new AuthorizationError();
 }
 
+// ── Write-scope asserts (Workstream A — GHSA-qwhm-9fcm-p878) ─────────────────
+// Mirror assertCanWriteAccount: admin/manager unrestricted; user scoped to the
+// model's ownership columns. Exact columns differ per model — see each helper.
+
+export async function assertCanWriteLead(
+  user: AuthzUser,
+  leadId: string,
+): Promise<void> {
+  const where =
+    user.role === "admin" || user.role === "manager"
+      ? { id: leadId, deletedAt: null }
+      : { id: leadId, deletedAt: null, OR: [{ assigned_to: user.id }, { createdBy: user.id }] };
+  const row = await prismadb.crm_Leads.findFirst({ where, select: { id: true } });
+  if (!row) throw new AuthorizationError();
+}
+
+export async function assertCanWriteOpportunity(
+  user: AuthzUser,
+  opportunityId: string,
+): Promise<void> {
+  const where =
+    user.role === "admin" || user.role === "manager"
+      ? { id: opportunityId, deletedAt: null }
+      : { id: opportunityId, deletedAt: null, OR: [{ assigned_to: user.id }, { createdBy: user.id }] };
+  const row = await prismadb.crm_Opportunities.findFirst({ where, select: { id: true } });
+  if (!row) throw new AuthorizationError();
+}
+
+export async function assertCanWriteContract(
+  user: AuthzUser,
+  contractId: string,
+): Promise<void> {
+  const where =
+    user.role === "admin" || user.role === "manager"
+      ? { id: contractId, deletedAt: null }
+      : { id: contractId, deletedAt: null, OR: [{ assigned_to: user.id }, { createdBy: user.id }] };
+  const row = await prismadb.crm_Contracts.findFirst({ where, select: { id: true } });
+  if (!row) throw new AuthorizationError();
+}
+
+// crm_TargetLists has NO assigned_to — ownership is created_by only.
+export async function assertCanWriteTargetList(
+  user: AuthzUser,
+  listId: string,
+): Promise<void> {
+  const where =
+    user.role === "admin" || user.role === "manager"
+      ? { id: listId, deletedAt: null }
+      : { id: listId, deletedAt: null, created_by: user.id };
+  const row = await prismadb.crm_TargetLists.findFirst({ where, select: { id: true } });
+  if (!row) throw new AuthorizationError();
+}
+
+// crm_Accounts_Tasks has NO deletedAt (hard delete). Ownership = creator or assignee.
+// NOTE: this covers creator/assignee. Broadening to parent-account writers is a
+// deliberate, safe narrowing deferred here (it would only widen access).
+export async function assertCanWriteCrmTask(
+  user: AuthzUser,
+  taskId: string,
+): Promise<void> {
+  const where =
+    user.role === "admin" || user.role === "manager"
+      ? { id: taskId }
+      : { id: taskId, OR: [{ createdBy: user.id }, { user: user.id }] };
+  const row = await prismadb.crm_Accounts_Tasks.findFirst({ where, select: { id: true } });
+  if (!row) throw new AuthorizationError();
+}
+
+// Line items carry no ownership column; authority is the parent opportunity/contract
+// (correct because a line-item write recomputes the parent's totals). Resolve the
+// parent id from the line-item row, then delegate to the parent write assert.
+export async function assertCanWriteOpportunityLineItem(
+  user: AuthzUser,
+  lineItemId: string,
+): Promise<void> {
+  const row = await prismadb.crm_OpportunityLineItems.findUnique({
+    where: { id: lineItemId },
+    select: { opportunityId: true },
+  });
+  if (!row) throw new AuthorizationError();
+  await assertCanWriteOpportunity(user, row.opportunityId);
+}
+
+export async function assertCanWriteContractLineItem(
+  user: AuthzUser,
+  lineItemId: string,
+): Promise<void> {
+  const row = await prismadb.crm_ContractLineItems.findUnique({
+    where: { id: lineItemId },
+    select: { contractId: true },
+  });
+  if (!row) throw new AuthorizationError();
+  await assertCanWriteContract(user, row.contractId);
+}
+
 // ---------------------------------------------------------------------------
 // E3.T1: Document read/write scope helpers (linked-entity aware).
 // Documents have multi-faceted ownership: created_by_user, createdBy (legacy),

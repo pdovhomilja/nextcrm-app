@@ -1,20 +1,36 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/audit-log";
 import { revalidatePath } from "next/cache";
 import { sumLineTotals } from "@/lib/line-items";
+import {
+  requireAuthenticated,
+  assertCanWriteContract,
+  assertCanReadOpportunity,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export const copyLineItemsFromOpportunity = async (
   contractId: string,
   opportunityId: string
 ) => {
-  const session = await getSession();
-  if (!session?.user?.id) {
-    return { error: "Unauthorized" };
+  // Dual guard: write on the destination contract, read on the source opportunity.
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
   }
-
-  const userId = session.user.id;
+  try {
+    await assertCanWriteContract(user, contractId);
+    await assertCanReadOpportunity(user, opportunityId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
+  const userId = user.id;
 
   try {
     const [contract, opportunity] = await Promise.all([

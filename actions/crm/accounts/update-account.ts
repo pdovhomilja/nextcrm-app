@@ -1,9 +1,14 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { inngest } from "@/inngest/client";
 import { writeAuditLog, diffObjects } from "@/lib/audit-log";
+import {
+  requireAuthenticated,
+  assertCanWriteAccount,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export const updateAccount = async (data: {
   id: string;
@@ -31,11 +36,22 @@ export const updateAccount = async (data: {
   member_of?: string | null;
   industry?: string;
 }) => {
-  const session = await getSession();
-  if (!session) return { error: "Unauthorized" };
-
   const { id, ...rest } = data;
   if (!id) return { error: "id is required" };
+
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
+  try {
+    await assertCanWriteAccount(user, id);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
 
   try {
     const before = await prismadb.crm_Accounts.findUnique({ where: { id, deletedAt: null } });
@@ -43,7 +59,7 @@ export const updateAccount = async (data: {
       where: { id },
       data: {
         v: 0,
-        updatedBy: session.user.id,
+        updatedBy: user.id,
         ...rest,
       },
     });
@@ -56,7 +72,7 @@ export const updateAccount = async (data: {
       entityId: account.id,
       action: "updated",
       changes,
-      userId: session.user.id,
+      userId: user.id,
     });
     void inngest.send({ name: "crm/account.saved", data: { record_id: account.id } });
     revalidatePath("/[locale]/(routes)/crm/accounts", "page");

@@ -1,10 +1,15 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import sendEmail from "@/lib/sendmail";
 import { inngest } from "@/inngest/client";
 import { writeAuditLog, diffObjects } from "@/lib/audit-log";
+import {
+  requireAuthenticated,
+  assertCanWriteLead,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export const updateLead = async (data: {
   id: string;
@@ -23,10 +28,6 @@ export const updateLead = async (data: {
   assigned_to?: string;
   accountIDs?: string;
 }) => {
-  const session = await getSession();
-  if (!session) return { error: "Unauthorized" };
-
-  const userId = session.user.id;
   const {
     id,
     firstName,
@@ -46,6 +47,21 @@ export const updateLead = async (data: {
   } = data;
 
   if (!id) return { error: "id is required" };
+
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
+  try {
+    await assertCanWriteLead(user, id);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
+  const userId = user.id;
 
   try {
     const before = await prismadb.crm_Leads.findUnique({ where: { id, deletedAt: null } });
@@ -98,7 +114,7 @@ export const updateLead = async (data: {
       entityId: lead.id,
       action: "updated",
       changes,
-      userId: session.user.id,
+      userId: user.id,
     });
     void inngest.send({ name: "crm/lead.saved", data: { record_id: lead.id } });
     revalidatePath("/[locale]/(routes)/crm/leads", "page");

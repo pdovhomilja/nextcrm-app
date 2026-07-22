@@ -1,20 +1,36 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { inngest } from "@/inngest/client";
 import { writeAuditLog } from "@/lib/audit-log";
 import { convertTarget } from "./convert-target";
 import { handleStageTransition } from "@/lib/crm/stage-transition";
+import {
+  requireAuthenticated,
+  assertCanWriteTarget,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export async function convertTargetToDeal(
   targetId: string
 ): Promise<
   { accountId: string; contactId: string; opportunityId: string } | { error: string }
 > {
-  const session = await getSession();
-  if (!session) return { error: "Unauthorized" };
-  const userId = (session.user as any).id;
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
+  try {
+    await assertCanWriteTarget(user, targetId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
+  const userId = user.id;
 
   const converted = await convertTarget(targetId);
   if ("error" in converted) return converted;

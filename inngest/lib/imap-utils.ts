@@ -1,5 +1,6 @@
 import Imap from "imap";
 import { simpleParser } from "mailparser";
+import { assertPublicHost } from "@/lib/net/host-guard";
 
 export type ImapAccount = {
   username: string;
@@ -21,15 +22,18 @@ export type ParsedHeader = {
 };
 
 /** Open a connection and resolve when ready. Caller is responsible for imap.end(). */
-export function connectImap(account: ImapAccount): Promise<Imap> {
+export async function connectImap(account: ImapAccount): Promise<Imap> {
+  const pinned = await assertPublicHost(account.imapHost);
   return new Promise((resolve, reject) => {
     const imap = new Imap({
       user: account.username,
       password: account.password,
-      host: account.imapHost,
+      host: pinned.address,
       port: account.imapPort,
       tls: account.imapSsl,
-      tlsOptions: { rejectUnauthorized: false },
+      // Dial the validated IP; keep the hostname for TLS SNI. (rejectUnauthorized
+      // left as-is — TLS verification is a separate workstream.)
+      tlsOptions: { servername: account.imapHost, rejectUnauthorized: false },
       authTimeout: 15000,
       connTimeout: 15000,
     });

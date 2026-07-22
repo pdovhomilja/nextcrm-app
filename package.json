@@ -101,6 +101,7 @@
     "imap": "^0.8.19",
     "inngest": "^4.0.2",
     "input-otp": "^1.4.2",
+    "ipaddr.js": "^2.4.0",
     "jotai": "^2.18.0",
     "lucide-react": "^0.574.0",
     "mailparser": "^3.9.3",

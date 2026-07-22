@@ -1,14 +1,28 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/audit-log";
 import { revalidatePath } from "next/cache";
 import { sumLineTotals } from "@/lib/line-items";
+import {
+  requireAuthenticated,
+  assertCanWriteOpportunityLineItem,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export const removeOpportunityLineItem = async (id: string) => {
-  const session = await getSession();
-  if (!session?.user?.id) {
-    return { error: "Unauthorized" };
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
+  try {
+    await assertCanWriteOpportunityLineItem(user, id);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
   }
 
   try {
@@ -35,7 +49,7 @@ export const removeOpportunityLineItem = async (id: string) => {
       entityId: id,
       action: "deleted",
       changes: null,
-      userId: session.user.id,
+      userId: user.id,
     });
 
     revalidatePath("/[locale]/(routes)/crm/opportunities/[opportunityId]", "page");
