@@ -1,6 +1,4 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
-
 import { prismadb } from "@/lib/prisma";
 import { CreateNewContract } from "./schema";
 import { InputType, ReturnType } from "./types";
@@ -8,28 +6,14 @@ import { InputType, ReturnType } from "./types";
 import { createSafeAction } from "@/lib/create-safe-action";
 import { writeAuditLog } from "@/lib/audit-log";
 import { getSnapshotRate, getDefaultCurrency } from "@/lib/currency";
+import {
+  requireAuthenticated,
+  assertCanWriteAccount,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 const handler = async (data: InputType): Promise<ReturnType> => {
-  const session = await getSession();
-
-  if (!session?.user?.email) {
-    return {
-      error: "User not logged in.",
-    };
-  }
-
-  const user = await prismadb.users.findUnique({
-    where: {
-      email: session?.user?.email,
-    },
-  });
-
-  if (!user) {
-    return {
-      error: "User not found.",
-    };
-  }
-
   const {
     title,
     value,
@@ -48,6 +32,21 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     return {
       error: "Please fill in all the required fields.",
     };
+  }
+
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "User not logged in." };
+    throw e;
+  }
+  try {
+    // Parent-write: attaching the contract to an account requires write on it.
+    if (account) await assertCanWriteAccount(user, account);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
   }
 
   try {

@@ -1,0 +1,75 @@
+# Local development support services for nextcrm-dev.
+#
+# This is NOT the full containerized stack — that lives in docker-compose.yml
+# and runs the app in Docker too. This file supports the workflow where you
+# run `pnpm dev` on the host and only the supporting services are containerized.
+#
+#   pnpm db:up          # start Postgres (localhost:5433)
+#   pnpm inngest:up     # start everything in this file (Inngest + Postgres)
+#   pnpm dev            # then run the app on the host
+#
+# Inngest dashboard: http://localhost:8288
+# Postgres:          postgresql://nextcrm:nextcrm@localhost:5433/nextcrm
+
+name: nextcrm-dev
+
+services:
+  # --- Inngest Dev Server ---
+  inngest:
+    image: inngest/inngest:latest
+    container_name: nextcrm-dev-inngest
+    restart: unless-stopped
+    command:
+      - inngest
+      - dev
+      # Persist run/event history across restarts (writes to /.inngest/main.db).
+      - --persist
+      # Auto-discovery scans common ports (3000-3010, 8000, 8080, 5173, ...)
+      # and would register OTHER local projects' Inngest apps, then execute
+      # their functions from this server. Keep it off and sync only nextcrm.
+      - --no-discovery
+      - -u
+      - http://host.docker.internal:3000/api/inngest
+    ports:
+      # Dashboard + event API. The connect gateway (8289) is deliberately not
+      # published: the app uses HTTP serve (app/api/inngest/route.ts), not
+      # connect mode, and 8289 is already taken by another local project.
+      - "8288:8288"
+    volumes:
+      - inngest_data:/.inngest
+    extra_hosts:
+      # Redundant on Docker Desktop, required on Linux. Keeps the file portable.
+      - "host.docker.internal:host-gateway"
+    # No healthcheck: the image ships no HTTP client (no curl/wget/nc), and
+    # nothing depends on this service being ready.
+
+  # --- PostgreSQL (pgvector) for local host-dev ---
+  # Separate from docker-compose.yml's postgres: that one belongs to the full
+  # containerised stack and deliberately does not publish a host port. This one
+  # is published so `pnpm dev` on the host can reach it, and uses its own volume
+  # so the two workflows never share state.
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: nextcrm-dev-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nextcrm
+      POSTGRES_PASSWORD: nextcrm
+      POSTGRES_DB: nextcrm
+    ports:
+      # 5433 on the host: 5432 is left free for any system Postgres.
+      # Bound to loopback only (not 0.0.0.0): credentials are the throwaway
+      # nextcrm/nextcrm pair above, so this must not be reachable from the
+      # LAN/VPN/any other network interface — only from this machine.
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nextcrm -d nextcrm"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  inngest_data:
+  postgres_dev_data:

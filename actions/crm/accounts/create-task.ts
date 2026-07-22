@@ -5,6 +5,12 @@ import { revalidatePath } from "next/cache";
 import resendHelper from "@/lib/resend";
 import NewTaskFromCRMEmail from "@/emails/NewTaskFromCRM";
 import NewTaskFromCRMToWatchersEmail from "@/emails/NewTaskFromCRMToWatchers";
+import {
+  requireAuthenticated,
+  assertCanWriteAccount,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export const createTask = async (data: {
   title: string;
@@ -14,6 +20,8 @@ export const createTask = async (data: {
   account: string;
   dueDateAt?: Date;
 }) => {
+  // getSession stays for the notification-email fields (name, userLanguage)
+  // that the AuthzUser does not carry.
   const session = await getSession();
   if (!session) return { error: "Unauthorized" };
 
@@ -21,6 +29,21 @@ export const createTask = async (data: {
 
   if (!title || !user || !priority || !content || !account) {
     return { error: "Missing one of the task data" };
+  }
+
+  // Parent-write: creating a task under an account requires write on that account.
+  let authUser;
+  try {
+    authUser = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
+  try {
+    await assertCanWriteAccount(authUser, account);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
   }
 
   let resend;
@@ -39,8 +62,10 @@ export const createTask = async (data: {
         content,
         account,
         dueDateAt,
-        createdBy: user,
-        updatedBy: user,
+        // createdBy/updatedBy = the authenticated caller (was previously the
+        // spoofable input `user` field); `user` remains the task assignee.
+        createdBy: authUser.id,
+        updatedBy: authUser.id,
         user,
         taskStatus: "ACTIVE",
       },

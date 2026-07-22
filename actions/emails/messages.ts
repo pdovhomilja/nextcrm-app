@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth-server";
 
 import { prismadb } from "@/lib/prisma";
 import { decrypt } from "@/lib/email-crypto";
+import { assertPublicHost, HostNotAllowedError } from "@/lib/net/host-guard";
 import nodemailer from "nodemailer";
 import { EmailFolder } from "@prisma/client";
 
@@ -162,13 +163,25 @@ export async function sendEmail(input: SendInput) {
   });
   if (!account) throw new Error("Account not found");
 
+  let pinned: { address: string; hostname: string };
+  try {
+    pinned = await assertPublicHost(account.smtpHost);
+  } catch (e) {
+    if (e instanceof HostNotAllowedError) throw new Error("Mail host is not allowed");
+    throw e;
+  }
+
   const password = decrypt(account.passwordEncrypted);
 
   const transporter = nodemailer.createTransport({
-    host: account.smtpHost,
+    host: pinned.address,
     port: account.smtpPort,
     secure: account.smtpSsl,
     auth: { user: account.username, pass: password },
+    // servername for TLS SNI (host is a pinned IP). Added via a typed spread so
+    // the object literal keeps only the well-known SMTP props and TS resolves the
+    // SMTP overload correctly.
+    ...({ servername: account.smtpHost } as { servername: string }),
   });
 
   const info = await transporter.sendMail({

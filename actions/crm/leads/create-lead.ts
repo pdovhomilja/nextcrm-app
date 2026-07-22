@@ -1,10 +1,15 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import sendEmail from "@/lib/sendmail";
 import { inngest } from "@/inngest/client";
 import { writeAuditLog } from "@/lib/audit-log";
+import {
+  requireAuthenticated,
+  assertCanWriteAccount,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export const createLead = async (data: {
   first_name?: string;
@@ -22,10 +27,6 @@ export const createLead = async (data: {
   assigned_to?: string;
   accountIDs?: string;
 }) => {
-  const session = await getSession();
-  if (!session) return { error: "Unauthorized" };
-
-  const userId = session.user.id;
   const {
     first_name,
     last_name,
@@ -42,6 +43,22 @@ export const createLead = async (data: {
     assigned_to,
     accountIDs,
   } = data;
+
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
+  try {
+    // Parent-write: linking the new lead to an account requires write on it.
+    if (accountIDs) await assertCanWriteAccount(user, accountIDs);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
+  const userId = user.id;
 
   try {
     const lead = await prismadb.crm_Leads.create({
@@ -92,7 +109,7 @@ export const createLead = async (data: {
       entityId: lead.id,
       action: "created",
       changes: null,
-      userId: session.user.id,
+      userId: user.id,
     });
     void inngest.send({ name: "crm/lead.saved", data: { record_id: lead.id } });
     revalidatePath("/[locale]/(routes)/crm/leads", "page");

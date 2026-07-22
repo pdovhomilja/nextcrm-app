@@ -1,14 +1,14 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
-
 import { prismadb } from "@/lib/prisma";
 import { parseSpreadsheetFile } from "@/lib/spreadsheet/parse";
+import { requireAuthenticated } from "@/lib/authz";
 
 export async function importTargets(
   formData: FormData
 ): Promise<{ imported: number; skipped: number; errors: string[] }> {
-  const session = await getSession();
-  if (!session) throw new Error("Unauthorized");
+  // Plain bulk create; rows are owned by the importer. requireAuthenticated
+  // throws on no session, matching this function's throw-based contract.
+  const user = await requireAuthenticated();
 
   const file = formData.get("file") as File | null;
   if (!file) throw new Error("No file provided");
@@ -65,7 +65,7 @@ export async function importTargets(
       industry: row.industry || null,
       employees: row.employees || null,
       description: row.description || null,
-      created_by: (session.user as any).id,
+      created_by: user.id,
     });
   });
 

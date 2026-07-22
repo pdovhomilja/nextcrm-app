@@ -1,13 +1,30 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { junctionTableHelpers } from "@/lib/junction-helpers";
+import {
+  requireAuthenticated,
+  assertCanWriteAccount,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export const unwatchAccount = async (accountId: string) => {
-  const session = await getSession();
-  if (!session) return { error: "Unauthorized" };
-
   if (!accountId) return { error: "accountId is required" };
+
+  // Symmetric with watchAccount: watcher membership is write-scoped.
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
+  try {
+    await assertCanWriteAccount(user, accountId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
 
   try {
     await prismadb.crm_Accounts.update({
@@ -15,7 +32,7 @@ export const unwatchAccount = async (accountId: string) => {
       data: {
         watchers: junctionTableHelpers.removeAccountWatcher(
           accountId,
-          session.user.id
+          user.id
         ),
       },
     });

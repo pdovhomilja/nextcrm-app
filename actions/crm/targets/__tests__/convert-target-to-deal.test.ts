@@ -1,4 +1,13 @@
 jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
+// convertTargetToDeal now resolves the caller via requireAuthenticated and
+// guards on assertCanWriteTarget; those are pass-through here (the guard itself
+// is covered by targets-write-scope.test.ts).
+jest.mock("@/lib/authz", () => ({
+  requireAuthenticated: jest.fn(),
+  assertCanWriteTarget: jest.fn(),
+  AuthenticationError: class AuthenticationError extends Error {},
+  AuthorizationError: class AuthorizationError extends Error {},
+}));
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
     crm_Targets: { findFirst: jest.fn() },
@@ -19,6 +28,11 @@ jest.mock("@/actions/crm/targets/convert-target", () => ({
 import { prismadb } from "@/lib/prisma";
 import { inngest } from "@/inngest/client";
 import { getSession } from "@/lib/auth-server";
+import {
+  requireAuthenticated,
+  assertCanWriteTarget,
+  AuthenticationError,
+} from "@/lib/authz";
 import { convertTarget } from "@/actions/crm/targets/convert-target";
 import { convertTargetToDeal } from "@/actions/crm/targets/convert-target-to-deal";
 
@@ -26,10 +40,12 @@ describe("convertTargetToDeal", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (getSession as jest.Mock).mockResolvedValue({ user: { id: "u1" } });
+    (requireAuthenticated as jest.Mock).mockResolvedValue({ id: "u1", role: "admin" });
+    (assertCanWriteTarget as jest.Mock).mockResolvedValue(undefined);
   });
 
   it("unauthenticated returns Unauthorized", async () => {
-    (getSession as jest.Mock).mockResolvedValue(null);
+    (requireAuthenticated as jest.Mock).mockRejectedValue(new AuthenticationError());
     expect(await convertTargetToDeal("t1")).toEqual({ error: "Unauthorized" });
     expect(convertTarget).not.toHaveBeenCalled();
   });
