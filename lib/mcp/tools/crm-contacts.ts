@@ -1,5 +1,11 @@
 import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
+import type { AuthzUser } from "@/lib/authz";
+import {
+  contactReadScopeWhere,
+  assertCanWriteContact,
+  assertCanWriteAccount,
+} from "@/lib/authz/scopes/crm";
 import {
   paginationSchema,
   paginationArgs,
@@ -8,15 +14,41 @@ import {
   ilike,
   notFound,
   softDeleteData,
+  assertScopeOrNotFound,
 } from "../helpers";
+
+// assertCanWriteContact intentionally ignores deletedAt (the server actions
+// guard it separately), so the MCP write path keeps its own soft-delete check.
+async function assertWritableContact(user: AuthzUser, contactId: string) {
+  const row = await prismadb.crm_Contacts.findFirst({
+    where: { id: contactId, deletedAt: null },
+    select: { id: true },
+  });
+  if (!row) notFound("Contact");
+  await assertScopeOrNotFound(() => assertCanWriteContact(user, contactId), "Contact");
+}
+
+// Relinking a contact to an account is a parent write — mirrors update-contact.ts.
+async function assertLinkableAccount(user: AuthzUser, accountId: string) {
+  const row = await prismadb.crm_Accounts.findFirst({
+    where: { id: accountId, deletedAt: null },
+    select: { id: true },
+  });
+  if (!row) notFound("Account");
+  await assertScopeOrNotFound(() => assertCanWriteAccount(user, accountId), "Account");
+}
 
 export const crmContactTools = [
   {
     name: "crm_list_contacts",
-    description: "List CRM contacts assigned to the authenticated user",
+    description: "List CRM contacts visible to the authenticated user",
     schema: z.object({ ...paginationSchema }),
-    async handler(args: { limit: number; offset: number }, userId: string) {
-      const where = { assigned_to: userId, deletedAt: null };
+    async handler(
+      args: { limit: number; offset: number },
+      _userId: string,
+      user: AuthzUser
+    ) {
+      const where = contactReadScopeWhere(user);
       const [data, total] = await Promise.all([
         prismadb.crm_Contacts.findMany({
           where,
@@ -30,11 +62,11 @@ export const crmContactTools = [
   },
   {
     name: "crm_get_contact",
-    description: "Get a single CRM contact by ID",
+    description: "Get a single CRM contact by ID (visible to the authenticated user)",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, userId: string) {
+    async handler(args: { id: string }, _userId: string, user: AuthzUser) {
       const contact = await prismadb.crm_Contacts.findFirst({
-        where: { id: args.id, assigned_to: userId, deletedAt: null },
+        where: { id: args.id, ...contactReadScopeWhere(user) },
       });
       if (!contact) notFound("Contact");
       return itemResponse(contact);
@@ -42,21 +74,28 @@ export const crmContactTools = [
   },
   {
     name: "crm_search_contacts",
-    description: "Search contacts by name, email, or phone (substring match)",
+    description:
+      "Search contacts visible to the authenticated user by name, email, or phone (substring match)",
     schema: z.object({ query: z.string().min(1), ...paginationSchema }),
     async handler(
       args: { query: string; limit: number; offset: number },
-      userId: string
+      _userId: string,
+      user: AuthzUser
     ) {
+      // The read scope itself may carry an `OR`; nest the search terms under
+      // `AND` so they intersect the scope instead of replacing it.
       const where = {
-        assigned_to: userId,
-        deletedAt: null,
-        OR: [
-          ilike("first_name", args.query),
-          ilike("last_name", args.query),
-          ilike("email", args.query),
-          ilike("office_phone", args.query),
-          ilike("mobile_phone", args.query),
+        ...contactReadScopeWhere(user),
+        AND: [
+          {
+            OR: [
+              ilike("first_name", args.query),
+              ilike("last_name", args.query),
+              ilike("email", args.query),
+              ilike("office_phone", args.query),
+              ilike("mobile_phone", args.query),
+            ],
+          },
         ],
       };
       const [data, total] = await Promise.all([
@@ -117,6 +156,8 @@ export const crmContactTools = [
       office_phone: z.string().optional(),
       mobile_phone: z.string().optional(),
       position: z.string().optional(),
+      // Pass an account id to link, explicit null to unlink. Omit to leave unchanged.
+      account: z.string().uuid().nullable().optional(),
     }),
     async handler(
       args: {
@@ -127,17 +168,23 @@ export const crmContactTools = [
         office_phone?: string;
         mobile_phone?: string;
         position?: string;
+        account?: string | null;
       },
-      userId: string
+      userId: string,
+      user: AuthzUser
     ) {
-      const existing = await prismadb.crm_Contacts.findFirst({
-        where: { id: args.id, assigned_to: userId, deletedAt: null },
-      });
-      if (!existing) notFound("Contact");
-      const { id, ...updateData } = args;
+      await assertWritableContact(user, args.id);
+      if (args.account) await assertLinkableAccount(user, args.account);
+      const { id, account, ...updateData } = args;
       const contact = await prismadb.crm_Contacts.update({
         where: { id },
-        data: { ...updateData, updatedBy: userId },
+        data: {
+          ...updateData,
+          // `accountsIDs` is the real relation FK (crm_Contacts.assigned_accounts);
+          // the legacy `account` column carries no relation, so the UI ignores it too.
+          ...(account !== undefined && { accountsIDs: account }),
+          updatedBy: userId,
+        },
       });
       return itemResponse(contact);
     },
@@ -146,11 +193,8 @@ export const crmContactTools = [
     name: "crm_delete_contact",
     description: "Soft-delete a CRM contact by ID (sets deletedAt timestamp)",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, userId: string) {
-      const existing = await prismadb.crm_Contacts.findFirst({
-        where: { id: args.id, assigned_to: userId, deletedAt: null },
-      });
-      if (!existing) notFound("Contact");
+    async handler(args: { id: string }, userId: string, user: AuthzUser) {
+      await assertWritableContact(user, args.id);
       const contact = await prismadb.crm_Contacts.update({
         where: { id: args.id },
         data: softDeleteData(userId),
