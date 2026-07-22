@@ -5,6 +5,49 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.18.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.17.0...v0.18.0) (2026-07-22)
+
+
+### Added
+
+* **admin:** mount Resend service card at /admin/services ([3c552db](https://github.com/pdovhomilja/nextcrm-app/commit/3c552dba846415cbaeb267474f56afa95d84cac5))
+* **authz:** object-level authorization on account write actions ([69edcfe](https://github.com/pdovhomilja/nextcrm-app/commit/69edcfea75ec2af1565a54424b93ac17fae72621))
+* **authz:** object-level authorization on contact write actions ([c08d61b](https://github.com/pdovhomilja/nextcrm-app/commit/c08d61be5782aa452c1516facea8c98ecccc110c))
+* **authz:** object-level authorization on contract write actions ([12750da](https://github.com/pdovhomilja/nextcrm-app/commit/12750dae561e15add52ef62d0bdfefd55b6288eb))
+* **authz:** object-level authorization on CRM task write actions ([8be1abb](https://github.com/pdovhomilja/nextcrm-app/commit/8be1abb88516555c8779fdca0cbe4c7adaf15a36))
+* **authz:** object-level authorization on lead write actions ([747d9dc](https://github.com/pdovhomilja/nextcrm-app/commit/747d9dc3c56ee97fd278758e79f6744a8fd6ebec))
+* **authz:** object-level authorization on opportunity write actions ([c0c8379](https://github.com/pdovhomilja/nextcrm-app/commit/c0c837913aff65ccaede4deb36c4dc5611c564ff))
+* **authz:** object-level authorization on target write actions ([522ac83](https://github.com/pdovhomilja/nextcrm-app/commit/522ac832b9bf5b8b4fcf13cbeb12685596e09e53))
+* **authz:** object-level authorization on target-list write actions ([a748ef1](https://github.com/pdovhomilja/nextcrm-app/commit/a748ef1f124ebde27a5e07aeac0d65b4084d262b))
+* **authz:** parent-scoped authorization on contract line-items ([cad5741](https://github.com/pdovhomilja/nextcrm-app/commit/cad57416c5cefe2a723adf7c7c74b3b296a101fc))
+* **authz:** parent-scoped authorization on opportunity line-items ([a973962](https://github.com/pdovhomilja/nextcrm-app/commit/a973962deb106897e591169aa98312fd830cec15))
+* **authz:** write-scope asserts for lead, opportunity, contract, target-list, crm-task, line-items ([4eead0e](https://github.com/pdovhomilja/nextcrm-app/commit/4eead0e6ee22e5112e3dcf548bc7854f02624de9))
+* **dev:** Inngest dev server via docker-compose.dev.yml for host development ([7596978](https://github.com/pdovhomilja/nextcrm-app/commit/7596978289202d402246f27b47c2e3c15bc786c8))
+* **dev:** local pgvector Postgres service for host development ([c28e2d4](https://github.com/pdovhomilja/nextcrm-app/commit/c28e2d41394889682b56f8f8210174cfd8375c20))
+* **dev:** point DATABASE_URL at local Postgres, add db:migrate ([0e9b69c](https://github.com/pdovhomilja/nextcrm-app/commit/0e9b69c1268a1081c98a7dd7c921556bf22e6485))
+* **dev:** seed local database, add db:seed and db:reset ([8f4f415](https://github.com/pdovhomilja/nextcrm-app/commit/8f4f41520df2350bee74640209d8bac70be85c14))
+* **mcp:** assertScopeOrNotFound adapter for object-level tool authorization ([d9e12d2](https://github.com/pdovhomilja/nextcrm-app/commit/d9e12d270a0b01477421d44a335ff52a517ce7b9))
+* **mcp:** object-level authorization on project board tools ([df19c69](https://github.com/pdovhomilja/nextcrm-app/commit/df19c69fc49a2829dc04baae812a4bfe5a2cde14))
+* **mcp:** object-level authorization on project comment + document-link tools ([b8d967c](https://github.com/pdovhomilja/nextcrm-app/commit/b8d967cf2bc7b078e289ccb94280a300c3de9d78))
+* **mcp:** object-level authorization on project section tools ([a5faf98](https://github.com/pdovhomilja/nextcrm-app/commit/a5faf98d8362f10a5f7ae2ca5877ae47bd28ff0e))
+* **mcp:** object-level authorization on project task tools; drop userBoardWhere ([f36e85a](https://github.com/pdovhomilja/nextcrm-app/commit/f36e85a2dc0f96c8af19bd68cf6818fd440ee462))
+* **mcp:** read-scoped authorization on project watch_board (escalation fix) ([7f6d2f8](https://github.com/pdovhomilja/nextcrm-app/commit/7f6d2f83a2b1e6f19fc9445cdb4989141ab5e1fb))
+* **net:** assertPublicHost — resolve-validate-pin guard against SSRF/DNS-rebinding ([e4f8e95](https://github.com/pdovhomilja/nextcrm-app/commit/e4f8e954248f2484341c31f5bfc8d0bb9f01ac90))
+* **net:** ip-rules — refuse non-public-unicast addresses (SSRF) ([17cbb28](https://github.com/pdovhomilja/nextcrm-app/commit/17cbb28de85aa29192b4a66837372a148aaf794c))
+* **security:** SSRF host-guard on IMAP test/discover/create sinks ([a775e0d](https://github.com/pdovhomilja/nextcrm-app/commit/a775e0d0498362b7240e82b6543cdf25e9c1249e))
+* **security:** SSRF host-guard on SMTP send and background IMAP connect ([53eeac4](https://github.com/pdovhomilja/nextcrm-app/commit/53eeac43eb4ec9aa3ba57777d88a01504f6c570c))
+
+
+### Fixed
+
+* **authz:** guard directly-callable convertTarget action ([8b9f291](https://github.com/pdovhomilja/nextcrm-app/commit/8b9f291cdccdcf51c31562d8ceed072205845566))
+* **authz:** use shared opportunity write-scope in setInactiveOpportunity ([30f9544](https://github.com/pdovhomilja/nextcrm-app/commit/30f95446bb825ded9105604a39c2c81b5ad86a58))
+* **db-guard:** block empty/unresolvable host instead of passing it ([521137f](https://github.com/pdovhomilja/nextcrm-app/commit/521137f93129f3af146b4ee2fc7faf10c6a4390d))
+* **db-guard:** close query-string [@localhost](https://github.com/localhost) bypass, fix bracketed IPv6 ([8909bc3](https://github.com/pdovhomilja/nextcrm-app/commit/8909bc3f631cc007bfdd21e76c6f94a35a9aa8cf))
+* **dev:** bind local Postgres to loopback and bound db:wait retries ([989e2ed](https://github.com/pdovhomilja/nextcrm-app/commit/989e2ed9ccdf8b621147db962121b9b5a18721b0))
+* **dev:** guard db scripts against remote DB and correct local Postgres docs ([3482cd0](https://github.com/pdovhomilja/nextcrm-app/commit/3482cd0936de273d6ce24cf28018ac8ff965cd7b))
+* **security:** authorize Resend key action, harden IMAP/SMTP connect surface ([648160f](https://github.com/pdovhomilja/nextcrm-app/commit/648160f0dfdaa235d45ec8b3806f4552277244f3))
+
 ## [0.17.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.16.0...v0.17.0) (2026-07-20)
 
 
