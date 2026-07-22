@@ -1,13 +1,33 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import {
+  requireAuthenticated,
+  assertCanWriteTarget,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export async function convertTarget(
   targetId: string
 ): Promise<{ accountId: string; contactId: string } | { error: string }> {
-  const session = await getSession();
-  if (!session) return { error: "Unauthorized" };
+  // This is a directly-callable "use server" action (invoked from
+  // UpdateTargetForm as well as via convertTargetToDeal), so it needs its own
+  // object-level guard: converting a target creates an account + contact and
+  // mutates the target, and must be limited to targets the caller can write.
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
+  try {
+    await assertCanWriteTarget(user, targetId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
 
   const target = await prismadb.crm_Targets.findFirst({ where: { id: targetId, deletedAt: null } });
   if (!target) return { error: "Target not found" };
@@ -39,7 +59,7 @@ export async function convertTarget(
           employees: target.employees ?? undefined,
           description: target.description ?? undefined,
           status: "Active",
-          createdBy: (session.user as any).id,
+          createdBy: user.id,
         },
       });
 
@@ -58,7 +78,7 @@ export async function convertTarget(
           social_instagram: target.social_instagram ?? undefined,
           social_facebook: target.social_facebook ?? undefined,
           accountsIDs: acct.id,
-          createdBy: (session.user as any).id,
+          createdBy: user.id,
         },
       });
 
@@ -68,7 +88,7 @@ export async function convertTarget(
           converted_at: new Date(),
           converted_account_id: acct.id,
           converted_contact_id: ctct.id,
-          updatedBy: (session.user as any).id,
+          updatedBy: user.id,
         },
       });
 

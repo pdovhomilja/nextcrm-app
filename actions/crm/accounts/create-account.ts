@@ -1,9 +1,9 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { inngest } from "@/inngest/client";
 import { writeAuditLog } from "@/lib/audit-log";
+import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
 
 export const createAccount = async (data: {
   name: string;
@@ -30,8 +30,15 @@ export const createAccount = async (data: {
   member_of?: string;
   industry?: string;
 }) => {
-  const session = await getSession();
-  if (!session) return { error: "Unauthorized" };
+  // Plain create: the row is owned by its creator, so authentication is
+  // sufficient — no object-level write assert needed.
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
 
   const { name } = data;
   if (!name) return { error: "name is required" };
@@ -40,8 +47,8 @@ export const createAccount = async (data: {
     const account = await prismadb.crm_Accounts.create({
       data: {
         v: 0,
-        createdBy: session.user.id,
-        updatedBy: session.user.id,
+        createdBy: user.id,
+        updatedBy: user.id,
         ...data,
         status: "Active",
       },
@@ -51,7 +58,7 @@ export const createAccount = async (data: {
       entityId: account.id,
       action: "created",
       changes: null,
-      userId: session.user.id,
+      userId: user.id,
     });
     void inngest.send({ name: "crm/account.saved", data: { record_id: account.id } });
     revalidatePath("/[locale]/(routes)/crm/accounts", "page");

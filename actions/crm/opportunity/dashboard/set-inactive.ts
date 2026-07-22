@@ -1,37 +1,32 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
+import {
+  requireAuthenticated,
+  assertCanWriteOpportunity,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export async function setInactiveOpportunity(id: string) {
-  const session = await getSession();
-  if (!session) {
-    return { error: "Unauthenticated" };
-  }
+  if (!id) return { error: "id is required" };
 
-  console.log(id, "id");
-
-  if (!id) {
-    console.log("Opportunity id is required");
+  // Use the shared write scope (assigned_to OR createdBy; admin/manager) rather
+  // than a hand-rolled assigned_to-only + admin-only check.
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthenticated" };
+    throw e;
   }
   try {
-    const opportunity = await prismadb.crm_Opportunities.findUnique({
-      where: {
-        id,
-        deletedAt: null,
-      },
-      select: {
-        assigned_to: true,
-      },
-    });
+    await assertCanWriteOpportunity(user, id);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
 
-    if (!opportunity) {
-      return { error: "Opportunity not found" };
-    }
-
-    if (session.user.role !== "admin" && opportunity.assigned_to !== session.user.id) {
-      return { error: "Forbidden" };
-    }
-
+  try {
     const result = await prismadb.crm_Opportunities.update({
       where: {
         id,

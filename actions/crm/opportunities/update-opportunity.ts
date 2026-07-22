@@ -1,5 +1,4 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { inngest } from "@/inngest/client";
@@ -7,6 +6,12 @@ import { writeAuditLog, diffObjects } from "@/lib/audit-log";
 import { getSnapshotRate, getDefaultCurrency } from "@/lib/currency";
 import { handleStageTransition } from "@/lib/crm/stage-transition";
 import { qualifiedEntryBlockReason } from "@/lib/crm/approval-gate";
+import {
+  requireAuthenticated,
+  assertCanWriteOpportunity,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export const updateOpportunity = async (data: {
   id: string;
@@ -25,10 +30,6 @@ export const updateOpportunity = async (data: {
   sales_stage?: string;
   type?: string;
 }) => {
-  const session = await getSession();
-  if (!session) return { error: "Unauthorized" };
-
-  const userId = session.user.id;
   const {
     id,
     account,
@@ -48,6 +49,22 @@ export const updateOpportunity = async (data: {
   } = data;
 
   if (!id) return { error: "id is required" };
+
+  // Authorization runs before the approval gate and the update.
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
+  try {
+    await assertCanWriteOpportunity(user, id);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
+  const userId = user.id;
 
   try {
     const defaultCurrency = await getDefaultCurrency();
@@ -95,7 +112,7 @@ export const updateOpportunity = async (data: {
       entityId: opportunity.id,
       action: "updated",
       changes,
-      userId: session.user.id,
+      userId: user.id,
     });
     void inngest.send({ name: "crm/opportunity.saved", data: { record_id: opportunity.id } });
     revalidatePath("/[locale]/(routes)/crm/opportunities", "page");

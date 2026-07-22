@@ -1,4 +1,12 @@
 jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
+// Actions now resolve the caller via requireAuthenticated + assertCanWrite*;
+// authz behavior is covered by the *-scope tests, so pass it through here.
+jest.mock("@/lib/authz", () => ({
+  requireAuthenticated: jest.fn(),
+  assertCanWriteAccount: jest.fn(),
+  AuthenticationError: class AuthenticationError extends Error {},
+  AuthorizationError: class AuthorizationError extends Error {},
+}));
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
     crm_Opportunities: { create: jest.fn() },
@@ -18,12 +26,15 @@ jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));
 
 import { prismadb } from "@/lib/prisma";
 import { getSession } from "@/lib/auth-server";
+import { requireAuthenticated, assertCanWriteAccount } from "@/lib/authz";
 import { createOpportunity } from "@/actions/crm/opportunities/create-opportunity";
 
 describe("createOpportunity delivery_deadline", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (getSession as jest.Mock).mockResolvedValue({ user: { id: "u1" } });
+    (requireAuthenticated as jest.Mock).mockResolvedValue({ id: "u1", role: "admin" });
+    (assertCanWriteAccount as jest.Mock).mockResolvedValue(undefined);
     (prismadb.crm_Opportunities.create as jest.Mock).mockResolvedValue({ id: "opp-1" });
   });
 
