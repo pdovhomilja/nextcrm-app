@@ -14,6 +14,7 @@ import {
   notFound,
   softDeleteData,
   assertScopeOrNotFound,
+  assertAssignableUser,
 } from "../helpers";
 
 // assertCanWriteAccount intentionally ignores deletedAt (the server actions
@@ -138,6 +139,8 @@ export const crmAccountTools = [
       description: z.string().optional(),
       office_phone: z.string().optional(),
       website: z.string().optional(),
+      // Reassign the owner. Use crm_list_users to resolve a person to their ID.
+      assigned_to: z.string().uuid().nullable().optional(),
     }),
     async handler(
       args: {
@@ -147,15 +150,21 @@ export const crmAccountTools = [
         description?: string;
         office_phone?: string;
         website?: string;
+        assigned_to?: string | null;
       },
       userId: string,
       user: AuthzUser
     ) {
       await assertWritableAccount(user, args.id);
-      const { id, ...updateData } = args;
+      if (args.assigned_to) await assertAssignableUser(args.assigned_to);
+      const { id, assigned_to, ...updateData } = args;
       const account = await prismadb.crm_Accounts.update({
         where: { id },
-        data: { ...updateData, updatedBy: userId },
+        data: {
+          ...updateData,
+          ...(assigned_to !== undefined && { assigned_to }),
+          updatedBy: userId,
+        },
       });
       return itemResponse(account);
     },

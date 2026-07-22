@@ -7,6 +7,7 @@ jest.mock("@/lib/prisma", () => ({
     crm_Opportunities: { findMany: jest.fn(), count: jest.fn(), findFirst: jest.fn() },
     crm_Accounts: { findMany: jest.fn(), count: jest.fn(), findFirst: jest.fn() },
     crm_Contacts: { findMany: jest.fn(), count: jest.fn(), findFirst: jest.fn() },
+    crm_Leads: { findMany: jest.fn(), count: jest.fn(), findFirst: jest.fn() },
   },
 }));
 
@@ -14,13 +15,19 @@ import { prismadb } from "@/lib/prisma";
 import { crmOpportunityTools } from "@/lib/mcp/tools/crm-opportunities";
 import { crmAccountTools } from "@/lib/mcp/tools/crm-accounts";
 import { crmContactTools } from "@/lib/mcp/tools/crm-contacts";
+import { crmLeadTools } from "@/lib/mcp/tools/crm-leads";
 
 type Role = "user" | "manager" | "admin";
 const MEMBER = { id: "u1", role: "user" as Role };
 const MANAGER = { id: "m1", role: "manager" as Role };
 const ADMIN = { id: "a1", role: "admin" as Role };
 
-const allTools = [...crmOpportunityTools, ...crmAccountTools, ...crmContactTools];
+const allTools = [
+  ...crmOpportunityTools,
+  ...crmAccountTools,
+  ...crmContactTools,
+  ...crmLeadTools,
+];
 // Handlers receive (args, userId, user)
 const run = (name: string, args: any, user: { id: string; role: Role }) => {
   const t = allTools.find((x) => x.name === name);
@@ -36,18 +43,21 @@ const listMocks = {
   crm_list_opportunities: prismadb.crm_Opportunities,
   crm_list_accounts: prismadb.crm_Accounts,
   crm_list_contacts: prismadb.crm_Contacts,
+  crm_list_leads: prismadb.crm_Leads,
 } as const;
 
 const searchMocks = {
   crm_search_opportunities: prismadb.crm_Opportunities,
   crm_search_accounts: prismadb.crm_Accounts,
   crm_search_contacts: prismadb.crm_Contacts,
+  crm_search_leads: prismadb.crm_Leads,
 } as const;
 
 const getMocks = {
   crm_get_opportunity: prismadb.crm_Opportunities,
   crm_get_account: prismadb.crm_Accounts,
   crm_get_contact: prismadb.crm_Contacts,
+  crm_get_lead: prismadb.crm_Leads,
 } as const;
 
 beforeEach(() => jest.clearAllMocks());

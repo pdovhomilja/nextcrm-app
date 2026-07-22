@@ -16,6 +16,7 @@ import {
   notFound,
   softDeleteData,
   assertScopeOrNotFound,
+  assertAssignableUser,
 } from "../helpers";
 
 // Relinking an opportunity to an account/contact is a parent write: the row must
@@ -28,17 +29,6 @@ async function assertLinkableAccount(user: AuthzUser, accountId: string) {
   });
   if (!row) notFound("Account");
   await assertScopeOrNotFound(() => assertCanWriteAccount(user, accountId), "Account");
-}
-
-// Reassignment targets must be a real, active user. The server action relies on
-// the FK constraint alone; checking here keeps the failure a clean NOT_FOUND
-// instead of a Prisma error, and stops work being parked on a disabled account.
-async function assertAssignableUser(assigneeId: string) {
-  const row = await prismadb.users.findFirst({
-    where: { id: assigneeId, userStatus: "ACTIVE" },
-    select: { id: true },
-  });
-  if (!row) notFound("User");
 }
 
 async function assertLinkableContact(user: AuthzUser, contactId: string) {

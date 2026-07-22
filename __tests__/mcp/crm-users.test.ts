@@ -7,8 +7,9 @@ jest.mock("@/lib/prisma", () => ({
   prismadb: {
     users: { findMany: jest.fn(), count: jest.fn(), findFirst: jest.fn() },
     crm_Opportunities: { findFirst: jest.fn(), update: jest.fn() },
-    crm_Accounts: { findFirst: jest.fn() },
-    crm_Contacts: { findFirst: jest.fn() },
+    crm_Accounts: { findFirst: jest.fn(), update: jest.fn() },
+    crm_Contacts: { findFirst: jest.fn(), update: jest.fn() },
+    crm_Leads: { findFirst: jest.fn(), update: jest.fn() },
   },
 }));
 
@@ -17,13 +18,22 @@ import { join } from "node:path";
 import { prismadb } from "@/lib/prisma";
 import { crmUserTools } from "@/lib/mcp/tools/crm-users";
 import { crmOpportunityTools } from "@/lib/mcp/tools/crm-opportunities";
+import { crmAccountTools } from "@/lib/mcp/tools/crm-accounts";
+import { crmContactTools } from "@/lib/mcp/tools/crm-contacts";
+import { crmLeadTools } from "@/lib/mcp/tools/crm-leads";
 
 type Role = "user" | "manager" | "admin";
 const MEMBER = { id: "u1", role: "user" as Role };
 const MANAGER = { id: "m1", role: "manager" as Role };
 const ADMIN = { id: "a1", role: "admin" as Role };
 
-const tools = [...crmUserTools, ...crmOpportunityTools];
+const tools = [
+  ...crmUserTools,
+  ...crmOpportunityTools,
+  ...crmAccountTools,
+  ...crmContactTools,
+  ...crmLeadTools,
+];
 const run = (name: string, args: any, user: { id: string; role: Role }) => {
   const t = tools.find((x) => x.name === name);
   if (!t) throw new Error(`tool not found: ${name}`);
@@ -31,15 +41,24 @@ const run = (name: string, args: any, user: { id: string; role: Role }) => {
 };
 
 const users = prismadb.users as any;
-const opps = prismadb.crm_Opportunities as any;
+
+// Every entity that carries assigned_to and can be reassigned over MCP.
+const REASSIGNABLE = [
+  { tool: "crm_update_opportunity", model: prismadb.crm_Opportunities },
+  { tool: "crm_update_account", model: prismadb.crm_Accounts },
+  { tool: "crm_update_contact", model: prismadb.crm_Contacts },
+  { tool: "crm_update_lead", model: prismadb.crm_Leads },
+] as const;
 
 beforeEach(() => {
   jest.clearAllMocks();
   users.findMany.mockResolvedValue([]);
   users.count.mockResolvedValue(0);
   users.findFirst.mockResolvedValue({ id: "u2" });
-  opps.findFirst.mockResolvedValue({ id: "o1" });
-  opps.update.mockResolvedValue({ id: "o1" });
+  for (const { model } of REASSIGNABLE) {
+    (model as any).findFirst.mockResolvedValue({ id: "x1" });
+    (model as any).update.mockResolvedValue({ id: "x1" });
+  }
 });
 
 // The registry can't be imported here: lib/mcp/tools/index.ts pulls in
@@ -140,45 +159,67 @@ describe("crm_list_users search", () => {
   });
 });
 
-describe("crm_update_opportunity reassignment", () => {
+describe.each(REASSIGNABLE)("$tool reassignment", ({ tool, model }) => {
+  const m = model as any;
+  const UUID = "11111111-1111-4111-8111-111111111111";
+  const ASSIGNEE = "22222222-2222-4222-8222-222222222222";
+
+  // The handler tests below call handlers directly, which bypasses validation.
+  // The route validates through tool.schema, and a zod object strips keys it
+  // does not declare — so without this, a missing schema field would look fine.
+  it("declares assigned_to on the schema so the route does not strip it", () => {
+    const schema = tools.find((t) => t.name === tool)!.schema as any;
+    expect(schema.parse({ id: UUID, assigned_to: ASSIGNEE }).assigned_to).toBe(ASSIGNEE);
+  });
+
+  it("accepts an explicit null through the schema", () => {
+    const schema = tools.find((t) => t.name === tool)!.schema as any;
+    expect(schema.parse({ id: UUID, assigned_to: null }).assigned_to).toBeNull();
+  });
+
+  it("rejects a non-uuid assignee at the schema", () => {
+    const schema = tools.find((t) => t.name === tool)!.schema as any;
+    expect(() => schema.parse({ id: UUID, assigned_to: "not-a-uuid" })).toThrow();
+  });
+
   it("persists assigned_to", async () => {
-    await run("crm_update_opportunity", { id: "o1", assigned_to: "u2" }, ADMIN);
-    expect(opps.update.mock.calls[0][0].data.assigned_to).toBe("u2");
+    await run(tool, { id: "x1", assigned_to: "u2" }, ADMIN);
+    expect(m.update.mock.calls[0][0].data.assigned_to).toBe("u2");
   });
 
   it("rejects an unknown assignee instead of writing a dangling FK", async () => {
     users.findFirst.mockResolvedValue(null);
-    await expect(
-      run("crm_update_opportunity", { id: "o1", assigned_to: "ghost" }, ADMIN)
-    ).rejects.toThrow("NOT_FOUND");
-    expect(opps.update).not.toHaveBeenCalled();
+    await expect(run(tool, { id: "x1", assigned_to: "ghost" }, ADMIN)).rejects.toThrow(
+      "NOT_FOUND"
+    );
+    expect(m.update).not.toHaveBeenCalled();
   });
 
   it("refuses to park work on a non-active account", async () => {
     users.findFirst.mockResolvedValue(null);
-    await expect(
-      run("crm_update_opportunity", { id: "o1", assigned_to: "u2" }, ADMIN)
-    ).rejects.toThrow("NOT_FOUND");
+    await expect(run(tool, { id: "x1", assigned_to: "u2" }, ADMIN)).rejects.toThrow(
+      "NOT_FOUND"
+    );
     expect(users.findFirst.mock.calls[0][0].where.userStatus).toBe("ACTIVE");
   });
 
   it("explicit null unassigns without validating a user", async () => {
-    await run("crm_update_opportunity", { id: "o1", assigned_to: null }, ADMIN);
-    expect(opps.update.mock.calls[0][0].data.assigned_to).toBeNull();
+    await run(tool, { id: "x1", assigned_to: null }, ADMIN);
+    expect(m.update.mock.calls[0][0].data.assigned_to).toBeNull();
     expect(users.findFirst).not.toHaveBeenCalled();
   });
 
   it("omitting assigned_to leaves the owner untouched", async () => {
-    await run("crm_update_opportunity", { id: "o1", name: "renamed" }, ADMIN);
-    expect(opps.update.mock.calls[0][0].data).not.toHaveProperty("assigned_to");
+    await run(tool, { id: "x1" }, ADMIN);
+    expect(m.update.mock.calls[0][0].data).not.toHaveProperty("assigned_to");
   });
 
-  it("checks the opportunity is writable before validating the assignee", async () => {
-    opps.findFirst.mockResolvedValue(null);
-    await expect(
-      run("crm_update_opportunity", { id: "victim", assigned_to: "u2" }, MEMBER)
-    ).rejects.toThrow("NOT_FOUND");
+  it("checks the record is writable before validating the assignee", async () => {
+    m.findFirst.mockResolvedValue(null);
+    await expect(run(tool, { id: "victim", assigned_to: "u2" }, MEMBER)).rejects.toThrow(
+      "NOT_FOUND"
+    );
     expect(users.findFirst).not.toHaveBeenCalled();
-    expect(opps.update).not.toHaveBeenCalled();
+    expect(m.update).not.toHaveBeenCalled();
   });
 });
