@@ -1,6 +1,6 @@
 {
   "name": "nextcrm-app",
-  "version": "0.18.0",
+  "version": "0.19.0",
   "private": true,
   "engines": {
     "node": ">=22.12.0",

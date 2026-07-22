@@ -5,6 +5,19 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.18.0...v0.19.0) (2026-07-22)
+
+
+### Added
+
+* **mcp:** add crm_list_users and opportunity reassignment ([d2adc62](https://github.com/pdovhomilja/nextcrm-app/commit/d2adc6262086a975369cc71411e81fd166d89490))
+
+
+### Fixed
+
+* **mcp:** role-aware read scoping and account/contact linking in CRM tools ([3a89d55](https://github.com/pdovhomilja/nextcrm-app/commit/3a89d5555277c1c5a1fbb83826f91c6a9ee2ce12))
+* **mcp:** role-aware read scoping, FK linking, and user lookup for CRM tools ([4575e9d](https://github.com/pdovhomilja/nextcrm-app/commit/4575e9d7dec10a9f689a910ded518a0797cfe2f3))
+
 ## [0.18.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.17.0...v0.18.0) (2026-07-22)
 
 
