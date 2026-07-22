@@ -5,6 +5,14 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.19.0...v0.20.0) (2026-07-22)
+
+
+### Added
+
+* **mcp:** reassignment on accounts, contacts and leads; scope CRM lead tools ([0591426](https://github.com/pdovhomilja/nextcrm-app/commit/05914261d7236370237d50edde9d3474d91ea4f3))
+* **mcp:** reassignment on accounts, contacts and leads; scope CRM lead tools ([2e7220a](https://github.com/pdovhomilja/nextcrm-app/commit/2e7220a50d1b98d668192299a1e42ba90099b1c9))
+
 ## [0.19.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.18.0...v0.19.0) (2026-07-22)
 
 
