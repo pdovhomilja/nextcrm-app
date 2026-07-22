@@ -1,4 +1,8 @@
 import { z } from "zod";
+// Import from the leaf errors module, not the @/lib/authz barrel: the barrel
+// re-exports session helpers that pull in better-auth (ESM-only), which breaks
+// any jest suite transitively importing this file. errors.ts has no imports.
+import { AuthorizationError } from "@/lib/authz/errors";
 
 // ── Pagination ──────────────────────────────────────────────────
 
@@ -57,4 +61,19 @@ export function validationError(msg: string): never {
 
 export function externalError(msg: string): never {
   throw new Error(`EXTERNAL_ERROR: ${msg}`);
+}
+
+// Run an object-level authorization assert (assertCanWriteBoard, etc.) and
+// convert a denial into NOT_FOUND so the caller cannot tell whether the id
+// exists (no existence oracle). Non-authorization errors propagate unchanged.
+export async function assertScopeOrNotFound(
+  assert: () => Promise<void>,
+  entity: string,
+): Promise<void> {
+  try {
+    await assert();
+  } catch (e) {
+    if (e instanceof AuthorizationError) notFound(entity);
+    throw e;
+  }
 }
