@@ -175,17 +175,25 @@ jobs:
       - run: pnpm exec prisma migrate deploy
       - name: Seed test data (admin user for auth.setup)
         run: pnpm exec prisma db seed
+      # Pinned, not @latest: an unpinned CLI is refetched each run and a new
+      # upstream release can break CI with no warning. Pre-fetching here also
+      # keeps the registry download out of the readiness budget below — that
+      # download racing the poll was the cause of intermittent startup failures.
+      - name: Install Inngest CLI
+        run: npm install -g inngest-cli@1.38.1
       - name: Start Inngest dev server
         # Campaign submit paths await inngest.send(); without a reachable
         # event API at INNGEST_BASE_URL the server action throws and the
         # wizard never redirects.
         run: |
-          nohup npx --yes inngest-cli@latest dev --no-discovery -u http://localhost:3000/api/inngest > inngest-dev.log 2>&1 &
-          for i in $(seq 1 30); do
+          nohup inngest dev --no-discovery -u http://localhost:3000/api/inngest > inngest-dev.log 2>&1 &
+          # 60 × 2s = 120s. The binary is already installed, so this budget is
+          # purely the server's own boot time, not a network fetch.
+          for i in $(seq 1 60); do
             curl -sf http://localhost:8288 > /dev/null && exit 0
             sleep 2
           done
-          echo "inngest-cli dev failed to become ready" >&2
+          echo "inngest-cli dev failed to become ready after 120s" >&2
           cat inngest-dev.log >&2
           exit 1
       - name: Run Playwright (chromium; setup project runs as its dependency)

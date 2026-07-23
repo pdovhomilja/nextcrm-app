@@ -2,7 +2,7 @@
 
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { ElementRef, useRef, useState } from "react";
+import { ElementRef, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -19,6 +19,7 @@ import { FormSubmit } from "@/components/form/form-submit";
 import { FormDatePicker } from "@/components/form/form-datepicker";
 import { FormTextarea } from "@/components/form/form-textarea";
 import { FormSelect } from "@/components/form/from-select";
+import { useSession } from "@/lib/auth-client";
 
 const CreateContractForm = ({
   accounts,
@@ -32,8 +33,14 @@ const CreateContractForm = ({
   const router = useRouter();
   const closeRef = useRef<ElementRef<"button">>(null);
   const [assignedTo, setAssignedTo] = useState<string>("");
+  const { data: session } = useSession();
   const t = useTranslations("CrmContractForm");
   const c = useTranslations("Common");
+
+  useEffect(() => {
+    const uid = session?.user?.id;
+    if (uid) setAssignedTo((prev) => prev || uid);
+  }, [session]);
 
   //console.log(accountId, "accountId");
 
@@ -143,6 +150,7 @@ const CreateContractForm = ({
           data={accounts}
           errors={fieldErrors}
           defaultValue={accountId}
+          disabled={!!accountId}
         />
         <div className="space-y-1">
           <label className="text-sm font-medium">{c("assignedTo")}</label>

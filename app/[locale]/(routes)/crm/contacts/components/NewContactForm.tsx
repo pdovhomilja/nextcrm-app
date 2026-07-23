@@ -1,6 +1,7 @@
 "use client";
 
 import { z } from "zod";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
@@ -27,6 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 import { createContact } from "@/actions/crm/contacts/create-contact";
+import { useSession } from "@/lib/auth-client";
 
 type AccountOption = {
   id: string;
@@ -35,15 +37,18 @@ type AccountOption = {
 
 type NewContactFormProps = {
   accounts: AccountOption[];
+  accountId?: string;
   onFinish: () => void;
 };
 
 export function NewContactForm({
   accounts,
+  accountId,
   onFinish,
 }: NewContactFormProps) {
   const t = useTranslations("CrmContactForm");
   const c = useTranslations("Common");
+  const { data: session } = useSession();
 
   const formSchema = z.object({
     birthday_year: z.string().optional(),
@@ -88,7 +93,7 @@ export function NewContactForm({
       status: false,
       type: "",
       assigned_to: "",
-      assigned_account: "",
+      assigned_account: accountId ?? "",
       social_twitter: "",
       social_facebook: "",
       social_linkedin: "",
@@ -101,6 +106,11 @@ export function NewContactForm({
     },
   });
 
+  useEffect(() => {
+    const uid = session?.user?.id;
+    if (uid && !form.getValues("assigned_to")) form.setValue("assigned_to", uid);
+  }, [session, form]);
+
   const contactType = [
     { name: t("customer"), id: "Customer" },
     { name: t("partner"), id: "Partner" },
@@ -108,8 +118,13 @@ export function NewContactForm({
   ];
 
   const onSubmit = async (data: NewAccountFormValues) => {
-    const { type, ...rest } = data;
-    const result = await createContact({ ...rest, contact_type_id: type || undefined });
+    const { type, assigned_to, assigned_account, ...rest } = data;
+    const result = await createContact({
+      ...rest,
+      assigned_to: assigned_to || undefined,
+      assigned_account: assigned_account || undefined,
+      contact_type_id: type || undefined,
+    });
     if (result?.error) {
       form.setError("root.serverError", { message: result.error });
     } else {
@@ -370,6 +385,7 @@ export function NewContactForm({
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
+                        disabled={!!accountId}
                       >
                         <FormControl>
                           <SelectTrigger>

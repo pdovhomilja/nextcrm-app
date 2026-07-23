@@ -1,6 +1,7 @@
 "use client";
 
 import { z } from "zod";
+import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -27,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 import { createAccount } from "@/actions/crm/accounts/create-account";
+import { useSession } from "@/lib/auth-client";
 
 type Props = {
   industries: any[];
@@ -36,6 +38,7 @@ type Props = {
 export function NewAccountForm({ industries, onFinish }: Props) {
   const t = useTranslations("CrmAccountForm");
   const c = useTranslations("Common");
+  const { data: session } = useSession();
 
   const formSchema = z.object({
     name: z.string().min(1, t("nameRequired")).max(100),
@@ -69,6 +72,11 @@ export function NewAccountForm({ industries, onFinish }: Props) {
     resolver: zodResolver(formSchema),
     mode: "onBlur",
   });
+
+  useEffect(() => {
+    const uid = session?.user?.id;
+    if (uid && !form.getValues("assigned_to")) form.setValue("assigned_to", uid);
+  }, [session, form]);
 
   const onSubmit = async (data: NewAccountFormValues) => {
     const result = await createAccount(data);

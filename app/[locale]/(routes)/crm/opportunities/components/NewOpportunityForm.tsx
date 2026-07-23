@@ -1,7 +1,7 @@
 "use client";
 
 import { z } from "zod";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { useForm } from "react-hook-form";
 import { CalendarIcon } from "lucide-react";
@@ -44,6 +44,7 @@ import {
   crm_campaigns,
 } from "@prisma/client";
 import { createOpportunity } from "@/actions/crm/opportunities/create-opportunity";
+import { useSession } from "@/lib/auth-client";
 
 //TODO: fix all the types
 type NewTaskFormProps = {
@@ -71,6 +72,7 @@ export function NewOpportunityForm({
 }: NewTaskFormProps) {
   const t = useTranslations("CrmOpportunityForm");
   const c = useTranslations("Common");
+  const { data: session } = useSession();
 
   const [searchAccountValue, setSearchAccountValue] = useState<string>("");
   const [searchContactValue, setSearchContactValue] = useState<string>("");
@@ -137,6 +139,11 @@ export function NewOpportunityForm({
       name: "",
     },
   });
+
+  useEffect(() => {
+    const uid = session?.user?.id;
+    if (uid && !form.getValues("assigned_to")) form.setValue("assigned_to", uid);
+  }, [session, form]);
 
   const onSubmit = async (data: NewAccountFormValues) => {
     const result = await createOpportunity(data);
@@ -445,11 +452,12 @@ export function NewOpportunityForm({
                   control={form.control}
                   name="account"
                   render={({ field }) => (
-                    <FormItem hidden={accountId ? true : false}>
+                    <FormItem>
                       <FormLabel>{t("assignedAccount")}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
+                        disabled={!!accountId}
                       >
                         <FormControl>
                           <SelectTrigger>
