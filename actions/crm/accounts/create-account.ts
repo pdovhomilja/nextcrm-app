@@ -50,6 +50,8 @@ export const createAccount = async (data: {
         createdBy: user.id,
         updatedBy: user.id,
         ...data,
+        assigned_to: data.assigned_to || user.id,
+        industry: data.industry || undefined,
         status: "Active",
       },
     });
