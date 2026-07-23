@@ -5,6 +5,15 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.20.0...v0.20.1) (2026-07-23)
+
+
+### Fixed
+
+* **crm:** blank-UUID + create-in-context UX; ci(e2e): pin inngest-cli ([2e75f1c](https://github.com/pdovhomilja/nextcrm-app/commit/2e75f1cd11462a30b81a3fbd42c240597605fb2d))
+* **crm:** normalize blank UUID fields in createAccount ([6123855](https://github.com/pdovhomilja/nextcrm-app/commit/612385540a259868ecfe1ea81e02d7ea6da0960c))
+* **crm:** normalize blank UUID inputs and auto-fill account/assignee on create ([a5b0a78](https://github.com/pdovhomilja/nextcrm-app/commit/a5b0a782f327aadb21c7ccc8faeae63e1de818fa))
+
 ## [0.20.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.19.0...v0.20.0) (2026-07-22)
 
 
