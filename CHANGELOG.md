@@ -5,6 +5,15 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.2](https://github.com/pdovhomilja/nextcrm-app/compare/v0.20.1...v0.20.2) (2026-07-23)
+
+
+### Fixed
+
+* **deps:** resolve all 65 Dependabot security alerts ([29efcd7](https://github.com/pdovhomilja/nextcrm-app/commit/29efcd79c6386f1510563c124bcf4a99e5c42d7d))
+* **deps:** resolve all 65 Dependabot security alerts (one PR) ([2647733](https://github.com/pdovhomilja/nextcrm-app/commit/2647733eb536d807adef070b719a95c0f8d7870f))
+* **deps:** resolve all 65 Dependabot security alerts via pnpm overrides ([3412d9a](https://github.com/pdovhomilja/nextcrm-app/commit/3412d9ac05963f58c6f5708f863ad45b349e2039))
+
 ## [0.20.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.20.0...v0.20.1) (2026-07-23)
 
 
