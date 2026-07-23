@@ -35,7 +35,7 @@ interface ContactsViewProps {
   accountId?: string;
 }
 
-const ContactsView = ({ data, crmData }: ContactsViewProps) => {
+const ContactsView = ({ data, crmData, accountId }: ContactsViewProps) => {
   const [open, setOpen] = useState(false);
   const t = useTranslations("CrmPage");
 
@@ -67,6 +67,7 @@ const ContactsView = ({ data, crmData }: ContactsViewProps) => {
                 <div className="mt-6 space-y-4">
                   <NewContactForm
                     accounts={accounts}
+                    accountId={accountId}
                     onFinish={() => setOpen(false)}
                   />
                 </div>

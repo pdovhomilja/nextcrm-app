@@ -1,6 +1,7 @@
 "use client";
 
 import { z } from "zod";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
@@ -26,6 +27,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 import { createLead } from "@/actions/crm/leads/create-lead";
+import { useSession } from "@/lib/auth-client";
 
 //TODO: fix all the types
 type ConfigItem = { id: string; name: string };
@@ -35,12 +37,14 @@ type NewTaskFormProps = {
   leadSources: ConfigItem[];
   leadStatuses: ConfigItem[];
   leadTypes: ConfigItem[];
+  accountId?: string;
   onFinish?: () => void;
 };
 
-export function NewLeadForm({ accounts, leadSources, leadStatuses, leadTypes, onFinish }: NewTaskFormProps) {
+export function NewLeadForm({ accounts, leadSources, leadStatuses, leadTypes, accountId, onFinish }: NewTaskFormProps) {
   const t = useTranslations("CrmLeadForm");
   const c = useTranslations("Common");
+  const { data: session } = useSession();
 
   const formSchema = z.object({
     first_name: z.string().optional(),
@@ -78,9 +82,14 @@ export function NewLeadForm({ accounts, leadSources, leadStatuses, leadTypes, on
       refered_by: "",
       campaign: "",
       assigned_to: "",
-      accountIDs: "",
+      accountIDs: accountId ?? "",
     },
   });
+
+  useEffect(() => {
+    const uid = session?.user?.id;
+    if (uid && !form.getValues("assigned_to")) form.setValue("assigned_to", uid);
+  }, [session, form]);
 
   const onSubmit = async (data: NewLeadFormValues) => {
     const result = await createLead(data);
@@ -346,6 +355,7 @@ export function NewLeadForm({ accounts, leadSources, leadStatuses, leadTypes, on
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
+                    disabled={!!accountId}
                   >
                     <FormControl>
                       <SelectTrigger>

@@ -83,6 +83,7 @@ export const FormSelect = forwardRef<HTMLInputElement, FormInputProps>(
           <Select
             onValueChange={(value: any) => setValue(value)}
             value={value}
+            disabled={pending || disabled}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder={placeholder} />
