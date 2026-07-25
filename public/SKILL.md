@@ -64,7 +64,7 @@ All tools require a valid Bearer token. Tokens are generated from the Developer 
 - **crm_get_account** — Get a single CRM account by ID
 - **crm_search_accounts** — Search accounts by name or website (substring match)
 - **crm_create_account** — Create a new CRM account
-- **crm_update_account** — Update an existing CRM account by ID
+- **crm_update_account** — Update an existing CRM account by ID (accepts `assigned_to` to reassign the owner)
 - **crm_delete_account** — Soft-delete a CRM account by ID (sets deletedAt timestamp)
 
 ### Contacts (6 tools)
@@ -73,7 +73,7 @@ All tools require a valid Bearer token. Tokens are generated from the Developer 
 - **crm_get_contact** — Get a single CRM contact by ID
 - **crm_search_contacts** — Search contacts by name, email, or phone (substring match)
 - **crm_create_contact** — Create a new CRM contact
-- **crm_update_contact** — Update an existing CRM contact by ID
+- **crm_update_contact** — Update an existing CRM contact by ID (accepts `assigned_to` to reassign, `account` to link/unlink a parent account)
 - **crm_delete_contact** — Soft-delete a CRM contact by ID (sets deletedAt timestamp)
 
 ### Leads (6 tools)
@@ -82,7 +82,7 @@ All tools require a valid Bearer token. Tokens are generated from the Developer 
 - **crm_get_lead** — Get a single CRM lead by ID
 - **crm_search_leads** — Search leads by name, company, or email (substring match)
 - **crm_create_lead** — Create a new CRM lead
-- **crm_update_lead** — Update an existing CRM lead by ID
+- **crm_update_lead** — Update an existing CRM lead by ID (accepts `assigned_to` to reassign the owner)
 - **crm_delete_lead** — Soft-delete a CRM lead by ID (sets deletedAt timestamp)
 
 ### Opportunities (6 tools)
@@ -91,7 +91,7 @@ All tools require a valid Bearer token. Tokens are generated from the Developer 
 - **crm_get_opportunity** — Get a single CRM opportunity by ID
 - **crm_search_opportunities** — Search opportunities by name or description (substring match)
 - **crm_create_opportunity** — Create a new CRM opportunity
-- **crm_update_opportunity** — Update an existing CRM opportunity by ID
+- **crm_update_opportunity** — Update an existing CRM opportunity by ID (accepts `assigned_to` to reassign, `account`/`contact` to link/unlink)
 - **crm_delete_opportunity** — Soft-delete a CRM opportunity by ID
 
 ### Targets (6 tools)
@@ -104,6 +104,8 @@ All tools require a valid Bearer token. Tokens are generated from the Developer 
 - **crm_delete_target** — Soft-delete a CRM target by ID (sets deletedAt timestamp)
 
 ### Products (5 tools)
+
+Writes (create/update/delete) require a manager or admin role; reads are open to all roles.
 
 - **crm_list_products** — List CRM products (org-wide catalog)
 - **crm_get_product** — Get a single CRM product by ID
@@ -159,7 +161,11 @@ All tools require a valid Bearer token. Tokens are generated from the Developer 
 
 - **crm_list_email_accounts** — List the authenticated user's connected email accounts
 
-### Campaigns (18 tools)
+### Users (1 tool)
+
+- **crm_list_users** — List NextCRM users to resolve a person to the user ID that `assigned_to` needs. Returns active users by default; managers and admins additionally see email, role, status, and last login
+
+### Campaigns (19 tools)
 
 - **campaigns_list** — List campaigns (org-wide)
 - **campaigns_get** — Get a campaign by ID with steps and stats summary
@@ -237,6 +243,13 @@ All tools require a valid Bearer token. Tokens are generated from the Developer 
 2. `crm_enrich_target_bulk` — enrich up to 100 targets at once
 3. `crm_get_target` — check enrichment results
 
+### Reassign records to another user
+1. `crm_list_users` — resolve the person's name to a user ID (`query` does a substring match on name)
+2. `crm_update_account` / `crm_update_contact` / `crm_update_lead` / `crm_update_opportunity` — set `assigned_to` to that ID
+3. Pass `assigned_to: null` instead to unassign; omit it entirely to leave the current owner alone
+
+A member token can only reassign records it already owns, and the target must be an ACTIVE user — otherwise the update returns `NOT_FOUND`.
+
 ### Project management
 1. `projects_create_board` — create a project board
 2. `projects_create_section` — add columns (To Do, In Progress, Done)
@@ -249,5 +262,7 @@ All tools require a valid Bearer token. Tokens are generated from the Developer 
 - All list operations support pagination (cursor-based)
 - Search operations use substring matching
 - Delete operations are soft-deletes (set `deletedAt`, recoverable via admin audit log)
-- Data is scoped to the authenticated user where applicable
+- Reads are scoped by the token owner's role, matching the web UI: admin and manager tokens see all non-deleted records, member tokens see only their own
+- Writes are gated per-record. A denied write returns `NOT_FOUND` rather than `FORBIDDEN`, so a failure never confirms a record exists
+- `assigned_to` accepts an active user ID (reassign) or explicit `null` (unassign); omitting it leaves the owner untouched. Use `crm_list_users` to resolve the ID
 - Enrichment tools require API keys (OpenAI + Firecrawl) configured at system or user level
