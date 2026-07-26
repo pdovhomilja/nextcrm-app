@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 type Connection = {
   id: string;
@@ -32,6 +33,8 @@ const CALLBACK_MESSAGES: Record<string, { tone: "success" | "error"; text: strin
 };
 
 export function CalendarConnectionsList() {
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const callbackResult = searchParams.get("calendar");
   const banner = callbackResult ? CALLBACK_MESSAGES[callbackResult] ?? null : null;
@@ -39,6 +42,7 @@ export function CalendarConnectionsList() {
   const [connections, setConnections] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -57,15 +61,40 @@ export function CalendarConnectionsList() {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    if (callbackResult) {
+      const msg = CALLBACK_MESSAGES[callbackResult];
+      if (msg) {
+        if (msg.tone === "success") {
+          toast.success(msg.text);
+        } else {
+          toast.error(msg.text);
+        }
+      }
+
+      // Remove query param 'calendar' from URL while preserving other params like 'tab=calendar'
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("calendar");
+      const query = params.toString() ? `?${params.toString()}` : "";
+      router.replace(`${pathname}${query}`, { scroll: false });
+    }
+  }, [callbackResult, pathname, router, searchParams]);
+
   async function disconnect(id: string) {
+    setDeletingId(id);
     try {
       const res = await fetch(`/api/profile/calendar-connections/${id}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error(`Disconnect failed (${res.status})`);
+      toast.success("Calendar connection removed successfully.");
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Disconnect failed");
+      const errorMsg = e instanceof Error ? e.message : "Disconnect failed";
+      toast.error(errorMsg);
+      setError(errorMsg);
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -139,8 +168,13 @@ export function CalendarConnectionsList() {
                     </a>
                   </Button>
                 )}
-                <Button size="sm" variant="destructive" onClick={() => disconnect(c.id)}>
-                  Disconnect
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => disconnect(c.id)}
+                  disabled={deletingId !== null}
+                >
+                  {deletingId === c.id ? "Disconnecting..." : "Disconnect"}
                 </Button>
               </div>
             </li>
