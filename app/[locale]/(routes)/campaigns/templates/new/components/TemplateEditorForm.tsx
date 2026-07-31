@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TipTapEditor } from "@/components/campaigns/TipTapEditor";
 import { createTemplate } from "@/actions/campaigns/templates/create-template";
 import { updateTemplate } from "@/actions/campaigns/templates/update-template";
 import { generateTemplate } from "@/actions/campaigns/templates/generate-template";
+import { previewTemplate } from "@/actions/campaigns/templates/preview-template";
 
 type InitialData = {
   name: string;
@@ -39,6 +41,9 @@ export default function TemplateEditorForm({ initialData, templateId }: Props) {
     initialData?.content_json ?? {}
   );
 
+  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+
   const [aiPrompt, setAiPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -64,6 +69,19 @@ export default function TemplateEditorForm({ initialData, templateId }: Props) {
       setError(err instanceof Error ? err.message : "AI generation failed");
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleBodyTabChange = async (value: string) => {
+    if (value !== "preview") return;
+    setIsPreviewLoading(true);
+    try {
+      const res = await previewTemplate({ contentHtml });
+      setPreviewHtml(res.html ?? null);
+    } catch {
+      setPreviewHtml(null);
+    } finally {
+      setIsPreviewLoading(false);
     }
   };
 
@@ -172,7 +190,29 @@ export default function TemplateEditorForm({ initialData, templateId }: Props) {
       {/* TipTap Editor */}
       <div className="flex flex-col gap-2">
         <Label>Email Body</Label>
-        <TipTapEditor content={contentHtml} onChange={handleEditorChange} />
+        <Tabs defaultValue="edit" onValueChange={handleBodyTabChange}>
+          <TabsList>
+            <TabsTrigger value="edit">Edit</TabsTrigger>
+            <TabsTrigger value="preview">Preview</TabsTrigger>
+          </TabsList>
+          <TabsContent value="edit">
+            <TipTapEditor content={contentHtml} onChange={handleEditorChange} />
+          </TabsContent>
+          <TabsContent value="preview">
+            {isPreviewLoading ? (
+              <div className="rounded-md border p-4 text-sm text-muted-foreground">
+                Rendering preview...
+              </div>
+            ) : (
+              <iframe
+                srcDoc={previewHtml ?? ""}
+                sandbox=""
+                title="Email preview"
+                className="h-[600px] w-full rounded-md border bg-white"
+              />
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Actions */}
