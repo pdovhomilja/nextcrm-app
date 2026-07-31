@@ -20,6 +20,19 @@ describe("renderCampaignEmail", () => {
     expect(html).toMatch(/<body[^>]*style=/);
   });
 
+  it("strips script tags and event handlers while keeping formatting", async () => {
+    const html = await renderCampaignEmail({
+      contentHtml:
+        '<p>Hi <strong>there</strong></p><script>alert(1)</script><img src="x" onerror="alert(2)"><a href="javascript:alert(3)">click</a>',
+      unsubscribeUrl,
+    });
+
+    expect(html).toContain("<p>Hi <strong>there</strong></p>");
+    expect(html).not.toContain("<script");
+    expect(html).not.toContain("onerror");
+    expect(html).not.toContain("javascript:alert");
+  });
+
   it("includes a visible unsubscribe link pointing at the given URL", async () => {
     const html = await renderCampaignEmail({ contentHtml, unsubscribeUrl });
 

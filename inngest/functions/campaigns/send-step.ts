@@ -39,7 +39,7 @@ export const campaignSendStep = inngest.createFunction(
     const unsubscribeUrl = `${process.env.NEXTAUTH_URL}/api/campaigns/unsubscribe?token=${sendRecord.unsubscribe_token}`;
 
     const html = await renderCampaignEmail({
-      contentHtml: resolveMergeTags(sendRecord.step.template.content_html, sendRecord.target),
+      contentHtml: resolveMergeTags(sendRecord.step.template.content_html, sendRecord.target, true),
       unsubscribeUrl,
     });
 
