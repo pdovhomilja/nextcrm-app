@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  const sessionId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  const sessionId = crypto.randomUUID();
   const abortController = new AbortController();
   activeSessions.set(sessionId, { controller: abortController, enrichmentId: enrichmentRecord.id });
 

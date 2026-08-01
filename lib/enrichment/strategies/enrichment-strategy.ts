@@ -9,6 +9,15 @@ export interface EnrichmentStrategyOptions {
   openaiApiKey: string;
 }
 
+const PERSONAL_EMAIL_DOMAINS = ['gmail.com', 'aol.com', 'icloud.com', 'protonmail.com'];
+// Providers matched by first domain label so country TLDs count too (yahoo.co.uk, …)
+const PERSONAL_EMAIL_PROVIDERS = ['yahoo', 'hotmail', 'outlook'];
+
+function isPersonalEmailDomain(domain: string): boolean {
+  const d = domain.toLowerCase();
+  return PERSONAL_EMAIL_DOMAINS.includes(d) || PERSONAL_EMAIL_PROVIDERS.includes(d.split('.')[0]);
+}
+
 export class EnrichmentStrategy {
   private firecrawl: FirecrawlService;
   private openai: OpenAIService;
@@ -43,15 +52,7 @@ export class EnrichmentStrategy {
         console.log(`[EnrichmentStrategy] Parsed domain: ${emailDomain}, Generated ${searchQueries.length} search queries`);
         
         // Check if it's a personal email domain
-        isPersonalEmail = !!(emailDomain && (
-          emailDomain.includes('gmail.com') || 
-          emailDomain.includes('yahoo.') || 
-          emailDomain.includes('hotmail.') || 
-          emailDomain.includes('outlook.') ||
-          emailDomain.includes('aol.com') ||
-          emailDomain.includes('icloud.com') ||
-          emailDomain.includes('protonmail.com')
-        ));
+        isPersonalEmail = !!(emailDomain && isPersonalEmailDomain(emailDomain));
         
         // Add parsed info to context
         if (parsedEmail.companyName) {
@@ -68,7 +69,7 @@ export class EnrichmentStrategy {
           f.name === 'company_website'
         );
         
-        if (websiteField && emailDomain && !emailDomain.includes('gmail.com') && !emailDomain.includes('yahoo.') && !emailDomain.includes('hotmail.') && !emailDomain.includes('outlook.')) {
+        if (websiteField && emailDomain && !isPersonalEmail) {
           results[websiteField.name] = {
             field: websiteField.name,
             value: `https://${emailDomain}`,

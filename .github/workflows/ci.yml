@@ -10,6 +10,9 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 # Inert dummy env shared by every job. Module-level code (OpenAI client in
 # /api/inngest, better-auth, minio, …) reads these at import, so typecheck,
 # tests and next build all need them present. Nothing here is a real
