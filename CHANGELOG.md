@@ -5,6 +5,13 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.21.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.21.0...v0.21.1) (2026-08-01)
+
+
+### Fixed
+
+* add calendar connection feedback ([854233f](https://github.com/pdovhomilja/nextcrm-app/commit/854233f4538264e4a9e6b4800b58051ba7b651c0))
+
 ## [0.21.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.20.2...v0.21.0) (2026-08-01)
 
 
