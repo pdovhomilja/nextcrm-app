@@ -5,6 +5,14 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.21.2](https://github.com/pdovhomilja/nextcrm-app/compare/v0.21.1...v0.21.2) (2026-08-01)
+
+
+### Fixed
+
+* **security:** resolve all open Dependabot and CodeQL alerts ([d7145d7](https://github.com/pdovhomilja/nextcrm-app/commit/d7145d7732c457ac40a6e1fccbf1ca53e8c1188a))
+* **security:** resolve all open Dependabot and CodeQL alerts ([5a0c382](https://github.com/pdovhomilja/nextcrm-app/commit/5a0c3820c65d8c36eb41a5949b2ebccfebd73dbe))
+
 ## [0.21.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.21.0...v0.21.1) (2026-08-01)
 
 
