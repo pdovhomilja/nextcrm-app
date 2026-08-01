@@ -203,10 +203,9 @@ If looking for "Example Corp" but finding "Microsoft has 200,000 employees":
 
 **CRITICAL**: Use domain names and context to verify if it's the same company. Be smart about name variations.
 
-**TARGET ENTITY - IMPORTANT**: You are ONLY extracting information about:
-${contextInfo}
+**TARGET ENTITY - IMPORTANT**: You are ONLY extracting information about the TARGET ENTITY described under "TARGET ENTITY:" at the start of the user message.
 
-**CRITICAL**: 
+**CRITICAL**:
 - Only extract information about the TARGET ENTITY listed above
 - Company name variations are OK (e.g., "Seek AI" vs "Seek", "OpenAI" vs "Open AI")
 - Look for domain matches (e.g., if searching for "Seek AI" and you see content from seek.ai, that's likely the same company)
@@ -218,8 +217,7 @@ ${contextInfo}
 - Always capitalize industry names properly (e.g., "Technology", "Healthcare", "E-commerce", "Finance")
 - If you find information about CLEARLY DIFFERENT companies, IGNORE IT
 
-Fields to extract for the TARGET ENTITY ONLY:
-${fieldDescriptions}
+Extract only the fields listed under "FIELDS TO EXTRACT:" in the user message, for the TARGET ENTITY ONLY.
 
 ADDITIONAL GUIDELINES:
 1. Employee Count: Must be explicitly stated. Look for phrases like "X employees", "team of X", "X people". If not found, return null.
@@ -246,7 +244,7 @@ DOMAIN PARKING/SALE PAGES:
           },
           {
             role: 'user',
-            content: trimmedContent,
+            content: `TARGET ENTITY:\n${contextInfo}\n\nFIELDS TO EXTRACT:\n${fieldDescriptions}\n\nCONTENT:\n${trimmedContent}`,
           },
         ],
         response_format: zodResponseFormat(schema, 'enrichment_data'),
@@ -431,13 +429,9 @@ DOMAIN PARKING/SALE PAGES:
   - WRONG: "Contact Us | Acme Corp" (this is just a page title)
   - RIGHT: "Our headquarters is located in San Francisco, CA"
 
-**CRITICAL**: Do NOT use page titles, headers, or navigation text as exact_text. The exact_text must be from the actual content that contains the value.${customInstructions}
+**CRITICAL**: Do NOT use page titles, headers, or navigation text as exact_text. The exact_text must be from the actual content that contains the value.
 
-Context about the entity:
-${contextInfo}
-
-Fields to extract:
-${fieldDescriptions}
+Context about the entity is provided under "TARGET ENTITY:" and the fields to extract under "FIELDS TO EXTRACT:" at the start of the user message.
 
 Example of what the content looks like:
 """
@@ -488,7 +482,7 @@ REMEMBER: Extract exact_text from the "=== ACTUAL CONTENT BELOW ===" section, NO
           },
           {
             role: 'user',
-            content: trimmedContent,
+            content: `TARGET ENTITY:\n${contextInfo}\n\nFIELDS TO EXTRACT:\n${fieldDescriptions}${customInstructions}\n\nCONTENT:\n${trimmedContent}`,
           },
         ],
         response_format: zodResponseFormat(schema, 'corroborated_data'),
@@ -576,7 +570,7 @@ REMEMBER: Extract exact_text from the "=== ACTUAL CONTENT BELOW ===" section, NO
             );
             
             if (looksLikeTitle) {
-              console.log(`[VALIDATION] Filtering out title-like evidence for ${field.name}:`, e.exact_text);
+              console.log('[VALIDATION] Filtering out title-like evidence for field:', field.name, e.exact_text);
               return false;
             }
             
@@ -606,14 +600,14 @@ REMEMBER: Extract exact_text from the "=== ACTUAL CONTENT BELOW ===" section, NO
             
             const looksLikeHallucination = hallucationPatterns.some(pattern => pattern.test(e.exact_text));
             if (looksLikeHallucination) {
-              console.log(`[VALIDATION] Detected potential hallucination pattern in ${field.name}:`, e.exact_text);
+              console.log('[VALIDATION] Detected potential hallucination pattern in field:', field.name, e.exact_text);
               return false;
             }
             
             // Validate that the snippet actually contains the value
             const isValid = validateSnippetContainsValue(e.exact_text, e.value as string | number | boolean | string[]);
             if (!isValid) {
-              console.log(`[VALIDATION] Filtering out evidence for ${field.name} - snippet doesn't contain value:`, {
+              console.log("[VALIDATION] Filtering out evidence - snippet doesn't contain value:", field.name, {
                 value: e.value,
                 snippet: e.exact_text.substring(0, 100) + '...'
               });
@@ -647,7 +641,7 @@ REMEMBER: Extract exact_text from the "=== ACTUAL CONTENT BELOW ===" section, NO
             
             // Debug log what we're keeping
             if (validSourceContext.length > 0) {
-              console.log(`[SOURCE-CONTEXT] For ${field.name}, keeping ${validSourceContext.length} sources:`,
+              console.log('[SOURCE-CONTEXT] Keeping sources for field:', field.name, validSourceContext.length,
                 validSourceContext.map((sc: { url: string; snippet: string }) => ({ url: sc.url, snippet: sc.snippet.substring(0, 50) + '...' }))
               );
 
@@ -702,7 +696,11 @@ REMEMBER: Extract exact_text from the "=== ACTUAL CONTENT BELOW ===" section, NO
               // Validate GitHub URLs in evidence
               if (enrichmentResult.corroboration) {
                 enrichmentResult.corroboration.evidence = enrichmentResult.corroboration.evidence.filter((e) => {
-                if (e.source_url && e.source_url.includes('github.com')) {
+                let sourceHost = '';
+                try {
+                  sourceHost = new URL(e.source_url && e.source_url.includes('://') ? e.source_url : `https://${e.source_url}`).hostname;
+                } catch { /* not a parseable URL */ }
+                if (e.source_url && (sourceHost === 'github.com' || sourceHost.endsWith('.github.com'))) {
                   // Check if this GitHub URL was provided in the context
                   const validGithubUrls = Array.isArray(context.validGithubUrls) ? context.validGithubUrls as string[] : [];
                   const isValid = validGithubUrls.includes(e.source_url);

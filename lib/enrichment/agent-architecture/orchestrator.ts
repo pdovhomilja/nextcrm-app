@@ -1359,9 +1359,14 @@ export class AgentOrchestrator {
         if (enrichment.sourceContext && Array.isArray(enrichment.sourceContext)) {
           enrichment.sourceContext = enrichment.sourceContext.filter(ctx => {
             if (!ctx.url) return false;
-            
+
+            let ctxHost = '';
+            try {
+              ctxHost = new URL(ctx.url.includes('://') ? ctx.url : `https://${ctx.url}`).hostname;
+            } catch { /* not a parseable URL */ }
+
             // If it claims to be a GitHub URL, verify it was in our search results
-            if (ctx.url.includes('github.com')) {
+            if (ctxHost === 'github.com' || ctxHost.endsWith('.github.com')) {
               const isValidGithub = githubResults.some(r => r.url === ctx.url);
               if (!isValidGithub) {
                 console.log(`[AGENT-TECH-STACK] Removing hallucinated GitHub URL: ${ctx.url}`);
@@ -1781,9 +1786,14 @@ export class AgentOrchestrator {
       if (src.includes('webflow')) technologies.add('Webflow');
       if (src.includes('stripe')) technologies.add('Stripe');
       if (src.includes('cloudflare')) technologies.add('Cloudflare');
-      if (src.includes('cdn.jsdelivr.net')) technologies.add('jsDelivr CDN');
-      if (src.includes('unpkg.com')) technologies.add('unpkg CDN');
-      if (src.includes('cdnjs.cloudflare.com')) technologies.add('cdnjs');
+      let srcHost = '';
+      try {
+        // Base handles relative and scheme-relative srcs; those resolve to the placeholder host
+        srcHost = new URL(src, 'https://placeholder.invalid').hostname;
+      } catch { /* malformed src */ }
+      if (srcHost === 'cdn.jsdelivr.net') technologies.add('jsDelivr CDN');
+      if (srcHost === 'unpkg.com') technologies.add('unpkg CDN');
+      if (srcHost === 'cdnjs.cloudflare.com') technologies.add('cdnjs');
     }
     
     // Check for CSS frameworks in link tags

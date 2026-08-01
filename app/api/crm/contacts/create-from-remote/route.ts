@@ -18,8 +18,6 @@ export async function POST(req: Request) {
 
   const body = await req.json();
 
-  console.log(body, "body");
-
   const { name, surname, email, phone, company, message, tag } = body;
   if (!name || !surname || !email || !phone || !company || !message || !tag) {
     return NextResponse.json(
