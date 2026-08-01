@@ -14,10 +14,24 @@ const MERGE_TAG_MAP: Record<string, keyof MergeTagTarget> = {
   position: "position",
 };
 
-export function resolveMergeTags(html: string, target: MergeTagTarget): string {
+function escapeHtmlValue(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+export function resolveMergeTags(
+  html: string,
+  target: MergeTagTarget,
+  escapeHtml = false
+): string {
   return html.replace(/\{\{(\w+)\}\}/g, (match, tag: string) => {
     const field = MERGE_TAG_MAP[tag];
     if (!field) return match; // unknown tag — leave as-is
-    return target[field] ?? "";
+    const value = target[field] ?? "";
+    return escapeHtml ? escapeHtmlValue(value) : value;
   });
 }
