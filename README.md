@@ -300,12 +300,25 @@ Available soon at: http://docs.nextcrm.io
 
 1. Copy the environment variables to .env
 
-   ```sh
-   cp .env.example .env
-   ```
+   Linux / macOS:
 
    ```sh
+   cp .env.example .env
    cp .env.local.example .env.local
+   ```
+
+   Windows (PowerShell):
+
+   ```powershell
+   Copy-Item .env.example .env
+   Copy-Item .env.local.example .env.local
+   ```
+
+   Windows (Command Prompt):
+
+   ```cmd
+   copy .env.example .env
+   copy .env.local.example .env.local
    ```
 
    **.env**
@@ -361,6 +374,13 @@ nano .env                # set ADMIN_EMAIL to a real email you own
 docker compose up -d
 ```
 
+> **Windows:** `cp` and `nano` are not available on Windows. Use `Copy-Item` (PowerShell) or `copy` (Command Prompt) to copy the file, and edit it with `notepad`:
+>
+> ```powershell
+> Copy-Item .env.docker .env
+> notepad .env           # set ADMIN_EMAIL to a real email you own
+> ```
+
 Open [http://localhost:3000](http://localhost:3000) — the app is ready, the schema is migrated, and the seeded admin user matches the `ADMIN_EMAIL` you set.
 
 > [!IMPORTANT]
@@ -384,6 +404,14 @@ You **never edit `Dockerfile` or `docker-compose.yml`** to add your secrets. Ins
 ```sh
 cp .env.docker .env
 nano .env       # set ADMIN_EMAIL, internal service passwords, and any optional API keys
+docker compose up -d
+```
+
+Windows (PowerShell):
+
+```powershell
+Copy-Item .env.docker .env
+notepad .env    # set ADMIN_EMAIL, internal service passwords, and any optional API keys
 docker compose up -d
 ```
 
