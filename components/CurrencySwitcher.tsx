@@ -18,7 +18,6 @@ export function CurrencySwitcher() {
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="gap-1 text-xs font-medium">
           <span>{current?.symbol ?? "$"}</span>
-          <span>{displayCurrency}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
@@ -30,7 +29,6 @@ export function CurrencySwitcher() {
           >
             <span className="w-6 text-center">{c.symbol}</span>
             <span className="font-medium">{c.code}</span>
-            <span className="ml-auto text-xs text-muted-foreground">{c.name}</span>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
