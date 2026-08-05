@@ -68,6 +68,13 @@ Before you begin, ensure you have the following installed:
    cp .env.local.example .env.local
    ```
 
+   On Windows, `cp` is not available. Use `Copy-Item` (PowerShell) or `copy` (Command Prompt) instead:
+
+   ```powershell
+   Copy-Item .env.example .env
+   Copy-Item .env.local.example .env.local
+   ```
+
    Edit both files with your configuration:
    - `.env`: Set your PostgreSQL connection string (`DATABASE_URL`)
    - `.env.local`: Configure authentication, file uploads, and other services
