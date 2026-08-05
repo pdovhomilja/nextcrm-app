@@ -53,7 +53,7 @@ export const emailSyncAccount = inngest.createFunction(
       "search-uids",
       async () => {
         const pwd = decrypt(account.passwordEncrypted);
-        const acc = { username: account.username, password: pwd, imapHost: account.imapHost, imapPort: account.imapPort, imapSsl: account.imapSsl };
+        const acc = { username: account.username, password: pwd, imapHost: account.imapHost, imapPort: account.imapPort, imapSsl: account.imapSsl, allowSelfSignedTls: account.allowSelfSignedTls };
         const [inbox, sent] = await Promise.all([
           connectImap(acc).then(async (imap) => {
             try { return await searchFolder(imap, "INBOX", account.inboxLastUid ?? 0); }
@@ -86,7 +86,7 @@ export const emailSyncAccount = inngest.createFunction(
     // Step: fetch headers only — separate connections per folder to avoid box-state conflicts
     const { inboxHeaders, sentHeaders } = await step.run("fetch-headers", async () => {
       const pwd = decrypt(account.passwordEncrypted);
-      const acc = { username: account.username, password: pwd, imapHost: account.imapHost, imapPort: account.imapPort, imapSsl: account.imapSsl };
+      const acc = { username: account.username, password: pwd, imapHost: account.imapHost, imapPort: account.imapPort, imapSsl: account.imapSsl, allowSelfSignedTls: account.allowSelfSignedTls };
       const [inbox, sent] = await Promise.all([
         inboxUids.length > 0
           ? connectImap(acc).then(async (imap) => {

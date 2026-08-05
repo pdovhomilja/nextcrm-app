@@ -32,6 +32,7 @@ export async function getEmailAccounts() {
       smtpSsl: true,
       username: true,
       isActive: true,
+      allowSelfSignedTls: true,
       sentFolderName: true,
       lastSyncedAt: true,
       createdAt: true,
@@ -48,6 +49,7 @@ type CreateInput = {
   smtpHost: string;
   smtpPort: number;
   smtpSsl: boolean;
+  allowSelfSignedTls?: boolean;
   username: string;
   password: string;
   sentFolderName?: string;
@@ -88,6 +90,7 @@ export async function createEmailAccount(input: CreateInput) {
       smtpHost: input.smtpHost,
       smtpPort: input.smtpPort,
       smtpSsl: input.smtpSsl,
+      allowSelfSignedTls: input.allowSelfSignedTls ?? false,
       username: input.username,
       passwordEncrypted,
       ...(input.sentFolderName && { sentFolderName: input.sentFolderName }),
@@ -114,6 +117,7 @@ type TestInput = {
   imapHost: string;
   imapPort: number;
   imapSsl: boolean;
+  allowSelfSignedTls?: boolean;
   username: string;
   password: string;
 };
@@ -145,9 +149,9 @@ export async function testEmailConnection(
       host: pinned.address,
       port: input.imapPort,
       tls: input.imapSsl,
-      // Dial the validated IP; keep the hostname for TLS SNI. (rejectUnauthorized
-      // left as-is — TLS verification is a separate workstream.)
-      tlsOptions: { servername: pinned.hostname, rejectUnauthorized: false },
+      // Dial the validated IP; keep the hostname for TLS SNI and verify the
+      // certificate against it. Self-signed servers opt out per account.
+      tlsOptions: { servername: pinned.hostname, rejectUnauthorized: !input.allowSelfSignedTls },
       authTimeout: 8000,
       connTimeout: 8000,
     });
@@ -175,6 +179,7 @@ type ListFoldersInput = {
   imapHost: string;
   imapPort: number;
   imapSsl: boolean;
+  allowSelfSignedTls?: boolean;
   username: string;
   password: string;
 };
@@ -205,7 +210,9 @@ export async function listImapFolders(
       host: pinned.address,
       port: input.imapPort,
       tls: input.imapSsl,
-      tlsOptions: { servername: pinned.hostname, rejectUnauthorized: false },
+      // Dial the validated IP; keep the hostname for TLS SNI and verify the
+      // certificate against it. Self-signed servers opt out per account.
+      tlsOptions: { servername: pinned.hostname, rejectUnauthorized: !input.allowSelfSignedTls },
       authTimeout: 8000,
       connTimeout: 8000,
     });

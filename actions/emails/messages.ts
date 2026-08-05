@@ -89,6 +89,7 @@ export async function getEmail(id: string) {
           imapHost: true,
           imapPort: true,
           imapSsl: true,
+          allowSelfSignedTls: true,
           sentFolderName: true,
         },
       });
@@ -103,6 +104,7 @@ export async function getEmail(id: string) {
             imapHost: account.imapHost,
             imapPort: account.imapPort,
             imapSsl: account.imapSsl,
+            allowSelfSignedTls: account.allowSelfSignedTls,
           },
           folderName,
           email.imapUid
@@ -182,6 +184,9 @@ export async function sendEmail(input: SendInput) {
     // the object literal keeps only the well-known SMTP props and TS resolves the
     // SMTP overload correctly.
     ...({ servername: account.smtpHost } as { servername: string }),
+    // Verify the certificate against the SNI hostname; self-signed servers opt
+    // out per account.
+    tls: { rejectUnauthorized: !account.allowSelfSignedTls },
   });
 
   const info = await transporter.sendMail({
