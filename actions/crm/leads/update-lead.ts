@@ -7,6 +7,7 @@ import { writeAuditLog, diffObjects } from "@/lib/audit-log";
 import {
   requireAuthenticated,
   assertCanWriteLead,
+  assertCanWriteAccount,
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
@@ -57,6 +58,9 @@ export const updateLead = async (data: {
   }
   try {
     await assertCanWriteLead(user, id);
+    // Parent-write: relinking the lead to an account requires write on it,
+    // mirroring createLead.
+    if (accountIDs) await assertCanWriteAccount(user, accountIDs);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;
