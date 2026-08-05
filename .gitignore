@@ -76,3 +76,8 @@ v8-compile-cache-*/
 
 #superpowers plugin
 .superpowers/
+
+# pnpm artifacts
+.modules.yaml
+.package-map.json
+.pnpm-workspace-state-v1.json

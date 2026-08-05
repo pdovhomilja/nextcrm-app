@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { TbBrandNextjs, TbBrandTypescript } from "react-icons/tb";
 import { BiLogoMongodb, BiLogoTailwindCss } from "react-icons/bi";
-import { SiPrisma, SiReact, SiOpenai } from "react-icons/si";
+import { SiPrisma, SiReact } from "react-icons/si";
 import fs from "fs";
 import path from "path";
 
@@ -57,7 +57,6 @@ export async function GET(request: Request) {
               <SiPrisma size={50} color={"purple"} />
               <SiReact size={50} color={"blue"} />
               <BiLogoTailwindCss size={50} color={"blue"} />
-              <SiOpenai size={50} color={"white"} />
             </span>
 
             <p tw="text-neutral-300 pb-10">https://demo.nextcrm.io</p>
