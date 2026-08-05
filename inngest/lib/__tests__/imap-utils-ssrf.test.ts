@@ -39,9 +39,23 @@ it("a blocked host is not dialled", async () => {
   expect(mockImapInstances.length).toBe(0);
 });
 
-it("an allowed host dials the PINNED IP with servername=hostname", async () => {
+it("an allowed host dials the PINNED IP with servername=hostname and verifies the cert", async () => {
   guard.mockResolvedValue({ address: "93.184.216.34", hostname: "imap.example.com" });
   await connectImap({ username: "u", password: "p", imapHost: "imap.example.com", imapPort: 993, imapSsl: true });
   expect(mockImapInstances[0].config.host).toBe("93.184.216.34");
   expect(mockImapInstances[0].config.tlsOptions.servername).toBe("imap.example.com");
+  expect(mockImapInstances[0].config.tlsOptions.rejectUnauthorized).toBe(true);
+});
+
+it("verification stays on by default (no allowSelfSignedTls flag)", async () => {
+  guard.mockResolvedValue({ address: "93.184.216.34", hostname: "imap.example.com" });
+  await connectImap({ username: "u", password: "p", imapHost: "imap.example.com", imapPort: 993, imapSsl: true });
+  expect(mockImapInstances[0].config.tlsOptions.rejectUnauthorized).toBe(true);
+});
+
+it("allowSelfSignedTls opts out of certificate verification", async () => {
+  guard.mockResolvedValue({ address: "93.184.216.34", hostname: "imap.example.com" });
+  await connectImap({ username: "u", password: "p", imapHost: "imap.example.com", imapPort: 993, imapSsl: true, allowSelfSignedTls: true });
+  expect(mockImapInstances[0].config.tlsOptions.servername).toBe("imap.example.com");
+  expect(mockImapInstances[0].config.tlsOptions.rejectUnauthorized).toBe(false);
 });

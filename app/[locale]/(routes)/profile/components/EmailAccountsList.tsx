@@ -43,6 +43,7 @@ export function EmailAccountsList({ accounts }: { accounts: Account[] }) {
     smtpHost: "",
     smtpPort: "465",
     smtpSsl: true,
+    allowSelfSignedTls: false,
     username: "",
     password: "",
     sentFolderName: "Sent",
@@ -78,6 +79,7 @@ export function EmailAccountsList({ accounts }: { accounts: Account[] }) {
       imapHost: form.imapHost,
       imapPort: Number(form.imapPort),
       imapSsl: form.imapSsl,
+      allowSelfSignedTls: form.allowSelfSignedTls,
       username: form.username,
       password: form.password,
     });
@@ -96,6 +98,7 @@ export function EmailAccountsList({ accounts }: { accounts: Account[] }) {
       imapHost: form.imapHost,
       imapPort: Number(form.imapPort),
       imapSsl: form.imapSsl,
+      allowSelfSignedTls: form.allowSelfSignedTls,
       username: form.username,
       password: form.password,
     });
@@ -355,6 +358,24 @@ export function EmailAccountsList({ accounts }: { accounts: Account[] }) {
                 className="ml-4"
               />
               <Label htmlFor="smtpSsl">SMTP SSL</Label>
+            </div>
+
+            {/* Self-signed TLS opt-out */}
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="allowSelfSignedTls"
+                  checked={form.allowSelfSignedTls}
+                  onCheckedChange={(v) => setForm((f) => ({ ...f, allowSelfSignedTls: v }))}
+                />
+                <Label htmlFor="allowSelfSignedTls">
+                  Allow self-signed TLS certificates
+                </Label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Off by default. Enable only for a mail server you control that uses
+                a self-signed certificate.
+              </p>
             </div>
 
             {testResult && (

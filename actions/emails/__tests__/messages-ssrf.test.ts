@@ -40,7 +40,7 @@ it("a blocked stored SMTP host is not dialled", async () => {
   expect(createTransport).not.toHaveBeenCalled();
 });
 
-it("an allowed host dials the PINNED IP with servername=hostname", async () => {
+it("an allowed host dials the PINNED IP with servername=hostname and cert verification on", async () => {
   findAcc.mockResolvedValue({
     id: "a1", userId: "u1", smtpHost: "smtp.example.com", smtpPort: 465, smtpSsl: true,
     username: "u", passwordEncrypted: "enc",
@@ -50,4 +50,17 @@ it("an allowed host dials the PINNED IP with servername=hostname", async () => {
   const cfg = createTransport.mock.calls[0][0];
   expect(cfg.host).toBe("93.184.216.34");
   expect(cfg.servername).toBe("smtp.example.com");
+  expect(cfg.tls.rejectUnauthorized).toBe(true);
+});
+
+it("allowSelfSignedTls opts out of cert verification", async () => {
+  findAcc.mockResolvedValue({
+    id: "a1", userId: "u1", smtpHost: "smtp.example.com", smtpPort: 465, smtpSsl: true,
+    allowSelfSignedTls: true, username: "u", passwordEncrypted: "enc",
+  });
+  guard.mockResolvedValue({ address: "93.184.216.34", hostname: "smtp.example.com" });
+  await sendEmail({ accountId: "a1", to: ["x@y.z"], subject: "s", body: "b" } as any);
+  const cfg = createTransport.mock.calls[0][0];
+  expect(cfg.servername).toBe("smtp.example.com");
+  expect(cfg.tls.rejectUnauthorized).toBe(false);
 });

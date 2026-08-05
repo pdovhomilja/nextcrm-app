@@ -8,6 +8,8 @@ export type ImapAccount = {
   imapHost: string;
   imapPort: number;
   imapSsl: boolean;
+  /** Per-account opt-out: allow self-signed mail-server certs. Off by default. */
+  allowSelfSignedTls?: boolean;
 };
 
 export type ParsedHeader = {
@@ -31,9 +33,9 @@ export async function connectImap(account: ImapAccount): Promise<Imap> {
       host: pinned.address,
       port: account.imapPort,
       tls: account.imapSsl,
-      // Dial the validated IP; keep the hostname for TLS SNI. (rejectUnauthorized
-      // left as-is — TLS verification is a separate workstream.)
-      tlsOptions: { servername: account.imapHost, rejectUnauthorized: false },
+      // Dial the validated IP; keep the hostname for TLS SNI and verify the
+      // certificate against it. Self-signed servers opt out per account.
+      tlsOptions: { servername: account.imapHost, rejectUnauthorized: !account.allowSelfSignedTls },
       authTimeout: 15000,
       connTimeout: 15000,
     });

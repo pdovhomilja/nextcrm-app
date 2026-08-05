@@ -1459,6 +1459,7 @@ model EmailAccount {
   smtpHost          String
   smtpPort          Int
   smtpSsl           Boolean   @default(true)
+  allowSelfSignedTls Boolean  @default(false)
   username          String
   passwordEncrypted String
   isActive          Boolean   @default(true)

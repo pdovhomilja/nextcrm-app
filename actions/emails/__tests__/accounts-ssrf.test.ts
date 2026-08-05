@@ -60,7 +60,7 @@ describe("testEmailConnection", () => {
     expect(mockImapInstances.length).toBe(0);
   });
 
-  it("an allowed host is dialled on the PINNED IP with servername=hostname", async () => {
+  it("an allowed host is dialled on the PINNED IP with servername=hostname and cert verification on", async () => {
     guard.mockResolvedValue({ address: "93.184.216.34", hostname: "mail.example.com" });
     const res = await testEmailConnection({
       imapHost: "mail.example.com", imapPort: 993, imapSsl: true, username: "u", password: "p",
@@ -68,6 +68,18 @@ describe("testEmailConnection", () => {
     expect(res).toEqual({ ok: true });
     expect(mockImapInstances[0].config.host).toBe("93.184.216.34");
     expect(mockImapInstances[0].config.tlsOptions.servername).toBe("mail.example.com");
+    expect(mockImapInstances[0].config.tlsOptions.rejectUnauthorized).toBe(true);
+  });
+
+  it("allowSelfSignedTls opts out of cert verification", async () => {
+    guard.mockResolvedValue({ address: "93.184.216.34", hostname: "mail.example.com" });
+    const res = await testEmailConnection({
+      imapHost: "mail.example.com", imapPort: 993, imapSsl: true,
+      allowSelfSignedTls: true, username: "u", password: "p",
+    });
+    expect(res).toEqual({ ok: true });
+    expect(mockImapInstances[0].config.tlsOptions.servername).toBe("mail.example.com");
+    expect(mockImapInstances[0].config.tlsOptions.rejectUnauthorized).toBe(false);
   });
 });
 
@@ -81,13 +93,23 @@ describe("listImapFolders", () => {
     expect(mockImapInstances.length).toBe(0);
   });
 
-  it("an allowed host is dialled on the PINNED IP", async () => {
+  it("an allowed host is dialled on the PINNED IP with cert verification on", async () => {
     guard.mockResolvedValue({ address: "93.184.216.34", hostname: "imap.example.com" });
     await listImapFolders({
       imapHost: "imap.example.com", imapPort: 993, imapSsl: true, username: "u", password: "p",
     });
     expect(mockImapInstances[0].config.host).toBe("93.184.216.34");
     expect(mockImapInstances[0].config.tlsOptions.servername).toBe("imap.example.com");
+    expect(mockImapInstances[0].config.tlsOptions.rejectUnauthorized).toBe(true);
+  });
+
+  it("allowSelfSignedTls opts out of cert verification", async () => {
+    guard.mockResolvedValue({ address: "93.184.216.34", hostname: "imap.example.com" });
+    await listImapFolders({
+      imapHost: "imap.example.com", imapPort: 993, imapSsl: true,
+      allowSelfSignedTls: true, username: "u", password: "p",
+    });
+    expect(mockImapInstances[0].config.tlsOptions.rejectUnauthorized).toBe(false);
   });
 });
 
@@ -107,5 +129,30 @@ describe("createEmailAccount", () => {
     guard.mockResolvedValue({ address: "93.184.216.34", hostname: "mail.example.com" });
     await createEmailAccount({ ...input, imapHost: "mail.example.com", smtpHost: "smtp.example.com" });
     expect(prismadb.emailAccount.create).toHaveBeenCalled();
+  });
+
+  it("defaults allowSelfSignedTls to false", async () => {
+    guard.mockResolvedValue({ address: "93.184.216.34", hostname: "mail.example.com" });
+    await createEmailAccount({ ...input, imapHost: "mail.example.com", smtpHost: "smtp.example.com" });
+    expect(prismadb.emailAccount.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ allowSelfSignedTls: false }),
+      })
+    );
+  });
+
+  it("persists allowSelfSignedTls when opted in", async () => {
+    guard.mockResolvedValue({ address: "93.184.216.34", hostname: "mail.example.com" });
+    await createEmailAccount({
+      ...input,
+      imapHost: "mail.example.com",
+      smtpHost: "smtp.example.com",
+      allowSelfSignedTls: true,
+    });
+    expect(prismadb.emailAccount.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ allowSelfSignedTls: true }),
+      })
+    );
   });
 });

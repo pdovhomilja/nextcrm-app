@@ -71,6 +71,7 @@ export const emailLinkCrm = inngest.createFunction(
           imapHost: true,
           imapPort: true,
           imapSsl: true,
+          allowSelfSignedTls: true,
           sentFolderName: true,
         },
       });
@@ -91,6 +92,7 @@ export const emailLinkCrm = inngest.createFunction(
                 imapHost: emailAccount.imapHost,
                 imapPort: emailAccount.imapPort,
                 imapSsl: emailAccount.imapSsl,
+                allowSelfSignedTls: emailAccount.allowSelfSignedTls,
               },
               folderName,
               email.imapUid!
