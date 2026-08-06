@@ -85,4 +85,46 @@ describe("GET google calendar OAuth callback", () => {
     expect(res.headers.get("location")).toContain("calendar=no-refresh-token");
     expect(upsert).not.toHaveBeenCalled();
   });
+
+  it("consumes only the matched state, preserving other pending connect tabs", async () => {
+    // Two tabs open authorize calls -> cookie holds ["s1","s2"]. Tab one
+    // completes with state s1; s2 must remain valid for tab two's callback.
+    getToken.mockResolvedValue({
+      tokens: { refresh_token: "rt", access_token: "at", scope: READONLY },
+    });
+    const req = new NextRequest(
+      `http://localhost/api/profile/calendar-connections/google/callback?code=c1&state=${STATE}`
+    );
+    req.cookies.set("gcal_oauth_state", JSON.stringify([STATE, "s2"]));
+
+    const res = await GET(req);
+    expect(res.headers.get("location")).toContain("calendar=connected");
+    expect(res.cookies.get("gcal_oauth_state")?.value).toBe(JSON.stringify(["s2"]));
+  });
+
+  it("rejects a mismatched state (constant-time), clearing the cookie", async () => {
+    const req = new NextRequest(
+      `http://localhost/api/profile/calendar-connections/google/callback?code=c1&state=attacker`
+    );
+    req.cookies.set("gcal_oauth_state", JSON.stringify([STATE]));
+
+    const res = await GET(req);
+    expect(res.headers.get("location")).toContain("calendar=state-mismatch");
+    expect(res.cookies.get("gcal_oauth_state")?.value).toBe("");
+    expect(upsert).not.toHaveBeenCalled();
+  });
+
+  it("accepts a legacy single-state (non-JSON) cookie", async () => {
+    getToken.mockResolvedValue({
+      tokens: { refresh_token: "rt", access_token: "at", scope: READONLY },
+    });
+    const req = new NextRequest(
+      `http://localhost/api/profile/calendar-connections/google/callback?code=c1&state=${STATE}`
+    );
+    req.cookies.set("gcal_oauth_state", STATE);
+
+    const res = await GET(req);
+    expect(res.headers.get("location")).toContain("calendar=connected");
+    expect(upsert).toHaveBeenCalled();
+  });
 });

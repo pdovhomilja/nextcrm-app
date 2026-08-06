@@ -31,7 +31,6 @@ const updateActivity = prismadb.crm_Activities.update as jest.Mock;
 const createTarget = prismadb.crm_Targets.create as jest.Mock;
 const findUser = prismadb.users.findFirst as jest.Mock;
 const match = matchCounterparty as jest.Mock;
-const transaction = prismadb.$transaction as jest.Mock;
 
 function input(overrides: Partial<CalendarEventInput> = {}): CalendarEventInput {
   return {
@@ -147,6 +146,9 @@ describe("upsertCalendarEvent", () => {
     );
     expect(res).toEqual({ action: "skipped", reason: "no-match" });
     expect(createTarget).not.toHaveBeenCalled();
+    // The google no-match path never uses the host user id, so it must not
+    // pay for the users.findFirst query.
+    expect(findUser).not.toHaveBeenCalled();
   });
 
   it("creates a Target for unmatched calendly invitees, assigned to the host rep", async () => {
@@ -177,10 +179,22 @@ describe("upsertCalendarEvent", () => {
     );
   });
 
-  it("treats a concurrent duplicate-create race as benign (P2002)", async () => {
+  it("treats a concurrent duplicate-create race as benign (P2002 at the create boundary)", async () => {
+    // The race is the read-then-create gap: findUnique returned nothing, then
+    // the unique (source, externalId) constraint rejects the create inside the
+    // transaction — not the transaction wrapper itself. Simulating the
+    // rejection on crm_CalendarEvents.create exercises the real interleaving.
     match.mockResolvedValue([{ entityType: "contact", entityId: "c1" }]);
-    transaction.mockRejectedValueOnce(Object.assign(new Error("dup"), { code: "P2002" }));
+    createMapping.mockRejectedValueOnce(Object.assign(new Error("dup"), { code: "P2002" }));
     const res = await upsertCalendarEvent(input());
     expect(res).toEqual({ action: "skipped", reason: "concurrent-duplicate" });
+  });
+
+  it("fails loudly when a future third source hits the no-match path, rather than inheriting Calendly's Target auto-create", async () => {
+    match.mockResolvedValue([]);
+    await expect(
+      upsertCalendarEvent(input({ source: "hypothetical" as CalendarEventInput["source"] }))
+    ).rejects.toThrow(/no-match behavior undefined for calendar source: hypothetical/);
+    expect(createTarget).not.toHaveBeenCalled();
   });
 });

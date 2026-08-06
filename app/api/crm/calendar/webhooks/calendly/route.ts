@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyCalendlySignature } from "@/lib/crm/calendar/calendly-signature";
 import { getCalendlySettings } from "@/lib/crm/calendar/calendly-settings";
+import { isCalendlyReplay } from "@/lib/crm/calendar/calendly-replay";
 import { inngest } from "@/inngest/client";
 
 type CalendlyWebhookBody = {
@@ -51,9 +52,16 @@ export async function POST(req: NextRequest) {
   if (!p.uri || !ev?.start_time) {
     console.warn(
       "[calendly-webhook] dropping event with missing uri/start_time",
-      body.event
+      { event: body.event, uri: p.uri, start_time: ev?.start_time }
     );
     return NextResponse.json({ ok: true });
+  }
+
+  // Calendly retries un-2xx'd deliveries with the same body. The downstream
+  // (source, externalId) upsert is already idempotent, so correctness does not
+  // depend on this — it only stops duplicate work reaching Inngest.
+  if (isCalendlyReplay(body.event, p.uri, ev.start_time)) {
+    return NextResponse.json({ ok: true, dropped: "replay" });
   }
 
   await inngest.send({

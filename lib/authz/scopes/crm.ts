@@ -444,19 +444,31 @@ export async function assertCanWriteTargetList(
   if (!row) throw new AuthorizationError();
 }
 
-// crm_Accounts_Tasks has NO deletedAt (hard delete). Ownership = creator or assignee.
-// NOTE: this covers creator/assignee. Broadening to parent-account writers is a
-// deliberate, safe narrowing deferred here (it would only widen access).
+// crm_Accounts_Tasks has NO deletedAt (hard delete). A user may act on a task
+// when they are its owner (creator or assignee) OR a writer on a parent
+// (account/opportunity) — mirroring createTask, which requires write on the
+// parent to create a task under it.
 export async function assertCanWriteCrmTask(
   user: AuthzUser,
   taskId: string,
 ): Promise<void> {
-  const where =
-    user.role === "admin" || user.role === "manager"
-      ? { id: taskId }
-      : { id: taskId, OR: [{ createdBy: user.id }, { user: user.id }] };
-  const row = await prismadb.crm_Accounts_Tasks.findFirst({ where, select: { id: true } });
-  if (!row) throw new AuthorizationError();
+  if (user.role === "admin" || user.role === "manager") {
+    const row = await prismadb.crm_Accounts_Tasks.findFirst({
+      where: { id: taskId },
+      select: { id: true },
+    });
+    if (!row) throw new AuthorizationError();
+    return;
+  }
+  const task = await prismadb.crm_Accounts_Tasks.findUnique({
+    where: { id: taskId },
+    select: { id: true, createdBy: true, user: true, account: true, opportunity_id: true },
+  });
+  if (!task) throw new AuthorizationError();
+  if (task.createdBy === user.id || task.user === user.id) return;
+  if (task.account) return assertCanWriteAccount(user, task.account);
+  if (task.opportunity_id) return assertCanWriteOpportunity(user, task.opportunity_id);
+  throw new AuthorizationError();
 }
 
 // Line items carry no ownership column; authority is the parent opportunity/contract

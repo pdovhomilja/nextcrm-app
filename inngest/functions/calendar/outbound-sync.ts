@@ -292,7 +292,15 @@ export const calendarOutboundSync = inngest.createFunction(
         // so the rep's next edit would decide "insert" again and send a second
         // real invite email to the customer. Repoint the row at our activity
         // instead — the Google event is provably ours, we created it moments
-        // ago — and log the now-orphaned duplicate loudly for an operator.
+        // ago — and soft-delete the now-orphaned duplicate.
+        //
+        // Note on `attendeeEmails`: on every mapping write (this repoint, the
+        // insert create, and the patch update) it stores the CRM's INTENT —
+        // the counterparty we invited, or [] when the CRM has no counterparty
+        // — never the Google echo. The Google guest list can diverge from it
+        // (the rep can add guests on the Google side after the event is
+        // created), and that divergence is deliberately not read back into the
+        // mapping. Confirmed intended in the two-way-sync hardening backlog.
         const conflicting = await prismadb.crm_CalendarEvents.findUnique({
           where: {
             source_externalId: { source: "google", externalId: inserted.id },
@@ -304,13 +312,6 @@ export const calendarOutboundSync = inngest.createFunction(
         if (!conflicting) throw error;
         if (conflicting.activityId === activityId) return;
 
-        console.error(
-          `[calendar-outbound-sync] mapping conflict on google event ${inserted.id}: ` +
-            `it was claimed by activity ${conflicting.activityId} while pushing activity ` +
-            `${activityId} (inbound poller raced the insert). Repointed the mapping to ` +
-            `${activityId} and soft-deleted activity ${conflicting.activityId}, which is a ` +
-            `duplicate of this meeting created by that race.`
-        );
         // Both writes go in ONE transaction. Committing the repoint without
         // the soft-delete is unrecoverable on retry: the retried step's
         // `create` fails P2002 again, but `findUnique` now reports the row as
@@ -347,6 +348,19 @@ export const calendarOutboundSync = inngest.createFunction(
             data: { deletedAt: new Date() },
           }),
         ]);
+        // Log only AFTER the transaction commits. Logging first and then
+        // reconciling meant the operator alert claimed the repoint +
+        // soft-delete had happened when a failure inside `$transaction` would
+        // leave them uncommitted — and the retry path (P2002 -> findUnique ->
+        // now-ours early return) would never revisit the soft-delete, so the
+        // claim could stay permanently false.
+        console.error(
+          `[calendar-outbound-sync] mapping conflict on google event ${inserted.id}: ` +
+            `it was claimed by activity ${conflicting.activityId} while pushing activity ` +
+            `${activityId} (inbound poller raced the insert). Repointed the mapping to ` +
+            `${activityId} and soft-deleted activity ${conflicting.activityId}, which is a ` +
+            `duplicate of this meeting created by that race.`
+        );
       }
     });
     return { pushed: true, did: "insert" };

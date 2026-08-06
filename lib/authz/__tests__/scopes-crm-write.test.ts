@@ -6,7 +6,8 @@ jest.mock("@/lib/prisma", () => ({
     crm_Opportunities: { findFirst: jest.fn() },
     crm_Contracts: { findFirst: jest.fn() },
     crm_TargetLists: { findFirst: jest.fn() },
-    crm_Accounts_Tasks: { findFirst: jest.fn() },
+    crm_Accounts_Tasks: { findFirst: jest.fn(), findUnique: jest.fn() },
+    crm_Accounts: { findFirst: jest.fn() },
     crm_OpportunityLineItems: { findUnique: jest.fn() },
     crm_ContractLineItems: { findUnique: jest.fn() },
   },
@@ -91,8 +92,11 @@ describe("assertCanWriteTargetList (created_by only, no assigned_to)", () => {
   });
 });
 
-describe("assertCanWriteCrmTask (createdBy OR user assignee, no deletedAt)", () => {
+describe("assertCanWriteCrmTask (creator/assignee OR parent-writer, no deletedAt)", () => {
   const find = prismadb.crm_Accounts_Tasks.findFirst as jest.Mock;
+  const findUnique = prismadb.crm_Accounts_Tasks.findUnique as jest.Mock;
+  const findAccount = prismadb.crm_Accounts.findFirst as jest.Mock;
+  const findOpportunity = prismadb.crm_Opportunities.findFirst as jest.Mock;
 
   it("admin: bare id where (no deletedAt column on this model)", async () => {
     find.mockResolvedValue({ id: "t1" });
@@ -100,17 +104,58 @@ describe("assertCanWriteCrmTask (createdBy OR user assignee, no deletedAt)", () 
     expect(find).toHaveBeenCalledWith({ where: { id: "t1" }, select: { id: true } });
   });
 
-  it("user: scoped to creator or assignee", async () => {
-    find.mockResolvedValue({ id: "t1" });
+  it("user: allowed when the user is the creator", async () => {
+    findUnique.mockResolvedValue({ id: "t1", createdBy: "u3", user: "other", account: null, opportunity_id: null });
     await assertCanWriteCrmTask({ id: "u3", role: "user" }, "t1");
-    expect(find).toHaveBeenCalledWith({
-      where: { id: "t1", OR: [{ createdBy: "u3" }, { user: "u3" }] },
-      select: { id: true },
+    expect(findUnique).toHaveBeenCalledWith({
+      where: { id: "t1" },
+      select: { id: true, createdBy: true, user: true, account: true, opportunity_id: true },
     });
+    expect(findAccount).not.toHaveBeenCalled();
+    expect(findOpportunity).not.toHaveBeenCalled();
   });
 
-  it("throws when not creator/assignee", async () => {
-    find.mockResolvedValue(null);
+  it("user: allowed when the user is the assignee", async () => {
+    findUnique.mockResolvedValue({ id: "t1", createdBy: "other", user: "u3", account: null, opportunity_id: null });
+    await assertCanWriteCrmTask({ id: "u3", role: "user" }, "t1");
+    expect(findAccount).not.toHaveBeenCalled();
+    expect(findOpportunity).not.toHaveBeenCalled();
+  });
+
+  it("user: allowed as a writer on the parent account", async () => {
+    findUnique.mockResolvedValue({ id: "t1", createdBy: "other", user: "other", account: "a1", opportunity_id: null });
+    findAccount.mockResolvedValue({ id: "a1" });
+    await assertCanWriteCrmTask({ id: "u3", role: "user" }, "t1");
+    expect(findAccount).toHaveBeenCalled();
+    expect(findAccount.mock.calls[0][0]).toMatchObject({ where: { id: "a1" } });
+    expect(findOpportunity).not.toHaveBeenCalled();
+  });
+
+  it("user: allowed as a writer on the parent opportunity", async () => {
+    findUnique.mockResolvedValue({ id: "t1", createdBy: "other", user: "other", account: null, opportunity_id: "o1" });
+    findOpportunity.mockResolvedValue({ id: "o1" });
+    await assertCanWriteCrmTask({ id: "u3", role: "user" }, "t1");
+    expect(findOpportunity).toHaveBeenCalled();
+    expect(findAccount).not.toHaveBeenCalled();
+  });
+
+  it("throws when not creator/assignee and the parent write is denied", async () => {
+    findUnique.mockResolvedValue({ id: "t1", createdBy: "other", user: "other", account: "a1", opportunity_id: null });
+    findAccount.mockResolvedValue(null);
+    await expect(
+      assertCanWriteCrmTask({ id: "u3", role: "user" }, "t1")
+    ).rejects.toBeInstanceOf(AuthorizationError);
+  });
+
+  it("throws when the task has no writable parent", async () => {
+    findUnique.mockResolvedValue({ id: "t1", createdBy: "other", user: "other", account: null, opportunity_id: null });
+    await expect(
+      assertCanWriteCrmTask({ id: "u3", role: "user" }, "t1")
+    ).rejects.toBeInstanceOf(AuthorizationError);
+  });
+
+  it("throws when the task does not exist", async () => {
+    findUnique.mockResolvedValue(null);
     await expect(
       assertCanWriteCrmTask({ id: "u3", role: "user" }, "t1")
     ).rejects.toBeInstanceOf(AuthorizationError);

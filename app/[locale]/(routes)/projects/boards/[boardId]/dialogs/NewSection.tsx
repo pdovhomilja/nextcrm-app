@@ -26,7 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Loader } from "@/components/ui/loader";
 import { useTranslations } from "next-intl";
 import { createSection } from "@/actions/projects/create-section";
 
@@ -64,6 +64,7 @@ const NewSectionDialog = ({ boardId }: Props) => {
   //Actions
 
   const onSubmit = async (data: NewAccountFormValues) => {
+    setOpen(false);
     setIsLoading(true);
     try {
       const result = await createSection({ boardId, title: data.title });
@@ -79,7 +80,6 @@ const NewSectionDialog = ({ boardId }: Props) => {
         title: "",
       });
       setIsLoading(false);
-      setOpen(false);
       router.refresh();
     }
   };
@@ -87,8 +87,15 @@ const NewSectionDialog = ({ boardId }: Props) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="px-2">{t("newSection.trigger")}</Button>
+        <Button className="px-2" disabled={isLoading}>
+          {isLoading ? <Loader /> : t("newSection.trigger")}
+        </Button>
       </DialogTrigger>
+      {isLoading && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-background/60">
+          <Loader />
+        </div>
+      )}
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{t("newSection.title")}</DialogTitle>
@@ -96,48 +103,42 @@ const NewSectionDialog = ({ boardId }: Props) => {
             {t("newSection.description")}
           </DialogDescription>
         </DialogHeader>
-        {isLoading ? (
-          <div className="flex flex-col gap-2 py-4">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
-          </div>
-        ) : (
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-4"
-            >
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("newSection.nameLabel")}</FormLabel>
-                    <FormControl>
-                      <Input
-                        disabled={isLoading}
-                        placeholder={t("newSection.namePlaceholder")}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setOpen(false)}
-                >
-                  {t("newSection.cancel")}
-                </Button>
-                <Button type="submit">{t("newSection.create")}</Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        )}
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-4"
+          >
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("newSection.nameLabel")}</FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={isLoading}
+                      placeholder={t("newSection.namePlaceholder")}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+              >
+                {t("newSection.cancel")}
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {t("newSection.create")}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

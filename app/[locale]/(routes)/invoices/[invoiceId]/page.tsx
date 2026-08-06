@@ -81,6 +81,7 @@ export default async function InvoiceDetailPage({ params }: Props) {
           balanceDue={invoice.balanceDue.toString()}
           currency={invoice.currency}
           accountEmail={accountEmail}
+          hasPdf={!!invoice.pdfStorageKey}
         />
       </div>
 
@@ -304,7 +305,9 @@ export default async function InvoiceDetailPage({ params }: Props) {
                   <TableCell className="text-right">
                     {li.taxRate
                       ? `${li.taxRate.name} (${li.taxRate.rate}%)`
-                      : "-"}
+                      : li.taxRateSnapshot
+                        ? `${li.taxRateSnapshot}%`
+                        : "-"}
                   </TableCell>
                   <TableCell className="text-right font-mono font-medium">
                     {formatCurrency(

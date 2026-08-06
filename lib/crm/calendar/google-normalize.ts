@@ -34,6 +34,7 @@ export function normalizeGoogleEvent(
 
   const repDomain = opts.accountEmail.split("@")[1]?.toLowerCase();
   const counterparty = attendees
+    .filter((a) => !a.resource)
     .map((a) => a.email?.toLowerCase())
     .filter((e): e is string => Boolean(e))
     .filter((e) => e !== opts.accountEmail.toLowerCase())

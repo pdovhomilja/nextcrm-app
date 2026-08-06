@@ -36,11 +36,13 @@ export function decideOutboundAction(input: {
     source: string;
     externalId: string;
     status: string;
-    // The start time Google is currently advertising for this event. Needed to
-    // tell a genuine reschedule (startAt !== activity.date) from a non-date
-    // edit on an already-past meeting (startAt === activity.date) — see the
-    // live-mapping branch below.
-    startAt?: Date | null;
+    // The start time Google is currently advertising for this event. Required
+    // (never just absent) because the live-mapping branch below has to tell a
+    // genuine reschedule (startAt !== activity.date) from a non-date edit on
+    // an already-past meeting (startAt === activity.date) — a caller without a
+    // mapping row just passes `null`, which is the same signal as "no date
+    // advertised".
+    startAt: Date | null;
     rawPayload?: unknown;
   } | null;
   hasWriteConnection: boolean;

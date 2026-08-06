@@ -76,3 +76,15 @@ v8-compile-cache-*/
 
 #superpowers plugin
 .superpowers/
+
+# local object storage (dev fallback when MINIO is not configured)
+/.storage/
+
+# dev server logs
+nextd.err.log
+nextd.out.log
+
+# pnpm artifacts
+.modules.yaml
+.package-map.json
+.pnpm-workspace-state-v1.json

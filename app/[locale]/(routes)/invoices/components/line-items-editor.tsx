@@ -29,6 +29,9 @@ export interface LineItemRow {
   unitPrice: number;
   discountPercent: number;
   taxRateId: string;
+  /** Effective tax rate percentage. For preset rates this mirrors the preset;
+   *  a manual/custom rate has taxRateId === "" and taxRatePercent set. */
+  taxRatePercent: number;
 }
 
 interface LineItemsEditorProps {
@@ -89,6 +92,7 @@ export function LineItemsEditor({
         unitPrice: 0,
         discountPercent: 0,
         taxRateId: "",
+        taxRatePercent: 0,
       },
     ]);
   };
@@ -101,9 +105,27 @@ export function LineItemsEditor({
     });
   };
 
-  const getTaxRateValue = (taxRateId: string) => {
+  const getPresetRate = (taxRateId: string) => {
     const tr = taxRates.find((t) => t.id === taxRateId);
     return tr ? parseFloat(tr.rate) : 0;
+  };
+
+  const getEffectiveTaxRate = (item: LineItemRow) =>
+    item.taxRateId ? getPresetRate(item.taxRateId) : item.taxRatePercent;
+
+  const handleTaxRateSelect = (index: number, value: string) => {
+    if (value === "custom") {
+      updateItem(index, { taxRateId: "" });
+      return;
+    }
+    if (value === "none") {
+      updateItem(index, { taxRateId: "", taxRatePercent: 0 });
+      return;
+    }
+    updateItem(index, {
+      taxRateId: value,
+      taxRatePercent: getPresetRate(value),
+    });
   };
 
   const l = labels ?? {};
@@ -126,7 +148,7 @@ export function LineItemsEditor({
           item.quantity,
           item.unitPrice,
           item.discountPercent,
-          getTaxRateValue(item.taxRateId)
+          getEffectiveTaxRate(item)
         );
 
         return (
@@ -202,24 +224,48 @@ export function LineItemsEditor({
               }
             />
 
-            <Select
-              value={item.taxRateId || "none"}
-              onValueChange={(v) =>
-                updateItem(index, { taxRateId: v === "none" ? "" : v })
-              }
-            >
-              <SelectTrigger className="h-9 text-xs">
-                <SelectValue placeholder="Tax..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None</SelectItem>
-                {taxRates.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
-                    {t.name} ({t.rate}%)
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-1">
+              <Select
+                value={
+                  item.taxRateId ||
+                  (item.taxRatePercent > 0 ? "custom" : "none")
+                }
+                onValueChange={(v) => handleTaxRateSelect(index, v)}
+              >
+                <SelectTrigger className="h-9 text-xs">
+                  <SelectValue placeholder="Tax..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {taxRates.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name} ({t.rate}%)
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="custom">Custom...</SelectItem>
+                </SelectContent>
+              </Select>
+              {!item.taxRateId && (
+                <div className="flex items-center gap-1">
+                  <Input
+                    className="h-9 flex-1 text-xs"
+                    type="number"
+                    min={0}
+                    max={100}
+                    step="0.01"
+                    value={item.taxRatePercent}
+                    onChange={(e) =>
+                      updateItem(index, {
+                        taxRateId: "",
+                        taxRatePercent: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                    placeholder="0"
+                  />
+                  <span className="text-xs text-muted-foreground">%</span>
+                </div>
+              )}
+            </div>
 
             <span className="text-sm font-mono text-right">
               {lineTotal.toFixed(2)}

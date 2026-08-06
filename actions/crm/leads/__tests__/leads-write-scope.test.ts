@@ -66,6 +66,26 @@ describe("updateLead", () => {
     expect(assertLead).toHaveBeenCalledWith(OWNER, "l-1");
     expect(lUpdate).toHaveBeenCalled();
   });
+
+  it("denies relinking to an account the user cannot write", async () => {
+    assertAccount.mockRejectedValue(new AuthorizationError());
+    const res = await updateLead({ id: "l-1", lastName: "X", accountIDs: "foreign-acc" } as any);
+    expect(res).toEqual({ error: "Forbidden" });
+    expect(assertAccount).toHaveBeenCalledWith(OWNER, "foreign-acc");
+    expect(lUpdate).not.toHaveBeenCalled();
+  });
+
+  it("allows relinking when the user can write the target account", async () => {
+    await updateLead({ id: "l-1", lastName: "X", accountIDs: "acc-1" } as any);
+    expect(assertAccount).toHaveBeenCalledWith(OWNER, "acc-1");
+    expect(lUpdate).toHaveBeenCalled();
+  });
+
+  it("does not require account write when no account is linked", async () => {
+    await updateLead({ id: "l-1", lastName: "X" } as any);
+    expect(assertAccount).not.toHaveBeenCalled();
+    expect(lUpdate).toHaveBeenCalled();
+  });
 });
 
 describe("deleteLead", () => {

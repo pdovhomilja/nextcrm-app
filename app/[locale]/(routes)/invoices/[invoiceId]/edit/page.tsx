@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { prismadb } from "@/lib/prisma";
+import { isInvoiceEditable } from "@/lib/invoices/permissions";
 import Container from "@/app/[locale]/(routes)/components/ui/Container";
 import { InvoiceForm } from "../../components/invoice-form";
 import { getInvoiceById } from "../../data/get-invoices";
@@ -18,7 +19,7 @@ export default async function EditInvoicePage({ params }: Props) {
     notFound();
   }
 
-  if (invoice.status !== "DRAFT") {
+  if (!isInvoiceEditable(invoice.status)) {
     redirect(`/invoices/${invoiceId}`);
   }
 
@@ -88,6 +89,12 @@ export default async function EditInvoicePage({ params }: Props) {
       unitPrice: li.unitPrice.toString(),
       discountPercent: li.discountPercent.toString(),
       taxRateId: li.taxRateId,
+      taxRatePercent:
+        li.taxRateSnapshot != null
+          ? parseFloat(li.taxRateSnapshot.toString())
+          : li.taxRate
+            ? parseFloat(li.taxRate.rate.toString())
+            : 0,
     })),
   };
 

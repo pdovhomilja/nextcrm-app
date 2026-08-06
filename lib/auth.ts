@@ -5,7 +5,8 @@ import { admin as adminPlugin } from "better-auth/plugins";
 import { prismadb } from "@/lib/prisma";
 import { ac, admin, manager, user } from "@/lib/auth-permissions";
 import { newUserNotify } from "@/lib/new-user-notify";
-import resendHelper from "@/lib/resend";
+import resendHelper, { RESEND_NOT_CONFIGURED_ERROR } from "@/lib/resend";
+import sendEmail from "@/lib/sendmail";
 
 const isDemo = process.env.NEXT_PUBLIC_APP_URL === "https://demo.nextcrm.io";
 
@@ -69,17 +70,24 @@ export const auth = betterAuth({
   plugins: [
     emailOTP({
       sendVerificationOTP: async ({ email, otp, type }) => {
+        const from = `${process.env.NEXT_PUBLIC_APP_NAME} <${process.env.EMAIL_FROM}>`;
+        const subject = `Your verification code: ${otp}`;
+        const text = `Your one-time verification code is: ${otp}\n\nThis code expires in 5 minutes.\n\nIf you did not request this, please ignore this email.`;
+
         try {
           const resend = await resendHelper();
           await resend.emails.send({
-            from: `${process.env.NEXT_PUBLIC_APP_NAME} <${process.env.EMAIL_FROM}>`,
+            from,
             to: email,
-            subject: `Your verification code: ${otp}`,
-            text: `Your one-time verification code is: ${otp}\n\nThis code expires in 5 minutes.\n\nIf you did not request this, please ignore this email.`,
+            subject,
+            text,
           });
         } catch (e) {
-          // In dev/test, email sending may fail — OTP is captured by testUtils plugin
-          if (process.env.NODE_ENV !== "production") {
+          if (e instanceof Error && e.message === RESEND_NOT_CONFIGURED_ERROR) {
+            // Resend not configured — fall back to the SMTP mailer
+            await sendEmail({ from, to: email, subject, text });
+          } else if (process.env.NODE_ENV !== "production") {
+            // In dev/test, email sending may fail — OTP is captured by testUtils plugin
             console.log(`[Auth] OTP email send failed for ${email}, but captured by testUtils`);
           } else {
             throw e;

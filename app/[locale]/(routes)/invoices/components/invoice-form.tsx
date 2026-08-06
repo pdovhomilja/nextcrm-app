@@ -81,6 +81,7 @@ interface InvoiceFormProps {
       unitPrice: string;
       discountPercent: string;
       taxRateId: string | null;
+      taxRatePercent?: number;
     }>;
   };
 }
@@ -148,6 +149,11 @@ export function InvoiceForm({
         unitPrice: parseFloat(li.unitPrice) || 0,
         discountPercent: parseFloat(li.discountPercent) || 0,
         taxRateId: li.taxRateId ?? "",
+        taxRatePercent:
+          li.taxRatePercent ??
+          (li.taxRateId
+            ? getTaxRateValue(li.taxRateId)
+            : 0),
       }));
     }
     return [
@@ -158,6 +164,7 @@ export function InvoiceForm({
         unitPrice: 0,
         discountPercent: 0,
         taxRateId: defaultTaxRateId,
+        taxRatePercent: defaultTaxRateId ? getTaxRateValue(defaultTaxRateId) : 0,
       },
     ];
   });
@@ -171,7 +178,7 @@ export function InvoiceForm({
     quantity: li.quantity,
     unitPrice: li.unitPrice,
     discountPercent: li.discountPercent,
-    taxRate: getTaxRateValue(li.taxRateId),
+    taxRate: li.taxRateId ? getTaxRateValue(li.taxRateId) : li.taxRatePercent,
   }));
 
   const handleSubmit = async () => {
@@ -208,6 +215,7 @@ export function InvoiceForm({
             unitPrice: l.unitPrice,
             discountPercent: l.discountPercent,
             taxRateId: l.taxRateId || null,
+            taxRatePercent: l.taxRateId ? undefined : l.taxRatePercent,
           })),
       };
 

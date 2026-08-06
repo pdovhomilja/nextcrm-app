@@ -1,22 +1,10 @@
 import { inngest } from "@/inngest/client";
 import { prismadb } from "@/lib/prisma";
-import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
-import { minioClient, MINIO_BUCKET } from "@/lib/minio";
+import { getObjectBuffer, putObject, getObjectPublicUrl } from "@/lib/storage";
 import sharp from "sharp";
 
 const THUMB_WIDTH = 200;
 const THUMB_HEIGHT = 200;
-
-async function fetchFileBuffer(key: string): Promise<Buffer> {
-  const response = await minioClient.send(
-    new GetObjectCommand({ Bucket: MINIO_BUCKET, Key: key })
-  );
-  const chunks: Uint8Array[] = [];
-  for await (const chunk of response.Body as AsyncIterable<Uint8Array>) {
-    chunks.push(chunk);
-  }
-  return Buffer.concat(chunks);
-}
 
 export const generateDocumentThumbnail = inngest.createFunction(
   {
@@ -40,7 +28,7 @@ export const generateDocumentThumbnail = inngest.createFunction(
       return { skipped: "non-image file" };
     }
 
-    const buffer = await fetchFileBuffer(document.key);
+    const buffer = await getObjectBuffer(document.key);
     const thumbnail = await sharp(buffer)
       .resize(THUMB_WIDTH, THUMB_HEIGHT, { fit: "cover" })
       .png()
@@ -48,16 +36,9 @@ export const generateDocumentThumbnail = inngest.createFunction(
 
     const thumbnailKey = `thumbnails/${documentId}.png`;
 
-    await minioClient.send(
-      new PutObjectCommand({
-        Bucket: MINIO_BUCKET,
-        Key: thumbnailKey,
-        Body: thumbnail,
-        ContentType: "image/png",
-      })
-    );
+    await putObject(thumbnailKey, thumbnail, "image/png");
 
-    const thumbnailUrl = `${process.env.NEXT_PUBLIC_MINIO_ENDPOINT}/${MINIO_BUCKET}/${thumbnailKey}`;
+    const thumbnailUrl = getObjectPublicUrl(thumbnailKey);
 
     await prismadb.documents.update({
       where: { id: documentId },

@@ -5,6 +5,11 @@ const withNextIntl = require("next-intl/plugin")(
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
+  // Pin the Turbopack workspace root to this project. A stray pnpm workspace in
+  // the user's home directory can otherwise be mis-detected as the root.
+  turbopack: {
+    root: __dirname,
+  },
   serverExternalPackages: ["pdf-parse", "pdfjs-dist"],
   images: {
     remotePatterns: [
