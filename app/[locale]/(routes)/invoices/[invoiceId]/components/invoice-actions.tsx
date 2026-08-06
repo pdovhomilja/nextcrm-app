@@ -26,6 +26,7 @@ interface InvoiceActionsProps {
   balanceDue: string;
   currency: string;
   accountEmail?: string;
+  hasPdf: boolean;
 }
 
 export function InvoiceActions({
@@ -34,11 +35,15 @@ export function InvoiceActions({
   balanceDue,
   currency,
   accountEmail,
+  hasPdf,
 }: InvoiceActionsProps) {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
 
   const isDraft = status === "DRAFT";
+  const canEdit = ["DRAFT", "ISSUED", "SENT", "PARTIALLY_PAID", "OVERDUE"].includes(
+    status
+  );
   const canPay = [
     "ISSUED",
     "SENT",
@@ -74,8 +79,9 @@ export function InvoiceActions({
     setLoading("regenerate");
     const res = await regenerateInvoicePdf(invoiceId);
     if (res.ok) {
-      toast.success("PDF regenerated");
+      toast.success(hasPdf ? "PDF regenerated" : "PDF generated");
       router.refresh();
+      window.open(`/api/invoices/${invoiceId}/pdf`, "_blank");
     } else {
       toast.error(res.error);
     }
@@ -84,14 +90,17 @@ export function InvoiceActions({
 
   return (
     <div className="flex flex-wrap gap-2">
+      {canEdit && (
+        <Link href={`/invoices/${invoiceId}/edit`}>
+          <Button variant="outline" size="sm">
+            <Pencil className="mr-2 h-4 w-4" />
+            Edit
+          </Button>
+        </Link>
+      )}
+
       {isDraft && (
         <>
-          <Link href={`/invoices/${invoiceId}/edit`}>
-            <Button variant="outline" size="sm">
-              <Pencil className="mr-2 h-4 w-4" />
-              Edit
-            </Button>
-          </Link>
           <Button
             variant="default"
             size="sm"
@@ -142,29 +151,43 @@ export function InvoiceActions({
         Duplicate
       </Button>
 
-      <a
-        href={`/api/invoices/${invoiceId}/pdf`}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <Button variant="outline" size="sm">
-          <FileDown className="mr-2 h-4 w-4" />
-          Download PDF
-        </Button>
-      </a>
-
-      {!isDraft && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRegenerate}
-          disabled={loading === "regenerate"}
-          title="Re-render PDF using current company settings"
+      {hasPdf && (
+        <a
+          href={`/api/invoices/${invoiceId}/pdf`}
+          target="_blank"
+          rel="noopener noreferrer"
         >
-          <RefreshCw className="mr-2 h-4 w-4" />
-          {loading === "regenerate" ? "Regenerating..." : "Regenerate PDF"}
-        </Button>
+          <Button variant="outline" size="sm">
+            <FileDown className="mr-2 h-4 w-4" />
+            Download PDF
+          </Button>
+        </a>
       )}
+
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleRegenerate}
+        disabled={loading === "regenerate"}
+        title={
+          hasPdf
+            ? "Re-render PDF using current company settings"
+            : "Generate the PDF for this invoice"
+        }
+      >
+        {hasPdf ? (
+          <RefreshCw className="mr-2 h-4 w-4" />
+        ) : (
+          <FileDown className="mr-2 h-4 w-4" />
+        )}
+        {loading === "regenerate"
+          ? hasPdf
+            ? "Regenerating..."
+            : "Generating..."
+          : hasPdf
+            ? "Regenerate PDF"
+            : "Generate PDF"}
+      </Button>
     </div>
   );
 }

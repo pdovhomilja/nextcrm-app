@@ -1,12 +1,62 @@
 {
   "name": "nextcrm-app",
   "version": "0.21.2",
-  "private": true,
+  "description": "Full-featured Next.js CRM application (accounts, contacts, opportunities, documents, invoices, email, calendar)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ogc16/nextcrm-app.git"
+  },
+  "keywords": [
+    "crm",
+    "nextjs",
+    "react",
+    "sales",
+    "prisma",
+    "postgres"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
   "engines": {
     "node": ">=22.12.0",
     "pnpm": ">=10.0.0"
   },
   "packageManager": "pnpm@11.9.0",
+  "files": [
+    "app",
+    "actions",
+    "components",
+    "context",
+    "emails",
+    "hooks",
+    "i18n",
+    "inngest",
+    "lib",
+    "locales",
+    "prisma",
+    "proxy.ts",
+    "public",
+    "types",
+    "components.json",
+    "eslint.config.mjs",
+    "next-env.d.ts",
+    "next.config.js",
+    "postcss.config.js",
+    "prisma.config.ts",
+    "tailwind.config.js",
+    "tsconfig.json",
+    ".env.example",
+    ".env.local.example",
+    "!**/__tests__/**",
+    "!**/__mocks__/**",
+    "!**/*.test.ts",
+    "!**/*.test.tsx"
+  ],
+  "exports": {
+    "./package.json": "./package.json"
+  },
   "scripts": {
     "dev": "next dev",
     "inngest:up": "docker compose -f docker-compose.dev.yml up -d",
@@ -28,7 +78,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
-    "test:e2e:debug": "playwright test --debug"
+    "test:e2e:debug": "playwright test --debug",
+    "prepublishOnly": "npx tsc --noEmit"
   },
   "prisma": {
     "seed": "ts-node ./prisma/seeds/seed.ts"

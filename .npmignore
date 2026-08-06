@@ -1,0 +1,19 @@
+# Secrets — never publish these
+.env
+.env.*
+!.env.example
+!.env.local.example
+
+# Build / generated artifacts
+node_modules
+.next
+.storage
+tsconfig.tsbuildinfo
+
+# Logs
+*.log
+nextd.err.log
+nextd.out.log
+
+# OS junk
+.DS_Store

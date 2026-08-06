@@ -7,7 +7,11 @@ import {
 } from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
 import { canReadInvoice, type InvoiceStatus } from "@/lib/invoices/permissions";
-import { getInvoicePdfPresignedUrl } from "@/lib/invoices/storage";
+import {
+  getInvoicePdfPresignedUrl,
+  getInvoicePdfStream,
+} from "@/lib/invoices/storage";
+import { generateAndStoreInvoicePdf } from "@/lib/invoices/pdf/generate";
 
 export async function GET(
   _request: NextRequest,
@@ -38,12 +42,33 @@ export async function GET(
   }
 
   if (!invoice.pdfStorageKey) {
-    return NextResponse.json(
-      { error: "PDF not yet generated. Issue the invoice first." },
-      { status: 404 },
-    );
+    try {
+      const { pdfBuffer } = await generateAndStoreInvoicePdf(invoiceId, "en");
+      return new NextResponse(new Uint8Array(pdfBuffer), {
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `inline; filename="${invoiceId}.pdf"`,
+        },
+      });
+    } catch (err) {
+      console.error("[invoice pdf] on-demand generation failed:", err);
+      return NextResponse.json(
+        { error: "PDF generation failed. Check server logs for details." },
+        { status: 500 },
+      );
+    }
   }
 
   const url = await getInvoicePdfPresignedUrl(invoice.pdfStorageKey);
-  return NextResponse.redirect(url);
+  if (url) return NextResponse.redirect(url);
+
+  const body = await getInvoicePdfStream(invoice.pdfStorageKey);
+  const chunks: Uint8Array[] = [];
+  for await (const chunk of body) chunks.push(chunk);
+  return new NextResponse(Buffer.concat(chunks), {
+    headers: {
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `inline; filename="${invoiceId}.pdf"`,
+    },
+  });
 }

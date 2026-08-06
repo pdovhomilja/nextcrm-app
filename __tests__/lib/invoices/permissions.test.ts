@@ -32,8 +32,16 @@ describe("canEditInvoice", () => {
     expect(canEditInvoice({ status: "DRAFT", createdBy: "u2" }, ad)).toBe(true));
   it("manager can edit any DRAFT", () =>
     expect(canEditInvoice({ status: "DRAFT", createdBy: "u2" }, mg)).toBe(true));
-  it("nobody can edit ISSUED", () =>
-    expect(canEditInvoice({ status: "ISSUED", createdBy: "u1" }, ad)).toBe(false));
+  it("creator can edit own ISSUED", () =>
+    expect(canEditInvoice({ status: "ISSUED", createdBy: "u1" }, u)).toBe(true));
+  it("admin can edit any ISSUED", () =>
+    expect(canEditInvoice({ status: "ISSUED", createdBy: "u2" }, ad)).toBe(true));
+  it("non-creator user cannot edit ISSUED", () =>
+    expect(canEditInvoice({ status: "ISSUED", createdBy: "u2" }, u)).toBe(false));
+  it("nobody can edit PAID", () =>
+    expect(canEditInvoice({ status: "PAID", createdBy: "u1" }, ad)).toBe(false));
+  it("nobody can edit CANCELLED", () =>
+    expect(canEditInvoice({ status: "CANCELLED", createdBy: "u1" }, ad)).toBe(false));
 });
 
 describe("canIssueInvoice", () => {
