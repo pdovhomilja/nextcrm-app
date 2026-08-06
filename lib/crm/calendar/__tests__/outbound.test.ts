@@ -39,7 +39,7 @@ describe("decideOutboundAction", () => {
       decideOutboundAction({ action: "upsert", activity: { ...MEETING, type: "call" }, mapping: null, hasWriteConnection: true })
     ).toEqual({ do: "skip", reason: "not-a-meeting" });
     expect(
-      decideOutboundAction({ action: "upsert", activity: MEETING, mapping: { source: "calendly", externalId: "x", status: "scheduled" }, hasWriteConnection: true })
+      decideOutboundAction({ action: "upsert", activity: MEETING,       mapping: { source: "calendly", externalId: "x", status: "scheduled", startAt: null }, hasWriteConnection: true })
     ).toEqual({ do: "skip", reason: "calendly-owned" });
     expect(
       decideOutboundAction({ action: "upsert", activity: MEETING, mapping: null, hasWriteConnection: false })
@@ -51,13 +51,13 @@ describe("decideOutboundAction", () => {
       decideOutboundAction({ action: "upsert", activity: MEETING, mapping: null, hasWriteConnection: true })
     ).toEqual({ do: "insert" });
     expect(
-      decideOutboundAction({ action: "upsert", activity: MEETING, mapping: { source: "google", externalId: "ev1", status: "scheduled" }, hasWriteConnection: true })
+      decideOutboundAction({ action: "upsert", activity: MEETING, mapping: { source: "google", externalId: "ev1", status: "scheduled", startAt: null }, hasWriteConnection: true })
     ).toEqual({ do: "patch", eventId: "ev1" });
   });
 
   it("cancel deletes when mapped to google, skips when never pushed", () => {
     expect(
-      decideOutboundAction({ action: "cancel", activity: MEETING, mapping: { source: "google", externalId: "ev1", status: "scheduled" }, hasWriteConnection: true })
+      decideOutboundAction({ action: "cancel", activity: MEETING, mapping: { source: "google", externalId: "ev1", status: "scheduled", startAt: null }, hasWriteConnection: true })
     ).toEqual({ do: "delete", eventId: "ev1" });
     expect(
       decideOutboundAction({ action: "cancel", activity: MEETING, mapping: null, hasWriteConnection: true })
@@ -69,7 +69,7 @@ describe("decideOutboundAction", () => {
       decideOutboundAction({
         action: "upsert",
         activity: { ...MEETING, status: "cancelled" },
-        mapping: { source: "google", externalId: "ev1", status: "scheduled" },
+        mapping: { source: "google", externalId: "ev1", status: "scheduled", startAt: null },
         hasWriteConnection: true,
       })
     ).toEqual({ do: "delete", eventId: "ev1" });
@@ -91,7 +91,7 @@ describe("decideOutboundAction", () => {
       decideOutboundAction({
         action: "upsert",
         activity: MEETING,
-        mapping: { source: "google", externalId: "ev1", status: "cancelled" },
+        mapping: { source: "google", externalId: "ev1", status: "cancelled", startAt: null },
         hasWriteConnection: true,
       })
     ).toEqual({ do: "insert" });
@@ -102,7 +102,7 @@ describe("decideOutboundAction", () => {
       decideOutboundAction({
         action: "upsert",
         activity: MEETING,
-        mapping: { source: "google", externalId: "ev1", status: "scheduled" },
+        mapping: { source: "google", externalId: "ev1", status: "scheduled", startAt: null },
         hasWriteConnection: true,
       })
     ).toEqual({ do: "patch", eventId: "ev1" });
@@ -115,7 +115,7 @@ describe("decideOutboundAction", () => {
   });
 
   describe("already-happened meetings are never re-pushed", () => {
-    const GOOGLE_MAPPING = { source: "google", externalId: "ev1", status: "scheduled" };
+    const GOOGLE_MAPPING = { source: "google", externalId: "ev1", status: "scheduled", startAt: null };
 
     it("skips a completed meeting instead of patching it (logging an outcome must not email the customer)", () => {
       expect(
@@ -252,6 +252,7 @@ describe("decideOutboundAction", () => {
             source: "google",
             externalId: "ev1",
             status: "scheduled",
+            startAt: null,
             rawPayload: { organizer: { email: "jane@client.com" } },
           },
           hasWriteConnection: true,
@@ -268,6 +269,7 @@ describe("decideOutboundAction", () => {
             source: "google",
             externalId: "ev1",
             status: "scheduled",
+            startAt: null,
             rawPayload: { organizer: { email: "rep@acme.com", self: true } },
           },
           hasWriteConnection: true,
@@ -280,7 +282,7 @@ describe("decideOutboundAction", () => {
         decideOutboundAction({
           action: "upsert",
           activity: MEETING,
-          mapping: { source: "google", externalId: "ev1", status: "scheduled", rawPayload: {} },
+          mapping: { source: "google", externalId: "ev1", status: "scheduled", startAt: null, rawPayload: {} },
           hasWriteConnection: true,
         })
       ).toEqual({ do: "patch", eventId: "ev1" });
@@ -288,7 +290,7 @@ describe("decideOutboundAction", () => {
         decideOutboundAction({
           action: "upsert",
           activity: MEETING,
-          mapping: { source: "google", externalId: "ev1", status: "scheduled", rawPayload: null },
+          mapping: { source: "google", externalId: "ev1", status: "scheduled", startAt: null, rawPayload: null },
           hasWriteConnection: true,
         })
       ).toEqual({ do: "patch", eventId: "ev1" });
@@ -303,6 +305,7 @@ describe("decideOutboundAction", () => {
             source: "google",
             externalId: "ev1",
             status: "scheduled",
+            startAt: null,
             rawPayload: { organizer: { email: "jane@client.com" } },
           },
           hasWriteConnection: true,

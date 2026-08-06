@@ -644,6 +644,29 @@ describe("calendarOutboundSync", () => {
       errorLog.mockRestore();
     });
 
+    it("does not log the reconciliation when the transaction fails (log fires only after commit)", async () => {
+      // Regression: the operator log used to fire BEFORE the $transaction, so
+      // a failure inside it left the repoint + soft-delete uncommitted while
+      // the alert claimed they happened — and the retry path (P2002 ->
+      // findUnique -> now-ours early return) never revisits the soft-delete,
+      // so the claim could stay permanently false. The log must only appear
+      // after the transaction commits.
+      decide.mockReturnValue({ do: "insert" });
+      createMapping.mockRejectedValue(p2002());
+      findMappingByExternalId.mockResolvedValue({
+        id: "map-inbound",
+        activityId: "act-duplicate",
+      });
+      const errorLog = jest.spyOn(console, "error").mockImplementation(() => {});
+      transaction.mockRejectedValue(new Error("transaction failed"));
+
+      const { result } = run("act1");
+      await expect(result).rejects.toThrow("transaction failed");
+
+      expect(errorLog).not.toHaveBeenCalled();
+      errorLog.mockRestore();
+    });
+
     it("does not soft-delete anything when the conflicting row is already ours", async () => {
       decide.mockReturnValue({ do: "insert" });
       createMapping.mockRejectedValue(p2002());

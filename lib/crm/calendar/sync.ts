@@ -84,12 +84,23 @@ export async function upsertCalendarEvent(input: CalendarEventInput): Promise<Up
     if (duplicate) return { action: "skipped", reason: "duplicate-of-calendly" };
   }
 
-  const hostUserId = await resolveHostUserId(input.hostEmail);
   const matched: EntityLink[] = await matchCounterparty(input.counterpartyEmails);
 
-  if (matched.length === 0 && input.source === "google") {
-    return { action: "skipped", reason: "no-match" };
+  if (matched.length === 0) {
+    if (input.source === "google") {
+      return { action: "skipped", reason: "no-match" };
+    }
+    if (input.source !== "calendly") {
+      // A future third source must define its own no-match behavior. Falling
+      // through would silently inherit Calendly's Target auto-create and
+      // invent a lead from a source nobody reviewed — fail loudly instead.
+      throw new Error(`no-match behavior undefined for calendar source: ${input.source}`);
+    }
   }
+
+  // Resolved lazily (not before the no-match branches above) so the Google
+  // no-match path — which never uses it — skips the user lookup entirely.
+  const hostUserId = await resolveHostUserId(input.hostEmail);
 
   const durationMinutes =
     input.endAt != null
