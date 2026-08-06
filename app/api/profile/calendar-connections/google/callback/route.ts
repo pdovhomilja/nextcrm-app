@@ -7,19 +7,35 @@ import {
   getGoogleOAuthClient,
   scopeLevelFromGrantedScopes,
 } from "@/lib/crm/calendar/google";
+import {
+  STATE_COOKIE,
+  STATE_COOKIE_PATH,
+  parsePendingStates,
+  serializePendingStates,
+  statesEqual,
+} from "@/lib/crm/calendar/oauth-state";
 
-const STATE_COOKIE = "gcal_oauth_state";
-const STATE_COOKIE_PATH = "/api/profile/calendar-connections/google";
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  sameSite: "lax" as const,
+  secure: process.env.NODE_ENV === "production",
+  maxAge: 600,
+  path: STATE_COOKIE_PATH,
+};
 
-function redirectAndClearState(url: string) {
+// Redirect back to the profile page, writing the still-pending OAuth states
+// back to the cookie so OTHER concurrently-open connect tabs keep working.
+// `states` is the consumed list with the matched state already removed; an
+// empty list clears the cookie. The target has no locale prefix on purpose:
+// /profile is a non-API route, so the next-intl middleware (proxy.ts) adds the
+// prefix as it does for every other locale-less path.
+function redirectWithStates(url: string, states: string[]) {
   const res = NextResponse.redirect(url);
-  res.cookies.set(STATE_COOKIE, "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 0,
-    path: STATE_COOKIE_PATH,
-  });
+  if (states.length === 0) {
+    res.cookies.set(STATE_COOKIE, "", { ...COOKIE_OPTIONS, maxAge: 0 });
+  } else {
+    res.cookies.set(STATE_COOKIE, serializePendingStates(states), COOKIE_OPTIONS);
+  }
   return res;
 }
 
@@ -30,19 +46,27 @@ export async function GET(req: NextRequest) {
   }
   const code = req.nextUrl.searchParams.get("code");
   const appUrl = process.env.NEXT_PUBLIC_APP_URL!;
-  if (!code) return redirectAndClearState(`${appUrl}/profile?tab=calendar&calendar=error`);
+  if (!code) return redirectWithStates(`${appUrl}/profile?tab=calendar&calendar=error`, []);
 
-  const cookieState = req.cookies.get(STATE_COOKIE)?.value;
   const queryState = req.nextUrl.searchParams.get("state");
-  if (!cookieState || !queryState || cookieState !== queryState) {
-    return redirectAndClearState(`${appUrl}/profile?tab=calendar&calendar=state-mismatch`);
+  const pending = parsePendingStates(req.cookies.get(STATE_COOKIE)?.value);
+  // Constant-time comparison per candidate — the state is the connect flow's
+  // CSRF token and must not be compared with `!==`.
+  const matchIndex = queryState
+    ? pending.findIndex((s) => statesEqual(s, queryState))
+    : -1;
+  if (matchIndex === -1) {
+    return redirectWithStates(`${appUrl}/profile?tab=calendar&calendar=state-mismatch`, []);
   }
+  // Consume exactly the matched state; leave any others pending so a second
+  // tab's callback is not invalidated by this one completing.
+  pending.splice(matchIndex, 1);
 
   try {
     const auth = getGoogleOAuthClient();
     const { tokens } = await auth.getToken(code);
     if (!tokens.refresh_token) {
-      return redirectAndClearState(`${appUrl}/profile?tab=calendar&calendar=no-refresh-token`);
+      return redirectWithStates(`${appUrl}/profile?tab=calendar&calendar=no-refresh-token`, pending);
     }
     auth.setCredentials(tokens);
     const scopeLevel = scopeLevelFromGrantedScopes(tokens.scope);
@@ -51,7 +75,7 @@ export async function GET(req: NextRequest) {
     const primary = await calendar.calendarList.get({ calendarId: "primary" });
     const accountEmail = primary.data.id;
     if (!accountEmail) {
-      return redirectAndClearState(`${appUrl}/profile?tab=calendar&calendar=error`);
+      return redirectWithStates(`${appUrl}/profile?tab=calendar&calendar=error`, pending);
     }
 
     await prismadb.calendarConnection.upsert({
@@ -97,12 +121,12 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return redirectAndClearState(`${appUrl}/profile?tab=calendar&calendar=connected`);
+    return redirectWithStates(`${appUrl}/profile?tab=calendar&calendar=connected`, pending);
   } catch (error) {
     console.error(
       "[google-calendar-callback]",
       error instanceof Error ? error.message : String(error)
     );
-    return redirectAndClearState(`${appUrl}/profile?tab=calendar&calendar=error`);
+    return redirectWithStates(`${appUrl}/profile?tab=calendar&calendar=error`, pending);
   }
 }

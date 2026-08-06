@@ -64,6 +64,28 @@ describe("normalizeGoogleEvent", () => {
       .toEqual({ skip: "no-counterparty" });
   });
 
+  it("excludes room/resource attendees from the counterparty set", () => {
+    const withRoom = ev({
+      attendees: [
+        { email: "rep@aqunama.com", self: true, responseStatus: "accepted" },
+        { email: "jane@client.com", responseStatus: "accepted" },
+        { email: "boardroom@aqunama.com", resource: true, responseStatus: "accepted" },
+      ],
+    });
+    const res = normalizeGoogleEvent(withRoom, OPTS);
+    expect(res).toMatchObject({ counterpartyEmails: ["jane@client.com"] });
+  });
+
+  it("skips an event whose only external attendees are resources", () => {
+    const onlyRoom = ev({
+      attendees: [
+        { email: "rep@aqunama.com", self: true, responseStatus: "accepted" },
+        { email: "boardroom@aqunama.com", resource: true, responseStatus: "accepted" },
+      ],
+    });
+    expect(normalizeGoogleEvent(onlyRoom, OPTS)).toEqual({ skip: "no-counterparty" });
+  });
+
   it("maps cancelled events to a cancelled input", () => {
     const res = normalizeGoogleEvent(
       { id: "gev1", status: "cancelled" }, OPTS

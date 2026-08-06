@@ -71,6 +71,7 @@ export async function duplicateInvoice(invoiceId: string) {
           unitPrice: li.unitPrice,
           discountPercent: li.discountPercent,
           taxRateId: li.taxRateId,
+          taxRateSnapshot: li.taxRateSnapshot,
           lineSubtotal: li.lineSubtotal,
           lineVat: li.lineVat,
           lineTotal: li.lineTotal,

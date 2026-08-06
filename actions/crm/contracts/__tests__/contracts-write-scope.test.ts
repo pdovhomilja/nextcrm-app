@@ -70,6 +70,32 @@ describe("updateContract", () => {
     expect(assertContract).toHaveBeenCalledWith(OWNER, "ct-1");
     expect(ctUpdate).toHaveBeenCalled();
   });
+
+  it("denies relinking to an account the user cannot write", async () => {
+    assertAccount.mockRejectedValue(new AuthorizationError());
+    const res = await updateContract({
+      id: "ct-1",
+      v: 0,
+      title: "T",
+      value: "100",
+      account: "foreign-acc",
+    } as any);
+    expect(res).toEqual({ error: "Forbidden" });
+    expect(assertAccount).toHaveBeenCalledWith(OWNER, "foreign-acc");
+    expect(ctUpdate).not.toHaveBeenCalled();
+  });
+
+  it("allows relinking when the user can write the target account", async () => {
+    await updateContract({ id: "ct-1", v: 0, title: "T", value: "100", account: "acc-1" } as any);
+    expect(assertAccount).toHaveBeenCalledWith(OWNER, "acc-1");
+    expect(ctUpdate).toHaveBeenCalled();
+  });
+
+  it("does not require account write when no account is linked", async () => {
+    await updateContract({ id: "ct-1", v: 0, title: "T", value: "100" } as any);
+    expect(assertAccount).not.toHaveBeenCalled();
+    expect(ctUpdate).toHaveBeenCalled();
+  });
 });
 
 describe("deleteContract", () => {

@@ -9,6 +9,7 @@ import { getSnapshotRate, getDefaultCurrency } from "@/lib/currency";
 import {
   requireAuthenticated,
   assertCanWriteContract,
+  assertCanWriteAccount,
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
@@ -52,6 +53,9 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   }
   try {
     await assertCanWriteContract(user, id);
+    // Parent-write: relinking the contract to an account requires write on it,
+    // mirroring createNewContract.
+    if (account) await assertCanWriteAccount(user, account);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;

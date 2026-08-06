@@ -1,10 +1,8 @@
 import path from "path";
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-server";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { minioClient, MINIO_BUCKET, MINIO_PUBLIC_URL } from "@/lib/minio";
 import { randomUUID } from "crypto";
+import { getObjectUploadUrl, getObjectPublicUrl } from "@/lib/storage";
 
 const ALLOWED_FOLDERS = ["avatars", "images", "documents", "uploads"] as const;
 type AllowedFolder = (typeof ALLOWED_FOLDERS)[number];
@@ -40,22 +38,14 @@ export async function POST(req: NextRequest) {
   const ext = filename.includes(".") ? filename.split(".").pop()?.trim() || "bin" : "bin";
   const key = `${folder}/${randomUUID()}.${ext}`;
 
-  const command = new PutObjectCommand({
-    Bucket: MINIO_BUCKET,
-    Key: key,
-    ContentType: contentType,
-  });
-
-  // Presigned URL valid for 10 minutes
   try {
-    const presignedUrl = await getSignedUrl(minioClient, command, { expiresIn: 600 });
-
-    // The public URL where the file will be accessible after upload
-    const fileUrl = `${MINIO_PUBLIC_URL}/${MINIO_BUCKET}/${key}`;
+    // In MinIO mode this is a presigned PUT URL; otherwise a local upload route.
+    const presignedUrl = await getObjectUploadUrl(key, contentType, 600);
+    const fileUrl = getObjectPublicUrl(key);
 
     return NextResponse.json({ presignedUrl, fileUrl, key });
   } catch (err) {
-    console.error("Failed to generate presigned URL:", err);
+    console.error("Failed to generate upload URL:", err);
     return NextResponse.json({ error: "Failed to generate upload URL" }, { status: 500 });
   }
 }

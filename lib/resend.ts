@@ -1,6 +1,9 @@
 import { Resend } from "resend";
 import { prismadb } from "./prisma";
 
+export const RESEND_NOT_CONFIGURED_ERROR =
+  "Resend API key is not configured. Please add it in Admin settings or set RESEND_API_KEY environment variable.";
+
 export default async function resendHelper() {
   const resendKey = await prismadb.systemServices.findFirst({
     where: {
@@ -11,7 +14,7 @@ export default async function resendHelper() {
   const apiKey = process.env.RESEND_API_KEY || resendKey?.serviceKey;
 
   if (!apiKey) {
-    throw new Error("Resend API key is not configured. Please add it in Admin settings or set RESEND_API_KEY environment variable.");
+    throw new Error(RESEND_NOT_CONFIGURED_ERROR);
   }
 
   const resend = new Resend(apiKey);

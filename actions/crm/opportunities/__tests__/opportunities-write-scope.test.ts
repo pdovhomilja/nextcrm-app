@@ -71,6 +71,26 @@ describe("updateOpportunity", () => {
     expect(assertOpp).toHaveBeenCalledWith(OWNER, "o-1");
     expect(oUpdate).toHaveBeenCalled();
   });
+
+  it("denies relinking to an account the user cannot write", async () => {
+    assertAccount.mockRejectedValue(new AuthorizationError());
+    const res = await updateOpportunity({ id: "o-1", name: "New", account: "foreign-acc" } as any);
+    expect(res).toEqual({ error: "Forbidden" });
+    expect(assertAccount).toHaveBeenCalledWith(OWNER, "foreign-acc");
+    expect(oUpdate).not.toHaveBeenCalled();
+  });
+
+  it("allows relinking when the user can write the target account", async () => {
+    await updateOpportunity({ id: "o-1", name: "New", account: "acc-1" } as any);
+    expect(assertAccount).toHaveBeenCalledWith(OWNER, "acc-1");
+    expect(oUpdate).toHaveBeenCalled();
+  });
+
+  it("does not require account write when no account is linked", async () => {
+    await updateOpportunity({ id: "o-1", name: "New" } as any);
+    expect(assertAccount).not.toHaveBeenCalled();
+    expect(oUpdate).toHaveBeenCalled();
+  });
 });
 
 describe("deleteOpportunity", () => {

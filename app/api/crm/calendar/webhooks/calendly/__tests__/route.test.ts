@@ -9,6 +9,7 @@ import { createHmac } from "crypto";
 import { NextRequest } from "next/server";
 import { getCalendlySettings } from "@/lib/crm/calendar/calendly-settings";
 import { inngest } from "@/inngest/client";
+import { __resetCalendlyReplayCacheForTests } from "@/lib/crm/calendar/calendly-replay";
 import { POST } from "../route";
 
 const settings = getCalendlySettings as jest.Mock;
@@ -53,6 +54,7 @@ const CREATED = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  __resetCalendlyReplayCacheForTests();
   settings.mockResolvedValue({ apiToken: "tok", signingKey: KEY, webhookUri: null });
 });
 
@@ -101,5 +103,50 @@ describe("POST /api/crm/calendar/webhooks/calendly", () => {
     const res = await POST(makeReq({ event: "routing_form_submission.created", payload: {} }));
     expect(res.status).toBe(200);
     expect(send).not.toHaveBeenCalled();
+  });
+
+  it("ACKs and logs (does not forward) a delivery missing uri/start_time", async () => {
+    const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+    const res = await POST(
+      makeReq({ event: "invitee.created", payload: { email: "jane@client.com" } })
+    );
+    expect(res.status).toBe(200);
+    expect(send).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledWith(
+      "[calendly-webhook] dropping event with missing uri/start_time",
+      expect.objectContaining({ event: "invitee.created" })
+    );
+    warn.mockRestore();
+  });
+
+  it("drops a replayed delivery within the tolerance window instead of re-forwarding", async () => {
+    const first = await POST(makeReq(CREATED));
+    expect(first.status).toBe(200);
+    expect(send).toHaveBeenCalledTimes(1);
+
+    const replay = await POST(makeReq(CREATED));
+    expect(replay.status).toBe(200);
+    expect(send).toHaveBeenCalledTimes(1);
+  });
+
+  it("still forwards a reschedule with the same invitee URI but a new start time", async () => {
+    const original = await POST(makeReq(CREATED));
+    expect(original.status).toBe(200);
+    expect(send).toHaveBeenCalledTimes(1);
+
+    const rescheduled = await POST(
+      makeReq({
+        ...CREATED,
+        payload: {
+          ...CREATED.payload,
+          scheduled_event: {
+            ...CREATED.payload.scheduled_event,
+            start_time: "2026-07-22T14:00:00.000000Z",
+          },
+        },
+      })
+    );
+    expect(rescheduled.status).toBe(200);
+    expect(send).toHaveBeenCalledTimes(2);
   });
 });

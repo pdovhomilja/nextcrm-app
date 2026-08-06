@@ -11,6 +11,17 @@ export function isInvoiceImmutable(status: InvoiceStatus): boolean {
   return status !== "DRAFT";
 }
 
+/** Statuses that may still be edited (drafts plus issued-but-not-terminal). */
+export function isInvoiceEditable(status: InvoiceStatus): boolean {
+  return (
+    status === "DRAFT" ||
+    status === "ISSUED" ||
+    status === "SENT" ||
+    status === "PARTIALLY_PAID" ||
+    status === "OVERDUE"
+  );
+}
+
 function isManagerOrAdmin(user: UserCtx): boolean {
   return user.role === "manager" || user.role === "admin";
 }
@@ -24,7 +35,7 @@ export function canReadInvoice(invoice: InvoiceCtx, user: UserCtx): boolean {
 }
 
 export function canEditInvoice(invoice: InvoiceCtx, user: UserCtx): boolean {
-  if (isInvoiceImmutable(invoice.status)) return false;
+  if (!isInvoiceEditable(invoice.status)) return false;
   return isOwnerOrPrivileged(invoice, user);
 }
 

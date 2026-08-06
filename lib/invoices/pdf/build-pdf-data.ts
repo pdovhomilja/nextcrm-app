@@ -49,8 +49,18 @@ type InvoiceForPdf = {
     discountPercent: unknown;
     lineTotal: unknown;
     taxRate: { rate: unknown } | null;
+    taxRateSnapshot?: unknown;
   }>;
 };
+
+function effectiveTaxRate(li: {
+  taxRate: { rate: unknown } | null;
+  taxRateSnapshot?: unknown;
+}): Decimal {
+  if (li.taxRate) return new Decimal(String(li.taxRate.rate));
+  if (li.taxRateSnapshot != null) return new Decimal(String(li.taxRateSnapshot));
+  return new Decimal(0);
+}
 
 type SettingsForPdf = {
   companyName: string | null;
@@ -109,23 +119,21 @@ export function buildInvoicePdfData(
   settings: SettingsForPdf,
   locale: string
 ): InvoicePdfData {
-  if (!invoice.number || !invoice.issueDate) {
-    throw new Error("Invoice is not yet issued — cannot build PDF data");
-  }
-
   const vatBreakdown = computeInvoiceTotals(
     invoice.lineItems.map((li) => ({
       quantity: new Decimal(String(li.quantity)),
       unitPrice: new Decimal(String(li.unitPrice)),
       discountPercent: new Decimal(String(li.discountPercent)),
-      taxRate: li.taxRate ? new Decimal(String(li.taxRate.rate)) : new Decimal(0),
+      taxRate: effectiveTaxRate(li),
     }))
   ).vatBreakdown;
 
   return {
     type: invoice.type as InvoicePdfData["type"],
-    number: invoice.number,
-    issueDate: invoice.issueDate.toISOString().slice(0, 10),
+    number: invoice.number ?? "DRAFT",
+    issueDate: invoice.issueDate
+      ? invoice.issueDate.toISOString().slice(0, 10)
+      : new Date().toISOString().slice(0, 10),
     dueDate: invoice.dueDate?.toISOString().slice(0, 10),
     taxableSupplyDate: invoice.taxableSupplyDate?.toISOString().slice(0, 10),
     locale,
@@ -138,7 +146,7 @@ export function buildInvoicePdfData(
       quantity: String(li.quantity),
       unitPrice: String(li.unitPrice),
       discountPercent: String(li.discountPercent),
-      taxRate: li.taxRate ? String(li.taxRate.rate) : "0",
+      taxRate: effectiveTaxRate(li).toString(),
       lineTotal: String(li.lineTotal),
     })),
     subtotal: String(invoice.subtotal),

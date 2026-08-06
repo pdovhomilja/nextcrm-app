@@ -23,6 +23,8 @@ export const lineItemInputSchema = z.object({
   unitPrice: z.number().min(0, "Unit price must be >= 0"),
   discountPercent: z.number().min(0).max(100).default(0),
   taxRateId: z.string().uuid().optional().nullable(),
+  /** Manual tax rate percentage, used when no preset taxRateId is set. */
+  taxRatePercent: z.number().min(0).max(100).optional(),
 });
 
 export type LineItemInput = z.infer<typeof lineItemInputSchema>;

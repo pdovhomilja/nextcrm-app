@@ -145,6 +145,13 @@ export function CalendarConnectionsList() {
               <div>
                 <p className="text-sm font-medium">{c.accountEmail}</p>
                 <p className="text-xs text-muted-foreground">
+                  {/* `scopeLevel` is the last-known level: we deliberately never
+                      downgrade the stored level on deactivation (the token is what
+                      changed, and a truthful level must describe the stored refresh
+                      token). An inactive readwrite connection therefore still says
+                      "Two-way" — the "Needs reconnect" badge is what conveys it is
+                      currently not syncing. Confirmed acceptable in the hardening
+                      backlog. */}
                   {c.scopeLevel === "readwrite" ? "Two-way · " : "Inbound only · "}
                   {c.isActive
                     ? c.lastSyncedAt

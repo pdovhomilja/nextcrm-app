@@ -12,6 +12,7 @@ import {
   AuthorizationError,
 } from "@/lib/authz";
 import { serializeDecimals } from "@/lib/serialize-decimals";
+import { generateAndStoreInvoicePdf } from "@/lib/invoices/pdf/generate";
 
 export async function updateInvoice(invoiceId: string, raw: unknown) {
   const user = await getUser();
@@ -64,11 +65,11 @@ export async function updateInvoice(invoiceId: string, raw: unknown) {
       discountPercent: new Decimal(l.discountPercent),
       taxRate: l.taxRateId
         ? (rateMap.get(l.taxRateId) ?? new Decimal(0))
-        : new Decimal(0),
+        : new Decimal(l.taxRatePercent ?? 0),
     }));
     const totals = computeInvoiceTotals(lineInputs);
 
-    return prismadb.$transaction(async (tx) => {
+    const updated = await prismadb.$transaction(async (tx) => {
       // Delete existing line items
       await tx.invoice_LineItems.deleteMany({ where: { invoiceId } });
 
@@ -87,6 +88,9 @@ export async function updateInvoice(invoiceId: string, raw: unknown) {
           lineItems: {
             create: input.lineItems!.map((l, i) => {
               const lt = computeLineTotal(lineInputs[i]);
+              const presetRate = l.taxRateId
+                ? (rateMap.get(l.taxRateId) ?? null)
+                : null;
               return {
                 position: l.position ?? i,
                 productId: l.productId ?? null,
@@ -95,6 +99,11 @@ export async function updateInvoice(invoiceId: string, raw: unknown) {
                 unitPrice: l.unitPrice,
                 discountPercent: l.discountPercent,
                 taxRateId: l.taxRateId ?? null,
+                taxRateSnapshot: presetRate
+                  ? presetRate.toString()
+                  : l.taxRatePercent
+                    ? l.taxRatePercent.toString()
+                    : null,
                 lineSubtotal: lt.lineSubtotal.toString(),
                 lineVat: lt.lineVat.toString(),
                 lineTotal: lt.lineTotal.toString(),
@@ -107,8 +116,11 @@ export async function updateInvoice(invoiceId: string, raw: unknown) {
         },
       });
 
-      return serializeDecimals(updated);
+      return updated;
     });
+
+    await refreshPdfIfIssued(updated);
+    return serializeDecimals(updated);
   }
 
   // No line items change — simple field update
@@ -122,7 +134,17 @@ export async function updateInvoice(invoiceId: string, raw: unknown) {
     },
   });
 
+  await refreshPdfIfIssued(updated);
   return serializeDecimals(updated);
+}
+
+async function refreshPdfIfIssued(updated: { status: string; id: string }) {
+  if (updated.status === "DRAFT") return;
+  try {
+    await generateAndStoreInvoicePdf(updated.id, "en");
+  } catch (err) {
+    console.error("[updateInvoice] PDF regeneration failed:", err);
+  }
 }
 
 function buildUpdateData(input: Record<string, unknown>) {

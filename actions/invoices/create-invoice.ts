@@ -48,7 +48,7 @@ export async function createInvoice(raw: unknown) {
     discountPercent: new Decimal(l.discountPercent),
     taxRate: l.taxRateId
       ? (rateMap.get(l.taxRateId) ?? new Decimal(0))
-      : new Decimal(0),
+      : new Decimal(l.taxRatePercent ?? 0),
   }));
   const totals = computeInvoiceTotals(lineInputs);
 
@@ -77,6 +77,9 @@ export async function createInvoice(raw: unknown) {
       lineItems: {
         create: input.lineItems.map((l, i) => {
           const lt = computeLineTotal(lineInputs[i]);
+          const presetRate = l.taxRateId
+            ? (rateMap.get(l.taxRateId) ?? null)
+            : null;
           return {
             position: l.position ?? i,
             productId: l.productId ?? null,
@@ -85,6 +88,11 @@ export async function createInvoice(raw: unknown) {
             unitPrice: l.unitPrice,
             discountPercent: l.discountPercent,
             taxRateId: l.taxRateId ?? null,
+            taxRateSnapshot: presetRate
+              ? presetRate.toString()
+              : l.taxRatePercent
+                ? l.taxRatePercent.toString()
+                : null,
             lineSubtotal: lt.lineSubtotal.toString(),
             lineVat: lt.lineVat.toString(),
             lineTotal: lt.lineTotal.toString(),

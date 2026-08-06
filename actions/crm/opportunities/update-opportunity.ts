@@ -9,6 +9,7 @@ import { qualifiedEntryBlockReason } from "@/lib/crm/approval-gate";
 import {
   requireAuthenticated,
   assertCanWriteOpportunity,
+  assertCanWriteAccount,
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
@@ -60,6 +61,9 @@ export const updateOpportunity = async (data: {
   }
   try {
     await assertCanWriteOpportunity(user, id);
+    // Parent-write: relinking the opportunity to an account requires write on
+    // it, mirroring createOpportunity.
+    if (account) await assertCanWriteAccount(user, account);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;
