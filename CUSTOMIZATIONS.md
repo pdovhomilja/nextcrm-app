@@ -24,6 +24,7 @@ know exactly what to re-verify, and so the automated guards (`scripts/check-inva
 | **Unit tests** | Jest | **Unchanged** — Jest (kit's coverage discipline layered on) | — |
 | **Ways of working** | — | starter-kit `CLAUDE.md`, `docs/guides/`, `.claude/skills/` ported | CODEOWNERS |
 | **Coolify/nixpacks** | maintained | **Dormant** — left in place (not deleted) to avoid merge churn; unused on Vercel | — |
+| **CI cost** | `ci.yml` runs E2E on every push (~8 min) | **Path-gated** — a `changes` job gates `integration`/`build`/`e2e` on `if: needs.changes.outputs.code == 'true'`; docs/CI/agent-config-only pushes skip them and run just `fast` + guardrails. One edit to upstream's `ci.yml`. | `CODEOWNERS` |
 
 *(WS3)* = lands in the CI/CD workstream; its invariant is a WARN in `check-invariants.sh`
 until then, promoted to FAIL once the file exists.

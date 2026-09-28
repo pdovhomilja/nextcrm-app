@@ -58,6 +58,37 @@ env:
   IMAP_PASSWORD: ci
 
 jobs:
+  # Detect whether this push touches app code. Docs / CI-workflow / agent-config
+  # -only changes skip the heavy DB + Playwright jobs below (which otherwise cost
+  # ~8 min of E2E for nothing on a docs change). `fast` still runs as the always-on
+  # cheap gate. On a PR the diff is the whole PR (base = main); on a branch push it
+  # is the last commit.
+  changes:
+    name: Detect code changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      code: ${{ steps.f.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: f
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -eu
+          base="${BASE_SHA:-$(git rev-parse HEAD~1)}"
+          changed="$(git diff --name-only "$base"...HEAD)"
+          echo "Changed files vs $base:"; printf '%s\n' "$changed" | sed 's/^/  /'
+          # Anything NOT purely docs / CI / agent-config / helper-scripts counts as
+          # code and triggers the heavy jobs. prisma/**, package.json, lockfile,
+          # app/config code are deliberately NOT in this skip list.
+          code_files="$(grep -vE '^(docs/|\.github/|\.claude/|scripts/|.*\.md$|CLAUDE\.md$|AGENTS\.md$|CUSTOMIZATIONS\.md$|vercel\.json$|\.gitignore$|\.editorconfig$|\.prettier|LICENSE$)' <<< "$changed" || true)"
+          if [ -n "$code_files" ]; then code=true; else code=false; fi
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          echo "Heavy jobs (integration/build/e2e) will run: $code"
+
   # Cheap gate with no services: a typo or failing unit test costs ~1 minute
   # here instead of spinning up the database-backed jobs below.
   fast:
@@ -84,7 +115,8 @@ jobs:
 
   integration:
     name: Integration (fresh-DB migrations + DB suites)
-    needs: fast
+    needs: [fast, changes]
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     services:
@@ -118,7 +150,8 @@ jobs:
 
   build:
     name: Production build (mirrors Coolify)
-    needs: fast
+    needs: [fast, changes]
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     services:
@@ -148,7 +181,8 @@ jobs:
 
   e2e:
     name: E2E (Playwright)
-    needs: fast
+    needs: [fast, changes]
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     services:

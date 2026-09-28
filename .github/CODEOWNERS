@@ -13,6 +13,9 @@
 /scripts/check-invariants.sh              @radesix
 /scripts/sync-upstream.sh                 @radesix
 
+# CI pipeline — fork modifies it (path-gated heavy jobs); flag upstream changes to it
+/.github/workflows/ci.yml                 @radesix
+
 # 3-tier deploy/migration model (added in WS3)
 /vercel.json                              @radesix
 /.github/workflows/migrate-qa.yml         @radesix
