@@ -152,14 +152,78 @@ Before running **Promote to Production**, set these in Vercel's **Production** s
 code-only fast-forward — its only GitHub secret need is the **required-reviewer** gate
 on the `production` environment, not a DB secret.
 
-- **Required:** `DATABASE_URL` (session pooler, IPv4 — see `SUPABASE_ON_VERCEL.md`),
-  `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL=https://crm.radeengineering.com`,
-  `GOOGLE_ID`, `GOOGLE_SECRET`, `EMAIL_ENCRYPTION_KEY`,
-  `MINIO_ENDPOINT` / `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` / `MINIO_BUCKET=rade-crm-prod` / `NEXT_PUBLIC_MINIO_ENDPOINT` (R2 prod),
-  `INNGEST_ID`, `INNGEST_APP_NAME`, `INNGEST_EVENT_KEY`, `INNGEST_SIGNING_KEY`,
-  `NEXT_PUBLIC_APP_URL=https://crm.radeengineering.com`, `NEXT_PUBLIC_APP_NAME`, `NEXT_PUBLIC_APP_DOMAIN=crm.radeengineering.com`.
-- **For live email / campaigns:** `RESEND_API_KEY` (live), `RESEND_FROM_EMAIL`, `RESEND_WEBHOOK_SECRET`, `NEXTAUTH_URL=https://crm.radeengineering.com`.
-- **If used:** `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`, `E2B_API_KEY`, AI keys, `GOOGLE_CALENDAR_*`, `NEXTCRM_TOKEN`.
+### ⚠️ Login-critical — the first email-OTP sign-in fails without these
+
+In production `sendVerificationOTP` (`lib/auth.ts`) **rethrows** on a send failure (in
+non-prod it's swallowed and the code is logged), so a broken send = no login:
+
+- **`RESEND_API_KEY`** — sends the OTP. `resendHelper` falls back to a DB service key,
+  but a fresh `nextcrm-prod` has none, so the env var is effectively required.
+  **Use a NEW, Production-only Resend key** (Sending access), *not* the shared QA key
+  (that key also serves the marketing site — don't couple prod to it). Scope it to the
+  prod sending domains `mail.radeengineering.com` (transactional/OTP) **and**
+  `crm.radeengineering.com` (campaigns), both verified in the same Resend account.
+- **`EMAIL_FROM`** — the OTP `from` address: `` `${NEXT_PUBLIC_APP_NAME} <${EMAIL_FROM}>` ``.
+  If unset, the send is `…<undefined>` and Resend rejects it. Set e.g.
+  `noreply@mail.radeengineering.com` (matching QA); its domain must be verified for the key.
+
+### Required for the app to boot / core function
+
+`DATABASE_URL` (session pooler, IPv4 — see `SUPABASE_ON_VERCEL.md`),
+`BETTER_AUTH_SECRET`, `BETTER_AUTH_URL=https://crm.radeengineering.com`,
+`EMAIL_ENCRYPTION_KEY`, `NEXTAUTH_URL=https://crm.radeengineering.com`,
+`MINIO_ENDPOINT` / `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` / `MINIO_BUCKET=rade-crm-prod` / `NEXT_PUBLIC_MINIO_ENDPOINT` (R2 prod — `lib/minio.ts` throws at import if missing),
+`INNGEST_ID`, `INNGEST_APP_NAME`, `INNGEST_EVENT_KEY`, `INNGEST_SIGNING_KEY`,
+`NEXT_PUBLIC_APP_URL=https://crm.radeengineering.com`, `NEXT_PUBLIC_APP_NAME`.
+
+### Google sign-in — NOT used in this deployment
+
+`GOOGLE_ID` / `GOOGLE_SECRET` power **only** the "Sign in with Google" button
+(`socialProviders.google` in `lib/auth.ts`). **Decision: Google sign-in is not used.**
+The clean fix is to **gate the provider in code** so it's only registered when both vars
+are set — then no button shows and no creds are needed in any scope (tracked as a small
+follow-up code change). Until that lands, the vars are read with `!` at auth init, so set
+`GOOGLE_ID` / `GOOGLE_SECRET` to **placeholders** in Production (matching QA) to satisfy
+the reads. If Google login is ever wanted: real values from Google Cloud → OAuth client,
+redirect `https://crm.radeengineering.com/api/auth/callback/google`.
+
+### For live campaigns / tracking
+
+`RESEND_FROM_EMAIL` (campaign sender), `RESEND_WEBHOOK_SECRET` (the **production**
+Resend webhook's signing secret — the QA one won't verify prod deliveries).
+
+### Optional (only if the feature is used)
+
+`UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`, `E2B_API_KEY`, AI keys,
+`GOOGLE_CALENDAR_*`, `NEXTCRM_TOKEN`, `NEXT_PUBLIC_APP_DOMAIN=crm.radeengineering.com`.
+
+### Current state — gaps to close (snapshot 2026-09-28)
+
+Diffed against the live Vercel **Production** scope; **update or delete this block once
+closed** (it's a point-in-time snapshot, not a standing rule):
+
+| Var | Status | Priority |
+|---|---|---|
+| `RESEND_API_KEY` | **Missing** in Production (only in Preview) | 🔴 Login-critical — new prod-only key |
+| `EMAIL_FROM` | **Missing** in Production (only in Preview) | 🔴 Login-critical |
+| `RESEND_WEBHOOK_SECRET` | Missing (only QA endpoint's secret) | 🟠 No prod open/click tracking until set |
+| `GOOGLE_ID` / `GOOGLE_SECRET` | Missing (placeholders in Preview) | ⚪ Google sign-in not used — gate in code (follow-up), or set placeholders as interim |
+| `NEXT_PUBLIC_APP_DOMAIN` | Absent everywhere | ⚪ Optional (fallback `nextcrm.app`) |
+| everything else in the lists above | ✅ Already set correctly in Production | — |
+
+Hygiene: real secrets entered in Preview/Production must be stored **Sensitive**, not
+Plain (Vercel flags Plain secrets `readable-secret`). `JWT_SECRET`, `GITHUB_*`, `IMAP_*`
+present in some scopes are **not read by this fork** (CI/legacy) — leave as-is.
+
+### Then promote
+
+1. Set the vars above (login-critical first).
+2. Arm the `PRODUCTION_PROMOTE_ENABLED` repo variable (promotion is inert until set).
+3. Confirm the GitHub **`production` environment** has the required-reviewer gate.
+4. Run the **Promote to Production** action (a code-only fast-forward of `production`
+   from `qa`, gated on the reviewer).
+5. Verify: the prod deploy migrated `nextcrm-prod`, and email-OTP login works — in prod
+   the OTP arrives by **real email** now (no dev-log line, no `test-otp` endpoint).
 
 ## Adding or renaming a variable
 
