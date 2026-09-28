@@ -125,8 +125,7 @@ in this fork's code** (kept for merge-friendliness).
 | `NEXT_PUBLIC_DISCORD_INVITE_URL` | All | No | Support link (fallback `#`). | — |
 | `NEXT_PUBLIC_GITHUB_REPO_URL` | All | No | Repo link (fallback `#`). | — |
 | `NEXT_PUBLIC_GITHUB_ISSUES_URL` | All | No | Issues link (fallback `#`). | — |
-| `NEXT_PUBLIC_GITHUB_REPO_API` | All | No | Repo API URL for the star count. | `https://api.github.com/repos/<owner>/<repo>` |
-| `NEXT_PUBLIC_GITHUB_TOKEN` | All | No | ⚠️ **Client-exposed token** — bundled to the browser. Use only an unprivileged/public value; leave empty to fetch unauthenticated. A server-only fix is tracked separately. | leave empty |
+| `NEXT_PUBLIC_GITHUB_REPO_API` | All | No | Repo API URL for the login-page star count (fetched unauthenticated; falls back to 0). | `https://api.github.com/repos/<owner>/<repo>` |
 
 <!-- env-doc:end -->
 
@@ -179,13 +178,12 @@ non-prod it's swallowed and the code is logged), so a broken send = no login:
 ### Google sign-in — NOT used in this deployment
 
 `GOOGLE_ID` / `GOOGLE_SECRET` power **only** the "Sign in with Google" button
-(`socialProviders.google` in `lib/auth.ts`). **Decision: Google sign-in is not used.**
-The clean fix is to **gate the provider in code** so it's only registered when both vars
-are set — then no button shows and no creds are needed in any scope (tracked as a small
-follow-up code change). Until that lands, the vars are read with `!` at auth init, so set
-`GOOGLE_ID` / `GOOGLE_SECRET` to **placeholders** in Production (matching QA) to satisfy
-the reads. If Google login is ever wanted: real values from Google Cloud → OAuth client,
-redirect `https://crm.radeengineering.com/api/auth/callback/google`.
+(`socialProviders.google`). **Decision: Google sign-in is not used, and the provider is
+now gated** — `lib/auth.ts` registers it only when both vars are set (`lib/auth-social.ts`
+`socialProvidersFromEnv`). So **leave both unset** in every scope: no button shows and no
+creds are needed. Email-OTP login is unaffected. If Google login is ever wanted: set real
+values (Google Cloud → OAuth client, redirect
+`https://crm.radeengineering.com/api/auth/callback/google`).
 
 ### For live campaigns / tracking
 
@@ -207,7 +205,7 @@ closed** (it's a point-in-time snapshot, not a standing rule):
 | `RESEND_API_KEY` | **Missing** in Production (only in Preview) | 🔴 Login-critical — new prod-only key |
 | `EMAIL_FROM` | **Missing** in Production (only in Preview) | 🔴 Login-critical |
 | `RESEND_WEBHOOK_SECRET` | Missing (only QA endpoint's secret) | 🟠 No prod open/click tracking until set |
-| `GOOGLE_ID` / `GOOGLE_SECRET` | Missing (placeholders in Preview) | ⚪ Google sign-in not used — gate in code (follow-up), or set placeholders as interim |
+| `GOOGLE_ID` / `GOOGLE_SECRET` | Placeholders in Preview | ⚪ Google sign-in gated in code — leave **unset** everywhere (can clear the QA placeholders) |
 | `NEXT_PUBLIC_APP_DOMAIN` | Absent everywhere | ⚪ Optional (fallback `nextcrm.app`) |
 | everything else in the lists above | ✅ Already set correctly in Production | — |
 
