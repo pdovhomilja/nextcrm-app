@@ -1,20 +1,60 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 
-function verifyResendSignature(body: string, signature: string | null): boolean {
-  if (!signature || !process.env.RESEND_WEBHOOK_SECRET) return false;
-  const expected = createHmac("sha256", process.env.RESEND_WEBHOOK_SECRET)
-    .update(body)
-    .digest("hex");
-  return signature === `sha256=${expected}`;
+// Resend signs webhooks with Svix ("standard webhooks"). The signed content is
+// `${svix-id}.${svix-timestamp}.${rawBody}`, HMAC-SHA256'd with the secret key
+// (the base64 payload after the `whsec_` prefix), then base64-encoded. The
+// `svix-signature` header is a space-separated list of `v1,<sig>` entries; any
+// matching v1 entry is a pass. The timestamp is checked against a tolerance
+// window to reject replayed deliveries.
+const SVIX_TOLERANCE_SECONDS = 5 * 60;
+
+function timingSafeEqualStr(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return timingSafeEqual(bufA, bufB);
+}
+
+function verifyResendWebhook(
+  body: string,
+  headers: {
+    id: string | null;
+    timestamp: string | null;
+    signature: string | null;
+  }
+): boolean {
+  const secret = process.env.RESEND_WEBHOOK_SECRET;
+  const { id, timestamp, signature } = headers;
+  if (!secret || !id || !timestamp || !signature) return false;
+
+  // Reject stale or future-dated (replayed) deliveries.
+  const ts = Number(timestamp);
+  if (!Number.isFinite(ts)) return false;
+  const now = Math.floor(Date.now() / 1000);
+  if (Math.abs(now - ts) > SVIX_TOLERANCE_SECONDS) return false;
+
+  const key = Buffer.from(secret.replace(/^whsec_/, ""), "base64");
+  const expected = createHmac("sha256", key)
+    .update(`${id}.${timestamp}.${body}`)
+    .digest("base64");
+
+  return signature.split(" ").some((part) => {
+    const [version, sig] = part.split(",");
+    return version === "v1" && !!sig && timingSafeEqualStr(sig, expected);
+  });
 }
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
-  const signature = req.headers.get("Resend-Signature");
 
-  if (!verifyResendSignature(body, signature)) {
+  const valid = verifyResendWebhook(body, {
+    id: req.headers.get("svix-id"),
+    timestamp: req.headers.get("svix-timestamp"),
+    signature: req.headers.get("svix-signature"),
+  });
+  if (!valid) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 
