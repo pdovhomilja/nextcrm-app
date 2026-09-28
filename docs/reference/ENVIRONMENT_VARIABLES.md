@@ -70,6 +70,7 @@ in this fork's code** (kept for merge-friendliness).
 | `EMAIL_USERNAME` | All | No | SMTP username. | — |
 | `EMAIL_PASSWORD` | All | No | SMTP password. | — |
 | `MAILTRAP_API_KEY` | All | No | Mailtrap key; falls back to a DB service key. | — |
+| `EMAIL_REDIRECT_TO` | Dev, Preview | No | **Non-prod safety:** rewrites every outbound recipient to this one test inbox so QA/dev sends never reach real people (`lib/email/redirect.ts`). Set in Dev + Preview **only**; unset in Production (and it never redirects a prod deploy). | `qa-inbox@example.com` |
 | `SMTP_HOST` | — | Legacy | Not read in this fork (per-account email creds live in the DB). | — |
 | `SMTP_PORT` | — | Legacy | Not read in this fork. | — |
 | `SMTP_USER` | — | Legacy | Not read in this fork. | — |

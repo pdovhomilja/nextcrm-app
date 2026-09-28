@@ -287,11 +287,15 @@ value per scope*. Hard rules:
    (playbook §11). **A newly-*required* env var that is added to code but not set in a
    Vercel scope breaks that environment's deploy even though CI is green** — CI runs
    with its own env, so it won't catch a missing Vercel-scoped var.
-5. TODO(rade): dev-email safety. NextCRM's email path (`lib/resend.ts`) is a thin
-   Resend client with **no non-prod redirect guard** — there is currently nothing
-   stopping a dev/QA run from emailing a real address. Decide whether to add a
-   redirect-in-non-prod wrapper (kit convention: an `EMAIL_REDIRECT_TO` guard set in
-   Development/Preview and absent in Production) before wiring real outbound email.
+5. **Dev/QA email safety (implemented).** Set **`EMAIL_REDIRECT_TO`** in the
+   Development + Preview (QA) scopes to a single test inbox and **every** outbound
+   recipient is rewritten to it, so a dev/QA run can send real Resend email without
+   reaching a real address (`lib/email/redirect.ts`, applied centrally in
+   `lib/resend.ts` for transactional and in the campaign sender). Leave it **unset in
+   Production**; it also never redirects a production deploy (`VERCEL_ENV`). This
+   matters because QA shares the prod sending domains — a QA bounce/complaint would
+   otherwise hurt the shared domain reputation. See
+   `docs/reference/ENVIRONMENT_VARIABLES.md`.
 
 ---
 

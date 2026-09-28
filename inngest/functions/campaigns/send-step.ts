@@ -4,6 +4,7 @@ import { Resend } from "resend";
 import { resolveMergeTags } from "@/lib/campaigns/merge-tags";
 import { renderCampaignEmail } from "@/lib/campaigns/render-email";
 import { sendStepSkipReason } from "@/lib/campaigns/recipient-filters";
+import { redirectRecipients } from "@/lib/email/redirect";
 
 // Campaigns use a dedicated Resend key (domain-restricted to the campaigns sending
 // domain, tracking on) — segregated from the transactional key (RESEND_API_KEY, via
@@ -55,7 +56,7 @@ export const campaignSendStep = inngest.createFunction(
     const result = await step.run("send-email", async () => {
       return resend.emails.send({
         from: fromAddress,
-        to: sendRecord.email,
+        to: redirectRecipients(sendRecord.email),
         subject: resolveMergeTags(sendRecord.step.subject, sendRecord.target),
         html,
         ...(sendRecord.campaign.reply_to ? { replyTo: sendRecord.campaign.reply_to } : {}),
