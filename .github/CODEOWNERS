@@ -1,0 +1,24 @@
+# Files this fork OWNS and upstream must not silently override.
+# A PR touching any of these — including an upstream-sync PR — requests @radesix's
+# review, a human warning that complements the automated Guardrails checks.
+# (Enforcement requires "Require review from Code Owners" in branch protection;
+# it is useful as documentation regardless.)
+
+# Fork operating model & safety
+/CLAUDE.md                                @radesix
+/CUSTOMIZATIONS.md                        @radesix
+/.github/CODEOWNERS                       @radesix
+/.github/workflows/guardrails.yml         @radesix
+/.github/workflows/upstream-drift.yml     @radesix
+/scripts/check-invariants.sh              @radesix
+/scripts/sync-upstream.sh                 @radesix
+
+# 3-tier deploy/migration model (added in WS3)
+/vercel.json                              @radesix
+/.github/workflows/migrate-qa.yml         @radesix
+/.github/workflows/migrate-production.yml @radesix
+/.github/workflows/promote-production.yml @radesix
+
+# Ways-of-working docs & skills (added in WS1/WS2)
+/docs/guides/                             @radesix
+/.claude/                                 @radesix

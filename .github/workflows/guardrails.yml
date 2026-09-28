@@ -1,0 +1,82 @@
+name: Guardrails
+
+# Fork-safety checks kept DELIBERATELY in their own workflow file (not folded into
+# the upstream-maintained ci.yml) so upstream's ci.yml merges cleanly forever and
+# these guards live in a file upstream never touches — zero merge conflict.
+#
+# Runs on every PR into main (including the upstream-sync PR that scripts/sync-upstream.sh
+# opens) so a breaking upstream change surfaces as a red PR, never a broken main.
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: guardrails-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  invariants:
+    name: Fork invariants
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assert customizations survived
+        run: bash scripts/check-invariants.sh
+
+  schema-drift:
+    name: Prisma schema/migration drift
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # pgvector image: the migrations run CREATE EXTENSION vector when replayed into
+    # the shadow database, so a plain postgres image would fail the replay.
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: nextcrm_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # prisma.config.ts resolves env("DATABASE_URL"); give it the service DB.
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nextcrm_ci
+      SHADOW_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nextcrm_shadow
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Create shadow database
+        run: psql "$DATABASE_URL" -c 'CREATE DATABASE nextcrm_shadow;'
+      # Replays every committed migration into the shadow DB, then diffs the result
+      # against schema.prisma. --exit-code makes a non-empty diff fail the job.
+      # A failure means: schema.prisma was changed without a matching migration (or
+      # the migrations don't reproduce the schema) — the classic break an upstream
+      # schema edit causes. Fix: `pnpm exec prisma migrate dev` to generate one.
+      - name: Detect schema vs. migrations drift
+        run: |
+          pnpm exec prisma migrate diff \
+            --from-migrations ./prisma/migrations \
+            --to-schema-datamodel ./prisma/schema.prisma \
+            --shadow-database-url "$SHADOW_DATABASE_URL" \
+            --exit-code \
+          || {
+            echo "::error::schema.prisma and prisma/migrations are out of sync." \
+                 "Generate a migration with 'pnpm exec prisma migrate dev' (do NOT 'prisma db push')." >&2
+            exit 1
+          }
