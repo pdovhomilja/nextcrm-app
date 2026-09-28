@@ -16,6 +16,7 @@ know exactly what to re-verify, and so the automated guards (`scripts/check-inva
 |---|---|---|---|
 | **Database host** | Local Postgres / self-managed | **Supabase Postgres** (QA + prod); local for DEV | connection strings (env) |
 | **ORM / auth** | Prisma + better-auth | **Unchanged** — Supabase is DB-host-only (no Supabase Auth, no RLS) | — |
+| **Local DEV DB** | Docker Postgres `:5433` (`pnpm db:up`) | **Hybrid** — canonical DEV DB is the Supabase CLI stack (`supabase start`, `:54322`) for hosted parity; `:5433` compose kept **untouched** as fallback. `db:*` scripts + `assert-local-db.sh` deliberately NOT repointed (avoids churning upstream `package.json`); the host guard already allows `127.0.0.1:54322`. `supabase/` dir is additive. | — |
 | **Hosting** | Coolify (nixpacks) | **Vercel** (crm.radeengineering.com) | `vercel.json` *(WS3)* |
 | **Environments** | `dev` → `main` | **3-tier:** feature → `main` → `qa` → `production` | migrate/promote workflows *(WS3)* |
 | **Migrations** | Prisma `migrate deploy` | **Unchanged** — through CI only, never hand-applied, never `db push` | `check-invariants.sh`, `guardrails.yml` |
