@@ -19,7 +19,7 @@ for every deliberate deviation and the upstream sync/contribute recipes.
 - ✅ **WS1 — conventions & guides** — this file + `docs/guides/`, `docs/reference/`, `docs/templates/`.
 - ✅ **WS2 — skills** — `.claude/skills/deep-review`, `fix-ci`, `ship-phase`.
 - ✅ **CI cost** — heavy jobs (`integration`/`build`/`e2e`) path-gated to code changes.
-- ⏳ **WS3 — 3-tier CI/CD** (`vercel.json`, `migrate-qa.yml`, `migrate-production.yml`, `promote-production.yml`, PR template).
+- ✅ **WS3 — 3-tier CI/CD** — `vercel.json`, `advance-qa.yml`, `promote-production.yml`, PR template (build-migrates: Vercel deploy applies migrations).
 - ⏳ **WS4 — env & secrets** (`docs/reference/ENVIRONMENT_VARIABLES.md` + env-doc guard).
 
 ---
@@ -84,7 +84,7 @@ handlers) — so scope every query by hand; there is no RLS to fall back on.
     (`vercel.json`). If work started on `main`, create a feature branch **before**
     the first commit.
   - **`qa`** — a fixed deploy pointer, **force-updated**: automatically by
-    `migrate-qa.yml` after CI passes on `main`, or manually
+    `advance-qa.yml` after CI passes on `main`, or manually
     (`git push origin <branch>:qa --force`) only to preview an unmerged branch.
     Maps to Vercel *Preview* at `qa.crm.radeengineering.com`. Never open a PR from/into it.
   - **`production`** — advanced **only** by `promote-production.yml` (the gated
@@ -194,10 +194,14 @@ handlers) — so scope every query by hand; there is no RLS to fall back on.
   `pnpm db:seed` → `pnpm dev`. `pnpm db:migrate`/`db:seed` follow `DATABASE_URL`;
   `scripts/assert-local-db.sh` refuses them when `DATABASE_URL` points at a non-local
   host (it allows any `127.0.0.1`/`localhost`/`::1`) — respect it.
-- **Migrations reach QA and PRODUCTION only through the workflows — never a manual
-  apply, DB connector, or MCP apply from a machine.** `migrate-qa.yml` runs
-  `prisma migrate deploy` against `nextcrm-qa` and advances `qa` after CI on `main`;
-  `promote-production.yml` → `migrate-production.yml` → `nextcrm-prod`.
+- **Migrations reach QA and PRODUCTION only through a deploy — never a manual
+  apply, DB connector, or MCP apply from a machine.** NextCRM's build runs
+  `prisma migrate deploy`, so the **Vercel deploy migrates its own database**:
+  `advance-qa.yml` fast-forwards `qa` after CI on `main` → Vercel builds `qa` →
+  migrations apply to `nextcrm-qa`. `promote-production.yml` (gated) fast-forwards
+  `production` → Vercel builds `production` → migrations apply to `nextcrm-prod`.
+  Only `qa`/`production` build (Vercel Ignored Build Step), so PR previews never
+  migrate QA.
 - **Migration-through-CI ordering:** **additive** changes go **migration-first**
   (migration PR lands in QA, then the code PR); **destructive** changes go
   **code-first / expand-contract** (stop using → deploy → drop later).

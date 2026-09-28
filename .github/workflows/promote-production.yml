@@ -1,0 +1,74 @@
+name: Promote to Production
+
+# Gated "Promote" button. Fast-forwards the `production` branch to a validated
+# commit (default: the current `qa` tip). Vercel then builds `production` as the
+# Production deployment — and NextCRM's build runs `prisma migrate deploy`, so the
+# production database is migrated at deploy time (this workflow does not migrate).
+#
+# Inert until armed: set the repo variable PRODUCTION_PROMOTE_ENABLED=true once
+# production is ready to receive releases.
+#
+# Safety:
+# - The target must be an ancestor of `main` (merged + CI-tested) — you can only
+#   ship a prefix of tested history, never a cherry-picked/divergent commit.
+# - `production` is advanced by a fast-forward push (no --force), so a non-linear
+#   move is rejected.
+# - The `promote` job runs in the `Production` GitHub environment, so its required
+#   reviewer must approve before production is advanced (and thus before the
+#   migrating Vercel deploy runs).
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Branch or SHA to promote (must be an ancestor of main). Default: qa tip."
+        required: false
+        default: qa
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    name: Validate target
+    if: ${{ vars.PRODUCTION_PROMOTE_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      sha: ${{ steps.v.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: v
+        env:
+          TARGET: ${{ github.event.inputs.target }}
+        run: |
+          set -eu
+          git fetch --quiet origin main qa production || git fetch --quiet origin main qa
+          sha="$(git rev-parse "origin/${TARGET}^{commit}" 2>/dev/null || git rev-parse "${TARGET}^{commit}")"
+          if ! git merge-base --is-ancestor "$sha" origin/main; then
+            echo "::error::promotion target '${TARGET}' (${sha}) is not an ancestor of main — refusing to promote unmerged or divergent history." >&2
+            exit 1
+          fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "Validated promotion target: $sha"
+
+  promote:
+    name: Advance production
+    needs: validate
+    if: ${{ needs.validate.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: Production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fast-forward production to the validated commit
+        env:
+          SHA: ${{ needs.validate.outputs.sha }}
+        run: |
+          set -eu
+          echo "Advancing production -> ${SHA}"
+          git push origin "${SHA}:refs/heads/production"

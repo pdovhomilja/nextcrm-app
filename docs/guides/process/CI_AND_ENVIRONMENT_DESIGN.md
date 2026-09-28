@@ -15,6 +15,18 @@
 > **no** Supabase Auth, RLS, PostgREST, or `supabase-js`, and the app is
 > **single-tenant** (no `tenant_id`). The 2-tier column is kept below purely as
 > portable rationale — this fork runs the full 3-tier model.
+>
+> **⚠ Migration model — build-migrates (fork-specific), read this before §4/§5.**
+> NextCRM's `build` runs `prisma migrate deploy`, so **the Vercel deploy migrates
+> its own database at build time** — this fork does **not** use separate
+> `migrate-qa.yml` / `migrate-production.yml` workflows. The sections below that
+> describe a standalone migration job are kept as portable rationale (the *ordering*
+> discipline, the pooler/secret traps, the promote-from-qa reasoning all still
+> apply), but in this repo they are realized as: **`advance-qa.yml`** fast-forwards
+> `qa` after CI on `main` (→ Vercel builds qa → migrates `nextcrm-qa`), and the
+> gated **`promote-production.yml`** fast-forwards `production` (→ Vercel builds
+> production → migrates `nextcrm-prod`). Only `qa`/`production` build (Vercel Ignored
+> Build Step), so PR previews never migrate QA. See `CUSTOMIZATIONS.md`.
 
 ---
 
