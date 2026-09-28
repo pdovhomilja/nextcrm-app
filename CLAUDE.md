@@ -186,11 +186,12 @@ handlers) — so scope every query by hand; there is no RLS to fall back on.
   leaves CI nothing to apply; the Guardrails invariant check forbids it in scripts,
   and the schema/migration-sync check fails a schema edit that ships without a migration.
 - **DEV database (hybrid):** the canonical local DB is the **Supabase CLI stack**
-  (`npx supabase start`, :54322) for hosted parity; the Docker `:5433` compose
-  (`pnpm db:up`) is an untouched upstream fallback. We do **not** repoint the `db:*`
-  scripts (that would churn upstream's `package.json`).
-- **DEV (local) loop:** `npx supabase start` (or `pnpm db:up` for the Docker
-  fallback) → set `DATABASE_URL` (→ `127.0.0.1:54322`) → `pnpm db:migrate` →
+  (`pnpm dlx supabase start`, :54622 — ports pinned to the `546xx` block in
+  `supabase/config.toml` to coexist with other local Supabase stacks) for hosted
+  parity; the Docker `:5433` compose (`pnpm db:up`) is an untouched upstream fallback.
+  We do **not** repoint the `db:*` scripts (that would churn upstream's `package.json`).
+- **DEV (local) loop:** `pnpm dlx supabase start` (or `pnpm db:up` for the Docker
+  fallback) → set `DATABASE_URL` (→ `127.0.0.1:54622`) → `pnpm db:migrate` →
   `pnpm db:seed` → `pnpm dev`. `pnpm db:migrate`/`db:seed` follow `DATABASE_URL`;
   `scripts/assert-local-db.sh` refuses them when `DATABASE_URL` points at a non-local
   host (it allows any `127.0.0.1`/`localhost`/`::1`) — respect it.
