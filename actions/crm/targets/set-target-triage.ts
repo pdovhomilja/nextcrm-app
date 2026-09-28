@@ -2,6 +2,7 @@
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { writeAuditLog, diffObjects } from "@/lib/audit-log";
+import { buildTriageData, TriageValidationError } from "@/lib/crm/triage";
 import {
   requireAuthenticated,
   assertCanWriteTarget,
@@ -22,11 +23,6 @@ export const setTargetTriage = async (data: {
   const { id, status, pass_reason, pass_note, revisit_at } = data;
   if (!id) return { error: "id is required" };
 
-  // A pass must record why, so nothing is silently skipped.
-  if (status === "PASSED" && !pass_reason) {
-    return { error: "pass_reason is required when passing a target" };
-  }
-
   let user;
   try {
     user = await requireAuthenticated();
@@ -41,37 +37,25 @@ export const setTargetTriage = async (data: {
     throw e;
   }
 
+  // Validate + build the write shape (rejects any status other than
+  // APPROVED/PASSED, and requires a reason on PASSED).
+  let triageData;
+  try {
+    triageData = buildTriageData({ status, pass_reason, pass_note, revisit_at, userId: user.id });
+  } catch (e) {
+    if (e instanceof TriageValidationError) return { error: e.message };
+    throw e;
+  }
+
   const existing = await prismadb.crm_Targets.findFirst({
     where: { id, deletedAt: null },
   });
   if (!existing) return { error: "Target not found" };
 
-  // APPROVED clears any prior pass metadata; PASSED records the reason/note and
-  // an optional revisit date (snooze) to resurface later.
-  const triageData =
-    status === "APPROVED"
-      ? {
-          triage_status: "APPROVED" as const,
-          pass_reason: null,
-          pass_note: null,
-          revisit_at: null,
-        }
-      : {
-          triage_status: "PASSED" as const,
-          pass_reason: pass_reason ?? null,
-          pass_note: pass_note ?? null,
-          revisit_at: revisit_at ? new Date(revisit_at) : null,
-        };
-
   try {
     const target = await prismadb.crm_Targets.update({
       where: { id },
-      data: {
-        ...triageData,
-        triaged_at: new Date(),
-        triaged_by: user.id,
-        updatedBy: user.id,
-      },
+      data: { ...triageData, updatedBy: user.id },
     });
 
     await writeAuditLog({

@@ -82,6 +82,14 @@ describe("setTargetTriage", () => {
     expect(prismadb.crm_Targets.update).not.toHaveBeenCalled();
   });
 
+  it("rejects a status that is not APPROVED or PASSED and does not write", async () => {
+    // A crafted value must not fall through to the PASSED branch (which would
+    // otherwise write PASSED with a null reason, bypassing the reason rule).
+    const result = await setTargetTriage({ id: TARGET_ID, status: "NEW" as never });
+    expect(result).toEqual({ error: expect.stringMatching(/APPROVED|PASSED|status/i) });
+    expect(prismadb.crm_Targets.update).not.toHaveBeenCalled();
+  });
+
   it("returns Unauthorized when not authenticated", async () => {
     (requireAuthenticated as jest.Mock).mockRejectedValue(new AuthenticationError());
     const result = await setTargetTriage({ id: TARGET_ID, status: "APPROVED" });

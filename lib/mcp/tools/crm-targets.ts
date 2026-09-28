@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
+import { buildTriageData } from "@/lib/crm/triage";
+import { writeAuditLog, diffObjects } from "@/lib/audit-log";
 import {
   paginationSchema,
   paginationArgs,
@@ -144,7 +146,9 @@ export const crmTargetTools = [
   },
   {
     name: "crm_update_target",
-    description: "Update an existing CRM target by ID",
+    description:
+      "Update an existing CRM target by ID. Accepts the same fields as the CSV import (company_website, industry, city, description, etc.).",
+    // Kept at parity with lib/spreadsheet/target-fields.ts and crm_create_target.
     schema: z.object({
       id: z.string().uuid(),
       first_name: z.string().min(1).optional(),
@@ -154,6 +158,20 @@ export const crmTargetTools = [
       office_phone: z.string().optional(),
       company: z.string().optional(),
       position: z.string().optional(),
+      company_website: z.string().optional(),
+      personal_website: z.string().optional(),
+      social_linkedin: z.string().optional(),
+      social_x: z.string().optional(),
+      social_instagram: z.string().optional(),
+      social_facebook: z.string().optional(),
+      personal_email: z.string().email().optional(),
+      company_email: z.string().email().optional(),
+      company_phone: z.string().optional(),
+      city: z.string().optional(),
+      country: z.string().optional(),
+      industry: z.string().optional(),
+      employees: z.string().optional(),
+      description: z.string().optional(),
     }),
     async handler(
       args: {
@@ -165,6 +183,20 @@ export const crmTargetTools = [
         office_phone?: string;
         company?: string;
         position?: string;
+        company_website?: string;
+        personal_website?: string;
+        social_linkedin?: string;
+        social_x?: string;
+        social_instagram?: string;
+        social_facebook?: string;
+        personal_email?: string;
+        company_email?: string;
+        company_phone?: string;
+        city?: string;
+        country?: string;
+        industry?: string;
+        employees?: string;
+        description?: string;
       },
       userId: string
     ) {
@@ -207,21 +239,27 @@ export const crmTargetTools = [
         where: { id: args.id, created_by: userId, deletedAt: null },
       });
       if (!existing) notFound("Target");
-      if (args.status === "PASSED" && !args.pass_reason) {
-        throw new Error("pass_reason is required when passing a target");
-      }
-      const triageData =
-        args.status === "APPROVED"
-          ? { triage_status: "APPROVED" as const, pass_reason: null, pass_note: null, revisit_at: null }
-          : {
-              triage_status: "PASSED" as const,
-              pass_reason: args.pass_reason ?? null,
-              pass_note: args.pass_note ?? null,
-              revisit_at: args.revisit_at ? new Date(args.revisit_at) : null,
-            };
+      // Shared with the web action; throws on invalid status / missing reason.
+      const triageData = buildTriageData({
+        status: args.status,
+        pass_reason: args.pass_reason,
+        pass_note: args.pass_note,
+        revisit_at: args.revisit_at,
+        userId,
+      });
       const target = await prismadb.crm_Targets.update({
         where: { id: args.id },
-        data: { ...triageData, triaged_at: new Date(), triaged_by: userId, updatedBy: userId },
+        data: { ...triageData, updatedBy: userId },
+      });
+      await writeAuditLog({
+        entityType: "target",
+        entityId: args.id,
+        action: "updated",
+        changes: diffObjects(
+          existing as unknown as Record<string, unknown>,
+          target as unknown as Record<string, unknown>
+        ),
+        userId,
       });
       return itemResponse(target);
     },

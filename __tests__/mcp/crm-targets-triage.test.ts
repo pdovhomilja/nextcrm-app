@@ -9,8 +9,13 @@ jest.mock("@/lib/prisma", () => ({
     },
   },
 }));
+jest.mock("@/lib/audit-log", () => ({
+  writeAuditLog: jest.fn(),
+  diffObjects: jest.fn(() => []),
+}));
 
 import { prismadb } from "@/lib/prisma";
+import { writeAuditLog } from "@/lib/audit-log";
 import { crmTargetTools } from "@/lib/mcp/tools/crm-targets";
 import { TARGET_FIELDS } from "@/lib/spreadsheet/target-fields";
 
@@ -84,13 +89,16 @@ describe("crm_create_target load fields (schema parity with CSV import)", () => 
     expect(data.created_by).toBe(USER);
   });
 
-  it("accepts every CSV-importable field (no silent drift)", () => {
-    const tool = crmTargetTools.find((t) => t.name === "crm_create_target")!;
-    const shapeKeys = Object.keys((tool.schema as any).shape);
-    for (const field of TARGET_FIELDS) {
-      expect(shapeKeys).toContain(field.key);
+  it.each(["crm_create_target", "crm_update_target"])(
+    "%s accepts every CSV-importable field (no silent drift)",
+    (toolName) => {
+      const tool = crmTargetTools.find((t) => t.name === toolName)!;
+      const shapeKeys = Object.keys((tool.schema as any).shape);
+      for (const field of TARGET_FIELDS) {
+        expect(shapeKeys).toContain(field.key);
+      }
     }
-  });
+  );
 });
 
 describe("crm_set_target_triage", () => {
@@ -121,6 +129,13 @@ describe("crm_set_target_triage", () => {
       run("crm_set_target_triage", { id: TARGET_ID, status: "PASSED" })
     ).rejects.toThrow(/reason/i);
     expect(prismadb.crm_Targets.update).not.toHaveBeenCalled();
+  });
+
+  it("writes a target audit-log entry on success", async () => {
+    await run("crm_set_target_triage", { id: TARGET_ID, status: "APPROVED" });
+    expect(writeAuditLog).toHaveBeenCalledWith(
+      expect.objectContaining({ entityType: "target", entityId: TARGET_ID, action: "updated", userId: USER })
+    );
   });
 
   it("surfaces NOT_FOUND for a target the caller does not own", async () => {
