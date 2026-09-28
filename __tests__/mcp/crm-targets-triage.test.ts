@@ -1,11 +1,18 @@
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
-    crm_Targets: { findMany: jest.fn(), count: jest.fn(), findFirst: jest.fn(), update: jest.fn() },
+    crm_Targets: {
+      findMany: jest.fn(),
+      count: jest.fn(),
+      findFirst: jest.fn(),
+      update: jest.fn(),
+      create: jest.fn(),
+    },
   },
 }));
 
 import { prismadb } from "@/lib/prisma";
 import { crmTargetTools } from "@/lib/mcp/tools/crm-targets";
+import { TARGET_FIELDS } from "@/lib/spreadsheet/target-fields";
 
 const USER = "u1";
 const TARGET_ID = "11111111-1111-1111-1111-111111111111";
@@ -45,6 +52,44 @@ describe("crm_list_targets triage_status filter", () => {
     await run("crm_list_targets", { limit: 20, offset: 0 });
     const where = (prismadb.crm_Targets.findMany as jest.Mock).mock.calls[0][0].where;
     expect(where.triage_status).toBeUndefined();
+  });
+});
+
+describe("crm_create_target load fields (schema parity with CSV import)", () => {
+  // Validate THROUGH the tool's Zod schema — that is where undeclared fields
+  // are stripped, so this is the boundary the parity fix must survive. Calling
+  // the handler directly would bypass it and pass even with a narrow schema.
+  const createThroughSchema = (args: unknown) => {
+    const tool = crmTargetTools.find((t) => t.name === "crm_create_target")!;
+    const parsed = (tool.schema as any).parse(args);
+    return (tool.handler as any)(parsed, USER);
+  };
+
+  it("keeps company_website, industry, city, and description through validation", async () => {
+    await createThroughSchema({
+      last_name: "KC Home Solutions",
+      company: "KC Home Solutions",
+      company_website: "https://kchomesolutions.example",
+      industry: "Remodeling",
+      city: "Olathe",
+      description: "Homepage headline renders white-on-light-gray — unreadable.",
+    });
+    const data = (prismadb.crm_Targets.create as jest.Mock).mock.calls[0][0].data;
+    expect(data.company_website).toBe("https://kchomesolutions.example");
+    expect(data.industry).toBe("Remodeling");
+    expect(data.city).toBe("Olathe");
+    expect(data.description).toBe(
+      "Homepage headline renders white-on-light-gray — unreadable."
+    );
+    expect(data.created_by).toBe(USER);
+  });
+
+  it("accepts every CSV-importable field (no silent drift)", () => {
+    const tool = crmTargetTools.find((t) => t.name === "crm_create_target")!;
+    const shapeKeys = Object.keys((tool.schema as any).shape);
+    for (const field of TARGET_FIELDS) {
+      expect(shapeKeys).toContain(field.key);
+    }
   });
 });
 
