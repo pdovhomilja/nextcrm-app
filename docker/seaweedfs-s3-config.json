@@ -1,0 +1,9 @@
+{
+  "identities": [
+    {
+      "name": "nextcrm",
+      "credentials": [{ "accessKey": "nextcrm", "secretKey": "changeme" }],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}

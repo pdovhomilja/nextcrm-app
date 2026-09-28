@@ -70,6 +70,53 @@ services:
       timeout: 5s
       retries: 10
 
+  # --- SeaweedFS: S3-compatible local object storage ---
+  # MinIO's public Docker images were gated by MinIO in 2025 (minio/minio and
+  # minio/mc no longer pull anonymously), so local dev uses SeaweedFS's S3
+  # gateway instead. NextCRM's S3 client (lib/minio.ts) is generic path-style,
+  # so it treats this exactly like MinIO. R2 is still used on QA/prod.
+  seaweedfs:
+    image: chrislusf/seaweedfs:latest
+    container_name: nextcrm-dev-s3
+    restart: unless-stopped
+    # S3 API on :9000 (matches MINIO_ENDPOINT in .env); creds from the config.
+    command: server -dir=/data -s3 -s3.port=9000 -s3.config=/etc/seaweedfs/s3.json
+    ports:
+      # Loopback only — the throwaway nextcrm/changeme creds must not be
+      # reachable off this machine.
+      - "127.0.0.1:9000:9000"
+    volumes:
+      - seaweedfs_data:/data
+      - ./docker/seaweedfs-s3-config.json:/etc/seaweedfs/s3.json:ro
+
+  # One-shot: wait for the S3 API, create the `nextcrm` bucket (matches
+  # MINIO_BUCKET in .env), and set a permissive CORS rule so the browser's
+  # presigned PUT uploads from localhost:3000 succeed. Uses the public AWS CLI
+  # image against the SeaweedFS endpoint.
+  createbucket:
+    image: amazon/aws-cli:latest
+    container_name: nextcrm-dev-createbucket
+    depends_on:
+      - seaweedfs
+    restart: "no"
+    environment:
+      AWS_ACCESS_KEY_ID: nextcrm
+      AWS_SECRET_ACCESS_KEY: changeme
+      AWS_DEFAULT_REGION: us-east-1
+    entrypoint:
+      - /bin/sh
+      - -c
+      - >
+        for i in $$(seq 1 30); do
+          aws --endpoint-url http://seaweedfs:9000 s3api create-bucket --bucket nextcrm >/dev/null 2>&1 && break;
+          echo 'waiting for seaweedfs s3...'; sleep 2;
+        done;
+        aws --endpoint-url http://seaweedfs:9000 s3api put-bucket-cors --bucket nextcrm --cors-configuration
+        '{"CORSRules":[{"AllowedOrigins":["http://localhost:3000"],"AllowedMethods":["GET","PUT","HEAD"],"AllowedHeaders":["*"],"ExposeHeaders":["ETag"]}]}' || true;
+        aws --endpoint-url http://seaweedfs:9000 s3 ls;
+        echo 'bucket ready'
+
 volumes:
   inngest_data:
   postgres_dev_data:
+  seaweedfs_data:

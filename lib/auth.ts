@@ -69,6 +69,12 @@ export const auth = betterAuth({
   plugins: [
     emailOTP({
       sendVerificationOTP: async ({ email, otp, type }) => {
+        // Dev/test: no real email is sent locally (dummy Resend key), so print the
+        // code to the server log — local login needs no inbox. testUtils also
+        // captures it for GET /api/auth/test-otp. Never runs in production.
+        if (process.env.NODE_ENV !== "production") {
+          console.log(`[Auth] OTP for ${email} (${type}): ${otp}`);
+        }
         try {
           const resend = await resendHelper();
           await resend.emails.send({
