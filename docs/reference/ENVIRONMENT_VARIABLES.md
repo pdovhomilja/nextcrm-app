@@ -61,7 +61,8 @@ in this fork's code** (kept for merge-friendliness).
 
 | Variable | Scope | Required | Purpose | Format / example |
 |---|---|---|---|---|
-| `RESEND_API_KEY` | All | No | Resend API key (OTP, invites, campaigns). Falls back to a DB service key; dummy locally (OTP is read from the dev log / `test-otp`). | `re_...` |
+| `RESEND_API_KEY` | All | No | **Transactional** Resend key (OTP, invites, invoices, notifications — via `lib/resend.ts`). Falls back to a DB service key; dummy locally (OTP is read from the dev log / `test-otp`). Sending-access, domain-restricted to the transactional domain. | `re_...` |
+| `RESEND_CAMPAIGNS_API_KEY` | Preview, Prod | No | **Campaign** Resend key (Inngest sender, `send-step.ts`) — segregated from transactional; domain-restricted to the campaigns domain (tracking on). Falls back to `RESEND_API_KEY` if unset. | `re_...` |
 | `RESEND_FROM_EMAIL` | Preview, Prod | Sending | Verified sender for campaign email. | `noreply@crm.radeengineering.com` |
 | `RESEND_WEBHOOK_SECRET` | Preview, Prod | No | Svix signing secret for the open/click-tracking webhook (`/api/campaigns/webhooks/resend`). | `whsec_...` |
 | `EMAIL_FROM` | All | No | From address for the nodemailer path. | `noreply@yourdomain.com` |
@@ -187,8 +188,24 @@ values (Google Cloud → OAuth client, redirect
 
 ### For live campaigns / tracking
 
-`RESEND_FROM_EMAIL` (campaign sender), `RESEND_WEBHOOK_SECRET` (the **production**
-Resend webhook's signing secret — the QA one won't verify prod deliveries).
+`RESEND_CAMPAIGNS_API_KEY` (the prod **campaigns** key), `RESEND_FROM_EMAIL` (campaign
+sender), `RESEND_WEBHOOK_SECRET` (the **production** Resend webhook's signing secret —
+the QA one won't verify prod deliveries).
+
+**Resend key layout (4 keys — all Sending access; domain-restriction optional).**
+Transactional and campaigns are segregated by key *and* sending domain (transactional
+domain: tracking off; campaigns domain: tracking on). Keys never cross environments:
+
+| Vercel scope | Transactional (`RESEND_API_KEY`) | Campaigns (`RESEND_CAMPAIGNS_API_KEY`) |
+|---|---|---|
+| **Production** | prod transactional key | prod campaigns key |
+| **Preview (QA)** | QA transactional key | QA campaigns key |
+
+**QA shares the prod sending domains** (no separate QA subdomain), so QA and prod share
+**sender reputation** — separate keys do *not* isolate that. Guard against QA emailing
+real recipients (bounces/complaints hurt the shared domain) with a **non-prod email
+redirect** so QA only ever sends to a test inbox. See `LOCAL_DEV_GUIDE.md` (dev/QA email
+safety); no such guard exists yet.
 
 ### Optional (only if the feature is used)
 

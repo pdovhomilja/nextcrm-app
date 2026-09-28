@@ -5,7 +5,12 @@ import { resolveMergeTags } from "@/lib/campaigns/merge-tags";
 import { renderCampaignEmail } from "@/lib/campaigns/render-email";
 import { sendStepSkipReason } from "@/lib/campaigns/recipient-filters";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Campaigns use a dedicated Resend key (domain-restricted to the campaigns sending
+// domain, tracking on) — segregated from the transactional key (RESEND_API_KEY, via
+// lib/resend.ts). Falls back to RESEND_API_KEY if a separate campaigns key isn't set.
+const resend = new Resend(
+  process.env.RESEND_CAMPAIGNS_API_KEY || process.env.RESEND_API_KEY
+);
 
 export const campaignSendStep = inngest.createFunction(
   {
