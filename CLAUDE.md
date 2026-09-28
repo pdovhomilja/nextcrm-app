@@ -17,7 +17,8 @@ for every deliberate deviation and the upstream sync/contribute recipes.
 - ✅ **Upstream-sync lane + guardrails** — `scripts/sync-upstream.sh`,
   `.github/workflows/guardrails.yml`, `upstream-drift.yml`, `scripts/check-invariants.sh`.
 - ✅ **WS1 — conventions & guides** — this file + `docs/guides/`, `docs/reference/`, `docs/templates/`.
-- ⏳ **WS2 — skills** (`.claude/skills/deep-review`, `fix-ci`, `ship-phase`).
+- ✅ **WS2 — skills** — `.claude/skills/deep-review`, `fix-ci`, `ship-phase`.
+- ✅ **CI cost** — heavy jobs (`integration`/`build`/`e2e`) path-gated to code changes.
 - ⏳ **WS3 — 3-tier CI/CD** (`vercel.json`, `migrate-qa.yml`, `migrate-production.yml`, `promote-production.yml`, PR template).
 - ⏳ **WS4 — env & secrets** (`docs/reference/ENVIRONMENT_VARIABLES.md` + env-doc guard).
 
@@ -93,7 +94,7 @@ handlers) — so scope every query by hand; there is no RLS to fall back on.
   A push triggers CI — and on `qa`/`production`, deploys and DB migrations — so it
   is an outward, cost-incurring action. Ask before pushing. Local commits are cheap.
 - **Pre-PR gate — two mandatory steps, in order, BEFORE opening the PR:**
-  1. **Run the `deep-review` skill** (once WS2 lands) and fix every finding, or
+  1. **Run the `deep-review` skill** and fix every finding, or
      defer to Known Gaps with a reason. Scale depth to risk (a money path, auth
      flow, public route, or migration warrants a full pass; a pure rename does not).
   2. **Complete the doc-sync walk** (see Documentation Sync) — including appending
@@ -260,8 +261,7 @@ handlers) — so scope every query by hand; there is no RLS to fall back on.
 
 ## Skills
 
-Project skills land in `.claude/skills/` in WS2 (run the actual skill when invoked
-by name):
+Project skills in `.claude/skills/` (run the actual skill when invoked by name):
 - **`deep-review`** — thorough pre-PR review (security, money paths, correctness). Step 1 of the pre-PR gate.
 - **`ship-phase`** — finish a unit of work: deep review → doc-sync → checks → commit → push → PR.
 - **`fix-ci`** — diagnose a failing CI run, fix, verify locally, push until green.
