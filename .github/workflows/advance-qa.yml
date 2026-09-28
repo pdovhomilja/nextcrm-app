@@ -1,0 +1,49 @@
+name: Advance QA
+
+# After CI passes on `main`, fast-forward the fixed `qa` branch to that exact
+# commit. Vercel then builds `qa` as the QA Preview — and because NextCRM's build
+# runs `prisma migrate deploy`, the QA database is migrated at deploy time (this
+# workflow does NOT migrate; it only moves the pointer). `main` itself does not
+# deploy (vercel.json), and only `qa`/`production` build (Vercel Ignored Build
+# Step), so PR-branch previews never migrate the QA database.
+#
+# The push to `qa` uses GITHUB_TOKEN, which deliberately triggers no further
+# Actions workflow; Vercel's own Git integration is not subject to that rule, so
+# it still deploys the qa branch.
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+
+concurrency:
+  group: advance-qa
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  advance-qa:
+    name: Advance qa pointer
+    # Inert until armed: set repo variable QA_DEPLOY_ENABLED=true once the QA
+    # Vercel env is complete (WS4), so `qa` isn't advanced into a failing deploy.
+    # Then: only for a successful CI run triggered by a push to main in THIS repo
+    # (never a fork PR whose branch happens to be named main).
+    if: >-
+      vars.QA_DEPLOY_ENABLED == 'true' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - name: Fast-forward qa to the CI-tested main commit
+        run: |
+          echo "Advancing qa -> ${{ github.event.workflow_run.head_sha }}"
+          git push origin HEAD:refs/heads/qa --force

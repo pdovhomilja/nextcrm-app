@@ -64,9 +64,9 @@ else
 fi
 
 echo ""
-echo "Fork invariants — pending checks (promote to FAIL once WS3 lands):"
+echo "Fork invariants — 3-tier deploy model (WS3):"
 
-# 5. vercel.json disables main auto-deploy (the 3-tier promote model). Not present until WS3.
+# 5. vercel.json disables main auto-deploy (the 3-tier promote model).
 if [ -f vercel.json ]; then
   if grep -q '"main"[[:space:]]*:[[:space:]]*false' vercel.json; then
     OK "vercel.json disables main auto-deploy"
@@ -74,15 +74,16 @@ if [ -f vercel.json ]; then
     FAIL "vercel.json exists but no longer disables main auto-deploy"
   fi
 else
-  WARN "vercel.json not present yet (WS3) — main-deploy-disable invariant unenforced"
+  FAIL "vercel.json is missing — main auto-deploy is no longer disabled"
 fi
 
-# 6. The 3-tier migration/promote workflows exist. Not present until WS3.
-for wf in migrate-qa.yml migrate-production.yml promote-production.yml; do
+# 6. The 3-tier branch-advance / promote workflows exist.
+#    (NextCRM's build migrates on deploy, so there are no separate migrate-* jobs.)
+for wf in advance-qa.yml promote-production.yml; do
   if [ -f ".github/workflows/$wf" ]; then
     OK ".github/workflows/$wf present"
   else
-    WARN ".github/workflows/$wf not present yet (WS3)"
+    FAIL ".github/workflows/$wf is missing (3-tier deploy automation)"
   fi
 done
 

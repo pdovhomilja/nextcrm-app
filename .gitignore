@@ -53,11 +53,12 @@ migration-errors.log
 backups/
 
 #Agents
-.claude/
+# Ignore local Claude settings, but TRACK project skills (they ship with the repo).
+.claude/*
+!.claude/skills/
 .agents/
 .cursor/
 .agent-os/
-.claude
 .vscode
 
 # Playwright
