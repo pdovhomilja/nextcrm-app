@@ -37,6 +37,18 @@
 - **Tell:** the error names a Client Component boundary, and the offending field is
   a money or quantity column.
 
+### A `NEXT_PUBLIC_` variable is inlined into the client bundle — never put a secret in one
+
+- **Symptom:** a token/key read via `process.env.NEXT_PUBLIC_*` (even inside a
+  server-only function) ends up readable in the browser bundle.
+- **Cause:** Next.js **statically replaces** every `NEXT_PUBLIC_*` reference at build
+  time, everywhere, and ships the value to the client — regardless of where it's read.
+  (Real case here: `NEXT_PUBLIC_GITHUB_TOKEN` in `get-repo-stars.ts`.)
+- **Fix / rule:** secrets/tokens use a **server-only** name (no `NEXT_PUBLIC_` prefix)
+  and are read only in server code. `NEXT_PUBLIC_*` is for values that are safe to be
+  public (URLs, names, feature flags). If a value must reach the client, fetch it
+  through a server action/route, don't inline it.
+
 ## Rendering / Next.js
 
 ### `robots.ts` / `sitemap.ts` (and other metadata files) must live at the app root

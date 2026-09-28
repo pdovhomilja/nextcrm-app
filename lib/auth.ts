@@ -5,6 +5,7 @@ import { admin as adminPlugin } from "better-auth/plugins";
 import { prismadb } from "@/lib/prisma";
 import { ac, admin, manager, user } from "@/lib/auth-permissions";
 import { handleUserCreated } from "@/lib/auth-hooks";
+import { socialProvidersConfig } from "@/lib/auth-social";
 import resendHelper from "@/lib/resend";
 
 const isDemo = process.env.NEXT_PUBLIC_APP_URL === "https://demo.nextcrm.io";
@@ -55,12 +56,9 @@ export const auth = betterAuth({
     },
   },
 
-  socialProviders: {
-    google: {
-      clientId: process.env.GOOGLE_ID!,
-      clientSecret: process.env.GOOGLE_SECRET!,
-    },
-  },
+  // Google sign-in is registered only when GOOGLE_ID + GOOGLE_SECRET are set;
+  // unset = no Google button, no creds needed (email-OTP is unaffected).
+  socialProviders: socialProvidersConfig(process.env.GOOGLE_ID, process.env.GOOGLE_SECRET),
 
   emailAndPassword: {
     enabled: false,
