@@ -182,7 +182,8 @@ handlers) — so scope every query by hand; there is no RLS to fall back on.
   **left → right, never backward** — no hand-applied change to a hosted environment.
 - **NEVER `prisma db push`** — every schema change is a committed migration file
   (`pnpm exec prisma migrate dev` to author). `db push` drifts the schema and
-  leaves CI nothing to apply; the Guardrails drift check fails on it.
+  leaves CI nothing to apply; the Guardrails invariant check forbids it in scripts,
+  and the schema/migration-sync check fails a schema edit that ships without a migration.
 - **DEV database (hybrid):** the canonical local DB is the **Supabase CLI stack**
   (`npx supabase start`, :54322) for hosted parity; the Docker `:5433` compose
   (`pnpm db:up`) is an untouched upstream fallback. We do **not** repoint the `db:*`

@@ -162,10 +162,15 @@ file (`prisma migrate dev` locally), commit it, let CI apply it with
 `prisma migrate deploy`. Applying committed files is the migration approach; `db push`
 is not. The fork enforces this two ways: `scripts/assert-local-db.sh` (wired as the
 `db:guard` script) refuses destructive/seeding Prisma commands against a non-local
-`DATABASE_URL`, and `.github/workflows/guardrails.yml` runs a **shadow-DB drift check**
-(`prisma migrate diff --from-migrations ./prisma/migrations --to-schema-datamodel
-./prisma/schema.prisma --exit-code`) that fails any PR whose `schema.prisma` was edited
-without a matching migration — the exact drift a `db push` would produce.
+`DATABASE_URL`, and `.github/workflows/guardrails.yml` runs a **git-based
+schema/migration-sync check** that fails any PR whose `prisma/schema.prisma` was edited
+without adding a migration under `prisma/migrations/` — the exact break an upstream
+merge (or a `db push`) causes. It is deliberately git-based, **not** `prisma migrate
+diff`: this repo carries a *known, benign baseline drift* between `schema.prisma` and
+its migrations (DB-level `gen_random_uuid()` defaults vs app-generated ids; see the
+repo's standing "author migrations via `migrate diff --script` + fresh-replay" rule),
+so a full `migrate diff` would fail on every PR. That migrations apply in order on a
+fresh DB is proven separately by `ci.yml`'s `integration` job.
 
 **Forward-only.** Hosted migrations are never rolled back; you fix forward with a new
 migration. Rollback belongs to DEV only.
@@ -538,8 +543,8 @@ Reproduce the **3-tier** design on a new repo in this order (2-tier: do steps 1,
    and throwaway build secrets. **The build job runs in PARALLEL with the check jobs
    (only `needs: fast`)** — a build doesn't depend on the integration/e2e suites, so
    gating it behind them only makes it wait. (No contract/RLS tier — this fork has no
-   RLS.) The Prisma schema/migration **drift check** lives in the separate
-   `guardrails.yml` (shadow-DB `prisma migrate diff`).
+   RLS.) The Prisma schema/migration **sync check** lives in the separate
+   `guardrails.yml` (git-based: schema edited ⇒ a migration must accompany it).
 8. **Required checks:** in the repo ruleset, require the `fast`/`integration` jobs (and
    the `build` job once it's QA-DB-backed) — after each has run once. **Required checks
    are matched by job NAME**, so renaming/splitting a required job means updating the

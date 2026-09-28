@@ -48,8 +48,8 @@ the fork falls behind.
   (Development/Preview/Production) or the Vercel deploy breaks while CI stays green.
 - Did upstream add a **Coolify/self-host assumption** that conflicts with Vercel?
 - Did upstream touch **auth** in a way that assumes their better-auth config vs ours?
-- Did a **schema change** land? Guardrails' drift check confirms a migration exists;
-  confirm it applied to Supabase QA via `migrate-qa.yml` after merge.
+- Did a **schema change** land? Guardrails' schema/migration-sync check confirms a
+  migration accompanies it; confirm it applied to Supabase QA via `migrate-qa.yml` after merge.
 
 ## Contributing BACK upstream (sync OUT)
 

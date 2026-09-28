@@ -161,6 +161,26 @@
   to run against a non-local host. Keep new destructive DB scripts behind that guard
   (`pnpm db:guard`); never bypass it to "just reseed quickly."
 
+### `prisma migrate diff` reports benign baseline drift — don't guard with it
+
+- **Symptom:** `prisma migrate diff --from-migrations ./prisma/migrations --to-schema
+  ./prisma/schema.prisma --exit-code` exits **2 (drift)** on a clean checkout, listing
+  `id` columns whose default "changed from `gen_random_uuid()` to `None`" plus a couple
+  of FK differences — even though migrations apply cleanly and the app works.
+- **Cause:** the migrations create DB-level `DEFAULT gen_random_uuid()` while
+  `schema.prisma` models those ids as app-generated (no DB default). This is a
+  **known, benign baseline drift** in the upstream repo — its own `docs/superpowers/`
+  plans carry a standing rule to author migrations via `prisma migrate diff
+  --from-schema … --to-schema … --script` + fresh-DB replay, precisely because
+  `migrate dev` against the dev DB drifts.
+- **Fix / rule:** do **not** build a CI guard on a full `migrate diff` (it would fail
+  every PR). The Guardrails **schema/migration-sync** check is instead **git-based** —
+  it fails only when a PR edits `prisma/schema.prisma` without adding a migration under
+  `prisma/migrations/`. Migrations-apply-in-order is proven separately by `ci.yml`'s
+  fresh-DB `prisma migrate deploy`. Also note: Prisma 7 renamed the flag to
+  `--to-schema` (not `--to-schema-datamodel`) and has **no** `--shadow-database-url`
+  flag (shadow DB is set via `datasource.shadowDatabaseUrl` in a Prisma config file).
+
 ---
 
 <!-- Add new entries above this line, newest-relevant first within each section.
