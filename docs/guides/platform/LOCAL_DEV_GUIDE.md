@@ -8,8 +8,8 @@ reference — for the *principles* behind the 3-tier model see
 > This is the Rade Engineering CRM — a fork of `pdovhomilja/nextcrm-app`. The
 > stack is **pnpm + Prisma + Docker**, with Postgres (Supabase) as the database,
 > **better-auth** for auth, **Inngest** for background jobs, **Upstash Redis** for
-> cache/rate-limiting, S3-compatible object storage (MinIO/R2), and **Resend** for
-> email. There is **no Stripe** and **no Supabase Auth/RLS** — Supabase is used as a
+> cache/rate-limiting, S3-compatible object storage (**SeaweedFS** locally, **R2** in
+> the cloud), and **Resend** for email. There is **no Stripe** and **no Supabase Auth/RLS** — Supabase is used as a
 > managed Postgres host only, single-tenant. Upstream-sync tooling
 > (`scripts/sync-upstream.sh`, the guardrails workflows, `CUSTOMIZATIONS.md`) is
 > covered separately; this guide is the day-to-day local workflow.
@@ -27,9 +27,11 @@ reference — for the *principles* behind the 3-tier model see
   Bash** or **WSL** (not cmd/PowerShell).
 - **Docker Desktop** — required for the local support services (Inngest, and the
   docker-compose pgvector Postgres) and for the Supabase CLI local stack.
-- **Supabase CLI** (`npx supabase …` works without a global install) — used to run
-  the local Postgres that mirrors the hosted Supabase QA/prod build (see the DEV
-  database note below).
+- **Supabase CLI** — used to run the local Postgres that mirrors the hosted Supabase
+  QA/prod build (see the DEV database note below). Run it with **`pnpm dlx
+  supabase@2.118.0 …`** (or `npx supabase …`); a version-pinned `dlx`/`npx` invocation
+  needs no global install. **On recent macOS the Homebrew formula is currently broken**
+  (fails to build against the newer Command Line Tools), so prefer the `dlx`/`npx` path.
 - **Vercel CLI** (`pnpm i -g vercel`) — for `vercel link` / `vercel env pull`.
 - **`gh` CLI** — for the PR workflow.
 
@@ -37,14 +39,19 @@ reference — for the *principles* behind the 3-tier model see
 
 ## DEV database — the chosen approach (read before Part 1)
 
-The fork runs its **DEV Postgres via the Supabase CLI local stack** (`npx supabase
-start`, default DB port **54322**). This gives **parity with the hosted Supabase
-QA/prod** — same Postgres build and the `pgvector` extension — so schema and vector
-behaviour match what runs in the cloud. Prisma's `DATABASE_URL` points at that local
-Supabase DB:
+The fork runs its **DEV Postgres via the Supabase CLI local stack** (`pnpm dlx supabase
+start`). This gives **parity with the hosted Supabase QA/prod** — same Postgres build and
+the `pgvector` extension — so schema and vector behaviour match what runs in the cloud.
+
+> **Ports are pinned to the `546xx` block** (`supabase/config.toml`, committed): DB
+> **54622**, API 54621, Studio 54623, shadow 54620. The CLI's own defaults are `543xx` —
+> we moved off them so this stack **coexists with other local Supabase projects** without
+> port clashes. If you run several Supabase stacks, keep each on its own block.
+
+Prisma's `DATABASE_URL` points at that local Supabase DB:
 
 ```
-DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:54322/postgres"
+DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:54622/postgres"
 ```
 
 **Inngest still runs via `docker-compose.dev.yml`** (`pnpm inngest:up`), independent
@@ -56,15 +63,15 @@ of the database choice.
 > `scripts/assert-local-db.sh` were written around that container. The guard in
 > `assert-local-db.sh` only checks that the host is `localhost`/`127.0.0.1`/`::1` (it
 > does **not** pin a port), so `pnpm db:migrate` and `pnpm db:seed` work fine against
-> the Supabase-local DB on 54322. But `pnpm db:up` / `db:wait` / `db:reset` drive the
+> the Supabase-local DB on 54622. But `pnpm db:up` / `db:wait` / `db:reset` drive the
 > **5433 docker-compose container and its volume**, not the Supabase stack — don't mix
 > them with the Supabase-local path.
 >
-> **Decision — hybrid (canonical DEV DB = the Supabase CLI stack on 54322).** We
+> **Decision — hybrid (canonical DEV DB = the Supabase CLI stack on 54622).** We
 > deliberately do **not** repoint `db:up`/`db:wait`/`db:reset` or `assert-local-db.sh`
-> at 54322: those edits would churn upstream's hottest file (`package.json`) and the
+> at 54622: those edits would churn upstream's hottest file (`package.json`) and the
 > compose file on every sync. Instead — run `npx supabase start`, point `DATABASE_URL`
-> at 54322 (the host guard already allows it), and use the Supabase CLI for lifecycle
+> at 54622 (the host guard already allows it), and use the Supabase CLI for lifecycle
 > (`supabase stop`, `supabase db reset`). `pnpm db:migrate`/`db:seed` follow
 > `DATABASE_URL` and work on either path; the `:5433` docker-compose Postgres stays
 > **exactly as upstream ships it** as a fallback. See `CUSTOMIZATIONS.md`.
@@ -89,11 +96,11 @@ vercel env pull         # writes Development-scoped values into .env / .env.loca
 #      secrets are never pulled to a local machine. (Playbook §11.)
 
 # 3. Start the local Supabase Postgres (Docker must be running)
-npx supabase start      # boots local Postgres (+ pgvector) on port 54322
+npx supabase start      # boots local Postgres (+ pgvector) on port 54622
 npx supabase status     # prints the local DB URL, ports, and Studio URL
 
 # 4. Point DATABASE_URL at the LOCAL Supabase DB in .env (see the DEV database note):
-#      DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:54322/postgres"
+#      DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:54622/postgres"
 #    Everything else pulled from Vercel (Upstash Redis, Resend, MinIO, etc.) stays as-is.
 
 # 5. Apply migrations, then seed dev data
@@ -121,6 +128,37 @@ repo's built-in pgvector container rather than the Supabase CLI stack, set
 `pnpm db:up && pnpm db:wait && pnpm db:migrate && pnpm db:seed` (or the all-in-one
 `pnpm db:reset`). See the DEV database note above for why the two paths don't mix.
 
+### Logging in locally (email OTP — no inbox needed)
+
+Auth is **email-OTP only** (better-auth; no password login). Locally **no real email is
+sent** — `.env` ships a dummy `RESEND_API_KEY`, so the send silently no-ops. Two ways to
+get the code:
+
+1. **Server log (easiest).** Enter your email on `http://localhost:3000` and click
+   **Send code**, then read the `pnpm dev` terminal for:
+   ```
+   [Auth] OTP for you@example.com (sign-in): 123456
+   ```
+   This line is printed only when `NODE_ENV !== "production"` (see `lib/auth.ts`); it
+   never runs in a deployed build.
+2. **Test endpoint (for scripts/E2E).** After requesting a code, fetch it — better-auth's
+   `testUtils` plugin captures it in memory (non-prod only):
+   ```bash
+   curl "http://localhost:3000/api/auth/test-otp?email=you@example.com"   # → {"otp":"123456"}
+   ```
+   `test-otp` returns `404 No OTP found` if you haven't requested a code first, and is a
+   `404` entirely in production.
+
+The **first user to sign in is auto-promoted to admin** and set `ACTIVE` (real better-auth
+`databaseHooks.user.create.after` → `lib/auth-hooks.ts`); everyone after that starts as a
+pending `user`.
+
+> **Inviting other users in dev.** Admin → Users → Invite creates the user as `ACTIVE`
+> immediately, then tries to email them. With the dummy Resend key that email send throws,
+> so the UI shows *"Failed to invite user"* — but **the user was already created** and can
+> sign in via the OTP flow above. The invite email is only a notification; it carries no
+> code or magic link. (Real invite delivery needs a working `RESEND_API_KEY`.)
+
 ---
 
 ## Part 2 — Daily start / stop loop
@@ -132,8 +170,12 @@ the session.
 1. Launch **Docker Desktop**; wait for it to go solid.
 2. **Database:** `npx supabase start` (Supabase-local path) — or `pnpm db:up` for the
    docker-compose Postgres.
-3. **Inngest:** `pnpm inngest:up` (dashboard at `http://localhost:8288`; `pnpm
-   inngest:logs` to tail).
+3. **Inngest + local S3:** `pnpm inngest:up` brings up `docker-compose.dev.yml` — the
+   Inngest dev server (dashboard `http://localhost:8288`; `pnpm inngest:logs` to tail)
+   **and SeaweedFS**, the local S3-compatible store on `http://localhost:9000` (a
+   one-shot `createbucket` container makes the `nextcrm` bucket + CORS on first run).
+   MinIO's public Docker images were gated in 2025, so local object storage uses
+   SeaweedFS; `lib/minio.ts` is generic path-style S3 and treats it identically.
 4. **Dev server:** `pnpm dev`.
 5. Verify the app at `http://localhost:3000`.
 
@@ -144,7 +186,8 @@ the session.
 4. Quit Docker Desktop.
 
 **Notes:**
-- Remote REST services (Upstash Redis, MinIO/R2, Resend) need no local process.
+- Remote REST services (Upstash Redis, Resend) need no local process. Object storage
+  **does** run locally (SeaweedFS, started by `pnpm inngest:up`); R2 is cloud-only (QA/prod).
 - `npx supabase stop` preserves data; `npx supabase stop --no-backup` discards it for a
   clean slate next boot. For the docker-compose path, `pnpm db:reset` re-creates the
   container/volume and re-applies all migrations + seed from scratch — **local only,
@@ -311,7 +354,8 @@ reviewer).
 
 1. Add to the app **GitHub repo**.
 2. Add to the **Vercel project** (so they can `vercel env pull` dev values).
-3. Add to the **dev** Supabase / Upstash Redis / MinIO — **not** production.
+3. Add to any **shared dev** services (e.g. Upstash Redis) — **not** production. The
+   local DB (Supabase CLI) and object store (SeaweedFS) run on their machine, no accounts.
 4. Add to **Sentry** / observability, if used.
 5. They follow **Part 1** above.
 6. **No production credentials** — production access is deployment-only; the prod
