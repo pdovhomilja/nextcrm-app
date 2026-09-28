@@ -1,0 +1,55 @@
+name: Upstream drift watch
+
+# Weekly (and on-demand) check of how far this fork is behind pdovhomilja/nextcrm-app.
+# When behind, it opens/updates a single tracking issue telling you to run the tested
+# sync lane (scripts/sync-upstream.sh). It NEVER merges anything itself — merges belong
+# on a workstation where conflicts can be resolved, then validated by CI + Guardrails.
+#
+# Note: scheduled runs only fire from the default branch once this file is on main.
+
+on:
+  schedule:
+    - cron: "0 14 * * 1" # Mondays 14:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  drift:
+    name: Compare with upstream/main
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      UPSTREAM_URL: https://github.com/pdovhomilja/nextcrm-app.git
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Measure drift and file a tracking issue
+        run: |
+          set -euo pipefail
+          git remote add upstream "$UPSTREAM_URL" 2>/dev/null || git remote set-url upstream "$UPSTREAM_URL"
+          git fetch --quiet upstream main
+
+          behind=$(git rev-list --count HEAD..upstream/main)
+          echo "This fork is behind upstream/main by $behind commit(s)."
+          if [ "$behind" -eq 0 ]; then
+            echo "Up to date — nothing to file."
+            exit 0
+          fi
+
+          title="⬆️ Upstream sync: ${behind} commit(s) behind pdovhomilja/nextcrm-app"
+          commits="$(git log --oneline --no-merges HEAD..upstream/main | head -50)"
+          body=$(printf 'This fork is **%s commit(s)** behind `upstream/main`.\n\nMerge it through the tested lane (never straight into `main`):\n\n```bash\nbash scripts/sync-upstream.sh\n```\n\nThat creates a `sync/upstream-<date>` branch and (with `--push`) opens a PR, so **CI + Guardrails validate the merge before it reaches `main`.** Guardrails will catch schema/migration drift and any reverted fork invariant.\n\n<details><summary>Incoming commits (up to 50)</summary>\n\n```\n%s\n```\n\n</details>\n' "$behind" "$commits")
+
+          gh label create upstream-sync --color 1D76DB --description "Fork is behind upstream" 2>/dev/null || true
+          existing=$(gh issue list --label upstream-sync --state open --json number --jq '.[0].number // empty' 2>/dev/null || true)
+          if [ -n "${existing:-}" ]; then
+            gh issue edit "$existing" --title "$title" --body "$body"
+            echo "Updated tracking issue #$existing"
+          else
+            gh issue create --title "$title" --body "$body" --label upstream-sync
+          fi

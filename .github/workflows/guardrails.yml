@@ -1,0 +1,65 @@
+name: Guardrails
+
+# Fork-safety checks kept DELIBERATELY in their own workflow file (not folded into
+# the upstream-maintained ci.yml) so upstream's ci.yml merges cleanly forever and
+# these guards live in a file upstream never touches — zero merge conflict.
+#
+# Runs on every PR into main (including the upstream-sync PR that scripts/sync-upstream.sh
+# opens) so a breaking upstream change surfaces as a red PR, never a broken main.
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: guardrails-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  invariants:
+    name: Fork invariants
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assert customizations survived
+        run: bash scripts/check-invariants.sh
+
+  schema-migration-sync:
+    name: Prisma schema/migration sync
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Guards the break an upstream merge most commonly causes: prisma/schema.prisma
+    # edited WITHOUT a matching migration. This is a GIT-based check, deliberately
+    # NOT `prisma migrate diff`: the upstream baseline already carries benign
+    # schema<->migration drift (DB-level gen_random_uuid() defaults vs app-generated
+    # ids, plus a couple of FK mismatches), so a full `migrate diff` would fail on
+    # every PR. We only flag a NEW schema change that ships without a migration.
+    # That migrations apply in order on a fresh DB is already proven by ci.yml's
+    # `integration` job (`prisma migrate deploy`).
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fail if schema.prisma changed without a migration
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -eu
+          base="${BASE_SHA:-$(git rev-parse HEAD~1)}"
+          changed="$(git diff --name-only "$base"...HEAD)"
+          echo "Changed files vs base ($base):"; printf '%s\n' "$changed" | sed 's/^/  /'
+          # Herestrings (not pipes) so the default bash `pipefail` + `grep -q` SIGPIPE
+          # trap can't misreport a match.
+          schema_changed=0; migrations_changed=0
+          grep -qx 'prisma/schema.prisma' <<< "$changed" && schema_changed=1 || true
+          grep -q  '^prisma/migrations/'  <<< "$changed" && migrations_changed=1 || true
+          if [ "$schema_changed" = 1 ] && [ "$migrations_changed" = 0 ]; then
+            echo "::error::prisma/schema.prisma changed but no migration under prisma/migrations/ was added. Run 'pnpm exec prisma migrate dev' to generate one (never 'prisma db push'). If this schema change genuinely needs no migration, say so in the PR."
+            exit 1
+          fi
+          echo "OK — schema_changed=$schema_changed, migrations_changed=$migrations_changed"

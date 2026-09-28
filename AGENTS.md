@@ -1,6 +1,14 @@
 # AGENTS.md
 
-This file is the authoritative guide for AI agents (Claude Code and other LLM agents) working in the `nextcrm-app` project. It covers context management, available superpowers/skills, current repo status, and available MCP servers.
+> **⚠️ Rade Engineering fork:** [`CLAUDE.md`](CLAUDE.md) is the authoritative agent
+> guide and **supersedes this file where they differ** — most importantly the
+> **Git & deploy workflow**. This fork uses a **3-tier Vercel model**
+> (feature → `main` → `qa` → `production`, `main` does not deploy), **not** the
+> `dev`→`main` Coolify flow described in §4 below. Ignore §4's branch model; read
+> `CLAUDE.md` "Git & Workflow Conventions" instead. The Context-Mode (§1) and
+> Prisma Decimal (§3) sections below still apply.
+
+This file covers agent context management, superpowers/skills, and MCP servers for the `nextcrm-app` project.
 
 ---
 
