@@ -66,7 +66,8 @@ interface WriteAuditLogParams {
 
 export async function writeAuditLog(params: WriteAuditLogParams): Promise<void> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // The app-level AuditAction/AuditChange types are intentionally broader than
+    // the generated Prisma enum/Json inputs, so cast at this single boundary.
     await (prismadb as any).crm_AuditLog.create({
       data: {
         entityType: params.entityType,

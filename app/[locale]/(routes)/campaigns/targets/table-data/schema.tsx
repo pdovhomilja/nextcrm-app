@@ -10,6 +10,13 @@ export const targetSchema = z.object({
   company: z.string().nullable(),
   position: z.string().nullable(),
   status: z.boolean(),
+  triage_status: z.enum(["NEW", "APPROVED", "PASSED"]).default("NEW"),
+  pass_reason: z
+    .enum(["SCOPE_TOO_LARGE", "NOT_A_FIT", "BAD_TIMING", "ALREADY_MODERN", "OTHER"])
+    .nullable()
+    .optional(),
+  pass_note: z.string().nullable().optional(),
+  revisit_at: z.coerce.date().nullable().optional(),
 });
 
 export type Target = z.infer<typeof targetSchema>;

@@ -3,9 +3,14 @@
 import { ColumnDef } from "@tanstack/react-table";
 
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { Target } from "../table-data/schema";
 import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
+import {
+  triageStatusLabel,
+  triageBadgeVariant,
+} from "../table-data/triage-options";
 import moment from "moment";
 
 export const columns: ColumnDef<Target>[] = [
@@ -104,6 +109,23 @@ export const columns: ColumnDef<Target>[] = [
     cell: ({ row }) => (
       <div className="">{row.original.status ? "Active" : "Inactive"}</div>
     ),
+    enableSorting: true,
+    enableHiding: true,
+  },
+  {
+    accessorKey: "triage_status",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Triage" />
+    ),
+    cell: ({ row }) => {
+      const value = (row.getValue("triage_status") as string) ?? "NEW";
+      return (
+        <Badge variant={triageBadgeVariant(value)}>
+          {triageStatusLabel(value)}
+        </Badge>
+      );
+    },
+    filterFn: (row, id, value) => value.includes(row.getValue(id)),
     enableSorting: true,
     enableHiding: true,
   },

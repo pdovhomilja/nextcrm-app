@@ -19,8 +19,10 @@ import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
 import { toast } from "sonner";
 import { deleteTarget } from "@/actions/crm/targets/delete-target";
+import { setTargetTriage } from "@/actions/crm/targets/set-target-triage";
 import RightViewModalNoTrigger from "@/components/modals/right-view-notrigger";
 import { UpdateTargetForm } from "../components/UpdateTargetForm";
+import { TriagePassDialog } from "../components/TriagePassDialog";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -35,7 +37,22 @@ export function DataTableRowActions<TData>({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [updateOpen, setUpdateOpen] = useState(false);
+  const [passOpen, setPassOpen] = useState(false);
 
+  const targetLabel =
+    (target?.company ||
+      `${target?.first_name ? target.first_name + " " : ""}${target?.last_name}`) ??
+    "target";
+
+  const onApprove = async () => {
+    const result = await setTargetTriage({ id: target.id, status: "APPROVED" });
+    if ("error" in result) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success("Target approved for outreach");
+    router.refresh();
+  };
 
   const onDelete = async () => {
     setLoading(true);
@@ -70,6 +87,13 @@ export function DataTableRowActions<TData>({
       >
         <UpdateTargetForm initialData={row.original} setOpen={setUpdateOpen} />
       </RightViewModalNoTrigger>
+      <TriagePassDialog
+        targetId={target.id}
+        targetLabel={targetLabel}
+        open={passOpen}
+        setOpen={setPassOpen}
+        onDone={() => router.refresh()}
+      />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -88,6 +112,11 @@ export function DataTableRowActions<TData>({
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setUpdateOpen(true)}>
             Update
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={onApprove}>Approve</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setPassOpen(true)}>
+            Pass…
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setOpen(true)}>
