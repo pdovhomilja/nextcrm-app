@@ -1238,7 +1238,7 @@ pnpm dev
 
 In a separate terminal, test with a valid token (replace `TOKEN`):
 ```bash
-curl -X POST http://localhost:3000/api/mcp/http \
+curl -X POST http://localhost:3000/api/mcp/mcp \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer TOKEN" \
   -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
@@ -1247,7 +1247,7 @@ Expected: JSON response listing all 25 tools.
 
 Test with invalid token:
 ```bash
-curl -X POST http://localhost:3000/api/mcp/http \
+curl -X POST http://localhost:3000/api/mcp/mcp \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer nxtc__invalid" \
   -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
@@ -1499,7 +1499,7 @@ git commit -m "feat: add API tokens section to profile page"
 
 ```bash
 # Replace TOKEN with the generated token
-curl -X POST http://localhost:3000/api/mcp/http \
+curl -X POST http://localhost:3000/api/mcp/mcp \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer TOKEN" \
   -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
@@ -1507,7 +1507,7 @@ curl -X POST http://localhost:3000/api/mcp/http \
 Expected: JSON with `tools` array listing all 25 tool names.
 
 ```bash
-curl -X POST http://localhost:3000/api/mcp/http \
+curl -X POST http://localhost:3000/api/mcp/mcp \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer TOKEN" \
   -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"list_accounts","arguments":{"limit":5,"offset":0}},"id":2}'

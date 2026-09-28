@@ -96,7 +96,7 @@ NextCRM now ships with a built-in [Model Context Protocol](https://modelcontextp
 }
 ```
 
-Both SSE (`/api/mcp/sse`) and HTTP (`/api/mcp/http`) transports are supported.
+Both SSE (`/api/mcp/sse`) and HTTP (`/api/mcp/mcp`) transports are supported.
 
 **Claude Code Skill:** Download the [SKILL.md](/en/profile?tab=developer) from your Developer profile tab for a ready-to-use Claude Code skill with full tool documentation.
 ```

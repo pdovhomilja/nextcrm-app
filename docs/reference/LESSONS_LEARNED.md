@@ -215,6 +215,39 @@
   via the OTP flow — the invite email carries no code or magic link.
 - **Tell:** "no OTP email in dev" + a dummy/placeholder `RESEND_API_KEY` in `.env`.
 
+## MCP server / integrations
+
+### The MCP Streamable-HTTP transport path is `/api/mcp/mcp`, not `/api/mcp/http`
+
+- **Symptom:** an MCP client fails to connect to the CRM's server with
+  `ENDPOINT_NOT_FOUND` / a 404 at `…/api/mcp/http`, even though the app is up and the
+  token is valid.
+- **Cause:** the route is `app/api/mcp/[transport]/route.ts` with `mcp-handler`, whose
+  transport segments are **`mcp`** (Streamable HTTP) and **`sse`** (legacy) — there is
+  no `http` transport. Some **archived plan/spec docs** under `docs/superpowers/` and
+  older curl snippets said `/api/mcp/http`; that path never routed (see the
+  `fix(mcp): set basePath so /api/mcp/{mcp,sse} actually route` commit).
+- **Fix / rule:** connect to **`/api/mcp/mcp`** (Streamable HTTP, POST-only — a GET
+  returns 405, which confirms it exists) or `/api/mcp/sse` (SSE). **Trust `README.md`
+  and the `SKILL.md` files (already correct) over historical `docs/superpowers/` plans.**
+  Verify live with `curl -i -X POST https://<host>/api/mcp/mcp -H 'Accept: application/json, text/event-stream' -d '{"jsonrpc":"2.0","id":1,"method":"initialize",...}'` → expect a `200` with an `initialize` result.
+- **Tell:** `ENDPOINT_NOT_FOUND` on `/api/mcp/http`; a GET to `/api/mcp/mcp` returns 405 (exists) while `/api/mcp/http` returns 404.
+
+### Vercel Deployment Protection blocks token-auth MCP clients on the QA/Preview tier
+
+- **Symptom:** the QA MCP server fails with **HTTP 401** whose body contains a Vercel
+  SSO callback (`vercel_auth_callback: https://vercel.com/sso-api?url=…`), even with a
+  valid app Bearer token. Browsers reach QA fine (you're logged into Vercel).
+- **Cause:** Vercel **Deployment Protection** (Vercel Authentication) is **on by
+  default for Preview** (`qa.crm.radeengineering.com`). It intercepts every request
+  with an SSO gate *before* it reaches the app, so a Bearer token never gets a chance —
+  the 401 is Vercel's, not the app's.
+- **Fix / rule:** either add a **Protection Bypass for Automation** secret and send it
+  as an `x-vercel-protection-bypass` header alongside the app token, or turn off Vercel
+  Authentication for Preview (makes QA publicly reachable — the app still requires OTP
+  login). Production's custom domain is not protection-gated, so prod needs neither.
+- **Tell:** a 401 whose JSON mentions `vercel.com/sso-api` — that's Vercel's gate, not the app.
+
 ---
 
 <!-- Add new entries above this line, newest-relevant first within each section.
