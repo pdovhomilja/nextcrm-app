@@ -4,7 +4,7 @@ import { emailOTP, testUtils } from "better-auth/plugins";
 import { admin as adminPlugin } from "better-auth/plugins";
 import { prismadb } from "@/lib/prisma";
 import { ac, admin, manager, user } from "@/lib/auth-permissions";
-import { newUserNotify } from "@/lib/new-user-notify";
+import { handleUserCreated } from "@/lib/auth-hooks";
 import resendHelper from "@/lib/resend";
 
 const isDemo = process.env.NEXT_PUBLIC_APP_URL === "https://demo.nextcrm.io";
@@ -105,22 +105,16 @@ export const auth = betterAuth({
     },
   },
 
-  callbacks: {
-    async onUserCreated(user: { id: string }) {
-      // Check if this is the first user — make them admin
-      const count = await prismadb.users.count();
-      if (count === 1) {
-        await prismadb.users.update({
-          where: { id: user.id },
-          data: { role: "admin", userStatus: "ACTIVE" },
-        });
-      } else if (!isDemo) {
-        // Notify admins about new pending user
-        const dbUser = await prismadb.users.findUnique({ where: { id: user.id } });
-        if (dbUser) {
-          await newUserNotify(dbUser);
-        }
-      }
+  databaseHooks: {
+    user: {
+      create: {
+        // Runs after a new user row is created. `onUserCreated` was never a
+        // valid better-auth option, so the first-user-admin promotion never
+        // fired — this is the real hook.
+        after: async (user) => {
+          await handleUserCreated(user.id);
+        },
+      },
     },
   },
 });
