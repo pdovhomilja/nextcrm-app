@@ -35,7 +35,7 @@ nextcrm-app/
 ```
 
 **Data flow:**
-1. MCP client connects to `/api/mcp/sse` or `/api/mcp/http`
+1. MCP client connects to `/api/mcp/sse` or `/api/mcp/mcp`
 2. `lib/mcp/auth.ts` extracts `Bearer nxtc__...` from `Authorization` header
 3. Hashes token, validates against DB (not revoked, not expired)
 4. Resolves `userId` → all tools execute scoped to that user's data
