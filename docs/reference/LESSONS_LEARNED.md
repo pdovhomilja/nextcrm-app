@@ -181,6 +181,28 @@
   `--to-schema` (not `--to-schema-datamodel`) and has **no** `--shadow-database-url`
   flag (shadow DB is set via `datasource.shadowDatabaseUrl` in a Prisma config file).
 
+## Auth / local dev
+
+### The dev login OTP never arrives by email — retrieve it from the server log or `test-otp`
+
+- **Symptom:** signing in locally, the email-OTP "verification code" email never
+  shows up in any inbox, so login looks broken. Hitting
+  `/api/auth/test-otp?email=…` first returns `404 No OTP found`.
+- **Cause:** auth is email-OTP only (better-auth) and **dev sends no real email** —
+  `.env` ships a dummy `RESEND_API_KEY`, so `sendVerificationOTP`'s Resend call
+  no-ops (it 401s and is swallowed in non-prod). The code is instead captured in
+  memory by the `testUtils` plugin, which is enabled **only** when
+  `NODE_ENV !== "production"` and only **after** a code has been requested.
+- **Fix / rule:** two ways to get the code locally — (1) request it on the login page,
+  then read the `pnpm dev` server log for `[Auth] OTP for … : 123456` (printed
+  non-prod-only from `lib/auth.ts`); (2) for scripts/E2E, request first, then
+  `GET /api/auth/test-otp?email=…`. You must trigger the send before either works.
+  The first user to sign in is auto-promoted to admin + `ACTIVE`
+  (`lib/auth-hooks.ts`). Inviting a user in dev shows "Failed to invite user"
+  (same dummy-key send failure) but the user **is** created `ACTIVE` and can sign in
+  via the OTP flow — the invite email carries no code or magic link.
+- **Tell:** "no OTP email in dev" + a dummy/placeholder `RESEND_API_KEY` in `.env`.
+
 ---
 
 <!-- Add new entries above this line, newest-relevant first within each section.
