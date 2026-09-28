@@ -63,3 +63,16 @@ jobs:
             exit 1
           fi
           echo "OK — schema_changed=$schema_changed, migrations_changed=$migrations_changed"
+
+  env-docs:
+    name: Env-doc parity
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # WS4 env-doc guard: this fork has no central env validator, so a newly-required
+    # var can pass CI green and break the Vercel deploy. This asserts .env.example and
+    # docs/reference/ENVIRONMENT_VARIABLES.md stay in lock-step (hard gate), and warns
+    # (non-fatal) on process.env reads missing from .env.example. See the script header.
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assert .env.example and ENVIRONMENT_VARIABLES.md agree
+        run: bash scripts/check-env-docs.sh

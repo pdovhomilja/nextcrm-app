@@ -28,6 +28,7 @@ know exactly what to re-verify, and so the automated guards (`scripts/check-inva
 | **Ways of working** | — | starter-kit `CLAUDE.md`, `docs/guides/`, `.claude/skills/` ported | CODEOWNERS |
 | **Coolify/nixpacks** | maintained | **Dormant** — left in place (not deleted) to avoid merge churn; unused on Vercel | — |
 | **CI cost** | `ci.yml` runs E2E on every push (~8 min) | **Path-gated** — a `changes` job gates `integration`/`build`/`e2e` on `if: needs.changes.outputs.code == 'true'`; docs/CI/agent-config-only pushes skip them and run just `fast` + guardrails. One edit to upstream's `ci.yml`. | `CODEOWNERS` |
+| **Env docs (WS4)** | `.env.example` only; no central validator | **Additive env-doc guard** — `.env.example` reconciled against real `process.env` usage (fork keys in a separate appended block so upstream's stays byte-identical); `docs/reference/ENVIRONMENT_VARIABLES.md` documents every key; `scripts/check-env-docs.sh` enforces `.env.example` ↔ doc parity (hard) + warns on un-templated `process.env` reads. | `guardrails.yml` (`env-docs` job) |
 
 *(WS3)* = lands in the CI/CD workstream; its invariant is a WARN in `check-invariants.sh`
 until then, promoted to FAIL once the file exists.
