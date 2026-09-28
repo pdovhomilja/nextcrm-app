@@ -20,7 +20,7 @@ for every deliberate deviation and the upstream sync/contribute recipes.
 - ✅ **WS2 — skills** — `.claude/skills/deep-review`, `fix-ci`, `ship-phase`.
 - ✅ **CI cost** — heavy jobs (`integration`/`build`/`e2e`) path-gated to code changes.
 - ✅ **WS3 — 3-tier CI/CD** — `vercel.json`, `advance-qa.yml`, `promote-production.yml`, PR template (build-migrates: Vercel deploy applies migrations).
-- ⏳ **WS4 — env & secrets** (`docs/reference/ENVIRONMENT_VARIABLES.md` + env-doc guard).
+- ✅ **WS4 — env & secrets** — `docs/reference/ENVIRONMENT_VARIABLES.md` + the env-doc guard (`scripts/check-env-docs.sh`, wired into `guardrails.yml`) enforcing `.env.example` ↔ doc parity.
 
 ---
 
@@ -234,8 +234,9 @@ handlers) — so scope every query by hand; there is no RLS to fall back on.
 
 - **When editing any spec/doc, update ALL related files before reporting done.**
   Walk the doc-sync set (overview/spec, data-model, phase/workstream specs,
-  manual-testing doc, E2E-patterns, **PROJECT_STRUCTURE**, and — once WS4 lands —
-  **ENVIRONMENT_VARIABLES**); confirm each updated or explicitly N/A. The **testing
+  manual-testing doc, E2E-patterns, **PROJECT_STRUCTURE**, and
+  **ENVIRONMENT_VARIABLES** — any env-var change must keep `.env.example` and the doc
+  in sync or the env-doc guard fails); confirm each updated or explicitly N/A. The **testing
   and data-model docs are the usual blind spots.**
 - **`docs/reference/LESSONS_LEARNED.md` is a MANDATORY doc-sync target.** Every pass
   asks "what gotcha here is likely to recur, and is it captured?" — and appends it.

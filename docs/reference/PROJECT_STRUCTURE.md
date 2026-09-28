@@ -33,6 +33,7 @@ hooks/                  shared React hooks
 context/                React context definitions
 scripts/                operational scripts — assert-local-db.sh (guards destructive
                         Prisma commands to a local DB), check-invariants.sh,
+                        check-env-docs.sh (env-doc parity guard, WS4),
                         db-backup.sh, sync-upstream.sh, Mongo→Postgres migration +
                         validation tooling, test-data/
 docs/                   see docs/guides/process/DOCUMENTATION_GUIDE.md for the layout

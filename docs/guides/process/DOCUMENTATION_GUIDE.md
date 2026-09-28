@@ -166,7 +166,7 @@ docs/
 │   └── <feature>-manual-testing.md → manual scenarios (bidirectional E2E parity)
 ├── reference/                      → durable reference (doc-sync targets)
 │   ├── LESSONS_LEARNED.md          → central recurring-trap log (MANDATORY doc-sync)
-│   ├── ENVIRONMENT_VARIABLES.md    → every .env.example var (env-doc guard enforces) — WS4-pending, not yet ported
+│   ├── ENVIRONMENT_VARIABLES.md    → every .env.example var (env-doc guard enforces via scripts/check-env-docs.sh)
 │   └── PROJECT_STRUCTURE.md        → annotated repo map
 ├── guides/
 │   ├── ENGINEERING_PLAYBOOK.md     → the "why" behind the rules
