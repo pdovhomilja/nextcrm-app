@@ -13,10 +13,21 @@ import {
 export const crmTargetTools = [
   {
     name: "crm_list_targets",
-    description: "List CRM targets created by the authenticated user",
-    schema: z.object({ ...paginationSchema }),
-    async handler(args: { limit: number; offset: number }, userId: string) {
-      const where = { created_by: userId, deletedAt: null };
+    description:
+      "List CRM targets created by the authenticated user. Optionally filter by triage_status (NEW, APPROVED, PASSED).",
+    schema: z.object({
+      ...paginationSchema,
+      triage_status: z.enum(["NEW", "APPROVED", "PASSED"]).optional(),
+    }),
+    async handler(
+      args: { limit: number; offset: number; triage_status?: "NEW" | "APPROVED" | "PASSED" },
+      userId: string
+    ) {
+      const where = {
+        created_by: userId,
+        deletedAt: null,
+        ...(args.triage_status ? { triage_status: args.triage_status } : {}),
+      };
       const [data, total] = await Promise.all([
         prismadb.crm_Targets.findMany({
           where,
@@ -134,6 +145,52 @@ export const crmTargetTools = [
       const target = await prismadb.crm_Targets.update({
         where: { id },
         data: { ...updateData, updatedBy: userId },
+      });
+      return itemResponse(target);
+    },
+  },
+  {
+    name: "crm_set_target_triage",
+    description:
+      "Triage a target: APPROVE it for outreach, or PASS it with a reason (SCOPE_TOO_LARGE, NOT_A_FIT, BAD_TIMING, ALREADY_MODERN, OTHER) and an optional note and revisit_at date. APPROVE clears any prior pass fields.",
+    schema: z.object({
+      id: z.string().uuid(),
+      status: z.enum(["APPROVED", "PASSED"]),
+      pass_reason: z
+        .enum(["SCOPE_TOO_LARGE", "NOT_A_FIT", "BAD_TIMING", "ALREADY_MODERN", "OTHER"])
+        .optional(),
+      pass_note: z.string().optional(),
+      revisit_at: z.string().datetime().optional(),
+    }),
+    async handler(
+      args: {
+        id: string;
+        status: "APPROVED" | "PASSED";
+        pass_reason?: "SCOPE_TOO_LARGE" | "NOT_A_FIT" | "BAD_TIMING" | "ALREADY_MODERN" | "OTHER";
+        pass_note?: string;
+        revisit_at?: string;
+      },
+      userId: string
+    ) {
+      const existing = await prismadb.crm_Targets.findFirst({
+        where: { id: args.id, created_by: userId, deletedAt: null },
+      });
+      if (!existing) notFound("Target");
+      if (args.status === "PASSED" && !args.pass_reason) {
+        throw new Error("pass_reason is required when passing a target");
+      }
+      const triageData =
+        args.status === "APPROVED"
+          ? { triage_status: "APPROVED" as const, pass_reason: null, pass_note: null, revisit_at: null }
+          : {
+              triage_status: "PASSED" as const,
+              pass_reason: args.pass_reason ?? null,
+              pass_note: args.pass_note ?? null,
+              revisit_at: args.revisit_at ? new Date(args.revisit_at) : null,
+            };
+      const target = await prismadb.crm_Targets.update({
+        where: { id: args.id },
+        data: { ...triageData, triaged_at: new Date(), triaged_by: userId, updatedBy: userId },
       });
       return itemResponse(target);
     },
