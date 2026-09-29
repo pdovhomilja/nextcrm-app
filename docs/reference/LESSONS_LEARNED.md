@@ -90,6 +90,21 @@
 
 ## Frontend / Tailwind
 
+### A TanStack faceted filter over an array-valued column needs a column-level `getUniqueValues`
+
+- **Symptom:** a new faceted (multi-select) filter built on a column whose accessor
+  returns an **array** (e.g. the target's list names / tags) shows no options, or
+  options that are whole arrays, and matching misbehaves.
+- **Cause:** `getFacetedUniqueValues()` counts whatever `row.getUniqueValues(colId)`
+  returns, and the **default** is `[row.getValue(colId)]` — for an array accessor
+  that's `[["A","B"]]`, so the facet keys on the array object, not on `"A"`/`"B"`.
+- **Fix / rule:** define `getUniqueValues: (row) => string[]` on that column
+  (returning the flattened values), and keep it in sync with the accessor (factor a
+  shared helper). Then the facet lists each individual value. String-accessor
+  columns (e.g. Industry) don't need this — only array-valued ones.
+- **Tell:** an empty/garbled options list on a faceted filter whose column accessor
+  returns an array.
+
 ### Tailwind v4 arbitrary data-attribute variants can compile to nothing, silently
 
 - **Symptom:** `data-[pending=true]:opacity-50` had no effect; no error, no warning.

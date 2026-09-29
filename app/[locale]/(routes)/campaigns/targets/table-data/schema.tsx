@@ -21,6 +21,17 @@ export const targetSchema = z.object({
     .optional(),
   pass_note: z.string().nullable().optional(),
   revisit_at: z.coerce.date().nullable().optional(),
+  // Junction rows to target lists, each carrying the list's active status —
+  // powers the "List" faceted filter (active lists only). From getTargets().
+  target_lists: z
+    .array(
+      z.object({
+        target_list: z
+          .object({ id: z.string(), name: z.string(), status: z.boolean() })
+          .nullable(),
+      })
+    )
+    .optional(),
 });
 
 export type Target = z.infer<typeof targetSchema>;

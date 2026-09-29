@@ -20,7 +20,7 @@ export const getTargets = async () => {
     orderBy: { created_on: "desc" },
     include: {
       crate_by_user: { select: { name: true } },
-      target_lists: { include: { target_list: { select: { id: true, name: true } } } },
+      target_lists: { include: { target_list: { select: { id: true, name: true, status: true } } } },
     },
   });
   return targets;

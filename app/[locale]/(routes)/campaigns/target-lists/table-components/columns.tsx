@@ -55,6 +55,23 @@ export const columns: ColumnDef<TargetList>[] = [
     enableHiding: true,
   },
   {
+    // Creator name comes from the `crate_by_user` relation included by
+    // getTargetLists(); not on the (minimal) TargetList zod type, so read it
+    // off the raw row — matching the `_count` column's `as any` idiom.
+    id: "created_by",
+    accessorFn: (row) =>
+      (row as unknown as { crate_by_user?: { name?: string | null } })
+        .crate_by_user?.name ?? "",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Created by" />
+    ),
+    cell: ({ row }) => (
+      <div className="">{(row.getValue("created_by") as string) || "—"}</div>
+    ),
+    enableSorting: true,
+    enableHiding: true,
+  },
+  {
     accessorKey: "status",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />

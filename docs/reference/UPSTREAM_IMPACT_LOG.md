@@ -219,3 +219,40 @@ the many conditional wraps) and `BasicView.tsx`. Guards: `__tests__/lib/target-t
 | `.../crm/accounts/table-data/schema.tsx` | **rewrite** (1 field) | `contacts[].first_name`: `z.string().optional()` → `z.string().nullish()`. `.optional()` rejects an explicit `null`; `crm_Contacts.first_name` is nullable in the DB and a company contact (created by a target→opportunity conversion) has none. The row-schema is parsed during render, so the null threw a ZodError → React #419 → "This page couldn't load" (client-side, no digest) on the accounts list and the opportunity detail (`AccountsView`). `last_name` left required (non-null in DB). | Low |
 
 **Why:** reproduced first-hand on QA (`/crm/opportunities/d98743b0…`) — console showed `ZodError … path ["contacts",0,"first_name"] expected string, received null`. Fix aligns the display schema with the DB's existing nullability; enforcement of individual names belongs on the write path, not this read schema. Guard: `__tests__/crm/account-schema.test.ts` (revert-verified). Upstream-contributable.
+
+---
+
+## feat/enrichment-smb-and-detail-polish — SMB enrichment tuning + detail polish + target-list UX  (PR: TBD)
+
+**14 upstream-owned files.** Almost all are thin, insertion-only hooks; the small rewrites are noted. Grouped by area.
+
+**Detail-page cosmetics:**
+
+| Upstream file | Kind | What / where | Risk |
+|---|---|---|---|
+| `.../crm/accounts/table-components/columns.tsx` | **rewrite** (1 cell) | "Account contact" cell: `first_name + " " + last_name` → `[first_name,last_name].filter(Boolean).join(" ")`, comma-separated. A company contact's null `first_name` rendered a literal "null " prefix. | Low |
+| `.../crm/opportunities/[opportunityId]/components/BasicView.tsx` | **insert** | Guard `close_date`: show "Not set" instead of `moment(null)` → "Invalid date". | Low |
+| `.../crm/accounts/[accountId]/components/BasicView.tsx` | **insert** | Same `close_date` guard. | Low |
+
+**Enrichment (retarget for local-business prospecting):**
+
+| Upstream file | Kind | What / where | Risk |
+|---|---|---|---|
+| `lib/enrichment/e2b/agent-script.ts` | **rewrite** (prompt) | Contact discovery retargeted from C-suite (`site:linkedin.com`) → owner/founder/principal/president/office-manager/practice-manager; also read the site's About/Team page; JSON example no longer hardcodes contact `email`/`phone` to null (was biasing the model to skip them). | Med (agent behavior) |
+| `lib/enrichment/e2b/apply-result.ts` | **insert** | New pure `planContactPersist()` (keyed/named/skip). | Low |
+| `inngest/functions/enrich-target.ts` | **rewrite** (`upsert-contacts` step) | Persist name-only contacts (no email/LinkedIn) via `findFirst({targetId,name})`+create; keep upsert on the unique keys otherwise. Was: skip any contact lacking email/LinkedIn. Field apply (empty-only, confidence ≥0.6) unchanged. | Med |
+
+**Target-list & targets UX:**
+
+| Upstream file | Kind | What / where | Risk |
+|---|---|---|---|
+| `.../campaigns/target-lists/table-components/columns.tsx` | **insert** | "Created by" column (reads `crate_by_user.name`, already fetched). | Low |
+| `.../campaigns/target-lists/table-components/data-table.tsx` | **rewrite** (row/cell) | Row click → `/crm/target-lists/:id`; `stopPropagation` on the actions cell. | Low |
+| `.../campaigns/target-lists/table-components/data-table-row-actions.tsx` | **insert** | Activate/Deactivate menu item → existing `updateTargetList({id,status})` (previously unused by any UI). | Low |
+| `actions/crm/get-targets.ts` | **insert** (1 field) | Add `status` to the `target_list` select for the active-list filter. | Low |
+| `.../campaigns/targets/table-data/schema.tsx` | **insert** | Add `target_lists` to the row zod type. | Low |
+| `.../campaigns/targets/table-components/columns.tsx` | **insert** | Hidden filter-only `lists` column (active list names) with `getUniqueValues` for the facet + `filterFn`. | Low |
+| `.../campaigns/targets/table-components/data-table.tsx` | **insert** | `lists: false` default hidden; restore-merge so it stays hidden for viewers with saved prefs. | Low |
+| `.../campaigns/targets/table-components/data-table-toolbar.tsx` | **insert** | "List" faceted filter (active lists as options). | Low |
+
+**Why:** local-business prospecting — the enrichment hunted C-suite LinkedIn profiles that SMBs don't have, and dropped any contact without an email/LinkedIn, so runs on local targets persisted nothing; the UI lacked a way to deactivate a list or filter targets by list. Guards: `__tests__/enrichment/plan-contact-persist.test.ts` (unit); `tests/e2e/target-lists.spec.ts` (Created-by column, row-click nav, activate/deactivate) and `tests/e2e/targets-list-filter.spec.ts` (active-list facet offers active lists only + narrows), with matching manual steps in `docs/testing/target-lists-manual-testing.md`. All edits are additive/insertion-style and upstream-contributable.

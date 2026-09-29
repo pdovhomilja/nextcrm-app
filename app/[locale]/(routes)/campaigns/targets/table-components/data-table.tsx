@@ -46,6 +46,9 @@ const DEFAULT_COLUMN_VISIBILITY: VisibilityState = {
   email: false,
   mobile_phone: false,
   position: false,
+  // `lists` is a filter-only column (drives the "List" faceted filter); keep it
+  // hidden by default.
+  lists: false,
 };
 
 interface DataTableProps<TData, TValue> {
@@ -70,7 +73,12 @@ export function TargetsDataTable<TData, TValue>({
   React.useEffect(() => {
     try {
       const raw = window.localStorage.getItem(COLUMN_VISIBILITY_KEY);
-      if (raw) setColumnVisibility(JSON.parse(raw) as VisibilityState);
+      if (raw) {
+        const saved = JSON.parse(raw) as VisibilityState;
+        // Default newer filter-only columns to hidden even for viewers whose
+        // saved prefs predate the column (a missing key would otherwise show it).
+        setColumnVisibility({ lists: false, ...saved });
+      }
     } catch {
       /* localStorage blocked/unavailable — keep defaults */
     }

@@ -52,6 +52,26 @@ export function filterByConfidence(
   );
 }
 
+/**
+ * Decides how an enriched contact should be persisted:
+ *  - "keyed": has an email or LinkedIn URL → upsert on the (targetId,email)/
+ *    (targetId,linkedinUrl) unique key.
+ *  - "named": has only a name → dedup by (targetId,name) via findFirst+create
+ *    (no unique constraint exists for that pair).
+ *  - "skip": no name, email, or LinkedIn — nothing to identify it by.
+ * Local-business owners/managers often have a name + title but no public email
+ * or LinkedIn, so those are still worth keeping ("named").
+ */
+export function planContactPersist(contact: {
+  name: string | null;
+  email: string | null;
+  linkedinUrl: string | null;
+}): "keyed" | "named" | "skip" {
+  if (contact.email || contact.linkedinUrl) return "keyed";
+  if (contact.name && contact.name.trim().length > 0) return "named";
+  return "skip";
+}
+
 /** Builds the Prisma where clause for contact upsert dedup. */
 export function buildContactUpsertKey(
   targetId: string,

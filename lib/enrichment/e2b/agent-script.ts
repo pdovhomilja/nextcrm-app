@@ -97,8 +97,8 @@ Research strategy (follow this order):
    - Company description, industry, employee count, HQ city
    - LinkedIn company URL (linkedin.com/company/...), Twitter/X URL
 3. If the homepage lacks phone or email, open the /contact or /about page with browser_open, then browser_get_text again. These pages almost always have phone and email.
-4. Use web_search to find C-level contacts: query "CEO OR CTO OR CFO OR CMO OR \\"VP Sales\\" \${companyName} site:linkedin.com".
-5. For each C-level person found in search results, record their name, title, and LinkedIn URL.
+4. Find the people who run the business. FIRST open the company website's About, Team, "Meet the Team", or Staff page (browser_open + browser_get_text) — small/local businesses usually name the owner or principal there. THEN web_search: "owner OR founder OR principal OR president OR \\"office manager\\" OR \\"practice manager\\" \${companyName}". Do NOT restrict the search to linkedin.com — many local-business owners are not on LinkedIn.
+5. For each person found, record their name and title, plus their email and LinkedIn URL when those are visible. A name and title ALONE is still valuable — capture the person even if you find no email or LinkedIn.
 \${contactInstruction}
 
 When you have gathered sufficient data (or exhausted reasonable research steps), output ONLY a valid JSON object in this exact format and nothing else:
@@ -117,10 +117,10 @@ When you have gathered sufficient data (or exhausted reasonable research steps),
   "contacts": [
     {
       "name": "string",
-      "email": null,
+      "email": "string or null",
       "title": "string or null",
       "linkedinUrl": "string or null",
-      "phone": null,
+      "phone": "string or null",
       "source": "enriched"
     }
   ],
