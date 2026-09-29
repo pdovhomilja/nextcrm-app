@@ -185,9 +185,10 @@ target-seeded and **uses Claude, not the existing OpenAI path** (quality + brand
 2. Honors `do_not_email` (via `recipient-filters.ts` logic).
 3. Sends via Resend using the campaigns key (`RESEND_CAMPAIGNS_API_KEY` →
    `RESEND_API_KEY`) through `redirectRecipients` (non-prod safety guard).
-4. Writes a `crm_campaign_sends`-style send row (or reuses that table with a null
-   campaign — **decision in §15**), a target **activity**, an **audit-log** entry,
-   and flips `crm_Target_Email.status = SENT` with `resend_message_id`.
+4. Writes **send metadata onto `crm_Target_Email`** (`status = SENT`, `sent_at`,
+   `resend_message_id`) — *not* a `crm_campaign_sends` row (avoids overloading
+   campaign semantics with null-campaign sends) — plus a target **activity** and an
+   **audit-log** entry.
 
 **No new send plumbing** — it rides the existing Resend + redirect-guard path.
 
@@ -264,8 +265,8 @@ The email subsystem reads **only** `crm_Target_Homepage.preview_url` and
 - Two `scope`s: `ORG` (shared, house voice) and `USER` (personal). Picker merges org +
   own personal, filtered by kind; optional `is_default` per kind pre-selects.
 - Managed in CRM settings (create/edit/delete, soft-deleted), authz-scoped.
-- MCP parity: consider `crm_*` tools for prompt CRUD (follow existing MCP-parity
-  convention) — **deferred unless needed** (§15).
+- MCP parity: `crm_*` tools for **prompt CRUD included in Phase 1** (follow existing
+  MCP-parity convention). Homepage MCP tools **deferred** to the homepage build.
 
 ## 10. Upstream-owned touches & fork hygiene
 
@@ -345,12 +346,13 @@ sync or the env-doc guard fails):
 
 ## 15. Open questions / decisions to finalize in planning
 
-- **Send record table:** reuse `crm_campaign_sends` with a null `campaign_id`, or a
-  dedicated field on `crm_Target_Email`? (Leaning: keep send metadata on
-  `crm_Target_Email` to avoid overloading campaign semantics.)
-- **MCP parity** for the new actions (generate email, send, prompt CRUD, generate
-  homepage) — include now or defer? (Leaning: add email-send + prompt CRUD parity;
-  defer homepage MCP to its build.)
+**Resolved:**
+- **Send record table:** send metadata lives on **`crm_Target_Email`** (no
+  null-campaign `crm_campaign_sends` rows).
+- **MCP parity:** **email-send + prompt-CRUD** tools ship in Phase 1; **homepage MCP
+  deferred** to the homepage build.
+
+**Still open:**
 - **Exact env-var names** and whether the previews bucket needs separate R2
   credentials — confirm with owner before setting.
 - **Auto-pass bound** (N) and per-run cost/time ceiling for the homepage agent.
