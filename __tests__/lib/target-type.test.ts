@@ -24,6 +24,9 @@ describe("target-type config", () => {
     expect(hasRequiredIdentity({ type: "COMPANY", company: "" })).toBe(false);
     expect(hasRequiredIdentity({ type: "INDIVIDUAL", last_name: "Lovelace", company: "" })).toBe(true);
     expect(hasRequiredIdentity({ type: "INDIVIDUAL", last_name: "" })).toBe(false);
+    // Cross-field regression guards: reject when "wrong" field is populated
+    expect(hasRequiredIdentity({ type: "COMPANY", company: "", last_name: "Lovelace" })).toBe(false);
+    expect(hasRequiredIdentity({ type: "INDIVIDUAL", last_name: "", company: "Acme" })).toBe(false);
   });
 
   it("returns per-type field groups and labels", () => {
