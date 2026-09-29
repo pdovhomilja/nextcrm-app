@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { resolveRuntimeDatabaseUrl } from "@/lib/db/runtime-database-url";
 
 declare global {
   var cachedPrisma: PrismaClient | undefined;
@@ -8,7 +9,10 @@ declare global {
 
 // Prisma Client configuration with connection pooling and lifecycle management
 const prismaClientSingleton = () => {
-  const connectionString = `${process.env.DATABASE_URL}`;
+  // Runtime connects through the transaction pooler (RUNTIME_DATABASE_URL) when
+  // set, else falls back to DATABASE_URL (the session pooler that migrations use).
+  // See lib/db/runtime-database-url.ts and SUPABASE_ON_VERCEL.md §3.
+  const connectionString = resolveRuntimeDatabaseUrl();
   // Cap connections per function instance so a cold-start fan-out (or prerender)
   // can't exhaust the Supabase session-mode pooler (pool_size 15) and take down
   // every route with (EMAXCONNSESSION) / better-auth FAILED_TO_GET_SESSION.

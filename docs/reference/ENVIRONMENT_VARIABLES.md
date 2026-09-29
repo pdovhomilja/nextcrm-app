@@ -38,7 +38,8 @@ in this fork's code** (kept for merge-friendliness).
 
 | Variable | Scope | Required | Purpose | Format / example |
 |---|---|---|---|---|
-| `DATABASE_URL` | All | Yes | Postgres connection string (Prisma). The Vercel deploy runs `prisma migrate deploy` with this. | Local `postgresql://postgres:postgres@127.0.0.1:54622/postgres`; hosted = **session** pooler, IPv4 (`SUPABASE_ON_VERCEL.md`). |
+| `DATABASE_URL` | All | Yes | Postgres connection string (Prisma). The Vercel deploy runs `prisma migrate deploy` with this, and the runtime pool falls back to it. | Local `postgresql://postgres:postgres@127.0.0.1:54622/postgres`; hosted = **session** pooler `:5432`, IPv4 (`SUPABASE_ON_VERCEL.md`). |
+| `RUNTIME_DATABASE_URL` | Preview, Prod | No | Connection string the **runtime** pool (`lib/prisma.ts`) uses when it should differ from `DATABASE_URL` — the Supabase **transaction** pooler `:6543`, so warm instances multiplex instead of exhausting the session pooler (`EMAXCONNSESSION`). Blank/unset → falls back to `DATABASE_URL`. Not used by migrations. | hosted = transaction pooler `:6543`; empty locally. See `SUPABASE_ON_VERCEL.md` §3. |
 | `DB_POOL_MAX` | All | No | Max `pg` connections **per function instance** (`lib/prisma.ts`). Caps the pool so a cold-start fan-out can't exhaust the session-mode pooler (`EMAXCONNSESSION` → all pages 500). Empty/invalid falls back to 3; **never set to 1** (deadlocks multi-query renders). Set on **every** scope (`SUPABASE_ON_VERCEL.md` §3). | `3` |
 | `BETTER_AUTH_SECRET` | All | Yes | better-auth signing secret. The Production value is a root credential. | `openssl rand -base64 32` |
 | `BETTER_AUTH_URL` | All | Yes | Auth base URL. | `http://localhost:3000` / `https://crm.radeengineering.com` |

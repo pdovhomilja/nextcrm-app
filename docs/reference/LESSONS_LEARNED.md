@@ -288,6 +288,27 @@
   `--to-schema` (not `--to-schema-datamodel`) and has **no** `--shadow-database-url`
   flag (shadow DB is set via `datasource.shadowDatabaseUrl` in a Prisma config file).
 
+### The session pooler exhausts under normal load and takes down the *whole* app, not just one route
+
+- **Symptom:** a page throws "This page could not load" with digest `FAILED_TO_GET_SESSION`;
+  soon **every** page 500s, not just the one you were on. A public write (e.g. the
+  web-lead endpoint) also 500s at the same moment. Runtime logs show
+  `(EMAXCONNSESSION) max clients reached in session mode - pool_size: 15`.
+- **Cause:** on the Supabase **session** pooler (`:5432`) every connection is a
+  dedicated session. Each warm Vercel instance holds up to `DB_POOL_MAX` (3) of the
+  ~15-connection pool, so a handful of concurrent instances (pages + Inngest +
+  background work) exhaust it. Because *every* server render does a better-auth
+  **session lookup**, once the pool is dry auth fails app-wide — the "one page"
+  symptom is misleading. The per-instance `DB_POOL_MAX` cap can't prevent this;
+  instances × cap still overruns 15.
+- **Fix / rule:** point the **runtime** pool at the **transaction** pooler (`:6543`)
+  via `RUNTIME_DATABASE_URL` (`lib/db/runtime-database-url.ts`); keep `DATABASE_URL`
+  on the session pooler (`:5432`) for `prisma migrate deploy`. Raising the Supabase
+  pool size is a stop-gap; transaction mode is the real fix because it multiplexes.
+  Never move `DATABASE_URL` itself to `:6543` (breaks migration DDL/advisory locks).
+- **Tell:** the digest resolves to `FAILED_TO_GET_SESSION` and the error underneath
+  it is `EMAXCONNSESSION … session mode`. It's infra, not the feature you just shipped.
+
 ## Auth / local dev
 
 ### The dev login OTP never arrives by email — retrieve it from the server log or `test-otp`
