@@ -3,7 +3,7 @@ import { prismadb } from "@/lib/prisma";
 import { isFieldEmpty } from "@/lib/enrichment/utils/field-utils";
 import { getApiKey } from "@/lib/api-keys";
 import { getAgentScript } from "@/lib/enrichment/e2b/agent-script";
-import { resolveCompanyDomain, filterByConfidence, buildContactUpsertKey, type AgentOutput } from "@/lib/enrichment/e2b/apply-result";
+import { resolveCompanyDomain, filterByConfidence, buildContactUpsertKey, planContactPersist, type AgentOutput } from "@/lib/enrichment/e2b/apply-result";
 import { Sandbox } from "e2b";
 import type { EnrichmentField } from "@/lib/enrichment/types";
 
@@ -170,30 +170,69 @@ export const enrichTarget = inngest.createFunction(
     const contactIds = await step.run("upsert-contacts", async () => {
       const ids: string[] = [];
       for (const contact of agentOutput.contacts ?? []) {
-        if (!contact.email && !contact.linkedinUrl) continue;
-        const whereKey = buildContactUpsertKey(targetId, contact);
-        const upserted = await prismadb.crm_Target_Contact.upsert({
-          where: whereKey as Parameters<typeof prismadb.crm_Target_Contact.upsert>[0]["where"],
-          create: {
-            targetId,
-            name: contact.name,
-            email: contact.email,
-            title: contact.title,
-            linkedinUrl: contact.linkedinUrl,
-            phone: contact.phone,
-            source: "enriched",
-            enrichStatus: contact.title && contact.linkedinUrl ? "COMPLETED" : "PENDING",
-            enrichedAt: contact.title && contact.linkedinUrl ? new Date() : null,
-          },
-          update: {
-            title: contact.title ?? undefined,
-            linkedinUrl: contact.linkedinUrl ?? undefined,
-            name: contact.name ?? undefined,
-            enrichStatus: contact.title && contact.linkedinUrl ? "COMPLETED" : "PENDING",
-            enrichedAt: contact.title && contact.linkedinUrl ? new Date() : null,
-          },
-          select: { id: true, enrichStatus: true },
-        });
+        // Persist any contact we can identify; a name (+ title) alone is worth
+        // keeping for local-business prospecting. See planContactPersist.
+        const plan = planContactPersist(contact);
+        if (plan === "skip") continue;
+
+        const isEnriched = !!(contact.title && contact.linkedinUrl);
+        const enrichStatus = isEnriched ? "COMPLETED" : "PENDING";
+        const enrichedAt = isEnriched ? new Date() : null;
+
+        let upserted: { id: string; enrichStatus: string };
+        if (plan === "keyed") {
+          // Dedup on the (targetId,email)/(targetId,linkedinUrl) unique keys.
+          const whereKey = buildContactUpsertKey(targetId, contact);
+          upserted = await prismadb.crm_Target_Contact.upsert({
+            where: whereKey as Parameters<typeof prismadb.crm_Target_Contact.upsert>[0]["where"],
+            create: {
+              targetId,
+              name: contact.name,
+              email: contact.email,
+              title: contact.title,
+              linkedinUrl: contact.linkedinUrl,
+              phone: contact.phone,
+              source: "enriched",
+              enrichStatus,
+              enrichedAt,
+            },
+            update: {
+              title: contact.title ?? undefined,
+              linkedinUrl: contact.linkedinUrl ?? undefined,
+              email: contact.email ?? undefined,
+              phone: contact.phone ?? undefined,
+              name: contact.name ?? undefined,
+              enrichStatus,
+              enrichedAt,
+            },
+            select: { id: true, enrichStatus: true },
+          });
+        } else {
+          // Name-only: there is no unique key to upsert against, so dedup by
+          // (targetId, name) manually.
+          const existing = await prismadb.crm_Target_Contact.findFirst({
+            where: { targetId, name: contact.name },
+            select: { id: true },
+          });
+          upserted = existing
+            ? await prismadb.crm_Target_Contact.update({
+                where: { id: existing.id },
+                data: { title: contact.title ?? undefined, phone: contact.phone ?? undefined, enrichStatus, enrichedAt },
+                select: { id: true, enrichStatus: true },
+              })
+            : await prismadb.crm_Target_Contact.create({
+                data: {
+                  targetId,
+                  name: contact.name,
+                  title: contact.title,
+                  phone: contact.phone,
+                  source: "enriched",
+                  enrichStatus,
+                  enrichedAt,
+                },
+                select: { id: true, enrichStatus: true },
+              });
+        }
         if (upserted.enrichStatus === "PENDING") ids.push(upserted.id);
       }
       return ids;
