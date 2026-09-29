@@ -11,7 +11,7 @@ export const embedEmail = inngest.createFunction(
   {
     id: "email-embed-email",
     name: "Email: Embed Email",
-    concurrency: { limit: 10 },
+    concurrency: { limit: 5 },
     triggers: [{ event: "email/embed-email" }],
   },
   async ({ event }: { event: { data: { emailId: string } } }) => {
