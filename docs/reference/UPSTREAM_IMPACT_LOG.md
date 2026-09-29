@@ -99,3 +99,29 @@ upstream changed columns.
 - The `last_name`-optional relaxation is **upstream-contributable** — company-only targets are a
   legitimate shape and the UI CSV importer already allows them (`last_name ?? ""`).
 - No server/query change was needed for the new columns: `getTargets()` already returns full rows.
+
+---
+
+## fix/prisma-pool-exhaustion — Cap the pg pool + add a Pool-level error handler  (PR: TBD)
+
+**1 upstream-owned file** touched, **insertion-only** logic (no upstream logic rewritten):
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `lib/prisma.ts` | +~16/−1 | **insert** | in `prismaClientSingleton()`: `new Pool({ connectionString })` → `new Pool({ connectionString, max: Number(process.env.DB_POOL_MAX) \|\| 3 })`; add `pool.on("error", …)` before `new PrismaPg(pool)` (+ explanatory comments citing SUPABASE_ON_VERCEL.md §3–4) | Low |
+
+**Why:** upstream builds the pool with no `max`, so `pg` uses its default of **10** per function
+instance. Against the hosted **session-mode** pooler (`pool_size 15`), two warm Vercel instances
+exhaust it (`EMAXCONNSESSION`), which surfaces as better-auth `FAILED_TO_GET_SESSION` on **every**
+page (the QA outage, digest `3914836991`). The fork's `SUPABASE_ON_VERCEL.md` §3–4 already
+prescribed this exact config (`DB_POOL_MAX ?? 3` + a Pool-level `error` handler for Supavisor
+idle-reaps / `57P01`) but it had never been wired into the code. `|| 3` (not `?? 3`) is used so an
+empty-string/invalid env value can't coerce to pg's falsy fallback of 10.
+
+**Re-verify after any upstream merge:**
+`git diff <merge-base> upstream/main -- lib/prisma.ts` — if upstream reverted to `new Pool({ connectionString })`
+or restructured the singleton, re-apply the `max` cap + `pool.on("error")`. Guard: `lib/__tests__/prisma.test.ts`.
+
+**Note:** **upstream-contributable** — capping the pool and adding a Pool-level error handler are
+strict robustness improvements for any serverless/pooled deployment and would remove this divergence
+if merged upstream.

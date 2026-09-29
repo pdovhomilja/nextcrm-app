@@ -144,6 +144,30 @@
 
 ## Database / migrations
 
+### An uncapped `pg` pool exhausts the session-mode pooler → *every* page 500s
+
+- **Symptom:** the whole app shows "This page couldn't load" with a digest (e.g.
+  `3914836991`) on **every** route at once. Vercel runtime logs show better-auth
+  `APIError: Failed to get session` (`FAILED_TO_GET_SESSION`), and underneath it
+  `DriverAdapterError: (EMAXCONNSESSION) max clients reached in session mode -
+  max clients are limited to pool_size: 15`. Looks like a specific user action
+  (e.g. "convert target to deal") broke the site — but that action was only the
+  straw that pushed concurrent connections over the ceiling.
+- **Cause:** every page needs the session, so once the DB pool is exhausted the
+  session read fails and *all* pages fail. Upstream's `lib/prisma.ts` builds the
+  `pg` pool with **no `max`**, so it uses pg's default of **10 per function
+  instance**; against the hosted **session-mode** pooler (`pool_size 15`), ~2 warm
+  Vercel instances exhaust it — with barely any real traffic.
+- **Fix / rule:** cap the pool from `DB_POOL_MAX` (default 3, **never 1**) and set
+  the env var on **every** scope — `new Pool({ connectionString, max: Number(process.env.DB_POOL_MAX) || 3 })`.
+  Use `|| 3`, not `?? 3`: an empty-string/invalid value coerces to `0`/`NaN`, and
+  pg treats a falsy `max` as its default of **10**, silently re-creating the
+  exhaustion. Also attach `pool.on("error", …)` (Supavisor idle-reaps / `57P01`).
+  For real scale, move request handlers to the **transaction** pooler (`6543`) —
+  `max` can't beat the session-mode ceiling. See `SUPABASE_ON_VERCEL.md` §3–4.
+- **Tell:** `EMAXCONNSESSION … session mode … pool_size: 15` in Vercel logs, and a
+  site-wide `FAILED_TO_GET_SESSION` rather than one broken route.
+
 ### `prisma migrate dev` is interactive — it can't author a migration in an agent shell
 
 - **Symptom:** `pnpm exec prisma migrate dev --name X` aborts with *"Prisma Migrate has
