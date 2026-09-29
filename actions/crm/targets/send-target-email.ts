@@ -87,48 +87,66 @@ export const sendTargetEmail = async ({
   });
 
   const unsubscribeUrl = `${process.env.NEXTAUTH_URL}/api/crm/targets/unsubscribe?token=${draft.unsubscribe_token}`;
-  const html = await renderCampaignEmail({ contentHtml, unsubscribeUrl });
-  const from = process.env.RESEND_FROM_EMAIL!;
 
-  const resend = new Resend(process.env.RESEND_CAMPAIGNS_API_KEY || process.env.RESEND_API_KEY);
-  const result = await resend.emails.send({
-    from,
-    to: redirectRecipients(recipient),
-    subject: resolvedSubject,
-    html,
-    headers: { "List-Unsubscribe": `<${unsubscribeUrl}>` },
-  });
-
-  if (result.error) {
-    await prismadb.crm_Target_Email.update({
+  const markFailed = (message: string) =>
+    prismadb.crm_Target_Email.update({
       where: { id: draft.id },
-      data: { status: "FAILED", error_message: result.error.message },
+      data: { status: "FAILED", error_message: message },
     });
+
+  // Render + send: any failure (returned OR thrown) marks the row FAILED so it is
+  // never left stuck in DRAFT.
+  let messageId: string | undefined;
+  try {
+    const html = await renderCampaignEmail({ contentHtml, unsubscribeUrl });
+    const from = process.env.RESEND_FROM_EMAIL!;
+    const resend = new Resend(process.env.RESEND_CAMPAIGNS_API_KEY || process.env.RESEND_API_KEY);
+    const result = await resend.emails.send({
+      from,
+      to: redirectRecipients(recipient),
+      subject: resolvedSubject,
+      html,
+      headers: { "List-Unsubscribe": `<${unsubscribeUrl}>` },
+    });
+    if (result.error) {
+      await markFailed(result.error.message);
+      return { error: "Failed to send email." };
+    }
+    messageId = result.data?.id;
+  } catch (err) {
+    await markFailed(err instanceof Error ? err.message : String(err));
     return { error: "Failed to send email." };
   }
 
-  await prismadb.crm_Target_Email.update({
-    where: { id: draft.id },
-    data: { status: "SENT", resend_message_id: result.data?.id, sent_at: new Date() },
-  });
+  // The email is already out. Nothing below (including the SENT write) may surface
+  // as an error, or the operator retries and the prospect gets a duplicate cold email.
+  try {
+    await prismadb.crm_Target_Email.update({
+      where: { id: draft.id },
+      data: { status: "SENT", resend_message_id: messageId, sent_at: new Date() },
+    });
 
-  await createActivity({
-    type: "email",
-    title: `Outreach email sent: ${resolvedSubject}`,
-    date: new Date(),
-    status: "completed",
-    metadata: { target_email_id: draft.id },
-    links: [{ entityType: "target", entityId: targetId }],
-  });
+    await createActivity({
+      type: "email",
+      title: `Outreach email sent: ${resolvedSubject}`,
+      date: new Date(),
+      status: "completed",
+      metadata: { target_email_id: draft.id },
+      links: [{ entityType: "target", entityId: targetId }],
+    });
 
-  await writeAuditLog({
-    entityType: "target",
-    entityId: targetId,
-    action: "updated",
-    changes: [{ field: "outreach_email_sent", old: null, new: resolvedSubject }],
-    userId: user.id,
-  });
+    await writeAuditLog({
+      entityType: "target",
+      entityId: targetId,
+      action: "updated",
+      changes: [{ field: "outreach_email_sent", old: null, new: resolvedSubject }],
+      userId: user.id,
+    });
 
-  revalidatePath("/[locale]/(routes)/campaigns/targets/[targetId]", "page");
+    revalidatePath("/[locale]/(routes)/campaigns/targets/[targetId]", "page");
+  } catch (e) {
+    console.error("[SEND_TARGET_EMAIL_POST_SEND]", e);
+  }
+
   return { data: { id: draft.id } };
 };

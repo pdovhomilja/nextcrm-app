@@ -15,7 +15,7 @@ jest.mock("@/lib/prisma", () => ({
 jest.mock("@/lib/campaigns/render-email", () => ({
   renderCampaignEmail: jest.fn(async () => "<html>final</html>"),
 }));
-jest.mock("@/lib/email/redirect", () => ({ redirectRecipients: jest.fn((to) => to) }));
+jest.mock("@/lib/email/redirect", () => ({ redirectRecipients: jest.fn((to) => `redir+${to}`) }));
 jest.mock("@/actions/crm/activities/create-activity", () => ({ createActivity: jest.fn() }));
 jest.mock("@/lib/audit-log", () => ({ writeAuditLog: jest.fn() }));
 jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));
@@ -53,7 +53,7 @@ it("sends, records SENT, and logs an email activity", async () => {
     includeHomepage: false, promptUsed: "warm",
   });
   expect(res).toEqual({ data: { id: "e1" } });
-  expect(sendMock).toHaveBeenCalledWith(expect.objectContaining({ to: "ada@acme.com", subject: "Hi Acme", html: "<html>final</html>" }));
+  expect(sendMock).toHaveBeenCalledWith(expect.objectContaining({ to: "redir+ada@acme.com", subject: "Hi Acme", html: "<html>final</html>" }));
   expect(prismadb.crm_Target_Email.update).toHaveBeenCalledWith(
     expect.objectContaining({ where: { id: "e1" }, data: expect.objectContaining({ status: "SENT", resend_message_id: "msg_1" }) })
   );
@@ -71,6 +71,7 @@ it("refuses when the target is do_not_email", async () => {
   });
   expect(res).toEqual({ error: "This target is marked do-not-email." });
   expect(sendMock).not.toHaveBeenCalled();
+  expect(prismadb.crm_Target_Email.create).not.toHaveBeenCalled();
 });
 
 it("refuses a non-approved target", async () => {
@@ -80,6 +81,7 @@ it("refuses a non-approved target", async () => {
   });
   expect(res).toEqual({ error: "Target must be approved before generating outreach" });
   expect(sendMock).not.toHaveBeenCalled();
+  expect(prismadb.crm_Target_Email.create).not.toHaveBeenCalled();
 });
 
 it("records FAILED when Resend errors", async () => {
@@ -91,4 +93,30 @@ it("records FAILED when Resend errors", async () => {
   expect(prismadb.crm_Target_Email.update).toHaveBeenCalledWith(
     expect.objectContaining({ data: expect.objectContaining({ status: "FAILED", error_message: "bounce" }) })
   );
+});
+
+it("records FAILED when Resend throws", async () => {
+  sendMock.mockRejectedValue(new Error("network down"));
+  const res = await sendTargetEmail({
+    targetId: "t1", templateId: "tpl1", subject: "Hi", bodyHtml: "<p>x</p>", includeHomepage: false, promptUsed: "",
+  });
+  expect(res).toEqual({ error: "Failed to send email." });
+  expect(prismadb.crm_Target_Email.update).toHaveBeenCalledWith(
+    expect.objectContaining({ where: { id: "e1" }, data: expect.objectContaining({ status: "FAILED", error_message: "network down" }) })
+  );
+});
+
+it("still succeeds (no duplicate-send retry) when post-send bookkeeping throws", async () => {
+  const errSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+  (createActivity as jest.Mock).mockRejectedValue(new Error("activity boom"));
+  const res = await sendTargetEmail({
+    targetId: "t1", templateId: "tpl1", subject: "Hi", bodyHtml: "<p>x</p>", includeHomepage: false, promptUsed: "",
+  });
+  expect(res).toEqual({ data: { id: "e1" } });
+  expect(sendMock).toHaveBeenCalledTimes(1);
+  expect(prismadb.crm_Target_Email.update).toHaveBeenCalledWith(
+    expect.objectContaining({ where: { id: "e1" }, data: expect.objectContaining({ status: "SENT" }) })
+  );
+  expect(errSpy).toHaveBeenCalledWith("[SEND_TARGET_EMAIL_POST_SEND]", expect.any(Error));
+  errSpy.mockRestore();
 });
