@@ -39,6 +39,7 @@ it("rejects a COMPANY with no company name", async () => {
 it("rejects an INDIVIDUAL with no last name", async () => {
   await expect(createThroughSchema({ type: "INDIVIDUAL", company: "Acme" }))
     .rejects.toThrow(/last name/i);
+  expect(prismadb.crm_Targets.create).not.toHaveBeenCalled();
 });
 
 it("defaults type to COMPANY when omitted", async () => {

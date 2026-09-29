@@ -78,8 +78,10 @@ export const crmTargetTools = [
       type: z.enum(["INDIVIDUAL", "COMPANY"]).optional(),
       first_name: z.string().min(1).optional(),
       // fork: last_name is optional so a company-only target (no person) can be
-      // created — the handler requires last_name OR company and defaults the
-      // non-null column to "". Mirrors the UI CSV importer (last_name ?? "").
+      // created — the handler requires the type's identity field via
+      // requiredIdentityField (COMPANY -> company, INDIVIDUAL -> last_name) and
+      // defaults the non-null last_name column to "". Mirrors the UI CSV
+      // importer (last_name ?? "").
       last_name: z.string().min(1).optional(),
       email: z.string().email().optional(),
       mobile_phone: z.string().optional(),

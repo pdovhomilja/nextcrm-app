@@ -18,7 +18,7 @@ it("rejects a COMPANY target with no company name", async () => {
   expect(prismadb.crm_Targets.create).not.toHaveBeenCalled();
 });
 
-it("creates an INDIVIDUAL and persists description/industry pass-through", async () => {
+it("creates an INDIVIDUAL and persists description pass-through", async () => {
   const res = await createTarget({ type: "INDIVIDUAL", last_name: "Lovelace", description: "note" });
   expect(res.data?.type).toBe("INDIVIDUAL");
   expect(res.data?.description).toBe("note");

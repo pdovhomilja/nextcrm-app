@@ -92,12 +92,6 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
   });
 
   const onSubmit = async (data: NewTargetFormValues) => {
-    if (!data.last_name && !data.company) {
-      form.setError("root.serverError", {
-        message: "Please provide either last name or company.",
-      });
-      return;
-    }
     const result = await createTarget(data);
     if (result?.error) {
       form.setError("root.serverError", { message: result.error });
