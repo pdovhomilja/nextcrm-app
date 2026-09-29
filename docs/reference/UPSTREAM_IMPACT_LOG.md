@@ -20,6 +20,23 @@ resolve by hand. Re-run the entry's named tests to confirm the wiring survived.
 
 ---
 
+## feat/web-lead-source-status-assignee — public web-lead intake gains source/status/assignee  (PR: TBD)
+
+Extends the public "create lead from web" endpoint to capture `description` and
+resolve `lead_source`/`lead_status`/`assigned_to` server-side, and to fire the
+`crm/lead.saved` background event. All new logic lives in the new fork-owned
+`lib/crm/create-web-lead.ts` (zero merge risk). **1 upstream-owned file** touched:
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `app/api/crm/leads/create-lead-from-web/route.ts` | +12/-11 | **mixed** | insert: `description` added to the body destructure. rewrite: the top import (`prismadb` → `createWebLead`) and the inline `crm_Leads.create({...})` block inside the authorized branch replaced by a `createWebLead(...)` call. Auth check, content-type/header guards, `lastName` 400, response shape and status codes all unchanged. | Low–Med |
+
+New fork-owned files (no merge risk): `lib/crm/create-web-lead.ts`,
+`__tests__/crm/create-web-lead.test.ts`. **Re-verify after an upstream merge:**
+`__tests__/crm/create-web-lead.test.ts` (route guards + helper resolution). Note:
+`WEB_LEAD_ASSIGNEE_EMAIL` is a new optional env — the assignee falls back to
+`shaun@radeengineering.com`, and to a `null` assignee if that user is unmatched.
+
 ## feat/prospecting-skill — /prospect skill + target-contact MCP tool  (PR: TBD)
 
 Adds the fork-owned `/prospect` skill (all under `.claude/skills/prospect/` — zero

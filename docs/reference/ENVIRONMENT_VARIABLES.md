@@ -111,6 +111,7 @@ in this fork's code** (kept for merge-friendliness).
 | `E2B_API_KEY` | Preview, Prod | No | E2B sandbox for enrichment. | — |
 | `E2B_ENRICHMENT_TEMPLATE` | All | No | E2B template; defaults to `nextcrm-enrichment`. | — |
 | `NEXTCRM_TOKEN` | All | Route | Bearer token guarding the public create-lead endpoints (route 500s if unset when used). | random secret |
+| `WEB_LEAD_ASSIGNEE_EMAIL` | All | No | User (by email) that public web-form leads are assigned to; falls back to `null` assignee if unmatched. Defaults to `shaun@radeengineering.com`. | `shaun@radeengineering.com` |
 | `NEXTAUTH_URL` | All | No | Base URL for campaign unsubscribe links. | `https://crm.radeengineering.com` |
 | `MAIL_ALLOW_PRIVATE_HOSTS` | All | No | SSRF gate (`lib/net/host-guard.ts`), default off. | unset, or `true` (dev only) |
 | `ROSSUM_USERNAME` | — | Legacy | Not read in this fork. | — |
