@@ -1,9 +1,11 @@
-type MergeTagTarget = {
+export type MergeTagTarget = {
   first_name?: string | null;
   last_name?: string | null;
   email?: string | null;
   company?: string | null;
   position?: string | null;
+  homepage_url?: string | null;
+  homepage_screenshot?: string | null;
 };
 
 const MERGE_TAG_MAP: Record<string, keyof MergeTagTarget> = {
@@ -12,6 +14,8 @@ const MERGE_TAG_MAP: Record<string, keyof MergeTagTarget> = {
   email: "email",
   company: "company",
   position: "position",
+  homepage_url: "homepage_url",
+  homepage_screenshot: "homepage_screenshot",
 };
 
 function escapeHtmlValue(value: string): string {
