@@ -366,3 +366,17 @@ keeping only the statements for the new objects.
 `git diff <merge-base> upstream/main -- "app/[locale]/(routes)/campaigns/targets/[targetId]/components/BasicView.tsx"`
 — if upstream changed the CardHeader action cluster, reconcile by hand and keep `<TargetAiMenu />`
 plus the `Promise.all` loads. Do not delete `EnrichButton.tsx`.
+
+## feat/target-ai-outreach — MCP parity tools (prompt CRUD + send-target-email)  (PR: TBD)
+
+**1 upstream-owned file** touched; the two tool files are new fork-owned files (no merge risk).
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `lib/mcp/tools/index.ts` | +6/−0 | **insert-only** | Registered `crmAiPromptTools` + `crmTargetEmailTools`: 2 `export` lines and 2 `import` lines after the `crmTargetTriageTools` ones, and 2 spread entries after `...crmTargetTriageTools` in `allTools`. | Low (adjacent to other fork registrations; keep both sides on conflict) |
+
+New fork-owned files: `lib/mcp/tools/crm-ai-prompts.ts`, `lib/mcp/tools/crm-target-email.ts`,
+`lib/mcp/__tests__/crm-ai-prompts.test.ts`.
+
+**Re-verify after any upstream merge:** the three tool-array lines still appear in all three places
+of `lib/mcp/tools/index.ts` (export, import, `allTools` spread).
