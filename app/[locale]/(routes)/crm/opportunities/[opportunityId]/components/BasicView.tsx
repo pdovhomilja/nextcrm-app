@@ -28,6 +28,7 @@ import { formatCurrency, convertAmount, getExchangeRates, getDefaultCurrency } f
 import { Decimal } from "@prisma/client/runtime/client";
 import { cookies } from "next/headers";
 import { serializeDecimals } from "@/lib/serialize-decimals";
+import { getOriginatingTargetListNames } from "@/lib/crm/deal-source";
 
 interface OppsViewProps {
   data: {
@@ -48,6 +49,17 @@ export async function BasicView({ data }: OppsViewProps) {
   const displayCurrency = cookieStore.get("display_currency")?.value || defaultCurrency;
   const rates = await getExchangeRates();
   if (!data) return <div>Opportunity not found</div>;
+
+  // Provenance for deals converted from a target: derived on read (no stored
+  // link). See lib/crm/deal-source.ts. Campaign name is resolved from the
+  // campaigns already loaded above rather than a second query.
+  const targetListNames = await getOriginatingTargetListNames({
+    accountId: data.account,
+    contactId: data.contact,
+  });
+  const campaignName =
+    campaigns.find((c: { id: string; name: string }) => c.id === data.campaign)
+      ?.name ?? null;
 
   const fromCurrency = data.currency || "EUR";
   const budgetAmount = new Decimal(data.budget?.toString() ?? "0");
@@ -215,11 +227,22 @@ export async function BasicView({ data }: OppsViewProps) {
             </div>
           </div>
           <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
+            <SquareStack className="mt-px h-5 w-5" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium leading-none">Target list</p>
+              <p className="text-sm text-muted-foreground">
+                {targetListNames.length > 0
+                  ? targetListNames.join(", ")
+                  : "N/A"}
+              </p>
+            </div>
+          </div>
+          <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
             <Clapperboard className="mt-px h-5 w-5" />
             <div className="space-y-1">
               <p className="text-sm font-medium leading-none">Campaign</p>
               <p className="text-sm text-muted-foreground">
-                Will be added in the future
+                {campaignName ?? "N/A"}
               </p>
             </div>
           </div>
