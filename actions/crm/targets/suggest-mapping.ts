@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth-server";
 import { openAiHelper } from "@/lib/openai";
 
 const TARGET_FIELDS = [
+  "type",
   "last_name",
   "first_name",
   "email",
