@@ -67,7 +67,7 @@ export async function convertTargetToDeal(
 
     const opportunity = await prismadb.crm_Opportunities.create({
       data: {
-        name: `${target.company || target.last_name} — inbound`,
+        name: (target.company || target.last_name) as string,
         account: converted.accountId,
         contact: converted.contactId,
         campaign: lastSend?.campaign_id ?? undefined,

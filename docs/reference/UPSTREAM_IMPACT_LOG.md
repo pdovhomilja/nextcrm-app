@@ -256,3 +256,32 @@ the many conditional wraps) and `BasicView.tsx`. Guards: `__tests__/lib/target-t
 | `.../campaigns/targets/table-components/data-table-toolbar.tsx` | **insert** | "List" faceted filter (active lists as options). | Low |
 
 **Why:** local-business prospecting — the enrichment hunted C-suite LinkedIn profiles that SMBs don't have, and dropped any contact without an email/LinkedIn, so runs on local targets persisted nothing; the UI lacked a way to deactivate a list or filter targets by list. Guards: `__tests__/enrichment/plan-contact-persist.test.ts` (unit); `tests/e2e/target-lists.spec.ts` (Created-by column, row-click nav, activate/deactivate) and `tests/e2e/targets-list-filter.spec.ts` (active-list facet offers active lists only + narrows), with matching manual steps in `docs/testing/target-lists-manual-testing.md`. All edits are additive/insertion-style and upstream-contributable.
+
+---
+
+## feat/deal-target-list-attribution — Deal shows originating Target list + Campaign; drop opp-title suffix  (PR: TBD)
+
+Shows, on a converted deal's detail view, the target list(s) the deal originated from
+and its attributing campaign — **derived on read**, no schema change. New fork-owned
+`lib/crm/deal-source.ts` (+ `lib/crm/__tests__/deal-source.test.ts`) holds the target-list
+derivation (`getOriginatingTargetListNames` — reverse-lookup `crm_Targets` by
+`converted_account_id`+`converted_contact_id`, read its `target_lists`). The campaign name
+is resolved in BasicView from the campaigns already loaded via `getAllCrmData()` (no extra
+query). **2 upstream-owned files** touched:
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `actions/crm/targets/convert-target-to-deal.ts` | +1/−1 | **rewrite** (1 line) | opportunity `name` changed from `` `${company||last_name} — inbound` `` to `(company \|\| last_name)` — drops the misleading "— inbound" suffix (these deals are outbound). Prior to this the file was byte-identical to upstream. | Low |
+| `.../crm/opportunities/[opportunityId]/components/BasicView.tsx` | +~20/−6 | **mixed** | insert: `getOriginatingTargetListNames` import; a `targetListNames` derive call + a `campaignName` lookup from the already-loaded `campaigns` after the `!data` guard; a new "Target list" row (uses already-imported `SquareStack`) under the "Lead source" row. rewrite: the **Campaign** row's placeholder `"Will be added in the future"` → real `campaignName ?? "N/A"`. "Lead source" placeholder left as-is (out of scope). | Low–Med |
+
+New fork-owned files (no merge risk): `lib/crm/deal-source.ts`, `lib/crm/__tests__/deal-source.test.ts`.
+
+**Re-verify after any upstream merge:** `lib/crm/__tests__/deal-source.test.ts`. Then
+`git diff <merge-base> upstream/main -- actions/crm/targets/convert-target-to-deal.ts \
+  "app/[locale]/(routes)/crm/opportunities/[opportunityId]/components/BasicView.tsx"` — if
+upstream rewired the opp name or the Campaign/Lead-source rows, reconcile by hand and keep
+the derive call + Target-list row.
+
+**Note:** the derive-on-read design was chosen because the need is display-only; if deals
+ever need to be *filtered/reported* by originating list, revisit with a stored
+`source_target_id` column on `crm_Opportunities`.
