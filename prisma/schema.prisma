@@ -205,6 +205,11 @@ enum crm_Triage_Status {
   PASSED
 }
 
+enum crm_Target_Type {
+  INDIVIDUAL
+  COMPANY
+}
+
 enum crm_Pass_Reason {
   SCOPE_TOO_LARGE
   NOT_A_FIT
@@ -1290,6 +1295,7 @@ model crm_Targets {
   social_instagram String?
   social_facebook  String?
   status           Boolean   @default(true)
+  type             crm_Target_Type @default(COMPANY)
   do_not_email     Boolean   @default(false)
   do_not_email_at  DateTime?
   tags             String[]
@@ -1342,6 +1348,7 @@ model crm_Targets {
   @@index([deletedAt])
   @@index([triage_status])
   @@index([revisit_at])
+  @@index([type])
 }
 
 model crm_TargetLists {

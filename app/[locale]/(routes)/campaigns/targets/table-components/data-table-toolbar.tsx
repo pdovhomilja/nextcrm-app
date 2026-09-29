@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataTableViewOptions } from "./data-table-view-options";
 import { DataTableFacetedFilter } from "./data-table-faceted-filter";
+import { TARGET_TYPE_OPTIONS } from "@/lib/crm/target-type";
 import { TRIAGE_STATUS_OPTIONS } from "../table-data/triage-options";
 
 interface DataTableToolbarProps<TData> {
@@ -22,12 +23,12 @@ export function DataTableToolbar<TData>({
     <div className="flex items-center justify-between">
       <div className="flex flex-1 items-center space-x-2">
         <Input
-          placeholder="Filter by last name ..."
+          placeholder="Filter by name or company ..."
           value={
-            (table.getColumn("last_name")?.getFilterValue() as string) ?? ""
+            (table.getColumn("name")?.getFilterValue() as string) ?? ""
           }
           onChange={(event) =>
-            table.getColumn("last_name")?.setFilterValue(event.target.value)
+            table.getColumn("name")?.setFilterValue(event.target.value)
           }
           className="h-8 w-[150px] lg:w-[250px]"
         />
@@ -36,6 +37,13 @@ export function DataTableToolbar<TData>({
             column={table.getColumn("triage_status")}
             title="Triage"
             options={TRIAGE_STATUS_OPTIONS.map((o) => ({ label: o.label, value: o.value }))}
+          />
+        )}
+        {table.getColumn("type") && (
+          <DataTableFacetedFilter
+            column={table.getColumn("type")}
+            title="Type"
+            options={TARGET_TYPE_OPTIONS.map((o) => ({ label: o.label, value: o.value }))}
           />
         )}
         {isFiltered && (

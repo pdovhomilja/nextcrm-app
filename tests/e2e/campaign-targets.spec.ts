@@ -42,6 +42,11 @@ test.describe.serial("Campaign Targets", () => {
       timeout: 5000,
     });
 
+    // Targets default to Company; this scenario exercises the person-centric
+    // fields, so switch the type selector to Individual first.
+    await page.getByRole("combobox", { name: "Type" }).click();
+    await page.getByRole("option", { name: "Individual" }).click();
+
     // --- Name & Contact ---
     await page.getByLabel("First name").fill("PW-Target-First");
     await page.getByLabel("Last name").fill("PW-Target-Last");
@@ -49,10 +54,9 @@ test.describe.serial("Campaign Targets", () => {
     await page.getByLabel("Mobile phone").fill("+1 555 000 1111");
     await page.getByLabel("Office phone").fill("+1 555 000 2222");
 
-    // --- Company ---
-    await page.getByLabel("Company", { exact: true }).fill("PW Test Corp");
+    // --- Employer ---
+    await page.getByLabel("Employer", { exact: true }).fill("PW Test Corp");
     await page.getByLabel("Position").fill("QA Engineer");
-    await page.getByLabel("Company website", { exact: true }).fill("https://pw-test-corp.com");
     await page.getByLabel("Personal website").fill("https://pw-target.dev");
 
     // --- Social ---
@@ -63,14 +67,10 @@ test.describe.serial("Campaign Targets", () => {
 
     // --- Additional Contact ---
     await page.getByLabel("Personal Email", { exact: true }).fill("pw-personal@test.example.com");
-    await page.getByLabel("Company Email", { exact: true }).fill("pw-company@test.example.com");
-    await page.getByLabel("Company Phone", { exact: true }).fill("+1 800 000 0000");
 
-    // --- Location & Industry ---
+    // --- Location ---
     await page.getByLabel("City").fill("Prague");
     await page.getByLabel("Country").fill("Czech Republic");
-    await page.getByLabel("Industry").fill("SaaS");
-    await page.getByLabel("Employees").fill("50-200");
 
     // --- Description ---
     await page.getByLabel("Description").fill("Playwright test target with all fields");
@@ -84,11 +84,11 @@ test.describe.serial("Campaign Targets", () => {
     await page.waitForLoadState("networkidle", { timeout: 15000 });
   });
 
-  test("should filter targets by last name", async ({ page }) => {
+  test("should filter targets by name or company", async ({ page }) => {
     await page.goto("/en/campaigns/targets");
     await page.waitForLoadState("networkidle", { timeout: 15000 });
 
-    const filterInput = page.getByPlaceholder("Filter by last name ...");
+    const filterInput = page.getByPlaceholder("Filter by name or company ...");
     await expect(filterInput).toBeVisible({ timeout: 10000 });
 
     // Type something that matches nothing
@@ -169,8 +169,8 @@ test.describe.serial("Campaign Targets", () => {
       timeout: 10000,
     });
 
-    // Verify company info
-    await expect(page.getByText("Company").first()).toBeVisible();
+    // Verify employer info (Individual targets label the company field "Employer")
+    await expect(page.getByText("Employer").first()).toBeVisible();
     await expect(page.getByText("PW Test Corp")).toBeVisible();
 
     // Verify position

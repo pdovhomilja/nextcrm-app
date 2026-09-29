@@ -2,8 +2,10 @@
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
+import { normalizeTargetType, requiredIdentityField } from "@/lib/crm/target-type";
 
 export const createTarget = async (data: {
+  type?: "INDIVIDUAL" | "COMPANY";
   last_name?: string;
   first_name?: string;
   email?: string;
@@ -17,6 +19,14 @@ export const createTarget = async (data: {
   social_linkedin?: string;
   social_instagram?: string;
   social_facebook?: string;
+  personal_email?: string;
+  company_email?: string;
+  company_phone?: string;
+  city?: string;
+  country?: string;
+  industry?: string;
+  employees?: string;
+  description?: string;
   status?: boolean;
 }) => {
   let user;
@@ -28,11 +38,14 @@ export const createTarget = async (data: {
   }
 
   const { last_name, email, mobile_phone, ...rest } = data;
-  if (!last_name && !data.company) return { error: "last_name or company is required" };
+  const type = normalizeTargetType(data.type);
+  const required = requiredIdentityField(type);
+  if (required === "company" && !data.company) return { error: "A company target requires a company name" };
+  if (required === "last_name" && !last_name) return { error: "An individual target requires a last name" };
 
   try {
     const target = await prismadb.crm_Targets.create({
-      data: { last_name: last_name ?? "", email, mobile_phone, ...rest, created_by: user.id },
+      data: { last_name: last_name ?? "", email, mobile_phone, ...rest, type, created_by: user.id },
     });
     revalidatePath("/[locale]/(routes)/crm/targets", "page");
     return { data: target };

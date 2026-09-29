@@ -2,6 +2,7 @@
 import { prismadb } from "@/lib/prisma";
 import { parseSpreadsheetFile } from "@/lib/spreadsheet/parse";
 import { requireAuthenticated } from "@/lib/authz";
+import { normalizeTargetType } from "@/lib/crm/target-type";
 
 export async function importTargets(
   formData: FormData
@@ -44,6 +45,7 @@ export async function importTargets(
     }
 
     valid.push({
+      type: normalizeTargetType(row.type?.trim().toUpperCase()),
       last_name: last_name ?? "",
       first_name: row.first_name || null,
       email: email || null,

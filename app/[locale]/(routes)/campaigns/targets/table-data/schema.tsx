@@ -2,7 +2,8 @@ import { z } from "zod";
 
 export const targetSchema = z.object({
   id: z.string(),
-  first_name: z.string().nullable(),
+  type: z.enum(["INDIVIDUAL", "COMPANY"]).default("COMPANY"),
+  first_name: z.string().nullable().optional(),
   last_name: z.string(),
   email: z.string().nullable(),
   mobile_phone: z.string().nullable(),

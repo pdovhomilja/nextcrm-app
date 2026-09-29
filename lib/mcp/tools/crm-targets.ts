@@ -9,6 +9,7 @@ import {
   notFound,
   softDeleteData,
 } from "../helpers";
+import { normalizeTargetType, requiredIdentityField } from "@/lib/crm/target-type";
 
 export const crmTargetTools = [
   {
@@ -73,10 +74,14 @@ export const crmTargetTools = [
     name: "crm_create_target",
     description: "Create a new CRM target",
     schema: z.object({
+      // fork: Individual vs Company target type (defaults to COMPANY)
+      type: z.enum(["INDIVIDUAL", "COMPANY"]).optional(),
       first_name: z.string().min(1).optional(),
       // fork: last_name is optional so a company-only target (no person) can be
-      // created — the handler requires last_name OR company and defaults the
-      // non-null column to "". Mirrors the UI CSV importer (last_name ?? "").
+      // created — the handler requires the type's identity field via
+      // requiredIdentityField (COMPANY -> company, INDIVIDUAL -> last_name) and
+      // defaults the non-null last_name column to "". Mirrors the UI CSV
+      // importer (last_name ?? "").
       last_name: z.string().min(1).optional(),
       email: z.string().email().optional(),
       mobile_phone: z.string().optional(),
@@ -101,6 +106,7 @@ export const crmTargetTools = [
     }),
     async handler(
       args: {
+        type?: "INDIVIDUAL" | "COMPANY";
         first_name?: string;
         last_name?: string;
         email?: string;
@@ -126,13 +132,19 @@ export const crmTargetTools = [
       userId: string
     ) {
       const { last_name, ...rest } = args;
-      // A target is a person (last_name) or a company (company) — require one.
-      // last_name is a non-null column, so default a company-only target to "".
-      if (!last_name && !rest.company) {
-        throw new Error("Either last_name or company is required");
+      // fork: required identity keys off the target type (Individual needs a
+      // last name, Company needs a company name). last_name is a non-null
+      // column, so a company target defaults it to "".
+      const type = normalizeTargetType(args.type);
+      const required = requiredIdentityField(type);
+      if (required === "company" && !rest.company) {
+        throw new Error("A company target requires a company name");
+      }
+      if (required === "last_name" && !last_name) {
+        throw new Error("An individual target requires a last name");
       }
       const target = await prismadb.crm_Targets.create({
-        data: { last_name: last_name ?? "", ...rest, created_by: userId },
+        data: { last_name: last_name ?? "", ...rest, type, created_by: userId },
       });
       return itemResponse(target);
     },
@@ -142,6 +154,7 @@ export const crmTargetTools = [
     description: "Update an existing CRM target by ID",
     schema: z.object({
       id: z.string().uuid(),
+      type: z.enum(["INDIVIDUAL", "COMPANY"]).optional(),
       first_name: z.string().min(1).optional(),
       // fork: allow "" so a mistakenly-named company target can be blanked back
       // to company-only (last_name is a non-null column; "" = "no last name").
@@ -170,6 +183,7 @@ export const crmTargetTools = [
     async handler(
       args: {
         id: string;
+        type?: "INDIVIDUAL" | "COMPANY";
         first_name?: string;
         last_name?: string;
         email?: string;

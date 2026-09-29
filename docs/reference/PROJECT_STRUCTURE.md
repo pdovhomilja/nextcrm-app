@@ -22,7 +22,10 @@ actions/                server actions (data mutations/reads) grouped by domain 
 components/             shared UI component library (shadcn/ui + Radix + Tailwind)
 lib/                    server + shared logic — auth.ts / auth-client.ts (better-auth),
                         api-keys.ts, serialize-decimals.ts (Decimal→number for the
-                        server/client boundary), integrations, utilities
+                        server/client boundary), integrations, utilities;
+                        crm/target-type.ts (fork-owned Individual/Company target
+                        taxonomy — required-identity rule, per-type fields/labels,
+                        title resolver; consumed by target forms, detail, list, MCP, import)
 prisma/                 schema.prisma (the data model), migrations/ (forward-only,
                         applied via `prisma migrate deploy`), seeds/ + initial-data/
 inngest/                background jobs — client.ts (Inngest client), functions/, lib/

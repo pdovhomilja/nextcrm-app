@@ -17,6 +17,9 @@ import {
   Twitter,
   User,
   Globe,
+  MapPin,
+  Users,
+  Factory,
 } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
@@ -27,6 +30,14 @@ import ConvertToDealButton from "./ConvertToDealButton";
 import { TargetContactsTable } from "./TargetContactsTable";
 import { TriageControl } from "./TriageControl";
 import { passReasonLabel } from "../../table-data/triage-options";
+import {
+  fieldLabel,
+  isFieldForType,
+  normalizeTargetType,
+  resolveTargetTitle,
+  targetTypeBadgeVariant,
+  targetTypeLabel,
+} from "@/lib/crm/target-type";
 
 interface TargetContact {
   id: string;
@@ -46,14 +57,20 @@ interface TargetBasicViewProps {
 export async function BasicView({ data }: TargetBasicViewProps) {
   if (!data) return <div>Target not found</div>;
 
+  const type = normalizeTargetType(data.type);
+  const location = [data.city, data.country].filter(Boolean).join(", ");
+
   return (
     <div className="pb-3 space-y-5">
       <Card>
         <CardHeader className="pb-3">
           <div className="flex w-full justify-between">
             <div>
-              <CardTitle>
-                {data.first_name} {data.last_name}
+              <CardTitle className="flex items-center gap-2">
+                {resolveTargetTitle(data)}
+                <Badge variant={targetTypeBadgeVariant(data.type)}>
+                  {targetTypeLabel(data.type)}
+                </Badge>
               </CardTitle>
               <CardDescription>ID: {data.id}</CardDescription>
             </div>
@@ -75,51 +92,94 @@ export async function BasicView({ data }: TargetBasicViewProps) {
               <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
                 <Building2 className="mt-px h-5 w-5" />
                 <div className="space-y-1">
-                  <p className="text-sm font-medium leading-none">Company</p>
+                  <p className="text-sm font-medium leading-none">
+                    {fieldLabel(type, "company")}
+                  </p>
                   <p className="text-sm text-muted-foreground">
                     {data.company || "N/A"}
                   </p>
                 </div>
               </div>
-              <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
-                <User className="mt-px h-5 w-5" />
-                <div className="space-y-1">
-                  <p className="text-sm font-medium leading-none">Position</p>
-                  <p className="text-sm text-muted-foreground">
-                    {data.position || "N/A"}
-                  </p>
+              {isFieldForType(type, "industry") && (
+                <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
+                  <Factory className="mt-px h-5 w-5" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      {fieldLabel(type, "industry")}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {data.industry || "N/A"}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
-                <Globe className="mt-px h-5 w-5" />
-                <div className="space-y-1">
-                  <p className="text-sm font-medium leading-none">Company website</p>
-                  <p className="text-sm text-muted-foreground">
-                    {data.company_website ? (
-                      <Link href={data.company_website} target="_blank" className="underline">
-                        {data.company_website}
-                      </Link>
-                    ) : (
-                      "N/A"
-                    )}
-                  </p>
+              )}
+              {isFieldForType(type, "employees") && (
+                <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
+                  <Users className="mt-px h-5 w-5" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      {fieldLabel(type, "employees")}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {data.employees || "N/A"}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
-                <Globe className="mt-px h-5 w-5" />
-                <div className="space-y-1">
-                  <p className="text-sm font-medium leading-none">Personal website</p>
-                  <p className="text-sm text-muted-foreground">
-                    {data.personal_website ? (
-                      <Link href={data.personal_website} target="_blank" className="underline">
-                        {data.personal_website}
-                      </Link>
-                    ) : (
-                      "N/A"
-                    )}
-                  </p>
+              )}
+              {isFieldForType(type, "position") && (
+                <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
+                  <User className="mt-px h-5 w-5" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium leading-none">Position</p>
+                    <p className="text-sm text-muted-foreground">
+                      {data.position || "N/A"}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
+              {isFieldForType(type, "company_website") && (
+                <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
+                  <Globe className="mt-px h-5 w-5" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium leading-none">Company website</p>
+                    <p className="text-sm text-muted-foreground">
+                      {data.company_website ? (
+                        <Link href={data.company_website} target="_blank" className="underline">
+                          {data.company_website}
+                        </Link>
+                      ) : (
+                        "N/A"
+                      )}
+                    </p>
+                  </div>
+                </div>
+              )}
+              {isFieldForType(type, "personal_website") && (
+                <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
+                  <Globe className="mt-px h-5 w-5" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium leading-none">Personal website</p>
+                    <p className="text-sm text-muted-foreground">
+                      {data.personal_website ? (
+                        <Link href={data.personal_website} target="_blank" className="underline">
+                          {data.personal_website}
+                        </Link>
+                      ) : (
+                        "N/A"
+                      )}
+                    </p>
+                  </div>
+                </div>
+              )}
+              {location && (
+                <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
+                  <MapPin className="mt-px h-5 w-5" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium leading-none">Location</p>
+                    <p className="text-sm text-muted-foreground">{location}</p>
+                  </div>
+                </div>
+              )}
             </div>
             <div>
               <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
@@ -196,46 +256,118 @@ export async function BasicView({ data }: TargetBasicViewProps) {
         </CardContent>
       </Card>
 
+      {data.description && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle>{fieldLabel(type, "description")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+              {data.description}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-2 gap-3 w-full">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle>Contact information</CardTitle>
           </CardHeader>
           <CardContent className="gap-1">
-            <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
-              <div className="space-y-1">
-                <p className="text-sm font-medium leading-none">E-mail</p>
-                {data?.email ? (
-                  <Link
-                    href={`mailto:${data.email}`}
-                    className="flex items-center gap-5 text-sm text-muted-foreground"
-                  >
-                    {data.email}
-                    <EnvelopeClosedIcon />
-                  </Link>
-                ) : (
-                  <p className="text-sm text-muted-foreground">N/A</p>
-                )}
+            {isFieldForType(type, "email") && (
+              <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium leading-none">E-mail</p>
+                  {data?.email ? (
+                    <Link
+                      href={`mailto:${data.email}`}
+                      className="flex items-center gap-5 text-sm text-muted-foreground"
+                    >
+                      {data.email}
+                      <EnvelopeClosedIcon />
+                    </Link>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">N/A</p>
+                  )}
+                </div>
               </div>
-            </div>
-            <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
-              <Phone className="mt-px h-5 w-5" />
-              <div className="space-y-1">
-                <p className="text-sm font-medium leading-none">Mobile phone</p>
-                <p className="text-sm text-muted-foreground">
-                  {data.mobile_phone || "N/A"}
-                </p>
+            )}
+            {isFieldForType(type, "personal_email") && (
+              <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium leading-none">
+                    {fieldLabel(type, "personal_email")}
+                  </p>
+                  {data?.personal_email ? (
+                    <Link
+                      href={`mailto:${data.personal_email}`}
+                      className="flex items-center gap-5 text-sm text-muted-foreground"
+                    >
+                      {data.personal_email}
+                      <EnvelopeClosedIcon />
+                    </Link>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">N/A</p>
+                  )}
+                </div>
               </div>
-            </div>
-            <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
-              <Phone className="mt-px h-5 w-5" />
-              <div className="space-y-1">
-                <p className="text-sm font-medium leading-none">Office phone</p>
-                <p className="text-sm text-muted-foreground">
-                  {data.office_phone || "N/A"}
-                </p>
+            )}
+            {isFieldForType(type, "mobile_phone") && (
+              <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
+                <Phone className="mt-px h-5 w-5" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium leading-none">Mobile phone</p>
+                  <p className="text-sm text-muted-foreground">
+                    {data.mobile_phone || "N/A"}
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
+            {isFieldForType(type, "office_phone") && (
+              <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
+                <Phone className="mt-px h-5 w-5" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium leading-none">Office phone</p>
+                  <p className="text-sm text-muted-foreground">
+                    {data.office_phone || "N/A"}
+                  </p>
+                </div>
+              </div>
+            )}
+            {isFieldForType(type, "company_email") && (
+              <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium leading-none">
+                    {fieldLabel(type, "company_email")}
+                  </p>
+                  {data?.company_email ? (
+                    <Link
+                      href={`mailto:${data.company_email}`}
+                      className="flex items-center gap-5 text-sm text-muted-foreground"
+                    >
+                      {data.company_email}
+                      <EnvelopeClosedIcon />
+                    </Link>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">N/A</p>
+                  )}
+                </div>
+              </div>
+            )}
+            {isFieldForType(type, "company_phone") && (
+              <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
+                <Phone className="mt-px h-5 w-5" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium leading-none">
+                    {fieldLabel(type, "company_phone")}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {data.company_phone || "N/A"}
+                  </p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 

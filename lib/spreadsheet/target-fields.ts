@@ -7,6 +7,7 @@ export interface TargetField {
 }
 
 export const TARGET_FIELDS: TargetField[] = [
+  { key: "type", label: "Type", required: false },
   { key: "last_name", label: "Last Name", required: false },
   { key: "first_name", label: "First Name", required: false },
   { key: "email", label: "Email", required: false },

@@ -10,6 +10,7 @@ import {
 
 export const updateTarget = async (data: {
   id: string;
+  type?: "INDIVIDUAL" | "COMPANY";
   last_name?: string;
   first_name?: string;
   email?: string;

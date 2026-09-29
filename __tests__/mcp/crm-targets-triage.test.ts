@@ -137,9 +137,10 @@ describe("company-only targets (fork: last_name optional)", () => {
   });
 
   it("rejects a target with neither last_name nor company", async () => {
+    // type defaults to COMPANY, so the type-aware guard demands a company name.
     await expect(
       createThroughSchema({ industry: "Event / wedding venue" })
-    ).rejects.toThrow(/last_name or company/i);
+    ).rejects.toThrow(/requires a company name/i);
     expect(prismadb.crm_Targets.create).not.toHaveBeenCalled();
   });
 
