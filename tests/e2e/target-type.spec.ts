@@ -136,7 +136,7 @@ test.describe.serial("Target type (Individual vs Company)", () => {
     await gotoTargets(page);
 
     // One search input matches both the company name and the person's name.
-    await page.getByPlaceholder("Filter by name or company ...").fill(PREFIX);
+    await page.getByPlaceholder(/Filter by name/).fill(PREFIX);
     const companyRow = page.locator("table tbody tr", { hasText: COMPANY_NAME });
     const personRow = page.locator("table tbody tr", { hasText: PERSON_TITLE });
     await expect(companyRow).toHaveCount(1, { timeout: 10000 });
@@ -164,7 +164,7 @@ test.describe.serial("Target type (Individual vs Company)", () => {
 
   test("detail title is the company name for a Company target", async ({ page }) => {
     await gotoTargets(page);
-    await page.getByPlaceholder("Filter by name or company ...").fill(COMPANY_NAME);
+    await page.getByPlaceholder(/Filter by name/).fill(COMPANY_NAME);
     await openTypeRowMenuView(page, COMPANY_NAME);
 
     // The page heading (h2) is type-aware too: company name, not a blank person name.
@@ -183,7 +183,7 @@ test.describe.serial("Target type (Individual vs Company)", () => {
     page,
   }) => {
     await gotoTargets(page);
-    await page.getByPlaceholder("Filter by name or company ...").fill(PERSON_LAST);
+    await page.getByPlaceholder(/Filter by name/).fill(PERSON_LAST);
     await openTypeRowMenuView(page, PERSON_TITLE);
 
     await expect(

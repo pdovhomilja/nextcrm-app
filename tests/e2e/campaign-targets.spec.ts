@@ -88,7 +88,9 @@ test.describe.serial("Campaign Targets", () => {
     await page.goto("/en/campaigns/targets");
     await page.waitForLoadState("networkidle", { timeout: 15000 });
 
-    const filterInput = page.getByPlaceholder("Filter by name or company ...");
+    // Match the filter box by a stable prefix, not the exact placeholder text —
+    // the wording changes as filterable columns are added (e.g. "... industry ...").
+    const filterInput = page.getByPlaceholder(/Filter by name/);
     await expect(filterInput).toBeVisible({ timeout: 10000 });
 
     // Type something that matches nothing

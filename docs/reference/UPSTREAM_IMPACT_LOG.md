@@ -181,3 +181,41 @@ the many conditional wraps) and `BasicView.tsx`. Guards: `__tests__/lib/target-t
 | `inngest/functions/emails/embed-email.ts` | +1/−1 | **rewrite** | `concurrency: { limit: 10 }` → `{ limit: 5 }` — the declared limit exceeded the Inngest account plan limit (5), which failed the whole-app sync and prevented ALL functions from registering (enrichment, embeddings, email sync, campaigns, calendar). | Low |
 
 **Why:** surfaced only after the sharp fix let `/api/inngest` sync succeed — Inngest then validated function configs and rejected the app because `embedEmail` requested concurrency 10 > plan 5. Capping at 5 lets the app register. Raise again if the Inngest plan is upgraded. Upstream-contributable.
+
+---
+
+## fix/e2b-base-image — Repair the E2B enrichment template build  (PR: TBD)
+
+**1 upstream-owned file**, **rewrite**:
+
+| Upstream file | Kind | What / where | Risk |
+|---|---|---|---|
+| `e2b.Dockerfile` | **rewrite** | (1) `FROM e2b/nodejs:latest` → `FROM e2bdev/base:latest` — the old base image was removed from E2B's registry (`image not found`). (2) Split the npm install: `agent-browser`/`tsx` stay global (used as CLIs), but `@anthropic-ai/sdk` is installed **locally under `/home/user`** — the agent runs as `/home/user/agent.mjs` and ESM bare-import resolution ignores the global prefix/NODE_PATH. | Low |
+
+**Why:** `e2b template create nextcrm-enrichment` failed first on the missing base image, then at runtime with `ERR_MODULE_NOT_FOUND: @anthropic-ai/sdk`. Both are fixed; the template now builds and the sandbox agent runs (the remaining enrichment failure is a separate ANTHROPIC-credential issue, not the template). The template is built via the E2B CLI, not the app deploy, so this change is for reproducibility.
+
+---
+
+## feat/targets-list-name-cell — Clickable Name/Company + description tooltip + Industry filter  (PR: TBD)
+
+**3 upstream-owned files**, insertions only:
+
+| Upstream file | Kind | What / where | Risk |
+|---|---|---|---|
+| `.../campaigns/targets/table-components/columns.tsx` | **insert** | new `TargetLinkCell` helper — Name + Company cells become links to `/crm/targets/:id` (redirects to /campaigns/targets) and show a `description` hover tooltip; `industry` added to the Name filterFn; a `filterFn` added to the `industry` column so it can be faceted-filtered | Low |
+| `.../campaigns/targets/table-components/data-table-toolbar.tsx` | **insert** | Industry faceted filter (options derived from the data's distinct industries) + search placeholder update | Low |
+| `.../campaigns/targets/table-data/schema.tsx` | **insert** | `description` added to `targetSchema` (needed for the tooltip) | Low |
+
+**Note:** also carries the `e2b.Dockerfile` repair (base image + local sdk) folded into this branch per request — see the `fix/e2b-base-image` section above.
+
+---
+
+## feat/targets-list-name-cell — Account row-schema accepts null contact first_name  (PR: same PR, folded in per request)
+
+**1 upstream-owned file**, one-field relaxation:
+
+| Upstream file | Kind | What / where | Risk |
+|---|---|---|---|
+| `.../crm/accounts/table-data/schema.tsx` | **rewrite** (1 field) | `contacts[].first_name`: `z.string().optional()` → `z.string().nullish()`. `.optional()` rejects an explicit `null`; `crm_Contacts.first_name` is nullable in the DB and a company contact (created by a target→opportunity conversion) has none. The row-schema is parsed during render, so the null threw a ZodError → React #419 → "This page couldn't load" (client-side, no digest) on the accounts list and the opportunity detail (`AccountsView`). `last_name` left required (non-null in DB). | Low |
+
+**Why:** reproduced first-hand on QA (`/crm/opportunities/d98743b0…`) — console showed `ZodError … path ["contacts",0,"first_name"] expected string, received null`. Fix aligns the display schema with the DB's existing nullability; enforcement of individual names belongs on the write path, not this read schema. Guard: `__tests__/crm/account-schema.test.ts` (revert-verified). Upstream-contributable.

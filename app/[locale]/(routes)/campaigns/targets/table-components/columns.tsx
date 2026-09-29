@@ -17,7 +17,48 @@ import {
   targetTypeBadgeVariant,
   resolveTargetTitle,
 } from "@/lib/crm/target-type";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import moment from "moment";
+
+// A clickable cell that links to the target detail page (same /crm/targets/:id
+// route the row actions use — next.config redirects it to /campaigns/targets)
+// and, when the target has a description, shows it in a hover tooltip.
+function TargetLinkCell({
+  id,
+  text,
+  description,
+}: {
+  id: string;
+  text: string;
+  description?: string | null;
+}) {
+  if (!text) return null;
+  const link = (
+    <Link
+      href={`/crm/targets/${id}`}
+      onClick={(e) => e.stopPropagation()}
+      className="font-medium hover:underline"
+    >
+      {text}
+    </Link>
+  );
+  if (!description) return link;
+  return (
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>{link}</TooltipTrigger>
+        <TooltipContent className="max-w-sm whitespace-pre-wrap text-sm">
+          {description}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
 
 // Column order = display order. An adaptive Name column (company name for
 // companies, full name for individuals) leads after the select box, followed by
@@ -53,16 +94,24 @@ export const columns: ColumnDef<Target>[] = [
       <DataTableColumnHeader column={column} title="Name" />
     ),
     cell: ({ row }) => (
-      <div className="font-medium">{resolveTargetTitle(row.original)}</div>
+      <TargetLinkCell
+        id={row.original.id}
+        text={resolveTargetTitle(row.original)}
+        description={row.original.description}
+      />
     ),
-    // Search matches the resolved title plus company / first / last name, so
-    // both companies and individuals are findable from one input.
+    // Search matches the resolved title plus company / first / last name and
+    // industry, so both companies and individuals are findable from one input.
     filterFn: (row, _id, value) => {
       const q = String(value).toLowerCase();
       const r = row.original;
-      return [resolveTargetTitle(r), r.company, r.first_name, r.last_name].some(
-        (s) => (s ?? "").toLowerCase().includes(q)
-      );
+      return [
+        resolveTargetTitle(r),
+        r.company,
+        r.first_name,
+        r.last_name,
+        r.industry,
+      ].some((s) => (s ?? "").toLowerCase().includes(q));
     },
     enableSorting: true,
     enableHiding: false,
@@ -88,7 +137,11 @@ export const columns: ColumnDef<Target>[] = [
       <DataTableColumnHeader column={column} title="Company" />
     ),
     cell: ({ row }) => (
-      <div className="font-medium">{row.getValue("company")}</div>
+      <TargetLinkCell
+        id={row.original.id}
+        text={(row.getValue("company") as string | null) ?? ""}
+        description={row.original.description}
+      />
     ),
     enableSorting: true,
     enableHiding: true,
@@ -99,6 +152,7 @@ export const columns: ColumnDef<Target>[] = [
       <DataTableColumnHeader column={column} title="Industry" />
     ),
     cell: ({ row }) => <div className="">{row.getValue("industry")}</div>,
+    filterFn: (row, id, value) => value.includes(row.getValue(id)),
     enableSorting: true,
     enableHiding: true,
   },
