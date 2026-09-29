@@ -17,6 +17,20 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  TARGET_TYPE_OPTIONS,
+  normalizeTargetType,
+  requiredIdentityField,
+  isFieldForType,
+  fieldLabel,
+} from "@/lib/crm/target-type";
 
 type NewTargetFormProps = {
   onFinish: () => void;
@@ -46,6 +60,16 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
     employees:      z.string().optional(),
     description:    z.string().optional(),
     status: z.boolean(),
+    type: z.enum(["INDIVIDUAL", "COMPANY"]),
+  }).superRefine((v, ctx) => {
+    const required = requiredIdentityField(normalizeTargetType(v.type));
+    if (!v[required]?.trim()) {
+      ctx.addIssue({
+        code: "custom",
+        message: required === "company" ? "Company name is required" : "Last name is required",
+        path: [required],
+      });
+    }
   });
 
   type NewTargetFormValues = z.infer<typeof formSchema>;
@@ -54,6 +78,7 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
     resolver: zodResolver(formSchema),
     mode: "onBlur",
     defaultValues: {
+      type: "COMPANY",
       status: true,
       personal_email: "",
       company_email: "",
@@ -78,14 +103,45 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
       form.setError("root.serverError", { message: result.error });
     } else {
       toast.success("Target created successfully");
-      form.reset({ status: true });
+      form.reset({ status: true, type: "COMPANY" });
       onFinish();
     }
   };
 
+  const type = normalizeTargetType(form.watch("type"));
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 px-2">
+        <FormField
+          control={form.control}
+          name="type"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Type</FormLabel>
+              <Select
+                disabled={form.formState.isSubmitting}
+                value={field.value}
+                onValueChange={(value) => form.setValue("type", value as "INDIVIDUAL" | "COMPANY", { shouldDirty: true, shouldValidate: true })}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {TARGET_TYPE_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        {isFieldForType(type, "first_name") && (
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -114,6 +170,8 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
             )}
           />
         </div>
+        )}
+        {isFieldForType(type, "email") && (
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -142,6 +200,8 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
             )}
           />
         </div>
+        )}
+        {isFieldForType(type, "office_phone") && (
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -170,13 +230,14 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
             )}
           />
         </div>
+        )}
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="company"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Company</FormLabel>
+                <FormLabel>{fieldLabel(type, "company")}{type === "COMPANY" ? " *" : ""}</FormLabel>
                 <FormControl>
                   <Input disabled={form.formState.isSubmitting} placeholder="Acme Corp" {...field} />
                 </FormControl>
@@ -184,6 +245,7 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
               </FormItem>
             )}
           />
+        {isFieldForType(type, "company_website") && (
           <FormField
             control={form.control}
             name="company_website"
@@ -197,7 +259,9 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
               </FormItem>
             )}
           />
+        )}
         </div>
+        {isFieldForType(type, "personal_website") && (
         <FormField
           control={form.control}
           name="personal_website"
@@ -211,6 +275,7 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
             </FormItem>
           )}
         />
+        )}
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -268,25 +333,31 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
           />
         </div>
         <div className="grid grid-cols-2 gap-4">
+        {isFieldForType(type, "personal_email") && (
           <FormField control={form.control} name="personal_email" render={({ field }) => (
             <FormItem><FormLabel>Personal Email</FormLabel>
               <FormControl><Input placeholder="john@personal.com" {...field} value={field.value ?? ''} /></FormControl>
               <FormMessage />
             </FormItem>
           )} />
+        )}
+        {isFieldForType(type, "company_email") && (
           <FormField control={form.control} name="company_email" render={({ field }) => (
             <FormItem><FormLabel>Company Email</FormLabel>
               <FormControl><Input placeholder="info@company.com" {...field} value={field.value ?? ''} /></FormControl>
               <FormMessage />
             </FormItem>
           )} />
+        )}
         </div>
+        {isFieldForType(type, "company_phone") && (
         <FormField control={form.control} name="company_phone" render={({ field }) => (
           <FormItem><FormLabel>Company Phone</FormLabel>
             <FormControl><Input placeholder="+1 800 000 0000" {...field} value={field.value ?? ''} /></FormControl>
             <FormMessage />
           </FormItem>
         )} />
+        )}
         <div className="grid grid-cols-2 gap-4">
           <FormField control={form.control} name="city" render={({ field }) => (
             <FormItem><FormLabel>City</FormLabel>
@@ -301,6 +372,7 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
             </FormItem>
           )} />
         </div>
+        {isFieldForType(type, "industry") && (
         <div className="grid grid-cols-2 gap-4">
           <FormField control={form.control} name="industry" render={({ field }) => (
             <FormItem><FormLabel>Industry</FormLabel>
@@ -315,6 +387,7 @@ export function NewTargetForm({ onFinish }: NewTargetFormProps) {
             </FormItem>
           )} />
         </div>
+        )}
         <FormField control={form.control} name="description" render={({ field }) => (
           <FormItem><FormLabel>Description</FormLabel>
             <FormControl><Input placeholder="Short company description" {...field} value={field.value ?? ''} /></FormControl>
