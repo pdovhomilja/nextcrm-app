@@ -19,10 +19,12 @@ import {
 } from "@/lib/crm/target-type";
 import moment from "moment";
 
-// Column order = display order. Company / Industry / Website / Status / Triage
-// lead; the person-centric fields (name, email, phone, position) and the created
-// date follow and are hidden by default (still toggleable via the View menu, and
-// the choice is persisted per environment — see data-table.tsx).
+// Column order = display order. An adaptive Name column (company name for
+// companies, full name for individuals) leads after the select box, followed by
+// Type / Company / Industry / Website / Status / Triage. The person-centric
+// fields (first/last name, email, phone, position) and the created date are
+// hidden by default (still toggleable via the View menu, and the choice is
+// persisted per environment — see data-table.tsx).
 export const columns: ColumnDef<Target>[] = [
   {
     id: "select",
@@ -46,13 +48,23 @@ export const columns: ColumnDef<Target>[] = [
   },
   {
     id: "name",
+    accessorFn: (row) => resolveTargetTitle(row),
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Name" />
     ),
     cell: ({ row }) => (
       <div className="font-medium">{resolveTargetTitle(row.original)}</div>
     ),
-    enableSorting: false,
+    // Search matches the resolved title plus company / first / last name, so
+    // both companies and individuals are findable from one input.
+    filterFn: (row, _id, value) => {
+      const q = String(value).toLowerCase();
+      const r = row.original;
+      return [resolveTargetTitle(r), r.company, r.first_name, r.last_name].some(
+        (s) => (s ?? "").toLowerCase().includes(q)
+      );
+    },
+    enableSorting: true,
     enableHiding: false,
   },
   {
