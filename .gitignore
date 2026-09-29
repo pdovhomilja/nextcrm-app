@@ -77,3 +77,4 @@ v8-compile-cache-*/
 
 #superpowers plugin
 .superpowers/
+qa-targets-import.csv
