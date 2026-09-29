@@ -61,7 +61,7 @@ find and delete them afterward.
 
 **E2E:** `tests/e2e/target-type.spec.ts` › `list shows Type badges and the Type filter narrows results`
 
-1. In the targets list, type the shared prefix (e.g. `PWTYPE`) into **Filter by name or company ...**.
+1. In the targets list, type the shared prefix (e.g. `PWTYPE`) into **Filter by name, company, industry ...**.
 2. **Verify:** both new rows appear — the company row shows its company name, the individual row shows the person's full name (`Jane PWTYPEDoe`).
 3. **Verify:** the company row has a **Company** badge and the individual row has an **Individual** badge in the **Type** column.
 4. Open the **Type** faceted filter and select **Individual**.
