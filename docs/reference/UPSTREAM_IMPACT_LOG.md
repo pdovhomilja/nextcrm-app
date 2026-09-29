@@ -169,3 +169,15 @@ the many conditional wraps) and `BasicView.tsx`. Guards: `__tests__/lib/target-t
 - The `last_name = company` cleanup only touches rows where the MCP load duplicated the company name.
 - The whole feature is **upstream-contributable in principle** but is opinionated (co-equal
   Individual/Company targets); contribute only from a clean upstream base if upstream wants it.
+
+---
+
+## fix/inngest-concurrency-limit — embedEmail concurrency within Inngest plan  (PR: TBD)
+
+**1 upstream-owned file**, **rewrite** (one value):
+
+| Upstream file | +/− | Kind | What / where | Risk |
+|---|---|---|---|---|
+| `inngest/functions/emails/embed-email.ts` | +1/−1 | **rewrite** | `concurrency: { limit: 10 }` → `{ limit: 5 }` — the declared limit exceeded the Inngest account plan limit (5), which failed the whole-app sync and prevented ALL functions from registering (enrichment, embeddings, email sync, campaigns, calendar). | Low |
+
+**Why:** surfaced only after the sharp fix let `/api/inngest` sync succeed — Inngest then validated function configs and rejected the app because `embedEmail` requested concurrency 10 > plan 5. Capping at 5 lets the app register. Raise again if the Inngest plan is upgraded. Upstream-contributable.
