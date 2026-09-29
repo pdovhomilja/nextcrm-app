@@ -12,6 +12,11 @@ import {
   triageStatusLabel,
   triageBadgeVariant,
 } from "../table-data/triage-options";
+import {
+  targetTypeLabel,
+  targetTypeBadgeVariant,
+  resolveTargetTitle,
+} from "@/lib/crm/target-type";
 import moment from "moment";
 
 // Column order = display order. Company / Industry / Website / Status / Triage
@@ -38,6 +43,32 @@ export const columns: ColumnDef<Target>[] = [
     ),
     enableSorting: false,
     enableHiding: false,
+  },
+  {
+    id: "name",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Name" />
+    ),
+    cell: ({ row }) => (
+      <div className="font-medium">{resolveTargetTitle(row.original)}</div>
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
+    accessorKey: "type",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Type" />
+    ),
+    cell: ({ row }) => {
+      const v = (row.getValue("type") as string) ?? "COMPANY";
+      return (
+        <Badge variant={targetTypeBadgeVariant(v)}>{targetTypeLabel(v)}</Badge>
+      );
+    },
+    filterFn: (row, id, value) => value.includes(row.getValue(id)),
+    enableSorting: true,
+    enableHiding: true,
   },
   {
     accessorKey: "company",
