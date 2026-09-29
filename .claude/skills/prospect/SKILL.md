@@ -49,10 +49,13 @@ Derive the working vertical set (given, or spread across sensible local vertical
 and the geography breadth. Pick a per-vertical over-fetch target above the naive
 share of N, since dedup + disqualification will trim the batch.
 
-## 4. Fetch existing CRM websites (for dedup)
+## 4. Fetch existing CRM records (for dedup)
 
 Page through `crm_list_targets` (chosen environment) and collect every existing
-`company_website`. Keep this list — it feeds the top-up loop's net-new count.
+record's **`company_website` AND `company`** (name). Keep these — they feed the
+top-up loop's net-new count. Collecting the name matters: pre-parity rows (and any
+imported without a site) can have a blank `company_website`, so website-only dedup
+would miss them — name dedup catches them.
 
 ## 5. Parallel research
 
@@ -65,24 +68,31 @@ industry, email, description).
 
 ## 6. Top-up loop (reach N net-new qualified)
 
-Consolidate the returned candidates. Compute the net-new set with the dedup helper
-against the existing-CRM websites **and** within-batch:
+Consolidate the returned candidates. Compute the net-new set with
+**`filterNewProspects`** — it dedups on normalized **website OR company name**
+against the existing CRM records (step 4) **and** within the batch. Write the two
+arrays to temp JSON and run the helper (fill both files — do not paste the snippet
+with the `/* … */` placeholders unedited):
 
 ```bash
-node -e '
-import("./.claude/skills/prospect/scripts/dedupe.mjs").then(({ filterNewByWebsite }) => {
-  const candidates = /* array of {company_website,...} */;
-  const existing = /* array of existing company_website strings */;
-  const { kept, skipped } = filterNewByWebsite(candidates, existing);
-  console.log(JSON.stringify({ kept: kept.length, skipped: skipped.length }));
-});'
+# candidates.json = the research records [{company, company_website, ...}, ...]
+# existing.json   = the step-4 records    [{company, company_website}, ...]
+node --input-type=module -e '
+import { filterNewProspects } from "./.claude/skills/prospect/scripts/dedupe.mjs";
+import { readFileSync } from "node:fs";
+const candidates = JSON.parse(readFileSync(process.argv[1], "utf8"));
+const existing = JSON.parse(readFileSync(process.argv[2], "utf8"));
+const { kept, skipped } = filterNewProspects(candidates, existing);
+console.log(JSON.stringify({ keptCount: kept.length, skippedCount: skipped.length, kept }));
+' candidates.json existing.json
 ```
 
-(or import `filterNewByWebsite` directly). If the count of net-new qualified is
+Use the returned **`kept`** set as the net-new qualified prospects. If its count is
 below N, dispatch more research — more candidates in the same verticals first, then
-broaden geography — and repeat. **Stop at N, or at an attempt cap of 4 top-up
-rounds.** If still short, proceed with what cleared and **report the shortfall and
-why** (e.g. "niche exhausted for this geography").
+broaden geography — and repeat, adding each round's finds to `existing.json` so
+they don't re-dupe. **Stop at N, or at an attempt cap of 4 top-up rounds.** If still
+short, proceed with what cleared and **report the shortfall and why** (e.g. "niche
+exhausted for this geography").
 
 ## 7. Rank
 

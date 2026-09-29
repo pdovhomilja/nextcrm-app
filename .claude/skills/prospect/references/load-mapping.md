@@ -15,11 +15,17 @@ The load needs `crm_create_target` to accept the full field set (`company_websit
 prod parity deploy advertises an old 7-field schema and silently **strips** those
 fields.
 
-Guard against it: create the **first** target with `company_website` set, then read
-the returned record. **If `company_website` came back `null`, the fields are being
-stripped — ABORT THE LOAD.** Tell the user to re-run `/prospect` in a session
-started after the parity deploy (or import the CSV via the app), delete the stray
-first target (`crm_delete_target`), and stop. Do not create the rest.
+Guard against it: create the **first** target of the ranked net-new set with
+`company_website` set. Inspect the field on the **record `crm_create_target`
+returns** (it returns the full row); if the response is only an id, fetch it with
+`crm_get_target` and inspect that. **If `company_website` is `null`/absent, the
+fields are being stripped — ABORT THE LOAD:** delete the stray target
+(`crm_delete_target`), tell the user to re-run `/prospect` in a session started
+after the parity deploy (or import the CSV via the app), and stop. Do not create the
+rest.
+
+If `company_website` is present, the check passed **and this first target counts as
+loaded target #1** — continue from the second target in §4 (do not re-create #1).
 
 ## 3. Create (or reuse) the target list
 
@@ -34,9 +40,10 @@ Via `crm_create_target_list`:
 
 If a list with the same name already exists (`crm_list_target_lists`), reuse it.
 
-## 4. Create each target
+## 4. Create the remaining targets
 
-Via `crm_create_target`, using the mapping:
+The §2 parity-probe is already loaded as target #1 — create targets **#2..N** here
+(don't re-create #1). Via `crm_create_target`, using the mapping:
 
 | Field | Value |
 |---|---|
@@ -57,6 +64,7 @@ call (`target_ids` array, plus `target_list_id`).
 
 ## 6. Dedup note
 
-The set handed here is already net-new — it was filtered with `filterNewByWebsite`
-(`scripts/dedupe.mjs`) against the CRM and within-batch in `SKILL.md` step 6. Do not
-re-load anything in the skipped list.
+The set handed here is already net-new — it was filtered with `filterNewProspects`
+(`scripts/dedupe.mjs`), which dedups on normalized **website OR company name**
+against the CRM and within-batch in `SKILL.md` step 6 (name dedup catches existing
+rows with a blank/different website). Do not re-load anything in the skipped list.

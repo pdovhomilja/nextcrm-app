@@ -26,3 +26,49 @@ export function filterNewByWebsite(candidates, existingUrls) {
   }
   return { kept, skipped };
 }
+
+// Normalize a company name to a comparison key: lowercase, drop common legal
+// suffixes, strip punctuation, collapse whitespace. Secondary dedup key — catches
+// existing CRM rows that have a blank/different website (e.g. pre-parity rows).
+const LEGAL_SUFFIXES = new Set([
+  "llc", "l.l.c", "inc", "incorporated", "co", "corp", "corporation",
+  "ltd", "limited", "pllc", "pc", "pa", "llp", "lp",
+]);
+
+export function normalizeCompanyName(name) {
+  const words = String(name || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ") // strip punctuation (incl. & , . -)
+    .split(/\s+/)
+    .filter(Boolean)
+    .filter((w) => !LEGAL_SUFFIXES.has(w));
+  return words.join(" ");
+}
+
+// Dedup candidates against existing CRM records by normalized website OR company
+// name (and within the candidate batch). `existing` is an array of records that
+// have company_website and/or company. Spec §5.4/§6: match by website, then name.
+export function filterNewProspects(candidates, existing) {
+  const seenUrls = new Set();
+  const seenNames = new Set();
+  for (const e of existing || []) {
+    const u = normalizeSiteUrl(e.company_website);
+    if (u) seenUrls.add(u);
+    const n = normalizeCompanyName(e.company);
+    if (n) seenNames.add(n);
+  }
+  const kept = [];
+  const skipped = [];
+  for (const c of candidates) {
+    const u = normalizeSiteUrl(c.company_website);
+    const n = normalizeCompanyName(c.company);
+    if ((u && seenUrls.has(u)) || (n && seenNames.has(n))) {
+      skipped.push(c);
+      continue;
+    }
+    if (u) seenUrls.add(u);
+    if (n) seenNames.add(n);
+    kept.push(c);
+  }
+  return { kept, skipped };
+}
