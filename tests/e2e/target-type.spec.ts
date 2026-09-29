@@ -89,6 +89,8 @@ test.describe.serial("Target type (Individual vs Company)", () => {
     await page.getByRole("button", { name: "Create target" }).click();
 
     await assertSuccessToast(page);
+    // The create sheet closes on success.
+    await expect(page.getByText("Create new Target")).toBeHidden({ timeout: 10000 });
     await page.waitForLoadState("networkidle", { timeout: 15000 });
   });
 
@@ -123,6 +125,8 @@ test.describe.serial("Target type (Individual vs Company)", () => {
     await page.getByRole("button", { name: "Create target" }).click();
 
     await assertSuccessToast(page);
+    // The create sheet closes on success.
+    await expect(page.getByText("Create new Target")).toBeHidden({ timeout: 10000 });
     await page.waitForLoadState("networkidle", { timeout: 15000 });
   });
 
@@ -163,6 +167,10 @@ test.describe.serial("Target type (Individual vs Company)", () => {
     await page.getByPlaceholder("Filter by name or company ...").fill(COMPANY_NAME);
     await openTypeRowMenuView(page, COMPANY_NAME);
 
+    // The page heading (h2) is type-aware too: company name, not a blank person name.
+    await expect(
+      page.getByRole("heading", { name: `Target detail view: ${COMPANY_NAME}`, level: 2 })
+    ).toBeVisible({ timeout: 10000 });
     const title = detailTitle(page, COMPANY_NAME);
     await expect(title).toBeVisible({ timeout: 10000 });
     await expect(title).toContainText("Company");
@@ -178,6 +186,9 @@ test.describe.serial("Target type (Individual vs Company)", () => {
     await page.getByPlaceholder("Filter by name or company ...").fill(PERSON_LAST);
     await openTypeRowMenuView(page, PERSON_TITLE);
 
+    await expect(
+      page.getByRole("heading", { name: `Target detail view: ${PERSON_TITLE}`, level: 2 })
+    ).toBeVisible({ timeout: 10000 });
     const title = detailTitle(page, PERSON_TITLE);
     await expect(title).toBeVisible({ timeout: 10000 });
     await expect(title).toContainText("Individual");

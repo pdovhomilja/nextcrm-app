@@ -130,7 +130,7 @@ if merged upstream.
 
 ## feat/target-type — Individual vs Company target type  (PR: TBD)
 
-**14 upstream-owned files** touched (13 source + 1 E2E spec). Everything type-specific lives in the
+**15 upstream-owned files** touched (14 source + 1 E2E spec). Everything type-specific lives in the
 **fork-owned** `lib/crm/target-type.ts` (taxonomy, required-identity rule, title resolver, labels);
 the upstream files only get thin hooks that call it. Also fork-owned/new (no merge risk): the
 migration `prisma/migrations/20260928130000_target_type/`, `__tests__/lib/target-type.test.ts`,
@@ -153,7 +153,8 @@ migration `prisma/migrations/20260928130000_target_type/`, `__tests__/lib/target
 | `actions/crm/targets/import-targets.ts` | **insert** | optional `type` row value; defaults `COMPANY`. | Low |
 | `actions/crm/targets/suggest-mapping.ts` | **insert** | `type` added to **its own hardcoded** target-field array (it does not read `target-fields.ts`). | Low |
 | `lib/spreadsheet/target-fields.ts` | **insert** | `type` field added to the importable set — **side effect:** CSV/XLSX **export** now also emits a Type column. | Low |
-| `tests/e2e/campaign-targets.spec.ts` | **edit (test only)** | "create with all fields" now selects **Individual** first and drops company-only fills (company is the default type and hides person fields); list-filter placeholder → "Filter by name or company ..."; detail check "Company" → "Employer". | Low |
+| `…/campaigns/targets/[targetId]/page.tsx` | **insert + one-line rewrite** | imports `resolveTargetTitle`; the container heading `Target detail view: ${first_name} ${last_name}` becomes `Target detail view: ${resolveTargetTitle(target)}` (a Company otherwise rendered a blank title). | Low |
+| `tests/e2e/campaign-targets.spec.ts` | **edit (test only)** | "create with all fields" now selects **Individual** first and drops company-only fills (company is the default type and hides person fields); list-filter placeholder and test title → name-or-company; detail check "Company" → "Employer". | Low |
 
 **Re-verify after any upstream merge:** `git diff <merge-base> upstream/main -- <each file above>`. The
 friction points are `columns.tsx` (column array), `UpdateTargetForm.tsx` (the `last_name` schema line +

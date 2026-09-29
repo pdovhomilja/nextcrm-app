@@ -84,7 +84,7 @@ test.describe.serial("Campaign Targets", () => {
     await page.waitForLoadState("networkidle", { timeout: 15000 });
   });
 
-  test("should filter targets by last name", async ({ page }) => {
+  test("should filter targets by name or company", async ({ page }) => {
     await page.goto("/en/campaigns/targets");
     await page.waitForLoadState("networkidle", { timeout: 15000 });
 

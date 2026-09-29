@@ -75,9 +75,9 @@ find and delete them afterward.
 and `detail title is the person's full name for an Individual target`
 
 1. Filter to the Company target, open its **⋮** row menu, and click **View**.
-2. **Verify:** the detail card title is the **company name** with a **Company** badge, and Industry is shown while Position is not.
+2. **Verify:** the page heading reads **Target detail view: <company name>** and the detail card title is the **company name** with a **Company** badge, and Industry is shown while Position is not.
 3. Go back, filter to the Individual target, and open **View**.
-4. **Verify:** the detail card title is the person's **full name** with an **Individual** badge, and Position is shown while Industry is not.
+4. **Verify:** the page heading reads **Target detail view: <full name>** and the detail card title is the person's **full name** with an **Individual** badge, and Position is shown while Industry is not.
 
 ---
 
@@ -85,6 +85,3 @@ and `detail title is the person's full name for an Individual target`
 
 - **Update form / CSV import / MCP** type handling are covered by Jest
   (`__tests__/actions/*-type.test.ts`, `__tests__/mcp/crm-targets-type.test.ts`), not E2E.
-- **Detail page header** (`[targetId]/page.tsx`, the outer "Target detail view: …" container title)
-  still builds its text from first/last name and is not yet type-aware; the card title asserted above
-  is.
