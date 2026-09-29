@@ -144,6 +144,21 @@
 
 ## Database / migrations
 
+### `prisma migrate dev` is interactive — it can't author a migration in an agent shell
+
+- **Symptom:** `pnpm exec prisma migrate dev --name X` aborts with *"Prisma Migrate has
+  detected that the environment is non-interactive"* (often after applying a pending
+  migration first), so no new migration file is created.
+- **Cause:** `migrate dev` needs a TTY (it prompts, uses a shadow DB, and can offer a
+  reset). Agent/non-TTY shells don't provide one.
+- **Fix / rule:** hand-author the migration file the way this repo already does —
+  `prisma/migrations/<timestamp>_<name>/migration.sql`, additive and idempotent
+  (`CREATE TYPE … EXCEPTION WHEN duplicate_object`, `ADD COLUMN IF NOT EXISTS`,
+  `CREATE INDEX IF NOT EXISTS`) — then apply with `prisma migrate deploy` (non-inter-
+  active) and `prisma generate`. This matches the enum/column migrations already in
+  the repo and is exactly what CI's build runs.
+- **Tell:** the error text says "non-interactive"; `migrate deploy` has no such gate.
+
 ### Never `prisma db push` — every schema change is a committed migration
 
 - **Symptom:** schema is fine locally but a deployed environment has the wrong or
@@ -216,6 +231,20 @@
 - **Tell:** "no OTP email in dev" + a dummy/placeholder `RESEND_API_KEY` in `.env`.
 
 ## MCP server / integrations
+
+### An MCP tool's Zod schema silently strips undeclared fields — keep it at parity with the write path
+
+- **Symptom:** `crm_create_target` "accepted" `company_website`/`industry`/`city` (no
+  error) but they never landed in the DB — the handler forwarded them via `...rest`, yet
+  they were gone before it ran.
+- **Cause:** the tool validates args with `z.object({...}).parse()`, which **drops keys
+  the schema doesn't declare**. So a field missing from the schema is stripped at the
+  boundary, even though the handler would happily persist it. A test that calls the
+  handler directly passes (it bypasses the schema) — the gap only shows through `.parse()`.
+- **Fix / rule:** keep MCP create/update schemas at parity with the real write surface
+  (here: `lib/spreadsheet/target-fields.ts`, the CSV importable set), and assert parity
+  in a test that reads the schema `.shape` — don't test the handler in isolation.
+- **Tell:** an MCP write "succeeds" but a field is missing afterward, with no validation error.
 
 ### The MCP Streamable-HTTP transport path is `/api/mcp/mcp`, not `/api/mcp/http`
 
