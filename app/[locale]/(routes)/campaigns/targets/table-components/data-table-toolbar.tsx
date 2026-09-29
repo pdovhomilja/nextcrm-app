@@ -29,6 +29,16 @@ export function DataTableToolbar<TData>({
         .map((v) => ({ label: v, value: v }))
     : [];
 
+  // The "lists" column accessor returns each target's ACTIVE list names, so the
+  // faceted options here are exactly the active lists present in the data.
+  const listsColumn = table.getColumn("lists");
+  const listOptions = listsColumn
+    ? Array.from(listsColumn.getFacetedUniqueValues().keys())
+        .filter((v): v is string => typeof v === "string" && v.length > 0)
+        .sort((a, b) => a.localeCompare(b))
+        .map((v) => ({ label: v, value: v }))
+    : [];
+
   return (
     <div className="flex items-center justify-between">
       <div className="flex flex-1 items-center space-x-2">
@@ -61,6 +71,13 @@ export function DataTableToolbar<TData>({
             column={industryColumn}
             title="Industry"
             options={industryOptions}
+          />
+        )}
+        {listsColumn && listOptions.length > 0 && (
+          <DataTableFacetedFilter
+            column={listsColumn}
+            title="List"
+            options={listOptions}
           />
         )}
         {isFiltered && (

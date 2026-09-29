@@ -19,6 +19,7 @@ import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
 import { toast } from "sonner";
 import { deleteTargetList } from "@/actions/crm/target-lists/delete-target-list";
+import { updateTargetList } from "@/actions/crm/target-lists/update-target-list";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -47,6 +48,21 @@ export function DataTableRowActions<TData>({
     router.refresh();
   };
 
+  const onToggleStatus = async () => {
+    const result = await updateTargetList({
+      id: targetList.id,
+      status: !targetList.status,
+    });
+    if (result?.error) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success(
+      targetList.status ? "Target list deactivated" : "Target list activated"
+    );
+    router.refresh();
+  };
+
   return (
     <>
       <AlertModal
@@ -70,6 +86,9 @@ export function DataTableRowActions<TData>({
             onClick={() => router.push(`/crm/target-lists/${targetList?.id}`)}
           >
             View
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onToggleStatus}>
+            {targetList?.status ? "Deactivate" : "Activate"}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setOpen(true)}>

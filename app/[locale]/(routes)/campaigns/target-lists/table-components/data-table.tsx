@@ -28,6 +28,7 @@ import {
 import { DataTablePagination } from "./data-table-pagination";
 import { DataTableToolbar } from "./data-table-toolbar";
 import { PanelTopClose, PanelTopOpen } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -47,6 +48,7 @@ export function TargetListsDataTable<TData, TValue>({
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
   const [hide, setHide] = React.useState(false);
+  const router = useRouter();
 
   const table = useReactTable({
     data,
@@ -122,9 +124,24 @@ export function TargetListsDataTable<TData, TValue>({
                     <TableRow
                       key={row.id}
                       data-state={row.getIsSelected() && "selected"}
+                      className="cursor-pointer"
+                      onClick={() =>
+                        router.push(
+                          `/crm/target-lists/${(row.original as { id: string }).id}`
+                        )
+                      }
                     >
                       {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
+                        <TableCell
+                          key={cell.id}
+                          onClick={
+                            // The actions dropdown handles its own clicks — don't
+                            // let a click there also navigate to the detail page.
+                            cell.column.id === "actions"
+                              ? (e) => e.stopPropagation()
+                              : undefined
+                          }
+                        >
                           {flexRender(
                             cell.column.columnDef.cell,
                             cell.getContext()

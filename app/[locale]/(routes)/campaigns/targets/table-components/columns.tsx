@@ -66,6 +66,17 @@ function TargetLinkCell({
 // fields (first/last name, email, phone, position) and the created date are
 // hidden by default (still toggleable via the View menu, and the choice is
 // persisted per environment — see data-table.tsx).
+// Active target-list names this target belongs to — powers the "List" faceted
+// filter. Defined once so the column's accessor and getUniqueValues agree
+// (getFacetedUniqueValues counts what getUniqueValues returns, and the default
+// would treat the whole array as one opaque key).
+function activeListNames(row: Target): string[] {
+  return (row.target_lists ?? [])
+    .filter((l) => l.target_list?.status)
+    .map((l) => l.target_list?.name ?? "")
+    .filter((n) => n.length > 0);
+}
+
 export const columns: ColumnDef<Target>[] = [
   {
     id: "select",
@@ -273,6 +284,31 @@ export const columns: ColumnDef<Target>[] = [
     ),
     cell: ({ row }) => <div className="">{row.getValue("position")}</div>,
     enableSorting: true,
+    enableHiding: true,
+  },
+  {
+    // Filter-only column (hidden by default via DEFAULT_COLUMN_VISIBILITY):
+    // powers the faceted "List" filter. Accessor returns the names of the
+    // ACTIVE lists this target belongs to, so inactive lists never appear as
+    // options and a target only matches via a currently-active list.
+    id: "lists",
+    accessorFn: (row) => activeListNames(row),
+    // Flatten to individual names so the faceted filter lists each active list
+    // (the default would key the facet on the whole array).
+    getUniqueValues: (row) => activeListNames(row),
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Lists" />
+    ),
+    cell: ({ row }) => (
+      <div className="max-w-[220px] truncate">
+        {((row.getValue("lists") as string[]) ?? []).join(", ")}
+      </div>
+    ),
+    filterFn: (row, id, value) => {
+      const names = (row.getValue(id) as string[]) ?? [];
+      return (value as string[]).some((v) => names.includes(v));
+    },
+    enableSorting: false,
     enableHiding: true,
   },
   {
