@@ -20,6 +20,23 @@ resolve by hand. Re-run the entry's named tests to confirm the wiring survived.
 
 ---
 
+## fix/runtime-transaction-pooler — runtime uses the transaction pooler  (PR: TBD)
+
+Routes the serverless runtime Prisma pool through an optional
+`RUNTIME_DATABASE_URL` (Supabase transaction pooler `:6543`) so warm instances
+multiplex instead of exhausting the session pooler (`EMAXCONNSESSION` →
+`FAILED_TO_GET_SESSION` app-wide). All logic is in the new fork-owned
+`lib/db/runtime-database-url.ts` (zero merge risk). **1 upstream-owned file** touched:
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `lib/prisma.ts` | +5/-1 | **mixed** | insert: import of `resolveRuntimeDatabaseUrl`. rewrite: the single `connectionString` line now calls the resolver (`RUNTIME_DATABASE_URL` → else `DATABASE_URL`) instead of reading `DATABASE_URL` directly, plus a 3-line comment. This file is already fork-diverged (the `DB_POOL_MAX` pool + error handler). `prisma.config.ts`/`schema.prisma` intentionally **untouched** — migrations keep using `DATABASE_URL`. | Low |
+
+New fork-owned files (no merge risk): `lib/db/runtime-database-url.ts`,
+`__tests__/db/runtime-database-url.test.ts`. **Re-verify after an upstream merge:**
+`__tests__/db/runtime-database-url.test.ts`, and that `lib/prisma.ts` still calls
+`resolveRuntimeDatabaseUrl()` for the pool `connectionString`.
+
 ## feat/web-lead-source-status-assignee — public web-lead intake gains source/status/assignee  (PR: TBD)
 
 Extends the public "create lead from web" endpoint to capture `description` and

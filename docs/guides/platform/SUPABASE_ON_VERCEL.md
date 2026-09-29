@@ -56,8 +56,20 @@ query" across every route at one instant.
 - **Cap `DB_POOL_MAX` on every env scope** (DEV, QA, PRODUCTION) — a prod-only fix
   leaves QA exposed. The kit ships `DB_POOL_MAX=3`. **Never `1`** — a 1-connection
   pool deadlocks concurrent-query prerenders (pages issue multiple queries per
-  render).
-- **For launch traffic, move request handlers to the transaction pooler (6543).**
+  render). Note the per-instance cap alone can't save you: enough concurrent warm
+  instances (instances × `DB_POOL_MAX`) still overrun a 15-connection session pool.
+- **For launch traffic, move request handlers to the transaction pooler (6543)** —
+  it multiplexes, so N warm instances stop each holding a dedicated session. In
+  this fork the runtime reads **`RUNTIME_DATABASE_URL`** (the `:6543` string) via
+  `lib/db/runtime-database-url.ts`; `DATABASE_URL` stays on the **session** pooler
+  (`:5432`) because `prisma migrate deploy` (run in the Vercel build) needs it, and
+  the runtime falls back to it when `RUNTIME_DATABASE_URL` is blank. **Roll out per
+  scope, QA/Preview first, then Production** — a missing/blank value is a safe no-op
+  (runtime keeps using `DATABASE_URL`), so nothing can break a deploy.
+  - The `:6543` string is the `:5432` one with the port changed — same host
+    (`…pooler.supabase.com`), same `postgres.<ref>` user, same password/db.
+  - Do **not** point `DATABASE_URL` itself at `:6543`: transaction mode breaks
+    `prisma migrate deploy` (DDL/advisory locks). Only the runtime var moves.
 - **Co-locate the DB region with the Vercel region.** Connection *mode* never fixes
   geography: one project saw avg query time drop **~900 ms → ~33 ms** purely from
   putting the DB in the same region as the compute. A cross-region hop dwarfs any
@@ -99,7 +111,9 @@ itself has one.
 ## Quick reference
 
 - `DATABASE_URL` → shared pooler host, `postgres.<ref>` user, port **5432** for
-  `prisma migrate deploy`/build.
+  `prisma migrate deploy`/build (and the runtime fallback).
+- `RUNTIME_DATABASE_URL` → same host/user, port **6543** (transaction) for the
+  serverless runtime pool; optional, falls back to `DATABASE_URL`; QA before Prod.
 - `DB_POOL_MAX` → set on **all** scopes; never `1`.
 - DB region == Vercel region.
 - Every `pg.Pool` (including the one behind `@prisma/adapter-pg`) → a
