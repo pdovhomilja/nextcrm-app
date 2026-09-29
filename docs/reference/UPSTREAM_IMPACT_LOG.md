@@ -50,3 +50,28 @@ touched, all **insertion-only** (0 rewrites of upstream logic):
   tool array. The lone non-insert is a 1-line lint cleanup in `audit-log.ts`.
 - The `crm_create_target`/`crm_update_target` field-parity additions are
   **upstream-contributable** — merging them upstream would remove that divergence.
+
+---
+
+## fix/inngest-sharp-load — Defer sharp's native load out of the Inngest serve route  (PR: TBD)
+
+**1 upstream-owned file** touched, **insertion-only** logic (an equivalent import swap, no
+upstream logic rewritten):
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `inngest/functions/documents/generate-thumbnail.ts` | +5/−1 | **swap** | remove top-level `import sharp from "sharp"`; add `const sharp = (await import("sharp")).default;` inside the handler before first use (+4-line explanatory comment) | Low |
+
+**Why:** a top-level `import sharp` makes sharp's native libvips binding load when
+`app/api/inngest/route.ts` imports this function. On Vercel that native load fails
+(`ERR_DLOPEN_FAILED: libvips-cpp.so…`), 500-ing the whole serve route → Inngest sync and
+every function break. Lazy-loading defers the native load to actual thumbnail generation,
+so the route (and all other functions) import cleanly.
+
+**Re-verify after any upstream merge:**
+`git diff <merge-base> upstream/main -- inngest/functions/documents/generate-thumbnail.ts` —
+if upstream restored the top-level import, re-apply the lazy import. Confirm `/api/inngest`
+returns 200 on a Vercel deploy and the app syncs.
+
+**Note:** upstream-contributable — the lazy import is a strict improvement (native module
+loaded only when used) and would remove this divergence if merged upstream.

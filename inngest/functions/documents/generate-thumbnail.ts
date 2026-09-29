@@ -2,7 +2,6 @@ import { inngest } from "@/inngest/client";
 import { prismadb } from "@/lib/prisma";
 import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { minioClient, MINIO_BUCKET } from "@/lib/minio";
-import sharp from "sharp";
 
 const THUMB_WIDTH = 200;
 const THUMB_HEIGHT = 200;
@@ -41,6 +40,11 @@ export const generateDocumentThumbnail = inngest.createFunction(
     }
 
     const buffer = await fetchFileBuffer(document.key);
+    // Lazy-load sharp: importing it at module scope makes its native libvips
+    // binding load when the Inngest serve route (app/api/inngest) is imported,
+    // and a load failure there 500s the whole route — breaking sync and every
+    // Inngest function. Only this handler needs sharp, so import it here.
+    const sharp = (await import("sharp")).default;
     const thumbnail = await sharp(buffer)
       .resize(THUMB_WIDTH, THUMB_HEIGHT, { fit: "cover" })
       .png()
