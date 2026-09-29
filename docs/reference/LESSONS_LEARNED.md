@@ -277,6 +277,46 @@
   login). Production's custom domain is not protection-gated, so prod needs neither.
 - **Tell:** a 401 whose JSON mentions `vercel.com/sso-api` — that's Vercel's gate, not the app.
 
+## Background jobs / Inngest
+
+### A top-level native-module import in ANY Inngest function 500s the whole `/api/inngest` route on Vercel
+
+- **Symptom:** every request to `/api/inngest` (GET/POST/PUT) returns **500** on Vercel;
+  Inngest can't sync the app ("Sync new app" → *internal server error response from url*),
+  the branch/custom environment never registers, and events 404 with
+  `Inngest API Error: 404 Branch environment does not exist`. Downstream, everything that
+  dispatches Inngest events (enrichment, embeddings, email sync, campaign sends, calendar)
+  looks broken with unrelated-seeming errors (e.g. the UI's generic "failed to start
+  enrichment"). Works fine on local Mac dev, so it only shows up once deployed.
+- **Cause:** `app/api/inngest/route.ts` eagerly imports **all** functions. One function did
+  a top-level `import sharp from "sharp"`, so sharp's native libvips binding loaded when the
+  route module was imported. On Vercel's serverless runtime that `.so` isn't loadable
+  (`ERR_DLOPEN_FAILED: libvips-cpp.so…`) → the route throws at import time → 500 for every
+  request. The Inngest "branch environment does not exist" 404 and all the key/env theories
+  are red herrings two layers downstream of the real import-time crash.
+- **Fix / rule:** never import a native/heavy module at module scope in an Inngest function
+  file — lazy-load inside the handler: `const sharp = (await import("sharp")).default;`.
+  Diagnose from **Vercel runtime logs for `/api/inngest`** (the real error names the module),
+  not from the Inngest env error. Making the native module actually run on Vercel (file
+  tracing of the `.so`) is a separate fix that unused features can defer.
+- **Tell:** `/api/inngest` 500 in Vercel logs citing `Failed to load external module …`;
+  Inngest "Sync new app" returns *internal server error response from url*.
+
+## Testing
+
+### A schema-validated MCP-tool test needs a strict-format UUID, not the shared placeholder id
+
+- **Symptom:** a new test that parses args **through** a tool's Zod schema fails with
+  `ZodError … Invalid UUID` on `id`, while sibling tests using the same id pass.
+- **Cause:** most MCP tool tests call the handler directly (`run(name, args)`), which
+  **bypasses Zod**, so a loose placeholder like `11111111-1111-1111-1111-111111111111`
+  never gets validated. `z.string().uuid()` enforces the RFC version/variant nibbles, which
+  that placeholder violates — only a `schema.parse(...)` path hits it.
+- **Fix / rule:** in a test that parses through the schema (to exercise a schema change),
+  use a valid UUID such as `11111111-1111-4111-8111-111111111111` (v4, variant-8), not the
+  handler-direct placeholder.
+- **Tell:** `Invalid UUID` on `id` appearing only in tests that call `schema.parse(...)`.
+
 ---
 
 <!-- Add new entries above this line, newest-relevant first within each section.

@@ -1,6 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
+import Link from "next/link";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,10 @@ import {
 } from "../table-data/triage-options";
 import moment from "moment";
 
+// Column order = display order. Company / Industry / Website / Status / Triage
+// lead; the person-centric fields (name, email, phone, position) and the created
+// date follow and are hidden by default (still toggleable via the View menu, and
+// the choice is persisted per environment — see data-table.tsx).
 export const columns: ColumnDef<Target>[] = [
   {
     id: "select",
@@ -35,6 +40,87 @@ export const columns: ColumnDef<Target>[] = [
     enableHiding: false,
   },
   {
+    accessorKey: "company",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Company" />
+    ),
+    cell: ({ row }) => (
+      <div className="font-medium">{row.getValue("company")}</div>
+    ),
+    enableSorting: true,
+    enableHiding: true,
+  },
+  {
+    accessorKey: "industry",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Industry" />
+    ),
+    cell: ({ row }) => <div className="">{row.getValue("industry")}</div>,
+    enableSorting: true,
+    enableHiding: true,
+  },
+  {
+    accessorKey: "company_website",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Website" />
+    ),
+    cell: ({ row }) => {
+      const url = row.getValue("company_website") as string | null;
+      if (!url) return null;
+      const label = url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+      // Only linkify http(s). A stored value like `javascript:…` would otherwise
+      // be a click-to-XSS vector for admins/managers who see others' targets.
+      if (!/^https?:\/\//i.test(url)) {
+        return (
+          <span className="block max-w-[220px] truncate text-muted-foreground">
+            {label}
+          </span>
+        );
+      }
+      return (
+        <Link
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="block max-w-[220px] truncate text-muted-foreground underline"
+        >
+          {label}
+        </Link>
+      );
+    },
+    enableSorting: true,
+    enableHiding: true,
+  },
+  {
+    accessorKey: "status",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Status" />
+    ),
+    cell: ({ row }) => (
+      <div className="">{row.original.status ? "Active" : "Inactive"}</div>
+    ),
+    enableSorting: true,
+    enableHiding: true,
+  },
+  {
+    accessorKey: "triage_status",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Triage" />
+    ),
+    cell: ({ row }) => {
+      const value = (row.getValue("triage_status") as string) ?? "NEW";
+      return (
+        <Badge variant={triageBadgeVariant(value)}>
+          {triageStatusLabel(value)}
+        </Badge>
+      );
+    },
+    filterFn: (row, id, value) => value.includes(row.getValue(id)),
+    enableSorting: true,
+    enableHiding: true,
+  },
+  {
     accessorKey: "created_on",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Date created" />
@@ -45,7 +131,7 @@ export const columns: ColumnDef<Target>[] = [
       </div>
     ),
     enableSorting: false,
-    enableHiding: false,
+    enableHiding: true,
   },
   {
     accessorKey: "first_name",
@@ -84,48 +170,11 @@ export const columns: ColumnDef<Target>[] = [
     enableHiding: true,
   },
   {
-    accessorKey: "company",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Company" />
-    ),
-    cell: ({ row }) => <div className="">{row.getValue("company")}</div>,
-    enableSorting: true,
-    enableHiding: true,
-  },
-  {
     accessorKey: "position",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Position" />
     ),
     cell: ({ row }) => <div className="">{row.getValue("position")}</div>,
-    enableSorting: true,
-    enableHiding: true,
-  },
-  {
-    accessorKey: "status",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Status" />
-    ),
-    cell: ({ row }) => (
-      <div className="">{row.original.status ? "Active" : "Inactive"}</div>
-    ),
-    enableSorting: true,
-    enableHiding: true,
-  },
-  {
-    accessorKey: "triage_status",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Triage" />
-    ),
-    cell: ({ row }) => {
-      const value = (row.getValue("triage_status") as string) ?? "NEW";
-      return (
-        <Badge variant={triageBadgeVariant(value)}>
-          {triageStatusLabel(value)}
-        </Badge>
-      );
-    },
-    filterFn: (row, id, value) => value.includes(row.getValue(id)),
     enableSorting: true,
     enableHiding: true,
   },

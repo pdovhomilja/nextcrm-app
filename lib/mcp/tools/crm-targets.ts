@@ -74,7 +74,10 @@ export const crmTargetTools = [
     description: "Create a new CRM target",
     schema: z.object({
       first_name: z.string().min(1).optional(),
-      last_name: z.string().min(1),
+      // fork: last_name is optional so a company-only target (no person) can be
+      // created — the handler requires last_name OR company and defaults the
+      // non-null column to "". Mirrors the UI CSV importer (last_name ?? "").
+      last_name: z.string().min(1).optional(),
       email: z.string().email().optional(),
       mobile_phone: z.string().optional(),
       office_phone: z.string().optional(),
@@ -99,7 +102,7 @@ export const crmTargetTools = [
     async handler(
       args: {
         first_name?: string;
-        last_name: string;
+        last_name?: string;
         email?: string;
         mobile_phone?: string;
         office_phone?: string;
@@ -123,8 +126,13 @@ export const crmTargetTools = [
       userId: string
     ) {
       const { last_name, ...rest } = args;
+      // A target is a person (last_name) or a company (company) — require one.
+      // last_name is a non-null column, so default a company-only target to "".
+      if (!last_name && !rest.company) {
+        throw new Error("Either last_name or company is required");
+      }
       const target = await prismadb.crm_Targets.create({
-        data: { last_name, ...rest, created_by: userId },
+        data: { last_name: last_name ?? "", ...rest, created_by: userId },
       });
       return itemResponse(target);
     },
@@ -135,7 +143,9 @@ export const crmTargetTools = [
     schema: z.object({
       id: z.string().uuid(),
       first_name: z.string().min(1).optional(),
-      last_name: z.string().min(1).optional(),
+      // fork: allow "" so a mistakenly-named company target can be blanked back
+      // to company-only (last_name is a non-null column; "" = "no last name").
+      last_name: z.string().optional(),
       email: z.string().email().optional(),
       mobile_phone: z.string().optional(),
       office_phone: z.string().optional(),

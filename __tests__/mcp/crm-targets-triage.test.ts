@@ -106,6 +106,55 @@ describe("crm_create_target load fields (schema parity with CSV import)", () => 
   );
 });
 
+describe("company-only targets (fork: last_name optional)", () => {
+  // Validate THROUGH the Zod schema — the relaxation lives there (last_name is
+  // no longer required), so the handler must be reached via a real parse.
+  const createThroughSchema = (args: unknown) => {
+    const tool = crmTargetTools.find((t) => t.name === "crm_create_target")!;
+    const parsed = (tool.schema as any).parse(args);
+    return (tool.handler as any)(parsed, USER);
+  };
+  const updateThroughSchema = (args: unknown) => {
+    const tool = crmTargetTools.find((t) => t.name === "crm_update_target")!;
+    const parsed = (tool.schema as any).parse(args);
+    return (tool.handler as any)(parsed, USER);
+  };
+
+  beforeEach(() => {
+    (prismadb.crm_Targets.create as jest.Mock).mockImplementation(
+      ({ data }: any) => ({ id: TARGET_ID, ...data })
+    );
+  });
+
+  it('creates a company-only target (no last_name) and defaults the column to ""', async () => {
+    await createThroughSchema({
+      company: "Ball Event Center",
+      industry: "Event / wedding venue",
+    });
+    const data = (prismadb.crm_Targets.create as jest.Mock).mock.calls[0][0].data;
+    expect(data.company).toBe("Ball Event Center");
+    expect(data.last_name).toBe("");
+  });
+
+  it("rejects a target with neither last_name nor company", async () => {
+    await expect(
+      createThroughSchema({ industry: "Event / wedding venue" })
+    ).rejects.toThrow(/last_name or company/i);
+    expect(prismadb.crm_Targets.create).not.toHaveBeenCalled();
+  });
+
+  it('allows blanking last_name back to "" on update (company-only correction)', async () => {
+    // A schema-valid UUID (the shared TARGET_ID is only used by handler-direct
+    // calls that skip Zod, so it isn't a strict-format UUID).
+    await updateThroughSchema({
+      id: "11111111-1111-4111-8111-111111111111",
+      last_name: "",
+    });
+    const data = (prismadb.crm_Targets.update as jest.Mock).mock.calls[0][0].data;
+    expect(data.last_name).toBe("");
+  });
+});
+
 describe("crm_set_target_triage", () => {
   it("approving sets APPROVED and clears prior pass fields", async () => {
     await run("crm_set_target_triage", { id: TARGET_ID, status: "APPROVED" });
