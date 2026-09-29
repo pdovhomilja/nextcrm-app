@@ -39,6 +39,7 @@ in this fork's code** (kept for merge-friendliness).
 | Variable | Scope | Required | Purpose | Format / example |
 |---|---|---|---|---|
 | `DATABASE_URL` | All | Yes | Postgres connection string (Prisma). The Vercel deploy runs `prisma migrate deploy` with this. | Local `postgresql://postgres:postgres@127.0.0.1:54622/postgres`; hosted = **session** pooler, IPv4 (`SUPABASE_ON_VERCEL.md`). |
+| `DB_POOL_MAX` | All | No | Max `pg` connections **per function instance** (`lib/prisma.ts`). Caps the pool so a cold-start fan-out can't exhaust the session-mode pooler (`EMAXCONNSESSION` → all pages 500). Empty/invalid falls back to 3; **never set to 1** (deadlocks multi-query renders). Set on **every** scope (`SUPABASE_ON_VERCEL.md` §3). | `3` |
 | `BETTER_AUTH_SECRET` | All | Yes | better-auth signing secret. The Production value is a root credential. | `openssl rand -base64 32` |
 | `BETTER_AUTH_URL` | All | Yes | Auth base URL. | `http://localhost:3000` / `https://crm.radeengineering.com` |
 | `GOOGLE_ID` | All | Yes | Google OAuth client id (read at auth init). | from Google Cloud console |
