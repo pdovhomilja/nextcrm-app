@@ -193,3 +193,17 @@ the many conditional wraps) and `BasicView.tsx`. Guards: `__tests__/lib/target-t
 | `e2b.Dockerfile` | **rewrite** | (1) `FROM e2b/nodejs:latest` → `FROM e2bdev/base:latest` — the old base image was removed from E2B's registry (`image not found`). (2) Split the npm install: `agent-browser`/`tsx` stay global (used as CLIs), but `@anthropic-ai/sdk` is installed **locally under `/home/user`** — the agent runs as `/home/user/agent.mjs` and ESM bare-import resolution ignores the global prefix/NODE_PATH. | Low |
 
 **Why:** `e2b template create nextcrm-enrichment` failed first on the missing base image, then at runtime with `ERR_MODULE_NOT_FOUND: @anthropic-ai/sdk`. Both are fixed; the template now builds and the sandbox agent runs (the remaining enrichment failure is a separate ANTHROPIC-credential issue, not the template). The template is built via the E2B CLI, not the app deploy, so this change is for reproducibility.
+
+---
+
+## feat/targets-list-name-cell — Clickable Name/Company + description tooltip + Industry filter  (PR: TBD)
+
+**3 upstream-owned files**, insertions only:
+
+| Upstream file | Kind | What / where | Risk |
+|---|---|---|---|
+| `.../campaigns/targets/table-components/columns.tsx` | **insert** | new `TargetLinkCell` helper — Name + Company cells become links to `/crm/targets/:id` (redirects to /campaigns/targets) and show a `description` hover tooltip; `industry` added to the Name filterFn; a `filterFn` added to the `industry` column so it can be faceted-filtered | Low |
+| `.../campaigns/targets/table-components/data-table-toolbar.tsx` | **insert** | Industry faceted filter (options derived from the data's distinct industries) + search placeholder update | Low |
+| `.../campaigns/targets/table-data/schema.tsx` | **insert** | `description` added to `targetSchema` (needed for the tooltip) | Low |
+
+**Note:** also carries the `e2b.Dockerfile` repair (base image + local sdk) folded into this branch per request — see the `fix/e2b-base-image` section above.

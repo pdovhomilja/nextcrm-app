@@ -19,11 +19,21 @@ export function DataTableToolbar<TData>({
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0;
 
+  // Industry is free-text, so the faceted filter's options are the distinct
+  // industry values actually present in the loaded targets.
+  const industryColumn = table.getColumn("industry");
+  const industryOptions = industryColumn
+    ? Array.from(industryColumn.getFacetedUniqueValues().keys())
+        .filter((v): v is string => typeof v === "string" && v.length > 0)
+        .sort((a, b) => a.localeCompare(b))
+        .map((v) => ({ label: v, value: v }))
+    : [];
+
   return (
     <div className="flex items-center justify-between">
       <div className="flex flex-1 items-center space-x-2">
         <Input
-          placeholder="Filter by name or company ..."
+          placeholder="Filter by name, company, industry ..."
           value={
             (table.getColumn("name")?.getFilterValue() as string) ?? ""
           }
@@ -44,6 +54,13 @@ export function DataTableToolbar<TData>({
             column={table.getColumn("type")}
             title="Type"
             options={TARGET_TYPE_OPTIONS.map((o) => ({ label: o.label, value: o.value }))}
+          />
+        )}
+        {industryColumn && industryOptions.length > 0 && (
+          <DataTableFacetedFilter
+            column={industryColumn}
+            title="Industry"
+            options={industryOptions}
           />
         )}
         {isFiltered && (
