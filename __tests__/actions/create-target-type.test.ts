@@ -23,3 +23,15 @@ it("creates an INDIVIDUAL and persists description/industry pass-through", async
   expect(res.data?.type).toBe("INDIVIDUAL");
   expect(res.data?.description).toBe("note");
 });
+
+it("rejects an INDIVIDUAL target with no last name", async () => {
+  const res = await createTarget({ type: "INDIVIDUAL", company: "Acme" });
+  expect(res.error).toMatch(/last name/i);
+  expect(prismadb.crm_Targets.create).not.toHaveBeenCalled();
+});
+
+it("defaults an omitted type to COMPANY and persists it", async () => {
+  const res = await createTarget({ company: "Acme Inc" });
+  expect(res.error).toBeUndefined();
+  expect(res.data?.type).toBe("COMPANY");
+});
