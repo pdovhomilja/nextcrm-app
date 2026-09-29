@@ -160,7 +160,9 @@ export async function BasicView({ data }: OppsViewProps) {
                 Expected close date
               </p>
               <p className="text-sm text-muted-foreground">
-                {moment(data.close_date).format("MMM DD YYYY")}
+                {data.close_date
+                  ? moment(data.close_date).format("MMM DD YYYY")
+                  : "Not set"}
               </p>
             </div>
           </div>

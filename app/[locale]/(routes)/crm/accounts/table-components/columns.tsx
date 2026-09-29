@@ -68,13 +68,17 @@ export const columns: ColumnDef<Account>[] = [
       <DataTableColumnHeader column={column} title="Account contact" />
     ),
 
-    cell: ({ row }) => (
-      <div className="w-[150px]">
-        {row.original.contacts?.map(
-          (contact: any) => contact.first_name + " " + contact.last_name
-        )}
-      </div>
-    ),
+    cell: ({ row }) => {
+      // A company contact can have a null first_name; joining with a raw
+      // `+ " " +` rendered a literal "null" prefix (e.g. "null Ball Event
+      // Center"). Drop empty parts and comma-separate multiple contacts.
+      const names = (row.original.contacts ?? [])
+        .map((contact: any) =>
+          [contact.first_name, contact.last_name].filter(Boolean).join(" ")
+        )
+        .filter((n: string) => n.length > 0);
+      return <div className="w-[150px]">{names.join(", ")}</div>;
+    },
     enableSorting: false,
     enableHiding: true,
   },
