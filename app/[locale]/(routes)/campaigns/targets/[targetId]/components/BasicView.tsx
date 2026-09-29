@@ -25,6 +25,8 @@ import { Badge } from "@/components/ui/badge";
 import { EnrichButton } from "./EnrichButton";
 import ConvertToDealButton from "./ConvertToDealButton";
 import { TargetContactsTable } from "./TargetContactsTable";
+import { TriageControl } from "./TriageControl";
+import { passReasonLabel } from "../../table-data/triage-options";
 
 interface TargetContact {
   id: string;
@@ -56,6 +58,11 @@ export async function BasicView({ data }: TargetBasicViewProps) {
               <CardDescription>ID: {data.id}</CardDescription>
             </div>
             <div className="flex items-center gap-2">
+              <TriageControl
+                targetId={data.id}
+                targetLabel={data.company || `${data.first_name ?? ""} ${data.last_name}`.trim()}
+                status={data.triage_status}
+              />
               <EnrichButton targetId={data.id} />
               <ConvertToDealButton targetId={data.id} />
               <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
@@ -155,6 +162,23 @@ export async function BasicView({ data }: TargetBasicViewProps) {
                   </p>
                 </div>
               </div>
+              {data.triage_status === "PASSED" && (
+                <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
+                  <CalendarDays className="mt-px h-5 w-5" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium leading-none">Passed</p>
+                    <p className="text-sm text-muted-foreground">
+                      {passReasonLabel(data.pass_reason) || "—"}
+                      {data.revisit_at
+                        ? ` · revisit ${moment(data.revisit_at).format("MMM DD YYYY")}`
+                        : ""}
+                    </p>
+                    {data.pass_note ? (
+                      <p className="text-sm text-muted-foreground">{data.pass_note}</p>
+                    ) : null}
+                  </div>
+                </div>
+              )}
             </div>
             {data.tags && data.tags.length > 0 && (
               <div className="col-span-2 flex flex-col gap-2 mt-2">

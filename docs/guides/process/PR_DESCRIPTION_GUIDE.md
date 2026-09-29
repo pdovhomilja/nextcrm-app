@@ -64,6 +64,15 @@ a clean key→value shape (tab → contents, route → behavior).>
 - <Call out any deliberate architectural choice, prefixed "owner decision:" when
   it was a product call, not a technical one.>
 
+## Core changes (upstream impact)
+
+<Name every UPSTREAM-OWNED file this PR edits (a file that exists at upstream/main —
+check `git cat-file -e upstream/main:<path>`). New files carry no merge risk — don't
+list them. For each upstream file: insert-only hook vs **rewrite** of upstream lines
+(the real conflict surface), the risk, and why it was unavoidable. Write "None — fully
+additive (new/fork-owned files only)" when nothing upstream-owned changed. Link the
+per-file entry in `docs/reference/UPSTREAM_IMPACT_LOG.md`.>
+
 ## Trust boundary / security
 
 <Only when the change touches an auth surface, a query scope, a public endpoint,
@@ -130,6 +139,11 @@ timestamp, not a bug.">
 <What changed, with the key line or snippet. Verify statement: "Verified against
 the local DB that this returns the correct data.">
 
+## Core changes (upstream impact)
+
+<Upstream-owned files edited by the fix (insert-only vs **rewrite** + risk), or "None —
+fully additive". Link the `docs/reference/UPSTREAM_IMPACT_LOG.md` entry when any changed.>
+
 ## Test
 
 <Which tier and why THAT tier — "in the E2E tier, the only tier that exercises
@@ -159,6 +173,7 @@ the real database, since the unit tier mocks Prisma away." What it asserts
 | **Root cause** | Bug fixes. The *mechanism*; table for multi-symptom causes. |
 | **Fix** | Bug fixes. What changed + verification. |
 | **Key changes** | Features with several moving parts. |
+| **Core changes (upstream impact)** | Always. Upstream-owned files touched (insert vs **rewrite** + risk) or "None — fully additive"; link the impact-log entry. |
 | **Trust boundary / security** | Any auth surface, query scope, public endpoint, or user data touched. |
 | **Why it's safe / Why a standalone PR** | Migrations, dependency bumps, or anything whose *safety* is the question. |
 | **Testing / Test / Checks** | Always. Scale to the change. |
@@ -198,6 +213,7 @@ the real database, since the unit tier mocks Prisma away." What it asserts
 - [ ] Title is `type(scope): imperative summary`
 - [ ] Correct shape (fix = Symptom→Root cause→Fix; feature = What→…)
 - [ ] Scope boundary stated ("no migration / no schema change / lockfile-only")
+- [ ] **Core changes (upstream impact)** section filled — upstream-owned files (insert vs rewrite + risk) or "None — fully additive"; `UPSTREAM_IMPACT_LOG.md` updated + linked if any changed
 - [ ] Trust-boundary section present if any auth/scope/public surface changed
 - [ ] Tests described; totals cited; **Revert-verified** noted for regression tests
 - [ ] Deep-review outcome summarized (it ran *before* this PR — playbook §4)

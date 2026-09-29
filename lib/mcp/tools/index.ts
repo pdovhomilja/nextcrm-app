@@ -3,6 +3,7 @@ export { crmContactTools } from "./crm-contacts";
 export { crmLeadTools } from "./crm-leads";
 export { crmOpportunityTools } from "./crm-opportunities";
 export { crmTargetTools } from "./crm-targets";
+export { crmTargetTriageTools } from "./crm-target-triage";
 export { crmProductTools } from "./crm-products";
 export { crmUserTools } from "./crm-users";
 export { crmContractTools } from "./crm-contracts";
@@ -20,6 +21,7 @@ import { crmContactTools } from "./crm-contacts";
 import { crmLeadTools } from "./crm-leads";
 import { crmOpportunityTools } from "./crm-opportunities";
 import { crmTargetTools } from "./crm-targets";
+import { crmTargetTriageTools } from "./crm-target-triage";
 import { crmProductTools } from "./crm-products";
 import { crmUserTools } from "./crm-users";
 import { crmContractTools } from "./crm-contracts";
@@ -38,6 +40,7 @@ export const allTools = [
   ...crmLeadTools,
   ...crmOpportunityTools,
   ...crmTargetTools,
+  ...crmTargetTriageTools,
   ...crmProductTools,
   ...crmUserTools,
   ...crmContractTools,

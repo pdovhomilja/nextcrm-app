@@ -196,6 +196,23 @@ enum crm_AuditLog_Action {
   relation_removed
 }
 
+// Outbound-prospect triage: the pre-conversion review gate on a Target.
+// NEW = awaiting review, APPROVED = worth outreach, PASSED = skipped (with a
+// reason; an optional revisit_at can later resurface it).
+enum crm_Triage_Status {
+  NEW
+  APPROVED
+  PASSED
+}
+
+enum crm_Pass_Reason {
+  SCOPE_TOO_LARGE
+  NOT_A_FIT
+  BAD_TIMING
+  ALREADY_MODERN
+  OTHER
+}
+
 model crm_Opportunities {
   id               String                  @id @default(uuid()) @db.Uuid
   v                Int                     @default(0) @map("__v")
@@ -1297,6 +1314,14 @@ model crm_Targets {
   converted_account_id String?   @db.Uuid
   converted_contact_id String?   @db.Uuid
 
+  // Triage (pre-conversion review gate)
+  triage_status crm_Triage_Status @default(NEW)
+  pass_reason   crm_Pass_Reason?
+  pass_note     String?
+  revisit_at    DateTime?
+  triaged_at    DateTime?
+  triaged_by    String?   @db.Uuid
+
   deletedAt        DateTime?
   deletedBy        String?   @db.Uuid
 
@@ -1315,6 +1340,8 @@ model crm_Targets {
   @@index([do_not_email])
   @@index([converted_contact_id])
   @@index([deletedAt])
+  @@index([triage_status])
+  @@index([revisit_at])
 }
 
 model crm_TargetLists {

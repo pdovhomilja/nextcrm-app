@@ -6,6 +6,8 @@ import { Table } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataTableViewOptions } from "./data-table-view-options";
+import { DataTableFacetedFilter } from "./data-table-faceted-filter";
+import { TRIAGE_STATUS_OPTIONS } from "../table-data/triage-options";
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
@@ -29,6 +31,13 @@ export function DataTableToolbar<TData>({
           }
           className="h-8 w-[150px] lg:w-[250px]"
         />
+        {table.getColumn("triage_status") && (
+          <DataTableFacetedFilter
+            column={table.getColumn("triage_status")}
+            title="Triage"
+            options={TRIAGE_STATUS_OPTIONS.map((o) => ({ label: o.label, value: o.value }))}
+          />
+        )}
         {isFiltered && (
           <Button
             variant="ghost"

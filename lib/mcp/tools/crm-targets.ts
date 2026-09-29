@@ -80,6 +80,21 @@ export const crmTargetTools = [
       office_phone: z.string().optional(),
       company: z.string().optional(),
       position: z.string().optional(),
+      // fork: extended to full CSV-import field parity (lib/spreadsheet/target-fields.ts)
+      company_website: z.string().optional(),
+      personal_website: z.string().optional(),
+      social_linkedin: z.string().optional(),
+      social_x: z.string().optional(),
+      social_instagram: z.string().optional(),
+      social_facebook: z.string().optional(),
+      personal_email: z.string().email().optional(),
+      company_email: z.string().email().optional(),
+      company_phone: z.string().optional(),
+      city: z.string().optional(),
+      country: z.string().optional(),
+      industry: z.string().optional(),
+      employees: z.string().optional(),
+      description: z.string().optional(),
     }),
     async handler(
       args: {
@@ -90,6 +105,20 @@ export const crmTargetTools = [
         office_phone?: string;
         company?: string;
         position?: string;
+        company_website?: string;
+        personal_website?: string;
+        social_linkedin?: string;
+        social_x?: string;
+        social_instagram?: string;
+        social_facebook?: string;
+        personal_email?: string;
+        company_email?: string;
+        company_phone?: string;
+        city?: string;
+        country?: string;
+        industry?: string;
+        employees?: string;
+        description?: string;
       },
       userId: string
     ) {
@@ -112,6 +141,21 @@ export const crmTargetTools = [
       office_phone: z.string().optional(),
       company: z.string().optional(),
       position: z.string().optional(),
+      // fork: extended to full CSV-import field parity (lib/spreadsheet/target-fields.ts)
+      company_website: z.string().optional(),
+      personal_website: z.string().optional(),
+      social_linkedin: z.string().optional(),
+      social_x: z.string().optional(),
+      social_instagram: z.string().optional(),
+      social_facebook: z.string().optional(),
+      personal_email: z.string().email().optional(),
+      company_email: z.string().email().optional(),
+      company_phone: z.string().optional(),
+      city: z.string().optional(),
+      country: z.string().optional(),
+      industry: z.string().optional(),
+      employees: z.string().optional(),
+      description: z.string().optional(),
     }),
     async handler(
       args: {
@@ -123,6 +167,20 @@ export const crmTargetTools = [
         office_phone?: string;
         company?: string;
         position?: string;
+        company_website?: string;
+        personal_website?: string;
+        social_linkedin?: string;
+        social_x?: string;
+        social_instagram?: string;
+        social_facebook?: string;
+        personal_email?: string;
+        company_email?: string;
+        company_phone?: string;
+        city?: string;
+        country?: string;
+        industry?: string;
+        employees?: string;
+        description?: string;
       },
       userId: string
     ) {
