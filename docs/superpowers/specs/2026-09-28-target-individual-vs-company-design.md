@@ -64,6 +64,10 @@ across 4-5 upstream files (duplication, merge pain); separate per-type component
 - **One-time data cleanup in the same migration:** `UPDATE "crm_Targets" SET last_name = ''
   WHERE last_name = company;` — retires the duplicated `last_name` from the MCP load of
   the 28. (`last_name` is a non-null column; `''` = "no last name".)
+- **Implemented as** `prisma/migrations/20260928130000_target_type/migration.sql`
+  (hand-authored, idempotent). This spec is the canonical data-model reference for the
+  `crm_Targets.type` column — the repo has no standalone data-model doc; `prisma/schema.prisma`
+  is the source of truth for the shape.
 - **Migration-first ordering** (additive): the migration PR lands and deploys to QA
   before/with the code that depends on the column. Vercel's build runs
   `prisma migrate deploy`, so the QA deploy applies it — no manual apply.

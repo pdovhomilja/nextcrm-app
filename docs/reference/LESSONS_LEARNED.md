@@ -181,7 +181,23 @@
   `CREATE INDEX IF NOT EXISTS`) — then apply with `prisma migrate deploy` (non-inter-
   active) and `prisma generate`. This matches the enum/column migrations already in
   the repo and is exactly what CI's build runs.
+- **Also:** `migrate dev --create-only` can abort the same way when the local DB has
+  pre-existing drift (it wants to reset). Don't reset a shared local DB to get past it —
+  hand-author the migration as above.
 - **Tell:** the error text says "non-interactive"; `migrate deploy` has no such gate.
+
+### A dev server started before a schema change keeps a stale Prisma client — writes fail with a generic error
+
+- **Symptom:** after adding a column/enum and running `prisma migrate deploy` + `prisma generate`,
+  creating the record in the UI shows a generic *"Failed to create target"* (a broad `catch` in the
+  server action), and the dev-server log shows nothing. The DB has the column; `tsc` is happy.
+- **Cause:** the running `next dev` process cached the old generated client on `globalThis`, which
+  rejects the new field as an unknown argument. The action's blanket `catch { return { error } }`
+  hides the real Prisma message.
+- **Fix / rule:** **restart the dev server** after any schema change + `prisma generate`. In E2E,
+  make sure the server Playwright reuses (`reuseExistingServer`) was started *after* the client was
+  regenerated. If a swallowed error is hiding the cause, log the caught error in the catch.
+- **Tell:** a write that includes the new column fails generically while reads and the DB itself are fine.
 
 ### Never `prisma db push` — every schema change is a committed migration
 
@@ -269,6 +285,19 @@
   (here: `lib/spreadsheet/target-fields.ts`, the CSV importable set), and assert parity
   in a test that reads the schema `.shape` — don't test the handler in isolation.
 - **Tell:** an MCP write "succeeds" but a field is missing afterward, with no validation error.
+
+### A new target field must be added to every hand-maintained field list — one is easy to miss
+
+- **Symptom:** a new `crm_Targets` column works in the form and MCP but is missing from the CSV
+  import mapping (or the auto-suggested mapping never proposes it).
+- **Cause:** the target field set is duplicated by hand: `lib/spreadsheet/target-fields.ts` (import/
+  export set), the MCP tool Zod schemas, the create/update action arg types, **and**
+  `actions/crm/targets/suggest-mapping.ts`, which keeps its **own hardcoded field array** and does
+  not read `target-fields.ts`.
+- **Fix / rule:** when adding a target field, grep for a sibling field (e.g. `company_website`) and
+  update every hit; don't assume `target-fields.ts` is the only list. Note `target-fields.ts` also
+  drives CSV/XLSX **export**, so a new field there adds an export column.
+- **Tell:** a field imports fine when mapped manually but is never auto-mapped.
 
 ### The MCP Streamable-HTTP transport path is `/api/mcp/mcp`, not `/api/mcp/http`
 

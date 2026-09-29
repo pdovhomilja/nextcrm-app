@@ -125,3 +125,46 @@ or restructured the singleton, re-apply the `max` cap + `pool.on("error")`. Guar
 **Note:** **upstream-contributable** — capping the pool and adding a Pool-level error handler are
 strict robustness improvements for any serverless/pooled deployment and would remove this divergence
 if merged upstream.
+
+---
+
+## feat/target-type — Individual vs Company target type  (PR: TBD)
+
+**14 upstream-owned files** touched (13 source + 1 E2E spec). Everything type-specific lives in the
+**fork-owned** `lib/crm/target-type.ts` (taxonomy, required-identity rule, title resolver, labels);
+the upstream files only get thin hooks that call it. Also fork-owned/new (no merge risk): the
+migration `prisma/migrations/20260928130000_target_type/`, `__tests__/lib/target-type.test.ts`,
+`__tests__/actions/{create-target-type,import-targets-type}.test.ts`,
+`__tests__/mcp/crm-targets-type.test.ts`, `tests/e2e/target-type.spec.ts`,
+`docs/testing/target-type-manual-testing.md`, the design spec + plan.
+
+| Upstream file | Kind | What / where | Risk |
+|---|---|---|---|
+| `prisma/schema.prisma` | **insert** | `enum crm_Target_Type { INDIVIDUAL COMPANY }`; `type crm_Target_Type @default(COMPANY)` field + `@@index([type])` on `crm_Targets`. | Low |
+| `lib/mcp/tools/crm-targets.ts` | **insert + guard replacement** | `type` param on `crm_create_target` / `crm_update_target`; the fork's "last_name **or** company" guard (see `feat/qa-targets-ux` above) is **replaced** by a type-aware guard from `requiredIdentityField(type)` (COMPANY→company, INDIVIDUAL→last_name; create defaults COMPANY). | Med (rewrites the fork's own earlier guard) |
+| `actions/crm/targets/create-target.ts` | **insert + guard rewrite** | `type` + the previously-missing form fields added to the arg type; the identity guard becomes type-aware; `type` persisted. | Med |
+| `actions/crm/targets/update-target.ts` | **insert** | one `type?` line in the accepted-fields type. | Low |
+| `…/campaigns/targets/table-data/schema.tsx` | **insert** | `type` added to `targetSchema`; `first_name` made optional. | Low |
+| `…/table-components/columns.tsx` | **insert** | adaptive **Name** column (accessor + filterFn via `resolveTargetTitle`) and **Type** badge column. | Med (same column-array friction point as `feat/qa-targets-ux`) |
+| `…/table-components/data-table-toolbar.tsx` | **insert** | **Type** faceted filter; the search box is **repointed** `last_name` → `name` (placeholder now "Filter by name or company ..."). | Low–Med |
+| `…/components/NewTargetForm.tsx` | **insert** | Type selector, `isFieldForType` gating around person-only / company-only fields, `superRefine` enforcing the per-type required identity; `company` label via `fieldLabel`. | Med (many small wraps) |
+| `…/components/UpdateTargetForm.tsx` | **insert + REWRITE** | same as `NewTargetForm`; plus **rewrite**: `last_name` Zod `.min(1)` → `.optional()` (a company has no last name). | Med |
+| `…/[targetId]/components/BasicView.tsx` | **insert + replacement** | title → `resolveTargetTitle` + Type badge; person-only / company-only blocks gated by `isFieldForType`; company block relabelled via `fieldLabel`; Industry/Employees/Description surfaced. | Med |
+| `actions/crm/targets/import-targets.ts` | **insert** | optional `type` row value; defaults `COMPANY`. | Low |
+| `actions/crm/targets/suggest-mapping.ts` | **insert** | `type` added to **its own hardcoded** target-field array (it does not read `target-fields.ts`). | Low |
+| `lib/spreadsheet/target-fields.ts` | **insert** | `type` field added to the importable set — **side effect:** CSV/XLSX **export** now also emits a Type column. | Low |
+| `tests/e2e/campaign-targets.spec.ts` | **edit (test only)** | "create with all fields" now selects **Individual** first and drops company-only fills (company is the default type and hides person fields); list-filter placeholder → "Filter by name or company ..."; detail check "Company" → "Employer". | Low |
+
+**Re-verify after any upstream merge:** `git diff <merge-base> upstream/main -- <each file above>`. The
+friction points are `columns.tsx` (column array), `UpdateTargetForm.tsx` (the `last_name` schema line +
+the many conditional wraps) and `BasicView.tsx`. Guards: `__tests__/lib/target-type.test.ts`,
+`__tests__/mcp/crm-targets-type.test.ts`, `__tests__/actions/create-target-type.test.ts`,
+`__tests__/actions/import-targets-type.test.ts`, `tests/e2e/target-type.spec.ts`.
+
+**Notes:**
+- Migration is **additive** (new enum + non-null column defaulting `COMPANY`, plus a one-time
+  `last_name = company` → `''` cleanup) → **migration-first**: it reaches QA via the Vercel build's
+  `prisma migrate deploy`, never by hand.
+- The `last_name = company` cleanup only touches rows where the MCP load duplicated the company name.
+- The whole feature is **upstream-contributable in principle** but is opinionated (co-equal
+  Individual/Company targets); contribute only from a clean upstream base if upstream wants it.
