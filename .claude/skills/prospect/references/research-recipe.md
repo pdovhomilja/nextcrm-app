@@ -50,9 +50,19 @@ curl -sSL -A "Mozilla/5.0" --max-time 20 <url>
     - *performance:* heavy page weight, many render-blocking scripts, legacy jQuery.
     - *UI/UX:* unreadable / overlapping / broken elements. **Confirm any visual
       claim with a real browser screenshot** before stating it.
-- **Contact email** — a generic inbox (`info@`, `contact@`, `hello@`) or, where
-  findable, an **owner/president name + email** (contact/about pages, footer,
-  `mailto:` links, PostalAddress/Person schema JSON).
+- **Contacts & email (classify what you find)** — look on contact/about/team pages,
+  the footer, `mailto:` links, and schema JSON (Organization/Person `email`,
+  `sameAs`):
+  - **A specific person** — a named individual with a role (owner / president /
+    principal / partner / manager) **and** their email → capture the person's
+    `first_name`, `last_name`, `position` (title), and their **personal email**.
+  - **A generic / role-based inbox** — local-part like `info@`, `contact@`,
+    `hello@`, `sales@`, `office@`, `admin@`, `support@`, `service@`, `team@`,
+    `inquiries@` → capture as the **company email** (not a person).
+  - You may find one, both, or neither. Leave what you don't find empty.
+- **Social media presence** — find links to the business's profiles (header/footer
+  icons, schema `sameAs`): **X/Twitter, LinkedIn, Instagram, Facebook**. Capture the
+  full profile URL for each found; leave the rest empty.
 
 ## 4. Return record per kept candidate
 
@@ -60,9 +70,14 @@ For each candidate that cleared the gate, return:
 
 - `company` — business name
 - `company_website` — the **root** URL (scheme + host, no path)
-- `city` — the business's city (and region if broad geography)
+- `city` — the business's city
+- `region` — state/region (useful for broad-geography runs; else empty)
 - `industry` — the vertical / category
-- `email` — the contact email found (or empty)
+- **Person (only if a specific named person was found):** `first_name`,
+  `last_name`, `position` (title), `email` (their personal email)
+- `company_email` — the generic/role-based inbox (if found)
+- **Socials (each only if found):** `social_x`, `social_linkedin`,
+  `social_instagram`, `social_facebook` (full profile URLs)
 - `description` — a single field concatenating the enrichment findings from step 3,
   ending with a **one-line opener hook** naming the single strongest redesign
   motivator (e.g. "Homepage hero renders white-on-light-gray — unreadable.").

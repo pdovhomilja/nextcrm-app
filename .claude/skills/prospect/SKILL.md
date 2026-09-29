@@ -1,6 +1,6 @@
 ---
 name: prospect
-description: Find N net-new qualified website-redesign prospects for a describable ICP (geography, verticals, site criteria), verify and enrich each from the live site (WordPress version/builder/theme/plugins, sitemap URL count, homepage+menu links, last update, security/perf/UX issues, contact email), dedup against the CRM, and load them as NEW targets in a dated, criteria-labeled target list. Use when the user asks to prospect, find leads, build a target/lead list, or source redesign prospects.
+description: Find N net-new qualified website-redesign prospects for a describable ICP (geography, verticals, site criteria), verify and enrich each from the live site (WordPress version/builder/theme/plugins, sitemap URL count, homepage+menu links, last update, security/perf/UX issues, a named contact person + email or a generic company inbox, and social profiles), dedup against the CRM, and load them as NEW targets in a dated, criteria-labeled target list. Use when the user asks to prospect, find leads, build a target/lead list, or source redesign prospects.
 ---
 
 # Prospect — repeatable redesign-lead sourcing
@@ -102,8 +102,10 @@ so the strongest leads triage first.
 ## 8. Load
 
 Follow `references/load-mapping.md`: the parity-schema safety check, create/reuse
-the criteria-labeled target list, create each target (field mapping, `NEW`), and
-bulk-attach to the list.
+the criteria-labeled target list, create each target (field mapping, `NEW`), add any
+found people as target contacts (`crm_create_target_contact`, with the primary
+person also on the target's person fields so it survives conversion), and bulk-attach
+the targets to the list.
 
 ## 9. Report
 

@@ -63,9 +63,18 @@ into the target's **`description`** field:
   homepage + its menus**; **most recent page update** (sitemap `lastmod` /
   `Last-Modified` where available); observed **security, performance, and UI/UX
   issues**; any other concrete redesign-motivating signal.
-- **A contact email** — a generic inbox (`info@…`, `contact@…`) or, where
-  findable, an **owner/president name + email**. Stored in the target's contact
-  fields (`email` / `company_email`) and summarized in `description`.
+- **Contacts & email (classified):**
+  - a **specific named person** (owner/president/etc.) + their email → **both** the
+    target's person fields (`first_name`/`last_name`/`position`/`email`) **and** a
+    `crm_Target_Contact` via the `crm_create_target_contact` MCP tool (the target's
+    own Contacts list, like the "Add Contact" button). The person fields are what
+    conversion promotes into a real CRM Contact — `convertTarget` does **not** copy
+    `crm_Target_Contact` rows — so the primary person must be on the person fields;
+    the target-contact record makes them (and any extra people) visible/enrichable on
+    the target.
+  - a **generic/role-based inbox** (`info@`, `contact@`, …) → `company_email`.
+- **Social profiles** — X/Twitter, LinkedIn, Instagram, Facebook URLs where found →
+  the target's `social_*` fields.
 
 ## 5. Behavior / flow
 
@@ -120,7 +129,9 @@ into the target's **`description`** field:
 | Site URL (normalized root) | `company_website` |
 | Vertical / category | `industry` (when determinable) |
 | City | `city` · region/country → `country` |
-| Contact email | `email` (and/or `company_email`) |
+| Named person + email | target `first_name`/`last_name`/`position`/`email` (→ CRM Contact on conversion) **and** `crm_create_target_contact` (target Contacts list) |
+| Generic inbox | `company_email` |
+| Social profiles | `social_x` / `social_linkedin` / `social_instagram` / `social_facebook` |
 | **Full enrichment write-up (§4) + opener hook** | `description` |
 | — | `triage_status = NEW` (default) |
 

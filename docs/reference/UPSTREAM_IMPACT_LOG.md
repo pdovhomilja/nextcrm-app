@@ -20,6 +20,21 @@ resolve by hand. Re-run the entry's named tests to confirm the wiring survived.
 
 ---
 
+## feat/prospecting-skill — /prospect skill + target-contact MCP tool  (PR: TBD)
+
+Adds the fork-owned `/prospect` skill (all under `.claude/skills/prospect/` — zero
+merge risk) plus a new fork-owned MCP tool. **1 upstream-owned file** touched,
+insertion-only:
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `lib/mcp/tools/index.ts` | +3/0 | **insert** | export + import + spread of `crmTargetContactTools` (new fork-owned `lib/mcp/tools/crm-target-contacts.ts` → `crm_create_target_contact`, mirrors the "Add Contact" route). Same registration pattern as `crmTargetTriageTools`/`crmEnrichmentTools`. | Low |
+
+New fork-owned files (no merge risk): `lib/mcp/tools/crm-target-contacts.ts`,
+`.claude/skills/prospect/**`, and the spec/plan docs. **Re-verify after an upstream
+merge:** `__tests__/mcp/crm-target-contacts.test.ts`. Note: the deploy that ships
+this must reach QA/prod before the skill can create target contacts via MCP.
+
 ## feat/target-triage — Target triage gate + MCP field parity  (PR: TBD)
 
 Adds a pre-conversion triage gate on `crm_Targets`. **14 new files** (action,
