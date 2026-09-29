@@ -42,6 +42,7 @@ relevant one *before* doing the matching work.
 | `docs/reference/PROJECT_STRUCTURE.md` | a structural change (new top-level dir, moved module, new route group) — update it in the same PR. |
 | `docs/testing/e2e-patterns.md` | writing or debugging **any** Playwright E2E test. |
 | `CUSTOMIZATIONS.md` | syncing upstream in, contributing back, or making any new fork-specific deviation. |
+| `docs/reference/UPSTREAM_IMPACT_LOG.md` | **any change that edits an upstream-owned file** — append the exact core touches (see the Additive-first change standard). |
 
 ---
 
@@ -124,6 +125,23 @@ handlers) — so scope every query by hand; there is no RLS to fall back on.
 - **Contribute back from a clean upstream base**, not this customized `main`:
   `git switch -c fix/x upstream/main` → isolated change → PR to `pdovhomilja/nextcrm-app`.
   Full recipes in `CUSTOMIZATIONS.md`.
+
+### Additive-first change standard (every change, not just features)
+Because this fork tracks upstream, **minimize and document core divergence** on every
+change — this overrides convenience:
+1. **Design additively.** Put real logic in **new files** or **wrappers** around existing
+   behavior. Touch an **upstream-owned** file (exists at `upstream/main:<path>` —
+   check with `git cat-file -e upstream/main:<path>`) only with **thin, insertion-only
+   hooks**, and never rewrite upstream logic when a new-file/wrapper approach works.
+   Fork-owned files (e.g. `CLAUDE.md`, `docs/`, most `__tests__/`) carry no upstream
+   merge risk — edit them freely.
+2. **Flag core edits proactively.** Whenever a change modifies an upstream-owned file,
+   call it out **up front** — in the plan and the PR — naming each file and its conflict
+   risk. Don't wait to be asked.
+3. **Log exactly what changed in core.** Record every upstream-file edit in
+   `docs/reference/UPSTREAM_IMPACT_LOG.md` (file, insert-vs-rewrite, where, risk) so a
+   future `sync-upstream.sh` merge can be analyzed and reconciled fast. This log is a
+   **mandatory doc-sync target** whenever a change touches an upstream-owned file.
 
 ---
 
@@ -240,6 +258,9 @@ handlers) — so scope every query by hand; there is no RLS to fall back on.
   and data-model docs are the usual blind spots.**
 - **`docs/reference/LESSONS_LEARNED.md` is a MANDATORY doc-sync target.** Every pass
   asks "what gotcha here is likely to recur, and is it captured?" — and appends it.
+- **`docs/reference/UPSTREAM_IMPACT_LOG.md` is a MANDATORY doc-sync target whenever a
+  change edits an upstream-owned file** — append the exact core touches (file,
+  insert-vs-rewrite, risk) per the Additive-first change standard.
 - **Specs follow phase → workstream → PR** and describe intent/scope/acceptance —
   **never implementation code**. Start from `docs/templates/`.
 - **Manual-test ↔ E2E parity is BIDIRECTIONAL** — every manual step has a matching
