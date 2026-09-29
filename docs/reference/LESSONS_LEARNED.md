@@ -302,6 +302,21 @@
 - **Tell:** `/api/inngest` 500 in Vercel logs citing `Failed to load external module …`;
   Inngest "Sync new app" returns *internal server error response from url*.
 
+## Testing
+
+### A schema-validated MCP-tool test needs a strict-format UUID, not the shared placeholder id
+
+- **Symptom:** a new test that parses args **through** a tool's Zod schema fails with
+  `ZodError … Invalid UUID` on `id`, while sibling tests using the same id pass.
+- **Cause:** most MCP tool tests call the handler directly (`run(name, args)`), which
+  **bypasses Zod**, so a loose placeholder like `11111111-1111-1111-1111-111111111111`
+  never gets validated. `z.string().uuid()` enforces the RFC version/variant nibbles, which
+  that placeholder violates — only a `schema.parse(...)` path hits it.
+- **Fix / rule:** in a test that parses through the schema (to exercise a schema change),
+  use a valid UUID such as `11111111-1111-4111-8111-111111111111` (v4, variant-8), not the
+  handler-direct placeholder.
+- **Tell:** `Invalid UUID` on `id` appearing only in tests that call `schema.parse(...)`.
+
 ---
 
 <!-- Add new entries above this line, newest-relevant first within each section.

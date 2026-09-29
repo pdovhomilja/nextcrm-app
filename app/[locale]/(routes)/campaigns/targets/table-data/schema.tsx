@@ -8,6 +8,8 @@ export const targetSchema = z.object({
   mobile_phone: z.string().nullable(),
   office_phone: z.string().nullable(),
   company: z.string().nullable(),
+  company_website: z.string().nullable().optional(),
+  industry: z.string().nullable().optional(),
   position: z.string().nullable(),
   status: z.boolean(),
   triage_status: z.enum(["NEW", "APPROVED", "PASSED"]).default("NEW"),

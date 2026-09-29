@@ -75,3 +75,27 @@ returns 200 on a Vercel deploy and the app syncs.
 
 **Note:** upstream-contributable — the lazy import is a strict improvement (native module
 loaded only when used) and would remove this divergence if merged upstream.
+
+---
+
+## feat/qa-targets-ux — Company-only targets + targets-list columns  (PR: TBD, bundled with the Inngest fix above)
+
+**4 upstream-owned files** touched — relaxations and insertions, no upstream logic rewritten
+except the deliberate column reorder:
+
+| Upstream file | Kind | What / where | Risk |
+|---|---|---|---|
+| `lib/mcp/tools/crm-targets.ts` | **relax** | `crm_create_target`: `last_name` made `.optional()`; handler now requires last_name **or** company and defaults the non-null column to `""`. `crm_update_target`: dropped `last_name` `min(1)` so it can be blanked to `""`. Nothing else changed. | Low |
+| `app/[locale]/(routes)/campaigns/targets/table-components/columns.tsx` | **insert + reorder** | added `industry` and `company_website` (link) columns; reordered to Company·Industry·Website·Status·Triage; `created_on` `enableHiding` flipped to `true`. No column removed. | Low–Med |
+| `app/[locale]/(routes)/campaigns/targets/table-components/data-table.tsx` | **insert** | default column visibility (person/date fields hidden) + `localStorage` persistence of the viewer's choices, keyed per-origin so QA and prod remember independently. | Low |
+| `app/[locale]/(routes)/campaigns/targets/table-data/schema.tsx` | **insert** | `company_website` + `industry` added to `targetSchema`. | Low |
+
+**Re-verify after any upstream merge:** `__tests__/mcp/crm-targets-triage.test.ts` (company-only
+create/update). For the table: `git diff <merge-base> upstream/main -- …/table-components/columns.tsx`
+— `columns.tsx` is the one real friction point (full column-array reorder); reconcile by hand if
+upstream changed columns.
+
+**Notes:**
+- The `last_name`-optional relaxation is **upstream-contributable** — company-only targets are a
+  legitimate shape and the UI CSV importer already allows them (`last_name ?? ""`).
+- No server/query change was needed for the new columns: `getTargets()` already returns full rows.
