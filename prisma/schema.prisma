@@ -370,6 +370,7 @@ model crm_campaign_templates {
   created_by_user Users?               @relation("created_campaign_templates", fields: [created_by], references: [id])
   campaigns       crm_campaigns[]      @relation("CampaignTemplate")
   steps           crm_campaign_steps[]
+  target_emails   crm_Target_Email[]
 
   @@index([created_by])
   @@index([deletedAt])
@@ -1336,6 +1337,8 @@ model crm_Targets {
   enrichments       crm_Target_Enrichment[]
   target_contacts   crm_Target_Contact[]
   campaign_sends    crm_campaign_sends[]
+  target_emails     crm_Target_Email[]
+  homepage          crm_Target_Homepage?
   converted_account crm_Accounts?          @relation("target_converted_account", fields: [converted_account_id], references: [id], onDelete: SetNull)
   converted_contact crm_Contacts?          @relation("target_converted_contact", fields: [converted_contact_id], references: [id], onDelete: SetNull)
 
@@ -2048,4 +2051,92 @@ model Invoice_Settings {
   companyPhone        String?
   companyWebsite      String?
   updatedAt           DateTime @updatedAt
+}
+
+enum crm_Ai_Prompt_Kind {
+  EMAIL
+  HOMEPAGE
+}
+
+enum crm_Ai_Prompt_Scope {
+  ORG
+  USER
+}
+
+enum crm_Target_Email_Status {
+  DRAFT
+  SENT
+  FAILED
+}
+
+enum crm_Homepage_Status {
+  PENDING
+  RUNNING
+  READY
+  FAILED
+}
+
+model crm_Ai_Prompt {
+  id         String              @id @default(uuid()) @db.Uuid
+  name       String
+  body       String              @db.Text
+  kind       crm_Ai_Prompt_Kind
+  scope      crm_Ai_Prompt_Scope
+  user_id    String?             @db.Uuid
+  is_default Boolean             @default(false)
+  created_by String?             @db.Uuid
+  created_on DateTime?           @default(now())
+  updatedAt  DateTime?           @updatedAt
+  deletedAt  DateTime?
+  deletedBy  String?             @db.Uuid
+
+  @@index([kind, scope])
+  @@index([user_id])
+  @@index([deletedAt])
+}
+
+model crm_Target_Homepage {
+  id             String              @id @default(uuid()) @db.Uuid
+  targetId       String              @unique @db.Uuid
+  slug           String              @unique
+  preview_url    String?
+  screenshot_url String?
+  status         crm_Homepage_Status @default(PENDING)
+  base_prompt    String?             @db.Text
+  error          String?
+  created_by     String?             @db.Uuid
+  created_on     DateTime?           @default(now())
+  updatedAt      DateTime?           @updatedAt
+  deletedAt      DateTime?
+
+  target crm_Targets @relation(fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model crm_Target_Email {
+  id                String                  @id @default(uuid()) @db.Uuid
+  targetId          String                  @db.Uuid
+  template_id       String?                 @db.Uuid
+  subject           String
+  body_html         String                  @db.Text
+  prompt_used       String?                 @db.Text
+  included_homepage Boolean                 @default(false)
+  status            crm_Target_Email_Status @default(DRAFT)
+  unsubscribe_token String                  @unique @default(uuid()) @db.Uuid
+  sent_at           DateTime?
+  resend_message_id String?
+  error_message     String?
+  created_by        String?                 @db.Uuid
+  created_on        DateTime?               @default(now())
+  updatedAt         DateTime?               @updatedAt
+  deletedAt         DateTime?
+
+  target   crm_Targets             @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  template crm_campaign_templates? @relation(fields: [template_id], references: [id], onDelete: SetNull)
+
+  @@index([targetId])
+  @@index([status])
+  @@index([deletedAt])
 }

@@ -334,3 +334,28 @@ the derive call + Target-list row.
 **Note:** the derive-on-read design was chosen because the need is display-only; if deals
 ever need to be *filtered/reported* by originating list, revisit with a stored
 `source_target_id` column on `crm_Opportunities`.
+
+---
+
+## feat/target-ai-outreach — AI outreach models (prompt library, target email, homepage seam)  (PR: TBD)
+
+Schema foundation for the Target AI Outreach email subsystem. **1 upstream-owned file**
+touched, **insertion-only**; new migration folder is fork-owned (no merge risk).
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `prisma/schema.prisma` | +91/−0 | **insert-only** | appended at end of file: 4 enums (`crm_Ai_Prompt_Kind`, `crm_Ai_Prompt_Scope`, `crm_Target_Email_Status`, `crm_Homepage_Status`) + 3 models (`crm_Ai_Prompt`, `crm_Target_Homepage`, `crm_Target_Email`). Relation fields inserted: `target_emails crm_Target_Email[]` + `homepage crm_Target_Homepage?` in `crm_Targets` (after `campaign_sends`); `target_emails crm_Target_Email[]` in `crm_campaign_templates` (after `steps`). No existing upstream lines rewritten. | Low (additive) |
+
+New fork-owned file: `prisma/migrations/20260929120000_target_ai_outreach/migration.sql`
+(creates only the 4 enums, 3 tables, their indexes and 3 FKs).
+
+**Re-verify after any upstream merge:** `pnpm exec prisma validate`. Upstream appending
+models at end-of-file or adding relation lines beside `campaign_sends` / `steps` is the only
+textual conflict surface — keep both sides.
+
+**Note (pre-existing drift, out of scope):** `prisma migrate diff` from the migrations to
+`schema.prisma` already reports unrelated drift on `main` (e.g. `DocumentSystemType` drops
+`INVOICE`, embedding FK/index drops, `BIGINT`/`id DEFAULT` alterations). Because of this,
+`prisma migrate dev` would fold that drift into the new migration (and refuses to run
+non-interactively), so this migration was authored by taking `migrate diff` output and
+keeping only the statements for the new objects.
