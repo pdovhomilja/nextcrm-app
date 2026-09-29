@@ -16,6 +16,16 @@ You MAY use merge tags: {{first_name}}, {{last_name}}, {{company}}, {{position}}
 If the operator's instructions reference a homepage/mockup, you MAY include {{homepage_url}} (link) and/or {{homepage_screenshot}} (image URL for an <img src>).
 Keep it concise and specific to the prospect. No placeholders like [Name].`;
 
+// Claude often wraps JSON in ```json fences or adds a preamble; pull out the object.
+function extractJsonObject(text: string): string | null {
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  const candidate = (fenced ? fenced[1] : text).trim();
+  const start = candidate.indexOf("{");
+  const end = candidate.lastIndexOf("}");
+  if (start === -1 || end === -1 || end < start) return null;
+  return candidate.slice(start, end + 1);
+}
+
 export const generateTargetEmail = async ({
   targetId,
   prompt,
@@ -64,7 +74,7 @@ export const generateTargetEmail = async ({
       signal: controller.signal,
       body: JSON.stringify({
         model: "claude-sonnet-5-5",
-        max_tokens: 1500,
+        max_tokens: 4000,
         system: SYSTEM_PROMPT,
         messages: [
           { role: "user", content: `Operator instructions:\n${prompt}\n\nProspect facts:\n${facts}` },
@@ -73,10 +83,13 @@ export const generateTargetEmail = async ({
     });
     if (!response.ok) return { error: "AI request failed. Please try again." };
     const data = await response.json();
-    const text: string = data?.content?.[0]?.text ?? "";
+    const text: string =
+      (data?.content ?? []).find((b: any) => b?.type === "text")?.text ?? "";
+    const raw = extractJsonObject(text);
+    if (!raw) return { error: "AI returned an unexpected response. Please try again." };
     let parsed: { subject?: string; html?: string };
     try {
-      parsed = JSON.parse(text);
+      parsed = JSON.parse(raw);
     } catch {
       return { error: "AI returned an unexpected response. Please try again." };
     }

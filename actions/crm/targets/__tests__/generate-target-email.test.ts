@@ -59,3 +59,38 @@ it("handles a malformed AI response without throwing", async () => {
   const res = await generateTargetEmail({ targetId: "t1", prompt: "x" });
   expect(res).toEqual({ error: "AI returned an unexpected response. Please try again." });
 });
+
+const aiText = (text: string) => ({
+  ok: true,
+  json: async () => ({ content: [{ type: "text", text }] }),
+});
+
+it("parses JSON wrapped in a markdown code fence", async () => {
+  (global.fetch as jest.Mock).mockResolvedValue(
+    aiText('```json\n{"subject":"Hi Acme","html":"<p>Pitch</p>"}\n```'),
+  );
+  const res = await generateTargetEmail({ targetId: "t1", prompt: "x" });
+  expect(res).toEqual({ data: { subject: "Hi Acme", body_html: "<p>Pitch</p>" } });
+});
+
+it("parses JSON preceded by a preamble", async () => {
+  (global.fetch as jest.Mock).mockResolvedValue(
+    aiText('Here is the email:\n{"subject":"Hi Acme","html":"<p>Pitch</p>"}'),
+  );
+  const res = await generateTargetEmail({ targetId: "t1", prompt: "x" });
+  expect(res).toEqual({ data: { subject: "Hi Acme", body_html: "<p>Pitch</p>" } });
+});
+
+it("picks the text block when a non-text block comes first", async () => {
+  (global.fetch as jest.Mock).mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      content: [
+        { type: "thinking", thinking: "hmm" },
+        { type: "text", text: JSON.stringify({ subject: "Hi Acme", html: "<p>Pitch</p>" }) },
+      ],
+    }),
+  });
+  const res = await generateTargetEmail({ targetId: "t1", prompt: "x" });
+  expect(res).toEqual({ data: { subject: "Hi Acme", body_html: "<p>Pitch</p>" } });
+});
