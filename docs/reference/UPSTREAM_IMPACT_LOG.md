@@ -181,3 +181,15 @@ the many conditional wraps) and `BasicView.tsx`. Guards: `__tests__/lib/target-t
 | `inngest/functions/emails/embed-email.ts` | +1/−1 | **rewrite** | `concurrency: { limit: 10 }` → `{ limit: 5 }` — the declared limit exceeded the Inngest account plan limit (5), which failed the whole-app sync and prevented ALL functions from registering (enrichment, embeddings, email sync, campaigns, calendar). | Low |
 
 **Why:** surfaced only after the sharp fix let `/api/inngest` sync succeed — Inngest then validated function configs and rejected the app because `embedEmail` requested concurrency 10 > plan 5. Capping at 5 lets the app register. Raise again if the Inngest plan is upgraded. Upstream-contributable.
+
+---
+
+## fix/e2b-base-image — Repair the E2B enrichment template build  (PR: TBD)
+
+**1 upstream-owned file**, **rewrite**:
+
+| Upstream file | Kind | What / where | Risk |
+|---|---|---|---|
+| `e2b.Dockerfile` | **rewrite** | (1) `FROM e2b/nodejs:latest` → `FROM e2bdev/base:latest` — the old base image was removed from E2B's registry (`image not found`). (2) Split the npm install: `agent-browser`/`tsx` stay global (used as CLIs), but `@anthropic-ai/sdk` is installed **locally under `/home/user`** — the agent runs as `/home/user/agent.mjs` and ESM bare-import resolution ignores the global prefix/NODE_PATH. | Low |
+
+**Why:** `e2b template create nextcrm-enrichment` failed first on the missing base image, then at runtime with `ERR_MODULE_NOT_FOUND: @anthropic-ai/sdk`. Both are fixed; the template now builds and the sandbox agent runs (the remaining enrichment failure is a separate ANTHROPIC-credential issue, not the template). The template is built via the E2B CLI, not the app deploy, so this change is for reproducibility.
