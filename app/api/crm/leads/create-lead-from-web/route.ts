@@ -1,4 +1,4 @@
-import { prismadb } from "@/lib/prisma";
+import { createWebLead } from "@/lib/crm/create-web-lead";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -19,7 +19,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "No headers" }, { status: 400 });
   }
 
-  const { firstName, lastName, account, job, email, phone, lead_source } = body;
+  const { firstName, lastName, account, job, email, phone, description, lead_source } =
+    body;
 
   //Validate auth with token from .env.local
   const token = headers.get("authorization");
@@ -46,16 +47,17 @@ export async function POST(req: Request) {
       );
     }
     try {
-      await prismadb.crm_Leads.create({
-        data: {
-          v: 1,
-          firstName,
-          lastName,
-          company: account,
-          jobTitle: job,
-          email,
-          phone,
-        },
+      // Fork hook: resolve source/status/assignee server-side and fire the
+      // crm/lead.saved event. See lib/crm/create-web-lead.ts.
+      await createWebLead({
+        firstName,
+        lastName,
+        company: account,
+        jobTitle: job,
+        email,
+        phone,
+        description,
+        lead_source,
       });
 
       return NextResponse.json({ message: "New lead created successfully" });
