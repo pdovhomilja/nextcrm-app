@@ -11,7 +11,14 @@ export const accountSchema = z.object({
   contacts: z
     .array(
       z.object({
-        first_name: z.string().optional(),
+        // `first_name` is nullable in the DB (`crm_Contacts.first_name String?`)
+        // — a company contact (e.g. one created by a target→opportunity
+        // conversion) legitimately has no person first name. `.optional()`
+        // alone rejects an explicit `null` and made this row-schema parse throw
+        // a ZodError during render (React #419 → "This page couldn't load").
+        // `.nullish()` accepts both null and undefined. `last_name` stays
+        // required — it is non-null in the DB.
+        first_name: z.string().nullish(),
         last_name: z.string(),
       })
     )

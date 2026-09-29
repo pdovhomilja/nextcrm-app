@@ -63,6 +63,31 @@
   behavior is inconsistent, so verify the generated output exists after a real
   `next build`.
 
+### A too-strict client row-schema turns nullable DB data into a whole-page crash
+
+- **Symptom:** an account/opportunity detail (or the accounts list) shows
+  **"This page couldn't load"** with **no digest** and **no red console error the
+  user notices**; DevTools Network shows only a placeholder ("Content unavailable.
+  Resource was not cached"). The server request returns **200** — it's a
+  **client-side** failure. Console (once captured) shows
+  `ZodError … path ["contacts",0,"first_name"] expected string, received null`
+  plus React **#419**.
+- **Cause:** a table row-schema (`accounts/table-data/schema.tsx`) declared a
+  contact field `z.string().optional()`, which rejects an explicit `null`. But
+  `crm_Contacts.first_name` is **nullable in the DB**, and a company contact
+  (created by a **target→opportunity conversion**) has a null first name. The
+  schema is parsed **during render** (`data-table-row-actions:
+  accountSchema.parse(row.original)`), so the reject throws mid-render → the whole
+  page fails to hydrate.
+- **Fix / rule:** **read/display schemas must be at least as permissive as the DB
+  column** — use `.nullish()` for a DB-nullable field, not `.optional()` (which
+  only allows `undefined`). A display schema should never enforce a business rule
+  by throwing; bad data should still render so it can be seen and fixed.
+  Enforcement (e.g. "individuals must have a name") belongs on the **write path**.
+- **Tell:** server 200 + no digest + `React #419` → look for a client-side
+  `.parse()` (zod) over row data, and diff the schema against the Prisma model's
+  nullability.
+
 ## Frontend / Tailwind
 
 ### Tailwind v4 arbitrary data-attribute variants can compile to nothing, silently
@@ -369,6 +394,20 @@
   use a valid UUID such as `11111111-1111-4111-8111-111111111111` (v4, variant-8), not the
   handler-direct placeholder.
 - **Tell:** `Invalid UUID` on `id` appearing only in tests that call `schema.parse(...)`.
+
+### Changing a UI placeholder/label breaks E2E specs that locate by exact text
+
+- **Symptom:** E2E goes red after a purely cosmetic UI copy change — e.g.
+  `expect(getByPlaceholder('Filter by name or company ...')).toBeVisible()` fails
+  "element(s) not found", and a later `.fill()` on the same locator times out.
+- **Cause:** the placeholder was reworded (added "industry") but specs still matched
+  the **old exact string**. Nothing else changed; CI (8 min) was the first to catch it.
+- **Fix / rule:** locate stable inputs by a **prefix regex** (`getByPlaceholder(/Filter by name/)`)
+  or by role, not the full copy. When you change any user-visible string, **grep the
+  `tests/e2e` specs and the manual-test docs for the old text in the same PR** — the
+  manual↔E2E parity walk should catch it before pushing.
+- **Tell:** an E2E `getByPlaceholder`/`getByText`/`getByRole({name})` failing right
+  after a copy tweak, with the source change touching only display text.
 
 ---
 

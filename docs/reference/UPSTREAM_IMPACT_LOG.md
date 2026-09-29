@@ -207,3 +207,15 @@ the many conditional wraps) and `BasicView.tsx`. Guards: `__tests__/lib/target-t
 | `.../campaigns/targets/table-data/schema.tsx` | **insert** | `description` added to `targetSchema` (needed for the tooltip) | Low |
 
 **Note:** also carries the `e2b.Dockerfile` repair (base image + local sdk) folded into this branch per request — see the `fix/e2b-base-image` section above.
+
+---
+
+## feat/targets-list-name-cell — Account row-schema accepts null contact first_name  (PR: same PR, folded in per request)
+
+**1 upstream-owned file**, one-field relaxation:
+
+| Upstream file | Kind | What / where | Risk |
+|---|---|---|---|
+| `.../crm/accounts/table-data/schema.tsx` | **rewrite** (1 field) | `contacts[].first_name`: `z.string().optional()` → `z.string().nullish()`. `.optional()` rejects an explicit `null`; `crm_Contacts.first_name` is nullable in the DB and a company contact (created by a target→opportunity conversion) has none. The row-schema is parsed during render, so the null threw a ZodError → React #419 → "This page couldn't load" (client-side, no digest) on the accounts list and the opportunity detail (`AccountsView`). `last_name` left required (non-null in DB). | Low |
+
+**Why:** reproduced first-hand on QA (`/crm/opportunities/d98743b0…`) — console showed `ZodError … path ["contacts",0,"first_name"] expected string, received null`. Fix aligns the display schema with the DB's existing nullability; enforcement of individual names belongs on the write path, not this read schema. Guard: `__tests__/crm/account-schema.test.ts` (revert-verified). Upstream-contributable.
