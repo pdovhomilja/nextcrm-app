@@ -17,13 +17,16 @@ jest.mock("@/lib/audit-log", () => ({
 import { prismadb } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/audit-log";
 import { crmTargetTools } from "@/lib/mcp/tools/crm-targets";
+import { crmTargetTriageTools } from "@/lib/mcp/tools/crm-target-triage";
 import { TARGET_FIELDS } from "@/lib/spreadsheet/target-fields";
 
 const USER = "u1";
 const TARGET_ID = "11111111-1111-1111-1111-111111111111";
 
+// Triage tools live in their own fork-owned file; search both arrays.
+const allTargetTools = [...crmTargetTools, ...crmTargetTriageTools];
 const run = (name: string, args: any, userId = USER) => {
-  const t = crmTargetTools.find((x) => x.name === name);
+  const t = allTargetTools.find((x) => x.name === name);
   if (!t) throw new Error(`tool not found: ${name}`);
   return (t.handler as any)(args, userId);
 };
@@ -41,22 +44,24 @@ beforeEach(() => {
   }));
 });
 
-describe("crm_list_targets triage_status filter", () => {
-  it("adds triage_status to the where clause when provided", async () => {
+describe("crm_list_targets_by_triage", () => {
+  it("scopes the query by triage_status and the caller", async () => {
     (prismadb.crm_Targets.findMany as jest.Mock).mockResolvedValue([]);
     (prismadb.crm_Targets.count as jest.Mock).mockResolvedValue(0);
-    await run("crm_list_targets", { limit: 20, offset: 0, triage_status: "NEW" });
+    await run("crm_list_targets_by_triage", { triage_status: "NEW", limit: 20, offset: 0 });
     const where = (prismadb.crm_Targets.findMany as jest.Mock).mock.calls[0][0].where;
     expect(where.triage_status).toBe("NEW");
     expect(where.created_by).toBe(USER);
+    expect(where.deletedAt).toBeNull();
   });
 
-  it("omits the triage_status filter when not provided", async () => {
+  it("leaves the upstream crm_list_targets tool unfiltered (additive: no core edit)", async () => {
     (prismadb.crm_Targets.findMany as jest.Mock).mockResolvedValue([]);
     (prismadb.crm_Targets.count as jest.Mock).mockResolvedValue(0);
     await run("crm_list_targets", { limit: 20, offset: 0 });
     const where = (prismadb.crm_Targets.findMany as jest.Mock).mock.calls[0][0].where;
     expect(where.triage_status).toBeUndefined();
+    expect(where).toEqual({ created_by: USER, deletedAt: null });
   });
 });
 

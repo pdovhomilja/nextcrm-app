@@ -22,14 +22,17 @@ resolve by hand. Re-run the entry's named tests to confirm the wiring survived.
 
 ## feat/target-triage — Target triage gate + MCP field parity  (PR: TBD)
 
-Adds a pre-conversion triage gate on `crm_Targets`. **13 new files** (action, `lib/crm/triage.ts`,
-`TriagePassDialog`, `TriageControl`, `triage-options`, copied `data-table-faceted-filter`,
-tests, docs) — zero merge risk. **8 upstream-owned files** touched, below.
+Adds a pre-conversion triage gate on `crm_Targets`. **14 new files** (action,
+`lib/crm/triage.ts`, **`lib/mcp/tools/crm-target-triage.ts`** — the triage MCP tools in
+their own fork-owned file, `TriagePassDialog`, `TriageControl`, `triage-options`, copied
+`data-table-faceted-filter`, tests, docs) — zero merge risk. **10 upstream-owned files**
+touched, all **insertion-only** (0 rewrites of upstream logic):
 
 | Upstream file | +/− | Insert-only? | What / where | Risk |
 |---|---|---|---|---|
 | `prisma/schema.prisma` | +27/0 | **insert** | new `enum crm_Triage_Status` + `enum crm_Pass_Reason` block after `enum crm_AuditLog_Action`; 6 fields appended inside `model crm_Targets`; 2 `@@index` | Low |
-| `lib/mcp/tools/crm-targets.ts` | +132/6 | **mixed** | insert: `triage_status` filter on `crm_list_targets`, new `crm_set_target_triage` tool, imports. **rewrite: `crm_create_target` + `crm_update_target` schema/handler objects (extended to CSV parity); `crm_set_target_triage` uses `buildTriageData`** | **Moderate — main watch-point** |
+| `lib/mcp/tools/crm-targets.ts` | +58/0 | **insert** | `company_website`/`industry`/`city`/`description`/… fields appended to the `crm_create_target` + `crm_update_target` schemas & handler types (CSV parity). No existing tool rewritten; list tool & triage tool live elsewhere. | Low |
+| `lib/mcp/tools/index.ts` | +3/0 | **insert** | export + import + spread of `crmTargetTriageTools` (mirrors the `crmEnrichmentTools` registration) | Low |
 | `lib/audit-log.ts` | +3/1 | **mixed** | insert: `"target"` added to `AuditEntityType` union. rewrite: removed a redundant `eslint-disable` above the `crm_AuditLog.create` cast (+2-line comment) | Low |
 | `app/[locale]/(routes)/campaigns/targets/table-components/columns.tsx` | +22/0 | **insert** | imports + one `triage_status` badge column before the `actions` column | Low |
 | `app/[locale]/(routes)/campaigns/targets/table-components/data-table-row-actions.tsx` | +29/0 | **insert** | imports + `onApprove` + `passOpen` state + `Approve`/`Pass…` menu items + `<TriagePassDialog/>` mount | Low–Med |
@@ -40,8 +43,10 @@ tests, docs) — zero merge risk. **8 upstream-owned files** touched, below.
 **Re-verify after any upstream merge:** `__tests__/actions/set-target-triage.test.ts`,
 `__tests__/mcp/crm-targets-triage.test.ts`, `tests/e2e/target-triage.spec.ts`.
 
-**Note:** the only rewrite of existing upstream logic is in `lib/mcp/tools/crm-targets.ts`
-(the create/update schema objects + the triage handler). If upstream reworks those tool
-definitions, that's where a conflict would land. The `crm_create_target`/`crm_update_target`
-field-parity extension is **upstream-contributable** — merging it upstream would remove that
-divergence.
+**Notes:**
+- **No upstream logic is rewritten.** The MCP triage handler + `crm_list_targets_by_triage`
+  moved to the fork-owned `lib/mcp/tools/crm-target-triage.ts`; `crm-targets.ts` now only
+  *appends* fields to the create/update schemas, and `index.ts` only *registers* the new
+  tool array. The lone non-insert is a 1-line lint cleanup in `audit-log.ts`.
+- The `crm_create_target`/`crm_update_target` field-parity additions are
+  **upstream-contributable** — merging them upstream would remove that divergence.
