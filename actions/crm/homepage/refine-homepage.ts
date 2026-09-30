@@ -1,6 +1,7 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { inngest } from "@/inngest/client";
+import { writeAuditLog } from "@/lib/audit-log";
 import {
   requireAuthenticated,
   assertCanWriteTarget,
@@ -10,9 +11,11 @@ import {
 
 export const refineHomepage = async (data: { homepageId: string; prompt: string }) => {
   const { homepageId } = data;
-  const prompt = data.prompt?.trim();
   if (!homepageId) return { error: "homepageId is required" };
-  if (!prompt) return { error: "prompt is required" };
+  if (typeof data.prompt !== "string" || !data.prompt.trim()) {
+    return { error: "A change request is required." };
+  }
+  const prompt = data.prompt.trim();
 
   let user;
   try {
@@ -48,6 +51,13 @@ export const refineHomepage = async (data: { homepageId: string; prompt: string 
   await inngest.send({
     name: "homepage/target.refine",
     data: { homepageId, targetId: homepage.targetId, prompt, triggeredBy: user.id },
+  });
+  await writeAuditLog({
+    entityType: "target",
+    entityId: homepage.targetId,
+    action: "updated",
+    changes: [{ field: "homepage", old: null, new: "refinement queued" }],
+    userId: user.id,
   });
   return { data: { queued: true } };
 };

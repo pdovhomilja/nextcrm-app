@@ -38,6 +38,15 @@ export const revertHomepageVersion = async (data: { homepageId: string; versionI
     throw e;
   }
 
+  const target = await prismadb.crm_Targets.findFirst({
+    where: { id: homepage.targetId, deletedAt: null },
+    select: { triage_status: true },
+  });
+  if (!target) return { error: "Target not found" };
+  if (target.triage_status !== "APPROVED") {
+    return { error: "Target must be approved before generating a homepage" };
+  }
+
   // The version must belong to THIS homepage (no cross-homepage reverts).
   const version = await prismadb.crm_Target_Homepage_Version.findFirst({
     where: { id: versionId, homepage_id: homepageId },

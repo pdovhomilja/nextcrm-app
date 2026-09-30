@@ -76,21 +76,30 @@ export async function POST(
     deletedAt: null,
   };
   let homepageId: string;
-  if (existing) {
-    // Regenerate keeps the live slug (and its stored objects) unless a
-    // different one was explicitly requested.
-    const data: typeof baseData & { slug?: string } = { ...baseData };
-    if (requestedSlug && slugify(requestedSlug) && slugify(requestedSlug) !== existing.slug) {
-      data.slug = await ensureUniqueSlug(requestedSlug);
+  try {
+    if (existing) {
+      // Regenerate keeps the live slug (and its stored objects) unless a
+      // different one was explicitly requested.
+      const data: typeof baseData & { slug?: string } = { ...baseData };
+      if (requestedSlug && slugify(requestedSlug) && slugify(requestedSlug) !== existing.slug) {
+        data.slug = await ensureUniqueSlug(requestedSlug);
+      }
+      await prismadb.crm_Target_Homepage.update({ where: { id: existing.id }, data });
+      homepageId = existing.id;
+    } else {
+      const slug = await resolveSlug(id, target.company, requestedSlug);
+      const created = await prismadb.crm_Target_Homepage.create({
+        data: { ...baseData, targetId: id, slug, created_by: user.id },
+      });
+      homepageId = created.id;
     }
-    await prismadb.crm_Target_Homepage.update({ where: { id: existing.id }, data });
-    homepageId = existing.id;
-  } else {
-    const slug = await resolveSlug(id, target.company, requestedSlug);
-    const created = await prismadb.crm_Target_Homepage.create({
-      data: { ...baseData, targetId: id, slug, created_by: user.id },
-    });
-    homepageId = created.id;
+  } catch (e) {
+    // ensureUniqueSlug is check-then-write; a concurrent request can still
+    // collide on slug or targetId.
+    if ((e as { code?: string })?.code === "P2002") {
+      return NextResponse.json({ error: "Slug or homepage already exists; retry" }, { status: 409 });
+    }
+    throw e;
   }
 
   try {

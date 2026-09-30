@@ -24,7 +24,7 @@ export const updateHomepageSlug = async (data: { homepageId: string; slug: strin
 
   const homepage = await prismadb.crm_Target_Homepage.findFirst({
     where: { id: homepageId, deletedAt: null },
-    select: { id: true, targetId: true, slug: true },
+    select: { id: true, targetId: true, slug: true, status: true, preview_url: true },
   });
   if (!homepage) return { error: "Homepage not found" };
 
@@ -35,10 +35,26 @@ export const updateHomepageSlug = async (data: { homepageId: string; slug: strin
     throw e;
   }
 
+  // Renaming only edits the DB row: the published objects stay under the old
+  // slug, so a rename would 404 the live (possibly emailed) link. Only allow it
+  // while nothing is published (or after a failed run).
+  if (homepage.status === "PENDING" || homepage.status === "RUNNING") {
+    return { error: "Can't rename while generating." };
+  }
+  if (homepage.status === "READY" || (homepage.status !== "FAILED" && homepage.preview_url)) {
+    return { error: "This page is already published; regenerate to change its URL." };
+  }
+
   // Unchanged: ensureUniqueSlug would see our own row and suffix it "-2".
   if (wanted === homepage.slug) return { data: { slug: homepage.slug } };
 
-  const slug = await ensureUniqueSlug(data.slug);
-  await prismadb.crm_Target_Homepage.update({ where: { id: homepage.id }, data: { slug } });
-  return { data: { slug } };
+  try {
+    const slug = await ensureUniqueSlug(data.slug);
+    await prismadb.crm_Target_Homepage.update({ where: { id: homepage.id }, data: { slug } });
+    return { data: { slug } };
+  } catch (e) {
+    // ensureUniqueSlug is check-then-write, so a concurrent pick can still collide.
+    if ((e as { code?: string })?.code === "P2002") return { error: "That slug is taken, pick another." };
+    throw e;
+  }
 };

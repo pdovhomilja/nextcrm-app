@@ -381,6 +381,13 @@ describe("revert event", () => {
     expect(statuses()).toEqual(["RUNNING", "FAILED"]);
   });
 
+  it("loads the homepage with the soft-delete filter", async () => {
+    await handler({ event: revertEvent, step });
+    expect(prismadb.crm_Target_Homepage.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "h1", deletedAt: null } }),
+    );
+  });
+
   it("missing homepage row: no crash, nothing rendered", async () => {
     (prismadb.crm_Target_Homepage.findUnique as jest.Mock).mockResolvedValue(null);
     await expect(handler({ event: revertEvent, step })).resolves.toEqual({ skipped: "no homepage row" });

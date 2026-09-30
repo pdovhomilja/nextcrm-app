@@ -148,6 +148,13 @@ describe("POST generate-homepage", () => {
     expect(send).not.toHaveBeenCalled();
   });
 
+  it("returns 409 (not 500) on a P2002 unique collision", async () => {
+    hpCreate.mockRejectedValue(Object.assign(new Error("unique"), { code: "P2002" }));
+    const res = await call();
+    expect(res.status).toBe(409);
+    expect(send).not.toHaveBeenCalled();
+  });
+
   it("marks the row FAILED if the event send fails", async () => {
     jest.spyOn(console, "error").mockImplementation(() => {});
     send.mockRejectedValue(new Error("inngest down"));
@@ -170,6 +177,17 @@ describe("refineHomepage", () => {
       data: { homepageId: "h1", targetId: TID, prompt: "Bigger hero", triggeredBy: "me" },
     });
   });
+  it("writes an audit log on success", async () => {
+    await refineHomepage({ homepageId: "h1", prompt: "x" });
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({ entityType: "target", entityId: TID, action: "updated", userId: "me" }),
+    );
+  });
+  it("rejects a non-string prompt without throwing", async () => {
+    const res = await refineHomepage({ homepageId: "h1", prompt: undefined as unknown as string });
+    expect(res).toEqual({ error: "A change request is required." });
+    expect(send).not.toHaveBeenCalled();
+  });
   it("refuses a non-approved target", async () => {
     targetFindFirst.mockResolvedValue({ ...APPROVED, triage_status: "PASSED" });
     const res = await refineHomepage({ homepageId: "h1", prompt: "x" });
@@ -182,7 +200,7 @@ describe("refineHomepage", () => {
     expect(send).not.toHaveBeenCalled();
   });
   it("requires a prompt", async () => {
-    expect(await refineHomepage({ homepageId: "h1", prompt: "  " })).toEqual({ error: "prompt is required" });
+    expect(await refineHomepage({ homepageId: "h1", prompt: "  " })).toEqual({ error: "A change request is required." });
     expect(send).not.toHaveBeenCalled();
   });
   it("Homepage not found", async () => {
@@ -242,6 +260,13 @@ describe("revertHomepageVersion", () => {
       expect.objectContaining({ entityType: "target", entityId: TID, action: "updated" }),
     );
   });
+  it("refuses when the target is no longer approved", async () => {
+    targetFindFirst.mockResolvedValue({ ...APPROVED, triage_status: "PASSED" });
+    verFindFirst.mockResolvedValue({ id: "v1" });
+    const res = await revertHomepageVersion({ homepageId: "h1", versionId: "v1" });
+    expect(res).toEqual({ error: "Target must be approved before generating a homepage" });
+    expect(send).not.toHaveBeenCalled();
+  });
   it("rejects a version that belongs to another homepage", async () => {
     verFindFirst.mockResolvedValue(null);
     expect(await revertHomepageVersion({ homepageId: "h1", versionId: "x" })).toEqual({ error: "Version not found" });
@@ -255,12 +280,43 @@ describe("revertHomepageVersion", () => {
 });
 
 describe("updateHomepageSlug", () => {
-  it("ensures uniqueness and updates", async () => {
+  const UNPUBLISHED = { ...HP, status: "FAILED", preview_url: null };
+  beforeEach(() => hpFindFirst.mockResolvedValue(UNPUBLISHED));
+
+  it("ensures uniqueness and updates when unpublished/failed", async () => {
     uniq.mockResolvedValue("new-slug-2");
     const res = await updateHomepageSlug({ homepageId: "h1", slug: "New Slug" });
     expect(uniq).toHaveBeenCalledWith("New Slug");
     expect(hpUpdate).toHaveBeenCalledWith({ where: { id: "h1" }, data: { slug: "new-slug-2" } });
     expect(res).toEqual({ data: { slug: "new-slug-2" } });
+  });
+  it("allows a rename of a never-published PENDING-free row (no preview_url, not READY)", async () => {
+    // status is not READY/PENDING/RUNNING and nothing published
+    hpFindFirst.mockResolvedValue({ ...HP, status: "FAILED", preview_url: null });
+    expect((await updateHomepageSlug({ homepageId: "h1", slug: "fresh" })).error).toBeUndefined();
+  });
+  it("rejects a rename of a READY (published) page", async () => {
+    hpFindFirst.mockResolvedValue({ ...HP, status: "READY", preview_url: "https://p/p/acme-plumbing" });
+    const res = await updateHomepageSlug({ homepageId: "h1", slug: "other" });
+    expect(res).toEqual({ error: "This page is already published; regenerate to change its URL." });
+    expect(hpUpdate).not.toHaveBeenCalled();
+  });
+  it("rejects a rename of a READY page even when preview_url is null", async () => {
+    hpFindFirst.mockResolvedValue({ ...HP, status: "READY", preview_url: null });
+    const res = await updateHomepageSlug({ homepageId: "h1", slug: "other" });
+    expect(res.error).toMatch(/already published/);
+    expect(hpUpdate).not.toHaveBeenCalled();
+  });
+  it.each(["PENDING", "RUNNING"])("rejects a rename while %s", async (status) => {
+    hpFindFirst.mockResolvedValue({ ...HP, status, preview_url: null });
+    const res = await updateHomepageSlug({ homepageId: "h1", slug: "other" });
+    expect(res).toEqual({ error: "Can't rename while generating." });
+    expect(hpUpdate).not.toHaveBeenCalled();
+  });
+  it("returns a friendly error on a P2002 collision", async () => {
+    hpUpdate.mockRejectedValue(Object.assign(new Error("unique"), { code: "P2002" }));
+    const res = await updateHomepageSlug({ homepageId: "h1", slug: "taken" });
+    expect(res).toEqual({ error: "That slug is taken, pick another." });
   });
   it("is a no-op when the slug is unchanged (does not suffix its own slug)", async () => {
     const res = await updateHomepageSlug({ homepageId: "h1", slug: "Acme Plumbing" });

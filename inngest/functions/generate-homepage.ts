@@ -322,7 +322,7 @@ async function refineFlow(step: StepLike, data: RefineHomepageEventData) {
 async function revertFlow(step: StepLike, data: RevertHomepageEventData) {
   const homepage = await step.run("load-homepage", () =>
     prismadb.crm_Target_Homepage.findUnique({
-      where: { id: data.homepageId },
+      where: { id: data.homepageId, deletedAt: null },
       select: { id: true, targetId: true, slug: true, current_version_id: true },
     }),
   );
