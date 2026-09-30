@@ -64,7 +64,11 @@ export const generateTargetEmail = async ({
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30_000);
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    // ANTHROPIC_BASE_URL is an optional test seam (same name the Anthropic SDKs use):
+    // the E2E suite points it at a local mock so generation is deterministic and free.
+    // Unset in every deployed environment -> the real API.
+    const baseUrl = process.env.ANTHROPIC_BASE_URL || "https://api.anthropic.com";
+    const response = await fetch(`${baseUrl}/v1/messages`, {
       method: "POST",
       headers: {
         "content-type": "application/json",
