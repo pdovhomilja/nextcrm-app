@@ -662,6 +662,22 @@
 - **Tell:** a feature's POST "just fails" with no server log; confirm with
   `curl -s -D - --max-redirs 0 -X POST <url>` — a `308` to a non-existent path is the smoking gun.
 
+### A server action that THROWS shows users a redacted crash in production — return `{data}|{error}`
+
+- **Symptom:** an AI/API call in a server action fails and the user sees "An error occurred in the
+  Server Components render. The specific message is omitted in production builds … a digest property
+  is included" — even though the client caller has a `try/catch` that sets an error message.
+- **Cause:** Next.js **redacts errors thrown from server actions** at the server→client boundary in
+  production. The client's `catch` receives the redacted message, not the real one (e.g. an OpenAI
+  429). Only THROWN errors are redacted — **returned values are not**.
+- **Fix / rule:** server actions should **return** a discriminated result (`{ data } | { error }`)
+  with a friendly message, not throw, for expected failures (rate limit, bad key, timeout, bad
+  response). If the throwing action is upstream-owned, wrap it in a fork-owned action that catches
+  server-side (the real message is visible there) and returns the mapped error — see
+  `actions/campaigns/templates/generate-template-safe.ts`.
+- **Tell:** a `500` on the page's own `POST` (the server-action invocation) with a `digest`, and a
+  client `catch` that only ever shows the generic redacted string.
+
 ---
 
 <!-- Add new entries above this line, newest-relevant first within each section.

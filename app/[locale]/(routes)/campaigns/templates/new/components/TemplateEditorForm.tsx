@@ -9,7 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TipTapEditor } from "@/components/campaigns/TipTapEditor";
 import { createTemplate } from "@/actions/campaigns/templates/create-template";
 import { updateTemplate } from "@/actions/campaigns/templates/update-template";
-import { generateTemplate } from "@/actions/campaigns/templates/generate-template";
+// fork: safe wrapper returns {data}|{error} (thrown server-action errors are
+// redacted in prod, which crashed the page); see generate-template-safe.ts.
+import { generateTemplateSafe } from "@/actions/campaigns/templates/generate-template-safe";
 import { previewTemplate } from "@/actions/campaigns/templates/preview-template";
 
 type InitialData = {
@@ -59,11 +61,15 @@ export default function TemplateEditorForm({ initialData, templateId }: Props) {
     setIsGenerating(true);
     setError(null);
     try {
-      const result = await generateTemplate(aiPrompt);
-      setContentHtml(result.html);
-      setContentJson(result.json);
-      if (result.subject && !subject) {
-        setSubject(result.subject);
+      const result = await generateTemplateSafe(aiPrompt);
+      if ("error" in result) {
+        setError(result.error);
+        return;
+      }
+      setContentHtml(result.data.html);
+      setContentJson(result.data.json);
+      if (result.data.subject && !subject) {
+        setSubject(result.data.subject);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "AI generation failed");
