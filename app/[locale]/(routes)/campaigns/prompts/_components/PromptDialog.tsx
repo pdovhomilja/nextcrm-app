@@ -31,9 +31,11 @@ type Prompt = {
 
 export function PromptDialog({
   prompt,
+  isAdmin,
   onClose,
 }: {
   prompt?: Prompt;
+  isAdmin: boolean;
   onClose: () => void;
 }) {
   const [name, setName] = useState(prompt?.name ?? "");
@@ -98,6 +100,9 @@ export function PromptDialog({
                 <SelectContent>
                   <SelectItem value="EMAIL">Email</SelectItem>
                   <SelectItem value="HOMEPAGE">Homepage</SelectItem>
+                  {isAdmin && (
+                    <SelectItem value="HOMEPAGE_BASE">Homepage base (designer)</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
               <Select

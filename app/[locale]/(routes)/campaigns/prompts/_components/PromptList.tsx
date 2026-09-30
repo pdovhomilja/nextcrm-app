@@ -14,7 +14,7 @@ type Prompt = {
   scope: "ORG" | "USER";
 };
 
-export function PromptList({ prompts }: { prompts: Prompt[] }) {
+export function PromptList({ prompts, isAdmin }: { prompts: Prompt[]; isAdmin: boolean }) {
   const router = useRouter();
   const [editing, setEditing] = useState<Prompt | null>(null);
   const [creating, setCreating] = useState(false);
@@ -52,7 +52,7 @@ export function PromptList({ prompts }: { prompts: Prompt[] }) {
           {prompts.map((p) => (
             <tr key={p.id} className="border-t">
               <td className="py-2">{p.name}</td>
-              <td>{p.kind}</td>
+              <td>{p.kind === "HOMEPAGE_BASE" ? "Homepage base (designer)" : p.kind}</td>
               <td>{p.scope}</td>
               <td className="text-right space-x-2">
                 <Button
@@ -78,6 +78,7 @@ export function PromptList({ prompts }: { prompts: Prompt[] }) {
       </table>
       {creating && (
         <PromptDialog
+          isAdmin={isAdmin}
           onClose={() => {
             setCreating(false);
             router.refresh();
@@ -87,6 +88,7 @@ export function PromptList({ prompts }: { prompts: Prompt[] }) {
       {editing && (
         <PromptDialog
           prompt={editing}
+          isAdmin={isAdmin}
           onClose={() => {
             setEditing(null);
             router.refresh();

@@ -24,7 +24,7 @@ export const createPrompt = async (data: {
   let user;
   try {
     user = await requireAuthenticated();
-    if (data.scope === "ORG") await requireRole(["admin"]);
+    if (data.scope === "ORG" || data.kind === "HOMEPAGE_BASE") await requireRole(["admin"]);
   } catch (e) {
     if (e instanceof AuthenticationError) return { error: "Unauthorized" };
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
