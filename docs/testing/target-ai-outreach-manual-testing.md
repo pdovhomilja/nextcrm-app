@@ -96,11 +96,13 @@ the preview, and the sent email carries the overridden label + inherited link).
 4. Change the **Button label** (and/or link). Generate, then **Verify:** the preview shows the amber
    button with your overridden label. Send, and **Verify:** the received email's button uses the
    overridden label and the (inherited) link.
-5. **Homepage auto-default:** with a target that has a generated homepage, check **Include homepage…**.
-   **Verify:** the **Button link** field switches to `{{homepage_url}}`; unchecking restores the
-   template's link. On send, the button links to that target's homepage. *(The `{{homepage_url}}`
-   resolution is also covered by `actions/crm/targets/__tests__/preview-target-email.test.ts`; the
-   homepage-checkbox auto-fill needs a generated homepage, so it is verified manually here.)*
+5. **Homepage default + auto-link:** open the drawer on a target that **already has a generated
+   homepage**. **Verify:** "Include homepage…" starts **checked** and the **Button link** starts as
+   `{{homepage_url}}`. Unchecking restores the template's link; re-checking sets it back. On send, the
+   button links to that target's homepage. On a target with **no** homepage, the box starts unchecked
+   and disabled. *(The `{{homepage_url}}` resolution is covered by
+   `actions/crm/targets/__tests__/preview-target-email.test.ts`; the default-checked + auto-fill needs
+   a generated homepage, so it is verified manually here — E2E known gap.)*
 
 ### 1e. Edit the AI draft before sending
 

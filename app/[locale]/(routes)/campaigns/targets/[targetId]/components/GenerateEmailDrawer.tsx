@@ -51,7 +51,8 @@ export function GenerateEmailDrawer(props: {
   const [templateId, setTemplateId] = useState<string>(
     props.templates[0]?.id ?? "",
   );
-  const [includeHomepage, setIncludeHomepage] = useState(false);
+  // Default to including the homepage when this target already has one generated.
+  const [includeHomepage, setIncludeHomepage] = useState(props.hasHomepage);
 
   // CTA button: inherited from the selected template, overridable per-target.
   const ctaDefaults = (id: string) => {
@@ -60,7 +61,10 @@ export function GenerateEmailDrawer(props: {
   };
   const initialCta = ctaDefaults(props.templates[0]?.id ?? "");
   const [ctaLabel, setCtaLabel] = useState(initialCta.label);
-  const [ctaUrl, setCtaUrl] = useState(initialCta.url);
+  // When the homepage is included by default, the CTA link defaults to it too.
+  const [ctaUrl, setCtaUrl] = useState(
+    props.hasHomepage ? HOMEPAGE_CTA_URL : initialCta.url,
+  );
 
   const [subject, setSubject] = useState("");
   const [bodyHtml, setBodyHtml] = useState("");
@@ -223,11 +227,11 @@ export function GenerateEmailDrawer(props: {
       setPreviewHtml("");
       setPromptId("");
       setPrompt("");
-      setIncludeHomepage(false);
-      // Restore CTA to the (persisted) template's defaults for the next open.
+      // Re-apply the homepage default (checked when the target has one) for reopen.
+      setIncludeHomepage(props.hasHomepage);
       const d = ctaDefaults(templateId);
       setCtaLabel(d.label);
-      setCtaUrl(d.url);
+      setCtaUrl(props.hasHomepage ? HOMEPAGE_CTA_URL : d.url);
       setBusy(null);
     }
     props.onOpenChange(v);
