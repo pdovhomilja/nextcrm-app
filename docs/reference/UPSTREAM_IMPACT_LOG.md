@@ -455,3 +455,7 @@ email render path depends on them).
 ### feat/target-homepage-generation — register generate-homepage Inngest function
 - `app/api/inngest/route.ts` — insert-only (+2): `import { generateHomepage } from "@/inngest/functions/generate-homepage";` (after the last import) and `generateHomepage,` appended as the last entry of the `functions` array. Risk Low (on conflict keep both sides — upstream's functions plus ours; the array tail is the usual conflict spot).
 - **Re-verify after any upstream merge:** `generateHomepage` is still imported and present in the `functions` array, or the homepage generate/refine events are never handled.
+
+### feat/target-homepage-generation — public /p/ pass-through in proxy.ts
+- `proxy.ts` — insert-only (+5): an early `if (path.startsWith("/p/")) return NextResponse.next();` block (with a `// fork:` comment) directly after the existing `/api/inngest` pass-through. Without it the root `/p/[slug]` path (no dot, so it hits the intl matcher) would be forced through the sign-in redirect. Scoped to `/p/` only; no other path's auth is changed. Risk Low (on conflict keep both sides; the `/api/inngest` block is the usual neighbour).
+- **Re-verify after any upstream merge:** the `/p/` early-return is still present and precedes the auth/intl logic, or prospect preview links redirect to sign-in. Then `pnpm exec jest app/p`.

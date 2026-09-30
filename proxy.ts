@@ -23,6 +23,11 @@ export async function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // fork: public prospect homepage previews (/p/[slug]) — no auth, no intl; the slug is the capability
+  if (path.startsWith("/p/")) {
+    return NextResponse.next();
+  }
+
   // better-auth API routes — pass through to better-auth handler
   if (path.startsWith("/api/auth")) {
     return NextResponse.next();
