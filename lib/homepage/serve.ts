@@ -5,7 +5,7 @@ import { isValidSlug } from "@/lib/homepage/slug";
 // No auth. The slug is a readable, user-specifiable value BY DESIGN (guessable);
 // the content is a non-sensitive prospect mockup, so it is not a secret. Every
 // failure mode (bad slug,
-// unknown slug, not READY, missing R2 object, storage error) returns the SAME
+// unknown slug, never published, missing R2 object, storage error) returns the SAME
 // generic 404 so nothing can be enumerated and nothing 500s.
 
 // isValidSlug() (lib/homepage/slug.ts) is the single canonical shape. Rejecting
@@ -39,7 +39,14 @@ export const OK_HEADERS = {
 // while page + CDN scripts (e.g. Tailwind Play) still run. NEVER add allow-same-origin.
 export const HTML_CSP = "sandbox allow-scripts";
 
-/** Resolve a slug to a live READY homepage and fetch its R2 object; null on any miss. */
+/**
+ * Resolve a slug to a PUBLISHED homepage and fetch its R2 object; null on any miss.
+ * The gate is `current_version_id` (a version has been published), deliberately NOT
+ * `status`: during refine/regenerate/revert the job sets RUNNING (and FAILED on a
+ * failed refine) while the previously published R2 object stays intact, so a live,
+ * already-emailed link must keep serving. A never-published page (current_version_id
+ * null, e.g. mid-first-generation or a first-gen failure) still 404s.
+ */
 export async function loadPublished<T>(
   slug: string,
   fetchObject: (slug: string) => Promise<T | null>
@@ -47,7 +54,7 @@ export async function loadPublished<T>(
   if (!isValidSlug(slug)) return null;
   try {
     const row = await prismadb.crm_Target_Homepage.findFirst({
-      where: { slug, deletedAt: null, status: "READY" },
+      where: { slug, deletedAt: null, current_version_id: { not: null } },
       select: { id: true },
     });
     if (!row) return null;

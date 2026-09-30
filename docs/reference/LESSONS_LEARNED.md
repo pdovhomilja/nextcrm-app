@@ -523,6 +523,21 @@
 - **Tell:** any change to `/p/` headers or the iframe `sandbox` attribute that adds
   `allow-same-origin`, or serves the HTML from the CRM origin without the CSP.
 
+### Gate the public preview on "has a published version", not on job `status`
+
+- **Symptom:** an already-emailed `/p/<slug>` link 404s while a refine/regenerate/revert runs
+  (`status=RUNNING`) and after a failed refine (`status=FAILED`), even though the previously
+  published R2 object is intact.
+- **Cause:** the serve gate required `status: "READY"`, but the job flips status through
+  RUNNING/FAILED without touching the live R2 object.
+- **Rule:** `lib/homepage/serve.ts` gates on `current_version_id: { not: null }` (plus
+  `deletedAt: null`). A never-published page (no version) still 404s. Never key public
+  availability off a transient job status.
+- **Related (Inngest state):** never return base64 image data from a `step.run` — every step
+  output is persisted in run state and can hit output limits on media-rich pages. Do
+  render + screenshot + vision inside one step, or pass a short transient R2 key
+  (`previews/<slug>/tmp/source.png`) between steps.
+
 ## Testing
 
 ### A schema-validated MCP-tool test needs a strict-format UUID, not the shared placeholder id

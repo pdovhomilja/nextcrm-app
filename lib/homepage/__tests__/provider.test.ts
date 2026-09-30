@@ -47,3 +47,36 @@ it("throws on malformed or missing fields", async () => {
   (global.fetch as jest.Mock).mockResolvedValue({ ok: true, json: async () => ({ content: [{ type: "text", text: '{"critique":"x"}' }] }) });
   await expect(generateHomepage({ apiKey: "k", brief: "b", prompt: "p" })).rejects.toThrow();
 });
+
+it("passes an AbortSignal to fetch and aborts the request after the 120s budget", async () => {
+  jest.useFakeTimers();
+  try {
+    (global.fetch as jest.Mock).mockImplementation(
+      (_url: string, init: { signal: AbortSignal }) =>
+        new Promise((_res, rej) => {
+          init.signal.addEventListener("abort", () => rej(new Error("aborted")));
+        }),
+    );
+    const p = generateHomepage({ apiKey: "k", brief: "b", prompt: "p" });
+    const assertion = expect(p).rejects.toThrow("aborted");
+    const signal = (global.fetch as jest.Mock).mock.calls[0][1].signal as AbortSignal;
+    expect(signal.aborted).toBe(false);
+    await jest.advanceTimersByTimeAsync(119_000);
+    expect(signal.aborted).toBe(false);
+    await jest.advanceTimersByTimeAsync(2_000);
+    expect(signal.aborted).toBe(true);
+    await assertion;
+  } finally {
+    jest.useRealTimers();
+  }
+});
+
+it("clears the abort timer on success (no pending timers)", async () => {
+  jest.useFakeTimers();
+  try {
+    await generateHomepage({ apiKey: "k", brief: "b", prompt: "p" });
+    expect(jest.getTimerCount()).toBe(0);
+  } finally {
+    jest.useRealTimers();
+  }
+});

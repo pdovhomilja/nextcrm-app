@@ -15,6 +15,9 @@ jest.mock("@/lib/homepage/render", () => ({ renderAndScreenshot: jest.fn() }));
 jest.mock("@/lib/homepage/storage", () => ({
   putHomepageHtml: jest.fn(),
   putHomepageScreenshot: jest.fn(),
+  putHomepageTmpSource: jest.fn(),
+  getHomepageTmpSource: jest.fn(),
+  deleteHomepageTmpSource: jest.fn(),
   homepageShotKey: (slug: string) => `previews/${slug}/screenshot.png`,
 }));
 
@@ -24,7 +27,13 @@ import { getApiKey } from "@/lib/api-keys";
 import { harvestSource } from "@/lib/homepage/harvest-source";
 import { generateHomepage } from "@/lib/homepage/provider";
 import { renderAndScreenshot } from "@/lib/homepage/render";
-import { putHomepageHtml, putHomepageScreenshot } from "@/lib/homepage/storage";
+import {
+  putHomepageHtml,
+  putHomepageScreenshot,
+  putHomepageTmpSource,
+  getHomepageTmpSource,
+  deleteHomepageTmpSource,
+} from "@/lib/homepage/storage";
 import { AUTO_PASSES, onGenerateHomepageFailure } from "../generate-homepage";
 
 // createFunction is called once at module load — capture config + handler.
@@ -42,6 +51,9 @@ const handler = createFunctionMock.mock.results[0].value as (ctx: {
 }) => Promise<unknown>;
 
 const step = { run: (_n: string, f: () => unknown) => Promise.resolve().then(f) };
+
+const SRC_B64 = Buffer.from("SRC_SHOT").toString("base64");
+const PNG_B64 = Buffer.from("PNGDATA").toString("base64");
 
 const homepageUpdate = prismadb.crm_Target_Homepage.update as jest.Mock;
 const homepageUpdateMany = prismadb.crm_Target_Homepage.updateMany as jest.Mock;
@@ -71,7 +83,7 @@ beforeEach(() => {
   (prismadb.crm_Targets.findUnique as jest.Mock).mockResolvedValue(target);
   (prismadb.crm_Target_Homepage.findUnique as jest.Mock).mockResolvedValue(homepage);
   (harvestSource as jest.Mock).mockResolvedValue({
-    screenshotB64: "SRC_SHOT",
+    screenshotB64: SRC_B64,
     brand: { logoUrl: null, colors: ["#123456"], fonts: ["Inter"], copy: "We fix pipes" },
   });
   let n = 0;
@@ -80,6 +92,9 @@ beforeEach(() => {
     critique: `critique ${n}`,
   }));
   (renderAndScreenshot as jest.Mock).mockResolvedValue(Buffer.from("PNGDATA"));
+  (putHomepageTmpSource as jest.Mock).mockResolvedValue(undefined);
+  (getHomepageTmpSource as jest.Mock).mockResolvedValue(Buffer.from("SRC_SHOT"));
+  (deleteHomepageTmpSource as jest.Mock).mockResolvedValue(undefined);
   let v = 0;
   versionCreate.mockImplementation(async () => ({ id: `ver${++v}` }));
   homepageUpdate.mockResolvedValue({});
@@ -148,16 +163,26 @@ describe("generate event", () => {
     // 1 initial + AUTO_PASSES refinements
     expect(generateHomepage).toHaveBeenCalledTimes(1 + AUTO_PASSES);
     const first = (generateHomepage as jest.Mock).mock.calls[0][0];
-    expect(first).toMatchObject({ apiKey: "sk-test", sourceScreenshotB64: "SRC_SHOT" });
+    expect(first).toMatchObject({ apiKey: "sk-test", sourceScreenshotB64: SRC_B64 });
     expect(first.previousHtml).toBeUndefined();
+    expect(first.refinedScreenshotB64).toBeUndefined();
+    // the source shot goes to a transient R2 key, not through step state
+    expect(putHomepageTmpSource).toHaveBeenCalledWith("acme-plumbing", Buffer.from("SRC_SHOT"));
     expect(first.brief).toContain("Acme Plumbing");
     expect(first.brief).toContain("#123456");
     expect(first.prompt).toContain("Make it bold");
     // later passes are seeded with previous html + the rendered screenshot
     const second = (generateHomepage as jest.Mock).mock.calls[1][0];
     expect(second.previousHtml).toBe("<html>v1</html>");
-    expect(second.refinedScreenshotB64).toBe(Buffer.from("PNGDATA").toString("base64"));
-    expect(second.sourceScreenshotB64).toBe("SRC_SHOT");
+    expect(second.refinedScreenshotB64).toBe(PNG_B64);
+    expect(second.sourceScreenshotB64).toBe(SRC_B64);
+    // each auto pass renders the PREVIOUS html in-step; the final html is rendered for publish
+    expect((renderAndScreenshot as jest.Mock).mock.calls.map((c) => c[0])).toEqual([
+      "<html>v1</html>",
+      "<html>v2</html>",
+      "<html>v3</html>",
+      "<html>v4</html>",
+    ]);
 
     // every pass persisted as an AUTO version with its critique
     expect(versionCreate).toHaveBeenCalledTimes(1 + AUTO_PASSES);
@@ -182,6 +207,46 @@ describe("generate event", () => {
       error: null,
     });
     expect(statuses()).not.toContain("FAILED");
+    // transient source screenshot cleaned up after the run
+    expect(deleteHomepageTmpSource).toHaveBeenCalledWith("acme-plumbing");
+  });
+
+  it("keeps base64 image data out of every persisted step return value", async () => {
+    const outputs: { name: string; out: unknown }[] = [];
+    const recording = {
+      run: async (name: string, f: () => unknown) => {
+        const out = await f();
+        outputs.push({ name, out });
+        return out;
+      },
+    };
+    await handler({ event: generateEvent, step: recording });
+    expect(outputs.length).toBeGreaterThan(0);
+    const blob = JSON.stringify(outputs);
+    expect(blob).not.toContain(PNG_B64);
+    expect(blob).not.toContain(SRC_B64);
+    expect(blob).not.toMatch(/screenshotB64/);
+    expect(outputs.at(-1)!.name).not.toBe("mark-failed");
+  });
+
+  it("loads the target and homepage with the soft-delete filter", async () => {
+    await handler({ event: generateEvent, step });
+    expect(prismadb.crm_Targets.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "t1", deletedAt: null } }),
+    );
+    expect(prismadb.crm_Target_Homepage.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { targetId: "t1", deletedAt: null } }),
+    );
+  });
+
+  it("failure still FAILED and cleans up the transient source screenshot; cleanup errors never mask it", async () => {
+    (deleteHomepageTmpSource as jest.Mock).mockRejectedValue(new Error("r2 delete down"));
+    (renderAndScreenshot as jest.Mock).mockRejectedValue(new Error("chromium exploded"));
+    await handler({ event: generateEvent, step });
+    expect(deleteHomepageTmpSource).toHaveBeenCalledWith("acme-plumbing");
+    const last = homepageUpdate.mock.calls.at(-1)![0];
+    expect(last.data.status).toBe("FAILED");
+    expect(last.data.error).toContain("chromium exploded");
   });
 
   it("no company_website: harvest yields null, still READY", async () => {
@@ -190,6 +255,9 @@ describe("generate event", () => {
     await handler({ event: generateEvent, step });
 
     expect((generateHomepage as jest.Mock).mock.calls[0][0].sourceScreenshotB64).toBeUndefined();
+    expect(putHomepageTmpSource).not.toHaveBeenCalled();
+    expect(getHomepageTmpSource).not.toHaveBeenCalled();
+    expect(deleteHomepageTmpSource).not.toHaveBeenCalled();
     expect(homepageUpdate.mock.calls.at(-1)![0].data.status).toBe("READY");
   });
 
@@ -296,6 +364,15 @@ describe("refine event", () => {
     expect(putHomepageHtml).toHaveBeenCalledWith("acme-plumbing", "<html>v1</html>");
     const last = homepageUpdate.mock.calls.at(-1)![0];
     expect(last.data).toMatchObject({ status: "READY", current_version_id: "ver1" });
+    // human pass sends no rendered-draft image (unchanged behavior)
+    expect((generateHomepage as jest.Mock).mock.calls[0][0].refinedScreenshotB64).toBeUndefined();
+  });
+
+  it("loads the homepage with the soft-delete filter", async () => {
+    await handler({ event: refineEvent, step });
+    expect(prismadb.crm_Target_Homepage.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "h1", deletedAt: null } }),
+    );
   });
 
   it("no current version: FAILED", async () => {
@@ -348,6 +425,19 @@ describe("revert event", () => {
     // No model call and no new version row on a revert.
     expect(generateHomepage).not.toHaveBeenCalled();
     expect(versionCreate).not.toHaveBeenCalled();
+  });
+
+  it("keeps base64 screenshot data out of persisted step return values", async () => {
+    const outputs: unknown[] = [];
+    const recording = {
+      run: async (_n: string, f: () => unknown) => {
+        const out = await f();
+        outputs.push(out);
+        return out;
+      },
+    };
+    await handler({ event: revertEvent, step: recording });
+    expect(JSON.stringify(outputs)).not.toContain(PNG_B64);
   });
 
   it("unset NEXT_PUBLIC_PREVIEWS_BASE_URL: still republishes + READY, urls null", async () => {

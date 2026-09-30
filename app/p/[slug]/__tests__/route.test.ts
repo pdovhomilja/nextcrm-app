@@ -32,8 +32,33 @@ describe("GET /p/[slug]", () => {
     expect(res.headers.get("x-content-type-options")).toBe("nosniff");
     expect(await res.text()).toBe("<html>hi</html>");
     expect(find).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { slug: "acme", deletedAt: null, status: "READY" } })
+      expect.objectContaining({ where: { slug: "acme", deletedAt: null, current_version_id: { not: null } } })
     );
+  });
+
+  it("serves the live page for a FAILED/RUNNING homepage that has a published version", async () => {
+    // The gate is current_version_id (published), NOT status: the DB mock only
+    // returns a row when the where clause has no status requirement, mirroring
+    // a FAILED-but-published row.
+    find.mockImplementation(async ({ where }: { where: Record<string, unknown> }) =>
+      "status" in where ? null : { id: "h1", status: "FAILED", current_version_id: "ver1" }
+    );
+    html.mockResolvedValue("<html>live</html>");
+    const res = await getPage(req("acme"), params("acme"));
+    expect(res.status).toBe(200);
+    expect(await res.text()).toBe("<html>live</html>");
+  });
+
+  it("404s a never-published homepage: the lookup requires a non-null current_version_id", async () => {
+    // A never-published row (current_version_id null) does not match { not: null },
+    // so the DB returns nothing.
+    find.mockResolvedValue(null);
+    const res = await getPage(req("acme"), params("acme"));
+    expect(res.status).toBe(404);
+    expect(html).not.toHaveBeenCalled();
+    const where = find.mock.calls[0][0].where;
+    expect(where.current_version_id).toEqual({ not: null });
+    expect(where).not.toHaveProperty("status");
   });
 
   it("404s an unknown/not-ready slug with the same body as a missing object", async () => {
@@ -93,9 +118,18 @@ describe("GET /p/[slug]/screenshot.png", () => {
     expect(res.headers.get("x-content-type-options")).toBe("nosniff");
     expect(res.headers.get("content-security-policy")).toBeNull();
     expect(find).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { slug: "acme", deletedAt: null, status: "READY" } })
+      expect.objectContaining({ where: { slug: "acme", deletedAt: null, current_version_id: { not: null } } })
     );
     expect(Buffer.from(await res.arrayBuffer())).toEqual(Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+  });
+
+  it("serves the screenshot for a FAILED/RUNNING homepage that has a published version", async () => {
+    find.mockImplementation(async ({ where }: { where: Record<string, unknown> }) =>
+      "status" in where ? null : { id: "h1" }
+    );
+    shot.mockResolvedValue(Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+    const res = await getShot(req("acme"), params("acme"));
+    expect(res.status).toBe(200);
   });
 
   it("404s unknown slug, missing object, and weird slug", async () => {

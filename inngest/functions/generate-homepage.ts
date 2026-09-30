@@ -4,7 +4,14 @@ import { getApiKey } from "@/lib/api-keys";
 import { harvestSource, type HarvestResult } from "@/lib/homepage/harvest-source";
 import { generateHomepage as generateHomepageHtml } from "@/lib/homepage/provider";
 import { renderAndScreenshot } from "@/lib/homepage/render";
-import { putHomepageHtml, putHomepageScreenshot, homepageShotKey } from "@/lib/homepage/storage";
+import {
+  putHomepageHtml,
+  putHomepageScreenshot,
+  putHomepageTmpSource,
+  getHomepageTmpSource,
+  deleteHomepageTmpSource,
+  homepageShotKey,
+} from "@/lib/homepage/storage";
 
 /** Number of automatic render->critique->refine passes after the initial draft. Hard bound. */
 export const AUTO_PASSES = 3;
@@ -12,8 +19,9 @@ export const AUTO_PASSES = 3;
 /**
  * Upper bounds for the slow external calls. `generateHomepage` (Anthropic
  * vision) has no internal timeout, so a hung request would otherwise run to the
- * function's maxDuration. Each call also runs in its own `step.run`, so a
- * timeout only fails (and retries) that one step.
+ * function's maxDuration (the provider also aborts its fetch at the same budget).
+ * Each pass runs in its own `step.run`, so a timeout only fails (and retries)
+ * that one step.
  */
 export const GENERATE_TIMEOUT_MS = 120_000;
 export const RENDER_TIMEOUT_MS = 60_000;
@@ -91,9 +99,17 @@ function previewUrls(slug: string): { preview_url: string | null; screenshot_url
   return { preview_url: `${base}/p/${slug}`, screenshot_url: `${base}/p/${slug}/screenshot.png` };
 }
 
-type PassResult = { html: string; critique: string; screenshotB64: string; versionId: string };
+// NOTE: no base64 image data may appear in any step.run RETURN value — Inngest
+// persists every step output in the run's state, and a harvest shot + several PNGs
+// + HTML drafts can exceed its output limits on media-rich pages. Screenshots are
+// produced and consumed inside a single step (in-memory only); the harvested source
+// shot travels via a transient R2 key.
+type PassResult = { html: string; critique: string; versionId: string };
 
-/** generate -> render -> persist version, each in its own bounded step. */
+const renderPng = (html: string) =>
+  withTimeout(renderAndScreenshot(html), RENDER_TIMEOUT_MS, "Homepage render");
+
+/** generate (+ in-step render of the previous draft for vision) -> persist version, each in its own bounded step. */
 async function runPass(
   step: StepLike,
   label: string,
@@ -102,8 +118,10 @@ async function runPass(
     brief: string;
     prompt: string;
     previousHtml?: string;
-    sourceScreenshotB64?: string;
-    refinedScreenshotB64?: string;
+    /** Render previousHtml in-step and send it to the model as an image (auto passes). */
+    visionOfPrevious?: boolean;
+    /** The harvest step stored the source screenshot at the transient R2 key. */
+    hasSourceShot?: boolean;
     homepage: HomepageRow;
     passKind: "AUTO" | "HUMAN";
     createdBy: string | null;
@@ -111,24 +129,27 @@ async function runPass(
     isFinal: boolean;
   },
 ): Promise<PassResult> {
-  const gen = await step.run(`generate-${label}`, () =>
-    withTimeout(
+  const gen = await step.run(`generate-${label}`, async () => {
+    // Both screenshots live only in memory inside this step; the step returns html + critique.
+    const sourceScreenshotB64 = args.hasSourceShot
+      ? (await getHomepageTmpSource(args.homepage.slug))?.toString("base64")
+      : undefined;
+    const refinedScreenshotB64 =
+      args.visionOfPrevious && args.previousHtml
+        ? (await renderPng(args.previousHtml)).toString("base64")
+        : undefined;
+    return withTimeout(
       generateHomepageHtml({
         apiKey: args.apiKey,
         brief: args.brief,
         prompt: args.prompt,
         previousHtml: args.previousHtml,
-        sourceScreenshotB64: args.sourceScreenshotB64,
-        refinedScreenshotB64: args.refinedScreenshotB64,
+        sourceScreenshotB64,
+        refinedScreenshotB64,
       }),
       GENERATE_TIMEOUT_MS,
       "Homepage generation",
-    ),
-  );
-
-  const screenshotB64 = await step.run(`render-${label}`, async () => {
-    const png = await withTimeout(renderAndScreenshot(gen.html), RENDER_TIMEOUT_MS, "Homepage render");
-    return png.toString("base64");
+    );
   });
 
   const versionId = await step.run(`persist-version-${label}`, async () => {
@@ -149,15 +170,21 @@ async function runPass(
     return v.id;
   });
 
-  return { html: gen.html, critique: gen.critique, screenshotB64, versionId };
+  return { html: gen.html, critique: gen.critique, versionId };
+}
+
+/** Render + upload the html and screenshot to the live keys (screenshot stays in-step). */
+async function renderAndUpload(step: StepLike, name: string, homepage: HomepageRow, html: string) {
+  await step.run(name, async () => {
+    const png = await renderPng(html);
+    await putHomepageHtml(homepage.slug, html);
+    await putHomepageScreenshot(homepage.slug, png);
+  });
 }
 
 /** Upload the final html + screenshot, then flip the homepage to READY. */
 async function publish(step: StepLike, homepage: HomepageRow, final: PassResult) {
-  await step.run("upload-final", async () => {
-    await putHomepageHtml(homepage.slug, final.html);
-    await putHomepageScreenshot(homepage.slug, Buffer.from(final.screenshotB64, "base64"));
-  });
+  await renderAndUpload(step, "upload-final", homepage, final.html);
   await step.run("mark-ready", () =>
     prismadb.crm_Target_Homepage.update({
       where: { id: homepage.id },
@@ -169,6 +196,15 @@ async function publish(step: StepLike, homepage: HomepageRow, final: PassResult)
       },
     }),
   );
+}
+
+/** Best-effort removal of the transient source screenshot; never throws. */
+async function cleanupTmp(step: StepLike, slug: string) {
+  try {
+    await step.run("cleanup-tmp", () => deleteHomepageTmpSource(slug));
+  } catch (e) {
+    console.error("[GENERATE_HOMEPAGE_CLEANUP]", e);
+  }
 }
 
 const markFailed = (step: StepLike, homepageId: string, error: string) =>
@@ -185,11 +221,11 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData) {
   const loaded = await step.run("load-target", async () => {
     const [target, homepage] = await Promise.all([
       prismadb.crm_Targets.findUnique({
-        where: { id: data.targetId },
+        where: { id: data.targetId, deletedAt: null },
         select: { id: true, company: true, company_website: true, description: true },
       }),
       prismadb.crm_Target_Homepage.findUnique({
-        where: { targetId: data.targetId },
+        where: { targetId: data.targetId, deletedAt: null },
         select: { id: true, targetId: true, slug: true, current_version_id: true },
       }),
     ]);
@@ -200,6 +236,7 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData) {
   // no row there is nothing to report status on.
   if (!homepage) return { skipped: "no homepage row" };
 
+  let storedSourceShot = false;
   try {
     await step.run("mark-running", () =>
       prismadb.crm_Target_Homepage.update({
@@ -215,15 +252,23 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData) {
       return { failed: "NO_API_KEY" };
     }
 
+    // The harvest screenshot is uploaded to a transient R2 key inside this step and
+    // only the brand + a flag are returned, so no base64 PNG enters step state.
     const harvest = target.company_website
-      ? await step.run("harvest-source", () => harvestSource(target.company_website))
+      ? await step.run("harvest-source", async () => {
+          const h = await harvestSource(target.company_website);
+          if (!h) return null;
+          await putHomepageTmpSource(homepage.slug, Buffer.from(h.screenshotB64, "base64"));
+          return { brand: h.brand, hasSourceShot: true };
+        })
       : null;
+    storedSourceShot = !!harvest?.hasSourceShot;
 
     const brief = buildBrief(target, harvest?.brand ?? null);
     const baseArgs = {
       apiKey,
       brief,
-      sourceScreenshotB64: harvest?.screenshotB64,
+      hasSourceShot: storedSourceShot,
       homepage,
       createdBy: null,
       versionPrompt: data.prompt ?? null,
@@ -241,16 +286,18 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData) {
         ...baseArgs,
         prompt: `${operator}\n\n${AUTO_REFINE_PROMPT}`,
         previousHtml: current.html,
-        refinedScreenshotB64: current.screenshotB64,
+        visionOfPrevious: true,
         passKind: "AUTO",
         isFinal: i === AUTO_PASSES,
       });
     }
 
     await publish(step, homepage, current);
+    if (storedSourceShot) await cleanupTmp(step, homepage.slug);
     return { ready: true, versions: 1 + AUTO_PASSES };
   } catch (err) {
     await markFailed(step, homepage.id, err instanceof Error ? err.message : String(err));
+    if (storedSourceShot) await cleanupTmp(step, homepage.slug);
     return { failed: true };
   }
 }
@@ -258,7 +305,7 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData) {
 async function refineFlow(step: StepLike, data: RefineHomepageEventData) {
   const homepage = await step.run("load-homepage", () =>
     prismadb.crm_Target_Homepage.findUnique({
-      where: { id: data.homepageId },
+      where: { id: data.homepageId, deletedAt: null },
       select: { id: true, targetId: true, slug: true, current_version_id: true },
     }),
   );
@@ -347,14 +394,7 @@ async function revertFlow(step: StepLike, data: RevertHomepageEventData) {
       throw new Error("Version not found for this homepage");
     }
 
-    const screenshotB64 = await step.run("render-revert", async () => {
-      const png = await withTimeout(renderAndScreenshot(version.html), RENDER_TIMEOUT_MS, "Homepage render");
-      return png.toString("base64");
-    });
-    await step.run("upload-revert", async () => {
-      await putHomepageHtml(homepage.slug, version.html);
-      await putHomepageScreenshot(homepage.slug, Buffer.from(screenshotB64, "base64"));
-    });
+    await renderAndUpload(step, "upload-revert", homepage, version.html);
     await step.run("mark-ready", () =>
       prismadb.crm_Target_Homepage.update({
         where: { id: homepage.id },

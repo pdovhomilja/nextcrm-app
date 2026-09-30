@@ -9,6 +9,9 @@ export type GenerateHomepageInput = {
   refinedScreenshotB64?: string;
 };
 
+/** Abort budget for the vision request; matches GENERATE_TIMEOUT_MS in the job. */
+export const GENERATE_FETCH_TIMEOUT_MS = 120_000;
+
 export type GenerateHomepageResult = { html: string; critique: string };
 
 const SYSTEM_PROMPT = `You are a senior web designer producing a redesigned homepage for a small business.
@@ -60,23 +63,32 @@ export async function generateHomepage(
 
   // ANTHROPIC_BASE_URL is an optional test seam (same as generate-target-email.ts).
   const baseUrl = process.env.ANTHROPIC_BASE_URL || "https://api.anthropic.com";
-  const res = await fetch(`${baseUrl}/v1/messages`, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-5-5",
-      max_tokens: 12000,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: "user", content }],
-    }),
-  });
-  if (!res.ok) throw new Error(`Anthropic request failed (${res.status})`);
-
-  const data = await res.json();
+  // Actually cancel the request on timeout (the job's withTimeout race only stops
+  // waiting). Budget matches the job's per-pass generate timeout.
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), GENERATE_FETCH_TIMEOUT_MS);
+  let data: { content?: { type?: string; text?: string }[] };
+  try {
+    const res = await fetch(`${baseUrl}/v1/messages`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-5-5",
+        max_tokens: 12000,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: "user", content }],
+      }),
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`Anthropic request failed (${res.status})`);
+    data = await res.json();
+  } finally {
+    clearTimeout(timeout);
+  }
   const text: string =
     (data?.content ?? []).find((b: { type?: string }) => b?.type === "text")?.text ?? "";
   const raw = extractJsonObject(text);

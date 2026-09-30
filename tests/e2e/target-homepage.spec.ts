@@ -64,6 +64,7 @@ const noObjectHomepageId = randomUUID();
 const noObjectTargetId = randomUUID();
 const v1Id = randomUUID();
 const v2Id = randomUUID();
+const noObjectVersionId = randomUUID();
 const htmlKey = (slug: string) => `previews/${slug}/index.html`;
 const shotKey = (slug: string) => `previews/${slug}/screenshot.png`;
 
@@ -159,6 +160,17 @@ async function seed() {
   await pool.query(
     `UPDATE "crm_Target_Homepage" SET current_version_id = $1 WHERE id = $2`,
     [v2Id, homepageId]
+  );
+  // The served route gates on a published version (current_version_id), so this row needs
+  // one to actually reach the storage lookup and exercise the missing-object 404 path.
+  await pool.query(
+    `INSERT INTO "crm_Target_Homepage_Version" (id, homepage_id, html, prompt, agent_critique, pass_kind, created_by)
+     VALUES ($1, $2, '<html>no object</html>', 'first', NULL, 'AUTO', $3)`,
+    [noObjectVersionId, noObjectHomepageId, adminId]
+  );
+  await pool.query(
+    `UPDATE "crm_Target_Homepage" SET current_version_id = $1 WHERE id = $2`,
+    [noObjectVersionId, noObjectHomepageId]
   );
 
   if (s3Available) {
