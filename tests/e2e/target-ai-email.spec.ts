@@ -24,6 +24,10 @@ const TARGET_EMAIL = `${PREFIX.toLowerCase()}@example.com`;
 const TEMPLATE_NAME = `${PREFIX} Template`;
 const PROMPT_NAME = `${PREFIX} Warm intro`;
 const PROMPT_BODY = `${PREFIX}: warm, concise, mention their outdated website.`;
+// CTA defaults live on the template; the drawer inherits them and can override.
+const CTA_LABEL = `${PREFIX} See your redesign`;
+const CTA_URL = `https://rade.example/${RUN}`;
+const CTA_LABEL_OVERRIDE = `${PREFIX} Book a call`;
 const MOCK_PORT = Number(process.env.E2E_MOCK_PORT ?? "4010");
 const ADMIN_EMAIL = process.env.TEST_USER_EMAIL || "test@nextcrm.app";
 
@@ -103,12 +107,14 @@ async function seed() {
 
   templateId = randomUUID();
   await pool.query(
-    `INSERT INTO "crm_campaign_templates" (id, name, subject_default, content_html, content_json, created_by)
-     VALUES ($1, $2, 'x', $3, '{}'::jsonb, $4)`,
+    `INSERT INTO "crm_campaign_templates" (id, name, subject_default, content_html, content_json, cta_label, cta_url, created_by)
+     VALUES ($1, $2, 'x', $3, '{}'::jsonb, $4, $5, $6)`,
     [
       templateId,
       TEMPLATE_NAME,
       `<div><h2>${PREFIX} template header</h2>{{body}}</div>`,
+      CTA_LABEL,
+      CTA_URL,
       adminId,
     ]
   );
@@ -217,6 +223,12 @@ test.describe("Target AI outreach — email", () => {
     await page.getByTestId("email-template-select").click();
     await page.getByRole("option", { name: TEMPLATE_NAME }).click();
 
+    // CTA is inherited from the picked template...
+    await expect(page.getByTestId("email-cta-label")).toHaveValue(CTA_LABEL);
+    await expect(page.getByTestId("email-cta-url")).toHaveValue(CTA_URL);
+    // ...and overridable per-target.
+    await page.getByTestId("email-cta-label").fill(CTA_LABEL_OVERRIDE);
+
     await page.getByTestId("email-generate-btn").click();
 
     // Fenced/preambled model output is tolerated and the subject is populated.
@@ -242,6 +254,8 @@ test.describe("Target AI outreach — email", () => {
       preview.getByText(`Hi Jane, here is our pitch for ${COMPANY}.`)
     ).toBeVisible();
     await expect(preview.getByText("{{company}}")).toHaveCount(0);
+    // The overridden CTA button renders in the branded preview.
+    await expect(preview.getByText(CTA_LABEL_OVERRIDE)).toBeVisible();
 
     // Preview-drift guard: editing the subject invalidates the preview (Send off)
     // until it is re-rendered with "Update preview". Net subject is unchanged.
@@ -266,6 +280,9 @@ test.describe("Target AI outreach — email", () => {
     const expectedTo = process.env.EMAIL_REDIRECT_TO || TARGET_EMAIL;
     expect([sent.to].flat()).toEqual([expectedTo]);
     expect(sent.html).toContain(`Hi Jane, here is our pitch for ${COMPANY}.`);
+    // The sent email carries the overridden CTA label + inherited link.
+    expect(sent.html).toContain(CTA_LABEL_OVERRIDE);
+    expect(sent.html).toContain(CTA_URL);
     expect(sent.html).toContain("/api/crm/targets/unsubscribe?token=");
     expect(String(sent.headers?.["List-Unsubscribe"])).toContain(
       "/api/crm/targets/unsubscribe?token="

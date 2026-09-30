@@ -27,6 +27,9 @@ export const crmTargetEmailTools = [
       subject: z.string().min(1),
       body_html: z.string().min(1),
       include_homepage: z.boolean().optional(),
+      // Optional CTA override; omit to inherit the template's cta_label/cta_url.
+      cta_label: z.string().optional(),
+      cta_url: z.string().optional(),
     }),
     async handler(
       args: {
@@ -35,6 +38,8 @@ export const crmTargetEmailTools = [
         subject: string;
         body_html: string;
         include_homepage?: boolean;
+        cta_label?: string;
+        cta_url?: string;
       },
       userId: string,
       user?: AuthzUser
@@ -64,6 +69,9 @@ export const crmTargetEmailTools = [
         subject: args.subject,
         bodyHtml: args.body_html,
         includeHomepage: Boolean(args.include_homepage),
+        // Inherit the template's CTA default when not provided; "" = no button.
+        ctaLabel: args.cta_label ?? template.cta_label,
+        ctaUrl: args.cta_url ?? template.cta_url,
         createdBy: userId,
       });
       if (!result.ok) {

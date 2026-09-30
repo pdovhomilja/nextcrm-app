@@ -64,7 +64,12 @@ export async function BasicView({ data }: TargetBasicViewProps) {
 
   // AI-email menu data is only needed for APPROVED targets (the menu item is
   // disabled otherwise), so skip the four queries for everything else.
-  let templates: { id: string; name: string }[] = [];
+  let templates: {
+    id: string;
+    name: string;
+    cta_label: string | null;
+    cta_url: string | null;
+  }[] = [];
   let prompts: { id: string; name: string; body: string }[] = [];
   let homepagePrompts: { id: string; name: string; body: string }[] = [];
   let hasHomepage = false;

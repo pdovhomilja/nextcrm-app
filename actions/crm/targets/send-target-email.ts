@@ -22,6 +22,10 @@ const sendInputSchema = z.object({
   subject: z.string().trim().min(1, "Subject is required"),
   bodyHtml: z.string().trim().min(1, "Email body is required"),
   includeHomepage: z.boolean().optional().default(false),
+  // CTA is inherited from the template by the drawer and overridable per-target;
+  // undefined = inherit template default, "" = explicitly no button.
+  ctaLabel: z.string().optional(),
+  ctaUrl: z.string().optional(),
   promptUsed: z.string().optional(),
 });
 
@@ -31,12 +35,14 @@ export const sendTargetEmail = async (input: {
   subject: string;
   bodyHtml: string;
   includeHomepage?: boolean;
+  ctaLabel?: string;
+  ctaUrl?: string;
   promptUsed?: string;
 }): Promise<{ data: { id: string } } | { error: string }> => {
   const parsed = sendInputSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   // Use the parsed (trimmed) values, not the raw input.
-  const { targetId, templateId, subject, bodyHtml, includeHomepage, promptUsed } = parsed.data;
+  const { targetId, templateId, subject, bodyHtml, includeHomepage, ctaLabel, ctaUrl, promptUsed } = parsed.data;
 
   let user;
   try {
@@ -70,6 +76,10 @@ export const sendTargetEmail = async (input: {
     subject,
     bodyHtml,
     includeHomepage,
+    // Inherit the template's CTA default when the caller didn't send one; an
+    // explicit "" (operator cleared the field) means no button.
+    ctaLabel: ctaLabel ?? template.cta_label,
+    ctaUrl: ctaUrl ?? template.cta_url,
     promptUsed,
     createdBy: user.id,
   });

@@ -23,10 +23,19 @@ import { generateTargetEmail } from "@/actions/crm/targets/generate-target-email
 import { previewTargetEmail } from "@/actions/crm/targets/preview-target-email";
 import { sendTargetEmail } from "@/actions/crm/targets/send-target-email";
 
-type Option = { id: string; name: string };
+type Option = {
+  id: string;
+  name: string;
+  cta_label?: string | null;
+  cta_url?: string | null;
+};
 type PromptOption = { id: string; name: string; body: string };
 
 const DEFAULT_ERROR = "Something went wrong. Please try again.";
+
+// The link auto-filled when "Include homepage" is checked; resolves to this
+// target's generated homepage at send/preview time.
+const HOMEPAGE_CTA_URL = "{{homepage_url}}";
 
 export function GenerateEmailDrawer(props: {
   open: boolean;
@@ -42,6 +51,16 @@ export function GenerateEmailDrawer(props: {
     props.templates[0]?.id ?? "",
   );
   const [includeHomepage, setIncludeHomepage] = useState(false);
+
+  // CTA button: inherited from the selected template, overridable per-target.
+  const ctaDefaults = (id: string) => {
+    const t = props.templates.find((x) => x.id === id);
+    return { label: t?.cta_label ?? "", url: t?.cta_url ?? "" };
+  };
+  const initialCta = ctaDefaults(props.templates[0]?.id ?? "");
+  const [ctaLabel, setCtaLabel] = useState(initialCta.label);
+  const [ctaUrl, setCtaUrl] = useState(initialCta.url);
+
   const [subject, setSubject] = useState("");
   const [bodyHtml, setBodyHtml] = useState("");
   const [previewHtml, setPreviewHtml] = useState("");
@@ -72,14 +91,29 @@ export function GenerateEmailDrawer(props: {
   }
   function onTemplateChange(id: string) {
     setTemplateId(id);
+    // Inherit the new template's CTA. Keep the homepage link if that box is on.
+    const d = ctaDefaults(id);
+    setCtaLabel(d.label);
+    setCtaUrl(includeHomepage ? HOMEPAGE_CTA_URL : d.url);
     invalidatePreview();
   }
   function onHomepageChange(v: boolean) {
     setIncludeHomepage(v);
+    // Auto-default the CTA link to the homepage URL when included; restore the
+    // template default when unchecked. The operator can still type over it.
+    setCtaUrl(v ? HOMEPAGE_CTA_URL : ctaDefaults(templateId).url);
     invalidatePreview();
   }
   function onSubjectChange(v: string) {
     setSubject(v);
+    invalidatePreview();
+  }
+  function onCtaLabelChange(v: string) {
+    setCtaLabel(v);
+    invalidatePreview();
+  }
+  function onCtaUrlChange(v: string) {
+    setCtaUrl(v);
     invalidatePreview();
   }
 
@@ -95,6 +129,8 @@ export function GenerateEmailDrawer(props: {
       subject: subj,
       bodyHtml: body,
       includeHomepage,
+      ctaLabel,
+      ctaUrl,
     });
     if (reqIdRef.current !== myReq) return;
     if ("error" in prev) {
@@ -149,6 +185,8 @@ export function GenerateEmailDrawer(props: {
         subject,
         bodyHtml,
         includeHomepage,
+        ctaLabel,
+        ctaUrl,
         promptUsed: prompt,
       });
       if ("error" in res) {
@@ -175,6 +213,10 @@ export function GenerateEmailDrawer(props: {
       setPromptId("");
       setPrompt("");
       setIncludeHomepage(false);
+      // Restore CTA to the (persisted) template's defaults for the next open.
+      const d = ctaDefaults(templateId);
+      setCtaLabel(d.label);
+      setCtaUrl(d.url);
       setBusy(null);
     }
     props.onOpenChange(v);
@@ -244,6 +286,25 @@ export function GenerateEmailDrawer(props: {
             Include homepage preview link + screenshot
             {!props.hasHomepage ? " (none generated yet)" : ""}
           </label>
+
+          {/* CTA button — inherited from the template, overridable per target.
+              The amber button shows only when both fields are set. */}
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <Input
+              value={ctaLabel}
+              onChange={(e) => onCtaLabelChange(e.target.value)}
+              aria-label="Button label"
+              placeholder="Button label (e.g. See your redesign)"
+              data-testid="email-cta-label"
+            />
+            <Input
+              value={ctaUrl}
+              onChange={(e) => onCtaUrlChange(e.target.value)}
+              aria-label="Button link"
+              placeholder="Button link or {{homepage_url}}"
+              data-testid="email-cta-url"
+            />
+          </div>
 
           <Button
             onClick={onGenerate}
