@@ -9,6 +9,7 @@ const goto = jest.fn();
 const route = jest.fn();
 const browserClose = jest.fn();
 const newContext = jest.fn();
+const setDefaultTimeout = jest.fn();
 const launch = jest.fn();
 
 jest.mock("playwright-core", () => ({ chromium: { launch: (...a: unknown[]) => launch(...a) } }));
@@ -34,6 +35,7 @@ beforeEach(() => {
   browserClose.mockResolvedValue(undefined);
   newContext.mockResolvedValue({
     route,
+    setDefaultTimeout,
     newPage: jest.fn().mockResolvedValue({ goto, evaluate, screenshot }),
   });
   launch.mockResolvedValue({ newContext, close: browserClose });
@@ -114,6 +116,41 @@ describe("harvestSource", () => {
     expect(await harvestSource("https://acme.example")).toBeNull();
   });
 
+  describe("hosted-env fail-safe", () => {
+    const saved = { ...process.env };
+    afterEach(() => {
+      process.env = { ...saved };
+    });
+
+    it.each(["production", "preview"])(
+      "refuses (null, no launch/goto) when MAIL_ALLOW_PRIVATE_HOSTS=true and VERCEL_ENV=%s",
+      async (env) => {
+        process.env.MAIL_ALLOW_PRIVATE_HOSTS = "true";
+        process.env.VERCEL_ENV = env;
+        const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+        expect(await harvestSource("https://acme.example")).toBeNull();
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining("[HARVEST_SOURCE] refused"));
+        expect(assertPublicHost).not.toHaveBeenCalled();
+        expect(launch).not.toHaveBeenCalled();
+        expect(goto).not.toHaveBeenCalled();
+        warn.mockRestore();
+      },
+    );
+
+    it("still harvests locally when the flag is set and VERCEL_ENV is unset", async () => {
+      process.env.MAIL_ALLOW_PRIVATE_HOSTS = "true";
+      delete process.env.VERCEL_ENV;
+      const out = await harvestSource("https://acme.example");
+      expect(out).not.toBeNull();
+      expect(goto).toHaveBeenCalled();
+    });
+  });
+
+  it("bounds page operations with a default timeout", async () => {
+    await harvestSource("https://acme.example");
+    expect(setDefaultTimeout).toHaveBeenCalledWith(15000);
+  });
+
   describe("per-request guard (redirects / subresources)", () => {
     async function getHandler() {
       await harvestSource("https://acme.example");
@@ -141,6 +178,13 @@ describe("harvestSource", () => {
       await handler(r);
       expect(r.abort).toHaveBeenCalled();
       expect(r.continue).not.toHaveBeenCalled();
+    });
+
+    it("does not throw if continue/abort reject (page closed mid-flight)", async () => {
+      const handler = await getHandler();
+      const r = mkRoute("https://cdn.example/a.png");
+      r.continue.mockRejectedValue(new Error("Target closed"));
+      await expect(handler(r)).resolves.toBeUndefined();
     });
 
     it("aborts non-http(s) requests", async () => {

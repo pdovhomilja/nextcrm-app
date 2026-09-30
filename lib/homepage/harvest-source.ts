@@ -132,6 +132,17 @@ function extractBrand(maxCopy: number): SourceBrand {
  * throws) for a blank/unsafe URL or any navigation/render failure.
  */
 export async function harvestSource(url: string | null | undefined): Promise<HarvestResult | null> {
+  // Fail-safe: assertPublicHost is a no-op when MAIL_ALLOW_PRIVATE_HOSTS=true
+  // (a local dev/test hatch). It must never weaken SSRF protection for
+  // prospect-site browsing in a hosted environment.
+  if (
+    process.env.MAIL_ALLOW_PRIVATE_HOSTS === "true" &&
+    (process.env.VERCEL_ENV === "production" || process.env.VERCEL_ENV === "preview")
+  ) {
+    console.warn("[HARVEST_SOURCE] refused: MAIL_ALLOW_PRIVATE_HOSTS set in hosted env");
+    return null;
+  }
+
   const trimmed = url?.trim();
   if (!trimmed) return null;
 
@@ -150,19 +161,32 @@ export async function harvestSource(url: string | null | undefined): Promise<Har
       serviceWorkers: "block",
     });
 
+    // Bound every page operation (evaluate, etc.), not just goto/screenshot.
+    context.setDefaultTimeout(NAV_TIMEOUT_MS);
+
     // Re-check every request (redirects, subresources) against the guard.
+    //
+    // ACCEPTED RESIDUAL (documented): DNS-rebinding TOCTOU. Chromium re-resolves
+    // the hostname at connect time, so a rebinding attacker can pass this check
+    // and then resolve to an internal address. Exfil is bounded to the screenshot
+    // and capped copy. Host-resolver pinning (--host-resolver-rules) or an egress
+    // proxy is a possible fast-follow; intentionally not attempted here.
     const verdicts = new Map<string, Promise<boolean>>();
     verdicts.set(firstHost, Promise.resolve(true));
     await context.route("**/*", async (route) => {
-      const reqUrl = parseHttpUrl(route.request().url());
-      if (!reqUrl) return route.abort();
-      const host = bareHost(reqUrl);
-      let verdict = verdicts.get(host);
-      if (!verdict) {
-        verdict = hostIsPublic(host);
-        verdicts.set(host, verdict);
+      try {
+        const reqUrl = parseHttpUrl(route.request().url());
+        if (!reqUrl) return await route.abort();
+        const host = bareHost(reqUrl);
+        let verdict = verdicts.get(host);
+        if (!verdict) {
+          verdict = hostIsPublic(host);
+          verdicts.set(host, verdict);
+        }
+        return (await verdict) ? await route.continue() : await route.abort();
+      } catch {
+        // route may reject if the page/context closed mid-flight; nothing to do.
       }
-      return (await verdict) ? route.continue() : route.abort();
     });
 
     const page = await context.newPage();
