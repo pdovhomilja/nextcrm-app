@@ -738,5 +738,26 @@
 
 ---
 
+## Prospecting / lead quality
+
+### Prospecting with no contact-email gate loads a majority of uncontactable targets
+
+- **Symptom:** a QA audit of the first prospecting run found **42 of 57 loaded targets (74%)** had no
+  reachable email of any kind — no `company_email` role inbox, no person `email`, and no
+  `crm_Target_Contact` row with an email. An outbound-redesign pipeline can't act on a lead it can't
+  email, so most of the list was dead on arrival.
+- **Cause:** the `prospect` skill treated email as an *always-collect* enrichment field — captured
+  when found, but **never a gate**. A site that qualified on redesign signals was loaded whether or
+  not a contact existed.
+- **Fix / rule:** the skill now has a **contactability** input. Default intent is `email-required`
+  (drop — and don't count toward N — any candidate with neither a role inbox nor a person's email);
+  `include-no-email` opts out. The mode is **asked when the prompt doesn't clearly specify it**, never
+  silently defaulted. Never invent an inbox to clear the gate — a guessed address is fabrication.
+- **Tell:** to audit a loaded batch, join `crm_Targets` to `crm_Target_Contact` and count rows where
+  `company_email`, `email`, `personal_email`, and every contact `email` are all null (read-only SQL
+  against the env's Supabase project).
+
+---
+
 <!-- Add new entries above this line, newest-relevant first within each section.
      Create a new `## <area>` heading when a trap doesn't fit an existing one. -->

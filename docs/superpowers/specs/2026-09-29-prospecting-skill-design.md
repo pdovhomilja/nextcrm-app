@@ -49,6 +49,7 @@ if unspecified.
 | **Industries / verticals** | No | If omitted, spread across sensible local verticals for the geography. |
 | **Website criteria** | No | Free-form filter on the *site itself* — e.g. "WordPress only," a specific WP version, a page builder, performance traits, or none. **Not** WordPress-locked. If omitted, default to "good redesign candidates" (visibly dated / weak UX / poor performance), technology-agnostic. **The exact criteria string is recorded verbatim in the target-list description.** |
 | **Geography** | No (asked if absent) | Supports **tight (single city)** through **broad (metro / region / state)**. |
+| **Contactability** | No (asked if ambiguous) | `email-required` (default intent) or `include-no-email`. Under `email-required`, a candidate with **no contactable email** — neither a role inbox (`info@`, …) **nor** a named person's email — is **dropped** and does not count toward N. Under `include-no-email`, the requirement is dropped and email-less sites count normally. Resolved from the prompt when clearly stated; **asked** (targeted follow-up, like environment) when not — never silently defaulted. |
 | **Environment** | Yes | `qa` or `prod`. **Always asked if unspecified.** A `prod` load requires an explicit confirmation before writing (real outbound data). |
 
 ## 4. Always-collect data set (every qualified prospect)
@@ -79,8 +80,9 @@ into the target's **`description`** field:
 ## 5. Behavior / flow
 
 1. **Resolve parameters** — parse the prompt, apply defaults (quantity 30), ask
-   targeted follow-ups for anything missing; always confirm environment; confirm a
-   `prod` write.
+   targeted follow-ups for anything missing; always confirm environment; resolve the
+   **contactability mode** (ask when the prompt doesn't clearly specify it); confirm
+   a `prod` write.
 2. **Plan the sweep** — derive the working set of verticals (given or spread) and
    the geography breadth; restate the resolved plan to the user before running.
 3. **Parallel research + enrichment** — fan out one subagent per vertical (per
@@ -88,7 +90,9 @@ into the target's **`description`** field:
    **non-negotiable quality bar** (§6): confirm the candidate meets the website
    criteria (or the default redesign-candidate heuristic) from **real HTTP 200
    evidence**, collect the **always-collect data set** (§4), find a contact email,
-   and drop anything unreachable / non-matching / fabricated. Each subagent writes
+   and drop anything unreachable / non-matching / fabricated — and, under
+   `email-required`, drop any candidate with **no findable contactable email**
+   (logged as a `no-email` drop, not counted toward N). Each subagent writes
    a structured evidence file to a **gitignored run-scoped scratch path** (not
    committed).
 4. **Top-up loop to reach N** — the orchestrator dedups results **against the CRM
@@ -108,7 +112,9 @@ into the target's **`description`** field:
    - **Attach all** created targets to the list in one bulk call.
 7. **Run report** — counts (candidates found / verified / duplicates skipped /
    loaded), breakdown by vertical, ranked tiers, the environment, the criteria
-   string, and a link/id to the target list. Note any shortfall against N.
+   string, the **contactability mode** (and, under `email-required`, the count of
+   candidates dropped for having no findable email), and a link/id to the target
+   list. Note any shortfall against N.
 
 ## 6. Non-negotiable quality bar
 
@@ -116,7 +122,8 @@ into the target's **`description`** field:
   its **raw HTML / headers / sitemap** (and a browser check where a visual signal
   is claimed). **Never fabricate** a business, URL, version, or metric.
 - A candidate that cannot be verified against the criteria is **dropped**, not
-  guessed.
+  guessed. Under `email-required`, a candidate with no verifiable contactable email
+  is likewise **dropped** (never load an uncontactable lead, never invent an inbox).
 - **Dedup is mandatory** — never load a business already in the CRM (matched by
   normalized website, then name).
 - Respect the environment gate — no silent prod writes.
@@ -153,6 +160,9 @@ are being stripped.
 4. Every loaded target has `company`, `company_website`, `city`, `industry` (when
    determinable), a contact email (when findable), and a `description` containing
    the §4 data set. WordPress prospects include version + builder/theme/plugins.
+   Under `email-required`, **every** loaded target has a contactable email (role
+   inbox or person email); under `include-no-email`, email-less targets may be
+   loaded and the report says how many.
 5. A target list exists named by geography + criteria + month, whose **description
    records the exact criteria** used to build it; all targets are `NEW`.
 6. The run report states counts, per-vertical breakdown, tiers, environment,
@@ -164,6 +174,12 @@ are being stripped.
 - **Resolved:** scope = steps 1–3; quantity default 30 (net-new qualified);
   industries/criteria/geography optional; environment always asked; dedup by
   website; ICP is configurable (not WordPress-locked); prompt-first interaction.
+- **Resolved (2026-09-30):** added a **contactability** input. Default intent is
+  `email-required` (only load leads with a role inbox or a person's email; email-less
+  candidates are dropped, not counted toward N); `include-no-email` opts out and
+  drops the requirement. The mode is **asked when the prompt doesn't clearly specify
+  it** (not silently defaulted). Motivated by a QA audit finding 42/57 loaded targets
+  (74%) had no reachable email — see `docs/reference/LESSONS_LEARNED.md`.
 - **To confirm during planning:** the exact gitignored scratch path for evidence
   files; the attempt-cap heuristic for the top-up loop; the list-name/label format;
   whether to also capture a lightweight per-lead evidence artifact for auditability
