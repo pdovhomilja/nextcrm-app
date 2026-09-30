@@ -646,6 +646,22 @@
   would blow up prompt tokens), persist the data URI on the row (`logo_data_uri`) so refine/revert can
   reuse it, and substitute the placeholder only at render + upload time.
 
+### A bare `:locale` redirect in next.config swallows `/api/*` and 404s every API call it prefixes
+
+- **Symptom:** every `fetch()` to `/api/crm/targets/*` (generate-homepage, enrich, …) fails in the UI
+  with the generic "Something went wrong. Please try again", and the **serverless function logs are
+  empty** — the request never reached a function.
+- **Cause:** `redirects()` had `source: "/:locale/crm/targets/:path*"`. A **bare `:locale` matches ANY
+  first segment, including the literal `api`**, so `/api/crm/targets/<id>/generate-homepage`
+  308-redirects to `/api/campaigns/targets/<id>/generate-homepage`, which has no route → 404. The
+  browser follows the 308 (POST preserved), the drawer's `res.json()` fails on the 404 HTML, and it
+  shows the generic error. The redirect fires at the routing layer *before* any function, hence no logs.
+- **Fix / rule:** constrain the locale segment to the real locale set —
+  `/:locale(en|cz|de|uk)/crm/...` (extracted to `lib/legacy-redirects.js`, unit-tested). Never leave a
+  bare `:locale` on a redirect whose path shares a prefix with `/api`.
+- **Tell:** a feature's POST "just fails" with no server log; confirm with
+  `curl -s -D - --max-redirs 0 -X POST <url>` — a `308` to a non-existent path is the smoking gun.
+
 ---
 
 <!-- Add new entries above this line, newest-relevant first within each section.

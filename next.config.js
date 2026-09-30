@@ -1,6 +1,7 @@
 const withNextIntl = require("next-intl/plugin")(
   "./i18n/request.ts"
 );
+const { legacyRedirects } = require("./lib/legacy-redirects");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -23,19 +24,10 @@ const nextConfig = {
       { protocol: "http", hostname: "minio" },
     ],
   },
+  // Locale-scoped legacy crm -> campaigns redirects (see lib/legacy-redirects.js).
+  // MUST stay locale-scoped so they never match /api/* routes.
   async redirects() {
-    return [
-      {
-        source: "/:locale/crm/targets/:path*",
-        destination: "/:locale/campaigns/targets/:path*",
-        permanent: true,
-      },
-      {
-        source: "/:locale/crm/target-lists/:path*",
-        destination: "/:locale/campaigns/target-lists/:path*",
-        permanent: true,
-      },
-    ];
+    return legacyRedirects();
   },
 };
 
