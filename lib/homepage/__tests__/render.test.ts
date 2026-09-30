@@ -18,7 +18,7 @@ jest.mock("@sparticuz/chromium", () => ({
   },
 }));
 
-import { renderAndScreenshot } from "@/lib/homepage/render";
+import { renderAndScreenshot, finalizeAnimationsInPage } from "@/lib/homepage/render";
 
 const ENV_KEYS = ["VERCEL", "AWS_LAMBDA_FUNCTION_NAME", "CHROMIUM_EXECUTABLE_PATH"] as const;
 const savedEnv: Record<string, string | undefined> = {};
@@ -96,7 +96,7 @@ it("egress: continues allowlisted requests and aborts everything else", async ()
 it("finalizes animations after setContent and before the screenshot", async () => {
   const png = await renderAndScreenshot("<h1>hi</h1>");
   expect(mockEvaluate).toHaveBeenCalledTimes(1);
-  expect(mockEvaluate).toHaveBeenCalledWith(expect.any(Function));
+  expect(mockEvaluate).toHaveBeenCalledWith(finalizeAnimationsInPage);
   const setOrder = mockSetContent.mock.invocationCallOrder[0];
   const evalOrder = mockEvaluate.mock.invocationCallOrder[0];
   const shotOrder = mockScreenshot.mock.invocationCallOrder[0];
@@ -173,4 +173,65 @@ it("always closes the browser when the screenshot fails", async () => {
   mockScreenshot.mockRejectedValue(new Error("boom"));
   await expect(renderAndScreenshot("<p/>")).rejects.toThrow("boom");
   expect(mockBrowserClose).toHaveBeenCalledTimes(1);
+});
+
+describe("finalizeAnimationsInPage (in-page callback)", () => {
+  const g = globalThis as unknown as { window?: unknown; document?: unknown };
+  const saved = { window: g.window, document: g.document };
+  afterEach(() => {
+    g.window = saved.window;
+    g.document = saved.document;
+  });
+
+  const makeEl = () => ({ style: {} as Record<string, string> });
+
+  it("drives gsap + ScrollTrigger animations and reveals DOM targets even with numeric ScrollTrigger.progress", () => {
+    const globalProgress = jest.fn();
+    const animProgress = jest.fn();
+    // ScrollTrigger#progress is a read-only NUMBER, not a method.
+    const trigger = { progress: 0.3, animation: { progress: animProgress } };
+    const els = [makeEl(), makeEl()];
+    g.window = {
+      gsap: { globalTimeline: { progress: globalProgress } },
+      ScrollTrigger: { getAll: () => [trigger] },
+    };
+    g.document = { querySelectorAll: () => els };
+
+    expect(() => finalizeAnimationsInPage()).not.toThrow();
+    expect(globalProgress).toHaveBeenCalledWith(1);
+    expect(animProgress).toHaveBeenCalledWith(1);
+    for (const el of els) {
+      expect(el.style.opacity).toBe("1");
+      expect(el.style.visibility).toBe("visible");
+      expect(el.style.transform).toBe("none");
+    }
+  });
+
+  it("still reveals DOM targets when gsap and ScrollTrigger throw", () => {
+    const els = [makeEl()];
+    g.window = {
+      gsap: {
+        get globalTimeline(): never {
+          throw new Error("gsap boom");
+        },
+      },
+      ScrollTrigger: {
+        getAll: () => {
+          throw new Error("st boom");
+        },
+      },
+    };
+    g.document = { querySelectorAll: () => els };
+    expect(() => finalizeAnimationsInPage()).not.toThrow();
+    expect(els[0].style.opacity).toBe("1");
+    expect(els[0].style.visibility).toBe("visible");
+  });
+
+  it("does not throw when gsap/ScrollTrigger are absent", () => {
+    const els = [makeEl()];
+    g.window = {};
+    g.document = { querySelectorAll: () => els };
+    expect(() => finalizeAnimationsInPage()).not.toThrow();
+    expect(els[0].style.opacity).toBe("1");
+  });
 });

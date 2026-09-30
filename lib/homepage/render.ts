@@ -30,6 +30,42 @@ export async function launchBrowser(): Promise<Browser> {
 }
 
 /**
+ * Runs INSIDE the page (serialized by Playwright `page.evaluate`) — it must stay
+ * self-contained (no closures over module scope). Forces the designed final
+ * state so scroll-reveal targets that start hidden are visible in the screenshot.
+ * Each step is independently guarded and the DOM-reveal fallback runs LAST, so a
+ * GSAP/ScrollTrigger failure can never skip it. Exported for unit testing.
+ */
+export function finalizeAnimationsInPage(): void {
+  try {
+    const g = (window as any).gsap;
+    if (g?.globalTimeline) g.globalTimeline.progress(1);
+  } catch {
+    /* best-effort */
+  }
+  try {
+    const ST = (window as any).ScrollTrigger;
+    // A ScrollTrigger's own `progress` is a read-only number; drive its animation.
+    if (ST?.getAll) ST.getAll().forEach((t: any) => t?.animation?.progress?.(1));
+  } catch {
+    /* best-effort */
+  }
+  try {
+    document
+      .querySelectorAll<HTMLElement>(
+        '[style*="opacity:0"],[style*="opacity: 0"],.reveal,[data-reveal]',
+      )
+      .forEach((el) => {
+        el.style.opacity = "1";
+        el.style.transform = "none";
+        el.style.visibility = "visible";
+      });
+  } catch {
+    /* best-effort */
+  }
+}
+
+/**
  * Render an HTML string in headless chromium and return a viewport PNG.
  *
  * SSRF / egress: the HTML is LLM-generated and grounded in prospect-controlled
@@ -79,26 +115,7 @@ export async function renderAndScreenshot(
     // Force the designed final state so scroll-reveal/GSAP targets that start
     // hidden are visible in the screenshot. Screenshot-only: the served /p/ page
     // still animates normally. Non-throwing: a page without GSAP still renders.
-    await page
-      .evaluate(() => {
-        try {
-          const g = (window as any).gsap;
-          if (g?.globalTimeline) g.globalTimeline.progress(1);
-          const ST = (window as any).ScrollTrigger;
-          if (ST?.getAll) ST.getAll().forEach((t: any) => t.progress?.(1));
-          document
-            .querySelectorAll<HTMLElement>(
-              '[style*="opacity:0"],[style*="opacity: 0"],.reveal,[data-reveal]',
-            )
-            .forEach((el) => {
-              el.style.opacity = "1";
-              el.style.transform = "none";
-              el.style.visibility = "visible";
-            });
-        } catch {
-          /* best-effort finalize */
-        }
-      })
+    await page.evaluate(finalizeAnimationsInPage)
       .catch(() => {});
     const png = await page.screenshot({ fullPage: false });
     return Buffer.from(png);
