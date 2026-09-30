@@ -61,6 +61,10 @@ export const getHomepageStatus = async (data: { targetId: string }) => {
       preview_url: homepage.preview_url,
       screenshot_url: homepage.screenshot_url,
       current_version_id: homepage.current_version_id,
+      // Kind of the current version (e.g. UPLOAD) so the drawer can gate AI refine.
+      // Derived from the already-selected versions window; null if not in it.
+      current_pass_kind:
+        homepage.versions.find((v) => v.id === homepage.current_version_id)?.pass_kind ?? null,
       versions: homepage.versions
         .slice()
         .reverse()
