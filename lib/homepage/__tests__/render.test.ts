@@ -59,14 +59,26 @@ it("launches, sets content, screenshots, and closes the browser", async () => {
   expect(mockBrowserClose).toHaveBeenCalledTimes(1);
 });
 
-it("blocks all network egress during render (self-contained HTML only)", async () => {
+it("egress: continues allowlisted requests and aborts everything else", async () => {
   await renderAndScreenshot("<h1>hi</h1>");
   expect(mockRoute).toHaveBeenCalledWith("**/*", expect.any(Function));
-  // The installed handler must abort every intercepted request.
-  const abort = jest.fn();
-  const handler = mockRoute.mock.calls[0][1] as (r: { abort: () => void }) => void;
-  handler({ abort });
-  expect(abort).toHaveBeenCalledTimes(1);
+  type MockRoute = { request: () => { url: () => string }; continue: () => void; abort: () => void };
+  const handler = mockRoute.mock.calls[0][1] as (r: MockRoute) => void;
+  const makeRoute = (url: string) => ({
+    request: () => ({ url: () => url }),
+    continue: jest.fn(),
+    abort: jest.fn(),
+  });
+
+  const allowed = makeRoute("https://fonts.googleapis.com/css2?family=Inter");
+  handler(allowed);
+  expect(allowed.continue).toHaveBeenCalledTimes(1);
+  expect(allowed.abort).not.toHaveBeenCalled();
+
+  const blocked = makeRoute("http://169.254.169.254/latest/meta-data/");
+  handler(blocked);
+  expect(blocked.abort).toHaveBeenCalledTimes(1);
+  expect(blocked.continue).not.toHaveBeenCalled();
 });
 
 it("honours custom viewport dimensions", async () => {

@@ -1,4 +1,5 @@
 import type { Browser } from "playwright-core";
+import { isAllowedRenderRequest } from "./render-allowlist";
 
 /**
  * Serverless (Vercel / AWS Lambda) vs local-dev chromium switch.
@@ -34,10 +35,10 @@ export async function launchBrowser(): Promise<Browser> {
  * SSRF / egress: the HTML is LLM-generated and grounded in prospect-controlled
  * harvested copy, so it could be steered (indirect prompt injection) to emit
  * `<img>`/`<script src>`/`fetch()` pointing at internal or attacker hosts. The
- * system prompt requires a fully self-contained document (inline CSS, no remote
- * fetches), so we ENFORCE that here: every network request the page attempts is
- * aborted. Only the in-memory `setContent` document and `data:`/`blob:` URIs
- * render. Blocking egress also removes the old `networkidle` flakiness.
+ * system prompt restricts remote assets, so we ENFORCE it here with a code-owned
+ * exact-host allowlist (see render-allowlist.ts): only Google Fonts and a pinned
+ * GSAP path may load; every other network request is aborted. The in-memory
+ * `setContent` document and `data:`/`blob:` URIs render as usual.
  */
 export async function renderAndScreenshot(
   html: string,
@@ -50,9 +51,12 @@ export async function renderAndScreenshot(
       acceptDownloads: false,
       serviceWorkers: "block",
     });
-    // Deny all egress. `**/*` matches http/https/ws requests; data:/blob: are
-    // handled in-process by chromium and are not routed, so they still work.
-    await context.route("**/*", (route) => route.abort());
+    // Egress allowlist: only Google Fonts + the pinned GSAP path continue; every
+    // other request (internal/metadata/attacker hosts) is aborted. `**/*` matches
+    // http/https/ws requests; data:/blob: are handled in-process and not routed.
+    await context.route("**/*", (route) =>
+      isAllowedRenderRequest(route.request().url()) ? route.continue() : route.abort(),
+    );
     const page = await context.newPage();
     // Document is self-contained + egress is blocked, so "load" settles fast.
     // A slow/partial render still yields a screenshot of what painted.
