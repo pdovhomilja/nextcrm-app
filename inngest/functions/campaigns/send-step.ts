@@ -44,9 +44,18 @@ export const campaignSendStep = inngest.createFunction(
 
     const unsubscribeUrl = `${process.env.NEXTAUTH_URL}/api/campaigns/unsubscribe?token=${sendRecord.unsubscribe_token}`;
 
+    const template = sendRecord.step.template;
     const html = await renderCampaignEmail({
-      contentHtml: resolveMergeTags(sendRecord.step.template.content_html, sendRecord.target, true),
+      contentHtml: resolveMergeTags(template.content_html, sendRecord.target, true),
       unsubscribeUrl,
+      // CTA label/url are escaped by the shell, so resolve merge tags WITHOUT
+      // escaping here to avoid double-escaping.
+      ctaLabel: template.cta_label
+        ? resolveMergeTags(template.cta_label, sendRecord.target)
+        : undefined,
+      ctaUrl: template.cta_url
+        ? resolveMergeTags(template.cta_url, sendRecord.target)
+        : undefined,
     });
 
     const fromAddress = sendRecord.campaign.from_name

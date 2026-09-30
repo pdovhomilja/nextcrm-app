@@ -4,6 +4,8 @@ import { renderCampaignEmail } from "@/lib/campaigns/render-email";
 
 export const previewTemplate = async (data: {
   contentHtml: string;
+  ctaLabel?: string | null;
+  ctaUrl?: string | null;
 }): Promise<{ html?: string; error?: string }> => {
   try {
     await requireAuthenticated();
@@ -15,6 +17,8 @@ export const previewTemplate = async (data: {
   const html = await renderCampaignEmail({
     contentHtml: data.contentHtml,
     unsubscribeUrl: "#",
+    ctaLabel: data.ctaLabel,
+    ctaUrl: data.ctaUrl,
   });
   return { html };
 };

@@ -20,6 +20,8 @@ type InitialData = {
   subject_default?: string | null;
   content_html?: string | null;
   content_json?: object | null;
+  cta_label?: string | null;
+  cta_url?: string | null;
 };
 
 type Props = {
@@ -42,6 +44,8 @@ export default function TemplateEditorForm({ initialData, templateId }: Props) {
   const [contentJson, setContentJson] = useState<object>(
     initialData?.content_json ?? {}
   );
+  const [ctaLabel, setCtaLabel] = useState(initialData?.cta_label ?? "");
+  const [ctaUrl, setCtaUrl] = useState(initialData?.cta_url ?? "");
 
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
@@ -82,7 +86,11 @@ export default function TemplateEditorForm({ initialData, templateId }: Props) {
     if (value !== "preview") return;
     setIsPreviewLoading(true);
     try {
-      const res = await previewTemplate({ contentHtml });
+      const res = await previewTemplate({
+        contentHtml,
+        ctaLabel: ctaLabel || undefined,
+        ctaUrl: ctaUrl || undefined,
+      });
       setPreviewHtml(res.html ?? null);
     } catch {
       setPreviewHtml(null);
@@ -110,6 +118,8 @@ export default function TemplateEditorForm({ initialData, templateId }: Props) {
           subject_default: subject,
           content_html: contentHtml,
           content_json: contentJson,
+          cta_label: ctaLabel.trim() || null,
+          cta_url: ctaUrl.trim() || null,
         });
       } else {
         await createTemplate({
@@ -118,6 +128,8 @@ export default function TemplateEditorForm({ initialData, templateId }: Props) {
           subject_default: subject,
           content_html: contentHtml,
           content_json: contentJson,
+          cta_label: ctaLabel.trim() || null,
+          cta_url: ctaUrl.trim() || null,
         });
       }
       router.push("/campaigns/templates");
@@ -219,6 +231,37 @@ export default function TemplateEditorForm({ initialData, templateId }: Props) {
             )}
           </TabsContent>
         </Tabs>
+      </div>
+
+      {/* Call-to-action button (optional) */}
+      <div className="flex flex-col gap-3 rounded-md border p-4">
+        <div className="flex flex-col gap-1">
+          <h3 className="font-semibold text-sm">Call-to-Action Button</h3>
+          <p className="text-xs text-muted-foreground">
+            Optional. The amber button appears only when both a label and a link
+            are set. Merge tags like {"{{homepage_url}}"} work in the link.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="cta-label">Button label</Label>
+            <Input
+              id="cta-label"
+              value={ctaLabel}
+              onChange={(e) => setCtaLabel(e.target.value)}
+              placeholder="e.g. Book a call"
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="cta-url">Button link</Label>
+            <Input
+              id="cta-url"
+              value={ctaUrl}
+              onChange={(e) => setCtaUrl(e.target.value)}
+              placeholder="https://radeengineering.com/book"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Actions */}

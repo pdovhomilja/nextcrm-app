@@ -361,6 +361,10 @@ model crm_campaign_templates {
   subject_default String?
   content_html    String    @db.Text
   content_json    Json
+  // fork: optional per-template CTA button rendered by the branded email shell
+  // (lib/campaigns/email-shell.ts). Button shows only when both are set.
+  cta_label       String?
+  cta_url         String?
   created_by      String?   @db.Uuid
   created_on      DateTime? @default(now())
   updatedAt       DateTime? @updatedAt
