@@ -40,8 +40,10 @@ const COMPANY = `${PREFIX} Roofing Co`;
 const SLUG = `pwhp${RUN}-roofing`;
 const SLUG_NO_OBJECT = `pwhp${RUN}-noobject`;
 const SLUG_UNKNOWN = `pwhp${RUN}-unknown`;
+const SLUG_UPLOAD = `pwhp${RUN}-upload`;
 const V1_MARKER = `${PREFIX} first draft`;
 const V2_MARKER = `${PREFIX} refined hero`;
+const UPLOAD_MARKER = `${PREFIX} uploaded page`;
 const ADMIN_EMAIL = process.env.TEST_USER_EMAIL || "test@nextcrm.app";
 const BASE_URL = "http://localhost:3000";
 
@@ -53,6 +55,16 @@ const PNG_1X1 = Buffer.from(
 
 const v1Html = `<!doctype html><html><head><title>v1</title></head><body><h1>${V1_MARKER}</h1></body></html>`;
 const v2Html = `<!doctype html><html><head><title>v2</title></head><body><h1>${V2_MARKER}</h1></body></html>`;
+const uploadHtml = `<!doctype html><html><head><title>upload</title></head><body><h1>${UPLOAD_MARKER}</h1></body></html>`;
+
+// The three crm_SystemSettings keys the admin Homepage Generation page writes
+// (actions/admin/homepage-settings.ts). Snapshotted before and restored after the
+// admin round-trip so the spec never leaves the operator's settings changed.
+const SETTING_KEYS = [
+  "homepage.model",
+  "homepage.max_tokens",
+  "homepage.base_prompt_id",
+];
 
 let pool: Pool;
 let s3: S3Client | null = null;
@@ -65,6 +77,11 @@ const noObjectTargetId = randomUUID();
 const v1Id = randomUUID();
 const v2Id = randomUUID();
 const noObjectVersionId = randomUUID();
+const uploadTargetId = randomUUID();
+const uploadHomepageId = randomUUID();
+const uploadV1Id = randomUUID();
+const uploadV2Id = randomUUID();
+let settingsSnapshot: { key: string; value: string }[] = [];
 const htmlKey = (slug: string) => `previews/${slug}/index.html`;
 const shotKey = (slug: string) => `previews/${slug}/screenshot.png`;
 
@@ -173,9 +190,42 @@ async function seed() {
     [noObjectVersionId, noObjectHomepageId]
   );
 
+  // A third APPROVED target whose CURRENT version is an UPLOAD (the "upload your own
+  // HTML" override result): an older AUTO version underneath, the UPLOAD on top. This is
+  // the state the upload-override job PRODUCES; the spec never clicks Upload (that would
+  // need the Inngest job + chromium to render the screenshot).
+  await pool.query(
+    `INSERT INTO "crm_Targets" (id, first_name, last_name, company, email, position, industry, type, triage_status, created_by)
+     VALUES ($1, 'Uma', $2, $3, $4, 'Owner', 'Roofing', 'COMPANY', 'APPROVED', $5)`,
+    [
+      uploadTargetId,
+      `${PREFIX}Upl`,
+      `${COMPANY} Upload`,
+      `upl-${PREFIX.toLowerCase()}@example.com`,
+      adminId,
+    ]
+  );
+  await pool.query(
+    `INSERT INTO "crm_Target_Homepage" (id, "targetId", slug, status, base_prompt, current_version_id, created_by)
+     VALUES ($1, $2, $3, 'READY', 'seeded', NULL, $4)`,
+    [uploadHomepageId, uploadTargetId, SLUG_UPLOAD, adminId]
+  );
+  await pool.query(
+    `INSERT INTO "crm_Target_Homepage_Version" (id, homepage_id, html, prompt, agent_critique, pass_kind, created_by, created_at)
+     VALUES ($1, $3, $4, 'first', NULL, 'AUTO', $6, now() - interval '1 hour'),
+            ($2, $3, $5, 'upload', NULL, 'UPLOAD', $6, now())`,
+    [uploadV1Id, uploadV2Id, uploadHomepageId, v1Html, uploadHtml, adminId]
+  );
+  await pool.query(
+    `UPDATE "crm_Target_Homepage" SET current_version_id = $1 WHERE id = $2`,
+    [uploadV2Id, uploadHomepageId]
+  );
+
   if (s3Available) {
     await putObject(htmlKey(SLUG), v2Html, "text/html; charset=utf-8");
     await putObject(shotKey(SLUG), PNG_1X1, "image/png");
+    await putObject(htmlKey(SLUG_UPLOAD), uploadHtml, "text/html; charset=utf-8");
+    await putObject(shotKey(SLUG_UPLOAD), PNG_1X1, "image/png");
   }
 }
 
@@ -183,10 +233,15 @@ async function seed() {
 // append-only and intentionally left. External state (R2 objects) is torn down too.
 async function cleanup() {
   await pool.query(`DELETE FROM "crm_Targets" WHERE id = ANY($1::uuid[])`, [
-    [targetId, noObjectTargetId],
+    [targetId, noObjectTargetId, uploadTargetId],
   ]);
   if (s3Available && s3) {
-    for (const key of [htmlKey(SLUG), shotKey(SLUG)]) {
+    for (const key of [
+      htmlKey(SLUG),
+      shotKey(SLUG),
+      htmlKey(SLUG_UPLOAD),
+      shotKey(SLUG_UPLOAD),
+    ]) {
       await s3
         .send(
           new DeleteObjectCommand({
@@ -196,6 +251,20 @@ async function cleanup() {
         )
         .catch(() => {});
     }
+  }
+}
+
+// Put crm_SystemSettings back exactly as found: drop the keys the admin test wrote, then
+// re-insert whatever existed before (none on a fresh DB -> leaves the keys absent).
+async function restoreSettings() {
+  await pool.query(`DELETE FROM "crm_SystemSettings" WHERE key = ANY($1::text[])`, [
+    SETTING_KEYS,
+  ]);
+  for (const row of settingsSnapshot) {
+    await pool.query(
+      `INSERT INTO "crm_SystemSettings" (key, value, "updatedAt") VALUES ($1, $2, now())`,
+      [row.key, row.value]
+    );
   }
 }
 
@@ -374,5 +443,139 @@ test.describe("Target AI homepage generation", () => {
     } finally {
       await ctx.dispose();
     }
+  });
+
+  test("a page whose current version is an UPLOAD hides Refine but keeps Regenerate/Revert/Upload", async ({
+    page,
+  }) => {
+    // Fixture precondition: the UPLOAD is really the current version.
+    const pre = await pool.query(
+      `SELECT v.pass_kind FROM "crm_Target_Homepage" h
+         JOIN "crm_Target_Homepage_Version" v ON v.id = h.current_version_id
+        WHERE h.id = $1`,
+      [uploadHomepageId]
+    );
+    expect(pre.rows[0].pass_kind).toBe("UPLOAD");
+
+    await page.goto(`/en/campaigns/targets/${uploadTargetId}`);
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+    await page.getByTestId("target-ai-menu").click();
+    await page.getByTestId("ai-generate-homepage").click();
+    await expect(page.getByTestId("generate-homepage-drawer")).toBeVisible();
+
+    // Wait for the authoritative snapshot (versions list + ?v=<current id>): the
+    // "uploaded" hint and canRefine both key off current_pass_kind from that fetch, so
+    // asserting absence of Refine BEFORE it lands would pass vacuously.
+    const v1 = page.getByTestId("homepage-version-1");
+    const v2 = page.getByTestId("homepage-version-2");
+    await expect(v2).toBeVisible({ timeout: 20000 });
+    await expect(page.getByTestId("homepage-preview")).toHaveAttribute(
+      "src",
+      `/p/${SLUG_UPLOAD}?v=${uploadV2Id}`
+    );
+    await expect(v2).toContainText("UPLOAD");
+    await expect(v2).toContainText("Current");
+    await expect(v1).toContainText("AUTO");
+
+    // Refine is gated off for an upload (no model lineage); the hint explains why.
+    await expect(page.getByTestId("homepage-upload-refine-hint")).toContainText(
+      "regenerate to use AI refine"
+    );
+    await expect(page.getByTestId("homepage-refine-input")).toHaveCount(0);
+    await expect(page.getByTestId("homepage-refine-btn")).toHaveCount(0);
+
+    // Regenerate, Upload and Revert (to the older generated version) stay available.
+    // None is clicked: each would queue an Inngest job.
+    await expect(page.getByTestId("homepage-generate-btn")).toHaveText(
+      "Regenerate"
+    );
+    await expect(page.getByTestId("homepage-generate-btn")).toBeEnabled();
+    await expect(page.getByTestId("homepage-upload-btn")).toBeEnabled();
+    await expect(page.getByTestId("homepage-upload-input")).toBeEnabled();
+    await expect(page.getByTestId("homepage-revert-2")).toBeDisabled(); // current
+    await expect(page.getByTestId("homepage-revert-1")).toBeEnabled();
+  });
+
+  test("GET /p/<slug> serves an uploaded version's HTML with the sandbox CSP", async () => {
+    test.skip(
+      !s3Available,
+      "no reachable S3/R2 endpoint (CI e2e job has none) — storage-backed serving verified locally"
+    );
+
+    const ctx = await publicContext();
+    try {
+      const res = await ctx.get(`/p/${SLUG_UPLOAD}`);
+      expect(res.status()).toBe(200);
+      // An upload is served exactly like a generated page: same opaque-origin sandbox.
+      expect(res.headers()["content-security-policy"]).toBe(
+        "sandbox allow-scripts"
+      );
+      expect(res.headers()["x-robots-tag"]).toBe("noindex");
+      const body = await res.text();
+      expect(body).toContain(UPLOAD_MARKER);
+      expect(body).not.toContain(V1_MARKER);
+    } finally {
+      await ctx.dispose();
+    }
+  });
+});
+
+// Admin configuration page. The shared storageState user is a seeded admin
+// (prisma/seeds/seed.ts: role "admin"), so the round-trip needs no extra seeding. The
+// non-admin deny path needs a second, non-admin session and is a Known Gap (covered
+// by Jest: actions/admin/__tests__/homepage-settings.test.ts).
+test.describe("Admin homepage generation settings", () => {
+  test.use({ storageState: "playwright/.auth/user.json" });
+
+  test.beforeAll(async ({}, testInfo) => {
+    if (testInfo.project.name !== "chromium") return;
+    pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const snap = await pool.query(
+      `SELECT key, value FROM "crm_SystemSettings" WHERE key = ANY($1::text[])`,
+      [SETTING_KEYS]
+    );
+    settingsSnapshot = snap.rows;
+  });
+
+  test.afterAll(async () => {
+    if (!pool) return;
+    try {
+      await restoreSettings();
+    } finally {
+      await pool.end();
+    }
+  });
+
+  test("saves model + max tokens (clamped to the model ceiling) and they persist across reload", async ({
+    page,
+  }) => {
+    await page.goto("/en/admin/homepage-settings");
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+    await expect(
+      page.getByRole("heading", { name: "Homepage Generation" })
+    ).toBeVisible();
+
+    // Haiku's ceiling is 32000, so 99999 must be clamped DOWN on save. The fill +
+    // select + save is retried as a unit and judged by the DB outcome, not the field
+    // value (controlled inputs can discard a pre-hydration fill — e2e-patterns.md).
+    await expect(async () => {
+      await page.locator("#homepage-model").click();
+      await page.getByRole("option", { name: "Haiku 4.5" }).click();
+      await page.locator("#homepage-max-tokens").fill("99999");
+      await page.getByRole("button", { name: "Save" }).click();
+      const rows = await pool.query(
+        `SELECT key, value FROM "crm_SystemSettings" WHERE key = ANY($1::text[])`,
+        [SETTING_KEYS.slice(0, 2)]
+      );
+      const saved = Object.fromEntries(rows.rows.map((r) => [r.key, r.value]));
+      expect(saved["homepage.model"]).toBe("claude-haiku-4-5-20251001");
+      expect(saved["homepage.max_tokens"]).toBe("32000");
+    }).toPass({ timeout: 20000 });
+
+    // Reload: the page re-reads the saved (clamped) values from the DB.
+    await page.reload();
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+    await expect(page.locator("#homepage-model")).toContainText("Haiku 4.5");
+    await expect(page.locator("#homepage-max-tokens")).toHaveValue("32000");
   });
 });

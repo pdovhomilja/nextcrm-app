@@ -32,8 +32,9 @@ pnpm dev
 - **URLs:** http://localhost:3000/en/campaigns/targets · http://localhost:3000/p/<slug>
 
 > The E2E spec does **not** launch chromium or call Anthropic: it seeds a READY page and
-> versions directly, so sections 1 and 2 are the automated happy path. Sections 3–5
-> exercise the real job and are manual-only.
+> versions directly (including an `UPLOAD`-current page), so sections 1, 2, the admin
+> settings round-trip (§6) and the refine-gate/serve of an uploaded page (§7) are automated.
+> Sections 3–5 and the live parts of §6/§7 exercise the real job and are manual-only.
 
 ---
 
@@ -102,6 +103,13 @@ pnpm dev
    "include homepage" option is enabled without a manual page reload.
 10. **Verify (previews host isolation):** with `NEXT_PUBLIC_PREVIEWS_BASE_URL` set, `/p/<slug>` serves
     only on the previews host; the same path on the CRM host returns 404.
+11. **Verify (premium output):** the generated page follows the configured base prompt and model (§6):
+    Google Fonts load, and GSAP + ScrollTrigger (the single pinned cdnjs path) run — scroll the served
+    `/p/<slug>` and confirm the staggered reveals, parallax and hover micro-interactions work.
+12. **Verify (screenshot shows the FINAL state):** the stored screenshot shows the page after its
+    animations have settled — scroll-reveal sections that start at `opacity:0` are **visible**, not left
+    hidden or half-faded. (The render step drives GSAP/ScrollTrigger to completion, then forces any
+    remaining hidden reveal targets visible.)
 
 ## 4. Refine
 
@@ -120,17 +128,30 @@ pnpm dev
 
 ## 6. Admin configuration (admin only)
 
+**E2E:** `tests/e2e/target-homepage.spec.ts` › `Admin homepage generation settings` › `saves model + max tokens (clamped to the model ceiling) and they persist across reload`
+*(steps 1–3 for an admin; needs no S3 so it also runs in CI; restores the original settings afterwards)*
+
 1. As an admin open **Admin → Homepage Generation** (`/admin/homepage-settings`). As a non-admin the
-   page is refused and the save action returns an error.
+   page is refused (the `/admin` layout redirects) and the save action returns an error.
 2. Pick a **model**, set **max tokens**, and pick a **base prompt** (or "Built-in default"); **Save**.
 3. **Verify:** reopening the page shows the saved values. An out-of-range max tokens is clamped
    server-side to `[4000, model ceiling]` (default is 16000). The default premium `HOMEPAGE_BASE`
    prompt is listed and editable in **Campaigns → Prompts** by admins only (non-admins get Forbidden).
+   *(E2E: choose Haiku 4.5, enter 99999 → saved value is the 32000 ceiling and survives a reload.)*
 4. **Verify (applies to the next run):** the next Generate/Refine uses the saved model/tokens/base
    prompt (no env vars involved — settings live in the DB). The code-owned output contract is always
    appended, so an edited base cannot break the JSON/egress/logo handling.
+5. **Verify (base prompt is admin-only):** sign in as a **non-admin** user → **Campaigns → Prompts**:
+   the `HOMEPAGE_BASE` kind is not offered, and creating, editing or deleting a `HOMEPAGE_BASE` prompt
+   is refused ("Forbidden"). As an admin the same actions succeed. Non-admins also cannot open
+   `/admin/homepage-settings` (redirected away).
 
 ## 7. Upload your own HTML
+
+**E2E:** `tests/e2e/target-homepage.spec.ts` › `a page whose current version is an UPLOAD hides Refine but keeps Regenerate/Revert/Upload`,
+`GET /p/<slug> serves an uploaded version's HTML with the sandbox CSP`
+*(seeds an `UPLOAD` current version; the second needs reachable S3/R2 and skips in CI. The upload
+action itself, the job, and the screenshot render are manual-only — see Known gaps.)*
 
 1. In the drawer click **Upload HTML** and choose a self-contained `.html` file (under ~3.5 MB).
 2. **Verify:** the job runs, an **UPLOAD** version is added and becomes **Current**, and `/p/<slug>`
@@ -141,6 +162,11 @@ pnpm dev
    **Revert** switches back to the upload.
 4. **Verify (limits):** a non-HTML file or a file over the cap is rejected with a message (a 413 shows
    "too large"); a non-approved target cannot upload.
+5. **Verify (revert between upload and generated):** Regenerate on an uploaded page → a new `AUTO`
+   version is Current and Refine reappears. **Revert** to the `UPLOAD` version → it is Current again,
+   `/p/<slug>` serves the upload, and Refine is hidden again with the hint. *(E2E covers the hidden
+   Refine, the hint and the enabled Regenerate/Revert/Upload controls on the seeded state; the
+   transitions themselves queue jobs and are manual.)*
 
 ## 8. MCP parity
 
@@ -158,7 +184,7 @@ status, preview URL and versions.
   first Vercel preview, not locally or in CI.
 - **No per-version screenshots:** revert re-renders.
 - **CI e2e has no S3:** the storage-backed E2E tests skip there (`LESSONS_LEARNED.md`).
-- **E2E parity for the manual steps 6–10 above is partial:** the `/p/` host-gate helper
+- **E2E parity for §3 steps 5–10 above is partial:** the `/p/` host-gate helper
   (`isPreviewHostAllowed`), the in-flight/published-slug/prompt-length guards, the 429-retriable
   classification, and the logo-inline harvest are all covered by **Jest** (unit), but there is no
   Playwright counterpart yet — the host gate and the stuck-row/logo scenarios need host-header and
@@ -166,3 +192,20 @@ status, preview URL and versions.
 - **Local migration checksum:** the `20260930120000_homepage_versions` migration was edited in place
   during review (columns dropped/added). If you already ran it locally, `pnpm exec prisma migrate reset`
   (local Supabase on :54622) to clear the checksum mismatch before `pnpm db:migrate`.
+- **Premium generation + screenshot final state (§3 steps 11–12):** need live Anthropic, real network
+  to Google Fonts/cdnjs, and chromium. Manual on QA only. The reveal-settling script
+  (`lib/homepage/render.ts`) and the allowlist are unit-tested; the full render is not e2e-tested.
+- **Upload action end-to-end (§7 steps 1–2, 4–5):** choosing a file → `/upload-homepage` → Inngest job →
+  screenshot render needs the job runner + chromium (and S3) which CI's e2e job lacks. The oversize /
+  non-HTML / non-approved rejections are covered by Jest (`upload-homepage-route.test.ts`), not
+  Playwright. Only the seeded `UPLOAD` state (Refine gate, serving) is e2e-tested.
+- **Admin config affecting generation (§6 step 4):** that the next Generate/Refine actually uses the
+  saved model/tokens/base prompt is covered by Jest (`generate-homepage.test.ts`,
+  `homepage-settings.test.ts`); the E2E only round-trips the saved values.
+- **Non-admin denial (§6 steps 1 and 5):** the e2e harness has one shared **admin** session
+  (`playwright/.auth/user.json`); there is no seeded non-admin session, so the `/admin` redirect, the
+  admin-action `Forbidden`, and the base-prompt admin-only gate are Jest-only
+  (`homepage-settings.test.ts`, `actions/crm/prompts/__tests__/homepage-base-gate.test.ts`). Add a
+  second seeded non-admin user + storageState as a fast-follow (pairs every admin allow with a deny).
+- **Base-prompt picker in the admin round-trip:** the e2e does not select a `HOMEPAGE_BASE` prompt
+  (none is seeded in the e2e DB); only model and max tokens are exercised.
