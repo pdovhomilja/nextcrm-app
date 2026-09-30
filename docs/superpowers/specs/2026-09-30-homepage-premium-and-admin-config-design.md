@@ -88,7 +88,9 @@ user    = [business brief]                         # facts, code-built (company,
   read through this helper so it works before anything is configured.
   - `model`: default `claude-sonnet-5-5`; allowed set `{claude-sonnet-5-5, claude-opus-5-5,
     claude-haiku-4-5-20251001}` owned in code. An unknown/removed stored value falls back to default.
-  - `max_tokens`: default (e.g.) 32000; **clamped** to `[4000, MODEL_MAX]` per the resolved model.
+  - `max_tokens`: default **16000**; **clamped** to `[4000, MODEL_MAX]` per the resolved model. (Default was
+    planned at ~32000 but lowered to 16000: the non-streaming vision call shares the render step's ~300s
+    function budget — see C5.)
   - `base_prompt`: the selected `HOMEPAGE_BASE` prompt's body; if unset/missing, a code default.
 - **Admin page:** `app/[locale]/(routes)/admin/homepage-settings` (matches `crm-settings`,
   `funnel-settings`), `isAdmin`-gated server-side (page + the save action). Non-admins are refused.
@@ -130,7 +132,11 @@ ScrollTrigger usage patterns (loaded from the allowlisted CDN), custom Google Fo
 
 ### C5 — Defaults, bounds, timeouts
 
-- Default `max_tokens` raised (≈32000) so premium pages stop truncating; clamped per model.
+- Default `max_tokens` raised from 12000 to **16000** (was planned ≈32000): a non-streaming vision call
+  shares the render step's ~300s function budget (up to `RENDER_TIMEOUT_MS` render + the ~200s generate
+  abort), so 16000 completes reliably while a larger default could abort on very large pages. Clamped per
+  model; ceilings stay higher for admins (who are warned). **Follow-up:** switch to streaming (or split
+  render into its own Inngest step) to raise the default safely — see `LESSONS_LEARNED.md`.
 - Larger outputs take longer; keep the per-pass generate timeout + render within the 300s function
   budget (re-check the arithmetic with the higher token ceiling; lower the default if needed).
 - Model + max_tokens flow from the resolver into `provider.ts` (currently hard-coded).
@@ -139,9 +145,15 @@ ScrollTrigger usage patterns (loaded from the allowlisted CDN), custom Google Fo
 
 - **Purpose:** let an authorized user replace the generated design for a target with an
   externally-produced, self-contained HTML file, served from the same `/p/<slug>` previews URL.
-- **Upload path:** presigned **direct-to-R2** upload (reuse the `crm_get_upload_url` pattern) to avoid
-  the ~4.5 MB Vercel function-body limit; enforce a size cap (e.g. 5 MB) and validate the content is
-  HTML. The object is written to the served key (`previews/<slug>/index.html`).
+- **Upload path (as built):** the drawer POSTs `{html}` JSON to the **route handler**
+  `app/api/crm/targets/[id]/upload-homepage` (not a server action — Next server actions cap request
+  bodies at ~1 MB, which would reject ordinary self-contained pages; route handlers allow Vercel's
+  ~4.5 MB). Size cap `MAX_UPLOAD_BYTES` = 4 MB (`lib/homepage/upload-limits.ts`; the drawer also
+  pre-checks ~3.5 MB client-side to leave JSON-escaping headroom and surfaces a 413 as "too large").
+  The core (`lib/homepage/upload-homepage-core.ts`) validates the content is HTML, stages it at a
+  transient R2 key, and sends `homepage/target.upload`; the Inngest upload flow renders and publishes it
+  to the served key (`previews/<slug>/index.html`). (The original plan was a presigned direct-to-R2
+  upload; it was superseded by the route handler.)
 - **Versioning:** the upload becomes a new `crm_Target_Homepage_Version` row with **`pass_kind:
   "UPLOAD"`** (html stored, `created_by` = uploader, no prompt/critique) and `current_version_id` is
   repointed to it. The existing serve gate (`current_version_id`), revert, and email "include

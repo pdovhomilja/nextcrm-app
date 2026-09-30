@@ -118,7 +118,31 @@ pnpm dev
 2. **Verify:** that version becomes **Current**, the preview and screenshot are re-rendered from
    its HTML (screenshots are not stored per version), and the public link now serves it.
 
-## 6. MCP parity
+## 6. Admin configuration (admin only)
+
+1. As an admin open **Admin → Homepage Generation** (`/admin/homepage-settings`). As a non-admin the
+   page is refused and the save action returns an error.
+2. Pick a **model**, set **max tokens**, and pick a **base prompt** (or "Built-in default"); **Save**.
+3. **Verify:** reopening the page shows the saved values. An out-of-range max tokens is clamped
+   server-side to `[4000, model ceiling]` (default is 16000). The default premium `HOMEPAGE_BASE`
+   prompt is listed and editable in **Campaigns → Prompts** by admins only (non-admins get Forbidden).
+4. **Verify (applies to the next run):** the next Generate/Refine uses the saved model/tokens/base
+   prompt (no env vars involved — settings live in the DB). The code-owned output contract is always
+   appended, so an edited base cannot break the JSON/egress/logo handling.
+
+## 7. Upload your own HTML
+
+1. In the drawer click **Upload HTML** and choose a self-contained `.html` file (under ~3.5 MB).
+2. **Verify:** the job runs, an **UPLOAD** version is added and becomes **Current**, and `/p/<slug>`
+   serves the uploaded page (same sandbox/noindex headers). The screenshot is rendered with the same
+   allowlisted egress, so assets from non-allowlisted hosts won't appear in the screenshot only.
+3. **Verify (refine disabled):** while an UPLOAD is current, **Refine** is disabled with an explanatory
+   hint (and the server refuses it). **Generate** still works and produces a fresh generated version;
+   **Revert** switches back to the upload.
+4. **Verify (limits):** a non-HTML file or a file over the cap is rejected with a message (a 413 shows
+   "too large"); a non-approved target cannot upload.
+
+## 8. MCP parity
 
 Covered by Jest (`lib/mcp/__tests__/crm-homepage.test.ts`), not the browser: `crm_generate_homepage`
 enqueues the same job (approved + authorised targets only); `crm_get_homepage_status` returns

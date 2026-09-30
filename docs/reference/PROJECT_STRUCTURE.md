@@ -93,15 +93,34 @@ current site (SSRF-guarded), draft + self-critique with Claude vision (headless 
 screenshots), publish to a private R2 prefix, serve at a public `/p/<slug>`, and refine /
 revert through a version history. Upstream-owned touches are limited to
 `schema.prisma`, `package.json`, `next.config.js`, `proxy.ts`, `app/api/inngest/route.ts`,
-`lib/mcp/tools/index.ts`, `BasicView.tsx` and two sidebar files — see `UPSTREAM_IMPACT_LOG.md`.
+`lib/mcp/tools/index.ts`, `BasicView.tsx`, `lib/audit-log.ts`, `prisma/seeds/seed.ts`, two sidebar files
+and `AdminSidebarNav.tsx` — see `UPSTREAM_IMPACT_LOG.md`. Generation is **admin-configurable**
+(model / max_tokens / base prompt — `/admin/homepage-settings`) and a user can **upload their own HTML**
+to override the generated design.
 
 ```text
 lib/homepage/
-  storage.ts                    private-R2 put/get under previews/<slug>/ (index.html, screenshot.png)
+  storage.ts                    private-R2 put/get under previews/<slug>/ (index.html, screenshot.png);
+                                also the transient upload key (putHomepageUpload / deleteHomepageUpload)
   render.ts                     renderAndScreenshot(html) -> PNG via @sparticuz/chromium + playwright-core
-                                (LAZY-imported; never at module scope). BLOCKS all network egress during
-                                render (self-contained HTML only). Also exports launchBrowser / isServerless
-                                (shared by harvest-source.ts)
+                                (LAZY-imported; never at module scope). Egress is gated by the code-owned
+                                allowlist (render-allowlist.ts): only Google Fonts + a version-pinned GSAP
+                                cdnjs path load, everything else (incl. WebSockets) is aborted. Before the
+                                screenshot a "finalize animations" step completes GSAP/ScrollTrigger
+                                timelines and force-reveals hidden elements. Also exports launchBrowser /
+                                isServerless (shared by harvest-source.ts)
+  render-allowlist.ts           ALLOWED_RENDER_HOSTS, GSAP_VERSION, isAllowedRenderRequest(url) — single
+                                source of truth shared by render.ts and the prompt's machine contract
+  settings.ts                   admin-config resolver: getHomepageSettings() (model / max_tokens /
+                                base_prompt_id from crm_SystemSettings, DB -> code default), HOMEPAGE_MODELS
+                                allow-set, clampMaxTokens (default 16000, floor 4000, per-model ceiling)
+  prompt.ts                     buildSystemPrompt(basePrompt): admin-editable base prompt (DEFAULT_BASE_PROMPT
+                                fallback) + code-owned MACHINE_CONTRACT ALWAYS appended (JSON shape, egress
+                                hosts, logo placeholder, no-invented-facts) so a weak base can't break parsing
+  upload-homepage-core.ts       runUploadHomepage(): validate HTML + size, ensure row, stage the file, send
+                                homepage/target.upload, audit (shared core behind the upload route)
+  upload-limits.ts              MAX_UPLOAD_BYTES (4 MB) — plain module (a "use server" file can't export
+                                constants) shared by the route core and the drawer's client-side guard
   harvest-source.ts             harvestSource(url): SSRF-guarded (lib/net/host-guard.ts) fetch +
                                 screenshot + brand extraction; inlines the logo as a data: URI
   provider.ts                   Anthropic vision provider: generateHomepage({brief,prompt,previousHtml?,...})
@@ -114,19 +133,34 @@ lib/homepage/
   serve.ts                      shared public-serve helpers: generic 404, cache headers,
                                 CSP `sandbox allow-scripts`, loadPublished(slug)
 lib/ai/anthropic-json.ts        tolerant JSON extraction from fenced/preambled model output
-inngest/functions/generate-homepage.ts   homepage/target.{generate,refine,revert} job: harvest (+ logo
+inngest/functions/generate-homepage.ts   homepage/target.{generate,refine,revert,upload} job: harvest (+ logo
                                 inline) -> draft -> N auto critique passes (+ HUMAN refine, revert) ->
-                                upload -> version row -> READY (throws NonRetriableError on failure)
-actions/crm/homepage/           server actions: get-homepage-status, refine-homepage,
-                                revert-homepage-version, update-homepage-slug
+                                upload -> version row -> READY (throws NonRetriableError on failure).
+                                Generate/refine resolve model / max_tokens / base prompt via settings.ts;
+                                the upload flow renders + publishes an operator-uploaded page as an UPLOAD
+                                version (no model call)
+actions/crm/homepage/           server actions: get-homepage-status (exposes current_pass_kind),
+                                refine-homepage (refuses while an UPLOAD is current), revert-homepage-version,
+                                update-homepage-slug
+actions/admin/homepage-settings.ts   getHomepageSettingsForAdmin / saveHomepageSettings (isAdmin-gated,
+                                validates model, clamps max_tokens, audits as entity "setting")
+app/[locale]/(routes)/admin/homepage-settings/   admin page + _components/HomepageSettingsForm.tsx
+                                (model, max tokens, base prompt picker; "Homepage Generation" sidebar entry)
+prisma/seeds/homepage-base-prompt.ts   default premium HOMEPAGE_BASE prompt body (seed.ts + migration
+                                20260930130200 seed it; admins edit it in the prompt library)
 app/api/crm/targets/[id]/generate-homepage/route.ts   POST trigger (authz + APPROVED gate)
+app/api/crm/targets/[id]/upload-homepage/route.ts   POST {html} upload override (authz + APPROVED gate).
+                                A ROUTE HANDLER, not a server action: actions cap bodies at ~1 MB
 app/p/[slug]/route.ts           PUBLIC GET -> stored HTML (no auth, noindex, CSP sandbox)
 app/p/[slug]/screenshot.png/route.ts   PUBLIC GET -> stored screenshot
 app/[locale]/(routes)/campaigns/targets/[targetId]/components/GenerateHomepageDrawer.tsx
-                                slug / prompt / generate / preview iframe / refine / versions / revert
+                                slug / prompt / generate / preview iframe / refine / versions / revert /
+                                upload-your-own-HTML (refine is disabled while an upload is current)
 lib/mcp/tools/crm-homepage.ts   MCP crm_generate_homepage, crm_get_homepage_status
 scripts/smoke/homepage-render-smoke.cjs   manual chromium launch smoke (Linux/serverless)
 prisma/migrations/20260930120000_homepage_versions/   crm_Target_Homepage_Version + current_version_id
+prisma/migrations/2026093013*/  HOMEPAGE_BASE prompt kind, UPLOAD pass kind (ALTER TYPE ADD VALUE),
+                                seeded default base prompt
 tests/e2e/target-homepage.spec.ts       seeded READY page: drawer preview/versions + /p/<slug> serving
                                         (no real chromium job / Anthropic call); manual doc:
                                         docs/testing/target-homepage-manual-testing.md
