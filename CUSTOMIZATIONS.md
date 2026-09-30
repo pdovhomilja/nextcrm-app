@@ -38,9 +38,34 @@ know exactly what to re-verify, and so the automated guards (`scripts/check-inva
 | **DB — runtime transaction pooler** | single `DATABASE_URL` (session pooler) for CLI + runtime | **Split** — the serverless runtime pool reads optional **`RUNTIME_DATABASE_URL`** (transaction pooler `:6543`) via `lib/db/runtime-database-url.ts`, falling back to `DATABASE_URL`; `DATABASE_URL` stays on the session pooler (`:5432`) for `prisma migrate deploy`. Fixes session-pooler exhaustion (`EMAXCONNSESSION` → app-wide `FAILED_TO_GET_SESSION`). One thin insert into upstream `lib/prisma.ts`. | env-doc guard; `__tests__/db/runtime-database-url.test.ts` |
 | **CRM — public web-lead intake** | `POST /api/crm/leads/create-lead-from-web` creates a bare lead (name/company/email only) | **Extended additively** — captures `description` and resolves `lead_source` (name, default `"Web"`) / `lead_status` (`"New"`) / `assigned_to` (`WEB_LEAD_ASSIGNEE_EMAIL`, default `shaun@radeengineering.com`) server-side, each null-on-miss, then fires the `crm/lead.saved` event. Logic in new `lib/crm/create-web-lead.ts`; the upstream route is a thin hook. Auth check + `lastName` 400 unchanged. | `__tests__/crm/create-web-lead.test.ts` |
 | **CRM — target AI outreach (email)** | no AI outreach; campaigns are bulk, list-based sends | **Additive** — from an **approved** target, an "AI" header menu drafts a personalised email with Claude (`generate-target-email.ts`, tolerant of fenced JSON), previews it merged into a campaign template's `{{body}}` (`lib/campaigns/compose-target-email.ts`, extended merge tags incl. `homepage_url`/`homepage_screenshot`, empty until a homepage exists), and sends a **one-off** via Resend with a per-email unsubscribe token (`/api/crm/targets/unsubscribe`), `do_not_email` + approval gates, activity + audit entries. Reusable **prompt library** (`/campaigns/prompts`, org/personal, EMAIL/HOMEPAGE kinds) and MCP parity (`crm_send_target_email`, prompt CRUD). New tables `crm_Ai_Prompt`, `crm_Target_Email`, `crm_Target_Homepage` (migration `20260929120000_target_ai_outreach`). Upstream-owned touches: `schema.prisma` (insert-only), `BasicView.tsx`, `lib/mcp/tools/index.ts`, `playwright.config.ts` (see `UPSTREAM_IMPACT_LOG.md`). **Planned follow-up:** AI homepage generation + `previews.radeengineering.com` (the `crm_Target_Homepage` table and merge tags are the seam; the "Generate homepage" menu item is disabled until then). | `actions/crm/targets/__tests__/`, `actions/crm/prompts/__tests__/`, `lib/mcp/__tests__/`, `tests/e2e/target-ai-email.spec.ts` |
+| **CRM — target AI homepage generation** | no homepage generation; "Generate homepage" was a disabled placeholder | **Additive** — from an **approved** target, the AI menu opens a drawer that harvests the prospect's current site (SSRF-guarded via `lib/net/host-guard.ts`), drafts a redesigned homepage with Claude vision, self-critiques for N automatic passes over headless-chromium screenshots (`@sparticuz/chromium` + `playwright-core`, lazy-imported), then supports human **refine** / **revert** over a version history (`crm_Target_Homepage_Version`, migration `20260930120000_homepage_versions`). Job: Inngest `homepage/target.generate` + `.refine` (`inngest/functions/generate-homepage.ts`); MCP parity (`crm_generate_homepage`, `crm_get_homepage_status`). **Previews model:** pages are stored in the **existing private R2 bucket** (`MINIO_*`, `previews/<slug>/`, no new bucket/creds) and served **only** through a public, unauthenticated Next route `/p/[slug]` (+ `/p/[slug]/screenshot.png`) — Vercel-served private R2, not a public bucket. Designed to be linked on `previews.radeengineering.com` (`NEXT_PUBLIC_PREVIEWS_BASE_URL`, optional/fail-closed) and always sent with `Content-Security-Policy: sandbox allow-scripts` (opaque origin) + `noindex`. Upstream-owned touches (all insert-only except one array extension; see `UPSTREAM_IMPACT_LOG.md`): `prisma/schema.prisma`, `package.json`, `next.config.js`, `proxy.ts` (`/p/` pass-through), `app/api/inngest/route.ts`, `lib/mcp/tools/index.ts`, `BasicView.tsx`, `app-sidebar.tsx`, `menu-items/Campaigns.tsx`. | `inngest/functions/__tests__/generate-homepage.test.ts`, `lib/homepage/__tests__/`, `actions/crm/homepage/__tests__/`, `app/p/[slug]/__tests__/`, `lib/mcp/__tests__/crm-homepage.test.ts`, `tests/e2e/target-homepage.spec.ts` |
 
 *(WS3)* = lands in the CI/CD workstream; its invariant is a WARN in `check-invariants.sh`
 until then, promoted to FAIL once the file exists.
+
+---
+
+## Known gaps — homepage generation
+
+Deliberate, accepted limitations of the homepage-generation feature (revisit when noted):
+
+- **Guessable, readable slug (user's explicit choice).** `/p/<slug>` is public and unauthenticated
+  and the slug is human-readable (`acme-plumbing`), so it can be guessed. The content is a
+  non-sensitive prospect mockup. **Fast-follow (optional):** an Upstash rate-limit on `/p/`
+  (skip outside `VERCEL_ENV=production`, per `e2e-patterns.md`).
+- **Chromium version skew — verify on first deploy.** `@sparticuz/chromium` 147 vs
+  `playwright-core` 1.58.2 (Chromium 145). The serverless launch can't be exercised locally or
+  in CI; the first Vercel preview (QA) run is the verification step (see `LESSONS_LEARNED.md`).
+- **DNS-rebinding residual on the source harvest.** The host guard resolves once; the browser
+  resolves again. Bounded to a screenshot/copy of the answer; host-resolver pinning is a
+  possible fast-follow (see `LESSONS_LEARNED.md`).
+- **A failed refine on a published page keeps the live preview (by design).** The prior version
+  stays current and served; the row records the error. This protects links already emailed.
+- **No per-version screenshot storage.** Only the current screenshot is stored; **revert
+  re-renders** the target version's HTML (`screenshot_key` on versions is unused for now).
+- **E2E does not launch chromium or call Anthropic.** `tests/e2e/target-homepage.spec.ts` seeds a
+  READY page + versions directly; storage-backed serving assertions run only where an S3 endpoint
+  is reachable (local SeaweedFS), and are skipped in CI's `e2e` job (no S3 service there).
 
 ---
 
