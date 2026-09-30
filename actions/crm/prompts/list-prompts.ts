@@ -2,7 +2,7 @@
 import { prismadb } from "@/lib/prisma";
 import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
 
-export type AiPromptKind = "EMAIL" | "HOMEPAGE";
+export type AiPromptKind = "EMAIL" | "HOMEPAGE" | "HOMEPAGE_BASE";
 export type AiPromptScope = "ORG" | "USER";
 
 export const listPrompts = async ({ kind }: { kind: AiPromptKind }) => {

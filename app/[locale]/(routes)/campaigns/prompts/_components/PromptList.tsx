@@ -10,7 +10,7 @@ type Prompt = {
   id: string;
   name: string;
   body: string;
-  kind: "EMAIL" | "HOMEPAGE";
+  kind: "EMAIL" | "HOMEPAGE" | "HOMEPAGE_BASE";
   scope: "ORG" | "USER";
 };
 

@@ -2056,6 +2056,7 @@ model Invoice_Settings {
 enum crm_Ai_Prompt_Kind {
   EMAIL
   HOMEPAGE
+  HOMEPAGE_BASE
 }
 
 enum crm_Ai_Prompt_Scope {
@@ -2147,6 +2148,7 @@ model crm_Target_Email {
 enum crm_Homepage_Pass_Kind {
   AUTO
   HUMAN
+  UPLOAD
 }
 
 model crm_Target_Homepage_Version {
