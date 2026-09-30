@@ -115,10 +115,12 @@ describe("saveHomepageSettings", () => {
       ["homepage.max_tokens", "30000"],
       ["homepage.base_prompt_id", "p1"],
     ]);
+    expect(writeAuditLog).toHaveBeenCalledTimes(1);
     expect(writeAuditLog).toHaveBeenCalledWith(
       expect.objectContaining({
         entityType: "setting",
-        entityId: "homepage-generation",
+        // crm_AuditLog.entityId is a UUID column; a non-UUID is silently dropped.
+        entityId: "00000000-0000-4000-8000-0000000000c0",
         action: "updated",
         userId: "admin-1",
       }),

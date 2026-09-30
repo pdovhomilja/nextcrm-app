@@ -17,6 +17,8 @@ import {
 const KEY_MODEL = "homepage.model";
 const KEY_MAX_TOKENS = "homepage.max_tokens";
 const KEY_BASE_PROMPT_ID = "homepage.base_prompt_id";
+// crm_AuditLog.entityId is a UUID column; settings have no row id, so use a fixed sentinel.
+const HOMEPAGE_SETTINGS_ENTITY_ID = "00000000-0000-4000-8000-0000000000c0";
 
 type AdminUser = Awaited<ReturnType<typeof requireRole>>;
 
@@ -84,7 +86,7 @@ export async function saveHomepageSettings(input: {
 
   await writeAuditLog({
     entityType: "setting",
-    entityId: "homepage-generation",
+    entityId: HOMEPAGE_SETTINGS_ENTITY_ID,
     action: "updated",
     changes: [
       {
