@@ -13,6 +13,8 @@ import {
   putHomepageTmpSource,
   getHomepageTmpSource,
   deleteHomepageTmpSource,
+  getHomepageUpload,
+  deleteHomepageUpload,
 } from "@/lib/homepage/storage";
 
 /** Number of automatic render->critique->refine passes after the initial draft. Hard bound. */
@@ -53,6 +55,14 @@ export type RevertHomepageEventData = {
   /** Required by the per-target concurrency key; the revert trigger must send it. */
   targetId: string;
   versionId: string;
+  triggeredBy?: string;
+};
+
+export type UploadHomepageEventData = {
+  homepageId: string;
+  /** Required by the per-target concurrency key; the upload action must send it. */
+  targetId: string;
+  slug: string;
   triggeredBy?: string;
 };
 
@@ -507,6 +517,75 @@ async function revertFlow(step: StepLike, data: RevertHomepageEventData) {
   }
 }
 
+/**
+ * Publish an operator-uploaded HTML override. The html (up to ~4 MB) sits at a
+ * transient R2 key; it is read, rendered (same allowlisted egress + finalize as
+ * every other flow, via renderPng), published, and recorded as an UPLOAD version
+ * all inside ONE step so the html never enters persisted step state — only the
+ * small version id is returned. The transient blob is removed best-effort after
+ * READY (kept on failure so a retry can reuse it).
+ */
+async function uploadFlow(step: StepLike, data: UploadHomepageEventData) {
+  const homepage = await step.run("load-homepage", () =>
+    prismadb.crm_Target_Homepage.findUnique({
+      where: { id: data.homepageId, deletedAt: null },
+      select: { id: true, targetId: true, slug: true, current_version_id: true, logo_data_uri: true },
+    }),
+  );
+  if (!homepage) return { skipped: "no homepage row" };
+  const logoDataUri = homepage.logo_data_uri ?? null;
+
+  try {
+    await step.run("mark-running", () =>
+      prismadb.crm_Target_Homepage.update({
+        where: { id: homepage.id },
+        data: { status: "RUNNING", error: null },
+      }),
+    );
+
+    const versionId = await step.run("publish-upload", async () => {
+      const html = await getHomepageUpload(homepage.slug);
+      if (!html) throw new Error("Uploaded file not found");
+      const materialized = materializeLogo(html, logoDataUri);
+      const png = await renderPng(materialized);
+      await putHomepageHtml(homepage.slug, materialized);
+      await putHomepageScreenshot(homepage.slug, png);
+      const v = await prismadb.crm_Target_Homepage_Version.create({
+        data: {
+          homepage_id: homepage.id,
+          html: materialized,
+          prompt: null,
+          agent_critique: null,
+          pass_kind: "UPLOAD",
+          created_by: data.triggeredBy ?? null,
+        },
+        select: { id: true },
+      });
+      return v.id;
+    });
+
+    await step.run("mark-ready", () =>
+      prismadb.crm_Target_Homepage.update({
+        where: { id: homepage.id },
+        data: {
+          status: "READY",
+          current_version_id: versionId,
+          ...previewUrls(homepage.slug),
+          error: null,
+        },
+      }),
+    );
+    try {
+      await step.run("cleanup-upload", () => deleteHomepageUpload(homepage.slug));
+    } catch (e) {
+      console.error("[GENERATE_HOMEPAGE_CLEANUP]", e);
+    }
+    return { ready: true };
+  } catch (err) {
+    return failRun(step, "upload", homepage.id, err);
+  }
+}
+
 const BACKSTOP_ERROR = "run failed (onFailure backstop)";
 
 /**
@@ -523,7 +602,9 @@ export async function onGenerateHomepageFailure({
   event,
 }: {
   error?: { message?: string };
-  event: { data: { event?: { data?: Partial<GenerateHomepageEventData & RefineHomepageEventData & RevertHomepageEventData> } } };
+  event: { data: { event?: { data?: Partial<
+          GenerateHomepageEventData & RefineHomepageEventData & RevertHomepageEventData & UploadHomepageEventData
+        > } } };
 }): Promise<void> {
   const orig = event?.data?.event?.data ?? {};
   const message = error?.message ? `${BACKSTOP_ERROR}: ${error.message}`.slice(0, 1000) : BACKSTOP_ERROR;
@@ -552,9 +633,10 @@ export const generateHomepage = inngest.createFunction(
       { event: "homepage/target.generate" },
       { event: "homepage/target.refine" },
       { event: "homepage/target.revert" },
+      { event: "homepage/target.upload" },
     ],
     concurrency: [
-      // Serialize generate/refine/revert (or a double-click) per target so
+      // Serialize generate/refine/revert/upload (or a double-click) per target so
       // RUNNING/READY and version writes never interleave. All events carry targetId.
       { key: "event.data.targetId", limit: 1 },
       // Cap total concurrent runs: each launches a headless chromium in the
@@ -573,6 +655,8 @@ export const generateHomepage = inngest.createFunction(
         return refineFlow(s, event.data as RefineHomepageEventData);
       case "homepage/target.revert":
         return revertFlow(s, event.data as RevertHomepageEventData);
+      case "homepage/target.upload":
+        return uploadFlow(s, event.data as UploadHomepageEventData);
       default:
         throw new NonRetriableError(`Unexpected event ${event.name}`);
     }

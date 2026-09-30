@@ -20,6 +20,8 @@ jest.mock("@/lib/homepage/storage", () => ({
   putHomepageTmpSource: jest.fn(),
   getHomepageTmpSource: jest.fn(),
   deleteHomepageTmpSource: jest.fn(),
+  getHomepageUpload: jest.fn(),
+  deleteHomepageUpload: jest.fn(),
   homepageShotKey: (slug: string) => `previews/${slug}/screenshot.png`,
 }));
 
@@ -36,6 +38,8 @@ import {
   putHomepageTmpSource,
   getHomepageTmpSource,
   deleteHomepageTmpSource,
+  getHomepageUpload,
+  deleteHomepageUpload,
 } from "@/lib/homepage/storage";
 import { NonRetriableError } from "inngest";
 import { AUTO_PASSES, onGenerateHomepageFailure } from "../generate-homepage";
@@ -133,6 +137,7 @@ describe("generate-homepage function config", () => {
       "homepage/target.generate",
       "homepage/target.refine",
       "homepage/target.revert",
+      "homepage/target.upload",
     ]);
     expect(config.retries).toBeLessThanOrEqual(2);
   });
@@ -582,6 +587,119 @@ describe("revert event", () => {
     homepageUpdateMany.mockResolvedValue({ count: 1 });
     await onGenerateHomepageFailure({
       event: { data: { function_id: "generate-homepage", run_id: "r1", event: revertEvent } } as never,
+    });
+    expect(homepageUpdateMany).toHaveBeenCalledWith({
+      where: { id: "h1", status: { in: ["PENDING", "RUNNING"] } },
+      data: { status: "FAILED", error: expect.stringContaining("onFailure backstop") },
+    });
+  });
+});
+
+describe("upload event", () => {
+  const uploadEvent = {
+    name: "homepage/target.upload",
+    data: { homepageId: "h1", targetId: "t1", slug: "acme-plumbing", triggeredBy: "u1" },
+  };
+  const UPLOADED = "<html>uploaded</html>";
+  const hp = { ...homepage, current_version_id: "ver2", logo_data_uri: null };
+
+  beforeEach(() => {
+    (prismadb.crm_Target_Homepage.findUnique as jest.Mock).mockResolvedValue(hp);
+    (getHomepageUpload as jest.Mock).mockResolvedValue(UPLOADED);
+    (deleteHomepageUpload as jest.Mock).mockResolvedValue(undefined);
+  });
+
+  it("renders the uploaded html, publishes, records an UPLOAD version, repoints + READY, cleans up", async () => {
+    const out = await handler({ event: uploadEvent, step });
+    expect(out).toEqual({ ready: true });
+    expect(getHomepageUpload).toHaveBeenCalledWith("acme-plumbing");
+    // Same allowlisted render path as every other flow.
+    expect(renderAndScreenshot).toHaveBeenCalledWith(UPLOADED);
+    expect(putHomepageHtml).toHaveBeenCalledWith("acme-plumbing", UPLOADED);
+    expect(putHomepageScreenshot).toHaveBeenCalledWith("acme-plumbing", Buffer.from("PNGDATA"));
+    expect(versionCreate).toHaveBeenCalledWith({
+      data: {
+        homepage_id: "h1",
+        html: UPLOADED,
+        prompt: null,
+        agent_critique: null,
+        pass_kind: "UPLOAD",
+        created_by: "u1",
+      },
+      select: { id: true },
+    });
+    expect(statuses()).toEqual(["RUNNING", "READY"]);
+    expect(homepageUpdate).toHaveBeenLastCalledWith({
+      where: { id: "h1" },
+      data: {
+        status: "READY",
+        current_version_id: "ver1",
+        preview_url: "https://previews.example.com/p/acme-plumbing",
+        screenshot_url: "https://previews.example.com/p/acme-plumbing/screenshot.png",
+        error: null,
+      },
+    });
+    expect(deleteHomepageUpload).toHaveBeenCalledWith("acme-plumbing");
+    expect(generateHomepage).not.toHaveBeenCalled();
+  });
+
+  it("keeps base64 data and the uploaded html out of every step return value", async () => {
+    const outputs: unknown[] = [];
+    const recording = {
+      run: async (_n: string, f: () => unknown) => {
+        const out = await f();
+        outputs.push(out);
+        return out;
+      },
+    };
+    await handler({ event: uploadEvent, step: recording });
+    const serialized = JSON.stringify(outputs);
+    expect(serialized).not.toContain(PNG_B64);
+    expect(serialized).not.toContain("uploaded");
+    expect(outputs).toContain("ver1");
+  });
+
+  it("no upload blob: FAILED via failRun, nothing rendered or published", async () => {
+    (getHomepageUpload as jest.Mock).mockResolvedValue(null);
+    await runExpectingFailure({ event: uploadEvent, step });
+    expect(renderAndScreenshot).not.toHaveBeenCalled();
+    expect(putHomepageHtml).not.toHaveBeenCalled();
+    expect(versionCreate).not.toHaveBeenCalled();
+    expect(statuses()).toEqual(["RUNNING", "FAILED"]);
+  });
+
+  it("render error: FAILED, live keys and versions untouched, upload blob kept for retry", async () => {
+    (renderAndScreenshot as jest.Mock).mockRejectedValue(new Error("chromium crashed"));
+    await runExpectingFailure({ event: uploadEvent, step });
+    expect(putHomepageHtml).not.toHaveBeenCalled();
+    expect(versionCreate).not.toHaveBeenCalled();
+    expect(statuses()).toEqual(["RUNNING", "FAILED"]);
+  });
+
+  it("cleanup failure is best-effort: still READY", async () => {
+    (deleteHomepageUpload as jest.Mock).mockRejectedValue(new Error("r2 down"));
+    await expect(handler({ event: uploadEvent, step })).resolves.toEqual({ ready: true });
+    expect(statuses()).toEqual(["RUNNING", "READY"]);
+  });
+
+  it("loads the homepage with the soft-delete filter", async () => {
+    await handler({ event: uploadEvent, step });
+    expect(prismadb.crm_Target_Homepage.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "h1", deletedAt: null } }),
+    );
+  });
+
+  it("missing homepage row: skipped, nothing read or rendered", async () => {
+    (prismadb.crm_Target_Homepage.findUnique as jest.Mock).mockResolvedValue(null);
+    await expect(handler({ event: uploadEvent, step })).resolves.toEqual({ skipped: "no homepage row" });
+    expect(getHomepageUpload).not.toHaveBeenCalled();
+    expect(renderAndScreenshot).not.toHaveBeenCalled();
+  });
+
+  it("onFailure backstop marks the homepage FAILED for an upload event (carries homepageId)", async () => {
+    homepageUpdateMany.mockResolvedValue({ count: 1 });
+    await onGenerateHomepageFailure({
+      event: { data: { function_id: "generate-homepage", run_id: "r1", event: uploadEvent } } as never,
     });
     expect(homepageUpdateMany).toHaveBeenCalledWith({
       where: { id: "h1", status: { in: ["PENDING", "RUNNING"] } },
