@@ -35,6 +35,22 @@ homepages. **1 upstream-owned file** touched (`prisma/schema.prisma`); the migra
 
 ---
 
+## feat/target-homepage-generation — serverless chromium deps + config (Task 2)  (PR: TBD)
+
+Adds headless chromium for the homepage render loop. **2 upstream-owned files** touched
+(`package.json`, `next.config.js`); `pnpm-lock.yaml` is regenerated. `vercel.json` and
+`scripts/smoke/homepage-render-smoke.cjs` are fork-owned (zero merge risk).
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `package.json` | +2/−0 | **insert-only** | Two `dependencies`: `@sparticuz/chromium` (147.0.2) and `playwright-core` (1.58.2, matches installed `@playwright/test`). | Low (on conflict keep both sides, re-run `pnpm install` to regenerate the lockfile) |
+| `next.config.js` | +1/−1 | **one-line rewrite** (array extension) | `serverExternalPackages: ["pdf-parse", "pdfjs-dist"]` extended with `"@sparticuz/chromium", "playwright-core"` + trailing `// fork:` comment. Existing entries untouched. | Low (if upstream edits this array, union the entries) |
+
+**Re-verify after any upstream merge:** both packages still in `serverExternalPackages` and
+`dependencies`; `node scripts/smoke/homepage-render-smoke.cjs` still writes a non-zero PNG.
+
+---
+
 ## fix/runtime-transaction-pooler — runtime uses the transaction pooler  (PR: TBD)
 
 Routes the serverless runtime Prisma pool through an optional

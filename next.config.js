@@ -5,7 +5,7 @@ const withNextIntl = require("next-intl/plugin")(
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
-  serverExternalPackages: ["pdf-parse", "pdfjs-dist"],
+  serverExternalPackages: ["pdf-parse", "pdfjs-dist", "@sparticuz/chromium", "playwright-core"], // fork: homepage-generation headless chromium
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "localhost" },
