@@ -23,13 +23,22 @@ type HomepageLike = {
   screenshot_url?: string | null;
 } | null;
 
-/** The single recipient-resolution chain: email -> company_email -> personal_email. */
+/**
+ * The single recipient-resolution chain: email -> company_email -> personal_email.
+ * Blank/whitespace values are treated as ABSENT (the target forms store cleared
+ * fields as "", and `??` would not fall through an empty string), and the winner
+ * is trimmed.
+ */
 export function resolveTargetRecipient(target: {
   email?: string | null;
   company_email?: string | null;
   personal_email?: string | null;
 }): string | null {
-  return target.email ?? target.company_email ?? target.personal_email ?? null;
+  const pick = (v?: string | null): string | null => {
+    const t = v?.trim();
+    return t ? t : null;
+  };
+  return pick(target.email) ?? pick(target.company_email) ?? pick(target.personal_email);
 }
 
 export function buildTargetMergeSource(target: TargetLike, homepage: HomepageLike): MergeTagTarget {

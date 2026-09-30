@@ -17,10 +17,12 @@ jest.mock("@/lib/campaigns/render-email", () => ({
 
 import { requireAuthenticated, assertCanWriteTarget } from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
+import { renderCampaignEmail } from "@/lib/campaigns/render-email";
 import { previewTargetEmail } from "@/actions/crm/targets/preview-target-email";
 
 const authed = requireAuthenticated as jest.Mock;
 const assertT = assertCanWriteTarget as jest.Mock;
+const render = renderCampaignEmail as jest.Mock;
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -92,6 +94,50 @@ describe("preview hardening", () => {
     assertT.mockRejectedValue(new AuthorizationError());
     expect(await previewTargetEmail(base)).toEqual({ error: "Forbidden" });
     expect(prismadb.crm_Targets.findFirst).not.toHaveBeenCalled();
+  });
+});
+
+// ── CTA button: inherit from template, override, homepage auto-default ──
+describe("preview CTA", () => {
+  const TARGET_ID = "11111111-1111-4111-8111-111111111111";
+  const TEMPLATE_ID = "22222222-2222-4222-8222-222222222222";
+  const base = {
+    targetId: TARGET_ID, templateId: TEMPLATE_ID, subject: "Hi", bodyHtml: "<p>x</p>",
+  };
+  const withTemplateCta = (cta: { cta_label: string | null; cta_url: string | null }) =>
+    (prismadb.crm_campaign_templates.findFirst as jest.Mock).mockResolvedValue({
+      id: TEMPLATE_ID, content_html: "<div>{{body}}</div>", ...cta,
+    });
+  const lastRenderArgs = () => render.mock.calls.at(-1)?.[0];
+
+  it("inherits the template CTA when the caller sends none", async () => {
+    withTemplateCta({ cta_label: "See your redesign", cta_url: "https://rade.example/x" });
+    await previewTargetEmail({ ...base, includeHomepage: false });
+    expect(lastRenderArgs()).toMatchObject({
+      ctaLabel: "See your redesign",
+      ctaUrl: "https://rade.example/x",
+    });
+  });
+
+  it("lets the caller override the inherited CTA", async () => {
+    withTemplateCta({ cta_label: "Default", cta_url: "https://default.example" });
+    await previewTargetEmail({ ...base, includeHomepage: false, ctaLabel: "Book now", ctaUrl: "https://override.example" });
+    expect(lastRenderArgs()).toMatchObject({ ctaLabel: "Book now", ctaUrl: "https://override.example" });
+  });
+
+  it("resolves {{homepage_url}} in the CTA link against the target homepage", async () => {
+    withTemplateCta({ cta_label: "See your redesign", cta_url: null });
+    (prismadb.crm_Target_Homepage.findFirst as jest.Mock).mockResolvedValue({
+      status: "READY", preview_url: "https://pages.example/ada", screenshot_url: null,
+    });
+    await previewTargetEmail({ ...base, includeHomepage: true, ctaUrl: "{{homepage_url}}" });
+    expect(lastRenderArgs()).toMatchObject({ ctaUrl: "https://pages.example/ada" });
+  });
+
+  it("renders no button when the CTA link is explicitly cleared", async () => {
+    withTemplateCta({ cta_label: "See your redesign", cta_url: "https://rade.example/x" });
+    await previewTargetEmail({ ...base, includeHomepage: false, ctaUrl: "" });
+    expect(lastRenderArgs()?.ctaUrl).toBeUndefined();
   });
 });
 

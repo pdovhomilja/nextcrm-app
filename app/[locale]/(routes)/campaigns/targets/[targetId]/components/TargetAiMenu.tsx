@@ -12,7 +12,12 @@ import { toast } from "sonner";
 import { GenerateEmailDrawer } from "./GenerateEmailDrawer";
 import { GenerateHomepageDrawer } from "./GenerateHomepageDrawer";
 
-type Option = { id: string; name: string };
+type Option = {
+  id: string;
+  name: string;
+  cta_label?: string | null;
+  cta_url?: string | null;
+};
 type PromptOption = { id: string; name: string; body: string };
 type HomepageInfo = {
   slug: string;
@@ -69,17 +74,17 @@ export function TargetAiMenu(props: {
           </DropdownMenuItem>
           <DropdownMenuItem
             disabled={!approved}
-            data-testid="ai-generate-email"
-            onClick={() => setEmailOpen(true)}
-          >
-            Generate email{!approved ? " (approve first)" : ""}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            disabled={!approved}
             data-testid="ai-generate-homepage"
             onClick={() => setHomepageOpen(true)}
           >
             Generate homepage{!approved ? " (approve first)" : ""}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={!approved}
+            data-testid="ai-generate-email"
+            onClick={() => setEmailOpen(true)}
+          >
+            Generate email{!approved ? " (approve first)" : ""}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

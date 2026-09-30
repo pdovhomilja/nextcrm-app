@@ -22,6 +22,8 @@ const previewInputSchema = z.object({
   subject: z.string().trim().min(1, "Subject is required"),
   bodyHtml: z.string().trim().min(1, "Email body is required"),
   includeHomepage: z.boolean().optional().default(false),
+  ctaLabel: z.string().optional(),
+  ctaUrl: z.string().optional(),
 });
 
 export const previewTargetEmail = async (input: {
@@ -30,11 +32,13 @@ export const previewTargetEmail = async (input: {
   subject: string;
   bodyHtml: string;
   includeHomepage?: boolean;
+  ctaLabel?: string;
+  ctaUrl?: string;
 }): Promise<{ data: { html: string; subject: string } } | { error: string }> => {
   const parsed = previewInputSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   // Use the parsed (trimmed) values, not the raw input.
-  const { targetId, templateId, subject, bodyHtml, includeHomepage } = parsed.data;
+  const { targetId, templateId, subject, bodyHtml, includeHomepage, ctaLabel, ctaUrl } = parsed.data;
 
   let user;
   try {
@@ -68,7 +72,15 @@ export const previewTargetEmail = async (input: {
       bodyHtml,
       mergeSource,
     });
-    const html = await renderCampaignEmail({ contentHtml, unsubscribeUrl: "#" });
+    // Inherit the template's CTA default when not supplied; "" means no button.
+    const finalCtaLabel = ctaLabel ?? template.cta_label;
+    const finalCtaUrl = ctaUrl ?? template.cta_url;
+    const html = await renderCampaignEmail({
+      contentHtml,
+      unsubscribeUrl: "#",
+      ctaLabel: finalCtaLabel ? resolveMergeTags(finalCtaLabel, mergeSource) : undefined,
+      ctaUrl: finalCtaUrl ? resolveMergeTags(finalCtaUrl, mergeSource) : undefined,
+    });
     return { data: { html, subject: resolveMergeTags(subject, mergeSource) } };
   } catch (e) {
     if (e instanceof TemplateBodyError) return { error: e.message };

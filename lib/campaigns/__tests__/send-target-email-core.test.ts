@@ -15,6 +15,19 @@ describe("resolveTargetRecipient", () => {
   it("returns null when there is no address", () => {
     expect(resolveTargetRecipient({})).toBeNull();
   });
+
+  // Regression: the Update-target form stores blank fields as "" (not null), and
+  // `??` does NOT fall through on "" — so a COMPANY target with email:"" but a real
+  // company_email was wrongly reported as having no address. Treat blank/whitespace
+  // as absent, and trim the winner.
+  it("treats empty/whitespace fields as absent and falls through", () => {
+    expect(
+      resolveTargetRecipient({ email: "", personal_email: "", company_email: "info@x.com" })
+    ).toBe("info@x.com");
+    expect(resolveTargetRecipient({ email: "   ", company_email: "info@x.com" })).toBe("info@x.com");
+    expect(resolveTargetRecipient({ email: "", company_email: "", personal_email: "" })).toBeNull();
+    expect(resolveTargetRecipient({ email: " a@x.com " })).toBe("a@x.com");
+  });
 });
 
 describe("buildTargetUnsubscribeUrl", () => {

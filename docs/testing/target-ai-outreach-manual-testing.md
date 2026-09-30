@@ -39,8 +39,9 @@ pnpm dev
 3. **Verify:** the "Generate outreach email" drawer opens.
 4. In **Choose a prompt**, pick a saved email prompt.
 5. **Verify:** the guidance box fills with that prompt's body (you can still edit it).
-6. Pick a **template** (must contain `{{body}}`). Leave "Include homepage…" unchecked
-   (homepage generation is a later phase; the box is disabled with "none generated yet").
+6. Pick a **template** (must contain `{{body}}`). The **Button label / Button link** fields
+   inherit that template's CTA defaults — see 1d. Leave "Include homepage…" unchecked
+   (the box is disabled with "none generated yet" until a homepage exists).
 7. Click **Generate**.
 8. **Verify:** a **Subject** field appears populated, and the **preview** frame shows
    your template wrapped around the AI body, with `{{first_name}}` / `{{company}}`
@@ -82,6 +83,24 @@ See `actions/crm/targets/__tests__/`.
 *(Unsubscribe route is unit-tested in `app/api/crm/targets/unsubscribe/__tests__/route.test.ts`;
 no browser E2E — it is an unauthenticated endpoint: GET shows a confirm form, POST mutates and also
 serves RFC 8058 one-click.)*
+
+### 1d. CTA button — inherit from template, override, homepage auto-default
+
+**E2E:** `tests/e2e/target-ai-email.spec.ts` › `generates, previews and sends an outreach email
+from an approved target` (asserts the drawer inherits the template CTA, the override flows into
+the preview, and the sent email carries the overridden label + inherited link).
+
+1. Use a template that has a **Button label** and **Button link** set (Campaigns → Templates).
+2. Open the Generate-email drawer on an approved target and pick that template.
+3. **Verify:** the **Button label** and **Button link** fields pre-fill with the template's values.
+4. Change the **Button label** (and/or link). Generate, then **Verify:** the preview shows the amber
+   button with your overridden label. Send, and **Verify:** the received email's button uses the
+   overridden label and the (inherited) link.
+5. **Homepage auto-default:** with a target that has a generated homepage, check **Include homepage…**.
+   **Verify:** the **Button link** field switches to `{{homepage_url}}`; unchecking restores the
+   template's link. On send, the button links to that target's homepage. *(The `{{homepage_url}}`
+   resolution is also covered by `actions/crm/targets/__tests__/preview-target-email.test.ts`; the
+   homepage-checkbox auto-fill needs a generated homepage, so it is verified manually here.)*
 
 ## 2. AI prompt library — create, edit, delete
 

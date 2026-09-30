@@ -759,5 +759,20 @@
 
 ---
 
+### `??` does not fall through an empty string — blank form fields break fallback chains
+
+- **Symptom:** an APPROVED COMPANY target with a real `company_email` was rejected at send with
+  "This target has no email address," even though the address was clearly set in the UI.
+- **Cause:** `resolveTargetRecipient` chained `target.email ?? target.company_email ?? …`. The
+  Update-target form stores *cleared* fields as `""` (not `null`), and `??` only falls through on
+  `null`/`undefined` — so `"" ?? company_email` returns `""`, which is falsy → "no address." The
+  target had `email: ""`, `personal_email: ""`, `company_email: "real@addr"`.
+- **Fix / rule:** at any fallback chain over user-editable string columns, treat blank/whitespace as
+  absent — `const pick = v => v?.trim() || null; pick(a) ?? pick(b) ?? pick(c)` — don't rely on `??`
+  alone. This also repairs existing `""` rows without a data migration. (Related: forms could store
+  `null` for blanks, but fixing at the read point is the robust, retroactive fix.)
+- **Tell:** a "missing X" error where the value is visibly present, on a record that was *edited*
+  (`updatedBy` set) — an edit that rewrote a sibling field to `""`.
+
 <!-- Add new entries above this line, newest-relevant first within each section.
      Create a new `## <area>` heading when a trap doesn't fit an existing one. -->

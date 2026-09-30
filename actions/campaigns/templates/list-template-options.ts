@@ -7,11 +7,12 @@ import {
 } from "@/lib/authz";
 
 /**
- * Slim `{ id, name }` template list for pickers (e.g. the target AI-email drawer).
- * Same read scope as `getTemplates`, but without `content_html` / `content_json`.
+ * Slim template list for pickers (e.g. the target AI-email drawer). Same read
+ * scope as `getTemplates`, but without `content_html` / `content_json`. Includes
+ * the CTA defaults so a picker can inherit them (and let the operator override).
  */
 export const listTemplateOptions = async (): Promise<
-  { id: string; name: string }[]
+  { id: string; name: string; cta_label: string | null; cta_url: string | null }[]
 > => {
   let user;
   try {
@@ -24,6 +25,6 @@ export const listTemplateOptions = async (): Promise<
   return prismadb.crm_campaign_templates.findMany({
     where: campaignTemplateReadScopeWhere(user),
     orderBy: { created_on: "desc" },
-    select: { id: true, name: true },
+    select: { id: true, name: true, cta_label: true, cta_url: true },
   });
 };

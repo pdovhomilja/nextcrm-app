@@ -70,10 +70,15 @@ export async function deliverTargetEmail(params: {
   subject: string;
   bodyHtml: string;
   includeHomepage: boolean;
+  /** Optional CTA button (already resolved to the final label/link to use for
+   *  THIS send — callers apply any template-default fallback). Merge tags are
+   *  resolved here against the target; the shell escapes + scheme-checks. */
+  ctaLabel?: string | null;
+  ctaUrl?: string | null;
   promptUsed?: string;
   createdBy: string;
 }): Promise<DeliverTargetEmailResult> {
-  const { target, recipient, template, subject, bodyHtml, includeHomepage, createdBy } = params;
+  const { target, recipient, template, subject, bodyHtml, includeHomepage, ctaLabel, ctaUrl, createdBy } = params;
 
   // Fail closed BEFORE any DRAFT row or Resend call: no email with a dead
   // unsubscribe link (CAN-SPAM / one-click compliance).
@@ -135,7 +140,14 @@ export async function deliverTargetEmail(params: {
   try {
     const unsubscribeUrl = buildTargetUnsubscribeUrl(draft.unsubscribe_token);
     if (!unsubscribeUrl) throw new Error(MISSING_BASE_URL_MESSAGE);
-    const html = await renderCampaignEmail({ contentHtml, unsubscribeUrl });
+    const html = await renderCampaignEmail({
+      contentHtml,
+      unsubscribeUrl,
+      // Resolve merge tags (e.g. {{homepage_url}}) against this target WITHOUT
+      // escaping — the shell escapes label + scheme-checks the URL.
+      ctaLabel: ctaLabel ? resolveMergeTags(ctaLabel, mergeSource) : undefined,
+      ctaUrl: ctaUrl ? resolveMergeTags(ctaUrl, mergeSource) : undefined,
+    });
     const resend = new Resend(process.env.RESEND_CAMPAIGNS_API_KEY || process.env.RESEND_API_KEY);
     const result = await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL!,
