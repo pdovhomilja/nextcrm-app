@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { TargetEmailRow } from "@/actions/crm/targets/list-target-emails";
+import { LocalDateTime } from "./LocalDateTime";
 
 function statusVariant(
   status: string
@@ -16,16 +17,7 @@ function statusVariant(
   return "secondary"; // DRAFT / other
 }
 
-function fmt(d: Date | null): string {
-  if (!d) return "—";
-  return new Date(d).toLocaleString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+const iso = (d: Date | null): string | null => (d ? new Date(d).toISOString() : null);
 
 /**
  * Outreach-email history for a target (server-rendered, read-only). Shows every
@@ -40,11 +32,16 @@ export function TargetEmailHistory({ emails }: { emails: TargetEmailRow[] }) {
       <CardHeader className="pb-3">
         <CardTitle className="text-base">Outreach emails</CardTitle>
         <CardDescription>
-          {emails.length === 0
-            ? "No emails sent yet."
-            : lastSent
-              ? `Last emailed ${fmt(lastSent)} · ${emails.length} total`
-              : `${emails.length} total`}
+          {emails.length === 0 ? (
+            "No emails sent yet."
+          ) : lastSent ? (
+            <>
+              Last emailed <LocalDateTime iso={iso(lastSent)} /> · {emails.length}{" "}
+              total
+            </>
+          ) : (
+            `${emails.length} total`
+          )}
         </CardDescription>
       </CardHeader>
       {emails.length > 0 && (
@@ -59,7 +56,7 @@ export function TargetEmailHistory({ emails }: { emails: TargetEmailRow[] }) {
                 <div className="min-w-0">
                   <div className="truncate font-medium">{e.subject}</div>
                   <div className="text-xs text-muted-foreground">
-                    {fmt(e.sent_at ?? e.created_on)}
+                    <LocalDateTime iso={iso(e.sent_at ?? e.created_on)} />
                     {e.included_homepage ? " · homepage included" : ""}
                     {e.status === "FAILED" && e.error_message
                       ? ` · ${e.error_message}`
