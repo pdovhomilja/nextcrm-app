@@ -392,3 +392,15 @@ of `lib/mcp/tools/index.ts` (export, import, `allTools` spread).
 
 **Re-verify after any upstream merge:** `pnpm exec playwright test --project=chromium tests/e2e/target-ai-email.spec.ts`
 (the spec fails fast if the seam is lost: its "Anthropic mock was hit" assertion runs before the send click).
+
+## feat/target-ai-outreach — merge-tag homepage fields  (PR: TBD)
+
+**1 upstream-owned file** touched (`lib/campaigns/merge-tags.ts`).
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `lib/campaigns/merge-tags.ts` | +5/−1 | **insert-only** (one keyword change) | Added `export` to `type MergeTagTarget`; added `homepage_url` / `homepage_screenshot` optional fields to that type; added the matching two entries to `MERGE_TAG_MAP`. No existing logic rewritten. | Low (small file; on conflict keep both sides — upstream's entries plus ours) |
+
+**Re-verify after any upstream merge:** `MergeTagTarget` is still exported and `MERGE_TAG_MAP` still
+has both `homepage_*` entries; then `pnpm exec jest lib/campaigns app/api/crm/targets` (the target
+email render path depends on them).

@@ -454,6 +454,15 @@
   shows a confirm form, POST mutates; pair with `List-Unsubscribe-Post` for RFC 8058
   one-click. See `app/api/crm/targets/unsubscribe/route.ts`.
 
+### Outbound email must fail closed on a missing base URL (NEXTAUTH_URL)
+
+- **Symptom / risk:** the List-Unsubscribe header and footer link are built from
+  `NEXTAUTH_URL`; with it unset the email ships with a dead (relative/empty) unsubscribe link.
+- **Fix / rule:** the send path returns an error **before creating a draft** when the base URL
+  is missing, rather than sending. Any outbound-email link that must be absolute (unsubscribe,
+  tracking) should fail closed, not fall back to an empty string.
+- **Tell:** a template/link builder with `?? ""` on an env-derived origin.
+
 ## Testing
 
 ### A schema-validated MCP-tool test needs a strict-format UUID, not the shared placeholder id
