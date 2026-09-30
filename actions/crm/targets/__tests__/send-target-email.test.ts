@@ -212,3 +212,17 @@ describe("send hardening", () => {
     expect(sendMock).not.toHaveBeenCalled();
   });
 });
+
+it("trims surrounding whitespace from subject/body before storing and sending", async () => {
+  const res = await sendTargetEmail({
+    targetId: "11111111-1111-4111-8111-111111111111",
+    templateId: "22222222-2222-4222-8222-222222222222",
+    subject: "  Hi there \n",
+    bodyHtml: "\n  <p>Pitch</p>  ",
+  });
+  expect(res).toEqual({ data: { id: "e1" } });
+  expect(prismadb.crm_Target_Email.create).toHaveBeenCalledWith({
+    data: expect.objectContaining({ subject: "Hi there", body_html: "<p>Pitch</p>" }),
+  });
+  expect(sendMock).toHaveBeenCalledWith(expect.objectContaining({ subject: "Hi there" }));
+});

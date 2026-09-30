@@ -66,12 +66,16 @@ app/[locale]/(routes)/campaigns/
                                 Generate homepage [disabled, later phase])
     GenerateEmailDrawer.tsx     prompt + template pick -> generate -> preview -> send
 app/api/crm/targets/unsubscribe/   public GET one-click opt-out (token -> do_not_email)
-actions/crm/prompts/            prompt-library server actions (list, list-bodies,
-                                create, update, delete)
+actions/crm/prompts/            prompt-library server actions (list, create, update,
+                                delete; mutations write crm_AuditLog "prompt" entries)
+actions/campaigns/templates/list-template-options.ts   scoped template picker options
+                                (used by the Generate-email drawer)
 actions/crm/targets/            generate-target-email.ts (Claude; tolerant JSON),
                                 preview-target-email.ts, send-target-email.ts
                                 (approval + do_not_email gates, draft->SENT/FAILED row,
                                 activity + audit log)
+lib/campaigns/send-target-email-core.ts  shared delivery core (fail-closed unsubscribe URL,
+                                         DRAFT -> Resend -> SENT/FAILED) for web action + MCP
 lib/campaigns/compose-target-email.ts   {{body}} template merge + target merge source
 lib/campaigns/merge-tags.ts             merge-tag resolver (extended with homepage_* tags)
 lib/mcp/tools/crm-ai-prompts.ts         MCP prompt CRUD tools

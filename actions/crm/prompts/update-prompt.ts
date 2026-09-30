@@ -1,6 +1,7 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { writeAuditLog, diffObjects } from "@/lib/audit-log";
 import {
   requireAuthenticated,
   requireRole,
@@ -31,6 +32,16 @@ export const updatePrompt = async (data: { id: string; name: string; body: strin
     const updated = await prismadb.crm_Ai_Prompt.update({
       where: { id: data.id },
       data: { name, body },
+    });
+    await writeAuditLog({
+      entityType: "prompt",
+      entityId: data.id,
+      action: "updated",
+      changes: diffObjects(
+        res.existing as unknown as Record<string, unknown>,
+        updated as unknown as Record<string, unknown>
+      ),
+      userId: res.user.id,
     });
     revalidatePath("/[locale]/(routes)/campaigns/prompts", "page");
     return { data: updated };

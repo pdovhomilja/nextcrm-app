@@ -1,6 +1,7 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { writeAuditLog } from "@/lib/audit-log";
 import {
   requireAuthenticated,
   requireRole,
@@ -19,6 +20,13 @@ export const deletePrompt = async ({ id }: { id: string }) => {
     await prismadb.crm_Ai_Prompt.update({
       where: { id },
       data: { deletedAt: new Date(), deletedBy: user.id },
+    });
+    await writeAuditLog({
+      entityType: "prompt",
+      entityId: id,
+      action: "deleted",
+      changes: null,
+      userId: user.id,
     });
     revalidatePath("/[locale]/(routes)/campaigns/prompts", "page");
     return { data: { id } };

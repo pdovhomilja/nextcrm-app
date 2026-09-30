@@ -10,6 +10,7 @@
 // Order (safety-critical): unsubscribe base URL present (fail-closed) -> homepage
 // -> merge source -> compose -> DRAFT row -> render -> Resend send -> SENT/FAILED.
 import { Resend } from "resend";
+import type { crm_Target_Email } from "@prisma/client";
 import { prismadb } from "@/lib/prisma";
 import { renderCampaignEmail } from "@/lib/campaigns/render-email";
 import { resolveMergeTags } from "@/lib/campaigns/merge-tags";
@@ -53,8 +54,8 @@ export type DeliverTargetEmailResult =
       ok: true;
       draftId: string;
       resolvedSubject: string;
-      /** The SENT row, or null if the post-send SENT write failed (email is out regardless). */
-      sent: { id: string } | null;
+      /** The full updated SENT row, or null if the post-send SENT write failed (email is out regardless). */
+      sent: crm_Target_Email | null;
     }
   | {
       ok: false;
@@ -159,7 +160,7 @@ export async function deliverTargetEmail(params: {
 
   // The email is already out. Nothing below may surface as an error, or the
   // caller retries and the prospect gets a duplicate cold email.
-  let sent: { id: string } | null = null;
+  let sent: crm_Target_Email | null = null;
   try {
     sent = await prismadb.crm_Target_Email.update({
       where: { id: draft.id },

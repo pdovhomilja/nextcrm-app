@@ -94,3 +94,13 @@ describe("preview hardening", () => {
     expect(prismadb.crm_Targets.findFirst).not.toHaveBeenCalled();
   });
 });
+
+it("trims surrounding whitespace from subject/body before rendering", async () => {
+  const res = await previewTargetEmail({
+    targetId: "11111111-1111-4111-8111-111111111111",
+    templateId: "22222222-2222-4222-8222-222222222222",
+    subject: "  Hi {{company}}  ",
+    bodyHtml: "\n <p>Pitch</p> \n",
+  });
+  expect(res).toEqual({ data: { html: `<html><div><p>Pitch</p></div></html>`, subject: "Hi Acme" } });
+});

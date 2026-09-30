@@ -2,6 +2,7 @@
 import { prismadb } from "@/lib/prisma";
 
 export type AuditEntityType =
+  | "prompt" // fork: AI prompt library
   | "account"
   | "contact"
   | "lead"

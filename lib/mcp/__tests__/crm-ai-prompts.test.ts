@@ -9,7 +9,9 @@ jest.mock("@/lib/prisma", () => ({
     },
   },
 }));
+jest.mock("@/lib/audit-log", () => ({ writeAuditLog: jest.fn() }));
 import { prismadb } from "@/lib/prisma";
+import { writeAuditLog } from "@/lib/audit-log";
 import { crmAiPromptTools } from "@/lib/mcp/tools/crm-ai-prompts";
 
 const list = crmAiPromptTools.find((t) => t.name === "crm_list_prompts")!;
@@ -39,6 +41,9 @@ it("creates a personal prompt owned by the user", async () => {
   expect(prismadb.crm_Ai_Prompt.create).toHaveBeenCalledWith({
     data: { name: "N", body: "B", kind: "EMAIL", scope: "USER", user_id: "u1", created_by: "u1" },
   });
+  expect(writeAuditLog).toHaveBeenCalledWith(
+    expect.objectContaining({ entityType: "prompt", entityId: "p2", action: "created", userId: "u1" })
+  );
 });
 
 it("delete only looks up the caller's own personal prompts", async () => {
@@ -52,10 +57,14 @@ it("delete only looks up the caller's own personal prompts", async () => {
     where: { id: "p3" },
     data: { deletedAt: expect.any(Date), deletedBy: "u1" },
   });
+  expect(writeAuditLog).toHaveBeenCalledWith(
+    expect.objectContaining({ entityType: "prompt", entityId: "p3", action: "deleted", userId: "u1" })
+  );
 });
 
 it("delete of another user's / org prompt is NOT_FOUND and does not update", async () => {
   (prismadb.crm_Ai_Prompt.findFirst as jest.Mock).mockResolvedValue(null);
   await expect(del.handler({ id: "p4" } as never, "u1")).rejects.toThrow("NOT_FOUND");
   expect(prismadb.crm_Ai_Prompt.update).not.toHaveBeenCalled();
+  expect(writeAuditLog).not.toHaveBeenCalled();
 });

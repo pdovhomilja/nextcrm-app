@@ -1,6 +1,7 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { writeAuditLog } from "@/lib/audit-log";
 import {
   requireAuthenticated,
   requireRole,
@@ -39,6 +40,13 @@ export const createPrompt = async (data: {
       user_id: data.scope === "USER" ? user.id : null,
       created_by: user.id,
     },
+  });
+  await writeAuditLog({
+    entityType: "prompt",
+    entityId: created.id,
+    action: "created",
+    changes: null,
+    userId: user.id,
   });
   revalidatePath("/[locale]/(routes)/campaigns/prompts", "page");
   return { data: created };

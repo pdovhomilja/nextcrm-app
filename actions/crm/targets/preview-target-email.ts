@@ -21,6 +21,7 @@ const previewInputSchema = z.object({
   templateId: z.string().uuid("Select a valid template"),
   subject: z.string().trim().min(1, "Subject is required"),
   bodyHtml: z.string().trim().min(1, "Email body is required"),
+  includeHomepage: z.boolean().optional().default(false),
 });
 
 export const previewTargetEmail = async (input: {
@@ -28,11 +29,12 @@ export const previewTargetEmail = async (input: {
   templateId: string;
   subject: string;
   bodyHtml: string;
-  includeHomepage: boolean;
+  includeHomepage?: boolean;
 }): Promise<{ data: { html: string; subject: string } } | { error: string }> => {
   const parsed = previewInputSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
-  const { targetId, templateId, subject, bodyHtml, includeHomepage } = input;
+  // Use the parsed (trimmed) values, not the raw input.
+  const { targetId, templateId, subject, bodyHtml, includeHomepage } = parsed.data;
 
   let user;
   try {

@@ -16,9 +16,14 @@ jest.mock("@/lib/prisma", () => ({
   },
 }));
 jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));
+jest.mock("@/lib/audit-log", () => ({
+  writeAuditLog: jest.fn(),
+  diffObjects: jest.fn(() => [{ field: "name", old: "Old", new: "New" }]),
+}));
 
 import { requireAuthenticated, requireRole, AuthorizationError } from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
+import { writeAuditLog } from "@/lib/audit-log";
 import { listPrompts } from "@/actions/crm/prompts/list-prompts";
 import { createPrompt } from "@/actions/crm/prompts/create-prompt";
 import { updatePrompt } from "@/actions/crm/prompts/update-prompt";
@@ -56,6 +61,9 @@ it("lets any user create a personal prompt with user_id set", async () => {
   expect(prismadb.crm_Ai_Prompt.create).toHaveBeenCalledWith({
     data: { name: "Cold intro", body: "Write...", kind: "EMAIL", scope: "USER", user_id: "me", created_by: "me" },
   });
+  expect(writeAuditLog).toHaveBeenCalledWith(
+    expect.objectContaining({ entityType: "prompt", entityId: "p2", action: "created", userId: "me" })
+  );
 });
 
 it("requires admin to create an org prompt", async () => {
@@ -75,6 +83,7 @@ describe("updatePrompt authz", () => {
     const res = await updatePrompt(input);
     expect(res).toEqual({ error: "Forbidden" });
     expect(update).not.toHaveBeenCalled();
+    expect(writeAuditLog).not.toHaveBeenCalled();
   });
 
   it("lets the owner edit their USER prompt", async () => {
@@ -83,6 +92,13 @@ describe("updatePrompt authz", () => {
     const res = await updatePrompt(input);
     expect(res).toEqual({ data: { id: "p1" } });
     expect(update).toHaveBeenCalledWith({ where: { id: "p1" }, data: { name: "New", body: "Body" } });
+    expect(writeAuditLog).toHaveBeenCalledWith({
+      entityType: "prompt",
+      entityId: "p1",
+      action: "updated",
+      changes: [{ field: "name", old: "Old", new: "New" }],
+      userId: "me",
+    });
   });
 
   it("forbids a non-admin from editing an ORG prompt", async () => {
@@ -124,6 +140,13 @@ describe("deletePrompt authz", () => {
       data: { deletedAt: expect.any(Date), deletedBy: "me" },
     });
     expect(del).not.toHaveBeenCalled();
+    expect(writeAuditLog).toHaveBeenCalledWith({
+      entityType: "prompt",
+      entityId: "p1",
+      action: "deleted",
+      changes: null,
+      userId: "me",
+    });
   });
 
   it("forbids a non-admin from deleting an ORG prompt", async () => {

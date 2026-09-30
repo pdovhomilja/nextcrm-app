@@ -4,6 +4,7 @@
 // prompts are managed by admins in the web UI.
 import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
+import { writeAuditLog } from "@/lib/audit-log";
 import {
   paginationSchema,
   paginationArgs,
@@ -64,6 +65,13 @@ export const crmAiPromptTools = [
           created_by: userId,
         },
       });
+      await writeAuditLog({
+        entityType: "prompt",
+        entityId: created.id,
+        action: "created",
+        changes: null,
+        userId,
+      });
       return itemResponse(created);
     },
   },
@@ -79,6 +87,13 @@ export const crmAiPromptTools = [
       const updated = await prismadb.crm_Ai_Prompt.update({
         where: { id: args.id },
         data: { deletedAt: new Date(), deletedBy: userId },
+      });
+      await writeAuditLog({
+        entityType: "prompt",
+        entityId: args.id,
+        action: "deleted",
+        changes: null,
+        userId,
       });
       return itemResponse(updated);
     },

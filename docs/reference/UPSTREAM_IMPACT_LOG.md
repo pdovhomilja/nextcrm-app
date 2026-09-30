@@ -404,3 +404,14 @@ of `lib/mcp/tools/index.ts` (export, import, `allTools` spread).
 **Re-verify after any upstream merge:** `MergeTagTarget` is still exported and `MERGE_TAG_MAP` still
 has both `homepage_*` entries; then `pnpm exec jest lib/campaigns app/api/crm/targets` (the target
 email render path depends on them).
+
+## feat/target-ai-outreach — audit entity type "prompt"  (PR: TBD)
+
+**1 upstream-owned file** touched (`lib/audit-log.ts`).
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `lib/audit-log.ts` | +1/−0 | **insert-only** | One new union member `\| "prompt" // fork: AI prompt library` as the first line of the `AuditEntityType` union. `crm_AuditLog.entityType` is a plain String column, so no migration. No existing logic rewritten. | Low (on conflict keep both sides — upstream's members plus ours) |
+
+**Re-verify after any upstream merge:** `"prompt"` is still in `AuditEntityType`; then
+`pnpm exec tsc --noEmit` (prompt actions + MCP prompt tools call `writeAuditLog({ entityType: "prompt" })`).
