@@ -6,6 +6,7 @@ type Props = {
     title: string;
     campaigns: string;
     templates: string;
+    prompts: string;
     targets: string;
     targetLists: string;
   };
@@ -18,6 +19,7 @@ export const getCampaignsMenuItem = ({ localizations }: Props): NavItem => {
     items: [
       { title: localizations.campaigns, url: "/campaigns" },
       { title: localizations.templates, url: "/campaigns/templates" },
+      { title: localizations.prompts, url: "/campaigns/prompts" },
       { title: localizations.targets, url: "/campaigns/targets" },
       { title: localizations.targetLists, url: "/campaigns/target-lists" },
     ],

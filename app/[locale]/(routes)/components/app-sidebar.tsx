@@ -97,6 +97,7 @@ export function AppSidebar({
         title: "Campaigns",
         campaigns: "All Campaigns",
         templates: "Templates",
+        prompts: "Prompts",
         targets: "Targets",
         targetLists: "Target Lists",
       },

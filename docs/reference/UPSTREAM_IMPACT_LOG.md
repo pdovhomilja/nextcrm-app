@@ -446,3 +446,8 @@ email render path depends on them).
 
 **Re-verify after any upstream merge:** `"prompt"` is still in `AuditEntityType`; then
 `pnpm exec tsc --noEmit` (prompt actions + MCP prompt tools call `writeAuditLog({ entityType: "prompt" })`).
+
+### feat/target-homepage-generation — Campaigns sidebar "Prompts" link
+- `app/[locale]/(routes)/components/app-sidebar.tsx` — insert-only (+1): `prompts: "Prompts"` localization in the Campaigns block. Risk Low.
+- `app/[locale]/(routes)/components/menu-items/Campaigns.tsx` — insert-only (+2): `prompts` prop + `/campaigns/prompts` nav item. Risk Low.
+- Note: both already fork-diverged (commit 87443b53 added the Campaigns nav); this appends one nav entry.
