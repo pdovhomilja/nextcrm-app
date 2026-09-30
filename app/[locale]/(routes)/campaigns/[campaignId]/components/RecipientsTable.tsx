@@ -62,7 +62,7 @@ export default function RecipientsTable({ sends }: { sends: Send[] }) {
         <table className="w-full text-sm">
           <thead className="bg-muted/50">
             <tr>
-              {["Name", "Email", "Status", "Opened", "Clicked", "Bounced"].map((h) => (
+              {["Name", "Email", "Status", "Opened", "Clicked", "Bounced", "Unsub"].map((h) => (
                 <th
                   key={h}
                   className="px-3 py-2 text-left font-medium text-muted-foreground"
@@ -87,12 +87,13 @@ export default function RecipientsTable({ sends }: { sends: Send[] }) {
                 <td className="px-3 py-2">{s.opened_at ? "✓" : "–"}</td>
                 <td className="px-3 py-2">{s.clicked_at ? "✓" : "–"}</td>
                 <td className="px-3 py-2">{s.status === "bounced" ? "✓" : "–"}</td>
+                <td className="px-3 py-2">{s.unsubscribed_at ? "✓" : "–"}</td>
               </tr>
             ))}
             {filtered.length === 0 && (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={7}
                   className="px-3 py-8 text-center text-muted-foreground"
                 >
                   No recipients found.

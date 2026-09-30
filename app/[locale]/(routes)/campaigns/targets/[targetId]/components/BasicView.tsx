@@ -28,6 +28,7 @@ import { TargetAiMenu } from "./TargetAiMenu";
 import { listTemplateOptions } from "@/actions/campaigns/templates/list-template-options";
 import { listTargetEmails } from "@/actions/crm/targets/list-target-emails";
 import { TargetEmailHistory } from "./TargetEmailHistory";
+import { HomepageViews } from "./HomepageViews";
 import { listPrompts } from "@/actions/crm/prompts/list-prompts";
 import { prismadb } from "@/lib/prisma";
 import ConvertToDealButton from "./ConvertToDealButton";
@@ -81,6 +82,7 @@ export async function BasicView({ data }: TargetBasicViewProps) {
     preview_url: string | null;
     screenshot_url: string | null;
   } | null = null;
+  let homepageViews: { count: number; lastViewedAt: Date | null } | null = null;
   if (data.triage_status === "APPROVED") {
     const [templatesRaw, promptsRaw, homepagePromptsRaw, homepage] =
       await Promise.all([
@@ -95,6 +97,8 @@ export async function BasicView({ data }: TargetBasicViewProps) {
             preview_url: true,
             screenshot_url: true,
             current_version_id: true,
+            view_count: true,
+            last_viewed_at: true,
           },
         }),
       ]);
@@ -117,6 +121,9 @@ export async function BasicView({ data }: TargetBasicViewProps) {
           screenshot_url: homepage.screenshot_url,
         }
       : null;
+    homepageViews = homepage
+      ? { count: homepage.view_count, lastViewedAt: homepage.last_viewed_at }
+      : null;
   }
 
   // Outreach-email history (always shown, even when empty, so it's clear whether
@@ -131,6 +138,11 @@ export async function BasicView({ data }: TargetBasicViewProps) {
             <div>
               <CardTitle className="flex items-center gap-2">
                 {resolveTargetTitle(data)}
+                {data.do_not_email && (
+                  <Badge variant="destructive" data-testid="do-not-email-badge">
+                    Do not email
+                  </Badge>
+                )}
                 <Badge variant={targetTypeBadgeVariant(data.type)}>
                   {targetTypeLabel(data.type)}
                 </Badge>
@@ -327,6 +339,13 @@ export async function BasicView({ data }: TargetBasicViewProps) {
           </div>
         </CardContent>
       </Card>
+
+      {homepageViews && (
+        <HomepageViews
+          count={homepageViews.count}
+          lastViewedAt={homepageViews.lastViewedAt}
+        />
+      )}
 
       <TargetEmailHistory emails={targetEmails} />
 

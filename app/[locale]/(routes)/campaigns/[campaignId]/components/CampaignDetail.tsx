@@ -12,6 +12,7 @@ export default function CampaignDetail({ campaign }: { campaign: CampaignWithDat
   const opened = sends.filter((s) => s.opened_at != null).length;
   const clicked = sends.filter((s) => s.clicked_at != null).length;
   const bounced = sends.filter((s) => s.status === "bounced").length;
+  const unsubscribed = sends.filter((s) => s.unsubscribed_at != null).length;
   const openRate = totalSent > 0 ? Math.round((opened / totalSent) * 100) : 0;
   const clickRate = totalSent > 0 ? Math.round((clicked / totalSent) * 100) : 0;
 
@@ -59,13 +60,14 @@ export default function CampaignDetail({ campaign }: { campaign: CampaignWithDat
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-3 gap-4 sm:grid-cols-6">
         {[
           { label: "Sent", value: totalSent },
           { label: "Delivered", value: delivered },
           { label: "Open Rate", value: `${openRate}%` },
           { label: "Click Rate", value: `${clickRate}%` },
           { label: "Bounced", value: bounced },
+          { label: "Unsub", value: unsubscribed },
         ].map(({ label, value }) => (
           <div key={label} className="bg-muted/30 rounded-lg p-4 text-center">
             <div className="text-2xl font-bold">{value}</div>

@@ -63,7 +63,23 @@ export function TargetEmailHistory({ emails }: { emails: TargetEmailRow[] }) {
                       : ""}
                   </div>
                 </div>
-                <Badge variant={statusVariant(e.status)}>{e.status}</Badge>
+                <div className="flex shrink-0 flex-col items-end gap-1">
+                  <Badge variant={statusVariant(e.status)}>{e.status}</Badge>
+                  {(e.opened_at || e.clicked_at) && (
+                    <div className="flex gap-1">
+                      {e.opened_at && (
+                        <Badge variant="outline" className="text-[10px]">
+                          Opened
+                        </Badge>
+                      )}
+                      {e.clicked_at && (
+                        <Badge variant="outline" className="text-[10px]">
+                          Clicked
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </div>
               </li>
             ))}
           </ul>

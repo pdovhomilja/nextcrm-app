@@ -525,3 +525,19 @@ divergence, so treat them as the real conflict surface):
 - `.env.example` — insert-only: `CAMPAIGN_MAILING_ADDRESS` (+ doc row in `ENVIRONMENT_VARIABLES.md`, a fork-owned file). **Risk Low**.
 
 **Re-verify after any upstream merge:** `git diff <merge-base> upstream/main -- lib/campaigns/render-email.ts emails/CampaignLayout.tsx` (overlap here is a hand-merge); confirm `renderCampaignEmail` still delegates to `renderCampaignShell` and the `SANITIZE_OPTIONS` allowlist is intact; then `pnpm exec jest __tests__/campaigns/render-email.test.ts && pnpm exec tsc --noEmit`.
+
+### feat/outreach-engagement-tracking — unsubscribe visibility, outreach open/click, homepage views
+
+Adds engagement visibility (A: surface unsubscribes; B: open/click tracking for one-off
+outreach emails; C: public homepage view counting). New **fork-owned** files carry the logic:
+`lib/homepage/views.ts` (UA filter + counter), `app/[locale]/(routes)/campaigns/targets/[targetId]/components/HomepageViews.tsx`, the migration `20260930150000_outreach_engagement_tracking/`, and tests.
+
+**Upstream-owned files touched:**
+
+- `prisma/schema.prisma` — insert-only (+6): `opened_at`/`clicked_at` on `crm_Target_Email`, `view_count`/`last_viewed_at` on `crm_Target_Homepage` (both fork-added models). Migration `20260930150000` (`ADD COLUMN`). Additive. **Risk Low** (keep both sides on conflict).
+- `app/api/campaigns/webhooks/resend/route.ts` — **insert** (~+22): a fork block before the campaign switch — when a Resend event's message id is not a campaign send, match `crm_Target_Email` by `resend_message_id` and stamp `opened_at`/`clicked_at`, then return. Upstream campaign handling unchanged. **Risk Low–Medium** (inserted mid-handler; on conflict keep the fallback before the switch).
+- `app/[locale]/(routes)/campaigns/[campaignId]/components/RecipientsTable.tsx` — insert: "Unsub" header + `unsubscribed_at` cell + `colSpan` 6→7. **Risk Low**.
+- `app/[locale]/(routes)/campaigns/[campaignId]/components/CampaignDetail.tsx` — insert: `unsubscribed` count, an "Unsub" stat, grid `cols-5`→`cols-3 sm:cols-6`. **Risk Low**.
+- `app/[locale]/(routes)/campaigns/targets/[targetId]/components/BasicView.tsx` — insert: a "Do not email" badge, `view_count`/`last_viewed_at` in the homepage select, and the `<HomepageViews>` render. **Risk Low–Medium** (this file is upstream-owned but already heavily fork-diverged for the target-outreach UI — also edited in PRs #27/#28; on conflict keep the fork inserts). The `/p/<slug>` view-tracking hook lives in the **fork-owned** `app/p/[slug]/route.ts` (one insertion-only `recordHomepageView` call).
+
+**Re-verify after any upstream merge:** confirm the webhook still falls back to `crm_Target_Email`, the two migrations' columns exist, and the campaign table/stat still show Unsub; then `pnpm exec jest __tests__/campaigns/api/webhooks-resend.test.ts lib/homepage && pnpm exec tsc --noEmit`.

@@ -135,6 +135,37 @@ and asserts the sent email shows with a **SENT** status).
    send — subject, timestamp, and a **SENT** badge — with a "Last emailed …" summary. A failed send
    shows a **FAILED** badge with its error; a target never emailed shows "No emails sent yet."
 
+### 1h. Open / click tracking on outreach emails
+
+**E2E:** `tests/e2e/target-ai-email.spec.ts` › `generates, previews and sends…` (marks the sent row
+opened+clicked as the webhook would, reloads, asserts the **Opened** / **Clicked** badges).
+
+1. After the recipient opens the email / clicks a link, Resend fires a webhook that stamps the row.
+   **Verify:** the outreach-history row shows an **Opened** and/or **Clicked** badge. *(These come from
+   the Resend open/click webhook, which now also matches one-off outreach emails, not just campaigns;
+   the webhook logic is unit-tested in `__tests__/campaigns/api/webhooks-resend.test.ts`.)*
+
+### 1i. Sample-homepage view count
+
+**E2E:** unit only (needs a generated homepage + a real `/p/<slug>` request — E2E known gap). UA filter
++ counter are covered by `lib/homepage/__tests__/views.test.ts`.
+
+1. With a generated homepage, open its `/p/<slug>` preview in a normal browser.
+2. **Verify:** the target detail shows **"Sample homepage — viewed N times · last …"** (the count
+   increments). Bot/prefetch traffic (email-client link scanners) is filtered out, so the number is an
+   approximate "did a human look?" signal — use website analytics for exact traffic.
+
+### 1j. Unsubscribe / do-not-email visibility
+
+**E2E:** `tests/e2e/target-ai-email.spec.ts` › `generates, previews and sends…` (flags the target
+do-not-email, reloads, asserts the badge).
+
+1. When a contact unsubscribes (campaign or outreach), they're globally set do-not-email.
+   **Verify:** the target detail shows a red **"Do not email"** badge next to the title, and further
+   sends to that target are refused.
+2. **Campaign side:** on a campaign detail page, **Verify:** the Recipients table has an **Unsub**
+   column (✓ per unsubscribed recipient) and the stats row shows an **Unsub** count.
+
 ## 2. AI prompt library — create, edit, delete
 
 **E2E:** `tests/e2e/target-ai-email.spec.ts` › `creates, edits and deletes a prompt`

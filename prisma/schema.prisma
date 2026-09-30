@@ -2111,6 +2111,9 @@ model crm_Target_Homepage {
   error          String?
   current_version_id String? @db.Uuid
   logo_data_uri  String?             @db.Text
+  // fork: public /p/<slug> view tracking (basic UA-filtered counter)
+  view_count     Int                 @default(0)
+  last_viewed_at DateTime?
   versions           crm_Target_Homepage_Version[]
   created_by     String?             @db.Uuid
   created_on     DateTime?           @default(now())
@@ -2134,6 +2137,9 @@ model crm_Target_Email {
   status            crm_Target_Email_Status @default(DRAFT)
   unsubscribe_token String                  @unique @default(uuid()) @db.Uuid
   sent_at           DateTime?
+  // fork: engagement tracking for one-off outreach (Resend open/click webhook)
+  opened_at         DateTime?
+  clicked_at        DateTime?
   resend_message_id String?
   error_message     String?
   created_by        String?                 @db.Uuid
@@ -2147,6 +2153,8 @@ model crm_Target_Email {
   @@index([targetId])
   @@index([status])
   @@index([deletedAt])
+  // fork: the Resend webhook looks up outreach emails by message id (open/click).
+  @@index([resend_message_id])
 }
 
 enum crm_Homepage_Pass_Kind {

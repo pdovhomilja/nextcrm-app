@@ -789,5 +789,19 @@
   contenteditable is timing-sensitive — prefer select-all + type (deterministic replace) over
   click-to-position + append.
 
+### Public links get prefetched — raw hit counts overcount human views
+
+- **Symptom:** a view counter on a public URL (e.g. the `/p/<slug>` homepage preview) that's emailed
+  to prospects will register "views" the prospect never made.
+- **Cause:** email clients and security stacks **prefetch/scan links** the moment the email arrives —
+  Outlook Safe Links, Gmail/Proofpoint scanners, and chat unfurlers (Slack/Discord/WhatsApp/iMessage)
+  all GET the URL with bot-ish user agents. So a "view" often means "a filter looked," not "a human
+  looked."
+- **Fix / rule:** filter by user agent before counting (require a browser-like `Mozilla/...`, exclude
+  known bot/prefetcher/CLI markers — see `lib/homepage/views.ts`). It's **approximate** — some scanners
+  spoof browser UAs and slip through, some privacy browsers are missed. Treat the number as a "did a
+  human likely look?" signal; for exact traffic use real website analytics. Record best-effort and
+  non-blocking (never fail serving on a tracking write).
+
 <!-- Add new entries above this line, newest-relevant first within each section.
      Create a new `## <area>` heading when a trap doesn't fit an existing one. -->
