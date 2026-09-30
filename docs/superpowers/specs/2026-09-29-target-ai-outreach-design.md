@@ -265,6 +265,25 @@ concept, expressed as prompt files), plus the operator's per-target prompt.
   if homepage generation becomes a shared capability. Requires CRM↔service auth; does
   **not** improve quality over Phase 1.
 
+### 6.5 Source-asset harvesting (v1 = reference + extract; added 2026-09-30)
+
+Before generating, the Playwright step visits the target's **`company_website`** (when
+present) to ground the redesign in the prospect's real brand instead of invented
+placeholders:
+- **Screenshot** the current site → passed to Claude vision as a visual brand reference.
+- **Extract** (via `page.evaluate`) the **logo URL**, dominant **brand colors**, **fonts**,
+  and key **copy** (headline, services, about) → passed to the generator as structured
+  brand context. The **logo is referenced by its source URL** in the redesign (v1 does
+  **not** download/re-host asset files — that's a fast-follow).
+- Missing/blank `company_website` → skip harvesting, generate from description/prompt only.
+
+**SSRF safety (required):** fetching `company_website` is a **prospect-controlled
+server-side fetch** — gate every navigation with the existing host guard
+(`docs/superpowers/specs/2026-07-21-ssrf-host-guard-design.md`: block private/internal
+IPs, cloud metadata endpoints, non-`http(s)` schemes), plus a navigation timeout and a
+response-size cap. Playwright runs with downloads disabled. This is the §8 "server-side
+fetch of prospect-controlled URLs" case, now explicitly designed.
+
 ## 7. The seam (email ⇄ homepage)
 
 The email subsystem reads **only** `crm_Target_Homepage.preview_url` and
