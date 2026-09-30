@@ -200,38 +200,66 @@ The CRM depends on a single interface, roughly:
 The CRM handles rendering-to-hosting, screenshotting, storage, and versioning around
 whatever the provider returns. Swapping the provider (Phase 2) touches nothing else.
 
-### 6.2 Default provider — e2b iterating design agent
+### 6.2 Default provider — Playwright-in-Inngest iterating design agent
+
+> **Updated per feasibility spike (2026-09-30).** The spike proved the
+> render→screenshot→Claude-vision-critique→refine loop end-to-end with plain
+> **Playwright headless chromium** (launch ~1.7s, valid screenshots) and high-quality
+> self-critique (the model caught real flaws in its own output). **Finding: e2b is NOT
+> required** — the loop runs in a normal Inngest background job, which is simpler
+> (one less service) and matches the enrichment job pattern. Measured cost/latency:
+> ~$0.07–0.12 and ~25–40s per vision pass on `claude-sonnet-5-5` → a 3-pass auto loop
+> ≈ $0.30 and ~2 min. **Default N = 3 auto passes.**
+
 Runs as an **Inngest job** (mirrors `inngest/functions/enrich-target.ts`: companion
-status table, key resolution, retries, status transitions). Inside an e2b sandbox:
+status table, ANTHROPIC key via `getApiKey`, retries, status transitions):
 
 1. Generate initial HTML (self-contained: HTML + Tailwind via CDN, inline assets).
-2. **Render** it in a headless browser in the sandbox.
+2. **Render** it with headless chromium (Playwright; in the serverless/Inngest runtime
+   use a serverless-compatible chromium, e.g. `@sparticuz/chromium` + `playwright-core`
+   — Vercel Fluid Compute supports this within the 5 GB package limit).
 3. **Screenshot** the render.
-4. **Claude vision** critiques the screenshot against a curated design rubric.
-5. **Refine** the HTML; repeat for a **bounded** number of auto-passes.
-6. Each pass persists a `crm_Target_Homepage_Version` row (`pass_kind = AUTO`).
-7. Final pass → upload HTML + screenshot to R2 → set `preview_url`/`screenshot_url`,
-   `status = READY`.
+4. **Claude vision** (`claude-sonnet-5-5`, `max_tokens ≈ 12k`) critiques the screenshot
+   against a curated design rubric.
+5. **Refine** the HTML; repeat for **N = 3** bounded auto-passes (cost/time-capped).
+6. Each pass persists a `crm_Target_Homepage_Version` row (`pass_kind = AUTO`) with its
+   `agent_critique`.
+7. Final pass → upload HTML + screenshot to **R2 (private)** → set
+   `preview_url`/`screenshot_url` → `status = READY`.
 
-**Human refinement:** operator submits a change request → another job run seeded with
-the current HTML + the request → new version (`pass_kind = HUMAN`).
+**Human refinement (unlimited rounds):** operator reviews the rendered preview +
+screenshot in a drawer and submits a change request → another job run seeded with the
+current HTML + the request → new version (`pass_kind = HUMAN`). Versions are
+compare/revert-able; the published `preview_url`/`screenshot_url` track the chosen version.
 
 Curated **design guidance** lives as versioned prompt assets in-repo (the "skills"
 concept, expressed as prompt files), plus the operator's per-target prompt.
 
-### 6.3 Hosting & screenshots
-- **R2 public bucket + custom domain.** `previews.radeengineering.com` fronts a
-  public R2 bucket (reusing the `lib/minio.ts` S3 client, or a sibling helper for the
-  previews bucket — additive). Pages uploaded under `p/<slug>`; screenshots under a
-  sibling key. Publicly viewable by anyone with the link (acceptable for outreach).
+### 6.3 Hosting & screenshots (Vercel route + private R2)
+
+> **Updated per DNS reality + user decision (2026-09-30).** `radeengineering.com` DNS
+> is on **GoDaddy → Vercel** (no Cloudflare zone), so an R2 *custom domain* (which
+> requires a Cloudflare zone) is not the low-friction path. Decision: **serve previews
+> from Vercel, backed by a private R2 bucket.**
+
+- **`previews.radeengineering.com`** is added as a domain on the Vercel project (like
+  `crm.`; GoDaddy record → Vercel, TLS automatic) — **operator/infra prerequisite**.
+- A public route **`/p/[slug]`** streams the stored HTML from R2 (via the existing
+  `lib/minio.ts` S3 client) as `text/html`; the screenshot is served by a sibling route
+  **`/p/[slug]/screenshot.png`** streaming the PNG from R2. The email's
+  `{{homepage_screenshot}}` `<img>` points at that screenshot route URL.
+- **R2 bucket stays PRIVATE** — objects are read server-side by the route, never a
+  public bucket. Objects keyed under a `previews/<slug>` prefix in the existing bucket
+  (no new bucket/creds needed unless preferred).
 - **Slug.** Auto-proposed from the company name (slugified), **editable**, uniqueness
-  enforced on save (collision → operator adjusts, or auto-suffix). Trade-off noted:
-  a readable slug is mildly guessable vs. a random token; acceptable for teasers.
+  enforced on save (collision → operator adjusts, or auto-suffix).
 - **Screenshot** comes from the agent's own render step — **no separate screenshot
   service**.
+- New env: `NEXT_PUBLIC_PREVIEWS_BASE_URL` (e.g. `https://previews.radeengineering.com`),
+  optional (fail-closed consumer) until the domain is live. Confirm value with the user.
 
 ### 6.4 Roadmap (behind the provider interface — no seam/data-model change)
-- **Phase 1:** e2b iterating agent (this spec).
+- **Phase 1:** Playwright-in-Inngest iterating agent (this spec, spike-validated).
 - **Phase 2 (optional, later):** move the same agent behind an **external hosted
   service** exposing the same interface over HTTP — an operational/decoupling choice
   if homepage generation becomes a shared capability. Requires CRM↔service auth; does
@@ -254,9 +282,19 @@ The email subsystem reads **only** `crm_Target_Homepage.preview_url` and
   (no RLS — application code is the boundary; scope every query by owner/permission).
 - **Anti-spam:** send path honors `do_not_email` / `do_not_email_at`.
 - **Non-prod safety:** all sends go through `redirectRecipients`.
-- **SSRF/hosting:** generated HTML is static and served from R2; no server-side fetch
-  of prospect-controlled URLs during generation unless explicitly designed with the
-  existing host guard (`docs/superpowers/specs/2026-07-21-ssrf-host-guard-design.md`).
+- **SSRF/hosting:** generated HTML is model-produced static markup, stored in a
+  **private** R2 bucket and streamed by the public `/p/[slug]` Vercel route as
+  `text/html`; generation performs no server-side fetch of prospect-controlled URLs
+  (if that's ever added, use the existing host guard
+  `docs/superpowers/specs/2026-07-21-ssrf-host-guard-design.md`).
+- **Preview-serving isolation (model-generated HTML on our domain):** previews render on
+  **`previews.radeengineering.com`**, a *different host* from the app
+  (`crm.radeengineering.com`) — cookies are per-host, so a stray `<script>` in generated
+  HTML runs in an origin with **no access to the CRM session**. Harden further with a
+  restrictive **CSP** on the preview route (and consider sanitizing the model HTML).
+- **Public preview routes** (`/p/[slug]`, `/p/[slug]/screenshot.png`) are unauthenticated
+  by design (prospects open them); the slug is the only capability. Add `no-store` /
+  `noindex` headers and rate-limiting per the abuse checklist.
 - **Audit:** email sends and homepage publishes write audit-log entries.
 
 ## 9. Prompt library
