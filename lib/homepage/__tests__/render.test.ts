@@ -4,6 +4,8 @@ const mockBrowserClose = jest.fn();
 const mockNewPage = jest.fn();
 const mockNewContext = jest.fn();
 const mockRoute = jest.fn();
+const mockRouteWebSocket = jest.fn();
+const mockEvaluate = jest.fn();
 const mockLaunch = jest.fn();
 const mockExecutablePath = jest.fn();
 
@@ -31,8 +33,18 @@ beforeEach(() => {
   mockSetContent.mockResolvedValue(undefined);
   mockBrowserClose.mockResolvedValue(undefined);
   mockRoute.mockResolvedValue(undefined);
-  mockNewPage.mockResolvedValue({ setContent: mockSetContent, screenshot: mockScreenshot });
-  mockNewContext.mockResolvedValue({ route: mockRoute, newPage: mockNewPage });
+  mockRouteWebSocket.mockResolvedValue(undefined);
+  mockEvaluate.mockResolvedValue(undefined);
+  mockNewPage.mockResolvedValue({
+    setContent: mockSetContent,
+    screenshot: mockScreenshot,
+    evaluate: mockEvaluate,
+  });
+  mockNewContext.mockResolvedValue({
+    route: mockRoute,
+    routeWebSocket: mockRouteWebSocket,
+    newPage: mockNewPage,
+  });
   mockLaunch.mockResolvedValue({ newContext: mockNewContext, close: mockBrowserClose });
   mockExecutablePath.mockResolvedValue("/tmp/chromium");
 });
@@ -79,6 +91,39 @@ it("egress: continues allowlisted requests and aborts everything else", async ()
   handler(blocked);
   expect(blocked.abort).toHaveBeenCalledTimes(1);
   expect(blocked.continue).not.toHaveBeenCalled();
+});
+
+it("finalizes animations after setContent and before the screenshot", async () => {
+  const png = await renderAndScreenshot("<h1>hi</h1>");
+  expect(mockEvaluate).toHaveBeenCalledTimes(1);
+  expect(mockEvaluate).toHaveBeenCalledWith(expect.any(Function));
+  const setOrder = mockSetContent.mock.invocationCallOrder[0];
+  const evalOrder = mockEvaluate.mock.invocationCallOrder[0];
+  const shotOrder = mockScreenshot.mock.invocationCallOrder[0];
+  expect(setOrder).toBeLessThan(evalOrder);
+  expect(evalOrder).toBeLessThan(shotOrder);
+  expect(png).toEqual(Buffer.from("PNG"));
+});
+
+it("a failing finalize evaluate does not prevent the screenshot", async () => {
+  mockEvaluate.mockRejectedValue(new Error("page crashed"));
+  const png = await renderAndScreenshot("<p/>");
+  expect(png).toEqual(Buffer.from("PNG"));
+});
+
+it("blocks WebSocket egress via context.routeWebSocket", async () => {
+  await renderAndScreenshot("<p/>");
+  expect(mockRouteWebSocket).toHaveBeenCalledWith("**", expect.any(Function));
+  const handler = mockRouteWebSocket.mock.calls[0][1] as (ws: { close: () => void }) => void;
+  const ws = { close: jest.fn() };
+  handler(ws);
+  expect(ws.close).toHaveBeenCalledTimes(1);
+});
+
+it("still renders when the context has no routeWebSocket (older Playwright)", async () => {
+  mockNewContext.mockResolvedValue({ route: mockRoute, newPage: mockNewPage });
+  const png = await renderAndScreenshot("<p/>");
+  expect(png).toEqual(Buffer.from("PNG"));
 });
 
 it("honours custom viewport dimensions", async () => {
