@@ -489,6 +489,24 @@ describe("refine event", () => {
     await runExpectingFailure({ event: refineEvent, step });
     expect(homepageUpdate.mock.calls.at(-1)![0].data.status).toBe("FAILED");
   });
+
+  it("run-time re-check: an UPLOAD current version is never AI-refined (queued-refine vs upload race)", async () => {
+    // The trigger gated on pass_kind, but a queued refine can run AFTER an upload
+    // repointed current_version_id to an UPLOAD version. The job must not trust it.
+    (prismadb.crm_Target_Homepage_Version.findUnique as jest.Mock).mockResolvedValue({
+      id: "verCur",
+      html: "<html>uploaded</html>",
+      pass_kind: "UPLOAD",
+    });
+    await runExpectingFailure({ event: refineEvent, step });
+    expect(generateHomepage).not.toHaveBeenCalled();
+    expect(versionCreate).not.toHaveBeenCalled();
+    const last = homepageUpdate.mock.calls.at(-1)![0];
+    expect(last.data.status).toBe("FAILED");
+    expect(last.data.error).toBe(
+      "This page was uploaded; AI refine isn't available. Regenerate to use AI.",
+    );
+  });
 });
 
 describe("revert event", () => {

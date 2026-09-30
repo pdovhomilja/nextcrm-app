@@ -434,16 +434,24 @@ async function refineFlow(step: StepLike, data: RefineHomepageEventData) {
       const [version, target] = await Promise.all([
         prismadb.crm_Target_Homepage_Version.findUnique({
           where: { id: homepage.current_version_id as string },
-          select: { id: true, html: true },
+          select: { id: true, html: true, pass_kind: true },
         }),
         prismadb.crm_Targets.findUnique({
           where: { id: homepage.targetId },
           select: { id: true, company: true, company_website: true, description: true },
         }),
       ]);
-      return { html: version?.html ?? null, target };
+      return { html: version?.html ?? null, pass_kind: version?.pass_kind ?? null, target };
     });
     if (!seed.html) throw new Error("Current version not found");
+    // Defense-in-depth: the trigger gates on UPLOAD, but a refine queued BEFORE an
+    // upload can run AFTER it repoints current_version_id. Don't trust the caller —
+    // never AI-refine an operator-uploaded page. Same wording as the trigger action.
+    if (seed.pass_kind === "UPLOAD") {
+      throw new NonRetriableError(
+        "This page was uploaded; AI refine isn't available. Regenerate to use AI.",
+      );
+    }
 
     const current = await runPass(step, "human", {
       apiKey,
