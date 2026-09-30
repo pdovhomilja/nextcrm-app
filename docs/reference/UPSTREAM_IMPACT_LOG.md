@@ -486,3 +486,7 @@ email render path depends on them).
 ### feat/homepage-premium-config — homepage prompt/pass enum values
 - `prisma/schema.prisma` — insert-only (+2 lines): added `HOMEPAGE_BASE` to enum `crm_Ai_Prompt_Kind` and `UPLOAD` to enum `crm_Homepage_Pass_Kind`. No other schema lines touched (no `prisma format`). Additive; migrations `20260930130000_homepage_base_prompt_kind` and `20260930130100_homepage_upload_pass_kind` (`ALTER TYPE ... ADD VALUE IF NOT EXISTS`). Risk Low (on conflict keep both sides; enum value lists are the usual conflict spot).
 - **Re-verify after any upstream merge:** both enums still contain the added values, then `pnpm exec prisma generate && pnpm exec tsc --noEmit`.
+
+### feat/homepage-premium-config — admin settings audit entity type
+- `lib/audit-log.ts` — insert-only (+1 line): added `"setting"` to the `AuditEntityType` union (beside our `"prompt"` fork line) so `actions/admin/homepage-settings.ts` can audit settings changes. `crm_AuditLog.entityType` is a plain String column, so no migration. Risk Low (on conflict keep both fork lines in the union).
+- **Re-verify after any upstream merge:** `AuditEntityType` still includes `"setting"`, then `pnpm exec tsc --noEmit`.
