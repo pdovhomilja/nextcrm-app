@@ -28,6 +28,8 @@ describe("GET /p/[slug]", () => {
     expect(res.headers.get("content-type")).toBe("text/html; charset=utf-8");
     expect(res.headers.get("x-robots-tag")).toBe("noindex");
     expect(res.headers.get("cache-control")).toBe("public, max-age=300");
+    expect(res.headers.get("content-security-policy")).toBe("sandbox allow-scripts");
+    expect(res.headers.get("x-content-type-options")).toBe("nosniff");
     expect(await res.text()).toBe("<html>hi</html>");
     expect(find).toHaveBeenCalledWith(
       expect.objectContaining({ where: { slug: "acme", deletedAt: null, status: "READY" } })
@@ -40,6 +42,7 @@ describe("GET /p/[slug]", () => {
     expect(a.status).toBe(404);
     expect(a.headers.get("cache-control")).toBe("no-store");
     expect(a.headers.get("x-robots-tag")).toBe("noindex");
+    expect(a.headers.get("x-content-type-options")).toBe("nosniff");
     expect(html).not.toHaveBeenCalled();
 
     find.mockResolvedValue({ id: "h1" });
@@ -56,6 +59,17 @@ describe("GET /p/[slug]", () => {
     }
     expect(find).not.toHaveBeenCalled();
     expect(html).not.toHaveBeenCalled();
+  });
+
+  it("serves a max-length slugify() output (guard agrees with slugify)", async () => {
+    const { slugify, SLUG_MAX_LENGTH } = jest.requireActual("@/lib/homepage/slug");
+    const long = slugify("ab-".repeat(200));
+    expect(long.length).toBeLessThanOrEqual(SLUG_MAX_LENGTH);
+    expect(long.endsWith("-")).toBe(false);
+    find.mockResolvedValue({ id: "h1" });
+    html.mockResolvedValue("<html/>");
+    expect((await getPage(req("x"), params(long))).status).toBe(200);
+    expect((await getPage(req("x"), params(`${long}-99`))).status).toBe(200);
   });
 
   it("404s (not 500) when storage throws", async () => {
@@ -76,12 +90,21 @@ describe("GET /p/[slug]/screenshot.png", () => {
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toBe("image/png");
     expect(res.headers.get("x-robots-tag")).toBe("noindex");
+    expect(res.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(res.headers.get("content-security-policy")).toBeNull();
+    expect(find).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { slug: "acme", deletedAt: null, status: "READY" } })
+    );
     expect(Buffer.from(await res.arrayBuffer())).toEqual(Buffer.from([0x89, 0x50, 0x4e, 0x47]));
   });
 
   it("404s unknown slug, missing object, and weird slug", async () => {
     find.mockResolvedValue(null);
-    expect((await getShot(req("nope"), params("nope"))).status).toBe(404);
+    const nf = await getShot(req("nope"), params("nope"));
+    expect(nf.status).toBe(404);
+    expect(nf.headers.get("cache-control")).toBe("no-store");
+    expect(nf.headers.get("x-robots-tag")).toBe("noindex");
+    expect(nf.headers.get("x-content-type-options")).toBe("nosniff");
     find.mockResolvedValue({ id: "h1" });
     shot.mockResolvedValue(null);
     expect((await getShot(req("acme"), params("acme"))).status).toBe(404);

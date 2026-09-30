@@ -1,5 +1,25 @@
 import { prismadb } from "@/lib/prisma";
 
+/** slugify() truncates to this many characters. */
+export const SLUG_MAX_LENGTH = 150;
+// ensureUniqueSlug() may append "-<n>" after truncation; leave room for it.
+const SLUG_SUFFIX_ROOM = 10;
+const SLUG_SHAPE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/**
+ * Canonical slug validator: exactly the shape slugify()/ensureUniqueSlug() can emit
+ * (lowercase alnum, single interior hyphens, no leading/trailing hyphen). Used by the
+ * public serving guard so it can never drift from what slugify produces.
+ */
+export function isValidSlug(s: string): boolean {
+  return (
+    typeof s === "string" &&
+    s.length > 0 &&
+    s.length <= SLUG_MAX_LENGTH + SLUG_SUFFIX_ROOM &&
+    SLUG_SHAPE.test(s)
+  );
+}
+
 /**
  * Converts a string to a URL-friendly slug.
  * - Converts to lowercase
@@ -22,8 +42,10 @@ export function slugify(input: string): string {
       .replace(/-+/g, "-")
       // Trim hyphens from start and end
       .replace(/^-+|-+$/g, "")
-      // Cap at 150 characters
-      .slice(0, 150)
+      // Cap at SLUG_MAX_LENGTH characters
+      .slice(0, SLUG_MAX_LENGTH)
+      // Truncation can leave a trailing hyphen
+      .replace(/-+$/g, "")
   );
 }
 

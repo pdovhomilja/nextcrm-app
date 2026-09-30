@@ -1,5 +1,5 @@
 import { getHomepageHtml } from "@/lib/homepage/storage";
-import { loadPublished, notFound, OK_HEADERS } from "@/lib/homepage/serve";
+import { HTML_CSP, loadPublished, notFound, OK_HEADERS } from "@/lib/homepage/serve";
 
 // Public, unauthenticated prospect preview (served on previews.radeengineering.com).
 // proxy.ts passes `/p/` through untouched. Private R2 object is reachable only here.
@@ -12,6 +12,10 @@ export async function GET(
   if (html === null) return notFound();
   return new Response(html, {
     status: 200,
-    headers: { "content-type": "text/html; charset=utf-8", ...OK_HEADERS },
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+      "content-security-policy": HTML_CSP,
+      ...OK_HEADERS,
+    },
   });
 }
