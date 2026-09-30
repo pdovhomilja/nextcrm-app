@@ -32,6 +32,14 @@ export type RefineHomepageEventData = {
   triggeredBy?: string;
 };
 
+export type RevertHomepageEventData = {
+  homepageId: string;
+  /** Required by the per-target concurrency key; the revert trigger must send it. */
+  targetId: string;
+  versionId: string;
+  triggeredBy?: string;
+};
+
 type StepLike = {
   run: <T>(name: string, fn: () => Promise<T> | T) => Promise<T>;
 };
@@ -306,6 +314,65 @@ async function refineFlow(step: StepLike, data: RefineHomepageEventData) {
   }
 }
 
+/**
+ * Re-publish an earlier version: re-render its stored html (chromium runs here,
+ * never in the trigger action), overwrite the live html + screenshot, and
+ * repoint current_version_id. No model call and no new version row.
+ */
+async function revertFlow(step: StepLike, data: RevertHomepageEventData) {
+  const homepage = await step.run("load-homepage", () =>
+    prismadb.crm_Target_Homepage.findUnique({
+      where: { id: data.homepageId },
+      select: { id: true, targetId: true, slug: true, current_version_id: true },
+    }),
+  );
+  if (!homepage) return { skipped: "no homepage row" };
+
+  try {
+    await step.run("mark-running", () =>
+      prismadb.crm_Target_Homepage.update({
+        where: { id: homepage.id },
+        data: { status: "RUNNING", error: null },
+      }),
+    );
+
+    const version = await step.run("load-version", () =>
+      prismadb.crm_Target_Homepage_Version.findUnique({
+        where: { id: data.versionId },
+        select: { id: true, homepage_id: true, html: true },
+      }),
+    );
+    // A version id from another homepage must never be published here.
+    if (!version || version.homepage_id !== homepage.id) {
+      throw new Error("Version not found for this homepage");
+    }
+
+    const screenshotB64 = await step.run("render-revert", async () => {
+      const png = await withTimeout(renderAndScreenshot(version.html), RENDER_TIMEOUT_MS, "Homepage render");
+      return png.toString("base64");
+    });
+    await step.run("upload-revert", async () => {
+      await putHomepageHtml(homepage.slug, version.html);
+      await putHomepageScreenshot(homepage.slug, Buffer.from(screenshotB64, "base64"));
+    });
+    await step.run("mark-ready", () =>
+      prismadb.crm_Target_Homepage.update({
+        where: { id: homepage.id },
+        data: {
+          status: "READY",
+          current_version_id: version.id,
+          ...previewUrls(homepage.slug),
+          error: null,
+        },
+      }),
+    );
+    return { ready: true };
+  } catch (err) {
+    await markFailed(step, homepage.id, err instanceof Error ? err.message : String(err));
+    return { failed: true };
+  }
+}
+
 const BACKSTOP_ERROR = "run failed (onFailure backstop)";
 
 /**
@@ -318,7 +385,7 @@ const BACKSTOP_ERROR = "run failed (onFailure backstop)";
 export async function onGenerateHomepageFailure({
   event,
 }: {
-  event: { data: { event?: { data?: Partial<GenerateHomepageEventData & RefineHomepageEventData> } } };
+  event: { data: { event?: { data?: Partial<GenerateHomepageEventData & RefineHomepageEventData & RevertHomepageEventData> } } };
 }): Promise<void> {
   const orig = event?.data?.event?.data ?? {};
   try {
@@ -342,9 +409,13 @@ export const generateHomepage = inngest.createFunction(
   {
     id: "generate-homepage",
     name: "Generate Homepage",
-    triggers: [{ event: "homepage/target.generate" }, { event: "homepage/target.refine" }],
+    triggers: [
+      { event: "homepage/target.generate" },
+      { event: "homepage/target.refine" },
+      { event: "homepage/target.revert" },
+    ],
     // Serialize generate/refine (or a double-click) per target so RUNNING/READY
-    // and version writes never interleave. Both events carry targetId.
+    // and version writes never interleave. All three events carry targetId.
     concurrency: { key: "event.data.targetId", limit: 1 },
     retries: 2,
     onFailure: onGenerateHomepageFailure,
@@ -353,6 +424,9 @@ export const generateHomepage = inngest.createFunction(
     const s = step as unknown as StepLike;
     if (event.name === "homepage/target.refine") {
       return refineFlow(s, event.data as RefineHomepageEventData);
+    }
+    if (event.name === "homepage/target.revert") {
+      return revertFlow(s, event.data as RevertHomepageEventData);
     }
     return generateFlow(s, event.data as GenerateHomepageEventData);
   },

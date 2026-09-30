@@ -91,6 +91,7 @@ describe("generate-homepage function config", () => {
     expect(config.triggers.map((t) => t.event).sort()).toEqual([
       "homepage/target.generate",
       "homepage/target.refine",
+      "homepage/target.revert",
     ]);
     expect(config.retries).toBeLessThanOrEqual(2);
   });
@@ -311,5 +312,89 @@ describe("refine event", () => {
     (generateHomepage as jest.Mock).mockReset().mockRejectedValue(new Error("boom"));
     await handler({ event: refineEvent, step });
     expect(homepageUpdate.mock.calls.at(-1)![0].data.status).toBe("FAILED");
+  });
+});
+
+describe("revert event", () => {
+  const versionFindUnique = prismadb.crm_Target_Homepage_Version.findUnique as jest.Mock;
+  const revertEvent = {
+    name: "homepage/target.revert",
+    data: { homepageId: "h1", targetId: "t1", versionId: "ver9", triggeredBy: "u1" },
+  };
+  const hp = { ...homepage, current_version_id: "ver2" };
+
+  beforeEach(() => {
+    (prismadb.crm_Target_Homepage.findUnique as jest.Mock).mockResolvedValue(hp);
+    versionFindUnique.mockResolvedValue({ id: "ver9", homepage_id: "h1", html: "<html>old</html>" });
+  });
+
+  it("re-renders the version html, republishes to the live keys, repoints current_version_id, READY", async () => {
+    const out = await handler({ event: revertEvent, step });
+    expect(out).toEqual({ ready: true });
+    expect(renderAndScreenshot).toHaveBeenCalledWith("<html>old</html>");
+    expect(putHomepageHtml).toHaveBeenCalledWith("acme-plumbing", "<html>old</html>");
+    expect(putHomepageScreenshot).toHaveBeenCalledWith("acme-plumbing", Buffer.from("PNGDATA"));
+    expect(statuses()).toEqual(["RUNNING", "READY"]);
+    expect(homepageUpdate).toHaveBeenLastCalledWith({
+      where: { id: "h1" },
+      data: {
+        status: "READY",
+        current_version_id: "ver9",
+        preview_url: "https://previews.example.com/p/acme-plumbing",
+        screenshot_url: "https://previews.example.com/p/acme-plumbing/screenshot.png",
+        error: null,
+      },
+    });
+    // No model call and no new version row on a revert.
+    expect(generateHomepage).not.toHaveBeenCalled();
+    expect(versionCreate).not.toHaveBeenCalled();
+  });
+
+  it("unset NEXT_PUBLIC_PREVIEWS_BASE_URL: still republishes + READY, urls null", async () => {
+    delete process.env.NEXT_PUBLIC_PREVIEWS_BASE_URL;
+    await handler({ event: revertEvent, step });
+    expect(putHomepageHtml).toHaveBeenCalled();
+    expect(homepageUpdate).toHaveBeenLastCalledWith({
+      where: { id: "h1" },
+      data: expect.objectContaining({ status: "READY", preview_url: null, screenshot_url: null }),
+    });
+  });
+
+  it("version belonging to another homepage: FAILED, nothing published", async () => {
+    versionFindUnique.mockResolvedValue({ id: "ver9", homepage_id: "OTHER", html: "<html>x</html>" });
+    await handler({ event: revertEvent, step });
+    expect(putHomepageHtml).not.toHaveBeenCalled();
+    expect(statuses()).toEqual(["RUNNING", "FAILED"]);
+  });
+
+  it("missing version: FAILED", async () => {
+    versionFindUnique.mockResolvedValue(null);
+    await handler({ event: revertEvent, step });
+    expect(renderAndScreenshot).not.toHaveBeenCalled();
+    expect(statuses()).toEqual(["RUNNING", "FAILED"]);
+  });
+
+  it("render error: FAILED, never left RUNNING, live keys untouched", async () => {
+    (renderAndScreenshot as jest.Mock).mockRejectedValue(new Error("chromium crashed"));
+    await handler({ event: revertEvent, step });
+    expect(putHomepageHtml).not.toHaveBeenCalled();
+    expect(statuses()).toEqual(["RUNNING", "FAILED"]);
+  });
+
+  it("missing homepage row: no crash, nothing rendered", async () => {
+    (prismadb.crm_Target_Homepage.findUnique as jest.Mock).mockResolvedValue(null);
+    await expect(handler({ event: revertEvent, step })).resolves.toEqual({ skipped: "no homepage row" });
+    expect(renderAndScreenshot).not.toHaveBeenCalled();
+  });
+
+  it("onFailure backstop marks the homepage FAILED for a revert event (carries homepageId)", async () => {
+    homepageUpdateMany.mockResolvedValue({ count: 1 });
+    await onGenerateHomepageFailure({
+      event: { data: { function_id: "generate-homepage", run_id: "r1", event: revertEvent } } as never,
+    });
+    expect(homepageUpdateMany).toHaveBeenCalledWith({
+      where: { id: "h1" },
+      data: { status: "FAILED", error: expect.stringContaining("onFailure backstop") },
+    });
   });
 });
