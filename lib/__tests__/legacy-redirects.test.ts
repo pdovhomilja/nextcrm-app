@@ -1,4 +1,9 @@
+// next-intl is ESM and isn't transformed by jest; stub defineRouting so importing
+// @/i18n/routing just yields its config object (we only read `routing.locales`).
+jest.mock("next-intl/routing", () => ({ defineRouting: (config: unknown) => config }));
+
 import { legacyRedirects, LEGACY_REDIRECT_LOCALES } from "@/lib/legacy-redirects";
+import { routing } from "@/i18n/routing";
 
 // Compile a Next.js redirect `source` to a RegExp the same way path-to-regexp does
 // for the simple shapes we use: `:name(regex)` -> that regex group, `:name*` ->
@@ -47,6 +52,12 @@ describe("legacy crm -> campaigns redirects", () => {
     }
     // an unknown "locale" (e.g. api, or a typo) must NOT match
     expect(rx.test("/xx/crm/targets/123")).toBe(false);
+  });
+
+  it("locale set stays in sync with i18n/routing.ts (drift guard)", () => {
+    // If a locale is added to routing.ts but not here, that locale's legacy
+    // /crm/... URLs silently stop redirecting. Keep the two lists identical.
+    expect([...LEGACY_REDIRECT_LOCALES].sort()).toEqual([...routing.locales].sort());
   });
 
   it("keeps the locale set in sync with the destination capture", () => {

@@ -30,6 +30,21 @@ describe("generateTemplateSafe", () => {
     expect((await generateTemplateSafe("p") as { error: string }).error).toMatch(/API key/i);
   });
 
+  // Distinct from the OpenAI-401 above: the upstream auth guard throws exactly
+  // "Unauthorized". This must map to a session message, NOT the API-key one — and
+  // it relies on the exact-match check running before the `OpenAI error:` regex.
+  it("maps the exact 'Unauthorized' auth throw to a session-expired message", async () => {
+    upstream.mockRejectedValue(new Error("Unauthorized"));
+    const err = (await generateTemplateSafe("p") as { error: string }).error;
+    expect(err).toMatch(/session expired|sign in/i);
+    expect(err).not.toMatch(/API key/i);
+  });
+
+  it("maps a JSON parse failure to an 'unexpected response' message", async () => {
+    upstream.mockRejectedValue(new SyntaxError("Unexpected token < in JSON at position 0"));
+    expect((await generateTemplateSafe("p") as { error: string }).error).toMatch(/unexpected response/i);
+  });
+
   it("maps an abort/timeout to a timeout message", async () => {
     const e = new Error("aborted");
     e.name = "AbortError";
