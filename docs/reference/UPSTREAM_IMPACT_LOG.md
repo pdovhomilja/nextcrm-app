@@ -451,3 +451,7 @@ email render path depends on them).
 - `app/[locale]/(routes)/components/app-sidebar.tsx` — insert-only (+1): `prompts: "Prompts"` localization in the Campaigns block. Risk Low.
 - `app/[locale]/(routes)/components/menu-items/Campaigns.tsx` — insert-only (+2): `prompts` prop + `/campaigns/prompts` nav item. Risk Low.
 - Note: both already fork-diverged (commit 87443b53 added the Campaigns nav); this appends one nav entry.
+
+### feat/target-homepage-generation — register generate-homepage Inngest function
+- `app/api/inngest/route.ts` — insert-only (+2): `import { generateHomepage } from "@/inngest/functions/generate-homepage";` (after the last import) and `generateHomepage,` appended as the last entry of the `functions` array. Risk Low (on conflict keep both sides — upstream's functions plus ours; the array tail is the usual conflict spot).
+- **Re-verify after any upstream merge:** `generateHomepage` is still imported and present in the `functions` array, or the homepage generate/refine events are never handled.
