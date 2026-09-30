@@ -29,6 +29,7 @@ const GSAP_BASE_URL = `https://cdnjs.cloudflare.com/ajax/libs/gsap/${GSAP_VERSIO
 export const MACHINE_CONTRACT = `Output contract (mandatory, overrides anything above):
 - Respond with ONLY a JSON object, no prose: {"critique": "<2-3 sentences>", "html": "<the complete HTML document>"}.
 - Output ONE single, fully self-contained HTML document.
+- Never invent phone numbers, addresses, emails, testimonials, hours, or facts that are not in the brief; reuse only the supplied brand and copy.
 - You MAY load external resources ONLY from these hosts: ${ALLOWED_RENDER_HOSTS.join(", ")}, and GSAP (with ScrollTrigger) from ${GSAP_BASE_URL}/gsap.min.js and ${GSAP_BASE_URL}/ScrollTrigger.min.js. No other remote resources of any kind.
 - For the business logo, if a logo is provided use the EXACT token __RADE_LOGO_SRC__ as the logo <img> src (it is substituted with the real logo); otherwise render a clean text wordmark. Never reference any other logo URL.`;
 

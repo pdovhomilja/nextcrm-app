@@ -5,6 +5,9 @@ const rows = (o: Record<string,string>) => (prismadb.crm_SystemSettings.findMany
   .mockResolvedValue(Object.entries(o).map(([key,value])=>({key,value})));
 beforeEach(() => jest.clearAllMocks());
 
+it("DEFAULT_MAX_TOKENS is the budget-safe 16000", () => {
+  expect(DEFAULT_MAX_TOKENS).toBe(16000);
+});
 it("resolveModel: known passes, unknown/blank -> default", () => {
   expect(resolveModel("claude-opus-5-5")).toBe("claude-opus-5-5");
   expect(resolveModel("gpt-4")).toBe(DEFAULT_HOMEPAGE_MODEL);

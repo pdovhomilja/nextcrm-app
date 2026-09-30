@@ -8,7 +8,8 @@ export const HOMEPAGE_MODELS = [
 export type HomepageModel = (typeof HOMEPAGE_MODELS)[number];
 
 export const DEFAULT_HOMEPAGE_MODEL: HomepageModel = "claude-sonnet-5-5";
-export const DEFAULT_MAX_TOKENS = 32000;
+// Non-streaming vision call shares the render step's ~300s function budget (render up to RENDER_TIMEOUT_MS + the ~200s generate abort). 16000 completes reliably; larger admin values may abort on very large pages — streaming is the follow-up (see LESSONS_LEARNED).
+export const DEFAULT_MAX_TOKENS = 16000;
 export const MAX_TOKENS_FLOOR = 4000;
 export const MODEL_MAX_TOKENS: Record<HomepageModel, number> = {
   "claude-sonnet-5-5": 64000,

@@ -5,7 +5,7 @@ import { getApiKey } from "@/lib/api-keys";
 import { harvestSource, type HarvestResult } from "@/lib/homepage/harvest-source";
 import { generateHomepage as generateHomepageHtml } from "@/lib/homepage/provider";
 import { buildSystemPrompt } from "@/lib/homepage/prompt";
-import { DEFAULT_HOMEPAGE_MODEL, DEFAULT_MAX_TOKENS } from "@/lib/homepage/settings";
+import { getHomepageSettings } from "@/lib/homepage/settings";
 import { renderAndScreenshot } from "@/lib/homepage/render";
 import {
   putHomepageHtml,
@@ -146,6 +146,10 @@ async function runPass(
   label: string,
   args: {
     apiKey: string;
+    /** Admin-resolved generation settings (see resolveGenerationConfig). */
+    system: string;
+    model: string;
+    maxTokens: number;
     brief: string;
     prompt: string;
     previousHtml?: string;
@@ -178,10 +182,9 @@ async function runPass(
         previousHtml: args.previousHtml,
         sourceScreenshotB64,
         refinedScreenshotB64,
-        // Interim defaults; Task 2.5 replaces these with the admin-resolved settings.
-        system: buildSystemPrompt(null),
-        model: DEFAULT_HOMEPAGE_MODEL,
-        maxTokens: DEFAULT_MAX_TOKENS,
+        system: args.system,
+        model: args.model,
+        maxTokens: args.maxTokens,
       }),
       GENERATE_TIMEOUT_MS,
       "Homepage generation",
@@ -274,6 +277,32 @@ async function failRun(step: StepLike, flow: string, homepageId: string, err: un
   throw new NonRetriableError(message);
 }
 
+/**
+ * Resolve the admin-configured model / max_tokens / base prompt once per run.
+ * Each lookup is its own step and returns only small scalars (settings + the
+ * base prompt text), never image data. A missing/deleted base prompt falls back
+ * to the built-in default inside buildSystemPrompt.
+ */
+async function resolveGenerationConfig(
+  step: StepLike,
+): Promise<{ system: string; model: string; maxTokens: number }> {
+  const settings = await step.run("resolve-settings", () => getHomepageSettings());
+  const basePromptId = settings.basePromptId;
+  const base = basePromptId
+    ? await step.run("load-base-prompt", () =>
+        prismadb.crm_Ai_Prompt.findFirst({
+          where: { id: basePromptId, kind: "HOMEPAGE_BASE", deletedAt: null },
+          select: { body: true },
+        }),
+      )
+    : null;
+  return {
+    system: buildSystemPrompt(base?.body ?? null),
+    model: settings.model,
+    maxTokens: settings.maxTokens,
+  };
+}
+
 const NO_API_KEY = "NO_API_KEY: configure ANTHROPIC key in admin or profile settings";
 
 async function generateFlow(step: StepLike, data: GenerateHomepageEventData) {
@@ -307,6 +336,7 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData) {
 
     const apiKey = await step.run("resolve-api-key", () => getApiKey("ANTHROPIC", data.triggeredBy));
     if (!apiKey) throw new NonRetriableError(NO_API_KEY);
+    const genConfig = await resolveGenerationConfig(step);
 
     // The harvest screenshot is uploaded to a transient R2 key inside this step and
     // only the brand + a flag are returned, so no base64 PNG enters step state.
@@ -331,6 +361,7 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData) {
     const brief = buildBrief(target, harvest?.brand ?? null, logoDataUri);
     const baseArgs = {
       apiKey,
+      ...genConfig,
       brief,
       hasSourceShot: storedSourceShot,
       homepage,
@@ -387,6 +418,7 @@ async function refineFlow(step: StepLike, data: RefineHomepageEventData) {
 
     const apiKey = await step.run("resolve-api-key", () => getApiKey("ANTHROPIC", data.triggeredBy));
     if (!apiKey) throw new NonRetriableError(NO_API_KEY);
+    const genConfig = await resolveGenerationConfig(step);
 
     const seed = await step.run("load-current-version", async () => {
       const [version, target] = await Promise.all([
@@ -405,6 +437,7 @@ async function refineFlow(step: StepLike, data: RefineHomepageEventData) {
 
     const current = await runPass(step, "human", {
       apiKey,
+      ...genConfig,
       brief: seed.target ? buildBrief(seed.target, null, logoDataUri) : "",
       prompt: data.prompt,
       previousHtml: seed.html,

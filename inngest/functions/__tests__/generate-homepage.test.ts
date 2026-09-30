@@ -6,8 +6,10 @@ jest.mock("@/lib/prisma", () => ({
     crm_Targets: { findUnique: jest.fn() },
     crm_Target_Homepage: { findUnique: jest.fn(), update: jest.fn(), updateMany: jest.fn() },
     crm_Target_Homepage_Version: { create: jest.fn(), findUnique: jest.fn() },
+    crm_Ai_Prompt: { findFirst: jest.fn() },
   },
 }));
+jest.mock("@/lib/homepage/settings", () => ({ getHomepageSettings: jest.fn() }));
 jest.mock("@/lib/api-keys", () => ({ getApiKey: jest.fn() }));
 jest.mock("@/lib/homepage/harvest-source", () => ({ harvestSource: jest.fn() }));
 jest.mock("@/lib/homepage/provider", () => ({ generateHomepage: jest.fn() }));
@@ -27,6 +29,7 @@ import { getApiKey } from "@/lib/api-keys";
 import { harvestSource } from "@/lib/homepage/harvest-source";
 import { generateHomepage } from "@/lib/homepage/provider";
 import { renderAndScreenshot } from "@/lib/homepage/render";
+import { getHomepageSettings } from "@/lib/homepage/settings";
 import {
   putHomepageHtml,
   putHomepageScreenshot,
@@ -81,6 +84,12 @@ beforeEach(() => {
   jest.resetAllMocks();
   process.env.NEXT_PUBLIC_PREVIEWS_BASE_URL = "https://previews.example.com";
   (getApiKey as jest.Mock).mockResolvedValue("sk-test");
+  (getHomepageSettings as jest.Mock).mockResolvedValue({
+    model: "claude-opus-5-5",
+    maxTokens: 40000,
+    basePromptId: "bp1",
+  });
+  (prismadb.crm_Ai_Prompt.findFirst as jest.Mock).mockResolvedValue({ body: "BASE_BODY" });
   (prismadb.crm_Targets.findUnique as jest.Mock).mockResolvedValue(target);
   (prismadb.crm_Target_Homepage.findUnique as jest.Mock).mockResolvedValue(homepage);
   (harvestSource as jest.Mock).mockResolvedValue({
@@ -233,6 +242,45 @@ describe("generate event", () => {
     expect(statuses()).not.toContain("FAILED");
     // transient source screenshot cleaned up after the run
     expect(deleteHomepageTmpSource).toHaveBeenCalledWith("acme-plumbing");
+  });
+
+  it("uses the admin-resolved model/maxTokens/base prompt on every pass", async () => {
+    await handler({ event: generateEvent, step });
+    expect(prismadb.crm_Ai_Prompt.findFirst).toHaveBeenCalledWith({
+      where: { id: "bp1", kind: "HOMEPAGE_BASE", deletedAt: null },
+      select: { body: true },
+    });
+    const calls = (generateHomepage as jest.Mock).mock.calls;
+    expect(calls).toHaveLength(1 + AUTO_PASSES);
+    for (const [arg] of calls) {
+      expect(arg.model).toBe("claude-opus-5-5");
+      expect(arg.maxTokens).toBe(40000);
+      expect(arg.system).toContain("BASE_BODY");
+      expect(arg.system).toContain("Output contract");
+    }
+  });
+
+  it("no base prompt id: skips the lookup and falls back to the default base", async () => {
+    (getHomepageSettings as jest.Mock).mockResolvedValue({
+      model: "claude-sonnet-5-5",
+      maxTokens: 16000,
+      basePromptId: null,
+    });
+    await handler({ event: generateEvent, step });
+    expect(prismadb.crm_Ai_Prompt.findFirst).not.toHaveBeenCalled();
+    const arg = (generateHomepage as jest.Mock).mock.calls[0][0];
+    expect(arg.model).toBe("claude-sonnet-5-5");
+    expect(arg.maxTokens).toBe(16000);
+    expect(arg.system).toContain("senior web designer");
+    expect(arg.system).toContain("Output contract");
+  });
+
+  it("base prompt missing/deleted: falls back to the default base", async () => {
+    (prismadb.crm_Ai_Prompt.findFirst as jest.Mock).mockResolvedValue(null);
+    await handler({ event: generateEvent, step });
+    const arg = (generateHomepage as jest.Mock).mock.calls[0][0];
+    expect(arg.system).not.toContain("BASE_BODY");
+    expect(arg.system).toContain("senior web designer");
   });
 
   it("keeps base64 image data out of every persisted step return value", async () => {
@@ -404,6 +452,14 @@ describe("refine event", () => {
     expect(last.data).toMatchObject({ status: "READY", current_version_id: "ver1" });
     // human pass sends no rendered-draft image (unchanged behavior)
     expect((generateHomepage as jest.Mock).mock.calls[0][0].refinedScreenshotB64).toBeUndefined();
+  });
+
+  it("uses the admin-resolved model/maxTokens/base prompt", async () => {
+    await handler({ event: refineEvent, step });
+    const arg = (generateHomepage as jest.Mock).mock.calls[0][0];
+    expect(arg.model).toBe("claude-opus-5-5");
+    expect(arg.maxTokens).toBe(40000);
+    expect(arg.system).toContain("BASE_BODY");
   });
 
   it("loads the homepage with the soft-delete filter", async () => {
