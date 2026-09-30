@@ -20,6 +20,21 @@ resolve by hand. Re-run the entry's named tests to confirm the wiring survived.
 
 ---
 
+## feat/target-homepage-generation — homepage version history (Task 1: schema)  (PR: TBD)
+
+Adds a version-history table and a current-version pointer for generated target
+homepages. **1 upstream-owned file** touched (`prisma/schema.prisma`); the migration
+`prisma/migrations/20260930120000_homepage_versions/` is new (fork-owned, zero merge risk).
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `prisma/schema.prisma` | +~30/−0 | **insert-only** | New enum `crm_Homepage_Pass_Kind` + new model `crm_Target_Homepage_Version` appended at end of file; three fields (`current_version_id`, `source_url`, `versions`) inserted after `error` inside the fork-owned `crm_Target_Homepage` model. No upstream model/line rewritten. | Low (additive; on conflict keep both sides — upstream's additions plus ours) |
+
+**Re-verify after any upstream merge:** `pnpm exec prisma validate`; the enum, the
+`crm_Target_Homepage_Version` model and the three `crm_Target_Homepage` fields are still present.
+
+---
+
 ## fix/runtime-transaction-pooler — runtime uses the transaction pooler  (PR: TBD)
 
 Routes the serverless runtime Prisma pool through an optional

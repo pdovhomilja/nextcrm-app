@@ -2104,6 +2104,9 @@ model crm_Target_Homepage {
   status         crm_Homepage_Status @default(PENDING)
   base_prompt    String?             @db.Text
   error          String?
+  current_version_id String? @db.Uuid
+  source_url         String?
+  versions           crm_Target_Homepage_Version[]
   created_by     String?             @db.Uuid
   created_on     DateTime?           @default(now())
   updatedAt      DateTime?           @updatedAt
@@ -2139,4 +2142,25 @@ model crm_Target_Email {
   @@index([targetId])
   @@index([status])
   @@index([deletedAt])
+}
+
+enum crm_Homepage_Pass_Kind {
+  AUTO
+  HUMAN
+}
+
+model crm_Target_Homepage_Version {
+  id             String                 @id @default(uuid()) @db.Uuid
+  homepage_id    String                 @db.Uuid
+  html           String                 @db.Text
+  screenshot_key String?
+  prompt         String?                @db.Text
+  agent_critique String?                @db.Text
+  pass_kind      crm_Homepage_Pass_Kind
+  created_by     String?                @db.Uuid
+  created_at     DateTime               @default(now())
+
+  homepage crm_Target_Homepage @relation(fields: [homepage_id], references: [id], onDelete: Cascade)
+
+  @@index([homepage_id])
 }
