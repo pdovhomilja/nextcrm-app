@@ -36,8 +36,10 @@ pnpm dev
 
 1. Open an **Approved** target's detail page (Campaigns → Targets → View).
 2. Click the **AI** menu (sparkles) in the header → **Generate email**.
-3. **Verify:** the "Generate outreach email" drawer opens.
-4. In **Choose a prompt**, pick a saved email prompt.
+3. **Verify:** the "Generate outreach email" drawer opens with the **first prompt and first
+   template already selected** (the guidance box pre-filled from that prompt), so it's ready to
+   generate immediately.
+4. Optionally pick a different **prompt**.
 5. **Verify:** the guidance box fills with that prompt's body (you can still edit it).
 6. Pick a **template** (must contain `{{body}}`). The **Button label / Button link** fields
    inherit that template's CTA defaults — see 1d. Leave "Include homepage…" unchecked
@@ -96,11 +98,12 @@ the preview, and the sent email carries the overridden label + inherited link).
 4. Change the **Button label** (and/or link). Generate, then **Verify:** the preview shows the amber
    button with your overridden label. Send, and **Verify:** the received email's button uses the
    overridden label and the (inherited) link.
-5. **Homepage default + auto-link:** open the drawer on a target that **already has a generated
-   homepage**. **Verify:** "Include homepage…" starts **checked** and the **Button link** starts as
+5. **Homepage default + auto-link:** open the drawer on a target whose homepage is **READY with a
+   screenshot**. **Verify:** "Include homepage…" starts **checked** and the **Button link** starts as
    `{{homepage_url}}`. Unchecking restores the template's link; re-checking sets it back. On send, the
-   button links to that target's homepage. On a target with **no** homepage, the box starts unchecked
-   and disabled. *(The `{{homepage_url}}` resolution is covered by
+   button links to that target's homepage. On a target with **no** homepage (or one still
+   generating/failed), the box starts unchecked (and is disabled when no page is published yet).
+   *(The `{{homepage_url}}` resolution is covered by
    `actions/crm/targets/__tests__/preview-target-email.test.ts`; the default-checked + auto-fill needs
    a generated homepage, so it is verified manually here — E2E known gap.)*
 

@@ -96,6 +96,9 @@ export function TargetAiMenu(props: {
         templates={props.templates}
         prompts={props.prompts}
         hasHomepage={props.hasHomepage}
+        homepageReady={
+          props.homepage?.status === "READY" && !!props.homepage?.screenshot_url
+        }
       />
 
       <GenerateHomepageDrawer

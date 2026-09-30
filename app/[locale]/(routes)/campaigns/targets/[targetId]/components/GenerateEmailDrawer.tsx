@@ -44,15 +44,21 @@ export function GenerateEmailDrawer(props: {
   targetId: string;
   templates: Option[];
   prompts: PromptOption[];
+  /** A published homepage exists — enables the "Include homepage" checkbox. */
   hasHomepage: boolean;
+  /** The homepage is READY with a screenshot — defaults the checkbox checked. */
+  homepageReady: boolean;
 }) {
-  const [promptId, setPromptId] = useState<string>("");
-  const [prompt, setPrompt] = useState("");
+  // Default to the first prompt (and load its guidance) so the drawer opens ready
+  // to generate; the template already defaults to the first one below.
+  const [promptId, setPromptId] = useState<string>(props.prompts[0]?.id ?? "");
+  const [prompt, setPrompt] = useState(props.prompts[0]?.body ?? "");
   const [templateId, setTemplateId] = useState<string>(
     props.templates[0]?.id ?? "",
   );
-  // Default to including the homepage when this target already has one generated.
-  const [includeHomepage, setIncludeHomepage] = useState(props.hasHomepage);
+  // Default to including the homepage when this target has a READY one (with a
+  // screenshot); the checkbox is still enableable whenever a published page exists.
+  const [includeHomepage, setIncludeHomepage] = useState(props.homepageReady);
 
   // CTA button: inherited from the selected template, overridable per-target.
   const ctaDefaults = (id: string) => {
@@ -63,7 +69,7 @@ export function GenerateEmailDrawer(props: {
   const [ctaLabel, setCtaLabel] = useState(initialCta.label);
   // When the homepage is included by default, the CTA link defaults to it too.
   const [ctaUrl, setCtaUrl] = useState(
-    props.hasHomepage ? HOMEPAGE_CTA_URL : initialCta.url,
+    props.homepageReady ? HOMEPAGE_CTA_URL : initialCta.url,
   );
 
   const [subject, setSubject] = useState("");
@@ -225,13 +231,13 @@ export function GenerateEmailDrawer(props: {
       setSubject("");
       setBodyHtml("");
       setPreviewHtml("");
-      setPromptId("");
-      setPrompt("");
-      // Re-apply the homepage default (checked when the target has one) for reopen.
-      setIncludeHomepage(props.hasHomepage);
+      setPromptId(props.prompts[0]?.id ?? "");
+      setPrompt(props.prompts[0]?.body ?? "");
+      // Re-apply the homepage default (checked when a READY homepage) for reopen.
+      setIncludeHomepage(props.homepageReady);
       const d = ctaDefaults(templateId);
       setCtaLabel(d.label);
-      setCtaUrl(props.hasHomepage ? HOMEPAGE_CTA_URL : d.url);
+      setCtaUrl(props.homepageReady ? HOMEPAGE_CTA_URL : d.url);
       setBusy(null);
     }
     props.onOpenChange(v);
