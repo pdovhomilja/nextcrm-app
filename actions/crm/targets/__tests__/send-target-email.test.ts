@@ -10,6 +10,7 @@ jest.mock("@/lib/prisma", () => ({
     crm_campaign_templates: { findFirst: jest.fn() },
     crm_Target_Homepage: { findFirst: jest.fn() },
     crm_Target_Email: { create: jest.fn(), update: jest.fn() },
+    users: { findUnique: jest.fn() },
   },
 }));
 jest.mock("@/lib/campaigns/render-email", () => ({
@@ -44,6 +45,7 @@ beforeEach(() => {
   (prismadb.crm_Target_Homepage.findFirst as jest.Mock).mockResolvedValue(null);
   (prismadb.crm_Target_Email.create as jest.Mock).mockResolvedValue({ id: "e1", unsubscribe_token: "tok" });
   (prismadb.crm_Target_Email.update as jest.Mock).mockResolvedValue({ id: "e1" });
+  (prismadb.users.findUnique as jest.Mock).mockResolvedValue({ email: "sender@rade.example" });
   sendMock.mockResolvedValue({ data: { id: "msg_1" }, error: null });
 });
 
@@ -54,6 +56,8 @@ it("sends, records SENT, and logs an email activity", async () => {
   });
   expect(res).toEqual({ data: { id: "e1" } });
   expect(sendMock).toHaveBeenCalledWith(expect.objectContaining({ to: "redir+ada@acme.com", subject: "Hi Acme", html: "<html>final</html>" }));
+  // Reply-To is the sending operator's email so prospect replies reach a real inbox.
+  expect(sendMock.mock.calls[0][0].replyTo).toBe("sender@rade.example");
   expect(sendMock.mock.calls[0][0].headers).toEqual(
     expect.objectContaining({
       "List-Unsubscribe": expect.stringMatching(/^<.+>$/),

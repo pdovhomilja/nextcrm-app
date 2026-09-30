@@ -102,6 +102,34 @@ the preview, and the sent email carries the overridden label + inherited link).
    resolution is also covered by `actions/crm/targets/__tests__/preview-target-email.test.ts`; the
    homepage-checkbox auto-fill needs a generated homepage, so it is verified manually here.)*
 
+### 1e. Edit the AI draft before sending
+
+**E2E:** `tests/e2e/target-ai-email.spec.ts` › `generates, previews and sends…` (the test rewrites
+the draft in the editor and asserts the **edited** body — not the AI original — reaches the send).
+
+1. Generate a draft. **Verify:** the AI copy appears in an editable rich-text editor below the subject.
+2. Edit the text (merge tags like `{{first_name}}` still work). **Verify:** editing disables **Send**
+   until you click **Update preview**; the preview then shows your edited copy.
+3. Send. **Verify:** the received email contains your edits, not the original draft.
+
+### 1f. Reply-To is the sender's email
+
+**E2E:** `tests/e2e/target-ai-email.spec.ts` › `generates, previews and sends…` (asserts the Resend
+`reply_to` equals the seeded admin's email).
+
+1. Send an outreach email, then reply to it from the recipient inbox (or inspect headers).
+2. **Verify:** the **Reply-To** is *your* (the sending user's) email, not the `noreply@` From — so a
+   prospect's reply reaches you. *(Replies are not ingested into the CRM; they land in your inbox.)*
+
+### 1g. Target shows its outreach history
+
+**E2E:** `tests/e2e/target-ai-email.spec.ts` › `generates, previews and sends…` (reloads the target
+and asserts the sent email shows with a **SENT** status).
+
+1. After sending, open the target detail page. **Verify:** an **"Outreach emails"** section lists the
+   send — subject, timestamp, and a **SENT** badge — with a "Last emailed …" summary. A failed send
+   shows a **FAILED** badge with its error; a target never emailed shows "No emails sent yet."
+
 ## 2. AI prompt library — create, edit, delete
 
 **E2E:** `tests/e2e/target-ai-email.spec.ts` › `creates, edits and deletes a prompt`

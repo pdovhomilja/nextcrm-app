@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { TipTapEditor } from "@/components/campaigns/TipTapEditor";
 import { generateTargetEmail } from "@/actions/crm/targets/generate-target-email";
 import { previewTargetEmail } from "@/actions/crm/targets/preview-target-email";
 import { sendTargetEmail } from "@/actions/crm/targets/send-target-email";
@@ -63,6 +64,9 @@ export function GenerateEmailDrawer(props: {
 
   const [subject, setSubject] = useState("");
   const [bodyHtml, setBodyHtml] = useState("");
+  // TipTap's `content` prop is only read at creation, so bump this key to remount
+  // the editor with fresh AI output; it stays stable while the operator types.
+  const [bodyEditorKey, setBodyEditorKey] = useState(0);
   const [previewHtml, setPreviewHtml] = useState("");
   const [busy, setBusy] = useState<"gen" | "preview" | "send" | null>(
     null,
@@ -106,6 +110,12 @@ export function GenerateEmailDrawer(props: {
   }
   function onSubjectChange(v: string) {
     setSubject(v);
+    invalidatePreview();
+  }
+  // Operator edits to the AI draft invalidate the preview until re-rendered,
+  // exactly like a subject change.
+  function onBodyChange(html: string) {
+    setBodyHtml(html);
     invalidatePreview();
   }
   function onCtaLabelChange(v: string) {
@@ -155,6 +165,7 @@ export function GenerateEmailDrawer(props: {
       }
       setSubject(res.data.subject);
       setBodyHtml(res.data.body_html);
+      setBodyEditorKey((k) => k + 1); // remount the editor with the new AI draft
       setPreviewHtml("");
       await refreshPreview(myReq, res.data.subject, res.data.body_html);
     } catch {
@@ -322,6 +333,18 @@ export function GenerateEmailDrawer(props: {
                 aria-label="Email subject"
                 data-testid="email-subject"
               />
+              {/* Editable AI draft — the operator refines the copy before sending;
+                  edits flow to the preview (after Update) and the send. */}
+              <div className="space-y-1" data-testid="email-body-editor">
+                <span className="text-xs text-muted-foreground">
+                  Email body — edit before sending
+                </span>
+                <TipTapEditor
+                  key={bodyEditorKey}
+                  content={bodyHtml}
+                  onChange={(html) => onBodyChange(html)}
+                />
+              </div>
               <iframe
                 title="Email preview"
                 srcDoc={previewHtml}

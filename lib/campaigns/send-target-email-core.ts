@@ -75,10 +75,13 @@ export async function deliverTargetEmail(params: {
    *  resolved here against the target; the shell escapes + scheme-checks. */
   ctaLabel?: string | null;
   ctaUrl?: string | null;
+  /** Reply-To for the send (the sending operator's email) so prospect replies
+   *  reach a real inbox instead of the noreply From. Omitted -> no Reply-To. */
+  replyTo?: string | null;
   promptUsed?: string;
   createdBy: string;
 }): Promise<DeliverTargetEmailResult> {
-  const { target, recipient, template, subject, bodyHtml, includeHomepage, ctaLabel, ctaUrl, createdBy } = params;
+  const { target, recipient, template, subject, bodyHtml, includeHomepage, ctaLabel, ctaUrl, replyTo, createdBy } = params;
 
   // Fail closed BEFORE any DRAFT row or Resend call: no email with a dead
   // unsubscribe link (CAN-SPAM / one-click compliance).
@@ -152,6 +155,7 @@ export async function deliverTargetEmail(params: {
     const result = await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL!,
       to: redirectRecipients(recipient),
+      ...(replyTo && replyTo.trim() ? { replyTo: replyTo.trim() } : {}),
       subject: resolvedSubject,
       html,
       headers: {

@@ -774,5 +774,20 @@
 - **Tell:** a "missing X" error where the value is visibly present, on a record that was *edited*
   (`updatedBy` set) — an edit that rewrote a sibling field to `""`.
 
+## Frontend / React
+
+### TipTap's `content` prop is read once — remount with a `key` to load new content
+
+- **Symptom:** an editor seeded from server/AI state (`<TipTapEditor content={bodyHtml} />`) stayed
+  blank / stale when `bodyHtml` arrived or changed after mount.
+- **Cause:** `useEditor({ content })` only applies `content` at creation; there is no effect that
+  calls `editor.commands.setContent` on prop change, so later updates are ignored.
+- **Fix / rule:** bump a `key` on the editor (`<TipTapEditor key={version} content={…} />`) to remount
+  it when fresh content should load (e.g. after an AI generate), and keep the key **stable while the
+  user types** so it is not remounted on every keystroke (which would lose the cursor). Do NOT add a
+  reactive `setContent` effect to the shared editor — it fights the user's caret. E2E: editing a
+  contenteditable is timing-sensitive — prefer select-all + type (deterministic replace) over
+  click-to-position + append.
+
 <!-- Add new entries above this line, newest-relevant first within each section.
      Create a new `## <area>` heading when a trap doesn't fit an existing one. -->

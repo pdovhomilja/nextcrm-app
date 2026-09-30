@@ -28,6 +28,8 @@ const PROMPT_BODY = `${PREFIX}: warm, concise, mention their outdated website.`;
 const CTA_LABEL = `${PREFIX} See your redesign`;
 const CTA_URL = `https://rade.example/${RUN}`;
 const CTA_LABEL_OVERRIDE = `${PREFIX} Book a call`;
+// Appended to the AI draft in the editor to prove the operator's edits are sent.
+const EDIT_MARKER = `${PREFIX}-EDITED`;
 const MOCK_PORT = Number(process.env.E2E_MOCK_PORT ?? "4010");
 const ADMIN_EMAIL = process.env.TEST_USER_EMAIL || "test@nextcrm.app";
 
@@ -257,6 +259,14 @@ test.describe("Target AI outreach — email", () => {
     // The overridden CTA button renders in the branded preview.
     await expect(preview.getByText(CTA_LABEL_OVERRIDE)).toBeVisible();
 
+    // Edit the AI draft in the body editor (select-all + replace, keeping merge
+    // tags) — this invalidates the preview until re-rendered, like a subject edit.
+    const bodyEditor = page.locator('[data-testid="email-body-editor"] .ProseMirror');
+    await bodyEditor.click();
+    await page.keyboard.press("ControlOrMeta+a");
+    await page.keyboard.type(`Hi {{first_name}}, ${EDIT_MARKER} for {{company}}.`);
+    await expect(page.getByTestId("email-send-btn")).toBeDisabled();
+
     // Preview-drift guard: editing the subject invalidates the preview (Send off)
     // until it is re-rendered with "Update preview". Net subject is unchanged.
     const subjectInput = page.getByTestId("email-subject");
@@ -269,6 +279,8 @@ test.describe("Target AI outreach — email", () => {
       timeout: 15000,
     });
     await expect(preview.getByText(`${PREFIX} template header`)).toBeVisible();
+    // The operator's body edit shows in the re-rendered preview.
+    await expect(preview.getByText(new RegExp(EDIT_MARKER))).toBeVisible();
 
     await page.getByTestId("email-send-btn").click();
     await assertSuccessToast(page, "Email sent");
@@ -279,7 +291,12 @@ test.describe("Target AI outreach — email", () => {
     expect(sent.subject).toBe(`Quick idea for ${COMPANY}`);
     const expectedTo = process.env.EMAIL_REDIRECT_TO || TARGET_EMAIL;
     expect([sent.to].flat()).toEqual([expectedTo]);
-    expect(sent.html).toContain(`Hi Jane, here is our pitch for ${COMPANY}.`);
+    // Reply-To = the sending operator's email (not the noreply From).
+    expect(sent.reply_to).toBe(ADMIN_EMAIL);
+    // The operator's edited body (merge tags resolved) reached the sent email —
+    // NOT the original AI draft.
+    expect(sent.html).toContain(`Hi Jane, ${EDIT_MARKER} for ${COMPANY}.`);
+    expect(sent.html).not.toContain("here is our pitch");
     // The sent email carries the overridden CTA label + inherited link.
     expect(sent.html).toContain(CTA_LABEL_OVERRIDE);
     expect(sent.html).toContain(CTA_URL);
@@ -310,6 +327,14 @@ test.describe("Target AI outreach — email", () => {
       );
       expect(a.rows.length).toBeGreaterThan(0);
     }).toPass({ timeout: 10000 });
+
+    // The send now shows in the target's outreach history (with a SENT status).
+    await page.goto(`/en/campaigns/targets/${approvedTargetId}`);
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+    const history = page.getByTestId("target-email-history");
+    await expect(history).toBeVisible({ timeout: 10000 });
+    await expect(history.getByText(`Quick idea for ${COMPANY}`)).toBeVisible();
+    await expect(history.getByText("SENT")).toBeVisible();
   });
 
   test("blocks AI email generation for a non-approved target", async ({

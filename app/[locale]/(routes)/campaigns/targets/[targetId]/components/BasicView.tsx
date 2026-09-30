@@ -26,6 +26,8 @@ import { EnvelopeClosedIcon } from "@radix-ui/react-icons";
 import { Badge } from "@/components/ui/badge";
 import { TargetAiMenu } from "./TargetAiMenu";
 import { listTemplateOptions } from "@/actions/campaigns/templates/list-template-options";
+import { listTargetEmails } from "@/actions/crm/targets/list-target-emails";
+import { TargetEmailHistory } from "./TargetEmailHistory";
 import { listPrompts } from "@/actions/crm/prompts/list-prompts";
 import { prismadb } from "@/lib/prisma";
 import ConvertToDealButton from "./ConvertToDealButton";
@@ -116,6 +118,10 @@ export async function BasicView({ data }: TargetBasicViewProps) {
         }
       : null;
   }
+
+  // Outreach-email history (always shown, even when empty, so it's clear whether
+  // this target has been emailed).
+  const targetEmails = await listTargetEmails(data.id);
 
   return (
     <div className="pb-3 space-y-5">
@@ -321,6 +327,8 @@ export async function BasicView({ data }: TargetBasicViewProps) {
           </div>
         </CardContent>
       </Card>
+
+      <TargetEmailHistory emails={targetEmails} />
 
       {data.description && (
         <Card>
