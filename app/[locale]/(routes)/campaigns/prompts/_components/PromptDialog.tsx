@@ -3,6 +3,7 @@ import { useState } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -43,16 +44,21 @@ export function PromptDialog({
 
   async function save() {
     setBusy(true);
-    const res = prompt
-      ? await updatePrompt({ id: prompt.id, name, body })
-      : await createPrompt({ name, body, kind, scope });
-    setBusy(false);
-    if ("error" in res) {
-      toast.error(res.error);
-      return;
+    try {
+      const res = prompt
+        ? await updatePrompt({ id: prompt.id, name, body })
+        : await createPrompt({ name, body, kind, scope });
+      if ("error" in res) {
+        toast.error(res.error);
+        return;
+      }
+      toast.success(prompt ? "Prompt updated" : "Prompt created");
+      onClose();
+    } catch {
+      toast.error("Failed to save prompt");
+    } finally {
+      setBusy(false);
     }
-    toast.success(prompt ? "Prompt updated" : "Prompt created");
-    onClose();
   }
 
   return (
@@ -60,16 +66,21 @@ export function PromptDialog({
       <DialogContent data-testid="prompt-dialog">
         <DialogHeader>
           <DialogTitle>{prompt ? "Edit prompt" : "New prompt"}</DialogTitle>
+          <DialogDescription>
+            Reusable guidance the AI follows when drafting outreach.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <Input
             placeholder="Name"
+            aria-label="Prompt name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             data-testid="prompt-name"
           />
           <Textarea
             placeholder="Prompt body"
+            aria-label="Prompt body"
             rows={6}
             value={body}
             onChange={(e) => setBody(e.target.value)}
@@ -81,7 +92,7 @@ export function PromptDialog({
                 value={kind}
                 onValueChange={(v) => setKind(v as "EMAIL" | "HOMEPAGE")}
               >
-                <SelectTrigger>
+                <SelectTrigger aria-label="Prompt kind">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -93,7 +104,7 @@ export function PromptDialog({
                 value={scope}
                 onValueChange={(v) => setScope(v as "ORG" | "USER")}
               >
-                <SelectTrigger>
+                <SelectTrigger aria-label="Prompt scope">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

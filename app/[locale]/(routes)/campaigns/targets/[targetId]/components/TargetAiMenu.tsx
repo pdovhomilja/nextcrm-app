@@ -12,12 +12,13 @@ import { toast } from "sonner";
 import { GenerateEmailDrawer } from "./GenerateEmailDrawer";
 
 type Option = { id: string; name: string };
+type PromptOption = { id: string; name: string; body: string };
 
 export function TargetAiMenu(props: {
   targetId: string;
   triageStatus: "NEW" | "APPROVED" | "PASSED";
   templates: Option[];
-  prompts: Option[];
+  prompts: PromptOption[];
   hasHomepage: boolean;
 }) {
   const [emailOpen, setEmailOpen] = useState(false);
@@ -51,7 +52,9 @@ export function TargetAiMenu(props: {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={enrich}>Enrich with AI</DropdownMenuItem>
+          <DropdownMenuItem disabled={enriching} onClick={enrich}>
+            Enrich with AI
+          </DropdownMenuItem>
           <DropdownMenuItem
             disabled={!approved}
             data-testid="ai-generate-email"

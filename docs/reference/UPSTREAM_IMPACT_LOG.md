@@ -346,7 +346,7 @@ of the action cluster); new migration folder is fork-owned (no merge risk).
 | Upstream file | +/− | Insert-only? | What / where | Risk |
 |---|---|---|---|---|
 | `prisma/schema.prisma` | +91/−0 | **insert-only** | appended at end of file: 4 enums (`crm_Ai_Prompt_Kind`, `crm_Ai_Prompt_Scope`, `crm_Target_Email_Status`, `crm_Homepage_Status`) + 3 models (`crm_Ai_Prompt`, `crm_Target_Homepage`, `crm_Target_Email`). Relation fields inserted: `target_emails crm_Target_Email[]` + `homepage crm_Target_Homepage?` in `crm_Targets` (after `campaign_sends`); `target_emails crm_Target_Email[]` in `crm_campaign_templates` (after `steps`). No existing upstream lines rewritten. | Low (additive) |
-| `app/[locale]/(routes)/campaigns/targets/[targetId]/components/BasicView.tsx` | ~+22/−4 | **insert/replace** (no upstream logic rewritten) | In the CardHeader action cluster: replaced `<EnrichButton targetId={data.id} />` and the placeholder `<MoreHorizontal />` with a single `<TargetAiMenu ... />` (imports for `MoreHorizontal`/`EnrichButton` removed; `TargetAiMenu`, `getTemplates`, `listPrompts`, `prismadb` added). Inserted a server-side `Promise.all` (getTemplates, listPrompts EMAIL, `crm_Target_Homepage` status) after the `location` derive and before `return`, feeding the menu. `EnrichButton.tsx` (upstream-owned) intentionally left in place, now unused. | Low–Med (action-cluster JSX is a likely textual conflict point) |
+| `app/[locale]/(routes)/campaigns/targets/[targetId]/components/BasicView.tsx` | ~+26/−4 | **insert/replace** (no upstream logic rewritten) | In the CardHeader action cluster: replaced `<EnrichButton targetId={data.id} />` and the placeholder `<MoreHorizontal />` with a single `<TargetAiMenu ... />` (imports for `MoreHorizontal`/`EnrichButton` removed; `TargetAiMenu`, `listTemplateOptions`, `listPrompts`, `prismadb` added). Inserted an **APPROVED-gated** server-side block after the `location` derive and before `return`: only when `data.triage_status === "APPROVED"` it runs a `Promise.all` (slim fork-owned `listTemplateOptions()` → `{id,name}[]`, `listPrompts` EMAIL, `crm_Target_Homepage` status); otherwise `templates`/`prompts` are empty and `hasHomepage=false`. `EnrichButton.tsx` (upstream-owned) intentionally left in place, now unused. | Low–Med (action-cluster JSX is a likely textual conflict point) |
 
 New fork-owned file: `prisma/migrations/20260929120000_target_ai_outreach/migration.sql`
 (creates only the 4 enums, 3 tables, their indexes and 3 FKs).
@@ -365,7 +365,7 @@ keeping only the statements for the new objects.
 **Re-verify after any upstream merge (BasicView):**
 `git diff <merge-base> upstream/main -- "app/[locale]/(routes)/campaigns/targets/[targetId]/components/BasicView.tsx"`
 — if upstream changed the CardHeader action cluster, reconcile by hand and keep `<TargetAiMenu />`
-plus the `Promise.all` loads. Do not delete `EnrichButton.tsx`.
+plus the APPROVED-gated `Promise.all` loads (`listTemplateOptions`). Do not delete `EnrichButton.tsx`.
 
 ## feat/target-ai-outreach — MCP parity tools (prompt CRUD + send-target-email)  (PR: TBD)
 

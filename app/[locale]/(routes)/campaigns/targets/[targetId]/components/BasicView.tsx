@@ -25,7 +25,7 @@ import Link from "next/link";
 import { EnvelopeClosedIcon } from "@radix-ui/react-icons";
 import { Badge } from "@/components/ui/badge";
 import { TargetAiMenu } from "./TargetAiMenu";
-import { getTemplates } from "@/actions/campaigns/templates/get-templates";
+import { listTemplateOptions } from "@/actions/campaigns/templates/list-template-options";
 import { listPrompts } from "@/actions/crm/prompts/list-prompts";
 import { prismadb } from "@/lib/prisma";
 import ConvertToDealButton from "./ConvertToDealButton";
@@ -62,17 +62,24 @@ export async function BasicView({ data }: TargetBasicViewProps) {
   const type = normalizeTargetType(data.type);
   const location = [data.city, data.country].filter(Boolean).join(", ");
 
-  const [templatesRaw, promptsRaw, homepage] = await Promise.all([
-    getTemplates(),
-    listPrompts({ kind: "EMAIL" }),
-    prismadb.crm_Target_Homepage.findFirst({
-      where: { targetId: data.id, deletedAt: null },
-      select: { status: true },
-    }),
-  ]);
-  const templates = (templatesRaw ?? []).map((t) => ({ id: t.id, name: t.name }));
-  const prompts = promptsRaw.map((p) => ({ id: p.id, name: p.name }));
-  const hasHomepage = homepage?.status === "READY";
+  // AI-email menu data is only needed for APPROVED targets (the menu item is
+  // disabled otherwise), so skip the three queries for everything else.
+  let templates: { id: string; name: string }[] = [];
+  let prompts: { id: string; name: string; body: string }[] = [];
+  let hasHomepage = false;
+  if (data.triage_status === "APPROVED") {
+    const [templatesRaw, promptsRaw, homepage] = await Promise.all([
+      listTemplateOptions(),
+      listPrompts({ kind: "EMAIL" }),
+      prismadb.crm_Target_Homepage.findFirst({
+        where: { targetId: data.id, deletedAt: null },
+        select: { status: true },
+      }),
+    ]);
+    templates = templatesRaw;
+    prompts = promptsRaw.map((p) => ({ id: p.id, name: p.name, body: p.body }));
+    hasHomepage = homepage?.status === "READY";
+  }
 
   return (
     <div className="pb-3 space-y-5">

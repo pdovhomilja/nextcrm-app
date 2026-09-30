@@ -20,11 +20,15 @@ export function PromptList({ prompts }: { prompts: Prompt[] }) {
   const [creating, setCreating] = useState(false);
 
   async function onDelete(id: string) {
-    const res = await deletePrompt({ id });
-    if ("error" in res) toast.error(res.error);
-    else {
-      toast.success("Prompt deleted");
-      router.refresh();
+    try {
+      const res = await deletePrompt({ id });
+      if ("error" in res) toast.error(res.error);
+      else {
+        toast.success("Prompt deleted");
+        router.refresh();
+      }
+    } catch {
+      toast.error("Failed to delete prompt");
     }
   }
 
@@ -39,7 +43,9 @@ export function PromptList({ prompts }: { prompts: Prompt[] }) {
             <th>Name</th>
             <th>Kind</th>
             <th>Scope</th>
-            <th />
+            <th>
+              <span className="sr-only">Actions</span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -49,12 +55,18 @@ export function PromptList({ prompts }: { prompts: Prompt[] }) {
               <td>{p.kind}</td>
               <td>{p.scope}</td>
               <td className="text-right space-x-2">
-                <Button variant="ghost" size="sm" onClick={() => setEditing(p)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label={`Edit ${p.name}`}
+                  onClick={() => setEditing(p)}
+                >
                   Edit
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
+                  aria-label={`Delete ${p.name}`}
                   onClick={() => onDelete(p.id)}
                 >
                   Delete
