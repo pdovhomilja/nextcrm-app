@@ -12,6 +12,8 @@ export type TargetEmailRow = {
   subject: string;
   status: string;
   sent_at: Date | null;
+  opened_at: Date | null;
+  clicked_at: Date | null;
   error_message: string | null;
   included_homepage: boolean;
   created_on: Date | null;
@@ -42,6 +44,8 @@ export const listTargetEmails = async (
       subject: true,
       status: true,
       sent_at: true,
+      opened_at: true,
+      clicked_at: true,
       error_message: true,
       included_homepage: true,
       created_on: true,

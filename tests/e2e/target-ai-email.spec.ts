@@ -335,6 +335,26 @@ test.describe("Target AI outreach — email", () => {
     await expect(history).toBeVisible({ timeout: 10000 });
     await expect(history.getByText(`Quick idea for ${COMPANY}`)).toBeVisible();
     await expect(history.getByText("SENT")).toBeVisible();
+
+    // Engagement display: mark the sent row opened+clicked (as the Resend webhook
+    // would), reload, and assert the badges surface in the history.
+    await pool.query(
+      `UPDATE "crm_Target_Email" SET opened_at = now(), clicked_at = now() WHERE "targetId" = $1`,
+      [approvedTargetId]
+    );
+    await page.goto(`/en/campaigns/targets/${approvedTargetId}`);
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+    await expect(history.getByText("Opened")).toBeVisible({ timeout: 10000 });
+    await expect(history.getByText("Clicked")).toBeVisible();
+
+    // Unsubscribe visibility: flag the target do-not-email, reload, assert the badge.
+    await pool.query(
+      `UPDATE "crm_Targets" SET do_not_email = true WHERE id = $1`,
+      [approvedTargetId]
+    );
+    await page.goto(`/en/campaigns/targets/${approvedTargetId}`);
+    await page.waitForLoadState("networkidle", { timeout: 15000 });
+    await expect(page.getByTestId("do-not-email-badge")).toBeVisible({ timeout: 10000 });
   });
 
   test("blocks AI email generation for a non-approved target", async ({

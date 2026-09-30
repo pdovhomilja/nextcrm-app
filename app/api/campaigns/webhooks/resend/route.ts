@@ -69,7 +69,29 @@ export async function POST(req: NextRequest) {
   const send = await prismadb.crm_campaign_sends.findFirst({
     where: { resend_message_id: messageId },
   });
-  if (!send) return NextResponse.json({ ok: true }); // unknown message
+
+  // fork: not a campaign send — maybe a one-off target outreach email, which
+  // shares the campaigns Resend key (tracking on). Record open/click there.
+  if (!send) {
+    const targetEmail = await prismadb.crm_Target_Email.findFirst({
+      where: { resend_message_id: messageId },
+      select: { id: true, opened_at: true, clicked_at: true },
+    });
+    if (targetEmail) {
+      if (event.type === "email.opened" && !targetEmail.opened_at) {
+        await prismadb.crm_Target_Email.update({
+          where: { id: targetEmail.id },
+          data: { opened_at: new Date() },
+        });
+      } else if (event.type === "email.clicked" && !targetEmail.clicked_at) {
+        await prismadb.crm_Target_Email.update({
+          where: { id: targetEmail.id },
+          data: { clicked_at: new Date() },
+        });
+      }
+    }
+    return NextResponse.json({ ok: true }); // handled or unknown message
+  }
 
   switch (event.type) {
     case "email.delivered":
