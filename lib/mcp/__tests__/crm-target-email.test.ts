@@ -157,3 +157,45 @@ describe("crm_send_target_email", () => {
     spy.mockRestore();
   });
 });
+
+describe("crm_send_target_email — template scope + fail-closed base URL", () => {
+  it("scopes the template lookup by the caller's role (owner-only for a normal user)", async () => {
+    templates.mockImplementation(async ({ where }: { where: { created_by?: string } }) =>
+      where.created_by === "owner" ? { id: ARGS.template_id, content_html: "<div>{{body}}</div>" } : null
+    );
+    await expect(
+      send.handler(ARGS, "u1", { id: "u1", role: "user" })
+    ).rejects.toThrow("NOT_FOUND");
+    expect(templates).toHaveBeenCalledWith({
+      where: expect.objectContaining({ id: ARGS.template_id, deletedAt: null, created_by: "u1" }),
+    });
+    expectNothingSentOrDrafted();
+  });
+
+  it("does not owner-scope the template for an admin", async () => {
+    await send.handler(ARGS, "u1", { id: "u1", role: "admin" });
+    expect(templates).toHaveBeenCalledWith({ where: { id: ARGS.template_id, deletedAt: null } });
+  });
+
+  it("falls back to owner-only scope when no user context is supplied", async () => {
+    await send.handler(ARGS, "u1");
+    expect(templates).toHaveBeenCalledWith({
+      where: expect.objectContaining({ created_by: "u1" }),
+    });
+  });
+
+  describe("NEXTAUTH_URL unset", () => {
+    const saved = process.env.NEXTAUTH_URL;
+    afterEach(() => {
+      if (saved === undefined) delete process.env.NEXTAUTH_URL;
+      else process.env.NEXTAUTH_URL = saved;
+    });
+
+    it.each([undefined, ""])("fails closed (%j): EXTERNAL_ERROR, no DRAFT, no send", async (val) => {
+      if (val === undefined) delete process.env.NEXTAUTH_URL;
+      else process.env.NEXTAUTH_URL = val;
+      await expect(send.handler(ARGS, "u1")).rejects.toThrow(/EXTERNAL_ERROR.*base URL/);
+      expectNothingSentOrDrafted();
+    });
+  });
+});

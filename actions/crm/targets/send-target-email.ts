@@ -1,32 +1,29 @@
 "use server";
+import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { Resend } from "resend";
 import {
   requireAuthenticated,
   assertCanWriteTarget,
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
-import { renderCampaignEmail } from "@/lib/campaigns/render-email";
-import { resolveMergeTags } from "@/lib/campaigns/merge-tags";
+import { campaignTemplateReadScopeWhere } from "@/lib/authz/scopes/crm";
 import {
-  composeTargetEmailContent,
-  buildTargetMergeSource,
-  TemplateBodyError,
-} from "@/lib/campaigns/compose-target-email";
-import { redirectRecipients } from "@/lib/email/redirect";
+  deliverTargetEmail,
+  resolveTargetRecipient,
+} from "@/lib/campaigns/send-target-email-core";
 import { createActivity } from "@/actions/crm/activities/create-activity";
 import { writeAuditLog } from "@/lib/audit-log";
 
-export const sendTargetEmail = async ({
-  targetId,
-  templateId,
-  subject,
-  bodyHtml,
-  includeHomepage,
-  promptUsed,
-}: {
+const sendInputSchema = z.object({
+  targetId: z.string().uuid("Invalid target"),
+  templateId: z.string().uuid("Select a valid template"),
+  subject: z.string().trim().min(1, "Subject is required"),
+  bodyHtml: z.string().trim().min(1, "Email body is required"),
+});
+
+export const sendTargetEmail = async (input: {
   targetId: string;
   templateId: string;
   subject: string;
@@ -34,6 +31,11 @@ export const sendTargetEmail = async ({
   includeHomepage: boolean;
   promptUsed: string;
 }): Promise<{ data: { id: string } } | { error: string }> => {
+  const parsed = sendInputSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  const { targetId, templateId, subject, bodyHtml } = input;
+  const { includeHomepage, promptUsed } = input;
+
   let user;
   try {
     user = await requireAuthenticated();
@@ -50,91 +52,40 @@ export const sendTargetEmail = async ({
     return { error: "Target must be approved before generating outreach" };
   if (target.do_not_email) return { error: "This target is marked do-not-email." };
 
-  const recipient = target.email ?? target.company_email ?? target.personal_email;
+  const recipient = resolveTargetRecipient(target);
   if (!recipient) return { error: "This target has no email address." };
 
+  // Same read scope as the template picker: a template the caller cannot read is not-found.
   const template = await prismadb.crm_campaign_templates.findFirst({
-    where: { id: templateId, deletedAt: null },
+    where: { id: templateId, ...campaignTemplateReadScopeWhere(user) },
   });
   if (!template) return { error: "Template not found" };
 
-  const homepage = includeHomepage
-    ? await prismadb.crm_Target_Homepage.findFirst({ where: { targetId, deletedAt: null } })
-    : null;
-  const mergeSource = buildTargetMergeSource(target, homepage);
-
-  let contentHtml: string;
-  try {
-    contentHtml = composeTargetEmailContent({ templateHtml: template.content_html, bodyHtml, mergeSource });
-  } catch (e) {
-    if (e instanceof TemplateBodyError) return { error: e.message };
-    throw e;
-  }
-  const resolvedSubject = resolveMergeTags(subject, mergeSource);
-
-  // Draft row first so we have an id + unsubscribe token for the List-Unsubscribe URL.
-  const draft = await prismadb.crm_Target_Email.create({
-    data: {
-      targetId,
-      template_id: templateId,
-      subject: resolvedSubject,
-      body_html: bodyHtml,
-      prompt_used: promptUsed,
-      included_homepage: includeHomepage && homepage?.status === "READY",
-      status: "DRAFT",
-      created_by: user.id,
-    },
+  const result = await deliverTargetEmail({
+    target,
+    recipient,
+    template,
+    subject,
+    bodyHtml,
+    includeHomepage,
+    promptUsed,
+    createdBy: user.id,
   });
-
-  const unsubscribeUrl = `${process.env.NEXTAUTH_URL}/api/crm/targets/unsubscribe?token=${draft.unsubscribe_token}`;
-
-  const markFailed = (message: string) =>
-    prismadb.crm_Target_Email.update({
-      where: { id: draft.id },
-      data: { status: "FAILED", error_message: message },
-    });
-
-  // Render + send: any failure (returned OR thrown) marks the row FAILED so it is
-  // never left stuck in DRAFT.
-  let messageId: string | undefined;
-  try {
-    const html = await renderCampaignEmail({ contentHtml, unsubscribeUrl });
-    const from = process.env.RESEND_FROM_EMAIL!;
-    const resend = new Resend(process.env.RESEND_CAMPAIGNS_API_KEY || process.env.RESEND_API_KEY);
-    const result = await resend.emails.send({
-      from,
-      to: redirectRecipients(recipient),
-      subject: resolvedSubject,
-      html,
-      headers: {
-        "List-Unsubscribe": `<${unsubscribeUrl}>`,
-        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-      },
-    });
-    if (result.error) {
-      await markFailed(result.error.message);
-      return { error: "Failed to send email." };
-    }
-    messageId = result.data?.id;
-  } catch (err) {
-    await markFailed(err instanceof Error ? err.message : String(err));
+  if (!result.ok) {
+    if (result.kind === "config") return { error: "Sending is not configured (missing base URL)." };
+    if (result.kind === "compose") return { error: result.message };
     return { error: "Failed to send email." };
   }
 
-  // The email is already out. Nothing below (including the SENT write) may surface
-  // as an error, or the operator retries and the prospect gets a duplicate cold email.
+  // The email is already out. Nothing below may surface as an error, or the
+  // operator retries and the prospect gets a duplicate cold email.
   try {
-    await prismadb.crm_Target_Email.update({
-      where: { id: draft.id },
-      data: { status: "SENT", resend_message_id: messageId, sent_at: new Date() },
-    });
-
     await createActivity({
       type: "email",
-      title: `Outreach email sent: ${resolvedSubject}`,
+      title: `Outreach email sent: ${result.resolvedSubject}`,
       date: new Date(),
       status: "completed",
-      metadata: { target_email_id: draft.id },
+      metadata: { target_email_id: result.draftId },
       links: [{ entityType: "target", entityId: targetId }],
     });
 
@@ -142,7 +93,7 @@ export const sendTargetEmail = async ({
       entityType: "target",
       entityId: targetId,
       action: "updated",
-      changes: [{ field: "outreach_email_sent", old: null, new: resolvedSubject }],
+      changes: [{ field: "outreach_email_sent", old: null, new: result.resolvedSubject }],
       userId: user.id,
     });
 
@@ -151,5 +102,5 @@ export const sendTargetEmail = async ({
     console.error("[SEND_TARGET_EMAIL_POST_SEND]", e);
   }
 
-  return { data: { id: draft.id } };
+  return { data: { id: result.draftId } };
 };

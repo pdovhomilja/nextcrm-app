@@ -23,12 +23,21 @@ type HomepageLike = {
   screenshot_url?: string | null;
 } | null;
 
+/** The single recipient-resolution chain: email -> company_email -> personal_email. */
+export function resolveTargetRecipient(target: {
+  email?: string | null;
+  company_email?: string | null;
+  personal_email?: string | null;
+}): string | null {
+  return target.email ?? target.company_email ?? target.personal_email ?? null;
+}
+
 export function buildTargetMergeSource(target: TargetLike, homepage: HomepageLike): MergeTagTarget {
   const ready = homepage?.status === "READY";
   return {
     first_name: target.first_name ?? "",
     last_name: target.last_name ?? "",
-    email: target.email ?? target.company_email ?? target.personal_email ?? "",
+    email: resolveTargetRecipient(target) ?? "",
     company: target.company ?? "",
     position: target.position ?? "",
     homepage_url: ready ? homepage?.preview_url ?? "" : "",

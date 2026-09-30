@@ -1,4 +1,5 @@
 "use server";
+import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
 import {
   requireAuthenticated,
@@ -6,6 +7,7 @@ import {
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
+import { campaignTemplateReadScopeWhere } from "@/lib/authz/scopes/crm";
 import { renderCampaignEmail } from "@/lib/campaigns/render-email";
 import { resolveMergeTags } from "@/lib/campaigns/merge-tags";
 import {
@@ -14,19 +16,24 @@ import {
   TemplateBodyError,
 } from "@/lib/campaigns/compose-target-email";
 
-export const previewTargetEmail = async ({
-  targetId,
-  templateId,
-  subject,
-  bodyHtml,
-  includeHomepage,
-}: {
+const previewInputSchema = z.object({
+  targetId: z.string().uuid("Invalid target"),
+  templateId: z.string().uuid("Select a valid template"),
+  subject: z.string().trim().min(1, "Subject is required"),
+  bodyHtml: z.string().trim().min(1, "Email body is required"),
+});
+
+export const previewTargetEmail = async (input: {
   targetId: string;
   templateId: string;
   subject: string;
   bodyHtml: string;
   includeHomepage: boolean;
 }): Promise<{ data: { html: string; subject: string } } | { error: string }> => {
+  const parsed = previewInputSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  const { targetId, templateId, subject, bodyHtml, includeHomepage } = input;
+
   let user;
   try {
     user = await requireAuthenticated();
@@ -43,7 +50,7 @@ export const previewTargetEmail = async ({
     return { error: "Target must be approved before generating outreach" };
 
   const template = await prismadb.crm_campaign_templates.findFirst({
-    where: { id: templateId, deletedAt: null },
+    where: { id: templateId, ...campaignTemplateReadScopeWhere(user) },
   });
   if (!template) return { error: "Template not found" };
 
