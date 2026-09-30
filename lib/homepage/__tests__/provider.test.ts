@@ -1,0 +1,49 @@
+jest.mock("@/lib/api-keys", () => ({ getApiKey: jest.fn() }));
+import { extractJsonObject } from "@/lib/ai/anthropic-json";
+import { generateHomepage } from "@/lib/homepage/provider";
+
+beforeEach(() => {
+  global.fetch = jest.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({ content: [{ type: "text", text: "```json\n{\"critique\":\"dated\",\"html\":\"<main>new</main>\"}\n```" }] }),
+  }) as unknown as typeof fetch;
+});
+
+it("extractJsonObject strips fences", () => {
+  expect(extractJsonObject("```json\n{\"a\":1}\n```")).toBe('{"a":1}');
+  expect(extractJsonObject("no json")).toBeNull();
+});
+
+it("generateHomepage returns html + critique and sends an image block when a screenshot is given", async () => {
+  const out = await generateHomepage({ apiKey: "k", brief: "Acme", prompt: "modern", sourceScreenshotB64: "AAAA" });
+  expect(out).toEqual({ html: "<main>new</main>", critique: "dated" });
+  const body = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body);
+  expect(body.model).toBe("claude-sonnet-5-5");
+  expect(body.max_tokens).toBe(12000);
+  const parts = body.messages[0].content;
+  expect(parts.some((p: { type: string }) => p.type === "image")).toBe(true);
+  expect(parts[parts.length - 1].type).toBe("text");
+  const headers = (global.fetch as jest.Mock).mock.calls[0][1].headers;
+  expect(headers["x-api-key"]).toBe("k");
+  expect(headers["anthropic-version"]).toBe("2023-06-01");
+});
+
+it("sends no image block without screenshots and includes previous html", async () => {
+  await generateHomepage({ apiKey: "k", brief: "Acme", prompt: "modern", previousHtml: "<p>old</p>" });
+  const body = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body);
+  const parts = body.messages[0].content;
+  expect(parts.some((p: { type: string }) => p.type === "image")).toBe(false);
+  expect(parts[0].text).toContain("<p>old</p>");
+});
+
+it("throws on non-ok response", async () => {
+  (global.fetch as jest.Mock).mockResolvedValue({ ok: false, status: 500, json: async () => ({}) });
+  await expect(generateHomepage({ apiKey: "k", brief: "b", prompt: "p" })).rejects.toThrow();
+});
+
+it("throws on malformed or missing fields", async () => {
+  (global.fetch as jest.Mock).mockResolvedValue({ ok: true, json: async () => ({ content: [{ type: "text", text: "nope" }] }) });
+  await expect(generateHomepage({ apiKey: "k", brief: "b", prompt: "p" })).rejects.toThrow();
+  (global.fetch as jest.Mock).mockResolvedValue({ ok: true, json: async () => ({ content: [{ type: "text", text: '{"critique":"x"}' }] }) });
+  await expect(generateHomepage({ apiKey: "k", brief: "b", prompt: "p" })).rejects.toThrow();
+});
