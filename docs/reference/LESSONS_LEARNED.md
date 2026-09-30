@@ -416,6 +416,53 @@
 - **Tell:** `/api/inngest` 500 in Vercel logs citing `Failed to load external module …`;
   Inngest "Sync new app" returns *internal server error response from url*.
 
+## AI / outbound email
+
+### Claude wraps "return only JSON" output in code fences or a preamble — tolerate it
+
+- **Symptom:** AI email generation intermittently fails with "AI returned an unexpected
+  response" even though the model produced a perfectly good `{subject, html}` object.
+- **Cause:** the prompt says "Return ONLY valid JSON", but Anthropic models often reply
+  with a chatty preamble and/or a ```` ```json ```` fence around the object. A bare
+  `JSON.parse(text)` throws on either.
+- **Fix / rule:** never `JSON.parse` raw model text. Extract the object first — strip a
+  fence if present, then slice from the first `{` to the last `}` — and only then parse
+  and validate the shape (`extractJsonObject` in `actions/crm/targets/generate-target-email.ts`).
+  Keep failure a clean user-facing error, not a throw. The E2E mock deliberately returns
+  fenced + preambled output so this stays covered.
+- **Tell:** intermittent JSON-parse failures on LLM output that "works when you retry".
+
+### A one-off cold email must never be retryable by a post-send bookkeeping failure
+
+- **Symptom (the trap avoided):** the email is already delivered, then a later step
+  (mark `SENT`, write the activity, audit log, `revalidatePath`) throws — the action
+  returns an error, the operator clicks Send again, and the prospect gets a **duplicate
+  cold email**.
+- **Cause:** send + bookkeeping share one try/error path, so a DB/audit hiccup after the
+  provider accepted the message looks identical to "the send failed".
+- **Fix / rule:** split the two phases in `actions/crm/targets/send-target-email.ts`.
+  Render + send failures (returned **or** thrown) mark the row `FAILED` and return an
+  error; everything **after** the provider accepted the message is wrapped in its own
+  try/catch that logs and still returns success. Never let a side-effect that follows an
+  irreversible external send surface as a user-visible failure.
+- **Tell:** any "send then record" action whose error return can be reached after the
+  external call succeeded.
+
+### An email unsubscribe link must not mutate on GET
+
+- Email unsubscribe links must not mutate on GET (scanners/prefetchers auto-visit) — GET
+  shows a confirm form, POST mutates; pair with `List-Unsubscribe-Post` for RFC 8058
+  one-click. See `app/api/crm/targets/unsubscribe/route.ts`.
+
+### Outbound email must fail closed on a missing base URL (NEXTAUTH_URL)
+
+- **Symptom / risk:** the List-Unsubscribe header and footer link are built from
+  `NEXTAUTH_URL`; with it unset the email ships with a dead (relative/empty) unsubscribe link.
+- **Fix / rule:** the send path returns an error **before creating a draft** when the base URL
+  is missing, rather than sending. Any outbound-email link that must be absolute (unsubscribe,
+  tracking) should fail closed, not fall back to an empty string.
+- **Tell:** a template/link builder with `?? ""` on an env-derived origin.
+
 ## Testing
 
 ### A schema-validated MCP-tool test needs a strict-format UUID, not the shared placeholder id
@@ -444,6 +491,33 @@
   manual↔E2E parity walk should catch it before pushing.
 - **Tell:** an E2E `getByPlaceholder`/`getByText`/`getByRole({name})` failing right
   after a copy tweak, with the source change touching only display text.
+
+### Server-side third-party calls can't be mocked with `page.route` — use a base-URL seam
+
+- **Symptom:** an E2E that "mocks" Anthropic/Resend with `page.route('**/api.anthropic.com/**')`
+  passes the interception setup but the flow still hits the real API (or fails with an
+  auth error in CI's dummy-key env).
+- **Cause:** those calls happen inside **server actions** running in the Next server
+  process; Playwright's `page.route` only sees the browser's own requests.
+- **Fix / rule:** give the server an env-configurable base URL (`ANTHROPIC_BASE_URL`; the
+  `resend` SDK already honours `RESEND_BASE_URL`), point both at a mock HTTP server the
+  spec starts, set them in `playwright.config.ts` (so `pnpm dev` inherits them), and
+  assert on what the mock **received** — that also proves the server picked up the seam
+  before anything irreversible (a send) is clicked. Kill any pre-existing dev server first
+  (`reuseExistingServer` keeps its old env).
+- **Tell:** an E2E "mock" whose call counter stays 0.
+
+### Two specs in one file share a fixture prefix — one's cleanup deletes the other's rows
+
+- **Symptom:** a spec passes alone (`-g name`) but fails in the full file with fixtures
+  "missing" (an empty prompt list, `toHaveValue("")`), differing by run order.
+- **Cause:** two `describe`s ran in parallel workers and both cleaned up with
+  `DELETE … WHERE name LIKE '<PREFIX>%'` on the same prefix, so the fast one wiped the
+  slow one's seeded rows mid-test.
+- **Fix / rule:** give each independent describe its own fixture prefix, or make the file
+  `test.describe.configure({ mode: "serial" })`. Cleanup must only match rows that
+  describe itself created.
+- **Tell:** flaky "fixture not found" that vanishes when the failing test is run alone.
 
 ---
 

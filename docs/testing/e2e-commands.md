@@ -40,6 +40,21 @@ pnpm exec playwright show-report               # open the last HTML report
 The suite runs the specs across chromium, firefox, webkit, and the mobile Chrome /
 Safari device profiles (see the `projects` in `playwright.config.ts`).
 
+## Specs that mock third-party APIs (Anthropic / Resend)
+
+`tests/e2e/target-ai-email.spec.ts` starts a local mock server (port `E2E_MOCK_PORT`,
+default `4010`) and `playwright.config.ts` points `ANTHROPIC_BASE_URL` /
+`RESEND_BASE_URL` at it, because those calls are made by **server actions** and
+`page.route` can't see them. Consequences when running locally:
+
+- **Stop any dev server already running on :3000 first** — `reuseExistingServer` would
+  keep its old env and the spec would (correctly) fail its "Anthropic mock was hit"
+  assertion rather than call the real API.
+- The spec runs on the `chromium` project only (other projects skip it) — the mock owns
+  a fixed port.
+- It seeds/cleans its own rows via `pg` (target, template, prompt); no manual data needed
+  beyond the seeded admin.
+
 ## Run against the deployed QA
 
 The 3-tier Vercel pipeline (feature → main [no deploy] → qa → production) gives a

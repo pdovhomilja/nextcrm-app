@@ -49,6 +49,43 @@ public/                 static assets served at the site root
 types/                  shared TypeScript types (invoice.ts, types.d.ts, ambient d.ts)
 ```
 
+## Target AI outreach (fork-owned, email phase)
+
+AI-drafted one-off outreach email from an **approved** target, plus a reusable prompt
+library. All new files are fork-owned (only `BasicView.tsx`, `schema.prisma` and
+`lib/mcp/tools/index.ts` are upstream-owned touches — see `UPSTREAM_IMPACT_LOG.md`).
+
+```text
+app/[locale]/(routes)/campaigns/
+  prompts/                      AI prompt library page (create / edit / soft-delete
+                                EMAIL + HOMEPAGE prompts, ORG or personal scope);
+                                page.tsx + _components/{PromptList,PromptDialog}.tsx.
+                                URL-only for now (no sidebar entry).
+  targets/[targetId]/components/
+    TargetAiMenu.tsx            header "AI" dropdown (Enrich / Generate email /
+                                Generate homepage [disabled, later phase])
+    GenerateEmailDrawer.tsx     prompt + template pick -> generate -> preview -> send
+app/api/crm/targets/unsubscribe/   public GET one-click opt-out (token -> do_not_email)
+actions/crm/prompts/            prompt-library server actions (list, create, update,
+                                delete; mutations write crm_AuditLog "prompt" entries)
+actions/campaigns/templates/list-template-options.ts   scoped template picker options
+                                (used by the Generate-email drawer)
+actions/crm/targets/            generate-target-email.ts (Claude; tolerant JSON),
+                                preview-target-email.ts, send-target-email.ts
+                                (approval + do_not_email gates, draft->SENT/FAILED row,
+                                activity + audit log)
+lib/campaigns/send-target-email-core.ts  shared delivery core (fail-closed unsubscribe URL,
+                                         DRAFT -> Resend -> SENT/FAILED) for web action + MCP
+lib/campaigns/compose-target-email.ts   {{body}} template merge + target merge source
+lib/campaigns/merge-tags.ts             merge-tag resolver (extended with homepage_* tags)
+lib/mcp/tools/crm-ai-prompts.ts         MCP prompt CRUD tools
+lib/mcp/tools/crm-target-email.ts       MCP crm_send_target_email tool
+prisma/migrations/20260929120000_target_ai_outreach/   crm_Ai_Prompt, crm_Target_Email,
+                                        crm_Target_Homepage (+ enums)
+tests/e2e/target-ai-email.spec.ts       happy path + prompt library; mocks Anthropic/Resend
+                                        with a local server (see e2e-commands.md)
+```
+
 ## Key config files
 
 - `package.json` — scripts (pnpm); note `db:*` commands are guarded by
@@ -57,7 +94,9 @@ types/                  shared TypeScript types (invoice.ts, types.d.ts, ambient
 - `pnpm-workspace.yaml` / `pnpm-lock.yaml` — pnpm 11 workspace + lockfile.
 - `prisma.config.ts` — Prisma CLI config (schema location, seed entry).
 - `playwright.config.ts` — E2E config; `webServer` runs `pnpm dev`; the `setup`
-  project depends into every browser project.
+  project depends into every browser project. Fork insertion: points
+  `ANTHROPIC_BASE_URL`/`RESEND_BASE_URL` at the local mock server used by
+  `tests/e2e/target-ai-email.spec.ts`.
 - `jest.config.ts` / `jest.env.setup.ts` — Jest test config.
 - `next.config.js`, `tailwind.config.js`, `postcss.config.js`, `tsconfig.json`,
   `eslint.config.mjs` / `.eslintrc.json`, `components.json` (shadcn/ui).

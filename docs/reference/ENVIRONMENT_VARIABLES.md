@@ -30,6 +30,14 @@ Preview + Prod). **Required**: *Yes* = app throws/breaks without it; *Sending* /
 with a fallback; *Legacy* = present in `.env.example` from upstream but **not read
 in this fork's code** (kept for merge-friendliness).
 
+> **Target AI Outreach (email) phase — NO new env var.** AI email generation reuses
+> `ANTHROPIC_API_KEY` (or the system/personal DB key), and the one-off send reuses
+> `RESEND_CAMPAIGNS_API_KEY` (→ `RESEND_API_KEY`), `RESEND_FROM_EMAIL`, `NEXTAUTH_URL`
+> (unsubscribe link) and the `EMAIL_REDIRECT_TO` guard. Nothing is newly *required*, so
+> no Vercel scope needs updating for this phase. The `previews.radeengineering.com`
+> homepage build (a later phase) is where its own vars will arrive. The E2E-only
+> base-URL overrides are test seams listed under *Not app config* below, not app config.
+
 <!-- env-doc:begin -->
 <!-- The env-doc guard parses every `| `NAME` |` row between these markers and
      checks the set equals the keys in .env.example. Keep new app vars INSIDE. -->
@@ -99,7 +107,7 @@ in this fork's code** (kept for merge-friendliness).
 | Variable | Scope | Required | Purpose | Format / example |
 |---|---|---|---|---|
 | `OPENAI_API_KEY` | All | No | OpenAI (document enrichment, etc.). | `sk-...` |
-| `ANTHROPIC_API_KEY` | All | No | Anthropic (enrichment agent). | `sk-ant-...` |
+| `ANTHROPIC_API_KEY` | All | No | Anthropic (enrichment agent; also AI outreach-email generation — falls back to a system/personal key stored in the DB). | `sk-ant-...` |
 | `GROQ_API_KEY` | All | No | Groq provider. | — |
 | `FIRECRAWL_API_KEY` | All | No | Firecrawl (contact enrichment). | `fc-...` |
 
@@ -146,6 +154,8 @@ sandbox-runtime values — not application configuration — so they are exclude
 | `NODE_ENV`, `CI`, `VERCEL*`, `NEXT_RUNTIME` | many | Platform/framework-injected. |
 | `SEED_DEMO_DATA`, `SEED_CONTACT_EMAIL`, `TEST_USER_EMAIL` | `prisma/seeds/`, tests | Seed/test only. |
 | `DATABASE_URL_MONGO`, `DATABASE_URL_POSTGRES` | `scripts/migrate-mongo-to-postgres.ts` | One-off migration script. |
+| `ANTHROPIC_BASE_URL` | `actions/crm/targets/generate-target-email.ts` | Optional **test seam** (same name the Anthropic SDKs use): overrides the API origin. Set only by `playwright.config.ts` to a local mock for `tests/e2e/target-ai-email.spec.ts`; unset in every deployed scope → the real API. |
+| `RESEND_BASE_URL`, `E2E_MOCK_PORT` | `playwright.config.ts` (`RESEND_BASE_URL` is read by the `resend` SDK itself) | E2E only: point Resend at the same local mock so a test run can never send real email; `E2E_MOCK_PORT` (default `4010`) is the mock's port. |
 | `COMPANY_NAME`, `COMPANY_WEBSITE`, `TARGET_EMAIL`, `TARGET_NAME`, `KNOWN_DOMAIN` | `lib/enrichment/e2b/agent-script.ts` | Injected **inside** the E2B sandbox at runtime, not app config. |
 
 ## Production go-live checklist (Vercel **Production** scope)

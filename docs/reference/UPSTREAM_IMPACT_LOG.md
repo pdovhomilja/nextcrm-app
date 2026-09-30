@@ -334,3 +334,84 @@ the derive call + Target-list row.
 **Note:** the derive-on-read design was chosen because the need is display-only; if deals
 ever need to be *filtered/reported* by originating list, revisit with a stored
 `source_target_id` column on `crm_Opportunities`.
+
+---
+
+## feat/target-ai-outreach — AI outreach models (prompt library, target email, homepage seam)  (PR: TBD)
+
+Schema foundation for the Target AI Outreach email subsystem plus its UI entry point.
+**2 upstream-owned files** touched (`schema.prisma` insertion-only; `BasicView.tsx` insert/replace
+of the action cluster); new migration folder is fork-owned (no merge risk).
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `prisma/schema.prisma` | +91/−0 | **insert-only** | appended at end of file: 4 enums (`crm_Ai_Prompt_Kind`, `crm_Ai_Prompt_Scope`, `crm_Target_Email_Status`, `crm_Homepage_Status`) + 3 models (`crm_Ai_Prompt`, `crm_Target_Homepage`, `crm_Target_Email`). Relation fields inserted: `target_emails crm_Target_Email[]` + `homepage crm_Target_Homepage?` in `crm_Targets` (after `campaign_sends`); `target_emails crm_Target_Email[]` in `crm_campaign_templates` (after `steps`). No existing upstream lines rewritten. | Low (additive) |
+| `app/[locale]/(routes)/campaigns/targets/[targetId]/components/BasicView.tsx` | ~+26/−4 | **insert/replace** (no upstream logic rewritten) | In the CardHeader action cluster: replaced `<EnrichButton targetId={data.id} />` and the placeholder `<MoreHorizontal />` with a single `<TargetAiMenu ... />` (imports for `MoreHorizontal`/`EnrichButton` removed; `TargetAiMenu`, `listTemplateOptions`, `listPrompts`, `prismadb` added). Inserted an **APPROVED-gated** server-side block after the `location` derive and before `return`: only when `data.triage_status === "APPROVED"` it runs a `Promise.all` (slim fork-owned `listTemplateOptions()` → `{id,name}[]`, `listPrompts` EMAIL, `crm_Target_Homepage` status); otherwise `templates`/`prompts` are empty and `hasHomepage=false`. `EnrichButton.tsx` (upstream-owned) intentionally left in place, now unused. | Low–Med (action-cluster JSX is a likely textual conflict point) |
+
+New fork-owned file: `prisma/migrations/20260929120000_target_ai_outreach/migration.sql`
+(creates only the 4 enums, 3 tables, their indexes and 3 FKs).
+
+**Re-verify after any upstream merge:** `pnpm exec prisma validate`. Upstream appending
+models at end-of-file or adding relation lines beside `campaign_sends` / `steps` is the only
+textual conflict surface — keep both sides.
+
+**Note (pre-existing drift, out of scope):** `prisma migrate diff` from the migrations to
+`schema.prisma` already reports unrelated drift on `main` (e.g. `DocumentSystemType` drops
+`INVOICE`, embedding FK/index drops, `BIGINT`/`id DEFAULT` alterations). Because of this,
+`prisma migrate dev` would fold that drift into the new migration (and refuses to run
+non-interactively), so this migration was authored by taking `migrate diff` output and
+keeping only the statements for the new objects.
+
+**Re-verify after any upstream merge (BasicView):**
+`git diff <merge-base> upstream/main -- "app/[locale]/(routes)/campaigns/targets/[targetId]/components/BasicView.tsx"`
+— if upstream changed the CardHeader action cluster, reconcile by hand and keep `<TargetAiMenu />`
+plus the APPROVED-gated `Promise.all` loads (`listTemplateOptions`). Do not delete `EnrichButton.tsx`.
+
+## feat/target-ai-outreach — MCP parity tools (prompt CRUD + send-target-email)  (PR: TBD)
+
+**1 upstream-owned file** touched; the two tool files are new fork-owned files (no merge risk).
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `lib/mcp/tools/index.ts` | +6/−0 | **insert-only** | Registered `crmAiPromptTools` + `crmTargetEmailTools`: 2 `export` lines and 2 `import` lines after the `crmTargetTriageTools` ones, and 2 spread entries after `...crmTargetTriageTools` in `allTools`. | Low (adjacent to other fork registrations; keep both sides on conflict) |
+
+New fork-owned files: `lib/mcp/tools/crm-ai-prompts.ts`, `lib/mcp/tools/crm-target-email.ts`,
+`lib/mcp/__tests__/crm-ai-prompts.test.ts`.
+
+**Re-verify after any upstream merge:** the three tool-array lines still appear in all three places
+of `lib/mcp/tools/index.ts` (export, import, `allTools` spread).
+
+## feat/target-ai-outreach — E2E harness seam (Anthropic/Resend base URLs)  (PR: TBD)
+
+**1 upstream-owned file** touched (`playwright.config.ts`); the other edits are fork-owned
+(`actions/crm/targets/generate-target-email.ts`, `scripts/check-env-docs.sh`, docs, the new spec).
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `playwright.config.ts` | +13/−0 | **insert-only** | A commented block between the `dotenv.config(...)` calls and the `defineConfig` doc-comment: sets `E2E_MOCK_PORT`, `ANTHROPIC_BASE_URL`, `RESEND_BASE_URL` (forced to the local mock) and `??=` defaults for `ANTHROPIC_API_KEY` / `RESEND_FROM_EMAIL`. Must run before `webServer` so the spawned `pnpm dev` inherits them. No existing lines rewritten. | Low (upstream rarely edits the header of this file; on conflict keep both sides) |
+
+**Re-verify after any upstream merge:** `pnpm exec playwright test --project=chromium tests/e2e/target-ai-email.spec.ts`
+(the spec fails fast if the seam is lost: its "Anthropic mock was hit" assertion runs before the send click).
+
+## feat/target-ai-outreach — merge-tag homepage fields  (PR: TBD)
+
+**1 upstream-owned file** touched (`lib/campaigns/merge-tags.ts`).
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `lib/campaigns/merge-tags.ts` | +5/−1 | **insert-only** (one keyword change) | Added `export` to `type MergeTagTarget`; added `homepage_url` / `homepage_screenshot` optional fields to that type; added the matching two entries to `MERGE_TAG_MAP`. No existing logic rewritten. | Low (small file; on conflict keep both sides — upstream's entries plus ours) |
+
+**Re-verify after any upstream merge:** `MergeTagTarget` is still exported and `MERGE_TAG_MAP` still
+has both `homepage_*` entries; then `pnpm exec jest lib/campaigns app/api/crm/targets` (the target
+email render path depends on them).
+
+## feat/target-ai-outreach — audit entity type "prompt"  (PR: TBD)
+
+**1 upstream-owned file** touched (`lib/audit-log.ts`).
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `lib/audit-log.ts` | +1/−0 | **insert-only** | One new union member `\| "prompt" // fork: AI prompt library` as the first line of the `AuditEntityType` union. `crm_AuditLog.entityType` is a plain String column, so no migration. No existing logic rewritten. | Low (on conflict keep both sides — upstream's members plus ours) |
+
+**Re-verify after any upstream merge:** `"prompt"` is still in `AuditEntityType`; then
+`pnpm exec tsc --noEmit` (prompt actions + MCP prompt tools call `writeAuditLog({ entityType: "prompt" })`).

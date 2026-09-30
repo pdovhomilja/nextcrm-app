@@ -9,6 +9,19 @@ import path from "path";
 dotenv.config({ path: path.resolve(__dirname, ".env") });
 dotenv.config({ path: path.resolve(__dirname, ".env.local"), override: true });
 
+// [fork] Target AI outreach E2E (tests/e2e/target-ai-email.spec.ts): the Anthropic
+// and Resend calls happen SERVER-side (server actions), so browser-level
+// `page.route` can't intercept them. Point both SDK base URLs at the mock server the
+// spec starts, so generation is deterministic and no real email can ever leave. Set
+// here (before `webServer` spawns `pnpm dev`) so the dev server inherits them. Kill
+// any already-running dev server first: `reuseExistingServer` keeps its old env.
+const E2E_MOCK_PORT = process.env.E2E_MOCK_PORT ?? "4010";
+process.env.E2E_MOCK_PORT = E2E_MOCK_PORT;
+process.env.ANTHROPIC_BASE_URL = `http://127.0.0.1:${E2E_MOCK_PORT}`;
+process.env.RESEND_BASE_URL = `http://127.0.0.1:${E2E_MOCK_PORT}`;
+process.env.ANTHROPIC_API_KEY ??= "sk-ant-e2e-mock";
+process.env.RESEND_FROM_EMAIL ??= "e2e@example.com";
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
