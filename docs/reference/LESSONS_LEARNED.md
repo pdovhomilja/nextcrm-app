@@ -646,6 +646,38 @@
   would blow up prompt tokens), persist the data URI on the row (`logo_data_uri`) so refine/revert can
   reuse it, and substitute the placeholder only at render + upload time.
 
+### A bare `:locale` redirect in next.config swallows `/api/*` and 404s every API call it prefixes
+
+- **Symptom:** every `fetch()` to `/api/crm/targets/*` (generate-homepage, enrich, …) fails in the UI
+  with the generic "Something went wrong. Please try again", and the **serverless function logs are
+  empty** — the request never reached a function.
+- **Cause:** `redirects()` had `source: "/:locale/crm/targets/:path*"`. A **bare `:locale` matches ANY
+  first segment, including the literal `api`**, so `/api/crm/targets/<id>/generate-homepage`
+  308-redirects to `/api/campaigns/targets/<id>/generate-homepage`, which has no route → 404. The
+  browser follows the 308 (POST preserved), the drawer's `res.json()` fails on the 404 HTML, and it
+  shows the generic error. The redirect fires at the routing layer *before* any function, hence no logs.
+- **Fix / rule:** constrain the locale segment to the real locale set —
+  `/:locale(en|cz|de|uk)/crm/...` (extracted to `lib/legacy-redirects.js`, unit-tested). Never leave a
+  bare `:locale` on a redirect whose path shares a prefix with `/api`.
+- **Tell:** a feature's POST "just fails" with no server log; confirm with
+  `curl -s -D - --max-redirs 0 -X POST <url>` — a `308` to a non-existent path is the smoking gun.
+
+### A server action that THROWS shows users a redacted crash in production — return `{data}|{error}`
+
+- **Symptom:** an AI/API call in a server action fails and the user sees "An error occurred in the
+  Server Components render. The specific message is omitted in production builds … a digest property
+  is included" — even though the client caller has a `try/catch` that sets an error message.
+- **Cause:** Next.js **redacts errors thrown from server actions** at the server→client boundary in
+  production. The client's `catch` receives the redacted message, not the real one (e.g. an OpenAI
+  429). Only THROWN errors are redacted — **returned values are not**.
+- **Fix / rule:** server actions should **return** a discriminated result (`{ data } | { error }`)
+  with a friendly message, not throw, for expected failures (rate limit, bad key, timeout, bad
+  response). If the throwing action is upstream-owned, wrap it in a fork-owned action that catches
+  server-side (the real message is visible there) and returns the mapped error — see
+  `actions/campaigns/templates/generate-template-safe.ts`.
+- **Tell:** a `500` on the page's own `POST` (the server-action invocation) with a `digest`, and a
+  client `catch` that only ever shows the generic redacted string.
+
 ---
 
 <!-- Add new entries above this line, newest-relevant first within each section.
