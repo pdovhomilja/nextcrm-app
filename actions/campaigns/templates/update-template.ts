@@ -15,6 +15,8 @@ export const updateTemplate = async (
     subject_default: string;
     content_html: string;
     content_json: object;
+    cta_label: string | null;
+    cta_url: string | null;
   }>
 ) => {
   let user;

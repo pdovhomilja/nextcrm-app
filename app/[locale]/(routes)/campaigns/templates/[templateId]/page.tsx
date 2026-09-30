@@ -33,6 +33,8 @@ export default async function EditTemplatePage({ params }: Props) {
           subject_default: template.subject_default,
           content_html: template.content_html,
           content_json: template.content_json as object | null,
+          cta_label: template.cta_label,
+          cta_url: template.cta_url,
         }}
       />
     </div>

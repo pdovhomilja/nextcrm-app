@@ -232,9 +232,11 @@ export const campaignTools = [
       subject_default: z.string().optional(),
       content_html: z.string().min(1),
       content_json: z.any(),
+      cta_label: z.string().optional(),
+      cta_url: z.string().optional(),
     }),
     async handler(
-      args: { name: string; description?: string; subject_default?: string; content_html: string; content_json: any },
+      args: { name: string; description?: string; subject_default?: string; content_html: string; content_json: any; cta_label?: string; cta_url?: string },
       userId: string
     ) {
       const template = await prismadb.crm_campaign_templates.create({
@@ -244,6 +246,8 @@ export const campaignTools = [
           subject_default: args.subject_default,
           content_html: args.content_html,
           content_json: args.content_json,
+          cta_label: args.cta_label,
+          cta_url: args.cta_url,
           created_by: userId,
         },
       });
@@ -260,6 +264,8 @@ export const campaignTools = [
       subject_default: z.string().optional(),
       content_html: z.string().optional(),
       content_json: z.any().optional(),
+      cta_label: z.string().nullable().optional(),
+      cta_url: z.string().nullable().optional(),
     }),
     async handler(args: Record<string, any>, _userId: string, user: AuthzUser) {
       const existing = await prismadb.crm_campaign_templates.findFirst({

@@ -8,6 +8,8 @@ export const createTemplate = async (data: {
   subject_default?: string;
   content_html: string;
   content_json: object;
+  cta_label?: string | null;
+  cta_url?: string | null;
 }) => {
   let user;
   try {

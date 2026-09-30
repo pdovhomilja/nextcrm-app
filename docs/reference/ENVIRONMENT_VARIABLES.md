@@ -78,6 +78,7 @@ in this fork's code** (kept for merge-friendliness).
 | `RESEND_CAMPAIGNS_API_KEY` | Preview, Prod | No | **Campaign** Resend key (Inngest sender, `send-step.ts`) — segregated from transactional; domain-restricted to the campaigns domain (tracking on). Falls back to `RESEND_API_KEY` if unset. | `re_...` |
 | `RESEND_FROM_EMAIL` | Preview, Prod | Sending | Verified sender for campaign email. | `noreply@crm.radeengineering.com` |
 | `RESEND_WEBHOOK_SECRET` | Preview, Prod | No | Svix signing secret for the open/click-tracking webhook (`/api/campaigns/webhooks/resend`). | `whsec_...` |
+| `CAMPAIGN_MAILING_ADDRESS` | Preview, Prod | No | Physical mailing address printed in the branded campaign email footer (CAN-SPAM). Read by `lib/campaigns/brand.ts`; when unset the footer omits the address line. | `Rade Engineering, 123 Main St, City, ST 00000` |
 | `EMAIL_FROM` | All | No | From address for the nodemailer path. | `noreply@yourdomain.com` |
 | `EMAIL_HOST` | All | No | SMTP host (`lib/sendmail.ts`). | `smtp.example.com` |
 | `EMAIL_USERNAME` | All | No | SMTP username. | — |

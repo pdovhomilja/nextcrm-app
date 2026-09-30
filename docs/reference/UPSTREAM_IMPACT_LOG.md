@@ -498,3 +498,30 @@ email render path depends on them).
 ### feat/homepage-premium-config — seed default HOMEPAGE_BASE prompt
 - `prisma/seeds/seed.ts` — insert-only (+4 lines): one `import { seedHomepageBasePrompt } from "./homepage-base-prompt";` and one `await seedHomepageBasePrompt(prisma);` call (after `seedInvoices`, outside the demo-data gate). Logic/body live in the new fork-owned `prisma/seeds/homepage-base-prompt.ts` (fixed id `00000000-0000-4000-8000-00000000ba5e`, upsert); hosted envs get the row via the new migration `20260930130200_seed_homepage_base_prompt` (`ON CONFLICT DO NOTHING`). Risk Low (on conflict keep both lines; the import block and the tail of `main()` are the usual conflict spots).
 - **Re-verify after any upstream merge:** the import and the `seedHomepageBasePrompt(prisma)` call are still present in `seed.ts`, then `pnpm exec tsc --noEmit`.
+
+### feat/campaign-branded-shell — branded campaign email shell + per-template CTA button
+
+Replaces upstream's plain React-Email campaign shell with a branded, table-based,
+Outlook-safe HTML shell (Rade house style), and adds an optional per-template CTA
+button. New **fork-owned** files carry the real logic (zero merge risk):
+`lib/campaigns/email-shell.ts` (the string shell), `lib/campaigns/brand.ts` (hardcoded
+brand constants + `CAMPAIGN_MAILING_ADDRESS` env read), and migration
+`prisma/migrations/20260930140000_campaign_template_cta/`.
+
+**Upstream-owned files touched** (before this branch, `render-email.ts` and
+`CampaignLayout.tsx` were byte-identical to `upstream/main` — this is their first
+divergence, so treat them as the real conflict surface):
+
+- `lib/campaigns/render-email.ts` — **rewrite** of the render function (~−25/+15). Dropped the `react-dom/static` `prerender` + `@/emails/CampaignLayout` path; now sanitizes the body (the `SANITIZE_OPTIONS` allowlist is preserved verbatim) and delegates to the fork-owned `renderCampaignShell`. Added optional `ctaLabel`/`ctaUrl` params (back-compatible — all existing callers still pass only `contentHtml`/`unsubscribeUrl`). **Risk Medium** (full-function rewrite of a pristine upstream file; on conflict keep the shell delegation + sanitizer allowlist).
+- `emails/CampaignLayout.tsx` — **DELETED** (was upstream's React-Email shell; superseded by `lib/campaigns/email-shell.ts`). **Risk Medium** (modify/delete conflict if upstream edits it — on merge, discard upstream's version and keep it deleted; the shell now lives in `email-shell.ts`).
+- `inngest/functions/campaigns/send-step.ts` — **insert** (~+9): reads `template.cta_label`/`cta_url`, merge-resolves them (unescaped — the shell escapes), passes to `renderCampaignEmail`. **Risk Low**.
+- `actions/campaigns/templates/create-template.ts` — insert (+2 params): optional `cta_label`/`cta_url` persisted. **Risk Low**.
+- `actions/campaigns/templates/update-template.ts` — insert (+2 params in the `Partial<>`). **Risk Low**.
+- `actions/campaigns/templates/preview-template.ts` — insert (+2 params `ctaLabel`/`ctaUrl`, passthrough to renderer). **Risk Low**.
+- `lib/mcp/tools/campaigns.ts` — insert: `cta_label`/`cta_url` on the `campaigns_create_template` + `campaigns_update_template` zod schemas and the create write. **Risk Low**.
+- `app/[locale]/(routes)/campaigns/templates/new/components/TemplateEditorForm.tsx` — insert: CTA state, two inputs, and CTA passthrough in save + preview. **Risk Low** (this file is already fork-diverged for `generateTemplateSafe`; keep both hunks on conflict).
+- `app/[locale]/(routes)/campaigns/templates/[templateId]/page.tsx` — insert (+2): forward `cta_label`/`cta_url` into `initialData`. **Risk Low**.
+- `prisma/schema.prisma` — insert-only (+5): `cta_label`/`cta_url` (nullable TEXT) + a comment on `crm_campaign_templates`. Migration `20260930140000_campaign_template_cta` (`ADD COLUMN`). Additive. **Risk Low** (on conflict keep both sides).
+- `.env.example` — insert-only: `CAMPAIGN_MAILING_ADDRESS` (+ doc row in `ENVIRONMENT_VARIABLES.md`, a fork-owned file). **Risk Low**.
+
+**Re-verify after any upstream merge:** `git diff <merge-base> upstream/main -- lib/campaigns/render-email.ts emails/CampaignLayout.tsx` (overlap here is a hand-merge); confirm `renderCampaignEmail` still delegates to `renderCampaignShell` and the `SANITIZE_OPTIONS` allowlist is intact; then `pnpm exec jest __tests__/campaigns/render-email.test.ts && pnpm exec tsc --noEmit`.
