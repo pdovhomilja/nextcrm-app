@@ -215,6 +215,7 @@ describe("getHomepageStatus", () => {
     hpFindFirst.mockResolvedValue({
       ...HP,
       status: "READY",
+      error: null,
       preview_url: "https://p/p/acme",
       screenshot_url: "https://p/p/acme/screenshot.png",
       versions: [{ id: "v1", pass_kind: "AUTO", agent_critique: "c", created_at: created }],
@@ -222,7 +223,9 @@ describe("getHomepageStatus", () => {
     const res = await getHomepageStatus({ targetId: TID });
     expect(res).toEqual({
       data: {
+        id: "h1",
         status: "READY",
+        error: null,
         slug: "acme-plumbing",
         preview_url: "https://p/p/acme",
         screenshot_url: "https://p/p/acme/screenshot.png",

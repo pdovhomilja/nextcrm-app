@@ -28,7 +28,9 @@ export const getHomepageStatus = async (data: { targetId: string }) => {
   const homepage = await prismadb.crm_Target_Homepage.findFirst({
     where: { targetId, deletedAt: null },
     select: {
+      id: true,
       status: true,
+      error: true,
       slug: true,
       preview_url: true,
       screenshot_url: true,
@@ -43,7 +45,12 @@ export const getHomepageStatus = async (data: { targetId: string }) => {
 
   return {
     data: {
+      // id + error feed the generate drawer: refine/revert/slug actions key on the
+      // homepage id (the generate route doesn't return it), and the FAILED reason
+      // must be shown to the operator.
+      id: homepage.id,
       status: homepage.status,
+      error: homepage.error,
       slug: homepage.slug,
       preview_url: homepage.preview_url,
       screenshot_url: homepage.screenshot_url,

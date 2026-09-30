@@ -10,9 +10,16 @@ import {
 import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { GenerateEmailDrawer } from "./GenerateEmailDrawer";
+import { GenerateHomepageDrawer } from "./GenerateHomepageDrawer";
 
 type Option = { id: string; name: string };
 type PromptOption = { id: string; name: string; body: string };
+type HomepageInfo = {
+  slug: string;
+  status: "PENDING" | "RUNNING" | "READY" | "FAILED";
+  preview_url: string | null;
+  screenshot_url: string | null;
+};
 
 export function TargetAiMenu(props: {
   targetId: string;
@@ -20,8 +27,13 @@ export function TargetAiMenu(props: {
   templates: Option[];
   prompts: PromptOption[];
   hasHomepage: boolean;
+  company: string;
+  companyWebsite: string | null;
+  homepagePrompts: PromptOption[];
+  homepage: HomepageInfo | null;
 }) {
   const [emailOpen, setEmailOpen] = useState(false);
+  const [homepageOpen, setHomepageOpen] = useState(false);
   const [enriching, setEnriching] = useState(false);
   const approved = props.triageStatus === "APPROVED";
 
@@ -62,8 +74,12 @@ export function TargetAiMenu(props: {
           >
             Generate email{!approved ? " (approve first)" : ""}
           </DropdownMenuItem>
-          <DropdownMenuItem disabled title="Coming soon">
-            Generate homepage (coming soon)
+          <DropdownMenuItem
+            disabled={!approved}
+            data-testid="ai-generate-homepage"
+            onClick={() => setHomepageOpen(true)}
+          >
+            Generate homepage{!approved ? " (approve first)" : ""}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -75,6 +91,20 @@ export function TargetAiMenu(props: {
         templates={props.templates}
         prompts={props.prompts}
         hasHomepage={props.hasHomepage}
+      />
+
+      <GenerateHomepageDrawer
+        open={homepageOpen}
+        onOpenChange={setHomepageOpen}
+        targetId={props.targetId}
+        company={props.company}
+        companyWebsite={props.companyWebsite}
+        prompts={props.homepagePrompts}
+        hasHomepage={props.hasHomepage}
+        initialSlug={props.homepage?.slug ?? null}
+        initialStatus={props.homepage?.status ?? null}
+        initialPreviewUrl={props.homepage?.preview_url ?? null}
+        initialScreenshotUrl={props.homepage?.screenshot_url ?? null}
       />
     </>
   );
