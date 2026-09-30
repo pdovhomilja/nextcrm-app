@@ -1,9 +1,10 @@
 # Research recipe — per candidate (each research subagent follows this exactly)
 
 You are researching one **vertical** in one **geography** against a **website
-criteria** string (may be empty). Return a structured list of **verified,
-enriched** candidate records. Quality over quantity — a dropped candidate is fine;
-a fabricated one is a failure.
+criteria** string (may be empty), under a **contactability mode** (`email-required`
+or `include-no-email`). Return a structured list of **verified, enriched** candidate
+records. Quality over quantity — a dropped candidate is fine; a fabricated one is a
+failure.
 
 ## 1. Discover real candidates
 
@@ -25,8 +26,17 @@ curl -sSL -A "Mozilla/5.0" --max-time 20 <url>
   poor performance. Drop candidates that don't match.
 - Confirm it's a real business in the target geography (on-page city references,
   address schema).
+- **Contactability gate (only when mode is `email-required`):** the candidate must
+  have a **findable, contactable email** — a generic/role-based inbox (`info@`,
+  `contact@`, …) **or** a specific person's email (see the Contacts step below).
+  Do the contact/email discovery **before** keeping the candidate, and **drop** any
+  site where neither can be verified — it does **not** count toward the quota; log it
+  as a `no-email` drop (step 5). Under `include-no-email`, skip this gate — collect
+  whatever email you find but never drop for its absence.
 
-**Never fabricate.** If you can't verify a field, leave it empty — don't guess.
+**Never fabricate.** If you can't verify a field, leave it empty — don't guess. A
+`mailto:` or schema `email` is proof; a guessed address is a fabrication — never
+invent an inbox to clear the contactability gate.
 
 ## 3. Always-collect enrichment (record every field you can verify)
 
@@ -84,5 +94,6 @@ For each candidate that cleared the gate, return:
 
 ## 5. Note drops
 
-List candidates you dropped and why (not WP / not dated / 403 / not local), so a
-later top-up pass doesn't recheck them.
+List candidates you dropped and why (not WP / not dated / 403 / not local /
+**no-email** under `email-required`), so a later top-up pass doesn't recheck them.
+Report the `no-email` drops as their own count so the orchestrator can surface it.

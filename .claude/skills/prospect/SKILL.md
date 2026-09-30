@@ -1,6 +1,6 @@
 ---
 name: prospect
-description: Find N net-new qualified website-redesign prospects for a describable ICP (geography, verticals, site criteria), verify and enrich each from the live site (WordPress version/builder/theme/plugins, sitemap URL count, homepage+menu links, last update, security/perf/UX issues, a named contact person + email or a generic company inbox, and social profiles), dedup against the CRM, and load them as NEW targets in a dated, criteria-labeled target list. Use when the user asks to prospect, find leads, build a target/lead list, or source redesign prospects.
+description: Find N net-new qualified website-redesign prospects for a describable ICP (geography, verticals, site criteria), verify and enrich each from the live site (WordPress version/builder/theme/plugins, sitemap URL count, homepage+menu links, last update, security/perf/UX issues, a named contact person + email or a generic company inbox, and social profiles), dedup against the CRM, and load them as NEW targets in a dated, criteria-labeled target list. By default only leads with a contactable email count; an opt-in allows email-less sites. Use when the user asks to prospect, find leads, build a target/lead list, or source redesign prospects.
 ---
 
 # Prospect — repeatable redesign-lead sourcing
@@ -32,10 +32,23 @@ or ambiguous — never a full interview:
   performance). **Record the criteria string verbatim** — it goes into the target
   list's description (step 8).
 - **Geography** — tight (a city) through broad (metro / region / state). Ask if absent.
+- **Contactability (email requirement)** — two modes:
+  - **`email-required`** — only load leads with a **contactable email** (a
+    role/generic inbox like `info@` **or** a named person's email). A candidate with
+    neither is **dropped** and does **not** count toward N (treated like a criteria
+    miss — see `research-recipe.md` step 2).
+  - **`include-no-email`** — drop the requirement entirely; email-less sites are kept
+    and count toward N like any other qualified lead.
+
+  Resolve from the prompt if it clearly states one (e.g. "only leads with an email",
+  "must be contactable" → `email-required`; "include sites without an email",
+  "regardless of email" → `include-no-email`). **If the prompt does not clearly
+  specify, ASK** (a targeted follow-up, like environment) — do not silently default.
+  Suggest `email-required` as the recommended choice when you ask.
 - **Environment** — `qa` or `prod`. **Always ask if unspecified.**
 
-Restate the resolved plan (quantity, verticals, criteria, geography, environment)
-to the user before running.
+Restate the resolved plan (quantity, verticals, criteria, geography, contactability
+mode, environment) to the user before running.
 
 ## 2. Environment gate
 
@@ -60,11 +73,13 @@ would miss them — name dedup catches them.
 ## 5. Parallel research
 
 Using `dispatching-parallel-agents`, dispatch **one research subagent per
-vertical**. Give each: the geography, its vertical, the website criteria, and a
+vertical**. Give each: the geography, its vertical, the website criteria, the
+**contactability mode** (`email-required` or `include-no-email`), and a
 per-vertical over-fetch count. Instruct each to follow
 `references/research-recipe.md` **exactly** and return a structured list of
 verified, enriched candidate records (company, company_website root, city,
-industry, email, description).
+industry, email, description). Under `email-required`, over-fetch harder — expect a
+chunk of otherwise-qualified sites to be dropped for having no findable email.
 
 ## 6. Top-up loop (reach N net-new qualified)
 
@@ -111,4 +126,6 @@ the targets to the list.
 
 Print: counts (candidates found / verified / duplicates skipped / loaded),
 per-vertical breakdown, ranked tiers, the environment, the exact criteria string,
-and the target-list id/link. Note any shortfall against N.
+the **contactability mode**, and the target-list id/link. When mode was
+`email-required`, also report **how many otherwise-qualified candidates were dropped
+for having no findable email**. Note any shortfall against N.
