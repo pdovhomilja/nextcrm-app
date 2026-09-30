@@ -380,3 +380,15 @@ New fork-owned files: `lib/mcp/tools/crm-ai-prompts.ts`, `lib/mcp/tools/crm-targ
 
 **Re-verify after any upstream merge:** the three tool-array lines still appear in all three places
 of `lib/mcp/tools/index.ts` (export, import, `allTools` spread).
+
+## feat/target-ai-outreach — E2E harness seam (Anthropic/Resend base URLs)  (PR: TBD)
+
+**1 upstream-owned file** touched (`playwright.config.ts`); the other edits are fork-owned
+(`actions/crm/targets/generate-target-email.ts`, `scripts/check-env-docs.sh`, docs, the new spec).
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `playwright.config.ts` | +13/−0 | **insert-only** | A commented block between the `dotenv.config(...)` calls and the `defineConfig` doc-comment: sets `E2E_MOCK_PORT`, `ANTHROPIC_BASE_URL`, `RESEND_BASE_URL` (forced to the local mock) and `??=` defaults for `ANTHROPIC_API_KEY` / `RESEND_FROM_EMAIL`. Must run before `webServer` so the spawned `pnpm dev` inherits them. No existing lines rewritten. | Low (upstream rarely edits the header of this file; on conflict keep both sides) |
+
+**Re-verify after any upstream merge:** `pnpm exec playwright test --project=chromium tests/e2e/target-ai-email.spec.ts`
+(the spec fails fast if the seam is lost: its "Anthropic mock was hit" assertion runs before the send click).
