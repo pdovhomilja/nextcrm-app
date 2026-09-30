@@ -12,6 +12,7 @@ const navItems = [
   { label: "CRM Settings", href: "/admin/crm-settings", icon: SlidersHorizontal },
   { label: "Funnel Settings", href: "/admin/funnel-settings", icon: SlidersHorizontal },
   { label: "Calendar Settings", href: "/admin/calendar-settings", icon: CalendarClock },
+  { label: "Homepage Generation", href: "/admin/homepage-settings", icon: SlidersHorizontal },
   { label: "Audit Log",    href: "/admin/audit-log",    icon: ClipboardList },
   { label: "Currencies",   href: "/admin/currencies",   icon: Coins },
   { label: "Invoices",     href: "/admin/invoices",     icon: FileText },

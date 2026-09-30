@@ -25,20 +25,22 @@ type Prompt = {
   id: string;
   name: string;
   body: string;
-  kind: "EMAIL" | "HOMEPAGE";
+  kind: "EMAIL" | "HOMEPAGE" | "HOMEPAGE_BASE";
   scope: "ORG" | "USER";
 };
 
 export function PromptDialog({
   prompt,
+  isAdmin,
   onClose,
 }: {
   prompt?: Prompt;
+  isAdmin: boolean;
   onClose: () => void;
 }) {
   const [name, setName] = useState(prompt?.name ?? "");
   const [body, setBody] = useState(prompt?.body ?? "");
-  const [kind, setKind] = useState<"EMAIL" | "HOMEPAGE">(prompt?.kind ?? "EMAIL");
+  const [kind, setKind] = useState<"EMAIL" | "HOMEPAGE" | "HOMEPAGE_BASE">(prompt?.kind ?? "EMAIL");
   const [scope, setScope] = useState<"ORG" | "USER">(prompt?.scope ?? "USER");
   const [busy, setBusy] = useState(false);
 
@@ -90,7 +92,7 @@ export function PromptDialog({
             <div className="flex gap-2">
               <Select
                 value={kind}
-                onValueChange={(v) => setKind(v as "EMAIL" | "HOMEPAGE")}
+                onValueChange={(v) => setKind(v as "EMAIL" | "HOMEPAGE" | "HOMEPAGE_BASE")}
               >
                 <SelectTrigger aria-label="Prompt kind">
                   <SelectValue />
@@ -98,6 +100,9 @@ export function PromptDialog({
                 <SelectContent>
                   <SelectItem value="EMAIL">Email</SelectItem>
                   <SelectItem value="HOMEPAGE">Homepage</SelectItem>
+                  {isAdmin && (
+                    <SelectItem value="HOMEPAGE_BASE">Homepage base (designer)</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
               <Select

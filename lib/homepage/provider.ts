@@ -8,27 +8,16 @@ export type GenerateHomepageInput = {
   previousHtml?: string;
   sourceScreenshotB64?: string;
   refinedScreenshotB64?: string;
+  /** Full system prompt (see buildSystemPrompt in lib/homepage/prompt.ts). */
+  system: string;
+  model: string;
+  maxTokens: number;
 };
 
 /** Abort budget for the vision request; matches GENERATE_TIMEOUT_MS in the job. */
 export const GENERATE_FETCH_TIMEOUT_MS = 200_000;
 
 export type GenerateHomepageResult = { html: string; critique: string };
-
-const SYSTEM_PROMPT = `You are a senior web designer producing a redesigned homepage for a small business.
-
-Design rubric (follow strictly):
-- Output ONE single, fully self-contained HTML document: inline <style>, no external CSS/JS frameworks, no build step. Web-safe font stacks or system fonts only.
-- Responsive and mobile-first; must look correct from 360px to 1440px wide. Use fluid type and CSS grid/flexbox.
-- Reuse the supplied brand: colors, business name, and real copy from the source site. Never invent phone numbers, addresses, testimonials, or claims that are not in the brief.
-- Logo: if the brief supplies a logo placeholder token, use it verbatim as the logo <img>'s src attribute (it is substituted with the real logo). Otherwise render the business name as a clean styled text wordmark. NEVER reference a remote logo image URL.
-- Strong visual hierarchy: clear hero with one primary call to action, concise value proposition, services/offerings, social proof only if supplied, contact section.
-- Generous whitespace, consistent spacing scale, accessible contrast (WCAG AA), semantic landmarks (header, main, section, footer), descriptive alt text.
-- Modern and clean; avoid clutter, stock-template look, and dated patterns. No scripts that fetch remote resources.
-- If screenshots are provided, they show the current (source) site and/or a previous attempt; use them to preserve brand identity while fixing weaknesses.
-
-Respond with ONLY a JSON object, no prose, of the form:
-{"critique": "<brief critique of the source/previous design and what you changed>", "html": "<the complete HTML document>"}`;
 
 type ContentBlock =
   | { type: "text"; text: string }
@@ -79,9 +68,9 @@ export async function generateHomepage(
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-5-5",
-        max_tokens: 12000,
-        system: SYSTEM_PROMPT,
+        model: input.model,
+        max_tokens: input.maxTokens,
+        system: input.system,
         messages: [{ role: "user", content }],
       }),
       signal: controller.signal,
@@ -101,7 +90,7 @@ export async function generateHomepage(
     clearTimeout(timeout);
   }
   // A response cut off at max_tokens yields HTML truncated mid-string that then
-  // fails JSON.parse and would be retried three times at 12k tokens each. Fail fast.
+  // fails JSON.parse and would be retried several times at full max_tokens each. Fail fast.
   if (data?.stop_reason === "max_tokens") {
     throw new NonRetriableError(
       "AI response was cut off (max_tokens). Try a shorter prompt or simpler design.",

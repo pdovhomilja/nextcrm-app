@@ -21,6 +21,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { MAX_UPLOAD_BYTES } from "@/lib/homepage/upload-limits";
 import { getHomepageStatus } from "@/actions/crm/homepage/get-homepage-status";
 import { refineHomepage } from "@/actions/crm/homepage/refine-homepage";
 import { revertHomepageVersion } from "@/actions/crm/homepage/revert-homepage-version";
@@ -46,10 +47,15 @@ type HomepageState = {
   preview_url: string | null;
   screenshot_url: string | null;
   current_version_id: string | null;
+  current_pass_kind?: string | null;
   versions: HomepageVersion[];
 };
 
 const DEFAULT_ERROR = "Something went wrong. Please try again.";
+// Client pre-check for uploads, below the server's MAX_UPLOAD_BYTES: JSON
+// escaping plus Vercel's ~4.5MB body limit can 413 a near-cap file before the
+// route handler runs. The server route remains the real guard.
+const CLIENT_UPLOAD_LIMIT_BYTES = Math.min(3_500_000, MAX_UPLOAD_BYTES);
 const POLL_INTERVAL_MS = 2500;
 // A refine/revert only queues an event; the row stays in its old state until the
 // job starts. If we never see a change within this window the job never started.
@@ -103,8 +109,9 @@ export function GenerateHomepageDrawer(props: {
   const [prompt, setPrompt] = useState("");
   const [refineText, setRefineText] = useState("");
   const [busy, setBusy] = useState<
-    "gen" | "slug" | "refine" | "revert" | null
+    "gen" | "slug" | "refine" | "revert" | "upload" | null
   >(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   // True from the moment a job is queued until polling observes it finish.
   const [awaiting, setAwaiting] = useState(false);
 
@@ -359,6 +366,73 @@ export function GenerateHomepageDrawer(props: {
     }
   }
 
+  async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const input = e.target;
+    const file = input.files?.[0];
+    if (!file) return;
+    // Clear so picking the same file again re-fires onChange.
+    const reset = () => {
+      input.value = "";
+    };
+    if (file.size > CLIENT_UPLOAD_LIMIT_BYTES) {
+      toast.error("File too large (max 3.5 MB)");
+      reset();
+      return;
+    }
+    const myReq = ++reqIdRef.current;
+    stopPolling();
+    setBusy("upload");
+    try {
+      const html = await file.text();
+      if (reqIdRef.current !== myReq) return;
+      if (new Blob([html]).size > CLIENT_UPLOAD_LIMIT_BYTES) {
+        toast.error("File too large (max 3.5 MB)");
+        return;
+      }
+      const res = await fetch(`/api/crm/targets/${targetId}/upload-homepage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ html }),
+      });
+      if (reqIdRef.current !== myReq) return;
+      // A 413 from the platform may not carry a JSON body.
+      const body = await res.json().catch(() => ({}));
+      if (reqIdRef.current !== myReq) return;
+      if (!res.ok) {
+        toast.error(
+          typeof body?.error === "string"
+            ? body.error
+            : res.status === 413
+              ? "File too large or upload failed"
+              : DEFAULT_ERROR,
+        );
+        return;
+      }
+      const uploadedSlug =
+        typeof body?.slug === "string" && body.slug ? body.slug : null;
+      setHp((prev) =>
+        prev
+          ? { ...prev, status: "PENDING", error: null }
+          : {
+              id: null,
+              status: "PENDING",
+              error: null,
+              slug: uploadedSlug ?? (proposeSlug(slug) || slug),
+              preview_url: null,
+              screenshot_url: null,
+              current_version_id: null,
+              versions: [],
+            },
+      );
+      startPolling(myReq, null);
+    } catch {
+      if (reqIdRef.current === myReq) toast.error(DEFAULT_ERROR);
+    } finally {
+      reset();
+      if (reqIdRef.current === myReq) setBusy(null);
+    }
+  }
+
   async function onRefine() {
     if (!hp?.id) return;
     const myReq = ++reqIdRef.current;
@@ -437,7 +511,8 @@ export function GenerateHomepageDrawer(props: {
     ? `${hp.screenshot_url ?? `/p/${hp.slug}/screenshot.png`}${cacheKey ? `?v=${cacheKey}` : ""}`
     : "";
   const versions = hp?.versions ?? [];
-  const canRefine = !!hp?.id && !!hp.current_version_id;
+  const isUpload = hp?.current_pass_kind === "UPLOAD";
+  const canRefine = !!hp?.id && !!hp.current_version_id && !isUpload;
   const generateLabel =
     busy === "gen" || busy === "slug"
       ? "Working…"
@@ -532,6 +607,36 @@ export function GenerateHomepageDrawer(props: {
             )}
           </div>
 
+          <div className="space-y-1">
+            <label htmlFor="homepage-upload-input" className="text-sm font-medium">
+              Upload your own HTML
+            </label>
+            <div className="flex items-center gap-3">
+              <input
+                ref={fileInputRef}
+                id="homepage-upload-input"
+                data-testid="homepage-upload-input"
+                type="file"
+                accept="text/html,.html"
+                onChange={onUpload}
+                disabled={locked}
+                className="sr-only"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={locked}
+                data-testid="homepage-upload-btn"
+              >
+                {busy === "upload" ? "Uploading…" : "Upload HTML"}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Overrides the generated design with your own self-contained HTML.
+            </p>
+          </div>
+
           {status === "FAILED" && (
             <div
               role="alert"
@@ -623,6 +728,15 @@ export function GenerateHomepageDrawer(props: {
                 {busy === "refine" ? "Queuing…" : "Refine"}
               </Button>
             </div>
+          )}
+
+          {isUpload && !!hp?.id && (
+            <p
+              className="text-sm text-muted-foreground"
+              data-testid="homepage-upload-refine-hint"
+            >
+              This page was uploaded — regenerate to use AI refine.
+            </p>
           )}
 
           {versions.length > 0 && (

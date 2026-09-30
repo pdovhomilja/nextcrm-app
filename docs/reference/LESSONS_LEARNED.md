@@ -393,6 +393,24 @@
 
 ## Background jobs / Inngest
 
+### Re-check a state invariant in the job, not only in the emitter — events can be reordered
+
+- **Symptom (latent):** the homepage upload-override rule ("an uploaded page is never AI-refined")
+  was enforced only in the trigger action (`refine-homepage.ts` refuses when the current version
+  is `UPLOAD`). But a `homepage/target.refine` event can be queued, then a `homepage/target.upload`
+  completes and repoints `current_version_id` to an `UPLOAD` version, then the already-queued refine
+  runs — silently turning the operator's uploaded design into an AI `HUMAN` version. Per-target
+  `concurrency.limit:1` serializes execution but does **not** fix event *ordering*.
+- **Cause:** the invariant was checked at the emitter (the action), which reads state that can change
+  before the consumer (the Inngest job) runs. The gap between emit and run is a real window.
+- **Fix / rule:** re-validate the load-bearing invariant **inside the job** at run time, after
+  loading the row it acts on — don't trust that the emitter's precondition still holds. In
+  `refineFlow` the `load-current-version` step now selects `pass_kind` and throws
+  `NonRetriableError` (same refusal message as the action) if it is `UPLOAD`, before any model call.
+  Persist FAILED + throw `NonRetriableError` so the run doesn't retry a permanently-invalid state.
+- **Tell:** a guard that lives only in a server action/trigger while the actual mutation happens in a
+  later-scheduled job; ask "what if the row changed between emit and run?"
+
 ### A top-level native-module import in ANY Inngest function 500s the whole `/api/inngest` route on Vercel
 
 - **Symptom:** every request to `/api/inngest` (GET/POST/PUT) returns **500** on Vercel;
@@ -537,6 +555,46 @@
   output is persisted in run state and can hit output limits on media-rich pages. Do
   render + screenshot + vision inside one step, or pass a short transient R2 key
   (`previews/<slug>/tmp/source.png`) between steps.
+
+### Non-streaming vision calls share the render step's ~300s budget — keep `max_tokens` modest (streaming is the follow-up)
+
+- **Symptom (latent):** a large `max_tokens` (e.g. 32000) on the homepage generate/refine call can run
+  past the generate abort (`GENERATE_TIMEOUT_MS`, 200s) and, combined with the headless render in the
+  same Inngest step (`RENDER_TIMEOUT_MS`, 60s), blow the ~300s Vercel function budget on very large pages.
+- **Cause:** `lib/homepage/provider.ts` makes a **non-streaming** Messages call, so the whole completion
+  must finish inside one request; output time scales with tokens. A big ceiling is only safe if the model
+  actually stops early.
+- **Rule / fix:** `DEFAULT_MAX_TOKENS` in `lib/homepage/settings.ts` is **16000** (not the originally
+  planned ~32000); `clampMaxTokens` still allows admins to go up to the per-model ceiling
+  (`MODEL_MAX_TOKENS`), at their own risk. **Follow-up to raise it safely:** switch the call to streaming
+  (or move render into its own `step.run`) so the generate and render budgets stop competing.
+- **Tell:** a long page that "times out / aborts" only at high admin `max_tokens`; lowering the value
+  (or a shorter brief) makes it complete.
+
+### Next.js Server Actions cap request bodies at ~1 MB — file/large-body uploads need a route handler
+
+- **Symptom:** uploading a self-contained HTML page of a few hundred KB to a few MB via a `"use server"`
+  action is rejected before any of your own size/validation code runs.
+- **Cause:** Next.js limits Server Action request bodies to ~1 MB by default (`serverActions.bodySizeLimit`).
+  Route handlers are bounded by the platform instead (Vercel ~4.5 MB).
+- **Rule / fix:** take any upload or large JSON body through a **route handler**, not a server action. The
+  homepage upload override is `app/api/crm/targets/[id]/upload-homepage/route.ts` (auth + APPROVED gate in
+  the route; the validate/stage/send/audit core lives in `lib/homepage/upload-homepage-core.ts`). Keep the
+  app cap under the platform limit with headroom for JSON escaping (`MAX_UPLOAD_BYTES` = 4 MB, client
+  pre-check ~3.5 MB), and surface a 413 as "too large". Shared constants go in a plain module
+  (`lib/homepage/upload-limits.ts`) — a `"use server"` file may only export async functions.
+- **Tell:** a generic failure/413 on a moderately large action payload with no server log from your code.
+
+### Admin-editable prompts vs the code-owned machine contract — always append the contract
+
+- **Rule:** the admin-editable `HOMEPAGE_BASE` prompt carries *creative direction* only. Everything the
+  pipeline mechanically depends on — the JSON output shape, the allowed egress hosts / pinned GSAP URL
+  (imported from `lib/homepage/render-allowlist.ts` so the prompt and renderer can't drift), the logo
+  placeholder token, and the "never invent contact details/facts" rule — lives in `MACHINE_CONTRACT`
+  (`lib/homepage/prompt.ts`) and is **always appended** by `buildSystemPrompt`. A weak or edited base can
+  then degrade design quality but cannot break parsing, egress, or logo substitution.
+- **Also:** authoring/editing `HOMEPAGE_BASE` prompts is admin-gated server-side in
+  create/update/delete-prompt (the prompt library is otherwise open to any authenticated user).
 
 ## Testing
 

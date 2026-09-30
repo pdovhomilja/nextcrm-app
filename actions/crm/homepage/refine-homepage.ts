@@ -51,6 +51,15 @@ export const refineHomepage = async (data: { homepageId: string; prompt: string 
     return { error: "A generation is already in progress. Wait for it to finish." };
   }
 
+  // An uploaded page has no model lineage to refine from; refuse before any work.
+  const current = await prismadb.crm_Target_Homepage_Version.findUnique({
+    where: { id: homepage.current_version_id },
+    select: { pass_kind: true },
+  });
+  if (current?.pass_kind === "UPLOAD") {
+    return { error: "This page was uploaded; AI refine isn't available. Regenerate to use AI." };
+  }
+
   const target = await prismadb.crm_Targets.findFirst({
     where: { id: homepage.targetId, deletedAt: null },
     select: { triage_status: true },

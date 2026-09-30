@@ -21,7 +21,7 @@ jest.mock("@/lib/prisma", () => ({
       create: jest.fn(),
       update: jest.fn(),
     },
-    crm_Target_Homepage_Version: { findFirst: jest.fn() },
+    crm_Target_Homepage_Version: { findFirst: jest.fn(), findUnique: jest.fn() },
   },
 }));
 
@@ -52,6 +52,7 @@ const hpFindUnique = prismadb.crm_Target_Homepage.findUnique as jest.Mock;
 const hpCreate = prismadb.crm_Target_Homepage.create as jest.Mock;
 const hpUpdate = prismadb.crm_Target_Homepage.update as jest.Mock;
 const verFindFirst = prismadb.crm_Target_Homepage_Version.findFirst as jest.Mock;
+const verFindUnique = prismadb.crm_Target_Homepage_Version.findUnique as jest.Mock;
 
 const TID = "11111111-2222-3333-4444-555555555555";
 const ME = { id: "me", role: "user" };
@@ -74,6 +75,7 @@ beforeEach(() => {
   targetFindFirst.mockResolvedValue(APPROVED);
   hpFindUnique.mockResolvedValue(null);
   hpFindFirst.mockResolvedValue(HP);
+  verFindUnique.mockResolvedValue({ pass_kind: "AUTO" });
   hpCreate.mockResolvedValue({ id: "h1" });
   hpUpdate.mockResolvedValue({});
   uniq.mockImplementation(async (b: string) => b.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""));
@@ -253,6 +255,20 @@ describe("refineHomepage", () => {
     expect(res).toEqual({ error: "A generation is already in progress. Wait for it to finish." });
     expect(send).not.toHaveBeenCalled();
   });
+  it("refuses refine when the current version is an UPLOAD (no model lineage)", async () => {
+    verFindUnique.mockResolvedValue({ pass_kind: "UPLOAD" });
+    const res = await refineHomepage({ homepageId: "h1", prompt: "x" });
+    expect(res).toEqual({ error: expect.stringMatching(/uploaded; AI refine isn't available/) });
+    expect(verFindUnique).toHaveBeenCalledWith({ where: { id: "v2" }, select: { pass_kind: true } });
+    expect(send).not.toHaveBeenCalled();
+    expect(audit).not.toHaveBeenCalled();
+  });
+  it.each(["AUTO", "HUMAN"])("allows refine when the current version is %s", async (kind) => {
+    verFindUnique.mockResolvedValue({ pass_kind: kind });
+    const res = await refineHomepage({ homepageId: "h1", prompt: "x" });
+    expect(res).toEqual({ data: { queued: true } });
+    expect(send).toHaveBeenCalledTimes(1);
+  });
   it("allows refine once a stuck run has gone stale — F2", async () => {
     hpFindFirst.mockResolvedValue({ ...HP, status: "RUNNING", updatedAt: new Date(Date.now() - 30 * 60_000) });
     const res = await refineHomepage({ homepageId: "h1", prompt: "x" });
@@ -282,6 +298,7 @@ describe("getHomepageStatus", () => {
         preview_url: "https://p/p/acme",
         screenshot_url: "https://p/p/acme/screenshot.png",
         current_version_id: "v2",
+        current_pass_kind: null,
         versions: [{ id: "v1", pass_kind: "AUTO", agent_critique: "c", created_at: created }],
       },
     });
@@ -311,6 +328,36 @@ describe("getHomepageStatus", () => {
     const longOne = res.data.versions.find((v) => v.id === "v3")!;
     expect(longOne.agent_critique!.length).toBeLessThanOrEqual(281); // 280 + ellipsis
     expect(longOne.agent_critique!.endsWith("…")).toBe(true);
+  });
+
+  it("exposes current_pass_kind from the current version (no extra query)", async () => {
+    const d = (n: number) => new Date(`2026-01-0${n}`);
+    hpFindFirst.mockResolvedValue({
+      ...HP,
+      status: "READY",
+      error: null,
+      preview_url: null,
+      screenshot_url: null,
+      versions: [
+        { id: "v2", pass_kind: "UPLOAD", agent_critique: null, created_at: d(2) },
+        { id: "v1", pass_kind: "AUTO", agent_critique: null, created_at: d(1) },
+      ],
+    });
+    const res = (await getHomepageStatus({ targetId: TID })) as { data: { current_pass_kind: string | null } };
+    expect(res.data.current_pass_kind).toBe("UPLOAD");
+  });
+  it("current_pass_kind is null when there is no current version", async () => {
+    hpFindFirst.mockResolvedValue({
+      ...HP,
+      current_version_id: null,
+      status: "READY",
+      error: null,
+      preview_url: null,
+      screenshot_url: null,
+      versions: [{ id: "v1", pass_kind: "AUTO", agent_critique: null, created_at: new Date("2026-01-01") }],
+    });
+    const res = (await getHomepageStatus({ targetId: TID })) as { data: { current_pass_kind: string | null } };
+    expect(res.data.current_pass_kind).toBeNull();
   });
 
   it("returns data:null when no homepage exists", async () => {

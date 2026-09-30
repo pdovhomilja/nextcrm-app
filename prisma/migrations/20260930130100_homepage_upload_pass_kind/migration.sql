@@ -1,0 +1,1 @@
+ALTER TYPE "crm_Homepage_Pass_Kind" ADD VALUE IF NOT EXISTS 'UPLOAD';

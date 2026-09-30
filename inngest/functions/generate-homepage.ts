@@ -4,6 +4,8 @@ import { prismadb } from "@/lib/prisma";
 import { getApiKey } from "@/lib/api-keys";
 import { harvestSource, type HarvestResult } from "@/lib/homepage/harvest-source";
 import { generateHomepage as generateHomepageHtml } from "@/lib/homepage/provider";
+import { buildSystemPrompt } from "@/lib/homepage/prompt";
+import { getHomepageSettings } from "@/lib/homepage/settings";
 import { renderAndScreenshot } from "@/lib/homepage/render";
 import {
   putHomepageHtml,
@@ -11,6 +13,8 @@ import {
   putHomepageTmpSource,
   getHomepageTmpSource,
   deleteHomepageTmpSource,
+  getHomepageUpload,
+  deleteHomepageUpload,
 } from "@/lib/homepage/storage";
 
 /** Number of automatic render->critique->refine passes after the initial draft. Hard bound. */
@@ -51,6 +55,14 @@ export type RevertHomepageEventData = {
   /** Required by the per-target concurrency key; the revert trigger must send it. */
   targetId: string;
   versionId: string;
+  triggeredBy?: string;
+};
+
+export type UploadHomepageEventData = {
+  homepageId: string;
+  /** Required by the per-target concurrency key; the upload action must send it. */
+  targetId: string;
+  slug: string;
   triggeredBy?: string;
 };
 
@@ -144,6 +156,10 @@ async function runPass(
   label: string,
   args: {
     apiKey: string;
+    /** Admin-resolved generation settings (see resolveGenerationConfig). */
+    system: string;
+    model: string;
+    maxTokens: number;
     brief: string;
     prompt: string;
     previousHtml?: string;
@@ -176,6 +192,9 @@ async function runPass(
         previousHtml: args.previousHtml,
         sourceScreenshotB64,
         refinedScreenshotB64,
+        system: args.system,
+        model: args.model,
+        maxTokens: args.maxTokens,
       }),
       GENERATE_TIMEOUT_MS,
       "Homepage generation",
@@ -268,6 +287,32 @@ async function failRun(step: StepLike, flow: string, homepageId: string, err: un
   throw new NonRetriableError(message);
 }
 
+/**
+ * Resolve the admin-configured model / max_tokens / base prompt once per run.
+ * Each lookup is its own step and returns only small scalars (settings + the
+ * base prompt text), never image data. A missing/deleted base prompt falls back
+ * to the built-in default inside buildSystemPrompt.
+ */
+async function resolveGenerationConfig(
+  step: StepLike,
+): Promise<{ system: string; model: string; maxTokens: number }> {
+  const settings = await step.run("resolve-settings", () => getHomepageSettings());
+  const basePromptId = settings.basePromptId;
+  const base = basePromptId
+    ? await step.run("load-base-prompt", () =>
+        prismadb.crm_Ai_Prompt.findFirst({
+          where: { id: basePromptId, kind: "HOMEPAGE_BASE", deletedAt: null },
+          select: { body: true },
+        }),
+      )
+    : null;
+  return {
+    system: buildSystemPrompt(base?.body ?? null),
+    model: settings.model,
+    maxTokens: settings.maxTokens,
+  };
+}
+
 const NO_API_KEY = "NO_API_KEY: configure ANTHROPIC key in admin or profile settings";
 
 async function generateFlow(step: StepLike, data: GenerateHomepageEventData) {
@@ -301,6 +346,7 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData) {
 
     const apiKey = await step.run("resolve-api-key", () => getApiKey("ANTHROPIC", data.triggeredBy));
     if (!apiKey) throw new NonRetriableError(NO_API_KEY);
+    const genConfig = await resolveGenerationConfig(step);
 
     // The harvest screenshot is uploaded to a transient R2 key inside this step and
     // only the brand + a flag are returned, so no base64 PNG enters step state.
@@ -325,6 +371,7 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData) {
     const brief = buildBrief(target, harvest?.brand ?? null, logoDataUri);
     const baseArgs = {
       apiKey,
+      ...genConfig,
       brief,
       hasSourceShot: storedSourceShot,
       homepage,
@@ -381,24 +428,34 @@ async function refineFlow(step: StepLike, data: RefineHomepageEventData) {
 
     const apiKey = await step.run("resolve-api-key", () => getApiKey("ANTHROPIC", data.triggeredBy));
     if (!apiKey) throw new NonRetriableError(NO_API_KEY);
+    const genConfig = await resolveGenerationConfig(step);
 
     const seed = await step.run("load-current-version", async () => {
       const [version, target] = await Promise.all([
         prismadb.crm_Target_Homepage_Version.findUnique({
           where: { id: homepage.current_version_id as string },
-          select: { id: true, html: true },
+          select: { id: true, html: true, pass_kind: true },
         }),
         prismadb.crm_Targets.findUnique({
           where: { id: homepage.targetId },
           select: { id: true, company: true, company_website: true, description: true },
         }),
       ]);
-      return { html: version?.html ?? null, target };
+      return { html: version?.html ?? null, pass_kind: version?.pass_kind ?? null, target };
     });
     if (!seed.html) throw new Error("Current version not found");
+    // Defense-in-depth: the trigger gates on UPLOAD, but a refine queued BEFORE an
+    // upload can run AFTER it repoints current_version_id. Don't trust the caller —
+    // never AI-refine an operator-uploaded page. Same wording as the trigger action.
+    if (seed.pass_kind === "UPLOAD") {
+      throw new NonRetriableError(
+        "This page was uploaded; AI refine isn't available. Regenerate to use AI.",
+      );
+    }
 
     const current = await runPass(step, "human", {
       apiKey,
+      ...genConfig,
       brief: seed.target ? buildBrief(seed.target, null, logoDataUri) : "",
       prompt: data.prompt,
       previousHtml: seed.html,
@@ -468,6 +525,75 @@ async function revertFlow(step: StepLike, data: RevertHomepageEventData) {
   }
 }
 
+/**
+ * Publish an operator-uploaded HTML override. The html (up to ~4 MB) sits at a
+ * transient R2 key; it is read, rendered (same allowlisted egress + finalize as
+ * every other flow, via renderPng), published, and recorded as an UPLOAD version
+ * all inside ONE step so the html never enters persisted step state — only the
+ * small version id is returned. The transient blob is removed best-effort after
+ * READY (kept on failure so a retry can reuse it).
+ */
+async function uploadFlow(step: StepLike, data: UploadHomepageEventData) {
+  const homepage = await step.run("load-homepage", () =>
+    prismadb.crm_Target_Homepage.findUnique({
+      where: { id: data.homepageId, deletedAt: null },
+      select: { id: true, targetId: true, slug: true, current_version_id: true, logo_data_uri: true },
+    }),
+  );
+  if (!homepage) return { skipped: "no homepage row" };
+  const logoDataUri = homepage.logo_data_uri ?? null;
+
+  try {
+    await step.run("mark-running", () =>
+      prismadb.crm_Target_Homepage.update({
+        where: { id: homepage.id },
+        data: { status: "RUNNING", error: null },
+      }),
+    );
+
+    const versionId = await step.run("publish-upload", async () => {
+      const html = await getHomepageUpload(homepage.slug);
+      if (!html) throw new Error("Uploaded file not found");
+      const materialized = materializeLogo(html, logoDataUri);
+      const png = await renderPng(materialized);
+      await putHomepageHtml(homepage.slug, materialized);
+      await putHomepageScreenshot(homepage.slug, png);
+      const v = await prismadb.crm_Target_Homepage_Version.create({
+        data: {
+          homepage_id: homepage.id,
+          html: materialized,
+          prompt: null,
+          agent_critique: null,
+          pass_kind: "UPLOAD",
+          created_by: data.triggeredBy ?? null,
+        },
+        select: { id: true },
+      });
+      return v.id;
+    });
+
+    await step.run("mark-ready", () =>
+      prismadb.crm_Target_Homepage.update({
+        where: { id: homepage.id },
+        data: {
+          status: "READY",
+          current_version_id: versionId,
+          ...previewUrls(homepage.slug),
+          error: null,
+        },
+      }),
+    );
+    try {
+      await step.run("cleanup-upload", () => deleteHomepageUpload(homepage.slug));
+    } catch (e) {
+      console.error("[GENERATE_HOMEPAGE_CLEANUP]", e);
+    }
+    return { ready: true };
+  } catch (err) {
+    return failRun(step, "upload", homepage.id, err);
+  }
+}
+
 const BACKSTOP_ERROR = "run failed (onFailure backstop)";
 
 /**
@@ -484,7 +610,9 @@ export async function onGenerateHomepageFailure({
   event,
 }: {
   error?: { message?: string };
-  event: { data: { event?: { data?: Partial<GenerateHomepageEventData & RefineHomepageEventData & RevertHomepageEventData> } } };
+  event: { data: { event?: { data?: Partial<
+          GenerateHomepageEventData & RefineHomepageEventData & RevertHomepageEventData & UploadHomepageEventData
+        > } } };
 }): Promise<void> {
   const orig = event?.data?.event?.data ?? {};
   const message = error?.message ? `${BACKSTOP_ERROR}: ${error.message}`.slice(0, 1000) : BACKSTOP_ERROR;
@@ -513,9 +641,10 @@ export const generateHomepage = inngest.createFunction(
       { event: "homepage/target.generate" },
       { event: "homepage/target.refine" },
       { event: "homepage/target.revert" },
+      { event: "homepage/target.upload" },
     ],
     concurrency: [
-      // Serialize generate/refine/revert (or a double-click) per target so
+      // Serialize generate/refine/revert/upload (or a double-click) per target so
       // RUNNING/READY and version writes never interleave. All events carry targetId.
       { key: "event.data.targetId", limit: 1 },
       // Cap total concurrent runs: each launches a headless chromium in the
@@ -534,6 +663,8 @@ export const generateHomepage = inngest.createFunction(
         return refineFlow(s, event.data as RefineHomepageEventData);
       case "homepage/target.revert":
         return revertFlow(s, event.data as RevertHomepageEventData);
+      case "homepage/target.upload":
+        return uploadFlow(s, event.data as UploadHomepageEventData);
       default:
         throw new NonRetriableError(`Unexpected event ${event.name}`);
     }

@@ -6,8 +6,10 @@ jest.mock("@/lib/prisma", () => ({
     crm_Targets: { findUnique: jest.fn() },
     crm_Target_Homepage: { findUnique: jest.fn(), update: jest.fn(), updateMany: jest.fn() },
     crm_Target_Homepage_Version: { create: jest.fn(), findUnique: jest.fn() },
+    crm_Ai_Prompt: { findFirst: jest.fn() },
   },
 }));
+jest.mock("@/lib/homepage/settings", () => ({ getHomepageSettings: jest.fn() }));
 jest.mock("@/lib/api-keys", () => ({ getApiKey: jest.fn() }));
 jest.mock("@/lib/homepage/harvest-source", () => ({ harvestSource: jest.fn() }));
 jest.mock("@/lib/homepage/provider", () => ({ generateHomepage: jest.fn() }));
@@ -18,6 +20,8 @@ jest.mock("@/lib/homepage/storage", () => ({
   putHomepageTmpSource: jest.fn(),
   getHomepageTmpSource: jest.fn(),
   deleteHomepageTmpSource: jest.fn(),
+  getHomepageUpload: jest.fn(),
+  deleteHomepageUpload: jest.fn(),
   homepageShotKey: (slug: string) => `previews/${slug}/screenshot.png`,
 }));
 
@@ -27,12 +31,15 @@ import { getApiKey } from "@/lib/api-keys";
 import { harvestSource } from "@/lib/homepage/harvest-source";
 import { generateHomepage } from "@/lib/homepage/provider";
 import { renderAndScreenshot } from "@/lib/homepage/render";
+import { getHomepageSettings } from "@/lib/homepage/settings";
 import {
   putHomepageHtml,
   putHomepageScreenshot,
   putHomepageTmpSource,
   getHomepageTmpSource,
   deleteHomepageTmpSource,
+  getHomepageUpload,
+  deleteHomepageUpload,
 } from "@/lib/homepage/storage";
 import { NonRetriableError } from "inngest";
 import { AUTO_PASSES, onGenerateHomepageFailure } from "../generate-homepage";
@@ -81,6 +88,12 @@ beforeEach(() => {
   jest.resetAllMocks();
   process.env.NEXT_PUBLIC_PREVIEWS_BASE_URL = "https://previews.example.com";
   (getApiKey as jest.Mock).mockResolvedValue("sk-test");
+  (getHomepageSettings as jest.Mock).mockResolvedValue({
+    model: "claude-opus-5-5",
+    maxTokens: 40000,
+    basePromptId: "bp1",
+  });
+  (prismadb.crm_Ai_Prompt.findFirst as jest.Mock).mockResolvedValue({ body: "BASE_BODY" });
   (prismadb.crm_Targets.findUnique as jest.Mock).mockResolvedValue(target);
   (prismadb.crm_Target_Homepage.findUnique as jest.Mock).mockResolvedValue(homepage);
   (harvestSource as jest.Mock).mockResolvedValue({
@@ -124,6 +137,7 @@ describe("generate-homepage function config", () => {
       "homepage/target.generate",
       "homepage/target.refine",
       "homepage/target.revert",
+      "homepage/target.upload",
     ]);
     expect(config.retries).toBeLessThanOrEqual(2);
   });
@@ -233,6 +247,45 @@ describe("generate event", () => {
     expect(statuses()).not.toContain("FAILED");
     // transient source screenshot cleaned up after the run
     expect(deleteHomepageTmpSource).toHaveBeenCalledWith("acme-plumbing");
+  });
+
+  it("uses the admin-resolved model/maxTokens/base prompt on every pass", async () => {
+    await handler({ event: generateEvent, step });
+    expect(prismadb.crm_Ai_Prompt.findFirst).toHaveBeenCalledWith({
+      where: { id: "bp1", kind: "HOMEPAGE_BASE", deletedAt: null },
+      select: { body: true },
+    });
+    const calls = (generateHomepage as jest.Mock).mock.calls;
+    expect(calls).toHaveLength(1 + AUTO_PASSES);
+    for (const [arg] of calls) {
+      expect(arg.model).toBe("claude-opus-5-5");
+      expect(arg.maxTokens).toBe(40000);
+      expect(arg.system).toContain("BASE_BODY");
+      expect(arg.system).toContain("Output contract");
+    }
+  });
+
+  it("no base prompt id: skips the lookup and falls back to the default base", async () => {
+    (getHomepageSettings as jest.Mock).mockResolvedValue({
+      model: "claude-sonnet-5-5",
+      maxTokens: 16000,
+      basePromptId: null,
+    });
+    await handler({ event: generateEvent, step });
+    expect(prismadb.crm_Ai_Prompt.findFirst).not.toHaveBeenCalled();
+    const arg = (generateHomepage as jest.Mock).mock.calls[0][0];
+    expect(arg.model).toBe("claude-sonnet-5-5");
+    expect(arg.maxTokens).toBe(16000);
+    expect(arg.system).toContain("senior web designer");
+    expect(arg.system).toContain("Output contract");
+  });
+
+  it("base prompt missing/deleted: falls back to the default base", async () => {
+    (prismadb.crm_Ai_Prompt.findFirst as jest.Mock).mockResolvedValue(null);
+    await handler({ event: generateEvent, step });
+    const arg = (generateHomepage as jest.Mock).mock.calls[0][0];
+    expect(arg.system).not.toContain("BASE_BODY");
+    expect(arg.system).toContain("senior web designer");
   });
 
   it("keeps base64 image data out of every persisted step return value", async () => {
@@ -406,6 +459,14 @@ describe("refine event", () => {
     expect((generateHomepage as jest.Mock).mock.calls[0][0].refinedScreenshotB64).toBeUndefined();
   });
 
+  it("uses the admin-resolved model/maxTokens/base prompt", async () => {
+    await handler({ event: refineEvent, step });
+    const arg = (generateHomepage as jest.Mock).mock.calls[0][0];
+    expect(arg.model).toBe("claude-opus-5-5");
+    expect(arg.maxTokens).toBe(40000);
+    expect(arg.system).toContain("BASE_BODY");
+  });
+
   it("loads the homepage with the soft-delete filter", async () => {
     await handler({ event: refineEvent, step });
     expect(prismadb.crm_Target_Homepage.findUnique).toHaveBeenCalledWith(
@@ -427,6 +488,24 @@ describe("refine event", () => {
     (generateHomepage as jest.Mock).mockReset().mockRejectedValue(new Error("boom"));
     await runExpectingFailure({ event: refineEvent, step });
     expect(homepageUpdate.mock.calls.at(-1)![0].data.status).toBe("FAILED");
+  });
+
+  it("run-time re-check: an UPLOAD current version is never AI-refined (queued-refine vs upload race)", async () => {
+    // The trigger gated on pass_kind, but a queued refine can run AFTER an upload
+    // repointed current_version_id to an UPLOAD version. The job must not trust it.
+    (prismadb.crm_Target_Homepage_Version.findUnique as jest.Mock).mockResolvedValue({
+      id: "verCur",
+      html: "<html>uploaded</html>",
+      pass_kind: "UPLOAD",
+    });
+    await runExpectingFailure({ event: refineEvent, step });
+    expect(generateHomepage).not.toHaveBeenCalled();
+    expect(versionCreate).not.toHaveBeenCalled();
+    const last = homepageUpdate.mock.calls.at(-1)![0];
+    expect(last.data.status).toBe("FAILED");
+    expect(last.data.error).toBe(
+      "This page was uploaded; AI refine isn't available. Regenerate to use AI.",
+    );
   });
 });
 
@@ -526,6 +605,119 @@ describe("revert event", () => {
     homepageUpdateMany.mockResolvedValue({ count: 1 });
     await onGenerateHomepageFailure({
       event: { data: { function_id: "generate-homepage", run_id: "r1", event: revertEvent } } as never,
+    });
+    expect(homepageUpdateMany).toHaveBeenCalledWith({
+      where: { id: "h1", status: { in: ["PENDING", "RUNNING"] } },
+      data: { status: "FAILED", error: expect.stringContaining("onFailure backstop") },
+    });
+  });
+});
+
+describe("upload event", () => {
+  const uploadEvent = {
+    name: "homepage/target.upload",
+    data: { homepageId: "h1", targetId: "t1", slug: "acme-plumbing", triggeredBy: "u1" },
+  };
+  const UPLOADED = "<html>uploaded</html>";
+  const hp = { ...homepage, current_version_id: "ver2", logo_data_uri: null };
+
+  beforeEach(() => {
+    (prismadb.crm_Target_Homepage.findUnique as jest.Mock).mockResolvedValue(hp);
+    (getHomepageUpload as jest.Mock).mockResolvedValue(UPLOADED);
+    (deleteHomepageUpload as jest.Mock).mockResolvedValue(undefined);
+  });
+
+  it("renders the uploaded html, publishes, records an UPLOAD version, repoints + READY, cleans up", async () => {
+    const out = await handler({ event: uploadEvent, step });
+    expect(out).toEqual({ ready: true });
+    expect(getHomepageUpload).toHaveBeenCalledWith("acme-plumbing");
+    // Same allowlisted render path as every other flow.
+    expect(renderAndScreenshot).toHaveBeenCalledWith(UPLOADED);
+    expect(putHomepageHtml).toHaveBeenCalledWith("acme-plumbing", UPLOADED);
+    expect(putHomepageScreenshot).toHaveBeenCalledWith("acme-plumbing", Buffer.from("PNGDATA"));
+    expect(versionCreate).toHaveBeenCalledWith({
+      data: {
+        homepage_id: "h1",
+        html: UPLOADED,
+        prompt: null,
+        agent_critique: null,
+        pass_kind: "UPLOAD",
+        created_by: "u1",
+      },
+      select: { id: true },
+    });
+    expect(statuses()).toEqual(["RUNNING", "READY"]);
+    expect(homepageUpdate).toHaveBeenLastCalledWith({
+      where: { id: "h1" },
+      data: {
+        status: "READY",
+        current_version_id: "ver1",
+        preview_url: "https://previews.example.com/p/acme-plumbing",
+        screenshot_url: "https://previews.example.com/p/acme-plumbing/screenshot.png",
+        error: null,
+      },
+    });
+    expect(deleteHomepageUpload).toHaveBeenCalledWith("acme-plumbing");
+    expect(generateHomepage).not.toHaveBeenCalled();
+  });
+
+  it("keeps base64 data and the uploaded html out of every step return value", async () => {
+    const outputs: unknown[] = [];
+    const recording = {
+      run: async (_n: string, f: () => unknown) => {
+        const out = await f();
+        outputs.push(out);
+        return out;
+      },
+    };
+    await handler({ event: uploadEvent, step: recording });
+    const serialized = JSON.stringify(outputs);
+    expect(serialized).not.toContain(PNG_B64);
+    expect(serialized).not.toContain("uploaded");
+    expect(outputs).toContain("ver1");
+  });
+
+  it("no upload blob: FAILED via failRun, nothing rendered or published", async () => {
+    (getHomepageUpload as jest.Mock).mockResolvedValue(null);
+    await runExpectingFailure({ event: uploadEvent, step });
+    expect(renderAndScreenshot).not.toHaveBeenCalled();
+    expect(putHomepageHtml).not.toHaveBeenCalled();
+    expect(versionCreate).not.toHaveBeenCalled();
+    expect(statuses()).toEqual(["RUNNING", "FAILED"]);
+  });
+
+  it("render error: FAILED, live keys and versions untouched, upload blob kept for retry", async () => {
+    (renderAndScreenshot as jest.Mock).mockRejectedValue(new Error("chromium crashed"));
+    await runExpectingFailure({ event: uploadEvent, step });
+    expect(putHomepageHtml).not.toHaveBeenCalled();
+    expect(versionCreate).not.toHaveBeenCalled();
+    expect(statuses()).toEqual(["RUNNING", "FAILED"]);
+  });
+
+  it("cleanup failure is best-effort: still READY", async () => {
+    (deleteHomepageUpload as jest.Mock).mockRejectedValue(new Error("r2 down"));
+    await expect(handler({ event: uploadEvent, step })).resolves.toEqual({ ready: true });
+    expect(statuses()).toEqual(["RUNNING", "READY"]);
+  });
+
+  it("loads the homepage with the soft-delete filter", async () => {
+    await handler({ event: uploadEvent, step });
+    expect(prismadb.crm_Target_Homepage.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "h1", deletedAt: null } }),
+    );
+  });
+
+  it("missing homepage row: skipped, nothing read or rendered", async () => {
+    (prismadb.crm_Target_Homepage.findUnique as jest.Mock).mockResolvedValue(null);
+    await expect(handler({ event: uploadEvent, step })).resolves.toEqual({ skipped: "no homepage row" });
+    expect(getHomepageUpload).not.toHaveBeenCalled();
+    expect(renderAndScreenshot).not.toHaveBeenCalled();
+  });
+
+  it("onFailure backstop marks the homepage FAILED for an upload event (carries homepageId)", async () => {
+    homepageUpdateMany.mockResolvedValue({ count: 1 });
+    await onGenerateHomepageFailure({
+      event: { data: { function_id: "generate-homepage", run_id: "r1", event: uploadEvent } } as never,
     });
     expect(homepageUpdateMany).toHaveBeenCalledWith({
       where: { id: "h1", status: { in: ["PENDING", "RUNNING"] } },

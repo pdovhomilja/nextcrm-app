@@ -482,3 +482,19 @@ email render path depends on them).
 ### fix/legacy-redirect-api-paths — graceful AI-template errors (OpenAI 429 no longer crashes the page)
 - `app/[locale]/(routes)/campaigns/templates/new/components/TemplateEditorForm.tsx` — insert/repoint (~+5/−4): swapped the `generateTemplate` import for the fork-owned `generateTemplateSafe` wrapper and branch on its `{data}|{error}` result. The upstream **`generate-template.ts` action and its tests are UNTOUCHED** (additive-first: the fix lives in the new fork-owned `actions/campaigns/templates/generate-template-safe.ts`). Root cause: the upstream action THROWS on failure (OpenAI 429/401, timeout, bad JSON), and Next.js redacts thrown server-action errors in production → the client saw the generic "Server Components render … digest" crash instead of a useful message. Risk Low (single thin caller change; on conflict keep the wrapper call).
 - **Re-verify after any upstream merge:** the form still calls `generateTemplateSafe` and renders `result.error`; then `pnpm exec jest actions/campaigns/templates`.
+
+### feat/homepage-premium-config — homepage prompt/pass enum values
+- `prisma/schema.prisma` — insert-only (+2 lines): added `HOMEPAGE_BASE` to enum `crm_Ai_Prompt_Kind` and `UPLOAD` to enum `crm_Homepage_Pass_Kind`. No other schema lines touched (no `prisma format`). Additive; migrations `20260930130000_homepage_base_prompt_kind` and `20260930130100_homepage_upload_pass_kind` (`ALTER TYPE ... ADD VALUE IF NOT EXISTS`). Risk Low (on conflict keep both sides; enum value lists are the usual conflict spot).
+- **Re-verify after any upstream merge:** both enums still contain the added values, then `pnpm exec prisma generate && pnpm exec tsc --noEmit`.
+
+### feat/homepage-premium-config — admin settings audit entity type
+- `lib/audit-log.ts` — insert-only (+1 line): added `"setting"` to the `AuditEntityType` union (beside our `"prompt"` fork line) so `actions/admin/homepage-settings.ts` can audit settings changes. `crm_AuditLog.entityType` is a plain String column, so no migration. Risk Low (on conflict keep both fork lines in the union).
+- **Re-verify after any upstream merge:** `AuditEntityType` still includes `"setting"`, then `pnpm exec tsc --noEmit`.
+
+### feat/homepage-premium-config — admin sidebar nav entry
+- `app/[locale]/(routes)/admin/_components/AdminSidebarNav.tsx` — insert-only (+1 line): added a `{ label: "Homepage Generation", href: "/admin/homepage-settings", icon: SlidersHorizontal }` entry to `navItems` (after Calendar Settings; no new import). Page/form live in the new fork-owned `admin/homepage-settings/`. Risk Low (on conflict keep both sides; the `navItems` array is the usual conflict spot).
+- **Re-verify after any upstream merge:** the `homepage-settings` entry is still in `navItems`, then `pnpm exec tsc --noEmit`.
+
+### feat/homepage-premium-config — seed default HOMEPAGE_BASE prompt
+- `prisma/seeds/seed.ts` — insert-only (+4 lines): one `import { seedHomepageBasePrompt } from "./homepage-base-prompt";` and one `await seedHomepageBasePrompt(prisma);` call (after `seedInvoices`, outside the demo-data gate). Logic/body live in the new fork-owned `prisma/seeds/homepage-base-prompt.ts` (fixed id `00000000-0000-4000-8000-00000000ba5e`, upsert); hosted envs get the row via the new migration `20260930130200_seed_homepage_base_prompt` (`ON CONFLICT DO NOTHING`). Risk Low (on conflict keep both lines; the import block and the tail of `main()` are the usual conflict spots).
+- **Re-verify after any upstream merge:** the import and the `seedHomepageBasePrompt(prisma)` call are still present in `seed.ts`, then `pnpm exec tsc --noEmit`.
