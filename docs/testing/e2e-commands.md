@@ -55,6 +55,16 @@ default `4010`) and `playwright.config.ts` points `ANTHROPIC_BASE_URL` /
 - It seeds/cleans its own rows via `pg` (target, template, prompt); no manual data needed
   beyond the seeded admin.
 
+## Homepage generation spec (seeded, no chromium / Anthropic)
+
+`tests/e2e/target-homepage.spec.ts` does not run the generate job (headless chromium is
+Linux-serverless only; Anthropic is covered by Jest). It seeds a READY `crm_Target_Homepage`
++ two versions via `pg`, and — **only when an S3 endpoint is reachable** (local SeaweedFS
+`:9000`, `pnpm inngest:up`) — the private-R2 objects, then asserts the drawer and the public
+`/p/<slug>` route. CI's `e2e` job has no S3 service, so the storage-backed tests probe in
+`beforeAll` and skip there; the drawer/version and generic-404 tests always run. Chromium
+project only.
+
 ## Run against the deployed QA
 
 The 3-tier Vercel pipeline (feature → main [no deploy] → qa → production) gives a

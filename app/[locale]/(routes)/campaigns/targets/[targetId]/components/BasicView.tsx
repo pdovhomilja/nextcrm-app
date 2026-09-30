@@ -63,22 +63,53 @@ export async function BasicView({ data }: TargetBasicViewProps) {
   const location = [data.city, data.country].filter(Boolean).join(", ");
 
   // AI-email menu data is only needed for APPROVED targets (the menu item is
-  // disabled otherwise), so skip the three queries for everything else.
+  // disabled otherwise), so skip the four queries for everything else.
   let templates: { id: string; name: string }[] = [];
   let prompts: { id: string; name: string; body: string }[] = [];
+  let homepagePrompts: { id: string; name: string; body: string }[] = [];
   let hasHomepage = false;
+  let homepageInfo: {
+    slug: string;
+    status: "PENDING" | "RUNNING" | "READY" | "FAILED";
+    preview_url: string | null;
+    screenshot_url: string | null;
+  } | null = null;
   if (data.triage_status === "APPROVED") {
-    const [templatesRaw, promptsRaw, homepage] = await Promise.all([
-      listTemplateOptions(),
-      listPrompts({ kind: "EMAIL" }),
-      prismadb.crm_Target_Homepage.findFirst({
-        where: { targetId: data.id, deletedAt: null },
-        select: { status: true },
-      }),
-    ]);
+    const [templatesRaw, promptsRaw, homepagePromptsRaw, homepage] =
+      await Promise.all([
+        listTemplateOptions(),
+        listPrompts({ kind: "EMAIL" }),
+        listPrompts({ kind: "HOMEPAGE" }),
+        prismadb.crm_Target_Homepage.findFirst({
+          where: { targetId: data.id, deletedAt: null },
+          select: {
+            slug: true,
+            status: true,
+            preview_url: true,
+            screenshot_url: true,
+            current_version_id: true,
+          },
+        }),
+      ]);
     templates = templatesRaw;
     prompts = promptsRaw.map((p) => ({ id: p.id, name: p.name, body: p.body }));
-    hasHomepage = homepage?.status === "READY";
+    homepagePrompts = homepagePromptsRaw.map((p) => ({
+      id: p.id,
+      name: p.name,
+      body: p.body,
+    }));
+    // A page is "available" to the email drawer once it has a published version,
+    // regardless of a later RUNNING refine or a FAILED refine — matching the /p/
+    // serving gate (current_version_id), not the transient job status.
+    hasHomepage = !!homepage?.current_version_id;
+    homepageInfo = homepage
+      ? {
+          slug: homepage.slug,
+          status: homepage.status,
+          preview_url: homepage.preview_url,
+          screenshot_url: homepage.screenshot_url,
+        }
+      : null;
   }
 
   return (
@@ -107,6 +138,10 @@ export async function BasicView({ data }: TargetBasicViewProps) {
                 templates={templates}
                 prompts={prompts}
                 hasHomepage={hasHomepage}
+                company={data.company ?? ""}
+                companyWebsite={data.company_website ?? null}
+                homepagePrompts={homepagePrompts}
+                homepage={homepageInfo}
               />
               <ConvertToDealButton targetId={data.id} />
             </div>

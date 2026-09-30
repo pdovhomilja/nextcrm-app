@@ -34,9 +34,12 @@ in this fork's code** (kept for merge-friendliness).
 > `ANTHROPIC_API_KEY` (or the system/personal DB key), and the one-off send reuses
 > `RESEND_CAMPAIGNS_API_KEY` (→ `RESEND_API_KEY`), `RESEND_FROM_EMAIL`, `NEXTAUTH_URL`
 > (unsubscribe link) and the `EMAIL_REDIRECT_TO` guard. Nothing is newly *required*, so
-> no Vercel scope needs updating for this phase. The `previews.radeengineering.com`
-> homepage build (a later phase) is where its own vars will arrive. The E2E-only
+> no Vercel scope needs updating for this phase. The E2E-only
 > base-URL overrides are test seams listed under *Not app config* below, not app config.
+>
+> **Homepage generation phase — ONE optional var:** `NEXT_PUBLIC_PREVIEWS_BASE_URL`
+> (optional, fail-closed; nothing newly *required*). Generation reuses `ANTHROPIC_API_KEY`
+> (or the DB key) and the existing `MINIO_*` R2 bucket (private `previews/` prefix).
 
 <!-- env-doc:begin -->
 <!-- The env-doc guard parses every `| `NAME` |` row between these markers and
@@ -122,7 +125,8 @@ in this fork's code** (kept for merge-friendliness).
 | `NEXTCRM_TOKEN` | All | Route | Bearer token guarding the public create-lead endpoints (route 500s if unset when used). | random secret |
 | `WEB_LEAD_ASSIGNEE_EMAIL` | All | No | User (by email) that public web-form leads are assigned to; falls back to `null` assignee if unmatched. Defaults to `shaun@radeengineering.com`. | `shaun@radeengineering.com` |
 | `NEXTAUTH_URL` | All | No | Base URL for campaign unsubscribe links. | `https://crm.radeengineering.com` |
-| `MAIL_ALLOW_PRIVATE_HOSTS` | All | No | SSRF gate (`lib/net/host-guard.ts`), default off. | unset, or `true` (dev only) |
+| `MAIL_ALLOW_PRIVATE_HOSTS` | All | No | SSRF gate (`lib/net/host-guard.ts`), default off. **Never set in Preview/Production**: it would weaken the homepage source-harvest SSRF guard (a hosted-env fail-safe already blocks harvest when it is set there, but do not rely on that). | unset, or `true` (dev only) |
+| `NEXT_PUBLIC_PREVIEWS_BASE_URL` | Preview, Prod | No | Public base URL of the prospect-preview host (`/p/<slug>` is served under it). **Optional / fail-closed:** the homepage generate job (`inngest/functions/generate-homepage.ts`) builds `preview_url`/`screenshot_url` from it and leaves them `null` if unset (the page is still stored + `READY`; the drawer falls back to the relative `/p/<slug>` on the CRM host). **No new bucket/creds:** previews reuse the existing `MINIO_*` R2 bucket under a private `previews/` prefix, served only through the Next `/p/` route. | `https://previews.radeengineering.com` |
 | `ROSSUM_USERNAME` | — | Legacy | Not read in this fork. | — |
 | `ROSSUM_PASSWORD` | — | Legacy | Not read in this fork. | — |
 | `CRON_SECRET` | — | Legacy | Not read in this fork. | — |
@@ -154,8 +158,9 @@ sandbox-runtime values — not application configuration — so they are exclude
 | `NODE_ENV`, `CI`, `VERCEL*`, `NEXT_RUNTIME` | many | Platform/framework-injected. |
 | `SEED_DEMO_DATA`, `SEED_CONTACT_EMAIL`, `TEST_USER_EMAIL` | `prisma/seeds/`, tests | Seed/test only. |
 | `DATABASE_URL_MONGO`, `DATABASE_URL_POSTGRES` | `scripts/migrate-mongo-to-postgres.ts` | One-off migration script. |
-| `ANTHROPIC_BASE_URL` | `actions/crm/targets/generate-target-email.ts` | Optional **test seam** (same name the Anthropic SDKs use): overrides the API origin. Set only by `playwright.config.ts` to a local mock for `tests/e2e/target-ai-email.spec.ts`; unset in every deployed scope → the real API. |
+| `ANTHROPIC_BASE_URL` | `actions/crm/targets/generate-target-email.ts`, `lib/homepage/provider.ts` | Optional **test seam** (same name the Anthropic SDKs use): overrides the API origin. Set only by `playwright.config.ts` to a local mock for `tests/e2e/target-ai-email.spec.ts`; unset in every deployed scope → the real API. |
 | `RESEND_BASE_URL`, `E2E_MOCK_PORT` | `playwright.config.ts` (`RESEND_BASE_URL` is read by the `resend` SDK itself) | E2E only: point Resend at the same local mock so a test run can never send real email; `E2E_MOCK_PORT` (default `4010`) is the mock's port. |
+| `CHROMIUM_EXECUTABLE_PATH`, `AWS_LAMBDA_FUNCTION_NAME` | `lib/homepage/render.ts`, `lib/homepage/harvest-source.ts` | Homepage rendering only. `AWS_LAMBDA_FUNCTION_NAME` (with `VERCEL`) is platform-injected and selects the bundled `@sparticuz/chromium` (serverless Linux). `CHROMIUM_EXECUTABLE_PATH` is an optional **local-dev seam** pointing at an installed Chrome/Chromium so generation can run off-Linux; never set in a deployed scope. |
 | `COMPANY_NAME`, `COMPANY_WEBSITE`, `TARGET_EMAIL`, `TARGET_NAME`, `KNOWN_DOMAIN` | `lib/enrichment/e2b/agent-script.ts` | Injected **inside** the E2B sandbox at runtime, not app config. |
 
 ## Production go-live checklist (Vercel **Production** scope)

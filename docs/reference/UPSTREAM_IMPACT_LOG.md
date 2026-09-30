@@ -20,6 +20,37 @@ resolve by hand. Re-run the entry's named tests to confirm the wiring survived.
 
 ---
 
+## feat/target-homepage-generation — homepage version history (Task 1: schema)  (PR: TBD)
+
+Adds a version-history table and a current-version pointer for generated target
+homepages. **1 upstream-owned file** touched (`prisma/schema.prisma`); the migration
+`prisma/migrations/20260930120000_homepage_versions/` is new (fork-owned, zero merge risk).
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `prisma/schema.prisma` | +~30/−0 | **insert-only** | New enum `crm_Homepage_Pass_Kind` + new model `crm_Target_Homepage_Version` appended at end of file; three fields (`current_version_id`, `source_url`, `versions`) inserted after `error` inside the fork-owned `crm_Target_Homepage` model. No upstream model/line rewritten. | Low (additive; on conflict keep both sides — upstream's additions plus ours) |
+
+**Re-verify after any upstream merge:** `pnpm exec prisma validate`; the enum, the
+`crm_Target_Homepage_Version` model and the three `crm_Target_Homepage` fields are still present.
+
+---
+
+## feat/target-homepage-generation — serverless chromium deps + config (Task 2)  (PR: TBD)
+
+Adds headless chromium for the homepage render loop. **2 upstream-owned files** touched
+(`package.json`, `next.config.js`); `pnpm-lock.yaml` is regenerated. `vercel.json` and
+`scripts/smoke/homepage-render-smoke.cjs` are fork-owned (zero merge risk).
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `package.json` | +2/−0 | **insert-only** | Two `dependencies`: `@sparticuz/chromium` (147.0.2) and `playwright-core` (1.58.2, matches installed `@playwright/test`). | Low (on conflict keep both sides, re-run `pnpm install` to regenerate the lockfile) |
+| `next.config.js` | +1/−1 | **one-line rewrite** (array extension) | `serverExternalPackages: ["pdf-parse", "pdfjs-dist"]` extended with `"@sparticuz/chromium", "playwright-core"` + trailing `// fork:` comment. Existing entries untouched. | Low (if upstream edits this array, union the entries) |
+
+**Re-verify after any upstream merge:** both packages still in `serverExternalPackages` and
+`dependencies`; `node scripts/smoke/homepage-render-smoke.cjs` still writes a non-zero PNG.
+
+---
+
 ## fix/runtime-transaction-pooler — runtime uses the transaction pooler  (PR: TBD)
 
 Routes the serverless runtime Prisma pool through an optional
@@ -415,3 +446,31 @@ email render path depends on them).
 
 **Re-verify after any upstream merge:** `"prompt"` is still in `AuditEntityType`; then
 `pnpm exec tsc --noEmit` (prompt actions + MCP prompt tools call `writeAuditLog({ entityType: "prompt" })`).
+
+### feat/target-homepage-generation — Campaigns sidebar "Prompts" link
+- `app/[locale]/(routes)/components/app-sidebar.tsx` — insert-only (+1): `prompts: "Prompts"` localization in the Campaigns block. Risk Low.
+- `app/[locale]/(routes)/components/menu-items/Campaigns.tsx` — insert-only (+2): `prompts` prop + `/campaigns/prompts` nav item. Risk Low.
+- Note: both already fork-diverged (commit 87443b53 added the Campaigns nav); this appends one nav entry.
+
+### feat/target-homepage-generation — register generate-homepage Inngest function
+- `app/api/inngest/route.ts` — insert-only (+2): `import { generateHomepage } from "@/inngest/functions/generate-homepage";` (after the last import) and `generateHomepage,` appended as the last entry of the `functions` array. Risk Low (on conflict keep both sides — upstream's functions plus ours; the array tail is the usual conflict spot).
+- **Re-verify after any upstream merge:** `generateHomepage` is still imported and present in the `functions` array, or the homepage generate/refine events are never handled.
+
+### feat/target-homepage-generation — public /p/ pass-through in proxy.ts
+- `proxy.ts` — insert-only (+5): an early `if (path.startsWith("/p/")) return NextResponse.next();` block (with a `// fork:` comment) directly after the existing `/api/inngest` pass-through. Without it the root `/p/[slug]` path (no dot, so it hits the intl matcher) would be forced through the sign-in redirect. Scoped to `/p/` only; no other path's auth is changed. Risk Low (on conflict keep both sides; the `/api/inngest` block is the usual neighbour).
+- **Re-verify after any upstream merge:** the `/p/` early-return is still present and precedes the auth/intl logic, or prospect preview links redirect to sign-in. Then `pnpm exec jest app/p`.
+
+### feat/target-homepage-generation — BasicView: HOMEPAGE prompts + homepage record (extends the `feat/target-ai-outreach` BasicView entry above)
+- `app/[locale]/(routes)/campaigns/targets/[targetId]/components/BasicView.tsx` — insert/extend (~+40/−8), no upstream logic rewritten. Inside the existing **APPROVED-gated** `Promise.all` (now 4 loads, was 3): added `listPrompts({ kind: "HOMEPAGE" })` and widened the `crm_Target_Homepage` select from `{ status }` to `{ slug, status, preview_url, screenshot_url }`. New locals `homepagePrompts` / `homepageInfo` (plain-serializable) and 4 new props on `<TargetAiMenu>` (`company`, `companyWebsite`, `homepagePrompts`, `homepage`). Non-APPROVED targets still run zero extra queries. Risk Low–Med (same action-cluster/`Promise.all` conflict surface as the original entry; on conflict keep upstream's JSX plus our props).
+- **Re-verify after any upstream merge:** the APPROVED gate still wraps all four loads and `TargetAiMenu` still receives `homepagePrompts` + `homepage`, or the Generate-homepage drawer opens with no prompts / stale initial state. Then `pnpm exec tsc --noEmit`.
+
+### feat/target-homepage-generation — register homepage MCP tools
+- `lib/mcp/tools/index.ts` — insert-only (+3): `export { crmHomepageTools } from "./crm-homepage";`, the matching `import`, and `...crmHomepageTools,` in `allTools` (each directly after the `crmAiPromptTools` line). Real logic lives in the new fork-owned `lib/mcp/tools/crm-homepage.ts` (`crm_generate_homepage`, `crm_get_homepage_status`). Risk Low (on conflict keep both sides; the export/import/spread lists are the usual conflict spot).
+- **Re-verify after any upstream merge:** `crmHomepageTools` is still exported, imported and spread into `allTools`, or the homepage MCP tools disappear. Then `pnpm exec jest lib/mcp`.
+
+### feat/target-homepage-generation — deep-review fixes (upstream-owned touches)
+- `next.config.js` — insert-only (+7): new top-level `outputFileTracingIncludes` key forcing `@sparticuz/chromium/bin/**` into the `/api/inngest` function bundle (its brotli binary is loaded at runtime and isn't traced from imports; without it the serverless chromium launch fails while CI stays green). No existing config rewritten. Risk Low (on conflict keep both sides; sits beside our existing `serverExternalPackages` fork line).
+- `proxy.ts` — extends the `/p/` entry above (insert-only, ~+12/−1): the `/p/` pass-through now host-gates to `NEXT_PUBLIC_PREVIEWS_BASE_URL`'s host (returns 404 for `/p/` on any other non-local host) so LLM-generated previews aren't also reachable under the authenticated CRM domain; unset env still allows `/p/` everywhere (local dev). Risk Low.
+- `app/[locale]/(routes)/campaigns/targets/[targetId]/components/BasicView.tsx` — extends the BasicView entry above (~+3/−1): the APPROVED-gated `crm_Target_Homepage` select adds `current_version_id`, and `hasHomepage` now derives from `!!current_version_id` (published-version gate) instead of `status === "READY"`, matching the `/p/` serving gate. Risk Low.
+- `prisma/schema.prisma` — fork-added-field cleanup on this branch's own additions: dropped the never-read `crm_Target_Homepage.source_url` and `crm_Target_Homepage_Version.screenshot_key` columns, ADDED `crm_Target_Homepage.logo_data_uri` (read column — the harvested logo inlined as a data: URI, reused by refine/revert), and switched the version index to `@@index([homepage_id, created_at])`. The unshipped migration `20260930120000_homepage_versions` was edited in place to match (branch not deployed). **This supersedes the earlier `prisma/schema.prisma` row above** (which still lists `source_url` as an added field — no longer accurate). Risk Low (touches only fork-added rows in the models this branch introduced/extended).
+- **Re-verify after any upstream merge:** the chromium file-tracing key survives, the `/p/` host gate precedes the auth/intl logic, `hasHomepage` still gates on `current_version_id`, and the two dropped columns stay dropped. Then `pnpm exec tsc --noEmit && pnpm exec jest inngest actions/crm/homepage lib/homepage app/p`.

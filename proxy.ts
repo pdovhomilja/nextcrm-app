@@ -2,6 +2,7 @@ import createMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
 import { getSessionCookie } from "better-auth/cookies";
 import { NextRequest, NextResponse } from "next/server";
+import { isPreviewHostAllowed, isPreviewsBaseMalformed } from "./lib/homepage/preview-host";
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -20,6 +21,23 @@ export async function proxy(req: NextRequest) {
 
   // Inngest webhook — pass through, Inngest handles its own auth via signing key
   if (path.startsWith("/api/inngest")) {
+    return NextResponse.next();
+  }
+
+  // fork: public prospect homepage previews (/p/[slug]) — no auth, no intl; the slug is the capability.
+  // When a dedicated previews host is configured (NEXT_PUBLIC_PREVIEWS_BASE_URL),
+  // serve previews ONLY on that host so LLM-generated content can't also be reached
+  // under the authenticated CRM domain. Unset (local dev) → allow everywhere so the
+  // drawer's relative /p/ fallback works.
+  if (path.startsWith("/p/")) {
+    const previewsBase = process.env.NEXT_PUBLIC_PREVIEWS_BASE_URL;
+    if (isPreviewsBaseMalformed(previewsBase)) {
+      // Fail-open on the convenience gate (never break previews), but surface it:
+      // a malformed previews base means the isolation gate is silently disabled.
+      console.warn("[PREVIEW_HOST_GATE] NEXT_PUBLIC_PREVIEWS_BASE_URL is malformed; /p/ host gate disabled");
+    } else if (!isPreviewHostAllowed(req.headers.get("host"), previewsBase)) {
+      return new NextResponse(null, { status: 404 });
+    }
     return NextResponse.next();
   }
 

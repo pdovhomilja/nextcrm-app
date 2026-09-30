@@ -31,6 +31,7 @@ import { calendarOutboundSync } from "@/inngest/functions/calendar/outbound-sync
 import { enrichDocument } from "@/inngest/functions/documents/enrich-document";
 import { generateDocumentThumbnail } from "@/inngest/functions/documents/generate-thumbnail";
 import { syncExchangeRates } from "@/inngest/functions/ecb/sync-exchange-rates";
+import { generateHomepage } from "@/inngest/functions/generate-homepage";
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
@@ -66,5 +67,6 @@ export const { GET, POST, PUT } = serve({
     enrichDocument,
     generateDocumentThumbnail,
     syncExchangeRates,
+    generateHomepage,
   ],
 });

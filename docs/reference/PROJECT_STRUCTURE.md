@@ -60,10 +60,10 @@ app/[locale]/(routes)/campaigns/
   prompts/                      AI prompt library page (create / edit / soft-delete
                                 EMAIL + HOMEPAGE prompts, ORG or personal scope);
                                 page.tsx + _components/{PromptList,PromptDialog}.tsx.
-                                URL-only for now (no sidebar entry).
+                                Linked from the Campaigns sidebar group.
   targets/[targetId]/components/
     TargetAiMenu.tsx            header "AI" dropdown (Enrich / Generate email /
-                                Generate homepage [disabled, later phase])
+                                Generate homepage)
     GenerateEmailDrawer.tsx     prompt + template pick -> generate -> preview -> send
 app/api/crm/targets/unsubscribe/   public GET one-click opt-out (token -> do_not_email)
 actions/crm/prompts/            prompt-library server actions (list, create, update,
@@ -84,6 +84,52 @@ prisma/migrations/20260929120000_target_ai_outreach/   crm_Ai_Prompt, crm_Target
                                         crm_Target_Homepage (+ enums)
 tests/e2e/target-ai-email.spec.ts       happy path + prompt library; mocks Anthropic/Resend
                                         with a local server (see e2e-commands.md)
+```
+
+## Target homepage generation (fork-owned)
+
+AI-generated prospect homepage mockup from an **approved** target: harvest the prospect's
+current site (SSRF-guarded), draft + self-critique with Claude vision (headless chromium
+screenshots), publish to a private R2 prefix, serve at a public `/p/<slug>`, and refine /
+revert through a version history. Upstream-owned touches are limited to
+`schema.prisma`, `package.json`, `next.config.js`, `proxy.ts`, `app/api/inngest/route.ts`,
+`lib/mcp/tools/index.ts`, `BasicView.tsx` and two sidebar files — see `UPSTREAM_IMPACT_LOG.md`.
+
+```text
+lib/homepage/
+  storage.ts                    private-R2 put/get under previews/<slug>/ (index.html, screenshot.png)
+  render.ts                     renderAndScreenshot(html) -> PNG via @sparticuz/chromium + playwright-core
+                                (LAZY-imported; never at module scope). BLOCKS all network egress during
+                                render (self-contained HTML only). Also exports launchBrowser / isServerless
+                                (shared by harvest-source.ts)
+  harvest-source.ts             harvestSource(url): SSRF-guarded (lib/net/host-guard.ts) fetch +
+                                screenshot + brand extraction; inlines the logo as a data: URI
+  provider.ts                   Anthropic vision provider: generateHomepage({brief,prompt,previousHtml?,...})
+  queue-generation.ts           shared trigger: row upsert + published-slug guard + stale-aware in-flight
+                                guard + event send + audit (used by the web route AND the MCP tool);
+                                MAX_HOMEPAGE_PROMPT_CHARS, STALE_RUN_MS, isHomepageRunActive()
+  slug.ts                       ensureUniqueSlug (prisma) + re-exports the shape helpers
+  slug-shape.ts                 prisma-free slugify / isValidSlug (shared by server AND client components)
+  preview-host.ts               pure /p/ host-gate helpers (isPreviewHostAllowed) used by proxy.ts
+  serve.ts                      shared public-serve helpers: generic 404, cache headers,
+                                CSP `sandbox allow-scripts`, loadPublished(slug)
+lib/ai/anthropic-json.ts        tolerant JSON extraction from fenced/preambled model output
+inngest/functions/generate-homepage.ts   homepage/target.{generate,refine,revert} job: harvest (+ logo
+                                inline) -> draft -> N auto critique passes (+ HUMAN refine, revert) ->
+                                upload -> version row -> READY (throws NonRetriableError on failure)
+actions/crm/homepage/           server actions: get-homepage-status, refine-homepage,
+                                revert-homepage-version, update-homepage-slug
+app/api/crm/targets/[id]/generate-homepage/route.ts   POST trigger (authz + APPROVED gate)
+app/p/[slug]/route.ts           PUBLIC GET -> stored HTML (no auth, noindex, CSP sandbox)
+app/p/[slug]/screenshot.png/route.ts   PUBLIC GET -> stored screenshot
+app/[locale]/(routes)/campaigns/targets/[targetId]/components/GenerateHomepageDrawer.tsx
+                                slug / prompt / generate / preview iframe / refine / versions / revert
+lib/mcp/tools/crm-homepage.ts   MCP crm_generate_homepage, crm_get_homepage_status
+scripts/smoke/homepage-render-smoke.cjs   manual chromium launch smoke (Linux/serverless)
+prisma/migrations/20260930120000_homepage_versions/   crm_Target_Homepage_Version + current_version_id
+tests/e2e/target-homepage.spec.ts       seeded READY page: drawer preview/versions + /p/<slug> serving
+                                        (no real chromium job / Anthropic call); manual doc:
+                                        docs/testing/target-homepage-manual-testing.md
 ```
 
 ## Key config files

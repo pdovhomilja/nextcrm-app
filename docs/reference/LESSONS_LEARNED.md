@@ -416,6 +416,34 @@
 - **Tell:** `/api/inngest` 500 in Vercel logs citing `Failed to load external module …`;
   Inngest "Sync new app" returns *internal server error response from url*.
 
+### Headless chromium (`@sparticuz/chromium` + `playwright-core`) must be lazy-imported inside the handler
+
+- **Symptom:** after adding the homepage-render job, every request to `/api/inngest` 500s on
+  Vercel (Inngest can't sync), while local Mac dev is fine. Same failure family as the `sharp`
+  entry above.
+- **Cause:** `app/api/inngest/route.ts` eagerly imports every function file; a module-scope
+  `import chromium from "@sparticuz/chromium"` / `import { chromium } from "playwright-core"`
+  loads the binary-carrying packages when the route module is imported, and a resolution or
+  native-load failure there takes down the whole route.
+- **Fix / rule:** import both **inside** the function that launches the browser
+  (`lib/homepage/render.ts` -> `await import(...)`), keep them in `serverExternalPackages`
+  (`next.config.js`), and never re-export them from a module the Inngest route imports at
+  scope. Diagnose from Vercel runtime logs for `/api/inngest`.
+- **Tell:** `/api/inngest` 500 the deploy after a render/scrape/PDF dependency landed.
+
+### `@sparticuz/chromium` vs `playwright-core` version skew — the serverless launch is unverifiable locally
+
+- **Symptom / risk:** `@sparticuz/chromium` 147 ships Chromium 147; `playwright-core` 1.58.2
+  targets Chromium 145. The bundled serverless binary only runs on Linux (Lambda/Vercel), so
+  it cannot be launched on a macOS dev machine, and CI does not exercise it either
+  (unit tests mock the renderer). A skew can surface as a CDP protocol error at launch.
+- **Rule:** treat the first **Vercel preview (QA)** run of "Generate homepage" as the
+  verification step for the chromium launch — it is a release checkpoint, not an assumption.
+  `scripts/smoke/homepage-render-smoke.cjs` documents the local/Linux smoke. If it fails,
+  pin `playwright-core` to the version whose bundled Chromium matches, or pin
+  `@sparticuz/chromium` to 145.x.
+- **Tell:** homepage jobs go `FAILED` with a browser-launch / protocol error only on Vercel.
+
 ## AI / outbound email
 
 ### Claude wraps "return only JSON" output in code fences or a preamble — tolerate it
@@ -462,6 +490,53 @@
   is missing, rather than sending. Any outbound-email link that must be absolute (unsubscribe,
   tracking) should fail closed, not fall back to an empty string.
 - **Tell:** a template/link builder with `?? ""` on an env-derived origin.
+
+### Fetching a prospect's website (`company_website`) is an SSRF surface
+
+- **Risk:** the homepage generator loads `company_website` in a headless browser to screenshot
+  and mine brand assets. That URL is user/CSV/MCP-supplied data, so it can point at
+  `localhost`, cloud metadata (`169.254.169.254`), or an internal host.
+- **Rule:** every fetch of a prospect URL goes through the shared host guard
+  (`assertPublicHost`, `lib/net/host-guard.ts`) **before** navigation, with a hard timeout and
+  **downloads disabled** (`lib/homepage/harvest-source.ts`). A blank or blocked URL degrades to
+  "generate without a source screenshot", never a failed job. `MAIL_ALLOW_PRIVATE_HOSTS` must
+  never be set in Preview/Production; the harvester also refuses to run if it is set in a
+  hosted env (fail-safe). Assert the blocked-URL path in a test.
+- **Accepted residual — DNS-rebinding TOCTOU:** the guard resolves the host, then the browser
+  resolves it again, so a hostile DNS server could answer differently the second time. The
+  blast radius is bounded to a screenshot/brand-copy of whatever that answer serves (no
+  response is returned to the caller). Host-resolver pinning (`--host-resolver-rules` /
+  routing through a pinned IP) is a possible fast-follow.
+
+### Serving model-generated HTML: isolate the host AND sandbox the document
+
+- **Risk:** the preview page is LLM-generated from scraped third-party content (so it can
+  contain script) and `/p/[slug]` is reachable on every host, including the authenticated CRM
+  host, where a stray script would otherwise run with CRM cookies.
+- **Rule (defence in depth):** (1) publish/link the previews on the dedicated
+  `previews.` host (`NEXT_PUBLIC_PREVIEWS_BASE_URL`), and (2) always send
+  `Content-Security-Policy: sandbox allow-scripts` (`lib/homepage/serve.ts`, **without**
+  `allow-same-origin`) so the document gets an opaque origin — scripts and CDN Tailwind still
+  run, but no cookies/storage/same-origin fetches reach the CRM session. The in-app preview
+  `<iframe sandbox="allow-scripts">` matches. Also `noindex`, `nosniff`, and a generic 404 for
+  every miss (no slug enumeration). **Never add `allow-same-origin`.**
+- **Tell:** any change to `/p/` headers or the iframe `sandbox` attribute that adds
+  `allow-same-origin`, or serves the HTML from the CRM origin without the CSP.
+
+### Gate the public preview on "has a published version", not on job `status`
+
+- **Symptom:** an already-emailed `/p/<slug>` link 404s while a refine/regenerate/revert runs
+  (`status=RUNNING`) and after a failed refine (`status=FAILED`), even though the previously
+  published R2 object is intact.
+- **Cause:** the serve gate required `status: "READY"`, but the job flips status through
+  RUNNING/FAILED without touching the live R2 object.
+- **Rule:** `lib/homepage/serve.ts` gates on `current_version_id: { not: null }` (plus
+  `deletedAt: null`). A never-published page (no version) still 404s. Never key public
+  availability off a transient job status.
+- **Related (Inngest state):** never return base64 image data from a `step.run` — every step
+  output is persisted in run state and can hit output limits on media-rich pages. Do
+  render + screenshot + vision inside one step, or pass a short transient R2 key
+  (`previews/<slug>/tmp/source.png`) between steps.
 
 ## Testing
 
@@ -518,6 +593,58 @@
   `test.describe.configure({ mode: "serial" })`. Cleanup must only match rows that
   describe itself created.
 - **Tell:** flaky "fixture not found" that vanishes when the failing test is run alone.
+
+### An E2E that needs private object storage can't run in CI's e2e job — probe and skip, don't fail
+
+- **Symptom:** a spec that seeds/reads R2 passes locally (SeaweedFS on `:9000`) but fails in
+  CI with `ECONNREFUSED 127.0.0.1:9000`, or the served route silently 404s.
+- **Cause:** CI's `e2e` job has `MINIO_*` set to dummy values but **no S3 service** — only
+  Postgres + Inngest. Storage-backed code takes a different path there (see "Environment-
+  branched code paths" in `e2e-patterns.md`).
+- **Fix / rule:** keep DB-only assertions (drawer, versions, "no object -> generic 404")
+  unconditional; gate the storage-backed assertions on a reachability probe in `beforeAll`
+  and `test.skip` with an explicit reason. Never let the probe fail the run. If storage-backed
+  coverage matters in CI, add an S3 service container to the job instead.
+
+### `@sparticuz/chromium`'s binary isn't file-traced — serverless launch fails while CI stays green
+
+- **Symptom:** the homepage Inngest job works locally but on Vercel the render step throws at
+  `chromium.executablePath()` / launch (missing binary), even though CI (unit + build) was green.
+- **Cause:** the brotli-packed chromium binary lives in `node_modules/@sparticuz/chromium/bin/`
+  and is loaded at **runtime**, so Next's dependency tracer never sees it and omits it from the
+  serverless bundle. CI never bundles for Vercel, so it can't catch this.
+- **Fix / rule:** add the package's `bin/**` to `outputFileTracingIncludes` for the function that
+  launches it (`"/api/inngest"` here) in `next.config.js`. Verify on the FIRST QA deploy, together
+  with the playwright-core/@sparticuz chromium-version skew.
+
+### Returning `{ failed: true }` from an Inngest flow marks the run green — throw after persisting FAILED
+
+- **Symptom:** a background job's row is correctly `FAILED` and the user sees the error, but the
+  Inngest dashboard shows the run **Completed** (green), `onFailure` never fires, and there's no log
+  of the underlying error (only a truncated message on the row).
+- **Cause:** a flow that catches its error and `return`s a value tells Inngest the run succeeded.
+  The stack is lost and alerting/backstops don't trigger.
+- **Fix / rule:** in the catch, `console.error` with context, persist `status: FAILED` to the row,
+  THEN `throw new NonRetriableError(message)` — the run shows red, `onFailure` fires as a backstop,
+  and the whole (expensive) flow is not retried. Reserve plain `throw`/retries for genuinely
+  transient step failures; step-level retries already cover those before the flow catch runs.
+- **Tell:** tests that `await handler()` on a failure path must switch to `.rejects` / swallow the
+  throw (the DB-state assertions still hold because FAILED was persisted before the throw).
+
+### Rendering LLM-generated HTML in headless chromium is an SSRF egress hole — block the network at render
+
+- **Symptom:** the harvest step guards outbound requests (SSRF), but the *render* step loads
+  model HTML with scripts enabled and no egress restriction — indirect prompt injection (via
+  prospect-controlled copy) could emit `<img>/fetch()` at internal hosts that fire from the server.
+- **Fix / rule:** the generated document is required to be self-contained, so ENFORCE it — install
+  `context.route("**/*", r => r.abort())` before `setContent` so only the in-memory document +
+  `data:`/`blob:` render. It also removes the `networkidle` flakiness (switch to `waitUntil: "load"`).
+- **Tradeoff it creates:** blocking egress ALSO blocks a legit remote logo `<img src>`, so the
+  screenshot (email image + vision self-critique) would diverge from the served page. Fix: at harvest,
+  fetch the logo bytes (re-validate the host with the SAME SSRF guard, `page.request` bypasses CORS,
+  cap size) and inline them as a `data:` URI. Feed the model a placeholder token (never the base64 — it
+  would blow up prompt tokens), persist the data URI on the row (`logo_data_uri`) so refine/revert can
+  reuse it, and substitute the placeholder only at render + upload time.
 
 ---
 

@@ -4,5 +4,11 @@
     "deploymentEnabled": {
       "main": false
     }
+  },
+  "functions": {
+    "app/api/inngest/route.ts": {
+      "memory": 2048,
+      "maxDuration": 300
+    }
   }
 }
