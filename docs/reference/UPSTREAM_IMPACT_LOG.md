@@ -490,3 +490,7 @@ email render path depends on them).
 ### feat/homepage-premium-config — admin settings audit entity type
 - `lib/audit-log.ts` — insert-only (+1 line): added `"setting"` to the `AuditEntityType` union (beside our `"prompt"` fork line) so `actions/admin/homepage-settings.ts` can audit settings changes. `crm_AuditLog.entityType` is a plain String column, so no migration. Risk Low (on conflict keep both fork lines in the union).
 - **Re-verify after any upstream merge:** `AuditEntityType` still includes `"setting"`, then `pnpm exec tsc --noEmit`.
+
+### feat/homepage-premium-config — admin sidebar nav entry
+- `app/[locale]/(routes)/admin/_components/AdminSidebarNav.tsx` — insert-only (+1 line): added a `{ label: "Homepage Generation", href: "/admin/homepage-settings", icon: SlidersHorizontal }` entry to `navItems` (after Calendar Settings; no new import). Page/form live in the new fork-owned `admin/homepage-settings/`. Risk Low (on conflict keep both sides; the `navItems` array is the usual conflict spot).
+- **Re-verify after any upstream merge:** the `homepage-settings` entry is still in `navItems`, then `pnpm exec tsc --noEmit`.
