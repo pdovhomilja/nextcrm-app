@@ -10,7 +10,9 @@
 
 Make AI-generated prospect homepages look **premium** (custom typography, motion — staggered scroll
 reveals, parallax, hover micro-interactions) and make the generation **configurable by an admin**
-(model, max output tokens, and the base "designer" prompt) instead of hard-coded constants.
+(model, max output tokens, and the base "designer" prompt) instead of hard-coded constants. Also
+allow an authorized user to **upload an externally-produced HTML file that overrides the generated
+design**, served from the same previews URL.
 
 ## Why (current state → problem)
 
@@ -47,6 +49,10 @@ editable prompt, and the constraints are ours to relax deliberately.
 3. **Controlled egress via a code-owned allowlist**: Google Fonts + a pinned GSAP (with ScrollTrigger).
 4. **Default model = Sonnet 5.5; Opus 5.5 opt-in; Haiku 4.5 available.** Default `max_tokens` raised
    well above 12k, clamped in code to the model ceiling.
+5. **Upload override:** an authorized user can upload a self-contained HTML file that becomes the
+   current served design (a new version), reusing the serve path + sandbox + allowlisted render +
+   version model. Uploaded HTML is **not sanitized** (would break the design); isolation rests on the
+   sandbox CSP + the authenticated-uploader trust model.
 
 ## Prompt layering (the model of "base vs guidance")
 
@@ -129,9 +135,33 @@ ScrollTrigger usage patterns (loaded from the allowlisted CDN), custom Google Fo
   budget (re-check the arithmetic with the higher token ceiling; lower the default if needed).
 - Model + max_tokens flow from the resolver into `provider.ts` (currently hard-coded).
 
+### C6 — Upload override (bring-your-own design)
+
+- **Purpose:** let an authorized user replace the generated design for a target with an
+  externally-produced, self-contained HTML file, served from the same `/p/<slug>` previews URL.
+- **Upload path:** presigned **direct-to-R2** upload (reuse the `crm_get_upload_url` pattern) to avoid
+  the ~4.5 MB Vercel function-body limit; enforce a size cap (e.g. 5 MB) and validate the content is
+  HTML. The object is written to the served key (`previews/<slug>/index.html`).
+- **Versioning:** the upload becomes a new `crm_Target_Homepage_Version` row with **`pass_kind:
+  "UPLOAD"`** (html stored, `created_by` = uploader, no prompt/critique) and `current_version_id` is
+  repointed to it. The existing serve gate (`current_version_id`), revert, and email "include
+  homepage" paths therefore work unchanged — you can revert between an uploaded and a generated
+  version.
+- **Screenshot:** render the uploaded HTML with the same **allowlisted egress** + "finalize
+  animations" step to produce the email image. Caveat: assets the upload pulls from non-allowlisted
+  hosts won't appear in the *screenshot* (the served page still shows them in the prospect's browser).
+- **Refine gating:** AI-refine is **disabled while an upload is current** (no model lineage);
+  regenerate is still allowed and produces a fresh generated version (revertible back to the upload).
+- **Isolation:** served with the same headers (`sandbox allow-scripts`, `nosniff`, `noindex`).
+  Uploaded HTML is **not sanitized** — isolation is the sandbox opaque origin (no CRM cookies) plus
+  the fact that the uploader is authenticated/trusted.
+- **Authz + audit:** gated by the same target-write check (`assertCanWriteTarget` / `created_by`
+  scope); every upload writes an audit-log entry.
+
 ## Data model / migration (additive, migration-first)
 
 - Add the `HOMEPAGE_BASE` value to the prompt-kind enum.
+- Add the `UPLOAD` value to the `crm_Homepage_Pass_Kind` enum (for upload-override versions).
 - Add the homepage-generation settings row/table (`model`, `max_tokens`, `base_prompt_id`, audit
   columns).
 - Seed the default premium `HOMEPAGE_BASE` prompt (seed script is the source of truth).
@@ -147,6 +177,11 @@ ScrollTrigger usage patterns (loaded from the allowlisted CDN), custom Google Fo
   appended by code, so an edited base prompt can't break parsing or egress.
 - **max_tokens clamp:** prevents an admin setting an absurd value (cost/timeout footgun).
 - **Audit:** settings changes write `crm_audit_log`.
+- **Upload override:** serving arbitrary unsanitized HTML from our domain is accepted **only** because
+  (a) the served page is sandboxed to an opaque origin (no CRM cookies/DOM), (b) it is `noindex`, and
+  (c) the uploader is authenticated and audited (not the public). Enforce a size cap + HTML
+  content-type validation on upload; the render-time allowlist still bounds SSRF. Not sanitized by
+  design (sanitizing would break the uploaded design). Consider a rate-limit on uploads.
 
 ## Acceptance criteria
 
@@ -162,6 +197,10 @@ ScrollTrigger usage patterns (loaded from the allowlisted CDN), custom Google Fo
    (verified incl. an internal-host attempt).
 6. A previously-truncating premium refine now completes within the token budget.
 7. Served `/p/` pages animate in the prospect's browser and honor `prefers-reduced-motion`.
+8. An authorized user can upload a self-contained HTML file for a target; it becomes the current
+   version (`pass_kind: UPLOAD`), is served at `/p/<slug>` with the sandbox/nosniff/noindex headers,
+   and a screenshot is produced. Revert works to/from generated versions; AI-refine is refused while
+   an upload is current; oversized/non-HTML uploads are rejected; the upload is audit-logged.
 
 ## Testing
 
@@ -169,9 +208,15 @@ ScrollTrigger usage patterns (loaded from the allowlisted CDN), custom Google Fo
   authz on the save action; allowlist matcher (exact host pass, cdnjs path pin, internal/other host
   reject); prompt composition (contract always appended; `HOMEPAGE_BASE` excluded from guidance).
 - **Render:** the "finalize animations" step forces final state and no-ops without GSAP (mock).
+- **Upload override:** upload action authz (target-write) + validation (HTML content-type, size cap);
+  an upload creates an `UPLOAD` version and repoints `current_version_id`; the serve path serves the
+  uploaded HTML; revert works to/from a generated version; AI-refine is refused while an upload is
+  current; audit entry written.
 - **Integration/E2E:** admin settings save round-trip; a generation run using a configured model;
-  `/p/` serves an animated page. Manual ↔ E2E parity per the docs rules.
-- Revert-verify the load-bearing guards (allowlist reject, contract-appended, clamp).
+  `/p/` serves an animated page; an uploaded page serves + shows in the drawer. Manual ↔ E2E parity
+  per the docs rules.
+- Revert-verify the load-bearing guards (allowlist reject, contract-appended, clamp, upload
+  authz/validation).
 
 ## Fork / upstream impact
 
