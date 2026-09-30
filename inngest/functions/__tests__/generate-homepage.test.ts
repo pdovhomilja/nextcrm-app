@@ -4,7 +4,7 @@ jest.mock("@/inngest/client", () => ({
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
     crm_Targets: { findUnique: jest.fn() },
-    crm_Target_Homepage: { findUnique: jest.fn(), update: jest.fn() },
+    crm_Target_Homepage: { findUnique: jest.fn(), update: jest.fn(), updateMany: jest.fn() },
     crm_Target_Homepage_Version: { create: jest.fn(), findUnique: jest.fn() },
   },
 }));
@@ -25,7 +25,7 @@ import { harvestSource } from "@/lib/homepage/harvest-source";
 import { generateHomepage } from "@/lib/homepage/provider";
 import { renderAndScreenshot } from "@/lib/homepage/render";
 import { putHomepageHtml, putHomepageScreenshot } from "@/lib/homepage/storage";
-import { AUTO_PASSES } from "../generate-homepage";
+import { AUTO_PASSES, onGenerateHomepageFailure } from "../generate-homepage";
 
 // createFunction is called once at module load — capture config + handler.
 const createFunctionMock = inngest.createFunction as jest.Mock;
@@ -33,6 +33,8 @@ const config = createFunctionMock.mock.calls[0][0] as {
   id: string;
   triggers: { event: string }[];
   retries: number;
+  concurrency: { key: string; limit: number };
+  onFailure: unknown;
 };
 const handler = createFunctionMock.mock.results[0].value as (ctx: {
   event: { name: string; data: Record<string, unknown> };
@@ -42,6 +44,7 @@ const handler = createFunctionMock.mock.results[0].value as (ctx: {
 const step = { run: (_n: string, f: () => unknown) => Promise.resolve().then(f) };
 
 const homepageUpdate = prismadb.crm_Target_Homepage.update as jest.Mock;
+const homepageUpdateMany = prismadb.crm_Target_Homepage.updateMany as jest.Mock;
 const versionCreate = prismadb.crm_Target_Homepage_Version.create as jest.Mock;
 
 const target = {
@@ -91,8 +94,48 @@ describe("generate-homepage function config", () => {
     ]);
     expect(config.retries).toBeLessThanOrEqual(2);
   });
+  it("serializes runs per target (concurrency limit 1 keyed on targetId)", () => {
+    expect(config.concurrency).toEqual({ key: "event.data.targetId", limit: 1 });
+  });
+  it("registers the onFailure backstop", () => {
+    expect(config.onFailure).toBe(onGenerateHomepageFailure);
+  });
   it("bounds auto passes to 3", () => {
     expect(AUTO_PASSES).toBe(3);
+  });
+});
+
+describe("onFailure backstop", () => {
+  const failed = (data: Record<string, unknown>) => ({
+    data: { function_id: "generate-homepage", run_id: "r1", event: { name: "x", data } },
+  });
+
+  it("generate (targetId): marks that target's PENDING/RUNNING homepage FAILED", async () => {
+    homepageUpdateMany.mockResolvedValue({ count: 1 });
+    await onGenerateHomepageFailure({ event: failed({ targetId: "t1" }) });
+    expect(homepageUpdateMany).toHaveBeenCalledWith({
+      where: { targetId: "t1", status: { in: ["PENDING", "RUNNING"] } },
+      data: { status: "FAILED", error: expect.stringContaining("onFailure backstop") },
+    });
+  });
+
+  it("refine (homepageId): marks that homepage FAILED", async () => {
+    homepageUpdateMany.mockResolvedValue({ count: 1 });
+    await onGenerateHomepageFailure({ event: failed({ homepageId: "h1", targetId: "t1" }) });
+    expect(homepageUpdateMany).toHaveBeenCalledWith({
+      where: { id: "h1" },
+      data: { status: "FAILED", error: expect.stringContaining("onFailure backstop") },
+    });
+  });
+
+  it("never throws (DB error swallowed) and no-ops without ids", async () => {
+    const spy = jest.spyOn(console, "error").mockImplementation(() => {});
+    homepageUpdateMany.mockRejectedValue(new Error("db down"));
+    await expect(onGenerateHomepageFailure({ event: failed({ targetId: "t1" }) })).resolves.toBeUndefined();
+    homepageUpdateMany.mockClear();
+    await onGenerateHomepageFailure({ event: failed({}) });
+    expect(homepageUpdateMany).not.toHaveBeenCalled();
+    spy.mockRestore();
   });
 });
 
@@ -219,7 +262,7 @@ describe("generate event", () => {
 describe("refine event", () => {
   const refineEvent = {
     name: "homepage/target.refine",
-    data: { homepageId: "h1", prompt: "Bigger hero", triggeredBy: "u1" },
+    data: { homepageId: "h1", targetId: "t1", prompt: "Bigger hero", triggeredBy: "u1" },
   };
 
   beforeEach(() => {

@@ -26,6 +26,8 @@ export type GenerateHomepageEventData = {
 };
 export type RefineHomepageEventData = {
   homepageId: string;
+  /** Required by the per-target concurrency key; the refine trigger must send it. */
+  targetId: string;
   prompt: string;
   triggeredBy?: string;
 };
@@ -304,12 +306,48 @@ async function refineFlow(step: StepLike, data: RefineHomepageEventData) {
   }
 }
 
+const BACKSTOP_ERROR = "run failed (onFailure backstop)";
+
+/**
+ * Backstop for the "never stuck RUNNING" invariant. The in-body `mark-failed`
+ * step can itself throw (DB blip) and function-level cancellation/timeouts skip
+ * the body's catch entirely; Inngest calls this once the run has terminally
+ * failed. `event.data.event` is the ORIGINAL triggering event (generate carries
+ * targetId, refine carries homepageId). Never throws.
+ */
+export async function onGenerateHomepageFailure({
+  event,
+}: {
+  event: { data: { event?: { data?: Partial<GenerateHomepageEventData & RefineHomepageEventData> } } };
+}): Promise<void> {
+  const orig = event?.data?.event?.data ?? {};
+  try {
+    if (orig.homepageId) {
+      await prismadb.crm_Target_Homepage.updateMany({
+        where: { id: orig.homepageId },
+        data: { status: "FAILED", error: BACKSTOP_ERROR },
+      });
+    } else if (orig.targetId) {
+      await prismadb.crm_Target_Homepage.updateMany({
+        where: { targetId: orig.targetId, status: { in: ["PENDING", "RUNNING"] } },
+        data: { status: "FAILED", error: BACKSTOP_ERROR },
+      });
+    }
+  } catch (e) {
+    console.error("[GENERATE_HOMEPAGE_ONFAILURE]", e);
+  }
+}
+
 export const generateHomepage = inngest.createFunction(
   {
     id: "generate-homepage",
     name: "Generate Homepage",
     triggers: [{ event: "homepage/target.generate" }, { event: "homepage/target.refine" }],
+    // Serialize generate/refine (or a double-click) per target so RUNNING/READY
+    // and version writes never interleave. Both events carry targetId.
+    concurrency: { key: "event.data.targetId", limit: 1 },
     retries: 2,
+    onFailure: onGenerateHomepageFailure,
   },
   async ({ event, step }) => {
     const s = step as unknown as StepLike;
