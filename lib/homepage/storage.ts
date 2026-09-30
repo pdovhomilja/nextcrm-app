@@ -56,3 +56,24 @@ export async function getHomepageTmpSource(slug: string): Promise<Buffer | null>
 export async function deleteHomepageTmpSource(slug: string): Promise<void> {
   await minioClient.send(new DeleteObjectCommand({ Bucket: MINIO_BUCKET, Key: homepageTmpSourceKey(slug) }));
 }
+
+// Transient (job-scoped) uploaded HTML for the upload-override flow. Lives under
+// previews/<slug>/tmp/ so it never collides with the served keys; it is read,
+// rendered, then best-effort deleted.
+export const homepageUploadKey = (slug: string) => `previews/${slug}/tmp/upload.html`;
+
+export async function putHomepageUpload(slug: string, html: string): Promise<void> {
+  await minioClient.send(new PutObjectCommand({
+    Bucket: MINIO_BUCKET, Key: homepageUploadKey(slug), Body: html,
+    ContentType: "text/html; charset=utf-8",
+  }));
+}
+
+export async function getHomepageUpload(slug: string): Promise<string | null> {
+  const b = await getBuffer(homepageUploadKey(slug));
+  return b ? b.toString("utf-8") : null;
+}
+
+export async function deleteHomepageUpload(slug: string): Promise<void> {
+  await minioClient.send(new DeleteObjectCommand({ Bucket: MINIO_BUCKET, Key: homepageUploadKey(slug) }));
+}
