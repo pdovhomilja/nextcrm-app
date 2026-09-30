@@ -169,6 +169,7 @@ export function GenerateEmailDrawer(props: {
                 title="preview"
                 srcDoc={previewHtml}
                 className="w-full h-96 border rounded"
+                sandbox=""
                 data-testid="email-preview"
               />
               <Button

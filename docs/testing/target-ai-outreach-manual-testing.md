@@ -69,11 +69,14 @@ See `actions/crm/targets/__tests__/`.
 ### 1c. Opt-out link
 
 1. From the email received in 1.11, click the unsubscribe link.
-2. **Verify:** a confirmation page is shown, and the target now has **do not email** set;
+2. **Verify:** a confirm page with an **Unsubscribe** button is shown and the target is
+   **not** yet do-not-email (GET never mutates). Click the button.
+3. **Verify:** a confirmation page is shown, and the target now has **do not email** set;
    generating and sending to that target is refused afterwards.
 
 *(Unsubscribe route is unit-tested in `app/api/crm/targets/unsubscribe/__tests__/route.test.ts`;
-no browser E2E — it is an unauthenticated one-click endpoint.)*
+no browser E2E — it is an unauthenticated endpoint: GET shows a confirm form, POST mutates and also
+serves RFC 8058 one-click.)*
 
 ## 2. AI prompt library — create, edit, delete
 

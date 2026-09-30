@@ -448,6 +448,12 @@
 - **Tell:** any "send then record" action whose error return can be reached after the
   external call succeeded.
 
+### An email unsubscribe link must not mutate on GET
+
+- Email unsubscribe links must not mutate on GET (scanners/prefetchers auto-visit) — GET
+  shows a confirm form, POST mutates; pair with `List-Unsubscribe-Post` for RFC 8058
+  one-click. See `app/api/crm/targets/unsubscribe/route.ts`.
+
 ## Testing
 
 ### A schema-validated MCP-tool test needs a strict-format UUID, not the shared placeholder id

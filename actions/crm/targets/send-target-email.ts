@@ -106,7 +106,10 @@ export const sendTargetEmail = async ({
       to: redirectRecipients(recipient),
       subject: resolvedSubject,
       html,
-      headers: { "List-Unsubscribe": `<${unsubscribeUrl}>` },
+      headers: {
+        "List-Unsubscribe": `<${unsubscribeUrl}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
     });
     if (result.error) {
       await markFailed(result.error.message);

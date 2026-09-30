@@ -54,6 +54,12 @@ it("sends, records SENT, and logs an email activity", async () => {
   });
   expect(res).toEqual({ data: { id: "e1" } });
   expect(sendMock).toHaveBeenCalledWith(expect.objectContaining({ to: "redir+ada@acme.com", subject: "Hi Acme", html: "<html>final</html>" }));
+  expect(sendMock.mock.calls[0][0].headers).toEqual(
+    expect.objectContaining({
+      "List-Unsubscribe": expect.stringMatching(/^<.+>$/),
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    })
+  );
   expect(prismadb.crm_Target_Email.update).toHaveBeenCalledWith(
     expect.objectContaining({ where: { id: "e1" }, data: expect.objectContaining({ status: "SENT", resend_message_id: "msg_1" }) })
   );

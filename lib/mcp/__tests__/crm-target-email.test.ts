@@ -103,6 +103,12 @@ describe("crm_send_target_email", () => {
     expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining({ to: "redir+ada@example.com", subject: "Hi Ada" })
     );
+    expect(mockSend.mock.calls[0][0].headers).toEqual(
+      expect.objectContaining({
+        "List-Unsubscribe": expect.stringMatching(/^<.+>$/),
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      })
+    );
     expect(emailUpdate).toHaveBeenCalledWith({
       where: { id: "e1" },
       data: expect.objectContaining({ status: "SENT", resend_message_id: "resend-1" }),
