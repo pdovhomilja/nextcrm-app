@@ -243,6 +243,19 @@ test.describe("Target AI outreach — email", () => {
     ).toBeVisible();
     await expect(preview.getByText("{{company}}")).toHaveCount(0);
 
+    // Preview-drift guard: editing the subject invalidates the preview (Send off)
+    // until it is re-rendered with "Update preview". Net subject is unchanged.
+    const subjectInput = page.getByTestId("email-subject");
+    await subjectInput.fill("Quick idea for {{company}}!");
+    await expect(page.getByTestId("email-send-btn")).toBeDisabled();
+    await subjectInput.fill("Quick idea for {{company}}");
+    await expect(page.getByTestId("email-send-btn")).toBeDisabled();
+    await page.getByTestId("email-preview-btn").click();
+    await expect(page.getByTestId("email-send-btn")).toBeEnabled({
+      timeout: 15000,
+    });
+    await expect(preview.getByText(`${PREFIX} template header`)).toBeVisible();
+
     await page.getByTestId("email-send-btn").click();
     await assertSuccessToast(page, "Email sent");
 

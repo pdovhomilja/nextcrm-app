@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   Sheet,
   SheetContent,
@@ -45,7 +45,14 @@ export function GenerateEmailDrawer(props: {
   const [subject, setSubject] = useState("");
   const [bodyHtml, setBodyHtml] = useState("");
   const [previewHtml, setPreviewHtml] = useState("");
-  const [busy, setBusy] = useState<"gen" | "send" | null>(null);
+  const [busy, setBusy] = useState<"gen" | "preview" | "send" | null>(
+    null,
+  );
+  // Request-generation guard: bumped on close and on any input change that
+  // invalidates the preview, and at the start of every generate/preview. An
+  // in-flight request whose id is stale drops its results instead of writing
+  // state computed from outdated inputs.
+  const reqIdRef = useRef(0);
 
   // Picking a library prompt just copies its body (passed in as props) into the
   // guidance box; no server round-trip.
@@ -57,27 +64,39 @@ export function GenerateEmailDrawer(props: {
   // Preview drift guard: the preview must always reflect the exact template /
   // homepage / subject that Send will use. Any change after a preview exists
   // clears it (which also disables Send) until the operator re-previews.
+  function invalidatePreview() {
+    reqIdRef.current++; // discard any in-flight generate/preview result
+    setPreviewHtml("");
+    // Release a discarded generate/preview's busy lock; never a send's.
+    setBusy((b) => (b === "send" ? b : null));
+  }
   function onTemplateChange(id: string) {
     setTemplateId(id);
-    setPreviewHtml("");
+    invalidatePreview();
   }
   function onHomepageChange(v: boolean) {
     setIncludeHomepage(v);
-    setPreviewHtml("");
+    invalidatePreview();
   }
   function onSubjectChange(v: string) {
     setSubject(v);
-    setPreviewHtml("");
+    invalidatePreview();
   }
 
-  async function refreshPreview(s: string, b: string) {
+  // Drops its result (no state writes) if a newer request/change/close superseded myReq.
+  async function refreshPreview(
+    myReq: number,
+    subj: string,
+    body: string,
+  ): Promise<void> {
     const prev = await previewTargetEmail({
       targetId: props.targetId,
       templateId,
-      subject: s,
-      bodyHtml: b,
+      subject: subj,
+      bodyHtml: body,
       includeHomepage,
     });
+    if (reqIdRef.current !== myReq) return;
     if ("error" in prev) {
       toast.error(prev.error);
       return;
@@ -86,12 +105,14 @@ export function GenerateEmailDrawer(props: {
   }
 
   async function onGenerate() {
+    const myReq = ++reqIdRef.current;
     setBusy("gen");
     try {
       const res = await generateTargetEmail({
         targetId: props.targetId,
         prompt,
       });
+      if (reqIdRef.current !== myReq) return;
       if ("error" in res) {
         toast.error(res.error);
         return;
@@ -99,22 +120,23 @@ export function GenerateEmailDrawer(props: {
       setSubject(res.data.subject);
       setBodyHtml(res.data.body_html);
       setPreviewHtml("");
-      await refreshPreview(res.data.subject, res.data.body_html);
+      await refreshPreview(myReq, res.data.subject, res.data.body_html);
     } catch {
-      toast.error(DEFAULT_ERROR);
+      if (reqIdRef.current === myReq) toast.error(DEFAULT_ERROR);
     } finally {
-      setBusy(null);
+      if (reqIdRef.current === myReq) setBusy(null);
     }
   }
 
   async function onRefreshPreview() {
-    setBusy("gen");
+    const myReq = ++reqIdRef.current;
+    setBusy("preview");
     try {
-      await refreshPreview(subject, bodyHtml);
+      await refreshPreview(myReq, subject, bodyHtml);
     } catch {
-      toast.error(DEFAULT_ERROR);
+      if (reqIdRef.current === myReq) toast.error(DEFAULT_ERROR);
     } finally {
-      setBusy(null);
+      if (reqIdRef.current === myReq) setBusy(null);
     }
   }
 
@@ -146,6 +168,7 @@ export function GenerateEmailDrawer(props: {
   // enabled Send (one-click re-send of the previous email).
   function handleOpenChange(v: boolean) {
     if (!v) {
+      reqIdRef.current++; // a late generate/preview must not repopulate the reset drawer
       setSubject("");
       setBodyHtml("");
       setPreviewHtml("");
@@ -230,7 +253,7 @@ export function GenerateEmailDrawer(props: {
             {busy === "gen" ? "Generating…" : "Generate"}
           </Button>
 
-          {subject && (
+          {(bodyHtml || subject) && (
             <div className="space-y-2">
               <Input
                 value={subject}

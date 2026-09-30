@@ -45,8 +45,13 @@ pnpm dev
 8. **Verify:** a **Subject** field appears populated, and the **preview** frame shows
    your template wrapped around the AI body, with `{{first_name}}` / `{{company}}`
    already replaced by the target's real values (no literal `{{…}}` visible).
-9. Edit the subject if you like, then click **Send email**.
-10. **Verify:** a success toast "Email sent" appears and the drawer closes.
+9. Edit the subject if you like. **Verify:** editing the subject (or changing the
+   template / homepage checkbox) clears the preview and **Send email** becomes disabled;
+   click **Update preview** to re-render it and re-enable Send. Clearing the subject
+   entirely keeps the preview/Update/Send block visible. Closing the drawer (or changing
+   an input) while a Generate/Update is still running discards that late result instead
+   of repopulating the drawer.
+10. Click **Send email**. **Verify:** a success toast "Email sent" appears and the drawer closes.
 11. **Verify:** exactly one email arrives (at `EMAIL_REDIRECT_TO` if set) with the
     resolved subject, and it carries an unsubscribe link.
 12. **Verify:** the target's activity timeline shows "Outreach email sent: <subject>".
