@@ -4,6 +4,8 @@ import { prismadb } from "@/lib/prisma";
 import { getApiKey } from "@/lib/api-keys";
 import { harvestSource, type HarvestResult } from "@/lib/homepage/harvest-source";
 import { generateHomepage as generateHomepageHtml } from "@/lib/homepage/provider";
+import { buildSystemPrompt } from "@/lib/homepage/prompt";
+import { DEFAULT_HOMEPAGE_MODEL, DEFAULT_MAX_TOKENS } from "@/lib/homepage/settings";
 import { renderAndScreenshot } from "@/lib/homepage/render";
 import {
   putHomepageHtml,
@@ -176,6 +178,10 @@ async function runPass(
         previousHtml: args.previousHtml,
         sourceScreenshotB64,
         refinedScreenshotB64,
+        // Interim defaults; Task 2.5 replaces these with the admin-resolved settings.
+        system: buildSystemPrompt(null),
+        model: DEFAULT_HOMEPAGE_MODEL,
+        maxTokens: DEFAULT_MAX_TOKENS,
       }),
       GENERATE_TIMEOUT_MS,
       "Homepage generation",
