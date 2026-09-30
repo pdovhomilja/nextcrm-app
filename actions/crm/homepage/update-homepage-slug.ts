@@ -24,7 +24,14 @@ export const updateHomepageSlug = async (data: { homepageId: string; slug: strin
 
   const homepage = await prismadb.crm_Target_Homepage.findFirst({
     where: { id: homepageId, deletedAt: null },
-    select: { id: true, targetId: true, slug: true, status: true, preview_url: true },
+    select: {
+      id: true,
+      targetId: true,
+      slug: true,
+      status: true,
+      preview_url: true,
+      current_version_id: true,
+    },
   });
   if (!homepage) return { error: "Homepage not found" };
 
@@ -37,11 +44,12 @@ export const updateHomepageSlug = async (data: { homepageId: string; slug: strin
 
   // Renaming only edits the DB row: the published objects stay under the old
   // slug, so a rename would 404 the live (possibly emailed) link. Only allow it
-  // while nothing is published (or after a failed run).
+  // for a never-published page, whatever its status (a FAILED refine/regenerate
+  // of a live page still has its preview_url / version and must stay locked).
   if (homepage.status === "PENDING" || homepage.status === "RUNNING") {
     return { error: "Can't rename while generating." };
   }
-  if (homepage.status === "READY" || (homepage.status !== "FAILED" && homepage.preview_url)) {
+  if (homepage.preview_url || homepage.current_version_id || homepage.status === "READY") {
     return { error: "This page is already published; regenerate to change its URL." };
   }
 

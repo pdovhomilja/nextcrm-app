@@ -283,7 +283,7 @@ describe("revertHomepageVersion", () => {
 });
 
 describe("updateHomepageSlug", () => {
-  const UNPUBLISHED = { ...HP, status: "FAILED", preview_url: null };
+  const UNPUBLISHED = { ...HP, status: "FAILED", preview_url: null, current_version_id: null };
   beforeEach(() => hpFindFirst.mockResolvedValue(UNPUBLISHED));
 
   it("ensures uniqueness and updates when unpublished/failed", async () => {
@@ -295,7 +295,7 @@ describe("updateHomepageSlug", () => {
   });
   it("allows a rename of a never-published PENDING-free row (no preview_url, not READY)", async () => {
     // status is not READY/PENDING/RUNNING and nothing published
-    hpFindFirst.mockResolvedValue({ ...HP, status: "FAILED", preview_url: null });
+    hpFindFirst.mockResolvedValue({ ...HP, status: "FAILED", preview_url: null, current_version_id: null });
     expect((await updateHomepageSlug({ homepageId: "h1", slug: "fresh" })).error).toBeUndefined();
   });
   it("rejects a rename of a READY (published) page", async () => {
@@ -306,6 +306,18 @@ describe("updateHomepageSlug", () => {
   });
   it("rejects a rename of a READY page even when preview_url is null", async () => {
     hpFindFirst.mockResolvedValue({ ...HP, status: "READY", preview_url: null });
+    const res = await updateHomepageSlug({ homepageId: "h1", slug: "other" });
+    expect(res.error).toMatch(/already published/);
+    expect(hpUpdate).not.toHaveBeenCalled();
+  });
+  it("rejects a rename of a FAILED page that still has a live preview_url (failed refine of a published page)", async () => {
+    hpFindFirst.mockResolvedValue({ ...HP, status: "FAILED", preview_url: "https://p/p/acme-plumbing", current_version_id: null });
+    const res = await updateHomepageSlug({ homepageId: "h1", slug: "other" });
+    expect(res).toEqual({ error: "This page is already published; regenerate to change its URL." });
+    expect(hpUpdate).not.toHaveBeenCalled();
+  });
+  it("rejects a rename of a FAILED page that has a published version even with null preview_url", async () => {
+    hpFindFirst.mockResolvedValue({ ...HP, status: "FAILED", preview_url: null, current_version_id: "v2" });
     const res = await updateHomepageSlug({ homepageId: "h1", slug: "other" });
     expect(res.error).toMatch(/already published/);
     expect(hpUpdate).not.toHaveBeenCalled();
