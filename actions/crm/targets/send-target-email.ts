@@ -69,6 +69,13 @@ export const sendTargetEmail = async (input: {
   });
   if (!template) return { error: "Template not found" };
 
+  // Reply-To = the sending operator's email so prospect replies reach a real
+  // inbox (the From is a noreply address).
+  const sender = await prismadb.users.findUnique({
+    where: { id: user.id },
+    select: { email: true },
+  });
+
   const result = await deliverTargetEmail({
     target,
     recipient,
@@ -80,6 +87,7 @@ export const sendTargetEmail = async (input: {
     // explicit "" (operator cleared the field) means no button.
     ctaLabel: ctaLabel ?? template.cta_label,
     ctaUrl: ctaUrl ?? template.cta_url,
+    replyTo: sender?.email,
     promptUsed,
     createdBy: user.id,
   });

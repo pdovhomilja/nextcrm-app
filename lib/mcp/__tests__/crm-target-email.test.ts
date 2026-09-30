@@ -8,6 +8,7 @@ jest.mock("@/lib/prisma", () => ({
     crm_campaign_templates: { findFirst: jest.fn() },
     crm_Target_Homepage: { findFirst: jest.fn() },
     crm_Target_Email: { create: jest.fn(), update: jest.fn() },
+    users: { findUnique: jest.fn() },
   },
 }));
 jest.mock("@/lib/campaigns/render-email", () => ({

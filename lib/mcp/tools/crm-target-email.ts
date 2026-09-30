@@ -62,6 +62,12 @@ export const crmTargetEmailTools = [
       });
       if (!template) notFound("Template");
 
+      // Reply-To = the sending operator's email (prospect replies reach a real inbox).
+      const sender = await prismadb.users.findUnique({
+        where: { id: userId },
+        select: { email: true },
+      });
+
       const result = await deliverTargetEmail({
         target,
         recipient,
@@ -72,6 +78,7 @@ export const crmTargetEmailTools = [
         // Inherit the template's CTA default when not provided; "" = no button.
         ctaLabel: args.cta_label ?? template.cta_label,
         ctaUrl: args.cta_url ?? template.cta_url,
+        replyTo: sender?.email,
         createdBy: userId,
       });
       if (!result.ok) {

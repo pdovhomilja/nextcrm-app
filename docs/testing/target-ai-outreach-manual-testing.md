@@ -36,8 +36,10 @@ pnpm dev
 
 1. Open an **Approved** target's detail page (Campaigns → Targets → View).
 2. Click the **AI** menu (sparkles) in the header → **Generate email**.
-3. **Verify:** the "Generate outreach email" drawer opens.
-4. In **Choose a prompt**, pick a saved email prompt.
+3. **Verify:** the "Generate outreach email" drawer opens with the **first prompt and first
+   template already selected** (the guidance box pre-filled from that prompt), so it's ready to
+   generate immediately.
+4. Optionally pick a different **prompt**.
 5. **Verify:** the guidance box fills with that prompt's body (you can still edit it).
 6. Pick a **template** (must contain `{{body}}`). The **Button label / Button link** fields
    inherit that template's CTA defaults — see 1d. Leave "Include homepage…" unchecked
@@ -96,11 +98,42 @@ the preview, and the sent email carries the overridden label + inherited link).
 4. Change the **Button label** (and/or link). Generate, then **Verify:** the preview shows the amber
    button with your overridden label. Send, and **Verify:** the received email's button uses the
    overridden label and the (inherited) link.
-5. **Homepage auto-default:** with a target that has a generated homepage, check **Include homepage…**.
-   **Verify:** the **Button link** field switches to `{{homepage_url}}`; unchecking restores the
-   template's link. On send, the button links to that target's homepage. *(The `{{homepage_url}}`
-   resolution is also covered by `actions/crm/targets/__tests__/preview-target-email.test.ts`; the
-   homepage-checkbox auto-fill needs a generated homepage, so it is verified manually here.)*
+5. **Homepage default + auto-link:** open the drawer on a target whose homepage is **READY with a
+   screenshot**. **Verify:** "Include homepage…" starts **checked** and the **Button link** starts as
+   `{{homepage_url}}`. Unchecking restores the template's link; re-checking sets it back. On send, the
+   button links to that target's homepage. On a target with **no** homepage (or one still
+   generating/failed), the box starts unchecked (and is disabled when no page is published yet).
+   *(The `{{homepage_url}}` resolution is covered by
+   `actions/crm/targets/__tests__/preview-target-email.test.ts`; the default-checked + auto-fill needs
+   a generated homepage, so it is verified manually here — E2E known gap.)*
+
+### 1e. Edit the AI draft before sending
+
+**E2E:** `tests/e2e/target-ai-email.spec.ts` › `generates, previews and sends…` (the test rewrites
+the draft in the editor and asserts the **edited** body — not the AI original — reaches the send).
+
+1. Generate a draft. **Verify:** the AI copy appears in an editable rich-text editor below the subject.
+2. Edit the text (merge tags like `{{first_name}}` still work). **Verify:** editing disables **Send**
+   until you click **Update preview**; the preview then shows your edited copy.
+3. Send. **Verify:** the received email contains your edits, not the original draft.
+
+### 1f. Reply-To is the sender's email
+
+**E2E:** `tests/e2e/target-ai-email.spec.ts` › `generates, previews and sends…` (asserts the Resend
+`reply_to` equals the seeded admin's email).
+
+1. Send an outreach email, then reply to it from the recipient inbox (or inspect headers).
+2. **Verify:** the **Reply-To** is *your* (the sending user's) email, not the `noreply@` From — so a
+   prospect's reply reaches you. *(Replies are not ingested into the CRM; they land in your inbox.)*
+
+### 1g. Target shows its outreach history
+
+**E2E:** `tests/e2e/target-ai-email.spec.ts` › `generates, previews and sends…` (reloads the target
+and asserts the sent email shows with a **SENT** status).
+
+1. After sending, open the target detail page. **Verify:** an **"Outreach emails"** section lists the
+   send — subject, timestamp, and a **SENT** badge — with a "Last emailed …" summary. A failed send
+   shows a **FAILED** badge with its error; a target never emailed shows "No emails sent yet."
 
 ## 2. AI prompt library — create, edit, delete
 
