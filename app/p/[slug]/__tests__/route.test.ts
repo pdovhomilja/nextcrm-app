@@ -27,7 +27,9 @@ describe("GET /p/[slug]", () => {
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toBe("text/html; charset=utf-8");
     expect(res.headers.get("x-robots-tag")).toBe("noindex");
-    expect(res.headers.get("cache-control")).toBe("public, max-age=300");
+    expect(res.headers.get("cache-control")).toBe(
+      "public, max-age=300, s-maxage=300, stale-while-revalidate=600",
+    );
     expect(res.headers.get("content-security-policy")).toBe("sandbox allow-scripts");
     expect(res.headers.get("x-content-type-options")).toBe("nosniff");
     expect(await res.text()).toBe("<html>hi</html>");

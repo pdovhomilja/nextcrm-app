@@ -7,6 +7,7 @@ import {
   AuthorizationError,
 } from "@/lib/authz";
 import { ensureUniqueSlug, slugify } from "@/lib/homepage/slug";
+import { writeAuditLog } from "@/lib/audit-log";
 
 export const updateHomepageSlug = async (data: { homepageId: string; slug: string }) => {
   const { homepageId } = data;
@@ -59,6 +60,13 @@ export const updateHomepageSlug = async (data: { homepageId: string; slug: strin
   try {
     const slug = await ensureUniqueSlug(data.slug);
     await prismadb.crm_Target_Homepage.update({ where: { id: homepage.id }, data: { slug } });
+    await writeAuditLog({
+      entityType: "target",
+      entityId: homepage.targetId,
+      action: "updated",
+      changes: [{ field: "homepage_slug", old: homepage.slug, new: slug }],
+      userId: user.id,
+    });
     return { data: { slug } };
   } catch (e) {
     // ensureUniqueSlug is check-then-write, so a concurrent pick can still collide.

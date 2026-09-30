@@ -8,6 +8,7 @@ import {
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
+import { MAX_HOMEPAGE_PROMPT_CHARS, isHomepageRunActive } from "@/lib/homepage/queue-generation";
 
 export const refineHomepage = async (data: { homepageId: string; prompt: string }) => {
   const { homepageId } = data;
@@ -16,6 +17,9 @@ export const refineHomepage = async (data: { homepageId: string; prompt: string 
     return { error: "A change request is required." };
   }
   const prompt = data.prompt.trim();
+  if (prompt.length > MAX_HOMEPAGE_PROMPT_CHARS) {
+    return { error: `Change request is too long (max ${MAX_HOMEPAGE_PROMPT_CHARS} characters).` };
+  }
 
   let user;
   try {
@@ -27,7 +31,7 @@ export const refineHomepage = async (data: { homepageId: string; prompt: string 
 
   const homepage = await prismadb.crm_Target_Homepage.findFirst({
     where: { id: homepageId, deletedAt: null },
-    select: { id: true, targetId: true },
+    select: { id: true, targetId: true, status: true, current_version_id: true, updatedAt: true },
   });
   if (!homepage) return { error: "Homepage not found" };
 
@@ -36,6 +40,15 @@ export const refineHomepage = async (data: { homepageId: string; prompt: string 
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;
+  }
+
+  // A refine needs a published version to build on, and must not stack on a run
+  // that's already in flight (each refine is a full vision pass).
+  if (!homepage.current_version_id) {
+    return { error: "Generate the homepage first, then refine it." };
+  }
+  if (isHomepageRunActive(homepage.status, homepage.updatedAt)) {
+    return { error: "A generation is already in progress. Wait for it to finish." };
   }
 
   const target = await prismadb.crm_Targets.findFirst({

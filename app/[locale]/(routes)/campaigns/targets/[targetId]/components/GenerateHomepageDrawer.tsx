@@ -1,5 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { slugify as proposeSlug } from "@/lib/homepage/slug-shape";
 import {
   Sheet,
   SheetContent,
@@ -58,18 +60,9 @@ const POLL_MAX_MS = 6 * 60_000;
 const isActive = (s: HomepageStatus | undefined) =>
   s === "PENDING" || s === "RUNNING";
 
-// Client-side mirror of slugify() in lib/homepage/slug.ts. That module imports
-// prisma, so it cannot be bundled into a client component. Display/proposal only;
-// the server re-slugifies and uniquifies whatever we send.
-function proposeSlug(input: string): string {
-  return input
-    .toLowerCase()
-    .replace(/[^a-z0-9-]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 150)
-    .replace(/-+$/g, "");
-}
+// `proposeSlug` is the shared, prisma-free slugify() (lib/homepage/slug-shape),
+// so the client preview matches exactly what the server persists. Display/proposal
+// only; the server still re-slugifies and uniquifies whatever we send.
 
 // The slug may only change while nothing is published: renaming a published
 // page would 404 the (possibly emailed) live link. FAILED-with-a-live-page is
@@ -102,6 +95,7 @@ export function GenerateHomepageDrawer(props: {
     hasHomepage,
   } = props;
 
+  const router = useRouter();
   const [hp, setHp] = useState<HomepageState | null>(null);
   const [loading, setLoading] = useState(false);
   const [slug, setSlug] = useState("");
@@ -189,8 +183,14 @@ export function GenerateHomepageDrawer(props: {
 
           if (settled) {
             stopPolling();
-            if (next.status === "READY") toast.success("Homepage ready");
-            else if (next.status === "FAILED")
+            if (next.status === "READY") {
+              toast.success("Homepage ready");
+              // Refresh the server component so the email drawer's "include
+              // homepage" gate (hasHomepage, computed server-side) picks up the
+              // now-published page without a manual reload. The open-effect
+              // re-seeds from the fresh props and re-fetches — converges to READY.
+              router.refresh();
+            } else if (next.status === "FAILED")
               toast.error(next.error ?? "Homepage generation failed");
           } else if (elapsed > POLL_MAX_MS) {
             stopPolling();
@@ -210,7 +210,7 @@ export function GenerateHomepageDrawer(props: {
         }
       }, POLL_INTERVAL_MS);
     },
-    [targetId, stopPolling, applySnapshot],
+    [targetId, stopPolling, applySnapshot, router],
   );
 
   // On open: seed from the server-component props (so the preview shows
@@ -524,6 +524,8 @@ export function GenerateHomepageDrawer(props: {
               <Badge
                 variant={status === "FAILED" ? "destructive" : "secondary"}
                 data-testid="homepage-status"
+                role="status"
+                aria-live="polite"
               >
                 {status}
               </Badge>
@@ -553,6 +555,8 @@ export function GenerateHomepageDrawer(props: {
             <p
               className="text-sm text-muted-foreground"
               data-testid="homepage-progress"
+              role="status"
+              aria-live="polite"
             >
               {hasPage
                 ? "Updating the page — the preview below is the previous version."
@@ -563,8 +567,9 @@ export function GenerateHomepageDrawer(props: {
           {hasPage && hp && (
             <div className="space-y-2">
               {/* Sandboxed WITHOUT allow-same-origin: the served page is LLM-generated
-                  from scraped content and needs scripts (Tailwind Play) to style, but
-                  must get an opaque origin (no CRM cookies). Matches the route's CSP. */}
+                  and self-contained (inline CSS/JS only); allow-scripts lets its own
+                  inline scripts run while the opaque origin blocks CRM cookies.
+                  Matches the route's CSP. */}
               <iframe
                 title="Homepage preview"
                 src={previewSrc}
@@ -656,6 +661,7 @@ export function GenerateHomepageDrawer(props: {
                           onClick={() => onRevert(v.id)}
                           disabled={locked || isCurrent}
                           data-testid={`homepage-revert-${n}`}
+                          aria-label={`Revert to v${n}`}
                         >
                           Revert
                         </Button>

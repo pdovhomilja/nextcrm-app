@@ -60,7 +60,7 @@ app/[locale]/(routes)/campaigns/
   prompts/                      AI prompt library page (create / edit / soft-delete
                                 EMAIL + HOMEPAGE prompts, ORG or personal scope);
                                 page.tsx + _components/{PromptList,PromptDialog}.tsx.
-                                URL-only for now (no sidebar entry).
+                                Linked from the Campaigns sidebar group.
   targets/[targetId]/components/
     TargetAiMenu.tsx            header "AI" dropdown (Enrich / Generate email /
                                 Generate homepage)
@@ -99,17 +99,24 @@ revert through a version history. Upstream-owned touches are limited to
 lib/homepage/
   storage.ts                    private-R2 put/get under previews/<slug>/ (index.html, screenshot.png)
   render.ts                     renderAndScreenshot(html) -> PNG via @sparticuz/chromium + playwright-core
-                                (LAZY-imported inside the function; never at module scope)
+                                (LAZY-imported; never at module scope). BLOCKS all network egress during
+                                render (self-contained HTML only). Also exports launchBrowser / isServerless
+                                (shared by harvest-source.ts)
   harvest-source.ts             harvestSource(url): SSRF-guarded (lib/net/host-guard.ts) fetch +
-                                screenshot + brand extraction of the prospect's current site
+                                screenshot + brand extraction; inlines the logo as a data: URI
   provider.ts                   Anthropic vision provider: generateHomepage({brief,prompt,previousHtml?,...})
-  slug.ts                       slugify / isValidSlug / ensureUniqueSlug (readable, user-editable)
+  queue-generation.ts           shared trigger: row upsert + published-slug guard + stale-aware in-flight
+                                guard + event send + audit (used by the web route AND the MCP tool);
+                                MAX_HOMEPAGE_PROMPT_CHARS, STALE_RUN_MS, isHomepageRunActive()
+  slug.ts                       ensureUniqueSlug (prisma) + re-exports the shape helpers
+  slug-shape.ts                 prisma-free slugify / isValidSlug (shared by server AND client components)
+  preview-host.ts               pure /p/ host-gate helpers (isPreviewHostAllowed) used by proxy.ts
   serve.ts                      shared public-serve helpers: generic 404, cache headers,
                                 CSP `sandbox allow-scripts`, loadPublished(slug)
 lib/ai/anthropic-json.ts        tolerant JSON extraction from fenced/preambled model output
-inngest/functions/generate-homepage.ts   homepage/target.generate + .refine job: harvest -> draft ->
-                                N auto critique passes (+ HUMAN refine, revert) -> upload -> version row
-                                -> READY/FAILED
+inngest/functions/generate-homepage.ts   homepage/target.{generate,refine,revert} job: harvest (+ logo
+                                inline) -> draft -> N auto critique passes (+ HUMAN refine, revert) ->
+                                upload -> version row -> READY (throws NonRetriableError on failure)
 actions/crm/homepage/           server actions: get-homepage-status, refine-homepage,
                                 revert-homepage-version, update-homepage-slug
 app/api/crm/targets/[id]/generate-homepage/route.ts   POST trigger (authz + APPROVED gate)

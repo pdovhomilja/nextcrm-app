@@ -4,23 +4,8 @@
 // "Additive-first change standard" and docs/reference/UPSTREAM_IMPACT_LOG.md.
 import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
-import { inngest } from "@/inngest/client";
-import { writeAuditLog } from "@/lib/audit-log";
-import { ensureUniqueSlug, slugify } from "@/lib/homepage/slug";
+import { queueHomepageGeneration, MAX_HOMEPAGE_PROMPT_CHARS } from "@/lib/homepage/queue-generation";
 import { itemResponse, notFound, validationError, externalError } from "../helpers";
-
-/**
- * Resolve the homepage slug (mirrors the web generate route). An explicit slug
- * wins; otherwise derive from the company name. A blank/all-symbol company
- * slugifies to "", so fall back to a slug derived from the target id.
- */
-async function resolveSlug(targetId: string, company: string | null, requested?: string) {
-  const candidates = [requested, company ?? "", `site-${targetId.slice(0, 8)}`];
-  for (const c of candidates) {
-    if (c && slugify(c)) return ensureUniqueSlug(c);
-  }
-  return ensureUniqueSlug(`site-${targetId.replace(/[^a-z0-9]/gi, "").slice(0, 8) || "page"}`);
-}
 
 export const crmHomepageTools = [
   {
@@ -29,8 +14,8 @@ export const crmHomepageTools = [
       "Queue generation of a preview homepage for an APPROVED target (regenerates if one already exists). Trigger-only: returns immediately; poll crm_get_homepage_status for progress. Optional prompt steers the design; optional slug sets the preview URL (only for a not-yet-published page).",
     schema: z.object({
       target_id: z.string().uuid(),
-      prompt: z.string().optional(),
-      slug: z.string().optional(),
+      prompt: z.string().max(MAX_HOMEPAGE_PROMPT_CHARS).optional(),
+      slug: z.string().max(160).optional(),
     }),
     async handler(args: { target_id: string; prompt?: string; slug?: string }, userId: string) {
       const target = await prismadb.crm_Targets.findFirst({
@@ -42,79 +27,18 @@ export const crmHomepageTools = [
         validationError("Target must be approved before generating a homepage");
       }
 
-      const prompt = args.prompt?.trim() ? args.prompt.trim() : undefined;
-      const requestedSlug = args.slug?.trim() ? args.slug : undefined;
-
-      // The row MUST exist before the event is sent: the job looks it up by
-      // targetId and silently skips when there is none.
-      const existing = await prismadb.crm_Target_Homepage.findUnique({
-        where: { targetId: target.id },
-        select: { id: true, slug: true, preview_url: true, current_version_id: true },
-      });
-      const baseData = {
-        status: "PENDING" as const,
-        base_prompt: prompt ?? null,
-        source_url: target.company_website ?? null,
-        error: null,
-        deletedAt: null,
-      };
-
-      let homepageId: string;
-      let slug: string;
-      try {
-        if (existing) {
-          const data: typeof baseData & { slug?: string } = { ...baseData };
-          const wanted = requestedSlug ? slugify(requestedSlug) : "";
-          if (wanted && wanted !== existing.slug) {
-            // Renaming only edits the DB row; published objects stay under the
-            // old slug, so a rename would 404 a live (possibly emailed) link.
-            if (existing.preview_url || existing.current_version_id) {
-              validationError(
-                "This page is already published; its URL can't be changed. Omit slug to regenerate."
-              );
-            }
-            data.slug = await ensureUniqueSlug(requestedSlug as string);
-          }
-          await prismadb.crm_Target_Homepage.update({ where: { id: existing.id }, data });
-          homepageId = existing.id;
-          slug = data.slug ?? existing.slug;
-        } else {
-          slug = await resolveSlug(target.id, target.company, requestedSlug);
-          const created = await prismadb.crm_Target_Homepage.create({
-            data: { ...baseData, targetId: target.id, slug, created_by: userId },
-          });
-          homepageId = created.id;
-        }
-      } catch (e) {
-        // ensureUniqueSlug is check-then-write; a concurrent request can collide.
-        if ((e as { code?: string })?.code === "P2002") {
-          validationError("Slug or homepage already exists; retry");
-        }
-        throw e;
-      }
-
-      try {
-        await inngest.send({
-          name: "homepage/target.generate",
-          data: { targetId: target.id, prompt, triggeredBy: userId },
-        });
-      } catch (e) {
-        console.error("[MCP_GENERATE_HOMEPAGE_SEND]", e);
-        await prismadb.crm_Target_Homepage.update({
-          where: { id: homepageId },
-          data: { status: "FAILED", error: "Failed to queue generation job" },
-        });
-        externalError("Failed to queue homepage generation");
-      }
-
-      await writeAuditLog({
-        entityType: "target",
-        entityId: target.id,
-        action: "updated",
-        changes: [{ field: "homepage", old: null, new: "generation queued" }],
+      const result = await queueHomepageGeneration({
+        target: { id: target.id, company: target.company, company_website: target.company_website },
+        prompt: args.prompt,
+        requestedSlug: args.slug,
         userId,
       });
-      return itemResponse({ queued: true, slug, status: "PENDING" });
+      if (!result.ok) {
+        if (result.code === "QUEUE_FAILED") externalError(result.message);
+        validationError(result.message);
+      }
+
+      return itemResponse({ queued: true, slug: result.slug, status: "PENDING" });
     },
   },
   {

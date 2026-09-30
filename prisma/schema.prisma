@@ -2105,7 +2105,7 @@ model crm_Target_Homepage {
   base_prompt    String?             @db.Text
   error          String?
   current_version_id String? @db.Uuid
-  source_url         String?
+  logo_data_uri  String?             @db.Text
   versions           crm_Target_Homepage_Version[]
   created_by     String?             @db.Uuid
   created_on     DateTime?           @default(now())
@@ -2153,7 +2153,6 @@ model crm_Target_Homepage_Version {
   id             String                 @id @default(uuid()) @db.Uuid
   homepage_id    String                 @db.Uuid
   html           String                 @db.Text
-  screenshot_key String?
   prompt         String?                @db.Text
   agent_critique String?                @db.Text
   pass_kind      crm_Homepage_Pass_Kind
@@ -2162,5 +2161,5 @@ model crm_Target_Homepage_Version {
 
   homepage crm_Target_Homepage @relation(fields: [homepage_id], references: [id], onDelete: Cascade)
 
-  @@index([homepage_id])
+  @@index([homepage_id, created_at])
 }

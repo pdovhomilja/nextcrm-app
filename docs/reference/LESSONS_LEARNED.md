@@ -606,6 +606,46 @@
   and `test.skip` with an explicit reason. Never let the probe fail the run. If storage-backed
   coverage matters in CI, add an S3 service container to the job instead.
 
+### `@sparticuz/chromium`'s binary isn't file-traced — serverless launch fails while CI stays green
+
+- **Symptom:** the homepage Inngest job works locally but on Vercel the render step throws at
+  `chromium.executablePath()` / launch (missing binary), even though CI (unit + build) was green.
+- **Cause:** the brotli-packed chromium binary lives in `node_modules/@sparticuz/chromium/bin/`
+  and is loaded at **runtime**, so Next's dependency tracer never sees it and omits it from the
+  serverless bundle. CI never bundles for Vercel, so it can't catch this.
+- **Fix / rule:** add the package's `bin/**` to `outputFileTracingIncludes` for the function that
+  launches it (`"/api/inngest"` here) in `next.config.js`. Verify on the FIRST QA deploy, together
+  with the playwright-core/@sparticuz chromium-version skew.
+
+### Returning `{ failed: true }` from an Inngest flow marks the run green — throw after persisting FAILED
+
+- **Symptom:** a background job's row is correctly `FAILED` and the user sees the error, but the
+  Inngest dashboard shows the run **Completed** (green), `onFailure` never fires, and there's no log
+  of the underlying error (only a truncated message on the row).
+- **Cause:** a flow that catches its error and `return`s a value tells Inngest the run succeeded.
+  The stack is lost and alerting/backstops don't trigger.
+- **Fix / rule:** in the catch, `console.error` with context, persist `status: FAILED` to the row,
+  THEN `throw new NonRetriableError(message)` — the run shows red, `onFailure` fires as a backstop,
+  and the whole (expensive) flow is not retried. Reserve plain `throw`/retries for genuinely
+  transient step failures; step-level retries already cover those before the flow catch runs.
+- **Tell:** tests that `await handler()` on a failure path must switch to `.rejects` / swallow the
+  throw (the DB-state assertions still hold because FAILED was persisted before the throw).
+
+### Rendering LLM-generated HTML in headless chromium is an SSRF egress hole — block the network at render
+
+- **Symptom:** the harvest step guards outbound requests (SSRF), but the *render* step loads
+  model HTML with scripts enabled and no egress restriction — indirect prompt injection (via
+  prospect-controlled copy) could emit `<img>/fetch()` at internal hosts that fire from the server.
+- **Fix / rule:** the generated document is required to be self-contained, so ENFORCE it — install
+  `context.route("**/*", r => r.abort())` before `setContent` so only the in-memory document +
+  `data:`/`blob:` render. It also removes the `networkidle` flakiness (switch to `waitUntil: "load"`).
+- **Tradeoff it creates:** blocking egress ALSO blocks a legit remote logo `<img src>`, so the
+  screenshot (email image + vision self-critique) would diverge from the served page. Fix: at harvest,
+  fetch the logo bytes (re-validate the host with the SAME SSRF guard, `page.request` bypasses CORS,
+  cap size) and inline them as a `data:` URI. Feed the model a placeholder token (never the base64 — it
+  would blow up prompt tokens), persist the data URI on the row (`logo_data_uri`) so refine/revert can
+  reuse it, and substitute the placeholder only at render + upload time.
+
 ---
 
 <!-- Add new entries above this line, newest-relevant first within each section.

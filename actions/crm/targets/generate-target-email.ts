@@ -1,6 +1,7 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { getApiKey } from "@/lib/api-keys";
+import { extractJsonObject } from "@/lib/ai/anthropic-json";
 import {
   requireAuthenticated,
   assertCanWriteTarget,
@@ -15,16 +16,6 @@ The "html" is clean, inline-styled body markup (<p>, <a>, <strong>, <ul>).
 You MAY use merge tags: {{first_name}}, {{last_name}}, {{company}}, {{position}}.
 If the operator's instructions reference a homepage/mockup, you MAY include {{homepage_url}} (link) and/or {{homepage_screenshot}} (image URL for an <img src>).
 Keep it concise and specific to the prospect. No placeholders like [Name].`;
-
-// Claude often wraps JSON in ```json fences or adds a preamble; pull out the object.
-function extractJsonObject(text: string): string | null {
-  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
-  const candidate = (fenced ? fenced[1] : text).trim();
-  const start = candidate.indexOf("{");
-  const end = candidate.lastIndexOf("}");
-  if (start === -1 || end === -1 || end < start) return null;
-  return candidate.slice(start, end + 1);
-}
 
 export const generateTargetEmail = async ({
   targetId,

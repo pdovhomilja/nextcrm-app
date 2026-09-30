@@ -11,6 +11,7 @@ const browserClose = jest.fn();
 const newContext = jest.fn();
 const setDefaultTimeout = jest.fn();
 const launch = jest.fn();
+const logoGet = jest.fn();
 
 jest.mock("playwright-core", () => ({ chromium: { launch: (...a: unknown[]) => launch(...a) } }));
 jest.mock("@sparticuz/chromium", () => ({
@@ -33,10 +34,15 @@ beforeEach(() => {
   goto.mockResolvedValue(undefined);
   route.mockResolvedValue(undefined);
   browserClose.mockResolvedValue(undefined);
+  logoGet.mockResolvedValue({
+    ok: () => true,
+    headers: () => ({ "content-type": "image/png" }),
+    body: async () => Buffer.from("LOGOBYTES"),
+  });
   newContext.mockResolvedValue({
     route,
     setDefaultTimeout,
-    newPage: jest.fn().mockResolvedValue({ goto, evaluate, screenshot }),
+    newPage: jest.fn().mockResolvedValue({ goto, evaluate, screenshot, request: { get: logoGet } }),
   });
   launch.mockResolvedValue({ newContext, close: browserClose });
 });
@@ -70,6 +76,8 @@ describe("harvestSource", () => {
   });
 
   it("runs the guard before launching or navigating", async () => {
+    // No logo here so the (separate) logo-host guard call doesn't muddy the order.
+    evaluate.mockResolvedValue({ logoUrl: null, colors: [], fonts: [], copy: "x" });
     const order: string[] = [];
     assertPublicHost.mockImplementation(async () => {
       order.push("guard");
@@ -84,6 +92,39 @@ describe("harvestSource", () => {
     });
     await harvestSource("https://acme.example");
     expect(order).toEqual(["guard", "launch", "goto"]);
+  });
+
+  it("inlines the logo as a data: URI (re-validating the logo host with the SSRF guard) — F3", async () => {
+    const out = await harvestSource("https://acme.example");
+    // logo host re-validated before fetch, then fetched via page.request (bypasses CORS)
+    expect(assertPublicHost).toHaveBeenCalledWith("x");
+    expect(logoGet).toHaveBeenCalledWith("https://x/logo.png", expect.objectContaining({ timeout: expect.any(Number) }));
+    expect(out?.brand.logoDataUri).toBe(`data:image/png;base64,${Buffer.from("LOGOBYTES").toString("base64")}`);
+  });
+
+  it("skips the logo (null data URI) when its host fails the SSRF guard", async () => {
+    // First call (page host) passes; second call (logo host) rejects.
+    assertPublicHost.mockResolvedValueOnce({ address: "1.2.3.4", hostname: "acme.example" });
+    assertPublicHost.mockRejectedValueOnce(new Error("blocked"));
+    const out = await harvestSource("https://acme.example");
+    expect(out).not.toBeNull();
+    expect(logoGet).not.toHaveBeenCalled();
+    expect(out?.brand.logoDataUri).toBeNull();
+  });
+
+  it("skips a logo larger than the cap, and a non-image response", async () => {
+    logoGet.mockResolvedValueOnce({
+      ok: () => true,
+      headers: () => ({ "content-type": "image/png" }),
+      body: async () => Buffer.alloc(200 * 1024, 1), // > 128 KB cap
+    });
+    expect((await harvestSource("https://acme.example"))?.brand.logoDataUri).toBeNull();
+    logoGet.mockResolvedValueOnce({
+      ok: () => true,
+      headers: () => ({ "content-type": "text/html" }),
+      body: async () => Buffer.from("<html>"),
+    });
+    expect((await harvestSource("https://acme.example"))?.brand.logoDataUri).toBeNull();
   });
 
   it("harvests screenshot + brand for a safe url, with downloads disabled and a nav timeout", async () => {

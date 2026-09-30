@@ -1,8 +1,12 @@
 import type { Browser } from "playwright-core";
 import { assertPublicHost } from "@/lib/net/host-guard";
+import { launchBrowser } from "@/lib/homepage/render";
 
 export type SourceBrand = {
   logoUrl: string | null;
+  /** The logo fetched and inlined as a data: URI (so it survives the render egress
+   *  block); null when there's no logo or it couldn't be fetched/was too large. */
+  logoDataUri: string | null;
   colors: string[];
   fonts: string[];
   copy: string;
@@ -12,32 +16,8 @@ export type HarvestResult = { screenshotB64: string; brand: SourceBrand };
 
 const NAV_TIMEOUT_MS = 15000;
 const MAX_COPY_CHARS = 2000;
-
-/**
- * Environment switch — mirrors lib/homepage/render.ts (its launcher is not
- * exported and render.ts is deliberately left untouched; keep the two in sync).
- */
-function isServerless(): boolean {
-  return !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
-}
-
-async function launchBrowser(): Promise<Browser> {
-  const { chromium: pw } = await import("playwright-core");
-  if (isServerless()) {
-    const mod = await import("@sparticuz/chromium");
-    const sparticuz = mod.default;
-    return pw.launch({
-      args: sparticuz.args,
-      executablePath: await sparticuz.executablePath(),
-      headless: true,
-    });
-  }
-  return pw.launch(
-    process.env.CHROMIUM_EXECUTABLE_PATH
-      ? { executablePath: process.env.CHROMIUM_EXECUTABLE_PATH, headless: true }
-      : { headless: true },
-  );
-}
+// Cap the inlined logo so it never bloats the stored HTML / screenshot payload.
+const MAX_LOGO_BYTES = 128 * 1024;
 
 /** Parse to an http(s) URL, or null. `new URL` also normalises odd host encodings (decimal/hex IPs). */
 function parseHttpUrl(raw: string): URL | null {
@@ -66,7 +46,7 @@ async function hostIsPublic(host: string): Promise<boolean> {
 /**
  * Runs inside the page. Must be self-contained (serialised into the browser).
  */
-function extractBrand(maxCopy: number): SourceBrand {
+function extractBrand(maxCopy: number): Omit<SourceBrand, "logoDataUri"> {
   const abs = (href: string | null | undefined): string | null => {
     if (!href) return null;
     try {
@@ -195,16 +175,45 @@ export async function harvestSource(url: string | null | undefined): Promise<Har
     const raw = await page.evaluate(extractBrand, MAX_COPY_CHARS);
     const png = await page.screenshot({ fullPage: false, timeout: 15000 });
 
+    // Fetch the logo bytes and inline them as a data: URI. The render step blocks
+    // all network egress, so a remote <img src> would never load there (the
+    // screenshot + vision critique would miss the logo); a data: URI renders.
+    // page.request bypasses page CORS, so re-validate the logo host with the SAME
+    // SSRF guard before fetching. Best-effort: any failure just yields no logo.
+    let logoDataUri: string | null = null;
+    const logoTarget = raw.logoUrl ? parseHttpUrl(raw.logoUrl) : null;
+    if (logoTarget && (await hostIsPublic(bareHost(logoTarget)))) {
+      try {
+        const resp = await page.request.get(logoTarget.href, { timeout: 10000 });
+        const ct = resp.headers()["content-type"] || "";
+        if (resp.ok() && ct.startsWith("image/")) {
+          const body = await resp.body();
+          if (body.length > 0 && body.length <= MAX_LOGO_BYTES) {
+            logoDataUri = `data:${ct.split(";")[0]};base64,${body.toString("base64")}`;
+          }
+        }
+      } catch {
+        // best-effort; leave logoDataUri null
+      }
+    }
+
     return {
       screenshotB64: Buffer.from(png).toString("base64"),
       brand: {
         logoUrl: raw.logoUrl ?? null,
+        logoDataUri,
         colors: raw.colors ?? [],
         fonts: raw.fonts ?? [],
         copy: (raw.copy ?? "").slice(0, MAX_COPY_CHARS),
       },
     };
-  } catch {
+  } catch (e) {
+    // Log host + error NAME only. Playwright navigation errors embed the full
+    // navigated URL in `.message`, so never log the message (SSRF/PII hygiene).
+    // On Vercel a chromium launch failure surfaces here and would otherwise be
+    // indistinguishable from "prospect has no website"; this is the breadcrumb
+    // for the first-deploy chromium verification.
+    console.warn("[HARVEST_SOURCE] failed for host", firstHost, (e as Error)?.name);
     return null;
   } finally {
     await browser?.close().catch(() => {});

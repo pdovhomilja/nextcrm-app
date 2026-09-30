@@ -6,25 +6,9 @@ import {
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
-import { inngest } from "@/inngest/client";
 import { prismadb } from "@/lib/prisma";
-import { writeAuditLog } from "@/lib/audit-log";
-import { ensureUniqueSlug, slugify } from "@/lib/homepage/slug";
+import { queueHomepageGeneration } from "@/lib/homepage/queue-generation";
 import { NextRequest, NextResponse } from "next/server";
-
-/**
- * Resolve the homepage slug. An explicit body slug wins; otherwise derive from
- * the company name. An all-symbol/blank company slugifies to "", so fall back
- * to a slug derived from the target id (never leave an empty/colliding slug).
- */
-async function resolveSlug(targetId: string, company: string | null, requested?: string) {
-  const candidates = [requested, company ?? "", `site-${targetId.slice(0, 8)}`];
-  for (const c of candidates) {
-    if (c && slugify(c)) return ensureUniqueSlug(c);
-  }
-  // Unreachable in practice (target ids are hex UUIDs), but never persist "".
-  return ensureUniqueSlug(`site-${targetId.replace(/[^a-z0-9]/gi, "").slice(0, 8) || "page"}`);
-}
 
 export async function POST(
   request: NextRequest,
@@ -57,71 +41,26 @@ export async function POST(
     );
   }
 
-  const body = await request.json().catch(() => ({}));
-  const prompt: string | undefined =
-    typeof body.prompt === "string" && body.prompt.trim() ? body.prompt.trim() : undefined;
-  const requestedSlug: string | undefined = typeof body.slug === "string" ? body.slug : undefined;
+  // A JSON `null` / non-object body would make `body.prompt` throw; coerce to {}.
+  const raw = await request.json().catch(() => ({}));
+  const body = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  const prompt = typeof body.prompt === "string" && body.prompt.trim() ? body.prompt : undefined;
+  const requestedSlug = typeof body.slug === "string" ? body.slug : undefined;
 
-  // The row MUST exist before the event is sent: the job looks it up by
-  // targetId and silently skips when there is none.
-  const existing = await prismadb.crm_Target_Homepage.findUnique({
-    where: { targetId: id },
-    select: { id: true, slug: true },
-  });
-  const baseData = {
-    status: "PENDING" as const,
-    base_prompt: prompt ?? null,
-    source_url: target.company_website ?? null,
-    error: null,
-    deletedAt: null,
-  };
-  let homepageId: string;
-  try {
-    if (existing) {
-      // Regenerate keeps the live slug (and its stored objects) unless a
-      // different one was explicitly requested.
-      const data: typeof baseData & { slug?: string } = { ...baseData };
-      if (requestedSlug && slugify(requestedSlug) && slugify(requestedSlug) !== existing.slug) {
-        data.slug = await ensureUniqueSlug(requestedSlug);
-      }
-      await prismadb.crm_Target_Homepage.update({ where: { id: existing.id }, data });
-      homepageId = existing.id;
-    } else {
-      const slug = await resolveSlug(id, target.company, requestedSlug);
-      const created = await prismadb.crm_Target_Homepage.create({
-        data: { ...baseData, targetId: id, slug, created_by: user.id },
-      });
-      homepageId = created.id;
-    }
-  } catch (e) {
-    // ensureUniqueSlug is check-then-write; a concurrent request can still
-    // collide on slug or targetId.
-    if ((e as { code?: string })?.code === "P2002") {
-      return NextResponse.json({ error: "Slug or homepage already exists; retry" }, { status: 409 });
-    }
-    throw e;
-  }
-
-  try {
-    await inngest.send({
-      name: "homepage/target.generate",
-      data: { targetId: id, prompt, triggeredBy: user.id },
-    });
-  } catch (e) {
-    console.error("[GENERATE_HOMEPAGE_SEND]", e);
-    await prismadb.crm_Target_Homepage.update({
-      where: { id: homepageId },
-      data: { status: "FAILED", error: "Failed to queue generation job" },
-    });
-    return NextResponse.json({ error: "Failed to queue generation" }, { status: 502 });
-  }
-
-  await writeAuditLog({
-    entityType: "target",
-    entityId: id,
-    action: "updated",
-    changes: [{ field: "homepage", old: null, new: "generation queued" }],
+  const result = await queueHomepageGeneration({
+    target: { id: target.id, company: target.company, company_website: target.company_website },
+    prompt,
+    requestedSlug,
     userId: user.id,
   });
-  return NextResponse.json({ queued: true });
+
+  if (!result.ok) {
+    let status: number;
+    if (result.code === "PROMPT_TOO_LONG") status = 400;
+    else if (result.code === "SLUG_LOCKED" || result.code === "CONFLICT" || result.code === "BUSY") status = 409;
+    else status = 502;
+    return NextResponse.json({ error: result.message }, { status });
+  }
+
+  return NextResponse.json({ queued: true, slug: result.slug });
 }

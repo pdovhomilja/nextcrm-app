@@ -91,6 +91,17 @@ pnpm dev
 5. **Verify (blank website):** a target with no `company_website` still generates.
    **Verify (blocked URL):** a target whose website is `http://localhost` / a private IP still
    generates (source harvest is skipped, never fetched).
+6. **Verify (logo fidelity, F3):** for a target whose site has a logo, the generated **screenshot**
+   shows the logo (not just the served page) — the logo is harvested and inlined, so it renders even
+   though the render step blocks all network egress.
+7. **Verify (in-flight guard, M3):** while a generation is Generating…, re-clicking Generate (or
+   Refine/Revert) is rejected with "already in progress" — no duplicate run is queued.
+8. **Verify (published-slug lock, H2):** once a page is published, changing the slug and regenerating
+   keeps the original slug (the live `/p/<slug>` link is never orphaned).
+9. **Verify (email gate refresh, M5):** after a generation completes, open **Generate email** — the
+   "include homepage" option is enabled without a manual page reload.
+10. **Verify (previews host isolation):** with `NEXT_PUBLIC_PREVIEWS_BASE_URL` set, `/p/<slug>` serves
+    only on the previews host; the same path on the CRM host returns 404.
 
 ## 4. Refine
 
@@ -98,6 +109,8 @@ pnpm dev
 2. **Verify:** a new `HUMAN` version is added and becomes **Current**; the preview updates.
 3. **Verify (failure keeps the live page):** if the refine job fails, the previous version stays
    Current and the public `/p/<slug>` keeps serving it.
+4. **Verify (refine needs a page first):** on a target with no generated page yet, Refine is refused
+   with "Generate the homepage first".
 
 ## 5. Revert
 
@@ -121,3 +134,11 @@ status, preview URL and versions.
   first Vercel preview, not locally or in CI.
 - **No per-version screenshots:** revert re-renders.
 - **CI e2e has no S3:** the storage-backed E2E tests skip there (`LESSONS_LEARNED.md`).
+- **E2E parity for the manual steps 6–10 above is partial:** the `/p/` host-gate helper
+  (`isPreviewHostAllowed`), the in-flight/published-slug/prompt-length guards, the 429-retriable
+  classification, and the logo-inline harvest are all covered by **Jest** (unit), but there is no
+  Playwright counterpart yet — the host gate and the stuck-row/logo scenarios need host-header and
+  timing control that the current e2e harness doesn't set up. Add Playwright coverage as a fast-follow.
+- **Local migration checksum:** the `20260930120000_homepage_versions` migration was edited in place
+  during review (columns dropped/added). If you already ran it locally, `pnpm exec prisma migrate reset`
+  (local Supabase on :54622) to clear the checksum mismatch before `pnpm db:migrate`.

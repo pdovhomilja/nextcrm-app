@@ -1,53 +1,10 @@
 import { prismadb } from "@/lib/prisma";
+import { slugify, isValidSlug, SLUG_MAX_LENGTH, SLUG_SUFFIX_ROOM } from "@/lib/homepage/slug-shape";
 
-/** slugify() truncates to this many characters. */
-export const SLUG_MAX_LENGTH = 150;
-// ensureUniqueSlug() may append "-<n>" after truncation; leave room for it.
-const SLUG_SUFFIX_ROOM = 10;
-const SLUG_SHAPE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-
-/**
- * Canonical slug validator: exactly the shape slugify()/ensureUniqueSlug() can emit
- * (lowercase alnum, single interior hyphens, no leading/trailing hyphen). Used by the
- * public serving guard so it can never drift from what slugify produces.
- */
-export function isValidSlug(s: string): boolean {
-  return (
-    typeof s === "string" &&
-    s.length > 0 &&
-    s.length <= SLUG_MAX_LENGTH + SLUG_SUFFIX_ROOM &&
-    SLUG_SHAPE.test(s)
-  );
-}
-
-/**
- * Converts a string to a URL-friendly slug.
- * - Converts to lowercase
- * - Replaces non-alphanumeric characters with hyphens
- * - Collapses multiple hyphens to single hyphen
- * - Trims hyphens from start and end
- * - Caps length at 150 characters
- */
-export function slugify(input: string): string {
-  if (!input || !input.trim()) {
-    return "";
-  }
-
-  return (
-    input
-      .toLowerCase()
-      // Replace any non-alphanumeric characters with hyphens
-      .replace(/[^a-z0-9-]/g, "-")
-      // Collapse multiple consecutive hyphens into single hyphen
-      .replace(/-+/g, "-")
-      // Trim hyphens from start and end
-      .replace(/^-+|-+$/g, "")
-      // Cap at SLUG_MAX_LENGTH characters
-      .slice(0, SLUG_MAX_LENGTH)
-      // Truncation can leave a trailing hyphen
-      .replace(/-+$/g, "")
-  );
-}
+// Shape helpers live in the prisma-free lib/homepage/slug-shape.ts so client
+// components can share them; re-exported here so existing server imports of
+// "@/lib/homepage/slug" keep working unchanged.
+export { slugify, isValidSlug, SLUG_MAX_LENGTH, SLUG_SUFFIX_ROOM };
 
 /**
  * Ensures a slug is unique by suffixing with -2, -3, etc. if necessary.
@@ -67,6 +24,7 @@ export async function ensureUniqueSlug(base: string): Promise<string> {
   while (true) {
     const existing = await prismadb.crm_Target_Homepage.findUnique({
       where: { slug: candidate },
+      select: { id: true },
     });
 
     if (!existing) {

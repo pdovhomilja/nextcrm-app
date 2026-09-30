@@ -104,8 +104,9 @@ serves RFC 8058 one-click.)*
 
 ## Known gaps
 
-- **No sidebar link to the prompt library yet:** `/en/campaigns/prompts` is reachable
-  by URL only (`menu-items/Campaigns.tsx` is upstream-owned and was not touched).
+- **Prompt library** is linked from the Campaigns sidebar group (an insertion-only
+  hook in the upstream-owned `menu-items/Campaigns.tsx`; also reachable at
+  `/en/campaigns/prompts`).
 - **Homepage generation** now exists — see `docs/testing/target-homepage-manual-testing.md`.
   The include-homepage checkbox above stays disabled until a homepage exists for the target.
 - **MCP parity** (`crm_send_target_email`, prompt CRUD tools) is covered by Jest

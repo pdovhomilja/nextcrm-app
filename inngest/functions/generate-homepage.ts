@@ -1,4 +1,5 @@
 import { inngest } from "@/inngest/client";
+import { NonRetriableError } from "inngest";
 import { prismadb } from "@/lib/prisma";
 import { getApiKey } from "@/lib/api-keys";
 import { harvestSource, type HarvestResult } from "@/lib/homepage/harvest-source";
@@ -10,7 +11,6 @@ import {
   putHomepageTmpSource,
   getHomepageTmpSource,
   deleteHomepageTmpSource,
-  homepageShotKey,
 } from "@/lib/homepage/storage";
 
 /** Number of automatic render->critique->refine passes after the initial draft. Hard bound. */
@@ -23,7 +23,13 @@ export const AUTO_PASSES = 3;
  * Each pass runs in its own `step.run`, so a timeout only fails (and retries)
  * that one step.
  */
-export const GENERATE_TIMEOUT_MS = 120_000;
+// Budget note (vercel.json maxDuration: 300s): the auto-pass `generate-*` step
+// does renderPng(previousHtml) (≤ RENDER_TIMEOUT_MS) AND the vision call
+// (≤ GENERATE_TIMEOUT_MS) in ONE invocation, so their sum plus chromium-launch/R2
+// overhead must stay under 300s or the platform kill beats our withTimeout/
+// markFailed (the onFailure backstop still holds the "never stuck RUNNING"
+// invariant, but the graceful path is preferred). 200 + 60 = 260s leaves ~40s.
+export const GENERATE_TIMEOUT_MS = 200_000;
 export const RENDER_TIMEOUT_MS = 60_000;
 
 export type GenerateHomepageEventData = {
@@ -57,7 +63,19 @@ type HomepageRow = {
   targetId: string;
   slug: string;
   current_version_id: string | null;
+  logo_data_uri?: string | null;
 };
+
+// The model is told to use this exact token as the logo <img> src (buildBrief);
+// we swap in the harvested logo data: URI only at RENDER + UPLOAD time. Keeping
+// the placeholder in the persisted/prompt HTML keeps prompts small (the base64
+// never enters the model prompt or a step return) while the screenshot + served
+// page still show the real logo under the render egress block.
+const LOGO_PLACEHOLDER = "__RADE_LOGO_SRC__";
+
+function materializeLogo(html: string, logoDataUri: string | null | undefined): string {
+  return html.split(LOGO_PLACEHOLDER).join(logoDataUri ?? "");
+}
 
 type TargetRow = {
   id: string;
@@ -79,15 +97,26 @@ function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
   return Promise.race([p, timeout]).finally(() => clearTimeout(timer));
 }
 
-function buildBrief(target: TargetRow, brand: HarvestResult["brand"] | null): string {
+function buildBrief(
+  target: TargetRow,
+  brand: HarvestResult["brand"] | null,
+  logoDataUri: string | null | undefined,
+): string {
   const lines = [`Business: ${target.company ?? "(unknown)"}`];
   if (target.company_website) lines.push(`Current website: ${target.company_website}`);
   if (target.description) lines.push(`Description: ${target.description}`);
   if (brand) {
-    if (brand.logoUrl) lines.push(`Logo URL: ${brand.logoUrl}`);
     if (brand.colors.length) lines.push(`Brand colors: ${brand.colors.join(", ")}`);
     if (brand.fonts.length) lines.push(`Brand fonts: ${brand.fonts.join(", ")}`);
     if (brand.copy) lines.push(`Copy from the current site:\n${brand.copy}`);
+  }
+  // Never hand the model a remote logo URL — it wouldn't load under the render
+  // egress block. When we have the logo, tell the model to use the placeholder
+  // token we substitute at render time; otherwise it uses a text wordmark.
+  if (logoDataUri) {
+    lines.push(
+      `Business logo: set the logo <img> src attribute to the EXACT token ${LOGO_PLACEHOLDER} (it is replaced with the real logo). Do not use any other logo URL.`,
+    );
   }
   return lines.join("\n");
 }
@@ -126,7 +155,8 @@ async function runPass(
     passKind: "AUTO" | "HUMAN";
     createdBy: string | null;
     versionPrompt: string | null;
-    isFinal: boolean;
+    /** Harvested logo, substituted into the placeholder before any render. */
+    logoDataUri: string | null;
   },
 ): Promise<PassResult> {
   const gen = await step.run(`generate-${label}`, async () => {
@@ -136,7 +166,7 @@ async function runPass(
       : undefined;
     const refinedScreenshotB64 =
       args.visionOfPrevious && args.previousHtml
-        ? (await renderPng(args.previousHtml)).toString("base64")
+        ? (await renderPng(materializeLogo(args.previousHtml, args.logoDataUri))).toString("base64")
         : undefined;
     return withTimeout(
       generateHomepageHtml({
@@ -157,9 +187,6 @@ async function runPass(
       data: {
         homepage_id: args.homepage.id,
         html: gen.html,
-        // Only the final version's screenshot is stored (at the live key);
-        // intermediate passes keep html + critique only.
-        screenshot_key: args.isFinal ? homepageShotKey(args.homepage.slug) : null,
         prompt: args.versionPrompt,
         agent_critique: gen.critique,
         pass_kind: args.passKind,
@@ -173,18 +200,30 @@ async function runPass(
   return { html: gen.html, critique: gen.critique, versionId };
 }
 
-/** Render + upload the html and screenshot to the live keys (screenshot stays in-step). */
-async function renderAndUpload(step: StepLike, name: string, homepage: HomepageRow, html: string) {
+/**
+ * Render + upload the html and screenshot to the live keys (screenshot stays
+ * in-step). The logo placeholder is substituted here so both the served HTML and
+ * the screenshot carry the real (inline) logo, while the persisted version keeps
+ * the placeholder.
+ */
+async function renderAndUpload(
+  step: StepLike,
+  name: string,
+  homepage: HomepageRow,
+  html: string,
+  logoDataUri: string | null,
+) {
   await step.run(name, async () => {
-    const png = await renderPng(html);
-    await putHomepageHtml(homepage.slug, html);
+    const materialized = materializeLogo(html, logoDataUri);
+    const png = await renderPng(materialized);
+    await putHomepageHtml(homepage.slug, materialized);
     await putHomepageScreenshot(homepage.slug, png);
   });
 }
 
 /** Upload the final html + screenshot, then flip the homepage to READY. */
-async function publish(step: StepLike, homepage: HomepageRow, final: PassResult) {
-  await renderAndUpload(step, "upload-final", homepage, final.html);
+async function publish(step: StepLike, homepage: HomepageRow, final: PassResult, logoDataUri: string | null) {
+  await renderAndUpload(step, "upload-final", homepage, final.html, logoDataUri);
   await step.run("mark-ready", () =>
     prismadb.crm_Target_Homepage.update({
       where: { id: homepage.id },
@@ -214,6 +253,20 @@ const markFailed = (step: StepLike, homepageId: string, error: string) =>
       data: { status: "FAILED", error: error.slice(0, 1000) },
     }),
   );
+
+/**
+ * Terminal failure handler for every flow: log with context (the original error
+ * is otherwise lost — only a 1000-char message reached the row), persist FAILED,
+ * then throw NonRetriableError so Inngest marks the run FAILED (visible in the
+ * dashboard; fires onFailure as a backstop) WITHOUT re-running the whole
+ * expensive flow. Returns `never`.
+ */
+async function failRun(step: StepLike, flow: string, homepageId: string, err: unknown): Promise<never> {
+  const message = err instanceof Error ? err.message : String(err);
+  console.error("[GENERATE_HOMEPAGE]", { flow, homepageId, error: message });
+  await markFailed(step, homepageId, message);
+  throw new NonRetriableError(message);
+}
 
 const NO_API_KEY = "NO_API_KEY: configure ANTHROPIC key in admin or profile settings";
 
@@ -247,10 +300,7 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData) {
     if (!target) throw new Error("Target not found");
 
     const apiKey = await step.run("resolve-api-key", () => getApiKey("ANTHROPIC", data.triggeredBy));
-    if (!apiKey) {
-      await markFailed(step, homepage.id, NO_API_KEY);
-      return { failed: "NO_API_KEY" };
-    }
+    if (!apiKey) throw new NonRetriableError(NO_API_KEY);
 
     // The harvest screenshot is uploaded to a transient R2 key inside this step and
     // only the brand + a flag are returned, so no base64 PNG enters step state.
@@ -259,12 +309,20 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData) {
           const h = await harvestSource(target.company_website);
           if (!h) return null;
           await putHomepageTmpSource(homepage.slug, Buffer.from(h.screenshotB64, "base64"));
-          return { brand: h.brand, hasSourceShot: true };
+          // Persist the inlined logo so refine/revert can reuse it later.
+          if (h.brand.logoDataUri) {
+            await prismadb.crm_Target_Homepage.update({
+              where: { id: homepage.id },
+              data: { logo_data_uri: h.brand.logoDataUri },
+            });
+          }
+          return { brand: h.brand, hasSourceShot: true, logoDataUri: h.brand.logoDataUri };
         })
       : null;
     storedSourceShot = !!harvest?.hasSourceShot;
+    const logoDataUri = harvest?.logoDataUri ?? null;
 
-    const brief = buildBrief(target, harvest?.brand ?? null);
+    const brief = buildBrief(target, harvest?.brand ?? null, logoDataUri);
     const baseArgs = {
       apiKey,
       brief,
@@ -272,6 +330,7 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData) {
       homepage,
       createdBy: null,
       versionPrompt: data.prompt ?? null,
+      logoDataUri,
     };
     const operator = data.prompt ? `${BASE_PROMPT}\n\nOperator instructions: ${data.prompt}` : BASE_PROMPT;
 
@@ -279,7 +338,6 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData) {
       ...baseArgs,
       prompt: operator,
       passKind: "AUTO",
-      isFinal: false, // AUTO_PASSES >= 1, so a refinement pass always follows
     });
     for (let i = 1; i <= AUTO_PASSES; i++) {
       current = await runPass(step, `auto-${i}`, {
@@ -288,17 +346,15 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData) {
         previousHtml: current.html,
         visionOfPrevious: true,
         passKind: "AUTO",
-        isFinal: i === AUTO_PASSES,
       });
     }
 
-    await publish(step, homepage, current);
+    await publish(step, homepage, current, logoDataUri);
     if (storedSourceShot) await cleanupTmp(step, homepage.slug);
     return { ready: true, versions: 1 + AUTO_PASSES };
   } catch (err) {
-    await markFailed(step, homepage.id, err instanceof Error ? err.message : String(err));
     if (storedSourceShot) await cleanupTmp(step, homepage.slug);
-    return { failed: true };
+    return failRun(step, "generate", homepage.id, err);
   }
 }
 
@@ -306,10 +362,11 @@ async function refineFlow(step: StepLike, data: RefineHomepageEventData) {
   const homepage = await step.run("load-homepage", () =>
     prismadb.crm_Target_Homepage.findUnique({
       where: { id: data.homepageId, deletedAt: null },
-      select: { id: true, targetId: true, slug: true, current_version_id: true },
+      select: { id: true, targetId: true, slug: true, current_version_id: true, logo_data_uri: true },
     }),
   );
   if (!homepage) return { skipped: "no homepage row" };
+  const logoDataUri = homepage.logo_data_uri ?? null;
 
   try {
     await step.run("mark-running", () =>
@@ -318,13 +375,12 @@ async function refineFlow(step: StepLike, data: RefineHomepageEventData) {
         data: { status: "RUNNING", error: null },
       }),
     );
-    if (!homepage.current_version_id) throw new Error("NO_CURRENT_VERSION: nothing to refine");
+    if (!homepage.current_version_id) {
+      throw new NonRetriableError("Nothing to refine yet — generate the homepage first.");
+    }
 
     const apiKey = await step.run("resolve-api-key", () => getApiKey("ANTHROPIC", data.triggeredBy));
-    if (!apiKey) {
-      await markFailed(step, homepage.id, NO_API_KEY);
-      return { failed: "NO_API_KEY" };
-    }
+    if (!apiKey) throw new NonRetriableError(NO_API_KEY);
 
     const seed = await step.run("load-current-version", async () => {
       const [version, target] = await Promise.all([
@@ -343,21 +399,20 @@ async function refineFlow(step: StepLike, data: RefineHomepageEventData) {
 
     const current = await runPass(step, "human", {
       apiKey,
-      brief: seed.target ? buildBrief(seed.target, null) : "",
+      brief: seed.target ? buildBrief(seed.target, null, logoDataUri) : "",
       prompt: data.prompt,
       previousHtml: seed.html,
       homepage,
       passKind: "HUMAN",
       createdBy: data.triggeredBy ?? null,
       versionPrompt: data.prompt,
-      isFinal: true,
+      logoDataUri,
     });
 
-    await publish(step, homepage, current);
+    await publish(step, homepage, current, logoDataUri);
     return { ready: true, versions: 1 };
   } catch (err) {
-    await markFailed(step, homepage.id, err instanceof Error ? err.message : String(err));
-    return { failed: true };
+    return failRun(step, "refine", homepage.id, err);
   }
 }
 
@@ -370,10 +425,11 @@ async function revertFlow(step: StepLike, data: RevertHomepageEventData) {
   const homepage = await step.run("load-homepage", () =>
     prismadb.crm_Target_Homepage.findUnique({
       where: { id: data.homepageId, deletedAt: null },
-      select: { id: true, targetId: true, slug: true, current_version_id: true },
+      select: { id: true, targetId: true, slug: true, current_version_id: true, logo_data_uri: true },
     }),
   );
   if (!homepage) return { skipped: "no homepage row" };
+  const logoDataUri = homepage.logo_data_uri ?? null;
 
   try {
     await step.run("mark-running", () =>
@@ -391,10 +447,10 @@ async function revertFlow(step: StepLike, data: RevertHomepageEventData) {
     );
     // A version id from another homepage must never be published here.
     if (!version || version.homepage_id !== homepage.id) {
-      throw new Error("Version not found for this homepage");
+      throw new NonRetriableError("Version not found for this homepage");
     }
 
-    await renderAndUpload(step, "upload-revert", homepage, version.html);
+    await renderAndUpload(step, "upload-revert", homepage, version.html, logoDataUri);
     await step.run("mark-ready", () =>
       prismadb.crm_Target_Homepage.update({
         where: { id: homepage.id },
@@ -408,8 +464,7 @@ async function revertFlow(step: StepLike, data: RevertHomepageEventData) {
     );
     return { ready: true };
   } catch (err) {
-    await markFailed(step, homepage.id, err instanceof Error ? err.message : String(err));
-    return { failed: true };
+    return failRun(step, "revert", homepage.id, err);
   }
 }
 
@@ -420,24 +475,29 @@ const BACKSTOP_ERROR = "run failed (onFailure backstop)";
  * step can itself throw (DB blip) and function-level cancellation/timeouts skip
  * the body's catch entirely; Inngest calls this once the run has terminally
  * failed. `event.data.event` is the ORIGINAL triggering event (generate carries
- * targetId, refine carries homepageId). Never throws.
+ * targetId, refine/revert carry homepageId). Only ever flips a row that is still
+ * PENDING/RUNNING, so it can never clobber a newer READY row from a late failure
+ * event. Never throws.
  */
 export async function onGenerateHomepageFailure({
+  error,
   event,
 }: {
+  error?: { message?: string };
   event: { data: { event?: { data?: Partial<GenerateHomepageEventData & RefineHomepageEventData & RevertHomepageEventData> } } };
 }): Promise<void> {
   const orig = event?.data?.event?.data ?? {};
+  const message = error?.message ? `${BACKSTOP_ERROR}: ${error.message}`.slice(0, 1000) : BACKSTOP_ERROR;
   try {
     if (orig.homepageId) {
       await prismadb.crm_Target_Homepage.updateMany({
-        where: { id: orig.homepageId },
-        data: { status: "FAILED", error: BACKSTOP_ERROR },
+        where: { id: orig.homepageId, status: { in: ["PENDING", "RUNNING"] } },
+        data: { status: "FAILED", error: message },
       });
     } else if (orig.targetId) {
       await prismadb.crm_Target_Homepage.updateMany({
         where: { targetId: orig.targetId, status: { in: ["PENDING", "RUNNING"] } },
-        data: { status: "FAILED", error: BACKSTOP_ERROR },
+        data: { status: "FAILED", error: message },
       });
     }
   } catch (e) {
@@ -454,20 +514,28 @@ export const generateHomepage = inngest.createFunction(
       { event: "homepage/target.refine" },
       { event: "homepage/target.revert" },
     ],
-    // Serialize generate/refine (or a double-click) per target so RUNNING/READY
-    // and version writes never interleave. All three events carry targetId.
-    concurrency: { key: "event.data.targetId", limit: 1 },
+    concurrency: [
+      // Serialize generate/refine/revert (or a double-click) per target so
+      // RUNNING/READY and version writes never interleave. All events carry targetId.
+      { key: "event.data.targetId", limit: 1 },
+      // Cap total concurrent runs: each launches a headless chromium in the
+      // 2048 MB function, so unbounded fan-out across targets would OOM.
+      { limit: 2 },
+    ],
     retries: 2,
     onFailure: onGenerateHomepageFailure,
   },
   async ({ event, step }) => {
     const s = step as unknown as StepLike;
-    if (event.name === "homepage/target.refine") {
-      return refineFlow(s, event.data as RefineHomepageEventData);
+    switch (event.name) {
+      case "homepage/target.generate":
+        return generateFlow(s, event.data as GenerateHomepageEventData);
+      case "homepage/target.refine":
+        return refineFlow(s, event.data as RefineHomepageEventData);
+      case "homepage/target.revert":
+        return revertFlow(s, event.data as RevertHomepageEventData);
+      default:
+        throw new NonRetriableError(`Unexpected event ${event.name}`);
     }
-    if (event.name === "homepage/target.revert") {
-      return revertFlow(s, event.data as RevertHomepageEventData);
-    }
-    return generateFlow(s, event.data as GenerateHomepageEventData);
   },
 );

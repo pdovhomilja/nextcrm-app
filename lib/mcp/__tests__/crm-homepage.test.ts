@@ -71,7 +71,6 @@ describe("crm_generate_homepage", () => {
         slug: "acme-co",
         status: "PENDING",
         base_prompt: "bold",
-        source_url: "https://acme.test",
         created_by: "u1",
       }),
     });

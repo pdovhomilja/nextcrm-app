@@ -87,6 +87,7 @@ export async function BasicView({ data }: TargetBasicViewProps) {
             status: true,
             preview_url: true,
             screenshot_url: true,
+            current_version_id: true,
           },
         }),
       ]);
@@ -97,7 +98,10 @@ export async function BasicView({ data }: TargetBasicViewProps) {
       name: p.name,
       body: p.body,
     }));
-    hasHomepage = homepage?.status === "READY";
+    // A page is "available" to the email drawer once it has a published version,
+    // regardless of a later RUNNING refine or a FAILED refine — matching the /p/
+    // serving gate (current_version_id), not the transient job status.
+    hasHomepage = !!homepage?.current_version_id;
     homepageInfo = homepage
       ? {
           slug: homepage.slug,

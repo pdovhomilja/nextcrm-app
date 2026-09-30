@@ -82,14 +82,13 @@ beforeEach(() => {
 describe("POST generate-homepage", () => {
   it("creates the row THEN sends the event with targetId", async () => {
     const res = await call({ prompt: "Bold" });
-    expect(await res.json()).toEqual({ queued: true });
+    expect(await res.json()).toEqual({ queued: true, slug: "acme-plumbing" });
     expect(hpCreate).toHaveBeenCalledWith({
       data: expect.objectContaining({
         targetId: TID,
         slug: "acme-plumbing",
         status: "PENDING",
         base_prompt: "Bold",
-        source_url: "https://acme.example",
       }),
     });
     expect(send).toHaveBeenCalledWith({
@@ -123,6 +122,41 @@ describe("POST generate-homepage", () => {
       data: expect.objectContaining({ status: "PENDING", error: null }),
     });
     expect(hpUpdate.mock.calls[0][0].data.slug).toBeUndefined();
+    expect(send).toHaveBeenCalledTimes(1);
+  });
+
+  it("refuses to rename an already-published page's slug (protects the live link) — H2", async () => {
+    hpFindUnique.mockResolvedValue({
+      id: "h1",
+      slug: "live-slug",
+      status: "READY",
+      preview_url: "https://p/p/live-slug",
+      current_version_id: "v2",
+    });
+    const res = await call({ slug: "brand-new" });
+    expect(res.status).toBe(409);
+    expect((await res.json()).error).toMatch(/already published/i);
+    expect(hpUpdate).not.toHaveBeenCalled();
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it("refuses to queue while a RECENT run is already in flight (no duplicate run) — M3", async () => {
+    hpFindUnique.mockResolvedValue({ id: "h1", slug: "live-slug", status: "RUNNING", preview_url: null, current_version_id: null, updatedAt: new Date() });
+    const res = await call();
+    expect(res.status).toBe(409);
+    expect(send).not.toHaveBeenCalled();
+    expect(hpUpdate).not.toHaveBeenCalled();
+  });
+
+  it("allows regenerate to recover a STALE stuck run (lost/cancelled event) — F2", async () => {
+    // RUNNING but last touched > 10 min ago -> not treated as busy, regenerate proceeds.
+    hpFindUnique.mockResolvedValue({
+      id: "h1", slug: "live-slug", status: "RUNNING", preview_url: null, current_version_id: null,
+      updatedAt: new Date(Date.now() - 30 * 60_000),
+    });
+    const res = await call();
+    expect(res.status).toBe(200);
+    expect(hpUpdate).toHaveBeenCalledWith(expect.objectContaining({ where: { id: "h1" }, data: expect.objectContaining({ status: "PENDING" }) }));
     expect(send).toHaveBeenCalledTimes(1);
   });
 
@@ -207,10 +241,28 @@ describe("refineHomepage", () => {
     hpFindFirst.mockResolvedValue(null);
     expect(await refineHomepage({ homepageId: "nope", prompt: "x" })).toEqual({ error: "Homepage not found" });
   });
+  it("refuses refine before anything is generated — M3", async () => {
+    hpFindFirst.mockResolvedValue({ ...HP, status: "READY", current_version_id: null });
+    const res = await refineHomepage({ homepageId: "h1", prompt: "x" });
+    expect(res).toEqual({ error: "Generate the homepage first, then refine it." });
+    expect(send).not.toHaveBeenCalled();
+  });
+  it("refuses refine while a RECENT run is already in flight — M3", async () => {
+    hpFindFirst.mockResolvedValue({ ...HP, status: "RUNNING", updatedAt: new Date() });
+    const res = await refineHomepage({ homepageId: "h1", prompt: "x" });
+    expect(res).toEqual({ error: "A generation is already in progress. Wait for it to finish." });
+    expect(send).not.toHaveBeenCalled();
+  });
+  it("allows refine once a stuck run has gone stale — F2", async () => {
+    hpFindFirst.mockResolvedValue({ ...HP, status: "RUNNING", updatedAt: new Date(Date.now() - 30 * 60_000) });
+    const res = await refineHomepage({ homepageId: "h1", prompt: "x" });
+    expect(res).toEqual({ data: { queued: true } });
+    expect(send).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("getHomepageStatus", () => {
-  it("returns the status shape with versions ordered created_at asc", async () => {
+  it("returns the status shape with versions (newest-first query, reversed to ascending)", async () => {
     const created = new Date("2026-01-01");
     hpFindFirst.mockResolvedValue({
       ...HP,
@@ -234,9 +286,33 @@ describe("getHomepageStatus", () => {
       },
     });
     expect(hpFindFirst.mock.calls[0][0].where).toEqual({ targetId: TID, deletedAt: null });
-    expect(JSON.stringify(hpFindFirst.mock.calls[0][0].select.versions.orderBy)).toContain("asc");
+    // Query newest-first + bounded, then the action reverses to ascending for the UI.
+    expect(JSON.stringify(hpFindFirst.mock.calls[0][0].select.versions.orderBy)).toContain("desc");
+    expect(hpFindFirst.mock.calls[0][0].select.versions.take).toBeGreaterThan(0);
     expect(assertT).toHaveBeenCalledWith(ME, TID);
   });
+  it("reverses the newest-first query to ascending and truncates long critiques — M7/F5", async () => {
+    const d = (n: number) => new Date(`2026-01-0${n}`);
+    // DB returns desc (newest first); the action must output ascending (v1..v3).
+    hpFindFirst.mockResolvedValue({
+      ...HP,
+      status: "READY",
+      error: null,
+      preview_url: null,
+      screenshot_url: null,
+      versions: [
+        { id: "v3", pass_kind: "HUMAN", agent_critique: "x".repeat(500), created_at: d(3) },
+        { id: "v2", pass_kind: "AUTO", agent_critique: "short", created_at: d(2) },
+        { id: "v1", pass_kind: "AUTO", agent_critique: null, created_at: d(1) },
+      ],
+    });
+    const res = (await getHomepageStatus({ targetId: TID })) as { data: { versions: { id: string; agent_critique: string | null }[] } };
+    expect(res.data.versions.map((v) => v.id)).toEqual(["v1", "v2", "v3"]); // reversed to ascending
+    const longOne = res.data.versions.find((v) => v.id === "v3")!;
+    expect(longOne.agent_critique!.length).toBeLessThanOrEqual(281); // 280 + ellipsis
+    expect(longOne.agent_critique!.endsWith("…")).toBe(true);
+  });
+
   it("returns data:null when no homepage exists", async () => {
     hpFindFirst.mockResolvedValue(null);
     expect(await getHomepageStatus({ targetId: TID })).toEqual({ data: null });
@@ -280,6 +356,13 @@ describe("revertHomepageVersion", () => {
     expect(await revertHomepageVersion({ homepageId: "h1", versionId: "v1" })).toEqual({ error: "Forbidden" });
     expect(send).not.toHaveBeenCalled();
   });
+  it("refuses revert while a RECENT run is already in flight — M3", async () => {
+    hpFindFirst.mockResolvedValue({ ...HP, status: "RUNNING", updatedAt: new Date() });
+    verFindFirst.mockResolvedValue({ id: "v1" });
+    const res = await revertHomepageVersion({ homepageId: "h1", versionId: "v1" });
+    expect(res).toEqual({ error: "A generation is already in progress. Wait for it to finish." });
+    expect(send).not.toHaveBeenCalled();
+  });
 });
 
 describe("updateHomepageSlug", () => {
@@ -292,6 +375,15 @@ describe("updateHomepageSlug", () => {
     expect(uniq).toHaveBeenCalledWith("New Slug");
     expect(hpUpdate).toHaveBeenCalledWith({ where: { id: "h1" }, data: { slug: "new-slug-2" } });
     expect(res).toEqual({ data: { slug: "new-slug-2" } });
+    expect(audit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        entityType: "target",
+        entityId: TID,
+        action: "updated",
+        changes: [{ field: "homepage_slug", old: "acme-plumbing", new: "new-slug-2" }],
+        userId: "me",
+      }),
+    );
   });
   it("allows a rename of a never-published PENDING-free row (no preview_url, not READY)", async () => {
     // status is not READY/PENDING/RUNNING and nothing published

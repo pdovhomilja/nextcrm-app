@@ -1,6 +1,6 @@
 jest.mock("@/lib/api-keys", () => ({ getApiKey: jest.fn() }));
 import { extractJsonObject } from "@/lib/ai/anthropic-json";
-import { generateHomepage } from "@/lib/homepage/provider";
+import { generateHomepage, GENERATE_FETCH_TIMEOUT_MS } from "@/lib/homepage/provider";
 
 beforeEach(() => {
   global.fetch = jest.fn().mockResolvedValue({
@@ -36,9 +36,36 @@ it("sends no image block without screenshots and includes previous html", async 
   expect(parts[0].text).toContain("<p>old</p>");
 });
 
-it("throws on non-ok response", async () => {
+it("throws a RETRIABLE error on a 5xx response", async () => {
   (global.fetch as jest.Mock).mockResolvedValue({ ok: false, status: 500, json: async () => ({}) });
-  await expect(generateHomepage({ apiKey: "k", brief: "b", prompt: "p" })).rejects.toThrow();
+  const err = await generateHomepage({ apiKey: "k", brief: "b", prompt: "p" }).catch((e) => e);
+  expect(err).toBeInstanceOf(Error);
+  expect(err.name).not.toBe("NonRetriableError");
+});
+
+it("throws NonRetriableError on a 4xx response (won't burn retries)", async () => {
+  (global.fetch as jest.Mock).mockResolvedValue({ ok: false, status: 401, json: async () => ({}) });
+  const err = await generateHomepage({ apiKey: "k", brief: "b", prompt: "p" }).catch((e) => e);
+  expect(err.name).toBe("NonRetriableError");
+  expect(err.message).toContain("401");
+});
+
+it.each([429, 408, 409])("keeps %d RETRIABLE (transient) — F1", async (status) => {
+  (global.fetch as jest.Mock).mockResolvedValue({ ok: false, status, json: async () => ({}) });
+  const err = await generateHomepage({ apiKey: "k", brief: "b", prompt: "p" }).catch((e) => e);
+  expect(err).toBeInstanceOf(Error);
+  expect(err.name).not.toBe("NonRetriableError");
+  expect(err.message).toContain(String(status));
+});
+
+it("throws NonRetriableError when the response was cut off at max_tokens", async () => {
+  (global.fetch as jest.Mock).mockResolvedValue({
+    ok: true,
+    json: async () => ({ stop_reason: "max_tokens", content: [{ type: "text", text: '{"critique":"x","html":"<main>tr' }] }),
+  });
+  const err = await generateHomepage({ apiKey: "k", brief: "b", prompt: "p" }).catch((e) => e);
+  expect(err.name).toBe("NonRetriableError");
+  expect(err.message).toMatch(/cut off|max_tokens/i);
 });
 
 it("throws on malformed or missing fields", async () => {
@@ -48,7 +75,7 @@ it("throws on malformed or missing fields", async () => {
   await expect(generateHomepage({ apiKey: "k", brief: "b", prompt: "p" })).rejects.toThrow();
 });
 
-it("passes an AbortSignal to fetch and aborts the request after the 120s budget", async () => {
+it("passes an AbortSignal to fetch and aborts the request after the fetch budget", async () => {
   jest.useFakeTimers();
   try {
     (global.fetch as jest.Mock).mockImplementation(
@@ -61,7 +88,7 @@ it("passes an AbortSignal to fetch and aborts the request after the 120s budget"
     const assertion = expect(p).rejects.toThrow("aborted");
     const signal = (global.fetch as jest.Mock).mock.calls[0][1].signal as AbortSignal;
     expect(signal.aborted).toBe(false);
-    await jest.advanceTimersByTimeAsync(119_000);
+    await jest.advanceTimersByTimeAsync(GENERATE_FETCH_TIMEOUT_MS - 1_000);
     expect(signal.aborted).toBe(false);
     await jest.advanceTimersByTimeAsync(2_000);
     expect(signal.aborted).toBe(true);

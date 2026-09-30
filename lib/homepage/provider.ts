@@ -1,3 +1,4 @@
+import { NonRetriableError } from "inngest";
 import { extractJsonObject } from "@/lib/ai/anthropic-json";
 
 export type GenerateHomepageInput = {
@@ -10,7 +11,7 @@ export type GenerateHomepageInput = {
 };
 
 /** Abort budget for the vision request; matches GENERATE_TIMEOUT_MS in the job. */
-export const GENERATE_FETCH_TIMEOUT_MS = 120_000;
+export const GENERATE_FETCH_TIMEOUT_MS = 200_000;
 
 export type GenerateHomepageResult = { html: string; critique: string };
 
@@ -19,7 +20,8 @@ const SYSTEM_PROMPT = `You are a senior web designer producing a redesigned home
 Design rubric (follow strictly):
 - Output ONE single, fully self-contained HTML document: inline <style>, no external CSS/JS frameworks, no build step. Web-safe font stacks or system fonts only.
 - Responsive and mobile-first; must look correct from 360px to 1440px wide. Use fluid type and CSS grid/flexbox.
-- Reuse the supplied brand: colors, logo, business name, and real copy from the source site. Never invent phone numbers, addresses, testimonials, or claims that are not in the brief.
+- Reuse the supplied brand: colors, business name, and real copy from the source site. Never invent phone numbers, addresses, testimonials, or claims that are not in the brief.
+- Logo: if the brief supplies a logo placeholder token, use it verbatim as the logo <img>'s src attribute (it is substituted with the real logo). Otherwise render the business name as a clean styled text wordmark. NEVER reference a remote logo image URL.
 - Strong visual hierarchy: clear hero with one primary call to action, concise value proposition, services/offerings, social proof only if supplied, contact section.
 - Generous whitespace, consistent spacing scale, accessible contrast (WCAG AA), semantic landmarks (header, main, section, footer), descriptive alt text.
 - Modern and clean; avoid clutter, stock-template look, and dated patterns. No scripts that fetch remote resources.
@@ -67,7 +69,7 @@ export async function generateHomepage(
   // waiting). Budget matches the job's per-pass generate timeout.
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), GENERATE_FETCH_TIMEOUT_MS);
-  let data: { content?: { type?: string; text?: string }[] };
+  let data: { content?: { type?: string; text?: string }[]; stop_reason?: string };
   try {
     const res = await fetch(`${baseUrl}/v1/messages`, {
       method: "POST",
@@ -84,10 +86,26 @@ export async function generateHomepage(
       }),
       signal: controller.signal,
     });
-    if (!res.ok) throw new Error(`Anthropic request failed (${res.status})`);
+    if (!res.ok) {
+      // Deterministic 4xx (bad request / auth) fail identically on every retry —
+      // don't burn retries (and vision billing) on them. But 408/409/429 are
+      // TRANSIENT (timeout / conflict / rate limit) and MUST stay retriable, as
+      // must all 5xx.
+      const msg = `Anthropic request failed (${res.status})`;
+      const transient = res.status === 408 || res.status === 409 || res.status === 429;
+      if (res.status >= 400 && res.status < 500 && !transient) throw new NonRetriableError(msg);
+      throw new Error(msg);
+    }
     data = await res.json();
   } finally {
     clearTimeout(timeout);
+  }
+  // A response cut off at max_tokens yields HTML truncated mid-string that then
+  // fails JSON.parse and would be retried three times at 12k tokens each. Fail fast.
+  if (data?.stop_reason === "max_tokens") {
+    throw new NonRetriableError(
+      "AI response was cut off (max_tokens). Try a shorter prompt or simpler design.",
+    );
   }
   const text: string =
     (data?.content ?? []).find((b: { type?: string }) => b?.type === "text")?.text ?? "";

@@ -8,6 +8,7 @@ import {
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
+import { isHomepageRunActive } from "@/lib/homepage/queue-generation";
 
 /**
  * Queue a revert. Re-rendering needs chromium, so it runs in the Inngest job
@@ -27,7 +28,7 @@ export const revertHomepageVersion = async (data: { homepageId: string; versionI
 
   const homepage = await prismadb.crm_Target_Homepage.findFirst({
     where: { id: homepageId, deletedAt: null },
-    select: { id: true, targetId: true },
+    select: { id: true, targetId: true, status: true, updatedAt: true },
   });
   if (!homepage) return { error: "Homepage not found" };
 
@@ -36,6 +37,12 @@ export const revertHomepageVersion = async (data: { homepageId: string; versionI
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;
+  }
+
+  // Don't queue a revert on top of an in-flight run (it would race the live keys).
+  // A stale run (lost/cancelled) doesn't lock it — see isHomepageRunActive.
+  if (isHomepageRunActive(homepage.status, homepage.updatedAt)) {
+    return { error: "A generation is already in progress. Wait for it to finish." };
   }
 
   const target = await prismadb.crm_Targets.findFirst({

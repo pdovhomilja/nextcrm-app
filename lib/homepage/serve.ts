@@ -26,17 +26,21 @@ export function notFound(): Response {
   });
 }
 
-// Static per publish; short public cache. A revert/republish is visible within 5 min.
+// Static per publish; short public + shared-edge cache so repeated prospect
+// loads and the email screenshot fetch hit the CDN, not the function. After a
+// revert/republish the edge revalidates at 5 min, and stale-while-revalidate can
+// serve the prior version for up to ~10 min more (≈15 min worst case) while it does.
 export const OK_HEADERS = {
-  "cache-control": "public, max-age=300",
+  "cache-control": "public, max-age=300, s-maxage=300, stale-while-revalidate=600",
   "x-robots-tag": "noindex",
   "x-content-type-options": "nosniff",
 } as const;
 
-// The served HTML is LLM-generated from scraped third-party content and /p/ is
-// reachable on every host (incl. the authenticated CRM host). `sandbox` without
-// `allow-same-origin` makes the document an opaque origin (no CRM cookies/storage)
-// while page + CDN scripts (e.g. Tailwind Play) still run. NEVER add allow-same-origin.
+// The served HTML is LLM-generated and self-contained (inline CSS/JS only — the
+// generator forbids external resources and the render step blocks egress). /p/ is
+// reachable on every host, so `sandbox` WITHOUT `allow-same-origin` makes the
+// document an opaque origin (no CRM cookies/storage) while its own inline scripts
+// still run. NEVER add allow-same-origin.
 export const HTML_CSP = "sandbox allow-scripts";
 
 /**

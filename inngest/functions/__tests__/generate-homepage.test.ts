@@ -34,6 +34,7 @@ import {
   getHomepageTmpSource,
   deleteHomepageTmpSource,
 } from "@/lib/homepage/storage";
+import { NonRetriableError } from "inngest";
 import { AUTO_PASSES, onGenerateHomepageFailure } from "../generate-homepage";
 
 // createFunction is called once at module load — capture config + handler.
@@ -42,7 +43,7 @@ const config = createFunctionMock.mock.calls[0][0] as {
   id: string;
   triggers: { event: string }[];
   retries: number;
-  concurrency: { key: string; limit: number };
+  concurrency: { key?: string; limit: number }[];
   onFailure: unknown;
 };
 const handler = createFunctionMock.mock.results[0].value as (ctx: {
@@ -100,6 +101,22 @@ beforeEach(() => {
   homepageUpdate.mockResolvedValue({});
 });
 
+// Failure flows now log the error and throw NonRetriableError (so Inngest marks
+// the run FAILED and the dashboard shows red) AFTER persisting FAILED to the row.
+// Silence the expected log noise and give tests a helper that runs a flow expected
+// to fail: it ASSERTS the run threw NonRetriableError (not swallow), so a fix that
+// stops throwing — or throws the wrong error — fails the test. The handler has
+// fully run by the time it rejects, so the post-failure DB assertions still hold.
+beforeEach(() => {
+  jest.spyOn(console, "error").mockImplementation(() => {});
+  jest.spyOn(console, "warn").mockImplementation(() => {});
+});
+const runExpectingFailure = async (
+  ctx: { event: { name: string; data: Record<string, unknown> }; step: { run: (n: string, f: () => unknown) => Promise<unknown> } },
+) => {
+  await expect(handler(ctx)).rejects.toBeInstanceOf(NonRetriableError);
+};
+
 describe("generate-homepage function config", () => {
   it("handles both events with bounded retries", () => {
     expect(config.id).toBe("generate-homepage");
@@ -110,8 +127,15 @@ describe("generate-homepage function config", () => {
     ]);
     expect(config.retries).toBeLessThanOrEqual(2);
   });
-  it("serializes runs per target (concurrency limit 1 keyed on targetId)", () => {
-    expect(config.concurrency).toEqual({ key: "event.data.targetId", limit: 1 });
+  it("serializes runs per target and caps total concurrent chromium runs", () => {
+    expect(config.concurrency).toEqual(
+      expect.arrayContaining([
+        { key: "event.data.targetId", limit: 1 },
+        expect.objectContaining({ limit: expect.any(Number) }),
+      ]),
+    );
+    // A global (unkeyed) cap must exist so parallel targets can't OOM the function.
+    expect(config.concurrency.some((c) => !c.key && c.limit > 0)).toBe(true);
   });
   it("registers the onFailure backstop", () => {
     expect(config.onFailure).toBe(onGenerateHomepageFailure);
@@ -139,7 +163,7 @@ describe("onFailure backstop", () => {
     homepageUpdateMany.mockResolvedValue({ count: 1 });
     await onGenerateHomepageFailure({ event: failed({ homepageId: "h1", targetId: "t1" }) });
     expect(homepageUpdateMany).toHaveBeenCalledWith({
-      where: { id: "h1" },
+      where: { id: "h1", status: { in: ["PENDING", "RUNNING"] } },
       data: { status: "FAILED", error: expect.stringContaining("onFailure backstop") },
     });
   });
@@ -242,7 +266,7 @@ describe("generate event", () => {
   it("failure still FAILED and cleans up the transient source screenshot; cleanup errors never mask it", async () => {
     (deleteHomepageTmpSource as jest.Mock).mockRejectedValue(new Error("r2 delete down"));
     (renderAndScreenshot as jest.Mock).mockRejectedValue(new Error("chromium exploded"));
-    await handler({ event: generateEvent, step });
+    await runExpectingFailure({ event: generateEvent, step });
     expect(deleteHomepageTmpSource).toHaveBeenCalledWith("acme-plumbing");
     const last = homepageUpdate.mock.calls.at(-1)![0];
     expect(last.data.status).toBe("FAILED");
@@ -273,7 +297,7 @@ describe("generate event", () => {
 
   it("no Anthropic key: FAILED with NO_API_KEY, no provider call", async () => {
     (getApiKey as jest.Mock).mockResolvedValue(null);
-    await handler({ event: generateEvent, step });
+    await runExpectingFailure({ event: generateEvent, step });
     expect(generateHomepage).not.toHaveBeenCalled();
     const last = homepageUpdate.mock.calls.at(-1)![0];
     expect(last.data.status).toBe("FAILED");
@@ -282,7 +306,7 @@ describe("generate event", () => {
 
   it("render error: FAILED, never left RUNNING", async () => {
     (renderAndScreenshot as jest.Mock).mockRejectedValue(new Error("chromium exploded"));
-    await handler({ event: generateEvent, step });
+    await runExpectingFailure({ event: generateEvent, step });
     const last = homepageUpdate.mock.calls.at(-1)![0];
     expect(last.data.status).toBe("FAILED");
     expect(last.data.error).toContain("chromium exploded");
@@ -294,7 +318,7 @@ describe("generate event", () => {
       .mockReset()
       .mockResolvedValueOnce({ html: "<html>ok</html>", critique: "c" })
       .mockRejectedValue(new Error("Anthropic request failed (529)"));
-    await handler({ event: generateEvent, step });
+    await runExpectingFailure({ event: generateEvent, step });
     const last = homepageUpdate.mock.calls.at(-1)![0];
     expect(last.data.status).toBe("FAILED");
     expect(last.data.error).toContain("529");
@@ -302,7 +326,7 @@ describe("generate event", () => {
 
   it("storage error: FAILED", async () => {
     (putHomepageHtml as jest.Mock).mockRejectedValue(new Error("R2 down"));
-    await handler({ event: generateEvent, step });
+    await runExpectingFailure({ event: generateEvent, step });
     expect(homepageUpdate.mock.calls.at(-1)![0].data.status).toBe("FAILED");
   });
 
@@ -310,8 +334,8 @@ describe("generate event", () => {
     jest.useFakeTimers();
     try {
       (generateHomepage as jest.Mock).mockReset().mockReturnValue(new Promise(() => {}));
-      const p = handler({ event: generateEvent, step });
-      await jest.advanceTimersByTimeAsync(121_000);
+      const p = handler({ event: generateEvent, step }).catch(() => {});
+      await jest.advanceTimersByTimeAsync(241_000);
       await p;
       const last = homepageUpdate.mock.calls.at(-1)![0];
       expect(last.data.status).toBe("FAILED");
@@ -325,6 +349,20 @@ describe("generate event", () => {
     (prismadb.crm_Target_Homepage.findUnique as jest.Mock).mockResolvedValue(null);
     await handler({ event: generateEvent, step });
     expect(generateHomepage).not.toHaveBeenCalled();
+  });
+
+  it("surfaces the failure to Inngest (throws NonRetriableError) AFTER persisting FAILED, so the run shows red", async () => {
+    (renderAndScreenshot as jest.Mock).mockRejectedValue(new Error("chromium exploded"));
+    const err = await handler({ event: generateEvent, step }).catch((e) => e);
+    expect(err).toBeInstanceOf(NonRetriableError);
+    expect((err as Error).message).toMatch(/chromium exploded/);
+    expect(homepageUpdate.mock.calls.at(-1)![0].data.status).toBe("FAILED");
+  });
+
+  it("rejects an unknown event name", async () => {
+    await expect(
+      handler({ event: { name: "homepage/target.bogus", data: {} }, step }),
+    ).rejects.toThrow(/Unexpected event/);
   });
 });
 
@@ -380,14 +418,14 @@ describe("refine event", () => {
       ...homepage,
       current_version_id: null,
     });
-    await handler({ event: refineEvent, step });
+    await runExpectingFailure({ event: refineEvent, step });
     expect(generateHomepage).not.toHaveBeenCalled();
     expect(homepageUpdate.mock.calls.at(-1)![0].data.status).toBe("FAILED");
   });
 
   it("provider error: FAILED, not RUNNING", async () => {
     (generateHomepage as jest.Mock).mockReset().mockRejectedValue(new Error("boom"));
-    await handler({ event: refineEvent, step });
+    await runExpectingFailure({ event: refineEvent, step });
     expect(homepageUpdate.mock.calls.at(-1)![0].data.status).toBe("FAILED");
   });
 });
@@ -452,21 +490,21 @@ describe("revert event", () => {
 
   it("version belonging to another homepage: FAILED, nothing published", async () => {
     versionFindUnique.mockResolvedValue({ id: "ver9", homepage_id: "OTHER", html: "<html>x</html>" });
-    await handler({ event: revertEvent, step });
+    await runExpectingFailure({ event: revertEvent, step });
     expect(putHomepageHtml).not.toHaveBeenCalled();
     expect(statuses()).toEqual(["RUNNING", "FAILED"]);
   });
 
   it("missing version: FAILED", async () => {
     versionFindUnique.mockResolvedValue(null);
-    await handler({ event: revertEvent, step });
+    await runExpectingFailure({ event: revertEvent, step });
     expect(renderAndScreenshot).not.toHaveBeenCalled();
     expect(statuses()).toEqual(["RUNNING", "FAILED"]);
   });
 
   it("render error: FAILED, never left RUNNING, live keys untouched", async () => {
     (renderAndScreenshot as jest.Mock).mockRejectedValue(new Error("chromium crashed"));
-    await handler({ event: revertEvent, step });
+    await runExpectingFailure({ event: revertEvent, step });
     expect(putHomepageHtml).not.toHaveBeenCalled();
     expect(statuses()).toEqual(["RUNNING", "FAILED"]);
   });
@@ -490,7 +528,7 @@ describe("revert event", () => {
       event: { data: { function_id: "generate-homepage", run_id: "r1", event: revertEvent } } as never,
     });
     expect(homepageUpdateMany).toHaveBeenCalledWith({
-      where: { id: "h1" },
+      where: { id: "h1", status: { in: ["PENDING", "RUNNING"] } },
       data: { status: "FAILED", error: expect.stringContaining("onFailure backstop") },
     });
   });
