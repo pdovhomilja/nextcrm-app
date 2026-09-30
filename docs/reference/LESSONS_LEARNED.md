@@ -393,6 +393,24 @@
 
 ## Background jobs / Inngest
 
+### Re-check a state invariant in the job, not only in the emitter — events can be reordered
+
+- **Symptom (latent):** the homepage upload-override rule ("an uploaded page is never AI-refined")
+  was enforced only in the trigger action (`refine-homepage.ts` refuses when the current version
+  is `UPLOAD`). But a `homepage/target.refine` event can be queued, then a `homepage/target.upload`
+  completes and repoints `current_version_id` to an `UPLOAD` version, then the already-queued refine
+  runs — silently turning the operator's uploaded design into an AI `HUMAN` version. Per-target
+  `concurrency.limit:1` serializes execution but does **not** fix event *ordering*.
+- **Cause:** the invariant was checked at the emitter (the action), which reads state that can change
+  before the consumer (the Inngest job) runs. The gap between emit and run is a real window.
+- **Fix / rule:** re-validate the load-bearing invariant **inside the job** at run time, after
+  loading the row it acts on — don't trust that the emitter's precondition still holds. In
+  `refineFlow` the `load-current-version` step now selects `pass_kind` and throws
+  `NonRetriableError` (same refusal message as the action) if it is `UPLOAD`, before any model call.
+  Persist FAILED + throw `NonRetriableError` so the run doesn't retry a permanently-invalid state.
+- **Tell:** a guard that lives only in a server action/trigger while the actual mutation happens in a
+  later-scheduled job; ask "what if the row changed between emit and run?"
+
 ### A top-level native-module import in ANY Inngest function 500s the whole `/api/inngest` route on Vercel
 
 - **Symptom:** every request to `/api/inngest` (GET/POST/PUT) returns **500** on Vercel;
