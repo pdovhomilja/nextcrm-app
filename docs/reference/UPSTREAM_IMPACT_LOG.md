@@ -494,3 +494,7 @@ email render path depends on them).
 ### feat/homepage-premium-config — admin sidebar nav entry
 - `app/[locale]/(routes)/admin/_components/AdminSidebarNav.tsx` — insert-only (+1 line): added a `{ label: "Homepage Generation", href: "/admin/homepage-settings", icon: SlidersHorizontal }` entry to `navItems` (after Calendar Settings; no new import). Page/form live in the new fork-owned `admin/homepage-settings/`. Risk Low (on conflict keep both sides; the `navItems` array is the usual conflict spot).
 - **Re-verify after any upstream merge:** the `homepage-settings` entry is still in `navItems`, then `pnpm exec tsc --noEmit`.
+
+### feat/homepage-premium-config — seed default HOMEPAGE_BASE prompt
+- `prisma/seeds/seed.ts` — insert-only (+4 lines): one `import { seedHomepageBasePrompt } from "./homepage-base-prompt";` and one `await seedHomepageBasePrompt(prisma);` call (after `seedInvoices`, outside the demo-data gate). Logic/body live in the new fork-owned `prisma/seeds/homepage-base-prompt.ts` (fixed id `00000000-0000-4000-8000-00000000ba5e`, upsert); hosted envs get the row via the new migration `20260930130200_seed_homepage_base_prompt` (`ON CONFLICT DO NOTHING`). Risk Low (on conflict keep both lines; the import block and the tail of `main()` are the usual conflict spots).
+- **Re-verify after any upstream merge:** the import and the `seedHomepageBasePrompt(prisma)` call are still present in `seed.ts`, then `pnpm exec tsc --noEmit`.

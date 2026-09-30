@@ -17,6 +17,7 @@ import leadTypesData from "../initial-data/crm_Lead_Types.json";
 
 import { seedCurrencies } from "./currencies";
 import { seedInvoices } from "./invoices";
+import { seedHomepageBasePrompt } from "./homepage-base-prompt";
 
 const connectionString = process.env.DATABASE_URL!;
 const pool = new Pool({ connectionString });
@@ -287,6 +288,9 @@ async function main() {
 
   // Invoice module defaults
   await seedInvoices(prisma);
+
+  // Default premium HOMEPAGE_BASE designer prompt (idempotent, fixed id)
+  await seedHomepageBasePrompt(prisma);
 
   console.log("-------- Seed DB completed --------");
 }
