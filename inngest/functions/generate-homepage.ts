@@ -274,17 +274,35 @@ const markFailed = (step: StepLike, homepageId: string, error: string) =>
   );
 
 /**
- * Terminal failure handler for every flow: log with context (the original error
- * is otherwise lost — only a 1000-char message reached the row), persist FAILED,
- * then throw NonRetriableError so Inngest marks the run FAILED (visible in the
- * dashboard; fires onFailure as a backstop) WITHOUT re-running the whole
- * expensive flow. Returns `never`.
+ * Failure handler for every flow, split by whether a retry could help:
+ *
+ * - TERMINAL (thrown as NonRetriableError at the source: missing API key, a
+ *   soft-deleted target, a guard, a not-found): a retry cannot fix it, so we
+ *   persist FAILED in-body and rethrow the NonRetriableError — Inngest marks the
+ *   run FAILED immediately, with no wasted retries.
+ * - TRANSIENT (anything else: a Chromium crash, an Anthropic 5xx/429, a render
+ *   or generation timeout, an R2 blip): a retry CAN help, so we rethrow the
+ *   original error unchanged. Inngest retries the run and REPLAYS the already
+ *   completed passes from memoized step state — only the failed step re-runs, so
+ *   a late flaky pass no longer discards the earlier drafts (intra-run resume).
+ *   We deliberately do NOT mark FAILED here: the row stays RUNNING across the
+ *   retry window, and onGenerateHomepageFailure flips it to FAILED once Inngest
+ *   exhausts its retries — preserving the "never stuck RUNNING" invariant.
+ *
+ * Returns `never`.
  */
-async function failRun(step: StepLike, flow: string, homepageId: string, err: unknown): Promise<never> {
+async function endRun(step: StepLike, flow: string, homepageId: string, err: unknown): Promise<never> {
   const message = err instanceof Error ? err.message : String(err);
-  console.error("[GENERATE_HOMEPAGE]", { flow, homepageId, error: message });
-  await markFailed(step, homepageId, message);
-  throw new NonRetriableError(message);
+  if (err instanceof NonRetriableError) {
+    console.error("[GENERATE_HOMEPAGE]", { flow, homepageId, error: message, terminal: true });
+    await markFailed(step, homepageId, message);
+    throw err;
+  }
+  // Transient: rethrow unchanged so Inngest retries (completed steps are
+  // memoized and not redone); the onFailure backstop records FAILED if the
+  // retries run out.
+  console.error("[GENERATE_HOMEPAGE]", { flow, homepageId, error: message, retrying: true });
+  throw err;
 }
 
 /**
@@ -342,7 +360,7 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData) {
         data: { status: "RUNNING", error: null },
       }),
     );
-    if (!target) throw new Error("Target not found");
+    if (!target) throw new NonRetriableError("Target not found");
 
     const apiKey = await step.run("resolve-api-key", () => getApiKey("ANTHROPIC", data.triggeredBy));
     if (!apiKey) throw new NonRetriableError(NO_API_KEY);
@@ -400,8 +418,11 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData) {
     if (storedSourceShot) await cleanupTmp(step, homepage.slug);
     return { ready: true, versions: 1 + AUTO_PASSES };
   } catch (err) {
-    if (storedSourceShot) await cleanupTmp(step, homepage.slug);
-    return failRun(step, "generate", homepage.id, err);
+    // Drop the transient source shot only on a terminal failure; on a retriable
+    // error keep it so the memoized harvest step's screenshot is still present
+    // when Inngest retries the failed pass.
+    if (storedSourceShot && err instanceof NonRetriableError) await cleanupTmp(step, homepage.slug);
+    return endRun(step, "generate", homepage.id, err);
   }
 }
 
@@ -443,7 +464,7 @@ async function refineFlow(step: StepLike, data: RefineHomepageEventData) {
       ]);
       return { html: version?.html ?? null, pass_kind: version?.pass_kind ?? null, target };
     });
-    if (!seed.html) throw new Error("Current version not found");
+    if (!seed.html) throw new NonRetriableError("Current version not found");
     // Defense-in-depth: the trigger gates on UPLOAD, but a refine queued BEFORE an
     // upload can run AFTER it repoints current_version_id. Don't trust the caller —
     // never AI-refine an operator-uploaded page. Same wording as the trigger action.
@@ -469,7 +490,7 @@ async function refineFlow(step: StepLike, data: RefineHomepageEventData) {
     await publish(step, homepage, current, logoDataUri);
     return { ready: true, versions: 1 };
   } catch (err) {
-    return failRun(step, "refine", homepage.id, err);
+    return endRun(step, "refine", homepage.id, err);
   }
 }
 
@@ -521,7 +542,7 @@ async function revertFlow(step: StepLike, data: RevertHomepageEventData) {
     );
     return { ready: true };
   } catch (err) {
-    return failRun(step, "revert", homepage.id, err);
+    return endRun(step, "revert", homepage.id, err);
   }
 }
 
@@ -553,7 +574,7 @@ async function uploadFlow(step: StepLike, data: UploadHomepageEventData) {
 
     const versionId = await step.run("publish-upload", async () => {
       const html = await getHomepageUpload(homepage.slug);
-      if (!html) throw new Error("Uploaded file not found");
+      if (!html) throw new NonRetriableError("Uploaded file not found");
       const materialized = materializeLogo(html, logoDataUri);
       const png = await renderPng(materialized);
       await putHomepageHtml(homepage.slug, materialized);
@@ -590,7 +611,7 @@ async function uploadFlow(step: StepLike, data: UploadHomepageEventData) {
     }
     return { ready: true };
   } catch (err) {
-    return failRun(step, "upload", homepage.id, err);
+    return endRun(step, "upload", homepage.id, err);
   }
 }
 
@@ -651,7 +672,11 @@ export const generateHomepage = inngest.createFunction(
       // 2048 MB function, so unbounded fan-out across targets would OOM.
       { limit: 2 },
     ],
-    retries: 2,
+    // Transient failures (endRun rethrows them unchanged) are retried here;
+    // each retry replays the completed passes from memoized step state and only
+    // re-runs the failed step, so a higher count buys resilience cheaply.
+    // Terminal errors are thrown as NonRetriableError and skip retries entirely.
+    retries: 3,
     onFailure: onGenerateHomepageFailure,
   },
   async ({ event, step }) => {

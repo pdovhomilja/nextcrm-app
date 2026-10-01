@@ -24,7 +24,10 @@ pnpm dev
   lands `FAILED` on macOS unless you set `CHROMIUM_EXECUTABLE_PATH` to a local Chrome
   (local-dev seam; see `ENVIRONMENT_VARIABLES.md`, *Not app config*). Sections 1 and 2 (seeded state) work
   anywhere; the serverless launch itself (sections 3–5) is verified on the **first Vercel preview
-  (QA) deploy** (see `docs/reference/LESSONS_LEARNED.md`, chromium version skew).
+  (QA) deploy** (see `docs/reference/LESSONS_LEARNED.md`, chromium version skew). The
+  Playwright/Chromium pair must share a major: `playwright-core` **1.59.1** (Chromium 147) with
+  `@sparticuz/chromium` **147.x** — a skew makes every render die at launch
+  (`page.screenshot: Target page … has been closed`).
 - **Storage:** local SeaweedFS on `:9000` (`pnpm inngest:up` / `docker-compose.dev.yml`) or
   R2 on hosted; previews live under the private `previews/` prefix.
 - **Optional:** `NEXT_PUBLIC_PREVIEWS_BASE_URL` (e.g. `https://previews.radeengineering.com`).
@@ -89,6 +92,11 @@ pnpm dev
 3. Click **Generate**. **Verify:** status goes Queued → Generating…; the drawer polls.
 4. **Verify:** on completion the preview + screenshot appear, and the Versions list holds the
    automatic passes (`AUTO`). If it lands **FAILED**, the error text is shown.
+   **Note (transient failures retry):** a transient error (render crash, provider 5xx/timeout)
+   no longer fails the run on the first stumble — Inngest retries and resumes from the last
+   completed pass, so the status can stay **Generating…** across the retry/backoff window
+   before it either recovers or lands **FAILED** (don't read a longer RUNNING as hung). A
+   *terminal* error (no API key, deleted target, uploaded-page guard) still fails immediately.
 5. **Verify (blank website):** a target with no `company_website` still generates.
    **Verify (blocked URL):** a target whose website is `http://localhost` / a private IP still
    generates (source harvest is skipped, never fetched).
@@ -180,8 +188,9 @@ status, preview URL and versions.
 
 - **Guessable slug (by design):** `/p/<slug>` is unauthenticated and human-readable; content is a
   non-sensitive mockup. An optional `/p/` rate-limit is a fast-follow (`CUSTOMIZATIONS.md`).
-- **Chromium version skew** (`@sparticuz/chromium` 147 vs `playwright-core` 1.58.2) is verified on the
-  first Vercel preview, not locally or in CI.
+- **Serverless chromium launch** (`@sparticuz/chromium` 147 + `playwright-core` 1.59.1, both
+  Chromium 147) is verified on the first Vercel preview, not locally or in CI. Keep the majors
+  matched on any bump (see `LESSONS_LEARNED.md`).
 - **No per-version screenshots:** revert re-renders.
 - **CI e2e has no S3:** the storage-backed E2E tests skip there (`LESSONS_LEARNED.md`).
 - **E2E parity for §3 steps 5–10 above is partial:** the `/p/` host-gate helper

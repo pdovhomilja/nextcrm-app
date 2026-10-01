@@ -37,9 +37,14 @@
  *
  * The serverless branch cannot be exercised on macOS; set SMOKE_SERVERLESS=1 on a
  * Linux host (e.g. a Vercel preview or `docker run` of a Lambda-like image) to try it.
- * Version note: playwright-core 1.58.x bundles chromium 145; @sparticuz/chromium
- * 147.x is the closest published build (no 145/146). Both speak CDP; pin them
- * together and re-verify on a Vercel preview after any bump.
+ * Version note: Playwright drives a Chromium build of a specific MAJOR; the
+ * @sparticuz/chromium binary MUST match that major or the browser dies on launch
+ * (symptom: "Target page, context or browser has been closed" at the first page
+ * op). playwright-core 1.59.x bundles chromium 147, matched here with
+ * @sparticuz/chromium 147.x. (The earlier 1.58.x + 147 pairing was a 145-vs-147
+ * skew and crashed every serverless render.) Keep the majors equal, pin them
+ * together, and re-verify on a Vercel preview after any bump — the serverless
+ * branch cannot be exercised on macOS.
  */
 const fs = require("node:fs");
 const os = require("node:os");

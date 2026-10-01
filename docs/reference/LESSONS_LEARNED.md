@@ -449,18 +449,58 @@
   scope. Diagnose from Vercel runtime logs for `/api/inngest`.
 - **Tell:** `/api/inngest` 500 the deploy after a render/scrape/PDF dependency landed.
 
-### `@sparticuz/chromium` vs `playwright-core` version skew — the serverless launch is unverifiable locally
+### `@sparticuz/chromium` vs `playwright-core` version skew — the Chromium MAJORs must match (CONFIRMED in prod)
 
-- **Symptom / risk:** `@sparticuz/chromium` 147 ships Chromium 147; `playwright-core` 1.58.2
-  targets Chromium 145. The bundled serverless binary only runs on Linux (Lambda/Vercel), so
-  it cannot be launched on a macOS dev machine, and CI does not exercise it either
-  (unit tests mock the renderer). A skew can surface as a CDP protocol error at launch.
-- **Rule:** treat the first **Vercel preview (QA)** run of "Generate homepage" as the
-  verification step for the chromium launch — it is a release checkpoint, not an assumption.
-  `scripts/smoke/homepage-render-smoke.cjs` documents the local/Linux smoke. If it fails,
-  pin `playwright-core` to the version whose bundled Chromium matches, or pin
-  `@sparticuz/chromium` to 145.x.
-- **Tell:** homepage jobs go `FAILED` with a browser-launch / protocol error only on Vercel.
+- **Symptom:** every homepage render on Vercel failed with
+  `page.screenshot: Target page, context or browser has been closed` — and a preceding
+  `[HOMEPAGE_RENDER] setContent did not fully settle … Target page … has been closed`.
+  The browser was already dead at `setContent` (the *first* page op, before any HTML
+  loaded), and even `revert` (re-rendering previously-good stored HTML) failed identically,
+  so it was not a heavy-page problem. Local Mac dev was fine — the serverless
+  `@sparticuz/chromium` binary only runs on Linux, so this surfaced only once deployed.
+- **Cause:** a two-major Chromium skew. `playwright-core` 1.58.2 drives Chromium **145**
+  (see `node_modules/playwright-core/browsers.json`), but `@sparticuz/chromium` 147.0.2
+  ships Chromium **147**. Playwright can start a binary of the wrong major but cannot
+  reliably drive it over CDP, so the renderer crashes on/just after launch.
+- **Fix / rule:** **keep the Chromium MAJOR equal on both sides.** There is no `@sparticuz`
+  build for 145/146 (it jumps 143 → 147), so the fix was to move Playwright *up* to the
+  major that matches the binary: `playwright-core` → **1.59.1** (Chromium 147), with
+  `@sparticuz/chromium` left at 147.0.2 and `@playwright/test` pinned to the same 1.59.1
+  (a caret had floated it to a newer major and pulled in a second `playwright-core`).
+  Find the mapping authoritatively from each package's `browsers.json` / the `@sparticuz`
+  version (its major = its Chromium major); don't trust memory. After any bump, re-verify on
+  a **Vercel preview (QA)** — `scripts/smoke/homepage-render-smoke.cjs` only exercises the
+  *local* Playwright chromium, never the serverless binary, so a green local smoke does **not**
+  prove the serverless launch.
+- **Tell:** homepage jobs go `FAILED` with a browser-launch / "…has been closed" / CDP error
+  **only on Vercel**; `revert` of a known-good version fails the same way (→ it's the binary,
+  not the generated HTML).
+
+### Inngest: classify errors (transient→retry, terminal→fail-fast) or you throw away resume
+
+- **Symptom:** a multi-step Inngest job (the homepage render loop: initial + 3 auto passes)
+  that failed on a *late* step restarted from scratch — every retry re-ran all the earlier,
+  already-completed passes (each an expensive Anthropic vision call), and a single flaky
+  render marked the whole run `FAILED`.
+- **Cause:** the flow's `catch` converted **every** error to `NonRetriableError` (one
+  `failRun` helper), on the belief that retrying would "re-run the whole expensive flow." But
+  Inngest **memoizes completed steps**: a retry replays finished steps from state and only
+  re-runs the failed one. Blanket-`NonRetriableError` opted the job *out* of that free resume.
+- **Fix / rule:** split failures by whether a retry can help (`endRun` in
+  `inngest/functions/generate-homepage.ts`). Throw `NonRetriableError` **at the source** for
+  genuinely terminal states (missing key, deleted row, a guard, a not-found) → mark `FAILED`
+  in-body immediately. For everything else (render crash, provider 5xx/429, a timeout, an R2
+  blip) **rethrow the original error unchanged** so Inngest retries and resumes from the last
+  completed step. Do **not** mark `FAILED` in-body for a transient error — leave the row
+  `RUNNING` across the retry window and let the `onFailure` backstop record `FAILED` once
+  retries are exhausted (keeps the "never stuck RUNNING" invariant). Consequence to expect: a
+  transient failure now shows `RUNNING` for longer (the retry/backoff window) before `FAILED`,
+  and its final row `error` carries the `onFailure` backstop prefix.
+- **Gotcha:** a terminal error thrown *inside* a `step.run` (vs the flow body) only stays
+  terminal if the runtime preserves `NonRetriableError` across the step boundary — prefer
+  throwing terminal guards in the flow body, and QA-verify any that must live inside a step.
+- **Tell:** an Inngest `catch` that wraps *all* errors in `NonRetriableError`; expensive early
+  steps re-running on what should have been a resumable retry.
 
 ## AI / outbound email
 

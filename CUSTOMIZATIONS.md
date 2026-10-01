@@ -53,9 +53,11 @@ Deliberate, accepted limitations of the homepage-generation feature (revisit whe
   and the slug is human-readable (`acme-plumbing`), so it can be guessed. The content is a
   non-sensitive prospect mockup. **Fast-follow (optional):** an Upstash rate-limit on `/p/`
   (skip outside `VERCEL_ENV=production`, per `e2e-patterns.md`).
-- **Chromium version skew — verify on first deploy.** `@sparticuz/chromium` 147 vs
-  `playwright-core` 1.58.2 (Chromium 145). The serverless launch can't be exercised locally or
-  in CI; the first Vercel preview (QA) run is the verification step (see `LESSONS_LEARNED.md`).
+- **Serverless chromium — majors matched, verify on first deploy.** `@sparticuz/chromium` 147
+  with `playwright-core` 1.59.1 (both Chromium 147); `@playwright/test` pinned to 1.59.1 to match.
+  An earlier 1.58.2 (Chromium 145) vs 147 skew crashed every render on Vercel. The serverless
+  launch can't be exercised locally or in CI; the first Vercel preview (QA) run is the
+  verification step (see `LESSONS_LEARNED.md`).
 - **DNS-rebinding residual on the source harvest.** The host guard resolves once; the browser
   resolves again. Bounded to a screenshot/copy of the answer; host-resolver pinning is a
   possible fast-follow (see `LESSONS_LEARNED.md`).

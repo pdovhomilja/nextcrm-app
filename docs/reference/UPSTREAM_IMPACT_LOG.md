@@ -557,3 +557,24 @@ unsubscribe route (refactored onto the shared page) and `GenerateEmailDrawer` (s
 - `inngest/functions/campaigns/send-step.ts` — insert (+3): `List-Unsubscribe-Post: List-Unsubscribe=One-Click` header so providers POST (not GET) to unsubscribe, matching the route. **Risk Low**.
 
 **Re-verify after any upstream merge:** confirm the editor keeps the `Image` extension, the campaign unsubscribe `GET` does not mutate (and `POST` does), and `send-step` still sets the one-click header; then `pnpm exec jest __tests__/campaigns/api/unsubscribe && pnpm exec tsc --noEmit`.
+
+### fix/serverless-chromium-version-skew — align Playwright/Chromium majors + intra-run resume
+
+Fixes the serverless homepage render (every render failed on Vercel with
+`page.screenshot: Target page … has been closed` — a 145-vs-147 Chromium skew) and reworks
+the Inngest failure handling so transient failures retry/resume via step memoization instead
+of restarting. All real logic lives in **fork-owned** files
+(`inngest/functions/generate-homepage.ts`, `scripts/smoke/homepage-render-smoke.cjs`, the test
+suite). **1 upstream-owned file** touched:
+
+- `package.json` — **version bumps only** (+2/−2): `playwright-core` `1.58.2` → **`1.59.1`**
+  (Chromium 145 → 147, to match the `@sparticuz/chromium` 147.0.2 binary — both fork-added in
+  Task 2), and `@playwright/test` `^1.58.2` → **`1.59.1`** (an upstream-owned devDependency,
+  caret → exact pin so it can't float to a newer major and pull in a second `playwright-core`).
+  `pnpm-lock.yaml` regenerated. **Risk Low** (on conflict, keep the versions equal across all
+  three of `playwright-core`/`@playwright/test`/`@sparticuz/chromium` majors; re-run `pnpm install`).
+
+**Re-verify after any upstream merge:** `playwright-core` and `@playwright/test` resolve to a
+single version whose Chromium major equals `@sparticuz/chromium`'s; `node scripts/smoke/homepage-render-smoke.cjs`
+writes a non-zero PNG locally; then `pnpm exec jest inngest/functions/__tests__/generate-homepage.test.ts && pnpm exec tsc --noEmit`.
+**The serverless launch itself is only proven on a Vercel preview (QA).**

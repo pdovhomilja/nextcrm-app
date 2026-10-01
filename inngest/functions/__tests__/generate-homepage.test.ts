@@ -114,20 +114,34 @@ beforeEach(() => {
   homepageUpdate.mockResolvedValue({});
 });
 
-// Failure flows now log the error and throw NonRetriableError (so Inngest marks
-// the run FAILED and the dashboard shows red) AFTER persisting FAILED to the row.
-// Silence the expected log noise and give tests a helper that runs a flow expected
-// to fail: it ASSERTS the run threw NonRetriableError (not swallow), so a fix that
-// stops throwing — or throws the wrong error — fails the test. The handler has
-// fully run by the time it rejects, so the post-failure DB assertions still hold.
+// endRun splits failures by whether a retry could help:
+//  - TERMINAL (NonRetriableError at the source: no API key, guard, not-found) ->
+//    persist FAILED in-body + rethrow NonRetriableError. `runExpectingTerminal`.
+//  - TRANSIENT (render crash, provider 5xx, timeout, R2 blip) -> rethrow the
+//    ORIGINAL error unchanged so Inngest retries it (replaying the completed
+//    passes from memoized step state); the row is NOT marked FAILED in-body
+//    (onGenerateHomepageFailure records FAILED once retries run out).
+//    `runExpectingRetriable`.
+// Silence the expected log noise. Each helper ASSERTS the exact rejection type,
+// so a regression that mis-classifies an error fails the test.
 beforeEach(() => {
   jest.spyOn(console, "error").mockImplementation(() => {});
   jest.spyOn(console, "warn").mockImplementation(() => {});
 });
-const runExpectingFailure = async (
-  ctx: { event: { name: string; data: Record<string, unknown> }; step: { run: (n: string, f: () => unknown) => Promise<unknown> } },
-) => {
+type FlowCtx = {
+  event: { name: string; data: Record<string, unknown> };
+  step: { run: (n: string, f: () => unknown) => Promise<unknown> };
+};
+const runExpectingTerminal = async (ctx: FlowCtx) => {
   await expect(handler(ctx)).rejects.toBeInstanceOf(NonRetriableError);
+};
+// A transient failure must reject with the original (retriable) error — an
+// Error that is NOT a NonRetriableError, so Inngest keeps retrying it.
+const runExpectingRetriable = async (ctx: FlowCtx): Promise<Error> => {
+  const err = await handler(ctx).catch((e: unknown) => e);
+  expect(err).toBeInstanceOf(Error);
+  expect(err).not.toBeInstanceOf(NonRetriableError);
+  return err as Error;
 };
 
 describe("generate-homepage function config", () => {
@@ -139,7 +153,9 @@ describe("generate-homepage function config", () => {
       "homepage/target.revert",
       "homepage/target.upload",
     ]);
-    expect(config.retries).toBeLessThanOrEqual(2);
+    // Bounded, but > 0 so transient failures get intra-run resume via retries.
+    expect(config.retries).toBeGreaterThanOrEqual(2);
+    expect(config.retries).toBeLessThanOrEqual(3);
   });
   it("serializes runs per target and caps total concurrent chromium runs", () => {
     expect(config.concurrency).toEqual(
@@ -316,14 +332,15 @@ describe("generate event", () => {
     );
   });
 
-  it("failure still FAILED and cleans up the transient source screenshot; cleanup errors never mask it", async () => {
-    (deleteHomepageTmpSource as jest.Mock).mockRejectedValue(new Error("r2 delete down"));
+  it("transient render failure: retriable, row kept RUNNING, transient source shot KEPT for the retry", async () => {
     (renderAndScreenshot as jest.Mock).mockRejectedValue(new Error("chromium exploded"));
-    await runExpectingFailure({ event: generateEvent, step });
-    expect(deleteHomepageTmpSource).toHaveBeenCalledWith("acme-plumbing");
-    const last = homepageUpdate.mock.calls.at(-1)![0];
-    expect(last.data.status).toBe("FAILED");
-    expect(last.data.error).toContain("chromium exploded");
+    const err = await runExpectingRetriable({ event: generateEvent, step });
+    expect(err.message).toContain("chromium exploded");
+    // The shot is reused by the memoized harvest step when Inngest retries, so it
+    // must NOT be cleaned up on a retriable failure.
+    expect(deleteHomepageTmpSource).not.toHaveBeenCalled();
+    // No in-body FAILED — the onFailure backstop records that only after retries run out.
+    expect(statuses()).not.toContain("FAILED");
   });
 
   it("no company_website: harvest yields null, still READY", async () => {
@@ -348,51 +365,61 @@ describe("generate event", () => {
     expect(last.data.screenshot_url).toBeNull();
   });
 
-  it("no Anthropic key: FAILED with NO_API_KEY, no provider call", async () => {
+  it("no Anthropic key: terminal (NonRetriable) FAILED with NO_API_KEY, no provider call", async () => {
     (getApiKey as jest.Mock).mockResolvedValue(null);
-    await runExpectingFailure({ event: generateEvent, step });
+    await runExpectingTerminal({ event: generateEvent, step });
     expect(generateHomepage).not.toHaveBeenCalled();
     const last = homepageUpdate.mock.calls.at(-1)![0];
     expect(last.data.status).toBe("FAILED");
     expect(last.data.error).toMatch(/^NO_API_KEY/);
   });
 
-  it("render error: FAILED, never left RUNNING", async () => {
-    (renderAndScreenshot as jest.Mock).mockRejectedValue(new Error("chromium exploded"));
-    await runExpectingFailure({ event: generateEvent, step });
+  it("deleted target: terminal (NonRetriable) FAILED, no provider call", async () => {
+    (prismadb.crm_Targets.findUnique as jest.Mock).mockResolvedValue(null);
+    await runExpectingTerminal({ event: generateEvent, step });
+    expect(generateHomepage).not.toHaveBeenCalled();
     const last = homepageUpdate.mock.calls.at(-1)![0];
     expect(last.data.status).toBe("FAILED");
-    expect(last.data.error).toContain("chromium exploded");
+    expect(last.data.error).toContain("Target not found");
+  });
+
+  it("render error: retriable, never marked FAILED in-body, live keys untouched", async () => {
+    (renderAndScreenshot as jest.Mock).mockRejectedValue(new Error("chromium exploded"));
+    const err = await runExpectingRetriable({ event: generateEvent, step });
+    expect(err.message).toContain("chromium exploded");
+    expect(statuses()).not.toContain("FAILED");
     expect(putHomepageHtml).not.toHaveBeenCalled();
   });
 
-  it("provider error mid-loop: FAILED", async () => {
+  it("provider error mid-loop (529): retriable, not marked FAILED in-body", async () => {
     (generateHomepage as jest.Mock)
       .mockReset()
       .mockResolvedValueOnce({ html: "<html>ok</html>", critique: "c" })
       .mockRejectedValue(new Error("Anthropic request failed (529)"));
-    await runExpectingFailure({ event: generateEvent, step });
-    const last = homepageUpdate.mock.calls.at(-1)![0];
-    expect(last.data.status).toBe("FAILED");
-    expect(last.data.error).toContain("529");
+    const err = await runExpectingRetriable({ event: generateEvent, step });
+    expect(err.message).toContain("529");
+    expect(statuses()).not.toContain("FAILED");
   });
 
-  it("storage error: FAILED", async () => {
+  it("storage error: retriable, not marked FAILED in-body", async () => {
     (putHomepageHtml as jest.Mock).mockRejectedValue(new Error("R2 down"));
-    await runExpectingFailure({ event: generateEvent, step });
-    expect(homepageUpdate.mock.calls.at(-1)![0].data.status).toBe("FAILED");
+    const err = await runExpectingRetriable({ event: generateEvent, step });
+    expect(err.message).toContain("R2 down");
+    expect(statuses()).not.toContain("FAILED");
   });
 
-  it("a hung provider call is bounded by a timeout and ends FAILED", async () => {
+  it("a hung provider call is bounded by a timeout and stays retriable", async () => {
     jest.useFakeTimers();
     try {
       (generateHomepage as jest.Mock).mockReset().mockReturnValue(new Promise(() => {}));
-      const p = handler({ event: generateEvent, step }).catch(() => {});
+      const p = handler({ event: generateEvent, step }).catch((e: unknown) => e);
       await jest.advanceTimersByTimeAsync(241_000);
-      await p;
-      const last = homepageUpdate.mock.calls.at(-1)![0];
-      expect(last.data.status).toBe("FAILED");
-      expect(last.data.error).toMatch(/timed out/i);
+      const err = (await p) as Error;
+      expect(err).toBeInstanceOf(Error);
+      expect(err).not.toBeInstanceOf(NonRetriableError);
+      expect(err.message).toMatch(/timed out/i);
+      // A timeout is transient — left for Inngest to retry, not marked FAILED here.
+      expect(statuses()).not.toContain("FAILED");
     } finally {
       jest.useRealTimers();
     }
@@ -404,12 +431,14 @@ describe("generate event", () => {
     expect(generateHomepage).not.toHaveBeenCalled();
   });
 
-  it("surfaces the failure to Inngest (throws NonRetriableError) AFTER persisting FAILED, so the run shows red", async () => {
+  it("surfaces a transient failure to Inngest as the ORIGINAL (retriable) error, so it retries instead of failing red", async () => {
     (renderAndScreenshot as jest.Mock).mockRejectedValue(new Error("chromium exploded"));
     const err = await handler({ event: generateEvent, step }).catch((e) => e);
-    expect(err).toBeInstanceOf(NonRetriableError);
+    // Not a NonRetriableError — Inngest replays the memoized passes and retries.
+    expect(err).toBeInstanceOf(Error);
+    expect(err).not.toBeInstanceOf(NonRetriableError);
     expect((err as Error).message).toMatch(/chromium exploded/);
-    expect(homepageUpdate.mock.calls.at(-1)![0].data.status).toBe("FAILED");
+    expect(statuses()).not.toContain("FAILED");
   });
 
   it("rejects an unknown event name", async () => {
@@ -474,20 +503,21 @@ describe("refine event", () => {
     );
   });
 
-  it("no current version: FAILED", async () => {
+  it("no current version: terminal (NonRetriable) FAILED", async () => {
     (prismadb.crm_Target_Homepage.findUnique as jest.Mock).mockResolvedValue({
       ...homepage,
       current_version_id: null,
     });
-    await runExpectingFailure({ event: refineEvent, step });
+    await runExpectingTerminal({ event: refineEvent, step });
     expect(generateHomepage).not.toHaveBeenCalled();
     expect(homepageUpdate.mock.calls.at(-1)![0].data.status).toBe("FAILED");
   });
 
-  it("provider error: FAILED, not RUNNING", async () => {
+  it("provider error: retriable, not marked FAILED in-body", async () => {
     (generateHomepage as jest.Mock).mockReset().mockRejectedValue(new Error("boom"));
-    await runExpectingFailure({ event: refineEvent, step });
-    expect(homepageUpdate.mock.calls.at(-1)![0].data.status).toBe("FAILED");
+    const err = await runExpectingRetriable({ event: refineEvent, step });
+    expect(err.message).toContain("boom");
+    expect(statuses()).not.toContain("FAILED");
   });
 
   it("run-time re-check: an UPLOAD current version is never AI-refined (queued-refine vs upload race)", async () => {
@@ -498,7 +528,7 @@ describe("refine event", () => {
       html: "<html>uploaded</html>",
       pass_kind: "UPLOAD",
     });
-    await runExpectingFailure({ event: refineEvent, step });
+    await runExpectingTerminal({ event: refineEvent, step });
     expect(generateHomepage).not.toHaveBeenCalled();
     expect(versionCreate).not.toHaveBeenCalled();
     const last = homepageUpdate.mock.calls.at(-1)![0];
@@ -567,25 +597,27 @@ describe("revert event", () => {
     });
   });
 
-  it("version belonging to another homepage: FAILED, nothing published", async () => {
+  it("version belonging to another homepage: terminal (NonRetriable) FAILED, nothing published", async () => {
     versionFindUnique.mockResolvedValue({ id: "ver9", homepage_id: "OTHER", html: "<html>x</html>" });
-    await runExpectingFailure({ event: revertEvent, step });
+    await runExpectingTerminal({ event: revertEvent, step });
     expect(putHomepageHtml).not.toHaveBeenCalled();
     expect(statuses()).toEqual(["RUNNING", "FAILED"]);
   });
 
-  it("missing version: FAILED", async () => {
+  it("missing version: terminal (NonRetriable) FAILED", async () => {
     versionFindUnique.mockResolvedValue(null);
-    await runExpectingFailure({ event: revertEvent, step });
+    await runExpectingTerminal({ event: revertEvent, step });
     expect(renderAndScreenshot).not.toHaveBeenCalled();
     expect(statuses()).toEqual(["RUNNING", "FAILED"]);
   });
 
-  it("render error: FAILED, never left RUNNING, live keys untouched", async () => {
+  it("render error: retriable, left RUNNING for the retry, live keys untouched", async () => {
     (renderAndScreenshot as jest.Mock).mockRejectedValue(new Error("chromium crashed"));
-    await runExpectingFailure({ event: revertEvent, step });
+    const err = await runExpectingRetriable({ event: revertEvent, step });
+    expect(err.message).toContain("chromium crashed");
     expect(putHomepageHtml).not.toHaveBeenCalled();
-    expect(statuses()).toEqual(["RUNNING", "FAILED"]);
+    // Only RUNNING in-body; onFailure records FAILED after retries run out.
+    expect(statuses()).toEqual(["RUNNING"]);
   });
 
   it("loads the homepage with the soft-delete filter", async () => {
@@ -677,21 +709,25 @@ describe("upload event", () => {
     expect(outputs).toContain("ver1");
   });
 
-  it("no upload blob: FAILED via failRun, nothing rendered or published", async () => {
+  it("no upload blob: terminal (NonRetriable) FAILED, nothing rendered or published", async () => {
     (getHomepageUpload as jest.Mock).mockResolvedValue(null);
-    await runExpectingFailure({ event: uploadEvent, step });
+    await runExpectingTerminal({ event: uploadEvent, step });
     expect(renderAndScreenshot).not.toHaveBeenCalled();
     expect(putHomepageHtml).not.toHaveBeenCalled();
     expect(versionCreate).not.toHaveBeenCalled();
     expect(statuses()).toEqual(["RUNNING", "FAILED"]);
   });
 
-  it("render error: FAILED, live keys and versions untouched, upload blob kept for retry", async () => {
+  it("render error: retriable, live keys and versions untouched, upload blob kept for retry", async () => {
     (renderAndScreenshot as jest.Mock).mockRejectedValue(new Error("chromium crashed"));
-    await runExpectingFailure({ event: uploadEvent, step });
+    const err = await runExpectingRetriable({ event: uploadEvent, step });
+    expect(err.message).toContain("chromium crashed");
     expect(putHomepageHtml).not.toHaveBeenCalled();
     expect(versionCreate).not.toHaveBeenCalled();
-    expect(statuses()).toEqual(["RUNNING", "FAILED"]);
+    // Only RUNNING in-body; onFailure records FAILED after retries run out.
+    expect(statuses()).toEqual(["RUNNING"]);
+    // The upload action keeps the blob on failure, so a retry can reuse it.
+    expect(deleteHomepageUpload).not.toHaveBeenCalled();
   });
 
   it("cleanup failure is best-effort: still READY", async () => {
