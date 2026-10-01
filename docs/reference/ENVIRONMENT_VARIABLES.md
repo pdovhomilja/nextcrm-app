@@ -40,6 +40,12 @@ in this fork's code** (kept for merge-friendliness).
 > **Homepage generation phase — ONE optional var:** `NEXT_PUBLIC_PREVIEWS_BASE_URL`
 > (optional, fail-closed; nothing newly *required*). Generation reuses `ANTHROPIC_API_KEY`
 > (or the DB key) and the existing `MINIO_*` R2 bucket (private `previews/` prefix).
+>
+> **Homepage AI imagery phase — ONE optional var:** `HIGGSFIELD_API_KEY` (primary image
+> provider; optional, fail-open — absent means the chain falls back to `OPENAI_API_KEY`, then
+> text-only). Nothing newly *required*, so no Vercel scope update is needed to deploy; set it in
+> Preview (QA) first to verify, then Production. Generated images are stored in the same R2
+> bucket under `previews/<slug>/images/`. `OPENAI_BASE_URL` is a test seam (see *Not app config*).
 
 <!-- env-doc:begin -->
 <!-- The env-doc guard parses every `| `NAME` |` row between these markers and
@@ -110,9 +116,10 @@ in this fork's code** (kept for merge-friendliness).
 
 | Variable | Scope | Required | Purpose | Format / example |
 |---|---|---|---|---|
-| `OPENAI_API_KEY` | All | No | OpenAI (document enrichment, etc.). | `sk-...` |
+| `OPENAI_API_KEY` | All | No | OpenAI (document enrichment, etc.). **Dual-use:** also the **fallback image provider** (OpenAI Images, `gpt-image-1`) for homepage AI imagery when `HIGGSFIELD_API_KEY` is unset or fails. | `sk-...` |
 | `ANTHROPIC_API_KEY` | All | No | Anthropic (enrichment agent; also AI outreach-email generation — falls back to a system/personal key stored in the DB). | `sk-ant-...` |
 | `GROQ_API_KEY` | All | No | Groq provider. | — |
+| `HIGGSFIELD_API_KEY` | All | No | **Primary image provider** for homepage AI imagery (Higgsfield, default SOUL V2). Holds `<key-id>:<key-secret>` (sent as `Authorization: Key <id>:<secret>`). **Optional / fail-open:** unset → the chain falls through to `OPENAI_API_KEY`, then text-only generation; a missing key never fails a deploy or a generation run. Admin → Homepage Generation shows a Connected / Not configured indicator. | `id:secret` |
 | `FIRECRAWL_API_KEY` | All | No | Firecrawl (contact enrichment). | `fc-...` |
 
 ### Integrations & public endpoints
@@ -160,6 +167,7 @@ sandbox-runtime values — not application configuration — so they are exclude
 | `SEED_DEMO_DATA`, `SEED_CONTACT_EMAIL`, `TEST_USER_EMAIL` | `prisma/seeds/`, tests | Seed/test only. |
 | `DATABASE_URL_MONGO`, `DATABASE_URL_POSTGRES` | `scripts/migrate-mongo-to-postgres.ts` | One-off migration script. |
 | `ANTHROPIC_BASE_URL` | `actions/crm/targets/generate-target-email.ts`, `lib/homepage/provider.ts` | Optional **test seam** (same name the Anthropic SDKs use): overrides the API origin. Set only by `playwright.config.ts` to a local mock for `tests/e2e/target-ai-email.spec.ts`; unset in every deployed scope → the real API. |
+| `OPENAI_BASE_URL` | `lib/homepage/images/openai.ts` | Optional **test seam** (mirrors `ANTHROPIC_BASE_URL`, same name the OpenAI SDKs use): overrides the OpenAI Images API origin for the homepage image fallback. Unset in every deployed scope → `https://api.openai.com`. |
 | `RESEND_BASE_URL`, `E2E_MOCK_PORT` | `playwright.config.ts` (`RESEND_BASE_URL` is read by the `resend` SDK itself) | E2E only: point Resend at the same local mock so a test run can never send real email; `E2E_MOCK_PORT` (default `4010`) is the mock's port. |
 | `CHROMIUM_EXECUTABLE_PATH`, `AWS_LAMBDA_FUNCTION_NAME` | `lib/homepage/render.ts`, `lib/homepage/harvest-source.ts` | Homepage rendering only. `AWS_LAMBDA_FUNCTION_NAME` (with `VERCEL`) is platform-injected and selects the bundled `@sparticuz/chromium` (serverless Linux). `CHROMIUM_EXECUTABLE_PATH` is an optional **local-dev seam** pointing at an installed Chrome/Chromium so generation can run off-Linux; never set in a deployed scope. |
 | `COMPANY_NAME`, `COMPANY_WEBSITE`, `TARGET_EMAIL`, `TARGET_NAME`, `KNOWN_DOMAIN` | `lib/enrichment/e2b/agent-script.ts` | Injected **inside** the E2B sandbox at runtime, not app config. |

@@ -648,6 +648,56 @@
 - **Also:** authoring/editing `HOMEPAGE_BASE` prompts is admin-gated server-side in
   create/update/delete-prompt (the prompt library is otherwise open to any authenticated user).
 
+### AI image generation is a fail-open side-channel — it must never fail (or retry) the run
+
+- **Symptom (avoided):** an image-provider hiccup (bad/missing key, timeout, NSFW flag, 5xx) turning a
+  perfectly good text-only homepage into a FAILED run, or making Inngest retry the whole flow.
+- **Rule:** the imagery step is a **provider chain** (Higgsfield → OpenAI → none) wrapped so that every
+  failure is caught, logged (`[HOMEPAGE_IMAGE]`) and degrades to the next provider, then to **zero
+  images** — the model is told which tokens (if any) exist. It is isolated from `endRun`/FAILED
+  persistence, and a missing key (`HIGGSFIELD_API_KEY`, `OPENAI_API_KEY`) just skips that provider.
+  Contrast with terminal *text*-generation errors, which still fail fast (see the Inngest
+  step-boundary entry above). Never add a new required env var for an optional capability.
+  Code: `lib/homepage/images/resolve.ts` (`generateWithFallback`), `inngest/functions/generate-homepage.ts`.
+
+### Higgsfield is async, and Soul returns JPEG — poll `status_url`, sniff the content-type
+
+- **Gotchas:** (1) the API is **submit → poll**: POST returns `request_id` + `status_url`; poll
+  `status_url` until `completed`. (2) The finished asset is at **`images[0].url`** (not `output`/`url`
+  at the top level). (3) Terminal failure statuses are **`failed`, `nsfw`, `canceled`** — treat each as
+  a provider failure (fall through), not as "keep polling". (4) The **SOUL model returns JPEG, not PNG**,
+  so storing/serving as `image/png` mislabels it. **Sniff the type from the magic bytes** (PNG
+  `89 50 4E 47`, JPEG `FF D8 FF`, WebP `RIFF…WEBP`, GIF `GIF8`) and store/serve that — never hardcode
+  `image/png` (`lib/homepage/storage.ts`, `app/p/[slug]/images/[name]/route.ts`). Provider outputs
+  persist only ~7 days, so copy the bytes into R2 immediately. The `Authorization` value is
+  `Key <id>:<secret>` and `HIGGSFIELD_API_KEY` holds `id:secret`.
+
+### Extending the render egress allowlist: exact host + slug path-prefix, nothing broader
+
+- **Context:** the render step blocks all network except Google Fonts + one pinned GSAP path. AI images
+  served from R2 on the previews host need to load at render time (so the screenshot shows them).
+- **Rule:** allow the previews host **only** when **both** the exact `host` (incl. port, from
+  `new URL(base).host`) matches **and** the pathname starts with the **current slug's**
+  `/p/<slug>/images/` prefix; absent either option the request stays blocked. Never allow the host
+  wholesale (a model-authored page could then pull another slug's images or any previews path), and
+  match on the parsed URL, not `startsWith` on the string. Mirrors the GSAP path-prefix guard
+  (`lib/homepage/render-allowlist.ts`). See also *Rendering LLM-generated HTML in headless chromium is
+  an SSRF egress hole*.
+
+### "No base64 in Inngest step state" applies to image bytes too — store in R2, return a reference
+
+- **Rule:** the existing rule (never return base64 image data from a `step.run` — see the *Non-streaming
+  vision calls* entry above; step output is serialized into the run state and capped) extends to
+  generated images.
+  A step that generates images **writes the bytes to R2 and returns only `{ token, url, alt }`** (the
+  slug-scoped served URL), never a Buffer/base64. Persisted version HTML keeps the `__RADE_IMG_n__`
+  **tokens** (like `__RADE_LOGO_SRC__`); substitution to the served URL happens at render + publish, so
+  versions stay small and portable.
+- **Generate once, reuse:** images are generated **once per run** (before the design passes) and the same
+  set is reused across every pass — never regenerate per pass (cost + latency, and passes would
+  critique different pictures). A `NonRetriableError` thrown inside any of these steps surfaces as a
+  `StepError` (classify by `.name`) — see the Inngest step-boundary entry above; not repeated here.
+
 ## Testing
 
 ### A slow/near-timeout E2E CI run is usually the Playwright browser install, not flaky tests

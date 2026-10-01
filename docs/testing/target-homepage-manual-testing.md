@@ -158,6 +158,43 @@ pnpm dev
    is refused ("Forbidden"). As an admin the same actions succeed. Non-admins also cannot open
    `/admin/homepage-settings` (redirected away).
 
+## 6a. AI imagery (admin settings + generation) — manual-only, verify on QA
+
+**E2E:** none for real image generation. E2E keeps the image client **mocked/absent** (no
+`HIGGSFIELD_API_KEY` in CI, no network to Higgsfield/OpenAI); real image generation is
+**QA-verified only** — exactly like the serverless chromium launch. The settings and fail-open
+paths are covered by Jest (`lib/homepage/images/__tests__/`, `inngest/functions/__tests__/generate-homepage.test.ts`,
+`actions/admin/__tests__/homepage-settings.test.ts`, `lib/homepage/__tests__/render-allowlist.test.ts`,
+`app/p/[slug]/images/[name]/__tests__/route.test.ts`). No new E2E spec is added for this phase.
+
+1. **Verify (provider indicator):** as an admin open **Admin → Homepage Generation**. Under **Image
+   provider** the status line reads `Higgsfield: Connected · OpenAI: Connected` / `Not configured`
+   according to whether `HIGGSFIELD_API_KEY` / `OPENAI_API_KEY` are set in that environment (it
+   reflects key presence only; it does not call the provider).
+2. Set **Image provider** (`auto` = Higgsfield → OpenAI → text-only, or pin one), **Image model**
+   (only the verified `soul-v2` is selectable) and **Images per homepage** (`image_count`, 0–6,
+   default 3; `0` disables imagery). **Save**; reopen and confirm the values persisted (an
+   out-of-range count is clamped server-side).
+3. With `HIGGSFIELD_API_KEY` set (format `<key-id>:<key-secret>`) and `image_count` ≥ 1, run **AI →
+   Generate homepage** on an approved target (§3). **Verify:** the generated preview shows the hero
+   and section photography, the stored **screenshot** shows the same images (they load at render time),
+   and Versions list the usual `AUTO` passes. Images are generated **once** per run and reused by
+   every pass.
+4. **Verify (served from the previews host):** open `/p/<slug>` on the previews host and inspect an
+   `<img>` — it points at `/p/<slug>/images/<name>` on that host (never a provider URL, never a
+   `data:` blob). `GET /p/<slug>/images/<name>` returns the image with its real content-type (Soul
+   returns **JPEG**) and 404s for an unpublished slug or a name outside `[a-z0-9._-]`.
+5. **Verify (egress is slug-scoped):** the render step's network allowlist admits the previews host
+   **only** under the current slug's `/p/<slug>/images/` prefix. A generated page cannot make the
+   renderer fetch another slug's images, a different path on the previews host, or any other host.
+6. **Verify (no key → text-only still succeeds):** unset `HIGGSFIELD_API_KEY` (and `OPENAI_API_KEY`)
+   in the environment under test, or set `image_count` to `0`, and generate again. **Verify:** the
+   run completes **READY** with a text/CSS-only page, no error banner, and the indicator shows `Not
+   configured`. With only `OPENAI_API_KEY` set the OpenAI fallback supplies the images.
+7. **Verify (a provider error never fails the run):** an invalid `HIGGSFIELD_API_KEY` (or one that
+   times out / is NSFW-flagged) falls through to OpenAI, then to text-only; the homepage still lands
+   **READY** (a `[HOMEPAGE_IMAGE]` warning is logged server-side).
+
 ## 7. Upload your own HTML
 
 **E2E:** `tests/e2e/target-homepage.spec.ts` › `a page whose current version is an UPLOAD hides Refine but keeps Regenerate/Revert/Upload`,
@@ -196,6 +233,8 @@ status, preview URL and versions.
   Chromium 147) is verified on the first Vercel preview, not locally or in CI. Keep the majors
   matched on any bump (see `LESSONS_LEARNED.md`).
 - **No per-version screenshots:** revert re-renders.
+- **Real AI image generation (§6a) is QA-only:** E2E keeps the image client mocked/absent (no
+  provider key, no outbound network in CI); the provider chain, fail-open and egress scoping are Jest-covered.
 - **CI e2e has no S3:** the storage-backed E2E tests skip there (`LESSONS_LEARNED.md`).
 - **E2E parity for §3 steps 5–10 above is partial:** the `/p/` host-gate helper
   (`isPreviewHostAllowed`), the in-flight/published-slug/prompt-length guards, the 429-retriable
