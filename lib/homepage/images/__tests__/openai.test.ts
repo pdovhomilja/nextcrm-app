@@ -52,11 +52,11 @@ it("returns the decoded PNG bytes from b64_json and maps 16:9 to a landscape siz
   expect(body).toEqual({ model: "gpt-image-1", prompt: "p", size: "1536x1024", n: 1 });
 });
 
-it("maps 4:5 to a portrait size", async () => {
+it("maps 2:3 to a portrait size", async () => {
   const fetchMock = jest
     .spyOn(global, "fetch")
     .mockResolvedValueOnce(okResponse(Buffer.from("x").toString("base64")));
-  await openaiProvider().generateImage({ ...spec, aspectRatio: "4:5" });
+  await openaiProvider().generateImage({ ...spec, aspectRatio: "2:3" });
   const body = JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string);
   expect(body.size).toBe("1024x1536");
 });

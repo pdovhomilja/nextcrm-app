@@ -117,16 +117,31 @@ it("rejects a non-https result url", async () => {
 });
 
 it.each([
-  "https://evil.example.com/requests/r1/status", // cross-host
-  "http://api.higgsfield.ai/requests/r1/status", // cleartext
-  "https://api.higgsfield.ai.evil.com/status", // look-alike suffix
-])("rejects an untrusted status_url (%s) and never polls it with the key", async (status_url) => {
+  "http://api.higgsfield.ai/requests/r1/status", // cleartext — key must not travel over http
+  "not-a-url",
+])("rejects a non-https status_url (%s) and never polls it with the key", async (status_url) => {
   const fetchMock = jest
     .spyOn(global, "fetch" as any)
     .mockResolvedValueOnce({ ok: true, json: async () => ({ request_id: "r1", status_url }) } as any);
-  await expect(higgsfieldProvider("soul-v2").generateImage(spec)).rejects.toThrow(/trusted https host/i);
-  // only the submit fetch ran; the untrusted status_url was never polled (key not sent to it)
+  await expect(higgsfieldProvider("soul-v2").generateImage(spec)).rejects.toThrow(/not https/i);
+  // only the submit fetch ran; the non-https status_url was never polled (key not sent over http)
   expect(fetchMock).toHaveBeenCalledTimes(1);
+});
+
+it("polls an https status_url on a different host (Higgsfield returns one off the api base)", async () => {
+  const fetchMock = jest
+    .spyOn(global, "fetch" as any)
+    .mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ request_id: "r1", status_url: "https://queue.higgsfield.ai/r1/status" }),
+    } as any)
+    .mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ status: "completed", images: [{ url: "https://cdn.example.com/x.png" }] }),
+    } as any)
+    .mockResolvedValueOnce({ ok: true, arrayBuffer: async () => Buffer.from("X").buffer } as any);
+  expect(Buffer.isBuffer(await higgsfieldProvider("soul-v2").generateImage(spec))).toBe(true);
+  expect(fetchMock.mock.calls[1][0]).toBe("https://queue.higgsfield.ai/r1/status");
 });
 
 it("times out if never completed", async () => {

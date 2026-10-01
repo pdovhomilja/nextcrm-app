@@ -50,7 +50,7 @@ export function planHomepageImages(input: {
     specs.push({
       token: imageToken(i + 1),
       role: "section",
-      aspectRatio: "4:5",
+      aspectRatio: "2:3",
       // Hard backstop: clamp final prompt to 600 chars.
       prompt: sectionPrompt.slice(0, 600),
       alt: `${industry} — ${sectionSubjects[(i - 1) % sectionSubjects.length]}`,

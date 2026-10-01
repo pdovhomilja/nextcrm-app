@@ -441,7 +441,7 @@ describe("generate event", () => {
     it("one image failing keeps the others", async () => {
       (planHomepageImages as jest.Mock).mockReturnValue([
         { token: "__RADE_IMG_1__", role: "hero", prompt: "p", alt: "hero", aspectRatio: "16:9" },
-        { token: "__RADE_IMG_2__", role: "section", prompt: "p", alt: "sec", aspectRatio: "4:5" },
+        { token: "__RADE_IMG_2__", role: "section", prompt: "p", alt: "sec", aspectRatio: "2:3" },
       ]);
       (generateWithFallback as jest.Mock)
         .mockResolvedValueOnce(null)
