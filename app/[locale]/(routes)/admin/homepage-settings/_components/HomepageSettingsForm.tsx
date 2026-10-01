@@ -20,9 +20,21 @@ interface Props {
     maxTokens: number;
     basePromptId: string | null;
     basePrompts: { id: string; name: string }[];
+    imageModel: string;
+    imageCount: number;
+    imageProvider: string;
+    imageProviders: { higgsfield: boolean; openai: boolean };
   };
   models: readonly string[];
+  imageModels: readonly string[];
+  imageProviders: readonly string[];
 }
+
+const PROVIDER_LABELS: Record<string, string> = {
+  auto: "Auto (first configured)",
+  higgsfield: "Higgsfield",
+  openai: "OpenAI",
+};
 
 const MODEL_LABELS: Record<string, string> = {
   "claude-sonnet-5-5": "Sonnet 5.5 (default)",
@@ -34,12 +46,20 @@ const MODEL_LABELS: Record<string, string> = {
 // uses a sentinel that is mapped back to null on save.
 const DEFAULT_PROMPT = "__builtin__";
 
-export function HomepageSettingsForm({ initial, models }: Props) {
+export function HomepageSettingsForm({
+  initial,
+  models,
+  imageModels,
+  imageProviders,
+}: Props) {
   const [model, setModel] = useState(initial.model);
   const [maxTokens, setMaxTokens] = useState(String(initial.maxTokens));
   const [basePromptId, setBasePromptId] = useState(
     initial.basePromptId ?? DEFAULT_PROMPT
   );
+  const [imageProvider, setImageProvider] = useState(initial.imageProvider);
+  const [imageModel, setImageModel] = useState(initial.imageModel);
+  const [imageCount, setImageCount] = useState(String(initial.imageCount));
   const [saving, setSaving] = useState(false);
 
   async function onSave() {
@@ -50,6 +70,9 @@ export function HomepageSettingsForm({ initial, models }: Props) {
         model,
         maxTokens: Number(maxTokens),
         basePromptId: basePromptId === DEFAULT_PROMPT ? null : basePromptId,
+        imageModel,
+        imageCount: Number(imageCount),
+        imageProvider,
       });
       if ("error" in res) {
         toast.error(res.error);
@@ -59,6 +82,9 @@ export function HomepageSettingsForm({ initial, models }: Props) {
       setModel(res.data.model);
       setMaxTokens(String(res.data.maxTokens));
       setBasePromptId(res.data.basePromptId ?? DEFAULT_PROMPT);
+      setImageModel(res.data.imageModel);
+      setImageCount(String(res.data.imageCount));
+      setImageProvider(res.data.imageProvider);
     } catch {
       toast.error("Failed to save settings");
     } finally {
@@ -113,6 +139,66 @@ export function HomepageSettingsForm({ initial, models }: Props) {
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="homepage-image-provider">Image provider</Label>
+        <Select value={imageProvider} onValueChange={setImageProvider}>
+          <SelectTrigger id="homepage-image-provider">
+            <SelectValue placeholder="Choose a provider" />
+          </SelectTrigger>
+          <SelectContent>
+            {imageProviders.map((p) => (
+              <SelectItem key={p} value={p}>
+                {PROVIDER_LABELS[p] ?? p}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p
+          className="text-xs text-muted-foreground"
+          data-testid="image-provider-status"
+        >
+          Higgsfield:{" "}
+          {initial.imageProviders.higgsfield ? "Connected" : "Not configured"}
+          {" · "}
+          OpenAI: {initial.imageProviders.openai ? "Connected" : "Not configured"}
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="homepage-image-model">Image model</Label>
+        <Select value={imageModel} onValueChange={setImageModel}>
+          <SelectTrigger id="homepage-image-model">
+            <SelectValue placeholder="Choose an image model" />
+          </SelectTrigger>
+          <SelectContent>
+            {imageModels.map((m) => (
+              <SelectItem key={m} value={m}>
+                {m}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          More models unlock as they are verified.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="homepage-image-count">Images per homepage</Label>
+        <Input
+          id="homepage-image-count"
+          type="number"
+          inputMode="numeric"
+          min={0}
+          max={6}
+          value={imageCount}
+          onChange={(e) => setImageCount(e.target.value)}
+        />
+        <p className="text-xs text-muted-foreground">
+          0–6. Set to 0 to disable image generation.
+        </p>
       </div>
 
       <Button onClick={onSave} disabled={saving}>

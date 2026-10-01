@@ -1,5 +1,9 @@
 import { getHomepageSettingsForAdmin } from "@/actions/admin/homepage-settings";
-import { HOMEPAGE_MODELS } from "@/lib/homepage/settings";
+import {
+  HOMEPAGE_MODELS,
+  VERIFIED_IMAGE_MODELS,
+  IMAGE_PROVIDERS,
+} from "@/lib/homepage/settings";
 import { HomepageSettingsForm } from "./_components/HomepageSettingsForm";
 
 export default async function HomepageSettingsPage() {
@@ -12,14 +16,19 @@ export default async function HomepageSettingsPage() {
           Homepage Generation
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Choose the model, output token budget and base prompt used when
-          generating target homepages.
+          Choose the model, output token budget, base prompt and image generation used
+          when generating target homepages.
         </p>
       </div>
       {"error" in res ? (
         <p className="text-sm text-destructive">{res.error}</p>
       ) : (
-        <HomepageSettingsForm initial={res.data} models={HOMEPAGE_MODELS} />
+        <HomepageSettingsForm
+          initial={res.data}
+          models={HOMEPAGE_MODELS}
+          imageModels={VERIFIED_IMAGE_MODELS}
+          imageProviders={IMAGE_PROVIDERS}
+        />
       )}
     </div>
   );

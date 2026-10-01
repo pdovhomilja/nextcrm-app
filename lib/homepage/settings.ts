@@ -10,6 +10,9 @@ export type HomepageModel = (typeof HOMEPAGE_MODELS)[number];
 // Image model names are the admin-facing allow-set; the Higgsfield adapter maps
 // each name -> its REST endpoint. Keep names stable (stored in settings).
 export const IMAGE_MODELS = ["soul-v2", "marketing-studio-image", "ideogram", "recraft", "qwen-image", "grok", "z-image"] as const;
+// Only verified Higgsfield endpoints are selectable in the admin UI; IMAGE_MODELS stays the
+// full validation allow-set (a stored non-verified value still validates, just isn't offered).
+export const VERIFIED_IMAGE_MODELS = ["soul-v2"] as const;
 export type ImageModel = (typeof IMAGE_MODELS)[number];
 export const DEFAULT_IMAGE_MODEL: ImageModel = "soul-v2";
 
