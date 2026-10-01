@@ -98,5 +98,6 @@ export async function saveHomepageSettings(input: {
     userId: auth.user.id,
   });
 
-  return { data: { model, maxTokens, basePromptId } };
+  const settings = await getHomepageSettings();
+  return { data: settings };
 }

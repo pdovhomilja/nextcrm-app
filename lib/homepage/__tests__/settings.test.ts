@@ -1,6 +1,6 @@
 jest.mock("@/lib/prisma", () => ({ prismadb: { crm_SystemSettings: { findMany: jest.fn() } } }));
 import { prismadb } from "@/lib/prisma";
-import { resolveModel, clampMaxTokens, getHomepageSettings, DEFAULT_HOMEPAGE_MODEL, DEFAULT_MAX_TOKENS, MAX_TOKENS_FLOOR } from "@/lib/homepage/settings";
+import { resolveModel, clampMaxTokens, getHomepageSettings, DEFAULT_HOMEPAGE_MODEL, DEFAULT_MAX_TOKENS, MAX_TOKENS_FLOOR, resolveImageModel, resolveImageProvider, clampImageCount, DEFAULT_IMAGE_MODEL, DEFAULT_IMAGE_PROVIDER, DEFAULT_IMAGE_COUNT, MAX_IMAGE_COUNT } from "@/lib/homepage/settings";
 const rows = (o: Record<string,string>) => (prismadb.crm_SystemSettings.findMany as jest.Mock)
   .mockResolvedValue(Object.entries(o).map(([key,value])=>({key,value})));
 beforeEach(() => jest.clearAllMocks());
@@ -25,7 +25,7 @@ it("clampMaxTokens: NaN falls back to default then clamps", () => {
 });
 it("getHomepageSettings: defaults when unset", async () => {
   rows({});
-  expect(await getHomepageSettings()).toEqual({ model: DEFAULT_HOMEPAGE_MODEL, maxTokens: DEFAULT_MAX_TOKENS, basePromptId: null });
+  expect(await getHomepageSettings()).toEqual({ model: DEFAULT_HOMEPAGE_MODEL, maxTokens: DEFAULT_MAX_TOKENS, basePromptId: null, imageModel: DEFAULT_IMAGE_MODEL, imageCount: DEFAULT_IMAGE_COUNT, imageProvider: DEFAULT_IMAGE_PROVIDER });
 });
 it("getHomepageSettings: reads + clamps stored values", async () => {
   rows({ "homepage.model":"claude-opus-5-5", "homepage.max_tokens":"999", "homepage.base_prompt_id":"p1" });
@@ -37,4 +37,27 @@ it("getHomepageSettings: reads + clamps stored values", async () => {
 it("getHomepageSettings: bad max_tokens falls back to default", async () => {
   rows({ "homepage.max_tokens":"abc" });
   expect((await getHomepageSettings()).maxTokens).toBe(DEFAULT_MAX_TOKENS);
+});
+it("resolveImageModel: known passes, unknown/blank -> default", () => {
+  expect(resolveImageModel("soul-v2")).toBe("soul-v2");
+  expect(resolveImageModel("nope")).toBe(DEFAULT_IMAGE_MODEL);
+  expect(resolveImageModel(null)).toBe(DEFAULT_IMAGE_MODEL);
+});
+it("resolveImageProvider: known/auto pass, unknown -> default", () => {
+  expect(resolveImageProvider("higgsfield")).toBe("higgsfield");
+  expect(resolveImageProvider("auto")).toBe("auto");
+  expect(resolveImageProvider("x")).toBe(DEFAULT_IMAGE_PROVIDER);
+});
+it("clampImageCount: clamps to [0, MAX], NaN -> default", () => {
+  expect(clampImageCount(-3)).toBe(0);
+  expect(clampImageCount(999)).toBe(MAX_IMAGE_COUNT);
+  expect(clampImageCount(NaN)).toBe(DEFAULT_IMAGE_COUNT);
+  expect(clampImageCount(2)).toBe(2);
+});
+it("getHomepageSettings: image defaults when unset", async () => {
+  (prismadb.crm_SystemSettings.findMany as jest.Mock).mockResolvedValue([]);
+  const s = await getHomepageSettings();
+  expect(s.imageModel).toBe(DEFAULT_IMAGE_MODEL);
+  expect(s.imageProvider).toBe(DEFAULT_IMAGE_PROVIDER);
+  expect(s.imageCount).toBe(DEFAULT_IMAGE_COUNT);
 });
