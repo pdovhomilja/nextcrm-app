@@ -14,6 +14,7 @@ jest.mock("@/lib/audit-log", () => ({ writeAuditLog: jest.fn() }));
 import { requireRole, AuthenticationError, AuthorizationError } from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/audit-log";
+import { DEFAULT_IMAGE_MODEL, DEFAULT_IMAGE_COUNT, DEFAULT_IMAGE_PROVIDER } from "@/lib/homepage/settings";
 import {
   getHomepageSettingsForAdmin,
   saveHomepageSettings,
@@ -25,6 +26,7 @@ const settingsFindMany = prismadb.crm_SystemSettings.findMany as jest.Mock;
 const promptFindFirst = prismadb.crm_Ai_Prompt.findFirst as jest.Mock;
 const promptFindMany = prismadb.crm_Ai_Prompt.findMany as jest.Mock;
 
+const IMG = { imageModel: "soul-v2", imageCount: 3, imageProvider: "auto" };
 const asAdmin = () => requireRoleMock.mockResolvedValue({ id: "admin-1" });
 
 beforeEach(() => {
@@ -39,6 +41,7 @@ describe("saveHomepageSettings", () => {
       model: "claude-sonnet-5-5",
       maxTokens: 20000,
       basePromptId: null,
+      ...IMG,
     });
     expect(res).toEqual({ error: "Forbidden" });
     expect(upsert).not.toHaveBeenCalled();
@@ -51,6 +54,7 @@ describe("saveHomepageSettings", () => {
       model: "claude-sonnet-5-5",
       maxTokens: 20000,
       basePromptId: null,
+      ...IMG,
     });
     expect(res).toEqual({ error: "Unauthorized" });
     expect(upsert).not.toHaveBeenCalled();
@@ -58,30 +62,48 @@ describe("saveHomepageSettings", () => {
 
   it("requires the admin role", async () => {
     asAdmin();
-    await saveHomepageSettings({ model: "claude-sonnet-5-5", maxTokens: 20000, basePromptId: null });
+    await saveHomepageSettings({ model: "claude-sonnet-5-5", maxTokens: 20000, basePromptId: null, ...IMG });
     expect(requireRoleMock).toHaveBeenCalledWith(["admin"]);
   });
 
   it("persists the default model when given an unknown one", async () => {
     asAdmin();
-    const res = await saveHomepageSettings({ model: "gpt-4", maxTokens: 20000, basePromptId: null });
+    const res = await saveHomepageSettings({ model: "gpt-4", maxTokens: 20000, basePromptId: null, ...IMG });
     expect(upsert).toHaveBeenCalledWith({
       where: { key: "homepage.model" },
       create: { key: "homepage.model", value: "claude-sonnet-5-5" },
       update: { value: "claude-sonnet-5-5" },
     });
-    expect(res).toEqual({ data: { model: "claude-sonnet-5-5", maxTokens: 20000, basePromptId: null } });
+    expect(res).toEqual({
+      data: {
+        model: "claude-sonnet-5-5",
+        maxTokens: 20000,
+        basePromptId: null,
+        imageModel: DEFAULT_IMAGE_MODEL,
+        imageCount: DEFAULT_IMAGE_COUNT,
+        imageProvider: DEFAULT_IMAGE_PROVIDER,
+      },
+    });
   });
 
   it("clamps maxTokens to the floor", async () => {
     asAdmin();
-    const res = await saveHomepageSettings({ model: "claude-sonnet-5-5", maxTokens: 999, basePromptId: null });
+    const res = await saveHomepageSettings({ model: "claude-sonnet-5-5", maxTokens: 999, basePromptId: null, ...IMG });
     expect(upsert).toHaveBeenCalledWith({
       where: { key: "homepage.max_tokens" },
       create: { key: "homepage.max_tokens", value: "4000" },
       update: { value: "4000" },
     });
-    expect(res).toEqual({ data: { model: "claude-sonnet-5-5", maxTokens: 4000, basePromptId: null } });
+    expect(res).toEqual({
+      data: {
+        model: "claude-sonnet-5-5",
+        maxTokens: 4000,
+        basePromptId: null,
+        imageModel: DEFAULT_IMAGE_MODEL,
+        imageCount: DEFAULT_IMAGE_COUNT,
+        imageProvider: DEFAULT_IMAGE_PROVIDER,
+      },
+    });
   });
 
   it("rejects an unknown base prompt with no writes", async () => {
@@ -91,6 +113,7 @@ describe("saveHomepageSettings", () => {
       model: "claude-sonnet-5-5",
       maxTokens: 20000,
       basePromptId: "nope",
+      ...IMG,
     });
     expect(res).toEqual({ error: expect.stringMatching(/not found/) });
     expect(promptFindFirst).toHaveBeenCalledWith({
@@ -101,19 +124,23 @@ describe("saveHomepageSettings", () => {
     expect(writeAuditLog).not.toHaveBeenCalled();
   });
 
-  it("saves all three keys, audits, and returns the data (happy path)", async () => {
+  it("saves all six keys, audits, and returns the data (happy path)", async () => {
     asAdmin();
     promptFindFirst.mockResolvedValue({ id: "p1" });
     const res = await saveHomepageSettings({
       model: "claude-opus-5-5",
       maxTokens: 30000,
       basePromptId: "p1",
+      ...IMG,
     });
     const keys = upsert.mock.calls.map((c) => [c[0].where.key, c[0].update.value]);
     expect(keys).toEqual([
       ["homepage.model", "claude-opus-5-5"],
       ["homepage.max_tokens", "30000"],
       ["homepage.base_prompt_id", "p1"],
+      ["homepage.image_model", "soul-v2"],
+      ["homepage.image_count", "3"],
+      ["homepage.image_provider", "auto"],
     ]);
     expect(writeAuditLog).toHaveBeenCalledTimes(1);
     expect(writeAuditLog).toHaveBeenCalledWith(
@@ -125,12 +152,68 @@ describe("saveHomepageSettings", () => {
         userId: "admin-1",
       }),
     );
-    expect(res).toEqual({ data: { model: "claude-opus-5-5", maxTokens: 30000, basePromptId: "p1" } });
+    expect(res).toEqual({
+      data: {
+        model: "claude-opus-5-5",
+        maxTokens: 30000,
+        basePromptId: "p1",
+        imageModel: DEFAULT_IMAGE_MODEL,
+        imageCount: DEFAULT_IMAGE_COUNT,
+        imageProvider: DEFAULT_IMAGE_PROVIDER,
+      },
+    });
+  });
+
+  it("validates image fields: unknown model -> default, count clamped, provider validated", async () => {
+    asAdmin();
+    const res = await saveHomepageSettings({
+      model: "claude-sonnet-5-5",
+      maxTokens: 20000,
+      basePromptId: null,
+      imageModel: "not-a-model",
+      imageCount: 99,
+      imageProvider: "midjourney",
+    });
+    const rows = Object.fromEntries(upsert.mock.calls.map((c) => [c[0].where.key, c[0].update.value]));
+    expect(rows["homepage.image_model"]).toBe(DEFAULT_IMAGE_MODEL);
+    expect(rows["homepage.image_count"]).toBe("6");
+    expect(rows["homepage.image_provider"]).toBe(DEFAULT_IMAGE_PROVIDER);
+    expect(res).toEqual({
+      data: expect.objectContaining({ imageModel: DEFAULT_IMAGE_MODEL, imageCount: 6, imageProvider: DEFAULT_IMAGE_PROVIDER }),
+    });
+  });
+
+  it("returns the REAL saved image values (not defaults) and clamps negative/NaN counts", async () => {
+    asAdmin();
+    const res = await saveHomepageSettings({
+      model: "claude-sonnet-5-5",
+      maxTokens: 20000,
+      basePromptId: null,
+      imageModel: "ideogram",
+      imageCount: 0,
+      imageProvider: "openai",
+    });
+    expect(res).toEqual({
+      data: expect.objectContaining({ imageModel: "ideogram", imageCount: 0, imageProvider: "openai" }),
+    });
+    const rows = Object.fromEntries(upsert.mock.calls.map((c) => [c[0].where.key, c[0].update.value]));
+    expect(rows["homepage.image_count"]).toBe("0");
+
+    upsert.mockClear();
+    const nan = await saveHomepageSettings({
+      model: "claude-sonnet-5-5",
+      maxTokens: 20000,
+      basePromptId: null,
+      imageModel: "soul-v2",
+      imageCount: NaN,
+      imageProvider: "higgsfield",
+    });
+    expect(nan).toEqual({ data: expect.objectContaining({ imageCount: DEFAULT_IMAGE_COUNT, imageProvider: "higgsfield" }) });
   });
 
   it("stores an empty string when basePromptId is null", async () => {
     asAdmin();
-    await saveHomepageSettings({ model: "claude-sonnet-5-5", maxTokens: 20000, basePromptId: null });
+    await saveHomepageSettings({ model: "claude-sonnet-5-5", maxTokens: 20000, basePromptId: null, ...IMG });
     expect(promptFindFirst).not.toHaveBeenCalled();
     expect(upsert).toHaveBeenCalledWith({
       where: { key: "homepage.base_prompt_id" },
@@ -153,6 +236,9 @@ describe("getHomepageSettingsForAdmin", () => {
       { key: "homepage.model", value: "claude-opus-5-5" },
       { key: "homepage.max_tokens", value: "20000" },
       { key: "homepage.base_prompt_id", value: "p1" },
+      { key: "homepage.image_model", value: "soul-v2" },
+      { key: "homepage.image_count", value: "3" },
+      { key: "homepage.image_provider", value: "auto" },
     ]);
     promptFindMany.mockResolvedValue([{ id: "p1", name: "Premium" }]);
     const res = await getHomepageSettingsForAdmin();
@@ -166,8 +252,46 @@ describe("getHomepageSettingsForAdmin", () => {
         model: "claude-opus-5-5",
         maxTokens: 20000,
         basePromptId: "p1",
+        imageModel: "soul-v2",
+        imageCount: 3,
+        imageProvider: "auto",
+        imageProviders: { higgsfield: expect.any(Boolean), openai: expect.any(Boolean) },
         basePrompts: [{ id: "p1", name: "Premium" }],
       },
+    });
+  });
+
+  describe("imageProviders presence", () => {
+    const saved = { h: process.env.HIGGSFIELD_API_KEY, o: process.env.OPENAI_API_KEY };
+    afterEach(() => {
+      if (saved.h === undefined) delete process.env.HIGGSFIELD_API_KEY;
+      else process.env.HIGGSFIELD_API_KEY = saved.h;
+      if (saved.o === undefined) delete process.env.OPENAI_API_KEY;
+      else process.env.OPENAI_API_KEY = saved.o;
+    });
+
+    it("exposes presence booleans only, never key values", async () => {
+      asAdmin();
+      settingsFindMany.mockResolvedValue([]);
+      promptFindMany.mockResolvedValue([]);
+      process.env.HIGGSFIELD_API_KEY = "sentinel-hf-key:sentinel-secret";
+      delete process.env.OPENAI_API_KEY;
+      const res = await getHomepageSettingsForAdmin();
+      expect("data" in res && res.data.imageProviders).toEqual({ higgsfield: true, openai: false });
+      const json = JSON.stringify(res);
+      expect(json).not.toContain("sentinel-hf-key");
+      expect(json).not.toContain("sentinel-secret");
+    });
+
+    it("reports both providers configured / unconfigured", async () => {
+      asAdmin();
+      settingsFindMany.mockResolvedValue([]);
+      promptFindMany.mockResolvedValue([]);
+      process.env.OPENAI_API_KEY = "sk-sentinel-openai";
+      delete process.env.HIGGSFIELD_API_KEY;
+      const res = await getHomepageSettingsForAdmin();
+      expect("data" in res && res.data.imageProviders).toEqual({ higgsfield: false, openai: true });
+      expect(JSON.stringify(res)).not.toContain("sk-sentinel-openai");
     });
   });
 });

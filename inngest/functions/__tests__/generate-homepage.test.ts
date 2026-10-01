@@ -14,6 +14,11 @@ jest.mock("@/lib/api-keys", () => ({ getApiKey: jest.fn() }));
 jest.mock("@/lib/homepage/harvest-source", () => ({ harvestSource: jest.fn() }));
 jest.mock("@/lib/homepage/provider", () => ({ generateHomepage: jest.fn() }));
 jest.mock("@/lib/homepage/render", () => ({ renderAndScreenshot: jest.fn() }));
+jest.mock("@/lib/homepage/images/resolve", () => ({
+  resolveImageProviders: jest.fn(),
+  generateWithFallback: jest.fn(),
+}));
+jest.mock("@/lib/homepage/images/plan", () => ({ planHomepageImages: jest.fn() }));
 jest.mock("@/lib/homepage/storage", () => ({
   putHomepageHtml: jest.fn(),
   putHomepageScreenshot: jest.fn(),
@@ -22,6 +27,8 @@ jest.mock("@/lib/homepage/storage", () => ({
   deleteHomepageTmpSource: jest.fn(),
   getHomepageUpload: jest.fn(),
   deleteHomepageUpload: jest.fn(),
+  putHomepageImage: jest.fn(),
+  homepageImageUrl: (slug: string, name: string) => `https://previews.example.com/p/${slug}/images/${name}`,
   homepageShotKey: (slug: string) => `previews/${slug}/screenshot.png`,
 }));
 
@@ -40,7 +47,10 @@ import {
   deleteHomepageTmpSource,
   getHomepageUpload,
   deleteHomepageUpload,
+  putHomepageImage,
 } from "@/lib/homepage/storage";
+import { resolveImageProviders, generateWithFallback } from "@/lib/homepage/images/resolve";
+import { planHomepageImages } from "@/lib/homepage/images/plan";
 import { NonRetriableError } from "inngest";
 import { AUTO_PASSES, onGenerateHomepageFailure } from "../generate-homepage";
 
@@ -60,6 +70,7 @@ const handler = createFunctionMock.mock.results[0].value as (ctx: {
 
 const step = { run: (_n: string, f: () => unknown) => Promise.resolve().then(f) };
 
+const IMG_B64 = Buffer.from("IMG").toString("base64");
 const SRC_B64 = Buffer.from("SRC_SHOT").toString("base64");
 const PNG_B64 = Buffer.from("PNGDATA").toString("base64");
 
@@ -92,7 +103,18 @@ beforeEach(() => {
     model: "claude-opus-5-5",
     maxTokens: 40000,
     basePromptId: "bp1",
+    imageModel: "soul-v2",
+    imageCount: 1,
+    imageProvider: "auto",
   });
+  (planHomepageImages as jest.Mock).mockReturnValue([
+    { token: "__RADE_IMG_1__", role: "hero", prompt: "p", alt: "hero shot", aspectRatio: "16:9" },
+  ]);
+  (resolveImageProviders as jest.Mock).mockReturnValue([
+    { name: "higgsfield", isConfigured: () => true, generateImage: jest.fn() },
+  ]);
+  (generateWithFallback as jest.Mock).mockResolvedValue(Buffer.from("IMG"));
+  (putHomepageImage as jest.Mock).mockResolvedValue(undefined);
   (prismadb.crm_Ai_Prompt.findFirst as jest.Mock).mockResolvedValue({ body: "BASE_BODY" });
   (prismadb.crm_Targets.findUnique as jest.Mock).mockResolvedValue(target);
   (prismadb.crm_Target_Homepage.findUnique as jest.Mock).mockResolvedValue(homepage);
@@ -247,6 +269,10 @@ describe("generate event", () => {
       "<html>v3</html>",
       "<html>v4</html>",
     ]);
+    // every render passes the slug so the egress allowlist permits this page's images
+    for (const c of (renderAndScreenshot as jest.Mock).mock.calls) {
+      expect(c[1]).toEqual({ slug: "acme-plumbing" });
+    }
 
     // every pass persisted as an AUTO version with its critique
     expect(versionCreate).toHaveBeenCalledTimes(1 + AUTO_PASSES);
@@ -330,6 +356,119 @@ describe("generate event", () => {
     expect(blob).not.toContain(SRC_B64);
     expect(blob).not.toMatch(/screenshotB64/);
     expect(outputs.at(-1)!.name).not.toBe("mark-failed");
+  });
+
+  describe("AI imagery", () => {
+    const briefs = () => (generateHomepage as jest.Mock).mock.calls.map((c) => c[0].brief as string);
+
+    it("generates images ONCE (not per pass), stores them, and teaches the model the tokens", async () => {
+      await handler({ event: generateEvent, step });
+      expect(generateWithFallback).toHaveBeenCalledTimes(1);
+      expect(planHomepageImages).toHaveBeenCalledTimes(1);
+      expect(planHomepageImages).toHaveBeenCalledWith(
+        expect.objectContaining({ count: 1, company: "Acme Plumbing", colors: ["#123456"] }),
+      );
+      expect(resolveImageProviders).toHaveBeenCalledWith({ provider: "auto", model: "soul-v2" });
+      expect(putHomepageImage).toHaveBeenCalledWith("acme-plumbing", "img-1.png", Buffer.from("IMG"));
+      expect(briefs()).toHaveLength(1 + AUTO_PASSES);
+      for (const b of briefs()) expect(b).toContain("__RADE_IMG_1__");
+    });
+
+    it("strips an image token with no generated image behind it; provided tokens + logo still materialize", async () => {
+      (harvestSource as jest.Mock).mockResolvedValue({
+        screenshotB64: SRC_B64,
+        brand: { logoUrl: null, colors: [], fonts: [], copy: "c", logoDataUri: "data:image/png;base64,LOGO" },
+      });
+      (generateHomepage as jest.Mock).mockReset();
+      (generateHomepage as jest.Mock).mockResolvedValue({
+        html: '<html><img src="__RADE_LOGO_SRC__"><img src="__RADE_IMG_1__"><img src="__RADE_IMG_9__"></html>',
+        critique: "c",
+      });
+      await handler({ event: generateEvent, step });
+      const url = "https://previews.example.com/p/acme-plumbing/images/img-1.png";
+      const expected = `<html><img src="data:image/png;base64,LOGO"><img src="${url}"><img src=""></html>`;
+      expect(putHomepageHtml).toHaveBeenCalledWith("acme-plumbing", expected);
+      for (const c of (renderAndScreenshot as jest.Mock).mock.calls) {
+        expect(c[0]).not.toContain("__RADE_IMG_9__");
+        expect(c[0]).toContain(url);
+      }
+    });
+
+    it("materializes image tokens for render + upload but persists versions WITH tokens", async () => {
+      (generateHomepage as jest.Mock).mockReset();
+      (generateHomepage as jest.Mock).mockResolvedValue({
+        html: '<html><img src="__RADE_IMG_1__"></html>',
+        critique: "c",
+      });
+      await handler({ event: generateEvent, step });
+      const url = "https://previews.example.com/p/acme-plumbing/images/img-1.png";
+      for (const c of versionCreate.mock.calls) expect(c[0].data.html).toContain("__RADE_IMG_1__");
+      for (const c of (renderAndScreenshot as jest.Mock).mock.calls) {
+        expect(c[0]).toContain(url);
+        expect(c[0]).not.toContain("__RADE_IMG_1__");
+      }
+      expect(putHomepageHtml).toHaveBeenCalledWith("acme-plumbing", `<html><img src="${url}"></html>`);
+    });
+
+    it("fail-open: no image from any provider still reaches READY, brief says no images", async () => {
+      (generateWithFallback as jest.Mock).mockResolvedValue(null);
+      await handler({ event: generateEvent, step });
+      expect(putHomepageImage).not.toHaveBeenCalled();
+      for (const b of briefs()) {
+        expect(b).toContain("No images available");
+        expect(b).not.toContain("__RADE_IMG_1__");
+      }
+      expect(statuses()).not.toContain("FAILED");
+      expect(homepageUpdate.mock.calls.at(-1)![0].data.status).toBe("READY");
+    });
+
+    it("fail-open: generation / storage / planning throwing is swallowed (never terminal, never retried)", async () => {
+      for (const arm of [
+        () => (generateWithFallback as jest.Mock).mockRejectedValue(new Error("provider boom")),
+        () => (putHomepageImage as jest.Mock).mockRejectedValue(new Error("r2 down")),
+        () => (planHomepageImages as jest.Mock).mockImplementation(() => { throw new Error("plan boom"); }),
+        () => (resolveImageProviders as jest.Mock).mockImplementation(() => { throw new Error("resolve boom"); }),
+      ]) {
+        jest.clearAllMocks();
+        arm();
+        await expect(handler({ event: generateEvent, step })).resolves.toMatchObject({ ready: true });
+        expect(statuses()).not.toContain("FAILED");
+        expect(homepageUpdate.mock.calls.at(-1)![0].data.status).toBe("READY");
+        for (const b of briefs()) expect(b).toContain("No images available");
+      }
+    });
+
+    it("one image failing keeps the others", async () => {
+      (planHomepageImages as jest.Mock).mockReturnValue([
+        { token: "__RADE_IMG_1__", role: "hero", prompt: "p", alt: "hero", aspectRatio: "16:9" },
+        { token: "__RADE_IMG_2__", role: "section", prompt: "p", alt: "sec", aspectRatio: "4:5" },
+      ]);
+      (generateWithFallback as jest.Mock)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(Buffer.from("IMG"));
+      await handler({ event: generateEvent, step });
+      expect(putHomepageImage).toHaveBeenCalledTimes(1);
+      expect(putHomepageImage).toHaveBeenCalledWith("acme-plumbing", "img-2.png", Buffer.from("IMG"));
+      const b = briefs()[0];
+      expect(b).toContain("__RADE_IMG_2__");
+      expect(b).not.toContain("__RADE_IMG_1__");
+    });
+
+    it("keeps image bytes (base64) out of every persisted step return value", async () => {
+      const outputs: unknown[] = [];
+      const recording = {
+        run: async (_n: string, f: () => unknown) => {
+          const out = await f();
+          outputs.push(out);
+          return out;
+        },
+      };
+      await handler({ event: generateEvent, step: recording });
+      const blob = JSON.stringify(outputs);
+      expect(blob).not.toContain(IMG_B64);
+      // the small token/alt/url list IS what the step returns
+      expect(blob).toContain("img-1.png");
+    });
   });
 
   it("loads the target and homepage with the soft-delete filter", async () => {
@@ -583,10 +722,23 @@ describe("revert event", () => {
     versionFindUnique.mockResolvedValue({ id: "ver9", homepage_id: "h1", html: "<html>old</html>" });
   });
 
+  it("materializes image tokens present in the stored html (served page keeps working)", async () => {
+    versionFindUnique.mockResolvedValue({
+      id: "ver9",
+      homepage_id: "h1",
+      html: '<html><img src="__RADE_IMG_2__"></html>',
+    });
+    await handler({ event: revertEvent, step });
+    const url = "https://previews.example.com/p/acme-plumbing/images/img-2.png";
+    expect(renderAndScreenshot).toHaveBeenCalledWith(`<html><img src="${url}"></html>`, { slug: "acme-plumbing" });
+    expect(putHomepageHtml).toHaveBeenCalledWith("acme-plumbing", `<html><img src="${url}"></html>`);
+    expect(generateWithFallback).not.toHaveBeenCalled();
+  });
+
   it("re-renders the version html, republishes to the live keys, repoints current_version_id, READY", async () => {
     const out = await handler({ event: revertEvent, step });
     expect(out).toEqual({ ready: true });
-    expect(renderAndScreenshot).toHaveBeenCalledWith("<html>old</html>");
+    expect(renderAndScreenshot).toHaveBeenCalledWith("<html>old</html>", { slug: "acme-plumbing" });
     expect(putHomepageHtml).toHaveBeenCalledWith("acme-plumbing", "<html>old</html>");
     expect(putHomepageScreenshot).toHaveBeenCalledWith("acme-plumbing", Buffer.from("PNGDATA"));
     expect(statuses()).toEqual(["RUNNING", "READY"]);
@@ -695,7 +847,7 @@ describe("upload event", () => {
     expect(out).toEqual({ ready: true });
     expect(getHomepageUpload).toHaveBeenCalledWith("acme-plumbing");
     // Same allowlisted render path as every other flow.
-    expect(renderAndScreenshot).toHaveBeenCalledWith(UPLOADED);
+    expect(renderAndScreenshot).toHaveBeenCalledWith(UPLOADED, { slug: "acme-plumbing" });
     expect(putHomepageHtml).toHaveBeenCalledWith("acme-plumbing", UPLOADED);
     expect(putHomepageScreenshot).toHaveBeenCalledWith("acme-plumbing", Buffer.from("PNGDATA"));
     expect(versionCreate).toHaveBeenCalledWith({

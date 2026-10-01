@@ -7,6 +7,22 @@ export const HOMEPAGE_MODELS = [
 ] as const;
 export type HomepageModel = (typeof HOMEPAGE_MODELS)[number];
 
+// Image model names are the admin-facing allow-set; the Higgsfield adapter maps
+// each name -> its REST endpoint. Keep names stable (stored in settings).
+export const IMAGE_MODELS = ["soul-v2", "marketing-studio-image", "ideogram", "recraft", "qwen-image", "grok", "z-image"] as const;
+// Only verified Higgsfield endpoints are selectable in the admin UI; IMAGE_MODELS stays the
+// full validation allow-set (a stored non-verified value still validates, just isn't offered).
+export const VERIFIED_IMAGE_MODELS = ["soul-v2"] as const;
+export type ImageModel = (typeof IMAGE_MODELS)[number];
+export const DEFAULT_IMAGE_MODEL: ImageModel = "soul-v2";
+
+export const IMAGE_PROVIDERS = ["auto", "higgsfield", "openai"] as const;
+export type ImageProviderSetting = (typeof IMAGE_PROVIDERS)[number];
+export const DEFAULT_IMAGE_PROVIDER: ImageProviderSetting = "auto";
+
+export const DEFAULT_IMAGE_COUNT = 3;
+export const MAX_IMAGE_COUNT = 6;
+
 export const DEFAULT_HOMEPAGE_MODEL: HomepageModel = "claude-sonnet-5-5";
 // Non-streaming vision call shares the render step's ~300s function budget (render up to RENDER_TIMEOUT_MS + the ~200s generate abort). 16000 truncated real homepages (hit max_tokens on the initial pass → the run failed); 24000 completed a full 4-pass generation on QA well within budget. Larger admin values may abort on very large pages — streaming is the follow-up (see LESSONS_LEARNED). Admins can still raise this per-env via homepage.max_tokens up to the model ceiling.
 export const DEFAULT_MAX_TOKENS = 24000;
@@ -20,6 +36,9 @@ export const MODEL_MAX_TOKENS: Record<HomepageModel, number> = {
 const KEY_MODEL = "homepage.model";
 const KEY_MAX_TOKENS = "homepage.max_tokens";
 const KEY_BASE_PROMPT_ID = "homepage.base_prompt_id";
+const KEY_IMAGE_MODEL = "homepage.image_model";
+const KEY_IMAGE_COUNT = "homepage.image_count";
+const KEY_IMAGE_PROVIDER = "homepage.image_provider";
 
 /** Clamp to [MAX_TOKENS_FLOOR, model ceiling]; NaN/invalid falls back to DEFAULT_MAX_TOKENS first. */
 export function clampMaxTokens(model: HomepageModel, n: number): number {
@@ -34,15 +53,31 @@ export function resolveModel(stored: string | null | undefined): HomepageModel {
     : DEFAULT_HOMEPAGE_MODEL;
 }
 
+export function resolveImageModel(stored: string | null | undefined): ImageModel {
+  return (IMAGE_MODELS as readonly string[]).includes(stored ?? "") ? (stored as ImageModel) : DEFAULT_IMAGE_MODEL;
+}
+
+export function resolveImageProvider(stored: string | null | undefined): ImageProviderSetting {
+  return (IMAGE_PROVIDERS as readonly string[]).includes(stored ?? "") ? (stored as ImageProviderSetting) : DEFAULT_IMAGE_PROVIDER;
+}
+
+export function clampImageCount(n: number): number {
+  const v = Number.isFinite(n) ? n : DEFAULT_IMAGE_COUNT;
+  return Math.min(MAX_IMAGE_COUNT, Math.max(0, Math.trunc(v)));
+}
+
 export type HomepageSettings = {
   model: HomepageModel;
   maxTokens: number;
   basePromptId: string | null;
+  imageModel: string;
+  imageCount: number;
+  imageProvider: string;
 };
 
 export async function getHomepageSettings(): Promise<HomepageSettings> {
   const rows = await prismadb.crm_SystemSettings.findMany({
-    where: { key: { in: [KEY_MODEL, KEY_MAX_TOKENS, KEY_BASE_PROMPT_ID] } },
+    where: { key: { in: [KEY_MODEL, KEY_MAX_TOKENS, KEY_BASE_PROMPT_ID, KEY_IMAGE_MODEL, KEY_IMAGE_COUNT, KEY_IMAGE_PROVIDER] } },
   });
   const map = new Map(rows.map((r) => [r.key, r.value]));
   const model = resolveModel(map.get(KEY_MODEL));
@@ -50,5 +85,12 @@ export async function getHomepageSettings(): Promise<HomepageSettings> {
     model,
     parseInt(map.get(KEY_MAX_TOKENS) ?? "", 10),
   );
-  return { model, maxTokens, basePromptId: map.get(KEY_BASE_PROMPT_ID) || null };
+  return {
+    model,
+    maxTokens,
+    basePromptId: map.get(KEY_BASE_PROMPT_ID) || null,
+    imageModel: resolveImageModel(map.get(KEY_IMAGE_MODEL)),
+    imageCount: clampImageCount(parseInt(map.get(KEY_IMAGE_COUNT) ?? "", 10)),
+    imageProvider: resolveImageProvider(map.get(KEY_IMAGE_PROVIDER)),
+  };
 }

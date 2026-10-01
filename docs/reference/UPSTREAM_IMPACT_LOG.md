@@ -593,3 +593,23 @@ files** touched, both already heavily fork-diverged (the 3-tier CI + E2E setup):
 **Re-verify after any upstream merge:** the e2e job still caches `~/.cache/ms-playwright` and
 runs `install chromium` + `install-deps` separately; `playwright.config.ts` still sets
 `retries: 1` and a CI `globalTimeout`; then a green E2E run on a code PR.
+
+---
+
+## feat/homepage-ai-imagery — on-brand AI imagery for generated homepages  (PR: TBD)
+
+Adds server-side image generation (Higgsfield → OpenAI → text-only provider chain, images in R2 under
+`previews/<slug>/images/`, served at `/p/<slug>/images/<name>`) to the homepage flow. **1 upstream-owned
+file** touched; everything else is fork-owned (verified with `git cat-file -e upstream/main:<path>` —
+absent upstream: `lib/homepage/**`, `app/p/**`, `inngest/functions/generate-homepage.ts`,
+`actions/admin/homepage-settings.ts`, `app/[locale]/(routes)/admin/homepage-settings/**`,
+`scripts/check-env-docs.sh`, `docs/**`, `CUSTOMIZATIONS.md`). No schema/migration change (settings live in
+the existing key/value store).
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `.env.example` | +3/−0 | **insert-only** | A 2-line comment + `HIGGSFIELD_API_KEY=` appended to the fork's "AI providers" block directly after `GROQ_API_KEY=`. No upstream line changed. | Low (additive; on conflict keep both sides, and keep the key documented in `docs/reference/ENVIRONMENT_VARIABLES.md` or `scripts/check-env-docs.sh` fails) |
+
+**Re-verify after any upstream merge:** `HIGGSFIELD_API_KEY=` is still in `.env.example` and
+`bash scripts/check-env-docs.sh` passes (it is also fork-owned: `OPENAI_BASE_URL` was added to its IGNORE
+list alongside `ANTHROPIC_BASE_URL`); then `pnpm exec jest lib/homepage actions/admin/__tests__/homepage-settings.test.ts inngest/functions/__tests__/generate-homepage.test.ts`.

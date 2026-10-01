@@ -1,5 +1,6 @@
 import type { Browser } from "playwright-core";
-import { isAllowedRenderRequest } from "./render-allowlist";
+import { isAllowedRenderRequest, type RenderAllowOpts } from "./render-allowlist";
+import { detectImageContentType, getHomepageImageBuffer } from "./storage";
 
 /**
  * Serverless (Vercel / AWS Lambda) vs local-dev chromium switch.
@@ -72,14 +73,29 @@ export function finalizeAnimationsInPage(): void {
  * harvested copy, so it could be steered (indirect prompt injection) to emit
  * `<img>`/`<script src>`/`fetch()` pointing at internal or attacker hosts. The
  * system prompt restricts remote assets, so we ENFORCE it here with a code-owned
- * exact-host allowlist (see render-allowlist.ts): only Google Fonts and a pinned
- * GSAP path may load; every other network request is aborted. The in-memory
+ * exact-host allowlist (see render-allowlist.ts): only Google Fonts, a pinned
+ * GSAP path, and (when `opts.slug` is given) that slug's `/p/<slug>/images/`
+ * prefix on the previews host may load; every other network request is aborted. The in-memory
  * `setContent` document and `data:`/`blob:` URIs render as usual.
  */
 export async function renderAndScreenshot(
   html: string,
-  opts: { width?: number; height?: number } = {},
+  opts: { width?: number; height?: number; slug?: string } = {},
 ): Promise<Buffer> {
+  // Per-slug image allowance: only when we know the slug AND the previews origin.
+  // A malformed/unset base leaves it undefined => images stay blocked (fail closed).
+  let allow: RenderAllowOpts | undefined;
+  const base = process.env.NEXT_PUBLIC_PREVIEWS_BASE_URL;
+  if (opts.slug && base) {
+    try {
+      allow = {
+        previewsHost: new URL(base).host,
+        imagePathPrefix: `/p/${opts.slug}/images/`,
+      };
+    } catch {
+      allow = undefined;
+    }
+  }
   const browser = await launchBrowser();
   try {
     const context = await browser.newContext({
@@ -87,12 +103,41 @@ export async function renderAndScreenshot(
       acceptDownloads: false,
       serviceWorkers: "block",
     });
-    // Egress allowlist: only Google Fonts + the pinned GSAP path continue; every
+    // Egress allowlist: only Google Fonts + the pinned GSAP path (+ this slug's
+    // image prefix on the previews host, when `allow` is set) continue; every
     // other request (internal/metadata/attacker hosts) is aborted. `**/*` matches
     // http/https/ws requests; data:/blob: are handled in-process and not routed.
-    await context.route("**/*", (route) =>
-      isAllowedRenderRequest(route.request().url()) ? route.continue() : route.abort(),
-    );
+    //
+    // This slug's generated images are served DIRECTLY FROM R2 (route.fulfill), not
+    // over the network: during a first generation the homepage has no
+    // `current_version_id` yet, so the public /p/<slug>/images/ route would 404
+    // (it gates on a published version). Fulfilling from storage makes the render
+    // independent of that gate and keeps egress closed (no network fetch).
+    await context.route("**/*", async (route) => {
+      const url = route.request().url();
+      if (opts.slug && allow?.previewsHost && allow.imagePathPrefix) {
+        let u: URL | null = null;
+        try {
+          u = new URL(url);
+        } catch {
+          u = null;
+        }
+        if (u && u.host.toLowerCase() === allow.previewsHost.toLowerCase() && u.pathname.startsWith(allow.imagePathPrefix)) {
+          const name = u.pathname.slice(allow.imagePathPrefix.length);
+          // Mirror the served route's validation: a simple filename only.
+          if (!/^[a-z0-9._-]+$/i.test(name) || /^\.+$/.test(name)) return route.abort();
+          let buf: Buffer | null = null;
+          try {
+            buf = await getHomepageImageBuffer(opts.slug, name);
+          } catch {
+            buf = null;
+          }
+          if (!buf) return route.abort();
+          return route.fulfill({ status: 200, contentType: detectImageContentType(buf), body: buf });
+        }
+      }
+      return isAllowedRenderRequest(url, allow) ? route.continue() : route.abort();
+    });
     // route() does not cover WebSockets; block them entirely (no allowlisted WS use).
     // Capability-checked so this no-ops on a Playwright without routeWebSocket.
     const ctxWs = context as any;

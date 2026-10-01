@@ -11,12 +11,18 @@ import {
   clampMaxTokens,
   getHomepageSettings,
   resolveModel,
+  resolveImageModel,
+  resolveImageProvider,
+  clampImageCount,
   type HomepageSettings,
 } from "@/lib/homepage/settings";
 
 const KEY_MODEL = "homepage.model";
 const KEY_MAX_TOKENS = "homepage.max_tokens";
 const KEY_BASE_PROMPT_ID = "homepage.base_prompt_id";
+const KEY_IMAGE_MODEL = "homepage.image_model";
+const KEY_IMAGE_COUNT = "homepage.image_count";
+const KEY_IMAGE_PROVIDER = "homepage.image_provider";
 // crm_AuditLog.entityId is a UUID column; settings have no row id, so use a fixed sentinel.
 const HOMEPAGE_SETTINGS_ENTITY_ID = "00000000-0000-4000-8000-0000000000c0";
 
@@ -35,7 +41,13 @@ async function requireAdmin(): Promise<
 }
 
 export async function getHomepageSettingsForAdmin(): Promise<
-  | { data: HomepageSettings & { basePrompts: { id: string; name: string }[] } }
+  | {
+      data: HomepageSettings & {
+        basePrompts: { id: string; name: string }[];
+        // Presence flags only — key values never leave the server.
+        imageProviders: { higgsfield: boolean; openai: boolean };
+      };
+    }
   | { error: string }
 > {
   const auth = await requireAdmin();
@@ -47,13 +59,20 @@ export async function getHomepageSettingsForAdmin(): Promise<
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   });
-  return { data: { ...settings, basePrompts } };
+  const imageProviders = {
+    higgsfield: !!process.env.HIGGSFIELD_API_KEY,
+    openai: !!process.env.OPENAI_API_KEY,
+  };
+  return { data: { ...settings, basePrompts, imageProviders } };
 }
 
 export async function saveHomepageSettings(input: {
   model: string;
   maxTokens: number;
   basePromptId: string | null;
+  imageModel: string;
+  imageCount: number;
+  imageProvider: string;
 }): Promise<{ data: HomepageSettings } | { error: string }> {
   const auth = await requireAdmin();
   if ("error" in auth) return auth;
@@ -61,6 +80,9 @@ export async function saveHomepageSettings(input: {
   // Never trust the raw client values: resolve against the allow-set and clamp.
   const model = resolveModel(input.model);
   const maxTokens = clampMaxTokens(model, input.maxTokens);
+  const imageModel = resolveImageModel(input.imageModel);
+  const imageCount = clampImageCount(input.imageCount);
+  const imageProvider = resolveImageProvider(input.imageProvider);
 
   if (input.basePromptId) {
     const prompt = await prismadb.crm_Ai_Prompt.findFirst({
@@ -75,6 +97,9 @@ export async function saveHomepageSettings(input: {
     [KEY_MODEL, model],
     [KEY_MAX_TOKENS, String(maxTokens)],
     [KEY_BASE_PROMPT_ID, basePromptId ?? ""],
+    [KEY_IMAGE_MODEL, imageModel],
+    [KEY_IMAGE_COUNT, String(imageCount)],
+    [KEY_IMAGE_PROVIDER, imageProvider],
   ];
   for (const [key, value] of rows) {
     await prismadb.crm_SystemSettings.upsert({
@@ -92,11 +117,20 @@ export async function saveHomepageSettings(input: {
       {
         field: "homepage_settings",
         old: null,
-        new: `model=${model} max_tokens=${maxTokens} base_prompt_id=${basePromptId ?? ""}`,
+        new: `model=${model} max_tokens=${maxTokens} base_prompt_id=${basePromptId ?? ""} image_model=${imageModel} image_count=${imageCount} image_provider=${imageProvider}`,
       },
     ],
     userId: auth.user.id,
   });
 
-  return { data: { model, maxTokens, basePromptId } };
+  return {
+    data: {
+      model,
+      maxTokens,
+      basePromptId,
+      imageModel,
+      imageCount,
+      imageProvider,
+    },
+  };
 }
