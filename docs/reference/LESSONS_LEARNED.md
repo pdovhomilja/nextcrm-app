@@ -638,6 +638,26 @@
 
 ## Testing
 
+### A slow/near-timeout E2E CI run is usually the Playwright browser install, not flaky tests
+
+- **Symptom:** the `E2E (Playwright)` CI job ran ~21min (vs a normal ~11–12min) and
+  looked like it was about to blow the 30min job cap, so "flaky tests" got the blame.
+- **Cause:** the Playwright test phase was fine — `116 passed (~8.5min)`, **0 flaky, 0
+  retries used**, identically on both the slow and fast runs. The variance was **one
+  setup step**: `pnpm exec playwright install --with-deps chromium` took **~11m45s** on
+  the slow run (uncached browser download + `apt-get` for OS libs, both at the mercy of
+  the runner's CDN/apt-mirror luck). The `attempts: 3` lines in the log were the *app's*
+  AWS-S3 SDK retrying inside the dev server — not test retries.
+- **Fix / rule:** before blaming the suite, read the **per-step timestamps** of the job
+  (`gh run view --job=<id> --log`, diff the step start times) and the Playwright summary
+  line (`N passed (Xm)` + any `flaky`). Cache the browser under `~/.cache/ms-playwright`
+  keyed to the Playwright version; run `install chromium` (cached) and `install-deps`
+  (apt) as separate steps. Add a Playwright `globalTimeout` (CI) so a genuine hang fails
+  fast under the GitHub job cap instead of silently crawling to it — but note it guards
+  only the test phase, not the install steps before it.
+- **Tell:** E2E wall-clock swings run-to-run while the `N passed (Xm)` figure stays
+  constant → it's setup/infra time, not the tests.
+
 ### A schema-validated MCP-tool test needs a strict-format UUID, not the shared placeholder id
 
 - **Symptom:** a new test that parses args **through** a tool's Zod schema fails with

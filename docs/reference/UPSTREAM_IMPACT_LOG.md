@@ -578,3 +578,18 @@ suite). **1 upstream-owned file** touched:
 single version whose Chromium major equals `@sparticuz/chromium`'s; `node scripts/smoke/homepage-render-smoke.cjs`
 writes a non-zero PNG locally; then `pnpm exec jest inngest/functions/__tests__/generate-homepage.test.ts && pnpm exec tsc --noEmit`.
 **The serverless launch itself is only proven on a Vercel preview (QA).**
+
+### chore/ci-cache-playwright-browsers — cache the E2E browser install; cap the test phase
+
+Removes the ~12-min variable `playwright install --with-deps chromium` step from the E2E job
+(it was threatening the 30-min job cap) and caps the Playwright test phase. **2 upstream-owned
+files** touched, both already heavily fork-diverged (the 3-tier CI + E2E setup):
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `.github/workflows/ci.yml` | +~18/−1 | **mixed** | insert: a cache-key resolve step, `actions/cache@v4` on `~/.cache/ms-playwright` (keyed to the Playwright version), and split `install chromium` / `install-deps chromium` steps. rewrite: the single `playwright install --with-deps chromium` line replaced by those steps. Rest of the e2e job (services, seed, Inngest, Playwright run) unchanged. | Low (fork owns this CI; on conflict keep the cache steps) |
+| `playwright.config.ts` | +~10/−2 | **mixed** | rewrite: `retries` 2→1 (CI) and a new CI-only `globalTimeout` (15min); comments. No other config changed. | Low (on conflict keep retries:1 + globalTimeout) |
+
+**Re-verify after any upstream merge:** the e2e job still caches `~/.cache/ms-playwright` and
+runs `install chromium` + `install-deps` separately; `playwright.config.ts` still sets
+`retries: 1` and a CI `globalTimeout`; then a green E2E run on a code PR.
