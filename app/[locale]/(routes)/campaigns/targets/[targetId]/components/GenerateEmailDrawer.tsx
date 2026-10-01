@@ -128,6 +128,16 @@ export function GenerateEmailDrawer(props: {
     setBodyHtml(html);
     invalidatePreview();
   }
+  // Append the homepage screenshot as an <img> (merge tag resolves at send/preview).
+  // Remounts the editor so the new content loads; skips if already embedded.
+  function insertHomepageScreenshot() {
+    if (bodyHtml.includes("{{homepage_screenshot}}")) return;
+    const img =
+      '<p><img src="{{homepage_screenshot}}" alt="Website redesign preview" style="max-width:100%;border-radius:8px;" /></p>';
+    setBodyHtml((prev) => prev + img);
+    setBodyEditorKey((k) => k + 1);
+    invalidatePreview();
+  }
   function onCtaLabelChange(v: string) {
     setCtaLabel(v);
     invalidatePreview();
@@ -346,9 +356,22 @@ export function GenerateEmailDrawer(props: {
               {/* Editable AI draft — the operator refines the copy before sending;
                   edits flow to the preview (after Update) and the send. */}
               <div className="space-y-1" data-testid="email-body-editor">
-                <span className="text-xs text-muted-foreground">
-                  Email body — edit before sending
-                </span>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    Email body — edit before sending
+                  </span>
+                  {props.homepageReady && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={insertHomepageScreenshot}
+                      data-testid="insert-homepage-screenshot"
+                    >
+                      Insert homepage screenshot
+                    </Button>
+                  )}
+                </div>
                 <TipTapEditor
                   key={bodyEditorKey}
                   content={bodyHtml}

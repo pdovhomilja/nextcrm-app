@@ -166,6 +166,29 @@ do-not-email, reloads, asserts the badge).
 2. **Campaign side:** on a campaign detail page, **Verify:** the Recipients table has an **Unsub**
    column (✓ per unsubscribed recipient) and the stats row shows an **Unsub** count.
 
+### 1k. Embed an image / the homepage screenshot in the body
+
+**E2E:** `tests/e2e/target-ai-email.spec.ts` › `generates, previews and sends…` (inserts an image
+via the toolbar button and asserts it survives editing and reaches the send).
+
+1. Generate a draft, then click the **image** button in the body toolbar and paste a URL (or a merge
+   tag like `{{homepage_screenshot}}`). **Verify:** the image appears in the editor and **stays** when
+   you keep editing (previously `<img>` was stripped — the editor had no image support).
+2. On a target with a READY homepage, click **Insert homepage screenshot**. **Verify:** an
+   `<img src="{{homepage_screenshot}}">` is added; with "Include homepage" checked, the preview/sent
+   email shows the actual screenshot (merge tag resolves to the screenshot URL).
+
+### 1l. Branded, confirm-based unsubscribe
+
+**E2E:** unsubscribe routes unit-tested (`__tests__/campaigns/api/unsubscribe*`,
+`app/api/crm/targets/unsubscribe/__tests__`). Visual branding verified manually.
+
+1. Click an unsubscribe link from a received email. **Verify:** a **branded page** (navy header +
+   gears logo) opens with an **Unsubscribe** button — and clicking the link alone does **not**
+   unsubscribe you (GET is a confirm; a link scanner can't opt you out). Click the button.
+2. **Verify:** a branded confirmation page shows, and the target is now do-not-email. Gmail/Apple
+   Mail's built-in Unsubscribe (one-click) also works (POST).
+
 ## 2. AI prompt library — create, edit, delete
 
 **E2E:** `tests/e2e/target-ai-email.spec.ts` › `creates, edits and deletes a prompt`

@@ -3,11 +3,13 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
+import TiptapImage from "@tiptap/extension-image";
 import {
   Bold,
   Italic,
   Underline as UnderlineIcon,
   Link as LinkIcon,
+  Image as ImageIcon,
   List,
   Heading1,
   Heading2,
@@ -25,6 +27,9 @@ export function TipTapEditor({ content, onChange }: Props) {
       StarterKit,
       Underline,
       Link.configure({ openOnClick: false }),
+      // Keeps <img> through load/edit (e.g. AI-embedded homepage screenshots) and
+      // enables the image button. src may be a merge tag like {{homepage_screenshot}}.
+      TiptapImage.configure({ inline: false, allowBase64: false }),
     ],
     content: content ?? "",
     immediatelyRender: false,
@@ -113,6 +118,20 @@ export function TipTapEditor({ content, onChange }: Props) {
         >
           <LinkIcon className="h-4 w-4" />
         </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          title="Insert image (URL or a merge tag like {{homepage_screenshot}})"
+          onClick={() => {
+            const url = window.prompt(
+              "Image URL (or a merge tag, e.g. {{homepage_screenshot}})"
+            );
+            if (url) editor.chain().focus().setImage({ src: url }).run();
+          }}
+        >
+          <ImageIcon className="h-4 w-4" />
+        </Button>
       </div>
       {/* Editor area */}
       <EditorContent
@@ -122,7 +141,8 @@ export function TipTapEditor({ content, onChange }: Props) {
       {/* Merge tag hint */}
       <div className="px-4 pb-2 text-xs text-muted-foreground">
         Available merge tags:{" "}
-        {"{{first_name}} {{last_name}} {{email}} {{company}} {{position}}"}
+        {"{{first_name}} {{last_name}} {{email}} {{company}} {{position}} {{homepage_url}} {{homepage_screenshot}}"}
+        {" "}— use the image button with {"{{homepage_screenshot}}"} to embed the sample.
       </div>
     </div>
   );

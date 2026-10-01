@@ -71,6 +71,9 @@ export const campaignSendStep = inngest.createFunction(
         ...(sendRecord.campaign.reply_to ? { replyTo: sendRecord.campaign.reply_to } : {}),
         headers: {
           "List-Unsubscribe": `<${unsubscribeUrl}>`,
+          // RFC 8058 one-click — providers POST (not GET) to unsubscribe, matching
+          // the route's GET=confirm / POST=mutate design.
+          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
         },
       });
     });
