@@ -116,6 +116,19 @@ it("rejects a non-https result url", async () => {
   await expect(higgsfieldProvider("soul-v2").generateImage(spec)).rejects.toThrow(/https/i);
 });
 
+it.each([
+  "https://evil.example.com/requests/r1/status", // cross-host
+  "http://api.higgsfield.ai/requests/r1/status", // cleartext
+  "https://api.higgsfield.ai.evil.com/status", // look-alike suffix
+])("rejects an untrusted status_url (%s) and never polls it with the key", async (status_url) => {
+  const fetchMock = jest
+    .spyOn(global, "fetch" as any)
+    .mockResolvedValueOnce({ ok: true, json: async () => ({ request_id: "r1", status_url }) } as any);
+  await expect(higgsfieldProvider("soul-v2").generateImage(spec)).rejects.toThrow(/trusted https host/i);
+  // only the submit fetch ran; the untrusted status_url was never polled (key not sent to it)
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+});
+
 it("times out if never completed", async () => {
   jest.useFakeTimers();
   jest
