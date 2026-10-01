@@ -541,3 +541,19 @@ outreach emails; C: public homepage view counting). New **fork-owned** files car
 - `app/[locale]/(routes)/campaigns/targets/[targetId]/components/BasicView.tsx` — insert: a "Do not email" badge, `view_count`/`last_viewed_at` in the homepage select, and the `<HomepageViews>` render. **Risk Low–Medium** (this file is upstream-owned but already heavily fork-diverged for the target-outreach UI — also edited in PRs #27/#28; on conflict keep the fork inserts). The `/p/<slug>` view-tracking hook lives in the **fork-owned** `app/p/[slug]/route.ts` (one insertion-only `recordHomepageView` call).
 
 **Re-verify after any upstream merge:** confirm the webhook still falls back to `crm_Target_Email`, the two migrations' columns exist, and the campaign table/stat still show Unsub; then `pnpm exec jest __tests__/campaigns/api/webhooks-resend.test.ts lib/homepage && pnpm exec tsc --noEmit`.
+
+### feat/email-image-and-unsub-confirm — editor images, branded unsubscribe, GET-safe campaign unsubscribe
+
+Makes `<img>` survive the editor (so homepage screenshots embed), brands the unsubscribe
+pages, and makes the campaign unsubscribe GET-safe. New **fork-owned** files:
+`lib/email/unsubscribe-page.ts` (shared branded page). Fork-only edits: the target
+unsubscribe route (refactored onto the shared page) and `GenerateEmailDrawer` (screenshot button).
+
+**Upstream-owned files touched:**
+
+- `package.json` — insert (+1 dep): `@tiptap/extension-image` **pinned exactly to `3.20.5`** to match the pinned `@tiptap/core` (a caret range pulls 3.31.x and a second core copy — it broke the editor; keep it pinned). **Risk Low** (CI uses `--frozen-lockfile`).
+- `components/campaigns/TipTapEditor.tsx` — insert: the `Image` extension (so `<img>` is parsed/serialized instead of stripped on edit), an image-insert toolbar button, and `{{homepage_url}}`/`{{homepage_screenshot}}` in the merge-tag hint. **Risk Low–Medium** (keep the Image extension on conflict).
+- `app/api/campaigns/unsubscribe/route.ts` — **rewrite**: `GET` now shows a confirm form and **never mutates** (link scanners auto-GET and were silently unsubscribing people); `POST` mutates (stamps `unsubscribed_at` + sets `do_not_email`, handles form + RFC 8058 one-click); both render the branded page. **Risk Medium** (behavior change; on conflict keep GET=confirm / POST=mutate).
+- `inngest/functions/campaigns/send-step.ts` — insert (+3): `List-Unsubscribe-Post: List-Unsubscribe=One-Click` header so providers POST (not GET) to unsubscribe, matching the route. **Risk Low**.
+
+**Re-verify after any upstream merge:** confirm the editor keeps the `Image` extension, the campaign unsubscribe `GET` does not mutate (and `POST` does), and `send-step` still sets the one-click header; then `pnpm exec jest __tests__/campaigns/api/unsubscribe && pnpm exec tsc --noEmit`.

@@ -10,9 +10,16 @@ jest.mock("@/lib/prisma", () => ({
   },
 }));
 
-import { NextRequest } from "next/server";
 import { prismadb } from "@/lib/prisma";
-import { GET } from "@/app/api/campaigns/unsubscribe/route";
+import { POST } from "@/app/api/campaigns/unsubscribe/route";
+
+// Suppression happens on POST (GET is a safe confirm form — see unsubscribe.test.ts).
+const post = (token: string) =>
+  POST(
+    new Request(`http://localhost/api/campaigns/unsubscribe?token=${token}`, {
+      method: "POST",
+    })
+  );
 
 describe("unsubscribe global opt-out", () => {
   beforeEach(() => jest.clearAllMocks());
@@ -27,9 +34,7 @@ describe("unsubscribe global opt-out", () => {
     (prismadb.crm_campaign_sends.update as jest.Mock).mockResolvedValue({});
     (prismadb.crm_Targets.updateMany as jest.Mock).mockResolvedValue({ count: 2 });
 
-    const res = await GET(
-      new NextRequest("http://localhost/api/campaigns/unsubscribe?token=tok-1")
-    );
+    const res = await post("tok-1");
 
     expect(res.status).toBe(200);
     expect(prismadb.crm_Targets.updateMany).toHaveBeenCalledWith({
@@ -53,7 +58,7 @@ describe("unsubscribe global opt-out", () => {
     });
     (prismadb.crm_Targets.updateMany as jest.Mock).mockResolvedValue({ count: 0 });
 
-    await GET(new NextRequest("http://localhost/api/campaigns/unsubscribe?token=tok-1"));
+    await post("tok-1");
 
     expect(prismadb.crm_campaign_sends.update).not.toHaveBeenCalled();
     expect(prismadb.crm_Targets.updateMany).toHaveBeenCalledTimes(1);
@@ -71,9 +76,7 @@ describe("unsubscribe global opt-out", () => {
       new Error("DB unavailable")
     );
 
-    const res = await GET(
-      new NextRequest("http://localhost/api/campaigns/unsubscribe?token=tok-1")
-    );
+    const res = await post("tok-1");
 
     expect(res.status).toBe(200);
   });
@@ -88,11 +91,8 @@ describe("unsubscribe global opt-out", () => {
     (prismadb.crm_campaign_sends.update as jest.Mock).mockResolvedValue({});
     (prismadb.crm_Targets.updateMany as jest.Mock).mockResolvedValue({ count: 2 });
 
-    const res = await GET(
-      new NextRequest("http://localhost/api/campaigns/unsubscribe?token=tok-1")
-    );
+    await post("tok-1");
 
-    expect(res.status).toBe(200);
     expect(prismadb.crm_Targets.updateMany).toHaveBeenCalledWith({
       where: {
         do_not_email: false,
@@ -105,14 +105,12 @@ describe("unsubscribe global opt-out", () => {
     });
   });
 
-  it("does not touch targets for an unknown token", async () => {
+  it("returns a generic 200 (no enumeration) for an unknown token, touching no targets", async () => {
     (prismadb.crm_campaign_sends.findUnique as jest.Mock).mockResolvedValue(null);
 
-    const res = await GET(
-      new NextRequest("http://localhost/api/campaigns/unsubscribe?token=bad")
-    );
+    const res = await post("bad");
 
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(200);
     expect(prismadb.crm_Targets.updateMany).not.toHaveBeenCalled();
   });
 });

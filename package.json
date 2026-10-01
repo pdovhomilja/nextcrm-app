@@ -71,6 +71,7 @@
     "@sparticuz/chromium": "147.0.2",
     "@tailwindcss/postcss": "^4.2.1",
     "@tanstack/react-table": "^8.21.3",
+    "@tiptap/extension-image": "3.20.5",
     "@tiptap/extension-link": "^3.20.5",
     "@tiptap/extension-underline": "^3.20.5",
     "@tiptap/pm": "^3.20.5",

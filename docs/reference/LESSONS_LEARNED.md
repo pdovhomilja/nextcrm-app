@@ -776,6 +776,30 @@
 
 ## Frontend / React
 
+### TipTap silently strips tags with no matching extension (e.g. `<img>` without Image)
+
+- **Symptom:** an AI-generated email with an embedded `<img>` showed in the first preview,
+  but editing it in the TipTap editor made the image vanish; typing `<img …>` or a merge tag
+  only produced literal text, never an image.
+- **Cause:** TipTap keeps only nodes/marks its **schema** knows. The editor ran StarterKit +
+  Link + Underline — **no Image extension** — so any `<img>` is dropped on load/`getHTML()`,
+  and there's no command to insert one.
+- **Fix / rule:** add `@tiptap/extension-image` (and a toolbar button → `setImage`). Pin the
+  extension to the **exact same version as `@tiptap/core`** — a caret range resolves to a newer
+  minor and pulls a **second `@tiptap/core`**, which breaks the editor (nodes from the wrong
+  core). The sanitizer must also allow `img`/`src` (it does), and merge tags in `src` must be
+  resolved **before** sanitizing so the scheme check sees a real URL.
+
+### A public unsubscribe link must NOT mutate on GET — scanners auto-GET it
+
+- **Symptom:** testing a campaign unsubscribe, the recipient was already unsubscribed before
+  anyone clicked — or a prospect got opted out without acting.
+- **Cause:** the campaign route unsubscribed on **GET**. Email clients and security stacks
+  prefetch/scan links (Safe Links, spam filters, chat unfurlers), so a GET fires without intent.
+- **Fix / rule:** `GET` = a confirm form only (never mutates); `POST` = the mutation (form button
+  + RFC 8058 one-click via the `List-Unsubscribe-Post` header). The target route already did this;
+  the campaign route was brought in line. Same root cause as the homepage-view prefetch trap.
+
 ### TipTap's `content` prop is read once — remount with a `key` to load new content
 
 - **Symptom:** an editor seeded from server/AI state (`<TipTapEditor content={bodyHtml} />`) stayed

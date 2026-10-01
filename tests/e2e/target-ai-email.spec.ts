@@ -267,6 +267,15 @@ test.describe("Target AI outreach — email", () => {
     await page.keyboard.type(`Hi {{first_name}}, ${EDIT_MARKER} for {{company}}.`);
     await expect(page.getByTestId("email-send-btn")).toBeDisabled();
 
+    // Insert an image via the toolbar button — it must survive editing + getHTML
+    // (requires the TipTap Image extension; without it the <img> is stripped).
+    const IMG_URL = `https://example.com/shot-${RUN}.png`;
+    page.once("dialog", (d) => d.accept(IMG_URL));
+    await page
+      .locator('[data-testid="email-body-editor"] button[title^="Insert image"]')
+      .click();
+    await expect(bodyEditor.locator(`img[src="${IMG_URL}"]`)).toHaveCount(1);
+
     // Preview-drift guard: editing the subject invalidates the preview (Send off)
     // until it is re-rendered with "Update preview". Net subject is unchanged.
     const subjectInput = page.getByTestId("email-subject");
@@ -281,6 +290,8 @@ test.describe("Target AI outreach — email", () => {
     await expect(preview.getByText(`${PREFIX} template header`)).toBeVisible();
     // The operator's body edit shows in the re-rendered preview.
     await expect(preview.getByText(new RegExp(EDIT_MARKER))).toBeVisible();
+    // The inserted image is in the re-rendered preview (syncs state before send).
+    await expect(preview.locator(`img[src="${IMG_URL}"]`)).toHaveCount(1);
 
     await page.getByTestId("email-send-btn").click();
     await assertSuccessToast(page, "Email sent");
@@ -297,6 +308,8 @@ test.describe("Target AI outreach — email", () => {
     // NOT the original AI draft.
     expect(sent.html).toContain(`Hi Jane, ${EDIT_MARKER} for ${COMPANY}.`);
     expect(sent.html).not.toContain("here is our pitch");
+    // The inserted image survived editing and reached the send.
+    expect(sent.html).toContain(IMG_URL);
     // The sent email carries the overridden CTA label + inherited link.
     expect(sent.html).toContain(CTA_LABEL_OVERRIDE);
     expect(sent.html).toContain(CTA_URL);
