@@ -1,4 +1,5 @@
 import { GSAP_VERSION, ALLOWED_RENDER_HOSTS } from "@/lib/homepage/render-allowlist";
+import type { GeneratedImage } from "@/lib/homepage/images/types";
 
 /**
  * Creative-direction fallback, used ONLY when no admin base prompt is configured.
@@ -15,7 +16,8 @@ Creative direction:
 - Structure: a strong hero with one primary call to action, a concise value proposition, services/offerings, social proof only if supplied in the brief, and a clear contact section.
 - Content integrity: reuse the supplied brand, business name, colors and real copy. Never invent phone numbers, addresses, testimonials, or claims that are not in the brief.
 - Accessibility: semantic landmarks (header, main, section, footer), descriptive alt text, WCAG AA contrast, visible focus states, and a \`prefers-reduced-motion\` fallback that disables the animations.
-- If screenshots are provided, they show the current (source) site and/or a previous attempt; preserve brand identity while fixing weaknesses.`;
+- If screenshots are provided, they show the current (source) site and/or a previous attempt; preserve brand identity while fixing weaknesses.
+- Design AROUND real photography: a photographic hero and image-led sections carry the premium feel — avoid flat color-block layouts when images are provided.`;
 
 /**
  * CODE-OWNED output/egress contract. ALWAYS appended to whatever base prompt is
@@ -31,9 +33,22 @@ export const MACHINE_CONTRACT = `Output contract (mandatory, overrides anything 
 - Output ONE single, fully self-contained HTML document.
 - Never invent phone numbers, addresses, emails, testimonials, hours, or facts that are not in the brief; reuse only the supplied brand and copy.
 - You MAY load external resources ONLY from these hosts: ${ALLOWED_RENDER_HOSTS.join(", ")}, and GSAP (with ScrollTrigger) from ${GSAP_BASE_URL}/gsap.min.js and ${GSAP_BASE_URL}/ScrollTrigger.min.js. No other remote resources of any kind.
-- For the business logo, if a logo is provided use the EXACT token __RADE_LOGO_SRC__ as the logo <img> src (it is substituted with the real logo); otherwise render a clean text wordmark. Never reference any other logo URL.`;
+- For the business logo, if a logo is provided use the EXACT token __RADE_LOGO_SRC__ as the logo <img> src (it is substituted with the real logo); otherwise render a clean text wordmark. Never reference any other logo URL.
+- Images: use ONLY the provided image tokens (__RADE_IMG_1__ and others) as <img> src where imagery strengthens the design; each token at most once; every <img> needs descriptive alt text; the tokens resolve to hosted images and will load. Do not reference any other image URL. If no image tokens are provided, use strong typography, color and CSS/SVG art instead.`;
 
 /** Admin base (or the built-in default when null/blank) + the always-present machine contract. */
 export function buildSystemPrompt(basePrompt: string | null): string {
   return `${basePrompt?.trim() || DEFAULT_BASE_PROMPT}\n\n${MACHINE_CONTRACT}`;
+}
+
+/**
+ * Returns a per-run list of available image tokens with their alt text,
+ * or a line telling the model no images are available.
+ */
+export function buildImageBrief(images: GeneratedImage[]): string {
+  if (!images.length) {
+    return "No images available — rely on typography, color and CSS/SVG art.";
+  }
+  const lines = images.map((i) => `- ${i.token} — ${i.alt}`);
+  return `Available image tokens (use as <img> src; each once; add alt text):\n${lines.join("\n")}`;
 }
