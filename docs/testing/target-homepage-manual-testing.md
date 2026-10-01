@@ -92,11 +92,15 @@ pnpm dev
 3. Click **Generate**. **Verify:** status goes Queued → Generating…; the drawer polls.
 4. **Verify:** on completion the preview + screenshot appear, and the Versions list holds the
    automatic passes (`AUTO`). If it lands **FAILED**, the error text is shown.
-   **Note (transient failures retry):** a transient error (render crash, provider 5xx/timeout)
+   **Note (transient vs terminal):** a *transient* error (render crash, provider 5xx/timeout)
    no longer fails the run on the first stumble — Inngest retries and resumes from the last
    completed pass, so the status can stay **Generating…** across the retry/backoff window
    before it either recovers or lands **FAILED** (don't read a longer RUNNING as hung). A
-   *terminal* error (no API key, deleted target, uploaded-page guard) still fails immediately.
+   *terminal* error — no API key, deleted target, uploaded-page guard, **or an AI `max_tokens`
+   cutoff / non-transient 4xx thrown inside a step** — fails fast with its actionable message
+   (e.g. "AI response was cut off (max_tokens)…" → raise Max tokens in admin), **not** a silent
+   RUNNING loop. (That `max_tokens` case was a regression — see `LESSONS_LEARNED.md`, the Inngest
+   step-boundary entry — now covered by `isTerminalError`.)
 5. **Verify (blank website):** a target with no `company_website` still generates.
    **Verify (blocked URL):** a target whose website is `http://localhost` / a private IP still
    generates (source harvest is skipped, never fetched).
