@@ -31,10 +31,18 @@ export default defineConfig({
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code */
   forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
+  /* Retry on CI only. One retry (not two): the suite is not flaky — ~116 tests
+   * pass in ~8.5min with no retries used — so a 2nd serial retry is mostly dead
+   * weight and a wall-clock multiplier if a real flake ever appears. */
+  retries: process.env.CI ? 1 : 0,
+  /* Opt out of parallel tests on CI (shared DB/seed state is not isolated for
+   * parallel workers). */
   workers: process.env.CI ? 1 : undefined,
+  /* Cap the whole suite on CI well under the e2e job's 30min GitHub cap, so a
+   * genuine hang fails fast (red + re-run) instead of silently burning toward
+   * the cap. Healthy runs are ~8.5min, so 15min is generous headroom. Guards
+   * the test phase only — not the browser/deps install steps before it. */
+  globalTimeout: process.env.CI ? 15 * 60 * 1000 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: "html",
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */

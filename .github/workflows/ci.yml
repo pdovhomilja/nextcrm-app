@@ -207,7 +207,27 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
+      # The chromium binary download was the E2E time sink: `playwright install
+      # --with-deps chromium` as one step swung ~2min→~12min (uncached download
+      # racing a slow CDN/apt mirror), which on a bad run crept toward this job's
+      # 30min cap. Cache the browser under ~/.cache/ms-playwright keyed to the
+      # Playwright version (the binary build is pinned to it): a hit restores in
+      # seconds; a miss (version bump) pays once and repopulates. The OS libs
+      # (apt) are NOT in that cache, so `install-deps` runs every time as its own,
+      # smaller, now-isolated step — if IT becomes the spike, move this job to the
+      # mcr.microsoft.com/playwright image (deps pre-baked). See LESSONS_LEARNED.
+      - name: Resolve Playwright version (cache key)
+        id: playwright
+        run: echo "version=$(node -e "console.log(require('@playwright/test/package.json').version)")" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ms-playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - name: Install Playwright chromium (restored from cache on a hit)
+        run: pnpm exec playwright install chromium
+      - name: Install Playwright OS dependencies (apt)
+        run: pnpm exec playwright install-deps chromium
       - run: pnpm exec prisma generate
       - run: pnpm exec prisma migrate deploy
       - name: Seed test data (admin user for auth.setup)
