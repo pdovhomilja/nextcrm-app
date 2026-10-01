@@ -15,7 +15,7 @@ export type GeneratedImage = {
 export interface ImageProvider {
   readonly name: string;
   isConfigured(): boolean;
-  /** Returns PNG bytes, or throws on failure (caller handles fallback/fail-open). */
+  /** Returns raw image bytes (type detected at store time), or throws on failure (caller handles fallback/fail-open). */
   generateImage(spec: ImageSpec): Promise<Buffer>;
 }
 
