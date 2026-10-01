@@ -4,7 +4,10 @@ import { prismadb } from "@/lib/prisma";
 import { getApiKey } from "@/lib/api-keys";
 import { harvestSource, type HarvestResult } from "@/lib/homepage/harvest-source";
 import { generateHomepage as generateHomepageHtml } from "@/lib/homepage/provider";
-import { buildSystemPrompt } from "@/lib/homepage/prompt";
+import { buildSystemPrompt, buildImageBrief } from "@/lib/homepage/prompt";
+import { planHomepageImages } from "@/lib/homepage/images/plan";
+import { resolveImageProviders, generateWithFallback } from "@/lib/homepage/images/resolve";
+import type { GeneratedImage } from "@/lib/homepage/images/types";
 import { getHomepageSettings } from "@/lib/homepage/settings";
 import { renderAndScreenshot } from "@/lib/homepage/render";
 import {
@@ -15,6 +18,8 @@ import {
   deleteHomepageTmpSource,
   getHomepageUpload,
   deleteHomepageUpload,
+  putHomepageImage,
+  homepageImageUrl,
 } from "@/lib/homepage/storage";
 
 /** Number of automatic render->critique->refine passes after the initial draft. Hard bound. */
@@ -35,6 +40,8 @@ export const AUTO_PASSES = 3;
 // invariant, but the graceful path is preferred). 200 + 60 = 260s leaves ~40s.
 export const GENERATE_TIMEOUT_MS = 200_000;
 export const RENDER_TIMEOUT_MS = 60_000;
+/** Upper bound for the whole parallel image-generation step (fail-open on expiry). */
+export const IMAGE_TIMEOUT_MS = 120_000;
 
 export type GenerateHomepageEventData = {
   targetId: string;
@@ -85,8 +92,42 @@ type HomepageRow = {
 // page still show the real logo under the render egress block.
 const LOGO_PLACEHOLDER = "__RADE_LOGO_SRC__";
 
-function materializeLogo(html: string, logoDataUri: string | null | undefined): string {
-  return html.split(LOGO_PLACEHOLDER).join(logoDataUri ?? "");
+/**
+ * Swap the logo placeholder AND every generated-image token for its real value.
+ * Tokens (`__RADE_IMG_N__`) stay in the persisted/prompt HTML — like the logo
+ * placeholder — and are only substituted at RENDER + UPLOAD time.
+ */
+function materialize(
+  html: string,
+  logoDataUri: string | null | undefined,
+  images: GeneratedImage[],
+): string {
+  let out = html.split(LOGO_PLACEHOLDER).join(logoDataUri ?? "");
+  for (const img of images) out = out.split(img.token).join(img.url);
+  return out;
+}
+
+const IMAGE_TOKEN_RE = /__RADE_IMG_(\d+)__/g;
+
+/** Stored object name for a token: `__RADE_IMG_2__` -> `img-2.png` (index fallback if malformed). */
+const imageName = (token: string, index: number): string => {
+  const n = /^__RADE_IMG_(\d+)__$/.exec(token)?.[1];
+  return `img-${n ?? index + 1}.png`;
+};
+
+/**
+ * Refine / revert don't regenerate images, and the generate step's list isn't
+ * persisted. The objects live at deterministic keys, so rebuild the token->url map
+ * from the tokens actually present in the stored html. A missing object just 404s
+ * (a broken image) rather than failing the run.
+ */
+function imagesInHtml(html: string, slug: string): GeneratedImage[] {
+  const nums = Array.from(new Set(Array.from(html.matchAll(IMAGE_TOKEN_RE), (m) => m[1])));
+  return nums.map((n) => ({
+    token: `__RADE_IMG_${n}__`,
+    alt: "existing page image",
+    url: homepageImageUrl(slug, `img-${n}.png`),
+  }));
 }
 
 type TargetRow = {
@@ -94,6 +135,7 @@ type TargetRow = {
   company: string | null;
   company_website: string | null;
   description: string | null;
+  industry?: string | null;
 };
 
 const BASE_PROMPT =
@@ -147,8 +189,9 @@ function previewUrls(slug: string): { preview_url: string | null; screenshot_url
 // shot travels via a transient R2 key.
 type PassResult = { html: string; critique: string; versionId: string };
 
-const renderPng = (html: string) =>
-  withTimeout(renderAndScreenshot(html), RENDER_TIMEOUT_MS, "Homepage render");
+// `slug` lets the render egress allowlist permit this page's own /images/ prefix.
+const renderPng = (html: string, slug: string) =>
+  withTimeout(renderAndScreenshot(html, { slug }), RENDER_TIMEOUT_MS, "Homepage render");
 
 /** generate (+ in-step render of the previous draft for vision) -> persist version, each in its own bounded step. */
 async function runPass(
@@ -173,6 +216,8 @@ async function runPass(
     versionPrompt: string | null;
     /** Harvested logo, substituted into the placeholder before any render. */
     logoDataUri: string | null;
+    /** Generated images whose tokens are substituted before any render. */
+    images: GeneratedImage[];
   },
 ): Promise<PassResult> {
   const gen = await step.run(`generate-${label}`, async () => {
@@ -182,7 +227,12 @@ async function runPass(
       : undefined;
     const refinedScreenshotB64 =
       args.visionOfPrevious && args.previousHtml
-        ? (await renderPng(materializeLogo(args.previousHtml, args.logoDataUri))).toString("base64")
+        ? (
+            await renderPng(
+              materialize(args.previousHtml, args.logoDataUri, args.images),
+              args.homepage.slug,
+            )
+          ).toString("base64")
         : undefined;
     return withTimeout(
       generateHomepageHtml({
@@ -231,18 +281,25 @@ async function renderAndUpload(
   homepage: HomepageRow,
   html: string,
   logoDataUri: string | null,
+  images: GeneratedImage[],
 ) {
   await step.run(name, async () => {
-    const materialized = materializeLogo(html, logoDataUri);
-    const png = await renderPng(materialized);
+    const materialized = materialize(html, logoDataUri, images);
+    const png = await renderPng(materialized, homepage.slug);
     await putHomepageHtml(homepage.slug, materialized);
     await putHomepageScreenshot(homepage.slug, png);
   });
 }
 
 /** Upload the final html + screenshot, then flip the homepage to READY. */
-async function publish(step: StepLike, homepage: HomepageRow, final: PassResult, logoDataUri: string | null) {
-  await renderAndUpload(step, "upload-final", homepage, final.html, logoDataUri);
+async function publish(
+  step: StepLike,
+  homepage: HomepageRow,
+  final: PassResult,
+  logoDataUri: string | null,
+  images: GeneratedImage[],
+) {
+  await renderAndUpload(step, "upload-final", homepage, final.html, logoDataUri, images);
   await step.run("mark-ready", () =>
     prismadb.crm_Target_Homepage.update({
       where: { id: homepage.id },
@@ -342,7 +399,14 @@ async function endRun(step: StepLike, flow: string, homepageId: string, err: unk
  */
 async function resolveGenerationConfig(
   step: StepLike,
-): Promise<{ system: string; model: string; maxTokens: number }> {
+): Promise<{
+  system: string;
+  model: string;
+  maxTokens: number;
+  imageModel: string;
+  imageCount: number;
+  imageProvider: string;
+}> {
   const settings = await step.run("resolve-settings", () => getHomepageSettings());
   const basePromptId = settings.basePromptId;
   const base = basePromptId
@@ -357,7 +421,63 @@ async function resolveGenerationConfig(
     system: buildSystemPrompt(base?.body ?? null),
     model: settings.model,
     maxTokens: settings.maxTokens,
+    imageModel: settings.imageModel,
+    imageCount: settings.imageCount,
+    imageProvider: settings.imageProvider,
   };
+}
+
+/**
+ * Generate the page's on-brand images ONCE per run, in a single step, and return
+ * only {token, alt, url} (never bytes — Inngest persists step output). FAIL-OPEN by
+ * construction: every failure path (plan, provider resolve, generation, R2 put,
+ * timeout) is caught HERE and yields [] / drops that image, so imagery can never fail
+ * the run. It deliberately never throws, so it cannot reach endRun / NonRetriableError
+ * and Inngest never retries the step.
+ */
+async function generateImages(
+  step: StepLike,
+  cfg: { imageModel: string; imageCount: number; imageProvider: string },
+  target: TargetRow,
+  slug: string,
+  colors: string[],
+): Promise<GeneratedImage[]> {
+  return step.run("generate-images", async (): Promise<GeneratedImage[]> => {
+    try {
+      const specs = planHomepageImages({
+        count: cfg.imageCount,
+        industry: target.industry ?? null,
+        company: target.company,
+        description: target.description,
+        colors,
+      });
+      if (!specs.length) return [];
+      const providers = resolveImageProviders({ provider: cfg.imageProvider, model: cfg.imageModel });
+      const results = await withTimeout(
+        Promise.all(
+          specs.map(async (spec, i): Promise<GeneratedImage | null> => {
+            // Per-image isolation: one image failing never drops its siblings.
+            try {
+              const bytes = await generateWithFallback(spec, providers);
+              if (!bytes) return null;
+              const name = imageName(spec.token, i);
+              await putHomepageImage(slug, name, bytes);
+              return { token: spec.token, alt: spec.alt, url: homepageImageUrl(slug, name) };
+            } catch (e) {
+              console.warn("[HOMEPAGE_IMAGE] image dropped:", (e as Error)?.message);
+              return null;
+            }
+          }),
+        ),
+        IMAGE_TIMEOUT_MS,
+        "Homepage image generation",
+      );
+      return results.filter((r): r is GeneratedImage => r !== null);
+    } catch (e) {
+      console.warn("[HOMEPAGE_IMAGE] generation skipped (fail-open):", (e as Error)?.message);
+      return [];
+    }
+  });
 }
 
 const NO_API_KEY = "NO_API_KEY: configure ANTHROPIC key in admin or profile settings";
@@ -367,7 +487,7 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData) {
     const [target, homepage] = await Promise.all([
       prismadb.crm_Targets.findUnique({
         where: { id: data.targetId, deletedAt: null },
-        select: { id: true, company: true, company_website: true, description: true },
+        select: { id: true, company: true, company_website: true, description: true, industry: true },
       }),
       prismadb.crm_Target_Homepage.findUnique({
         where: { targetId: data.targetId, deletedAt: null },
@@ -415,7 +535,16 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData) {
     storedSourceShot = !!harvest?.hasSourceShot;
     const logoDataUri = harvest?.logoDataUri ?? null;
 
-    const brief = buildBrief(target, harvest?.brand ?? null, logoDataUri);
+    // Generated ONCE, reused by every pass (fail-open: [] on any failure).
+    const images = await generateImages(
+      step,
+      genConfig,
+      target,
+      homepage.slug,
+      harvest?.brand.colors ?? [],
+    );
+
+    const brief = `${buildBrief(target, harvest?.brand ?? null, logoDataUri)}\n${buildImageBrief(images)}`;
     const baseArgs = {
       apiKey,
       ...genConfig,
@@ -425,6 +554,7 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData) {
       createdBy: null,
       versionPrompt: data.prompt ?? null,
       logoDataUri,
+      images,
     };
     const operator = data.prompt ? `${BASE_PROMPT}\n\nOperator instructions: ${data.prompt}` : BASE_PROMPT;
 
@@ -443,7 +573,7 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData) {
       });
     }
 
-    await publish(step, homepage, current, logoDataUri);
+    await publish(step, homepage, current, logoDataUri, images);
     if (storedSourceShot) await cleanupTmp(step, homepage.slug);
     return { ready: true, versions: 1 + AUTO_PASSES };
   } catch (err) {
@@ -503,10 +633,14 @@ async function refineFlow(step: StepLike, data: RefineHomepageEventData) {
       );
     }
 
+    // Images aren't regenerated on refine; keep the tokens already in the page valid.
+    const images = imagesInHtml(seed.html, homepage.slug);
     const current = await runPass(step, "human", {
       apiKey,
       ...genConfig,
-      brief: seed.target ? buildBrief(seed.target, null, logoDataUri) : "",
+      brief: seed.target
+        ? `${buildBrief(seed.target, null, logoDataUri)}\n${buildImageBrief(images)}`
+        : "",
       prompt: data.prompt,
       previousHtml: seed.html,
       homepage,
@@ -514,9 +648,10 @@ async function refineFlow(step: StepLike, data: RefineHomepageEventData) {
       createdBy: data.triggeredBy ?? null,
       versionPrompt: data.prompt,
       logoDataUri,
+      images,
     });
 
-    await publish(step, homepage, current, logoDataUri);
+    await publish(step, homepage, current, logoDataUri, imagesInHtml(current.html, homepage.slug));
     return { ready: true, versions: 1 };
   } catch (err) {
     return endRun(step, "refine", homepage.id, err);
@@ -557,7 +692,14 @@ async function revertFlow(step: StepLike, data: RevertHomepageEventData) {
       throw new NonRetriableError("Version not found for this homepage");
     }
 
-    await renderAndUpload(step, "upload-revert", homepage, version.html, logoDataUri);
+    await renderAndUpload(
+      step,
+      "upload-revert",
+      homepage,
+      version.html,
+      logoDataUri,
+      imagesInHtml(version.html, homepage.slug),
+    );
     await step.run("mark-ready", () =>
       prismadb.crm_Target_Homepage.update({
         where: { id: homepage.id },
@@ -604,8 +746,8 @@ async function uploadFlow(step: StepLike, data: UploadHomepageEventData) {
     const versionId = await step.run("publish-upload", async () => {
       const html = await getHomepageUpload(homepage.slug);
       if (!html) throw new NonRetriableError("Uploaded file not found");
-      const materialized = materializeLogo(html, logoDataUri);
-      const png = await renderPng(materialized);
+      const materialized = materialize(html, logoDataUri, []);
+      const png = await renderPng(materialized, homepage.slug);
       await putHomepageHtml(homepage.slug, materialized);
       await putHomepageScreenshot(homepage.slug, png);
       const v = await prismadb.crm_Target_Homepage_Version.create({
