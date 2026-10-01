@@ -496,9 +496,21 @@
   retries are exhausted (keeps the "never stuck RUNNING" invariant). Consequence to expect: a
   transient failure now shows `RUNNING` for longer (the retry/backoff window) before `FAILED`,
   and its final row `error` carries the `onFailure` backstop prefix.
-- **Gotcha:** a terminal error thrown *inside* a `step.run` (vs the flow body) only stays
-  terminal if the runtime preserves `NonRetriableError` across the step boundary — prefer
-  throwing terminal guards in the flow body, and QA-verify any that must live inside a step.
+- **Gotcha (confirmed on QA, then fixed):** a `NonRetriableError` thrown *inside* a `step.run`
+  does NOT reach the flow `catch` as a `NonRetriableError` instance — Inngest surfaces it as a
+  `StepError`, so `err instanceof NonRetriableError` is **false** and a naive classifier
+  retries it. We hit exactly this: the provider's `max_tokens` guard (thrown inside the
+  generate step) looped at `RUNNING` for ~25min on QA. The reliable signal is the **error
+  `.name`**: `StepError` copies the original name (`this.name = parsedErr.name`) and Inngest
+  registers `NonRetriableError` in its serialize-error constructors, so `.name` survives the
+  boundary even though the prototype does not. Fix (`isTerminalError` in
+  `generate-homepage.ts`): treat `err instanceof NonRetriableError || err.name ===
+  "NonRetriableError"` as terminal, and on the terminal path re-throw a **fresh**
+  `NonRetriableError` (re-throwing the `StepError` would not stop Inngest's *function*-level
+  retry, which also checks `instanceof`).
+- **Tell (this trap):** a deterministic failure (bad config, a `max_tokens` cutoff, a 4xx)
+  sits at `RUNNING` and retries instead of failing fast — check whether its `NonRetriableError`
+  is thrown inside a step and whether your classifier matches `.name`, not just `instanceof`.
 - **Tell:** an Inngest `catch` that wraps *all* errors in `NonRetriableError`; expensive early
   steps re-running on what should have been a resumable retry.
 

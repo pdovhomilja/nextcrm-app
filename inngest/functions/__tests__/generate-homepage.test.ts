@@ -143,6 +143,16 @@ const runExpectingRetriable = async (ctx: FlowCtx): Promise<Error> => {
   expect(err).not.toBeInstanceOf(NonRetriableError);
   return err as Error;
 };
+// Inngest surfaces a NonRetriableError thrown INSIDE a step to the flow catch as a
+// StepError: it copies the original `.name` ("NonRetriableError") but the prototype
+// is a plain Error, NOT NonRetriableError. This builds that exact shape so the tests
+// exercise the step→flow boundary (where `instanceof` alone silently misclassifies).
+const stepBoundaryNonRetriable = (message: string): Error => {
+  const e = new Error(message);
+  e.name = "NonRetriableError";
+  (e as { stepId?: string }).stepId = "generate-initial";
+  return e;
+};
 
 describe("generate-homepage function config", () => {
   it("handles both events with bounded retries", () => {
@@ -439,6 +449,27 @@ describe("generate event", () => {
     expect(err).not.toBeInstanceOf(NonRetriableError);
     expect((err as Error).message).toMatch(/chromium exploded/);
     expect(statuses()).not.toContain("FAILED");
+  });
+
+  it("terminal error from INSIDE a step (max_tokens as a StepError) fails fast, not retried", async () => {
+    // Reproduces the QA bug: the provider throws NonRetriableError inside the
+    // generate step; Inngest surfaces it as a StepError (name preserved, class
+    // lost). endRun must still treat it terminal — mark FAILED and re-throw a
+    // genuine NonRetriableError so Inngest stops retrying (no silent RUNNING loop).
+    (generateHomepage as jest.Mock)
+      .mockReset()
+      .mockRejectedValue(
+        stepBoundaryNonRetriable(
+          "AI response was cut off (max_tokens). Try a shorter prompt or simpler design.",
+        ),
+      );
+    const err = await handler({ event: generateEvent, step }).catch((e) => e);
+    expect(err).toBeInstanceOf(NonRetriableError);
+    expect((err as Error).message).toContain("max_tokens");
+    const last = homepageUpdate.mock.calls.at(-1)![0];
+    expect(last.data.status).toBe("FAILED");
+    expect(last.data.error).toContain("max_tokens");
+    expect(statuses()).toContain("FAILED");
   });
 
   it("rejects an unknown event name", async () => {
