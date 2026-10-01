@@ -11,6 +11,9 @@ import {
   clampMaxTokens,
   getHomepageSettings,
   resolveModel,
+  DEFAULT_IMAGE_MODEL,
+  DEFAULT_IMAGE_COUNT,
+  DEFAULT_IMAGE_PROVIDER,
   type HomepageSettings,
 } from "@/lib/homepage/settings";
 
@@ -98,6 +101,14 @@ export async function saveHomepageSettings(input: {
     userId: auth.user.id,
   });
 
-  const settings = await getHomepageSettings();
-  return { data: settings };
+  return {
+    data: {
+      model,
+      maxTokens,
+      basePromptId,
+      imageModel: DEFAULT_IMAGE_MODEL,
+      imageCount: DEFAULT_IMAGE_COUNT,
+      imageProvider: DEFAULT_IMAGE_PROVIDER,
+    },
+  };
 }

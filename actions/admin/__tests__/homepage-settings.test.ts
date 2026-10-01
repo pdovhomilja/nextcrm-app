@@ -14,6 +14,7 @@ jest.mock("@/lib/audit-log", () => ({ writeAuditLog: jest.fn() }));
 import { requireRole, AuthenticationError, AuthorizationError } from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/audit-log";
+import { DEFAULT_IMAGE_MODEL, DEFAULT_IMAGE_COUNT, DEFAULT_IMAGE_PROVIDER } from "@/lib/homepage/settings";
 import {
   getHomepageSettingsForAdmin,
   saveHomepageSettings,
@@ -70,7 +71,16 @@ describe("saveHomepageSettings", () => {
       create: { key: "homepage.model", value: "claude-sonnet-5-5" },
       update: { value: "claude-sonnet-5-5" },
     });
-    expect(res).toEqual({ data: { model: "claude-sonnet-5-5", maxTokens: 20000, basePromptId: null } });
+    expect(res).toEqual({
+      data: {
+        model: "claude-sonnet-5-5",
+        maxTokens: 20000,
+        basePromptId: null,
+        imageModel: DEFAULT_IMAGE_MODEL,
+        imageCount: DEFAULT_IMAGE_COUNT,
+        imageProvider: DEFAULT_IMAGE_PROVIDER,
+      },
+    });
   });
 
   it("clamps maxTokens to the floor", async () => {
@@ -81,7 +91,16 @@ describe("saveHomepageSettings", () => {
       create: { key: "homepage.max_tokens", value: "4000" },
       update: { value: "4000" },
     });
-    expect(res).toEqual({ data: { model: "claude-sonnet-5-5", maxTokens: 4000, basePromptId: null } });
+    expect(res).toEqual({
+      data: {
+        model: "claude-sonnet-5-5",
+        maxTokens: 4000,
+        basePromptId: null,
+        imageModel: DEFAULT_IMAGE_MODEL,
+        imageCount: DEFAULT_IMAGE_COUNT,
+        imageProvider: DEFAULT_IMAGE_PROVIDER,
+      },
+    });
   });
 
   it("rejects an unknown base prompt with no writes", async () => {
@@ -125,7 +144,16 @@ describe("saveHomepageSettings", () => {
         userId: "admin-1",
       }),
     );
-    expect(res).toEqual({ data: { model: "claude-opus-5-5", maxTokens: 30000, basePromptId: "p1" } });
+    expect(res).toEqual({
+      data: {
+        model: "claude-opus-5-5",
+        maxTokens: 30000,
+        basePromptId: "p1",
+        imageModel: DEFAULT_IMAGE_MODEL,
+        imageCount: DEFAULT_IMAGE_COUNT,
+        imageProvider: DEFAULT_IMAGE_PROVIDER,
+      },
+    });
   });
 
   it("stores an empty string when basePromptId is null", async () => {
@@ -153,6 +181,9 @@ describe("getHomepageSettingsForAdmin", () => {
       { key: "homepage.model", value: "claude-opus-5-5" },
       { key: "homepage.max_tokens", value: "20000" },
       { key: "homepage.base_prompt_id", value: "p1" },
+      { key: "homepage.image_model", value: "soul-v2" },
+      { key: "homepage.image_count", value: "3" },
+      { key: "homepage.image_provider", value: "auto" },
     ]);
     promptFindMany.mockResolvedValue([{ id: "p1", name: "Premium" }]);
     const res = await getHomepageSettingsForAdmin();
@@ -166,6 +197,9 @@ describe("getHomepageSettingsForAdmin", () => {
         model: "claude-opus-5-5",
         maxTokens: 20000,
         basePromptId: "p1",
+        imageModel: "soul-v2",
+        imageCount: 3,
+        imageProvider: "auto",
         basePrompts: [{ id: "p1", name: "Premium" }],
       },
     });
