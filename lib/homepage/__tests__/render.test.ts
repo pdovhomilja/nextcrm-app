@@ -20,7 +20,12 @@ jest.mock("@sparticuz/chromium", () => ({
 
 import { renderAndScreenshot, finalizeAnimationsInPage } from "@/lib/homepage/render";
 
-const ENV_KEYS = ["VERCEL", "AWS_LAMBDA_FUNCTION_NAME", "CHROMIUM_EXECUTABLE_PATH"] as const;
+const ENV_KEYS = [
+  "VERCEL",
+  "AWS_LAMBDA_FUNCTION_NAME",
+  "CHROMIUM_EXECUTABLE_PATH",
+  "NEXT_PUBLIC_PREVIEWS_BASE_URL",
+] as const;
 const savedEnv: Record<string, string | undefined> = {};
 
 beforeEach(() => {
@@ -91,6 +96,51 @@ it("egress: continues allowlisted requests and aborts everything else", async ()
   handler(blocked);
   expect(blocked.abort).toHaveBeenCalledTimes(1);
   expect(blocked.continue).not.toHaveBeenCalled();
+});
+
+describe("egress: per-slug image allowance wiring", () => {
+  type MockRoute = { request: () => { url: () => string }; continue: () => void; abort: () => void };
+  const run = async (url: string, o?: { slug?: string }) => {
+    await renderAndScreenshot("<p/>", o);
+    const handler = mockRoute.mock.calls[0][1] as (r: MockRoute) => void;
+    const r = { request: () => ({ url: () => url }), continue: jest.fn(), abort: jest.fn() };
+    handler(r);
+    return r;
+  };
+  const IMG = "https://previews.example.com/p/acme/images/img-1.png";
+
+  it("allows this slug's images when slug + NEXT_PUBLIC_PREVIEWS_BASE_URL are set", async () => {
+    process.env.NEXT_PUBLIC_PREVIEWS_BASE_URL = "https://previews.example.com";
+    const r = await run(IMG, { slug: "acme" });
+    expect(r.continue).toHaveBeenCalledTimes(1);
+    expect(r.abort).not.toHaveBeenCalled();
+  });
+
+  it("still aborts another slug's images and other hosts", async () => {
+    process.env.NEXT_PUBLIC_PREVIEWS_BASE_URL = "https://previews.example.com";
+    const other = await run("https://previews.example.com/p/other/images/x.png", { slug: "acme" });
+    expect(other.abort).toHaveBeenCalledTimes(1);
+    jest.clearAllMocks();
+    mockLaunch.mockResolvedValue({ newContext: mockNewContext, close: mockBrowserClose });
+    const evil = await run("https://evil.com/p/acme/images/x.png", { slug: "acme" });
+    expect(evil.abort).toHaveBeenCalledTimes(1);
+  });
+
+  it("blocks images when no slug is given", async () => {
+    process.env.NEXT_PUBLIC_PREVIEWS_BASE_URL = "https://previews.example.com";
+    const r = await run(IMG);
+    expect(r.abort).toHaveBeenCalledTimes(1);
+  });
+
+  it("blocks images when the base URL is unset or malformed (fail closed)", async () => {
+    const unset = await run(IMG, { slug: "acme" });
+    expect(unset.abort).toHaveBeenCalledTimes(1);
+    jest.clearAllMocks();
+    mockLaunch.mockResolvedValue({ newContext: mockNewContext, close: mockBrowserClose });
+    process.env.NEXT_PUBLIC_PREVIEWS_BASE_URL = "not a url";
+    const bad = await run(IMG, { slug: "acme" });
+    expect(bad.abort).toHaveBeenCalledTimes(1);
+  });
 });
 
 it("finalizes animations after setContent and before the screenshot", async () => {

@@ -1,5 +1,5 @@
 import type { Browser } from "playwright-core";
-import { isAllowedRenderRequest } from "./render-allowlist";
+import { isAllowedRenderRequest, type RenderAllowOpts } from "./render-allowlist";
 
 /**
  * Serverless (Vercel / AWS Lambda) vs local-dev chromium switch.
@@ -72,14 +72,29 @@ export function finalizeAnimationsInPage(): void {
  * harvested copy, so it could be steered (indirect prompt injection) to emit
  * `<img>`/`<script src>`/`fetch()` pointing at internal or attacker hosts. The
  * system prompt restricts remote assets, so we ENFORCE it here with a code-owned
- * exact-host allowlist (see render-allowlist.ts): only Google Fonts and a pinned
- * GSAP path may load; every other network request is aborted. The in-memory
+ * exact-host allowlist (see render-allowlist.ts): only Google Fonts, a pinned
+ * GSAP path, and (when `opts.slug` is given) that slug's `/p/<slug>/images/`
+ * prefix on the previews host may load; every other network request is aborted. The in-memory
  * `setContent` document and `data:`/`blob:` URIs render as usual.
  */
 export async function renderAndScreenshot(
   html: string,
-  opts: { width?: number; height?: number } = {},
+  opts: { width?: number; height?: number; slug?: string } = {},
 ): Promise<Buffer> {
+  // Per-slug image allowance: only when we know the slug AND the previews origin.
+  // A malformed/unset base leaves it undefined => images stay blocked (fail closed).
+  let allow: RenderAllowOpts | undefined;
+  const base = process.env.NEXT_PUBLIC_PREVIEWS_BASE_URL;
+  if (opts.slug && base) {
+    try {
+      allow = {
+        previewsHost: new URL(base).host,
+        imagePathPrefix: `/p/${opts.slug}/images/`,
+      };
+    } catch {
+      allow = undefined;
+    }
+  }
   const browser = await launchBrowser();
   try {
     const context = await browser.newContext({
@@ -87,11 +102,12 @@ export async function renderAndScreenshot(
       acceptDownloads: false,
       serviceWorkers: "block",
     });
-    // Egress allowlist: only Google Fonts + the pinned GSAP path continue; every
+    // Egress allowlist: only Google Fonts + the pinned GSAP path (+ this slug's
+    // image prefix on the previews host, when `allow` is set) continue; every
     // other request (internal/metadata/attacker hosts) is aborted. `**/*` matches
     // http/https/ws requests; data:/blob: are handled in-process and not routed.
     await context.route("**/*", (route) =>
-      isAllowedRenderRequest(route.request().url()) ? route.continue() : route.abort(),
+      isAllowedRenderRequest(route.request().url(), allow) ? route.continue() : route.abort(),
     );
     // route() does not cover WebSockets; block them entirely (no allowlisted WS use).
     // Capability-checked so this no-ops on a Playwright without routeWebSocket.
