@@ -3,7 +3,7 @@ export type ImageSpec = {
   role: "hero" | "section";
   prompt: string;
   alt: string;
-  aspectRatio: "16:9" | "4:5";
+  aspectRatio: "16:9" | "2:3";
 };
 
 export type GeneratedImage = {

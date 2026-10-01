@@ -58,18 +58,19 @@ export function higgsfieldProvider(model: string): ImageProvider {
       if (!submit.ok) throw new Error(`higgsfield submit ${submit.status}: ${await submit.text()}`);
       const { status_url } = (await submit.json()) as { request_id: string; status_url: string };
       if (!status_url) throw new Error("higgsfield submit returned no status_url");
-      // The status_url is polled WITH the API key, and it comes from the provider
-      // response — pin it to the trusted Higgsfield https origin before sending the
-      // key, so a malformed/compromised response can't exfiltrate it to another host
-      // (and never over cleartext http). Mirrors the https-only result-url check below.
-      let statusUrlTrusted = false;
+      // The status_url is polled WITH the API key, so require https before sending
+      // it — the key must never travel over cleartext http. We do NOT pin the host:
+      // Higgsfield returns the status_url on a different host than the api base
+      // (observed on QA), so an exact-host pin rejected every real request. https-only
+      // keeps the cleartext protection; tighten to a host/domain check only once the
+      // real status host is confirmed.
+      let statusUrlHttps = false;
       try {
-        const su = new URL(status_url);
-        statusUrlTrusted = su.protocol === "https:" && su.hostname.toLowerCase() === "api.higgsfield.ai";
+        statusUrlHttps = new URL(status_url).protocol === "https:";
       } catch {
         /* invalid URL → reject */
       }
-      if (!statusUrlTrusted) throw new Error("higgsfield status_url is not the trusted https host");
+      if (!statusUrlHttps) throw new Error("higgsfield status_url is not https");
 
       const deadline = Date.now() + POLL_TIMEOUT_MS;
       while (true) {

@@ -3,7 +3,7 @@ import type { ImageProvider, ImageSpec } from "./types";
 // gpt-image-1 supports 1024x1024, 1536x1024 (landscape), 1024x1536 (portrait).
 const SIZE: Record<ImageSpec["aspectRatio"], string> = {
   "16:9": "1536x1024",
-  "4:5": "1024x1536",
+  "2:3": "1024x1536",
 };
 
 /** Abort a hung connection; gpt-image-1 can take a while, so this is generous. */

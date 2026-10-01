@@ -19,7 +19,7 @@ describe("planHomepageImages", () => {
     expect(specs[0].role).toBe("hero");
     expect(specs[0].aspectRatio).toBe("16:9");
     expect(specs.map((s) => s.token)).toEqual(["__RADE_IMG_1__", "__RADE_IMG_2__", "__RADE_IMG_3__"]);
-    expect(specs[1].aspectRatio).toBe("4:5");
+    expect(specs[1].aspectRatio).toBe("2:3");
     // palette + industry steer the prompt; every spec has alt text
     expect(specs[0].prompt).toContain("Salon / spa");
     expect(specs[0].prompt).toContain("#3a2130");
