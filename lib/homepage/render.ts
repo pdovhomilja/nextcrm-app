@@ -1,5 +1,6 @@
 import type { Browser } from "playwright-core";
 import { isAllowedRenderRequest, type RenderAllowOpts } from "./render-allowlist";
+import { detectImageContentType, getHomepageImageBuffer } from "./storage";
 
 /**
  * Serverless (Vercel / AWS Lambda) vs local-dev chromium switch.
@@ -106,9 +107,37 @@ export async function renderAndScreenshot(
     // image prefix on the previews host, when `allow` is set) continue; every
     // other request (internal/metadata/attacker hosts) is aborted. `**/*` matches
     // http/https/ws requests; data:/blob: are handled in-process and not routed.
-    await context.route("**/*", (route) =>
-      isAllowedRenderRequest(route.request().url(), allow) ? route.continue() : route.abort(),
-    );
+    //
+    // This slug's generated images are served DIRECTLY FROM R2 (route.fulfill), not
+    // over the network: during a first generation the homepage has no
+    // `current_version_id` yet, so the public /p/<slug>/images/ route would 404
+    // (it gates on a published version). Fulfilling from storage makes the render
+    // independent of that gate and keeps egress closed (no network fetch).
+    await context.route("**/*", async (route) => {
+      const url = route.request().url();
+      if (opts.slug && allow?.previewsHost && allow.imagePathPrefix) {
+        let u: URL | null = null;
+        try {
+          u = new URL(url);
+        } catch {
+          u = null;
+        }
+        if (u && u.host.toLowerCase() === allow.previewsHost.toLowerCase() && u.pathname.startsWith(allow.imagePathPrefix)) {
+          const name = u.pathname.slice(allow.imagePathPrefix.length);
+          // Mirror the served route's validation: a simple filename only.
+          if (!/^[a-z0-9._-]+$/i.test(name) || /^\.+$/.test(name)) return route.abort();
+          let buf: Buffer | null = null;
+          try {
+            buf = await getHomepageImageBuffer(opts.slug, name);
+          } catch {
+            buf = null;
+          }
+          if (!buf) return route.abort();
+          return route.fulfill({ status: 200, contentType: detectImageContentType(buf), body: buf });
+        }
+      }
+      return isAllowedRenderRequest(url, allow) ? route.continue() : route.abort();
+    });
     // route() does not cover WebSockets; block them entirely (no allowlisted WS use).
     // Capability-checked so this no-ops on a Playwright without routeWebSocket.
     const ctxWs = context as any;

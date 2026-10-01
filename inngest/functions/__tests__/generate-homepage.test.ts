@@ -374,6 +374,26 @@ describe("generate event", () => {
       for (const b of briefs()) expect(b).toContain("__RADE_IMG_1__");
     });
 
+    it("strips an image token with no generated image behind it; provided tokens + logo still materialize", async () => {
+      (harvestSource as jest.Mock).mockResolvedValue({
+        screenshotB64: SRC_B64,
+        brand: { logoUrl: null, colors: [], fonts: [], copy: "c", logoDataUri: "data:image/png;base64,LOGO" },
+      });
+      (generateHomepage as jest.Mock).mockReset();
+      (generateHomepage as jest.Mock).mockResolvedValue({
+        html: '<html><img src="__RADE_LOGO_SRC__"><img src="__RADE_IMG_1__"><img src="__RADE_IMG_9__"></html>',
+        critique: "c",
+      });
+      await handler({ event: generateEvent, step });
+      const url = "https://previews.example.com/p/acme-plumbing/images/img-1.png";
+      const expected = `<html><img src="data:image/png;base64,LOGO"><img src="${url}"><img src=""></html>`;
+      expect(putHomepageHtml).toHaveBeenCalledWith("acme-plumbing", expected);
+      for (const c of (renderAndScreenshot as jest.Mock).mock.calls) {
+        expect(c[0]).not.toContain("__RADE_IMG_9__");
+        expect(c[0]).toContain(url);
+      }
+    });
+
     it("materializes image tokens for render + upload but persists versions WITH tokens", async () => {
       (generateHomepage as jest.Mock).mockReset();
       (generateHomepage as jest.Mock).mockResolvedValue({

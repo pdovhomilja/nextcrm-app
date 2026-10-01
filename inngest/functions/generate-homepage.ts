@@ -104,7 +104,9 @@ function materialize(
 ): string {
   let out = html.split(LOGO_PLACEHOLDER).join(logoDataUri ?? "");
   for (const img of images) out = out.split(img.token).join(img.url);
-  return out;
+  // A token the model invented with no generated image behind it must never be
+  // served as a literal broken <img src="__RADE_IMG_9__">.
+  return out.replace(/__RADE_IMG_\d+__/g, "");
 }
 
 const IMAGE_TOKEN_RE = /__RADE_IMG_(\d+)__/g;

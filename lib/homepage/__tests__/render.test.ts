@@ -18,6 +18,13 @@ jest.mock("@sparticuz/chromium", () => ({
   },
 }));
 
+const mockGetImageBuffer = jest.fn();
+jest.mock("@/lib/homepage/storage", () => ({
+  getHomepageImageBuffer: (...a: unknown[]) => mockGetImageBuffer(...a),
+  detectImageContentType: (b: Buffer) =>
+    b[0] === 0x89 ? "image/png" : "application/octet-stream",
+}));
+
 import { renderAndScreenshot, finalizeAnimationsInPage } from "@/lib/homepage/render";
 
 const ENV_KEYS = [
@@ -99,21 +106,74 @@ it("egress: continues allowlisted requests and aborts everything else", async ()
 });
 
 describe("egress: per-slug image allowance wiring", () => {
-  type MockRoute = { request: () => { url: () => string }; continue: () => void; abort: () => void };
+  type MockRoute = {
+    request: () => { url: () => string };
+    continue: () => void;
+    abort: () => void;
+    fulfill: (o: unknown) => void;
+  };
   const run = async (url: string, o?: { slug?: string }) => {
     await renderAndScreenshot("<p/>", o);
-    const handler = mockRoute.mock.calls[0][1] as (r: MockRoute) => void;
-    const r = { request: () => ({ url: () => url }), continue: jest.fn(), abort: jest.fn() };
-    handler(r);
+    const handler = mockRoute.mock.calls[0][1] as (r: MockRoute) => Promise<void>;
+    const r = {
+      request: () => ({ url: () => url }),
+      continue: jest.fn(),
+      abort: jest.fn(),
+      fulfill: jest.fn(),
+    };
+    await handler(r);
     return r;
   };
   const IMG = "https://previews.example.com/p/acme/images/img-1.png";
 
-  it("allows this slug's images when slug + NEXT_PUBLIC_PREVIEWS_BASE_URL are set", async () => {
+  const PNG_BYTES = Buffer.from([0x89, 0x50, 0x4e, 0x47, 1, 2, 3]);
+
+  it("serves this slug's images straight from R2 (fulfill), not over the network", async () => {
     process.env.NEXT_PUBLIC_PREVIEWS_BASE_URL = "https://previews.example.com";
+    mockGetImageBuffer.mockResolvedValue(PNG_BYTES);
     const r = await run(IMG, { slug: "acme" });
-    expect(r.continue).toHaveBeenCalledTimes(1);
+    expect(mockGetImageBuffer).toHaveBeenCalledWith("acme", "img-1.png");
+    expect(r.fulfill).toHaveBeenCalledWith({ status: 200, contentType: "image/png", body: PNG_BYTES });
+    expect(r.continue).not.toHaveBeenCalled();
     expect(r.abort).not.toHaveBeenCalled();
+  });
+
+  it("aborts an image request when the object is missing in R2", async () => {
+    process.env.NEXT_PUBLIC_PREVIEWS_BASE_URL = "https://previews.example.com";
+    mockGetImageBuffer.mockResolvedValue(null);
+    const r = await run(IMG, { slug: "acme" });
+    expect(r.abort).toHaveBeenCalledTimes(1);
+    expect(r.fulfill).not.toHaveBeenCalled();
+    expect(r.continue).not.toHaveBeenCalled();
+  });
+
+  it("rejects a crafted image name (nested path / encoded slash / dots) without reading R2", async () => {
+    process.env.NEXT_PUBLIC_PREVIEWS_BASE_URL = "https://previews.example.com";
+    for (const bad of [
+      "https://previews.example.com/p/acme/images/a/b.png",
+      "https://previews.example.com/p/acme/images/a%2Fb.png",
+      "https://previews.example.com/p/acme/images/..",
+    ]) {
+      jest.clearAllMocks();
+      mockLaunch.mockResolvedValue({ newContext: mockNewContext, close: mockBrowserClose });
+      const r = await run(bad, { slug: "acme" });
+      expect(r.abort).toHaveBeenCalledTimes(1);
+      expect(r.fulfill).not.toHaveBeenCalled();
+      expect(mockGetImageBuffer).not.toHaveBeenCalled();
+    }
+  });
+
+  it("non-image requests still go through the allowlist (continue / abort)", async () => {
+    process.env.NEXT_PUBLIC_PREVIEWS_BASE_URL = "https://previews.example.com";
+    const font = await run("https://fonts.googleapis.com/css2?family=Inter", { slug: "acme" });
+    expect(font.continue).toHaveBeenCalledTimes(1);
+    expect(font.fulfill).not.toHaveBeenCalled();
+    jest.clearAllMocks();
+    mockLaunch.mockResolvedValue({ newContext: mockNewContext, close: mockBrowserClose });
+    const evil = await run("http://169.254.169.254/latest/meta-data/", { slug: "acme" });
+    expect(evil.abort).toHaveBeenCalledTimes(1);
+    expect(evil.fulfill).not.toHaveBeenCalled();
+    expect(mockGetImageBuffer).not.toHaveBeenCalled();
   });
 
   it("still aborts another slug's images and other hosts", async () => {

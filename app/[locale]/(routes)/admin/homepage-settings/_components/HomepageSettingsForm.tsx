@@ -71,7 +71,9 @@ export function HomepageSettingsForm({
         maxTokens: Number(maxTokens),
         basePromptId: basePromptId === DEFAULT_PROMPT ? null : basePromptId,
         imageModel,
-        imageCount: Number(imageCount),
+        // An emptied field must not save Number("") === 0 (silently disabling
+        // images); keep the current value. The server clamp stays authoritative.
+        imageCount: imageCount.trim() === "" ? initial.imageCount : Number(imageCount),
         imageProvider,
       });
       if ("error" in res) {
