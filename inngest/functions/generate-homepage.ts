@@ -291,12 +291,41 @@ const markFailed = (step: StepLike, homepageId: string, error: string) =>
  *
  * Returns `never`.
  */
+/**
+ * Is this error terminal (a retry cannot help)?
+ *
+ * A `NonRetriableError` thrown INSIDE a `step.run` (e.g. the provider's
+ * max_tokens / non-transient 4xx guards, or upload-not-found) does NOT survive
+ * the Inngest step→flow boundary as an instance: Inngest surfaces it to the flow
+ * `catch` as a `StepError` whose `.name` is copied from the original error
+ * (`StepError` does `this.name = parsedErr.name`) but whose prototype is not
+ * `NonRetriableError`. So `instanceof` alone silently misclassifies those as
+ * transient and retries them (observed on QA: a max_tokens cutoff looped for
+ * ~25min at RUNNING). Match the preserved `.name` as well. Inngest registers
+ * `NonRetriableError` in its serialize-error constructors, so the name is stable.
+ */
+function isTerminalError(err: unknown): boolean {
+  if (err instanceof NonRetriableError) return true;
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "name" in err &&
+    (err as { name?: unknown }).name === "NonRetriableError"
+  );
+}
+
 async function endRun(step: StepLike, flow: string, homepageId: string, err: unknown): Promise<never> {
   const message = err instanceof Error ? err.message : String(err);
-  if (err instanceof NonRetriableError) {
+  if (isTerminalError(err)) {
     console.error("[GENERATE_HOMEPAGE]", { flow, homepageId, error: message, terminal: true });
     await markFailed(step, homepageId, message);
-    throw err;
+    // Re-throw as a genuine NonRetriableError. When the terminal error reached us
+    // as a StepError from inside a step, `throw err` would NOT stop Inngest's
+    // function-level retry (it checks `instanceof NonRetriableError`, which the
+    // StepError fails) — so we must construct a fresh one to actually fail fast.
+    throw err instanceof NonRetriableError
+      ? err
+      : new NonRetriableError(message, { cause: err instanceof Error ? err : undefined });
   }
   // Transient: rethrow unchanged so Inngest retries (completed steps are
   // memoized and not redone); the onFailure backstop records FAILED if the
@@ -421,7 +450,7 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData) {
     // Drop the transient source shot only on a terminal failure; on a retriable
     // error keep it so the memoized harvest step's screenshot is still present
     // when Inngest retries the failed pass.
-    if (storedSourceShot && err instanceof NonRetriableError) await cleanupTmp(step, homepage.slug);
+    if (storedSourceShot && isTerminalError(err)) await cleanupTmp(step, homepage.slug);
     return endRun(step, "generate", homepage.id, err);
   }
 }
