@@ -9,7 +9,7 @@ import { planHomepageImages } from "@/lib/homepage/images/plan";
 import { resolveImageProviders, generateWithFallback } from "@/lib/homepage/images/resolve";
 import type { GeneratedImage } from "@/lib/homepage/images/types";
 import { getHomepageSettings } from "@/lib/homepage/settings";
-import { pickStyleDirection } from "@/lib/homepage/prompt-layers/select-style";
+import { resolveStyleDirection } from "@/lib/homepage/prompt-layers/select-style";
 import {
   loadActiveStyles,
   loadAvoidText,
@@ -70,6 +70,12 @@ export type GenerateHomepageEventData = {
   targetId: string;
   /** Operator instructions appended to the base prompt. */
   prompt?: string;
+  /**
+   * One-shot HOMEPAGE_STYLE override picked in the drawer for THIS generation
+   * only — not persisted. Absent/unknown ids fall back to the deterministic auto
+   * pick, so refines (which carry no override) return to auto by design.
+   */
+  stylePromptId?: string | null;
   triggeredBy?: string;
 };
 export type RefineHomepageEventData = {
@@ -455,13 +461,19 @@ async function endRun(
  * The industry/style/avoid prompt layers are loaded in ONE memoized step (small
  * scalars only) and composed into `system` here, so every pass of the run — the
  * initial draft, each auto pass, and a refine — gets the same system prompt. The
- * style card is picked deterministically from `ctx.homepageId`, so it is also
- * stable across runs for the same target. With `varyDesign` off (or empty
- * libraries) the result is the pre-layers base + machine contract.
+ * style card is picked deterministically from `ctx.homepageId` (stable across
+ * runs for the same target) UNLESS `ctx.styleOverrideId` names a live style — a
+ * one-shot drawer pick for this generation; refines carry no override and so
+ * return to the deterministic pick. With `varyDesign` off (or empty libraries)
+ * the result is the pre-layers base + machine contract.
  */
 async function resolveGenerationConfig(
   step: StepLike,
-  ctx: { homepageId: string; industryPromptId: string | null },
+  ctx: {
+    homepageId: string;
+    industryPromptId: string | null;
+    styleOverrideId?: string | null;
+  },
 ): Promise<{
   system: string;
   model: string;
@@ -489,7 +501,11 @@ async function resolveGenerationConfig(
             loadAvoidText(),
             loadIndustryBody(ctx.industryPromptId),
           ]);
-          return { industry, style: pickStyleDirection(ctx.homepageId, styles)?.body ?? null, avoid };
+          return {
+            industry,
+            style: resolveStyleDirection(ctx.homepageId, styles, ctx.styleOverrideId)?.body ?? null,
+            avoid,
+          };
         });
   return {
     system: buildSystemPrompt({ base: base?.body ?? null, ...(layers ?? {}) }),
@@ -597,6 +613,7 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData, isF
     const genConfig = await resolveGenerationConfig(step, {
       homepageId: homepage.id,
       industryPromptId: target.homepage_industry_prompt_id ?? null,
+      styleOverrideId: data.stylePromptId ?? null,
     });
 
     // The harvest screenshot is uploaded to a transient R2 key inside this step and

@@ -1,4 +1,4 @@
-import { pickStyleDirection } from "../select-style";
+import { pickStyleDirection, resolveStyleDirection } from "../select-style";
 
 const styles = Array.from({ length: 10 }, (_, i) => ({
   id: `s${i}`,
@@ -15,6 +15,35 @@ describe("pickStyleDirection", () => {
 
   it("empty set -> null", () =>
     expect(pickStyleDirection("x", [])).toBeNull());
+
+  describe("resolveStyleDirection (one-shot override)", () => {
+    it("returns the matching override regardless of the hash pick", () => {
+      // Pick a style the deterministic hash would NOT choose for this seed.
+      const auto = pickStyleDirection("target-123", styles)!;
+      const other = styles.find((s) => s.id !== auto.id)!;
+      const picked = resolveStyleDirection("target-123", styles, other.id);
+      expect(picked).toEqual(other);
+      expect(picked!.id).not.toBe(auto.id);
+    });
+
+    it("falls back to the deterministic pick when the override id is unknown", () => {
+      expect(resolveStyleDirection("target-123", styles, "does-not-exist")).toEqual(
+        pickStyleDirection("target-123", styles),
+      );
+    });
+
+    it("falls back to the deterministic pick when no override is given", () => {
+      expect(resolveStyleDirection("target-123", styles, null)).toEqual(
+        pickStyleDirection("target-123", styles),
+      );
+      expect(resolveStyleDirection("target-123", styles)).toEqual(
+        pickStyleDirection("target-123", styles),
+      );
+    });
+
+    it("empty set -> null even with an override", () =>
+      expect(resolveStyleDirection("x", [], "whatever")).toBeNull());
+  });
 
   it("distributes roughly uniformly across styles for random UUID seeds", () => {
     const uuidStyles = Array.from({ length: 10 }, (_, i) => ({

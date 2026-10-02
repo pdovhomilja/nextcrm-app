@@ -829,6 +829,31 @@ describe("prompt layers", () => {
     expect(refineSystem).toContain("AVOID_TEXT");
   });
 
+  it("honors a one-shot style override on generate, overriding the hash pick", async () => {
+    populate();
+    const override = others[0]; // a card the h1 hash would NOT pick
+    await handler({
+      event: { ...generateEvent, data: { ...generateEvent.data, stylePromptId: override.id } },
+      step,
+    });
+    for (const system of systems()) {
+      expect(system).toContain(override.body);
+      expect(system).not.toContain(picked.body);
+    }
+  });
+
+  it("an unknown/stale style override id falls back to the deterministic pick", async () => {
+    populate();
+    await handler({
+      event: { ...generateEvent, data: { ...generateEvent.data, stylePromptId: "s-gone" } },
+      step,
+    });
+    for (const system of systems()) {
+      expect(system).toContain(picked.body);
+      for (const o of others) expect(system).not.toContain(o.body);
+    }
+  });
+
   it("varyDesign=false: base + machine contract only, layers never loaded", async () => {
     populate();
     (getHomepageSettings as jest.Mock).mockResolvedValue({

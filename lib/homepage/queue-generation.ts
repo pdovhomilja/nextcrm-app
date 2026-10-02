@@ -64,9 +64,19 @@ export async function queueHomepageGeneration(input: {
   target: QueueTarget;
   prompt?: string;
   requestedSlug?: string;
+  /**
+   * One-shot HOMEPAGE_STYLE override (the drawer's Style pick) for THIS run only.
+   * Passed straight through to the event; the job fails open to the auto pick for
+   * an absent/unknown id, so no validation is needed here.
+   */
+  stylePromptId?: string | null;
   userId: string;
 }): Promise<QueueGenerationResult> {
   const { target, userId } = input;
+  const stylePromptId =
+    typeof input.stylePromptId === "string" && input.stylePromptId.trim()
+      ? input.stylePromptId.trim()
+      : undefined;
   const trimmedPrompt = input.prompt?.trim();
   if (trimmedPrompt && trimmedPrompt.length > MAX_HOMEPAGE_PROMPT_CHARS) {
     return {
@@ -139,7 +149,7 @@ export async function queueHomepageGeneration(input: {
   try {
     await inngest.send({
       name: "homepage/target.generate",
-      data: { targetId: target.id, prompt, triggeredBy: userId },
+      data: { targetId: target.id, prompt, stylePromptId, triggeredBy: userId },
     });
   } catch (e) {
     console.error("[QUEUE_HOMEPAGE_GENERATION_SEND]", e);

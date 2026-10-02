@@ -46,11 +46,15 @@ export async function POST(
   const body = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
   const prompt = typeof body.prompt === "string" && body.prompt.trim() ? body.prompt : undefined;
   const requestedSlug = typeof body.slug === "string" ? body.slug : undefined;
+  // One-shot style override from the drawer; "" (Auto) or absent -> undefined.
+  const stylePromptId =
+    typeof body.styleId === "string" && body.styleId.trim() ? body.styleId : undefined;
 
   const result = await queueHomepageGeneration({
     target: { id: target.id, company: target.company, company_website: target.company_website },
     prompt,
     requestedSlug,
+    stylePromptId,
     userId: user.id,
   });
 

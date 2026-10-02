@@ -44,3 +44,30 @@ export function pickStyleDirection(
 
   return sorted[index];
 }
+
+/**
+ * Resolve the style card for a generation, honoring an optional one-shot override.
+ *
+ * When `overrideId` matches a live style it wins (the operator's per-generation
+ * pick in the drawer); an absent or unknown/stale override falls back to the
+ * deterministic {@link pickStyleDirection} hash so behavior is unchanged from the
+ * auto path. The override is NOT persisted, so refines — which re-resolve with no
+ * override — return to the deterministic pick by design.
+ *
+ * @param seed - Stable per-target seed (the homepage id).
+ * @param styles - Active style cards (id + body).
+ * @param overrideId - Operator-selected style id, or null/undefined for auto.
+ * @returns The chosen style, or null when there are no styles.
+ */
+export function resolveStyleDirection(
+  seed: string,
+  styles: { id: string; body: string }[],
+  overrideId?: string | null
+): { id: string; body: string } | null {
+  if (overrideId) {
+    const match = styles.find((s) => s.id === overrideId);
+    if (match) return match;
+    // Unknown/stale id (library edited since the drawer loaded): fail open to auto.
+  }
+  return pickStyleDirection(seed, styles);
+}
