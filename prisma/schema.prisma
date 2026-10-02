@@ -1333,6 +1333,9 @@ model crm_Targets {
   triaged_at    DateTime?
   triaged_by    String?   @db.Uuid
 
+  // Homepage generation: selected HOMEPAGE_INDUSTRY crm_Ai_Prompts row (no hard FK)
+  homepage_industry_prompt_id String? @db.Uuid
+
   deletedAt        DateTime?
   deletedBy        String?   @db.Uuid
 
@@ -2061,6 +2064,9 @@ enum crm_Ai_Prompt_Kind {
   EMAIL
   HOMEPAGE
   HOMEPAGE_BASE
+  HOMEPAGE_INDUSTRY
+  HOMEPAGE_STYLE
+  HOMEPAGE_AVOID
 }
 
 enum crm_Ai_Prompt_Scope {
