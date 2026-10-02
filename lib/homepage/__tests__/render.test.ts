@@ -13,7 +13,9 @@ jest.mock("playwright-core", () => ({ chromium: { launch: mockLaunch } }));
 jest.mock("@sparticuz/chromium", () => ({
   __esModule: true,
   default: {
-    args: ["--sparticuz-arg"],
+    // Includes --single-process (sparticuz ships it) so the launch test proves
+    // serverlessChromiumArgs strips it — the fix for the renderer-crash loop.
+    args: ["--sparticuz-arg", "--single-process"],
     executablePath: mockExecutablePath,
   },
 }));
@@ -25,7 +27,11 @@ jest.mock("@/lib/homepage/storage", () => ({
     b[0] === 0x89 ? "image/png" : "application/octet-stream",
 }));
 
-import { renderAndScreenshot, finalizeAnimationsInPage } from "@/lib/homepage/render";
+import {
+  renderAndScreenshot,
+  finalizeAnimationsInPage,
+  serverlessChromiumArgs,
+} from "@/lib/homepage/render";
 
 const ENV_KEYS = [
   "VERCEL",
@@ -243,13 +249,26 @@ it("honours custom viewport dimensions", async () => {
   );
 });
 
-it("uses @sparticuz chromium when running serverless (VERCEL)", async () => {
+it("uses @sparticuz chromium when running serverless (VERCEL), stripping --single-process", async () => {
   process.env.VERCEL = "1";
   await renderAndScreenshot("<p/>");
+  // --single-process is dropped: in single-process mode a renderer crash kills
+  // the whole browser ("Target page... has been closed") on heavy pages.
   expect(mockLaunch).toHaveBeenCalledWith({
     args: ["--sparticuz-arg"],
     executablePath: "/tmp/chromium",
     headless: true,
+  });
+});
+
+describe("serverlessChromiumArgs", () => {
+  it("removes --single-process and keeps the rest in order", () => {
+    expect(
+      serverlessChromiumArgs(["--a", "--single-process", "--b", "--no-sandbox"]),
+    ).toEqual(["--a", "--b", "--no-sandbox"]);
+  });
+  it("is a no-op when --single-process is absent", () => {
+    expect(serverlessChromiumArgs(["--a", "--b"])).toEqual(["--a", "--b"]);
   });
 });
 

@@ -7,7 +7,7 @@
   },
   "functions": {
     "app/api/inngest/route.ts": {
-      "memory": 2048,
+      "memory": 3008,
       "maxDuration": 300
     }
   }

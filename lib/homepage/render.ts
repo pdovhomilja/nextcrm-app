@@ -12,13 +12,26 @@ export function isServerless(): boolean {
   return !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
 }
 
+/**
+ * Harden the serverless chromium launch args. `@sparticuz/chromium` ships
+ * `--single-process` (it targets tiny Lambda), but in single-process mode a
+ * renderer crash takes down the ENTIRE browser — surfacing as
+ * "page.screenshot: Target page, context or browser has been closed" on heavy
+ * generated pages (GSAP + inline images) under memory pressure. Dropping the
+ * flag lets Chromium run the renderer in a child process, so a renderer hiccup
+ * no longer kills the whole browser. Pure + exported for unit testing.
+ */
+export function serverlessChromiumArgs(args: readonly string[]): string[] {
+  return args.filter((a) => a !== "--single-process");
+}
+
 export async function launchBrowser(): Promise<Browser> {
   const { chromium: pw } = await import("playwright-core");
   if (isServerless()) {
     const mod = await import("@sparticuz/chromium");
     const sparticuz = mod.default;
     return pw.launch({
-      args: sparticuz.args,
+      args: serverlessChromiumArgs(sparticuz.args),
       executablePath: await sparticuz.executablePath(),
       headless: true,
     });

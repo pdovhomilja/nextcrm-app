@@ -54,11 +54,18 @@ Deliberate, accepted limitations of the homepage-generation feature (revisit whe
   and the slug is human-readable (`acme-plumbing`), so it can be guessed. The content is a
   non-sensitive prospect mockup. **Fast-follow (optional):** an Upstash rate-limit on `/p/`
   (skip outside `VERCEL_ENV=production`, per `e2e-patterns.md`).
-- **Serverless chromium — majors matched, verify on first deploy.** `@sparticuz/chromium` 147
+- **Serverless chromium — majors matched + hardened, verify on first deploy.** `@sparticuz/chromium` 147
   with `playwright-core` 1.59.1 (both Chromium 147); `@playwright/test` pinned to 1.59.1 to match.
-  An earlier 1.58.2 (Chromium 145) vs 147 skew crashed every render on Vercel. The serverless
-  launch can't be exercised locally or in CI; the first Vercel preview (QA) run is the
-  verification step (see `LESSONS_LEARNED.md`).
+  An earlier 1.58.2 (Chromium 145) vs 147 skew crashed every render on Vercel. After that, heavy pages
+  still crashed intermittently (`Target page… has been closed`) because sparticuz ships
+  `--single-process` (a renderer crash kills the whole browser); we now strip that flag
+  (`serverlessChromiumArgs`) and raised the `/api/inngest` function memory to 3008 MB. The serverless
+  launch can't be exercised locally or in CI; the first Vercel preview (QA) run is the verification
+  step (see `LESSONS_LEARNED.md`).
+- **Stuck-RUNNING invariant held in-body + cron, not via Inngest `onFailure`.** Inngest v4 rejects the
+  internal `inngest/function.failed` event for a function that declares `triggers`, so the SDK
+  `onFailure` backstop can't run. `generate-homepage` records FAILED in-body on the final attempt, and
+  `sweep-stuck-homepages` (cron) fails any row stuck past 30 min to cover hard platform kills.
 - **DNS-rebinding residual on the source harvest.** The host guard resolves once; the browser
   resolves again. Bounded to a screenshot/copy of the answer; host-resolver pinning is a
   possible fast-follow (see `LESSONS_LEARNED.md`).

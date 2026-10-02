@@ -26,6 +26,23 @@ import {
 export const AUTO_PASSES = 3;
 
 /**
+ * Inngest function-level retry budget (retries AFTER the first attempt).
+ */
+export const MAX_RETRIES = 3;
+
+/**
+ * Is this the LAST attempt (no retry will follow)? endRun uses it to record
+ * FAILED in-body on the final attempt (see the onFailure note below). We mirror
+ * Inngest's own definition — `attempt + 1 >= maxAttempts` — using the runtime's
+ * `maxAttempts` when present, so we stay correct even if the SDK's
+ * retries->attempts mapping changes. Fallback (older runtime / test harness that
+ * omits maxAttempts): attempts are 0-indexed with MAX_RETRIES retries, so the
+ * last index is MAX_RETRIES.
+ */
+export const isFinalAttempt = (attempt: number, maxAttempts?: number): boolean =>
+  typeof maxAttempts === "number" ? attempt + 1 >= maxAttempts : attempt >= MAX_RETRIES;
+
+/**
  * Upper bounds for the slow external calls. `generateHomepage` (Anthropic
  * vision) has no internal timeout, so a hung request would otherwise run to the
  * function's maxDuration (the provider also aborts its fetch at the same budget).
@@ -227,15 +244,26 @@ async function runPass(
     const sourceScreenshotB64 = args.hasSourceShot
       ? (await getHomepageTmpSource(args.homepage.slug))?.toString("base64")
       : undefined;
-    const refinedScreenshotB64 =
-      args.visionOfPrevious && args.previousHtml
-        ? (
-            await renderPng(
-              materialize(args.previousHtml, args.logoDataUri, args.images),
-              args.homepage.slug,
-            )
-          ).toString("base64")
-        : undefined;
+    // Vision-of-previous (rendering the prior draft so the model can SEE it) is
+    // an enhancement, not essential: a chromium crash rendering it must NOT fail
+    // the whole multi-pass run. On failure, degrade to a text-only refine for
+    // this pass (the model still gets previousHtml). The FINAL publish render is
+    // separate and still load-bearing.
+    let refinedScreenshotB64: string | undefined;
+    if (args.visionOfPrevious && args.previousHtml) {
+      try {
+        const png = await renderPng(
+          materialize(args.previousHtml, args.logoDataUri, args.images),
+          args.homepage.slug,
+        );
+        refinedScreenshotB64 = png.toString("base64");
+      } catch (e) {
+        console.warn(
+          "[HOMEPAGE_RENDER] vision render failed; refining from HTML only",
+          (e as Error)?.message,
+        );
+      }
+    }
     return withTimeout(
       generateHomepageHtml({
         apiKey: args.apiKey,
@@ -373,7 +401,13 @@ function isTerminalError(err: unknown): boolean {
   );
 }
 
-async function endRun(step: StepLike, flow: string, homepageId: string, err: unknown): Promise<never> {
+async function endRun(
+  step: StepLike,
+  flow: string,
+  homepageId: string,
+  err: unknown,
+  isFinal: boolean,
+): Promise<never> {
   const message = err instanceof Error ? err.message : String(err);
   if (isTerminalError(err)) {
     console.error("[GENERATE_HOMEPAGE]", { flow, homepageId, error: message, terminal: true });
@@ -386,9 +420,22 @@ async function endRun(step: StepLike, flow: string, homepageId: string, err: unk
       ? err
       : new NonRetriableError(message, { cause: err instanceof Error ? err : undefined });
   }
-  // Transient: rethrow unchanged so Inngest retries (completed steps are
-  // memoized and not redone); the onFailure backstop records FAILED if the
-  // retries run out.
+  // Transient AND this is the last attempt: Inngest won't retry again, so record
+  // FAILED HERE. We can't rely on the SDK onFailure backstop — inngest v4 rejects
+  // the internal `inngest/function.failed` event for a function that declares
+  // `triggers` (validateEventSchemas throws "Event not found in triggers"), so
+  // the handler never runs and the row would be stuck RUNNING forever (observed
+  // in prod). The cron sweep (sweep-stuck-homepages) covers hard kills that skip
+  // this catch entirely. We throw the ORIGINAL error (not NonRetriable): on the
+  // off chance the attempt count is off, a further retry can still self-heal to
+  // READY, whereas a premature NonRetriable would strand the run.
+  if (isFinal) {
+    console.error("[GENERATE_HOMEPAGE]", { flow, homepageId, error: message, finalAttempt: true });
+    await markFailed(step, homepageId, message);
+    throw err;
+  }
+  // Transient, retries remain: rethrow unchanged so Inngest retries (completed
+  // steps are memoized and not redone) and resumes from the last completed pass.
   console.error("[GENERATE_HOMEPAGE]", { flow, homepageId, error: message, retrying: true });
   throw err;
 }
@@ -484,7 +531,7 @@ async function generateImages(
 
 const NO_API_KEY = "NO_API_KEY: configure ANTHROPIC key in admin or profile settings";
 
-async function generateFlow(step: StepLike, data: GenerateHomepageEventData) {
+async function generateFlow(step: StepLike, data: GenerateHomepageEventData, isFinal: boolean) {
   const loaded = await step.run("load-target", async () => {
     const [target, homepage] = await Promise.all([
       prismadb.crm_Targets.findUnique({
@@ -583,11 +630,11 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData) {
     // error keep it so the memoized harvest step's screenshot is still present
     // when Inngest retries the failed pass.
     if (storedSourceShot && isTerminalError(err)) await cleanupTmp(step, homepage.slug);
-    return endRun(step, "generate", homepage.id, err);
+    return endRun(step, "generate", homepage.id, err, isFinal);
   }
 }
 
-async function refineFlow(step: StepLike, data: RefineHomepageEventData) {
+async function refineFlow(step: StepLike, data: RefineHomepageEventData, isFinal: boolean) {
   const homepage = await step.run("load-homepage", () =>
     prismadb.crm_Target_Homepage.findUnique({
       where: { id: data.homepageId, deletedAt: null },
@@ -656,7 +703,7 @@ async function refineFlow(step: StepLike, data: RefineHomepageEventData) {
     await publish(step, homepage, current, logoDataUri, imagesInHtml(current.html, homepage.slug));
     return { ready: true, versions: 1 };
   } catch (err) {
-    return endRun(step, "refine", homepage.id, err);
+    return endRun(step, "refine", homepage.id, err, isFinal);
   }
 }
 
@@ -665,7 +712,7 @@ async function refineFlow(step: StepLike, data: RefineHomepageEventData) {
  * never in the trigger action), overwrite the live html + screenshot, and
  * repoint current_version_id. No model call and no new version row.
  */
-async function revertFlow(step: StepLike, data: RevertHomepageEventData) {
+async function revertFlow(step: StepLike, data: RevertHomepageEventData, isFinal: boolean) {
   const homepage = await step.run("load-homepage", () =>
     prismadb.crm_Target_Homepage.findUnique({
       where: { id: data.homepageId, deletedAt: null },
@@ -715,7 +762,7 @@ async function revertFlow(step: StepLike, data: RevertHomepageEventData) {
     );
     return { ready: true };
   } catch (err) {
-    return endRun(step, "revert", homepage.id, err);
+    return endRun(step, "revert", homepage.id, err, isFinal);
   }
 }
 
@@ -727,7 +774,7 @@ async function revertFlow(step: StepLike, data: RevertHomepageEventData) {
  * small version id is returned. The transient blob is removed best-effort after
  * READY (kept on failure so a retry can reuse it).
  */
-async function uploadFlow(step: StepLike, data: UploadHomepageEventData) {
+async function uploadFlow(step: StepLike, data: UploadHomepageEventData, isFinal: boolean) {
   const homepage = await step.run("load-homepage", () =>
     prismadb.crm_Target_Homepage.findUnique({
       where: { id: data.homepageId, deletedAt: null },
@@ -784,49 +831,19 @@ async function uploadFlow(step: StepLike, data: UploadHomepageEventData) {
     }
     return { ready: true };
   } catch (err) {
-    return endRun(step, "upload", homepage.id, err);
+    return endRun(step, "upload", homepage.id, err, isFinal);
   }
 }
 
-const BACKSTOP_ERROR = "run failed (onFailure backstop)";
-
-/**
- * Backstop for the "never stuck RUNNING" invariant. The in-body `mark-failed`
- * step can itself throw (DB blip) and function-level cancellation/timeouts skip
- * the body's catch entirely; Inngest calls this once the run has terminally
- * failed. `event.data.event` is the ORIGINAL triggering event (generate carries
- * targetId, refine/revert carry homepageId). Only ever flips a row that is still
- * PENDING/RUNNING, so it can never clobber a newer READY row from a late failure
- * event. Never throws.
- */
-export async function onGenerateHomepageFailure({
-  error,
-  event,
-}: {
-  error?: { message?: string };
-  event: { data: { event?: { data?: Partial<
-          GenerateHomepageEventData & RefineHomepageEventData & RevertHomepageEventData & UploadHomepageEventData
-        > } } };
-}): Promise<void> {
-  const orig = event?.data?.event?.data ?? {};
-  const message = error?.message ? `${BACKSTOP_ERROR}: ${error.message}`.slice(0, 1000) : BACKSTOP_ERROR;
-  try {
-    if (orig.homepageId) {
-      await prismadb.crm_Target_Homepage.updateMany({
-        where: { id: orig.homepageId, status: { in: ["PENDING", "RUNNING"] } },
-        data: { status: "FAILED", error: message },
-      });
-    } else if (orig.targetId) {
-      await prismadb.crm_Target_Homepage.updateMany({
-        where: { targetId: orig.targetId, status: { in: ["PENDING", "RUNNING"] } },
-        data: { status: "FAILED", error: message },
-      });
-    }
-  } catch (e) {
-    console.error("[GENERATE_HOMEPAGE_ONFAILURE]", e);
-  }
-}
-
+// The "never stuck RUNNING" invariant is held WITHOUT the SDK `onFailure`
+// backstop. Inngest v4's execution engine validates every invocation's event
+// against the function's declared `triggers` (validateEventSchemas); the internal
+// `inngest/function.failed` event that drives onFailure is not among our four
+// `homepage/*` triggers, so the handler throws "Event not found in triggers:
+// inngest/function.failed" BEFORE its body runs (observed in prod — the row was
+// left RUNNING with no error). We instead: (1) record FAILED in-body on the final
+// retry attempt (endRun + isFinalAttempt), and (2) run sweep-stuck-homepages on a
+// cron to fail any row a hard platform kill left stuck past a threshold.
 export const generateHomepage = inngest.createFunction(
   {
     id: "generate-homepage",
@@ -849,20 +866,23 @@ export const generateHomepage = inngest.createFunction(
     // each retry replays the completed passes from memoized step state and only
     // re-runs the failed step, so a higher count buys resilience cheaply.
     // Terminal errors are thrown as NonRetriableError and skip retries entirely.
-    retries: 3,
-    onFailure: onGenerateHomepageFailure,
+    retries: MAX_RETRIES,
   },
-  async ({ event, step }) => {
+  async ({ event, step, attempt, maxAttempts }) => {
     const s = step as unknown as StepLike;
+    // `attempt` is the 0-indexed retry attempt (undefined only under a test
+    // harness that omits it → treat as the first attempt). isFinal gates the
+    // in-body markFailed so a retry-exhausted run doesn't sit RUNNING forever.
+    const final = isFinalAttempt(typeof attempt === "number" ? attempt : 0, maxAttempts);
     switch (event.name) {
       case "homepage/target.generate":
-        return generateFlow(s, event.data as GenerateHomepageEventData);
+        return generateFlow(s, event.data as GenerateHomepageEventData, final);
       case "homepage/target.refine":
-        return refineFlow(s, event.data as RefineHomepageEventData);
+        return refineFlow(s, event.data as RefineHomepageEventData, final);
       case "homepage/target.revert":
-        return revertFlow(s, event.data as RevertHomepageEventData);
+        return revertFlow(s, event.data as RevertHomepageEventData, final);
       case "homepage/target.upload":
-        return uploadFlow(s, event.data as UploadHomepageEventData);
+        return uploadFlow(s, event.data as UploadHomepageEventData, final);
       default:
         throw new NonRetriableError(`Unexpected event ${event.name}`);
     }

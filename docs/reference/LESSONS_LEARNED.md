@@ -393,6 +393,26 @@
 
 ## Background jobs / Inngest
 
+### Inngest v4 `onFailure` is unusable on a function with explicit `triggers` — hold the invariant in-body + a cron sweep
+
+- **Symptom:** a homepage generation that exhausted its retries (or was hard-killed) sat at
+  `RUNNING` forever with `error: null` (UI stuck on "generating"). The logs showed
+  `POST /api/inngest 400 … Inngest function error: Event not found in triggers: inngest/function.failed`
+  at `validateEventSchemas`.
+- **Cause:** Inngest v4's execution engine validates every invocation's event against the function's
+  declared `triggers`. The `onFailure` handler is driven by the internal `inngest/function.failed`
+  event, which is NOT among the four `homepage/*` triggers, so `validateEventSchemas` throws BEFORE
+  the handler body runs. Deterministic for any function that declares `triggers` AND uses `onFailure`
+  (inngest 4.0.x). The backstop that was supposed to flip the row to `FAILED` never executed.
+- **Fix / rule:** do NOT rely on the SDK `onFailure` to hold a "never stuck RUNNING" invariant in v4.
+  Instead (1) record `FAILED` IN-BODY on the final attempt — read `ctx.attempt`/`ctx.maxAttempts` and
+  mark failed when `attempt + 1 >= maxAttempts` (`endRun`/`isFinalAttempt` in `generate-homepage.ts`);
+  and (2) run a cron sweep (`sweep-stuck-homepages.ts`) that fails any row stuck past a threshold,
+  covering hard platform kills (300s maxDuration / OOM) that skip the body's catch entirely. A
+  removed-but-wired `onFailure` only emits misleading red 400s.
+- **Tell:** a red `Event not found in triggers: inngest/function.failed` in the Inngest logs, and a
+  job row stuck in its in-progress status with no error.
+
 ### Re-check a state invariant in the job, not only in the emitter — events can be reordered
 
 - **Symptom (latent):** the homepage upload-override rule ("an uploaded page is never AI-refined")
@@ -797,6 +817,24 @@
   launches it (`"/api/inngest"` here) in `next.config.js`. Verify on the FIRST QA deploy, together
   with the playwright-core/@sparticuz chromium-version skew.
 
+### `@sparticuz/chromium`'s default `--single-process` crashes the whole browser on heavy pages — strip it
+
+- **Symptom:** the homepage render step failed intermittently on Vercel with
+  `page.screenshot: Target page, context or browser has been closed` (and `setContent did not fully
+  settle … browser has been closed`), AFTER the playwright-core/@sparticuz chromium-version skew was
+  already fixed. Some passes rendered fine; one would kill the run, and each retry (same HTML) re-crashed.
+- **Cause:** `@sparticuz/chromium`'s default `args` include `--single-process` (it targets tiny
+  Lambda). In single-process mode a renderer crash takes down the ENTIRE browser process; a heavy
+  generated page (GSAP + inline images) under memory pressure trips it.
+- **Fix / rule:** strip `--single-process` from the launch args (`serverlessChromiumArgs` in
+  `lib/homepage/render.ts`) so Chromium isolates the renderer in a child process, and give the
+  function memory headroom (`vercel.json` `/api/inngest` 2048→3008 MB). Can't be reproduced on
+  macOS/CI (the sparticuz binary is Linux-only) — verify on the first QA/prod render. Also make
+  non-essential renders (e.g. the vision screenshot of the previous draft) **non-fatal** so one crash
+  can't kill a multi-pass run.
+- **Tell:** "Target … has been closed" from `page.screenshot`/`setContent` in a serverless chromium
+  job, especially on content-heavy pages.
+
 ### Returning `{ failed: true }` from an Inngest flow marks the run green — throw after persisting FAILED
 
 - **Symptom:** a background job's row is correctly `FAILED` and the user sees the error, but the
@@ -805,9 +843,10 @@
 - **Cause:** a flow that catches its error and `return`s a value tells Inngest the run succeeded.
   The stack is lost and alerting/backstops don't trigger.
 - **Fix / rule:** in the catch, `console.error` with context, persist `status: FAILED` to the row,
-  THEN `throw new NonRetriableError(message)` — the run shows red, `onFailure` fires as a backstop,
-  and the whole (expensive) flow is not retried. Reserve plain `throw`/retries for genuinely
-  transient step failures; step-level retries already cover those before the flow catch runs.
+  THEN `throw new NonRetriableError(message)` — the run shows red and the whole (expensive) flow is
+  not retried. (Do NOT count on the SDK `onFailure` as the backstop — it's unusable on a triggered v4
+  function; see the "Inngest v4 `onFailure` is unusable" entry above.) Reserve plain `throw`/retries
+  for genuinely transient step failures; step-level retries already cover those before the flow catch runs.
 - **Tell:** tests that `await handler()` on a failure path must switch to `.rejects` / swallow the
   throw (the DB-state assertions still hold because FAILED was persisted before the throw).
 
