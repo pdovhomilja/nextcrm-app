@@ -827,11 +827,12 @@
   Lambda). In single-process mode a renderer crash takes down the ENTIRE browser process; a heavy
   generated page (GSAP + inline images) under memory pressure trips it.
 - **Fix / rule:** strip `--single-process` from the launch args (`serverlessChromiumArgs` in
-  `lib/homepage/render.ts`) so Chromium isolates the renderer in a child process, and give the
-  function memory headroom (`vercel.json` `/api/inngest` 2048→3008 MB). Can't be reproduced on
+  `lib/homepage/render.ts`) so Chromium isolates the renderer in a child process. Can't be reproduced on
   macOS/CI (the sparticuz binary is Linux-only) — verify on the first QA/prod render. Also make
   non-essential renders (e.g. the vision screenshot of the previous draft) **non-fatal** so one crash
-  can't kill a multi-pass run.
+  can't kill a multi-pass run. (Memory headroom would help too, but raising `/api/inngest` memory above
+  2048 MB fails this project's Vercel plan at config-validation — `memory: 3008` makes the deployment
+  fail with no build. 2048 is the max here; multi-process runs within it.)
 - **Tell:** "Target … has been closed" from `page.screenshot`/`setContent` in a serverless chromium
   job, especially on content-heavy pages.
 

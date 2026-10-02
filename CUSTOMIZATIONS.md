@@ -59,9 +59,11 @@ Deliberate, accepted limitations of the homepage-generation feature (revisit whe
   An earlier 1.58.2 (Chromium 145) vs 147 skew crashed every render on Vercel. After that, heavy pages
   still crashed intermittently (`Target page… has been closed`) because sparticuz ships
   `--single-process` (a renderer crash kills the whole browser); we now strip that flag
-  (`serverlessChromiumArgs`) and raised the `/api/inngest` function memory to 3008 MB. The serverless
-  launch can't be exercised locally or in CI; the first Vercel preview (QA) run is the verification
-  step (see `LESSONS_LEARNED.md`).
+  (`serverlessChromiumArgs`) so the renderer runs in a child process. (A memory bump would also help,
+  but `/api/inngest` memory above 2048 MB is rejected by this project's Vercel plan at config-validation
+  — `memory: 3008` fails the deploy outright — so it stays at 2048.) The serverless launch can't be
+  exercised locally or in CI; the first Vercel preview (QA) run is the verification step (see
+  `LESSONS_LEARNED.md`).
 - **Stuck-RUNNING invariant held in-body + cron, not via Inngest `onFailure`.** Inngest v4 rejects the
   internal `inngest/function.failed` event for a function that declares `triggers`, so the SDK
   `onFailure` backstop can't run. `generate-homepage` records FAILED in-body on the final attempt, and
