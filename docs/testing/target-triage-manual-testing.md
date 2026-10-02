@@ -61,6 +61,22 @@ server console (`[Auth] OTP for …`).
 3. Select **Approved**.
 4. **Verify:** the table narrows to approved targets and a **Reset** control appears.
 
+## 4. Engagement column + filter
+
+**E2E:** unit only — the per-target status derivation is covered by
+`app/[locale]/(routes)/campaigns/targets/table-data/__tests__/engagement-options.test.ts`; the live
+badge needs real outreach + Resend open/click delivery, so it's an E2E known gap (same as the rest of
+the engagement feature). Depends on the webhook fix + `homepage_clicked_at` (PR #39 / `feat/target-email-engagement`).
+
+1. **Verify:** the targets table shows an **Engagement** column **right after Triage**. A target with no
+   sent email shows a muted **—**; otherwise a badge: **Sent** (a SENT email), **Opened** (any email
+   opened), or **Clicked** (any email's **homepage link** clicked). The badge is the **furthest** state
+   across all of that target's outreach emails.
+2. In the toolbar, click the **Engagement** faceted filter. **Verify:** options **Clicked / Opened /
+   Sent / Not sent** appear with live counts; selecting one narrows the table, and **Reset** clears it.
+3. **Verify:** "Clicked" reflects the homepage link specifically — a target whose recipient only clicked
+   the unsubscribe link shows **Opened** (or **Sent**), not **Clicked**.
+
 ---
 
 ## Known gaps

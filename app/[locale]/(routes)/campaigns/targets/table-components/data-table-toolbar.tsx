@@ -9,6 +9,7 @@ import { DataTableViewOptions } from "./data-table-view-options";
 import { DataTableFacetedFilter } from "./data-table-faceted-filter";
 import { TARGET_TYPE_OPTIONS } from "@/lib/crm/target-type";
 import { TRIAGE_STATUS_OPTIONS } from "../table-data/triage-options";
+import { ENGAGEMENT_STATUS_OPTIONS } from "../table-data/engagement-options";
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
@@ -57,6 +58,13 @@ export function DataTableToolbar<TData>({
             column={table.getColumn("triage_status")}
             title="Triage"
             options={TRIAGE_STATUS_OPTIONS.map((o) => ({ label: o.label, value: o.value }))}
+          />
+        )}
+        {table.getColumn("engagement") && (
+          <DataTableFacetedFilter
+            column={table.getColumn("engagement")}
+            title="Engagement"
+            options={ENGAGEMENT_STATUS_OPTIONS.map((o) => ({ label: o.label, value: o.value }))}
           />
         )}
         {table.getColumn("type") && (

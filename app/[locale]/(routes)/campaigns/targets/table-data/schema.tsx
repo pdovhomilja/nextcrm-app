@@ -32,6 +32,17 @@ export const targetSchema = z.object({
       })
     )
     .optional(),
+  // Minimal outreach-email engagement fields — powers the "Engagement" column +
+  // faceted filter (furthest state across all emails). From getTargets().
+  target_emails: z
+    .array(
+      z.object({
+        status: z.string().nullable().optional(),
+        opened_at: z.coerce.date().nullable().optional(),
+        homepage_clicked_at: z.coerce.date().nullable().optional(),
+      })
+    )
+    .optional(),
 });
 
 export type Target = z.infer<typeof targetSchema>;

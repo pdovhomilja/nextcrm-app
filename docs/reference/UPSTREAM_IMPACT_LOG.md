@@ -698,3 +698,28 @@ so it can be cherry-picked onto a clean `upstream/main` base and PR'd to `pdovho
 
 **Ordering note:** the additive `homepage_clicked_at` migration ships in the **same PR** as the code that reads
 it (null-safe: the column is only ever read for display, and the webhook sets it best-effort).
+
+---
+
+## feat/targets-engagement-column — Engagement column + filter on the Targets list  (PR: TBD)
+
+Adds a derived **Engagement** badge column (Sent/Opened/Clicked, furthest state across a target's
+outreach emails) + a faceted filter to the Targets list, right after Triage. **4 upstream-owned files**
+touched, all **insert-only**; the derivation + options are a new fork-owned module. No migration (reuses
+`homepage_clicked_at` from `feat/target-email-engagement`). These four files are already deeply
+fork-diverged (the triage column, lists column and faceted filters are prior fork additions), so conflict
+risk is low but they are upstream paths.
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `actions/crm/get-targets.ts` | +7/−0 | **insert-only** | Added a `target_emails: { where: { deletedAt: null }, select: { status, opened_at, homepage_clicked_at } }` entry to the existing `include` (alongside `crate_by_user`, `target_lists`). No other change. | Low (additive include; on conflict keep the entry) |
+| `.../targets/table-data/schema.tsx` | +11/−0 | **insert-only** | Appended an optional `target_emails` array to the `targetSchema` Zod object (after `target_lists`). | Low |
+| `.../targets/table-components/columns.tsx` | +~34/−0 | **insert-only** | Added an `engagement-options` import and a new derived column object (`id: "engagement"`, accessorFn → `targetEngagementStatus`, Badge cell, faceted `filterFn`, rank `sortingFn`) **immediately after the `triage_status` column**. | Low (on conflict re-insert after triage) |
+| `.../targets/table-components/data-table-toolbar.tsx` | +9/−0 | **insert-only** | Added an `ENGAGEMENT_STATUS_OPTIONS` import and a `<DataTableFacetedFilter column="engagement" …>` block directly after the Triage filter block. | Low |
+
+Fork-owned (new): `.../targets/table-data/engagement-options.ts` (+ `__tests__/engagement-options.test.ts`)
+— the `targetEngagementStatus` derivation (CLICKED>OPENED>SENT>NONE), labels, badge variants, filter options.
+
+**Re-verify after any upstream merge:** the `engagement` column still renders after `triage_status`, the
+toolbar still has the Engagement faceted filter, `get-targets.ts` still includes `target_emails`, and
+`pnpm exec jest engagement-options && pnpm exec tsc --noEmit`.

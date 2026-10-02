@@ -21,6 +21,13 @@ export const getTargets = async () => {
     include: {
       crate_by_user: { select: { name: true } },
       target_lists: { include: { target_list: { select: { id: true, name: true, status: true } } } },
+      // Minimal engagement fields for the list's Engagement column/filter — the
+      // furthest state across a target's outreach is derived client-side
+      // (targetEngagementStatus). Outreach is ~1 email/target, so this is a light join.
+      target_emails: {
+        where: { deletedAt: null },
+        select: { status: true, opened_at: true, homepage_clicked_at: true },
+      },
     },
   });
   return targets;

@@ -13,6 +13,12 @@ import {
   triageBadgeVariant,
 } from "../table-data/triage-options";
 import {
+  targetEngagementStatus,
+  engagementStatusLabel,
+  engagementBadgeVariant,
+  engagementRank,
+} from "../table-data/engagement-options";
+import {
   targetTypeLabel,
   targetTypeBadgeVariant,
   resolveTargetTitle,
@@ -225,6 +231,33 @@ export const columns: ColumnDef<Target>[] = [
       );
     },
     filterFn: (row, id, value) => value.includes(row.getValue(id)),
+    enableSorting: true,
+    enableHiding: true,
+  },
+  {
+    // Derived (no DB column): furthest outreach engagement across the target's
+    // emails. Shown right after Triage; faceted-filterable like Triage.
+    id: "engagement",
+    accessorFn: (row) => targetEngagementStatus(row.target_emails),
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Engagement" />
+    ),
+    cell: ({ row }) => {
+      const value = row.getValue("engagement") as string;
+      if (value === "NONE") {
+        return <span className="text-muted-foreground">—</span>;
+      }
+      return (
+        <Badge variant={engagementBadgeVariant(value)}>
+          {engagementStatusLabel(value)}
+        </Badge>
+      );
+    },
+    filterFn: (row, id, value) => value.includes(row.getValue(id)),
+    // Sort by engagement strength (Clicked>Opened>Sent>Not sent), not the
+    // alphabetical status string (which would put "Not sent" between the others).
+    sortingFn: (a, b, id) =>
+      engagementRank(a.getValue(id)) - engagementRank(b.getValue(id)),
     enableSorting: true,
     enableHiding: true,
   },
