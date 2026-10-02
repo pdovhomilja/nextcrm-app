@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import type { AiPromptKind } from "@/actions/crm/prompts/kinds";
+import { HOMEPAGE_LAYER_KIND_LABELS, type AiPromptKind } from "@/actions/crm/prompts/kinds";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -101,9 +101,19 @@ export function PromptDialog({
                 <SelectContent>
                   <SelectItem value="EMAIL">Email</SelectItem>
                   <SelectItem value="HOMEPAGE">Homepage</SelectItem>
-                  {isAdmin && (
-                    <SelectItem value="HOMEPAGE_BASE">Homepage base (designer)</SelectItem>
-                  )}
+                  {isAdmin &&
+                    (
+                      [
+                        "HOMEPAGE_BASE",
+                        "HOMEPAGE_INDUSTRY",
+                        "HOMEPAGE_STYLE",
+                        "HOMEPAGE_AVOID",
+                      ] as const
+                    ).map((k) => (
+                      <SelectItem key={k} value={k}>
+                        {HOMEPAGE_LAYER_KIND_LABELS[k]}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
               <Select
