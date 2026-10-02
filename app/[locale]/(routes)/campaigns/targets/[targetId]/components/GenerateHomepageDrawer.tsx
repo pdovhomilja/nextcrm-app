@@ -26,6 +26,8 @@ import { getHomepageStatus } from "@/actions/crm/homepage/get-homepage-status";
 import { refineHomepage } from "@/actions/crm/homepage/refine-homepage";
 import { revertHomepageVersion } from "@/actions/crm/homepage/revert-homepage-version";
 import { updateHomepageSlug } from "@/actions/crm/homepage/update-homepage-slug";
+import { getHomepageIndustry } from "@/actions/crm/targets/get-homepage-industry";
+import { setHomepageIndustry } from "@/actions/crm/targets/set-homepage-industry";
 
 type PromptOption = { id: string; name: string; body: string };
 type HomepageStatus = "PENDING" | "RUNNING" | "READY" | "FAILED";
@@ -107,6 +109,13 @@ export function GenerateHomepageDrawer(props: {
   const [slug, setSlug] = useState("");
   const [promptId, setPromptId] = useState("");
   const [prompt, setPrompt] = useState("");
+  // Industry layer: options are the active HOMEPAGE_INDUSTRY prompts; the value
+  // shown is the target's saved pick, else the Generic default. Persisted on change.
+  const [industryOptions, setIndustryOptions] = useState<
+    { id: string; name: string }[]
+  >([]);
+  const [industryId, setIndustryId] = useState("");
+  const [savingIndustry, setSavingIndustry] = useState(false);
   const [refineText, setRefineText] = useState("");
   const [busy, setBusy] = useState<
     "gen" | "slug" | "refine" | "revert" | "upload" | null
@@ -284,6 +293,49 @@ export function GenerateHomepageDrawer(props: {
     stopPolling,
     invalidateRequests,
   ]);
+
+  // Load the Industry options + saved selection each time the drawer opens. Its
+  // own cancel flag (not reqIdRef) so generate/refine bumping the request id
+  // never drops this one-shot fetch.
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await getHomepageIndustry({ targetId });
+        if (cancelled) return;
+        if ("error" in res) {
+          toast.error(res.error);
+          return;
+        }
+        setIndustryOptions(res.data.options);
+        setIndustryId(res.data.selectedId ?? res.data.defaultId ?? "");
+      } catch {
+        if (!cancelled) toast.error(DEFAULT_ERROR);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, targetId]);
+
+  async function onPickIndustry(id: string) {
+    const previous = industryId;
+    setIndustryId(id);
+    setSavingIndustry(true);
+    try {
+      const res = await setHomepageIndustry({ targetId, promptId: id });
+      if ("error" in res) {
+        setIndustryId(previous);
+        toast.error(res.error);
+      }
+    } catch {
+      setIndustryId(previous);
+      toast.error(DEFAULT_ERROR);
+    } finally {
+      setSavingIndustry(false);
+    }
+  }
 
   // Picking a library prompt just copies its body (passed in as props) into the
   // guidance box; no server round-trip.
@@ -493,6 +545,8 @@ export function GenerateHomepageDrawer(props: {
       setPrompt("");
       setRefineText("");
       setBusy(null);
+      setIndustryOptions([]);
+      setIndustryId("");
     }
     onOpenChange(v);
   }
@@ -557,6 +611,35 @@ export function GenerateHomepageDrawer(props: {
               {slugEditable(hp)
                 ? `Will publish at /p/${proposeSlug(slug) || "…"}. Can't be changed once published.`
                 : `Published at /p/${hp?.slug}. Regenerating keeps this URL.`}
+            </p>
+          </div>
+
+          <div className="space-y-1">
+            <label htmlFor="homepage-industry" className="text-sm font-medium">
+              Industry
+            </label>
+            <Select
+              value={industryId}
+              onValueChange={onPickIndustry}
+              disabled={locked || savingIndustry || industryOptions.length === 0}
+            >
+              <SelectTrigger
+                id="homepage-industry"
+                data-testid="homepage-industry-select"
+                aria-label="Industry"
+              >
+                <SelectValue placeholder="Generic" />
+              </SelectTrigger>
+              <SelectContent>
+                {industryOptions.map((o) => (
+                  <SelectItem key={o.id} value={o.id}>
+                    {o.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Shapes the page&apos;s sections and tone. Defaults to Generic.
             </p>
           </div>
 

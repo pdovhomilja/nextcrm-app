@@ -3,6 +3,7 @@ import { prismadb } from "@/lib/prisma";
 import { parseSpreadsheetFile } from "@/lib/spreadsheet/parse";
 import { requireAuthenticated } from "@/lib/authz";
 import { normalizeTargetType } from "@/lib/crm/target-type";
+import { createIndustryMatcher } from "@/lib/homepage/prompt-layers/prefill-industry"; // fork
 
 export async function importTargets(
   formData: FormData
@@ -92,6 +93,12 @@ export async function importTargets(
           row.do_not_email_at = new Date();
         }
       }
+    }
+    // fork: best-effort Industry pre-match (one library load for the whole import).
+    const matchIndustryId = await createIndustryMatcher();
+    for (const row of valid) {
+      const industryPromptId = matchIndustryId(row.industry);
+      if (industryPromptId) row.homepage_industry_prompt_id = industryPromptId;
     }
     await prismadb.crm_Targets.createMany({ data: valid, skipDuplicates: true });
   }

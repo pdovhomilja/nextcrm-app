@@ -10,6 +10,7 @@ import {
   softDeleteData,
 } from "../helpers";
 import { normalizeTargetType, requiredIdentityField } from "@/lib/crm/target-type";
+import { industryPrefillData } from "@/lib/homepage/prompt-layers/prefill-industry"; // fork
 
 export const crmTargetTools = [
   {
@@ -144,7 +145,10 @@ export const crmTargetTools = [
         throw new Error("An individual target requires a last name");
       }
       const target = await prismadb.crm_Targets.create({
-        data: { last_name: last_name ?? "", ...rest, type, created_by: userId },
+        data: {
+          last_name: last_name ?? "", ...rest, type, created_by: userId,
+          ...(await industryPrefillData(rest.industry)), // fork: best-effort Industry pre-match
+        },
       });
       return itemResponse(target);
     },
