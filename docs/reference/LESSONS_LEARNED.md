@@ -830,9 +830,12 @@
   `lib/homepage/render.ts`) so Chromium isolates the renderer in a child process. Can't be reproduced on
   macOS/CI (the sparticuz binary is Linux-only) — verify on the first QA/prod render. Also make
   non-essential renders (e.g. the vision screenshot of the previous draft) **non-fatal** so one crash
-  can't kill a multi-pass run. (Memory headroom would help too, but raising `/api/inngest` memory above
-  2048 MB fails this project's Vercel plan at config-validation — `memory: 3008` makes the deployment
-  fail with no build. 2048 is the max here; multi-process runs within it.)
+  can't kill a multi-pass run. (Memory headroom would help too, but the project is on Vercel **Hobby**,
+  which caps function memory at **2048 MB** — any higher value, e.g. `memory: 3008`, fails config-validation
+  with no build and no listable deployment, while GitHub shows "Vercel: Deployment failed". 2048 is the
+  ceiling here; Pro would allow up to 3009. Multi-process chromium runs within 2048, but there's no
+  headroom to fall back on — if it OOMs on a heavy page, verify on QA and revisit (Pro, or keep
+  single-process with an in-step relaunch-and-retry).)
 - **Tell:** "Target … has been closed" from `page.screenshot`/`setContent` in a serverless chromium
   job, especially on content-heavy pages.
 

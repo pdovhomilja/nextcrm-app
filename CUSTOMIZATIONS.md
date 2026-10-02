@@ -60,10 +60,11 @@ Deliberate, accepted limitations of the homepage-generation feature (revisit whe
   still crashed intermittently (`Target page… has been closed`) because sparticuz ships
   `--single-process` (a renderer crash kills the whole browser); we now strip that flag
   (`serverlessChromiumArgs`) so the renderer runs in a child process. (A memory bump would also help,
-  but `/api/inngest` memory above 2048 MB is rejected by this project's Vercel plan at config-validation
-  — `memory: 3008` fails the deploy outright — so it stays at 2048.) The serverless launch can't be
-  exercised locally or in CI; the first Vercel preview (QA) run is the verification step (see
-  `LESSONS_LEARNED.md`).
+  but the project is on Vercel **Hobby**, which caps `/api/inngest` memory at **2048 MB** — `memory: 3008`
+  fails the deploy at config-validation — so it stays at 2048; Pro would allow up to 3009.) Multi-process
+  uses more RAM than single-process with no Hobby headroom above 2048, so the serverless render must be
+  verified on QA; if it OOMs, revisit (Pro for 3009, or single-process + in-step relaunch-retry). The
+  launch can't be exercised locally or in CI (see `LESSONS_LEARNED.md`).
 - **Stuck-RUNNING invariant held in-body + cron, not via Inngest `onFailure`.** Inngest v4 rejects the
   internal `inngest/function.failed` event for a function that declares `triggers`, so the SDK
   `onFailure` backstop can't run. `generate-homepage` records FAILED in-body on the final attempt, and
