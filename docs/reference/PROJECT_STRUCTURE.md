@@ -138,6 +138,8 @@ inngest/functions/generate-homepage.ts   homepage/target.{generate,refine,revert
                                 upload -> version row -> READY (throws NonRetriableError on failure).
                                 Generate/refine resolve model / max_tokens / base prompt via settings.ts;
                                 the upload flow renders + publishes an operator-uploaded page as an UPLOAD
+inngest/functions/sweep-stuck-homepages.ts   cron backstop: fails any homepage stuck PENDING/RUNNING past
+                                a threshold (covers hard platform kills; Inngest v4 onFailure is unusable)
                                 version (no model call)
 actions/crm/homepage/           server actions: get-homepage-status (exposes current_pass_kind),
                                 refine-homepage (refuses while an UPLOAD is current), revert-homepage-version,

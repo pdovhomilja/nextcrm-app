@@ -52,7 +52,7 @@ import {
 import { resolveImageProviders, generateWithFallback } from "@/lib/homepage/images/resolve";
 import { planHomepageImages } from "@/lib/homepage/images/plan";
 import { NonRetriableError } from "inngest";
-import { AUTO_PASSES, onGenerateHomepageFailure } from "../generate-homepage";
+import { AUTO_PASSES, MAX_RETRIES } from "../generate-homepage";
 
 // createFunction is called once at module load — capture config + handler.
 const createFunctionMock = inngest.createFunction as jest.Mock;
@@ -61,11 +61,13 @@ const config = createFunctionMock.mock.calls[0][0] as {
   triggers: { event: string }[];
   retries: number;
   concurrency: { key?: string; limit: number }[];
-  onFailure: unknown;
+  onFailure?: unknown;
 };
 const handler = createFunctionMock.mock.results[0].value as (ctx: {
   event: { name: string; data: Record<string, unknown> };
   step: { run: (name: string, fn: () => unknown) => Promise<unknown> };
+  attempt?: number;
+  maxAttempts?: number;
 }) => Promise<unknown>;
 
 const step = { run: (_n: string, f: () => unknown) => Promise.resolve().then(f) };
@@ -75,7 +77,6 @@ const SRC_B64 = Buffer.from("SRC_SHOT").toString("base64");
 const PNG_B64 = Buffer.from("PNGDATA").toString("base64");
 
 const homepageUpdate = prismadb.crm_Target_Homepage.update as jest.Mock;
-const homepageUpdateMany = prismadb.crm_Target_Homepage.updateMany as jest.Mock;
 const versionCreate = prismadb.crm_Target_Homepage_Version.create as jest.Mock;
 
 const target = {
@@ -153,6 +154,7 @@ beforeEach(() => {
 type FlowCtx = {
   event: { name: string; data: Record<string, unknown> };
   step: { run: (n: string, f: () => unknown) => Promise<unknown> };
+  attempt?: number;
 };
 const runExpectingTerminal = async (ctx: FlowCtx) => {
   await expect(handler(ctx)).rejects.toBeInstanceOf(NonRetriableError);
@@ -199,45 +201,18 @@ describe("generate-homepage function config", () => {
     // A global (unkeyed) cap must exist so parallel targets can't OOM the function.
     expect(config.concurrency.some((c) => !c.key && c.limit > 0)).toBe(true);
   });
-  it("registers the onFailure backstop", () => {
-    expect(config.onFailure).toBe(onGenerateHomepageFailure);
+  it("does NOT wire the SDK onFailure backstop (inngest v4 rejects function.failed for a triggered fn)", () => {
+    // The invariant is held in-body (final-attempt markFailed) + the cron sweep,
+    // NOT via onFailure — wiring it would only emit misleading 400s in prod.
+    expect(config.onFailure).toBeUndefined();
+  });
+  it("uses a bounded retry budget exported as MAX_RETRIES", () => {
+    expect(config.retries).toBe(MAX_RETRIES);
+    expect(MAX_RETRIES).toBeGreaterThanOrEqual(2);
+    expect(MAX_RETRIES).toBeLessThanOrEqual(3);
   });
   it("bounds auto passes to 3", () => {
     expect(AUTO_PASSES).toBe(3);
-  });
-});
-
-describe("onFailure backstop", () => {
-  const failed = (data: Record<string, unknown>) => ({
-    data: { function_id: "generate-homepage", run_id: "r1", event: { name: "x", data } },
-  });
-
-  it("generate (targetId): marks that target's PENDING/RUNNING homepage FAILED", async () => {
-    homepageUpdateMany.mockResolvedValue({ count: 1 });
-    await onGenerateHomepageFailure({ event: failed({ targetId: "t1" }) });
-    expect(homepageUpdateMany).toHaveBeenCalledWith({
-      where: { targetId: "t1", status: { in: ["PENDING", "RUNNING"] } },
-      data: { status: "FAILED", error: expect.stringContaining("onFailure backstop") },
-    });
-  });
-
-  it("refine (homepageId): marks that homepage FAILED", async () => {
-    homepageUpdateMany.mockResolvedValue({ count: 1 });
-    await onGenerateHomepageFailure({ event: failed({ homepageId: "h1", targetId: "t1" }) });
-    expect(homepageUpdateMany).toHaveBeenCalledWith({
-      where: { id: "h1", status: { in: ["PENDING", "RUNNING"] } },
-      data: { status: "FAILED", error: expect.stringContaining("onFailure backstop") },
-    });
-  });
-
-  it("never throws (DB error swallowed) and no-ops without ids", async () => {
-    const spy = jest.spyOn(console, "error").mockImplementation(() => {});
-    homepageUpdateMany.mockRejectedValue(new Error("db down"));
-    await expect(onGenerateHomepageFailure({ event: failed({ targetId: "t1" }) })).resolves.toBeUndefined();
-    homepageUpdateMany.mockClear();
-    await onGenerateHomepageFailure({ event: failed({}) });
-    expect(homepageUpdateMany).not.toHaveBeenCalled();
-    spy.mockRestore();
   });
 });
 
@@ -557,6 +532,55 @@ describe("generate event", () => {
     expect(statuses()).not.toContain("FAILED");
   });
 
+  it("FINAL retry attempt: a transient error is recorded FAILED in-body (not left to the broken onFailure)", async () => {
+    // Same transient error as the retriable test above, but on the last attempt
+    // Inngest won't retry again — so instead of waiting for the (unusable v4)
+    // onFailure backstop, endRun must mark FAILED here or the row stays RUNNING.
+    (putHomepageHtml as jest.Mock).mockRejectedValue(new Error("R2 down"));
+    const err = await handler({ event: generateEvent, step, attempt: MAX_RETRIES }).catch((e) => e);
+    expect((err as Error).message).toContain("R2 down");
+    expect(statuses()).toContain("FAILED");
+    const failed = homepageUpdate.mock.calls.find((c) => c[0].data.status === "FAILED");
+    expect(failed![0].data.error).toContain("R2 down");
+  });
+
+  it("uses the runtime maxAttempts to decide the final attempt (not just MAX_RETRIES)", async () => {
+    // maxAttempts=2 => final at attempt 1 (attempt+1 >= maxAttempts), even though
+    // 1 < MAX_RETRIES. Proves we honor the runtime signal over the constant.
+    (putHomepageHtml as jest.Mock).mockRejectedValue(new Error("R2 down"));
+    await handler({ event: generateEvent, step, attempt: 1, maxAttempts: 2 }).catch((e) => e);
+    expect(statuses()).toContain("FAILED");
+  });
+
+  it("NOT the final attempt (attempt+1 < maxAttempts): stays retriable, not marked FAILED", async () => {
+    (putHomepageHtml as jest.Mock).mockRejectedValue(new Error("R2 down"));
+    const err = await handler({ event: generateEvent, step, attempt: 1, maxAttempts: 4 }).catch((e) => e);
+    expect(err).toBeInstanceOf(Error);
+    expect(err).not.toBeInstanceOf(NonRetriableError);
+    expect(statuses()).not.toContain("FAILED");
+  });
+
+  it("vision render crash is NON-FATAL: passes refine from HTML only and the run still reaches READY", async () => {
+    // The 3 auto passes each render the PREVIOUS draft for vision; make those
+    // crash but let the final publish render succeed.
+    (renderAndScreenshot as jest.Mock)
+      .mockRejectedValueOnce(new Error("renderer gone"))
+      .mockRejectedValueOnce(new Error("renderer gone"))
+      .mockRejectedValueOnce(new Error("renderer gone"))
+      .mockResolvedValue(Buffer.from("PNGDATA"));
+    await handler({ event: generateEvent, step });
+    // All passes still ran despite the vision renders failing.
+    expect(generateHomepage).toHaveBeenCalledTimes(1 + AUTO_PASSES);
+    // Auto passes degraded to text-only (no screenshot fed to the model).
+    for (const [arg] of (generateHomepage as jest.Mock).mock.calls.slice(1)) {
+      expect(arg.refinedScreenshotB64).toBeUndefined();
+    }
+    // ...and the run still published + reached READY, never FAILED.
+    expect(putHomepageHtml).toHaveBeenCalledTimes(1);
+    expect(homepageUpdate.mock.calls.at(-1)![0].data.status).toBe("READY");
+    expect(statuses()).not.toContain("FAILED");
+  });
+
   it("a hung provider call is bounded by a timeout and stays retriable", async () => {
     jest.useFakeTimers();
     try {
@@ -690,6 +714,13 @@ describe("refine event", () => {
     expect(statuses()).not.toContain("FAILED");
   });
 
+  it("FINAL attempt: a transient refine error is recorded FAILED in-body", async () => {
+    (generateHomepage as jest.Mock).mockReset().mockRejectedValue(new Error("boom"));
+    const err = await handler({ event: refineEvent, step, attempt: MAX_RETRIES }).catch((e) => e);
+    expect((err as Error).message).toContain("boom");
+    expect(statuses()).toContain("FAILED");
+  });
+
   it("run-time re-check: an UPLOAD current version is never AI-refined (queued-refine vs upload race)", async () => {
     // The trigger gated on pass_kind, but a queued refine can run AFTER an upload
     // repointed current_version_id to an UPLOAD version. The job must not trust it.
@@ -815,17 +846,6 @@ describe("revert event", () => {
     await expect(handler({ event: revertEvent, step })).resolves.toEqual({ skipped: "no homepage row" });
     expect(renderAndScreenshot).not.toHaveBeenCalled();
   });
-
-  it("onFailure backstop marks the homepage FAILED for a revert event (carries homepageId)", async () => {
-    homepageUpdateMany.mockResolvedValue({ count: 1 });
-    await onGenerateHomepageFailure({
-      event: { data: { function_id: "generate-homepage", run_id: "r1", event: revertEvent } } as never,
-    });
-    expect(homepageUpdateMany).toHaveBeenCalledWith({
-      where: { id: "h1", status: { in: ["PENDING", "RUNNING"] } },
-      data: { status: "FAILED", error: expect.stringContaining("onFailure backstop") },
-    });
-  });
 });
 
 describe("upload event", () => {
@@ -931,16 +951,5 @@ describe("upload event", () => {
     await expect(handler({ event: uploadEvent, step })).resolves.toEqual({ skipped: "no homepage row" });
     expect(getHomepageUpload).not.toHaveBeenCalled();
     expect(renderAndScreenshot).not.toHaveBeenCalled();
-  });
-
-  it("onFailure backstop marks the homepage FAILED for an upload event (carries homepageId)", async () => {
-    homepageUpdateMany.mockResolvedValue({ count: 1 });
-    await onGenerateHomepageFailure({
-      event: { data: { function_id: "generate-homepage", run_id: "r1", event: uploadEvent } } as never,
-    });
-    expect(homepageUpdateMany).toHaveBeenCalledWith({
-      where: { id: "h1", status: { in: ["PENDING", "RUNNING"] } },
-      data: { status: "FAILED", error: expect.stringContaining("onFailure backstop") },
-    });
   });
 });

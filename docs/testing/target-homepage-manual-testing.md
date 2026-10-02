@@ -123,6 +123,23 @@ pnpm dev
     hidden or half-faded. (The render step drives GSAP/ScrollTrigger to completion, then forces any
     remaining hidden reveal targets visible.)
 
+### 3b. A failed generation must surface as FAILED — never stuck "generating" (QA/prod)
+
+The invariant is NOT held by the Inngest SDK `onFailure` (it's unusable on a v4 function with
+`triggers` — see `LESSONS_LEARNED.md`). Two code paths hold it; both are verifiable only on a deployed
+environment (they need the real Inngest runtime + chromium):
+
+1. **In-body, retry-exhausted:** if a generation keeps failing (e.g. a persistent render crash), after
+   the retry budget the row flips to **FAILED** with the error text shown in the drawer — it does NOT
+   sit on "Generating…" indefinitely. In the Inngest dashboard the run ends **red**.
+2. **Cron backstop (hard kill):** if a run is hard-killed (300s maxDuration / OOM) so the in-body catch
+   never runs, `sweep-stuck-homepages` (every 10 min) flips any row stuck PENDING/RUNNING past 30 min to
+   FAILED. To observe: find a row left RUNNING with no error, wait for the next sweep tick, confirm it
+   becomes FAILED. A healthy in-flight run (< 30 min) is never touched.
+3. **Vision-render crash is non-fatal:** if rendering a *previous* draft for the model crashes, that
+   pass degrades to a text-only refine and the run still completes — one chromium hiccup no longer kills
+   the whole multi-pass run.
+
 ## 4. Refine
 
 1. Type a change request (e.g. "make the hero darker") → **Refine**.
@@ -261,3 +278,8 @@ status, preview URL and versions.
   second seeded non-admin user + storageState as a fast-follow (pairs every admin allow with a deny).
 - **Base-prompt picker in the admin round-trip:** the e2e does not select a `HOMEPAGE_BASE` prompt
   (none is seeded in the e2e DB); only model and max tokens are exercised.
+- **Failure-surfacing paths (§3b):** the in-body final-attempt FAILED, the vision-render-crash
+  degrade, and the cron sweep (`sweep-stuck-homepages`) are covered by **Jest**
+  (`generate-homepage.test.ts`, `sweep-stuck-homepages.test.ts`, `render.test.ts`) — they need the real
+  Inngest runtime / retry budget / chromium, which the e2e harness doesn't provide, so there's no
+  Playwright counterpart. Verify on QA/prod per §3b.

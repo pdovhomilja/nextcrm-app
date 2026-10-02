@@ -613,3 +613,21 @@ the existing key/value store).
 **Re-verify after any upstream merge:** `HIGGSFIELD_API_KEY=` is still in `.env.example` and
 `bash scripts/check-env-docs.sh` passes (it is also fork-owned: `OPENAI_BASE_URL` was added to its IGNORE
 list alongside `ANTHROPIC_BASE_URL`); then `pnpm exec jest lib/homepage actions/admin/__tests__/homepage-settings.test.ts inngest/functions/__tests__/generate-homepage.test.ts`.
+
+---
+
+## fix/homepage-render-crash-and-failure-backstop — unstick homepage generation  (PR: TBD)
+
+Fixes the serverless chromium render crash (`page.screenshot: Target page... has been closed`) and the
+"stuck RUNNING" invariant (Inngest v4 `onFailure` is unusable on a triggered function). **1 upstream-owned
+file** touched; everything else is fork-owned (`inngest/functions/generate-homepage.ts`,
+`inngest/functions/sweep-stuck-homepages.ts` (new), `lib/homepage/render.ts`, `vercel.json`, `docs/**` —
+all verified absent at `upstream/main` with `git cat-file -e`). No schema/migration and no env-var change
+(the memory bump is `vercel.json`, not an env var).
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `app/api/inngest/route.ts` | +2/−0 | **insert-only** | Added `import { sweepStuckHomepages }` next to the `generateHomepage` import, and `sweepStuckHomepages,` to the `serve({ functions: [...] })` array. No upstream line changed. | Low (additive; on conflict keep both the import and the array entry) |
+
+**Re-verify after any upstream merge:** `sweepStuckHomepages` is still imported and listed in the
+`serve()` functions array; then `pnpm exec jest inngest/functions/__tests__/generate-homepage.test.ts inngest/functions/__tests__/sweep-stuck-homepages.test.ts lib/homepage/__tests__/render.test.ts`.
