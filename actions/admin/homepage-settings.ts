@@ -73,7 +73,8 @@ export async function saveHomepageSettings(input: {
   imageModel: string;
   imageCount: number;
   imageProvider: string;
-}): Promise<{ data: HomepageSettings } | { error: string }> {
+}): Promise<{ data: Omit<HomepageSettings, "varyDesign"> } | { error: string }> {
+  // varyDesign persistence + admin UI land in Task 8; until then save leaves it untouched.
   const auth = await requireAdmin();
   if ("error" in auth) return auth;
 

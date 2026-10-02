@@ -255,6 +255,7 @@ describe("getHomepageSettingsForAdmin", () => {
         imageModel: "soul-v2",
         imageCount: 3,
         imageProvider: "auto",
+        varyDesign: true,
         imageProviders: { higgsfield: expect.any(Boolean), openai: expect.any(Boolean) },
         basePrompts: [{ id: "p1", name: "Premium" }],
       },

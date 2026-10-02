@@ -39,6 +39,7 @@ const KEY_BASE_PROMPT_ID = "homepage.base_prompt_id";
 const KEY_IMAGE_MODEL = "homepage.image_model";
 const KEY_IMAGE_COUNT = "homepage.image_count";
 const KEY_IMAGE_PROVIDER = "homepage.image_provider";
+const KEY_VARY_DESIGN = "homepage.vary_design";
 
 /** Clamp to [MAX_TOKENS_FLOOR, model ceiling]; NaN/invalid falls back to DEFAULT_MAX_TOKENS first. */
 export function clampMaxTokens(model: HomepageModel, n: number): number {
@@ -66,6 +67,11 @@ export function clampImageCount(n: number): number {
   return Math.min(MAX_IMAGE_COUNT, Math.max(0, Math.trunc(v)));
 }
 
+/** Design-variation toggle: on unless the stored value is exactly "false". */
+export function resolveVaryDesign(stored: string | null | undefined): boolean {
+  return stored !== "false";
+}
+
 export type HomepageSettings = {
   model: HomepageModel;
   maxTokens: number;
@@ -73,11 +79,12 @@ export type HomepageSettings = {
   imageModel: string;
   imageCount: number;
   imageProvider: string;
+  varyDesign: boolean;
 };
 
 export async function getHomepageSettings(): Promise<HomepageSettings> {
   const rows = await prismadb.crm_SystemSettings.findMany({
-    where: { key: { in: [KEY_MODEL, KEY_MAX_TOKENS, KEY_BASE_PROMPT_ID, KEY_IMAGE_MODEL, KEY_IMAGE_COUNT, KEY_IMAGE_PROVIDER] } },
+    where: { key: { in: [KEY_MODEL, KEY_MAX_TOKENS, KEY_BASE_PROMPT_ID, KEY_IMAGE_MODEL, KEY_IMAGE_COUNT, KEY_IMAGE_PROVIDER, KEY_VARY_DESIGN] } },
   });
   const map = new Map(rows.map((r) => [r.key, r.value]));
   const model = resolveModel(map.get(KEY_MODEL));
@@ -92,5 +99,6 @@ export async function getHomepageSettings(): Promise<HomepageSettings> {
     imageModel: resolveImageModel(map.get(KEY_IMAGE_MODEL)),
     imageCount: clampImageCount(parseInt(map.get(KEY_IMAGE_COUNT) ?? "", 10)),
     imageProvider: resolveImageProvider(map.get(KEY_IMAGE_PROVIDER)),
+    varyDesign: resolveVaryDesign(map.get(KEY_VARY_DESIGN)),
   };
 }
