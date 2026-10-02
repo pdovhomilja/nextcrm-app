@@ -467,7 +467,7 @@ async function resolveGenerationConfig(
       )
     : null;
   return {
-    system: buildSystemPrompt(base?.body ?? null),
+    system: buildSystemPrompt({ base: base?.body ?? null }),
     model: settings.model,
     maxTokens: settings.maxTokens,
     imageModel: settings.imageModel,
