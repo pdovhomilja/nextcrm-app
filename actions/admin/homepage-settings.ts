@@ -23,6 +23,7 @@ const KEY_BASE_PROMPT_ID = "homepage.base_prompt_id";
 const KEY_IMAGE_MODEL = "homepage.image_model";
 const KEY_IMAGE_COUNT = "homepage.image_count";
 const KEY_IMAGE_PROVIDER = "homepage.image_provider";
+const KEY_VARY_DESIGN = "homepage.vary_design";
 // crm_AuditLog.entityId is a UUID column; settings have no row id, so use a fixed sentinel.
 const HOMEPAGE_SETTINGS_ENTITY_ID = "00000000-0000-4000-8000-0000000000c0";
 
@@ -73,8 +74,8 @@ export async function saveHomepageSettings(input: {
   imageModel: string;
   imageCount: number;
   imageProvider: string;
-}): Promise<{ data: Omit<HomepageSettings, "varyDesign"> } | { error: string }> {
-  // varyDesign persistence + admin UI land in Task 8; until then save leaves it untouched.
+  varyDesign: boolean;
+}): Promise<{ data: HomepageSettings } | { error: string }> {
   const auth = await requireAdmin();
   if ("error" in auth) return auth;
 
@@ -84,6 +85,8 @@ export async function saveHomepageSettings(input: {
   const imageModel = resolveImageModel(input.imageModel);
   const imageCount = clampImageCount(input.imageCount);
   const imageProvider = resolveImageProvider(input.imageProvider);
+  // Strict boolean: only a literal `true` enables (a stray string never does).
+  const varyDesign = input.varyDesign === true;
 
   if (input.basePromptId) {
     const prompt = await prismadb.crm_Ai_Prompt.findFirst({
@@ -101,6 +104,7 @@ export async function saveHomepageSettings(input: {
     [KEY_IMAGE_MODEL, imageModel],
     [KEY_IMAGE_COUNT, String(imageCount)],
     [KEY_IMAGE_PROVIDER, imageProvider],
+    [KEY_VARY_DESIGN, String(varyDesign)],
   ];
   for (const [key, value] of rows) {
     await prismadb.crm_SystemSettings.upsert({
@@ -118,7 +122,7 @@ export async function saveHomepageSettings(input: {
       {
         field: "homepage_settings",
         old: null,
-        new: `model=${model} max_tokens=${maxTokens} base_prompt_id=${basePromptId ?? ""} image_model=${imageModel} image_count=${imageCount} image_provider=${imageProvider}`,
+        new: `model=${model} max_tokens=${maxTokens} base_prompt_id=${basePromptId ?? ""} image_model=${imageModel} image_count=${imageCount} image_provider=${imageProvider} vary_design=${varyDesign}`,
       },
     ],
     userId: auth.user.id,
@@ -132,6 +136,7 @@ export async function saveHomepageSettings(input: {
       imageModel,
       imageCount,
       imageProvider,
+      varyDesign,
     },
   };
 }

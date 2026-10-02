@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectTrigger,
@@ -23,6 +24,7 @@ interface Props {
     imageModel: string;
     imageCount: number;
     imageProvider: string;
+    varyDesign: boolean;
     imageProviders: { higgsfield: boolean; openai: boolean };
   };
   models: readonly string[];
@@ -60,6 +62,7 @@ export function HomepageSettingsForm({
   const [imageProvider, setImageProvider] = useState(initial.imageProvider);
   const [imageModel, setImageModel] = useState(initial.imageModel);
   const [imageCount, setImageCount] = useState(String(initial.imageCount));
+  const [varyDesign, setVaryDesign] = useState(initial.varyDesign);
   const [saving, setSaving] = useState(false);
 
   async function onSave() {
@@ -75,6 +78,7 @@ export function HomepageSettingsForm({
         // images); keep the current value. The server clamp stays authoritative.
         imageCount: imageCount.trim() === "" ? initial.imageCount : Number(imageCount),
         imageProvider,
+        varyDesign,
       });
       if ("error" in res) {
         toast.error(res.error);
@@ -87,6 +91,7 @@ export function HomepageSettingsForm({
       setImageModel(res.data.imageModel);
       setImageCount(String(res.data.imageCount));
       setImageProvider(res.data.imageProvider);
+      setVaryDesign(res.data.varyDesign);
     } catch {
       toast.error("Failed to save settings");
     } finally {
@@ -200,6 +205,21 @@ export function HomepageSettingsForm({
         />
         <p className="text-xs text-muted-foreground">
           0–6. Set to 0 to disable image generation.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-4">
+          <Label htmlFor="homepage-vary-design">Vary design per target</Label>
+          <Switch
+            id="homepage-vary-design"
+            checked={varyDesign}
+            onCheckedChange={setVaryDesign}
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          When on, each target gets a deterministic, differing visual style
+          layer so generated homepages do not all look alike.
         </p>
       </div>
 
