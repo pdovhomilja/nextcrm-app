@@ -10,6 +10,11 @@ jest.mock("@/lib/prisma", () => ({
   },
 }));
 jest.mock("@/lib/homepage/settings", () => ({ getHomepageSettings: jest.fn() }));
+jest.mock("@/lib/homepage/prompt-layers/load-layers", () => ({
+  loadActiveStyles: jest.fn(),
+  loadAvoidText: jest.fn(),
+  loadIndustryBody: jest.fn(),
+}));
 jest.mock("@/lib/api-keys", () => ({ getApiKey: jest.fn() }));
 jest.mock("@/lib/homepage/harvest-source", () => ({ harvestSource: jest.fn() }));
 jest.mock("@/lib/homepage/provider", () => ({ generateHomepage: jest.fn() }));
@@ -39,6 +44,13 @@ import { harvestSource } from "@/lib/homepage/harvest-source";
 import { generateHomepage } from "@/lib/homepage/provider";
 import { renderAndScreenshot } from "@/lib/homepage/render";
 import { getHomepageSettings } from "@/lib/homepage/settings";
+import {
+  loadActiveStyles,
+  loadAvoidText,
+  loadIndustryBody,
+} from "@/lib/homepage/prompt-layers/load-layers";
+import { buildSystemPrompt } from "@/lib/homepage/prompt";
+import { pickStyleDirection } from "@/lib/homepage/prompt-layers/select-style";
 import {
   putHomepageHtml,
   putHomepageScreenshot,
@@ -108,6 +120,10 @@ beforeEach(() => {
     imageCount: 1,
     imageProvider: "auto",
   });
+  // Empty prompt-layer libraries by default (== pre-layers behaviour).
+  (loadActiveStyles as jest.Mock).mockResolvedValue([]);
+  (loadAvoidText as jest.Mock).mockResolvedValue(null);
+  (loadIndustryBody as jest.Mock).mockResolvedValue(null);
   (planHomepageImages as jest.Mock).mockReturnValue([
     { token: "__RADE_IMG_1__", role: "hero", prompt: "p", alt: "hero shot", aspectRatio: "16:9" },
   ]);
@@ -736,6 +752,156 @@ describe("refine event", () => {
     expect(last.data.status).toBe("FAILED");
     expect(last.data.error).toBe(
       "This page was uploaded; AI refine isn't available. Regenerate to use AI.",
+    );
+  });
+});
+
+describe("prompt layers", () => {
+  const styles = [
+    { id: "s-a", body: "STYLE_CARD_A" },
+    { id: "s-b", body: "STYLE_CARD_B" },
+    { id: "s-c", body: "STYLE_CARD_C" },
+  ];
+  const picked = pickStyleDirection("h1", styles)!;
+  const others = styles.filter((s) => s.id !== picked.id);
+  const refineEvent = {
+    name: "homepage/target.refine",
+    data: { homepageId: "h1", targetId: "t1", prompt: "Bigger hero", triggeredBy: "u1" },
+  };
+  const systems = () =>
+    (generateHomepage as jest.Mock).mock.calls.map((c) => (c[0] as { system: string }).system);
+
+  const populate = () => {
+    (loadActiveStyles as jest.Mock).mockResolvedValue(styles);
+    (loadAvoidText as jest.Mock).mockResolvedValue("AVOID_TEXT");
+    (loadIndustryBody as jest.Mock).mockResolvedValue("INDUSTRY_BODY");
+    (prismadb.crm_Targets.findUnique as jest.Mock).mockResolvedValue({
+      ...target,
+      homepage_industry_prompt_id: "11111111-1111-4111-8111-111111111111",
+    });
+  };
+  const seedRefine = () => {
+    (prismadb.crm_Target_Homepage.findUnique as jest.Mock).mockResolvedValue({
+      ...homepage,
+      current_version_id: "verCur",
+    });
+    (prismadb.crm_Target_Homepage_Version.findUnique as jest.Mock).mockResolvedValue({
+      id: "verCur",
+      html: "<html>current</html>",
+    });
+  };
+
+  it("composes base + industry + style + avoid + contract (contract last) on every pass", async () => {
+    populate();
+    await handler({ event: generateEvent, step });
+    const all = systems();
+    expect(all).toHaveLength(1 + AUTO_PASSES);
+    for (const system of all) {
+      const idx = ["BASE_BODY", "INDUSTRY_BODY", picked.body, "AVOID_TEXT", "Output contract"].map(
+        (needle) => system.indexOf(needle),
+      );
+      expect(idx.every((i) => i >= 0)).toBe(true);
+      expect([...idx].sort((a, b) => a - b)).toEqual(idx); // precedence order, contract last
+    }
+    // industry is resolved from the target's selected prompt id
+    expect(loadIndustryBody).toHaveBeenCalledWith("11111111-1111-4111-8111-111111111111");
+  });
+
+  it("uses the SAME style card on the initial pass, every auto pass and refine (seed = homepage.id)", async () => {
+    populate();
+    await handler({ event: generateEvent, step });
+    for (const system of systems()) {
+      expect(system).toContain(picked.body);
+      for (const o of others) expect(system).not.toContain(o.body);
+    }
+
+    jest.clearAllMocks();
+    seedRefine();
+    (generateHomepage as jest.Mock).mockResolvedValue({ html: "<html>r</html>", critique: "c" });
+    versionCreate.mockResolvedValue({ id: "verR" });
+    homepageUpdate.mockResolvedValue({});
+    (renderAndScreenshot as jest.Mock).mockResolvedValue(Buffer.from("PNGDATA"));
+    await handler({ event: refineEvent, step });
+    const refineSystem = systems()[0];
+    expect(refineSystem).toContain(picked.body);
+    for (const o of others) expect(refineSystem).not.toContain(o.body);
+    expect(refineSystem).toContain("INDUSTRY_BODY");
+    expect(refineSystem).toContain("AVOID_TEXT");
+  });
+
+  it("varyDesign=false: base + machine contract only, layers never loaded", async () => {
+    populate();
+    (getHomepageSettings as jest.Mock).mockResolvedValue({
+      model: "claude-opus-5-5",
+      maxTokens: 40000,
+      basePromptId: "bp1",
+      imageModel: "soul-v2",
+      imageCount: 1,
+      imageProvider: "auto",
+      varyDesign: false,
+    });
+    await handler({ event: generateEvent, step });
+    for (const system of systems()) {
+      expect(system).toContain("BASE_BODY");
+      expect(system).toContain("Output contract");
+      expect(system).not.toContain("INDUSTRY_BODY");
+      expect(system).not.toContain("AVOID_TEXT");
+      for (const st of styles) expect(system).not.toContain(st.body);
+    }
+    expect(loadActiveStyles).not.toHaveBeenCalled();
+    expect(loadAvoidText).not.toHaveBeenCalled();
+    expect(loadIndustryBody).not.toHaveBeenCalled();
+  });
+
+  it("a soft-deleted/missing industry id falls back to the Generic default", async () => {
+    populate();
+    // Exercise the real loader against the mocked prisma: the selected id misses
+    // (soft-deleted/unknown), the is_default row is returned.
+    (loadIndustryBody as jest.Mock).mockImplementation(
+      jest.requireActual("@/lib/homepage/prompt-layers/load-layers").loadIndustryBody,
+    );
+    (prismadb.crm_Ai_Prompt.findFirst as jest.Mock).mockImplementation(
+      async (args: { where: { kind: string; id?: string; is_default?: boolean } }) => {
+        if (args.where.kind === "HOMEPAGE_BASE") return { body: "BASE_BODY" };
+        if (args.where.id) return null; // soft-deleted / missing selected industry
+        if (args.where.is_default) return { body: "GENERIC_INDUSTRY" };
+        return null;
+      },
+    );
+    await handler({ event: generateEvent, step });
+    for (const system of systems()) {
+      expect(system).toContain("GENERIC_INDUSTRY");
+      expect(system).not.toContain("INDUSTRY_BODY");
+    }
+  });
+
+  it("empty libraries: system is base + contract (today's behaviour) and the run still reaches READY", async () => {
+    await handler({ event: generateEvent, step });
+    for (const system of systems()) {
+      expect(system).toBe(buildSystemPrompt({ base: "BASE_BODY" }));
+    }
+    const last = homepageUpdate.mock.calls.at(-1)![0];
+    expect(last.data.status).toBe("READY");
+  });
+
+  it("selects homepage_industry_prompt_id when loading the target (generate + refine)", async () => {
+    await handler({ event: generateEvent, step });
+    expect(prismadb.crm_Targets.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({ homepage_industry_prompt_id: true }),
+      }),
+    );
+    jest.clearAllMocks();
+    seedRefine();
+    (generateHomepage as jest.Mock).mockResolvedValue({ html: "<html>r</html>", critique: "c" });
+    versionCreate.mockResolvedValue({ id: "verR" });
+    homepageUpdate.mockResolvedValue({});
+    (prismadb.crm_Targets.findUnique as jest.Mock).mockResolvedValue(target);
+    await handler({ event: refineEvent, step });
+    expect(prismadb.crm_Targets.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({ homepage_industry_prompt_id: true }),
+      }),
     );
   });
 });
