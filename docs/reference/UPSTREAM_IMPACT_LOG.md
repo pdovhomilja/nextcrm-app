@@ -667,3 +667,34 @@ under `app/[locale]/(routes)/{campaigns,admin}/**`, `docs/**`). Two **new** migr
 **Ordering note:** the enum + column migration and the data-seed migration ship in the **same PR** as the code
 that reads them (not migration-first as a separate PR) because every read is null-/empty-safe: an unset
 `homepage_industry_prompt_id` or an empty layer library degrades to today's base + machine-contract behavior.
+
+---
+
+## feat/target-email-engagement — Resend open/click fix + homepage engagement line  (PR: TBD)
+
+Fixes the Resend webhook so opens/clicks actually record (it matched on the RFC `message_id` header,
+never the stored `email_id`), then surfaces engagement on the target detail: a homepage-specific click
+timestamp, an engagement line, and self-view exclusion on the `/p/` counter. **2 upstream-owned files**
+touched (both verified present at `upstream/main`); everything else is fork-owned (verified absent
+upstream: `lib/homepage/views.ts`, `app/p/[slug]/route.ts`, `actions/crm/targets/list-target-emails.ts`,
+`app/.../components/HomepageEngagement.tsx`, the `crm_Target_Email` model + its new column, `docs/**`,
+tests). One **new** migration (fork-owned, additive): `20261002120000_add_target_email_homepage_clicked_at`
+(1 nullable column on the fork-added `crm_Target_Email`).
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `app/api/campaigns/webhooks/resend/route.ts` | ~ | **mixed — modifications + insertions (NOT pure insert)** | **Fix (the key change, a MODIFICATION of an upstream line):** `const messageId = event.data.message_id ?? event.data.email_id` → `event.data.email_id ?? event.data.message_id` (Resend events carry both; `message_id` is the RFC 5322 header and never matches the stored id). **Other MODIFICATIONS of existing upstream lines:** the campaign branch's `opened_at`/`clicked_at` `new Date()` → `eventAt` (event timestamp); the `JSON.parse(body)` line is now wrapped in try/catch (→ 400 on malformed). **Inserts:** widened the parsed event type (`open`/`click` sub-objects, optional top-level + data `created_at`), a `resolveEventTime()` helper (prefers sub-timestamp → `event.created_at` → `data.created_at`) + a `linkTargetsHomepage()` helper, and the **fork-owned** target-email branch's homepage-click logic (`homepage_clicked_at`, `findFirst` with `deletedAt: null`, + a no-match visibility log). | **Medium** — the `messageId` fix is in upstream code and is an **upstream bug**; contribute it back (see below). On conflict: keep `email_id ??` precedence, the event-type widening, the campaign-branch `eventAt`, and the JSON.parse guard; the target-email homepage block is fork-only. |
+| `app/[locale]/(routes)/campaigns/targets/[targetId]/components/BasicView.tsx` | +~14/−0 | **insert-only** | insert: `import { HomepageEngagement }`, one derive line (`const homepageEmail = targetEmails.find(e => e.status === "SENT" && e.included_homepage) ?? null`) + an explanatory comment (the detail line intentionally differs from the list column) after the existing `listTargetEmails` call, and a `{homepageEmail && <HomepageEngagement .../>}` block directly after the existing `<HomepageViews/>` render. No change to existing queries/renders. | Low (additive; this file is already fork-extended by the outreach/homepage work — keep the insertions on conflict) |
+
+**Contribute back:** the `messageId` precedence fix is an upstream bug (affects `crm_campaign_sends` too) and
+was committed **standalone** (`fix(webhooks): match Resend events by email_id, not the RFC Message-ID header`)
+so it can be cherry-picked onto a clean `upstream/main` base and PR'd to `pdovhomilja/nextcrm-app`.
+
+**Re-verify after any upstream merge:**
+1. `route.ts` still resolves `messageId` as `email_id ?? message_id` and the target-email branch still sets
+   `homepage_clicked_at` on a matching `/p/<slug>` click.
+2. `BasicView.tsx` still derives `homepageEmail` and renders `<HomepageEngagement/>` under `<HomepageViews/>`.
+3. `pnpm exec jest __tests__/campaigns/api/webhooks-resend.test.ts lib/homepage/__tests__/views.test.ts && pnpm exec tsc --noEmit`.
+
+**Ordering note:** the additive `homepage_clicked_at` migration ships in the **same PR** as the code that reads
+it (null-safe: the column is only ever read for display, and the webhook sets it best-effort).

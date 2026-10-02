@@ -29,15 +29,35 @@ export function isRealBrowserView(ua: string | null | undefined): boolean {
 }
 
 /**
+ * Does the request carry a logged-in CRM (better-auth) session cookie? Used to
+ * EXCLUDE the operator's own views (previewing from the CRM, including the drawer
+ * iframe + "Open in new tab") from the public counter — only prospects without a
+ * CRM session should count. Cheap presence check only (no DB, no session read); a
+ * stale/expired cookie over-skips, which is acceptable for an approximate counter.
+ * Matches better-auth's default cookie name with the optional secure prefixes.
+ */
+export function hasCrmSessionCookie(cookieHeader: string | null | undefined): boolean {
+  if (!cookieHeader) return false;
+  const m = cookieHeader.match(
+    /(?:^|;\s*)(?:__Secure-|__Host-)?better-auth\.session_token=([^;\s]+)/
+  );
+  return !!m && m[1].length > 0;
+}
+
+/**
  * Increment the homepage view counter (by slug), best-effort and NON-blocking:
- * bot UAs are ignored, and DB errors are swallowed so serving never fails on a
- * tracking write. Fire-and-forget — do not await in the request path.
+ * bot UAs are ignored, a logged-in CRM session (operator self-view) is ignored,
+ * and DB errors are swallowed so serving never fails on a tracking write.
+ * Fire-and-forget — do not await in the request path.
  */
 export function recordHomepageView(
   slug: string,
-  ua: string | null | undefined
+  ua: string | null | undefined,
+  cookieHeader?: string | null
 ): void {
   if (!isRealBrowserView(ua)) return;
+  if (hasCrmSessionCookie(cookieHeader)) return; // operator previewing — don't count
+
   void prismadb.crm_Target_Homepage
     .update({
       where: { slug },

@@ -135,25 +135,40 @@ and asserts the sent email shows with a **SENT** status).
    send — subject, timestamp, and a **SENT** badge — with a "Last emailed …" summary. A failed send
    shows a **FAILED** badge with its error; a target never emailed shows "No emails sent yet."
 
-### 1h. Open / click tracking on outreach emails
+### 1h. Open / click tracking on outreach emails + homepage engagement line
 
 **E2E:** `tests/e2e/target-ai-email.spec.ts` › `generates, previews and sends…` (marks the sent row
 opened+clicked as the webhook would, reloads, asserts the **Opened** / **Clicked** badges).
+Webhook matching + homepage-specific click + the engagement line are unit-covered
+(`__tests__/campaigns/api/webhooks-resend.test.ts`); live Resend delivery is **manual on QA** (needs
+real open/click tracking on the sending domain), recorded as an E2E known gap.
 
 1. After the recipient opens the email / clicks a link, Resend fires a webhook that stamps the row.
-   **Verify:** the outreach-history row shows an **Opened** and/or **Clicked** badge. *(These come from
-   the Resend open/click webhook, which now also matches one-off outreach emails, not just campaigns;
-   the webhook logic is unit-tested in `__tests__/campaigns/api/webhooks-resend.test.ts`.)*
+   **Verify:** the outreach-history **Opened** / **Clicked** badges appear. *(The webhook matches the
+   event by Resend's `email_id` — NOT the RFC `message_id` header, which never matches the stored id;
+   see Lessons Learned. It also records the event's own timestamp.)*
+2. **Homepage engagement line.** On a target whose most recent SENT email **included the homepage**,
+   **Verify:** under the "Sample homepage — viewed N times" line a second line
+   (`data-testid="homepage-engagement"`) reads **"Email — opened &lt;date&gt; · homepage link clicked
+   &lt;date&gt;"**, with "not opened yet" / "homepage link not clicked yet" before the events arrive.
+3. **Homepage-specific click.** The engagement line's "homepage link clicked" fills **only** when the
+   clicked link is this email's `/p/<slug>` — clicking the **unsubscribe** link sets the generic
+   **Clicked** badge (1h.1) but does **not** fill the homepage-click part. *(Resend's `email.clicked`
+   fires for any tracked link; we match `data.click.link` to the homepage.)*
 
-### 1i. Sample-homepage view count
+### 1i. Sample-homepage view count — excludes your own CRM previews
 
-**E2E:** unit only (needs a generated homepage + a real `/p/<slug>` request — E2E known gap). UA filter
-+ counter are covered by `lib/homepage/__tests__/views.test.ts`.
+**E2E:** unit only (needs a generated homepage + a real `/p/<slug>` request — E2E known gap). UA filter,
+counter, and self-view exclusion are covered by `lib/homepage/__tests__/views.test.ts`.
 
-1. With a generated homepage, open its `/p/<slug>` preview in a normal browser.
+1. With a generated homepage, open its `/p/<slug>` preview in a normal browser **while logged out of the
+   CRM** (or from the emailed link as a prospect would).
 2. **Verify:** the target detail shows **"Sample homepage — viewed N times · last …"** (the count
-   increments). Bot/prefetch traffic (email-client link scanners) is filtered out, so the number is an
-   approximate "did a human look?" signal — use website analytics for exact traffic.
+   increments). Bot/prefetch traffic (email-client link scanners) is filtered out.
+3. **Self-view exclusion.** Open the same `/p/<slug>` **while logged into the CRM** (including the
+   Generate-homepage drawer's preview iframe / "Open in new tab"). **Verify:** the count does **not**
+   increment — operator previews are skipped via the better-auth session cookie, so the number reflects
+   prospect views. Approximate by design (a stale cookie over-skips).
 
 ### 1j. Unsubscribe / do-not-email visibility
 

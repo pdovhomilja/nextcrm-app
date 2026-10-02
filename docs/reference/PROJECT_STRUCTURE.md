@@ -80,8 +80,21 @@ lib/campaigns/compose-target-email.ts   {{body}} template merge + target merge s
 lib/campaigns/merge-tags.ts             merge-tag resolver (extended with homepage_* tags)
 lib/mcp/tools/crm-ai-prompts.ts         MCP prompt CRUD tools
 lib/mcp/tools/crm-target-email.ts       MCP crm_send_target_email tool
+app/api/campaigns/webhooks/resend/route.ts   (upstream, fork-extended) Svix-verified Resend webhook.
+                                        Matches events by data.email_id (NOT the RFC data.message_id
+                                        header) and records the event's own timestamp; sets
+                                        crm_Target_Email.opened_at/clicked_at, and homepage_clicked_at
+                                        when data.click.link is this email's /p/<slug>
+actions/crm/targets/list-target-emails.ts   outreach history (+ homepage_clicked_at); feeds the
+                                        Outreach card and the homepage engagement line
+.../components/HomepageEngagement.tsx   "Email — opened <date> · homepage link clicked <date>" line
+                                        under HomepageViews (data-testid homepage-engagement), derived
+                                        in BasicView from the latest SENT homepage-bearing email
+lib/homepage/views.ts                   (extended) hasCrmSessionCookie() — recordHomepageView skips the
+                                        operator's own logged-in previews (self-view exclusion)
 prisma/migrations/20260929120000_target_ai_outreach/   crm_Ai_Prompt, crm_Target_Email,
                                         crm_Target_Homepage (+ enums)
+prisma/migrations/20261002120000_add_target_email_homepage_clicked_at/   crm_Target_Email.homepage_clicked_at
 tests/e2e/target-ai-email.spec.ts       happy path + prompt library; mocks Anthropic/Resend
                                         with a local server (see e2e-commands.md)
 ```

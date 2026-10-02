@@ -536,6 +536,35 @@
 
 ## AI / outbound email
 
+### Resend webhooks: match by `data.email_id`, NOT `data.message_id` (the RFC header)
+
+- **Symptom:** opens/clicks never recorded despite Resend's dashboard showing the open and the
+  webhook endpoint returning 200 — `crm_Target_Email.opened_at`/`clicked_at` (and
+  `crm_campaign_sends`) stayed null. Verified in prod: the open event's `data.email_id` matched the
+  stored id, yet nothing updated.
+- **Cause:** Resend's `email.*` payloads carry **two** ids — `data.email_id` (the id returned by
+  `emails.send`, which we store as `resend_message_id`) **and** `data.message_id` (the RFC 5322
+  Message-ID header, `<...@...>`). The handler resolved the lookup as `message_id ?? email_id`, so it
+  matched on the header, found no row, and returned `{"ok":true}` without writing. An **upstream bug**
+  (same handler serves campaign sends) and silent — a 200 does not mean "recorded".
+- **Fix / rule:** match on **`email_id ?? message_id`**. `message_id` is the SMTP header, never the
+  Resend id. While here, read the event's own time (`data.open.timestamp` / `data.click.timestamp`)
+  instead of ingest time, and for homepage-click attribution match `data.click.link` to the page's
+  `/p/<slug>` (Resend fires `email.clicked` for ANY tracked link — unsubscribe included — so a bare
+  `clicked_at` is "a link", not "the homepage link"). See `app/api/campaigns/webhooks/resend/route.ts`.
+
+### Exclude operator self-views from a public counter via the session cookie (cheap, no DB)
+
+- **Symptom:** the `/p/<slug>` "viewed N times" counter incremented on the operator's own CRM
+  previews (including the Generate-drawer's preview iframe and "Open in new tab"), inflating the number.
+- **Cause:** the public route counted every real-browser GET with only a UA bot filter — no notion of
+  "this is us, logged into the CRM".
+- **Fix / rule:** skip the increment when the request carries a logged-in **better-auth session
+  cookie** (`(?:__Secure-|__Host-)?better-auth.session_token=<non-empty>`) — a **presence check on the
+  Cookie header only**, no `getSession()` DB round-trip, to keep the public serving path fast. The
+  drawer iframe / new-tab are same-origin and send the cookie → skipped; a prospect from the email has
+  no cookie → counted. Approximate by design (a stale cookie over-skips). `lib/homepage/views.ts`.
+
 ### Claude wraps "return only JSON" output in code fences or a preamble — tolerate it
 
 - **Symptom:** AI email generation intermittently fails with "AI returned an unexpected

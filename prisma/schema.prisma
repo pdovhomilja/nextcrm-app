@@ -2146,6 +2146,9 @@ model crm_Target_Email {
   // fork: engagement tracking for one-off outreach (Resend open/click webhook)
   opened_at         DateTime?
   clicked_at        DateTime?
+  // fork: set only when the clicked link was THIS email's homepage /p/<slug>
+  // (clicked_at fires for any tracked link: homepage CTA, unsubscribe, ...).
+  homepage_clicked_at DateTime?
   resend_message_id String?
   error_message     String?
   created_by        String?                 @db.Uuid

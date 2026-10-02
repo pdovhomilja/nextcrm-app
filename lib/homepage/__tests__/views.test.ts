@@ -3,7 +3,11 @@ jest.mock("@/lib/prisma", () => ({
 }));
 
 import { prismadb } from "@/lib/prisma";
-import { isRealBrowserView, recordHomepageView } from "@/lib/homepage/views";
+import {
+  isRealBrowserView,
+  recordHomepageView,
+  hasCrmSessionCookie,
+} from "@/lib/homepage/views";
 
 const update = prismadb.crm_Target_Homepage.update as jest.Mock;
 
@@ -59,5 +63,38 @@ describe("recordHomepageView", () => {
     expect(() =>
       recordHomepageView("acme-co", "Mozilla/5.0 Chrome/120 Safari/537.36")
     ).not.toThrow();
+  });
+
+  const BROWSER = "Mozilla/5.0 Chrome/120 Safari/537.36";
+
+  it("does NOT count an operator view carrying a CRM session cookie", () => {
+    recordHomepageView("acme-co", BROWSER, "better-auth.session_token=abc123; other=1");
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it("counts a prospect view with unrelated cookies but no session", () => {
+    recordHomepageView("acme-co", BROWSER, "_ga=GA1.2.3; theme=dark");
+    expect(update).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("hasCrmSessionCookie", () => {
+  it.each([
+    ["plain", "better-auth.session_token=abc.def"],
+    ["secure prefix", "__Secure-better-auth.session_token=abc.def; x=1"],
+    ["host prefix", "a=1; __Host-better-auth.session_token=abc.def"],
+    ["mid-header", "foo=bar; better-auth.session_token=tok; baz=qux"],
+  ])("detects the session cookie (%s)", (_l, header) => {
+    expect(hasCrmSessionCookie(header)).toBe(true);
+  });
+
+  it.each([
+    ["null", null],
+    ["empty", ""],
+    ["no session cookie", "_ga=GA1.2.3; theme=dark"],
+    ["empty value", "better-auth.session_token=; x=1"],
+    ["similar-but-different name", "my-better-auth.session_token_x=abc"],
+  ])("returns false when absent (%s)", (_l, header) => {
+    expect(hasCrmSessionCookie(header as string | null)).toBe(false);
   });
 });

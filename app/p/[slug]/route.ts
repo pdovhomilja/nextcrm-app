@@ -12,7 +12,8 @@ export async function GET(
   const html = await loadPublished(slug, getHomepageHtml);
   if (html === null) return notFound();
   // Best-effort, non-blocking, UA-filtered view count (not on the screenshot route).
-  recordHomepageView(slug, req.headers.get("user-agent"));
+  // The cookie header lets it skip the operator's own logged-in CRM previews.
+  recordHomepageView(slug, req.headers.get("user-agent"), req.headers.get("cookie"));
   return new Response(html, {
     status: 200,
     headers: {
