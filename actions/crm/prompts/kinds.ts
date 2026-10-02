@@ -7,6 +7,8 @@ export type AiPromptKind =
   | "HOMEPAGE_STYLE"
   | "HOMEPAGE_AVOID";
 
+export type AiPromptScope = "ORG" | "USER";
+
 // Org-level homepage-generation configuration: only admins may create, edit or
 // delete these, regardless of scope. EMAIL / HOMEPAGE stay personal-editable.
 const ADMIN_ONLY_KINDS: ReadonlySet<AiPromptKind> = new Set<AiPromptKind>([

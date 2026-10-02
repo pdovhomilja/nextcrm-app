@@ -8,7 +8,7 @@ import {
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
-import type { AiPromptKind, AiPromptScope } from "./list-prompts";
+import type { AiPromptKind, AiPromptScope } from "./kinds";
 import { isAdminOnlyKind } from "./kinds";
 
 export const createPrompt = async (data: {
