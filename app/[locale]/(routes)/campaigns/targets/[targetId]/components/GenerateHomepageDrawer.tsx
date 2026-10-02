@@ -28,6 +28,7 @@ import { revertHomepageVersion } from "@/actions/crm/homepage/revert-homepage-ve
 import { updateHomepageSlug } from "@/actions/crm/homepage/update-homepage-slug";
 import { getHomepageIndustry } from "@/actions/crm/targets/get-homepage-industry";
 import { setHomepageIndustry } from "@/actions/crm/targets/set-homepage-industry";
+import { getHomepageStyles } from "@/actions/crm/targets/get-homepage-styles";
 
 type PromptOption = { id: string; name: string; body: string };
 type HomepageStatus = "PENDING" | "RUNNING" | "READY" | "FAILED";
@@ -54,6 +55,10 @@ type HomepageState = {
 };
 
 const DEFAULT_ERROR = "Something went wrong. Please try again.";
+// Sentinel for the Style dropdown's "Auto" row. Radix <SelectItem> forbids an
+// empty-string value, so Auto needs a non-empty token; it maps to "no override"
+// (undefined) in the generate request, i.e. the deterministic server-side pick.
+const STYLE_AUTO = "__auto__";
 // Client pre-check for uploads, below the server's MAX_UPLOAD_BYTES: JSON
 // escaping plus Vercel's ~4.5MB body limit can 413 a near-cap file before the
 // route handler runs. The server route remains the real guard.
@@ -116,6 +121,13 @@ export function GenerateHomepageDrawer(props: {
   >([]);
   const [industryId, setIndustryId] = useState("");
   const [savingIndustry, setSavingIndustry] = useState(false);
+  // Style (art-direction) layer: options are the active HOMEPAGE_STYLE prompts.
+  // One-shot — the pick is NOT persisted; "" means Auto (deterministic server
+  // pick). It rides along in the generate POST and resets when the drawer closes.
+  const [styleOptions, setStyleOptions] = useState<{ id: string; name: string }[]>(
+    [],
+  );
+  const [styleId, setStyleId] = useState(STYLE_AUTO);
   const [refineText, setRefineText] = useState("");
   const [busy, setBusy] = useState<
     "gen" | "slug" | "refine" | "revert" | "upload" | null
@@ -319,6 +331,31 @@ export function GenerateHomepageDrawer(props: {
     };
   }, [open, targetId]);
 
+  // Load the Style options each time the drawer opens. No saved selection to
+  // restore (one-shot), so the value always resets to Auto on open. Own cancel
+  // flag, like the Industry fetch, so a generate/refine never drops it.
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    setStyleId(STYLE_AUTO);
+    (async () => {
+      try {
+        const res = await getHomepageStyles({ targetId });
+        if (cancelled) return;
+        if ("error" in res) {
+          toast.error(res.error);
+          return;
+        }
+        setStyleOptions(res.data.options);
+      } catch {
+        if (!cancelled) toast.error(DEFAULT_ERROR);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, targetId]);
+
   async function onPickIndustry(id: string) {
     const previous = industryId;
     setIndustryId(id);
@@ -382,6 +419,8 @@ export function GenerateHomepageDrawer(props: {
           body: JSON.stringify({
             slug: effectiveSlug || undefined,
             prompt: prompt.trim() || undefined,
+            // Auto -> omit, so the server does its deterministic pick.
+            styleId: styleId !== STYLE_AUTO ? styleId : undefined,
           }),
         },
       );
@@ -547,6 +586,8 @@ export function GenerateHomepageDrawer(props: {
       setBusy(null);
       setIndustryOptions([]);
       setIndustryId("");
+      setStyleOptions([]);
+      setStyleId(STYLE_AUTO);
     }
     onOpenChange(v);
   }
@@ -640,6 +681,37 @@ export function GenerateHomepageDrawer(props: {
             </Select>
             <p className="text-xs text-muted-foreground">
               Shapes the page&apos;s sections and tone. Defaults to Generic.
+            </p>
+          </div>
+
+          <div className="space-y-1">
+            <label htmlFor="homepage-style" className="text-sm font-medium">
+              Style
+            </label>
+            <Select
+              value={styleId}
+              onValueChange={setStyleId}
+              disabled={locked || styleOptions.length === 0}
+            >
+              <SelectTrigger
+                id="homepage-style"
+                data-testid="homepage-style-select"
+                aria-label="Style"
+              >
+                <SelectValue placeholder="Auto" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={STYLE_AUTO}>Auto (recommended)</SelectItem>
+                {styleOptions.map((o) => (
+                  <SelectItem key={o.id} value={o.id}>
+                    {o.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Art direction for this generation. Auto picks one for you; your
+              choice here isn&apos;t saved.
             </p>
           </div>
 

@@ -183,7 +183,9 @@ touches: `schema.prisma`, `seed.ts`, `package.json`, `create-target.ts`, `lib/mc
 ```text
 lib/homepage/prompt-layers/
   select-style.ts               pickStyleDirection(seed, styles): FNV-1a hash of the homepage id over the
-                                live styles sorted by id -> one stable-per-target style (null if none)
+                                live styles sorted by id -> one stable-per-target style (null if none).
+                                resolveStyleDirection(seed, styles, overrideId): honors a one-shot drawer
+                                style pick (matches a live style) else falls open to the hash pick
   load-layers.ts                ORG-scoped, soft-delete-aware loaders: loadActiveStyles, loadAvoidText
                                 (all avoid cards joined), loadIndustryBody(promptId) (selected card, else the
                                 is_default Generic card, else null; UUID-guarded)
@@ -201,6 +203,8 @@ actions/crm/targets/
   set-homepage-industry.ts      setHomepageIndustry({targetId, promptId}): persists
                                 crm_Targets.homepage_industry_prompt_id (null clears; target write-authz +
                                 audit; id must be a live ORG HOMEPAGE_INDUSTRY card)
+  get-homepage-styles.ts        getHomepageStyles({targetId}): active ORG HOMEPAGE_STYLE options for the
+                                drawer's one-shot Style dropdown (read-authz; no saved pick — not persisted)
 prisma/seeds/
   homepage-prompt-layers.ts     seedHomepagePromptLayers(prisma): idempotent seed of 1 avoid + 10 style +
                                 15 industry cards (fixed ids; upsert never duplicates or touches
@@ -211,18 +215,27 @@ prisma/seeds/
 prisma/migrations/20261001120000_homepage_prompt_layers/   3 enum values + crm_Targets.homepage_industry_prompt_id
 prisma/migrations/20261001130000_seed_homepage_prompt_layers/   idempotent layer seed + guarded base-body refactor
 inngest/functions/generate-homepage.ts   (extended) resolves industry/style/avoid per run (skipped when
-                                `homepage.vary_design` is off) and passes layers to buildSystemPrompt
+                                `homepage.vary_design` is off) and passes layers to buildSystemPrompt;
+                                threads a one-shot `stylePromptId` from the generate event into the style
+                                resolver (refine carries no override -> returns to the auto pick)
 lib/homepage/settings.ts        (extended) varyDesign (`homepage.vary_design`, default on)
 actions/admin/homepage-settings.ts   (extended) saves varyDesign; HomepageSettingsForm.tsx has the toggle
 app/[locale]/(routes)/campaigns/prompts/   (extended) list/dialog expose the Industry / Art direction /
-                                Avoid list kinds (admin-gated)
+                                Avoid list kinds (admin-gated); PromptList has a client-side kind filter
+                                (data-testid prompt-kind-filter) over the already-fetched prompts
 app/[locale]/(routes)/campaigns/targets/[targetId]/components/GenerateHomepageDrawer.tsx   (extended)
-                                "Industry" dropdown (data-testid homepage-industry-select)
+                                "Industry" dropdown (data-testid homepage-industry-select) + one-shot
+                                "Style" dropdown below it (data-testid homepage-style-select; Auto default,
+                                not persisted, omitted from the POST when Auto)
 lib/mcp/tools/crm-ai-prompts.ts (extended) crm_list_prompts accepts the new kinds (create/delete stay personal)
-tests: lib/homepage/prompt-layers/__tests__/, lib/homepage/__tests__/prompt.test.ts,
-       actions/crm/targets/__tests__/set-homepage-industry.test.ts, __tests__/actions/target-industry-prefill.test.ts,
-       actions/crm/prompts/__tests__/, prisma/seeds/__tests__/homepage-prompt-layers.test.ts;
-       manual: docs/testing/homepage-prompt-layers-manual-testing.md (no E2E — live generation is QA-only)
+tests: lib/homepage/prompt-layers/__tests__/ (incl. select-style resolveStyleDirection override cases),
+       lib/homepage/__tests__/prompt.test.ts,
+       actions/crm/targets/__tests__/set-homepage-industry.test.ts, get-homepage-styles.test.ts,
+       __tests__/actions/target-industry-prefill.test.ts,
+       actions/crm/prompts/__tests__/, prisma/seeds/__tests__/homepage-prompt-layers.test.ts,
+       inngest/functions/__tests__/generate-homepage.test.ts (style override + fall-back-to-auto);
+       manual: docs/testing/homepage-prompt-layers-manual-testing.md (no E2E — live generation is QA-only;
+       the one-shot Style dropdown + prompt-library kind filter are a recorded E2E Known Gap)
 ```
 
 ## Key config files

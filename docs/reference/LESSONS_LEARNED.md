@@ -977,6 +977,19 @@
 
 ## Frontend / React
 
+### Radix `<SelectItem>` can't use `""` as a value — use a sentinel for "none/auto/all"
+
+- **Symptom:** adding an "Auto" / "All kinds" default row to a shadcn/Radix `<Select>` with
+  `<SelectItem value="">` throws at render (`A <Select.Item /> must have a value prop that is not an
+  empty string`) — Radix reserves `""` for the cleared/placeholder state.
+- **Cause:** the empty string is how Radix represents "no selection shown" (so the placeholder
+  renders); a selectable item may therefore not use it.
+- **Fix / rule:** give the sentinel row a non-empty token (`const STYLE_AUTO = "__auto__"`,
+  `KIND_ALL = "__all__"`), default the state to it, and map it back to "no value" at the boundary —
+  e.g. omit the field from the POST (`styleId !== STYLE_AUTO ? styleId : undefined`) or treat it as
+  "no filter". The `<SelectValue placeholder="…">` still covers the genuinely-unset case.
+  (See `GenerateHomepageDrawer.tsx` Style dropdown and `PromptList.tsx` kind filter.)
+
 ### TipTap silently strips tags with no matching extension (e.g. `<img>` without Image)
 
 - **Symptom:** an AI-generated email with an embedded `<img>` showed in the first preview,
