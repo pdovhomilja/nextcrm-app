@@ -115,6 +115,14 @@ describe.each(["HOMEPAGE_INDUSTRY", "HOMEPAGE_STYLE", "HOMEPAGE_AVOID"] as const
       });
     });
 
+    it("create: a USER-scoped request is coerced to ORG with user_id null (readers filter scope ORG)", async () => {
+      create.mockResolvedValue({ id: "n1" });
+      await createPrompt({ name: "L", body: "x", kind, scope: "USER" });
+      expect(create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ kind, scope: "ORG", user_id: null }),
+      });
+    });
+
     it("update: non-admin cannot edit one they own", async () => {
       asNonAdmin();
       findFirst.mockResolvedValue({ id: "n1", kind, scope: "USER", user_id: "me" });

@@ -111,6 +111,31 @@ describe("layered composition", () => {
     expect(s).toContain("IND ");
   });
 
+  it("warns with the dropped layer names and lengths when the cap drops layers", () => {
+    const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      buildSystemPrompt(
+        { base: "BASE_TEXT", style: "STYLE_TEXT", avoid: "AVOID_".repeat(5000) },
+        { maxChars: 6000 },
+      );
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(String(warn.mock.calls[0][0])).toMatch(/avoid \(\d+ chars\)/);
+      expect(String(warn.mock.calls[0][0])).not.toContain("style");
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it("does not warn when nothing is dropped", () => {
+    const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      buildSystemPrompt({ base: "BASE_TEXT", style: "STYLE_TEXT" });
+      expect(warn).not.toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
   it("never drops base or the machine contract, even when the cap is impossibly small", () => {
     const s = buildSystemPrompt(layers, { maxChars: 1 });
     expect(s).toBe(`BASE_TEXT\n\n${MACHINE_CONTRACT}`);

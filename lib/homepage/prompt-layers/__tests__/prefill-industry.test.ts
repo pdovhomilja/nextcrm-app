@@ -53,7 +53,16 @@ describe("createIndustryMatcher", () => {
 
   it("degrades to an always-null matcher when the library can't load", async () => {
     findMany.mockRejectedValue(new Error("db down"));
-    const match = await createIndustryMatcher();
-    expect(match("Dentist")).toBeNull();
+    const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      const match = await createIndustryMatcher();
+      expect(match("Dentist")).toBeNull();
+      expect(warn).toHaveBeenCalledWith(
+        "[HOMEPAGE_INDUSTRY_PREFILL] matcher load failed; defaulting to Generic",
+        "db down",
+      );
+    } finally {
+      warn.mockRestore();
+    }
   });
 });

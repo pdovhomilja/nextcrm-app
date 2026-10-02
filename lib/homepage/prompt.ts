@@ -82,9 +82,17 @@ export function buildSystemPrompt(
     [base, ...optional.map((l) => l.text), MACHINE_CONTRACT].join("\n\n");
 
   let out = compose();
+  const dropped: { kind: string; length: number }[] = [];
   while (out.length > maxChars && optional.length > 0) {
-    optional.pop(); // last = lowest precedence (avoid, then style, then industry)
+    const d = optional.pop()!; // last = lowest precedence (avoid, then style, then industry)
+    dropped.push({ kind: d.kind, length: d.text.length });
     out = compose();
+  }
+  if (dropped.length > 0) {
+    console.warn(
+      `[HOMEPAGE_PROMPT] prompt exceeded ${maxChars} chars; dropped layer(s): ` +
+        dropped.map((d) => `${d.kind} (${d.length} chars)`).join(", "),
+    );
   }
   return out;
 }

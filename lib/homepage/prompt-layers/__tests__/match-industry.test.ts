@@ -39,6 +39,13 @@ describe("matchIndustry", () => {
     expect(matchIndustry("Carpet cleaning", prompts)).toBeNull();
   });
 
+  it("bare collision-prone words no longer mis-route", () => {
+    expect(matchIndustry("Bar association", prompts)).toBeNull();
+    expect(matchIndustry("Community bank", prompts)).toBeNull();
+    expect(matchIndustry("Boarding school", prompts)).toBeNull();
+    expect(matchIndustry("Bath & body", prompts)).toBeNull();
+  });
+
   it("returns null for unrecognized, empty, or null input", () => {
     expect(matchIndustry("Quantum cryptography", prompts)).toBeNull();
     expect(matchIndustry("", prompts)).toBeNull();

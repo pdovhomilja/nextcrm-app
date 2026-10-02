@@ -8,7 +8,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { HOMEPAGE_LAYER_KIND_LABELS, type AiPromptKind } from "@/actions/crm/prompts/kinds";
+import {
+  HOMEPAGE_LAYER_KIND_LABELS,
+  isAdminOnlyKind,
+  type AiPromptKind,
+} from "@/actions/crm/prompts/kinds";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -44,13 +48,16 @@ export function PromptDialog({
   const [kind, setKind] = useState<AiPromptKind>(prompt?.kind ?? "EMAIL");
   const [scope, setScope] = useState<"ORG" | "USER">(prompt?.scope ?? "USER");
   const [busy, setBusy] = useState(false);
+  // Admin-only homepage layers are always org-wide (readers filter scope ORG).
+  const scopeLocked = isAdminOnlyKind(kind);
+  const effectiveScope = scopeLocked ? "ORG" : scope;
 
   async function save() {
     setBusy(true);
     try {
       const res = prompt
         ? await updatePrompt({ id: prompt.id, name, body })
-        : await createPrompt({ name, body, kind, scope });
+        : await createPrompt({ name, body, kind, scope: effectiveScope });
       if ("error" in res) {
         toast.error(res.error);
         return;
@@ -117,8 +124,9 @@ export function PromptDialog({
                 </SelectContent>
               </Select>
               <Select
-                value={scope}
+                value={effectiveScope}
                 onValueChange={(v) => setScope(v as "ORG" | "USER")}
+                disabled={scopeLocked}
               >
                 <SelectTrigger aria-label="Prompt scope">
                   <SelectValue />

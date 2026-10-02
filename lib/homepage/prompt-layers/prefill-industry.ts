@@ -18,7 +18,11 @@ export async function createIndustryMatcher(): Promise<Matcher> {
       orderBy: { id: "asc" },
     });
     return (industry) => matchIndustry(industry ?? null, prompts);
-  } catch {
+  } catch (e) {
+    console.warn(
+      "[HOMEPAGE_INDUSTRY_PREFILL] matcher load failed; defaulting to Generic",
+      (e as Error)?.message,
+    );
     return () => null;
   }
 }

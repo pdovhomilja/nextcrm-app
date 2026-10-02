@@ -8,7 +8,7 @@ function fnv1a(data: Uint8Array): number {
 
   for (let i = 0; i < data.length; i++) {
     hash ^= data[i];
-    hash = (hash * FNV_PRIME) >>> 0; // Keep as 32-bit unsigned
+    hash = Math.imul(hash, FNV_PRIME) >>> 0; // 32-bit multiply (no float precision loss)
   }
 
   return hash >>> 0; // Ensure unsigned 32-bit

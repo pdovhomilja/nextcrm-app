@@ -57,6 +57,12 @@ describe("loadAvoidText", () => {
   it("none -> null", async () => {
     expect(await loadAvoidText()).toBeNull();
   });
+  it("orders deterministically: created_on then id tie-break", async () => {
+    await loadAvoidText();
+    expect(P.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ orderBy: [{ created_on: "asc" }, { id: "asc" }] }),
+    );
+  });
 });
 
 describe("loadIndustryBody", () => {
@@ -88,6 +94,16 @@ describe("loadIndustryBody", () => {
     rows = [generic];
     expect(await loadIndustryBody("not-a-uuid")).toBe("Generic");
     expect(P.findFirst).toHaveBeenCalledTimes(1);
+  });
+  it("Generic lookup is ordered by created_on for determinism", async () => {
+    rows = [generic];
+    await loadIndustryBody(null);
+    expect(P.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ is_default: true }),
+        orderBy: { created_on: "asc" },
+      }),
+    );
   });
   it("no Generic present -> null", async () => {
     expect(await loadIndustryBody(null)).toBeNull();

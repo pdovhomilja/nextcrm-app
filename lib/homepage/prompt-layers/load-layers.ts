@@ -22,7 +22,7 @@ export async function loadAvoidText(): Promise<string | null> {
   const rows = await prismadb.crm_Ai_Prompt.findMany({
     where: { kind: "HOMEPAGE_AVOID", scope: "ORG", deletedAt: null },
     select: { body: true },
-    orderBy: { created_on: "asc" },
+    orderBy: [{ created_on: "asc" }, { id: "asc" }],
   });
   return rows.length > 0 ? rows.map((r) => r.body).join("\n") : null;
 }
@@ -44,6 +44,7 @@ export async function loadIndustryBody(promptId: string | null): Promise<string 
   const generic = await prismadb.crm_Ai_Prompt.findFirst({
     where: { ...base, is_default: true },
     select: { body: true },
+    orderBy: { created_on: "asc" },
   });
   return generic?.body ?? null;
 }

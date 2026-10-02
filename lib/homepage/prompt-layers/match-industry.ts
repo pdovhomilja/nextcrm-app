@@ -20,7 +20,7 @@ const RULES: Array<{ name: RegExp; keywords: string[] }> = [
   {
     name: /^remodel/i,
     keywords: [
-      "remodel*", "kitchen", "bath", "bathroom", "roof*", "siding", "gutter*",
+      "remodel*", "kitchen", "bathroom", "roof*", "siding", "gutter*",
       "window*", "garage door*", "mason*", "builder*", "construction",
       "contractor*", "general contractor", "deck*", "addition*",
     ],
@@ -55,7 +55,7 @@ const RULES: Array<{ name: RegExp; keywords: string[] }> = [
   },
   {
     name: /^veterinar/i,
-    keywords: ["vet", "vets", "veterinar*", "pet", "pets", "grooming", "boarding", "daycare", "kennel*", "animal*"],
+    keywords: ["vet", "vets", "veterinar*", "pet", "pets", "grooming", "daycare", "kennel*", "animal*"],
   },
   {
     name: /^fitness/i,
@@ -64,7 +64,7 @@ const RULES: Array<{ name: RegExp; keywords: string[] }> = [
   {
     name: /^food/i,
     keywords: [
-      "restaurant*", "cafe*", "bakery", "bakeries", "brewery", "breweries", "bar",
+      "restaurant*", "cafe*", "bakery", "bakeries", "brewery", "breweries",
       "pizz*", "coffee", "catering", "food", "diner", "bistro", "pub", "taproom",
     ],
   },
@@ -87,7 +87,7 @@ const RULES: Array<{ name: RegExp; keywords: string[] }> = [
     name: /^nonprofit/i,
     keywords: [
       "nonprofit*", "non profit*", "charit*", "food pantry", "food bank", "church*",
-      "ministr*", "foundation", "social service*", "community",
+      "ministr*", "foundation", "social service*",
     ],
   },
 ];

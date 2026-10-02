@@ -32,13 +32,17 @@ export const createPrompt = async (data: {
     throw e;
   }
 
+  // Admin-only layer kinds are org-level configuration and every generation-time
+  // reader filters scope: "ORG", so a USER-scoped row would be silently ignored.
+  const scope: AiPromptScope = isAdminOnlyKind(data.kind) ? "ORG" : data.scope;
+
   const created = await prismadb.crm_Ai_Prompt.create({
     data: {
       name,
       body,
       kind: data.kind,
-      scope: data.scope,
-      user_id: data.scope === "USER" ? user.id : null,
+      scope,
+      user_id: scope === "USER" ? user.id : null,
       created_by: user.id,
     },
   });
