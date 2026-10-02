@@ -92,8 +92,9 @@ Extend the existing prompt CRUD MCP tools (`crm_create_prompt` / `crm_update_pro
 
 - **Industry free-text → vertical pre-match** is heuristic (keyword match). Acceptable because the operator can always correct the dropdown; the match is a convenience, not a correctness requirement.
 - **Combinatorial coherence:** only *one* layer is pick-one (Style). Industry is deterministic (dropdown), base/avoid are always-applied. This is deliberate — stacking multiple random pick-one layers would produce incoherent combos.
+- **Vertical groupings (decided):** remodeling keeps roofing/siding/gutters/windows/garage/masonry folded in; automotive keeps repair + detailing together. Confirmed — not split in v1.
 - **Refine rubric layer deferred to v2** (making `AUTO_REFINE_PROMPT` a configurable `HOMEPAGE_RUBRIC` kind) — out of scope here.
-- **Seed delivery:** seed prompts (appendix) ship as starter library entries the operator can edit/extend; decide whether seeding is idempotent on deploy or a one-time admin action during planning.
+- **Seed delivery (decided):** seeding is **idempotent** — re-running never duplicates — via upsert on a stable natural key (`kind` + canonical name, org scope, system-created). Delivered as a **runnable script** (the pattern used on the other projects, e.g. `pnpm seed:homepage-prompts`) that can be pointed at any environment, and also wired into local `prisma/seeds/seed.ts` for dev. The operator can edit/extend/soft-delete seeded entries afterward; a re-run restores/updates the canonical set without clobbering operator-created prompts.
 
 ## Known Gaps
 
