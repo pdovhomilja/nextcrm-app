@@ -5,6 +5,7 @@
 import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/audit-log";
+import type { AiPromptKind } from "@/actions/crm/prompts/kinds";
 import {
   paginationSchema,
   paginationArgs,
@@ -17,13 +18,20 @@ export const crmAiPromptTools = [
   {
     name: "crm_list_prompts",
     description:
-      "List AI prompt-library entries (org-wide + the caller's personal) for a kind (EMAIL or HOMEPAGE).",
+      "List AI prompt-library entries (org-wide + the caller's personal) for a kind (EMAIL, HOMEPAGE, HOMEPAGE_BASE, HOMEPAGE_INDUSTRY, HOMEPAGE_STYLE or HOMEPAGE_AVOID).",
     schema: z.object({
-      kind: z.enum(["EMAIL", "HOMEPAGE"]),
+      kind: z.enum([
+        "EMAIL",
+        "HOMEPAGE",
+        "HOMEPAGE_BASE",
+        "HOMEPAGE_INDUSTRY",
+        "HOMEPAGE_STYLE",
+        "HOMEPAGE_AVOID",
+      ]),
       ...paginationSchema,
     }),
     async handler(
-      args: { kind: "EMAIL" | "HOMEPAGE"; limit: number; offset: number },
+      args: { kind: AiPromptKind; limit: number; offset: number },
       userId: string
     ) {
       const where = {
@@ -45,7 +53,7 @@ export const crmAiPromptTools = [
   {
     name: "crm_create_prompt",
     description:
-      "Create a PERSONAL AI prompt (owned by the caller). Org-wide prompts are managed in the web UI by admins.",
+      "Create a PERSONAL AI prompt (owned by the caller). Org-wide prompts and the org-level homepage layer kinds (base/industry/style/avoid) are managed in the web UI by admins.",
     schema: z.object({
       name: z.string().min(1),
       body: z.string().min(1),

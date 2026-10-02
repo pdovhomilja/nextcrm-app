@@ -9,6 +9,7 @@ import {
   AuthorizationError,
 } from "@/lib/authz";
 import type { AiPromptKind, AiPromptScope } from "./list-prompts";
+import { isAdminOnlyKind } from "./kinds";
 
 export const createPrompt = async (data: {
   name: string;
@@ -24,7 +25,7 @@ export const createPrompt = async (data: {
   let user;
   try {
     user = await requireAuthenticated();
-    if (data.scope === "ORG" || data.kind === "HOMEPAGE_BASE") await requireRole(["admin"]);
+    if (data.scope === "ORG" || isAdminOnlyKind(data.kind)) await requireRole(["admin"]);
   } catch (e) {
     if (e instanceof AuthenticationError) return { error: "Unauthorized" };
     if (e instanceof AuthorizationError) return { error: "Forbidden" };

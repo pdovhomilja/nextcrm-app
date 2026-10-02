@@ -157,3 +157,18 @@ describe("deletePrompt authz", () => {
     expect(update).not.toHaveBeenCalled();
   });
 });
+
+describe("listPrompts with homepage layer kinds", () => {
+  it.each(["HOMEPAGE_INDUSTRY", "HOMEPAGE_STYLE", "HOMEPAGE_AVOID"] as const)(
+    "filters %s by kind and deletedAt:null",
+    async (kind) => {
+      (prismadb.crm_Ai_Prompt.findMany as jest.Mock).mockResolvedValue([]);
+      await listPrompts({ kind });
+      expect(prismadb.crm_Ai_Prompt.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ deletedAt: null, kind }),
+        })
+      );
+    }
+  );
+});

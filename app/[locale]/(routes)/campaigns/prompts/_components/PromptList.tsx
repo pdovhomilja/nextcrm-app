@@ -5,12 +5,13 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { deletePrompt } from "@/actions/crm/prompts/delete-prompt";
 import { PromptDialog } from "./PromptDialog";
+import type { AiPromptKind } from "@/actions/crm/prompts/kinds";
 
 type Prompt = {
   id: string;
   name: string;
   body: string;
-  kind: "EMAIL" | "HOMEPAGE" | "HOMEPAGE_BASE";
+  kind: AiPromptKind;
   scope: "ORG" | "USER";
 };
 

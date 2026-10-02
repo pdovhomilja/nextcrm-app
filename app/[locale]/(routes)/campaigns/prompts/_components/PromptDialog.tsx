@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import type { AiPromptKind } from "@/actions/crm/prompts/kinds";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -25,7 +26,7 @@ type Prompt = {
   id: string;
   name: string;
   body: string;
-  kind: "EMAIL" | "HOMEPAGE" | "HOMEPAGE_BASE";
+  kind: AiPromptKind;
   scope: "ORG" | "USER";
 };
 
@@ -40,7 +41,7 @@ export function PromptDialog({
 }) {
   const [name, setName] = useState(prompt?.name ?? "");
   const [body, setBody] = useState(prompt?.body ?? "");
-  const [kind, setKind] = useState<"EMAIL" | "HOMEPAGE" | "HOMEPAGE_BASE">(prompt?.kind ?? "EMAIL");
+  const [kind, setKind] = useState<AiPromptKind>(prompt?.kind ?? "EMAIL");
   const [scope, setScope] = useState<"ORG" | "USER">(prompt?.scope ?? "USER");
   const [busy, setBusy] = useState(false);
 
@@ -92,7 +93,7 @@ export function PromptDialog({
             <div className="flex gap-2">
               <Select
                 value={kind}
-                onValueChange={(v) => setKind(v as "EMAIL" | "HOMEPAGE" | "HOMEPAGE_BASE")}
+                onValueChange={(v) => setKind(v as AiPromptKind)}
               >
                 <SelectTrigger aria-label="Prompt kind">
                   <SelectValue />
