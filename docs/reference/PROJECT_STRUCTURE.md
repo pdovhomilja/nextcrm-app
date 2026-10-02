@@ -114,9 +114,13 @@ lib/homepage/
   settings.ts                   admin-config resolver: getHomepageSettings() (model / max_tokens /
                                 base_prompt_id from crm_SystemSettings, DB -> code default), HOMEPAGE_MODELS
                                 allow-set, clampMaxTokens (default 16000, floor 4000, per-model ceiling)
-  prompt.ts                     buildSystemPrompt(basePrompt): admin-editable base prompt (DEFAULT_BASE_PROMPT
-                                fallback) + code-owned MACHINE_CONTRACT ALWAYS appended (JSON shape, egress
-                                hosts, logo placeholder, no-invented-facts) so a weak base can't break parsing
+  prompt.ts                     buildSystemPrompt(layers, {maxChars}): composes base (admin-editable,
+                                DEFAULT_BASE_PROMPT fallback) -> industry -> style -> avoid -> code-owned
+                                MACHINE_CONTRACT, ALWAYS last (JSON shape, egress hosts, logo placeholder,
+                                no-invented-facts) so no layer can break parsing. Empty layers are dropped;
+                                over DEFAULT_MAX_PROMPT_CHARS (12k) it drops avoid -> style -> industry, never
+                                base or the contract
+  prompt-layers/                homepage prompt LAYERS (fork-owned; see "Homepage prompt layers" below)
   upload-homepage-core.ts       runUploadHomepage(): validate HTML + size, ensure row, stage the file, send
                                 homepage/target.upload, audit (shared core behind the upload route)
   upload-limits.ts              MAX_UPLOAD_BYTES (4 MB) — plain module (a "use server" file can't export
@@ -166,6 +170,59 @@ prisma/migrations/2026093013*/  HOMEPAGE_BASE prompt kind, UPLOAD pass kind (ALT
 tests/e2e/target-homepage.spec.ts       seeded READY page: drawer preview/versions + /p/<slug> serving
                                         (no real chromium job / Anthropic call); manual doc:
                                         docs/testing/target-homepage-manual-testing.md
+```
+
+### Homepage prompt layers (fork-owned)
+
+The generation prompt is composed from user-configurable layers stored in the existing `crm_Ai_Prompt`
+library (new admin-only kinds `HOMEPAGE_INDUSTRY` / `HOMEPAGE_STYLE` / `HOMEPAGE_AVOID`). Upstream-owned
+touches: `schema.prisma`, `seed.ts`, `package.json`, `create-target.ts`, `lib/mcp/tools/crm-targets.ts`,
+`import-targets.ts` — see `UPSTREAM_IMPACT_LOG.md`. Spec:
+`docs/superpowers/specs/2026-10-01-homepage-prompt-layers-design.md`.
+
+```text
+lib/homepage/prompt-layers/
+  select-style.ts               pickStyleDirection(seed, styles): FNV-1a hash of the homepage id over the
+                                live styles sorted by id -> one stable-per-target style (null if none)
+  load-layers.ts                ORG-scoped, soft-delete-aware loaders: loadActiveStyles, loadAvoidText
+                                (all avoid cards joined), loadIndustryBody(promptId) (selected card, else the
+                                is_default Generic card, else null; UUID-guarded)
+  match-industry.ts             matchIndustry(freeText, prompts): pure keyword -> HOMEPAGE_INDUSTRY id;
+                                rules keyed on the START of the prompt NAME (not ids), never throws
+  prefill-industry.ts           create-time best-effort pre-match: createIndustryMatcher() (one library
+                                load, reusable for CSV import), resolveIndustryPromptId, industryPrefillData
+                                (spread-ready `data` fragment; failures degrade to no pre-fill)
+actions/crm/prompts/kinds.ts    AiPromptKind union, isAdminOnlyKind (base/industry/style/avoid are admin-
+                                only to create/edit/delete), HOMEPAGE_LAYER_KIND_LABELS (UI labels).
+                                Not a "use server" file so it may export values
+actions/crm/targets/
+  get-homepage-industry.ts      getHomepageIndustry({targetId}): industry options (active ORG cards), the
+                                target's saved pick and the Generic default id (for the drawer dropdown)
+  set-homepage-industry.ts      setHomepageIndustry({targetId, promptId}): persists
+                                crm_Targets.homepage_industry_prompt_id (null clears; target write-authz +
+                                audit; id must be a live ORG HOMEPAGE_INDUSTRY card)
+prisma/seeds/
+  homepage-prompt-layers.ts     seedHomepagePromptLayers(prisma): idempotent seed of 1 avoid + 10 style +
+                                15 industry cards (fixed ids; upsert never duplicates or touches
+                                operator-created cards, but a re-run resets the 26 seeded cards' bodies)
+  run-homepage-prompts.ts       standalone runner behind `pnpm seed:homepage-prompts` (re-seed layers
+                                without a full db:seed)
+  homepage-base-prompt.ts       default HOMEPAGE_BASE body, now craft-only (structure/look moved to layers)
+prisma/migrations/20261001120000_homepage_prompt_layers/   3 enum values + crm_Targets.homepage_industry_prompt_id
+prisma/migrations/20261001130000_seed_homepage_prompt_layers/   idempotent layer seed + guarded base-body refactor
+inngest/functions/generate-homepage.ts   (extended) resolves industry/style/avoid per run (skipped when
+                                `homepage.vary_design` is off) and passes layers to buildSystemPrompt
+lib/homepage/settings.ts        (extended) varyDesign (`homepage.vary_design`, default on)
+actions/admin/homepage-settings.ts   (extended) saves varyDesign; HomepageSettingsForm.tsx has the toggle
+app/[locale]/(routes)/campaigns/prompts/   (extended) list/dialog expose the Industry / Art direction /
+                                Avoid list kinds (admin-gated)
+app/[locale]/(routes)/campaigns/targets/[targetId]/components/GenerateHomepageDrawer.tsx   (extended)
+                                "Industry" dropdown (data-testid homepage-industry-select)
+lib/mcp/tools/crm-ai-prompts.ts (extended) crm_list_prompts accepts the new kinds (create/delete stay personal)
+tests: lib/homepage/prompt-layers/__tests__/, lib/homepage/__tests__/prompt.test.ts,
+       actions/crm/targets/__tests__/set-homepage-industry.test.ts, __tests__/actions/target-industry-prefill.test.ts,
+       actions/crm/prompts/__tests__/, prisma/seeds/__tests__/homepage-prompt-layers.test.ts;
+       manual: docs/testing/homepage-prompt-layers-manual-testing.md (no E2E — live generation is QA-only)
 ```
 
 ## Key config files

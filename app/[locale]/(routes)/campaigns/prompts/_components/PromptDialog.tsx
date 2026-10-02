@@ -8,6 +8,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import {
+  HOMEPAGE_LAYER_KIND_LABELS,
+  isAdminOnlyKind,
+  type AiPromptKind,
+} from "@/actions/crm/prompts/kinds";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -25,7 +30,7 @@ type Prompt = {
   id: string;
   name: string;
   body: string;
-  kind: "EMAIL" | "HOMEPAGE" | "HOMEPAGE_BASE";
+  kind: AiPromptKind;
   scope: "ORG" | "USER";
 };
 
@@ -40,16 +45,19 @@ export function PromptDialog({
 }) {
   const [name, setName] = useState(prompt?.name ?? "");
   const [body, setBody] = useState(prompt?.body ?? "");
-  const [kind, setKind] = useState<"EMAIL" | "HOMEPAGE" | "HOMEPAGE_BASE">(prompt?.kind ?? "EMAIL");
+  const [kind, setKind] = useState<AiPromptKind>(prompt?.kind ?? "EMAIL");
   const [scope, setScope] = useState<"ORG" | "USER">(prompt?.scope ?? "USER");
   const [busy, setBusy] = useState(false);
+  // Admin-only homepage layers are always org-wide (readers filter scope ORG).
+  const scopeLocked = isAdminOnlyKind(kind);
+  const effectiveScope = scopeLocked ? "ORG" : scope;
 
   async function save() {
     setBusy(true);
     try {
       const res = prompt
         ? await updatePrompt({ id: prompt.id, name, body })
-        : await createPrompt({ name, body, kind, scope });
+        : await createPrompt({ name, body, kind, scope: effectiveScope });
       if ("error" in res) {
         toast.error(res.error);
         return;
@@ -92,7 +100,7 @@ export function PromptDialog({
             <div className="flex gap-2">
               <Select
                 value={kind}
-                onValueChange={(v) => setKind(v as "EMAIL" | "HOMEPAGE" | "HOMEPAGE_BASE")}
+                onValueChange={(v) => setKind(v as AiPromptKind)}
               >
                 <SelectTrigger aria-label="Prompt kind">
                   <SelectValue />
@@ -100,14 +108,25 @@ export function PromptDialog({
                 <SelectContent>
                   <SelectItem value="EMAIL">Email</SelectItem>
                   <SelectItem value="HOMEPAGE">Homepage</SelectItem>
-                  {isAdmin && (
-                    <SelectItem value="HOMEPAGE_BASE">Homepage base (designer)</SelectItem>
-                  )}
+                  {isAdmin &&
+                    (
+                      [
+                        "HOMEPAGE_BASE",
+                        "HOMEPAGE_INDUSTRY",
+                        "HOMEPAGE_STYLE",
+                        "HOMEPAGE_AVOID",
+                      ] as const
+                    ).map((k) => (
+                      <SelectItem key={k} value={k}>
+                        {HOMEPAGE_LAYER_KIND_LABELS[k]}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
               <Select
-                value={scope}
+                value={effectiveScope}
                 onValueChange={(v) => setScope(v as "ORG" | "USER")}
+                disabled={scopeLocked}
               >
                 <SelectTrigger aria-label="Prompt scope">
                   <SelectValue />

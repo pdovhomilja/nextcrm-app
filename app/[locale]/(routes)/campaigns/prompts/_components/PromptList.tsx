@@ -5,12 +5,13 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { deletePrompt } from "@/actions/crm/prompts/delete-prompt";
 import { PromptDialog } from "./PromptDialog";
+import { HOMEPAGE_LAYER_KIND_LABELS, type AiPromptKind } from "@/actions/crm/prompts/kinds";
 
 type Prompt = {
   id: string;
   name: string;
   body: string;
-  kind: "EMAIL" | "HOMEPAGE" | "HOMEPAGE_BASE";
+  kind: AiPromptKind;
   scope: "ORG" | "USER";
 };
 
@@ -52,7 +53,7 @@ export function PromptList({ prompts, isAdmin }: { prompts: Prompt[]; isAdmin: b
           {prompts.map((p) => (
             <tr key={p.id} className="border-t">
               <td className="py-2">{p.name}</td>
-              <td>{p.kind === "HOMEPAGE_BASE" ? "Homepage base (designer)" : p.kind}</td>
+              <td>{HOMEPAGE_LAYER_KIND_LABELS[p.kind] ?? p.kind}</td>
               <td>{p.scope}</td>
               <td className="text-right space-x-2">
                 <Button

@@ -26,7 +26,7 @@ const settingsFindMany = prismadb.crm_SystemSettings.findMany as jest.Mock;
 const promptFindFirst = prismadb.crm_Ai_Prompt.findFirst as jest.Mock;
 const promptFindMany = prismadb.crm_Ai_Prompt.findMany as jest.Mock;
 
-const IMG = { imageModel: "soul-v2", imageCount: 3, imageProvider: "auto" };
+const IMG = { imageModel: "soul-v2", imageCount: 3, imageProvider: "auto", varyDesign: true };
 const asAdmin = () => requireRoleMock.mockResolvedValue({ id: "admin-1" });
 
 beforeEach(() => {
@@ -82,6 +82,7 @@ describe("saveHomepageSettings", () => {
         imageModel: DEFAULT_IMAGE_MODEL,
         imageCount: DEFAULT_IMAGE_COUNT,
         imageProvider: DEFAULT_IMAGE_PROVIDER,
+        varyDesign: true,
       },
     });
   });
@@ -102,6 +103,7 @@ describe("saveHomepageSettings", () => {
         imageModel: DEFAULT_IMAGE_MODEL,
         imageCount: DEFAULT_IMAGE_COUNT,
         imageProvider: DEFAULT_IMAGE_PROVIDER,
+        varyDesign: true,
       },
     });
   });
@@ -124,7 +126,7 @@ describe("saveHomepageSettings", () => {
     expect(writeAuditLog).not.toHaveBeenCalled();
   });
 
-  it("saves all six keys, audits, and returns the data (happy path)", async () => {
+  it("saves all seven keys, audits, and returns the data (happy path)", async () => {
     asAdmin();
     promptFindFirst.mockResolvedValue({ id: "p1" });
     const res = await saveHomepageSettings({
@@ -141,6 +143,7 @@ describe("saveHomepageSettings", () => {
       ["homepage.image_model", "soul-v2"],
       ["homepage.image_count", "3"],
       ["homepage.image_provider", "auto"],
+      ["homepage.vary_design", "true"],
     ]);
     expect(writeAuditLog).toHaveBeenCalledTimes(1);
     expect(writeAuditLog).toHaveBeenCalledWith(
@@ -160,6 +163,7 @@ describe("saveHomepageSettings", () => {
         imageModel: DEFAULT_IMAGE_MODEL,
         imageCount: DEFAULT_IMAGE_COUNT,
         imageProvider: DEFAULT_IMAGE_PROVIDER,
+        varyDesign: true,
       },
     });
   });
@@ -173,6 +177,7 @@ describe("saveHomepageSettings", () => {
       imageModel: "not-a-model",
       imageCount: 99,
       imageProvider: "midjourney",
+      varyDesign: true,
     });
     const rows = Object.fromEntries(upsert.mock.calls.map((c) => [c[0].where.key, c[0].update.value]));
     expect(rows["homepage.image_model"]).toBe(DEFAULT_IMAGE_MODEL);
@@ -192,6 +197,7 @@ describe("saveHomepageSettings", () => {
       imageModel: "ideogram",
       imageCount: 0,
       imageProvider: "openai",
+      varyDesign: true,
     });
     expect(res).toEqual({
       data: expect.objectContaining({ imageModel: "ideogram", imageCount: 0, imageProvider: "openai" }),
@@ -207,8 +213,47 @@ describe("saveHomepageSettings", () => {
       imageModel: "soul-v2",
       imageCount: NaN,
       imageProvider: "higgsfield",
+      varyDesign: true,
     });
     expect(nan).toEqual({ data: expect.objectContaining({ imageCount: DEFAULT_IMAGE_COUNT, imageProvider: "higgsfield" }) });
+  });
+
+  it("persists varyDesign=false as the string \"false\", audits it, and returns it", async () => {
+    asAdmin();
+    const res = await saveHomepageSettings({
+      model: "claude-sonnet-5-5",
+      maxTokens: 20000,
+      basePromptId: null,
+      ...IMG,
+      varyDesign: false,
+    });
+    expect(upsert).toHaveBeenCalledWith({
+      where: { key: "homepage.vary_design" },
+      create: { key: "homepage.vary_design", value: "false" },
+      update: { value: "false" },
+    });
+    expect(res).toEqual({ data: expect.objectContaining({ varyDesign: false }) });
+    expect(writeAuditLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        changes: [
+          expect.objectContaining({ new: expect.stringContaining("vary_design=false") }),
+        ],
+      }),
+    );
+  });
+
+  it("coerces a non-boolean varyDesign to a strict boolean (only literal true enables)", async () => {
+    asAdmin();
+    const res = await saveHomepageSettings({
+      model: "claude-sonnet-5-5",
+      maxTokens: 20000,
+      basePromptId: null,
+      ...IMG,
+      varyDesign: "false" as unknown as boolean,
+    });
+    const rows = Object.fromEntries(upsert.mock.calls.map((c) => [c[0].where.key, c[0].update.value]));
+    expect(rows["homepage.vary_design"]).toBe("false");
+    expect(res).toEqual({ data: expect.objectContaining({ varyDesign: false }) });
   });
 
   it("stores an empty string when basePromptId is null", async () => {
@@ -255,10 +300,19 @@ describe("getHomepageSettingsForAdmin", () => {
         imageModel: "soul-v2",
         imageCount: 3,
         imageProvider: "auto",
+        varyDesign: true,
         imageProviders: { higgsfield: expect.any(Boolean), openai: expect.any(Boolean) },
         basePrompts: [{ id: "p1", name: "Premium" }],
       },
     });
+  });
+
+  it("returns varyDesign=false when the stored setting is the literal \"false\"", async () => {
+    asAdmin();
+    settingsFindMany.mockResolvedValue([{ key: "homepage.vary_design", value: "false" }]);
+    promptFindMany.mockResolvedValue([]);
+    const res = await getHomepageSettingsForAdmin();
+    expect("data" in res && res.data.varyDesign).toBe(false);
   });
 
   describe("imageProviders presence", () => {

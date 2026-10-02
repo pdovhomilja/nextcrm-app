@@ -8,12 +8,13 @@ import {
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
+import { isAdminOnlyKind } from "./kinds";
 
 async function loadAndAuthorize(id: string) {
   const user = await requireAuthenticated();
   const existing = await prismadb.crm_Ai_Prompt.findFirst({ where: { id, deletedAt: null } });
   if (!existing) return { error: "Prompt not found" as const };
-  if (existing.kind === "HOMEPAGE_BASE") await requireRole(["admin"]);
+  if (isAdminOnlyKind(existing.kind)) await requireRole(["admin"]);
   if (existing.scope === "ORG") {
     await requireRole(["admin"]);
   } else if (existing.user_id !== user.id) {

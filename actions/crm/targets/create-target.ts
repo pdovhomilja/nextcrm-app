@@ -3,6 +3,7 @@ import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
 import { normalizeTargetType, requiredIdentityField } from "@/lib/crm/target-type";
+import { industryPrefillData } from "@/lib/homepage/prompt-layers/prefill-industry"; // fork
 
 export const createTarget = async (data: {
   type?: "INDIVIDUAL" | "COMPANY";
@@ -45,7 +46,10 @@ export const createTarget = async (data: {
 
   try {
     const target = await prismadb.crm_Targets.create({
-      data: { last_name: last_name ?? "", email, mobile_phone, ...rest, type, created_by: user.id },
+      data: {
+        last_name: last_name ?? "", email, mobile_phone, ...rest, type, created_by: user.id,
+        ...(await industryPrefillData(rest.industry)), // fork: best-effort Industry pre-match
+      },
     });
     revalidatePath("/[locale]/(routes)/crm/targets", "page");
     return { data: target };

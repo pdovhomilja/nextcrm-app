@@ -68,3 +68,25 @@ it("delete of another user's / org prompt is NOT_FOUND and does not update", asy
   expect(prismadb.crm_Ai_Prompt.update).not.toHaveBeenCalled();
   expect(writeAuditLog).not.toHaveBeenCalled();
 });
+
+describe("homepage layer kinds over MCP", () => {
+  it.each(["HOMEPAGE_INDUSTRY", "HOMEPAGE_STYLE", "HOMEPAGE_AVOID"] as const)(
+    "list accepts %s and filters by it with deletedAt:null",
+    async (kind) => {
+      expect(list.schema.safeParse({ kind }).success).toBe(true);
+      (prismadb.crm_Ai_Prompt.findMany as jest.Mock).mockResolvedValue([]);
+      (prismadb.crm_Ai_Prompt.count as jest.Mock).mockResolvedValue(0);
+      await list.handler({ kind, limit: 50, offset: 0 } as never, "u1");
+      expect(prismadb.crm_Ai_Prompt.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ deletedAt: null, kind }) })
+      );
+    }
+  );
+
+  it.each(["HOMEPAGE_INDUSTRY", "HOMEPAGE_STYLE", "HOMEPAGE_AVOID", "HOMEPAGE_BASE"])(
+    "create rejects admin-only kind %s (MCP only makes personal prompts)",
+    (kind) => {
+      expect(create.schema.safeParse({ name: "N", body: "B", kind }).success).toBe(false);
+    }
+  );
+});

@@ -8,7 +8,8 @@ import {
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
-import type { AiPromptKind, AiPromptScope } from "./list-prompts";
+import type { AiPromptKind, AiPromptScope } from "./kinds";
+import { isAdminOnlyKind } from "./kinds";
 
 export const createPrompt = async (data: {
   name: string;
@@ -24,20 +25,24 @@ export const createPrompt = async (data: {
   let user;
   try {
     user = await requireAuthenticated();
-    if (data.scope === "ORG" || data.kind === "HOMEPAGE_BASE") await requireRole(["admin"]);
+    if (data.scope === "ORG" || isAdminOnlyKind(data.kind)) await requireRole(["admin"]);
   } catch (e) {
     if (e instanceof AuthenticationError) return { error: "Unauthorized" };
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;
   }
 
+  // Admin-only layer kinds are org-level configuration and every generation-time
+  // reader filters scope: "ORG", so a USER-scoped row would be silently ignored.
+  const scope: AiPromptScope = isAdminOnlyKind(data.kind) ? "ORG" : data.scope;
+
   const created = await prismadb.crm_Ai_Prompt.create({
     data: {
       name,
       body,
       kind: data.kind,
-      scope: data.scope,
-      user_id: data.scope === "USER" ? user.id : null,
+      scope,
+      user_id: scope === "USER" ? user.id : null,
       created_by: user.id,
     },
   });

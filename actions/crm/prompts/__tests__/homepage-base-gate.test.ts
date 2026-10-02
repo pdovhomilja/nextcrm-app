@@ -94,3 +94,65 @@ describe("HOMEPAGE_BASE admin gate", () => {
     expect(res).toEqual({ data: { id: "b1" } });
   });
 });
+
+describe.each(["HOMEPAGE_INDUSTRY", "HOMEPAGE_STYLE", "HOMEPAGE_AVOID"] as const)(
+  "%s admin gate (org-level homepage layer)",
+  (kind) => {
+    it("create: non-admin is Forbidden, nothing written", async () => {
+      asNonAdmin();
+      const res = await createPrompt({ name: "L", body: "x", kind, scope: "USER" });
+      expect(res).toEqual({ error: "Forbidden" });
+      expect(role).toHaveBeenCalledWith(["admin"]);
+      expect(create).not.toHaveBeenCalled();
+    });
+
+    it("create: admin can create it", async () => {
+      create.mockResolvedValue({ id: "n1" });
+      const res = await createPrompt({ name: "L", body: "x", kind, scope: "ORG" });
+      expect(res).toEqual({ data: { id: "n1" } });
+      expect(create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ kind, scope: "ORG" }),
+      });
+    });
+
+    it("create: a USER-scoped request is coerced to ORG with user_id null (readers filter scope ORG)", async () => {
+      create.mockResolvedValue({ id: "n1" });
+      await createPrompt({ name: "L", body: "x", kind, scope: "USER" });
+      expect(create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ kind, scope: "ORG", user_id: null }),
+      });
+    });
+
+    it("update: non-admin cannot edit one they own", async () => {
+      asNonAdmin();
+      findFirst.mockResolvedValue({ id: "n1", kind, scope: "USER", user_id: "me" });
+      const res = await updatePrompt({ id: "n1", name: "N", body: "B" });
+      expect(res).toEqual({ error: "Forbidden" });
+      expect(update).not.toHaveBeenCalled();
+    });
+
+    it("update: admin can edit it", async () => {
+      findFirst.mockResolvedValue({ id: "n1", kind, scope: "ORG", user_id: null });
+      update.mockResolvedValue({ id: "n1" });
+      expect(await updatePrompt({ id: "n1", name: "N", body: "B" })).toEqual({ data: { id: "n1" } });
+    });
+
+    it("delete: non-admin cannot delete one they own", async () => {
+      asNonAdmin();
+      findFirst.mockResolvedValue({ id: "n1", kind, scope: "USER", user_id: "me" });
+      const res = await deletePrompt({ id: "n1" });
+      expect(res).toEqual({ error: "Forbidden" });
+      expect(update).not.toHaveBeenCalled();
+    });
+
+    it("delete: admin soft-deletes it", async () => {
+      findFirst.mockResolvedValue({ id: "n1", kind, scope: "ORG", user_id: null });
+      update.mockResolvedValue({ id: "n1" });
+      expect(await deletePrompt({ id: "n1" })).toEqual({ data: { id: "n1" } });
+      expect(update).toHaveBeenCalledWith({
+        where: { id: "n1" },
+        data: { deletedAt: expect.any(Date), deletedBy: "me" },
+      });
+    });
+  }
+);

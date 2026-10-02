@@ -2,8 +2,12 @@
 import { prismadb } from "@/lib/prisma";
 import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
 
-export type AiPromptKind = "EMAIL" | "HOMEPAGE" | "HOMEPAGE_BASE";
-export type AiPromptScope = "ORG" | "USER";
+import type { AiPromptKind } from "./kinds";
+
+// NOTE: this is a "use server" module — it may export ONLY async server
+// functions. Types live in ./kinds (a plain module) and are imported from there
+// by server and client code alike. Re-exporting a type here breaks the RSC
+// action-module build ("Export AiPromptKind doesn't exist in target module").
 
 export const listPrompts = async ({ kind }: { kind: AiPromptKind }) => {
   let user;

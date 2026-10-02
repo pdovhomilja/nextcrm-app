@@ -28,7 +28,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
-    "test:e2e:debug": "playwright test --debug"
+    "test:e2e:debug": "playwright test --debug",
+    "seed:homepage-prompts": "tsx prisma/seeds/run-homepage-prompts.ts"
   },
   "prisma": {
     "seed": "ts-node ./prisma/seeds/seed.ts"

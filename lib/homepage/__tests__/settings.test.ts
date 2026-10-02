@@ -25,7 +25,7 @@ it("clampMaxTokens: NaN falls back to default then clamps", () => {
 });
 it("getHomepageSettings: defaults when unset", async () => {
   rows({});
-  expect(await getHomepageSettings()).toEqual({ model: DEFAULT_HOMEPAGE_MODEL, maxTokens: DEFAULT_MAX_TOKENS, basePromptId: null, imageModel: DEFAULT_IMAGE_MODEL, imageCount: DEFAULT_IMAGE_COUNT, imageProvider: DEFAULT_IMAGE_PROVIDER });
+  expect(await getHomepageSettings()).toEqual({ model: DEFAULT_HOMEPAGE_MODEL, maxTokens: DEFAULT_MAX_TOKENS, basePromptId: null, imageModel: DEFAULT_IMAGE_MODEL, imageCount: DEFAULT_IMAGE_COUNT, imageProvider: DEFAULT_IMAGE_PROVIDER, varyDesign: true });
 });
 it("getHomepageSettings: reads + clamps stored values", async () => {
   rows({ "homepage.model":"claude-opus-5-5", "homepage.max_tokens":"999", "homepage.base_prompt_id":"p1" });
@@ -60,4 +60,16 @@ it("getHomepageSettings: image defaults when unset", async () => {
   expect(s.imageModel).toBe(DEFAULT_IMAGE_MODEL);
   expect(s.imageProvider).toBe(DEFAULT_IMAGE_PROVIDER);
   expect(s.imageCount).toBe(DEFAULT_IMAGE_COUNT);
+});
+it("getHomepageSettings: varyDesign defaults true; only the literal \"false\" disables it", async () => {
+  rows({});
+  expect((await getHomepageSettings()).varyDesign).toBe(true);
+  rows({ "homepage.vary_design": "false" });
+  expect((await getHomepageSettings()).varyDesign).toBe(false);
+  rows({ "homepage.vary_design": "true" });
+  expect((await getHomepageSettings()).varyDesign).toBe(true);
+  rows({ "homepage.vary_design": "0" });
+  expect((await getHomepageSettings()).varyDesign).toBe(true);
+  rows({ "homepage.vary_design": "" });
+  expect((await getHomepageSettings()).varyDesign).toBe(true);
 });

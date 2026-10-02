@@ -9,6 +9,12 @@ import { planHomepageImages } from "@/lib/homepage/images/plan";
 import { resolveImageProviders, generateWithFallback } from "@/lib/homepage/images/resolve";
 import type { GeneratedImage } from "@/lib/homepage/images/types";
 import { getHomepageSettings } from "@/lib/homepage/settings";
+import { pickStyleDirection } from "@/lib/homepage/prompt-layers/select-style";
+import {
+  loadActiveStyles,
+  loadAvoidText,
+  loadIndustryBody,
+} from "@/lib/homepage/prompt-layers/load-layers";
 import { renderAndScreenshot } from "@/lib/homepage/render";
 import {
   putHomepageHtml,
@@ -445,9 +451,17 @@ async function endRun(
  * Each lookup is its own step and returns only small scalars (settings + the
  * base prompt text), never image data. A missing/deleted base prompt falls back
  * to the built-in default inside buildSystemPrompt.
+ *
+ * The industry/style/avoid prompt layers are loaded in ONE memoized step (small
+ * scalars only) and composed into `system` here, so every pass of the run — the
+ * initial draft, each auto pass, and a refine — gets the same system prompt. The
+ * style card is picked deterministically from `ctx.homepageId`, so it is also
+ * stable across runs for the same target. With `varyDesign` off (or empty
+ * libraries) the result is the pre-layers base + machine contract.
  */
 async function resolveGenerationConfig(
   step: StepLike,
+  ctx: { homepageId: string; industryPromptId: string | null },
 ): Promise<{
   system: string;
   model: string;
@@ -466,8 +480,19 @@ async function resolveGenerationConfig(
         }),
       )
     : null;
+  const layers =
+    settings.varyDesign === false
+      ? null
+      : await step.run("load-prompt-layers", async () => {
+          const [styles, avoid, industry] = await Promise.all([
+            loadActiveStyles(),
+            loadAvoidText(),
+            loadIndustryBody(ctx.industryPromptId),
+          ]);
+          return { industry, style: pickStyleDirection(ctx.homepageId, styles)?.body ?? null, avoid };
+        });
   return {
-    system: buildSystemPrompt(base?.body ?? null),
+    system: buildSystemPrompt({ base: base?.body ?? null, ...(layers ?? {}) }),
     model: settings.model,
     maxTokens: settings.maxTokens,
     imageModel: settings.imageModel,
@@ -536,7 +561,14 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData, isF
     const [target, homepage] = await Promise.all([
       prismadb.crm_Targets.findUnique({
         where: { id: data.targetId, deletedAt: null },
-        select: { id: true, company: true, company_website: true, description: true, industry: true },
+        select: {
+          id: true,
+          company: true,
+          company_website: true,
+          description: true,
+          industry: true,
+          homepage_industry_prompt_id: true,
+        },
       }),
       prismadb.crm_Target_Homepage.findUnique({
         where: { targetId: data.targetId, deletedAt: null },
@@ -562,7 +594,10 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData, isF
 
     const apiKey = await step.run("resolve-api-key", () => getApiKey("ANTHROPIC", data.triggeredBy));
     if (!apiKey) throw new NonRetriableError(NO_API_KEY);
-    const genConfig = await resolveGenerationConfig(step);
+    const genConfig = await resolveGenerationConfig(step, {
+      homepageId: homepage.id,
+      industryPromptId: target.homepage_industry_prompt_id ?? null,
+    });
 
     // The harvest screenshot is uploaded to a transient R2 key inside this step and
     // only the brand + a flag are returned, so no base64 PNG enters step state.
@@ -657,7 +692,6 @@ async function refineFlow(step: StepLike, data: RefineHomepageEventData, isFinal
 
     const apiKey = await step.run("resolve-api-key", () => getApiKey("ANTHROPIC", data.triggeredBy));
     if (!apiKey) throw new NonRetriableError(NO_API_KEY);
-    const genConfig = await resolveGenerationConfig(step);
 
     const seed = await step.run("load-current-version", async () => {
       const [version, target] = await Promise.all([
@@ -667,7 +701,13 @@ async function refineFlow(step: StepLike, data: RefineHomepageEventData, isFinal
         }),
         prismadb.crm_Targets.findUnique({
           where: { id: homepage.targetId },
-          select: { id: true, company: true, company_website: true, description: true },
+          select: {
+            id: true,
+            company: true,
+            company_website: true,
+            description: true,
+            homepage_industry_prompt_id: true,
+          },
         }),
       ]);
       return { html: version?.html ?? null, pass_kind: version?.pass_kind ?? null, target };
@@ -681,6 +721,13 @@ async function refineFlow(step: StepLike, data: RefineHomepageEventData, isFinal
         "This page was uploaded; AI refine isn't available. Regenerate to use AI.",
       );
     }
+
+    // Resolved after the target load (the industry layer needs the target's
+    // selected prompt id); same seed (homepage.id) => same style card as generate.
+    const genConfig = await resolveGenerationConfig(step, {
+      homepageId: homepage.id,
+      industryPromptId: seed.target?.homepage_industry_prompt_id ?? null,
+    });
 
     // Images aren't regenerated on refine; keep the tokens already in the page valid.
     const images = imagesInHtml(seed.html, homepage.slug);
