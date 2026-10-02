@@ -718,6 +718,42 @@
   critique different pictures). A `NonRetriableError` thrown inside any of these steps surfaces as a
   `StepError` (classify by `.name`) — see the Inngest step-boundary entry above; not repeated here.
 
+### Anchor keyword→name match rules to the START of a prompt name (names list other verticals in parentheses)
+
+- **Symptom (caught by tests):** the industry pre-matcher sent "Food pantry" to **Food & drink**
+  instead of **Nonprofit & community** — and similar parenthetical mis-routes.
+- **Cause:** the seeded Industry card *names* carry sub-verticals in parentheses
+  (`Nonprofit & community (social services, food pantry)`), so an unanchored name pattern like
+  `/food/i` also matches the wrong card, and a tie then resolves by list order.
+- **Fix / rule:** key each rule on a regex **anchored to the start of the prompt name**
+  (`/^nonprofit/i`, `/^(home trades|hvac)/i`) and match the target's free-text with whole-word /
+  word-prefix keywords (`"dent*"`). Match on the *name* (not the id) so it tracks the seeded library
+  but survives re-seeds; a miss returns null → the Generic default. Cover the cross-vertical
+  collisions in the test (`lib/homepage/prompt-layers/__tests__/match-industry.test.ts`).
+
+### Adding a Prisma enum value can turn a pre-existing too-narrow UI union type into a red `tsc`
+
+- **Symptom:** after an additive migration/enum change (`crm_Ai_Prompt_Kind` + 3 values), `tsc --noEmit`
+  failed in an *unrelated-looking* UI file (`campaigns/prompts/page.tsx` — TS2322) though no code
+  there changed.
+- **Cause:** the page/list/dialog hand-declared `kind: "EMAIL" | "HOMEPAGE" | "HOMEPAGE_BASE"` instead
+  of deriving it from the enum, so the widened Prisma type no longer assigned to it.
+- **Fix / rule:** after any enum change, run `pnpm exec tsc --noEmit` immediately and widen every
+  hand-written union to one shared type (here `AiPromptKind` in `actions/crm/prompts/kinds.ts`, a
+  non-`"use server"` module so it can export values/consts) rather than patching each call site.
+  Related: *A new target field must be added to every hand-maintained field list*.
+
+### A fixed-id seed upsert resets the seeded rows' text — and won't revive a soft-deleted one
+
+- **Rule:** `seedHomepagePromptLayers` (and its migration twin) upsert 26 rows by **fixed id**. That is
+  idempotent and never touches operator-created prompts, but a re-run **overwrites the seeded
+  cards' `name`/`body`/`is_default`** (operator edits to *those* cards are lost) and leaves
+  `deletedAt` untouched (a soft-deleted seeded card stays deleted). To customize, **create a new card**
+  rather than editing a seeded one. The guarded base-body refactor in the same migration is the opposite
+  pattern: it only `UPDATE`s when the body still equals the *exact* old seeded text, so an
+  operator-edited base is never clobbered. `pnpm seed:homepage-prompts` is not behind the local-DB
+  guard — check `DATABASE_URL` before running it.
+
 ## Testing
 
 ### A slow/near-timeout E2E CI run is usually the Playwright browser install, not flaky tests

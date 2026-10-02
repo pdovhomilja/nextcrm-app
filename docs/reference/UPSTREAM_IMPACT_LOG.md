@@ -631,3 +631,39 @@ all verified absent at `upstream/main` with `git cat-file -e`). No schema/migrat
 
 **Re-verify after any upstream merge:** `sweepStuckHomepages` is still imported and listed in the
 `serve()` functions array; then `pnpm exec jest inngest/functions/__tests__/generate-homepage.test.ts inngest/functions/__tests__/sweep-stuck-homepages.test.ts lib/homepage/__tests__/render.test.ts`.
+
+---
+
+## feat/homepage-prompt-layers — layered, user-configurable homepage prompts  (PR: TBD)
+
+Decomposes the homepage generation prompt into composable layers (base → industry → style → avoid →
+`MACHINE_CONTRACT` last) backed by three new `crm_Ai_Prompt` kinds, a per-target industry dropdown, an
+admin `vary_design` toggle and an idempotent seed. **6 upstream-owned files** touched (each verified present at
+`upstream/main` with `git cat-file -e upstream/main:<path>`); every other touched file is fork-owned
+(verified absent upstream: `lib/homepage/**`, `lib/mcp/tools/crm-ai-prompts.ts`, `inngest/functions/generate-homepage.ts`,
+`actions/admin/homepage-settings.ts`, `actions/crm/prompts/**`, `actions/crm/targets/{get,set}-homepage-industry.ts`,
+`prisma/seeds/homepage-*.ts` + `run-homepage-prompts.ts`, the prompt-library + admin-settings + Generate-drawer UI
+under `app/[locale]/(routes)/{campaigns,admin}/**`, `docs/**`). Two **new** migrations (fork-owned, additive):
+`20261001120000_homepage_prompt_layers` (3 enum values + 1 nullable column) and
+`20261001130000_seed_homepage_prompt_layers` (idempotent data seed + guarded base-body refactor).
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `prisma/schema.prisma` | +6/−0 | **insert-only** | In `model crm_Targets`: a 1-line comment + `homepage_industry_prompt_id String? @db.Uuid` directly after the triage fields (`triaged_by`), before `deletedAt` (nullable, **no hard FK**). In `enum crm_Ai_Prompt_Kind`: `HOMEPAGE_INDUSTRY`, `HOMEPAGE_STYLE`, `HOMEPAGE_AVOID` appended after `HOMEPAGE_BASE`. | Low (additive; on conflict keep both sides' columns/enum values and re-check that the migration `20261001120000` still matches the schema). The `crm_Ai_Prompt_Kind` enum is already fork-extended (`HOMEPAGE`, `HOMEPAGE_BASE`), so a conflict there is likely if upstream ever touches it — keep the union |
+| `prisma/seeds/seed.ts` | +4/−0 | **insert-only** | `import { seedHomepagePromptLayers } from "./homepage-prompt-layers";` directly after the existing `seedHomepageBasePrompt` import, and `await seedHomepagePromptLayers(prisma);` (+ comment) directly after the `seedHomepageBasePrompt(prisma)` call, before the "Seed DB completed" log. | Low (additive; on conflict keep both calls in this order) |
+| `package.json` | +2/−1 | **insert + 1 trailing-comma edit** | Added the script `"seed:homepage-prompts": "tsx prisma/seeds/run-homepage-prompts.ts"` as the **last** `scripts` entry (after `test:e2e:debug`), which adds a trailing comma to the previous line (the −1/+1 on `test:e2e:debug` is only that comma). No dependency change; `pnpm-lock.yaml` untouched. | Low (on conflict keep both; if upstream appends its own script at the same spot, keep both lines and fix the commas) |
+| `actions/crm/targets/create-target.ts` | +5/−1 | **mixed — reflow, NOT pure insertion** | insert: `import { industryPrefillData } from "@/lib/homepage/prompt-layers/prefill-industry"; // fork`. **rewrite:** the single-line `data: { last_name: last_name ?? "", email, mobile_phone, ...rest, type, created_by: user.id }` literal in `prismadb.crm_Targets.create` was **reflowed to a multi-line object** so one spread line `...(await industryPrefillData(rest.industry)), // fork` could be added. Same keys/values/order; the real logic lives in the new fork-owned `prefill-industry.ts` (best-effort, never throws). | **Medium** (a one-line `data:` literal is the most conflict-prone shape — if upstream edits that line, git conflicts on the whole literal). On conflict: take upstream's `data` keys, re-apply the single `...(await industryPrefillData(rest.industry))` spread + the import |
+| `lib/mcp/tools/crm-targets.ts` | +5/−1 | **mixed — reflow, NOT pure insertion** | insert: the same `industryPrefillData` import (`// fork`). **rewrite:** the single-line `data: { last_name: last_name ?? "", ...rest, type, created_by: userId }` in the `crm_create_target` handler reflowed to multi-line to add `...(await industryPrefillData(rest.industry)), // fork`. The `crm_update_target` handler is untouched. | **Medium** (same reflow risk; this file is already fork-diverged by the triage + field-parity work). On conflict: re-apply the import + the one spread |
+| `actions/crm/targets/import-targets.ts` | +7/−0 | **insert-only** | insert: the `createIndustryMatcher` import (`// fork`), and a ~6-line block immediately before the existing `prismadb.crm_Targets.createMany({ data: valid, skipDuplicates: true })` that builds one matcher (a single library load for the whole import) and sets `row.homepage_industry_prompt_id` on each `valid` row when it matches. The `createMany` call itself is unchanged. | Low (additive; on conflict keep the block immediately before `createMany`) |
+
+**Re-verify after any upstream merge:**
+1. `prisma/schema.prisma` still has `homepage_industry_prompt_id` on `crm_Targets` and the three `HOMEPAGE_*` enum values, and
+   `pnpm exec prisma migrate diff` / the schema↔migration sync check is clean against `20261001120000`.
+2. `create-target.ts` and `crm-targets.ts` (`crm_create_target`) each still spread `...(await industryPrefillData(rest.industry))`
+   into the `crm_Targets.create` `data`, and `import-targets.ts` still runs the matcher before `createMany`.
+3. `seed.ts` still calls `seedHomepagePromptLayers(prisma)` and `package.json` still has `seed:homepage-prompts`.
+4. `pnpm exec jest __tests__/actions/target-industry-prefill.test.ts actions/crm lib/homepage lib/mcp prisma/seeds inngest/functions/__tests__/generate-homepage.test.ts && pnpm exec tsc --noEmit`.
+
+**Ordering note:** the enum + column migration and the data-seed migration ship in the **same PR** as the code
+that reads them (not migration-first as a separate PR) because every read is null-/empty-safe: an unset
+`homepage_industry_prompt_id` or an empty layer library degrades to today's base + machine-contract behavior.
