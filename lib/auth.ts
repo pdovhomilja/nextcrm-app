@@ -8,6 +8,9 @@ import { newUserNotify } from "@/lib/new-user-notify";
 import resendHelper from "@/lib/resend";
 
 const isDemo = process.env.NEXT_PUBLIC_APP_URL === "https://demo.nextcrm.io";
+const bootstrapAdminEmail = (
+  process.env.BOOTSTRAP_ADMIN_EMAIL || "jayandraa5@gmail.com"
+).trim().toLowerCase();
 
 export const auth = betterAuth({
   database: prismaAdapter(prismadb, { provider: "postgresql" }),
@@ -110,10 +113,14 @@ export const auth = betterAuth({
   },
 
   callbacks: {
-    async onUserCreated(user: { id: string }) {
-      // Check if this is the first user — make them admin
+    async onUserCreated(user: { id: string; email?: string | null }) {
+      // The bootstrap account is always active and an admin, even when the
+      // database already contains imported or seeded users.
       const count = await prismadb.users.count();
-      if (count === 1) {
+      const isBootstrapAdmin =
+        user.email?.trim().toLowerCase() === bootstrapAdminEmail;
+
+      if (count === 1 || isBootstrapAdmin) {
         await prismadb.users.update({
           where: { id: user.id },
           data: { role: "admin", userStatus: "ACTIVE" },
