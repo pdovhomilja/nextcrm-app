@@ -171,24 +171,45 @@ pnpm dev
 
 ---
 
-## 8. One-shot Style override in the Generate drawer
+## 8. Style is chosen in the drawer and REMEMBERED (persisted per target)
 
-*(Follow-up — lets the operator override the stable-per-target style for a single generation. Not an original AC.)*
+*(Follow-up — the chosen style is persisted on the target and reused across generate/refine; it must not change on its own. Supersedes the earlier one-shot behavior.)*
 
 1. Open an **approved** target → **AI → Generate homepage**. Below the **Industry** dropdown there is
-   now a **Style** dropdown (`data-testid="homepage-style-select"`) defaulting to **Auto
-   (recommended)**. **Pass:** it lists the active **Art direction** cards; with an empty style library
-   it is disabled showing **Auto**.
+   a **Style** dropdown (`data-testid="homepage-style-select"`). On a target that has never generated,
+   it defaults to **Auto (recommended)**. **Pass:** it lists the active **Art direction** cards; with an
+   empty style library it is disabled showing **Auto**.
 2. Leave it on **Auto** and **Generate**. In the Inngest UI, `load-prompt-layers` → `style` is the
-   hash-picked card (same as §1) — **Auto changes nothing**.
-3. Regenerate the same target, this time picking a **specific** style (one you can recognise in the
-   output). **Pass:** `load-prompt-layers` → `style` is now **that** card's body, not the hash pick,
-   and the rendered `/p/<slug>` reflects it.
-4. **One-shot semantics:** after the override generate, click **Refine** (any change request).
-   **Pass:** the refine's `load-prompt-layers` → `style` returns to the **Auto** (hash) card — the
-   override is **not persisted** (by design). Re-opening the drawer also resets Style to **Auto**.
-5. **Tamper/degrade:** a stale/unknown style id (e.g. library edited since the drawer loaded) must
-   **not** fail the run — it falls open to the Auto pick. (Unit-covered; see parity table.)
+   hash-picked card (same as §1), and a `persist-style` step writes `crm_Targets.homepage_style_prompt_id`.
+   **Pass:** the auto pick is **snapshotted** — re-opening the drawer now shows that style selected
+   (not Auto).
+3. Click **Refine** (any change). **Pass:** the refine's `load-prompt-layers` → `style` is the **same**
+   card as the generate — the style is **reused, not re-picked**.
+4. Regenerate (or open the drawer and pick) a **specific, recognisable** style. **Pass:**
+   `load-prompt-layers` → `style` is now that card, `/p/<slug>` reflects it, and the pick is persisted —
+   a subsequent refine keeps it, and re-opening the drawer shows it selected.
+5. **Does not change automatically:** add/remove an Art-direction card in `/campaigns/prompts`, then
+   refine the target again. **Pass:** the remembered style is unchanged (editing the library no longer
+   shifts the hash pick for an already-generated target).
+6. **Tamper/degrade:** a stale/unknown remembered or override style id (e.g. the saved card was deleted)
+   must **not** fail the run — it falls through to the Auto pick, and the drawer falls back to **Auto**.
+   (Unit-covered; see parity table.)
+
+## 10. Refine can replace an image with a genuinely new one
+
+*(Follow-up — a HUMAN refine may regenerate images for slots it changes, using a bounded hint from the operator's refine text. Not an original AC.)*
+
+1. Generate a homepage that has images, then **Refine** with an instruction like
+   *"replace the hero image with a photo of a friendly team"*. **Pass:** in the Inngest UI a
+   `generate-refine-images` step runs; the refined `/p/<slug>` shows a **different** hero image (the old
+   one is not reused), and the other images are unchanged.
+2. **Keep-unchanged:** refine with a non-image change (e.g. *"make the headline bigger"*). **Pass:**
+   no `generate-refine-images` work happens (or it is a no-op) and all images stay the same.
+3. **Fail-open:** if image generation is unavailable (no provider key), a replace request must **not**
+   fail the refine — the slot is simply left empty rather than showing a broken image, and the run still
+   reaches **READY**. (Unit/integration-covered; see parity table.)
+4. **Bounded injection:** the replacement subject comes only from your refine text (clamped); it never
+   pulls in harvested-site content, and the prompt stays within the code-owned on-brand scaffold.
 
 ## 9. Prompt library — filter by kind
 
@@ -214,8 +235,10 @@ or is covered below at unit level.
 | Manual step | Automated counterpart |
 |---|---|
 | §1 stable style per target; style pool | `lib/homepage/prompt-layers/__tests__/select-style.test.ts` (determinism, order-independence, empty → null); `inngest/functions/__tests__/generate-homepage.test.ts` (style stable across passes) |
-| §8 one-shot style override + fail-open to Auto on unknown id | `lib/homepage/prompt-layers/__tests__/select-style.test.ts` (`resolveStyleDirection` override wins / unknown → hash / empty → null); `inngest/functions/__tests__/generate-homepage.test.ts` (`stylePromptId` override honored on generate, unknown id → deterministic pick) |
-| §8 drawer Style options query (read-authz, active ORG cards) | `actions/crm/targets/__tests__/get-homepage-styles.test.ts` |
+| §8 style precedence (override > remembered > auto) + fail-open on unknown id | `lib/homepage/prompt-layers/__tests__/select-style.test.ts` (`resolveStyleDirection` override wins, remembered reused over hash, unknown → hash, empty → null) |
+| §8 style snapshotted on generate + reused on refine (not re-picked) | `inngest/functions/__tests__/generate-homepage.test.ts` ("snapshots the resolved style onto the target on generate", "a refine REUSES the target's remembered style", `stylePromptId` override honored) |
+| §8 drawer Style options query + remembered `selectedId` (read-authz, active ORG cards, stale→null) | `actions/crm/targets/__tests__/get-homepage-styles.test.ts` |
+| §10 refine image replacement (new token → fresh image; failed → stripped; unchanged → no regen) | `inngest/functions/__tests__/generate-homepage.test.ts` ("refine image replacement" describe); `lib/homepage/images/__tests__/plan.test.ts` (`planRefineImage` bounded hint + injection/clamp) |
 | §1/§2/§6 layer loading, empty/soft-deleted/missing fallback, Generic default | `lib/homepage/prompt-layers/__tests__/load-layers.test.ts` |
 | §1/§2/§4/§6 composition order, contract last, empty layers dropped, 12k cap | `lib/homepage/__tests__/prompt.test.ts`; `inngest/functions/__tests__/generate-homepage.test.ts` |
 | §3 industry pre-match (free text → card) | `lib/homepage/prompt-layers/__tests__/match-industry.test.ts`, `prefill-industry.test.ts`; `__tests__/actions/target-industry-prefill.test.ts` (create path) |
@@ -231,12 +254,13 @@ base homepage flow. The drawer's Industry dropdown rendering (`data-testid="home
 is likewise only exercised by hand; add a seeded-state E2E (like `tests/e2e/target-homepage.spec.ts`)
 if the dropdown starts regressing.
 
-**Known Gap (E2E) — §8 Style dropdown + §9 prompt-library kind filter.** Both new UI controls are
-**manual-only**: no Playwright spec renders them yet. The *logic* behind §8 is unit/integration
-covered (see the two rows above); §9 is a pure client-side filter over already-fetched rows.
-Deferred deliberately for the same reason as the rest of this feature (the drawer path needs a live
-Anthropic call + headless chromium). Add seeded-state E2E (`data-testid="homepage-style-select"`,
-`data-testid="prompt-kind-filter"`) if either control starts regressing.
+**Known Gap (E2E) — §8 Style dropdown/persistence, §9 prompt-library kind filter, §10 refine image
+replacement.** These UI/visible outcomes are **manual-only**: no Playwright spec renders them yet. The
+*logic* is unit/integration covered (see the rows above — style precedence/persistence, `selectedId`,
+and refine image replacement); §9 is a pure client-side filter over already-fetched rows. Deferred
+deliberately for the same reason as the rest of this feature (the drawer path needs a live Anthropic call
++ headless chromium, and image replacement needs a live image provider). Add seeded-state E2E
+(`data-testid="homepage-style-select"`, `data-testid="prompt-kind-filter"`) if any control regresses.
 
 ## Cleanup
 

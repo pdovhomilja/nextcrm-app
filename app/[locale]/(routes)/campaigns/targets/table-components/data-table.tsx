@@ -4,6 +4,7 @@ import * as React from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
+  PaginationState,
   SortingState,
   VisibilityState,
   flexRender,
@@ -27,14 +28,23 @@ import {
 
 import { DataTablePagination } from "./data-table-pagination";
 import { DataTableToolbar } from "./data-table-toolbar";
+import { usePersistedTableState } from "./use-persisted-table-state";
 import { PanelTopClose, PanelTopOpen, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BulkEnrichTargetsModal } from "../components/BulkEnrichTargetsModal";
 import ExportTargetsButton from "@/components/campaigns/ExportTargetsButton";
 
 // Persisted per environment: localStorage is per-origin, so qa.crm… and the
-// production domain each remember their own column choices.
-const COLUMN_VISIBILITY_KEY = "targets:columnVisibility:v1";
+// production domain each remember their own view (columns, filters, sorting and
+// rows-per-page). See `usePersistedTableState`.
+const STORAGE_KEYS = {
+  columnVisibility: "targets:columnVisibility:v1",
+  columnFilters: "targets:columnFilters:v1",
+  sorting: "targets:sorting:v1",
+  pagination: "targets:pagination:v1",
+} as const;
+
+const DEFAULT_PAGE_SIZE = 10;
 
 // Lead with Company / Industry / Website / Status / Triage; hide the
 // person-centric and date fields by default. All stay toggleable via the View
@@ -60,41 +70,40 @@ export function TargetsDataTable<TData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
+  // Row selection is intentionally ephemeral — it should not survive navigation.
   const [rowSelection, setRowSelection] = React.useState({});
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>(DEFAULT_COLUMN_VISIBILITY);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
-  const [sorting, setSorting] = React.useState<SortingState>([]);
 
-  // Restore the viewer's saved column choices after mount (deferred to avoid an
-  // SSR/CSR hydration mismatch); keep defaults if localStorage is unavailable.
-  React.useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(COLUMN_VISIBILITY_KEY);
-      if (raw) {
-        const saved = JSON.parse(raw) as VisibilityState;
+  // Column visibility, filters, sorting and rows-per-page are persisted so the
+  // viewer's view survives leaving the list (e.g. to open a target) and
+  // returning — the Server Component page unmounts this table in between.
+  const [columnVisibility, setColumnVisibility] =
+    usePersistedTableState<VisibilityState>(
+      STORAGE_KEYS.columnVisibility,
+      DEFAULT_COLUMN_VISIBILITY,
+      {
         // Default newer filter-only columns to hidden even for viewers whose
         // saved prefs predate the column (a missing key would otherwise show it).
-        setColumnVisibility({ lists: false, ...saved });
+        merge: (saved) => ({ lists: false, ...saved }),
       }
-    } catch {
-      /* localStorage blocked/unavailable — keep defaults */
+    );
+  const [columnFilters, setColumnFilters] =
+    usePersistedTableState<ColumnFiltersState>(STORAGE_KEYS.columnFilters, []);
+  const [sorting, setSorting] = usePersistedTableState<SortingState>(
+    STORAGE_KEYS.sorting,
+    []
+  );
+  // Remember the page size, but always return to the first page: a saved
+  // pageIndex can point past the end once filters or the underlying data change.
+  const [pagination, setPagination] = usePersistedTableState<PaginationState>(
+    STORAGE_KEYS.pagination,
+    { pageIndex: 0, pageSize: DEFAULT_PAGE_SIZE },
+    {
+      merge: (saved) => ({
+        pageIndex: 0,
+        pageSize: saved.pageSize ?? DEFAULT_PAGE_SIZE,
+      }),
     }
-  }, []);
-
-  // Persist on every change so the layout survives leaving and returning.
-  React.useEffect(() => {
-    try {
-      window.localStorage.setItem(
-        COLUMN_VISIBILITY_KEY,
-        JSON.stringify(columnVisibility)
-      );
-    } catch {
-      /* ignore persistence failures */
-    }
-  }, [columnVisibility]);
+  );
 
   const [hide, setHide] = React.useState(false);
   const [bulkEnrichOpen, setBulkEnrichOpen] = React.useState(false);
@@ -107,12 +116,14 @@ export function TargetsDataTable<TData, TValue>({
       columnVisibility,
       rowSelection,
       columnFilters,
+      pagination,
     },
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),

@@ -9,14 +9,14 @@ import {
 
 /**
  * Data for the drawer's Style (art-direction) dropdown: the active ORG
- * HOMEPAGE_STYLE prompts the operator may choose from for a single generation.
+ * HOMEPAGE_STYLE prompts the operator may choose from, plus the target's
+ * REMEMBERED style so the drawer can default to it.
  *
- * Unlike the Industry pair, the style pick is ONE-SHOT and never persisted — it
- * rides along in the generate request and the server falls back to the
- * deterministic auto pick when none is sent (see resolveStyleDirection). So this
- * returns only the option list; there is no saved selection or default to read.
- * `targetId` is still taken so the read is authorized against the target the
- * drawer is generating for.
+ * The chosen style is persisted per target (`homepage_style_prompt_id`,
+ * snapshotted on first generate — see resolveStyleDirection) and reused across
+ * generate/refine, so it does not change on its own. `selectedId` is the saved
+ * style when it is still an active option, else null (fall back to Auto).
+ * `targetId` is also what the read is authorized against.
  */
 export const getHomepageStyles = async (data: { targetId: string }) => {
   const { targetId } = data;
@@ -36,11 +36,24 @@ export const getHomepageStyles = async (data: { targetId: string }) => {
     throw e;
   }
 
-  const rows = await prismadb.crm_Ai_Prompt.findMany({
-    where: { kind: "HOMEPAGE_STYLE", scope: "ORG", deletedAt: null },
-    select: { id: true, name: true },
-    orderBy: { name: "asc" },
-  });
+  const [rows, target] = await Promise.all([
+    prismadb.crm_Ai_Prompt.findMany({
+      where: { kind: "HOMEPAGE_STYLE", scope: "ORG", deletedAt: null },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+    prismadb.crm_Targets.findUnique({
+      where: { id: targetId },
+      select: { homepage_style_prompt_id: true },
+    }),
+  ]);
 
-  return { data: { options: rows.map((r) => ({ id: r.id, name: r.name })) } };
+  // Only surface the saved style if it is still an active option; otherwise the
+  // drawer falls back to Auto rather than showing a stale/removed style.
+  const savedId = target?.homepage_style_prompt_id ?? null;
+  const selectedId = savedId && rows.some((r) => r.id === savedId) ? savedId : null;
+
+  return {
+    data: { options: rows.map((r) => ({ id: r.id, name: r.name })), selectedId },
+  };
 };

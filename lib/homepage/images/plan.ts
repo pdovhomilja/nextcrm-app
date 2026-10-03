@@ -58,3 +58,35 @@ export function planHomepageImages(input: {
   }
   return specs;
 }
+
+/**
+ * Build the spec for ONE replacement image requested during a refine.
+ *
+ * The subject comes from a BOUNDED slice of the operator's refine instruction
+ * (first-party, authenticated text), clamped to limit any prompt-injection into
+ * the image provider — the same bounding the business `description` already gets.
+ * Deliberately does NOT feed in model/HTML-derived alt text (which can carry
+ * harvested-site content), keeping the injection surface to first-party input only.
+ * The on-brand style scaffold is code-owned, exactly like {@link planHomepageImages}.
+ */
+export function planRefineImage(input: {
+  token: string;
+  /** The operator's refine instruction (what to show in the replacement image). */
+  hint: string;
+  industry: string | null;
+  colors: string[];
+}): ImageSpec {
+  const industry = clampText(input.industry, 60) || "small business";
+  const palette = validatedColors(input.colors).join(", ");
+  const paletteClause = palette ? ` Color palette: ${palette}.` : "";
+  const common = `Premium editorial photograph for a ${industry}.${paletteClause} Warm, sophisticated, photorealistic, Architectural Digest style, soft natural light, shallow depth of field. No text, no signage, no logos, no watermarks.`;
+  const subject = clampText(input.hint, 180);
+  return {
+    token: input.token,
+    role: "section",
+    aspectRatio: "2:3",
+    // Hard backstop: clamp final prompt to 600 chars regardless of field lengths.
+    prompt: `${common}${subject ? ` Subject: ${subject}.` : ""}`.slice(0, 600),
+    alt: subject ? subject.slice(0, 80) : industry,
+  };
+}

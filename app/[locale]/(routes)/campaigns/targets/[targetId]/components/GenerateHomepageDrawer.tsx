@@ -122,8 +122,9 @@ export function GenerateHomepageDrawer(props: {
   const [industryId, setIndustryId] = useState("");
   const [savingIndustry, setSavingIndustry] = useState(false);
   // Style (art-direction) layer: options are the active HOMEPAGE_STYLE prompts.
-  // One-shot — the pick is NOT persisted; "" means Auto (deterministic server
-  // pick). It rides along in the generate POST and resets when the drawer closes.
+  // The pick is persisted per target and remembered across generate/refine; the
+  // drawer defaults to the saved style (see the load effect). STYLE_AUTO ("") means
+  // let the server pick (and snapshot) on first generate.
   const [styleOptions, setStyleOptions] = useState<{ id: string; name: string }[]>(
     [],
   );
@@ -331,9 +332,10 @@ export function GenerateHomepageDrawer(props: {
     };
   }, [open, targetId]);
 
-  // Load the Style options each time the drawer opens. No saved selection to
-  // restore (one-shot), so the value always resets to Auto on open. Own cancel
-  // flag, like the Industry fetch, so a generate/refine never drops it.
+  // Load the Style options each time the drawer opens and default the control to
+  // the target's REMEMBERED style (selectedId) so it doesn't reset on its own;
+  // Auto only when nothing is remembered yet. Own cancel flag, like the Industry
+  // fetch, so a generate/refine never drops it.
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
@@ -347,6 +349,7 @@ export function GenerateHomepageDrawer(props: {
           return;
         }
         setStyleOptions(res.data.options);
+        if (res.data.selectedId) setStyleId(res.data.selectedId);
       } catch {
         if (!cancelled) toast.error(DEFAULT_ERROR);
       }

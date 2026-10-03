@@ -1072,6 +1072,27 @@
 
 ## Email / campaign rendering
 
+### Outreach email shows the PRE-revert homepage (stable slug URL cached in place)
+
+- **Symptom:** revert a homepage to a previous version, then generate/send the outreach email — the
+  email's embedded screenshot and/or link still shows the **last-generated** design, not the reverted one.
+- **Cause:** the homepage is addressed by a **stable per-target slug** (`/p/<slug>` + `/p/<slug>/screenshot.png`,
+  `previewUrls()` in `inngest/functions/generate-homepage.ts`). Revert correctly re-renders the HTML +
+  screenshot and repoints `current_version_id`, but the **URL never changes between versions**, so caches
+  serve stale bytes: the public routes set `max-age=300, s-maxage=300, swr=600` (~15 min edge staleness,
+  `lib/homepage/serve.ts`), and **email-client image proxies (Gmail/Outlook) cache the stable screenshot
+  URL far longer — often indefinitely**. (Separately, the merge source blanks the homepage until
+  `status === "READY"`, so acting mid-revert yields an *empty* homepage, not a stale one.)
+- **Fix / rule:** **cache-bust by version** — stamp `?v=<current_version_id>` onto the homepage URL and
+  screenshot in the email merge source (`withVersionParam` in `lib/campaigns/compose-target-email.ts`), so
+  each published/reverted version is a distinct, cache-clean URL. Also **block compose/preview/send while a
+  homepage job is `RUNNING`** so an operator can't email mid-job. When content lives at a stable overwrite-in-place
+  URL, anything that embeds it in an email MUST carry a per-version cache-bust — email proxies make
+  shortening cache headers alone insufficient.
+- **Tell:** "email shows the old design after revert, but the drawer/preview shows the new one" ⇒ caching
+  on the stable slug URL, not a version-selection bug (the email never reads version HTML — only the slug URLs).
+
+
 ### AI/TipTap body markup can blow out the fixed email column (horizontal scroll)
 
 - **Symptom:** an outreach email renders fine on the first generate, then after an edit/regenerate it
@@ -1093,5 +1114,61 @@
 - **Tell:** "fits on first generate, wide after regenerate" ⇒ look for an uncapped `<img>` (usually the
   screenshot) or a `<pre>`/long-URL in the body, not the shell wrapper (which is already 600px capped).
 
-<!-- Add new entries above this line, newest-relevant first within each section.
-     Create a new `## <area>` heading when a trap doesn't fit an existing one. -->
+## UI / list tables
+
+### List-page table state (filters, sorting, rows-per-page) resets when you leave and return
+
+- **Symptom:** on a CRM list page (Targets, Leads, …) you set a filter and a rows-per-page, open a
+  record, come back — and the table is reset: no filter, rows-per-page back to 10. "Doesn't remember
+  my settings."
+- **Cause:** the list page is a **Server Component** that renders the client table inside it, so
+  navigating to a detail page **unmounts** the table and remounts it on return. The TanStack state
+  (`columnFilters`, `sorting`) was plain `useState` (resets on unmount), and **pagination was
+  uncontrolled** — held only inside the table instance, so it fell back to the default `pageSize` of 10.
+  Plain `useState` defaults can never survive this; persistence must be **external** (localStorage / URL /
+  context).
+- **Fix / rule:** back each piece of table state with `localStorage` via
+  `.../campaigns/targets/table-components/use-persisted-table-state.ts` (deferred mount-restore to avoid
+  an SSR/CSR **hydration mismatch** — do NOT read localStorage in `useState` init; skip the first persist
+  so the default can't clobber a saved value). Make pagination **controlled** (`pagination` in `state` +
+  `onPaginationChange`). Persist `pageSize` but reset `pageIndex` to 0 on restore — a saved page can point
+  past the end once data/filters change. Keep `rowSelection` ephemeral (don't persist selections). Keys
+  are per-origin, so QA and prod remember separately.
+- **Tell / scope:** every per-page list table shares this pattern (each has its own copy of
+  `data-table.tsx`); most don't persist anything. The hook is reusable to fix the rest. Also note: a brief
+  pre-restore flash on return is expected (restore runs in a mount effect, by design).
+
+## Homepage generation
+
+### A chosen homepage style silently changes (one-shot pick, hash drift)
+
+- **Symptom:** the operator picks a homepage style, but a later refine (or re-generate) comes back in a
+  different style; even without picking, the "auto" style changes on its own over time.
+- **Cause:** the style pick was a deliberately ONE-SHOT override that was never persisted — refine
+  re-resolved with no override and fell back to `pickStyleDirection`, an FNV-1a hash of the homepage id
+  `% activeStyles.length`. So (a) an explicit pick was dropped on the next refine, and (b) the auto pick
+  shifts whenever the style library is added to/removed from (the modulo moves). Contrast the *industry*
+  layer, which was already persisted per target.
+- **Fix / rule:** persist the chosen style per target (`crm_Targets.homepage_style_prompt_id`) and
+  **snapshot it on first generate even for an auto pick**; `resolveStyleDirection` precedence is
+  explicit-override → remembered → auto-hash, and both generate AND refine read + write it. Drawer defaults
+  to the remembered style. Rule: a "pick for me" default that must stay stable has to be **snapshotted**,
+  not recomputed each run — a hash over a mutable set is not stable.
+
+### Refine can't give you a different image — refine never (re)generated images
+
+- **Symptom:** "replace this image with a different one" during a refine does nothing — same image, or an
+  empty slot.
+- **Cause:** images were generated ONLY on the initial generate (`generateImages`, exactly `imageCount`).
+  `refineFlow` reused the existing `__RADE_IMG_n__` tokens and `materialize` STRIPS any token with no bytes
+  behind it — so a model-introduced token for a new image was deleted, and an unchanged token kept the old
+  image. There was no refine-time image path at all (it wasn't a "total limit", it was "no path").
+- **Fix / rule:** on a HUMAN refine, detect NEW tokens (present in the refined HTML but not the seed),
+  generate fresh bytes for them (capped `REFINE_IMAGE_CAP`, fail-open), and publish kept + new; a failed
+  new slot is omitted so `materialize` strips it (no broken `<img>`). The replacement subject comes from a
+  **bounded slice of the operator's refine text only** — never model/HTML-derived alt (which can carry
+  harvested-site content) — keeping the image-prompt injection surface to first-party input, like the
+  code-owned `planHomepageImages` prompts. Backend-only caveat: it relies on the model emitting a new token
+  for a replaced slot (per the refine-prompt instruction); reused tokens keep the old image.
+
+## Email / campaign rendering

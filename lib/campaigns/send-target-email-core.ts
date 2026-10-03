@@ -94,6 +94,17 @@ export async function deliverTargetEmail(params: {
         where: { targetId: target.id, deletedAt: null },
       })
     : null;
+  // Don't send while a homepage job (generate/refine/revert) is in flight: the
+  // merge source blanks the homepage until it is READY, so the email would go out
+  // with no preview. Fail closed and tell the operator to wait.
+  if (includeHomepage && homepage?.status === "RUNNING") {
+    return {
+      ok: false,
+      kind: "config",
+      message:
+        "The homepage is still generating — wait until it's Ready before sending.",
+    };
+  }
   const mergeSource = buildTargetMergeSource(target, homepage);
 
   let contentHtml: string;

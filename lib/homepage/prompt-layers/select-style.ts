@@ -46,28 +46,38 @@ export function pickStyleDirection(
 }
 
 /**
- * Resolve the style card for a generation, honoring an optional one-shot override.
+ * Resolve the style card for a generation, with precedence:
  *
- * When `overrideId` matches a live style it wins (the operator's per-generation
- * pick in the drawer); an absent or unknown/stale override falls back to the
- * deterministic {@link pickStyleDirection} hash so behavior is unchanged from the
- * auto path. The override is NOT persisted, so refines — which re-resolve with no
- * override — return to the deterministic pick by design.
+ *   1. `overrideId` — the operator's explicit pick in the drawer for THIS run. When
+ *      it matches a live style it wins, and the caller persists it as the target's
+ *      remembered style.
+ *   2. `rememberedId` — the style previously chosen/snapshotted for this target.
+ *      Reused so the style does NOT change on its own across generate/refine.
+ *   3. deterministic {@link pickStyleDirection} hash — only when nothing is picked
+ *      and nothing is remembered (first generate). The caller snapshots the result
+ *      so it, too, stays stable thereafter (even when the style library changes).
+ *
+ * An unknown/stale id at any step falls through to the next. Returns null only when
+ * there are no styles.
  *
  * @param seed - Stable per-target seed (the homepage id).
  * @param styles - Active style cards (id + body).
- * @param overrideId - Operator-selected style id, or null/undefined for auto.
+ * @param opts.overrideId - Operator-selected style id for this run, or null for auto.
+ * @param opts.rememberedId - The target's persisted style id, or null if none yet.
  * @returns The chosen style, or null when there are no styles.
  */
 export function resolveStyleDirection(
   seed: string,
   styles: { id: string; body: string }[],
-  overrideId?: string | null
+  opts?: { overrideId?: string | null; rememberedId?: string | null }
 ): { id: string; body: string } | null {
-  if (overrideId) {
-    const match = styles.find((s) => s.id === overrideId);
-    if (match) return match;
-    // Unknown/stale id (library edited since the drawer loaded): fail open to auto.
-  }
+  const byId = (id?: string | null) => (id ? styles.find((s) => s.id === id) : undefined);
+  // 1. Explicit operator pick for this run.
+  const override = byId(opts?.overrideId);
+  if (override) return override;
+  // 2. The style remembered for this target.
+  const remembered = byId(opts?.rememberedId);
+  if (remembered) return remembered;
+  // 3. First generate with no pick: deterministic auto pick (caller snapshots it).
   return pickStyleDirection(seed, styles);
 }

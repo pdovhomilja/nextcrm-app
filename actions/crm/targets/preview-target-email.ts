@@ -63,6 +63,12 @@ export const previewTargetEmail = async (input: {
   const homepage = includeHomepage
     ? await prismadb.crm_Target_Homepage.findFirst({ where: { targetId, deletedAt: null } })
     : null;
+  // While a homepage job (generate/refine/revert) runs, the merge source blanks the
+  // homepage until it is READY — so a preview would show no page. Surface that clearly
+  // instead of rendering an empty preview.
+  if (includeHomepage && homepage?.status === "RUNNING") {
+    return { error: "The homepage is still generating — wait until it's Ready, then preview." };
+  }
 
   const mergeSource = buildTargetMergeSource(target, homepage);
 

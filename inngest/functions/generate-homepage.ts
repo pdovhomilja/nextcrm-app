@@ -5,7 +5,7 @@ import { getApiKey } from "@/lib/api-keys";
 import { harvestSource, type HarvestResult } from "@/lib/homepage/harvest-source";
 import { generateHomepage as generateHomepageHtml } from "@/lib/homepage/provider";
 import { buildSystemPrompt, buildImageBrief } from "@/lib/homepage/prompt";
-import { planHomepageImages } from "@/lib/homepage/images/plan";
+import { planHomepageImages, planRefineImage } from "@/lib/homepage/images/plan";
 import { resolveImageProviders, generateWithFallback } from "@/lib/homepage/images/resolve";
 import type { GeneratedImage } from "@/lib/homepage/images/types";
 import { getHomepageSettings } from "@/lib/homepage/settings";
@@ -173,6 +173,20 @@ const BASE_PROMPT =
   "Redesign this small business's homepage as a modern, professional, conversion-focused page.";
 const AUTO_REFINE_PROMPT =
   "Critique the rendered draft against the rubric (hierarchy, spacing, contrast, mobile layout, brand fidelity) and produce an improved version. Fix concrete weaknesses; do not invent facts.";
+
+// Appended to a HUMAN refine so the operator can get genuinely new imagery.
+// A brand-new token (next unused number) signals "generate a fresh image for this
+// slot"; an existing token is left untouched and reuses its current image.
+const REFINE_IMAGE_INSTRUCTION =
+  "IMAGES: to REPLACE an image with a different one, give that <img> a BRAND-NEW token __RADE_IMG_<n>__ using the next unused number (e.g. if the page has __RADE_IMG_1__ and __RADE_IMG_2__, use __RADE_IMG_3__). To KEEP an image unchanged, leave its existing __RADE_IMG_<n>__ token exactly as-is. Only introduce a new token for an image you are actually changing, and never point an <img> at a real or external URL.";
+
+// Cap how many fresh images one refine may generate (cost/latency guard).
+const REFINE_IMAGE_CAP = 3;
+
+/** Image-token NUMBERS present in an html string (e.g. "1","2"), de-duplicated. */
+function imageTokenNums(html: string): string[] {
+  return Array.from(new Set(Array.from(html.matchAll(IMAGE_TOKEN_RE), (m) => m[1])));
+}
 
 function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
   let timer: ReturnType<typeof setTimeout>;
@@ -472,7 +486,10 @@ async function resolveGenerationConfig(
   ctx: {
     homepageId: string;
     industryPromptId: string | null;
+    /** Operator's explicit style pick for THIS run (drawer), if any. */
     styleOverrideId?: string | null;
+    /** The target's remembered style (reused unless an override is given). */
+    rememberedStyleId?: string | null;
   },
 ): Promise<{
   system: string;
@@ -481,6 +498,8 @@ async function resolveGenerationConfig(
   imageModel: string;
   imageCount: number;
   imageProvider: string;
+  /** The style actually used this run, for the caller to snapshot on the target. */
+  styleId: string | null;
 }> {
   const settings = await step.run("resolve-settings", () => getHomepageSettings());
   const basePromptId = settings.basePromptId;
@@ -501,14 +520,20 @@ async function resolveGenerationConfig(
             loadAvoidText(),
             loadIndustryBody(ctx.industryPromptId),
           ]);
-          return {
-            industry,
-            style: resolveStyleDirection(ctx.homepageId, styles, ctx.styleOverrideId)?.body ?? null,
-            avoid,
-          };
+          const style = resolveStyleDirection(ctx.homepageId, styles, {
+            overrideId: ctx.styleOverrideId,
+            rememberedId: ctx.rememberedStyleId,
+          });
+          return { industry, style: style?.body ?? null, styleId: style?.id ?? null, avoid };
         });
   return {
-    system: buildSystemPrompt({ base: base?.body ?? null, ...(layers ?? {}) }),
+    system: buildSystemPrompt({
+      base: base?.body ?? null,
+      industry: layers?.industry ?? null,
+      style: layers?.style ?? null,
+      avoid: layers?.avoid ?? null,
+    }),
+    styleId: layers?.styleId ?? null,
     model: settings.model,
     maxTokens: settings.maxTokens,
     imageModel: settings.imageModel,
@@ -570,6 +595,58 @@ async function generateImages(
   });
 }
 
+/**
+ * Generate fresh images for the NEW tokens a refine introduced (image replacement),
+ * in a single fail-open step. Each new slot's subject comes from a bounded slice of
+ * the operator's refine instruction (see planRefineImage). Returns the token NUMBERS
+ * that successfully generated+stored (to their deterministic img-<n>.png keys); any
+ * failure drops just that slot so a missing image can never fail the run. Capped at
+ * REFINE_IMAGE_CAP per refine.
+ */
+async function generateRefineImages(
+  step: StepLike,
+  cfg: { imageModel: string; imageProvider: string },
+  target: { industry?: string | null },
+  slug: string,
+  hint: string,
+  newTokens: string[],
+): Promise<string[]> {
+  if (!newTokens.length) return [];
+  return step.run("generate-refine-images", async (): Promise<string[]> => {
+    try {
+      const capped = newTokens.slice(0, REFINE_IMAGE_CAP);
+      const providers = resolveImageProviders({ provider: cfg.imageProvider, model: cfg.imageModel });
+      const results = await withTimeout(
+        Promise.all(
+          capped.map(async (token, i): Promise<string | null> => {
+            try {
+              const spec = planRefineImage({
+                token,
+                hint,
+                industry: target.industry ?? null,
+                colors: [],
+              });
+              const bytes = await generateWithFallback(spec, providers);
+              if (!bytes) return null;
+              await putHomepageImage(slug, imageName(token, i), bytes);
+              return /__RADE_IMG_(\d+)__/.exec(token)?.[1] ?? null;
+            } catch (e) {
+              console.warn("[HOMEPAGE_IMAGE] refine image dropped:", (e as Error)?.message);
+              return null;
+            }
+          }),
+        ),
+        IMAGE_TIMEOUT_MS,
+        "Refine image generation",
+      );
+      return results.filter((n): n is string => n !== null);
+    } catch (e) {
+      console.warn("[HOMEPAGE_IMAGE] refine image generation skipped (fail-open):", (e as Error)?.message);
+      return [];
+    }
+  });
+}
+
 const NO_API_KEY = "NO_API_KEY: configure ANTHROPIC key in admin or profile settings";
 
 async function generateFlow(step: StepLike, data: GenerateHomepageEventData, isFinal: boolean) {
@@ -584,6 +661,7 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData, isF
           description: true,
           industry: true,
           homepage_industry_prompt_id: true,
+          homepage_style_prompt_id: true,
         },
       }),
       prismadb.crm_Target_Homepage.findUnique({
@@ -614,7 +692,20 @@ async function generateFlow(step: StepLike, data: GenerateHomepageEventData, isF
       homepageId: homepage.id,
       industryPromptId: target.homepage_industry_prompt_id ?? null,
       styleOverrideId: data.stylePromptId ?? null,
+      rememberedStyleId: target.homepage_style_prompt_id ?? null,
     });
+    // Remember the style used this run so it stays stable across future
+    // generate/refine (snapshots the auto pick on first generate; records an
+    // operator override). No-op when nothing resolved (varyDesign off / no styles)
+    // or when it already matches what's stored.
+    if (genConfig.styleId && genConfig.styleId !== target.homepage_style_prompt_id) {
+      await step.run("persist-style", () =>
+        prismadb.crm_Targets.update({
+          where: { id: target.id },
+          data: { homepage_style_prompt_id: genConfig.styleId },
+        }),
+      );
+    }
 
     // The harvest screenshot is uploaded to a transient R2 key inside this step and
     // only the brand + a flag are returned, so no base64 PNG enters step state.
@@ -723,7 +814,9 @@ async function refineFlow(step: StepLike, data: RefineHomepageEventData, isFinal
             company: true,
             company_website: true,
             description: true,
+            industry: true,
             homepage_industry_prompt_id: true,
+            homepage_style_prompt_id: true,
           },
         }),
       ]);
@@ -740,13 +833,30 @@ async function refineFlow(step: StepLike, data: RefineHomepageEventData, isFinal
     }
 
     // Resolved after the target load (the industry layer needs the target's
-    // selected prompt id); same seed (homepage.id) => same style card as generate.
+    // selected prompt id). Refine carries no override, so it reuses the target's
+    // remembered style — the style must NOT change on a refine.
     const genConfig = await resolveGenerationConfig(step, {
       homepageId: homepage.id,
       industryPromptId: seed.target?.homepage_industry_prompt_id ?? null,
+      rememberedStyleId: seed.target?.homepage_style_prompt_id ?? null,
     });
+    // Snapshot for legacy homepages generated before the style was persisted, so a
+    // refine pins the (previously auto) style instead of letting it drift later.
+    if (
+      seed.target &&
+      genConfig.styleId &&
+      genConfig.styleId !== seed.target.homepage_style_prompt_id
+    ) {
+      await step.run("persist-style", () =>
+        prismadb.crm_Targets.update({
+          where: { id: seed.target!.id },
+          data: { homepage_style_prompt_id: genConfig.styleId },
+        }),
+      );
+    }
 
-    // Images aren't regenerated on refine; keep the tokens already in the page valid.
+    // The existing images (tokens already in the page) stay valid; the refine
+    // instruction lets the model introduce a NEW token to replace an image.
     const images = imagesInHtml(seed.html, homepage.slug);
     const current = await runPass(step, "human", {
       apiKey,
@@ -754,7 +864,7 @@ async function refineFlow(step: StepLike, data: RefineHomepageEventData, isFinal
       brief: seed.target
         ? `${buildBrief(seed.target, null, logoDataUri)}\n${buildImageBrief(images)}`
         : "",
-      prompt: data.prompt,
+      prompt: `${data.prompt}\n\n${REFINE_IMAGE_INSTRUCTION}`,
       previousHtml: seed.html,
       homepage,
       passKind: "HUMAN",
@@ -764,7 +874,34 @@ async function refineFlow(step: StepLike, data: RefineHomepageEventData, isFinal
       images,
     });
 
-    await publish(step, homepage, current, logoDataUri, imagesInHtml(current.html, homepage.slug));
+    // Generate fresh images for any NEW token the refine introduced (image
+    // replacement), using a bounded hint from the operator's instruction.
+    const seedNums = new Set(imageTokenNums(seed.html));
+    const currentNums = imageTokenNums(current.html);
+    const newTokens = currentNums
+      .filter((n) => !seedNums.has(n))
+      .map((n) => `__RADE_IMG_${n}__`);
+    const generatedNums = await generateRefineImages(
+      step,
+      genConfig,
+      { industry: seed.target?.industry ?? null },
+      homepage.slug,
+      data.prompt,
+      newTokens,
+    );
+    // Serve kept images + successfully-generated new ones. A new token that failed
+    // to generate is omitted so publish/materialize strips it (no broken <img>).
+    const validNums = new Set<string>([
+      ...currentNums.filter((n) => seedNums.has(n)),
+      ...generatedNums,
+    ]);
+    const finalImages: GeneratedImage[] = Array.from(validNums).map((n) => ({
+      token: `__RADE_IMG_${n}__`,
+      alt: "page image",
+      url: homepageImageUrl(homepage.slug, `img-${n}.png`),
+    }));
+
+    await publish(step, homepage, current, logoDataUri, finalImages);
     return { ready: true, versions: 1 };
   } catch (err) {
     return endRun(step, "refine", homepage.id, err, isFinal);

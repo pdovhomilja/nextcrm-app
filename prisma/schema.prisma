@@ -1335,6 +1335,10 @@ model crm_Targets {
 
   // Homepage generation: selected HOMEPAGE_INDUSTRY crm_Ai_Prompts row (no hard FK)
   homepage_industry_prompt_id String? @db.Uuid
+  // Homepage generation: remembered HOMEPAGE_STYLE crm_Ai_Prompts row (no hard FK).
+  // Snapshotted on first generate (even an "auto" pick) and reused on every later
+  // generate/refine so the style is stable until the operator changes it.
+  homepage_style_prompt_id String? @db.Uuid
 
   deletedAt        DateTime?
   deletedBy        String?   @db.Uuid

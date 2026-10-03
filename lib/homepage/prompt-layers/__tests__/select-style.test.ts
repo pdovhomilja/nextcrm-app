@@ -16,24 +16,43 @@ describe("pickStyleDirection", () => {
   it("empty set -> null", () =>
     expect(pickStyleDirection("x", [])).toBeNull());
 
-  describe("resolveStyleDirection (one-shot override)", () => {
-    it("returns the matching override regardless of the hash pick", () => {
+  describe("resolveStyleDirection (override > remembered > auto)", () => {
+    it("returns the matching explicit override regardless of the hash pick", () => {
       // Pick a style the deterministic hash would NOT choose for this seed.
       const auto = pickStyleDirection("target-123", styles)!;
       const other = styles.find((s) => s.id !== auto.id)!;
-      const picked = resolveStyleDirection("target-123", styles, other.id);
+      const picked = resolveStyleDirection("target-123", styles, { overrideId: other.id });
       expect(picked).toEqual(other);
       expect(picked!.id).not.toBe(auto.id);
     });
 
-    it("falls back to the deterministic pick when the override id is unknown", () => {
-      expect(resolveStyleDirection("target-123", styles, "does-not-exist")).toEqual(
-        pickStyleDirection("target-123", styles),
-      );
+    it("an explicit override beats a remembered style", () => {
+      const remembered = styles[2];
+      const override = styles[7];
+      const picked = resolveStyleDirection("target-123", styles, {
+        overrideId: override.id,
+        rememberedId: remembered.id,
+      });
+      expect(picked).toEqual(override);
     });
 
-    it("falls back to the deterministic pick when no override is given", () => {
-      expect(resolveStyleDirection("target-123", styles, null)).toEqual(
+    it("reuses the remembered style when no override is given (not the hash)", () => {
+      // Choose a remembered style the hash would NOT pick, to prove it wins over auto.
+      const auto = pickStyleDirection("target-123", styles)!;
+      const remembered = styles.find((s) => s.id !== auto.id)!;
+      const picked = resolveStyleDirection("target-123", styles, { rememberedId: remembered.id });
+      expect(picked).toEqual(remembered);
+      expect(picked!.id).not.toBe(auto.id);
+    });
+
+    it("falls back to the deterministic pick when override and remembered are unknown/absent", () => {
+      expect(
+        resolveStyleDirection("target-123", styles, {
+          overrideId: "nope",
+          rememberedId: "also-nope",
+        }),
+      ).toEqual(pickStyleDirection("target-123", styles));
+      expect(resolveStyleDirection("target-123", styles, null as never)).toEqual(
         pickStyleDirection("target-123", styles),
       );
       expect(resolveStyleDirection("target-123", styles)).toEqual(
@@ -42,7 +61,7 @@ describe("pickStyleDirection", () => {
     });
 
     it("empty set -> null even with an override", () =>
-      expect(resolveStyleDirection("x", [], "whatever")).toBeNull());
+      expect(resolveStyleDirection("x", [], { overrideId: "whatever" })).toBeNull());
   });
 
   it("distributes roughly uniformly across styles for random UUID seeds", () => {

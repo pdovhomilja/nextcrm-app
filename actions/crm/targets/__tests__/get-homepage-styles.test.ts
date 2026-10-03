@@ -11,6 +11,7 @@ jest.mock("@/lib/authz", () => ({
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
     crm_Ai_Prompt: { findMany: jest.fn() },
+    crm_Targets: { findUnique: jest.fn() },
   },
 }));
 
@@ -26,6 +27,7 @@ import { getHomepageStyles } from "../get-homepage-styles";
 const authed = requireAuthenticated as jest.Mock;
 const assertRead = assertCanReadTarget as jest.Mock;
 const pMany = prismadb.crm_Ai_Prompt.findMany as jest.Mock;
+const tFind = prismadb.crm_Targets.findUnique as jest.Mock;
 
 const USER = { id: "u-1", role: "user" };
 const TARGET = "11111111-1111-4111-8111-111111111111";
@@ -38,6 +40,7 @@ beforeEach(() => {
     { id: "a", name: "Bold Editorial" },
     { id: "b", name: "Minimal" },
   ]);
+  tFind.mockResolvedValue({ homepage_style_prompt_id: null });
 });
 
 describe("getHomepageStyles", () => {
@@ -56,7 +59,7 @@ describe("getHomepageStyles", () => {
     expect(pMany).not.toHaveBeenCalled();
   });
 
-  it("returns the active ORG HOMEPAGE_STYLE options (id + name only)", async () => {
+  it("returns the active ORG HOMEPAGE_STYLE options (id + name only), selectedId null when none saved", async () => {
     const res = await getHomepageStyles({ targetId: TARGET });
     expect(res).toEqual({
       data: {
@@ -64,6 +67,7 @@ describe("getHomepageStyles", () => {
           { id: "a", name: "Bold Editorial" },
           { id: "b", name: "Minimal" },
         ],
+        selectedId: null,
       },
     });
     expect(pMany).toHaveBeenCalledWith(
@@ -77,10 +81,38 @@ describe("getHomepageStyles", () => {
     );
   });
 
+  it("surfaces the target's remembered style as selectedId when it is still an active option", async () => {
+    tFind.mockResolvedValue({ homepage_style_prompt_id: "b" });
+    const res = await getHomepageStyles({ targetId: TARGET });
+    expect(res).toEqual({
+      data: {
+        options: [
+          { id: "a", name: "Bold Editorial" },
+          { id: "b", name: "Minimal" },
+        ],
+        selectedId: "b",
+      },
+    });
+  });
+
+  it("falls back to selectedId null when the remembered style is no longer an option", async () => {
+    tFind.mockResolvedValue({ homepage_style_prompt_id: "removed-style" });
+    const res = await getHomepageStyles({ targetId: TARGET });
+    expect(res).toEqual({
+      data: {
+        options: [
+          { id: "a", name: "Bold Editorial" },
+          { id: "b", name: "Minimal" },
+        ],
+        selectedId: null,
+      },
+    });
+  });
+
   it("returns an empty option list when the library is empty", async () => {
     pMany.mockResolvedValue([]);
     const res = await getHomepageStyles({ targetId: TARGET });
-    expect(res).toEqual({ data: { options: [] } });
+    expect(res).toEqual({ data: { options: [], selectedId: null } });
   });
 
   it("requires a targetId", async () => {

@@ -3,7 +3,7 @@ jest.mock("@/inngest/client", () => ({
 }));
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
-    crm_Targets: { findUnique: jest.fn() },
+    crm_Targets: { findUnique: jest.fn(), update: jest.fn() },
     crm_Target_Homepage: { findUnique: jest.fn(), update: jest.fn(), updateMany: jest.fn() },
     crm_Target_Homepage_Version: { create: jest.fn(), findUnique: jest.fn() },
     crm_Ai_Prompt: { findFirst: jest.fn() },
@@ -23,7 +23,10 @@ jest.mock("@/lib/homepage/images/resolve", () => ({
   resolveImageProviders: jest.fn(),
   generateWithFallback: jest.fn(),
 }));
-jest.mock("@/lib/homepage/images/plan", () => ({ planHomepageImages: jest.fn() }));
+jest.mock("@/lib/homepage/images/plan", () => ({
+  planHomepageImages: jest.fn(),
+  planRefineImage: jest.fn(),
+}));
 jest.mock("@/lib/homepage/storage", () => ({
   putHomepageHtml: jest.fn(),
   putHomepageScreenshot: jest.fn(),
@@ -62,7 +65,7 @@ import {
   putHomepageImage,
 } from "@/lib/homepage/storage";
 import { resolveImageProviders, generateWithFallback } from "@/lib/homepage/images/resolve";
-import { planHomepageImages } from "@/lib/homepage/images/plan";
+import { planHomepageImages, planRefineImage } from "@/lib/homepage/images/plan";
 import { NonRetriableError } from "inngest";
 import { AUTO_PASSES, MAX_RETRIES } from "../generate-homepage";
 
@@ -127,6 +130,13 @@ beforeEach(() => {
   (planHomepageImages as jest.Mock).mockReturnValue([
     { token: "__RADE_IMG_1__", role: "hero", prompt: "p", alt: "hero shot", aspectRatio: "16:9" },
   ]);
+  (planRefineImage as jest.Mock).mockImplementation(({ token }: { token: string }) => ({
+    token,
+    role: "section",
+    prompt: "p",
+    alt: "new",
+    aspectRatio: "2:3",
+  }));
   (resolveImageProviders as jest.Mock).mockReturnValue([
     { name: "higgsfield", isConfigured: () => true, generateImage: jest.fn() },
   ]);
@@ -928,6 +938,108 @@ describe("prompt layers", () => {
         select: expect.objectContaining({ homepage_industry_prompt_id: true }),
       }),
     );
+  });
+
+  it("snapshots the resolved style onto the target on generate (so it's remembered)", async () => {
+    populate(); // target has no homepage_style_prompt_id yet
+    await handler({ event: generateEvent, step });
+    const styleWrite = (prismadb.crm_Targets.update as jest.Mock).mock.calls
+      .map((c) => c[0])
+      .find((a) => a?.data?.homepage_style_prompt_id !== undefined);
+    expect(styleWrite).toBeTruthy();
+    expect(styleWrite.where).toEqual({ id: "t1" });
+    expect(styleWrite.data.homepage_style_prompt_id).toBe(picked.id);
+  });
+
+  it("a refine REUSES the target's remembered style instead of re-picking", async () => {
+    seedRefine();
+    const remembered = others[0]; // a card the h1 hash would NOT pick
+    (prismadb.crm_Targets.findUnique as jest.Mock).mockResolvedValue({
+      ...target,
+      homepage_industry_prompt_id: null,
+      homepage_style_prompt_id: remembered.id,
+    });
+    (loadActiveStyles as jest.Mock).mockResolvedValue(styles);
+    (loadAvoidText as jest.Mock).mockResolvedValue("AVOID_TEXT");
+    (loadIndustryBody as jest.Mock).mockResolvedValue(null);
+    (generateHomepage as jest.Mock).mockResolvedValue({ html: "<html>r</html>", critique: "c" });
+    versionCreate.mockResolvedValue({ id: "verR" });
+    homepageUpdate.mockResolvedValue({});
+    (renderAndScreenshot as jest.Mock).mockResolvedValue(Buffer.from("PNGDATA"));
+    await handler({ event: refineEvent, step });
+    const refineSystem = systems()[0];
+    expect(refineSystem).toContain(remembered.body);
+    expect(refineSystem).not.toContain(picked.body);
+  });
+});
+
+describe("refine image replacement", () => {
+  const refineEvent = {
+    name: "homepage/target.refine",
+    data: {
+      homepageId: "h1",
+      targetId: "t1",
+      prompt: "replace the hero with a team photo",
+      triggeredBy: "u1",
+    },
+  };
+
+  beforeEach(() => {
+    (prismadb.crm_Targets.findUnique as jest.Mock).mockResolvedValue({ ...target, industry: "Plumbing" });
+    (prismadb.crm_Target_Homepage.findUnique as jest.Mock).mockResolvedValue({
+      ...homepage,
+      current_version_id: "verCur",
+    });
+    (prismadb.crm_Target_Homepage_Version.findUnique as jest.Mock).mockResolvedValue({
+      id: "verCur",
+      html: '<img src="__RADE_IMG_1__">',
+    });
+    versionCreate.mockResolvedValue({ id: "verR" });
+    homepageUpdate.mockResolvedValue({});
+    (renderAndScreenshot as jest.Mock).mockResolvedValue(Buffer.from("PNGDATA"));
+  });
+
+  it("generates a fresh image for a NEW token the refine introduced and serves it", async () => {
+    // The model replaces the hero by assigning a brand-new token.
+    (generateHomepage as jest.Mock).mockResolvedValue({ html: '<img src="__RADE_IMG_2__">', critique: "c" });
+    (generateWithFallback as jest.Mock).mockResolvedValue(Buffer.from("NEWIMG"));
+
+    await handler({ event: refineEvent, step });
+
+    // Planned from the operator's refine text (bounded hint), for the new token.
+    expect(planRefineImage as jest.Mock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        token: "__RADE_IMG_2__",
+        hint: "replace the hero with a team photo",
+      }),
+    );
+    // Stored at its deterministic key, and the published HTML carries the URL (not the token).
+    expect(putHomepageImage).toHaveBeenCalledWith("acme-plumbing", "img-2.png", Buffer.from("NEWIMG"));
+    const htmlPut = (putHomepageHtml as jest.Mock).mock.calls.at(-1)![1] as string;
+    expect(htmlPut).toContain("https://previews.example.com/p/acme-plumbing/images/img-2.png");
+    expect(htmlPut).not.toContain("__RADE_IMG_2__");
+  });
+
+  it("strips a NEW token whose image generation FAILED (no broken <img>)", async () => {
+    (generateHomepage as jest.Mock).mockResolvedValue({ html: '<img src="__RADE_IMG_2__">', critique: "c" });
+    (generateWithFallback as jest.Mock).mockResolvedValue(null); // generation failed / fail-open
+
+    await handler({ event: refineEvent, step });
+
+    const htmlPut = (putHomepageHtml as jest.Mock).mock.calls.at(-1)![1] as string;
+    expect(htmlPut).not.toContain("__RADE_IMG_2__");
+    expect(htmlPut).not.toContain("img-2.png");
+  });
+
+  it("keeps an unchanged token without regenerating any image", async () => {
+    (generateHomepage as jest.Mock).mockResolvedValue({ html: '<img src="__RADE_IMG_1__">', critique: "c" });
+
+    await handler({ event: refineEvent, step });
+
+    expect(planRefineImage).not.toHaveBeenCalled();
+    expect(generateWithFallback).not.toHaveBeenCalled();
+    const htmlPut = (putHomepageHtml as jest.Mock).mock.calls.at(-1)![1] as string;
+    expect(htmlPut).toContain("https://previews.example.com/p/acme-plumbing/images/img-1.png");
   });
 });
 
