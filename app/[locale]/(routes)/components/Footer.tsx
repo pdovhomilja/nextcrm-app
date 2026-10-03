@@ -7,7 +7,7 @@ const Footer = async () => {
   const nextVersion = await getNextVersion();
   //console.log(nextVersion, "nextVersion");
   return (
-    <footer className="flex min-h-14 w-full items-center justify-between gap-4 border-t border-border/60 bg-background/70 px-5 py-3 text-xs text-muted-foreground backdrop-blur-md">
+    <footer className="flex min-h-16 w-full items-center justify-between gap-4 border-t border-border/60 bg-background/70 px-5 py-4 text-xs text-muted-foreground backdrop-blur-xl">
       <Link href="/" className="font-medium tracking-tight text-foreground/80 transition-colors hover:text-primary">
         VenSai CRM <span className="text-muted-foreground">· v{version}</span>
       </Link>
