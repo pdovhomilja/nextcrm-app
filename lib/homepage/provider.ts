@@ -1,5 +1,6 @@
 import { NonRetriableError } from "inngest";
 import { extractJsonObject } from "@/lib/ai/anthropic-json";
+import { computePassCostUsd } from "@/lib/homepage/cost";
 
 export type GenerateHomepageInput = {
   apiKey: string;
@@ -12,12 +13,27 @@ export type GenerateHomepageInput = {
   system: string;
   model: string;
   maxTokens: number;
+  /** Optional label (e.g. pass name) included in the [HOMEPAGE_USAGE] log line. */
+  logLabel?: string;
+};
+
+/** Token accounting from the Anthropic response (cache fields are present only
+ *  once prompt caching is enabled; they stay undefined otherwise). */
+export type GenerateHomepageUsage = {
+  input_tokens?: number;
+  output_tokens?: number;
+  cache_creation_input_tokens?: number;
+  cache_read_input_tokens?: number;
 };
 
 /** Abort budget for the vision request; matches GENERATE_TIMEOUT_MS in the job. */
 export const GENERATE_FETCH_TIMEOUT_MS = 200_000;
 
-export type GenerateHomepageResult = { html: string; critique: string };
+export type GenerateHomepageResult = {
+  html: string;
+  critique: string;
+  usage?: GenerateHomepageUsage;
+};
 
 type ContentBlock =
   | { type: "text"; text: string }
@@ -58,7 +74,11 @@ export async function generateHomepage(
   // waiting). Budget matches the job's per-pass generate timeout.
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), GENERATE_FETCH_TIMEOUT_MS);
-  let data: { content?: { type?: string; text?: string }[]; stop_reason?: string };
+  let data: {
+    content?: { type?: string; text?: string }[];
+    stop_reason?: string;
+    usage?: GenerateHomepageUsage;
+  };
   try {
     const res = await fetch(`${baseUrl}/v1/messages`, {
       method: "POST",
@@ -108,5 +128,29 @@ export async function generateHomepage(
   }
   if (typeof parsed.html !== "string" || !parsed.html || typeof parsed.critique !== "string")
     throw new Error("AI returned an unexpected response (missing html/critique)");
-  return { html: parsed.html, critique: parsed.critique };
+  // Token accounting — surfaces per-pass input/output and (once caching is on)
+  // cache read/creation so we can see cost and verify cache hits in the logs.
+  const usage = data?.usage;
+  if (usage) {
+    console.log("[HOMEPAGE_USAGE]", {
+      label: input.logLabel ?? null,
+      model: input.model,
+      input_tokens: usage.input_tokens,
+      output_tokens: usage.output_tokens,
+      cache_creation_input_tokens: usage.cache_creation_input_tokens,
+      cache_read_input_tokens: usage.cache_read_input_tokens,
+      cost_usd: Number(
+        computePassCostUsd(
+          {
+            input_tokens: usage.input_tokens,
+            output_tokens: usage.output_tokens,
+            cache_read_tokens: usage.cache_read_input_tokens,
+            cache_creation_tokens: usage.cache_creation_input_tokens,
+          },
+          input.model,
+        ).toFixed(4),
+      ),
+    });
+  }
+  return { html: parsed.html, critique: parsed.critique, usage };
 }
