@@ -4,7 +4,6 @@ import { getTranslations } from "next-intl/server";
 
 import "@/app/[locale]/globals.css";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import Footer from "@/app/[locale]/(routes)/components/Footer";
 import getGithubRepoStars from "@/actions/github/get-repo-stars";
 import { DiscordLogoIcon } from "@radix-ui/react-icons";
 
@@ -29,30 +28,29 @@ const AuthLayout = async ({ children }: { children: React.ReactNode }) => {
   const githubStars = await getGithubRepoStars();
 
   return (
-    <div className="flex flex-col justify-center items-center min-h-screen w-full">
-      <div className="flex justify-end items-center space-x-5 w-full p-5">
+    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-[#070d1b] text-white">
+      <div className="flex w-full items-center justify-end gap-5 p-7">
         <Link
           href={process.env.NEXT_PUBLIC_GITHUB_REPO_URL || "#"}
-          className=" border rounded-md p-2"
+          className="rounded-xl border border-slate-800 p-3 text-white hover:bg-slate-900"
         >
           <GithubIcon className="size-5" />
         </Link>
-        <div className="flex items-center border rounded-md p-2 ">
+        <div className="flex items-center rounded-xl border border-slate-800 p-3 text-white">
           <span className="sr-only">Github stars</span>
           {githubStars}
           <Star className="size-4" />
         </div>
-        <div className="flex items-center border rounded-md p-2">
+        <div className="flex items-center rounded-xl border border-slate-800 p-3 text-white">
           <Link href="https://discord.gg/Dd4Aj6S4Dz">
             <DiscordLogoIcon className="size-5" />
           </Link>
         </div>
         <ThemeToggle />
       </div>
-      <div className="flex items-center grow h-full overflow-hidden">
+      <div className="flex w-full flex-1 items-center justify-center overflow-hidden">
         {children}
       </div>
-      <Footer />
     </div>
   );
 };

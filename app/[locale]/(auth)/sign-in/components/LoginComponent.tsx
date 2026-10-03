@@ -93,17 +93,17 @@ export function LoginComponent() {
   };
 
   return (
-    <Card className="shadow-lg my-5">
-      <CardHeader className="space-y-1">
+    <Card className="my-5 w-full max-w-[336px] border-slate-800 bg-[#111827] text-white shadow-2xl">
+      <CardHeader className="space-y-1 pb-4">
         <CardTitle className="text-2xl">Login</CardTitle>
         <CardDescription>Choose your sign-in method</CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-4">
+      <CardContent className="grid gap-4 pb-7">
         <Button
           variant="outline"
           onClick={loginWithGoogle}
           disabled={isLoading}
-          className="w-full"
+          className="w-full border-slate-700 bg-[#080e1c] text-white hover:bg-slate-800 hover:text-white"
         >
           <Icons.google className="mr-2 h-4 w-4" />
           Continue with Google
@@ -128,13 +128,14 @@ export function LoginComponent() {
                 id="email"
                 type="email"
                 placeholder="name@domain.com"
+                className="border-slate-700 bg-[#080e1c] text-white placeholder:text-slate-400"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
                 onKeyDown={(e) => e.key === "Enter" && sendOtp()}
               />
             </div>
-            <Button onClick={sendOtp} disabled={isLoading || !email}>
+            <Button className="bg-[#1784a5] text-slate-950 hover:bg-[#249bbd]" onClick={sendOtp} disabled={isLoading || !email}>
               <MailIcon className="mr-2 h-4 w-4" />
               Send verification code
             </Button>

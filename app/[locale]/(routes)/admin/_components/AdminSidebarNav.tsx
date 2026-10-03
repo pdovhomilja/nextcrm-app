@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Key, Users, Settings, SlidersHorizontal, ClipboardList, Coins, FileText, CalendarClock, Linkedin } from "lucide-react";
+import { Key, Users, Settings, SlidersHorizontal, ClipboardList, Coins, FileText, CalendarClock, ArrowLeftRight, Linkedin } from "lucide-react";
 
 const navItems = [
   { label: "LLM Keys",     href: "/admin/llm-keys",     icon: Key },
@@ -16,6 +16,7 @@ const navItems = [
   { label: "Audit Log",    href: "/admin/audit-log",    icon: ClipboardList },
   { label: "Currencies",   href: "/admin/currencies",   icon: Coins },
   { label: "Invoices",     href: "/admin/invoices",     icon: FileText },
+  { label: "Import & Export", href: "/admin/data-transfer", icon: ArrowLeftRight },
 ];
 
 export function AdminSidebarNav() {
