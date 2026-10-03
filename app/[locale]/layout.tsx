@@ -10,6 +10,7 @@ import { getTranslations, getMessages } from "next-intl/server";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/app/providers/ThemeProvider";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -68,6 +69,7 @@ export default async function RootLayout(props: Props) {
         </NextIntlClientProvider>
         <Toaster />
         <SonnerToaster />
+        <Analytics />
       </body>
     </html>
   );
