@@ -804,3 +804,26 @@ authored manually to contain only the additive column and avoid bundling that en
 **Re-verify after any upstream merge:** `crm_Targets.homepage_style_prompt_id` still present,
 generate/refine still persist + reuse it (`resolveStyleDirection` precedence override→remembered→auto),
 and `pnpm exec jest generate-homepage select-style plan get-homepage-styles && pnpm exec tsc --noEmit`.
+
+---
+
+## feat/homepage-cost-tracking — per-target homepage generation cost  (PR: TBD)
+
+Per-target accumulated cost of homepage HTML generation, surfaced on a new admin
+**Homepage Costs** page. **2 upstream-owned files** touched, both insert-only; everything
+else is fork-owned (`lib/homepage/cost.ts` new; `actions/admin/homepage-costs.ts` new;
+`app/[locale]/(routes)/admin/homepage-costs/page.tsx` new; `inngest/functions/generate-homepage.ts`,
+`lib/homepage/provider.ts` are fork-owned). The migration file is new/fork-added (no upstream risk).
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `prisma/schema.prisma` | +7/−0 | **insert-only** | Added 5 nullable columns (`model`, `input_tokens`, `output_tokens`, `cache_read_tokens`, `cache_creation_tokens`) + a 2-line comment to the **fork-added** `crm_Target_Homepage_Version` model, right after `created_at`. No enum/relation/other-model change. Paired migration `20261003180000_homepage_version_usage` (additive, nullable, no backfill). | Low (additive columns on a fork model; on conflict re-add the 5 fields) |
+| `app/[locale]/(routes)/admin/_components/AdminSidebarNav.tsx` | +1/−0 | **insert-only** | One `navItems` entry (`Homepage Costs` → `/admin/homepage-costs`, `Coins` icon already imported) inserted right after the `Homepage Generation` entry. | Low (additive array entry; the `navItems` tail is a known merge-conflict spot — re-add the one line) |
+
+Note: as on prior branches, `prisma migrate dev` surfaced the **pre-existing, unrelated** drift
+(`DocumentSystemType` drops `INVOICE` in schema but not via a migration). NOT touched here — the
+migration was authored manually (only the 5 additive columns) and applied via `prisma migrate deploy`.
+
+**Re-verify after any upstream merge:** the 5 `crm_Target_Homepage_Version` usage columns still
+present; the persist step still writes them; the `Homepage Costs` nav entry still present; and
+`pnpm exec jest lib/homepage/__tests__/cost.test.ts actions/admin/__tests__/homepage-costs.test.ts generate-homepage && pnpm exec tsc --noEmit`.
