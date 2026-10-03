@@ -39,7 +39,7 @@ export const auth = betterAuth({
       },
       userStatus: {
         type: "string",
-        defaultValue: isDemo ? "ACTIVE" : "PENDING",
+        defaultValue: "ACTIVE",
         input: false,
       },
       userLanguage: {
