@@ -7,14 +7,30 @@ import TryAgain from "./components/TryAgain";
 import { Users } from "@prisma/client";
 
 const PendingPage = async () => {
+  const session = await getSession();
+  const bootstrapAdminEmail = (
+    process.env.BOOTSTRAP_ADMIN_EMAIL || "jayandraa5@gmail.com"
+  ).trim().toLowerCase();
+
+  // Repair the configured bootstrap account if it was created before the
+  // bootstrap rule existed or was left in PENDING state.
+  if (
+    session?.user.email?.trim().toLowerCase() === bootstrapAdminEmail &&
+    session.user.userStatus !== "ACTIVE"
+  ) {
+    await prismadb.users.update({
+      where: { id: session.user.id },
+      data: { role: "admin", userStatus: "ACTIVE" },
+    });
+    return redirect("/");
+  }
+
   const adminUsers: Users[] = await prismadb.users.findMany({
     where: {
       role: "admin",
       userStatus: "ACTIVE",
     },
   });
-
-  const session = await getSession();
 
   if (session?.user.userStatus !== "PENDING") {
     return redirect("/");
