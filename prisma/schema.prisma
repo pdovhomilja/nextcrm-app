@@ -2185,6 +2185,13 @@ model crm_Target_Homepage_Version {
   pass_kind      crm_Homepage_Pass_Kind
   created_by     String?                @db.Uuid
   created_at     DateTime               @default(now())
+  // fork: per-pass Anthropic token usage for cost tracking (null for upload
+  // versions and for passes generated before cost tracking shipped).
+  model                 String?
+  input_tokens          Int?
+  output_tokens         Int?
+  cache_read_tokens     Int?
+  cache_creation_tokens Int?
 
   homepage crm_Target_Homepage @relation(fields: [homepage_id], references: [id], onDelete: Cascade)
 
