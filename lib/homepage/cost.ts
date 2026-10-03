@@ -5,10 +5,16 @@ export type PassUsage = {
   cache_creation_tokens?: number | null;
 };
 
+import type { HomepageModel } from "@/lib/homepage/settings";
+
 type Rate = { input: number; output: number; cacheRead: number; cacheWrite: number };
 
-/** USD per 1,000,000 tokens. Keyed by the exact HOMEPAGE_MODELS ids. */
-export const HOMEPAGE_MODEL_PRICING: Record<string, Rate> = {
+/**
+ * USD per 1,000,000 tokens, one entry per HomepageModel. Typed by the model
+ * union (not `string`) so adding/renaming a model in HOMEPAGE_MODELS without a
+ * price here is a compile error rather than a silent $0.
+ */
+export const HOMEPAGE_MODEL_PRICING: Record<HomepageModel, Rate> = {
   "claude-sonnet-5-5": { input: 2.0, output: 10.0, cacheRead: 0.2, cacheWrite: 2.5 },
   "claude-opus-5-5": { input: 4.0, output: 20.0, cacheRead: 0.2, cacheWrite: 5.0 },
   "claude-haiku-4-5-20251001": { input: 1.0, output: 5.0, cacheRead: 0.1, cacheWrite: 1.25 },
@@ -18,7 +24,9 @@ const num = (x: number | null | undefined): number =>
   typeof x === "number" && Number.isFinite(x) ? x : 0;
 
 export function computePassCostUsd(usage: PassUsage, model: string | null | undefined): number {
-  const rate = model ? HOMEPAGE_MODEL_PRICING[model] : undefined;
+  // Loosen the key type only at the lookup — the strict map type above is the
+  // drift guard; a legacy/unknown model id simply misses and prices at 0.
+  const rate = model ? (HOMEPAGE_MODEL_PRICING as Record<string, Rate>)[model] : undefined;
   if (!rate) return 0;
   return (
     (num(usage.input_tokens) * rate.input +

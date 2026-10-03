@@ -2,11 +2,7 @@
 
 import { prismadb } from "@/lib/prisma";
 import { requireRole, AuthenticationError, AuthorizationError } from "@/lib/authz";
-import {
-  summarizeHomepageCost,
-  type TargetCostSummary,
-  type VersionCostInput,
-} from "@/lib/homepage/cost";
+import { summarizeHomepageCost, type TargetCostSummary } from "@/lib/homepage/cost";
 
 export type HomepageCostRow = {
   targetId: string;
@@ -47,7 +43,7 @@ export async function getHomepageCostsForAdmin(): Promise<
   const rows: HomepageCostRow[] = homepages.map((h) => ({
     targetId: h.targetId,
     company: h.target?.company ?? "(unknown)",
-    summary: summarizeHomepageCost(h.versions as VersionCostInput[]),
+    summary: summarizeHomepageCost(h.versions),
   }));
 
   rows.sort((a, b) => {
