@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+
+const HCTPL_LOGO_URL = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/hctpl-logo-MGmowsi8I3RvpJLdjM4RplJB2PDgoV.png";
 import {
   Sidebar,
   SidebarContent,
@@ -133,25 +135,23 @@ export function AppSidebar({
             isExpanded ? "gap-x-4" : "justify-center",
           )}
         >
-          {/* "N" Branding Symbol with rotation animation */}
-          <div
-            className={cn(
-              "flex-shrink-0 border rounded-full px-4 py-2 transition-transform duration-500",
-              isExpanded && "rotate-[360deg]",
-            )}
-          >
-            N
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-cyan-400/20">
+            <img
+              src={HCTPL_LOGO_URL}
+              alt="HCTPL"
+              className="h-full w-full object-contain"
+            />
           </div>
 
-          {/* App Name - visible when expanded, hidden when collapsed */}
-          <h1
+          <div
             className={cn(
-              "origin-left font-medium text-xl transition-all overflow-hidden whitespace-nowrap",
+              "origin-left overflow-hidden whitespace-nowrap transition-all",
               !isExpanded ? "w-0 opacity-0" : "w-auto opacity-100",
             )}
           >
-            {process.env.NEXT_PUBLIC_APP_NAME || "NextCRM"}
-          </h1>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">HCTPL</p>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">VenSai CRM</h1>
+          </div>
         </div>
       </SidebarHeader>
 

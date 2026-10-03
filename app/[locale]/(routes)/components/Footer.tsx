@@ -7,28 +7,17 @@ const Footer = async () => {
   const nextVersion = await getNextVersion();
   //console.log(nextVersion, "nextVersion");
   return (
-    <footer className="flex flex-row h-8 justify-end items-center w-full text-xs text-muted-foreground p-5">
-      <div className="hidden md:flex pr-5">
-        <Link href="/">
-          <h1 className="text-muted-foreground hover:text-foreground transition-colors">
-            {process.env.NEXT_PUBLIC_APP_NAME} - v{version}
-          </h1>
-        </Link>
-      </div>
-      <div className="hidden md:flex space-x-2 pr-2">
-        powered by Next.js
-        <span className="bg-black dark:bg-white rounded-md text-white dark:text-black px-1 mx-1">
+    <footer className="flex min-h-14 w-full items-center justify-between gap-4 border-t border-border/60 bg-background/70 px-5 py-3 text-xs text-muted-foreground backdrop-blur-md">
+      <Link href="/" className="font-medium tracking-tight text-foreground/80 transition-colors hover:text-primary">
+        VenSai CRM <span className="text-muted-foreground">· v{version}</span>
+      </Link>
+      <div className="hidden items-center gap-2 sm:flex">
+        <span>Powered by</span>
+        <span className="font-medium text-foreground/75">Hari Cornucopia Tech Pvt. Ltd.</span>
+        <span className="text-border">·</span>
+        <span>Built with Next.js</span>
+        <span className="rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[10px] text-primary">
           {nextVersion.substring(1, 7) || process.env.NEXT_PUBLIC_NEXT_VERSION}
-        </span>
-        +
-        <Link href={"https://ui.shadcn.com/"}>
-          <span className="rounded-md mr-2 hover:text-foreground transition-colors">
-            shadcnUI
-          </span>
-        </Link>{" "}
-        hosted by:
-        <span className="text-bold underline hover:text-foreground transition-colors">
-          <Link href="https://www.vercel.com">Vercel</Link>
         </span>
       </div>
     </footer>
