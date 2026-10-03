@@ -25,11 +25,11 @@ describe("seedHomepagePromptLayers", () => {
     await seedHomepagePromptLayers(prisma);
     await seedHomepagePromptLayers(prisma); // re-run
     const rows = Array.from(store.values());
-    expect(STYLE_PROMPTS).toHaveLength(10);
+    expect(STYLE_PROMPTS).toHaveLength(15);
     expect(INDUSTRY_PROMPTS).toHaveLength(15);
     expect(rows).toHaveLength(1 + STYLE_PROMPTS.length + INDUSTRY_PROMPTS.length);
     expect(rows.filter((r) => r.kind === "HOMEPAGE_AVOID")).toHaveLength(1);
-    expect(rows.filter((r) => r.kind === "HOMEPAGE_STYLE")).toHaveLength(10);
+    expect(rows.filter((r) => r.kind === "HOMEPAGE_STYLE")).toHaveLength(15);
     expect(rows.filter((r) => r.kind === "HOMEPAGE_INDUSTRY")).toHaveLength(15);
     const defaults = rows.filter((r) => r.kind === "HOMEPAGE_INDUSTRY" && r.is_default);
     expect(defaults).toHaveLength(1);

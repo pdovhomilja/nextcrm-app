@@ -25,7 +25,7 @@ pnpm dev
   values** (it discards your edits to those cards) and does **not** un-delete a soft-deleted one.
   `seed:homepage-prompts` is **not** behind the local-DB guard — it writes to whatever `DATABASE_URL`
   is set, so check that variable before running it.
-- **Library after seeding:** 1 **Avoid list** card, 10 **Art direction** (style) cards, 15 **Industry**
+- **Library after seeding:** 1 **Avoid list** card, 15 **Art direction** (style) cards, 15 **Industry**
   cards (one flagged default = **Generic**). Verify at http://localhost:3000/en/campaigns/prompts
   (sign in as an **admin** — the three layer kinds are only creatable/editable/deletable by admins).
 - **Two approved targets in different verticals** (see the target-triage doc), e.g. one plumbing
