@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import ExcelJS from "exceljs";
+import { Readable } from "node:stream";
 import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 
@@ -96,7 +97,7 @@ export async function POST(request: NextRequest) {
   if (file.size > 10 * 1024 * 1024) return NextResponse.json({ error: "Files must be smaller than 10 MB" }, { status: 413 });
   const workbook = new ExcelJS.Workbook();
   const name = file.name.toLowerCase();
-  if (name.endsWith(".csv")) await workbook.csv.load(await file.text());
+  if (name.endsWith(".csv")) await workbook.csv.read(Readable.from([await file.text()]));
   else if (name.endsWith(".xlsx")) await workbook.xlsx.load(Buffer.from(await file.arrayBuffer()));
   else return NextResponse.json({ error: "Use .xlsx or .csv files. Legacy .xls files are not supported." }, { status: 415 });
   const sheet = workbook.worksheets[0];
