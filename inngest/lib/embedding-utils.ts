@@ -1,7 +1,9 @@
 import { createHash } from "crypto";
 import OpenAI from "openai";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY || "sk-placeholder-for-build",
+});
 
 /**
  * Concatenate non-null text fields into a single embedding string.
