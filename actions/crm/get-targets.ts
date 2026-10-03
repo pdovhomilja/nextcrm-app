@@ -28,6 +28,18 @@ export const getTargets = async () => {
         where: { deletedAt: null },
         select: { status: true, opened_at: true, homepage_clicked_at: true },
       },
+      // One-to-one generated homepage — powers the list's "Homepage" column +
+      // filter. current_version_id (not transient job status) marks a published
+      // page, matching the /p/ serving gate and the email drawer's hasHomepage.
+      homepage: {
+        select: {
+          slug: true,
+          status: true,
+          preview_url: true,
+          current_version_id: true,
+          deletedAt: true,
+        },
+      },
     },
   });
   return targets;

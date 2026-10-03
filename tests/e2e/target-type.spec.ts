@@ -10,6 +10,9 @@ const COMPANY_NAME = `${PREFIX} Roofing Co`;
 const PERSON_FIRST = "Jane";
 const PERSON_LAST = `${PREFIX}Doe`;
 const PERSON_TITLE = `${PERSON_FIRST} ${PERSON_LAST}`;
+// The researched contact person stored on the COMPANY target (powers {{first_name}}).
+const CONTACT_FIRST = "Bill";
+const CONTACT_LAST = "Smith";
 
 async function assertSuccessToast(page: Page) {
   await expect(
@@ -73,12 +76,15 @@ test.describe.serial("Target type (Individual vs Company)", () => {
     await expect(page.getByLabel("Industry")).toBeVisible();
     await expect(page.getByLabel("Employees")).toBeVisible();
     await expect(page.getByLabel("Company website", { exact: true })).toBeVisible();
-    await expect(page.getByLabel("Last name")).toHaveCount(0);
-    await expect(page.getByLabel("First name")).toHaveCount(0);
+    // A company now carries an OPTIONAL contact person, labelled "Contact …".
+    await expect(page.getByLabel("Contact first name")).toBeVisible();
+    await expect(page.getByLabel("Contact last name")).toBeVisible();
+    // Person-only fields still don't show for a company.
     await expect(page.getByLabel("Position")).toHaveCount(0);
     await expect(page.getByLabel("Personal website")).toHaveCount(0);
 
     // Company name is required: submitting empty is rejected with an inline error.
+    // The contact-name fields are left empty — they must NOT block submission.
     await page.getByRole("button", { name: "Create target" }).click();
     await expect(page.getByText("Company name is required")).toBeVisible({
       timeout: 5000,
@@ -86,6 +92,8 @@ test.describe.serial("Target type (Individual vs Company)", () => {
 
     await page.getByLabel("Company name *").fill(COMPANY_NAME);
     await page.getByLabel("Industry").fill("Roofing");
+    await page.getByLabel("Contact first name").fill(CONTACT_FIRST);
+    await page.getByLabel("Contact last name").fill(CONTACT_LAST);
     await page.getByRole("button", { name: "Create target" }).click();
 
     await assertSuccessToast(page);
@@ -177,6 +185,12 @@ test.describe.serial("Target type (Individual vs Company)", () => {
     // Company detail shows company-only fields, not person-only ones.
     await expect(page.getByText("Industry").first()).toBeVisible();
     await expect(page.getByText("Position")).toHaveCount(0);
+    // The researched contact person appears as a "Contact" row; the title stays
+    // the company name (asserted above), not the person.
+    await expect(page.getByText("Contact", { exact: true })).toBeVisible();
+    await expect(
+      page.getByText(`${CONTACT_FIRST} ${CONTACT_LAST}`)
+    ).toBeVisible();
   });
 
   test("detail title is the person's full name for an Individual target", async ({

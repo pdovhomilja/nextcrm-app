@@ -67,10 +67,31 @@ Setting only one of label/link (not both) must also render no button.
    the footer under "You're receiving this because…".
 2. Unset it, restart `pnpm dev`, preview again → the address line is gone (no blank line).
 
+## 4. Wide body content stays inside the column (no horizontal scroll)
+
+The shell is a fixed 600px column; AI/TipTap body markup must never stretch it (that would scroll
+sideways in the preview, in Resend, and on mobile). See `docs/reference/LESSONS_LEARNED.md` →
+"AI/TipTap body markup can blow out the fixed email column".
+
+1. On an approved target **with a generated homepage**, open **AI → Generate email** and generate a draft.
+2. Click **Insert homepage screenshot**, then **Update preview**.
+3. **Verify:** the 1280px screenshot is scaled to fit the column — the preview has **no horizontal
+   scrollbar** and nothing is clipped off the right edge.
+4. In the body editor, paste a very long unbroken URL (e.g. `https://example.com/` + ~120 `a`s) and a
+   short code block, then **Update preview**.
+5. **Verify:** the long string wraps and the code block wraps — still no horizontal scroll.
+6. (Optional) Send to a test inbox and open in Gmail + a phone — the email fits the width on both.
+
+**Guard:** width constraints are unit-covered in `render-email.test.ts` → "constrains wide body content
+(no horizontal overflow)" (images capped, pre/code wrap, long words break).
+
 ---
 
 ## Known Gaps
 
+- **Wide-body width guards (§4):** the shell CSS rules are asserted by the unit test
+  (`render-email.test.ts`); a pixel-level visual E2E (measuring scrollWidth across email clients) is
+  brittle and omitted — verify visually per §4 and in Resend/mobile.
 - **Unsafe CTA URL rejection** (e.g. `javascript:`) is covered only by the unit test
   (`render-email.test.ts` → "refuses a CTA URL with an unsafe scheme"), not E2E — it is a
   server-side guard with no distinct UI affordance.

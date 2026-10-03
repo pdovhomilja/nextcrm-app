@@ -65,6 +65,8 @@ export async function BasicView({ data }: TargetBasicViewProps) {
 
   const type = normalizeTargetType(data.type);
   const location = [data.city, data.country].filter(Boolean).join(", ");
+  // Researched contact person at a company (powers the {{first_name}} salutation).
+  const contactName = `${data.first_name ?? ""} ${data.last_name ?? ""}`.trim();
 
   // AI-email menu data is only needed for APPROVED targets (the menu item is
   // disabled otherwise), so skip the four queries for everything else.
@@ -196,6 +198,20 @@ export async function BasicView({ data }: TargetBasicViewProps) {
                   </p>
                 </div>
               </div>
+              {/* Contact person at the company — the researched name that powers
+                  the {{first_name}} email salutation. Shown only when present
+                  (an individual target's own name is already the card title). */}
+              {type === "COMPANY" && contactName && (
+                <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
+                  <User className="mt-px h-5 w-5" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium leading-none">Contact</p>
+                    <p className="text-sm text-muted-foreground">
+                      {contactName}
+                    </p>
+                  </div>
+                </div>
+              )}
               {isFieldForType(type, "industry") && (
                 <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
                   <Factory className="mt-px h-5 w-5" />

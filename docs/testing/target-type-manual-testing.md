@@ -79,9 +79,28 @@ and `detail title is the person's full name for an Individual target`
 3. Go back, filter to the Individual target, and open **View**.
 4. **Verify:** the page heading reads **Target detail view: <full name>** and the detail card title is the person's **full name** with an **Individual** badge, and Position is shown while Industry is not.
 
+## 5. Company targets carry a contact person (first/last name)
+
+A COMPANY target can hold a researched contact person so the `{{first_name}}` email
+salutation resolves; the company name stays the record's identity.
+
+**E2E:** `tests/e2e/target-type.spec.ts` › `company target can store and show a contact person` *(parity — see Known gaps if deferred)*
+
+1. Open a **Company** target's **Edit** (⋮ → Edit, or the Update sheet).
+2. **Verify:** the name fields appear, labelled **Contact first name** and **Contact last name** (not just "First/Last name"), and **neither shows a required `*`** (only **Company name** is required for a company).
+3. Enter a first and last name (e.g. `Bill` / `Smith`), save.
+4. **Verify:** a success toast appears and the sheet closes.
+5. Open the target's **View** (detail page).
+6. **Verify:** the card title is still the **company name** (not the person), and a **Contact** row shows the full contact name (`Bill Smith`).
+7. Open **AI → Generate email**, pick a prompt/template, and generate.
+8. **Verify:** the draft opens with a first-name greeting that resolves to the contact (e.g. `Hi Bill,`) in the preview — the body stores the `{{first_name}}` merge tag, which resolves at preview/send.
+9. On an **Individual** target, confirm the same fields still read **First name / Last name** and **Last name** keeps its required `*`.
+
 ---
 
 ## Known gaps
 
 - **Update form / CSV import / MCP** type handling are covered by Jest
   (`__tests__/actions/*-type.test.ts`, `__tests__/mcp/crm-targets-type.test.ts`), not E2E.
+- **Contact-name field group + labels** are unit-covered in `__tests__/lib/target-type.test.ts`
+  (`isFieldForType`/`fieldLabel`/`resolveTargetTitle`).

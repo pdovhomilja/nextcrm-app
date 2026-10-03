@@ -122,3 +122,119 @@ test.describe.serial("Targets — active-list filter", () => {
     ).toHaveCount(0);
   });
 });
+
+// --- Homepage column + faceted filter ------------------------------------
+const HP_RUN = Date.now().toString(36);
+const HP_PREFIX = `PWHP${HP_RUN}`;
+const HP_WITH = `${HP_PREFIX} HasPage`;
+const HP_WITHOUT = `${HP_PREFIX} NoPage`;
+const HP_SLUG = `pwhp-${HP_RUN}`;
+const HP_PREVIEW_URL = `https://previews.radeengineering.com/p/${HP_SLUG}`;
+
+// One company target WITH a published homepage (a non-deleted row carrying a
+// current_version_id — the /p/ serving gate) and one WITHOUT any homepage row.
+async function seedHomepage() {
+  const p = pool();
+  try {
+    const u = await p.query(
+      `SELECT id FROM "Users" WHERE email = $1 LIMIT 1`,
+      [TEST_USER_EMAIL]
+    );
+    if (u.rows.length === 0) throw new Error(`seed: no Users row for ${TEST_USER_EMAIL}`);
+    const uid = u.rows[0].id;
+
+    const target = async (company: string) =>
+      (
+        await p.query(
+          `INSERT INTO "crm_Targets" (id, company, last_name, type, tags, notes, status, created_by, created_on)
+           VALUES (gen_random_uuid(), $1, '', 'COMPANY', '{}', '{}', true, $2, now()) RETURNING id`,
+          [company, uid]
+        )
+      ).rows[0].id as string;
+
+    const withId = await target(HP_WITH);
+    await target(HP_WITHOUT);
+    // current_version_id has no FK, so a random uuid marks "a published version".
+    await p.query(
+      `INSERT INTO "crm_Target_Homepage"
+         (id, "targetId", slug, status, preview_url, current_version_id, created_by, created_on)
+       VALUES (gen_random_uuid(), $1, $2, 'READY', $3, gen_random_uuid(), $4, now())`,
+      [withId, HP_SLUG, HP_PREVIEW_URL, uid]
+    );
+  } finally {
+    await p.end();
+  }
+}
+
+async function cleanupHomepage() {
+  const p = pool();
+  try {
+    // Deleting the targets cascades their crm_Target_Homepage rows.
+    await p.query(`DELETE FROM "crm_Targets" WHERE company LIKE $1`, [`${HP_PREFIX}%`]);
+  } finally {
+    await p.end();
+  }
+}
+
+test.describe.serial("Targets — Homepage column + filter", () => {
+  test.use({ storageState: "playwright/.auth/user.json" });
+
+  test.beforeAll(seedHomepage);
+  test.afterAll(cleanupHomepage);
+
+  test("sits between Triage and Engagement, links to the preview, and filters by presence", async ({
+    page,
+  }) => {
+    await gotoTargets(page);
+
+    // Column order: Homepage is a header, positioned after Triage and before Engagement.
+    const headers = await page.locator("table thead th").allInnerTexts();
+    const idx = (t: string) => headers.findIndex((h) => h.includes(t));
+    expect(idx("Homepage")).toBeGreaterThan(-1);
+    expect(idx("Homepage")).toBeGreaterThan(idx("Triage"));
+    expect(idx("Homepage")).toBeLessThan(idx("Engagement"));
+
+    // Isolate the two seeded rows by the shared name prefix.
+    await page.getByPlaceholder(/Filter by name/).fill(HP_PREFIX);
+    const withRow = page.locator("table tbody tr", { hasText: HP_WITH });
+    const withoutRow = page.locator("table tbody tr", { hasText: HP_WITHOUT });
+    await expect(withRow).toHaveCount(1, { timeout: 10000 });
+    await expect(withoutRow).toHaveCount(1);
+
+    // The target with a page shows a "View" link to its /p/<slug> preview (new tab);
+    // the one without shows a dash.
+    const viewLink = withRow.getByRole("link", { name: /View/i });
+    await expect(viewLink).toHaveAttribute("href", HP_PREVIEW_URL);
+    await expect(viewLink).toHaveAttribute("target", "_blank");
+    await expect(withoutRow.getByRole("link", { name: /View/i })).toHaveCount(0);
+
+    // Clicking the link opens the preview in a NEW tab and does NOT navigate the
+    // list row to the detail page (the cell link stops row-click propagation).
+    const popup = await Promise.all([
+      page.waitForEvent("popup"),
+      viewLink.click(),
+    ]).then(([p]) => p);
+    expect(popup.url()).toContain(`/p/${HP_SLUG}`);
+    await popup.close();
+    await expect(page).toHaveURL(/\/campaigns\/targets(\?|$)/);
+
+    // Faceted filter: "Has homepage" keeps only the target with a page.
+    await page
+      .locator('button[aria-haspopup="dialog"]', { hasText: "Homepage" })
+      .click();
+    await page.getByRole("option", { name: "Has homepage" }).click();
+    await page.keyboard.press("Escape");
+    await expect(withRow).toHaveCount(1, { timeout: 10000 });
+    await expect(withoutRow).toHaveCount(0);
+
+    // Flip to "No homepage" — the pairing reverses.
+    await page
+      .locator('button[aria-haspopup="dialog"]', { hasText: "Homepage" })
+      .click();
+    await page.getByRole("option", { name: "Has homepage" }).click(); // deselect
+    await page.getByRole("option", { name: "No homepage" }).click();
+    await page.keyboard.press("Escape");
+    await expect(withRow).toHaveCount(0, { timeout: 10000 });
+    await expect(withoutRow).toHaveCount(1);
+  });
+});

@@ -43,6 +43,18 @@ export const targetSchema = z.object({
       })
     )
     .optional(),
+  // One-to-one generated homepage — powers the "Homepage" column + filter.
+  // From getTargets(). current_version_id marks a published page.
+  homepage: z
+    .object({
+      slug: z.string().nullable().optional(),
+      status: z.string().nullable().optional(),
+      preview_url: z.string().nullable().optional(),
+      current_version_id: z.string().nullable().optional(),
+      deletedAt: z.coerce.date().nullable().optional(),
+    })
+    .nullable()
+    .optional(),
 });
 
 export type Target = z.infer<typeof targetSchema>;

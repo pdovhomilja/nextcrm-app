@@ -27,6 +27,16 @@ const contentStyles = `
     .campaign-content li { margin: 0 0 6px; }
     .campaign-content blockquote { margin: 0 0 14px; padding-left: 16px; border-left: 3px solid ${c.hairline}; color: ${c.muted}; }
     .campaign-content hr { border: none; border-top: 1px solid ${c.hairline}; margin: 22px 0; }
+    /* Overflow guards: body markup comes from the AI/TipTap and may contain a
+       wide image (e.g. the 1280px homepage screenshot via {{homepage_screenshot}}),
+       a long unbroken URL, a code block, or a wide table. None of these may stretch
+       the fixed 600px column — that would force horizontal scroll in the preview,
+       in Resend, and on mobile. Keep every element inside the column width. */
+    .campaign-content { overflow-wrap: break-word; word-break: break-word; }
+    .campaign-content img { max-width: 100%; height: auto; }
+    .campaign-content table { max-width: 100%; }
+    .campaign-content pre, .campaign-content code { white-space: pre-wrap; word-break: break-word; }
+    .campaign-content a { overflow-wrap: anywhere; }
 `;
 
 /** Escape text for HTML element content. */
@@ -163,7 +173,7 @@ export function renderCampaignShell({
           <!-- BODY -->
           <tr>
             <td style="background:${c.cardBg};padding:34px 30px 8px;border-left:1px solid ${c.hairline};border-right:1px solid ${c.hairline};">
-              <div class="campaign-content" style="font-size:15.5px;line-height:1.65;color:${c.bodyText};">
+              <div class="campaign-content" style="font-size:15.5px;line-height:1.65;color:${c.bodyText};overflow-wrap:break-word;word-break:break-word;">
                 ${body}
               </div>
             </td>

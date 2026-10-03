@@ -19,6 +19,11 @@ import {
   engagementRank,
 } from "../table-data/engagement-options";
 import {
+  targetHomepagePresence,
+  targetHomepageUrl,
+} from "../table-data/homepage-options";
+import { Globe } from "lucide-react";
+import {
   targetTypeLabel,
   targetTypeBadgeVariant,
   resolveTargetTitle,
@@ -229,6 +234,42 @@ export const columns: ColumnDef<Target>[] = [
           {triageStatusLabel(value)}
         </Badge>
       );
+    },
+    filterFn: (row, id, value) => value.includes(row.getValue(id)),
+    enableSorting: true,
+    enableHiding: true,
+  },
+  {
+    // Whether a homepage has been generated for this target. Shown between Triage
+    // and Engagement; faceted-filterable (Has homepage / None). When a published
+    // page exists, the cell links to its preview; otherwise it shows a dash.
+    id: "homepage",
+    accessorFn: (row) => targetHomepagePresence(row.homepage),
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Homepage" />
+    ),
+    cell: ({ row }) => {
+      const url = targetHomepageUrl(row.original.homepage);
+      if (url) {
+        return (
+          <Link
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center gap-1 font-medium text-muted-foreground hover:underline"
+          >
+            <Globe className="h-4 w-4" />
+            View
+          </Link>
+        );
+      }
+      // A published page with no safe preview URL is rare but possible; still
+      // signal that one exists rather than showing a bare dash.
+      if (row.getValue("homepage") === "YES") {
+        return <span className="text-muted-foreground">Generated</span>;
+      }
+      return <span className="text-muted-foreground">—</span>;
     },
     filterFn: (row, id, value) => value.includes(row.getValue(id)),
     enableSorting: true,

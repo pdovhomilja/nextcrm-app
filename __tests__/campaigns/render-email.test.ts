@@ -50,6 +50,37 @@ describe("renderCampaignEmail", () => {
     expect(html.toLowerCase()).toContain("unsubscribe");
   });
 
+  // Regression: a bare AI-generated <img> (e.g. the 1280px homepage screenshot
+// merged in via {{homepage_screenshot}}) or a long unbroken URL used to stretch
+  // the fixed 600px column, forcing horizontal scroll in the preview, in Resend,
+  // and on mobile. The shell must cap any body content so it can never overflow,
+  // regardless of what markup the AI emits.
+  describe("constrains wide body content (no horizontal overflow)", () => {
+    it("caps body images to the column width", async () => {
+      const html = await renderCampaignEmail({
+        contentHtml:
+          '<p><img src="https://previews.example.com/p/x/screenshot.png" width="1280" height="900" alt="preview"></p>',
+        unsubscribeUrl,
+      });
+      // A content-scoped image rule that constrains any <img> to the column.
+      expect(html).toMatch(
+        /\.campaign-content\s+img\s*\{[^}]*max-width:\s*100%/,
+      );
+    });
+
+    it("wraps preformatted/code blocks instead of letting them stretch", async () => {
+      const html = await renderCampaignEmail({ contentHtml, unsubscribeUrl });
+      expect(html).toMatch(
+        /\.campaign-content\s+(pre|code)[^{]*\{[^}]*white-space:\s*pre-wrap/,
+      );
+    });
+
+    it("breaks long unbroken words/URLs in the body", async () => {
+      const html = await renderCampaignEmail({ contentHtml, unsubscribeUrl });
+      expect(html).toMatch(/\.campaign-content[^{]*\{[^}]*overflow-wrap/);
+    });
+  });
+
   describe("CTA button", () => {
     it("renders the amber button when both a label and a safe URL are given", async () => {
       const html = await renderCampaignEmail({

@@ -723,3 +723,37 @@ Fork-owned (new): `.../targets/table-data/engagement-options.ts` (+ `__tests__/e
 **Re-verify after any upstream merge:** the `engagement` column still renders after `triage_status`, the
 toolbar still has the Engagement faceted filter, `get-targets.ts` still includes `target_emails`, and
 `pnpm exec jest engagement-options && pnpm exec tsc --noEmit`.
+
+---
+
+## feat/target-outreach-improvements — email width fix + contact name + Homepage column  (PR: TBD)
+
+Three changes shipped together: (1) **email body width overflow** fix (fork-owned shell + generator —
+no upstream touch); (2) a **contact person** (first/last name) on COMPANY targets so the `{{first_name}}`
+salutation resolves; (3) a **Homepage** column + faceted filter on the Targets list, between Triage and
+Engagement, linking to the generated `/p/<slug>` preview. **7 upstream-owned files** touched — 5
+insert-only, 2 tiny label modifications. No schema change / no migration (reuses the existing one-to-one
+`homepage` relation and the existing `first_name`/`last_name` columns). These targets files are already
+deeply fork-diverged (triage/engagement/lists columns, the type taxonomy); conflict risk is low but they
+are upstream paths.
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `actions/crm/get-targets.ts` | +12/−0 | **insert-only** | Added a one-to-one `homepage: { select: { slug, status, preview_url, current_version_id, deletedAt } }` entry to the existing `include` (alongside `target_lists`, `target_emails`). No other change. | Low (additive include; on conflict keep the entry) |
+| `.../targets/table-data/schema.tsx` | +12/−0 | **insert-only** | Appended an optional nullable `homepage` object to `targetSchema` (after `target_emails`). | Low |
+| `.../targets/table-components/columns.tsx` | +41/−0 | **insert-only** | Added `homepage-options` + `Globe` imports and a new `id: "homepage"` column (accessorFn → `targetHomepagePresence`, a preview `<Link>` cell via `targetHomepageUrl`, faceted `filterFn`) **immediately after the `triage_status` column and before `engagement`**. | Low (on conflict re-insert between Triage and Engagement) |
+| `.../targets/table-components/data-table-toolbar.tsx` | +8/−0 | **insert-only** | Added a `HOMEPAGE_PRESENCE_OPTIONS` import and a `<DataTableFacetedFilter column="homepage" …>` block directly before the Engagement filter. | Low |
+| `.../targets/[targetId]/components/BasicView.tsx` | +16/−0 | **insert-only** | Added a `const contactName` derive after `location`, and a `{type === "COMPANY" && contactName && (…)}` "Contact" row after the company field. No change to existing queries/renders. | Low (additive; already fork-extended) |
+| `.../targets/components/UpdateTargetForm.tsx` | +2/−2 | **modification** | Name labels now use `fieldLabel(type, …)` (→ "Contact first/last name" on COMPANY) and the required `*` shows only for INDIVIDUAL. The `isFieldForType(type,"first_name")` gate now also matches COMPANY (via the `target-type` group change). | Low |
+| `.../targets/components/NewTargetForm.tsx` | +2/−2 | **modification** | Same two-line label/asterisk change as UpdateTargetForm, for parity. | Low |
+
+Fork-owned (new/modified, no upstream risk): `.../targets/table-data/homepage-options.ts` (+ its test) —
+`targetHomepagePresence` (YES once `current_version_id` exists & not soft-deleted, matching the `/p/` gate)
++ `targetHomepageUrl` (http(s)-guarded) + filter options; `lib/crm/target-type.ts` — `first_name`/`last_name`
+added to the COMPANY field group + contact-aware `fieldLabel`; `lib/campaigns/email-shell.ts` — content-style
+overflow guards; `actions/crm/targets/generate-target-email.ts` — width-safe prompt + first-name-greeting nudge.
+
+**Re-verify after any upstream merge:** the `homepage` column still renders between `triage_status` and
+`engagement`, the toolbar still has the Homepage faceted filter, `get-targets.ts` still includes `homepage`,
+the forms still label the COMPANY name fields as "Contact …" without a required `*`, and
+`pnpm exec jest homepage-options target-type render-email generate-target-email && pnpm exec tsc --noEmit`.

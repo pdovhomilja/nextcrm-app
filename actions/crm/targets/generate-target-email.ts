@@ -13,8 +13,11 @@ const SYSTEM_PROMPT = `You are an expert B2B outreach copywriter for a web desig
 Write a short, personalized email BODY (no <html>, <head>, or <body> wrapper — it will be inserted into a template).
 Return ONLY valid JSON in this exact shape: {"subject":"...","html":"..."}
 The "html" is clean, inline-styled body markup (<p>, <a>, <strong>, <ul>).
+The email renders in a fixed 600px-wide column, so nothing may be wider than that.
+Do NOT set fixed pixel widths, and avoid wide tables or preformatted (<pre>/<code>) blocks.
 You MAY use merge tags: {{first_name}}, {{last_name}}, {{company}}, {{position}}.
-If the operator's instructions reference a homepage/mockup, you MAY include {{homepage_url}} (link) and/or {{homepage_screenshot}} (image URL for an <img src>).
+When a contact first name is provided below, OPEN with a brief greeting that uses the {{first_name}} merge tag verbatim (e.g. "Hi {{first_name}},") — write the literal "{{first_name}}" token, never the actual name, so it resolves at send time. When no contact name is provided, open with a natural greeting that does not use {{first_name}}.
+If the operator's instructions reference a homepage/mockup, you MAY include {{homepage_url}} (link) and/or {{homepage_screenshot}} (image URL). When you embed the screenshot, ALWAYS style the image so it cannot overflow: <img src="{{homepage_screenshot}}" alt="Website preview" style="display:block;max-width:100%;height:auto;border-radius:8px;" /> — never add a fixed width/height attribute.
 Keep it concise and specific to the prospect. No placeholders like [Name].`;
 
 export const generateTargetEmail = async ({
@@ -42,8 +45,14 @@ export const generateTargetEmail = async ({
   const apiKey = await getApiKey("ANTHROPIC", user.id);
   if (!apiKey) return { error: "No Anthropic API key configured. Add one in Profile → LLMs." };
 
+  const hasContactFirstName = Boolean((target.first_name ?? "").trim());
   const facts = [
     target.company ? `Company: ${target.company}` : null,
+    // Signal presence only — the literal name is withheld so the model greets via
+    // the {{first_name}} merge tag (which resolves at send) instead of inlining it.
+    hasContactFirstName
+      ? "A contact first name is on file — greet them with the {{first_name}} merge tag."
+      : null,
     target.position ? `Contact role: ${target.position}` : null,
     target.industry ? `Industry: ${target.industry}` : null,
     target.company_website ? `Website: ${target.company_website}` : null,

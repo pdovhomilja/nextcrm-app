@@ -38,4 +38,31 @@ describe("target-type config", () => {
     expect(fieldLabel("INDIVIDUAL", "company")).toBe("Employer");
     expect(fieldLabel("COMPANY", "company")).toBe("Company name");
   });
+
+  it("exposes a contact person (first/last name) on COMPANY targets", () => {
+    // Companies can carry a researched contact person so the {{first_name}}
+    // email salutation resolves; the fields exist for both types now.
+    expect(isFieldForType("COMPANY", "first_name")).toBe(true);
+    expect(isFieldForType("COMPANY", "last_name")).toBe(true);
+    expect(isFieldForType("INDIVIDUAL", "first_name")).toBe(true);
+  });
+
+  it("labels the name fields as the contact person on a company", () => {
+    expect(fieldLabel("COMPANY", "first_name")).toBe("Contact first name");
+    expect(fieldLabel("COMPANY", "last_name")).toBe("Contact last name");
+    expect(fieldLabel("INDIVIDUAL", "first_name")).toBe("First name");
+    expect(fieldLabel("INDIVIDUAL", "last_name")).toBe("Last name");
+  });
+
+  it("keeps the company name as the record identity even with a contact set", () => {
+    // Adding a contact person must NOT change the company's displayed title.
+    expect(
+      resolveTargetTitle({
+        type: "COMPANY",
+        company: "Acme Inc",
+        first_name: "Ada",
+        last_name: "Lovelace",
+      }),
+    ).toBe("Acme Inc");
+  });
 });

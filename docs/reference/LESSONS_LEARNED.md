@@ -1070,5 +1070,28 @@
   human likely look?" signal; for exact traffic use real website analytics. Record best-effort and
   non-blocking (never fail serving on a tracking write).
 
+## Email / campaign rendering
+
+### AI/TipTap body markup can blow out the fixed email column (horizontal scroll)
+
+- **Symptom:** an outreach email renders fine on the first generate, then after an edit/regenerate it
+  becomes very wide — horizontal scroll in the drawer preview AND in the actual sent email (visible in
+  Resend), and unusable on mobile. Looks intermittent because it depends on what markup the model emits.
+- **Cause:** the branded shell is a fixed 600px column, but the body comes from the AI/TipTap editor and
+  may contain a wide element — most often the **homepage screenshot `<img>` with no width cap** (the
+  capture is 1280px, >2× the column), or a long unbroken URL, a `<pre>`/`<code>` block, or a wide
+  `<table>`. Tables/images/preformatted text don't wrap — they stretch the column. A telling asymmetry:
+  the drawer's manual "Insert homepage screenshot" button hard-codes `max-width:100%` (safe), while the
+  model's `{{homepage_screenshot}}` `<img>` had no cap (unsafe).
+- **Fix / rule:** constrain wide content in the **shell** (the guarantee), not just the generator —
+  `lib/campaigns/email-shell.ts` `contentStyles` caps `.campaign-content img { max-width:100% }`, wraps
+  `pre/code`, caps `table`, and sets `overflow-wrap` (+ inline fallback on the body div). Treat any
+  body-HTML source (AI or hand-typed) as untrusted for width and make the container bulletproof;
+  separately nudge the generator prompt to avoid fixed widths. Head-`<style>` rules reach the preview,
+  Resend and most webmail/mobile; Outlook desktop ignores `max-width` on images, so also avoid emitting
+  fixed `width`/`height` image attributes at the source.
+- **Tell:** "fits on first generate, wide after regenerate" ⇒ look for an uncapped `<img>` (usually the
+  screenshot) or a `<pre>`/long-URL in the body, not the shell wrapper (which is already 600px capped).
+
 <!-- Add new entries above this line, newest-relevant first within each section.
      Create a new `## <area>` heading when a trap doesn't fit an existing one. -->

@@ -184,7 +184,7 @@ export function UpdateTargetForm({ initialData, setOpen }: UpdateTargetFormProps
             name="first_name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>First name</FormLabel>
+                <FormLabel>{fieldLabel(type, "first_name")}</FormLabel>
                 <FormControl>
                   <Input disabled={form.formState.isSubmitting} placeholder="John" {...field} />
                 </FormControl>
@@ -197,7 +197,7 @@ export function UpdateTargetForm({ initialData, setOpen }: UpdateTargetFormProps
             name="last_name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Last name *</FormLabel>
+                <FormLabel>{fieldLabel(type, "last_name")}{type === "INDIVIDUAL" ? " *" : ""}</FormLabel>
                 <FormControl>
                   <Input disabled={form.formState.isSubmitting} placeholder="Doe" {...field} />
                 </FormControl>

@@ -60,7 +60,10 @@ const TARGET_FIELD_GROUPS: Record<TargetType, string[]> = {
     "description",
   ],
   COMPANY: [
-    "company", "industry", "employees",
+    // first_name/last_name capture a CONTACT PERSON at the company (optional).
+    // They power the {{first_name}} email salutation; the company name stays the
+    // record's identity (resolveTargetTitle still uses `company`).
+    "company", "first_name", "last_name", "industry", "employees",
     "company_website", "company_email", "company_phone",
     "city", "country",
     "social_linkedin", "social_x", "social_instagram", "social_facebook",
@@ -89,5 +92,11 @@ const FIELD_LABELS: Record<string, string> = {
 
 export function fieldLabel(type: TargetType, key: string): string {
   if (key === "company") return type === "INDIVIDUAL" ? "Employer" : "Company name";
+  // On a company target, first/last name describe the contact person, not the
+  // record itself — label them accordingly.
+  if (key === "first_name")
+    return type === "COMPANY" ? "Contact first name" : "First name";
+  if (key === "last_name")
+    return type === "COMPANY" ? "Contact last name" : "Last name";
   return FIELD_LABELS[key] ?? key;
 }

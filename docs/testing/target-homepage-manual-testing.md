@@ -242,6 +242,30 @@ status, preview URL and versions.
 
 ---
 
+## 9. Targets list — "Homepage" column + filter
+
+The targets list shows a **Homepage** column between **Triage** and **Engagement** indicating whether a
+page has been generated, with a click-through to the generated preview.
+
+**E2E:** `tests/e2e/targets-list-filter.spec.ts` › `Homepage column links to the preview and filters by presence` *(parity — see Known gaps if deferred)*
+
+1. Open the targets list (**Campaigns → Targets**).
+2. **Verify:** there is a **Homepage** column positioned **between Triage and Engagement**.
+3. **Verify:** a target with a generated page shows a **View** link (globe icon); a target without one shows **—**.
+4. Click the **View** link on a target that has a page.
+5. **Verify:** it opens that target's `/p/<slug>` preview in a **new tab**, and the row itself did **not** navigate to the detail page (the link stops propagation).
+6. Open the **Homepage** faceted filter in the toolbar and choose **Has homepage**.
+7. **Verify:** only targets with a generated page remain, and a **Reset** control appears.
+8. Switch the filter to **No homepage**.
+9. **Verify:** only targets without a page remain.
+
+**Derivation note:** "has a homepage" = a non-deleted row with a `current_version_id` (a published
+version), matching the `/p/` serving gate and the email drawer's `hasHomepage` — NOT the transient job
+status. A later RUNNING/FAILED refine still counts as "Has homepage". Unit-covered in
+`.../targets/table-data/__tests__/homepage-options.test.ts`.
+
+---
+
 ## Known gaps
 
 - **Guessable slug (by design):** `/p/<slug>` is unauthenticated and human-readable; content is a
