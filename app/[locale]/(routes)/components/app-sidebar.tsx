@@ -136,6 +136,8 @@ export function AppSidebar({
           )}
         >
           <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-cyan-400/20">
+            {/* The logo is served from the supplied branded asset URL. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={HCTPL_LOGO_URL}
               alt="HCTPL"
