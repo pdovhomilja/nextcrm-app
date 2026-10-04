@@ -180,11 +180,23 @@ jobs:
         run: pnpm run build
 
   e2e:
-    name: E2E (Playwright)
+    name: E2E (Playwright) ${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
     needs: [fast, changes]
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # Shard the ~116-test suite across parallel runners to cut wall-clock. Each
+    # shard is its OWN runner with its own fresh postgres service + seed +
+    # storageState, so sharding is safe exactly where in-process parallelism is
+    # NOT: playwright.config.ts sets `workers: 1` on CI because parallel workers
+    # share DB/seed state. fail-fast:false so one shard failing still lets the
+    # others finish and contribute to the merged report. To change the shard
+    # count, edit shardIndex AND shardTotal together (e.g. [1,2,3,4] + [4]).
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2, 3]
+        shardTotal: [3]
     services:
       postgres:
         image: pgvector/pgvector:pg16
@@ -257,21 +269,53 @@ jobs:
         # Playwright's webServer starts `pnpm dev` — deliberately dev mode:
         # the OTP-capture auth flow (tests/auth.setup.ts -> /api/auth/test-otp
         # + better-auth testUtils plugin) is disabled under
-        # NODE_ENV=production.
-        run: pnpm exec playwright test --project=chromium
-      - name: Upload Playwright report
-        if: failure()
+        # NODE_ENV=production. --shard slices this runner's tests; the setup
+        # project (its dependency) still runs on every shard, seeding this
+        # shard's own DB. --reporter=blob writes a shard-indexed zip that the
+        # e2e-report job merges into one HTML report (traces/screenshots/videos
+        # are embedded in the blob, so no separate test-results upload needed).
+        run: pnpm exec playwright test --project=chromium --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --reporter=blob
+      - name: Upload shard blob report
+        # Always (even on failure) so a failed shard's results reach the merge.
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-${{ matrix.shardIndex }}
+          path: blob-report/
+          retention-days: 1
+          if-no-files-found: ignore
+
+  # Merge every shard's blob report into one HTML report. Runs after all e2e
+  # shards finish, even on failure (so a red run still produces a browsable
+  # report). Skipped on docs-only changes (code==false), same as the e2e shards.
+  # merge-reports is pure report processing — no browsers, no DB, no services.
+  e2e-report:
+    name: E2E report (merge shards)
+    needs: [changes, e2e]
+    if: ${{ !cancelled() && needs.changes.outputs.code == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Download all shard blob reports
+        uses: actions/download-artifact@v4
+        with:
+          path: all-blob-reports
+          pattern: blob-report-*
+          merge-multiple: true
+      - name: Merge blob reports into one HTML report
+        run: pnpm exec playwright merge-reports --reporter=html ./all-blob-reports
+      - name: Upload merged HTML report
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
           path: playwright-report/
-          retention-days: 7
-          if-no-files-found: ignore
-      - name: Upload test results (traces, screenshots, videos)
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: test-results/
           retention-days: 7
           if-no-files-found: ignore
