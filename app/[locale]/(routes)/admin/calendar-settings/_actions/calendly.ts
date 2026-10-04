@@ -36,13 +36,28 @@ export async function subscribeCalendlyWebhook(): Promise<{ ok: boolean; error?:
   if (denied) return { ok: false, error: denied.error };
 
   try {
-    const { apiToken } = await getCalendlySettings();
+    const { apiToken, webhookUri: existingWebhookUri } = await getCalendlySettings();
     if (!apiToken) return { ok: false, error: "Save the API token first." };
 
     const headers = {
       Authorization: `Bearer ${apiToken}`,
       "Content-Type": "application/json",
     };
+
+    if (existingWebhookUri) {
+      const deleteRes = await fetch(existingWebhookUri, {
+        method: "DELETE",
+        headers,
+      });
+      // A prior subscription that's already gone (404) isn't a failure — anything
+      // else means we don't know its state, so bail rather than risk duplicates.
+      if (!deleteRes.ok && deleteRes.status !== 404) {
+        return {
+          ok: false,
+          error: `Failed to remove previous subscription (${deleteRes.status})`,
+        };
+      }
+    }
 
     const meRes = await fetch("https://api.calendly.com/users/me", { headers });
     if (!meRes.ok) return { ok: false, error: `Calendly /users/me failed (${meRes.status})` };
