@@ -39,10 +39,12 @@ if [ -n "$MINIO_ENDPOINT" ] && [ -n "$MINIO_ACCESS_KEY" ] && [ -n "$MINIO_SECRET
   # Strip protocol for host:port extraction
   MINIO_HOST=$(echo "$MINIO_ENDPOINT" | sed 's|https\?://||')
 
-  # Create bucket via S3 API — returns 200 if created, 409 if exists (both are fine)
+  # Create bucket via S3 API (SigV4-signed; MinIO rejects plain basic auth
+  # with 400) — returns 200 if created, 409 if exists (both are fine)
   STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
     -X PUT "http://${MINIO_HOST}/${MINIO_BUCKET}" \
     -H "Host: ${MINIO_HOST}" \
+    --aws-sigv4 "aws:amz:us-east-1:s3" \
     -u "${MINIO_ACCESS_KEY}:${MINIO_SECRET_KEY}" \
     2>/dev/null || echo "000")
 
