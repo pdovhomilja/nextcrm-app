@@ -134,7 +134,7 @@
     "recharts": "2.15.4",
     "resend": "6.9.2",
     "sanitize-html": "^2.17.5",
-    "sharp": "^0.35.0",
+    "sharp": "^0.35.4",
     "sonner": "^2.0.7",
     "swr": "^2.4.0",
     "tailwind-merge": "^3.5.0",
