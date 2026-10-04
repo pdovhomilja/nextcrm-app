@@ -44,10 +44,11 @@ plugins/<id>/                 # public generic plugins
   messages/{cz,en,de,uk}.json #   plugin translations
   ...                         #   plugin code
 plugins-private/<id>/         # optional git submodule, same structure
-lib/plugins/plugins.generated.ts  # generated, git-ignored
+lib/plugins/plugins.generated.ts  # generated
 ```
 
-- `scripts/plugins/generate-registry.ts` scans `plugins/*/plugin.ts` and `plugins-private/*/plugin.ts` (if the folder exists) and writes `plugins.generated.ts` with static imports. It runs before `next build`, `next dev` and tests (`prebuild`, `predev`, `pretest` scripts).
+- `scripts/plugins/generate-registry.mjs` (plain Node, no tsx) scans `plugins/*/plugin.ts(x)` and `plugins-private/*/plugin.ts(x)` and writes `lib/plugins/plugins.generated.ts`. The file is **committed** for public plugins (CI runs `tsc` without a build step), a Jest test fails when it is stale, and the Dockerfile regenerates it before `next build` so private plugins are included in our image.
+- `@nextcrm/plugin-sdk` is a TypeScript path alias to `packages/plugin-sdk/src` (resolves open question 1); no pnpm workspace.
 - The Dockerfile copies `plugins-private/` when present; CI for the public repository builds without it.
 - Boundaries are enforced by ESLint (`no-restricted-imports`):
   - core code (`app/`, `actions/`, `lib/` except `lib/plugins/`) must not import from `plugins/` or `plugins-private/`;
@@ -94,10 +95,10 @@ export default definePlugin({
 |---|---|---|
 | Rule before write | `x.rule(entity, "beforeCreate" \| "beforeUpdate" \| "beforeDelete", fn, { onError, priority })` | Runs synchronously inside the write (§ 7). `fn` returns `allow()`, `reject(messageKey, params)` or `modify(patch)`. |
 | Action after write | `x.after(entity, "created" \| "updated" \| "deleted", fn)` | Enqueued as Inngest event `plugin/<id>/after`; never delays the write. |
-| Event handler | `x.on(eventName, fn)` | Subscribes to existing core Inngest events (`crm/account.saved`, `crm/opportunity.stage-changed`, …) plus new core events added in v0: `crm/account.deleted`, `crm/order.status-changed`. |
+| Event handler | `x.on(eventName, fn)` | Subscribes to existing core Inngest events (`crm/account.saved`, `crm/opportunity.stage-changed`, …) plus `crm/account.deleted` added in v0 (`crm/order.status-changed` ships with the orders feature). |
 | Scheduled job | `x.cron(id, cronExpr, fn)` | Registered as an Inngest cron function `plugin/<id>/<jobId>`. |
 | Account tab | `x.accountTab({ id, title, component, roles })` | Rendered as an extra tab on `crm/accounts/[accountId]`. React Server Component receiving `{ accountId, ctx }`. |
-| Account side panel | `x.accountPanel({ id, component, roles })` | Small card in the account overview sidebar (e.g. "protected until"). |
+| Account side panel | `x.accountPanel({ id, component, roles })` | Card rendered in the account overview stack directly below the basic info card (the page has no sidebar). |
 | Plugin page | `x.page({ path, title, component, roles })` | Served at `/[locale]/p/<pluginId>/<path>`. No menu item in v0; linked from tabs, panels and notifications. |
 | Admin page | automatic | `/admin/plugins/<pluginId>`: status, version, settings form, secrets form, log, uninstall. A plugin may add `x.adminSection(component)`. |
 | Company registry provider | `x.companyRegistry({ countries, lookup, validateVat? })` | Core account form gets a "Load from registry" button when an enabled provider covers the account's country. |
@@ -112,12 +113,12 @@ All extensions of a plugin are inert while the plugin is not `ENABLED`: tabs and
 
 - Intercepted operations per watched model: `create`, `createMany`, `update`, `updateMany`, `upsert`, `delete`, `deleteMany`. `*Many` operations run rules per affected row (the extension loads the rows first); bulk imports above 500 rows run rules in batches.
 - Soft delete (`deletedAt` set via `update`) is reported to rules as `beforeDelete`.
-- **Actor context** comes from `AsyncLocalStorage`: `runAsActor({ type: "user" | "token" | "plugin" | "system", userId, role, pluginId? }, fn)`. Server actions, the MCP route and Inngest functions set it at their entry point. A write without actor context runs as `system` and is logged once per call site in development.
+- **Actor context** — The MCP route and plugin Inngest functions set the actor explicitly. Server actions are not wrapped: `resolveActor()` falls back to the session user, then to `system` outside a request.
 - **Ordering:** rules of all enabled plugins for the operation run in `priority` order (default 100), then by plugin id. A `reject` stops the chain. `modify` patches are applied in order and later rules see the patched data.
 - **Recursion:** writes made by a plugin through `ctx.data` run rules of *other* plugins but not of the writing plugin itself. Depth is capped at 3; deeper writes throw.
 - **Timeouts and errors:** each rule has 500 ms. On timeout or exception the manifest's `onError` decides: `"block"` rejects the write with a generic "rule unavailable" message; `"allow"` (default) lets it through. Both are logged to the plugin log.
 - **User-facing errors:** `reject` throws `PluginRuleError { pluginId, messageKey, params }`. Server actions map it to the standard form error; the MCP route returns it as a tool error with the translated message.
-- **Known gaps (documented, not handled in v0):** raw SQL (`$queryRaw`, `$executeRaw`) and nested relation writes (`connectOrCreate`, nested `create` inside another model's write) bypass rules. v0 audits the codebase and converts nested writes to watched models into top-level writes; a lint rule flags new ones.
+- **Known gaps:** The v0 audit found no nested writes to watched models (only `documents → accounts` junction rows) and only read-only raw SQL on them. No lint rule in v0; reviewers check new nested writes.
 
 ## 8. Plugin context (`ctx`)
 
@@ -128,10 +129,10 @@ Every plugin function receives `ctx`; it is the plugin's only access to the syst
 | `ctx.plugin` | `{ id, version }` |
 | `ctx.actor` | who triggered the call (user, token, system, plugin) |
 | `ctx.settings` / `ctx.secrets` | parsed, typed settings; secrets decrypted server-side only |
-| `ctx.data` | CRM read/write for entities in § 6 plus products, price lists, users (read). Goes through the same service functions and role scoping as the UI; checked against manifest permissions. Writes run as actor `plugin`. |
+| `ctx.data` | CRM read/write for the entities in § 6 plus activities, users and products (read). Checked against manifest permissions. Plugins are trusted, so there is no per-user role scoping; writes run as actor `plugin` and pass through other plugins' rules. |
 | `ctx.store` | plugin key/value store (below) |
-| `ctx.http` | `fetch` with a 15 s default timeout, request logging (URL, status, duration; no bodies) and the existing SSRF host guard |
-| `ctx.notify` | in-app notification and e-mail to users or roles |
+| `ctx.http` | `fetch` with a 15 s default timeout, request logging (URL, status, duration; no bodies) and the existing SSRF host guard. Private hosts are blocked unless `PLUGIN_HTTP_ALLOW_PRIVATE_HOSTS=true`. |
+| `ctx.notify` | E-mail (Resend) to users or roles. In-app notifications follow when the core has a notification centre. |
 | `ctx.log` | `debug/info/warn/error`, stored in `PluginLog` and shown on the admin page |
 | `ctx.t` | translator for the plugin namespace |
 
@@ -178,7 +179,7 @@ model PluginLog {
 
 - An uninstalled plugin has no `InstalledPlugin` row.
 - `PluginLog` keeps 30 days; a core cron deletes older rows.
-- When a CRM record is hard-deleted, its `PluginData` rows are deleted by the same transaction (handled in the Prisma extension).
+- When a CRM record is hard-deleted, its `PluginData` rows are deleted right after the write (best effort, logged on failure).
 - Hosts with several app replicas read `InstalledPlugin` through a 10-second in-memory cache; enabling or disabling takes effect within 10 s everywhere.
 
 ## 10. Lifecycle
@@ -186,7 +187,7 @@ model PluginLog {
 | Step | What happens |
 |---|---|
 | Available | Plugin is in the image; listed under Administration → Plugins with description, version and requested permissions. |
-| Install (admin) | Check `sdk` range against the running SDK. Admin confirms permissions and fills required settings. Row created as `ENABLED`, then `onInstall(ctx)` runs (as an Inngest job if it may be long, e.g. first import). If `onInstall` fails the row is set to `DISABLED` with the error shown. |
+| Install (admin) | Check `sdk` range against the running SDK. Admin confirms permissions and fills required settings. Row created as `ENABLED`, then `onInstall(ctx)` runs (always as the Inngest function `plugin-lifecycle-install`, so long first imports do not block the request). If `onInstall` fails the row is set to `DISABLED` with the error shown. |
 | Disable / enable | Status flip. No data change. |
 | Upgrade | On app start, if image version > row version: `onUpgrade(ctx, fromVersion)` runs once (guarded by a Postgres advisory lock), then `version` is updated. Failure → `DISABLED` + admin notification. |
 | Uninstall (admin) | Admin sees a summary (number of store entries, records with attached data) and may download a JSON export. Then `onUninstall(ctx)`, delete `PluginData`, `PluginLog`, `InstalledPlugin`. Data written into core entities by the plugin (e.g. synced customers) stays; it is core data. |
@@ -199,7 +200,7 @@ Only `admin` can install, uninstall, change settings. Every lifecycle action wri
 - Tab, panel and page components render inside an error boundary; a crash shows "This plugin section is unavailable" and logs the error.
 - Event handlers and cron jobs run in Inngest with retries (3) and are logged per plugin.
 - `ctx.http` and rules have timeouts (§ 7, § 8).
-- Admin page shows status, last 200 log lines, last run of each job, and error count over 24 h.
+- Admin page shows status, pending upgrade and the last 200 log lines. Job runs and error rates are visible in the Inngest dashboard; a per-plugin run summary is v1.
 
 ## 12. Testing
 
