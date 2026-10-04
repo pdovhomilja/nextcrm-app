@@ -5,6 +5,14 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.23.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.22.1...v0.23.0) (2026-10-04)
+
+
+### Added
+
+* **docker:** add docker-compose-coolify.yml for env-configured deployments ([f13b64e](https://github.com/pdovhomilja/nextcrm-app/commit/f13b64e42baad6ef7285c2600595060d8cd1482a))
+* **docker:** docker-compose-coolify.yml for env-configured deployments ([06eaeea](https://github.com/pdovhomilja/nextcrm-app/commit/06eaeea2d390df53a66bf03af58f418ca477ae0d))
+
 ## [0.22.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.22.0...v0.22.1) (2026-10-04)
 
 
