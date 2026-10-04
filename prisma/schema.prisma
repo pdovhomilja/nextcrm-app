@@ -2015,3 +2015,44 @@ model Invoice_Settings {
   companyWebsite      String?
   updatedAt           DateTime @updatedAt
 }
+
+enum PluginStatus {
+  ENABLED
+  DISABLED
+}
+
+model InstalledPlugin {
+  id          String       @id
+  version     String
+  status      PluginStatus @default(ENABLED)
+  settings    Json         @default("{}")
+  secrets     String?
+  installedAt DateTime     @default(now())
+  installedBy String?      @db.Uuid
+  updatedAt   DateTime     @updatedAt
+}
+
+model PluginData {
+  id         String   @id @default(uuid()) @db.Uuid
+  pluginId   String
+  entityType String   @default("")
+  entityId   String   @default("")
+  key        String
+  value      Json
+  updatedAt  DateTime @updatedAt
+
+  @@unique([pluginId, entityType, entityId, key])
+  @@index([pluginId, key])
+  @@index([entityType, entityId])
+}
+
+model PluginLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  pluginId  String
+  level     String
+  message   String
+  context   Json?
+  createdAt DateTime @default(now())
+
+  @@index([pluginId, createdAt])
+}
