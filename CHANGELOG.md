@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * next 16.2.11 → 16.3.6 ([#310](https://github.com/pdovhomilja/nextcrm-app/pull/310))
 * sharp 0.35.3 → 0.35.4 ([#309](https://github.com/pdovhomilja/nextcrm-app/pull/309))
-* nodemailer 9.0.1 → 9.1.1 ([#308](https://github.com/pdovhomilja/nextcrm-app/pull/308))
+* nodemailer 9.0.1 → 10.0.9 ([#308](https://github.com/pdovhomilja/nextcrm-app/pull/308))
 * sanitize-html 2.17.5 → 2.17.7, with a Jest transform for its ESM-only htmlparser2 dependency ([#318](https://github.com/pdovhomilja/nextcrm-app/pull/318))
 
 ## [0.22.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.21.2...v0.22.0) (2026-08-10)
