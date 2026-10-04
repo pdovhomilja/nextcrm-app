@@ -456,7 +456,7 @@ The entrypoint runs `prisma migrate deploy` on every start, so new schema change
 
 This setup works out of the box with self-hosting platforms:
 
-- **Coolify** — point it at this repo, choose "Docker Compose" build pack, set your env vars in Coolify's UI
+- **Coolify** — point it at this repo, choose "Docker Compose" build pack with `/docker-compose-coolify.yml`, set your env vars in Coolify's UI (required ones are listed at the top of that file)
 - **Portainer / Dockge** — paste `docker-compose.yml` into a stack, add env vars in the UI
 
 In all cases, env vars set through the platform UI override the placeholders in `docker-compose.yml` the same way a `.env` file does locally.
