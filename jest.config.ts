@@ -17,7 +17,7 @@ const config: Config = {
     "^.+\\.m?js$": ["ts-jest", { tsconfig: { allowJs: true, target: "es2017" } }],
   },
   transformIgnorePatterns: [
-    "/node_modules/(?!(\\.pnpm/[^/]+/node_modules/)?(htmlparser2|domhandler|domutils|dom-serializer|domelementtype|entities)/)",
+    "/node_modules/(?!(\\.pnpm/[^/]+/node_modules/)?(htmlparser2|domhandler|domutils|dom-serializer|domelementtype|entities|next-intl|use-intl|@formatjs|intl-messageformat)/)",
   ],
 };
 

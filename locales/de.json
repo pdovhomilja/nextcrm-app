@@ -607,5 +607,12 @@
     "dashboard": "Dashboard",
     "profileSettings": "Profileinstellungen",
     "logout": "Abmelden"
+  },
+  "Plugins": {
+    "ruleUnavailable": "Eine Plugin-Regel ist nicht verfügbar. Die Änderung wurde nicht gespeichert.",
+    "sectionUnavailable": "Dieser Plugin-Bereich ist nicht verfügbar.",
+    "loadFromRegistry": "Aus Register laden",
+    "registryNotFound": "Firma im Register nicht gefunden.",
+    "admin": { "title": "Plugins", "notInstalled": "Nicht installiert", "enabled": "Aktiviert", "disabled": "Deaktiviert", "missing": "Fehlt in dieser Version", "install": "Installieren", "enable": "Aktivieren", "disable": "Deaktivieren", "uninstall": "Deinstallieren", "save": "Einstellungen speichern", "saved": "Einstellungen gespeichert", "permissions": "Angeforderte Berechtigungen", "confirmPermissions": "Ich erteile diese Berechtigungen", "settings": "Einstellungen", "secrets": "Geheimnisse", "secretSet": "Gesetzt (leer lassen zum Beibehalten)", "log": "Protokoll", "export": "Daten herunterladen (JSON)", "uninstallTitle": "{name} deinstallieren?", "uninstallBody": "{entries} gespeicherte Werte zu {records} Datensätzen und das Plugin-Protokoll werden gelöscht. Daten, die das Plugin in CRM-Datensätze geschrieben hat, bleiben erhalten.", "confirmUninstall": "Deinstallieren und Plugin-Daten löschen", "upgradePending": "Update ausstehend: {from} → {to}" }
   }
 }
