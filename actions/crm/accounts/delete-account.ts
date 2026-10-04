@@ -1,6 +1,8 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { pluginRuleErrorMessage } from "@/lib/plugins/action-errors";
+import { inngest } from "@/inngest/client";
 import { writeAuditLog } from "@/lib/audit-log";
 import {
   requireAuthenticated,
@@ -39,8 +41,11 @@ export const deleteAccount = async (accountId: string) => {
       userId: user.id,
     });
     revalidatePath("/[locale]/(routes)/crm/accounts", "page");
+    void inngest.send({ name: "crm/account.deleted", data: { record_id: accountId } });
     return { success: true };
   } catch (error) {
+    const ruleMessage = await pluginRuleErrorMessage(error);
+    if (ruleMessage) return { error: ruleMessage };
     console.log("[DELETE_ACCOUNT]", error);
     return { error: "Failed to delete account" };
   }

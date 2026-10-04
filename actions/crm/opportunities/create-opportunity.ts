@@ -1,6 +1,7 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { pluginRuleErrorMessage } from "@/lib/plugins/action-errors";
 import sendEmail from "@/lib/sendmail";
 import { inngest } from "@/inngest/client";
 import { writeAuditLog } from "@/lib/audit-log";
@@ -130,6 +131,8 @@ export const createOpportunity = async (data: {
     revalidatePath("/[locale]/(routes)/crm/opportunities", "page");
     return { data: opportunity };
   } catch (error) {
+    const ruleMessage = await pluginRuleErrorMessage(error);
+    if (ruleMessage) return { error: ruleMessage };
     console.log("[CREATE_OPPORTUNITY]", error);
     return { error: "Failed to create opportunity" };
   }
