@@ -313,7 +313,7 @@ importers:
         version: 3.9.3
       mailtrap:
         specifier: ^4.7.0
-        version: 4.7.0(@types/nodemailer@7.0.11)(debug@4.4.3(supports-color@5.5.0))(nodemailer@9.0.1)(supports-color@5.5.0)
+        version: 4.7.0(@types/nodemailer@7.0.11)(debug@4.4.3(supports-color@5.5.0))(nodemailer@10.0.9)(supports-color@5.5.0)
       mammoth:
         specifier: ^1.12.0
         version: 1.12.0
@@ -336,8 +336,8 @@ importers:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       nodemailer:
-        specifier: ^9.0.1
-        version: 9.0.1
+        specifier: ^10.0.9
+        version: 10.0.9
       openai:
         specifier: ^6.25.0
         version: 6.32.0(ws@8.21.1)(zod@4.3.6)
@@ -7647,9 +7647,9 @@ packages:
   node-releases@2.0.27:
     resolution: {integrity: sha512-nmh3lCkYZ3grZvqcCH+fjmQ7X+H0OeZgP40OierEaAptX4XofMh5kwNbWh7lBduUzCcV/8kZ+NDLCwm2iorIlA==}
 
-  nodemailer@9.0.1:
-    resolution: {integrity: sha512-Gwv8SQewT616ZM/URn0H54b8PWo/Wum7md3EW2aWy1lO27+WZCX+Xyak3J+NlmHUjDh5ME+uesJUDRbR3Ye8Bw==}
-    engines: {node: '>=6.0.0'}
+  nodemailer@10.0.9:
+    resolution: {integrity: sha512-BF0qcyplCwp+jMk6HCjFykBz/YhhZSsxrARhOldLwFWH+8kGjQsd2WIMIZhqEuyXRoGFi0ONbDeWDMDoL8MhLw==}
+    engines: {node: '>=20.0.0'}
 
   nopt@5.0.0:
     resolution: {integrity: sha512-Tbj67rffqceeLpcRXrT7vKAN8CwfPeIBgM7E6iBkmKLV7bEMwpGgYLGv0jACUsECaa/vuxP0IjEont6umdMgtQ==}
@@ -17360,17 +17360,17 @@ snapshots:
       iconv-lite: 0.7.2
       libmime: 5.3.7
       linkify-it: 5.0.2
-      nodemailer: 9.0.1
+      nodemailer: 10.0.9
       punycode.js: 2.3.1
       tlds: 1.261.0
 
-  mailtrap@4.7.0(@types/nodemailer@7.0.11)(debug@4.4.3(supports-color@5.5.0))(nodemailer@9.0.1)(supports-color@5.5.0):
+  mailtrap@4.7.0(@types/nodemailer@7.0.11)(debug@4.4.3(supports-color@5.5.0))(nodemailer@10.0.9)(supports-color@5.5.0):
     dependencies:
       axios: 1.18.1(debug@4.4.3(supports-color@5.5.0))(supports-color@5.5.0)
       qs: 6.15.3
     optionalDependencies:
       '@types/nodemailer': 7.0.11
-      nodemailer: 9.0.1
+      nodemailer: 10.0.9
     transitivePeerDependencies:
       - debug
       - supports-color
@@ -17694,7 +17694,7 @@ snapshots:
 
   node-releases@2.0.27: {}
 
-  nodemailer@9.0.1: {}
+  nodemailer@10.0.9: {}
 
   nopt@5.0.0:
     dependencies:
