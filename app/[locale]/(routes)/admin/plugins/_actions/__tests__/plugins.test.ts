@@ -11,7 +11,7 @@ jest.mock("@/lib/plugins/lifecycle", () => lifecycle);
 jest.mock("@/lib/plugins/state", () => ({ getPluginState: jest.fn(async () => ({ id: "demo", secrets: "cipher" })) }));
 jest.mock("@/lib/plugins/settings", () => ({ decryptSecrets: () => ({ apiKey: "very-secret", empty: "" }) }));
 
-import { getSecretFlags, installPluginAction, savePluginSettingsAction } from "../plugins";
+import { getSecretFlags, installPluginAction, savePluginSettingsAction, uninstallPluginAction } from "../plugins";
 import { requireRole, AuthorizationError } from "@/lib/authz";
 
 it("returns only boolean flags for secrets (Review Focus 4)", async () => {
@@ -31,4 +31,10 @@ it("rejects non-admins", async () => {
   (requireRole as jest.Mock).mockRejectedValueOnce(new (AuthorizationError as any)("no"));
   await expect(installPluginAction("demo", {}, {})).resolves.toEqual({ ok: false, error: "Forbidden" });
   expect(lifecycle.installPlugin).not.toHaveBeenCalled();
+});
+
+it("uninstalls a plugin whose code is absent from the registry (Review Focus 2)", async () => {
+  lifecycle.uninstallPlugin.mockResolvedValueOnce(undefined);
+  await expect(uninstallPluginAction("ghost")).resolves.toEqual({ ok: true });
+  expect(lifecycle.uninstallPlugin).toHaveBeenCalledWith("ghost", "admin-1");
 });
