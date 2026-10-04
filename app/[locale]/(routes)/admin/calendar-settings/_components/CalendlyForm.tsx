@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { saveCalendlyAction, subscribeCalendlyWebhook } from "../_actions/calendly";
@@ -12,10 +13,24 @@ export function CalendlyForm(props: {
 }) {
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
+  const [savePending, startSaveTransition] = useTransition();
+
+  const handleSave = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    startSaveTransition(async () => {
+      const res = await saveCalendlyAction(formData);
+      if (res.ok) {
+        toast.success("Calendly settings saved.");
+      } else {
+        toast.error(res.error ?? "Failed to save Calendly settings.");
+      }
+    });
+  };
 
   return (
     <div className="max-w-xl space-y-4 rounded-lg border p-4">
-      <form action={saveCalendlyAction} className="space-y-3">
+      <form onSubmit={handleSave} className="space-y-3">
         <div>
           <label className="text-sm font-medium">
             API token {props.hasToken ? "(saved)" : ""}
@@ -28,7 +43,9 @@ export function CalendlyForm(props: {
           </label>
           <Input name="signingKey" type="password" placeholder="Webhook signing key" />
         </div>
-        <Button type="submit">Save</Button>
+        <Button type="submit" disabled={savePending}>
+          {savePending ? "Saving..." : "Save"}
+        </Button>
       </form>
 
       <div className="border-t pt-4">

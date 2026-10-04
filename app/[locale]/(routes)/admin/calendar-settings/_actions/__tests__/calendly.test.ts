@@ -14,12 +14,14 @@ jest.mock("@/lib/crm/calendar/calendly-settings", () => ({
 }));
 jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));
 
-import { requireRole, AuthorizationError } from "@/lib/authz";
+import { requireRole, AuthenticationError, AuthorizationError } from "@/lib/authz";
 import {
   getCalendlySettings,
+  saveCalendlySettings,
   setCalendlyWebhookUri,
 } from "@/lib/crm/calendar/calendly-settings";
-import { subscribeCalendlyWebhook } from "../calendly";
+import { revalidatePath } from "next/cache";
+import { saveCalendlyAction, subscribeCalendlyWebhook } from "../calendly";
 
 const mockRequireRole = requireRole as jest.MockedFunction<typeof requireRole>;
 const mockGetCalendlySettings = getCalendlySettings as jest.MockedFunction<
@@ -28,6 +30,15 @@ const mockGetCalendlySettings = getCalendlySettings as jest.MockedFunction<
 const mockSetCalendlyWebhookUri = setCalendlyWebhookUri as jest.MockedFunction<
   typeof setCalendlyWebhookUri
 >;
+const mockSaveCalendlySettings = saveCalendlySettings as jest.MockedFunction<
+  typeof saveCalendlySettings
+>;
+
+function form(fields: Record<string, string>): FormData {
+  const fd = new FormData();
+  for (const [k, v] of Object.entries(fields)) fd.set(k, v);
+  return fd;
+}
 
 function jsonResponse(status: number, body: unknown): Response {
   return {
@@ -170,5 +181,50 @@ describe("subscribeCalendlyWebhook", () => {
       expect.objectContaining({ method: "DELETE" }),
     );
     expect(result).toEqual({ ok: true });
+  });
+});
+
+describe("saveCalendlyAction", () => {
+  it("returns an error result instead of throwing when the caller is not authenticated", async () => {
+    mockRequireRole.mockRejectedValue(new AuthenticationError("Unauthorized"));
+
+    const result = await saveCalendlyAction(form({ apiToken: "token" }));
+
+    expect(result).toEqual({ ok: false, error: "Unauthorized" });
+    expect(mockSaveCalendlySettings).not.toHaveBeenCalled();
+  });
+
+  it("returns an error result instead of throwing when the caller is not an admin", async () => {
+    mockRequireRole.mockRejectedValue(new AuthorizationError("Forbidden"));
+
+    const result = await saveCalendlyAction(form({ apiToken: "token" }));
+
+    expect(result).toEqual({ ok: false, error: "Forbidden" });
+    expect(mockSaveCalendlySettings).not.toHaveBeenCalled();
+  });
+
+  it("saves the settings and returns ok for an admin", async () => {
+    mockRequireRole.mockResolvedValue({ id: "admin-1", role: "admin" } as any);
+    mockSaveCalendlySettings.mockResolvedValue(undefined);
+
+    const result = await saveCalendlyAction(
+      form({ apiToken: "token-value", signingKey: "signing-value" })
+    );
+
+    expect(result).toEqual({ ok: true });
+    expect(mockSaveCalendlySettings).toHaveBeenCalledWith({
+      apiToken: "token-value",
+      signingKey: "signing-value",
+    });
+    expect(revalidatePath).toHaveBeenCalledWith("/admin/calendar-settings");
+  });
+
+  it("returns an error result instead of throwing when saving fails", async () => {
+    mockRequireRole.mockResolvedValue({ id: "admin-1", role: "admin" } as any);
+    mockSaveCalendlySettings.mockRejectedValue(new Error("Database unavailable"));
+
+    const result = await saveCalendlyAction(form({ apiToken: "token" }));
+
+    expect(result).toEqual({ ok: false, error: "Database unavailable" });
   });
 });

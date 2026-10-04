@@ -19,16 +19,28 @@ async function ensureAdmin(): Promise<{ error: string } | null> {
   }
 }
 
-export async function saveCalendlyAction(formData: FormData) {
+export async function saveCalendlyAction(
+  formData: FormData,
+): Promise<{ ok: boolean; error?: string }> {
   const denied = await ensureAdmin();
-  if (denied) throw new Error(denied.error);
+  if (denied) return { ok: false, error: denied.error };
+
   const apiToken = String(formData.get("apiToken") ?? "").trim();
   const signingKey = String(formData.get("signingKey") ?? "").trim();
-  await saveCalendlySettings({
-    ...(apiToken ? { apiToken } : {}),
-    ...(signingKey ? { signingKey } : {}),
-  });
-  revalidatePath("/admin/calendar-settings");
+
+  try {
+    await saveCalendlySettings({
+      ...(apiToken ? { apiToken } : {}),
+      ...(signingKey ? { signingKey } : {}),
+    });
+    revalidatePath("/admin/calendar-settings");
+    return { ok: true };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "Failed to save Calendly settings",
+    };
+  }
 }
 
 export async function subscribeCalendlyWebhook(): Promise<{ ok: boolean; error?: string }> {
