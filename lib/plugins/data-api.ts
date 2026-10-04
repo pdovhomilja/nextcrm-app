@@ -1,6 +1,7 @@
 import type { DataApi, EntityApi, FindArgs, Permission, ReadApi, RecordData } from "@nextcrm/plugin-sdk";
 import { PluginPermissionError } from "./errors";
 import { runAsActor } from "./actor";
+import { writePluginLog } from "./log";
 
 type Delegate = {
   findUnique(a: unknown): Promise<unknown>;
@@ -26,22 +27,32 @@ export function createDataApi(pluginId: string, permissions: Permission[]): Data
   const need = (p: Permission) => {
     if (!permissions.includes(p)) throw new PluginPermissionError(pluginId, p);
   };
+  // Never return password hashes: for users, drop caller select/include/omit and always omit password.
   const read = (model: string, perm: Permission): ReadApi => ({
-    async get(id) { need(perm); return (await (await db())[model].findUnique({ where: { id } })) as RecordData | null; },
-    async find(args: FindArgs = {}) { need(perm); return (await (await db())[model].findMany({ take: 100, ...args })) as RecordData[]; },
+    async get(id) {
+      need(perm);
+      const args = model === "users" ? { where: { id }, omit: { password: true } } : { where: { id } };
+      return (await (await db())[model].findUnique(args)) as RecordData | null;
+    },
+    async find(args: FindArgs = {}) {
+      need(perm);
+      const { where, orderBy, take, skip } = args;
+      const safe = model === "users" ? { where, orderBy, take, skip, omit: { password: true } } : args;
+      return (await (await db())[model].findMany({ take: 100, ...safe })) as RecordData[];
+    },
   });
   const entity = (model: string, r: Permission, w: Permission): EntityApi => ({
     ...read(model, r),
     async create(data) {
       need(w);
       const row = (await runAsActor({ type: "plugin", pluginId }, async () => (await db())[model].create({ data: { v: 0, ...data } }))) as RecordData;
-      await emitSaved(model, row.id as string);
+      await emitSaved(pluginId, model, row.id as string);
       return row;
     },
     async update(id, data) {
       need(w);
       const row = (await runAsActor({ type: "plugin", pluginId }, async () => (await db())[model].update({ where: { id }, data }))) as RecordData;
-      await emitSaved(model, id);
+      await emitSaved(pluginId, model, id);
       return row;
     },
   });
@@ -56,7 +67,9 @@ export function createDataApi(pluginId: string, permissions: Permission[]): Data
   };
 }
 
-async function emitSaved(model: string, recordId: string) {
+async function emitSaved(pluginId: string, model: string, recordId: string) {
   const { inngest } = await import("@/inngest/client");
-  void inngest.send({ name: SAVED_EVENT[model], data: { record_id: recordId } });
+  void inngest
+    .send({ name: SAVED_EVENT[model], data: { record_id: recordId } })
+    .catch((e: unknown) => writePluginLog(pluginId, "error", "Failed to emit saved event", { model, recordId, error: String(e) }));
 }
