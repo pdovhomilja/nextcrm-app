@@ -10,12 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-* **calendar:** delete prior Calendly subscription on re-subscribe ([5a46f3c](https://github.com/pdovhomilja/nextcrm-app/commit/5a46f3c2039071aa79960d963ff9c3d0471bbdd7))
-* **calendar:** delete prior Calendly subscription on re-subscribe ([7a57f18](https://github.com/pdovhomilja/nextcrm-app/commit/7a57f186d3832c10e5687032099bd61a925eb638)), closes [#267](https://github.com/pdovhomilja/nextcrm-app/issues/267)
-* show save success/error feedback on Calendly settings form ([e6791ce](https://github.com/pdovhomilja/nextcrm-app/commit/e6791cedb98d3a37c5c278b47f391c8433c4c7a6))
-* show save success/error feedback on Calendly settings form ([b3e4538](https://github.com/pdovhomilja/nextcrm-app/commit/b3e45388b25f4f9801f393754866de495ebd6688)), closes [#268](https://github.com/pdovhomilja/nextcrm-app/issues/268)
-* **webhooks:** match Resend events by email_id, not the RFC Message-ID header ([4b57ea7](https://github.com/pdovhomilja/nextcrm-app/commit/4b57ea764b18aa326d667609b299451fe3522698))
-* **webhooks:** match Resend events by email_id, not the RFC Message-ID header ([dd5ac0b](https://github.com/pdovhomilja/nextcrm-app/commit/dd5ac0bfc51043c6e9d1bdfdd0e8a6d8c625ed8a))
+* **calendar:** delete prior Calendly subscription on re-subscribe ([7a57f18](https://github.com/pdovhomilja/nextcrm-app/commit/7a57f186d3832c10e5687032099bd61a925eb638)), closes [#267](https://github.com/pdovhomilja/nextcrm-app/issues/267) ([#304](https://github.com/pdovhomilja/nextcrm-app/pull/304))
+* show save success/error feedback on Calendly settings form ([b3e4538](https://github.com/pdovhomilja/nextcrm-app/commit/b3e45388b25f4f9801f393754866de495ebd6688)), closes [#268](https://github.com/pdovhomilja/nextcrm-app/issues/268) ([#303](https://github.com/pdovhomilja/nextcrm-app/pull/303))
+* **webhooks:** match Resend events by email_id, not the RFC Message-ID header ([dd5ac0b](https://github.com/pdovhomilja/nextcrm-app/commit/dd5ac0bfc51043c6e9d1bdfdd0e8a6d8c625ed8a)) ([#314](https://github.com/pdovhomilja/nextcrm-app/pull/314))
+
+
+### Dependencies
+
+* next 16.2.11 → 16.3.6 ([#310](https://github.com/pdovhomilja/nextcrm-app/pull/310))
+* sharp 0.35.3 → 0.35.4 ([#309](https://github.com/pdovhomilja/nextcrm-app/pull/309))
+* nodemailer 9.0.1 → 9.1.1 ([#308](https://github.com/pdovhomilja/nextcrm-app/pull/308))
+* sanitize-html 2.17.5 → 2.17.7, with a Jest transform for its ESM-only htmlparser2 dependency ([#318](https://github.com/pdovhomilja/nextcrm-app/pull/318))
 
 ## [0.22.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.21.2...v0.22.0) (2026-08-10)
 
