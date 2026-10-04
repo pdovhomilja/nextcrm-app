@@ -966,6 +966,37 @@
 - **Tell:** a `500` on the page's own `POST` (the server-action invocation) with a `digest`, and a
   client `catch` that only ever shows the generic redacted string.
 
+### Shard the E2E suite at the runner level, not with in-process `workers`
+
+- **Symptom:** the E2E job is the pipeline's long pole (~8.4 of ~10 min) because `playwright.config.ts`
+  forces `workers: 1` on CI, so ~116 tests run serially in one runner. The obvious "just raise `workers`"
+  makes tests flaky.
+- **Cause:** parallel in-process workers share the **same** Postgres + seed + `storageState` for the job,
+  so concurrent specs stomp each other's rows — hence `workers: 1`. The config can't safely parallelize.
+- **Fix / rule:** parallelize at the **CI-runner** level with a Playwright `--shard=i/N` matrix
+  (`strategy.matrix.shardIndex`/`shardTotal`, `fail-fast: false`). Each shard is its own runner with its
+  **own** fresh Postgres service + seed + `storageState`, so there's no shared-state collision — sharding
+  is safe exactly where `workers > 1` is not. Leave `workers: 1` as-is. Keep shards reporting with
+  `--reporter=blob`, then a separate job `playwright merge-reports --reporter=html` over the downloaded
+  `blob-report-*` artifacts (`merge-multiple: true`; Playwright names each shard's blob file by index, so
+  no collision). Blob reports embed traces/screenshots/videos — the merged HTML supersedes the old
+  separate `test-results` upload. Cost tradeoff: per-shard fixed overhead (services/install/migrate/seed)
+  is paid ×N, so **billable minutes rise while wall-clock falls** — pick N for the sweet spot (3 for ~116
+  tests given ~2-min overhead; more = diminishing returns).
+- **Tell:** a single serial E2E job dominating CI wall-clock, with a config comment explaining why
+  `workers` is pinned to 1. The gate for the merge job must be `if: ${{ !cancelled() && ... }}` so it still
+  merges when a shard **fails** (plain `needs: [e2e]` would skip it on failure).
+
+### An authoring constraint sharding adds: a spec must not depend on another spec file's data
+
+- **Symptom:** a test that passed serially fails intermittently once sharded, because the data it relied on
+  was created by a **different** spec file.
+- **Cause:** sharding distributes whole spec **files** across separate runners, each with its own DB. Two
+  specs that happened to run against the same DB serially may now land on different shards.
+- **Fix / rule:** every spec must be self-contained — create (or seed) the data it needs and not lean on
+  another spec having run first. This was already the intent under `workers: 1` + per-job fresh DB;
+  sharding makes it load-bearing. See `docs/testing/e2e-patterns.md` ("Shard-safety").
+
 ---
 
 ## Prospecting / lead quality

@@ -827,3 +827,23 @@ migration was authored manually (only the 5 additive columns) and applied via `p
 **Re-verify after any upstream merge:** the 5 `crm_Target_Homepage_Version` usage columns still
 present; the persist step still writes them; the `Homepage Costs` nav entry still present; and
 `pnpm exec jest lib/homepage/__tests__/cost.test.ts actions/admin/__tests__/homepage-costs.test.ts generate-homepage && pnpm exec tsc --noEmit`.
+
+---
+
+## perf/e2e-playwright-sharding — shard the E2E suite across parallel runners  (PR: TBD)
+
+Splits the serial ~116-test Playwright E2E job into a 3-way shard matrix on the existing standard
+runners (no paid hardware), and adds a fork-owned merge job that recombines the shards' blob reports
+into one HTML report. Cuts the E2E job ~8.4→~4.5 min and the full pipeline ~10→~6 min. **1 upstream-owned
+file** touched; `playwright.config.ts` deliberately **not** changed (its `workers: 1` / `retries: 1`
+justifications are suite-level and still accurate — sharding happens at the CI-runner level, not via
+config workers).
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `.github/workflows/ci.yml` | +~56/−12 | **mixed** | insert: a `strategy.matrix` (`shardIndex: [1,2,3]` + `shardTotal: [3]`, `fail-fast: false`) on the `e2e` job; a shard-indexed `blob-report-${{ matrix.shardIndex }}` upload (always, `!cancelled()`); a new fork-owned `e2e-report` job that downloads `blob-report-*` and runs `playwright merge-reports --reporter=html`. rewrite: the `playwright test` line gains `--shard=.../... --reporter=blob`; the two failure-only `playwright-report` + `test-results` uploads replaced by the shard blob upload + the merge job's single `playwright-report`. Rest of the e2e job (services, caches, seed, Inngest) unchanged. | Low (fork owns this CI; on conflict keep the matrix + `--shard`/blob + the `e2e-report` merge job) |
+
+**Re-verify after any upstream merge:** the `e2e` job still has the `shardIndex`/`shardTotal` matrix and
+runs `playwright test ... --shard --reporter=blob`; the `e2e-report` job still merges `blob-report-*`
+into one `playwright-report`; then a green sharded E2E run on a code PR (confirm all 3 shards + the merge
+job pass and the merged report artifact appears).

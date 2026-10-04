@@ -30,6 +30,7 @@ Read the RSC-streaming section first; the rest are its consequences.
 - Session and auth setup
 - DB helper patterns
 - Data-integrity traps
+- Shard-safety (CI runs the suite in parallel shards)
 - Deployed QA environment
 - Authz / security assertions
 
@@ -663,6 +664,30 @@ Don't string-match a hardcoded provider message when asserting a duplicate-email
 duplicate-account path — the exact text is better-auth's to choose and can change.
 TODO(rade): capture better-auth's actual duplicate-email response (status + body)
 from a real run and assert on that, not a guessed substring.
+
+---
+
+## Shard-safety (CI runs the suite in parallel shards)
+
+CI splits the chromium suite across parallel runners with Playwright `--shard=i/N`
+(the `e2e` job's `strategy.matrix` in `.github/workflows/ci.yml`; an `e2e-report`
+job merges the shards' blob reports into one HTML report). Each shard is its **own**
+runner with its **own** fresh Postgres service + seed + `storageState` — which is
+exactly why sharding is safe even though `playwright.config.ts` pins `workers: 1`
+(in-process parallel workers would share one DB/seed; separate shards do not).
+
+**The one authoring rule this imposes:** a spec must be **self-contained** — it
+creates or seeds the data it needs and never relies on another spec *file* having run
+first. Sharding distributes whole spec files across separate runners (and DBs), so two
+specs that happened to share a DB when run serially may now land on different shards.
+This was already the intent under `workers: 1` + per-job fresh DB; sharding makes it
+load-bearing. (Within a single spec file, ordering across tests on the same shard is
+still fine.)
+
+Local runs are unaffected — you still run the whole suite in one process
+(`pnpm test:e2e`); sharding is a CI-only speedup. See the matching
+`LESSONS_LEARNED.md` entries under **Testing** for the rationale and the merge-job
+mechanics (`merge-reports`, `blob-report-*`, the `!cancelled()` gate).
 
 ---
 
