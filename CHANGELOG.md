@@ -5,6 +5,15 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.23.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.23.0...v0.23.1) (2026-10-04)
+
+
+### Fixed
+
+* **docker:** copy pnpm-workspace.yaml before frozen install ([98a6d0d](https://github.com/pdovhomilja/nextcrm-app/commit/98a6d0d625ec451999302c5a652720e189d06062)) ([#322](https://github.com/pdovhomilja/nextcrm-app/pull/322))
+* **docker:** switch MinIO to pgsty/minio, pinned ([1780e5d](https://github.com/pdovhomilja/nextcrm-app/commit/1780e5d7eee78e25182991aaba260a37fb26426e)) ([#324](https://github.com/pdovhomilja/nextcrm-app/pull/324))
+* **docker:** sign MinIO bucket creation with SigV4 ([4325c3b](https://github.com/pdovhomilja/nextcrm-app/commit/4325c3ba2e19948e1eedca4887ca6501644e7376)) ([#325](https://github.com/pdovhomilja/nextcrm-app/pull/325))
+
 ## [0.23.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.22.1...v0.23.0) (2026-10-04)
 
 
