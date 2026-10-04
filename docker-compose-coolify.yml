@@ -40,7 +40,9 @@ services:
 
   # --- MinIO Object Storage ---
   minio:
-    image: minio/minio:latest
+    # MinIO stopped publishing images (minio/minio is gone); pgsty/minio is a
+    # community rebuild with the same entrypoint, command and curl.
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
     restart: unless-stopped
     command: server /data --console-address ":9001"
     expose:
