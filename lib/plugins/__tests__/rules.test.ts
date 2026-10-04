@@ -72,3 +72,11 @@ it("ignores rules for other entities and operations", async () => {
   await expect(runBeforeRules(input, deps([p]))).resolves.toEqual({ name: "Acme" });
   expect(fn).not.toHaveBeenCalled();
 });
+
+it("a hanging createPluginContext with onError block rejects within the timeout", async () => {
+  const p = reg("p-block", (x) => x.rule("account", "beforeCreate", () => allow(), { onError: "block" }));
+  const d = { ...deps([p]), createPluginContext: () => new Promise<never>(() => {}) };
+  const started = Date.now();
+  await expect(runBeforeRules(input, d)).rejects.toMatchObject({ pluginId: null, messageKey: "ruleUnavailable" });
+  expect(Date.now() - started).toBeLessThan(500);
+});

@@ -68,3 +68,29 @@ it("deletes plugin data on hard delete", async () => {
   await interceptWrite({ model: "crm_Accounts", operation: "delete", args: { where: { id: "a1" } }, query: async () => ({ id: "a1" }) }, deps);
   expect(deps.deleteRecordData).toHaveBeenCalledWith("account", ["a1"]);
 });
+
+it("upsert without an existing row runs beforeCreate and emits created", async () => {
+  const deps = mkDeps({ findExisting: jest.fn(async () => null), afterTargets: jest.fn(async () => ["p-one"]) });
+  const query = jest.fn(async (a: any) => ({ id: "new", ...a.create }));
+  await interceptWrite({ model: "crm_Accounts", operation: "upsert", args: { where: { id: "x" }, create: { name: "C" }, update: { name: "U" } }, query }, deps);
+  expect(deps.runBeforeRules).toHaveBeenCalledWith(expect.objectContaining({ operation: "beforeCreate", data: { name: "C" } }));
+  expect(deps.sendAfter).toHaveBeenCalledWith("p-one", { entity: "account", operation: "created", recordId: "new" });
+});
+
+it("deleteMany runs rules per row, cleans plugin data and emits deleted for every id", async () => {
+  const deps = mkDeps({ afterTargets: jest.fn(async () => ["p-one"]) });
+  await interceptWrite({ model: "crm_Accounts", operation: "deleteMany", args: { where: {} }, query: async () => ({ count: 2 }) }, deps);
+  expect(deps.runBeforeRules).toHaveBeenCalledTimes(2);
+  expect(deps.runBeforeRules).toHaveBeenCalledWith(expect.objectContaining({ operation: "beforeDelete", recordId: "a2" }));
+  expect(deps.deleteRecordData).toHaveBeenCalledWith("account", ["a1", "a2"]);
+  expect(deps.sendAfter).toHaveBeenCalledWith("p-one", { entity: "account", operation: "deleted", recordId: "a1" });
+  expect(deps.sendAfter).toHaveBeenCalledWith("p-one", { entity: "account", operation: "deleted", recordId: "a2" });
+});
+
+it("uses the existing row's id when the write selects no id", async () => {
+  const deps = mkDeps({ afterTargets: jest.fn(async () => ["p-one"]) });
+  await interceptWrite({ model: "crm_Accounts", operation: "update", args: { where: { id: "a1" }, data: { name: "N" }, select: { name: true } }, query: async () => ({ name: "N" }) }, deps);
+  expect(deps.sendAfter).toHaveBeenCalledWith("p-one", { entity: "account", operation: "updated", recordId: "a1" });
+  await interceptWrite({ model: "crm_Accounts", operation: "delete", args: { where: { id: "a1" }, select: { name: true } }, query: async () => ({ name: "Old" }) }, deps);
+  expect(deps.deleteRecordData).toHaveBeenCalledWith("account", ["a1"]);
+});

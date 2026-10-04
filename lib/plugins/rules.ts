@@ -61,8 +61,8 @@ export async function runBeforeRules(input: RuleInput, deps?: RuleDeps): Promise
     const id = plugin.definition.id;
     let result;
     try {
-      const ctx = await d.createPluginContext({ plugin, actor });
-      result = await withTimeout(Promise.resolve(rule.handler({ ...input, data }, ctx)), d.timeoutMs);
+      const run = async () => rule.handler({ ...input, data }, await d.createPluginContext({ plugin, actor }));
+      result = await withTimeout(run(), d.timeoutMs);
     } catch (e) {
       writePluginLog(id, "error", `Rule ${input.entity}.${input.operation} failed: ${String(e)}`);
       if (rule.onError === "block") throw new PluginRuleError(null, "ruleUnavailable");

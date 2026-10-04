@@ -40,6 +40,7 @@ export async function getPluginState(id: string): Promise<PluginStateRow | undef
 }
 
 export async function getEnabledPlugins(): Promise<RegisteredPlugin[]> {
+  if (!getRegistry().length) return [];
   const enabled = new Set((await getPluginStates()).filter((r) => r.status === "ENABLED").map((r) => r.id));
   return getRegistry().filter((p) => enabled.has(p.definition.id));
 }

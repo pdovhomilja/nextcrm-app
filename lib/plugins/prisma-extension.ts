@@ -62,7 +62,7 @@ export async function interceptWrite(p: Params, deps: InterceptDeps): Promise<an
       const operation: BeforeOperation = soft ? "beforeDelete" : "beforeUpdate";
       const data = await deps.runBeforeRules({ entity, operation, recordId: (existing?.id as string) ?? null, data: input, existing });
       const row = await p.query(p.operation === "upsert" ? { ...p.args, update: data } : { ...p.args, data });
-      await emit(soft ? "deleted" : "updated", [row.id]);
+      await emit(soft ? "deleted" : "updated", [(existing?.id as string) ?? row.id]);
       return row;
     }
     case "updateMany":
@@ -85,8 +85,9 @@ export async function interceptWrite(p: Params, deps: InterceptDeps): Promise<an
       const existing = await deps.findExisting(model, p.args.where);
       await deps.runBeforeRules({ entity, operation: "beforeDelete", recordId: (existing?.id as string) ?? null, data: {}, existing });
       const row = await p.query(p.args);
-      deps.deleteRecordData(entity, [row.id]);
-      await emit("deleted", [row.id]);
+      const id = (existing?.id as string) ?? row.id;
+      deps.deleteRecordData(entity, [id]);
+      await emit("deleted", [id]);
       return row;
     }
   }
@@ -99,7 +100,8 @@ export function withPluginRules(base: PrismaClient) {
     runBeforeRules: async (input) => (await import("./rules")).runBeforeRules(input),
     afterTargets: async (entity, op) => (await import("./rules")).afterTargets(entity, op),
     sendAfter: (pluginId, data) => {
-      void import("@/inngest/client").then(({ inngest }) => inngest.send({ name: `plugin/${pluginId}/after`, data }));
+      void import("@/inngest/client").then(({ inngest }) => inngest.send({ name: `plugin/${pluginId}/after`, data }))
+        .catch((e) => console.error("[PLUGIN_AFTER_SEND]", e));
     },
     findExisting: (model, where) => (base as any)[model].findUnique({ where }),
     findManyExisting: (model, where) => (base as any)[model].findMany({ where }),
