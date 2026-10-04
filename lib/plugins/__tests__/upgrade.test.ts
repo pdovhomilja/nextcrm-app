@@ -1,8 +1,8 @@
 import { definePlugin } from "@nextcrm/plugin-sdk";
 
-const db = {
+const db: any = {
   $queryRaw: jest.fn(async () => [{ locked: true }]),
-  $executeRaw: jest.fn(),
+  $transaction: jest.fn(async (cb: any) => cb(db)),
   installedPlugin: { findMany: jest.fn(), update: jest.fn() },
 };
 jest.mock("@/lib/prisma-base", () => ({ prismaBase: db }));
@@ -29,12 +29,14 @@ it("runs onUpgrade for newer image versions, disables on failure, ignores missin
   expect(onUpgrade).toHaveBeenCalledWith({}, "1.0.0");
   expect(db.installedPlugin.update).toHaveBeenCalledWith({ where: { id: "up" }, data: { version: "1.1.0" } });
   expect(db.installedPlugin.update).toHaveBeenCalledWith({ where: { id: "broken" }, data: { status: "DISABLED" } });
-  expect(db.$executeRaw).toHaveBeenCalled(); // unlock
+  expect(String((db.$queryRaw.mock.calls[0] as any[])[0])).toContain("pg_try_advisory_xact_lock");
 });
 
 it("does nothing when another replica holds the lock", async () => {
   db.$queryRaw.mockResolvedValueOnce([{ locked: false }]);
   db.installedPlugin.findMany.mockClear();
+  db.installedPlugin.update.mockClear();
   await runPluginUpgrades();
   expect(db.installedPlugin.findMany).not.toHaveBeenCalled();
+  expect(db.installedPlugin.update).not.toHaveBeenCalled();
 });
