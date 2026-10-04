@@ -5,6 +5,18 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.23.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.23.0...v0.23.1) (2026-10-04)
+
+
+### Fixed
+
+* **docker:** copy pnpm-workspace.yaml before frozen install ([240a2f0](https://github.com/pdovhomilja/nextcrm-app/commit/240a2f0450610689ba9337f79207e88cb6e65e68))
+* **docker:** copy pnpm-workspace.yaml before frozen install ([98a6d0d](https://github.com/pdovhomilja/nextcrm-app/commit/98a6d0d625ec451999302c5a652720e189d06062))
+* **docker:** sign MinIO bucket creation with SigV4 ([2bb67c7](https://github.com/pdovhomilja/nextcrm-app/commit/2bb67c7c9937fd23bb93b9b306362a4e5d23d022))
+* **docker:** sign MinIO bucket creation with SigV4 ([4325c3b](https://github.com/pdovhomilja/nextcrm-app/commit/4325c3ba2e19948e1eedca4887ca6501644e7376))
+* **docker:** switch MinIO to pgsty/minio (official images are gone) ([96e068d](https://github.com/pdovhomilja/nextcrm-app/commit/96e068de554af2be604fb31b7b2b670e6e536eb8))
+* **docker:** switch MinIO to pgsty/minio, pinned ([1780e5d](https://github.com/pdovhomilja/nextcrm-app/commit/1780e5d7eee78e25182991aaba260a37fb26426e))
+
 ## [0.23.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.22.1...v0.23.0) (2026-10-04)
 
 
