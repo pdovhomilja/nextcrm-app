@@ -153,6 +153,12 @@ beforeEach(() => {
   (generateHomepage as jest.Mock).mockImplementation(async () => ({
     html: `<html>v${++n}</html>`,
     critique: `critique ${n}`,
+    usage: {
+      input_tokens: 100,
+      output_tokens: 200,
+      cache_read_input_tokens: 0,
+      cache_creation_input_tokens: 0,
+    },
   }));
   (renderAndScreenshot as jest.Mock).mockResolvedValue(Buffer.from("PNGDATA"));
   (putHomepageTmpSource as jest.Mock).mockResolvedValue(undefined);
@@ -281,6 +287,12 @@ describe("generate event", () => {
       expect(call[0].data.pass_kind).toBe("AUTO");
       expect(call[0].data.agent_critique).toMatch(/^critique/);
       expect(call[0].data.homepage_id).toBe("h1");
+      // per-pass usage is persisted for cost tracking
+      expect(call[0].data.input_tokens).toBe(100);
+      expect(call[0].data.output_tokens).toBe(200);
+      expect(call[0].data.cache_read_tokens).toBe(0);
+      expect(call[0].data.cache_creation_tokens).toBe(0);
+      expect(typeof call[0].data.model).toBe("string");
     }
 
     // final html + screenshot uploaded under the slug

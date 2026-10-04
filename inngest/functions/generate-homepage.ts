@@ -301,6 +301,7 @@ async function runPass(
         system: args.system,
         model: args.model,
         maxTokens: args.maxTokens,
+        logLabel: label,
       }),
       GENERATE_TIMEOUT_MS,
       "Homepage generation",
@@ -316,6 +317,12 @@ async function runPass(
         agent_critique: gen.critique,
         pass_kind: args.passKind,
         created_by: args.createdBy,
+        // per-pass token usage for cost tracking (null if the provider didn't report it)
+        model: args.model,
+        input_tokens: gen.usage?.input_tokens ?? null,
+        output_tokens: gen.usage?.output_tokens ?? null,
+        cache_read_tokens: gen.usage?.cache_read_input_tokens ?? null,
+        cache_creation_tokens: gen.usage?.cache_creation_input_tokens ?? null,
       },
       select: { id: true },
     });

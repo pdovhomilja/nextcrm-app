@@ -109,7 +109,10 @@ revert through a version history. Upstream-owned touches are limited to
 `lib/mcp/tools/index.ts`, `BasicView.tsx`, `lib/audit-log.ts`, `prisma/seeds/seed.ts`, two sidebar files
 and `AdminSidebarNav.tsx` — see `UPSTREAM_IMPACT_LOG.md`. Generation is **admin-configurable**
 (model / max_tokens / base prompt — `/admin/homepage-settings`) and a user can **upload their own HTML**
-to override the generated design.
+to override the generated design. Per-pass Anthropic token usage (model + input/output/cache
+tokens) is persisted on each version row; an admin **Homepage Costs** page
+(`/admin/homepage-costs`) aggregates accumulated cost per target
+(`lib/homepage/cost.ts` + `actions/admin/homepage-costs.ts`).
 
 ```text
 lib/homepage/
@@ -140,7 +143,11 @@ lib/homepage/
                                 constants) shared by the route core and the drawer's client-side guard
   harvest-source.ts             harvestSource(url): SSRF-guarded (lib/net/host-guard.ts) fetch +
                                 screenshot + brand extraction; inlines the logo as a data: URI
-  provider.ts                   Anthropic vision provider: generateHomepage({brief,prompt,previousHtml?,...})
+  provider.ts                   Anthropic vision provider: generateHomepage({brief,prompt,previousHtml?,...});
+                                returns per-pass token `usage`; logs [HOMEPAGE_USAGE] incl. cost_usd
+  cost.ts                       HOMEPAGE_MODEL_PRICING (Record<HomepageModel,Rate>), computePassCostUsd(usage,
+                                model) and summarizeHomepageCost(versions) -> per-target cost / gen-count /
+                                last-gen date / model (used by the Homepage Costs admin page + action)
   queue-generation.ts           shared trigger: row upsert + published-slug guard + stale-aware in-flight
                                 guard + event send + audit (used by the web route AND the MCP tool);
                                 MAX_HOMEPAGE_PROMPT_CHARS, STALE_RUN_MS, isHomepageRunActive()
