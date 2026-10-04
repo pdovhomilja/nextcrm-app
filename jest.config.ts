@@ -5,6 +5,8 @@ const config: Config = {
   testEnvironment: "node",
   setupFiles: ["<rootDir>/jest.env.setup.ts"],
   moduleNameMapper: {
+    "^@nextcrm/plugin-sdk$": "<rootDir>/packages/plugin-sdk/src/index.ts",
+    "^@nextcrm/plugin-sdk/testing$": "<rootDir>/packages/plugin-sdk/src/testing.ts",
     "^@/(.*)$": "<rootDir>/$1",
     "^e2b$": "<rootDir>/__mocks__/e2b.ts",
   },
