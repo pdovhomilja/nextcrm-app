@@ -9,7 +9,8 @@ const lifecycle = {
 };
 jest.mock("@/lib/plugins/lifecycle", () => lifecycle);
 jest.mock("@/lib/plugins/state", () => ({ getPluginState: jest.fn(async () => ({ id: "demo", secrets: "cipher" })) }));
-jest.mock("@/lib/plugins/settings", () => ({ decryptSecrets: () => ({ apiKey: "very-secret", empty: "" }) }));
+const mockDecrypt = jest.fn(() => JSON.stringify({ apiKey: "very-secret", empty: "" }));
+jest.mock("@/lib/email-crypto", () => ({ encrypt: (s: string) => s, decrypt: () => mockDecrypt() }));
 
 import { getSecretFlags, installPluginAction, savePluginSettingsAction, uninstallPluginAction } from "../plugins";
 import { requireRole, AuthorizationError } from "@/lib/authz";
@@ -18,6 +19,11 @@ it("returns only boolean flags for secrets (Review Focus 4)", async () => {
   const flags = await getSecretFlags("demo");
   expect(flags).toEqual({ apiKey: true, empty: false });
   expect(JSON.stringify(flags)).not.toContain("very-secret");
+});
+
+it("shows secrets as not set when they cannot be decrypted, instead of crashing (I1)", async () => {
+  mockDecrypt.mockImplementationOnce(() => { throw new Error("Unsupported state or unable to authenticate data"); });
+  await expect(getSecretFlags("demo")).resolves.toEqual({});
 });
 
 it("maps lifecycle errors to { ok: false, error } and never echoes secrets", async () => {

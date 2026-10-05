@@ -16,7 +16,7 @@ export async function createPluginContext(args: { plugin: RegisteredPlugin; acto
   const log = createLogger(definition.id);
   const state = await getPluginState(definition.id);
   const settings = parseStoredSettings(definition.settings, state?.settings, (m, c) => log.warn(m, c));
-  const rawSecrets = decryptSecrets(state?.secrets ?? null);
+  const rawSecrets = decryptSecrets(state?.secrets ?? null, (m) => log.warn(m));
   const secrets = parseStoredSettings(definition.secrets, rawSecrets, (m, c) => log.warn(m, c));
   const has = (p: string) => definition.permissions.includes(p as never);
   const http = createHttp(log);

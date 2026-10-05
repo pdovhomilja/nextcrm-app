@@ -44,3 +44,10 @@ it("encrypts and decrypts secrets as JSON", () => {
   expect(encryptSecrets({})).toBeNull();
   expect(decryptSecrets(null)).toEqual({});
 });
+
+it("treats undecryptable secrets as not set and reports it instead of throwing (I1)", () => {
+  const onError = jest.fn();
+  expect(decryptSecrets("garbage", onError)).toEqual({});
+  expect(onError).toHaveBeenCalledTimes(1);
+  expect(decryptSecrets("garbage")).toEqual({});
+});

@@ -56,6 +56,13 @@ export function encryptSecrets(values: Record<string, unknown>): string | null {
   return Object.keys(values).length ? encrypt(JSON.stringify(values)) : null;
 }
 
-export function decryptSecrets(cipher: string | null): Record<string, unknown> {
-  return cipher ? (JSON.parse(decrypt(cipher)) as Record<string, unknown>) : {};
+// Undecryptable secrets (e.g. after an encryption key change) are treated as not set, so the plugin and its admin page keep working.
+export function decryptSecrets(cipher: string | null, onError?: (message: string) => void): Record<string, unknown> {
+  if (!cipher) return {};
+  try {
+    return JSON.parse(decrypt(cipher)) as Record<string, unknown>;
+  } catch {
+    onError?.("Secrets could not be decrypted (encryption key changed?); treating them as not set. Re-enter them in plugin settings.");
+    return {};
+  }
 }

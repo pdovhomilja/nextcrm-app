@@ -69,3 +69,9 @@ it("uninstalls a missing plugin without calling code (Review Focus 2)", async ()
   await uninstallPlugin("ghost", "u1");
   expect(db.installedPlugin.delete).toHaveBeenCalledWith({ where: { id: "ghost" } });
 });
+
+it("lets the admin re-enter secrets that can no longer be decrypted (I1)", async () => {
+  getPluginState.mockResolvedValue({ id: "demo", secrets: "undecryptable", settings: {} });
+  await savePluginSettings("demo", "u1", { settings: {}, secrets: { apiKey: "new" } });
+  expect(db.installedPlugin.update).toHaveBeenCalledWith({ where: { id: "demo" }, data: { settings: { days: 90 }, secrets: 'enc:{"apiKey":"new"}' } });
+});

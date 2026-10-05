@@ -51,3 +51,15 @@ it("rejects oversized store values", async () => {
   const ctx = await createPluginContext({ plugin, actor: { type: "system" } });
   await expect(ctx.store.set("big", "x".repeat(256 * 1024 + 1))).rejects.toThrow("exceeds 256 KB");
 });
+
+it("builds a context with empty secrets and one warn line when secrets cannot be decrypted (I1)", async () => {
+  const { getPluginState } = jest.requireMock("@/lib/plugins/state");
+  getPluginState.mockResolvedValueOnce({ id: "demo", settings: {}, secrets: "not-json-after-key-change" });
+  const { prismaBase } = jest.requireMock("@/lib/prisma-base");
+  prismaBase.pluginLog.create.mockClear();
+  const ctx = await createPluginContext({ plugin, actor: { type: "system" } });
+  expect(ctx.secrets).toEqual({});
+  const warns = prismaBase.pluginLog.create.mock.calls.filter((c: any[]) => c[0].data.level === "warn");
+  expect(warns).toHaveLength(1);
+  expect(warns[0][0].data.message).toContain("Secrets could not be decrypted");
+});
