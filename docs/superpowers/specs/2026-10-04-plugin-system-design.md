@@ -119,6 +119,7 @@ All extensions of a plugin are inert while the plugin is not `ENABLED`: tabs and
 - **Timeouts and errors:** each rule has 500 ms. On timeout or exception the manifest's `onError` decides: `"block"` rejects the write with a generic "rule unavailable" message; `"allow"` (default) lets it through. Both are logged to the plugin log.
 - **User-facing errors:** `reject` throws `PluginRuleError { pluginId, messageKey, params }`. Server actions map it to the standard form error; the MCP route returns it as a tool error with the translated message.
 - **Known gaps:** The v0 audit found no nested writes to watched models (only `documents → accounts` junction rows) and only read-only raw SQL on them. No lint rule in v0; reviewers check new nested writes.
+- **Known gaps (bulk operations, v0):** `createManyAndReturn` and `updateManyAndReturn` are not intercepted, so rules and after-actions do not run for them (nothing in core uses them today). `createMany` runs rules but emits no after-events (it returns only a count). Batching above 500 rows is not implemented: `updateMany`/`deleteMany` load all affected rows in one query and run rules row by row. Rules may not `modify` bulk writes.
 
 ## 8. Plugin context (`ctx`)
 
@@ -205,7 +206,7 @@ Only `admin` can install, uninstall, change settings. Every lifecycle action wri
 ## 12. Testing
 
 - **SDK harness** (`@nextcrm/plugin-sdk/testing`): `createTestContext({ settings, actor, data })` with in-memory `store`, `data` and `http` mocks, so plugin logic is unit-tested without the app.
-- **Host tests:** registry generation, lifecycle transitions, permission checks, rule ordering, `onError` behaviour, recursion cap, actor propagation from server action, MCP route and Inngest.
+- **Host tests:** registry generation, lifecycle transitions, permission checks, rule ordering, `onError` behaviour, recursion cap, actor resolution (explicit frame, then session user, then `system`), MCP route and Inngest.
 - **Contract test per plugin** (run in CI for every plugin in `plugins/`): manifest validates, `sdk` range matches, translations exist for all four locales, no forbidden imports.
 - **Regression:** full existing test suite passes with zero plugins installed; an instance upgraded with no plugins shows no behavioural change.
 
@@ -223,5 +224,5 @@ Price lists, the price-rule engine and orders are core features with their own s
 
 ## 15. Open questions
 
-1. `packages/plugin-sdk` as a pnpm workspace package vs. a path alias (`@nextcrm/plugin-sdk` → `lib/plugins/sdk`). Workspace is cleaner for the boundary lint; alias is less build change. Decide in the implementation plan.
+1. ~~`packages/plugin-sdk` as a pnpm workspace package vs. a path alias.~~ **Resolved** in § 4: path alias `@nextcrm/plugin-sdk` → `packages/plugin-sdk/src`, no pnpm workspace.
 2. Whether plugin pages need their own layout slot in the main sidebar before v1 (depends on first plugins' UX feedback).
