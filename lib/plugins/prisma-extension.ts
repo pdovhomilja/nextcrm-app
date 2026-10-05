@@ -1,6 +1,7 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
 import type { AfterOperation, BeforeOperation, Entity, RecordData } from "@nextcrm/plugin-sdk";
 import { MODEL_TO_ENTITY } from "./rules";
+import { currentActorFrame } from "./actor";
 
 const WRITE_OPS = new Set(["create", "createMany", "update", "updateMany", "upsert", "delete", "deleteMany"]);
 
@@ -28,7 +29,11 @@ export async function interceptWrite(p: Params, deps: InterceptDeps): Promise<an
 
   const model = p.model as string;
   const emit = async (operation: AfterOperation, ids: string[]) => {
+    // Loop guard: a plugin's own writes never trigger its own after-actions.
+    const actor = currentActorFrame()?.actor;
+    const writer = actor?.type === "plugin" ? actor.pluginId : null;
     for (const pluginId of await deps.afterTargets(entity, operation)) {
+      if (pluginId === writer) continue;
       for (const recordId of ids) deps.sendAfter(pluginId, { entity, operation, recordId });
     }
   };

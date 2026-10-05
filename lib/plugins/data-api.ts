@@ -70,6 +70,6 @@ export function createDataApi(pluginId: string, permissions: Permission[]): Data
 async function emitSaved(pluginId: string, model: string, recordId: string) {
   const { inngest } = await import("@/inngest/client");
   void inngest
-    .send({ name: SAVED_EVENT[model], data: { record_id: recordId } })
+    .send({ name: SAVED_EVENT[model], data: { record_id: recordId, source: pluginId } })
     .catch((e: unknown) => writePluginLog(pluginId, "error", "Failed to emit saved event", { model, recordId, error: String(e) }));
 }

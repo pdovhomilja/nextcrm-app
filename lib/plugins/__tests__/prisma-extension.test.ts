@@ -94,3 +94,12 @@ it("uses the existing row's id when the write selects no id", async () => {
   await interceptWrite({ model: "crm_Accounts", operation: "delete", args: { where: { id: "a1" }, select: { name: true } }, query: async () => ({ name: "Old" }) }, deps);
   expect(deps.deleteRecordData).toHaveBeenCalledWith("account", ["a1"]);
 });
+
+it("does not send after-events back to the plugin that made the write; other plugins still get them (I2)", async () => {
+  const { runAsActor } = await import("@/lib/plugins/actor");
+  const deps = mkDeps({ afterTargets: jest.fn(async () => ["p-one", "p-two"]) });
+  await runAsActor({ type: "plugin", pluginId: "p-one" }, () =>
+    interceptWrite({ model: "crm_Accounts", operation: "update", args: { where: { id: "a1" }, data: { name: "N" } }, query: async () => ({ id: "a1" }) }, deps));
+  expect(deps.sendAfter).toHaveBeenCalledTimes(1);
+  expect(deps.sendAfter).toHaveBeenCalledWith("p-two", { entity: "account", operation: "updated", recordId: "a1" });
+});

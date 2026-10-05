@@ -37,7 +37,9 @@ export function buildPluginFunctions(registry: RegisteredPlugin[]) {
     for (const ev of extensions.events) {
       fns.push(inngest.createFunction(
         { id: `plugin-${id}-on-${slug(ev.event)}`, name: `Plugin ${id}: on ${ev.event}`, retries: 3, triggers: [{ event: ev.event }] },
-        async ({ event }: { event: { data: Record<string, unknown> } }) => runIfEnabled(plugin, (ctx) => ev.handler(event.data, ctx)),
+        async ({ event }: { event: { data: Record<string, unknown> } }) =>
+          // Loop guard: skip events caused by this plugin's own ctx.data writes.
+          event.data?.source === id ? { status: "skipped:self" as const } : runIfEnabled(plugin, (ctx) => ev.handler(event.data, ctx)),
       ));
     }
     if (extensions.afters.length) {

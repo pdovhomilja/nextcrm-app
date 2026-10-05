@@ -55,3 +55,13 @@ it("dispatches after-actions by entity and operation", async () => {
   expect(after).toHaveBeenCalledTimes(1);
   expect(after).toHaveBeenCalledWith({ entity: "account", operation: "created", recordId: "a1" }, expect.anything());
 });
+
+it("skips on-handlers for events the same plugin caused; runs them for other sources (I2)", async () => {
+  buildPluginFunctions([plugin]);
+  state.mockResolvedValue({ status: "ENABLED" });
+  await expect(created[1].handler({ event: { data: { record_id: "a1", source: "demo" } } })).resolves.toEqual({ status: "skipped:self" });
+  expect(onSaved).not.toHaveBeenCalled();
+  await created[1].handler({ event: { data: { record_id: "a1", source: "other" } } });
+  await created[1].handler({ event: { data: { record_id: "a1" } } });
+  expect(onSaved).toHaveBeenCalledTimes(2);
+});

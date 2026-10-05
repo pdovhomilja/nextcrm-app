@@ -32,3 +32,10 @@ it("catches and logs a failed saved-event emit", async () => {
   await new Promise((r) => setImmediate(r));
   expect(writePluginLog).toHaveBeenCalledWith("demo", "error", "Failed to emit saved event", expect.objectContaining({ recordId: "a1" }));
 });
+
+it("tags saved events with the writing plugin as source (I2)", async () => {
+  send.mockResolvedValue(undefined);
+  const api = createDataApi("demo", ["accounts:write"]);
+  await api.accounts.update("a1", { name: "x" });
+  expect(send).toHaveBeenCalledWith({ name: "crm/account.saved", data: { record_id: "a1", source: "demo" } });
+});
