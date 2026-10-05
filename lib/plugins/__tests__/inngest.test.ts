@@ -10,7 +10,12 @@ jest.mock("@/lib/plugins/context", () => ({ createPluginContext: jest.fn(async (
 jest.mock("@/lib/plugins/log", () => ({ writePluginLog: jest.fn() }));
 jest.mock("@/lib/prisma-base", () => ({ prismaBase: { pluginLog: { deleteMany: jest.fn() }, installedPlugin: { update: jest.fn() } } }));
 
-import { buildPluginFunctions } from "@/lib/plugins/inngest";
+const installing: Record<string, any> = {};
+jest.mock("@/lib/plugins/registry", () => ({ getRegistry: () => [], findPlugin: (id: string) => installing[id] }));
+
+import { buildPluginFunctions, pluginInstallFunction } from "@/lib/plugins/inngest";
+import { prismaBase } from "@/lib/prisma-base";
+import { writePluginLog } from "@/lib/plugins/log";
 
 const cron = jest.fn();
 const onSaved = jest.fn();
@@ -64,4 +69,20 @@ it("skips on-handlers for events the same plugin caused; runs them for other sou
   await created[1].handler({ event: { data: { record_id: "a1", source: "other" } } });
   await created[1].handler({ event: { data: { record_id: "a1" } } });
   expect(onSaved).toHaveBeenCalledTimes(2);
+});
+
+it("disables the plugin when onInstall throws (spec § 10)", async () => {
+  installing.demo = { ...plugin, definition: { ...plugin.definition, onInstall: jest.fn(async () => { throw new Error("boom"); }) } };
+  const run = (pluginInstallFunction as any).handler;
+  await expect(run({ event: { data: { pluginId: "demo" } } })).resolves.toEqual({ status: "failed" });
+  expect(prismaBase.installedPlugin.update).toHaveBeenCalledWith({ where: { id: "demo" }, data: { status: "DISABLED" } });
+  expect(writePluginLog).toHaveBeenCalledWith("demo", "error", expect.stringContaining("onInstall failed: Error: boom"));
+});
+
+it("leaves the plugin enabled when onInstall succeeds", async () => {
+  const onInstall = jest.fn();
+  installing.demo = { ...plugin, definition: { ...plugin.definition, onInstall } };
+  await expect((pluginInstallFunction as any).handler({ event: { data: { pluginId: "demo" } } })).resolves.toEqual({ status: "ok" });
+  expect(onInstall).toHaveBeenCalledTimes(1);
+  expect(prismaBase.installedPlugin.update).not.toHaveBeenCalled();
 });
