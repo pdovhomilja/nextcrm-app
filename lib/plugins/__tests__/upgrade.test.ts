@@ -13,7 +13,8 @@ jest.mock("@/lib/plugins/log", () => ({ writePluginLog: jest.fn() }));
 const onUpgrade = jest.fn();
 const failing = jest.fn(async () => { throw new Error("bad"); });
 const mk = (id: string, version: string, fn: any) => ({ source: "public", messages: {}, definition: definePlugin({ id, name: id, version, sdk: "^0.1.0", description: "", permissions: [], extensions: () => {}, onUpgrade: fn }) });
-jest.mock("@/lib/plugins/registry", () => ({ getRegistry: () => [mk("up", "1.1.0", onUpgrade), mk("same", "1.0.0", onUpgrade), mk("broken", "2.0.0", failing)] }));
+let emptyRegistry = false;
+jest.mock("@/lib/plugins/registry", () => ({ getRegistry: () => emptyRegistry ? [] : [mk("up", "1.1.0", onUpgrade), mk("same", "1.0.0", onUpgrade), mk("broken", "2.0.0", failing)] }));
 
 import { runPluginUpgrades } from "@/lib/plugins/upgrade";
 
@@ -39,4 +40,16 @@ it("does nothing when another replica holds the lock", async () => {
   await runPluginUpgrades();
   expect(db.installedPlugin.findMany).not.toHaveBeenCalled();
   expect(db.installedPlugin.update).not.toHaveBeenCalled();
+});
+
+it("returns without a transaction or query when the registry is empty (M1)", async () => {
+  emptyRegistry = true;
+  db.$transaction.mockClear();
+  db.$queryRaw.mockClear();
+  db.installedPlugin.findMany.mockClear();
+  await runPluginUpgrades();
+  expect(db.$transaction).not.toHaveBeenCalled();
+  expect(db.$queryRaw).not.toHaveBeenCalled();
+  expect(db.installedPlugin.findMany).not.toHaveBeenCalled();
+  emptyRegistry = false;
 });
