@@ -27,7 +27,8 @@ export function createDataApi(pluginId: string, permissions: Permission[]): Data
   const need = (p: Permission) => {
     if (!permissions.includes(p)) throw new PluginPermissionError(pluginId, p);
   };
-  // Never return password hashes: for users, drop caller select/include/omit and always omit password.
+  // Never return password hashes: only where/orderBy/take/skip reach Prisma (no select/include on any model,
+  // so relations to users cannot be loaded), and users always omit password.
   const read = (model: string, perm: Permission): ReadApi => ({
     async get(id) {
       need(perm);
@@ -37,8 +38,8 @@ export function createDataApi(pluginId: string, permissions: Permission[]): Data
     async find(args: FindArgs = {}) {
       need(perm);
       const { where, orderBy, take, skip } = args;
-      const safe = model === "users" ? { where, orderBy, take, skip, omit: { password: true } } : args;
-      return (await (await db())[model].findMany({ take: 100, ...safe })) as RecordData[];
+      const safe = { where, orderBy, take: take ?? 100, skip };
+      return (await (await db())[model].findMany(model === "users" ? { ...safe, omit: { password: true } } : safe)) as RecordData[];
     },
   });
   const entity = (model: string, r: Permission, w: Permission): EntityApi => ({

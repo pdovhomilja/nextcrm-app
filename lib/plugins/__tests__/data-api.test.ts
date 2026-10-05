@@ -39,3 +39,11 @@ it("tags saved events with the writing plugin as source (I2)", async () => {
   await api.accounts.update("a1", { name: "x" });
   expect(send).toHaveBeenCalledWith({ name: "crm/account.saved", data: { record_id: "a1", source: "demo" } });
 });
+
+it("drops include/select on every entity so relations cannot leak users credentials (M9)", async () => {
+  const api = createDataApi("demo", ["accounts:read", "users:read"]);
+  await api.accounts.find({ where: { name: "A" }, include: { assigned_to_user: true }, select: { assigned_to_user: { select: { password: true } } } } as never);
+  expect(delegate.findMany).toHaveBeenLastCalledWith({ where: { name: "A" }, orderBy: undefined, take: 100, skip: undefined });
+  await api.users.find();
+  expect(delegate.findMany).toHaveBeenLastCalledWith(expect.objectContaining({ take: 100, omit: { password: true } }));
+});
