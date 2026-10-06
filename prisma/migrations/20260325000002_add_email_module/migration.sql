@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS "Email" (
 CREATE TABLE IF NOT EXISTS "EmailEmbedding" (
     "id"          UUID NOT NULL DEFAULT gen_random_uuid(),
     "emailId"     UUID NOT NULL,
-    "embedding"   vector(1536) NOT NULL,
+    "embedding"   vector NOT NULL,
     "contentHash" TEXT NOT NULL,
     "embeddedAt"  TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

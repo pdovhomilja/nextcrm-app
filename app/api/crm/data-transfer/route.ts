@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
   const workbook = new ExcelJS.Workbook();
   const name = file.name.toLowerCase();
   if (name.endsWith(".csv")) await workbook.csv.read(Readable.from([await file.text()]));
-  else if (name.endsWith(".xlsx")) await workbook.xlsx.load(Buffer.from(await file.arrayBuffer()));
+  else if (name.endsWith(".xlsx")) await workbook.xlsx.load(Buffer.from(await file.arrayBuffer()) as any);
   else return NextResponse.json({ error: "Use .xlsx or .csv files. Legacy .xls files are not supported." }, { status: 415 });
   const sheet = workbook.worksheets[0];
   if (!sheet) return NextResponse.json({ error: "The workbook has no readable sheet" }, { status: 400 });

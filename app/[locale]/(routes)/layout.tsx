@@ -65,8 +65,13 @@ export default async function AppLayout({
     return redirect("/inactive");
   }
 
-  // Fetch localization dictionary
-  const dict = await getTranslations("ModuleMenu");
+  // Parallelize layout data fetching to eliminate waterfall delay
+  const [dict, cookieStore, enabledCurrencies, defaultCurrency] = await Promise.all([
+    getTranslations("ModuleMenu"),
+    cookies(),
+    getEnabledCurrencies(),
+    getDefaultCurrency(),
+  ]);
 
   // Extract translations as plain object for client component
   const translations = {
@@ -90,11 +95,7 @@ export default async function AppLayout({
     settings: dict("settings"),
   };
 
-  const cookieStore = await cookies();
   const sidebarOpen = cookieStore.get("sidebar_state")?.value !== "false";
-
-  const enabledCurrencies = await getEnabledCurrencies();
-  const defaultCurrency = await getDefaultCurrency();
   const cookieCurrency = cookieStore.get("display_currency")?.value;
   const displayCurrency = cookieCurrency && enabledCurrencies.some((c: { code: string }) => c.code === cookieCurrency)
     ? cookieCurrency

@@ -7,6 +7,14 @@ import { ac, admin, manager, user } from "@/lib/auth-permissions";
 import { newUserNotify } from "@/lib/new-user-notify";
 import resendHelper from "@/lib/resend";
 
+const googleClientId = process.env.GOOGLE_ID || process.env.GOOGLE_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_SECRET || process.env.GOOGLE_CLIENT_SECRET;
+const isGoogleConfigured = Boolean(
+  googleClientId &&
+  googleClientSecret &&
+  googleClientId !== "your-google-client-id" &&
+  googleClientSecret !== "your-google-client-secret"
+);
 const isDemo = process.env.NEXT_PUBLIC_APP_URL === "https://demo.nextcrm.io";
 const bootstrapAdminEmail = (
   process.env.BOOTSTRAP_ADMIN_EMAIL || "jayandraa5@gmail.com"
@@ -16,6 +24,11 @@ export const auth = betterAuth({
   database: prismaAdapter(prismadb, { provider: "postgresql" }),
   secret: process.env.BETTER_AUTH_SECRET || "default-secret-key-change-me",
   baseURL: process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  trustedOrigins: Array.from(new Set([
+    "http://localhost:3000",
+    process.env.NEXT_PUBLIC_APP_URL,
+    process.env.BETTER_AUTH_URL,
+  ].filter(Boolean) as string[])),
   advanced: {
     database: {
       generateId: "uuid",
@@ -59,11 +72,11 @@ export const auth = betterAuth({
   },
 
   socialProviders: {
-    ...(process.env.GOOGLE_ID && process.env.GOOGLE_SECRET
+    ...(isGoogleConfigured
       ? {
           google: {
-            clientId: process.env.GOOGLE_ID,
-            clientSecret: process.env.GOOGLE_SECRET,
+            clientId: googleClientId!,
+            clientSecret: googleClientSecret!,
           },
         }
       : {}),
@@ -76,10 +89,13 @@ export const auth = betterAuth({
   plugins: [
     emailOTP({
       sendVerificationOTP: async ({ email, otp, type }) => {
+        if (process.env.NODE_ENV !== "production") {
+          console.log(`\n========================================\n[Auth DEV Mode] Verification OTP for ${email}: ${otp}\n========================================\n`);
+        }
         try {
           const resend = await resendHelper();
           await resend.emails.send({
-            from: `${process.env.NEXT_PUBLIC_APP_NAME} <${process.env.EMAIL_FROM}>`,
+            from: `${process.env.NEXT_PUBLIC_APP_NAME || "NextCRM"} <${process.env.EMAIL_FROM || "noreply@domain.com"}>`,
             to: email,
             subject: `Your verification code: ${otp}`,
             text: `Your one-time verification code is: ${otp}\n\nThis code expires in 5 minutes.\n\nIf you did not request this, please ignore this email.`,
@@ -87,7 +103,7 @@ export const auth = betterAuth({
         } catch (e) {
           // In dev/test, email sending may fail — OTP is captured by testUtils plugin
           if (process.env.NODE_ENV !== "production") {
-            console.log(`[Auth] OTP email send failed for ${email}, but captured by testUtils`);
+            console.log(`[Auth] Email sending failed in dev mode for ${email}, but captured OTP: ${otp}`);
           } else {
             throw e;
           }

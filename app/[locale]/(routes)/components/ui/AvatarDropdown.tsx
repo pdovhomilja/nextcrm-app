@@ -61,7 +61,7 @@ const AvatarDropdown = ({ avatar, userId, name, email }: Props) => {
           <span>Profile settings</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={async () => { await signOut(); window.location.href = "/sign-in"; }}>
+        <DropdownMenuItem onClick={async () => { await signOut(); router.push("/sign-in"); router.refresh(); }}>
           <LogOut className="w-4 h-4 inline-block mr-2 stroke-current text-muted-foreground" />
           <span>Sign out</span>
         </DropdownMenuItem>

@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth-server";
 
 import { prismadb } from "@/lib/prisma";
 import { decrypt } from "@/lib/email-crypto";
+import { serializeDecimals, serializeDecimalsList } from "@/lib/serialize-decimals";
 import { assertPublicHost, HostNotAllowedError } from "@/lib/net/host-guard";
 import nodemailer from "nodemailer";
 import { EmailFolder } from "@prisma/client";
@@ -22,121 +23,135 @@ export async function getEmails(
   page: number,
   search?: string
 ) {
-  const userId = await requireSession();
+  try {
+    const userId = await requireSession();
 
-  const baseWhere = {
-    userId,
-    emailAccountId: accountId,
-    folder,
-    isDeleted: false,
-  } as const;
+    const baseWhere = {
+      userId,
+      emailAccountId: accountId,
+      folder,
+      isDeleted: false,
+    } as const;
 
-  // Build where clause with optional text search fallback
-  const where =
-    search && search.length >= 3
-      ? {
-          ...baseWhere,
-          OR: [
-            { subject: { contains: search, mode: "insensitive" as const } },
-            { fromEmail: { contains: search, mode: "insensitive" as const } },
-            { fromName: { contains: search, mode: "insensitive" as const } },
-          ],
-        }
-      : baseWhere;
+    // Build where clause with optional text search fallback
+    const where =
+      search && search.length >= 3
+        ? {
+            ...baseWhere,
+            OR: [
+              { subject: { contains: search, mode: "insensitive" as const } },
+              { fromEmail: { contains: search, mode: "insensitive" as const } },
+              { fromName: { contains: search, mode: "insensitive" as const } },
+            ],
+          }
+        : baseWhere;
 
-  const [emails, rawCount] = await Promise.all([
-    prismadb.email.findMany({
-      where,
-      orderBy: { sentAt: "desc" },
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
-      select: {
-        id: true,
-        subject: true,
-        fromName: true,
-        fromEmail: true,
-        sentAt: true,
-        isRead: true,
-        folder: true,
-      },
-    }),
-    prismadb.email.count({ where }),
-  ]);
+    const [emails, rawCount] = await Promise.all([
+      prismadb.email.findMany({
+        where,
+        orderBy: { sentAt: "desc" },
+        skip: (page - 1) * PAGE_SIZE,
+        take: PAGE_SIZE,
+        select: {
+          id: true,
+          subject: true,
+          fromName: true,
+          fromEmail: true,
+          sentAt: true,
+          isRead: true,
+          folder: true,
+        },
+      }),
+      prismadb.email.count({ where }),
+    ]);
 
-  const total = Math.min(rawCount, MAX_COUNT);
-  return { emails, total, page, totalPages: Math.ceil(total / PAGE_SIZE) };
-}
+    const total = Math.min(rawCount, MAX_COUNT);
+    return {
+      emails: serializeDecimalsList(emails),
+      total,
+      page,
+      totalPages: Math.ceil(total / PAGE_SIZE),
+    };
+  } catch (error) {
+    console.error("[getEmails] Error:", error);
+    return { emails: [], total: 0, page: 1, totalPages: 0 };
+  }
 
 export async function getEmail(id: string) {
-  const userId = await requireSession();
-  const email = await prismadb.email.findFirst({
-    where: { id, userId, isDeleted: false },
-    include: {
-      contacts: { include: { contact: { select: { id: true, first_name: true, last_name: true } } } },
-      accounts: { include: { account: { select: { id: true, name: true } } } },
-    },
-  });
-  if (!email) throw new Error("Not found");
+  try {
+    const userId = await requireSession();
+    const email = await prismadb.email.findFirst({
+      where: { id, userId, isDeleted: false },
+      include: {
+        contacts: { include: { contact: { select: { id: true, first_name: true, last_name: true } } } },
+        accounts: { include: { account: { select: { id: true, name: true } } } },
+      },
+    });
+    if (!email) throw new Error("Not found");
 
-  // Lazy body fetch for emails not yet CRM-linked at sync time
-  if (!email.bodyText && !email.bodyHtml && email.imapUid) {
-    try {
-      const account = await prismadb.emailAccount.findUnique({
-        where: { id: email.emailAccountId },
-        select: {
-          username: true,
-          passwordEncrypted: true,
-          imapHost: true,
-          imapPort: true,
-          imapSsl: true,
-          allowSelfSignedTls: true,
-          sentFolderName: true,
-        },
-      });
-
-      if (account) {
-        const { fetchBodyByUid } = await import("@/inngest/lib/imap-utils");
-        const folderName = email.folder === "SENT" ? (account.sentFolderName || "Sent") : "INBOX";
-        const body = await fetchBodyByUid(
-          {
-            username: account.username,
-            password: decrypt(account.passwordEncrypted),
-            imapHost: account.imapHost,
-            imapPort: account.imapPort,
-            imapSsl: account.imapSsl,
-            allowSelfSignedTls: account.allowSelfSignedTls,
+    // Lazy body fetch for emails not yet CRM-linked at sync time
+    if (!email.bodyText && !email.bodyHtml && email.imapUid) {
+      try {
+        const account = await prismadb.emailAccount.findUnique({
+          where: { id: email.emailAccountId },
+          select: {
+            username: true,
+            passwordEncrypted: true,
+            imapHost: true,
+            imapPort: true,
+            imapSsl: true,
+            allowSelfSignedTls: true,
+            sentFolderName: true,
           },
-          folderName,
-          email.imapUid
-        );
+        });
 
-        if (body.bodyText || body.bodyHtml) {
-          await prismadb.email.update({
-            where: { id },
-            data: { bodyText: body.bodyText ?? null, bodyHtml: body.bodyHtml ?? null },
-          });
-          // Patch in-memory so caller gets the body immediately (before any send that may throw)
-          email.bodyText = body.bodyText ?? null;
-          email.bodyHtml = body.bodyHtml ?? null;
-          // Trigger embed only if already CRM-linked (avoids embedding unrelated emails)
-          const isLinked = email.contacts.length > 0 || email.accounts.length > 0;
-          if (isLinked) {
-            const { inngest } = await import("@/inngest/client");
-            inngest.send({ name: "email/embed-email", data: { emailId: id } });
+        if (account) {
+          const { fetchBodyByUid } = await import("@/inngest/lib/imap-utils");
+          const folderName = email.folder === "SENT" ? (account.sentFolderName || "Sent") : "INBOX";
+          const body = await fetchBodyByUid(
+            {
+              username: account.username,
+              password: decrypt(account.passwordEncrypted),
+              imapHost: account.imapHost,
+              imapPort: account.imapPort,
+              imapSsl: account.imapSsl,
+              allowSelfSignedTls: account.allowSelfSignedTls,
+            },
+            folderName,
+            email.imapUid
+          );
+
+          if (body.bodyText || body.bodyHtml) {
+            await prismadb.email.update({
+              where: { id },
+              data: { bodyText: body.bodyText ?? null, bodyHtml: body.bodyHtml ?? null },
+            });
+            // Patch in-memory so caller gets the body immediately (before any send that may throw)
+            email.bodyText = body.bodyText ?? null;
+            email.bodyHtml = body.bodyHtml ?? null;
+            // Trigger embed only if already CRM-linked (avoids embedding unrelated emails)
+            const isLinked = email.contacts.length > 0 || email.accounts.length > 0;
+            if (isLinked) {
+              const { inngest } = await import("@/inngest/client");
+              inngest.send({ name: "email/embed-email", data: { emailId: id } });
+            }
           }
         }
+      } catch {
+        // Body fetch failed — return email without body; display will show a fallback
       }
-    } catch {
-      // Body fetch failed — return email without body; display will show a fallback
     }
-  }
 
-  // Mark as read (fire-and-forget)
-  if (!email.isRead) {
-    prismadb.email.update({ where: { id }, data: { isRead: true } }).catch(() => {});
-  }
+    // Mark as read (fire-and-forget)
+    if (!email.isRead) {
+      prismadb.email.update({ where: { id }, data: { isRead: true } }).catch(() => {});
+    }
 
-  return email;
+    return serializeDecimals(email);
+  } catch (error) {
+    console.error("[getEmail] Error:", error);
+    return null;
+  }
 }
 
 export async function deleteEmail(id: string) {

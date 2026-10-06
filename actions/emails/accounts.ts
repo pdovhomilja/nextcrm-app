@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth-server";
 
 import { prismadb } from "@/lib/prisma";
 import { encrypt } from "@/lib/email-crypto";
+import { serializeDecimalsList } from "@/lib/serialize-decimals";
 import {
   isAllowedImapPort,
   isAllowedSmtpPort,
@@ -18,27 +19,33 @@ async function requireSession() {
 }
 
 export async function getEmailAccounts() {
-  const userId = await requireSession();
-  return prismadb.emailAccount.findMany({
-    where: { userId },
-    select: {
-      id: true,
-      label: true,
-      imapHost: true,
-      imapPort: true,
-      imapSsl: true,
-      smtpHost: true,
-      smtpPort: true,
-      smtpSsl: true,
-      username: true,
-      isActive: true,
-      allowSelfSignedTls: true,
-      sentFolderName: true,
-      lastSyncedAt: true,
-      createdAt: true,
-    },
-    orderBy: { createdAt: "asc" },
-  });
+  try {
+    const userId = await requireSession();
+    const accounts = await prismadb.emailAccount.findMany({
+      where: { userId },
+      select: {
+        id: true,
+        label: true,
+        imapHost: true,
+        imapPort: true,
+        imapSsl: true,
+        smtpHost: true,
+        smtpPort: true,
+        smtpSsl: true,
+        username: true,
+        isActive: true,
+        allowSelfSignedTls: true,
+        sentFolderName: true,
+        lastSyncedAt: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "asc" },
+    });
+    return serializeDecimalsList(accounts);
+  } catch (error) {
+    console.error("[getEmailAccounts] Error:", error);
+    return [];
+  }
 }
 
 type CreateInput = {

@@ -16,7 +16,7 @@ ALTER TABLE "Documents"
 CREATE TABLE "crm_Embeddings_Documents" (
     "id"           UUID NOT NULL DEFAULT gen_random_uuid(),
     "document_id"  UUID NOT NULL,
-    "embedding"    vector(1536),
+    "embedding"    vector,
     "content_hash" TEXT NOT NULL,
     "embedded_at"  TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -29,7 +29,7 @@ CREATE TABLE "crm_Document_Chunks" (
     "document_id"  UUID NOT NULL,
     "chunk_index"  INTEGER NOT NULL,
     "chunk_text"   TEXT NOT NULL,
-    "embedding"    vector(1536),
+    "embedding"    vector,
     "embedded_at"  TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "crm_Document_Chunks_pkey" PRIMARY KEY ("id")

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 
 import { Icons } from "@/components/ui/icons";
@@ -25,17 +26,22 @@ import {
 type Step = "email" | "otp";
 
 export function LoginComponent() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
+
+  useEffect(() => {
+    router.prefetch("/en");
+  }, [router]);
 
   const loginWithGoogle = async () => {
     setIsLoading(true);
     try {
       await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/",
+        callbackURL: "/en",
       });
     } catch (error) {
       toast.error("Something went wrong with Google sign-in.");
@@ -84,7 +90,8 @@ export function LoginComponent() {
         return;
       }
       toast.success("Login successful.");
-      window.location.href = "/";
+      router.push("/en");
+      router.refresh();
     } catch (error) {
       toast.error("Verification failed.");
     } finally {
