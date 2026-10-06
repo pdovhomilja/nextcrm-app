@@ -77,6 +77,8 @@ export async function getEmails(
     return { emails: [], total: 0, page: 1, totalPages: 0 };
   }
 
+}
+
 export async function getEmail(id: string) {
   try {
     const userId = await requireSession();
