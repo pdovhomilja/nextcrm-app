@@ -4,14 +4,28 @@ import { getToken, startAuthorization, UserAuthorizationRequiredError } from "@v
 import { headers } from "next/headers";
 
 export const LINKEDIN_CONNECTOR_UID = "linkedin/vensai-crm-linkedin";
-export const LINKEDIN_SCOPES = [
-  "openid",
-  "profile",
-  "email",
+
+/** Org scopes need LinkedIn Community Management API approval and often break OIDC on the same app. */
+const LINKEDIN_ORG_SCOPES = [
   "r_organization_admin",
   "r_organization_social",
   "rw_organization_admin",
-];
+] as const;
+
+const LINKEDIN_BASE_SCOPES = ["openid", "profile", "email"] as const;
+
+function parseLinkedInScopes(): string[] {
+  const fromEnv = process.env.LINKEDIN_OAUTH_SCOPES?.trim();
+  if (fromEnv) {
+    return fromEnv.split(/[\s,]+/).filter(Boolean);
+  }
+  if (process.env.LINKEDIN_ORG_SCOPES === "true") {
+    return [...LINKEDIN_BASE_SCOPES, ...LINKEDIN_ORG_SCOPES];
+  }
+  return [...LINKEDIN_BASE_SCOPES];
+}
+
+export const LINKEDIN_SCOPES = parseLinkedInScopes();
 
 async function getOrigin() {
   if (process.env.NODE_ENV !== "production" && process.env.V0_RUNTIME_URL) return process.env.V0_RUNTIME_URL;
