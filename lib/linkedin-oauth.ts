@@ -4,19 +4,45 @@ import { prismadb } from "@/lib/prisma";
 import { decrypt, encrypt } from "@/lib/email-crypto";
 import { LINKEDIN_SCOPES } from "@/lib/linkedin-scopes";
 
+function normalizeEnvCredential(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  let trimmed = value.trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    trimmed = trimmed.slice(1, -1).trim();
+  }
+  return trimmed || undefined;
+}
+
 export function hasDirectLinkedInOAuth(): boolean {
-  const id = process.env.LINKEDIN_CLIENT_ID?.trim();
-  const secret = process.env.LINKEDIN_CLIENT_SECRET?.trim();
+  const id = normalizeEnvCredential(process.env.LINKEDIN_CLIENT_ID);
+  const secret = normalizeEnvCredential(process.env.LINKEDIN_CLIENT_SECRET);
   return Boolean(id && secret);
 }
 
 export function getLinkedInOAuthCredentials() {
-  const clientId = process.env.LINKEDIN_CLIENT_ID?.trim();
-  const clientSecret = process.env.LINKEDIN_CLIENT_SECRET?.trim();
+  const clientId = normalizeEnvCredential(process.env.LINKEDIN_CLIENT_ID);
+  const clientSecret = normalizeEnvCredential(process.env.LINKEDIN_CLIENT_SECRET);
   if (!clientId || !clientSecret) {
     throw new Error("LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET are required");
   }
   return { clientId, clientSecret };
+}
+
+/** Use the browser-facing host so redirect_uri matches LinkedIn app settings. */
+export function resolveLinkedInOriginFromRequest(request: Request): string {
+  const url = new URL(request.url);
+  const host =
+    request.headers.get("x-forwarded-host")?.split(",")[0]?.trim() ??
+    request.headers.get("host") ??
+    url.host;
+  const proto =
+    request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() ??
+    url.protocol.replace(":", "") ??
+    "https";
+  return `${proto}://${host}`.replace(/\/$/, "");
 }
 
 export function getLinkedInRedirectUri(appOrigin: string): string {
