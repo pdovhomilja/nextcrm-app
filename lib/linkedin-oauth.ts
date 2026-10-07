@@ -147,6 +147,15 @@ export async function persistLinkedInTokens(userId: string, tokens: LinkedInToke
   });
 }
 
+export async function isLinkedInUserConnected(userId: string): Promise<boolean> {
+  if (!hasDirectLinkedInOAuth()) return false;
+  const row = await prismadb.linkedInConnection.findUnique({
+    where: { userId },
+    select: { id: true },
+  });
+  return Boolean(row);
+}
+
 export async function getDirectLinkedInAccessToken(userId: string): Promise<string> {
   const row = await prismadb.linkedInConnection.findUnique({ where: { userId } });
   if (!row) {

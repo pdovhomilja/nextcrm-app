@@ -24,7 +24,12 @@ const ResendCard = async () => {
     <Card className="min-w-[350px] max-w-[450px]">
       <CardHeader className="text-lg">
         <CardTitle>Resend.com - API Key</CardTitle>
-        <CardDescription className="text-xs">
+        <CardDescription className="text-xs space-y-2">
+          <p>
+            Bulk email campaigns (Campaigns → New campaign) send through Resend via Inngest. Set{" "}
+            <code className="text-[10px]">RESEND_API_KEY</code> or save a key here, and verify{" "}
+            <code className="text-[10px]">RESEND_FROM_EMAIL</code> for your domain in Resend.
+          </p>
           <p>ENV API key:</p>
           <p>
             {process.env.RESEND_API_KEY ? (

@@ -4,6 +4,7 @@ import { Resend } from "resend";
 import { resolveMergeTags } from "@/lib/campaigns/merge-tags";
 import { renderCampaignEmail } from "@/lib/campaigns/render-email";
 import { sendStepSkipReason } from "@/lib/campaigns/recipient-filters";
+import { getPublicAppUrl } from "@/lib/app-url";
 
 const resend = new Resend(process.env.RESEND_API_KEY || "re_placeholder_for_build");
 
@@ -36,7 +37,7 @@ export const campaignSendStep = inngest.createFunction(
     const skipReason = sendStepSkipReason(sendRecord);
     if (skipReason) return { skipped: true, reason: skipReason };
 
-    const unsubscribeUrl = `${process.env.NEXTAUTH_URL}/api/campaigns/unsubscribe?token=${sendRecord.unsubscribe_token}`;
+    const unsubscribeUrl = `${getPublicAppUrl()}/api/campaigns/unsubscribe?token=${sendRecord.unsubscribe_token}`;
 
     const html = await renderCampaignEmail({
       contentHtml: resolveMergeTags(sendRecord.step.template.content_html, sendRecord.target, true),
