@@ -1008,6 +1008,7 @@ model Users {
   apiTokens            ApiToken[]
   emailAccounts        EmailAccount[]
   calendarConnections  CalendarConnection[]
+  linkedInConnection   LinkedInConnection?
   emails               Email[]
   enrichments_triggered          crm_Contact_Enrichment[]  @relation("enrichment_triggered_by")
   target_enrichments_triggered   crm_Target_Enrichment[]   @relation("target_enrichment_triggered_by")
@@ -1536,6 +1537,21 @@ model EmailEmbedding {
 
 enum CalendarProvider {
   google
+}
+
+model LinkedInConnection {
+  id                    String    @id @default(uuid()) @db.Uuid
+  userId                String    @unique @db.Uuid
+  accessTokenEncrypted  String
+  refreshTokenEncrypted String?
+  tokenExpiresAt        DateTime?
+  scope                 String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model CalendarConnection {

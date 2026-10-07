@@ -2,11 +2,18 @@
 
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth-server";
-import { beginLinkedInAuthorization } from "@/lib/linkedin-connect";
+import { beginLinkedInAuthorization, getLinkedInAppOrigin } from "@/lib/linkedin-connect";
+import { hasDirectLinkedInOAuth } from "@/lib/linkedin-oauth";
 
 export async function connectLinkedIn() {
   const session = await getSession();
   if (!session?.user?.id) redirect("/sign-in");
+
+  if (hasDirectLinkedInOAuth()) {
+    const origin = await getLinkedInAppOrigin();
+    return { url: `${origin}/api/linkedin/oauth` };
+  }
+
   const authorization = await beginLinkedInAuthorization(session.user.id);
   return { url: authorization.url };
 }

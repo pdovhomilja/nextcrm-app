@@ -18,7 +18,7 @@ import { connectLinkedIn, getLinkedInSnapshot } from "./actions";
 import LinkedInConnectButton from "./LinkedInConnectButton";
 
 type LinkedInPageProps = {
-  searchParams: Promise<{ connected?: string; organizationId?: string }>;
+  searchParams: Promise<{ connected?: string; organizationId?: string; reason?: string }>;
 };
 
 export default async function LinkedInPage({ searchParams }: LinkedInPageProps) {
@@ -67,11 +67,12 @@ export default async function LinkedInPage({ searchParams }: LinkedInPageProps) 
           </div>
           {connectFailed ? (
             <p className="relative mt-4 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              LinkedIn authorization failed during the token exchange. In your LinkedIn app, add redirect URL{" "}
-              <code className="font-mono text-xs">https://connect.vercel.com/callback</code>, then in Vercel Connect
-              set the client ID and secret to match LinkedIn. For a confidential web app use token auth{" "}
-              <strong>client_secret_post</strong> and turn PKCE off; if LinkedIn registered the app as public only, use{" "}
-              <strong>none</strong> with PKCE enabled.
+              LinkedIn connection failed
+              {params.reason ? ` (${params.reason})` : ""}. Set{" "}
+              <code className="font-mono text-xs">LINKEDIN_CLIENT_ID</code> and{" "}
+              <code className="font-mono text-xs">LINKEDIN_CLIENT_SECRET</code> on Vercel, and add redirect URL{" "}
+              <code className="font-mono text-xs">{process.env.NEXT_PUBLIC_APP_URL}/api/linkedin/callback</code> in
+              your LinkedIn app (Auth tab).
             </p>
           ) : null}
         </header>
