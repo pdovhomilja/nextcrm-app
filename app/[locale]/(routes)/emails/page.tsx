@@ -11,6 +11,15 @@ import { getEmailAccounts } from "@/actions/emails/accounts";
 import { getEmails } from "@/actions/emails/messages";
 import { EmailFolder } from "@prisma/client";
 
+type EmailsListResult = Awaited<ReturnType<typeof getEmails>>;
+
+const emptyEmailsResult: EmailsListResult = {
+  emails: [],
+  total: 0,
+  page: 1,
+  totalPages: 0,
+};
+
 const EmailRoute = async ({
   searchParams,
 }: {
@@ -89,10 +98,16 @@ const EmailRoute = async ({
   const activeFolder = params.folder === "SENT" ? EmailFolder.SENT : EmailFolder.INBOX;
 
   const activePage = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
-  let emailsResult = { emails: [], total: 0, page: 1, totalPages: 0 };
+
+  let emailsResult: EmailsListResult = emptyEmailsResult;
   if (activeAccountId) {
     try {
-      emailsResult = await getEmails(activeAccountId, activeFolder, activePage, params.search);
+      emailsResult = await getEmails(
+        activeAccountId,
+        activeFolder,
+        activePage,
+        params.search
+      );
     } catch (error) {
       console.error("[EmailRoute] Failed to load emails:", error);
     }

@@ -18,13 +18,14 @@ import { connectLinkedIn, getLinkedInSnapshot } from "./actions";
 import LinkedInConnectButton from "./LinkedInConnectButton";
 
 type LinkedInPageProps = {
-  searchParams: Promise<{ connected?: string; organizationId?: string }>;
+  searchParams: Promise<{ connected?: string; organizationId?: string; reason?: string }>;
 };
 
 export default async function LinkedInPage({ searchParams }: LinkedInPageProps) {
   const session = await getSession();
   const params = await searchParams;
   const connected = params.connected === "1";
+  const connectFailed = params.connected === "error";
   let snapshot: Awaited<ReturnType<typeof getLinkedInSnapshot>> | null = null;
 
   if (connected && params.organizationId && session?.user?.id) {
@@ -64,6 +65,16 @@ export default async function LinkedInPage({ searchParams }: LinkedInPageProps) 
             </div>
             <LinkedInConnectButton action={connectLinkedIn} />
           </div>
+          {connectFailed ? (
+            <p className="relative mt-4 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              LinkedIn connection failed
+              {params.reason ? ` (${params.reason})` : ""}. Set{" "}
+              <code className="font-mono text-xs">LINKEDIN_CLIENT_ID</code> and{" "}
+              <code className="font-mono text-xs">LINKEDIN_CLIENT_SECRET</code> on Vercel, and add redirect URL{" "}
+              <code className="font-mono text-xs">{process.env.NEXT_PUBLIC_APP_URL}/api/linkedin/callback</code> in
+              your LinkedIn app (Auth tab).
+            </p>
+          ) : null}
         </header>
 
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
