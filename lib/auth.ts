@@ -6,6 +6,7 @@ import { prismadb } from "@/lib/prisma";
 import { ac, admin, manager, user } from "@/lib/auth-permissions";
 import { newUserNotify } from "@/lib/new-user-notify";
 import resendHelper from "@/lib/resend";
+import { getBetterAuthTrustedOrigins } from "@/lib/auth-base-url";
 
 const googleClientId = process.env.GOOGLE_ID || process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_SECRET || process.env.GOOGLE_CLIENT_SECRET;
@@ -24,11 +25,7 @@ export const auth = betterAuth({
   database: prismaAdapter(prismadb, { provider: "postgresql" }),
   secret: process.env.BETTER_AUTH_SECRET || "default-secret-key-change-me",
   baseURL: process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-  trustedOrigins: Array.from(new Set([
-    "http://localhost:3000",
-    process.env.NEXT_PUBLIC_APP_URL,
-    process.env.BETTER_AUTH_URL,
-  ].filter(Boolean) as string[])),
+  trustedOrigins: getBetterAuthTrustedOrigins(),
   advanced: {
     database: {
       generateId: "uuid",
