@@ -104,10 +104,10 @@ export const createOpportunity = async (data: {
         where: { id: assigned_to },
       });
 
-      if (notifyRecipient) {
+      if (notifyRecipient?.email) {
         await sendEmail({
           from: process.env.EMAIL_FROM as string,
-          to: notifyRecipient.email || "info@softbase.cz",
+          to: notifyRecipient.email,
           subject:
             notifyRecipient.userLanguage === "en"
               ? `New opportunity ${name} has been added to the system and assigned to you.`

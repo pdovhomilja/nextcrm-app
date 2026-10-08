@@ -23,7 +23,7 @@ OpenAI, Firecrawl and Anthropic keys are resolved in this order: environment var
 | Anthropic | `ANTHROPIC_API_KEY` | yes |
 | E2B | `E2B_API_KEY` | no, environment only |
 
-With Docker Compose, neither compose file passes `ANTHROPIC_API_KEY` to the app, so save the Anthropic key in the admin panel. Put the OpenAI key into `OPENAI_API_KEY`, because the compose files set a placeholder that would otherwise hide the admin-panel key.
+With Docker Compose, both compose files pass `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` to the app and leave them empty when unset, so you can use either the environment or the admin panel.
 
 ## E2B template
 

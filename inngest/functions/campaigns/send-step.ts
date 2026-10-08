@@ -1,12 +1,10 @@
 import { inngest } from "@/inngest/client";
 import { prismadb } from "@/lib/prisma";
-import { Resend } from "resend";
+import resendHelper from "@/lib/resend";
 import { resolveMergeTags } from "@/lib/campaigns/merge-tags";
 import { renderCampaignEmail } from "@/lib/campaigns/render-email";
 import { sendStepSkipReason } from "@/lib/campaigns/recipient-filters";
 import { buildUnsubscribeUrl } from "@/lib/campaigns/unsubscribe-url";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const campaignSendStep = inngest.createFunction(
   {
@@ -49,6 +47,7 @@ export const campaignSendStep = inngest.createFunction(
       : process.env.RESEND_FROM_EMAIL!;
 
     const result = await step.run("send-email", async () => {
+      const resend = await resendHelper();
       return resend.emails.send({
         from: fromAddress,
         to: sendRecord.email,

@@ -3,19 +3,29 @@ title: Backups and restore
 description: Back up the database, uploaded files and the secrets that make them readable, and restore them.
 ---
 
-A complete backup has three parts. Missing any of them means data loss.
+A complete backup has three parts. Missing any of them means data loss. The background-job volume `inngest_data` holds only queued and scheduled runs and does not need a backup.
 
 | Part | Where it lives (Docker Compose) | Why |
 |---|---|---|
 | PostgreSQL database | volume `postgres_data` | All records, users, settings, audit log, embeddings, encrypted keys and tokens |
 | Uploaded files | volume `minio_data` | Documents, avatars, invoice PDFs |
-| Secrets | your `.env` or platform settings | `EMAIL_ENCRYPTION_KEY` decrypts stored keys, tokens and mailbox passwords; `BETTER_AUTH_SECRET` keeps sessions valid |
+| Secrets | your `.env` or platform settings; values you did not set are in volume `app_data` (`/app/data/secrets`) | `EMAIL_ENCRYPTION_KEY` decrypts stored keys, tokens and mailbox passwords; `BETTER_AUTH_SECRET` keeps sessions valid |
 
 <Callout type="warn">
   A database backup without the matching `EMAIL_ENCRYPTION_KEY` restores the records, but every saved AI key, mailbox password, Google Calendar connection, Calendly setting and plugin secret is unreadable. Store the key with your backups, separately from the backup files themselves.
 </Callout>
 
 Docker Compose prefixes volume names with the project name (by default the folder name), so on the host they appear as, for example, `nextcrm-app_postgres_data`. The commands below go through `docker compose` and do not need the full name. Run them from the folder with the compose file.
+
+## Generated secrets
+
+If the entrypoint generated any secrets, copy them out once and store them with your backups:
+
+```sh
+docker compose exec app sh -c 'cd /app/data/secrets && for f in *; do echo "$f=$(cat "$f")"; done'
+```
+
+The output has `.env` format. Putting those lines into `.env` makes the values independent of the volume, which is the simplest way to restore them.
 
 ## Database
 
@@ -49,7 +59,7 @@ Stopping MinIO for the copy gives a consistent archive; uploads fail during thos
 
 ### Start from an empty stack with the same secrets
 
-Use the same `.env`, especially the same `EMAIL_ENCRYPTION_KEY` and `BETTER_AUTH_SECRET`. Start only the storage services:
+Use the same `.env`, especially the same `EMAIL_ENCRYPTION_KEY` and `BETTER_AUTH_SECRET` (add the generated values you copied out, see [Generated secrets](#generated-secrets)). Start only the storage services:
 
 ```sh
 docker compose up -d postgres minio

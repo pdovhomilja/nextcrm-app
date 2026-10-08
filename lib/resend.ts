@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 import { prismadb } from "./prisma";
 import { encrypt, decrypt } from "./email-crypto";
+import { envSecret } from "./env-secret";
 
 // DB values written before encryption was added are plain text; encrypted
 // values carry this prefix (base64 never contains ":").
@@ -41,14 +42,15 @@ async function readDbKey(): Promise<{ id?: string; key: string | null }> {
 }
 
 export async function getResendApiKey(): Promise<string | null> {
-  if (process.env.RESEND_API_KEY) return process.env.RESEND_API_KEY;
+  const envKey = envSecret("RESEND_API_KEY");
+  if (envKey) return envKey;
   return (await readDbKey()).key;
 }
 
 /** Masked env and DB keys for the admin Services page; never the full keys. */
 export async function getResendKeyStatus() {
   const { id, key } = await readDbKey();
-  const envKey = process.env.RESEND_API_KEY;
+  const envKey = envSecret("RESEND_API_KEY");
   return {
     id,
     envKey: envKey ? maskKey(envKey) : null,

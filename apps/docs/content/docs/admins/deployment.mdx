@@ -7,8 +7,10 @@ Any platform that can run a Docker Compose stack can run NextCRM. The repository
 
 | File | Use it for |
 |---|---|
-| `docker-compose.yml` | A local trial or a single host. Publishes port 3000, has defaults for every password, passes only a subset of variables to the app. |
+| `docker-compose.yml` | A local trial or a single host. Publishes port 3000 (and MinIO on `127.0.0.1:9000`), has defaults for every password, generates missing secrets on the first start. |
 | `docker-compose-coolify.yml` | Platforms that inject environment variables and route traffic through their own proxy. Every deployment-specific value is a `${VAR}`, required secrets fail the deploy if missing, no host ports are published. |
+
+Both pass the same set of variables to the app (see the [configuration reference](/docs/admins/configuration)) and run Inngest in signed production mode.
 
 ## Coolify
 
@@ -33,6 +35,8 @@ The deploy fails without these four:
 
 Set them once and never change them. A new `BETTER_AUTH_SECRET` logs everyone out. A new `EMAIL_ENCRYPTION_KEY` makes stored keys and mailbox passwords unreadable.
 
+`INNGEST_SIGNING_KEY` and `INNGEST_EVENT_KEY` are optional. When they are empty, the app generates them on the first start, stores them in the `app_data` volume and shares them with the bundled Inngest server.
+
 </Step>
 <Step>
 
@@ -42,14 +46,14 @@ Set them once and never change them. A new `BETTER_AUTH_SECRET` logs everyone ou
 - `ADMIN_EMAIL`: the first admin's address.
 - `RESEND_API_KEY` and `EMAIL_FROM` (a verified Resend sender), so login codes can be sent.
 
-Add optional keys from the [configuration reference](/docs/admins/configuration) as needed. `docker-compose-coolify.yml` passes `RESEND_FROM_EMAIL`, `RESEND_WEBHOOK_SECRET`, `EMAIL_HOST`, `EMAIL_USERNAME`, `EMAIL_PASSWORD`, `OPENAI_API_KEY`, `GOOGLE_ID`, `GOOGLE_SECRET`, `GOOGLE_CALENDAR_CLIENT_ID`, `GOOGLE_CALENDAR_CLIENT_SECRET`, `FIRECRAWL_API_KEY`, `E2B_API_KEY` and the Inngest settings. Anything else (for example `ANTHROPIC_API_KEY` or `NEXTCRM_TOKEN`) must be added to the file's `app.environment` block, or set in the admin panel where that is possible.
+Add optional keys from the [configuration reference](/docs/admins/configuration) as needed; `docker-compose-coolify.yml` passes all of them. Leave an API key empty to use the one saved in the admin panel.
 
 </Step>
 <Step>
 
 ### Assign domains
 
-Assign your domain to the `app` service, port 3000. If browsers need to reach uploaded files, assign a second domain to the `minio` service, port 9000, and set `MINIO_PUBLIC_URL` to it (see [File storage behind a proxy](#file-storage-behind-a-proxy)).
+Assign your domain to the `app` service, port 3000. Assign a second domain to the `minio` service, port 9000, and set `MINIO_PUBLIC_URL` to it, for example `https://files.example.com`. Browsers upload to and download from that address (see [File storage behind a proxy](#file-storage-behind-a-proxy)).
 
 </Step>
 </Steps>
@@ -58,8 +62,8 @@ Assign your domain to the `app` service, port 3000. If browsers need to reach up
 
 Paste a compose file into a new stack and set variables in the platform UI. Variables set there fill the `${...}` placeholders the same way a `.env` file does.
 
-- `docker-compose.yml` works as is, but only passes some variables to the app and hard-codes `localhost:3000` as the URL. See [Which variables reach the app](/docs/admins/install-docker#which-variables-reach-the-app).
-- `docker-compose-coolify.yml` passes almost everything, but uses `expose` instead of `ports`. Add a `ports:` entry to the `app` service, or attach your reverse proxy to the stack's network.
+- `docker-compose.yml` works as is. Set `APP_URL` and `MINIO_PUBLIC_URL` to your public URLs.
+- `docker-compose-coolify.yml` requires the secrets up front and uses `expose` instead of `ports`. Add `ports:` entries to the `app` and `minio` services, or attach your reverse proxy to the stack's network.
 
 ## Build-pack platforms
 
@@ -82,18 +86,15 @@ The app listens on plain HTTP, port 3000. Terminate TLS in front of it (Coolify'
 
 Browsers talk to object storage directly:
 
-- **Uploads.** The app returns a presigned `PUT` URL signed for `MINIO_ENDPOINT`, and the browser uploads the file to that URL.
-- **Downloads and previews.** File links are built as `<NEXT_PUBLIC_MINIO_ENDPOINT>/<bucket>/<key>`, and the browser loads them from there.
+- **Uploads.** The app returns a presigned `PUT` URL, and the browser uploads the file to it.
+- **Downloads and previews.** File links are built as `<public endpoint>/<bucket>/<key>`, and the browser loads them from there. Invoice PDFs are served through short-lived presigned links instead.
 
-Both compose files set `MINIO_ENDPOINT` to `http://minio:9000`, an address only containers can resolve. For uploads and file links to work from a browser:
+Both compose files connect the app to MinIO at `http://minio:9000`, an address only containers can resolve, and sign every browser-facing URL for `MINIO_PUBLIC_URL` (passed to the app as `MINIO_PUBLIC_ENDPOINT`). For uploads and file links to work:
 
 1. Publish MinIO's S3 port (9000) under a domain browsers can reach, for example `https://files.example.com`.
-2. Set `MINIO_ENDPOINT` and `NEXT_PUBLIC_MINIO_ENDPOINT` to that URL (with `docker-compose-coolify.yml`, `NEXT_PUBLIC_MINIO_ENDPOINT` comes from `MINIO_PUBLIC_URL`; `MINIO_ENDPOINT` is fixed in the file and needs an edit or override).
-3. Decide how files are read. The entrypoint creates the bucket but sets no access policy, and file links are plain URLs without a signature. Object keys are random UUIDs.
+2. Set `MINIO_PUBLIC_URL` to that URL. The app does not need to reach it itself.
 
-<Callout type="warn">
-  The entrypoint's bucket check always uses `http://` with the host taken from `MINIO_ENDPOINT`. With an `https://` endpoint it may fail and log `WARN: Could not create MinIO bucket`. In that case create the bucket once by hand (for example in the MinIO console).
-</Callout>
+The entrypoint creates the bucket (it works with `http://` and `https://` endpoints) and, if the bucket has no policy yet, allows anonymous reads of the upload folders `avatars/`, `images/`, `documents/`, `uploads/` and `thumbnails/`. Object keys are random UUIDs. Invoices stay private. If you manage the bucket policy yourself, the entrypoint leaves it alone; grant anonymous `s3:GetObject` on those folders, or file links will not open.
 
 ## Migrations on start
 

@@ -1,6 +1,6 @@
 import { normalizeGoogleEvent } from "../google-normalize";
 
-const OPTS = { connectionId: "conn1", accountEmail: "rep@aqunama.com" };
+const OPTS = { connectionId: "conn1", accountEmail: "rep@example.com" };
 
 function ev(overrides: object = {}) {
   return {
@@ -11,7 +11,7 @@ function ev(overrides: object = {}) {
     start: { dateTime: "2026-07-21T10:00:00+02:00" },
     end: { dateTime: "2026-07-21T10:30:00+02:00" },
     attendees: [
-      { email: "rep@aqunama.com", self: true, responseStatus: "accepted" },
+      { email: "rep@example.com", self: true, responseStatus: "accepted" },
       { email: "jane@client.com", responseStatus: "accepted" },
     ],
     ...overrides,
@@ -28,7 +28,7 @@ describe("normalizeGoogleEvent", () => {
       connectionId: "conn1",
       title: "Client sync",
       counterpartyEmails: ["jane@client.com"],
-      hostEmail: "rep@aqunama.com",
+      hostEmail: "rep@example.com",
       status: "scheduled",
     });
     expect((res as { startAt: Date }).startAt.toISOString()).toBe("2026-07-21T08:00:00.000Z");
@@ -42,7 +42,7 @@ describe("normalizeGoogleEvent", () => {
   it("skips events the rep declined", () => {
     const declined = ev({
       attendees: [
-        { email: "rep@aqunama.com", self: true, responseStatus: "declined" },
+        { email: "rep@example.com", self: true, responseStatus: "declined" },
         { email: "jane@client.com" },
       ],
     });
@@ -52,8 +52,8 @@ describe("normalizeGoogleEvent", () => {
   it("skips internal meetings (same-domain attendees only)", () => {
     const internal = ev({
       attendees: [
-        { email: "rep@aqunama.com", self: true },
-        { email: "colleague@aqunama.com" },
+        { email: "rep@example.com", self: true },
+        { email: "colleague@example.com" },
       ],
     });
     expect(normalizeGoogleEvent(internal, OPTS)).toEqual({ skip: "no-counterparty" });

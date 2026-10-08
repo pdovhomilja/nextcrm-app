@@ -39,22 +39,45 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    # Uncomment to expose MinIO to host:
-    # ports:
-    #   - "9000:9000"
-    #   - "9001:9001"
+    # Browsers upload and download files directly from MinIO, so the S3 port
+    # is published on localhost to match the default MINIO_PUBLIC_URL. On a
+    # server, put MinIO behind a domain and set MINIO_PUBLIC_URL to it.
+    ports:
+      - "127.0.0.1:9000:9000"
+      # - "9001:9001"   # MinIO console
 
-  # --- Inngest Dev Server ---
+  # --- Inngest server (background jobs) ---
+  # Self-hosted Inngest in production mode: every call to /api/inngest must be
+  # signed with INNGEST_SIGNING_KEY, so the public endpoint cannot be used to
+  # trigger jobs. The keys come from .env or, when unset, from the files the
+  # app generates on first start (shared app_data volume, mounted read-only).
+  # Runs, schedules and sleeps persist in inngest_data across restarts.
   inngest:
     image: inngest/inngest:latest
     restart: unless-stopped
-    command: inngest dev -u http://app:3000/api/inngest
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        # Non-hex values (e.g. the old default "local") are ignored, like the app does.
+        printf '%s' "$${INNGEST_SIGNING_KEY}" | grep -Eq '^([0-9a-fA-F]{2})+$$' || INNGEST_SIGNING_KEY=
+        printf '%s' "$${INNGEST_EVENT_KEY}" | grep -Eq '^([0-9a-fA-F]{2})+$$' || INNGEST_EVENT_KEY=
+        until [ -n "$${INNGEST_SIGNING_KEY}" ] || [ -s /app-data/secrets/INNGEST_SIGNING_KEY ]; do sleep 1; done
+        until [ -n "$${INNGEST_EVENT_KEY}" ] || [ -s /app-data/secrets/INNGEST_EVENT_KEY ]; do sleep 1; done
+        export INNGEST_SIGNING_KEY="$${INNGEST_SIGNING_KEY:-$$(cat /app-data/secrets/INNGEST_SIGNING_KEY)}"
+        export INNGEST_EVENT_KEY="$${INNGEST_EVENT_KEY:-$$(cat /app-data/secrets/INNGEST_EVENT_KEY)}"
+        exec inngest start --sdk-url http://app:3000/api/inngest --poll-interval 60 --sqlite-dir /var/lib/inngest
+    environment:
+      INNGEST_SIGNING_KEY: ${INNGEST_SIGNING_KEY:-}
+      INNGEST_EVENT_KEY: ${INNGEST_EVENT_KEY:-}
+    volumes:
+      - app_data:/app-data:ro
+      - inngest_data:/var/lib/inngest
     networks:
       - nextcrm
     # No healthcheck: the inngest/inngest image ships no HTTP client
     # (no curl/wget/nc), so any exec-based probe fails permanently. The app
     # depends on this service with `service_started` instead — safe here
-    # because the dev server polls the app for functions, not the reverse.
+    # because the server polls the app for functions, not the reverse.
     # Uncomment to expose Inngest dashboard to host:
     # ports:
     #   - "8288:8288"
@@ -77,51 +100,70 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
       DB_NAME: ${POSTGRES_DB:-nextcrm}
 
-      # Auth
-      BETTER_AUTH_URL: http://localhost:3000
-      # BETTER_AUTH_SECRET is auto-generated if not set
+      # App + auth (public URL of this instance, e.g. https://crm.example.com)
+      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-NextCRM}
+      NEXT_PUBLIC_APP_URL: ${APP_URL:-http://localhost:3000}
+      BETTER_AUTH_URL: ${APP_URL:-http://localhost:3000}
+      # Set once, never change. When empty, the entrypoint generates them on
+      # first start and keeps them in the app_data volume (/app/data/secrets).
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-}
+      EMAIL_ENCRYPTION_KEY: ${EMAIL_ENCRYPTION_KEY:-}
 
       # MinIO — values come from the same env vars as the minio service.
-      NEXT_PUBLIC_MINIO_ENDPOINT: http://minio:9000
+      # MINIO_PUBLIC_URL = the URL browsers use to reach MinIO.
       MINIO_ENDPOINT: http://minio:9000
-      MINIO_PORT: "9000"
-      MINIO_BUCKET: nextcrm
-      MINIO_USE_SSL: "false"
+      MINIO_PUBLIC_ENDPOINT: ${MINIO_PUBLIC_URL:-http://localhost:9000}
+      MINIO_BUCKET: ${MINIO_BUCKET:-nextcrm}
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-nextcrm}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-changeme}
 
-      # Inngest
-      INNGEST_DEV: "1"
-      INNGEST_ID: nextcrm
-      INNGEST_APP_NAME: NextCRM
-      INNGEST_EVENT_KEY: local
-      INNGEST_SIGNING_KEY: ""
-      INNGEST_BASE_URL: http://inngest:8288
+      # Inngest — production mode against the bundled server. Empty keys are
+      # generated on first start and shared with it (see the inngest service).
+      INNGEST_DEV: "0"
+      INNGEST_ID: ${INNGEST_ID:-nextcrm}
+      INNGEST_APP_NAME: ${INNGEST_APP_NAME:-NextCRM}
+      INNGEST_EVENT_KEY: ${INNGEST_EVENT_KEY:-}
+      INNGEST_SIGNING_KEY: ${INNGEST_SIGNING_KEY:-}
+      INNGEST_BASE_URL: ${INNGEST_BASE_URL:-http://inngest:8288}
 
-      # App
-      NEXT_PUBLIC_APP_NAME: NextCRM
-      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      # Email. Login is passwordless email OTP sent through Resend, so
+      # RESEND_API_KEY (here or in Admin > Resend) and EMAIL_FROM (a verified
+      # Resend sender) are needed before anyone can sign in.
+      # RESEND_FROM_EMAIL is the campaign and notification sender.
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-}
+      RESEND_WEBHOOK_SECRET: ${RESEND_WEBHOOK_SECRET:-}
+      # SMTP (port 465, TLS) for the mails sent via lib/sendmail.ts
+      EMAIL_HOST: ${EMAIL_HOST:-}
+      EMAIL_USERNAME: ${EMAIL_USERNAME:-}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD:-}
 
       # Initial admin account (created on first run by the seed script).
       # IMPORTANT: set this to a real email you control. The app uses
       # passwordless Email OTP, so the placeholder default cannot
-      # receive login codes. Override via .env on first start, then
-      # configure SMTP/Resend (RESEND_API_KEY) so OTP emails actually
-      # send. Without an email provider you can read the OTP from
-      # the database directly.
+      # receive login codes. Without an email provider you can read the
+      # OTP from the database directly.
       TEST_USER_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-}
 
-      # Placeholder values for optional external services.
-      # The app initializes these clients at module load time, so empty
-      # values cause crashes. Users override these via .env to enable
-      # the corresponding features. The app runs fine with placeholders;
-      # individual features just won't work until real keys are provided.
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-sk-placeholder-replace-to-enable-ai}
-      RESEND_API_KEY: ${RESEND_API_KEY:-re_placeholder_replace_to_enable_email}
+      # Optional services. Leave empty to use keys saved in the admin panel
+      # (an env value always wins over the admin panel).
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       GOOGLE_ID: ${GOOGLE_ID:-}
       GOOGLE_SECRET: ${GOOGLE_SECRET:-}
+      GOOGLE_CALENDAR_CLIENT_ID: ${GOOGLE_CALENDAR_CLIENT_ID:-}
+      GOOGLE_CALENDAR_CLIENT_SECRET: ${GOOGLE_CALENDAR_CLIENT_SECRET:-}
       FIRECRAWL_API_KEY: ${FIRECRAWL_API_KEY:-}
       E2B_API_KEY: ${E2B_API_KEY:-}
+      # Token for the public lead/contact intake endpoints
+      NEXTCRM_TOKEN: ${NEXTCRM_TOKEN:-}
+      # Allow mail servers / plugin HTTP calls to private IPs ("true")
+      MAIL_ALLOW_PRIVATE_HOSTS: ${MAIL_ALLOW_PRIVATE_HOSTS:-}
+      PLUGIN_HTTP_ALLOW_PRIVATE_HOSTS: ${PLUGIN_HTTP_ALLOW_PRIVATE_HOSTS:-}
+    volumes:
+      - app_data:/app/data
     depends_on:
       postgres:
         condition: service_healthy
@@ -141,6 +183,8 @@ services:
 volumes:
   postgres_data:
   minio_data:
+  app_data:
+  inngest_data:
 
 networks:
   nextcrm:

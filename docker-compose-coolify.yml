@@ -10,6 +10,8 @@
 #
 # Required (deploy fails without them): POSTGRES_PASSWORD,
 # MINIO_ROOT_PASSWORD, BETTER_AUTH_SECRET, EMAIL_ENCRYPTION_KEY.
+# INNGEST_SIGNING_KEY / INNGEST_EVENT_KEY are optional: when unset, the app
+# generates them on first start and keeps them in the app_data volume.
 # Set the secrets once and never change them: a new BETTER_AUTH_SECRET logs
 # everyone out, a new EMAIL_ENCRYPTION_KEY makes stored mailbox passwords
 # unreadable.
@@ -60,14 +62,31 @@ services:
       timeout: 5s
       retries: 5
 
-  # --- Inngest Dev Server ---
-  # Fine for small instances; it keeps no job history across restarts.
-  # For Inngest Cloud set INNGEST_DEV=0 plus INNGEST_EVENT_KEY and
-  # INNGEST_SIGNING_KEY (the app then ignores this container).
+  # --- Inngest server (background jobs) ---
+  # Self-hosted Inngest in production mode: every call to /api/inngest must be
+  # signed with INNGEST_SIGNING_KEY. Keys come from the platform env or, when
+  # unset, from the files the app generates (app_data volume, read-only).
+  # Runs, schedules and sleeps persist in inngest_data.
   inngest:
     image: inngest/inngest:latest
     restart: unless-stopped
-    command: inngest dev -u http://app:3000/api/inngest
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        # Non-hex values (e.g. the old default "local") are ignored, like the app does.
+        printf '%s' "$${INNGEST_SIGNING_KEY}" | grep -Eq '^([0-9a-fA-F]{2})+$$' || INNGEST_SIGNING_KEY=
+        printf '%s' "$${INNGEST_EVENT_KEY}" | grep -Eq '^([0-9a-fA-F]{2})+$$' || INNGEST_EVENT_KEY=
+        until [ -n "$${INNGEST_SIGNING_KEY}" ] || [ -s /app-data/secrets/INNGEST_SIGNING_KEY ]; do sleep 1; done
+        until [ -n "$${INNGEST_EVENT_KEY}" ] || [ -s /app-data/secrets/INNGEST_EVENT_KEY ]; do sleep 1; done
+        export INNGEST_SIGNING_KEY="$${INNGEST_SIGNING_KEY:-$$(cat /app-data/secrets/INNGEST_SIGNING_KEY)}"
+        export INNGEST_EVENT_KEY="$${INNGEST_EVENT_KEY:-$$(cat /app-data/secrets/INNGEST_EVENT_KEY)}"
+        exec inngest start --sdk-url http://app:3000/api/inngest --poll-interval 60 --sqlite-dir /var/lib/inngest
+    environment:
+      INNGEST_SIGNING_KEY: ${INNGEST_SIGNING_KEY:-}
+      INNGEST_EVENT_KEY: ${INNGEST_EVENT_KEY:-}
+    volumes:
+      - app_data:/app-data:ro
+      - inngest_data:/var/lib/inngest
     networks:
       - nextcrm
     # No healthcheck: the image ships no HTTP client (see docker-compose.yml).
@@ -96,27 +115,27 @@ services:
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET}
       EMAIL_ENCRYPTION_KEY: ${EMAIL_ENCRYPTION_KEY:?set EMAIL_ENCRYPTION_KEY}
 
-      # MinIO (MINIO_PUBLIC_URL = the URL browsers use to fetch files)
-      NEXT_PUBLIC_MINIO_ENDPOINT: ${MINIO_PUBLIC_URL:-http://localhost:9000}
+      # MinIO (MINIO_PUBLIC_URL = the URL browsers use to upload and fetch
+      # files; presigned upload URLs are signed for it)
       MINIO_ENDPOINT: http://minio:9000
-      MINIO_PORT: "9000"
+      MINIO_PUBLIC_ENDPOINT: ${MINIO_PUBLIC_URL:-http://localhost:9000}
       MINIO_BUCKET: ${MINIO_BUCKET:-nextcrm}
-      MINIO_USE_SSL: "false"
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-nextcrm}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
 
-      # Inngest
-      INNGEST_DEV: ${INNGEST_DEV:-1}
+      # Inngest — production mode against the bundled server. Empty keys are
+      # generated on first start and shared with it (see the inngest service).
+      INNGEST_DEV: "0"
       INNGEST_ID: ${INNGEST_ID:-nextcrm}
       INNGEST_APP_NAME: ${INNGEST_APP_NAME:-NextCRM}
-      INNGEST_EVENT_KEY: ${INNGEST_EVENT_KEY:-local}
+      INNGEST_EVENT_KEY: ${INNGEST_EVENT_KEY:-}
       INNGEST_SIGNING_KEY: ${INNGEST_SIGNING_KEY:-}
       INNGEST_BASE_URL: ${INNGEST_BASE_URL:-http://inngest:8288}
 
       # Email. Login is passwordless email OTP sent through Resend, so
       # RESEND_API_KEY and EMAIL_FROM (a verified Resend sender) are needed
       # before anyone can sign in. RESEND_FROM_EMAIL is the campaign sender.
-      RESEND_API_KEY: ${RESEND_API_KEY:-re_placeholder_replace_to_enable_email}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
       EMAIL_FROM: ${EMAIL_FROM:-}
       RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-}
       RESEND_WEBHOOK_SECRET: ${RESEND_WEBHOOK_SECRET:-}
@@ -128,15 +147,25 @@ services:
       # Initial admin account, created by the seed on first start.
       # Must be a real inbox: login codes are sent there.
       TEST_USER_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-}
 
-      # Optional services; features stay off with the placeholders.
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-sk-placeholder-replace-to-enable-ai}
+      # Optional services. Leave empty to use keys saved in the admin panel
+      # (an env value always wins over the admin panel).
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       GOOGLE_ID: ${GOOGLE_ID:-}
       GOOGLE_SECRET: ${GOOGLE_SECRET:-}
       GOOGLE_CALENDAR_CLIENT_ID: ${GOOGLE_CALENDAR_CLIENT_ID:-}
       GOOGLE_CALENDAR_CLIENT_SECRET: ${GOOGLE_CALENDAR_CLIENT_SECRET:-}
       FIRECRAWL_API_KEY: ${FIRECRAWL_API_KEY:-}
       E2B_API_KEY: ${E2B_API_KEY:-}
+      # Token for the public lead/contact intake endpoints
+      NEXTCRM_TOKEN: ${NEXTCRM_TOKEN:-}
+      # Allow mail servers / plugin HTTP calls to private IPs ("true")
+      MAIL_ALLOW_PRIVATE_HOSTS: ${MAIL_ALLOW_PRIVATE_HOSTS:-}
+      PLUGIN_HTTP_ALLOW_PRIVATE_HOSTS: ${PLUGIN_HTTP_ALLOW_PRIVATE_HOSTS:-}
+    volumes:
+      - app_data:/app/data
     depends_on:
       postgres:
         condition: service_healthy
@@ -156,6 +185,8 @@ services:
 volumes:
   postgres_data:
   minio_data:
+  app_data:
+  inngest_data:
 
 networks:
   nextcrm:

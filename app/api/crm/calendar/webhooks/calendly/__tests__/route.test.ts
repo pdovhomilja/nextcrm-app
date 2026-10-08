@@ -46,7 +46,7 @@ const CREATED = {
       name: "Intro call",
       start_time: "2026-07-21T10:00:00.000000Z",
       end_time: "2026-07-21T10:30:00.000000Z",
-      event_memberships: [{ user_email: "rep@aqunama.com" }],
+      event_memberships: [{ user_email: "rep@example.com" }],
     },
   },
 };
@@ -80,7 +80,7 @@ describe("POST /api/crm/calendar/webhooks/calendly", () => {
           externalId: CREATED.payload.uri,
           title: "Intro call",
           counterpartyEmails: ["jane@client.com"],
-          hostEmail: "rep@aqunama.com",
+          hostEmail: "rep@example.com",
           status: "scheduled",
         }),
       })
