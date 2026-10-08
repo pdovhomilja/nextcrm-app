@@ -38,9 +38,11 @@ This project and everyone participating in it is governed by our commitment to:
 Before you begin, ensure you have the following installed:
 
 - **Node.js** ≥22.12.0
-- **pnpm** ≥9.0.0 (package manager)
-- **PostgreSQL** 17+ (database)
+- **pnpm** ≥10 (package manager)
+- **Docker** (runs the local PostgreSQL via `pnpm db:up`)
 - **Git** (version control)
+
+The full guide is at [docs.nextcrm.app → Local setup](https://docs.nextcrm.app/docs/developers/local-setup).
 
 ### Development Setup
 
@@ -76,20 +78,23 @@ Before you begin, ensure you have the following installed:
    ```
 
    Edit both files with your configuration:
-   - `.env`: Set your PostgreSQL connection string (`DATABASE_URL`)
+   - `.env`: `DATABASE_URL` (the default points at the local Postgres on `localhost:5433`)
    - `.env.local`: Configure authentication, file uploads, and other services
 
-5. **Initialize the database**
+5. **Start the database, apply migrations and seed**
 
    ```bash
-   pnpm prisma generate
-   pnpm prisma db push
+   pnpm db:up        # Postgres (pgvector) on localhost:5433
+   pnpm db:wait
+   pnpm db:migrate   # applies the committed migrations (prisma migrate deploy)
+   pnpm db:seed      # lookup data, test admin user, demo records
+   pnpm exec prisma generate
    ```
 
-6. **Seed the database with initial data**
+6. **Reset the database when needed**
 
    ```bash
-   pnpm prisma db seed
+   pnpm db:reset     # drops the local volume, then up, wait, migrate, seed
    ```
 
 7. **Start the development server**
@@ -141,9 +146,10 @@ We welcome feature suggestions! When suggesting a feature:
 3. **Test your changes**
 
    ```bash
-    pnpm lint
-    # run Playwright tests
-    pnpm test:e2e
+   pnpm lint
+   pnpm exec tsc --noEmit
+   pnpm test                           # Jest unit tests
+   pnpm test:e2e --project=chromium    # Playwright, when you changed UI flows
    ```
 
 4. **Commit your changes**
@@ -181,24 +187,22 @@ We welcome feature suggestions! When suggesting a feature:
 
 ### Testing
 
-- We use **Playwright** for E2E testing
-- Run tests with: `pnpm test:e2e` (headless) or `pnpm test:e2e:ui` (interactive UI)
-- Run specific browser: `pnpm test:e2e --project=chromium`
-- Debug tests: `pnpm test:e2e:debug`
-- Add tests for new features when possible
-- Ensure existing tests pass before submitting PRs
+- **Jest** unit tests: `pnpm test` (or `pnpm test <path>`). Suites live next to the code in `__tests__/` folders and in the top-level `__tests__/`.
+- **Playwright** end-to-end tests: `pnpm test:e2e` (headless), `pnpm test:e2e:ui`, `pnpm test:e2e:debug`. Specs are in `tests/e2e/`; `tests/auth.setup.ts` signs in the seeded test user.
+- Add tests for new features and make sure existing ones pass before you open a PR.
 
-Test files are located in `/tests/e2e/` directory. Authentication state is managed in `/tests/auth.setup.ts`.
+Details and the CI pipeline: [docs.nextcrm.app → Testing](https://docs.nextcrm.app/docs/developers/testing).
 
 ### Database Changes
 
 When modifying the database schema:
 
 1. Edit `prisma/schema.prisma`
-2. Run `pnpm prisma db push` to apply changes
-3. Run `pnpm prisma generate` to update the client
-4. If needed, create a seed script in `prisma/seeds/`
-5. Test your changes thoroughly
+2. Create a migration: `pnpm exec prisma migrate dev --create-only --name <change>` and review the SQL
+3. Apply it with `pnpm db:migrate` and run `pnpm exec prisma generate`
+4. Commit the schema change and the new `prisma/migrations/` folder together
+
+Do not use `prisma db push`; every environment applies the committed migrations.
 
 ### Internationalization
 
@@ -259,7 +263,7 @@ Based on our [roadmap](https://github.com/pdovhomilja/nextcrm-app#roadmap), here
 
 ## Getting Help
 
-- **Discord**: Join our community at [https://discord.gg/dHyxhTEzUb](https://discord.gg/dHyxhTEzUb)
+- **Discord**: Join our community at [https://discord.gg/dHyxhTEyUb](https://discord.gg/dHyxhTEyUb)
 - **GitHub Discussions**: Use for questions and general discussion
 - **Issues**: For bug reports and feature requests
 - **Twitter**: [@nextcrmapp](https://twitter.com/nextcrmapp)
@@ -270,4 +274,4 @@ Contributors will be recognized in our README and release notes. Thank you for h
 
 ---
 
-By contributing to NextCRM, you agree that your contributions will be licensed under the [MIT License](LICENSE.md).
+By contributing to NextCRM, you agree that your contributions will be licensed under the [MIT License](LICENSE).

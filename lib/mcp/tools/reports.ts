@@ -2,6 +2,8 @@ import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
 import { paginationSchema, paginationArgs, listResponse, itemResponse } from "../helpers";
 import type { ReportFilters } from "@/actions/reports/types";
+import type { AuthzUser } from "@/lib/authz";
+import { getReportScope } from "@/lib/authz/scopes/report-scope";
 
 export const reportTools = [
   {
@@ -49,8 +51,11 @@ export const reportTools = [
     }),
     async handler(
       args: { category: string; dateFrom?: string; dateTo?: string },
-      _userId: string
+      _userId: string,
+      user: AuthzUser
     ) {
+      // Same scoping as the web report pages and the CSV/PDF export.
+      const scope = getReportScope(user);
       const now = new Date();
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -64,30 +69,31 @@ export const reportTools = [
       switch (args.category) {
         case "sales": {
           const mod = await import("@/actions/reports/sales");
-          data = await mod.getOppsByMonth(filters);
+          data = await mod.getOppsByMonth(filters, scope);
           break;
         }
         case "leads": {
           const mod = await import("@/actions/reports/leads");
-          data = await mod.getNewLeads(filters);
+          data = await mod.getNewLeads(filters, scope);
           break;
         }
         case "accounts": {
           const mod = await import("@/actions/reports/accounts");
-          data = await mod.getNewAccounts(filters);
+          data = await mod.getNewAccounts(filters, scope);
           break;
         }
         case "activity": {
           const mod = await import("@/actions/reports/activity");
-          data = await mod.getTasksByAssignee(filters);
+          data = await mod.getTasksByAssignee(filters, scope);
           break;
         }
         case "campaigns": {
           const mod = await import("@/actions/reports/campaigns");
-          data = await mod.getCampaignPerformance(filters);
+          data = await mod.getCampaignPerformance(filters, scope);
           break;
         }
         case "users": {
+          if (!scope.allowUserDirectory) throw new Error("FORBIDDEN");
           const mod = await import("@/actions/reports/users");
           data = await mod.getUserGrowth(filters);
           break;

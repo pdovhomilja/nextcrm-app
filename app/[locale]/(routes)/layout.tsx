@@ -1,4 +1,4 @@
-import { getSession } from "@/lib/auth-server";
+import { getSessionAnyStatus } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 
@@ -47,7 +47,7 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getSession();
+  const session = await getSessionAnyStatus();
 
   //console.log(session, "session");
 

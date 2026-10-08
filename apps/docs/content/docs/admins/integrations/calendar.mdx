@@ -75,12 +75,12 @@ Open **Administration → Calendar Settings** (`/admin/calendar-settings`).
 </Step>
 <Step>
 
-Enter the **API token** and the **Webhook signing key** and click **Save**. Both are stored encrypted. Leaving a field empty keeps the stored value.
+Enter the **API token** and click **Save**. The **Webhook signing key** is optional: leave it empty and NextCRM generates one when you subscribe. Both values are stored encrypted. Leaving a field empty keeps the stored value.
 
 </Step>
 <Step>
 
-Click **Subscribe webhook**. NextCRM looks up your organization and creates an organization-scope subscription for `invitee.created` and `invitee.canceled`, pointing at:
+Click **Subscribe webhook**. NextCRM looks up your organization and creates an organization-scope subscription for `invitee.created` and `invitee.canceled`. It sends the saved signing key as the subscription's `signing_key`, or generates a random key, saves it and sends that. The subscription points at:
 
 ```
 https://crm.example.com/api/crm/calendar/webhooks/calendly
@@ -91,8 +91,8 @@ The page then shows the active subscription. **Re-subscribe webhook** deletes th
 </Step>
 </Steps>
 
-The webhook endpoint checks the `Calendly-Webhook-Signature` header against the saved signing key. Without a saved key, every call is rejected with 401. Valid bookings and cancellations are queued as background jobs that create or update CRM calendar events.
+The webhook endpoint verifies the `Calendly-Webhook-Signature` header (`t=<timestamp>,v1=<signature>`): `v1` must be the hex HMAC-SHA256 of `<t>.<raw body>` with the saved signing key, and `t` must be within 3 minutes of the server clock. Anything else is rejected with 401. Valid bookings and cancellations are queued as background jobs that create or update CRM calendar events.
 
 <Callout type="info">
-  NextCRM does not send its signing key to Calendly when it creates the subscription. If every webhook call is rejected with 401, check that the key you saved is the one Calendly signs with.
+  Calendly signs with the key it received when the subscription was created. If you change the saved signing key, click **Re-subscribe webhook** so Calendly gets the new key. Subscriptions created before this fix had no key; re-subscribe them once.
 </Callout>

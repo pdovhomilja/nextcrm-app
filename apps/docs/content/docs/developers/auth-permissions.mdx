@@ -11,10 +11,10 @@ Authentication uses [Better Auth](https://www.better-auth.com/), configured in `
 - **User table:** Better Auth maps its user model to `Users`, with extra fields `role`, `userStatus`, `userLanguage` and `avatar`. IDs are UUIDs.
 - **Sessions:** 7 days, refreshed every 24 hours.
 - **New users:** the first user becomes an active `admin`. Later users start as `PENDING` and admins are notified. A pending or inactive user cannot use the app until an admin activates them.
-- **Admin plugin:** the Better Auth admin plugin is enabled with the roles `admin`, `manager` and `user` (`lib/auth-permissions.ts`).
+- **Admin plugin:** the Better Auth admin plugin is enabled with the roles `admin`, `manager` and `user` (`lib/auth-permissions.ts`). None of the roles is granted any of the plugin's permissions, so its `/api/auth/admin/*` endpoints are closed; user management uses the server actions in `actions/admin/users`.
 - **Testing:** outside production the `testUtils` plugin captures OTPs. See [Local setup](/docs/developers/local-setup#sign-in-locally).
 
-On the server, `getSession()` from `lib/auth-server.ts` returns the Better Auth session for the current request. In feature code, use the `@/lib/authz` helpers below instead of reading the session directly.
+On the server, `getSession()` from `lib/auth-server.ts` returns the Better Auth session for the current request, or `null` when the user is not `ACTIVE`. `getSessionAnyStatus()` skips that check and is only for the pages that route pending and inactive users. In feature code, use the `@/lib/authz` helpers below instead of reading the session directly.
 
 ## Roles
 
@@ -28,7 +28,7 @@ There are three roles, stored in `Users.role` (enum `AppRole`):
 
 For the `user` role, "own scope" is defined per resource in `lib/authz/scopes/crm.ts`. For accounts, a user can see a record if they are `assigned_to`, `createdBy`, or a watcher. Contacts, leads, opportunities and contracts add rules for records linked to an account in scope.
 
-Access is enforced in code through `lib/authz`, not through the Better Auth access-control statements in `lib/auth-permissions.ts`.
+Access is enforced in code through `lib/authz`. The Better Auth access-control statements in `lib/auth-permissions.ts` only cover the plugin's own endpoints and grant nothing.
 
 ## Checking access
 
@@ -134,11 +134,12 @@ API tokens let external clients act as a user. They are used by the [MCP server]
 - Users create and revoke tokens in **Profile → Developer** (`/profile?tab=developer`).
 - Format: `nxtc__` followed by 48 hex characters.
 - Only the SHA-256 hash is stored (`ApiToken.tokenHash`), plus the first 8 characters for display. The raw token is shown once.
-- Each user can have at most 10 active tokens. A token can have an expiry date and can be revoked.
+- Each user can have at most 10 active tokens. A token can have an expiry date and can be revoked. Admins can revoke all tokens of a user (`revokeAllApiTokens`); deactivating a user does the same and also deletes their sessions.
+- `getMcpUser()` rejects a valid token whose owner is not `ACTIVE`.
 - `lastUsedAt` is updated on each use.
 - A token carries the full permissions of its user. There are no per-token scopes.
 
-The logic is in `lib/api-tokens.ts` (`generateApiToken`, `validateApiToken`, `revokeApiToken`, `listApiTokens`).
+The logic is in `lib/api-tokens.ts` (`generateApiToken`, `validateApiToken`, `revokeApiToken`, `revokeAllApiTokens`, `listApiTokens`).
 
 ## Shared-secret endpoints
 

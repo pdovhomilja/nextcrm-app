@@ -129,7 +129,7 @@ const DashboardPage = async () => {
           content={campaigns}
         />
         <DashboardCard
-          href="/crm/targets"
+          href="/campaigns/targets"
           title={dict("targets")}
           IconComponent={Target}
           content={targets}

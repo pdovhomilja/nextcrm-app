@@ -34,7 +34,7 @@ Sessions last 7 days and are refreshed every 24 hours. Password login is disable
 | Variable | Required | What it does |
 |---|---|---|
 | `APP_URL` | Docker only | Public URL of the instance. The compose files pass it to the app as `BETTER_AUTH_URL` and `NEXT_PUBLIC_APP_URL`. Default `http://localhost:3000`. |
-| `NEXT_PUBLIC_APP_URL` | Yes | Public URL of the instance. Used for links in emails (including the campaign unsubscribe link), the Google Calendar OAuth redirect URI and the Calendly webhook URL. Set it to the same value as `BETTER_AUTH_URL`. |
+| `NEXT_PUBLIC_APP_URL` | Yes | Public URL of the instance. Used for links in emails (including the unsubscribe link in campaign emails), the Google Calendar OAuth redirect URI and the Calendly webhook URL. Set it to the same value as `BETTER_AUTH_URL`. |
 | `NEXT_PUBLIC_APP_NAME` | Recommended | Product name shown in the UI and used as the sender name of system emails. |
 | `NEXT_PUBLIC_APP_DOMAIN` | No | Only used to build a fallback invoice sender (`invoices@<domain>`) when `EMAIL_FROM` is not set. |
 

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
 import { inngest } from "@/inngest/client";
 import { getApiKey } from "@/lib/api-keys";
+import { missingTargetEnrichmentKey } from "@/lib/enrichment/target-enrichment-keys";
 import { itemResponse, notFound, externalError } from "../helpers";
 
 export const crmEnrichmentTools = [
@@ -98,7 +99,7 @@ export const crmEnrichmentTools = [
   {
     name: "crm_enrich_target",
     description:
-      "Enrich a single target using Firecrawl + AI. Requires FIRECRAWL and OPENAI API keys.",
+      "Enrich a single target with the E2B sandbox agent (async). Requires an ANTHROPIC key and E2B_API_KEY on the server.",
     schema: z.object({
       targetId: z.string().uuid(),
       fields: z
@@ -114,11 +115,8 @@ export const crmEnrichmentTools = [
       args: { targetId: string; fields: Array<{ name: string; description?: string }> },
       userId: string
     ) {
-      const firecrawlKey = await getApiKey("FIRECRAWL", userId);
-      const openaiKey = await getApiKey("OPENAI", userId);
-      if (!firecrawlKey || !openaiKey) {
-        externalError("Missing required API keys (FIRECRAWL and/or OPENAI).");
-      }
+      const missingKey = await missingTargetEnrichmentKey(userId);
+      if (missingKey) externalError(`Missing required API key (${missingKey}).`);
 
       const target = await prismadb.crm_Targets.findUnique({
         where: { id: args.targetId },
@@ -153,7 +151,7 @@ export const crmEnrichmentTools = [
   },
   {
     name: "crm_enrich_target_bulk",
-    description: "Enrich multiple targets in bulk (max 100). Dispatches async jobs.",
+    description: "Enrich multiple targets in bulk (max 100) with the E2B sandbox agent. Dispatches async jobs. Requires an ANTHROPIC key and E2B_API_KEY on the server.",
     schema: z.object({
       targetIds: z.array(z.string().uuid()).min(1).max(100),
       fields: z
@@ -169,11 +167,8 @@ export const crmEnrichmentTools = [
       args: { targetIds: string[]; fields: Array<{ name: string; description?: string }> },
       userId: string
     ) {
-      const firecrawlKey = await getApiKey("FIRECRAWL", userId);
-      const openaiKey = await getApiKey("OPENAI", userId);
-      if (!firecrawlKey || !openaiKey) {
-        externalError("Missing required API keys (FIRECRAWL and/or OPENAI).");
-      }
+      const missingKey = await missingTargetEnrichmentKey(userId);
+      if (missingKey) externalError(`Missing required API key (${missingKey}).`);
 
       await inngest.send({
         name: "enrich/targets.bulk",

@@ -18,6 +18,21 @@ jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));
 import { requireRole, AuthorizationError } from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
 import { setResendKey } from "@/actions/admin/system/set-resend-key";
+import { decrypt } from "@/lib/email-crypto";
+
+const ORIGINAL_KEY = process.env.EMAIL_ENCRYPTION_KEY;
+beforeAll(() => {
+  process.env.EMAIL_ENCRYPTION_KEY = "b".repeat(64);
+});
+afterAll(() => {
+  process.env.EMAIL_ENCRYPTION_KEY = ORIGINAL_KEY;
+});
+
+function storedKey(call: any): string {
+  const value: string = call.data.serviceKey;
+  expect(value.startsWith("enc:")).toBe(true);
+  return decrypt(value.slice(4));
+}
 
 const mockRequireRole = requireRole as jest.MockedFunction<typeof requireRole>;
 
@@ -47,10 +62,10 @@ describe("setResendKey authorization", () => {
 
     await setResendKey(form({ id: "svc-1", serviceKey: "new-key" }));
 
-    expect(prismadb.systemServices.update).toHaveBeenCalledWith({
-      where: { id: "svc-1" },
-      data: { serviceKey: "new-key" },
-    });
+    const call = (prismadb.systemServices.update as jest.Mock).mock.calls[0][0];
+    expect(call.where).toEqual({ id: "svc-1" });
+    expect(call.data.serviceKey).not.toContain("new-key");
+    expect(storedKey(call)).toBe("new-key");
     expect(prismadb.systemServices.create).not.toHaveBeenCalled();
   });
 
@@ -59,9 +74,9 @@ describe("setResendKey authorization", () => {
 
     await setResendKey(form({ id: "", serviceKey: "first-key" }));
 
-    expect(prismadb.systemServices.create).toHaveBeenCalledWith({
-      data: { v: 0, name: "resend_smtp", serviceKey: "first-key" },
-    });
+    const call = (prismadb.systemServices.create as jest.Mock).mock.calls[0][0];
+    expect(call.data).toMatchObject({ v: 0, name: "resend_smtp" });
+    expect(storedKey(call)).toBe("first-key");
     expect(prismadb.systemServices.update).not.toHaveBeenCalled();
   });
 });

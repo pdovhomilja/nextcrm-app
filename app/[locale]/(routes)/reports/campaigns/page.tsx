@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ReportPageLayout } from "@/components/reports/ReportPageLayout";
 import { ReportChart } from "@/components/reports/ReportChart";
 import { parseSearchParamsToFilters } from "@/actions/reports/types";
+import { requireAuthenticated, getReportScope } from "@/lib/authz";
 import {
   getCampaignPerformance,
   getCampaignROI,
@@ -20,13 +21,14 @@ export default async function CampaignsReportPage({ searchParams }: Props) {
     )
   );
   const filters = parseSearchParamsToFilters(params);
+  const scope = getReportScope(await requireAuthenticated());
   const t = await getTranslations("ReportsPage");
 
   const [performance, campaignROI, topTemplates, targetGrowth] = await Promise.all([
-    getCampaignPerformance(filters),
-    getCampaignROI(filters),
-    getTopTemplates(filters),
-    getTargetListGrowth(filters),
+    getCampaignPerformance(filters, scope),
+    getCampaignROI(filters, scope),
+    getTopTemplates(filters, scope),
+    getTargetListGrowth(filters, scope),
   ]);
 
   return (

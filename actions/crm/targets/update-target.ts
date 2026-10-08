@@ -55,7 +55,7 @@ export const updateTarget = async (data: {
       where: { id },
       data: { ...rest, updatedBy: user.id },
     });
-    revalidatePath("/[locale]/(routes)/crm/targets", "page");
+    revalidatePath("/[locale]/(routes)/campaigns/targets", "page");
     return { data: target };
   } catch (error) {
     return { error: "Failed to update target" };

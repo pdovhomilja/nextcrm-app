@@ -7,19 +7,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-import { prismadb } from "@/lib/prisma";
-import { envSecret } from "@/lib/env-secret";
+import { getResendKeyStatus } from "@/lib/resend";
 
 import { Input } from "@/components/ui/input";
-import CopyKeyComponent from "./copy-key";
 import { setResendKey } from "@/actions/admin/system/set-resend-key";
 
 const ResendCard = async () => {
-  const resend_key = await prismadb.systemServices.findFirst({
-    where: {
-      name: "resend_smtp",
-    },
-  });
+  const resend_key = await getResendKeyStatus();
 
   return (
     <Card className="min-w-[350px] max-w-[450px]">
@@ -27,33 +21,15 @@ const ResendCard = async () => {
         <CardTitle>Resend.com - API Key</CardTitle>
         <CardDescription className="text-xs">
           <p>ENV API key:</p>
-          <p>
-            {envSecret("RESEND_API_KEY") ? (
-              <CopyKeyComponent
-                keyValue={envSecret("RESEND_API_KEY")}
-                message="Resend - API Key"
-              />
-            ) : (
-              "not enabled"
-            )}
-          </p>
+          <p>{resend_key.envKey ?? "not enabled"}</p>
           <p>API key from DB:</p>
-          <p>
-            {resend_key?.serviceKey ? (
-              <CopyKeyComponent
-                keyValue={resend_key?.serviceKey}
-                message="Resend - API Key"
-              />
-            ) : (
-              "not enabled"
-            )}
-          </p>
+          <p>{resend_key.dbKey ?? "not enabled"}</p>
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
         <form action={setResendKey}>
           <div>
-            <input type="hidden" name="id" value={resend_key?.id} />
+            <input type="hidden" name="id" value={resend_key.id} />
             <Input type="text" name="serviceKey" placeholder="Your API key" />
           </div>
           <div className="flex justify-end pt-2 gap-2">

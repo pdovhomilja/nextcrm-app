@@ -184,6 +184,54 @@ describe("subscribeCalendlyWebhook", () => {
   });
 });
 
+describe("subscribeCalendlyWebhook signing key", () => {
+  function mockCalendly() {
+    (global.fetch as jest.Mock)
+      .mockResolvedValueOnce(
+        jsonResponse(200, { resource: { current_organization: "org-1" } }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse(200, { resource: { uri: NEW_WEBHOOK_URI } }),
+      );
+  }
+  function sentBody() {
+    const [, init] = (global.fetch as jest.Mock).mock.calls[1];
+    return JSON.parse(init.body);
+  }
+
+  it("generates, saves and sends a signing key when none is saved", async () => {
+    mockRequireRole.mockResolvedValue({ id: "admin-1", role: "admin" } as any);
+    mockGetCalendlySettings.mockResolvedValue({
+      apiToken: "token-123",
+      signingKey: null,
+      webhookUri: null,
+    });
+    mockCalendly();
+
+    const result = await subscribeCalendlyWebhook();
+
+    expect(result).toEqual({ ok: true });
+    const { signing_key } = sentBody();
+    expect(signing_key).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(mockSaveCalendlySettings).toHaveBeenCalledWith({ signingKey: signing_key });
+  });
+
+  it("sends the saved signing key without replacing it", async () => {
+    mockRequireRole.mockResolvedValue({ id: "admin-1", role: "admin" } as any);
+    mockGetCalendlySettings.mockResolvedValue({
+      apiToken: "token-123",
+      signingKey: "saved-key",
+      webhookUri: null,
+    });
+    mockCalendly();
+
+    await subscribeCalendlyWebhook();
+
+    expect(sentBody().signing_key).toBe("saved-key");
+    expect(mockSaveCalendlySettings).not.toHaveBeenCalled();
+  });
+});
+
 describe("saveCalendlyAction", () => {
   it("returns an error result instead of throwing when the caller is not authenticated", async () => {
     mockRequireRole.mockRejectedValue(new AuthenticationError("Unauthorized"));

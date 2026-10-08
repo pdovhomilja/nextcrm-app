@@ -60,7 +60,7 @@ export async function convertTargetToDeal(
       select: { campaign_id: true },
     });
 
-    // Entry stage = lowest order (the AQUNAMA runbook configures "Pre-Sale" as order 0).
+    // Entry stage = lowest order (e.g. "Pre-Sale" configured as order 0).
     const entryStage = await prismadb.crm_Opportunities_Sales_Stages.findFirst({
       orderBy: { order: "asc" },
     });
