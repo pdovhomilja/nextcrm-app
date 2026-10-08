@@ -32,7 +32,7 @@ if [ -z "$url" ]; then
   echo "db guard: DATABASE_URL is not set and no value was found in .env." >&2
   echo "  A fresh clone has no .env (it is gitignored). Create one containing:" >&2
   echo '    DATABASE_URL="postgresql://nextcrm:nextcrm@localhost:5433/nextcrm"' >&2
-  echo "  See docs/internal/aqunama-setup-runbook.md for the full prerequisites." >&2
+  echo "  See the Installation section of README.md for the full prerequisites." >&2
   exit 1
 fi
 
