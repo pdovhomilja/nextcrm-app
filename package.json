@@ -137,6 +137,7 @@
     "sanitize-html": "^2.17.7",
     "sharp": "^0.35.4",
     "sonner": "^2.0.7",
+    "svix": "1.84.1",
     "swr": "^2.4.0",
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.1",
