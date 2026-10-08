@@ -1,0 +1,95 @@
+---
+title: Backups and restore
+description: Back up the database, uploaded files and the secrets that make them readable, and restore them.
+---
+
+A complete backup has three parts. Missing any of them means data loss.
+
+| Part | Where it lives (Docker Compose) | Why |
+|---|---|---|
+| PostgreSQL database | volume `postgres_data` | All records, users, settings, audit log, embeddings, encrypted keys and tokens |
+| Uploaded files | volume `minio_data` | Documents, avatars, invoice PDFs |
+| Secrets | your `.env` or platform settings | `EMAIL_ENCRYPTION_KEY` decrypts stored keys, tokens and mailbox passwords; `BETTER_AUTH_SECRET` keeps sessions valid |
+
+<Callout type="warn">
+  A database backup without the matching `EMAIL_ENCRYPTION_KEY` restores the records, but every saved AI key, mailbox password, Google Calendar connection, Calendly setting and plugin secret is unreadable. Store the key with your backups, separately from the backup files themselves.
+</Callout>
+
+Docker Compose prefixes volume names with the project name (by default the folder name), so on the host they appear as, for example, `nextcrm-app_postgres_data`. The commands below go through `docker compose` and do not need the full name. Run them from the folder with the compose file.
+
+## Database
+
+Create a dump in Postgres' custom format:
+
+```sh
+docker compose exec -T postgres \
+  pg_dump -U nextcrm -d nextcrm -Fc > nextcrm-$(date +%F).dump
+```
+
+Replace `nextcrm` with your `POSTGRES_USER` and `POSTGRES_DB` if you changed them. `pg_dump` takes a consistent snapshot while the app is running.
+
+## Uploaded files
+
+Archive the MinIO data directory from a throwaway container that mounts the `minio` service's volume:
+
+```sh
+docker compose stop minio
+docker run --rm --volumes-from "$(docker compose ps -aq minio)" \
+  -v "$PWD":/backup alpine \
+  tar czf /backup/minio-data-$(date +%F).tgz -C /data .
+docker compose start minio
+```
+
+Stopping MinIO for the copy gives a consistent archive; uploads fail during those seconds. If you use external S3 storage instead of the bundled MinIO, back up the bucket with your provider's tools.
+
+## Restore
+
+<Steps>
+<Step>
+
+### Start from an empty stack with the same secrets
+
+Use the same `.env`, especially the same `EMAIL_ENCRYPTION_KEY` and `BETTER_AUTH_SECRET`. Start only the storage services:
+
+```sh
+docker compose up -d postgres minio
+```
+
+</Step>
+<Step>
+
+### Restore the database
+
+```sh
+docker compose exec -T postgres \
+  pg_restore -U nextcrm -d nextcrm --clean --if-exists --no-owner < nextcrm-2026-01-31.dump
+```
+
+</Step>
+<Step>
+
+### Restore the files
+
+```sh
+docker compose stop minio
+docker run --rm --volumes-from "$(docker compose ps -aq minio)" \
+  -v "$PWD":/backup alpine \
+  sh -c "rm -rf /data/* /data/.[!.]* ; tar xzf /backup/minio-data-2026-01-31.tgz -C /data"
+docker compose start minio
+```
+
+</Step>
+<Step>
+
+### Start the app
+
+```sh
+docker compose up -d
+```
+
+The entrypoint applies any migrations newer than the dump. Because the `Users` table is not empty, the seed does not run.
+
+</Step>
+</Steps>
+
+Test a restore on a separate machine from time to time. A backup you have never restored is a guess.

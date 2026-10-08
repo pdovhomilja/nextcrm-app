@@ -1,0 +1,73 @@
+---
+title: Email
+description: Set up Resend for login codes and system mail, SMTP for notifications, and what users need for their own mailboxes.
+---
+
+NextCRM sends email through two channels and lets users connect their own mailboxes. Configure Resend first: without it nobody can receive a login code.
+
+| Channel | Configured by | Used for |
+|---|---|---|
+| Resend | `RESEND_API_KEY` (or the key under **Administration → Services**), `EMAIL_FROM`, `RESEND_FROM_EMAIL` | Login codes, invitations, invoice emails, project and task notifications, messages to all users, campaigns, scheduled reports, automation notifications |
+| SMTP | `EMAIL_HOST`, `EMAIL_USERNAME`, `EMAIL_PASSWORD`, `EMAIL_FROM` | New-user notifications to admins, activation emails, notifications when a lead, contact or opportunity is assigned to someone |
+| User mailboxes | Each user, in their profile | The built-in email client (IMAP sync, sending from the user's own account) |
+
+## Resend
+
+<Steps>
+<Step>
+
+Create a Resend account, verify your sending domain, and create an API key.
+
+</Step>
+<Step>
+
+Set the variables and make sure they reach the app container:
+
+```sh
+RESEND_API_KEY=re_...
+EMAIL_FROM=crm@example.com          # login codes, invitations, invoices
+RESEND_FROM_EMAIL=crm@example.com   # campaigns, reports, automation notifications
+NEXT_PUBLIC_APP_NAME=NextCRM        # sender display name
+```
+
+</Step>
+<Step>
+
+Restart the app and request a login code to test.
+
+</Step>
+</Steps>
+
+Login codes are sent as `NEXT_PUBLIC_APP_NAME <EMAIL_FROM>` and expire after 5 minutes. In production, a failed send makes the login request fail.
+
+### Environment key versus the Services page
+
+**Administration → Services** lets you store a Resend key in the database. The lookup order is: `RESEND_API_KEY` first, then the stored key. The stored key covers login codes, invitations, invoice emails, task notifications and messages to all users.
+
+Campaign sends, scheduled reports and automation notifications (follow-up tasks, the kill rule, the recycle digest) read `RESEND_API_KEY` directly and ignore the stored key. If you use those features, set the environment variable.
+
+<Callout type="warn">
+  `docker-compose.yml` and `docker-compose-coolify.yml` set `RESEND_API_KEY` to a placeholder when you leave it empty. The placeholder wins over the key on the Services page, so with Docker always put the real key into `RESEND_API_KEY`.
+</Callout>
+
+### Campaign delivery events
+
+Resend can report delivery events for campaign emails to `https://<your host>/api/campaigns/webhooks/resend`. Set `RESEND_WEBHOOK_SECRET`. The endpoint rejects any request whose `Resend-Signature` header is not `sha256=` followed by the hex HMAC-SHA256 of the request body with that secret.
+
+## SMTP
+
+Set `EMAIL_HOST`, `EMAIL_USERNAME` and `EMAIL_PASSWORD`. The app connects to `EMAIL_HOST` on port 465 with implicit TLS; the port is fixed in code. The sender is `EMAIL_FROM`.
+
+SMTP errors are logged and do not stop the action that triggered them. If admins do not get new-user notifications, check the app logs for `Error occurred while sending email`.
+
+Resend also offers SMTP (`smtp.resend.com`), so one Resend account can serve both channels.
+
+## User mailboxes
+
+Users connect IMAP/SMTP accounts in their profile under **Emails**. NextCRM stores the credentials encrypted with `EMAIL_ENCRYPTION_KEY` and syncs every active account every 15 minutes through Inngest. Synced emails are linked to matching CRM records and embedded for search (embedding needs `OPENAI_API_KEY`).
+
+By default the server refuses to connect to mail hosts that resolve to private or internal addresses. If your mail server is on an internal network, set `MAIL_ALLOW_PRIVATE_HOSTS=true`.
+
+## In-app feedback
+
+The feedback form inside the app sends its message through Resend to a fixed recipient address in the source code (`actions/feedback/send-feedback.ts`), not to your admins. Change that file if you want feedback to reach you.

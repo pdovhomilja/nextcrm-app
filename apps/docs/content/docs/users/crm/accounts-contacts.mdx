@@ -1,0 +1,71 @@
+---
+title: Companies and contacts
+description: Add companies (accounts) and the people who work there, and see everything linked to them.
+---
+
+In the sidebar, companies appear as **Companies**. On pages and forms they are called accounts. Both words mean the same record.
+
+## Add a company
+
+<Steps>
+<Step>
+Go to **Sales** → **Companies** and click **+**.
+</Step>
+<Step>
+Fill in **Account name** (required) and any other fields: **Office phone**, **E-mail**, **Website**, **Account ID**, **Account VAT number**, billing and shipping address, **Annual revenue**, **Is member of** (a parent company), and **Choose industry**.
+</Step>
+<Step>
+Click **Create account**.
+</Step>
+</Steps>
+
+If your admin has installed a company registry plugin, a country selector and a **Load from registry** button appear under **Account ID**. Enter the registration number, pick the country, and click **Load from registry** to fill in the company details. If nothing is found, you see "Company not found in the registry."
+
+## The company page
+
+The **Overview** tab shows the company's details, billing and shipping address, and these cards:
+
+- **Case study:** mark a happy client as a reference.
+- **Activities:** calls, meetings, notes, and emails. See [Activities and tasks](/docs/users/crm/activities-tasks).
+- **Find Similar:** see [Working with CRM records](/docs/users/crm/records#find-similar-records).
+- **Tasks:** follow-up tasks for this company.
+- **Opportunities**, **Contacts**, **Contracts**, **Leads:** records linked to the company, each with **+** to add a new one already linked.
+- **Products:** products and services this company has. See [Contracts and products](/docs/users/crm/contracts-products#assign-a-product-to-a-company).
+- **Documents** and **Invoices** linked to the company.
+
+### Case studies
+
+To suggest a company as a case study, click **Flag as candidate** on the **Case study** card. The card shows a **Candidate** badge. To take it back, click **Withdraw candidacy**.
+
+Managers and admins see **Approve case study** on candidates. After approval the badge reads **Approved**, and they can click **Revoke approval** to undo it. Marketing should only reference approved companies.
+
+## Add a contact
+
+<Steps>
+<Step>
+Go to **Sales** → **Contacts** and click **+**. Or click **+** on the **Contacts** card of a company page to link the contact to that company.
+</Step>
+<Step>
+Fill in **Last name** (required) and any other fields, such as **First name**, **Position**, **Email**, **Personal email**, **Mobile phone**, **Office phone**, **Birthday - (optional)**, and social profiles.
+</Step>
+<Step>
+Choose **Assign an Account** to link the contact to a company, **Assigned user** for the owner, and **Contact type**: **Customer**, **Partner**, or **Vendor**.
+</Step>
+<Step>
+Click **Create contact**.
+</Step>
+</Steps>
+
+<Callout type="info">
+Always enter the contact's email address. NextCRM uses it to link synced emails and calendar meetings to the contact, and AI enrichment needs it.
+</Callout>
+
+## The contact page
+
+The **Overview** tab shows the contact's details with an **Enrich with AI** button (see [AI enrichment](/docs/users/crm/ai-enrichment)), then **Activities**, **Find Similar**, and the contact's companies, opportunities, and documents.
+
+## Emails and meetings on companies and contacts
+
+When you connect a mailbox in your profile, NextCRM checks each synced message. If the From, To, or Cc address matches the email of a contact or a company, the message is linked to that record. Bcc addresses are ignored. See [Email](/docs/users/emails).
+
+When you connect Google Calendar, meetings with a contact's email address become **Meeting** activities on the contact and the contact's company. See [Activities and tasks](/docs/users/crm/activities-tasks#meetings-from-google-calendar).

@@ -1,0 +1,256 @@
+---
+title: Plugin system
+description: Reference for the NextCRM plugin SDK, manifest, permissions, extension points, the plugin store and the plugin lifecycle.
+---
+
+Plugins add behaviour to NextCRM without changing core code: validation rules on CRM writes, background jobs, extra tabs and panels on accounts, standalone pages, admin sections and company registry lookups.
+
+For a step-by-step example, see [Build a plugin](/docs/developers/plugin-tutorial).
+
+## Model
+
+- **Trusted code, built into the image.** Plugins are TypeScript modules in the repository. They are compiled into the app at build time. There is no runtime upload, no sandbox and no marketplace.
+- **Installed per instance.** Every plugin in the image is listed under **Administration → Plugins** (`/admin/plugins`). An admin installs it, grants its permissions by installing, and fills in its settings.
+- **One public API.** Plugins import only `@nextcrm/plugin-sdk` (in `packages/plugin-sdk`). The core never imports plugin code except through the generated registry.
+- **No database tables.** Plugins keep state in a key-value store backed by the core `PluginData` table.
+
+SDK version: `0.1.0` (`SDK_VERSION` in `packages/plugin-sdk/src/version.ts`).
+
+## Repository layout
+
+```text
+plugins/<id>/plugin.ts              default export of definePlugin(...) (plugin.tsx also works)
+plugins/<id>/messages/en.json       translations, also cz.json, de.json, uk.json
+plugins/<id>/__tests__/*.test.ts    unit tests with createTestContext
+plugins-private/<id>/...            same structure, private plugins
+```
+
+- `plugins/` holds public plugins and is part of the open-source repository. It is empty on `main` today.
+- `plugins-private/` is for plugins that are not open source. It is meant to be a separate private repository mounted at that path (for example as a git submodule). It is not part of the public repository.
+
+### The generated registry
+
+The app finds plugins through `lib/plugins/plugins.generated.ts`, written by `scripts/plugins/generate-registry.mjs`. The script imports each `plugins/<id>/plugin.ts` (and `plugins-private/<id>/plugin.ts`) and its message files.
+
+```bash
+pnpm plugins:generate                  # public and private plugins
+pnpm plugins:generate --public-only    # public plugins only (what you commit)
+pnpm plugins:generate --check          # fail if the committed file is stale
+```
+
+After you add or remove a plugin, run `pnpm plugins:generate --public-only` and commit `lib/plugins/plugins.generated.ts`. The Dockerfile runs the generator without flags before `next build`, so a production image includes `plugins-private/` when it is present.
+
+Do not edit the generated file by hand.
+
+## Manifest
+
+```ts
+import { definePlugin, z, allow, reject } from "@nextcrm/plugin-sdk";
+
+export default definePlugin({
+  id: "deal-guard",
+  name: "Deal guard",
+  version: "1.0.0",
+  sdk: "^0.1.0",
+  description: "Blocks opportunities without an expected close date.",
+  permissions: [],
+  settings: z.object({ enabled: z.boolean().default(true) }),
+  secrets: z.object({}),
+  extensions: (x) => {
+    x.rule("opportunity", "beforeCreate", (input, ctx) =>
+      ctx.settings.enabled && !input.data.close_date ? reject("closeDateRequired") : allow(),
+    );
+  },
+  onInstall: async (ctx) => {},
+  onUpgrade: async (ctx, fromVersion) => {},
+  onUninstall: async (ctx) => {},
+});
+```
+
+`definePlugin()` validates the manifest when the module loads and throws on errors:
+
+| Field | Rule |
+| --- | --- |
+| `id` | Lowercase, starts with a letter, letters, digits and `-`, 2 to 49 characters (`/^[a-z][a-z0-9-]{1,48}$/`). Must be unique. Use the folder name. |
+| `name`, `description` | Shown in the admin UI. |
+| `version` | Plain semver `X.Y.Z`. Bump it when you ship a change; a higher version triggers `onUpgrade`. |
+| `sdk` | A caret range, for example `^0.1.0`. For `0.x` versions the minor must match: `^0.1.0` accepts `0.1.x` (at or above `0.1.0`) only. |
+| `permissions` | Every permission the plugin uses. Unknown values throw. |
+| `settings`, `secrets` | Optional flat zod objects. Default to `z.object({})`. |
+| `extensions` | Function that registers extension points with the builder `x`. |
+| `onInstall`, `onUpgrade`, `onUninstall` | Optional lifecycle hooks. |
+
+The SDK re-exports `z` from zod. Use it so your schemas match the host's zod version.
+
+## Permissions
+
+| Permission | Grants |
+| --- | --- |
+| `accounts:read`, `contacts:read`, `leads:read`, `opportunities:read` | `get` and `find` on that entity in `ctx.data` |
+| `accounts:write`, `contacts:write`, `leads:write`, `opportunities:write` | `create` and `update` on that entity |
+| `activities:read` | `ctx.data.activities.find` |
+| `users:read` | `ctx.data.users.get` and `find` (never returns the password hash) |
+| `products:read` | `ctx.data.products.get` and `find` |
+| `notify` | `ctx.notify()` |
+| `http` | `ctx.http.fetch()` |
+
+Calling something without its permission throws `PluginPermissionError`. Admins see the requested permissions before they install. Rules, after-actions and UI slots need no permission of their own; they only need permissions for the `ctx` calls they make.
+
+## The plugin context
+
+Every handler, hook and component receives `ctx`:
+
+| Member | Description |
+| --- | --- |
+| `ctx.plugin` | `{ id, version }` |
+| `ctx.actor` | Who caused the call: `{ type: "user", userId, role }`, `{ type: "token", userId, role }` (MCP), `{ type: "system" }`, or `{ type: "plugin", pluginId }` |
+| `ctx.locale` | `en`, `cz`, `de` or `uk` |
+| `ctx.settings`, `ctx.secrets` | Parsed values, typed from your zod schemas |
+| `ctx.data` | Data API for CRM records (permission-gated) |
+| `ctx.store` | Key-value store |
+| `ctx.http.fetch(url, init)` | Outbound HTTP (permission `http`) |
+| `ctx.notify({ userIds?, roles?, subject, text })` | Email active users by id or role (permission `notify`) |
+| `ctx.log.debug/info/warn/error(message, context?)` | Writes to the plugin log shown in admin |
+| `ctx.t(key, params?)` | Translates a key from the plugin's own messages |
+
+### Data API
+
+`ctx.data` has `accounts`, `contacts`, `leads` and `opportunities` (`get`, `find`, `create`, `update`), `activities` (`find`), and `users` and `products` (`get`, `find`). There is no delete.
+
+- Records use the Prisma field names of the core models, for example `name`, `assigned_to`, `close_date`.
+- `find({ where, orderBy, take, skip })` filters only on the model's own scalar fields plus `AND`, `OR` and `NOT`. Relation filters throw `Invalid filter field: <key>`. `take` is capped at 100.
+- Reads are not limited to the actor's scope. A plugin with `accounts:read` can read every account.
+- Writes go through the normal Prisma client, so other plugins' rules run on them. Your own rules do not run on your own writes.
+- After a create or update, the data API sends `crm/<entity>.saved` with `source: <pluginId>`.
+
+### Store
+
+The store is the plugin's only persistent state. It is backed by the core `PluginData` table (`pluginId`, `entityType`, `entityId`, `key`, `value` JSON).
+
+```ts
+await ctx.store.set("lastSync", { at: new Date().toISOString() });
+const last = await ctx.store.get<{ at: string }>("lastSync");
+await ctx.store.list("sync:");          // entries whose key starts with "sync:"
+await ctx.store.delete("lastSync");
+
+const rec = ctx.store.forRecord("account", accountId);
+await rec.set("score", 42);             // attached to one CRM record
+```
+
+- Values must be JSON-serialisable and at most 256 KB each.
+- `forRecord(entity, id)` scopes keys to one account, contact, lead or opportunity. When that record is hard-deleted, its plugin data is deleted too.
+- Uninstalling deletes all of the plugin's store entries and logs. Admins can download a JSON export first (`/api/admin/plugins/<id>/export`).
+
+### Settings and secrets
+
+`settings` and `secrets` are flat `z.object`s whose fields are strings, numbers, booleans or enums. Fields may be optional or have defaults. Arrays and nested objects are rejected. The admin UI builds the settings form from the schema.
+
+- Secrets are encrypted at rest with `EMAIL_ENCRYPTION_KEY` and never sent to the browser. The admin page only shows whether each secret is set.
+- Required settings can be `undefined` until an admin saves them. Check before use.
+- If stored settings no longer match the schema after an upgrade, invalid fields fall back to schema defaults and a `warn` entry is logged.
+- If secrets cannot be decrypted (for example after a key change), they are treated as not set.
+
+## Extension points
+
+Register extension points inside `extensions: (x) => { ... }`. Entities are `account`, `contact`, `lead` and `opportunity`.
+
+### `x.rule(entity, operation, handler, options?)`
+
+Runs before a write, inside the user's request. `operation` is `beforeCreate`, `beforeUpdate` or `beforeDelete`.
+
+```ts
+x.rule("account", "beforeUpdate", (input, ctx) => {
+  // input: { entity, operation, recordId, data, existing }
+  if ("assigned_to" in input.data && input.data.assigned_to !== input.existing?.assigned_to
+      && ctx.actor.type === "user" && ctx.actor.role === "user") {
+    return reject("onlyManagersReassign");
+  }
+  return allow();
+}, { onError: "allow", priority: 100 });
+```
+
+- Return `allow()`, `reject(messageKey, params?)` or `modify(patch)`. A patch is merged into the data being written.
+- A rejected write fails with the translated message. Server actions show it to the user; MCP returns `RULE_REJECTED`.
+- Each rule has 500 ms. `onError` decides what happens if the rule throws or times out: `"allow"` (default) skips the rule, `"block"` rejects the write with the core "rule unavailable" message. Use `"block"` only when skipping the rule would break a guarantee.
+- Rules run in ascending `priority` (default 100), then by plugin id.
+- A soft delete (setting `deletedAt`) runs `beforeDelete`.
+- Bulk writes (`createMany`, `updateMany`, `deleteMany`) run rules per row but cannot be modified. A `modify` result on a bulk write throws.
+- Nested plugin writes are capped at depth 3.
+
+Rules apply to every write that goes through `prismadb`: server actions, API routes, MCP tools and other plugins.
+
+### `x.after(entity, operation, handler)`
+
+Runs after a write, in the background. `operation` is `created`, `updated` or `deleted`. The handler receives `{ entity, operation, recordId }`. All after-handlers of a plugin run in one Inngest function (`plugin-<id>-after`, 3 retries). `createMany` does not emit after-events. A plugin's own writes do not trigger its own after-handlers.
+
+### `x.on(event, handler)`
+
+Subscribes to any Inngest event, for example `crm/account.saved`. The handler gets the event `data` and `ctx`. Each event becomes one Inngest function (`plugin-<id>-on-<slug>`, 3 retries). Events caused by the plugin's own `ctx.data` writes are skipped.
+
+### `x.cron(id, schedule, handler)`
+
+A scheduled job with a 5-field cron expression, optionally prefixed with `TZ=<zone>`. The contract test rejects invalid expressions. Becomes the Inngest function `plugin-<id>-cron-<slug>` with 3 retries. Runs only while the plugin is enabled. The actor is `{ type: "plugin", pluginId }`.
+
+### `x.accountTab({ id, title, component, roles? })` and `x.accountPanel({ id, component, roles? })`
+
+Adds a tab or a panel to the account detail page. `title` is a message key. `component` is a React Server Component that receives `{ accountId, ctx }`. `roles` defaults to all three roles.
+
+### `x.page({ path, title, component, roles? })`
+
+A standalone page at `/<locale>/p/<pluginId>/<path>`. `path` must have at least one segment and may contain `/`. The component receives `{ path, searchParams, ctx }`. Plugin pages are not added to the navigation menu; link to them yourself.
+
+### `x.adminSection(component)`
+
+Renders a Server Component on the plugin's admin page (`/admin/plugins/<id>`) while the plugin is enabled. It receives `{ ctx }`.
+
+### `x.companyRegistry({ countries, lookup, validateVat? })`
+
+Provides company lookup by registration number for the given ISO country codes (upper case). `lookup` returns a `CompanyRecord` (`name`, `registrationNumber`, `country`, optional `vat`, `street`, `city`, `postalCode`) or `null`. The company lookup on accounts (`actions/crm/accounts/lookup-company.ts`) uses the first enabled provider that covers the chosen country.
+
+### UI components
+
+Tabs, panels, pages and admin sections are React Server Components. They render inside an error boundary: if one throws, the user sees "This plugin section is unavailable" and the rest of the page works. Pass only plain, serialisable props to Client Components.
+
+## HTTP
+
+`ctx.http.fetch()` wraps `fetch` with safety checks:
+
+- 15-second timeout by default, per hop. Override with `timeoutMs`.
+- Requests to private and loopback hosts are blocked unless the instance sets `PLUGIN_HTTP_ALLOW_PRIVATE_HOSTS=true`.
+- Up to 5 redirects, with the host check repeated on each hop. `Authorization`, `Cookie` and `Proxy-Authorization` are dropped on cross-origin redirects. A caller-supplied `redirect` option is ignored.
+
+## Translations
+
+Put messages in `plugins/<id>/messages/{en,cz,de,uk}.json`. They are merged into the app's messages under `plugins.<id>`. `ctx.t("key")` reads from that namespace, and `reject("key")` messages are translated the same way. If a locale file is missing at runtime, the English file is used. Tab and page `title` values are keys in these files.
+
+## Lifecycle
+
+| Step | What happens |
+| --- | --- |
+| Available | The plugin is in the image and listed in admin with its description, version and permissions. |
+| Install | Admin only. Checks the SDK range, validates settings and secrets, stores the row as `ENABLED`, then sends `plugin/installed`. `onInstall` runs in the Inngest function `plugin-lifecycle-install`. If the event cannot be sent, the install is rolled back. |
+| Enable / disable | Status change only. Disabled plugins run no rules, jobs, handlers or UI. |
+| Settings | Saved and validated against the schemas. Empty secret fields keep their stored value. |
+| Upgrade | On server start, every installed plugin whose stored version is older than its code runs `onUpgrade(ctx, fromVersion)` once, under a Postgres advisory lock. Upgrades run in the background, so new code may run before `onUpgrade` finishes. Keep `onUpgrade` idempotent and make handlers tolerate unmigrated data. |
+| Uninstall | Admin only. Runs `onUninstall` (errors are logged, not fatal), then deletes the plugin's `PluginData`, `PluginLog` and `InstalledPlugin` rows. Data the plugin wrote into core records stays. |
+| Missing | The install row exists but the code is gone. The plugin shows as missing, its extensions are inert, and uninstalling deletes its data without calling `onUninstall`. |
+
+Every lifecycle action writes an audit log entry with `entityType: "plugin"`. The admin page shows status and the last 200 log lines.
+
+## Limits in SDK 0.1
+
+- Slots exist only on accounts. No tabs or panels on contacts, leads or opportunities yet.
+- No navigation menu items.
+- No plugin-defined database tables or custom fields in core forms.
+- Plugins cannot register MCP tools.
+- Only trusted, first-party code. No sandbox.
+
+The design document `docs/superpowers/specs/2026-10-04-plugin-system-design.md` lists these as later work.
+
+## Boundaries
+
+`__tests__/plugins/boundaries.test.ts` enforces the import rules:
+
+- Core code does not import from `plugins/` or `plugins-private/` (except the generated registry).
+- Plugins import only `@nextcrm/plugin-sdk`, their own files, `react`, `zod` and npm packages. Add npm dependencies to the root `package.json`.
+- The SDK does not import core code.

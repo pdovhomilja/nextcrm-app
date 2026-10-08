@@ -1,0 +1,63 @@
+---
+title: Working with CRM records
+description: Lists, filters, record pages, history, and deleting records in the Sales module.
+---
+
+The **Sales** section of the sidebar holds the CRM: **Companies** (accounts), **Contacts**, **Leads**, **Opportunities**, **Contracts**, and **Products**. All of them work the same way. This page covers what they share.
+
+**Overview** shows the companies, contacts, leads, opportunities, and contracts lists on one page.
+
+## Lists
+
+Each list is a table with a toolbar above it.
+
+- **Filter box:** type to narrow the list. Companies and opportunities filter by name, contacts by last name, leads by company, contracts by title, products by name.
+- **Status:** pick one or more statuses. Products also have a **Type** filter.
+- **Reset:** clears all filters.
+- **View** → **Toggle columns:** show or hide columns.
+- **Row menu (…):** **View** opens the record, **Update** edits it in a side panel, **Delete** removes it. Products have **Edit** and **Delete**.
+
+## Create a record
+
+Click **+** in the card header of a list. A side panel opens with the form. Fill in the fields and click the create button at the bottom, for example **Create account** or **Create contact**. Required fields are marked; the form tells you what is missing.
+
+You can also create related records from inside a record. For example, the company page has its own contacts, opportunities, contracts, and leads cards, each with a **+** button.
+
+## Record pages
+
+Open a record to see its page. Companies, contacts, leads, opportunities, and contracts have two tabs:
+
+- **Overview:** the record's fields, then cards for related records, activities, and documents.
+- **History:** every change made to the record.
+
+To edit a record from its page, click the **…** button in the top card and choose **Update**.
+
+## History
+
+The **History** tab lists changes newest first. Each entry shows who made the change, when, and a badge: **created**, **updated**, **deleted**, **restored**, **linked**, or **unlinked**. Updates list each changed field with the old value, an arrow, and the new value. Changes made by background jobs show as **System**.
+
+## Find similar records
+
+Companies, contacts, leads, and opportunities have a **Find Similar** button on the **Overview** tab. It opens a panel with up to five records that are close in meaning, each with a match score. Use it to spot duplicates or comparable deals.
+
+If you see "Still generating similarity data. Check back shortly.", the record has not been processed yet. This feature needs AI to be set up on your instance.
+
+## Watch a company
+
+To add yourself to a company's watchers, open the row menu in the **Companies** list and choose **Watch Account**. To stop, choose **Stop watching Account**.
+
+A watcher can see and edit the company and see the contacts, leads, opportunities, and contracts linked to it. Users can only start watching a company they can already edit.
+
+## Delete a record
+
+Choose **Delete** in the row menu and click **Continue** in the confirmation dialog.
+
+<Callout type="info">
+The dialog says the action cannot be undone, but deleted companies, contacts, leads, opportunities, and contracts are only hidden. An admin can restore them from the [audit log](/docs/admins/audit-log).
+</Callout>
+
+## Who can change what
+
+- **Users** can edit and delete contacts, leads, opportunities, and contracts they are assigned to or created, and companies they are assigned to, created, or watch. Records you can only see because they are linked to your company are read-only for you.
+- **Managers and admins** can edit and delete any record.
+- Only **managers and admins** can create, edit, import, or delete products.

@@ -1,0 +1,151 @@
+---
+title: Data model
+description: Key Prisma models, schema conventions, soft delete, the audit log, and how to add a migration.
+---
+
+The whole schema lives in one file, `prisma/schema.prisma`. Prisma 7 reads the database URL from `prisma.config.ts`, which loads `DATABASE_URL` from `.env`. The schema itself has no `url` line.
+
+## Key models
+
+| Area | Models |
+| --- | --- |
+| Users and auth | `Users`, `Session`, `Account`, `Verification` (Better Auth), `ApiToken`, `ApiKeys` |
+| CRM core | `crm_Accounts`, `crm_Contacts`, `crm_Leads`, `crm_Opportunities`, `crm_Contracts` |
+| CRM lookups | `crm_Opportunities_Sales_Stages`, `crm_Opportunities_Type`, `crm_Industry_Type`, `crm_Contact_Types`, `crm_Lead_Sources`, `crm_Lead_Statuses`, `crm_Lead_Types` |
+| Activities | `crm_Activities`, `crm_ActivityLinks` |
+| Products and line items | `crm_Products`, `crm_ProductCategories`, `crm_AccountProducts`, `crm_OpportunityLineItems`, `crm_ContractLineItems` |
+| Targets and campaigns | `crm_Targets`, `crm_TargetLists`, `crm_Target_Contact`, `crm_campaigns`, `crm_campaign_templates`, `crm_campaign_steps`, `crm_campaign_sends` |
+| Projects | `Boards`, `Sections`, `Tasks`, `tasksComments` |
+| Documents | `Documents`, `Documents_Types`, `crm_Document_Chunks` |
+| Email and calendar | `EmailAccount`, `EmailFolder`, `Email`, `CalendarConnection`, `crm_CalendarEvents` |
+| Invoices | `Invoices`, `Invoice_LineItems`, `Invoice_Payments`, `Invoice_Series`, `Invoice_TaxRates`, `Invoice_Settings`, `Invoice_Activity` |
+| Currency | `Currency`, `ExchangeRate` |
+| Search | `crm_Embeddings_Accounts`, `crm_Embeddings_Contacts`, `crm_Embeddings_Leads`, `crm_Embeddings_Opportunities`, `crm_Embeddings_Documents`, `EmailEmbedding` |
+| Audit and reports | `crm_AuditLog`, `crm_Report_Config`, `crm_Report_Schedule` |
+| Plugins | `InstalledPlugin`, `PluginData`, `PluginLog` |
+
+Many-to-many links use explicit junction models such as `DocumentsToAccounts` or `ContactsToOpportunities`, with a composite `@@id`. Activities link to any CRM record through `crm_ActivityLinks` (`entityType` + `entityId`).
+
+## Conventions
+
+### IDs
+
+Most models use a UUID primary key:
+
+```prisma
+id String @id @default(uuid()) @db.Uuid
+```
+
+Foreign keys to these models are `String @db.Uuid`. A few models differ: the report models use `cuid()`, and `InstalledPlugin` uses the plugin id as its primary key. Follow the UUID pattern for new models.
+
+### Naming
+
+Model names keep their historical style: CRM models use the `crm_` prefix, and many columns are snake_case (`assigned_to`, `billing_city`). New fields should match the style of the model they are added to. Several CRM models also have a `v Int @map("__v")` column, a leftover from the earlier MongoDB version. Write actions set it to `0`.
+
+### Ownership columns
+
+CRM records carry `createdBy`, `updatedBy` and `assigned_to` (some models use `created_by`). Permission checks for the `user` role use these columns to decide what a user may see and change. See [Auth and permissions](/docs/developers/auth-permissions).
+
+### Soft delete
+
+Business records are not hard-deleted. Models such as accounts, contacts, leads, opportunities, contracts, products, activities, targets, target lists, campaigns, campaign templates, boards and documents have:
+
+```prisma
+deletedAt DateTime?
+deletedBy String?   @db.Uuid
+```
+
+To delete, set both fields. The MCP helpers show the pattern:
+
+```ts
+// lib/mcp/helpers.ts
+export function softDeleteData(userId: string) {
+  return { deletedAt: new Date(), deletedBy: userId };
+}
+```
+
+There is no global Prisma filter. Every read must add `deletedAt: null` itself:
+
+```ts
+await prismadb.crm_Accounts.findUnique({ where: { id, deletedAt: null } });
+```
+
+Admins can restore soft-deleted records from the audit log page.
+
+### Audit log
+
+`crm_AuditLog` stores one row per change: `entityType`, `entityId`, `action`, `changes` (JSONB) and `userId`. Write to it with `writeAuditLog()` from `lib/audit-log.ts`. For updates, compute the field changes with `diffObjects(before, after)`. It skips internal fields such as `updatedAt`, `v` and `deletedAt`.
+
+```ts
+const before = await prismadb.crm_Accounts.findUnique({ where: { id, deletedAt: null } });
+const account = await prismadb.crm_Accounts.update({ where: { id }, data });
+await writeAuditLog({
+  entityType: "account",
+  entityId: account.id,
+  action: "updated",
+  changes: before ? diffObjects(before, account) : null,
+  userId: user.id,
+});
+```
+
+The allowed `entityType` and `action` values are typed in `lib/audit-log.ts`. Extend those types (and the `crm_AuditLog_Action` enum in the schema, through a migration) when you add a new kind of entry.
+
+### Decimals
+
+Money and quantity columns use Prisma `Decimal`. Serialise them with `serializeDecimals()` before they cross into Client Components. See [Architecture](/docs/developers/architecture#reading-data-server-components).
+
+### Vectors and full-text search
+
+Embedding columns are `Unsupported("vector(1536)")` and are read and written with raw SQL. The pgvector extension and HNSW indexes are created in migration `20260320000000_add_pgvector_embeddings`. Invoices also have a `tsvector` column for full-text search.
+
+## Add a migration
+
+Migrations in `prisma/migrations/` are SQL files that every environment applies with `prisma migrate deploy`. CI applies the full chain to a fresh database on every push, and production builds run it in `pnpm build`.
+
+<Steps>
+<Step>
+
+### Edit the schema
+
+Change `prisma/schema.prisma`. Follow the conventions above.
+
+</Step>
+<Step>
+
+### Generate the SQL against your local database
+
+```bash
+pnpm exec prisma migrate dev --create-only --name add_my_feature
+```
+
+This writes `prisma/migrations/<timestamp>_add_my_feature/migration.sql` without applying it. Read the SQL. Prisma cannot express everything (for example pgvector indexes or `tsvector` columns), so add hand-written SQL to the file where needed.
+
+</Step>
+<Step>
+
+### Apply and regenerate
+
+```bash
+pnpm db:migrate
+pnpm exec prisma generate
+```
+
+</Step>
+<Step>
+
+### Commit the migration folder
+
+Commit the schema change and the new migration folder together. Do not edit migrations that are already on `main`; add a new one instead.
+
+</Step>
+</Steps>
+
+<Callout type="warn">
+Do not use `prisma db push` for changes you plan to commit. It changes the database without creating a migration, so other environments never get the change.
+</Callout>
+
+If your local database gets out of step with the migration chain, rebuild it with `pnpm db:reset`.
+
+## Seed data
+
+`prisma/seeds/seed.ts` loads the lookup tables from `prisma/initial-data/*.json`, seeds currencies and invoice defaults, and creates the test admin user. The demo CRM dataset is created only when `CI=true` or `SEED_DEMO_DATA=1` (which `pnpm db:seed` sets). The seed is idempotent, so you can run it again.

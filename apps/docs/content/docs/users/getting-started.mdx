@@ -1,0 +1,106 @@
+---
+title: Getting started
+description: Sign in, find your way around, change the language, and search across the CRM.
+---
+
+## Sign in
+
+The sign-in page offers two methods. Your administrator decides which ones work for your organization.
+
+<Tabs items={["Google", "Email code"]}>
+<Tab value="Google">
+Click **Continue with Google** and choose your Google account.
+</Tab>
+<Tab value="Email code">
+<Steps>
+<Step>
+Enter your work address in **Email** and click **Send verification code**.
+</Step>
+<Step>
+Open the email and copy the 6-digit code.
+</Step>
+<Step>
+Enter the code and click **Verify and sign in**. To start over with another address, click **Use a different email**.
+</Step>
+</Steps>
+</Tab>
+</Tabs>
+
+NextCRM has no passwords. Your session stays signed in for up to 7 days.
+
+### Waiting for approval
+
+New accounts start as pending. Until an administrator activates yours, you see a page that says your account must be allowed by Admin, with a list of admins you can email. After they approve you, click **Try again**. If an admin deactivates your account, you see a similar page and cannot use the app.
+
+## The screen layout
+
+- **Sidebar (left):** the modules. Click the sidebar edge or the toggle button at the top of the page to collapse it to icons.
+- **Header (top):** the search box, then the command menu hint, language selector, feedback button, display currency, light/dark theme toggle, and help links.
+- **Your name (bottom of the sidebar):** a menu with **Todo Dashboard**, **Sales Dashboard**, **Profile Settings**, and **Logout**.
+
+The sidebar contains:
+
+| Item | What it opens |
+| --- | --- |
+| **Dashboard** | Totals across the CRM |
+| **Sales** | **Dashboard**, **My Dashboard**, **Overview**, **Companies**, **Contacts**, **Leads**, **Opportunities**, **Contracts**, **Products**, and **Approvals** (managers and admins only) |
+| **Campaigns** | **All Campaigns**, **Templates**, **Targets**, **Target Lists** |
+| **Projects** | Project boards and tasks |
+| **E-mails** | Your connected mailboxes |
+| **Reports** | Sales, lead, account, activity, campaign, and user reports |
+| **Documents** | Uploaded files |
+| **Invoices** | Invoices and payments |
+| **Administration** | Admins only. See the [admin guide](/docs/admins) |
+
+## Roles and what you can see
+
+Every user has one of three roles: user, manager, or admin.
+
+- **Managers and admins** see every company, contact, lead, opportunity, and contract.
+- **Users** see records they are assigned to or created, plus records linked to a company they are assigned to, created, or watch.
+
+CRM lists and search follow these rules. If a colleague mentions a record you can't find, ask them to assign it to you or ask a manager.
+
+## The dashboard
+
+**Dashboard** shows **Total revenue** and **Expected revenue**, followed by cards with counts for **Active users**, **Invoices**, **Campaigns**, **Targets**, **Companies**, **Deals**, **Contacts**, **Leads**, **Contracts**, **Projects**, **Tasks**, **My tasks**, and **Documents**, plus your **Storage** use. Most cards open the matching list.
+
+Money amounts appear in your display currency. To change it, click the currency button in the header (for example **$ USD**) and pick another currency. Amounts are converted using the exchange rates your admin maintains.
+
+## Change the language
+
+NextCRM is available in English, Czech, German, and Ukrainian. To switch:
+
+- Use the language selector in the header (shown on wide screens), or
+- Go to **Profile Settings** → **Preferences** → **Language**.
+
+The setting is saved to your user account.
+
+## Search
+
+To search everything at once, type at least two characters into **Search something ...** at the top of the page and click **Search**.
+
+Results are grouped into **Accounts**, **Contacts**, **Leads**, **Opportunities**, **Projects**, **Tasks**, **Users**, and **Documents**, with up to 10 hits per group. Each result carries a badge:
+
+- **Keyword:** the words you typed appear in the record.
+- **Semantic:** the record is close in meaning, even if the words differ.
+- **Best Match:** both.
+
+Semantic matching needs AI to be set up on your instance. Without it, search falls back to keywords. You only get results you are allowed to see.
+
+## Command menu
+
+Press **⌘J** to open the command menu. The shortcuts listen for the Command key (⌘), so they are meant for Mac keyboards. Ctrl does not work. Type to find documents by name, or pick **Dashboard** or **Profile settings**.
+
+Keyboard shortcuts:
+
+| Shortcut | Action |
+| --- | --- |
+| ⌘J | Open or close the command menu |
+| Shift+⌘D | Go to the dashboard |
+| Shift+⌘P | Go to your profile |
+| ⌘K | Log out |
+
+<Callout type="warn">
+**⌘K** logs you out immediately. It does not open a search box.
+</Callout>

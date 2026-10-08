@@ -1,0 +1,51 @@
+---
+title: Upgrading
+description: Move a Docker Compose or Coolify instance to a new NextCRM release.
+---
+
+NextCRM releases are tagged in the GitHub repository (`v0.23.1` and so on), and every release has an entry in `CHANGELOG.md`. Database changes ship as Prisma migrations in `prisma/migrations/` and are applied automatically when the app container starts.
+
+## Before you upgrade
+
+1. Read the `CHANGELOG.md` entries between your version and the target. Look for new required variables and breaking changes.
+2. [Back up](/docs/admins/backups) the database and the uploaded files.
+3. Compare your environment with the current `.env.docker` or `docker-compose-coolify.yml` for new variables.
+
+## Docker Compose
+
+```sh
+git pull
+docker compose up -d --build
+```
+
+To move to a specific release instead of the latest commit on `main`:
+
+```sh
+git fetch --tags
+git checkout v0.23.1
+docker compose up -d --build
+```
+
+On start the entrypoint runs `prisma migrate deploy`, which applies only migrations that have not run yet. The seed only runs when there are no users, so existing data is not touched. Follow the startup with:
+
+```sh
+docker compose logs -f app
+```
+
+A `docker-compose.override.yml` you created is not part of the repository, so `git pull` leaves it in place.
+
+## Coolify
+
+Redeploy the resource. Coolify pulls the configured branch, rebuilds the image and starts it; migrations run on start as above. To pin a release, point the resource at a tag or commit instead of a branch.
+
+## Plugins
+
+If the new build contains newer plugin versions, their upgrade hooks run in the background after the app starts. The plugin page shows "Upgrade pending" until the upgrade has finished. See [Plugins](/docs/admins/plugins#upgrades).
+
+## If a migration fails
+
+The container exits with the Prisma error in its log, and Docker restarts it in a loop. Do not edit the database by hand to get past it. Restore the backup you made before the upgrade, go back to the previous release (`git checkout <previous tag>`), start the stack again, and report the error on GitHub.
+
+## Old installations
+
+Very old releases used MongoDB. The repository has a migration script (`pnpm migrate:mongo-to-postgres`) and a guide in `docs/POSTGRESQL_MIGRATION_GUIDE.md`. Releases that predate BetterAuth also need the steps in `docs/deployment/better-auth-migration-runbook.md`.

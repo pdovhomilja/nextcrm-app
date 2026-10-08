@@ -1,0 +1,73 @@
+---
+title: Activities and tasks
+description: Log calls, meetings, notes, and emails on records, sync meetings with Google Calendar, and track company follow-ups.
+---
+
+## Activities
+
+Companies, contacts, leads, opportunities, and contracts each have an **Activities** card on the **Overview** tab. It lists the record's calls, meetings, notes, and emails, newest first. Click **Load more** to see older ones.
+
+### Log an activity
+
+<Steps>
+<Step>
+On the record page, click **Log activity**.
+</Step>
+<Step>
+Choose a **Type**: **Call**, **Meeting**, **Note**, or **Email**.
+</Step>
+<Step>
+Enter a **Title \*** and a **Date & Time \***.
+</Step>
+<Step>
+Set the **Status**: **Scheduled**, **Completed**, or **Cancelled**. Calls and meetings start as **Scheduled**, notes and emails as **Completed**.
+</Step>
+<Step>
+Fill in the extra fields for the type: **Duration (minutes)** and **Outcome** for calls and meetings, **Email Subject** for emails. Add **Notes** if needed.
+</Step>
+<Step>
+Click **Log activity**.
+</Step>
+</Steps>
+
+To change an activity, click the pencil icon, edit the fields, and click **Save changes**. A common case is setting a finished call to **Completed** and filling in the **Outcome**.
+
+To remove an activity, click the trash icon and confirm **Delete** in the **Delete activity?** dialog.
+
+You can edit and delete activities you created. Managers and admins can edit and delete any activity.
+
+## Meetings from Google Calendar
+
+After you connect Google Calendar in your profile (see [Profile and settings](/docs/users/profile#calendar)), NextCRM reads your calendar every 15 minutes.
+
+For each event, NextCRM looks at the attendees' email addresses:
+
+1. If an attendee matches a contact, the event becomes a **Meeting** activity on that contact and on the contact's company. If the company has exactly one active opportunity, the meeting is linked to it as well.
+2. Otherwise, if an attendee matches a campaign target, the meeting is linked to the target.
+3. Otherwise, if an attendee matches a lead, the meeting is linked to the lead.
+
+Events with no matching attendee are skipped. When an event is moved in Google Calendar, the activity date follows. When it is cancelled, the activity status changes to **Cancelled**.
+
+### Two-way sync
+
+With **Enable two-way sync** turned on in your profile, meetings also flow the other way:
+
+- When you log a **Meeting** activity with a future date, NextCRM creates the event in your Google Calendar. The linked contact (or target, or lead) is added as an attendee and **receives an invitation from Google**.
+- When you change the meeting's title, notes, date, or duration, the Google event is updated and attendees get an updated invitation.
+- When you delete the meeting activity, the Google event is cancelled and attendees are notified.
+
+<Callout type="warn">
+Two-way sync sends real invitations to your customers. Check the date and the linked contact before you save a meeting.
+</Callout>
+
+NextCRM does not push meetings dated in the past, and it does not change events that someone else organized.
+
+## Company tasks
+
+Company tasks are follow-ups attached to a company, separate from project tasks. They appear on the **Tasks** card of the company page.
+
+To create one, click **+** on the **Tasks** card. In **Create new Task**, fill in **New task name**, **Task description**, **Task due date**, **Choose task priority**, and **Assigned to**, then click **Create**.
+
+In the card's row menu, **View** opens the task and **Delete** removes it. The task page shows **Task details**, attached documents, and a **Team conversation**. To comment, type in **Your comment ...** and click **Add**.
+
+Your own open company tasks also appear on **Sales** → **My Dashboard** under **My Tasks**. For project boards and project tasks, see [Projects](/docs/users/projects).

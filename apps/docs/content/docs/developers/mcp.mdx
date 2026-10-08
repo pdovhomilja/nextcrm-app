@@ -1,0 +1,151 @@
+---
+title: MCP server
+description: Connect AI agents to NextCRM over the Model Context Protocol, with bearer tokens, a tool catalogue and known limits.
+---
+
+NextCRM has a built-in [Model Context Protocol](https://modelcontextprotocol.io/) server. AI clients such as Claude Code, Claude Desktop or Cursor can list, read and change CRM data through it, with the permissions of the user who owns the token.
+
+## Endpoints
+
+The server is one route handler, `app/api/mcp/[transport]/route.ts`, built with `mcp-handler` and base path `/api/mcp`.
+
+| Transport | URL | Notes |
+| --- | --- | --- |
+| Streamable HTTP | `https://<your-host>/api/mcp/mcp` | Recommended. Current MCP spec default. |
+| SSE (legacy) | `https://<your-host>/api/mcp/sse`, messages to `/api/mcp/message` | For old clients only. Needs Redis, see below. |
+
+The server exposes tools only. It has no MCP resources or prompts.
+
+## Authentication
+
+Every request needs a personal API token in the `Authorization` header:
+
+```http
+Authorization: Bearer nxtc__<48 hex characters>
+```
+
+Create a token in **Profile → Developer** (`/profile?tab=developer`). The raw token is shown once. See [API tokens](/docs/developers/auth-permissions#api-tokens) for format, limits and revocation.
+
+For each call, `getMcpUser()` in `lib/mcp/auth.ts` validates the token, loads the user and their role, and passes both to the tool. Tools apply the same scope rules as the web app. A `user` token sees only that user's records; a `manager` or `admin` token sees everything their role allows.
+
+<Callout type="info">
+When `NODE_ENV` is `development` and there is no `nxtc__` bearer token, the server falls back to the Better Auth session cookie. This makes local testing from a browser session easy. Production always requires a token.
+</Callout>
+
+## Connect a client
+
+<Tabs items={["Claude Code", "JSON config", "Claude Desktop"]}>
+<Tab value="Claude Code">
+
+```bash
+claude mcp add --transport http nextcrm https://<your-host>/api/mcp/mcp \
+  --header "Authorization: Bearer nxtc__your_token"
+```
+
+</Tab>
+<Tab value="JSON config">
+
+For clients that read an `mcpServers` file, such as a project `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "nextcrm": {
+      "type": "http",
+      "url": "https://<your-host>/api/mcp/mcp",
+      "headers": { "Authorization": "Bearer nxtc__your_token" }
+    }
+  }
+}
+```
+
+</Tab>
+<Tab value="Claude Desktop">
+
+Claude Desktop's config file starts local (stdio) servers. Use the `mcp-remote` bridge to reach the HTTP endpoint:
+
+```json
+{
+  "mcpServers": {
+    "nextcrm": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://<your-host>/api/mcp/mcp",
+        "--header",
+        "Authorization: Bearer nxtc__your_token"
+      ]
+    }
+  }
+}
+```
+
+</Tab>
+</Tabs>
+
+The Developer tab also offers a `SKILL.md` download (served from `/SKILL.md`). Put it in `.claude/skills/` to give Claude Code a description of the tools.
+
+## Tool catalogue
+
+105 tools in 16 groups, registered from `lib/mcp/tools/index.ts`.
+
+| Group | File | Tools |
+| --- | --- | --- |
+| Accounts | `crm-accounts.ts` | `crm_list_accounts`, `crm_get_account`, `crm_search_accounts`, `crm_create_account`, `crm_update_account`, `crm_delete_account` |
+| Contacts | `crm-contacts.ts` | `crm_list_contacts`, `crm_get_contact`, `crm_search_contacts`, `crm_create_contact`, `crm_update_contact`, `crm_delete_contact` |
+| Leads | `crm-leads.ts` | `crm_list_leads`, `crm_get_lead`, `crm_search_leads`, `crm_create_lead`, `crm_update_lead`, `crm_delete_lead` |
+| Opportunities | `crm-opportunities.ts` | `crm_list_opportunities`, `crm_get_opportunity`, `crm_search_opportunities`, `crm_create_opportunity`, `crm_update_opportunity`, `crm_delete_opportunity` |
+| Contracts | `crm-contracts.ts` | `crm_list_contracts`, `crm_get_contract`, `crm_create_contract`, `crm_update_contract`, `crm_delete_contract` |
+| Products | `crm-products.ts` | `crm_list_products`, `crm_get_product`, `crm_create_product`, `crm_update_product`, `crm_delete_product` |
+| Activities | `crm-activities.ts` | `crm_list_activities`, `crm_get_activity`, `crm_create_activity`, `crm_update_activity`, `crm_delete_activity` |
+| Documents | `crm-documents.ts` | `crm_list_documents`, `crm_get_document`, `crm_create_document`, `crm_get_upload_url`, `crm_get_download_url`, `crm_link_document`, `crm_unlink_document`, `crm_delete_document` |
+| Targets | `crm-targets.ts` | `crm_list_targets`, `crm_get_target`, `crm_search_targets`, `crm_create_target`, `crm_update_target`, `crm_delete_target` |
+| Target lists | `crm-target-lists.ts` | `crm_list_target_lists`, `crm_get_target_list`, `crm_create_target_list`, `crm_update_target_list`, `crm_delete_target_list`, `crm_add_to_target_list`, `crm_remove_from_target_list` |
+| Enrichment | `crm-enrichment.ts` | `crm_enrich_contact`, `crm_enrich_contact_bulk`, `crm_enrich_target`, `crm_enrich_target_bulk` |
+| Users | `crm-users.ts` | `crm_list_users` |
+| Email accounts | `crm-email-accounts.ts` | `crm_list_email_accounts` |
+| Campaigns | `campaigns.ts` | `campaigns_list`, `campaigns_get`, `campaigns_create`, `campaigns_update`, `campaigns_delete`, `campaigns_send`, `campaigns_pause`, `campaigns_resume`, `campaigns_list_templates`, `campaigns_get_template`, `campaigns_create_template`, `campaigns_update_template`, `campaigns_delete_template`, `campaigns_create_step`, `campaigns_update_step`, `campaigns_delete_step`, `campaigns_assign_target_list`, `campaigns_remove_target_list`, `campaigns_get_stats` |
+| Projects | `projects.ts` | `projects_list_boards`, `projects_get_board`, `projects_create_board`, `projects_update_board`, `projects_delete_board`, `projects_create_section`, `projects_update_section`, `projects_delete_section`, `projects_list_tasks`, `projects_get_task`, `projects_create_task`, `projects_update_task`, `projects_move_task`, `projects_delete_task`, `projects_add_comment`, `projects_list_comments`, `projects_assign_document`, `projects_watch_board` |
+| Reports | `reports.ts` | `reports_list`, `reports_run` |
+
+Your client lists each tool's input schema (from its zod definition) when it connects.
+
+### Conventions
+
+- **Pagination:** paginated list tools take `limit` (1 to 100, default 20) and `offset` (default 0) and return `{ data, total, offset }`.
+- **Single items** return `{ data }`.
+- **Deletes are mostly soft deletes.** CRM records, campaigns, documents and boards get `deletedAt` and `deletedBy`. `projects_delete_task` sets the task to `COMPLETE`. `projects_delete_section` hard-deletes, and only an empty section.
+- **Enrichment tools** queue Inngest jobs and return before the enrichment finishes.
+- **Documents:** `crm_create_document` and `crm_get_upload_url` return a presigned URL. The client uploads the file to object storage itself.
+
+### Errors
+
+Failed calls return `isError: true` and a JSON body `{ "error": "...", "code": "..." }`:
+
+| Code | Meaning |
+| --- | --- |
+| `UNAUTHORIZED` | Missing, invalid, expired or revoked token |
+| `FORBIDDEN` | The record exists but the user may not access it |
+| `NOT_FOUND` | No such record (or soft-deleted) |
+| `INVALID_PARAMS` | Validation failed |
+| `INVALID_REQUEST` | Conflict with existing data |
+| `RULE_REJECTED` | A plugin rule rejected the write. The message is translated to English. |
+| `INTERNAL_ERROR` | Anything else, including failures of external services |
+
+## Add a tool
+
+1. Add an object to the array in the right `lib/mcp/tools/*.ts` file: `name`, `description`, `schema` (a `z.object`) and `handler(args, userId, user)`.
+2. In the handler, check access with the `@/lib/authz` helpers or a `…ReadScopeWhere(user)` filter, exactly like the matching server action.
+3. Throw with the helpers in `lib/mcp/helpers.ts` (`notFound`, `forbidden`, `conflict`, `validationError`) so the error maps to the right code.
+4. For a new file, export its array from `lib/mcp/tools/index.ts` and add it to `allTools`.
+5. Add a test under `lib/mcp/__tests__/` or `__tests__/mcp/`. Existing suites test scope for the `user` role.
+
+Tool calls run inside `runAsActor({ type: "token", ... })`, so plugin rules see the token user as the actor.
+
+## Limitations
+
+- **SSE needs Redis.** `mcp-handler` keeps SSE sessions in Redis and reads the URL from `REDIS_URL` or `KV_URL`. NextCRM does not set one up. Without it, SSE requests fail. Use Streamable HTTP.
+- **No per-token scopes.** A token can do everything its user can.
+- **Tools only.** No MCP resources, prompts or notifications.
+- **Plugins cannot add tools** in the current plugin SDK.
+- **No uploads through MCP.** File content goes to object storage through the presigned URL, not through the tool call.
