@@ -20,4 +20,22 @@ const handler = createMcpHandler(
   }
 );
 
-export { handler as GET, handler as POST };
+// The legacy SSE transport (/api/mcp/sse + /api/mcp/message) keeps session
+// state in Redis; mcp-handler throws without REDIS_URL/KV_URL. Answer with a
+// clear error instead and point clients at Streamable HTTP (/api/mcp/mcp).
+function route(req: Request) {
+  const transport = new URL(req.url).pathname.split("/").pop();
+  const isSse = transport === "sse" || transport === "message";
+  if (isSse && !process.env.REDIS_URL && !process.env.KV_URL) {
+    return Response.json(
+      {
+        error:
+          "SSE transport is not available: set REDIS_URL (or KV_URL) to enable it, or use the Streamable HTTP endpoint /api/mcp/mcp.",
+      },
+      { status: 501 }
+    );
+  }
+  return handler(req);
+}
+
+export { route as GET, route as POST };
