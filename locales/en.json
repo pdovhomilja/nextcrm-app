@@ -743,6 +743,12 @@
     "sectionUnavailable": "This plugin section is unavailable.",
     "loadFromRegistry": "Load from registry",
     "registryNotFound": "Company not found in the registry.",
+    "checkVat": "Check VAT number",
+    "vatValid": "VAT number is valid (VIES).",
+    "vatInvalid": "VAT number is not valid (VIES).",
+    "vatUnavailable": "VAT number cannot be verified right now. Try again later.",
+    "vatNoPrefix": "Enter the VAT number with its country code, e.g. CZ12345678.",
+    "vatNoProvider": "No VAT check is available.",
     "admin": { "title": "Plugins", "notInstalled": "Not installed", "enabled": "Enabled", "disabled": "Disabled", "missing": "Missing from this version", "install": "Install", "enable": "Enable", "disable": "Disable", "uninstall": "Uninstall", "save": "Save settings", "saved": "Settings saved", "permissions": "Requested permissions", "confirmPermissions": "I grant these permissions", "settings": "Settings", "secrets": "Secrets", "secretSet": "Set (leave empty to keep)", "log": "Log", "export": "Download data (JSON)", "uninstallTitle": "Uninstall {name}?", "uninstallBody": "{entries} stored values on {records} records and the plugin log will be deleted. Data the plugin wrote into CRM records stays.", "confirmUninstall": "Uninstall and delete plugin data", "upgradePending": "Upgrade pending: {from} → {to}" }
   }
 }

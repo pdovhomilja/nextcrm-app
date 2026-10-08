@@ -29,6 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 import { createAccount } from "@/actions/crm/accounts/create-account";
 import { getRegistryCountries, lookupCompany } from "@/actions/crm/accounts/lookup-company";
+import { VatCheckButton } from "./VatCheckButton";
 import { useSession } from "@/lib/auth-client";
 
 type Props = {
@@ -237,6 +238,7 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                       {...field}
                     />
                   </FormControl>
+                  <VatCheckButton vat={field.value} />
                   <FormMessage />
                 </FormItem>
               )}

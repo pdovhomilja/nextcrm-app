@@ -32,6 +32,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 import { updateAccount } from "@/actions/crm/accounts/update-account";
 import { getIndustries } from "@/actions/crm/get-industries";
+import { VatCheckButton } from "./VatCheckButton";
 
 interface UpdateAccountFormProps {
   //TODO: fix this any
@@ -254,6 +255,7 @@ export function UpdateAccountForm({
                       {...field}
                     />
                   </FormControl>
+                  <VatCheckButton vat={field.value} />
                   <FormMessage />
                 </FormItem>
               )}
