@@ -404,6 +404,9 @@ importers:
       sonner:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      svix:
+        specifier: 1.84.1
+        version: 1.84.1
       swr:
         specifier: ^2.4.0
         version: 2.4.0(react@19.2.4)

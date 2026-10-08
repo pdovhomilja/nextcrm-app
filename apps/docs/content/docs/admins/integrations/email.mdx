@@ -52,7 +52,7 @@ Campaign sends, scheduled reports and automation notifications (follow-up tasks,
 
 ### Campaign delivery events
 
-Resend can report delivery events for campaign emails to `https://<your host>/api/campaigns/webhooks/resend`. Set `RESEND_WEBHOOK_SECRET`. The endpoint rejects any request whose `Resend-Signature` header is not `sha256=` followed by the hex HMAC-SHA256 of the request body with that secret.
+Resend can report delivery events for campaign emails to `https://<your host>/api/campaigns/webhooks/resend`. Add that URL as a webhook in the Resend dashboard, copy its signing secret (it starts with `whsec_`) and set it as `RESEND_WEBHOOK_SECRET`. Resend signs webhooks with Svix: the endpoint verifies the `svix-id`, `svix-timestamp` and `svix-signature` headers with that secret and rejects requests with a bad signature or a timestamp more than 5 minutes off with 401.
 
 ## SMTP
 

@@ -76,6 +76,8 @@ jobs:
         run: pnpm i18n:check
       - name: Typecheck
         run: pnpm exec tsc --noEmit
+      - name: Plugin registry is up to date
+        run: pnpm plugins:generate --check
       - name: Unit tests (DB-backed suites run in the integration job)
         # Convention: suites that need a real database live under
         # __tests__/invoices/ (currently only lifecycle.test.ts) and are

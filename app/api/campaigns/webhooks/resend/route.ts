@@ -1,20 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prismadb } from "@/lib/prisma";
-import { createHmac } from "crypto";
-
-function verifyResendSignature(body: string, signature: string | null): boolean {
-  if (!signature || !process.env.RESEND_WEBHOOK_SECRET) return false;
-  const expected = createHmac("sha256", process.env.RESEND_WEBHOOK_SECRET)
-    .update(body)
-    .digest("hex");
-  return signature === `sha256=${expected}`;
-}
+import { verifyResendSignature } from "@/lib/campaigns/resend-signature";
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
-  const signature = req.headers.get("Resend-Signature");
 
-  if (!verifyResendSignature(body, signature)) {
+  if (!verifyResendSignature(body, req.headers)) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 

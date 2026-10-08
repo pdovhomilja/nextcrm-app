@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Download } from "lucide-react";
 import { ApiTokens } from "../ApiTokens";
 import { SkillMdCopyButton } from "../SkillMdCopyButton";
+import { allTools } from "@/lib/mcp/tools";
 
 type Props = { userId: string };
 
@@ -26,7 +27,7 @@ export async function DeveloperTabContent({ userId: _userId }: Props) {
           <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
             .claude/skills/
           </code>{" "}
-          directory. It documents all 127 MCP tools so Claude Code can interact
+          directory. It documents all {allTools.length} MCP tools so Claude Code can interact
           with your CRM data.
         </p>
         <div className="flex flex-wrap items-center gap-3">

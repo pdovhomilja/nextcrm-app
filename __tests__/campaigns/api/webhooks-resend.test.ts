@@ -11,21 +11,87 @@ import { NextRequest } from "next/server";
 import { createHmac } from "crypto";
 import { prismadb } from "@/lib/prisma";
 import { POST } from "@/app/api/campaigns/webhooks/resend/route";
+import { verifyResendSignature } from "@/lib/campaigns/resend-signature";
 
-const SECRET = "test-webhook-secret";
+// Resend signs with Svix: base64(HMAC-SHA256(base64-decoded secret after
+// `whsec_`, `${svix-id}.${svix-timestamp}.${body}`)), sent as `v1,<sig>`.
+const SECRET = "whsec_MfKQ9r8GKYqrTwjUPD8ILPZIo2LaLaSw";
 
-// Build a request signed the way the route verifies it
-// (Resend-Signature: sha256=<hex HMAC-SHA256(body, RESEND_WEBHOOK_SECRET)>).
-function signedRequest(payload: unknown): NextRequest {
-  const body = JSON.stringify(payload);
-  const signature =
-    "sha256=" + createHmac("sha256", SECRET).update(body).digest("hex");
+function svixHeaders(id: string, timestamp: number, body: string) {
+  const key = Buffer.from(SECRET.slice("whsec_".length), "base64");
+  const sig = createHmac("sha256", key)
+    .update(`${id}.${timestamp}.${body}`)
+    .digest("base64");
+  return {
+    "svix-id": id,
+    "svix-timestamp": String(timestamp),
+    "svix-signature": `v1,${sig}`,
+  };
+}
+
+function request(body: string, headers: Record<string, string>): NextRequest {
   return new NextRequest("http://localhost/api/campaigns/webhooks/resend", {
     method: "POST",
-    headers: { "Resend-Signature": signature },
+    headers,
     body,
   });
 }
+
+function signedRequest(payload: unknown): NextRequest {
+  const body = JSON.stringify(payload);
+  return request(body, svixHeaders("msg_test", Math.floor(Date.now() / 1000), body));
+}
+
+describe("Resend webhook signature (Svix)", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    process.env.RESEND_WEBHOOK_SECRET = SECRET;
+  });
+  afterEach(() => jest.useRealTimers());
+
+  it("accepts the Svix documentation test vector", () => {
+    // Vector from Svix's "verifying payloads manually" docs.
+    jest.useFakeTimers().setSystemTime(new Date(1614265330 * 1000));
+    const headers = new Headers({
+      "svix-id": "msg_p5jXN8AQM9LWM0D4loKWxJek",
+      "svix-timestamp": "1614265330",
+      "svix-signature": "v1,g0hM9SsE+OTPJTGt/tmIKtSyZlE3uFJELVlNIOLJ1OE=",
+    });
+    expect(verifyResendSignature('{"test": 2432232314}', headers)).toBe(true);
+    expect(verifyResendSignature('{"test": 2432232315}', headers)).toBe(false);
+  });
+
+  it("rejects a tampered body", async () => {
+    const ts = Math.floor(Date.now() / 1000);
+    const headers = svixHeaders("msg_1", ts, '{"type":"email.opened"}');
+    const res = await POST(request('{"type":"email.bounced"}', headers));
+    expect(res.status).toBe(401);
+  });
+
+  it("rejects a timestamp outside the 5-minute tolerance", async () => {
+    const ts = Math.floor(Date.now() / 1000) - 10 * 60;
+    const body = '{"type":"email.opened","data":{}}';
+    const res = await POST(request(body, svixHeaders("msg_1", ts, body)));
+    expect(res.status).toBe(401);
+  });
+
+  it("rejects the old Resend-Signature header format", async () => {
+    const body = '{"type":"email.opened","data":{}}';
+    const res = await POST(
+      request(body, {
+        "Resend-Signature":
+          "sha256=" + createHmac("sha256", SECRET).update(body).digest("hex"),
+      })
+    );
+    expect(res.status).toBe(401);
+  });
+
+  it("rejects everything when RESEND_WEBHOOK_SECRET is unset", async () => {
+    delete process.env.RESEND_WEBHOOK_SECRET;
+    const res = await POST(signedRequest({ type: "email.opened", data: {} }));
+    expect(res.status).toBe(401);
+  });
+});
 
 describe("Resend webhook handler", () => {
   beforeEach(() => {
