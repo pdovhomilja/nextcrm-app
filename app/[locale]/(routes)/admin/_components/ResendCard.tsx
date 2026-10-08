@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/card";
 
 import { prismadb } from "@/lib/prisma";
+import { envSecret } from "@/lib/env-secret";
 
 import { Input } from "@/components/ui/input";
 import CopyKeyComponent from "./copy-key";
@@ -27,9 +28,9 @@ const ResendCard = async () => {
         <CardDescription className="text-xs">
           <p>ENV API key:</p>
           <p>
-            {process.env.RESEND_API_KEY ? (
+            {envSecret("RESEND_API_KEY") ? (
               <CopyKeyComponent
-                keyValue={process.env.RESEND_API_KEY}
+                keyValue={envSecret("RESEND_API_KEY")}
                 message="Resend - API Key"
               />
             ) : (
