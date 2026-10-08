@@ -57,3 +57,15 @@ it("rewrites POST + 302 to GET without body", async () => {
   expect(second.body).toBeUndefined();
   expect(new Headers(second.headers).get("content-type")).toBeNull();
 });
+
+it("replays PUT with its body on a same-origin 301 (only POST becomes GET)", async () => {
+  lookup.mockResolvedValue([{ address: "93.184.216.34", family: 4 }]);
+  const fetchMock = jest.fn()
+    .mockResolvedValueOnce(new Response(null, { status: 301, headers: { location: "/b" } }))
+    .mockResolvedValueOnce(new Response("ok", { status: 200 }));
+  global.fetch = fetchMock as never;
+  await createHttp(log).fetch("https://example.com/a", { method: "PUT", body: "x", headers: { "Content-Type": "text/plain" } });
+  const second = fetchMock.mock.calls[1][1];
+  expect(second.method).toBe("PUT");
+  expect(second.body).toBe("x");
+});

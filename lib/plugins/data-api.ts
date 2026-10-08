@@ -62,7 +62,7 @@ export function createDataApi(pluginId: string, permissions: Permission[]): Data
       const allowed = scalarFields(model);
       assertFilter(where, allowed);
       assertFilter(orderBy, allowed);
-      const safe = { where, orderBy, take: Math.min(take ?? MAX_TAKE, MAX_TAKE), skip };
+      const safe = { where, orderBy, take: Math.max(-MAX_TAKE, Math.min(take ?? MAX_TAKE, MAX_TAKE)), skip };
       return (await (await db())[model].findMany(model === "users" ? { ...safe, omit: { password: true } } : safe)) as RecordData[];
     },
   });

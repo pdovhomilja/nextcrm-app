@@ -78,6 +78,9 @@ export const pluginInstallFunction = inngest.createFunction(
   async ({ event }: { event: { data: { pluginId: string } } }) => {
     const plugin = findPlugin(event.data.pluginId);
     if (!plugin?.definition.onInstall) return { status: "ok" };
+    // The event can outlive a rolled-back install (send rejected after Inngest accepted it) or be retried.
+    invalidatePluginCache();
+    if ((await getPluginState(plugin.definition.id))?.status !== "ENABLED") return { status: "skipped:not-installed" };
     try {
       const actor = { type: "plugin" as const, pluginId: plugin.definition.id };
       const ctx = await createPluginContext({ plugin, actor });
@@ -86,8 +89,8 @@ export const pluginInstallFunction = inngest.createFunction(
     } catch (e) {
       writePluginLog(plugin.definition.id, "error", `onInstall failed: ${String(e)}`);
       // updateMany: the plugin may have been uninstalled while the job ran.
-      await prismaBase.installedPlugin.updateMany({ where: { id: plugin.definition.id }, data: { status: "DISABLED" } });
-      await writeAuditLog({ entityType: "plugin", entityId: plugin.definition.id, action: "disabled", changes: null, userId: null });
+      const { count } = await prismaBase.installedPlugin.updateMany({ where: { id: plugin.definition.id }, data: { status: "DISABLED" } });
+      if (count > 0) await writeAuditLog({ entityType: "plugin", entityId: plugin.definition.id, action: "disabled", changes: null, userId: null });
       invalidatePluginCache();
       return { status: "failed" };
     }

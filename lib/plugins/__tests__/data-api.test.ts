@@ -71,3 +71,9 @@ it("resolves a non-empty scalar field set for every read API (M9)", async () => 
     await expect(a.find({ where: { id: "x" } })).resolves.toEqual([]);
   }
 });
+
+it("clamps a negative take to -100 so it cannot bypass the row cap", async () => {
+  const api = createDataApi("demo", ["accounts:read"]);
+  await api.accounts.find({ take: -100000 } as never);
+  expect(delegate.findMany.mock.calls[0][0].take).toBe(-100);
+});

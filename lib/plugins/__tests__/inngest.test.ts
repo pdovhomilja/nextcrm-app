@@ -73,6 +73,7 @@ it("skips on-handlers for events the same plugin caused; runs them for other sou
 });
 
 it("disables the plugin when onInstall throws (spec § 10)", async () => {
+  state.mockResolvedValue({ status: "ENABLED" });
   installing.demo = { ...plugin, definition: { ...plugin.definition, onInstall: jest.fn(async () => { throw new Error("boom"); }) } };
   const run = (pluginInstallFunction as any).handler;
   await expect(run({ event: { data: { pluginId: "demo" } } })).resolves.toEqual({ status: "failed" });
@@ -81,6 +82,7 @@ it("disables the plugin when onInstall throws (spec § 10)", async () => {
 });
 
 it("leaves the plugin enabled when onInstall succeeds", async () => {
+  state.mockResolvedValue({ status: "ENABLED" });
   const onInstall = jest.fn();
   installing.demo = { ...plugin, definition: { ...plugin.definition, onInstall } };
   await expect((pluginInstallFunction as any).handler({ event: { data: { pluginId: "demo" } } })).resolves.toEqual({ status: "ok" });
@@ -88,11 +90,30 @@ it("leaves the plugin enabled when onInstall succeeds", async () => {
   expect(prismaBase.installedPlugin.updateMany).not.toHaveBeenCalled();
 });
 
-it("install job: onInstall failure on an already-uninstalled plugin does not throw and is audited (M12)", async () => {
+it("install job: onInstall failure on an already-uninstalled plugin does not throw and writes no audit row (M2)", async () => {
+  state.mockResolvedValue({ status: "ENABLED" });
   installing.gone = { ...plugin, definition: { ...plugin.definition, id: "gone", onInstall: async () => { throw new Error("boom"); } } };
   const res = await (pluginInstallFunction as any).handler({ event: { data: { pluginId: "gone" } } });
   expect(res).toEqual({ status: "failed" });
   expect((prismaBase.installedPlugin as any).updateMany).toHaveBeenCalledWith({ where: { id: "gone" }, data: { status: "DISABLED" } });
   const { writeAuditLog } = jest.requireMock("@/lib/audit-log");
-  expect(writeAuditLog).toHaveBeenCalledWith({ entityType: "plugin", entityId: "gone", action: "disabled", changes: null, userId: null });
+  expect(writeAuditLog).not.toHaveBeenCalled();
+});
+
+it("install job: onInstall failure on a still-installed plugin is audited", async () => {
+  state.mockResolvedValue({ status: "ENABLED" });
+  (prismaBase.installedPlugin as any).updateMany.mockResolvedValueOnce({ count: 1 });
+  installing.live = { ...plugin, definition: { ...plugin.definition, id: "live", onInstall: async () => { throw new Error("boom"); } } };
+  await (pluginInstallFunction as any).handler({ event: { data: { pluginId: "live" } } });
+  const { writeAuditLog } = jest.requireMock("@/lib/audit-log");
+  expect(writeAuditLog).toHaveBeenCalledWith({ entityType: "plugin", entityId: "live", action: "disabled", changes: null, userId: null });
+});
+
+it("install job: skips onInstall unless the plugin is ENABLED (event outlived a rolled-back install)", async () => {
+  const onInstall = jest.fn();
+  installing.demo = { ...plugin, definition: { ...plugin.definition, onInstall } };
+  state.mockResolvedValue(undefined);
+  await expect((pluginInstallFunction as any).handler({ event: { data: { pluginId: "demo" } } })).resolves.toEqual({ status: "skipped:not-installed" });
+  expect(onInstall).not.toHaveBeenCalled();
+  expect(jest.requireMock("@/lib/plugins/state").invalidatePluginCache).toHaveBeenCalled();
 });

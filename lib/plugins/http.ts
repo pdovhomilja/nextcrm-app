@@ -30,7 +30,7 @@ export function createHttp(log: PluginLogger): PluginHttp {
           }
           const method = (rest.method ?? "GET").toUpperCase();
           const toGet =
-            method !== "HEAD" && (res.status === 303 || ((res.status === 301 || res.status === 302) && method !== "GET"));
+            method !== "HEAD" && (res.status === 303 || ((res.status === 301 || res.status === 302) && method === "POST"));
           if (toGet) {
             headers.delete("content-type");
             headers.delete("content-length");
