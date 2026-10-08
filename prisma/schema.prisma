@@ -194,6 +194,12 @@ enum crm_AuditLog_Action {
   restored
   relation_added
   relation_removed
+  installed
+  uninstalled
+  enabled
+  disabled
+  settings_changed
+  upgraded
 }
 
 model crm_Opportunities {
@@ -1037,7 +1043,7 @@ model Users {
 model crm_AuditLog {
   id         String    @id @default(uuid()) @db.Uuid
   entityType String
-  entityId   String    @db.Uuid
+  entityId   String
   action     crm_AuditLog_Action
   changes    Json?     @db.JsonB
   userId     String?   @db.Uuid
