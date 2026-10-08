@@ -37,6 +37,13 @@ it("keeps a required field without default as undefined instead of crashing", ()
   expect(parsed.days).toBe(90);
 });
 
+it("warns when a required field without default is missing (M5)", () => {
+  const warn = jest.fn();
+  const parsed = parseStoredSettings(schema, { days: 10 }, warn);
+  expect(parsed.url).toBeUndefined();
+  expect(warn).toHaveBeenCalledWith("Required settings missing: url", { fields: ["url"] });
+});
+
 it("encrypts and decrypts secrets as JSON", () => {
   const c = encryptSecrets({ apiKey: "k" });
   expect(c).toBe('enc:{"apiKey":"k"}');

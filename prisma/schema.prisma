@@ -200,6 +200,8 @@ enum crm_AuditLog_Action {
   disabled
   settings_changed
   upgraded
+  imported
+  cancelled
 }
 
 model crm_Opportunities {

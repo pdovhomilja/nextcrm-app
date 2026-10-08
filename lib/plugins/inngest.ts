@@ -1,5 +1,6 @@
 import { inngest } from "@/inngest/client";
 import { prismaBase } from "@/lib/prisma-base";
+import { writeAuditLog } from "@/lib/audit-log";
 import type { PluginContext } from "@nextcrm/plugin-sdk";
 import type { InngestFunction } from "inngest";
 import { getRegistry, findPlugin, type RegisteredPlugin } from "./registry";
@@ -9,6 +10,19 @@ import { runAsActor } from "./actor";
 import { writePluginLog } from "./log";
 
 const slug = (s: string) => s.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase();
+
+const cronFnId = (pluginId: string, cronId: string) => `plugin-${pluginId}-cron-${slug(cronId)}`;
+const onFnId = (pluginId: string, event: string) => `plugin-${pluginId}-on-${slug(event)}`;
+const afterFnId = (pluginId: string) => `plugin-${pluginId}-after`;
+
+export function pluginFunctionIds(plugin: RegisteredPlugin): string[] {
+  const { id, extensions } = plugin.definition;
+  return [
+    ...extensions.crons.map((c) => cronFnId(id, c.id)),
+    ...extensions.events.map((e) => onFnId(id, e.event)),
+    ...(extensions.afters.length ? [afterFnId(id)] : []),
+  ];
+}
 
 export async function runIfEnabled(plugin: RegisteredPlugin, fn: (ctx: PluginContext) => Promise<unknown> | unknown) {
   const state = await getPluginState(plugin.definition.id);
@@ -30,13 +44,13 @@ export function buildPluginFunctions(registry: RegisteredPlugin[]) {
     const { id, extensions } = plugin.definition;
     for (const cron of extensions.crons) {
       fns.push(inngest.createFunction(
-        { id: `plugin-${id}-cron-${slug(cron.id)}`, name: `Plugin ${id}: ${cron.id}`, retries: 3, triggers: [{ cron: cron.schedule }] },
+        { id: cronFnId(id, cron.id), name: `Plugin ${id}: ${cron.id}`, retries: 3, triggers: [{ cron: cron.schedule }] },
         async () => runIfEnabled(plugin, (ctx) => cron.handler(ctx)),
       ));
     }
     for (const ev of extensions.events) {
       fns.push(inngest.createFunction(
-        { id: `plugin-${id}-on-${slug(ev.event)}`, name: `Plugin ${id}: on ${ev.event}`, retries: 3, triggers: [{ event: ev.event }] },
+        { id: onFnId(id, ev.event), name: `Plugin ${id}: on ${ev.event}`, retries: 3, triggers: [{ event: ev.event }] },
         async ({ event }: { event: { data: Record<string, unknown> } }) =>
           // Loop guard: skip events caused by this plugin's own ctx.data writes.
           event.data?.source === id ? { status: "skipped:self" as const } : runIfEnabled(plugin, (ctx) => ev.handler(event.data, ctx)),
@@ -44,7 +58,7 @@ export function buildPluginFunctions(registry: RegisteredPlugin[]) {
     }
     if (extensions.afters.length) {
       fns.push(inngest.createFunction(
-        { id: `plugin-${id}-after`, name: `Plugin ${id}: after write`, retries: 3, triggers: [{ event: `plugin/${id}/after` }] },
+        { id: afterFnId(id), name: `Plugin ${id}: after write`, retries: 3, triggers: [{ event: `plugin/${id}/after` }] },
         async ({ event }: { event: { data: { entity: string; operation: string; recordId: string } } }) =>
           runIfEnabled(plugin, async (ctx) => {
             for (const a of extensions.afters) {
@@ -64,6 +78,9 @@ export const pluginInstallFunction = inngest.createFunction(
   async ({ event }: { event: { data: { pluginId: string } } }) => {
     const plugin = findPlugin(event.data.pluginId);
     if (!plugin?.definition.onInstall) return { status: "ok" };
+    // The event can outlive a rolled-back install (send rejected after Inngest accepted it) or be retried.
+    invalidatePluginCache();
+    if ((await getPluginState(plugin.definition.id))?.status !== "ENABLED") return { status: "skipped:not-installed" };
     try {
       const actor = { type: "plugin" as const, pluginId: plugin.definition.id };
       const ctx = await createPluginContext({ plugin, actor });
@@ -71,7 +88,9 @@ export const pluginInstallFunction = inngest.createFunction(
       return { status: "ok" };
     } catch (e) {
       writePluginLog(plugin.definition.id, "error", `onInstall failed: ${String(e)}`);
-      await prismaBase.installedPlugin.update({ where: { id: plugin.definition.id }, data: { status: "DISABLED" } });
+      // updateMany: the plugin may have been uninstalled while the job ran.
+      const { count } = await prismaBase.installedPlugin.updateMany({ where: { id: plugin.definition.id }, data: { status: "DISABLED" } });
+      if (count > 0) await writeAuditLog({ entityType: "plugin", entityId: plugin.definition.id, action: "disabled", changes: null, userId: null });
       invalidatePluginCache();
       return { status: "failed" };
     }

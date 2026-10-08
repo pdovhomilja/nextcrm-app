@@ -26,8 +26,16 @@ export async function installPlugin(id: string, userId: string, input: Input): P
     data: { id, version: definition.version, status: "ENABLED", settings: settings as never, secrets: encryptSecrets(secrets), installedBy: userId },
   });
   invalidatePluginCache();
+  try {
+    await inngest.send({ name: "plugin/installed", data: { pluginId: id } });
+  } catch (e) {
+    // Without the install event onInstall never runs; undo so the admin can retry.
+    await prismaBase.installedPlugin.delete({ where: { id } });
+    invalidatePluginCache();
+    writePluginLog(id, "error", `Install event could not be sent: ${String(e)}`);
+    throw new Error("Plugin installation could not be started; please try again.");
+  }
   await audit(id, userId, "installed");
-  await inngest.send({ name: "plugin/installed", data: { pluginId: id } });
 }
 
 export async function setPluginEnabled(id: string, userId: string, enabled: boolean): Promise<void> {

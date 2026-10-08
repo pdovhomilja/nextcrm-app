@@ -63,3 +63,13 @@ it("builds a context with empty secrets and one warn line when secrets cannot be
   expect(warns).toHaveLength(1);
   expect(warns[0][0].data.message).toContain("Secrets could not be decrypted");
 });
+
+it("writes the same settings warning only once per process (M5)", async () => {
+  const { prismaBase } = jest.requireMock("@/lib/prisma-base");
+  const warnPlugin = { ...plugin, definition: { ...plugin.definition, id: "demo-warn" } };
+  prismaBase.pluginLog.create.mockClear();
+  await createPluginContext({ plugin: warnPlugin, actor: { type: "system" } as never });
+  await createPluginContext({ plugin: warnPlugin, actor: { type: "system" } as never });
+  const warns = prismaBase.pluginLog.create.mock.calls.filter((c: any[]) => c[0].data.level === "warn");
+  expect(warns).toHaveLength(1);
+});

@@ -30,6 +30,8 @@ it("runs onUpgrade for newer image versions, disables on failure, ignores missin
   expect(onUpgrade).toHaveBeenCalledWith({}, "1.0.0");
   expect(db.installedPlugin.update).toHaveBeenCalledWith({ where: { id: "up" }, data: { version: "1.1.0" } });
   expect(db.installedPlugin.update).toHaveBeenCalledWith({ where: { id: "broken" }, data: { status: "DISABLED" } });
+  const { writeAuditLog } = jest.requireMock("@/lib/audit-log");
+  expect(writeAuditLog).toHaveBeenCalledWith({ entityType: "plugin", entityId: "broken", action: "disabled", changes: null, userId: null });
   expect(String((db.$queryRaw.mock.calls[0] as any[])[0])).toContain("pg_try_advisory_xact_lock");
 });
 

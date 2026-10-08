@@ -3,6 +3,7 @@ import { PluginRuleError } from "@/lib/plugins/errors";
 
 const mkDeps = (over: Partial<Parameters<typeof interceptWrite>[1]> = {}) => ({
   hasRules: jest.fn(async () => true),
+  hasInstalledPlugins: jest.fn(async () => true),
   runBeforeRules: jest.fn(async (i: any) => i.data),
   afterTargets: jest.fn(async () => [] as string[]),
   sendAfter: jest.fn(),
@@ -102,4 +103,27 @@ it("does not send after-events back to the plugin that made the write; other plu
     interceptWrite({ model: "crm_Accounts", operation: "update", args: { where: { id: "a1" }, data: { name: "N" } }, query: async () => ({ id: "a1" }) }, deps));
   expect(deps.sendAfter).toHaveBeenCalledTimes(1);
   expect(deps.sendAfter).toHaveBeenCalledWith("p-two", { entity: "account", operation: "updated", recordId: "a1" });
+});
+
+it("cleans plugin data on hard delete when only stores are used (M2)", async () => {
+  const deps = mkDeps({ hasRules: jest.fn(async () => false) });   // afterTargets default: []
+  await interceptWrite({ model: "crm_Accounts", operation: "delete", args: { where: { id: "a1" } }, query: async () => ({ id: "a1" }) }, deps);
+  expect(deps.deleteRecordData).toHaveBeenCalledWith("account", ["a1"]);
+  await interceptWrite({ model: "crm_Accounts", operation: "deleteMany", args: { where: {} }, query: async () => ({ count: 2 }) }, deps);
+  expect(deps.deleteRecordData).toHaveBeenCalledWith("account", ["a1", "a2"]);
+});
+
+it("keeps the fast path for deletes when no plugin is installed", async () => {
+  const deps = mkDeps({ hasRules: jest.fn(async () => false), hasInstalledPlugins: jest.fn(async () => false) });
+  await interceptWrite({ model: "crm_Accounts", operation: "delete", args: { where: { id: "a1" } }, query: async () => ({ id: "a1" }) }, deps);
+  expect(deps.findExisting).not.toHaveBeenCalled();
+  expect(deps.deleteRecordData).not.toHaveBeenCalled();
+});
+
+it("forces id into select so created after-events carry the record id (M4)", async () => {
+  const deps = mkDeps({ afterTargets: jest.fn(async (_e: any, op: any) => (op === "created" ? ["p1"] : [])) });
+  const query = jest.fn(async (args: any) => ({ id: args.select?.id ? "new1" : undefined, name: "N" }));
+  await interceptWrite({ model: "crm_Accounts", operation: "create", args: { data: { name: "N" }, select: { name: true } }, query }, deps);
+  expect(query.mock.calls[0][0].select).toEqual({ name: true, id: true });
+  expect(deps.sendAfter).toHaveBeenCalledWith("p1", { entity: "account", operation: "created", recordId: "new1" });
 });

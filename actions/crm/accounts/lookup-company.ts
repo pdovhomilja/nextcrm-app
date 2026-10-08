@@ -17,12 +17,14 @@ export async function lookupCompany(country: string, registrationNumber: string)
   const cc = country.trim().toUpperCase();
   const found = (await getCompanyRegistryProviders()).find((r) => r.provider.countries.includes(cc));
   if (!found) return { error: t("registryNotFound") };
-  const ctx = await createPluginContext({ plugin: found.plugin as never, actor: { type: "user", userId: user.id, role: user.role } });
+  let ctx: Awaited<ReturnType<typeof createPluginContext>> | undefined;
   try {
+    ctx = await createPluginContext({ plugin: found.plugin as never, actor: { type: "user", userId: user.id, role: user.role } });
     const data = await found.provider.lookup(registrationNumber.trim(), cc, ctx);
     return data ? { data } : { error: t("registryNotFound") };
   } catch (e) {
-    ctx.log.error(`Registry lookup failed: ${String(e)}`);
+    if (ctx) ctx.log.error(`Registry lookup failed: ${String(e)}`);
+    else console.error("[REGISTRY_LOOKUP]", e);
     return { error: t("registryNotFound") };
   }
 }

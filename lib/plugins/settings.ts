@@ -41,14 +41,17 @@ export function parseStoredSettings(
   const input = (stored && typeof stored === "object" ? stored : {}) as Record<string, unknown>;
   const out: Record<string, unknown> = {};
   const invalid: string[] = [];
+  const missing: string[] = [];
   for (const [key, fieldSchema] of Object.entries(schema.shape) as [string, z.ZodType][]) {
     const res = fieldSchema.safeParse(input[key]);
     if (res.success) { out[key] = res.data; continue; }
     const fallback = fieldSchema.safeParse(undefined);
     if (fallback.success) out[key] = fallback.data;
+    else if (input[key] === undefined) missing.push(key);
     if (input[key] !== undefined) invalid.push(key);
   }
   if (invalid.length) onWarn(`Stored settings invalid; using defaults for: ${invalid.join(", ")}`, { fields: invalid });
+  if (missing.length) onWarn(`Required settings missing: ${missing.join(", ")}`, { fields: missing });
   return Object.fromEntries(Object.entries(out).filter(([, v]) => v !== undefined));
 }
 

@@ -15,8 +15,9 @@ export class HostNotAllowedError extends Error {
 // SNI — dialling the hostname would re-resolve and reopen the DNS-rebinding hole.
 export async function assertPublicHost(
   host: string,
+  allowPrivate = process.env.MAIL_ALLOW_PRIVATE_HOSTS === "true",
 ): Promise<{ address: string; hostname: string }> {
-  if (process.env.MAIL_ALLOW_PRIVATE_HOSTS === "true") {
+  if (allowPrivate) {
     return { address: host, hostname: host };
   }
 

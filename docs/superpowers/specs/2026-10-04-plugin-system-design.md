@@ -190,7 +190,7 @@ model PluginLog {
 | Available | Plugin is in the image; listed under Administration → Plugins with description, version and requested permissions. |
 | Install (admin) | Check `sdk` range against the running SDK. Admin confirms permissions and fills required settings. Row created as `ENABLED`, then `onInstall(ctx)` runs (always as the Inngest function `plugin-lifecycle-install`, so long first imports do not block the request). If `onInstall` fails the row is set to `DISABLED` with the error shown. |
 | Disable / enable | Status flip. No data change. |
-| Upgrade | On app start, if image version > row version: `onUpgrade(ctx, fromVersion)` runs once (guarded by a Postgres advisory lock), then `version` is updated. Failure → `DISABLED` + admin notification. |
+| Upgrade | On app start, if image version > row version: `onUpgrade(ctx, fromVersion)` runs once (guarded by a Postgres advisory lock), then `version` is updated. Upgrades run in the background after boot; the server does not wait for them. Failure → `DISABLED` + admin notification. |
 | Uninstall (admin) | Admin sees a summary (number of store entries, records with attached data) and may download a JSON export. Then `onUninstall(ctx)`, delete `PluginData`, `PluginLog`, `InstalledPlugin`. Data written into core entities by the plugin (e.g. synced customers) stays; it is core data. |
 | Removed from image | Row exists but code is missing: shown as "missing", all extensions inert, admin can uninstall (data deletion without `onUninstall`). |
 

@@ -22,6 +22,7 @@ const old = { ...plugin, definition: { ...plugin.definition, id: "old-sdk", sdk:
 jest.mock("@/lib/plugins/registry", () => ({ findPlugin: (id: string) => ({ demo: plugin, "old-sdk": old } as any)[id] }));
 const getPluginState = jest.fn();
 jest.mock("@/lib/plugins/state", () => ({ getPluginState: (...a: unknown[]) => getPluginState(...a), invalidatePluginCache: jest.fn() }));
+jest.mock("@/lib/plugins/log", () => ({ writePluginLog: jest.fn() }));
 jest.mock("@/lib/plugins/context", () => ({ createPluginContext: jest.fn(async () => ({})) }));
 
 import { exportPluginData, getUninstallSummary, installPlugin, savePluginSettings, uninstallPlugin } from "@/lib/plugins/lifecycle";
@@ -36,6 +37,15 @@ it("installs with parsed settings and encrypted secrets, then queues onInstall",
     id: "demo", version: "1.0.0", status: "ENABLED", settings: { days: 90 }, secrets: 'enc:{"apiKey":"k"}', installedBy: "u1",
   } });
   expect(inngest.send).toHaveBeenCalledWith({ name: "plugin/installed", data: { pluginId: "demo" } });
+});
+
+it("rolls back the install when the install event cannot be sent (M12)", async () => {
+  getPluginState.mockResolvedValue(undefined);
+  (inngest.send as jest.Mock).mockRejectedValueOnce(new Error("inngest down"));
+  await expect(installPlugin("demo", "u1", { settings: {}, secrets: { apiKey: "k" } })).rejects.toThrow("try again");
+  expect(db.installedPlugin.delete).toHaveBeenCalledWith({ where: { id: "demo" } });
+  const { writeAuditLog } = jest.requireMock("@/lib/audit-log");
+  expect(writeAuditLog).not.toHaveBeenCalledWith(expect.objectContaining({ action: "installed" }));
 });
 
 it("refuses unknown, duplicate and incompatible plugins", async () => {
