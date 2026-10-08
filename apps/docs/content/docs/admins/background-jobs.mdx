@@ -39,34 +39,32 @@ Installed plugins can add their own scheduled and event-driven functions; they a
 
 ### Backfill embeddings
 
-Records that existed before you set `OPENAI_API_KEY` have no embeddings, so they do not show up in semantic search or "Find similar". To embed them, send the event `crm/backfill.requested` from the Inngest dashboard. With the bundled dev server, uncomment the `8288` port mapping of the `inngest` service in `docker-compose.yml` (or use an SSH tunnel), open the dashboard and send the event. Close the port again afterwards.
+Records that existed before you set `OPENAI_API_KEY` have no embeddings, so they do not show up in semantic search or "Find similar". To embed them, send the event `crm/backfill.requested` from the Inngest dashboard. With the bundled server, uncomment the `8288` port mapping of the `inngest` service in `docker-compose.yml` (or use an SSH tunnel), open the dashboard and send the event. Close the port again afterwards.
 
 ## Running Inngest
 
-<Tabs items={["Bundled dev server", "Inngest Cloud or self-hosted"]}>
-<Tab value="Bundled dev server">
+<Tabs items={["Bundled server", "Inngest Cloud"]}>
+<Tab value="Bundled server">
 
-Both compose files run `inngest dev -u http://app:3000/api/inngest` and set on the app:
+Both compose files run the self-hosted Inngest server in production mode (`inngest start -u http://app:3000/api/inngest`) and set on the app:
 
 ```sh
-INNGEST_DEV=1
+INNGEST_DEV=0
 INNGEST_BASE_URL=http://inngest:8288
-INNGEST_EVENT_KEY=local
-INNGEST_SIGNING_KEY=
+INNGEST_EVENT_KEY=<from env or generated>
+INNGEST_SIGNING_KEY=<from env or generated>
 ```
 
-This is fine for small instances. The dev server keeps no job history across restarts.
+Every request between the server and `/api/inngest` is signed with `INNGEST_SIGNING_KEY`; the app rejects unsigned ones, so the public endpoint cannot be used to trigger jobs. If you leave the two keys empty, the app generates them on the first start and stores them in the `app_data` volume, which the `inngest` service mounts read-only. If you set them yourself, the signing key must be a hex string (`openssl rand -hex 32`).
+
+Queued runs, schedules and sleeps are kept in the `inngest_data` volume, so they survive restarts. The server checks the app for new or changed functions every 60 seconds.
 
 </Tab>
-<Tab value="Inngest Cloud or self-hosted">
+<Tab value="Inngest Cloud">
 
-Set `INNGEST_DEV=0`, a real `INNGEST_EVENT_KEY` and `INNGEST_SIGNING_KEY`, and register `https://<your host>/api/inngest` as the app URL in Inngest. With `INNGEST_DEV=0` the app ignores the bundled `inngest` container. Set `INNGEST_BASE_URL` only if you run your own Inngest server.
-
-`docker-compose-coolify.yml` reads all of these from the environment. `docker-compose.yml` hard-codes the dev-server values, so change them with an override file.
+Set `INNGEST_EVENT_KEY` and `INNGEST_SIGNING_KEY` from the Inngest dashboard and register `https://<your host>/api/inngest` as the app URL in Inngest. The compose files point the app at the bundled server through `INNGEST_BASE_URL`, so with Cloud remove that line from the `app` environment (for example with an override file) and drop the `inngest` service.
 
 </Tab>
 </Tabs>
 
-<Callout type="warn">
-  `/api/inngest` is served by the app on its public port. In dev mode the Inngest SDK does not verify that requests to it come from Inngest. For an instance on the public internet, use Inngest Cloud or a self-hosted Inngest server with a signing key, or block `/api/inngest` at your reverse proxy for everything except the Inngest server.
-</Callout>
+`INNGEST_DEV=1` (the SDK's dev mode, which skips signature checks) is meant only for local development with `pnpm dev` and the dev server from `docker-compose.dev.yml`. Never set it on an instance reachable from a network.

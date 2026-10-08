@@ -3,12 +3,12 @@ title: Configuration reference
 description: Every environment variable NextCRM reads, grouped by area, with what it does and whether you need it.
 ---
 
-NextCRM is configured with environment variables. This page lists the variables the code actually reads. Example files in the repository (`.env.docker`, `.env.example`, `.env.local.example`) contain a few more names that the current code does not use; those are left out here.
+NextCRM is configured with environment variables. This page lists the variables the code actually reads; the example files in the repository (`.env.docker`, `.env.example`, `.env.local.example`) use the same names.
 
 "Required" means the app or a core flow (login, file storage) breaks without it. Optional variables switch on one feature.
 
 <Callout type="info">
-  With Docker Compose, a variable only reaches the app if it is listed under `services.app.environment`. See [Which variables reach the app](/docs/admins/install-docker#which-variables-reach-the-app).
+  With Docker Compose, a variable only reaches the app if it is listed under `services.app.environment`. Both compose files list every variable on this page except the build-time and "Other" ones. See [Which variables reach the app](/docs/admins/install-docker#which-variables-reach-the-app).
 </Callout>
 
 ## Database
@@ -23,8 +23,8 @@ NextCRM is configured with environment variables. This page lists the variables 
 
 | Variable | Required | What it does |
 |---|---|---|
-| `BETTER_AUTH_SECRET` | Yes | Signs sessions. Generate with `openssl rand -base64 32`. Changing it logs everyone out. The Docker entrypoint generates a random one on each start if it is empty. |
-| `BETTER_AUTH_URL` | Yes | Public base URL of the instance, for example `https://crm.example.com`. Used by BetterAuth for callbacks. |
+| `BETTER_AUTH_SECRET` | Yes | Signs sessions. Generate with `openssl rand -base64 32`. Changing it logs everyone out. In Docker, if it is empty, the entrypoint generates one on the first start and keeps it in the `app_data` volume. |
+| `BETTER_AUTH_URL` | Yes | Public base URL of the instance, for example `https://crm.example.com`. Used by BetterAuth for callbacks. The compose files set it from `APP_URL`. |
 | `GOOGLE_ID`, `GOOGLE_SECRET` | No | OAuth client for "Sign in with Google". Redirect URI: `<your URL>/api/auth/callback/google`. |
 
 Sessions last 7 days and are refreshed every 24 hours. Password login is disabled; users sign in with an email code or Google.
@@ -33,19 +33,19 @@ Sessions last 7 days and are refreshed every 24 hours. Password login is disable
 
 | Variable | Required | What it does |
 |---|---|---|
-| `NEXT_PUBLIC_APP_URL` | Yes | Public URL of the instance. Used for links in emails, the Google Calendar OAuth redirect URI and the Calendly webhook URL. Set it to the same value as `BETTER_AUTH_URL`. |
+| `APP_URL` | Docker only | Public URL of the instance. The compose files pass it to the app as `BETTER_AUTH_URL` and `NEXT_PUBLIC_APP_URL`. Default `http://localhost:3000`. |
+| `NEXT_PUBLIC_APP_URL` | Yes | Public URL of the instance. Used for links in emails (including the campaign unsubscribe link), the Google Calendar OAuth redirect URI and the Calendly webhook URL. Set it to the same value as `BETTER_AUTH_URL`. |
 | `NEXT_PUBLIC_APP_NAME` | Recommended | Product name shown in the UI and used as the sender name of system emails. |
-| `NEXTAUTH_URL` | For campaigns | Base URL used to build the unsubscribe link in campaign emails. Set it to your public URL if you send campaigns. |
 | `NEXT_PUBLIC_APP_DOMAIN` | No | Only used to build a fallback invoice sender (`invoices@<domain>`) when `EMAIL_FROM` is not set. |
 
 ## Encryption
 
 | Variable | Required | What it does |
 |---|---|---|
-| `EMAIL_ENCRYPTION_KEY` | Yes | 64 hexadecimal characters (32 bytes). Generate with `openssl rand -hex 32`. Encrypts, with AES-256-GCM: AI provider keys saved in the admin panel or profiles, users' mailbox credentials, Google Calendar tokens, Calendly settings and plugin secrets. |
+| `EMAIL_ENCRYPTION_KEY` | Yes | 64 hexadecimal characters (32 bytes). Generate with `openssl rand -hex 32`. In Docker, if it is empty, the entrypoint generates one on the first start and keeps it in the `app_data` volume. Encrypts, with AES-256-GCM: AI provider keys saved in the admin panel or profiles, users' mailbox credentials, Google Calendar tokens, Calendly settings and plugin secrets. |
 
 <Callout type="warn">
-  Set `EMAIL_ENCRYPTION_KEY` once and keep it. With a different key, all stored encrypted values become unreadable. Back it up together with the database.
+  Set `EMAIL_ENCRYPTION_KEY` once and keep it. With a different key, all stored encrypted values become unreadable. Back it up together with the database (in Docker: the `app_data` volume, unless you set it yourself).
 </Callout>
 
 ## File storage
@@ -54,19 +54,23 @@ NextCRM talks to any S3-compatible store through the AWS SDK with path-style URL
 
 | Variable | Required | What it does |
 |---|---|---|
-| `MINIO_ENDPOINT` | Yes | S3 endpoint URL the server connects to. Presigned upload URLs are signed for this address, so browsers upload directly to it. |
+| `MINIO_ENDPOINT` | Yes | S3 endpoint URL the server connects to, for example `http://minio:9000` inside Docker. `https://` endpoints work. |
+| `MINIO_PUBLIC_ENDPOINT` | If different | URL browsers use to reach the store. Presigned upload and invoice download URLs are signed for this address, and file links are built as `<MINIO_PUBLIC_ENDPOINT>/<bucket>/<key>`. Read at runtime. Falls back to `NEXT_PUBLIC_MINIO_ENDPOINT`, then `MINIO_ENDPOINT`. |
+| `NEXT_PUBLIC_MINIO_ENDPOINT` | No | Older name for `MINIO_PUBLIC_ENDPOINT`, still honoured. |
+| `MINIO_PUBLIC_URL` | Docker only | Compose variable passed to the app as `MINIO_PUBLIC_ENDPOINT`. Default `http://localhost:9000`. |
 | `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY` | Yes | S3 credentials. |
 | `MINIO_BUCKET` | Yes | Bucket name. The Docker entrypoint creates it if missing. |
-| `NEXT_PUBLIC_MINIO_ENDPOINT` | Yes | Public base URL used to build file links: `<NEXT_PUBLIC_MINIO_ENDPOINT>/<bucket>/<key>`. |
 | `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD` | Docker only | Credentials of the bundled `minio` service; the compose files pass them to the app as access and secret key. |
 
 The app throws at startup if any of the four required `MINIO_*` values is missing.
+
+File links are plain URLs, so browsers need anonymous read access to the upload folders (`avatars/`, `images/`, `documents/`, `uploads/`, `thumbnails/`). The Docker entrypoint sets that bucket policy when the bucket has none. Invoices (`invoices/`) stay private and are served through presigned links.
 
 ## Email
 
 | Variable | Required | What it does |
 |---|---|---|
-| `RESEND_API_KEY` | For login | Resend API key. Sends login codes, invitations, invoice emails, campaigns and scheduled reports. Takes priority over a key saved under **Administration → Services**. |
+| `RESEND_API_KEY` | For login | Resend API key. Sends login codes, invitations, invoice emails, campaigns and scheduled reports. Takes priority over a key saved under **Administration → Services**; leave it empty to use that key. |
 | `EMAIL_FROM` | For login | Sender address for login codes, invitations, invoice emails and SMTP notifications. Must be a sender verified in Resend. |
 | `RESEND_FROM_EMAIL` | For campaigns | Sender for campaign emails, scheduled reports and automation notifications. |
 | `RESEND_WEBHOOK_SECRET` | No | Secret used to verify calls to `/api/campaigns/webhooks/resend` (delivery events for campaigns). |
@@ -77,7 +81,7 @@ Details: [Email](/docs/admins/integrations/email).
 
 ## AI providers
 
-Each key can also be set in **Administration → LLM Keys** or by users in their profile. The environment variable wins when set. See [AI provider keys](/docs/admins/administration#llm-keys).
+Each key can also be set in **Administration → LLM Keys** or by users in their profile. The environment variable wins when set; empty values and template placeholders such as `sk-placeholder-…` or `your-openai-api-key` count as not set. See [AI provider keys](/docs/admins/administration#llm-keys).
 
 | Variable | Required | What it does |
 |---|---|---|
@@ -101,9 +105,9 @@ Details: [Enrichment](/docs/admins/integrations/enrichment).
 |---|---|---|
 | `INNGEST_ID` | Yes | Inngest app id, for example `nextcrm`. |
 | `INNGEST_APP_NAME` | Yes | Display name of the app in Inngest. |
-| `INNGEST_EVENT_KEY` | Yes | Key used to send events. Any value works with the dev server (the compose files use `local`). |
-| `INNGEST_SIGNING_KEY` | Production Inngest | Verifies requests from Inngest to `/api/inngest`. Required with Inngest Cloud or a self-hosted production server. |
-| `INNGEST_DEV` | No | `1` makes the SDK talk to an Inngest dev server. Read by the Inngest SDK. |
+| `INNGEST_EVENT_KEY` | Yes | Key used to send events. In Docker, if empty, generated on the first start and shared with the bundled Inngest server. |
+| `INNGEST_SIGNING_KEY` | Yes | Signs and verifies requests between Inngest and `/api/inngest`. With the bundled server it must be a hex string; in Docker, if empty, it is generated on the first start and shared with the bundled server. With Inngest Cloud use the key from the Inngest dashboard. |
+| `INNGEST_DEV` | No | `1` makes the SDK talk to an Inngest dev server and skip signature checks. Only for local development; the compose files set `0`. Read by the Inngest SDK. |
 | `INNGEST_BASE_URL` | No | Address of the Inngest server, for example `http://inngest:8288`. Read by the Inngest SDK. |
 
 Details: [Background jobs](/docs/admins/background-jobs).

@@ -44,11 +44,9 @@ Login codes are sent as `NEXT_PUBLIC_APP_NAME <EMAIL_FROM>` and expire after 5 m
 
 **Administration → Services** lets you store a Resend key in the database. The lookup order is: `RESEND_API_KEY` first, then the stored key. The stored key covers login codes, invitations, invoice emails, task notifications and messages to all users.
 
-Campaign sends, scheduled reports and automation notifications (follow-up tasks, the kill rule, the recycle digest) read `RESEND_API_KEY` directly and ignore the stored key. If you use those features, set the environment variable.
+Automation notifications (follow-up tasks, the kill rule, the recycle digest) read `RESEND_API_KEY` directly and ignore the stored key. If you use those features, set the environment variable.
 
-<Callout type="warn">
-  `docker-compose.yml` and `docker-compose-coolify.yml` set `RESEND_API_KEY` to a placeholder when you leave it empty. The placeholder wins over the key on the Services page, so with Docker always put the real key into `RESEND_API_KEY`.
-</Callout>
+`RESEND_API_KEY` wins over the key on the Services page. The compose files leave it empty when unset, and empty values or template placeholders count as not set, so the stored key is used.
 
 ### Campaign delivery events
 
