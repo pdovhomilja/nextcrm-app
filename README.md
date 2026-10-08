@@ -196,7 +196,7 @@ Global search across all CRM entities from a single search bar — grouped resul
 
 - [PostgreSQL 17+](https://www.postgresql.org/) – Powerful open-source relational database with **pgvector** extension for AI embeddings
 - [Resend](https://resend.com/) – A powerful email framework for streamlined email development together with [react.email](https://react.email)
-- [UploadThing](https://uploadthing.com/) + S3-compatible storage (DigitalOcean Spaces) – for document file storage
+- [MinIO](https://min.io/) or any S3-compatible storage – for document file storage
 - [Inngest](https://www.inngest.com/) – Background job queue for async embedding and AI workflows
 
 ### AI & MCP
@@ -331,11 +331,11 @@ Read the docs at [docs.nextcrm.app](https://docs.nextcrm.app): user guide, admin
    **.env.local**
 
    > > - BETTER_AUTH_SECRET - for auth
-   > > - uploadthings - for storing files
+   > > - MinIO / S3 (`MINIO_*`) - for storing files
    > > - openAI - for embeddings and project management assistant *(embeddings need `OPENAI_API_KEY` in the environment; enrichment can use an admin-panel key instead)*
    > > - Firecrawl - for contact/target enrichment *(optional — can be set via admin panel instead)*
-   > > - SMTP and IMAP for emails
-   > > - Inngest - for background embedding jobs
+   > > - Resend (`RESEND_API_KEY`, `EMAIL_FROM`) and optional SMTP (`EMAIL_HOST`, …) for emails
+   > > - Inngest - for background jobs (`INNGEST_DEV=1` with the local dev server from `pnpm inngest:up`)
    > > - `EMAIL_ENCRYPTION_KEY` - required for encrypting API keys stored in the database
 
 1. Init Prisma
@@ -393,10 +393,10 @@ Open [http://localhost:3000](http://localhost:3000) — the app is ready, the sc
 |---|---|---|
 | `app` | NextCRM (Next.js standalone build) | `localhost:3000` |
 | `postgres` | PostgreSQL 17 with pgvector | internal only |
-| `minio` | S3-compatible object storage | internal only |
-| `inngest` | Background job runner | internal only |
+| `minio` | S3-compatible object storage | `127.0.0.1:9000` |
+| `inngest` | Background job runner (self-hosted, signed requests) | internal only |
 
-Only port `3000` is exposed to the host. Everything else stays on the internal Docker network — secure by default. Uncomment the relevant `ports:` blocks in `docker-compose.yml` if you need direct access (e.g. for psql or the MinIO console).
+The app is published on port `3000`. MinIO's S3 port is published on `127.0.0.1:9000` because browsers upload and download files directly from MinIO; on a server, give MinIO its own domain and set `MINIO_PUBLIC_URL` to it. Postgres and Inngest stay on the internal Docker network. Uncomment the relevant `ports:` blocks in `docker-compose.yml` if you need direct access (e.g. for psql or the MinIO console).
 
 ### Configuring environment variables
 
@@ -417,9 +417,18 @@ docker compose up -d
 ```
 
 > [!WARNING]
-> The bundled Postgres and MinIO containers ship with a placeholder password (`changeme`) so the stack works on first run. The internal services are not exposed to the host network — only the app on port 3000 is reachable — so this is safe for local experimentation. **For any deployment beyond your laptop**, set strong values for `POSTGRES_PASSWORD` and `MINIO_ROOT_PASSWORD` in your `.env` file before starting the stack.
+> The bundled Postgres and MinIO containers ship with a placeholder password (`changeme`) so the stack works on first run. Postgres is not exposed to the host and MinIO only on `127.0.0.1`, so this is safe for local experimentation. **For any deployment beyond your laptop**, set strong values for `POSTGRES_PASSWORD` and `MINIO_ROOT_PASSWORD` in your `.env` file before starting the stack.
 
-The `.env.docker` file lists every supported variable with comments. Beyond the internal service passwords, you only need to add values for **optional external integrations** you want to enable:
+On a server, also set the two public URLs:
+
+```bash
+APP_URL=https://crm.example.com          # what people open; used for auth and links
+MINIO_PUBLIC_URL=https://files.example.com  # what browsers use to reach MinIO
+```
+
+**Secrets.** `BETTER_AUTH_SECRET`, `EMAIL_ENCRYPTION_KEY`, `INNGEST_SIGNING_KEY` and `INNGEST_EVENT_KEY` are generated on first start and stored in the `app_data` volume, so they survive restarts and upgrades. You can set them in `.env` instead; a value in the environment always wins. Never change them once set: a new `BETTER_AUTH_SECRET` logs everyone out, a new `EMAIL_ENCRYPTION_KEY` makes stored mailbox passwords and API keys unreadable.
+
+The `.env.docker` file lists every supported variable with comments. Beyond the internal service passwords, you only need to add values for **optional external integrations** you want to enable. API keys left empty can also be entered in the admin panel; an environment value always wins over the admin panel:
 
 ```bash
 # Example .env
@@ -427,6 +436,7 @@ OPENAI_API_KEY=sk-your-real-key       # enables AI features
 GOOGLE_ID=...apps.googleusercontent.com  # enables Google OAuth
 GOOGLE_SECRET=GOCSPX-...
 RESEND_API_KEY=re_...                 # enables transactional email
+EMAIL_FROM=noreply@yourdomain.com     # verified Resend sender for login codes
 FIRECRAWL_API_KEY=fc-...              # enables contact enrichment
 ```
 
@@ -434,10 +444,12 @@ FIRECRAWL_API_KEY=fc-...              # enables contact enrichment
 
 ### Persistent data
 
-Database and uploaded files persist across restarts via two named volumes:
+Data persists across restarts in four named volumes:
 
 - `postgres_data` — your database
 - `minio_data` — uploaded files
+- `app_data` — generated secrets (`/app/data/secrets`); back it up with the database
+- `inngest_data` — background job state (queued runs, schedules)
 
 ```sh
 docker compose down        # stops services, keeps data
@@ -453,14 +465,14 @@ docker compose up -d --build
 
 The entrypoint runs `prisma migrate deploy` on every start, so new schema changes are applied automatically. The seed only runs on first install (when no users exist), so your data is safe across upgrades.
 
-### Coolify, Dokku, Portainer, etc.
+### Coolify, Portainer, etc.
 
-This setup works out of the box with self-hosting platforms:
+This setup works with self-hosting platforms:
 
-- **Coolify** — point it at this repo, choose "Docker Compose" build pack with `/docker-compose-coolify.yml`, set your env vars in Coolify's UI (required ones are listed at the top of that file)
+- **Coolify** — point it at this repo, choose "Docker Compose" build pack with `/docker-compose-coolify.yml`, set your env vars in Coolify's UI (required ones are listed at the top of that file). Assign your domain to the `app` service (port 3000) and a second domain to `minio` (port 9000), then set `APP_URL` and `MINIO_PUBLIC_URL` to them.
 - **Portainer / Dockge** — paste `docker-compose.yml` into a stack, add env vars in the UI
 
-In all cases, env vars set through the platform UI override the placeholders in `docker-compose.yml` the same way a `.env` file does locally.
+In all cases, env vars set through the platform UI override the defaults in `docker-compose.yml` the same way a `.env` file does locally.
 
 ### First login
 
@@ -468,7 +480,7 @@ After first start, the seeded admin account uses whatever you set in `ADMIN_EMAI
 
 **With email provider configured (recommended)**
 
-Set `RESEND_API_KEY` (or another supported provider) in `.env`, then enter your `ADMIN_EMAIL` on the sign-in page and check your inbox for the OTP.
+Set `RESEND_API_KEY` and `EMAIL_FROM` in `.env`, then enter your `ADMIN_EMAIL` on the sign-in page and check your inbox for the OTP.
 
 **Without email provider (first-run testing)**
 
@@ -476,10 +488,10 @@ Read the OTP directly from the database:
 
 ```sh
 docker compose exec postgres psql -U nextcrm -d nextcrm \
-  -c 'SELECT identifier, value, "expiresAt" FROM "Verification" ORDER BY "createdAt" DESC LIMIT 1;'
+  -c 'SELECT identifier, value, "expiresAt" FROM verification ORDER BY "createdAt" DESC LIMIT 1;'
 ```
 
-(`identifier` is the email, `value` is the OTP code.)
+(`identifier` ends with the email; `value` is the OTP code followed by `:` and the attempt count, e.g. `606331:0`.)
 
 Use that OTP on the sign-in page. After login, configure an email provider from the Admin panel so future logins work normally.
 

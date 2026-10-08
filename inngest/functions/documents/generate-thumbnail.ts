@@ -1,7 +1,7 @@
 import { inngest } from "@/inngest/client";
 import { prismadb } from "@/lib/prisma";
 import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
-import { minioClient, MINIO_BUCKET } from "@/lib/minio";
+import { minioClient, MINIO_BUCKET, MINIO_PUBLIC_URL } from "@/lib/minio";
 import sharp from "sharp";
 
 const THUMB_WIDTH = 200;
@@ -57,7 +57,7 @@ export const generateDocumentThumbnail = inngest.createFunction(
       })
     );
 
-    const thumbnailUrl = `${process.env.NEXT_PUBLIC_MINIO_ENDPOINT}/${MINIO_BUCKET}/${thumbnailKey}`;
+    const thumbnailUrl = `${MINIO_PUBLIC_URL}/${MINIO_BUCKET}/${thumbnailKey}`;
 
     await prismadb.documents.update({
       where: { id: documentId },

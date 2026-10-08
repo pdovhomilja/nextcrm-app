@@ -40,6 +40,13 @@ describe("getApiKey — tier 1: ENV variable", () => {
     expect(mockFindFirst).not.toHaveBeenCalled();
   });
 
+  it("ignores placeholder ENV values and falls through to DB", async () => {
+    process.env.OPENAI_API_KEY = "sk-placeholder-replace-to-enable-ai";
+    mockFindFirst.mockResolvedValueOnce({ encryptedKey: "enc:db-key" });
+    const result = await getApiKey("OPENAI", TEST_USER_ID);
+    expect(result).toBe("db-key");
+  });
+
   it("maps providers to correct env var names", async () => {
     process.env.FIRECRAWL_API_KEY = "fc-key-xyz";
     const result = await getApiKey("FIRECRAWL", TEST_USER_ID);

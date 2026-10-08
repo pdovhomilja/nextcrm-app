@@ -28,9 +28,7 @@ Manage keys for OpenAI, Anthropic, Firecrawl and Groq. NextCRM looks for a key i
 
 Each card shows where the active key comes from (environment, system-wide or not configured) and its last four characters. Saved keys are encrypted with `EMAIL_ENCRYPTION_KEY`.
 
-<Callout type="warn">
-  `docker-compose.yml` sets `OPENAI_API_KEY` to a placeholder (`sk-placeholder-replace-to-enable-ai`) when you do not provide one. The placeholder counts as an environment key, so it wins over the key you save here and OpenAI features fail. With Docker Compose, put your real OpenAI key into `OPENAI_API_KEY`. The same applies to `RESEND_API_KEY` and the **Services** page.
-</Callout>
+An environment key wins over a saved one. Empty values and template placeholders (such as `sk-placeholder-…` from older compose files) do not count as an environment key, so the saved key is used.
 
 Some background jobs read `OPENAI_API_KEY` directly and never look at saved keys: record embeddings (semantic search, "Find similar") and document enrichment. Set the environment variable if you want those.
 
