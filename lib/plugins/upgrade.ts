@@ -32,6 +32,7 @@ export async function runPluginUpgrades(): Promise<void> {
         } catch (e) {
           writePluginLog(row.id, "error", `onUpgrade from ${row.version} failed: ${String(e)}`);
           await prismaBase.installedPlugin.update({ where: { id: row.id }, data: { status: "DISABLED" } });
+          await writeAuditLog({ entityType: "plugin", entityId: row.id, action: "disabled", changes: null, userId: null });
         }
       }
       invalidatePluginCache();

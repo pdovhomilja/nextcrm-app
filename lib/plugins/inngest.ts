@@ -1,5 +1,6 @@
 import { inngest } from "@/inngest/client";
 import { prismaBase } from "@/lib/prisma-base";
+import { writeAuditLog } from "@/lib/audit-log";
 import type { PluginContext } from "@nextcrm/plugin-sdk";
 import type { InngestFunction } from "inngest";
 import { getRegistry, findPlugin, type RegisteredPlugin } from "./registry";
@@ -71,7 +72,9 @@ export const pluginInstallFunction = inngest.createFunction(
       return { status: "ok" };
     } catch (e) {
       writePluginLog(plugin.definition.id, "error", `onInstall failed: ${String(e)}`);
-      await prismaBase.installedPlugin.update({ where: { id: plugin.definition.id }, data: { status: "DISABLED" } });
+      // updateMany: the plugin may have been uninstalled while the job ran.
+      await prismaBase.installedPlugin.updateMany({ where: { id: plugin.definition.id }, data: { status: "DISABLED" } });
+      await writeAuditLog({ entityType: "plugin", entityId: plugin.definition.id, action: "disabled", changes: null, userId: null });
       invalidatePluginCache();
       return { status: "failed" };
     }
