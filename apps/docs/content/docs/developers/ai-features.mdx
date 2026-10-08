@@ -1,0 +1,90 @@
+---
+title: AI features
+description: Embeddings and vector search with pgvector, record enrichment in E2B sandboxes, and how API keys are resolved.
+---
+
+AI work in NextCRM runs in Inngest functions, not in the request. A server action or route sends an event, and the function calls the model.
+
+## API key resolution
+
+Enrichment code gets provider keys from `getApiKey(provider, userId?)` in `lib/api-keys.ts`. It checks three places in order:
+
+1. The environment variable (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `FIRECRAWL_API_KEY`, `GROQ_API_KEY`).
+2. A system-wide key set by an admin in `/admin/llm-keys` (`ApiKeys` row with scope `SYSTEM`).
+3. The triggering user's own key from **Profile → LLMs** (scope `USER`), if a user id is passed.
+
+Stored keys are encrypted with AES-256-GCM using `EMAIL_ENCRYPTION_KEY` (`lib/email-crypto.ts`). If no key is found, `getApiKey` returns `null` and the caller must handle it.
+
+<Callout type="info">
+Embeddings do not use this chain. `inngest/lib/embedding-utils.ts`, document processing and the unified search query embedding create their OpenAI client from `OPENAI_API_KEY` directly. Without that variable, records are not embedded and search falls back to keyword results.
+</Callout>
+
+## Embeddings and vector search
+
+### Storage
+
+Embeddings are 1536-dimension vectors from OpenAI `text-embedding-3-small`, stored in pgvector columns:
+
+| Table | Source |
+| --- | --- |
+| `crm_Embeddings_Accounts`, `crm_Embeddings_Contacts`, `crm_Embeddings_Leads`, `crm_Embeddings_Opportunities` | One row per CRM record |
+| `crm_Embeddings_Documents`, `crm_Document_Chunks` | Whole document and text chunks |
+| `EmailEmbedding` | Synced emails |
+
+The columns are `Unsupported("vector(1536)")` in Prisma, so all reads and writes use `$queryRaw` / `$executeRaw`. The CRM tables have HNSW indexes with `vector_cosine_ops`.
+
+### Pipeline
+
+1. A server action saves a record and sends `crm/<entity>.saved` with `record_id`.
+2. The matching function (`embed-account` and so on) loads the record, builds text from a few fields with `buildEmbeddingText()`, and hashes it with `computeContentHash()`.
+3. If the hash matches the stored `content_hash`, the function stops. Otherwise it calls `generateEmbedding()` and upserts the vector.
+
+To embed records that existed before embeddings were enabled, send the event `crm/backfill.requested` (for example from the Inngest dashboard). `embed-backfill` sends a `crm/<entity>.saved` event for every account, contact, lead and opportunity.
+
+Uploaded documents follow a similar path: `document/uploaded` triggers `document-enrich`, which extracts text, embeds the document and its chunks, and writes a summary and classification with `gpt-4o-mini`.
+
+### Querying
+
+- **Find similar:** `actions/crm/similarity/get-similar-*.ts` order by cosine distance (`embedding <=> $vector`) and return `1 - distance` as the similarity.
+- **Unified search:** `actions/fulltext/unified-search.ts` runs keyword queries (`contains`, case-insensitive) and semantic queries in parallel and merges the results per entity. If the query embedding fails, it returns keyword results only.
+
+Both apply the caller's permission scope: find similar checks the source record with `assertCanRead…` and filters results with `filterAuthorized…Ids`, and unified search uses `getReportScope`. Do the same when you add a new vector query.
+
+## Enrichment
+
+Enrichment fills empty fields on contacts and targets from public web data. It runs as Inngest functions triggered from the UI, the `/api/crm/...` enrich routes, or the MCP enrichment tools.
+
+### Targets: agent in an E2B sandbox
+
+`enrich-target` (event `enrich/target.run`) does this:
+
+1. Resolves an Anthropic key with `getApiKey("ANTHROPIC", triggeredBy)`.
+2. Starts an [E2B](https://e2b.dev/) sandbox from the template in `E2B_ENRICHMENT_TEMPLATE` (default `nextcrm-enrichment`), with a 5-minute timeout.
+3. Runs the agent script from `lib/enrichment/e2b/agent-script.ts` inside the sandbox. It drives a headless Chrome through `agent-browser` and uses Claude (`claude-sonnet-4-6`) with browser and web-search tools.
+4. Applies the result with `lib/enrichment/e2b/apply-result.ts`. Fields with confidence below 0.6 are dropped, and only empty fields on the target are filled.
+5. Creates `crm_Target_Contact` rows for people it found, then sends one `enrich/target.contact.run` event per contact. `enrich-target-contact` enriches each one in its own sandbox.
+
+`enrich/targets.bulk` fans out to many targets.
+
+The sandbox needs `E2B_API_KEY`. The template is defined in `e2b/template.ts` (Node 20, `agent-browser`, `tsx`, the Anthropic SDK). `e2b/build.ts` builds it under the name `nextcrm-enrichment`:
+
+```bash
+pnpm exec tsx e2b/build.ts
+```
+
+There is also an older `e2b.toml` / `e2b.Dockerfile` pair for the E2B CLI. Jest replaces the `e2b` package with `__mocks__/e2b.ts`, so tests never start a sandbox.
+
+### Contacts: Firecrawl and OpenAI
+
+`enrich-contact` (event `enrich/contact.run`) does not use E2B. It resolves `FIRECRAWL` and `OPENAI` keys through `getApiKey` and runs `AgentEnrichmentStrategy` from `lib/enrichment/strategies/`. If either key is missing, the run is marked as failed with a message.
+
+### Status
+
+Each run writes a status row (`crm_Contact_Enrichment` or `crm_Target_Enrichment`) so the UI can show progress and errors.
+
+## Adding an AI feature
+
+- Put model calls in an Inngest function. Use `step.run()` around each call so retries do not repeat finished work.
+- Resolve keys with `getApiKey()` and pass the triggering user's id, so admin and user keys work.
+- Store results through the normal Prisma write path (`prismadb`) and the audit log, so plugin rules and history apply.
+- Never send data a user cannot read to a model on their behalf. Check scope before you build the prompt.

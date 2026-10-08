@@ -1,0 +1,133 @@
+---
+title: Background jobs
+description: How NextCRM uses Inngest for events, scheduled jobs and long-running work.
+---
+
+Slow, external or scheduled work runs in [Inngest](https://www.inngest.com/) functions. Request code sends an event and returns. Inngest calls the app back at `/api/inngest` to run the function, with retries.
+
+## Pieces
+
+| File | Role |
+| --- | --- |
+| `inngest/client.ts` | The Inngest client. Reads `INNGEST_ID`, `INNGEST_APP_NAME`, `INNGEST_EVENT_KEY`, `INNGEST_SIGNING_KEY`. |
+| `inngest/functions/` | One file per function, grouped by area. |
+| `inngest/lib/` | Shared helpers (embeddings, IMAP). |
+| `app/api/inngest/route.ts` | The `serve()` endpoint. Every function must be listed here. |
+| `lib/plugins/inngest.ts` | Builds functions for plugin crons, event handlers and after-actions. |
+
+## Run it locally
+
+```bash
+pnpm inngest:up   # dev server on http://localhost:8288
+pnpm dev
+```
+
+Set `INNGEST_DEV=1` in `.env.local` so the SDK uses the dev server. The dev server syncs only `http://host.docker.internal:3000/api/inngest`. Open the dashboard to see registered functions, send test events and inspect runs. See [Local setup](/docs/developers/local-setup).
+
+## Function catalogue
+
+### Event-triggered
+
+| Function id | Event | What it does |
+| --- | --- | --- |
+| `embed-account`, `embed-contact`, `embed-lead`, `embed-opportunity` | `crm/<entity>.saved` | Re-embeds the record if its text changed |
+| `embed-backfill` | `crm/backfill.requested` | Embeds existing records |
+| `enrich-contact` | `enrich/contact.run` | Enriches one contact (Firecrawl + OpenAI) |
+| `enrich-contacts-bulk` | `enrich/contacts.bulk` | Fans out contact enrichment |
+| `enrich-target` | `enrich/target.run` | Enriches one target in an E2B sandbox |
+| `enrich-targets-bulk` | `enrich/targets.bulk` | Fans out target enrichment |
+| `enrich-target-contact` | `enrich/target.contact.run` | Enriches one discovered target contact in E2B |
+| `email-sync-account` | `email/sync-account` | Syncs one IMAP account |
+| `email-embed-email` | `email/embed-email` | Embeds one email |
+| `email-link-crm` | `email/link-crm` | Links an email to CRM records |
+| `campaign-schedule-send`, `campaign-send-now`, `campaign-send-step`, `campaign-process-follow-up` | `campaigns/schedule`, `campaigns/send-now`, `campaigns/send-step`, `campaigns/follow-up` | Campaign sending |
+| `crm-qualified-cadence`, `crm-care-tasks` | `crm/opportunity.stage-changed` | Create follow-up tasks when an opportunity changes stage |
+| `crm-calendar-process-event` | `crm/calendar.event.received` | Processes an incoming calendar event |
+| `crm-google-calendar-sync-connection` | `crm/calendar.google-sync` | Syncs one Google Calendar connection |
+| `crm-calendar-outbound-sync` | `crm/calendar.outbound-sync` | Pushes changes to the calendar |
+| `document-enrich`, `document-generate-thumbnail` | `document/uploaded` | Processes and previews uploaded documents |
+| `plugin-lifecycle-install` | `plugin/installed` | Runs a plugin's `onInstall` |
+
+### Scheduled
+
+| Function id | Cron (UTC) | What it does |
+| --- | --- | --- |
+| `email-sync-all` | `*/15 * * * *` | Queues sync for all email accounts |
+| `crm-google-calendar-sync-all` | `*/15 * * * *` | Queues sync for all calendar connections |
+| `report-send-scheduled` | `*/15 * * * *` | Sends scheduled reports that are due |
+| `crm-kill-rule` | `0 6 * * *` | Closes stale opportunities |
+| `crm-recycle-targets` | `30 6 * * *` | Recycles targets whose sequence ended |
+| `crm-renewal-reminders` | `0 7 * * 1` | Creates renewal reminder tasks |
+| `ecb-sync-exchange-rates` | `0 17 * * 1-5` | Fetches ECB exchange rates |
+
+Plugin functions are added at runtime with ids `plugin-<id>-cron-<slug>`, `plugin-<id>-on-<slug>` and `plugin-<id>-after`.
+
+## Add a function
+
+<Steps>
+<Step>
+
+### Write the function
+
+Create a file in `inngest/functions/`. The SDK is Inngest v4: triggers go in the options object.
+
+```ts
+// inngest/functions/crm/notify-big-deal.ts
+import { inngest } from "@/inngest/client";
+import { prismadb } from "@/lib/prisma";
+
+export const notifyBigDeal = inngest.createFunction(
+  { id: "crm-notify-big-deal", name: "Notify big deal", triggers: [{ event: "crm/opportunity.saved" }] },
+  async ({ event, step }) => {
+    const { record_id } = event.data as { record_id: string };
+
+    const opp = await step.run("load", () =>
+      prismadb.crm_Opportunities.findUnique({ where: { id: record_id, deletedAt: null } }),
+    );
+    if (!opp) return { skipped: "not found" };
+
+    await step.run("notify", async () => {
+      // ...
+    });
+    return { ok: true };
+  },
+);
+```
+
+Use `step.run()` around each side effect. Inngest retries a failed step without repeating the steps that already succeeded. Use a cron trigger (`triggers: [{ cron: "0 6 * * *" }]`) for scheduled work.
+
+</Step>
+<Step>
+
+### Register it
+
+Import the function in `app/api/inngest/route.ts` and add it to the `functions` array. A function that is not listed there never runs.
+
+</Step>
+<Step>
+
+### Send the event
+
+```ts
+import { inngest } from "@/inngest/client";
+
+void inngest.send({ name: "crm/opportunity.saved", data: { record_id: opportunity.id } });
+```
+
+Server actions usually send without awaiting (`void`) so the user does not wait. Await the send when the caller must know it was queued.
+
+</Step>
+</Steps>
+
+## Conventions
+
+- **Event names:** `<area>/<subject>.<verb>`, for example `crm/account.saved` or `enrich/target.run`.
+- **Payloads:** keep them small. Send IDs (`record_id`), not records, and load fresh data in the function.
+- **Function ids:** stable and unique. Renaming an id creates a new function in Inngest.
+- **Idempotency:** functions can run more than once. The embedding functions, for example, compare a content hash and skip unchanged records.
+- **Auth:** functions run without a user session. If the work must respect a user's permissions, pass the user id in the event (the enrichment events use `triggeredBy`) and check it in the function.
+- **The `crm/<entity>.saved` events:** sent after creates and updates of accounts, contacts, leads and opportunities. Embeddings and plugin `on` handlers listen to them. Send the event from any new code path that writes these records.
+
+## Production
+
+In production the app needs `INNGEST_EVENT_KEY` and `INNGEST_SIGNING_KEY` from Inngest Cloud, or a self-hosted Inngest server with `INNGEST_BASE_URL`. The Docker Compose stack runs its own Inngest container. See the [configuration reference](/docs/admins/configuration).

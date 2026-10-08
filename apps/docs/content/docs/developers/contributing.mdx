@@ -1,0 +1,136 @@
+---
+title: Contributing
+description: Branches, pull requests, conventional commits, releases and the code conventions reviewers check.
+---
+
+NextCRM is MIT-licensed. Contributions of code, translations and docs are welcome. Report bugs and propose features in [GitHub issues](https://github.com/pdovhomilja/nextcrm-app/issues).
+
+## Workflow
+
+<Steps>
+<Step>
+
+### Fork and set up
+
+Fork the repository on GitHub, clone your fork, and follow [Local setup](/docs/developers/local-setup).
+
+</Step>
+<Step>
+
+### Create a branch
+
+Branch from the latest `main`. Name it after the change:
+
+```bash
+git checkout -b feat/target-list-export
+git checkout -b fix/invoice-rounding
+```
+
+</Step>
+<Step>
+
+### Make the change
+
+Keep a pull request to one concern. Follow the conventions below. Add or update tests.
+
+</Step>
+<Step>
+
+### Check locally
+
+```bash
+pnpm lint
+pnpm exec tsc --noEmit
+pnpm test
+pnpm test:e2e --project=chromium   # when you changed UI flows
+```
+
+If you added a plugin, also run `pnpm plugins:generate --public-only` and commit the generated registry.
+
+</Step>
+<Step>
+
+### Commit with conventional commits
+
+See below. The commit type decides how the change appears in the changelog.
+
+</Step>
+<Step>
+
+### Open a pull request
+
+Push the branch to your fork and open a PR. Describe what changed and why, link the issue, and list anything a reviewer must test by hand. CI runs on every PR into `dev` or `main` (see [Testing and CI](/docs/developers/testing#ci)).
+
+</Step>
+</Steps>
+
+### Branches in the main repository
+
+- `main` is the release branch. Releases are cut from it.
+- `dev` is the integration branch. CI runs on pushes to both.
+- Changes reach `main` only through reviewed pull requests. Nobody force-pushes `main` or `dev`.
+
+## Conventional commits
+
+Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): summary`. The scope is optional and names the area, for example `plugins`, `invoices` or `docker`.
+
+```text
+feat(campaigns): add CSV export to the targets table
+fix(plugins): cap take for ctx.data reads
+security: scope MCP campaign tools by role
+```
+
+`release-please-config.json` maps types to changelog sections:
+
+| Type | Changelog section |
+| --- | --- |
+| `feat` | Added |
+| `fix` | Fixed |
+| `security` | Security |
+| `refactor`, `perf` | Changed |
+| `docs`, `chore`, `test` | Hidden |
+
+## Releases
+
+Releases are automated with [release-please](https://github.com/googleapis/release-please) (`.github/workflows/release-please.yml`):
+
+1. Every push to `main` runs release-please.
+2. It opens or updates a release PR that bumps the version in `package.json` and `.release-please-manifest.json` and adds an entry to `CHANGELOG.md`.
+3. Merging that PR creates the tag (`vX.Y.Z`) and the GitHub release.
+
+Do not edit `CHANGELOG.md` or the `version` field in `package.json` by hand.
+
+## Code conventions
+
+### General
+
+- TypeScript in strict mode. Avoid `any`; replacing existing `any` types is welcome cleanup.
+- Use the `@/` path alias for imports.
+- UI uses shadcn/ui components from `components/ui` and Tailwind CSS classes.
+- Keep changes focused. Do not reformat or refactor code your change does not need.
+
+### Data and security
+
+- Check access in every server action, route handler and MCP tool with `@/lib/authz`. See [Auth and permissions](/docs/developers/auth-permissions).
+- Write through `prismadb` from `@/lib/prisma`, not `prismaBase`, so plugin rules apply.
+- Soft-delete business records (`deletedAt`, `deletedBy`) and filter `deletedAt: null` on reads.
+- Write an audit log entry for changes to CRM records.
+- Send the `crm/<entity>.saved` event after creating or updating accounts, contacts, leads or opportunities.
+- Serialise Prisma `Decimal` values with `serializeDecimals()` before they reach Client Components.
+- Schema changes need a committed migration. See [Data model](/docs/developers/data-model#add-a-migration).
+
+### Product scope
+
+NextCRM is one generic product used by many independent instances. Core changes must work for every instance and be configurable where behaviour differs. Do not add code for a single installation to the core. Build instance-specific behaviour as a [plugin](/docs/developers/plugins), and keep non-public plugins in `plugins-private/`.
+
+### Translations
+
+User-facing strings go through next-intl. Add every new key to all four files in `locales/`. See [Internationalization](/docs/developers/i18n).
+
+## Security issues
+
+Do not report vulnerabilities in public issues. Use GitHub's private vulnerability reporting for the repository ("Report a vulnerability" on the Security tab).
+
+## Getting help
+
+Ask in GitHub Discussions or on the project's Discord server (linked from the README).

@@ -1,0 +1,72 @@
+---
+title: Background jobs
+description: What runs in Inngest, on which schedule, what each job needs, and how to run Inngest in production.
+---
+
+NextCRM runs asynchronous and scheduled work with [Inngest](https://www.inngest.com/). The app serves its functions at `/api/inngest`. An Inngest server calls that endpoint to run them, and the app sends events to the server when something happens (a record is saved, a document is uploaded).
+
+If Inngest is not running, the app still works, but nothing below happens: no embeddings, no email sync, no scheduled sends.
+
+## Scheduled jobs
+
+| Job | Schedule (cron) | What it does | Needs |
+|---|---|---|---|
+| Email: Sync All Accounts | `*/15 * * * *` | Syncs every active user mailbox | Users' IMAP settings |
+| CRM: Google Calendar sync (all connections) | `*/15 * * * *` | Syncs every active Google Calendar connection | Google Calendar OAuth client |
+| Reports: Send Scheduled | `*/15 * * * *` | Sends report schedules that are due | `RESEND_API_KEY`, `RESEND_FROM_EMAIL` |
+| CRM: 45-day kill rule | `0 6 * * *` | Closes deals in a `qualified` stage after the configured days of client silence and notifies the rep | Funnel settings; Resend for the notification |
+| CRM: Recycle exhausted targets | `30 6 * * *` | Moves targets to a "Recycled" list after their sequence ended and sends admins a digest | `RESEND_API_KEY`, `RESEND_FROM_EMAIL` |
+| CRM: Renewal reminders | `0 7 * * 1` | Creates tasks for upcoming contract and product renewals | Funnel settings |
+| ECB Sync Exchange Rates | `0 17 * * 1-5` | Fetches ECB reference rates | ECB auto-update switched on under **Currencies** |
+
+Inngest evaluates cron expressions in UTC.
+
+## Event-driven jobs
+
+| Area | Jobs | Trigger | Needs |
+|---|---|---|---|
+| Embeddings | Embed Account, Contact, Lead, Opportunity | A record is saved | `OPENAI_API_KEY` (environment only) |
+| Embeddings | Embed Backfill All CRM Records | Event `crm/backfill.requested`, sent manually | `OPENAI_API_KEY` |
+| Email | Sync Account, Link to CRM, Embed Email | Mailbox sync | IMAP access; `OPENAI_API_KEY` for embeddings |
+| Enrichment | Enrich Contact, Enrich Contacts Bulk | User starts enrichment | OpenAI and Firecrawl keys |
+| Enrichment | Enrich Target, Enrich Targets Bulk, Enrich Target Contact | User or MCP starts enrichment | Anthropic key, `E2B_API_KEY` |
+| Campaigns | Schedule Send, Send Now, Send Step, Process Follow-up | User sends or schedules a campaign | `RESEND_API_KEY`, `RESEND_FROM_EMAIL` |
+| Sales automation | Qualified follow-up cadence, Care touchpoints | An opportunity changes stage | Sales stages with automation triggers |
+| Calendar | Process calendar event, Google Calendar sync (one connection), Calendar outbound sync | Calendly webhook, sync, CRM changes | Calendar setup |
+| Documents | Enrich Document, Generate Document Thumbnail | A document is uploaded | `OPENAI_API_KEY` for enrichment |
+
+Installed plugins can add their own scheduled and event-driven functions; they are registered with the rest.
+
+### Backfill embeddings
+
+Records that existed before you set `OPENAI_API_KEY` have no embeddings, so they do not show up in semantic search or "Find similar". To embed them, send the event `crm/backfill.requested` from the Inngest dashboard. With the bundled dev server, uncomment the `8288` port mapping of the `inngest` service in `docker-compose.yml` (or use an SSH tunnel), open the dashboard and send the event. Close the port again afterwards.
+
+## Running Inngest
+
+<Tabs items={["Bundled dev server", "Inngest Cloud or self-hosted"]}>
+<Tab value="Bundled dev server">
+
+Both compose files run `inngest dev -u http://app:3000/api/inngest` and set on the app:
+
+```sh
+INNGEST_DEV=1
+INNGEST_BASE_URL=http://inngest:8288
+INNGEST_EVENT_KEY=local
+INNGEST_SIGNING_KEY=
+```
+
+This is fine for small instances. The dev server keeps no job history across restarts.
+
+</Tab>
+<Tab value="Inngest Cloud or self-hosted">
+
+Set `INNGEST_DEV=0`, a real `INNGEST_EVENT_KEY` and `INNGEST_SIGNING_KEY`, and register `https://<your host>/api/inngest` as the app URL in Inngest. With `INNGEST_DEV=0` the app ignores the bundled `inngest` container. Set `INNGEST_BASE_URL` only if you run your own Inngest server.
+
+`docker-compose-coolify.yml` reads all of these from the environment. `docker-compose.yml` hard-codes the dev-server values, so change them with an override file.
+
+</Tab>
+</Tabs>
+
+<Callout type="warn">
+  `/api/inngest` is served by the app on its public port. In dev mode the Inngest SDK does not verify that requests to it come from Inngest. For an instance on the public internet, use Inngest Cloud or a self-hosted Inngest server with a signing key, or block `/api/inngest` at your reverse proxy for everything except the Inngest server.
+</Callout>

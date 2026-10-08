@@ -1,0 +1,114 @@
+---
+title: Profile and settings
+description: Your photo and details, language, mailboxes, Google Calendar, AI keys, and API tokens for AI agents.
+---
+
+Open your profile from the menu under your name at the bottom of the sidebar (**Profile Settings**), or press **Shift+⌘P**. The page has seven tabs.
+
+## Profile
+
+- **Profile Photo:** drop an image into the upload area. Check the preview, then click **Save photo**, or **Cancel** to discard it.
+- **Personal Information:** edit **Full name**, **Username**, and **Company**, then click **Update profile**.
+
+## Security
+
+NextCRM has no password of its own. You sign in with Google or an email code, so password changes happen with your identity provider.
+
+## Preferences
+
+Choose your **Language**: English, Czech, German, or Ukrainian. The interface switches right away and the choice is saved to your account.
+
+## Email Accounts
+
+Connect your IMAP/SMTP mailboxes here. See [Email](/docs/users/emails) for the steps.
+
+## Calendar
+
+Connect Google Calendar so meetings with your contacts show up as activities. Your admin must have set up Google Calendar for your instance first.
+
+<Steps>
+<Step>
+Click **Connect Google Calendar**.
+</Step>
+<Step>
+Sign in to Google and allow access. You return to the profile with "Google Calendar connected."
+</Step>
+<Step>
+The connection appears with its Google address and status. **Inbound only** means NextCRM reads your calendar. **Two-way** means it also writes meetings you log in NextCRM to your calendar.
+</Step>
+<Step>
+To turn on two-way sync, click **Enable two-way sync** and approve the wider access in Google.
+</Step>
+</Steps>
+
+The status line shows when the calendar last synced, or **Waiting for first sync**. If Google access is revoked or expires, it shows **Needs reconnect**. Click **Reconnect** to fix it. **Disconnect** removes the connection.
+
+<Callout type="warn">
+With two-way sync on, meetings you log in NextCRM send real Google invitations to the linked contact. Read [Meetings from Google Calendar](/docs/users/crm/activities-tasks#meetings-from-google-calendar) before you turn it on.
+</Callout>
+
+If you see "Google did not return a refresh token", remove NextCRM's access at myaccount.google.com/permissions and connect again.
+
+## LLMs
+
+Some AI features need API keys. Your admin can set keys for everyone. If they haven't, you can add your own here:
+
+| Key | Used for |
+| --- | --- |
+| **OpenAI** | Enrichment and embeddings (search, Find Similar) |
+| **Firecrawl** | Web scraping during enrichment |
+| **Anthropic** | Claude models |
+| **Groq** | Fast inference |
+
+Paste the key and click **Save**. The card then shows the masked **Current key**. Click **Remove** to delete it.
+
+If the card says "A system-wide key is active — your key is not in use.", your admin's key takes priority and yours is ignored.
+
+## Developer: API tokens for AI agents
+
+An API token lets an AI agent, such as Claude Desktop or Claude Code, work with your CRM data through MCP. The agent gets the same access as you: it sees and changes only what you can.
+
+### Create a token
+
+<Steps>
+<Step>
+Open the **Developer** tab. Under **API Tokens**, enter a token name, for example `Claude Desktop`.
+</Step>
+<Step>
+Optionally pick an expiry date.
+</Step>
+<Step>
+Click **Generate**.
+</Step>
+<Step>
+In **Token Created**, click **Copy to clipboard**. Tokens start with `nxtc__`.
+</Step>
+</Steps>
+
+<Callout type="warn">
+The token is shown only once. Store it somewhere safe, like a password manager. Anyone with the token can act as you.
+</Callout>
+
+The table lists your tokens with **Name**, **Prefix**, **Created**, and **Expires**. Click **Revoke** to disable a token you no longer use or that may have leaked. Revoking cannot be undone.
+
+### Connect your AI agent
+
+Click **Copy MCP Config** under **Claude Code Skill**. It copies a configuration like this:
+
+```json
+{
+  "mcpServers": {
+    "nextcrm": {
+      "type": "http",
+      "url": "https://YOUR_NEXTCRM_URL/api/mcp/mcp",
+      "headers": { "Authorization": "Bearer YOUR_API_TOKEN" }
+    }
+  }
+}
+```
+
+Replace `YOUR_NEXTCRM_URL` with the address you use to open NextCRM and `YOUR_API_TOKEN` with your token, then add it to your AI client's MCP settings.
+
+For Claude Code, also click **Download SKILL.md** and put the file in your `.claude/skills/` folder. It describes the available tools.
+
+For transports, client-specific setup, and the tool list, see the [MCP guide](/docs/developers/mcp).

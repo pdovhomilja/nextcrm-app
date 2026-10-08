@@ -1,0 +1,85 @@
+---
+title: Testing and CI
+description: Unit tests with Jest, end-to-end tests with Playwright, linting, type checks and the CI pipeline.
+---
+
+## Commands
+
+| Command | What it runs |
+| --- | --- |
+| `pnpm test` | Jest unit tests |
+| `pnpm test <path or pattern>` | Jest, filtered |
+| `pnpm test:e2e` | Playwright, all projects |
+| `pnpm test:e2e --project=chromium` | Playwright, Chromium only (what CI runs) |
+| `pnpm test:e2e:ui` | Playwright UI mode |
+| `pnpm test:e2e:headed` | Playwright with a visible browser |
+| `pnpm test:e2e:debug` | Playwright debugger |
+| `pnpm lint` | ESLint, fails on any warning (`--max-warnings=0`) |
+| `pnpm exec tsc --noEmit` | Type check |
+| `pnpm plugins:generate --check` | Fails if the committed plugin registry is stale |
+
+## Unit tests (Jest)
+
+Configuration is in `jest.config.ts`:
+
+- `ts-jest` preset, Node test environment.
+- Test files: any `*.test.ts` or `*.test.tsx` inside a `__tests__` folder. They live next to the code (`lib/plugins/__tests__/`, `actions/crm/accounts/__tests__/`, `lib/mcp/__tests__/`, ...) and in the root `__tests__/`.
+- `jest.env.setup.ts` loads `.env` and then `.env.local`.
+- Path aliases: `@/` maps to the repo root, and `@nextcrm/plugin-sdk` and `@nextcrm/plugin-sdk/testing` map to the SDK sources.
+- The `e2b` package is replaced by `__mocks__/e2b.ts`.
+
+Most unit tests mock Prisma and run without a database. One suite needs a real one: `__tests__/invoices/lifecycle.test.ts`. CI runs it in a separate job against a fresh database. Locally, run it against your dev database:
+
+```bash
+pnpm db:up && pnpm db:wait && pnpm db:migrate
+pnpm test __tests__/invoices/lifecycle.test.ts
+```
+
+Keep new database-backed suites under `__tests__/invoices/` or update the CI job's test list and the `fast` job's ignore pattern together.
+
+### What to test
+
+- **Permissions.** For any action, route or MCP tool that reads or writes records, test that a `user` cannot reach another user's records. Existing scope tests in `lib/authz/__tests__/` and `lib/mcp/__tests__/` show the pattern.
+- **Plugins.** Unit-test plugin logic with `createTestContext`. The contract and boundary tests in `__tests__/plugins/` run for every registered plugin. See [Build a plugin](/docs/developers/plugin-tutorial).
+- **Inngest functions.** Call the handler logic with mocked Prisma and clients. `inngest/functions/calendar/__tests__/` and `__tests__/inngest/` have examples.
+
+## End-to-end tests (Playwright)
+
+Configuration is in `playwright.config.ts`:
+
+- Tests live in `tests/e2e/*.spec.ts`. Fixtures are in `tests/fixtures/`.
+- `baseURL` is `http://localhost:3000`. Playwright starts `pnpm dev` itself, or reuses a running server outside CI.
+- The `setup` project runs `tests/auth.setup.ts` first. It requests an OTP for `TEST_USER_EMAIL` (default `test@nextcrm.app`), reads it from `/api/auth/test-otp`, signs in, and saves the session to `playwright/.auth/user.json`. The browser projects depend on it.
+- Projects: `chromium`, `firefox`, `webkit`, `Mobile Chrome`, `Mobile Safari`.
+- On CI: 2 retries, 1 worker, `test.only` fails the run. Traces are kept on first retry, screenshots and videos on failure.
+
+Before you run them locally:
+
+```bash
+pnpm db:up && pnpm db:wait
+pnpm db:migrate
+pnpm db:seed          # admin test user and the demo records the specs act on
+pnpm inngest:up       # several flows send Inngest events
+pnpm test:e2e --project=chromium
+```
+
+The seeded user must exist and be `ACTIVE`; `pnpm db:seed` takes care of that. The update and detail specs act on the first row of each table, which is why the demo dataset exists.
+
+## CI
+
+`.github/workflows/ci.yml` runs on pushes to `dev` and `main` and on pull requests into them. All jobs use Node 22 and `pnpm install --frozen-lockfile`, with dummy values for every required env var.
+
+| Job | Steps |
+| --- | --- |
+| Fast checks | `prisma generate`, `tsc --noEmit`, Jest (without the DB-backed suite) |
+| Integration | Postgres service (pgvector, pg16), `prisma migrate deploy` on an empty database, then the DB-backed Jest suite |
+| Production build | `pnpm run build` (prisma generate, migrate deploy, next build) |
+| E2E | Postgres, migrate, seed, Inngest dev server, `playwright test --project=chromium`; uploads the report and traces |
+
+The integration, build and E2E jobs start only after the fast checks pass.
+
+<Callout type="warn">
+CI does not run ESLint. Run `pnpm lint` yourself before you push.
+</Callout>
+
+CI uses Postgres 16 while the local dev compose file uses Postgres 17. If a migration behaves differently between them, CI is the reference.

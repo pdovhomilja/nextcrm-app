@@ -1,0 +1,102 @@
+---
+title: Leads, opportunities, and approvals
+description: Track potential customers, move deals through the pipeline, and get quotes approved.
+---
+
+A **lead** is a person or company that might buy. An **opportunity** (a deal) is a specific sale you are working on, linked to a company.
+
+## Add a lead
+
+<Steps>
+<Step>
+Go to **Sales** → **Leads** and click **+**.
+</Step>
+<Step>
+Fill in **Last name** (required), and as needed **First name**, **Company**, **Job title**, **Email**, **Phone**, **Lead source**, **Referred by**, and **Campaign**.
+</Step>
+<Step>
+Use **Assign an account** to link the lead to an existing company.
+</Step>
+<Step>
+Click **Create lead**.
+</Step>
+</Steps>
+
+Lead statuses are **New**, **In progress**, and **Completed**. The lead page shows the lead's details, **Activities**, **Find Similar**, and the **History** tab.
+
+## Add an opportunity
+
+<Steps>
+<Step>
+Go to **Sales** → **Opportunities** and click **+**. Or click **+** on the **Opportunities** card of a company page.
+</Step>
+<Step>
+Fill in **Opportunity name** (required), **Expected close date**, **Sales type**, **Sale stage**, **Budget**, **Currency**, **Expected revenue**, and **Next step**.
+</Step>
+<Step>
+Choose the **Assigned Account** and, if needed, a contact and campaign.
+</Step>
+<Step>
+Save the form.
+</Step>
+</Steps>
+
+Opportunity statuses are **Active**, **Inactive**, **Pending**, and **Closed**.
+
+## The opportunity page
+
+The **Overview** tab shows the deal's details, then:
+
+- **Line items:** the products and services in the quote. Click **+** to open **Add Line Item**. Pick a product under **Product (optional)** or type a custom **Name**, then set **Quantity**, **Unit Price**, and a **Discount Type** (**None**, **Percentage (%)**, or **Fixed Amount**). The table shows each **Line Total** and the **Subtotal**.
+- **Activities** and **Find Similar**.
+- The deal's companies, contacts, and documents.
+
+## The pipeline board
+
+**Sales** → **Dashboard** shows active opportunities as cards in columns, one column per sales stage.
+
+- **Change the stage:** drag a card to another column. You see "Opportunity stage changed".
+- **Add a deal in a stage:** click the plus icon in the column header.
+- **Mark a deal as lost:** click the thumbs-down icon on the card. The deal becomes inactive and moves to the **Lost** column.
+
+**Sales** → **My Dashboard** lists your open tasks, leads, and active opportunities in **My Tasks**, **My Leads**, and **My Opportunities**.
+
+## Quote approval
+
+Before a quote or statement of work goes to a client, a manager or admin can sign it off.
+
+<Steps>
+<Step>
+On the opportunity page, click **Request approval**. All active managers and admins get an email.
+</Step>
+<Step>
+The deal shows an **Approval pending** badge.
+</Step>
+<Step>
+After the decision you get an email, and the badge changes to **Approved** or **Rejected**. Hover over **Rejected** to read the reviewer's note.
+</Step>
+</Steps>
+
+After a rejection, fix the quote and click **Request approval** again.
+
+<Callout type="warn">
+If your admin has marked a sales stage as the quote stage, you cannot move a deal into that stage until its quote is approved. You see "Quote approval is required before moving this deal to the Qualified stage."
+</Callout>
+
+### Approve or reject (managers and admins)
+
+Go to **Sales** → **Approvals**. The **Quote approvals** page lists deals waiting for a decision, with **Deal**, **Account**, **Rep**, **Budget**, and **Requested**.
+
+- Click **Approve** to approve the quote.
+- Click **Reject**, write what needs to change in the dialog, and click **Reject quote**. The note goes to the rep by email.
+
+## Automatic follow-up
+
+Your admin can link sales stages to automatic follow-up. When that is set up:
+
+- **Follow-up tasks:** moving a deal into the quote stage, or into a care stage after delivery, creates follow-up tasks for the deal's owner on a schedule. Moving the deal to another stage cancels the remaining ones.
+- **Closing silent deals:** a deal in the quote stage with no client activity for a set number of days (45 by default) is closed, and the owner gets an email. An activity logged on the deal, or a synced incoming email linked to the deal's contact or company, resets the clock.
+
+Independent of stages, NextCRM checks once a week for contracts and assigned products whose renewal date is coming up (within 30 days by default) and creates a renewal task for them.
+
+Automatic tasks are assigned to the owner of the deal, contract, or company, who also gets an email. They appear in the **Tasks** card of the linked company. Ask your admin which stages are linked.

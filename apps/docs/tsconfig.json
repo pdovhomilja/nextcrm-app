@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "target": "ESNext",
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -18,22 +14,14 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
+    "paths": {
+      "@/*": ["./*"]
+    },
     "plugins": [
       {
         "name": "next"
       }
-    ],
-    "baseUrl": ".",
-    "paths": {
-      "@nextcrm/plugin-sdk": ["./packages/plugin-sdk/src/index.ts"],
-      "@nextcrm/plugin-sdk/testing": ["./packages/plugin-sdk/src/testing.ts"],
-      "@/*": [
-        "./*"
-      ],
-      "@/ui/*": [
-        "./components/ui/*"
-      ]
-    }
+    ]
   },
   "include": [
     "next-env.d.ts",
@@ -42,8 +30,5 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "apps"
-  ]
+  "exclude": ["node_modules"]
 }

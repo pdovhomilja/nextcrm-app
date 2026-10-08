@@ -1,0 +1,78 @@
+---
+title: Internationalization
+description: How translations work with next-intl, how to add strings, and what a new locale touches.
+---
+
+NextCRM uses [next-intl](https://next-intl.dev/). The UI ships in four locales:
+
+| Code | Language | File |
+| --- | --- | --- |
+| `en` | English (default) | `locales/en.json` |
+| `cz` | Czech | `locales/cz.json` |
+| `de` | German | `locales/de.json` |
+| `uk` | Ukrainian | `locales/uk.json` |
+
+Note that Czech uses `cz`, not the ISO code `cs`.
+
+## How it is wired
+
+- `i18n/routing.ts` defines the locales and the default (`en`).
+- `proxy.ts` runs the next-intl middleware, so every page URL has a locale prefix, for example `/en/crm/accounts`. All pages live under `app/[locale]/`.
+- `i18n/request.ts` loads `locales/<locale>.json` for each request and merges plugin messages under the `plugins` key.
+- `i18n/navigation.ts` exports locale-aware `Link`, `redirect`, `usePathname`, `useRouter` and `getPathname`. Use these instead of the `next/link` and `next/navigation` versions when you link between pages.
+
+## Use translations
+
+Message files are nested JSON, grouped by namespace (`CrmPage`, `ProfilePage`, `InvoicesPage`, `Common`, ...).
+
+In a Server Component:
+
+```tsx
+import { getTranslations } from "next-intl/server";
+
+export default async function AccountsPage() {
+  const t = await getTranslations("CrmPage");
+  return <h1>{t("accounts")}</h1>;
+}
+```
+
+In a Client Component:
+
+```tsx
+"use client";
+import { useTranslations } from "next-intl";
+
+export function CancelButton() {
+  const t = useTranslations("Common");
+  return <button>{t("cancel")}</button>;
+}
+```
+
+## Add a string
+
+1. Pick the namespace of the page or component, or add a new top-level namespace.
+2. Add the key to `locales/en.json`.
+3. Add the same key, translated, to `cz.json`, `de.json` and `uk.json`.
+4. Use it with `t("key")`. For values, use ICU placeholders: `"greeting": "Hello {name}"` and `t("greeting", { name })`.
+
+Core messages have no automatic fallback to English. A key missing from a locale file shows up as an error and the key path on that locale. Add every new key to all four files in the same commit. If you cannot translate it, copy the English text and say so in the PR.
+
+<Callout type="info">
+The non-English files are not complete today. `de.json` and `uk.json` lack some keys that exist in `en.json` (mostly in newer modules such as invoices). Filling these gaps is a good first contribution.
+</Callout>
+
+## Plugin messages
+
+Plugins keep their own messages in `plugins/<id>/messages/{en,cz,de,uk}.json`. They are merged under `plugins.<id>` and, unlike core messages, fall back to `en` when a locale file is missing. The plugin contract test fails if a locale file is missing or lacks a key from `en.json`. See [Plugins](/docs/developers/plugins#translations).
+
+## Add a locale
+
+Adding a fifth locale touches more than the message file. At minimum:
+
+- `i18n/routing.ts`: add the code to `locales`.
+- `locales/<code>.json`: a full copy of `en.json`, translated.
+- `prisma/schema.prisma`: add the code to the `Language` enum (used for `Users.userLanguage`), with a migration.
+- `components/SetLanguage.tsx` and `app/[locale]/(routes)/profile/components/LanguageForm.tsx`: add the option to the language pickers, and add the language label to every message file.
+- `packages/plugin-sdk/src/types.ts` (`LOCALES`) and `scripts/plugins/generate-registry.mjs` (`LOCALES`): the plugin system lists the locales explicitly. Changing the SDK locale list changes what every plugin must ship.
+
+Search the code for an existing code such as `"uk"` to find any remaining places before you open the PR.

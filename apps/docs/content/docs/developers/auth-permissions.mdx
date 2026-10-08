@@ -1,0 +1,150 @@
+---
+title: Auth and permissions
+description: Better Auth sessions, the three roles, how actions and routes check access, and API tokens.
+---
+
+## Authentication
+
+Authentication uses [Better Auth](https://www.better-auth.com/), configured in `lib/auth.ts`:
+
+- **Sign-in methods:** email OTP (passwordless) and Google OAuth. Email and password sign-in is disabled.
+- **User table:** Better Auth maps its user model to `Users`, with extra fields `role`, `userStatus`, `userLanguage` and `avatar`. IDs are UUIDs.
+- **Sessions:** 7 days, refreshed every 24 hours.
+- **New users:** the first user becomes an active `admin`. Later users start as `PENDING` and admins are notified. A pending or inactive user cannot use the app until an admin activates them.
+- **Admin plugin:** the Better Auth admin plugin is enabled with the roles `admin`, `manager` and `user` (`lib/auth-permissions.ts`).
+- **Testing:** outside production the `testUtils` plugin captures OTPs. See [Local setup](/docs/developers/local-setup#sign-in-locally).
+
+On the server, `getSession()` from `lib/auth-server.ts` returns the Better Auth session for the current request. In feature code, use the `@/lib/authz` helpers below instead of reading the session directly.
+
+## Roles
+
+There are three roles, stored in `Users.role` (enum `AppRole`):
+
+| Role | Data visibility | Administration |
+| --- | --- | --- |
+| `user` | Only records in their own scope | No |
+| `manager` | All business data | No |
+| `admin` | Everything | Yes (`/admin`, plugins, settings, users) |
+
+For the `user` role, "own scope" is defined per resource in `lib/authz/scopes/crm.ts`. For accounts, a user can see a record if they are `assigned_to`, `createdBy`, or a watcher. Contacts, leads, opportunities and contracts add rules for records linked to an account in scope.
+
+Access is enforced in code through `lib/authz`, not through the Better Auth access-control statements in `lib/auth-permissions.ts`.
+
+## Checking access
+
+The design is permission-driven: every server action and route handler authenticates, then checks the specific object it touches. A session check alone is never enough.
+
+### The helpers
+
+All helpers are exported from `@/lib/authz`:
+
+| Helper | Use it to |
+| --- | --- |
+| `requireAuthenticated()` | Get `{ id, role }` for the current user. Throws `AuthenticationError`. |
+| `requireRole(["admin"])` | Require one of the given roles. Throws `AuthorizationError`. |
+| `isAdmin(user)`, `isManagerOrAdmin(user)` | Branch on role. |
+| `accountReadScopeWhere(user)`, `leadReadScopeWhere(user)`, ... | Build a Prisma `where` for list queries. Includes `deletedAt: null`. |
+| `assertCanReadAccount(user, id)`, `assertCanWriteAccount(user, id)`, ... | Check one object. Throws `AuthorizationError`. |
+| `filterAuthorizedAccountIds(user, ids)`, ... | Reduce a list of IDs to the ones the user may touch (bulk actions). |
+| `getReportScope(user)` | Scope for report queries. |
+
+Helpers exist for accounts, contacts, leads, opportunities, contracts, targets, target lists, activities, campaigns, templates, documents, boards and tasks. Check `lib/authz/index.ts` for the full list before you write a new one.
+
+### In a server action
+
+```ts
+"use server";
+import {
+  requireAuthenticated,
+  assertCanWriteAccount,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
+
+export async function renameAccount(id: string, name: string) {
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
+  try {
+    await assertCanWriteAccount(user, id);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
+  // ... write with prismadb, audit log, inngest event
+}
+```
+
+### In a list query
+
+```ts
+const user = await requireAuthenticated();
+const accounts = await prismadb.crm_Accounts.findMany({
+  where: { ...accountReadScopeWhere(user), status: "Active" },
+});
+```
+
+### In a route handler
+
+```ts
+import {
+  requireAuthenticated,
+  assertCanReadAccount,
+  AuthenticationError,
+  AuthorizationError,
+  unauthorizedResponse,
+  notFoundOrForbiddenResponse,
+} from "@/lib/authz";
+
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  let user;
+  try {
+    user = await requireAuthenticated();
+    await assertCanReadAccount(user, id);
+  } catch (e) {
+    if (e instanceof AuthenticationError) return unauthorizedResponse();
+    if (e instanceof AuthorizationError) return notFoundOrForbiddenResponse();
+    throw e;
+  }
+  // ...
+}
+```
+
+`notFoundOrForbiddenResponse()` returns `404`, so a caller cannot probe which IDs exist.
+
+### Admin-only code
+
+Admin pages, admin actions and `/api/admin/*` routes call `requireRole(["admin"])`. The middleware in `proxy.ts` only checks that a session cookie exists for those paths; the role check happens in the handler.
+
+### Rules for contributors
+
+- Never trust an ID from the client. Check it with an `assertCan…` helper or a scoped `where`.
+- Use the same helper for reads and writes in MCP tools, actions and routes, so all entry points behave the same.
+- Add a test for the `user` role when you add or change a scope. The suites under `__tests__/` and `lib/authz/__tests__/` show the pattern.
+
+## API tokens
+
+API tokens let external clients act as a user. They are used by the [MCP server](/docs/developers/mcp).
+
+- Users create and revoke tokens in **Profile → Developer** (`/profile?tab=developer`).
+- Format: `nxtc__` followed by 48 hex characters.
+- Only the SHA-256 hash is stored (`ApiToken.tokenHash`), plus the first 8 characters for display. The raw token is shown once.
+- Each user can have at most 10 active tokens. A token can have an expiry date and can be revoked.
+- `lastUsedAt` is updated on each use.
+- A token carries the full permissions of its user. There are no per-token scopes.
+
+The logic is in `lib/api-tokens.ts` (`generateApiToken`, `validateApiToken`, `revokeApiToken`, `listApiTokens`).
+
+## Shared-secret endpoints
+
+Two older endpoints accept a shared secret from `NEXTCRM_TOKEN` instead of a user token, for creating records from external forms:
+
+- `POST /api/crm/leads/create-lead-from-web` reads it from the `Authorization` header.
+- `POST /api/crm/contacts/create-from-remote` reads it from a header named `NEXTCRM_TOKEN`.
+
+Leave `NEXTCRM_TOKEN` empty if you do not use them.

@@ -1,0 +1,62 @@
+---
+title: AI enrichment
+description: Fill in missing contact details from the web, one contact at a time or in bulk.
+---
+
+Enrichment searches the web for a contact and suggests values for empty fields, such as job title, LinkedIn URL, or company website. It runs on Firecrawl and OpenAI.
+
+## Before you start
+
+- The contact needs an email address. Without one, **Enrich with AI** is disabled.
+- NextCRM needs both a Firecrawl and an OpenAI API key. Your admin can set them for everyone. If they haven't, add your own under **Profile Settings** → **LLMs** (see [Profile and settings](/docs/users/profile#llms)).
+
+If keys are missing, you see **API Keys Required**. Click **Go to Settings** to add them.
+
+## Enrich one contact
+
+<Steps>
+<Step>
+Open the contact and click **Enrich with AI**.
+</Step>
+<Step>
+Choose the fields to look for. **Position / Job Title**, **LinkedIn URL**, **Company Website**, and **Company Description** are selected by default. You can also pick **Twitter / X URL**, **Facebook URL**, **Instagram URL**, **Office Phone**, and **Mobile Phone**.
+</Step>
+<Step>
+To look for something else, enter a name under **Add custom field** (for example "Number of employees"), an optional description, and click **Add field**.
+</Step>
+<Step>
+Click **Start Enrichment (N fields)**. The panel shows progress while the web search runs.
+</Step>
+<Step>
+Review the results. Each row shows the **Field**, the **Current** value, the **Enriched** value, a confidence percentage, and a **Source** link.
+</Step>
+<Step>
+Uncheck anything you don't want, then click **Apply N fields**. Click **Discard** to keep the contact unchanged.
+</Step>
+</Steps>
+
+Nothing is saved until you apply.
+
+## Enrich many contacts
+
+<Steps>
+<Step>
+Go to **Sales** → **Contacts** and tick the checkboxes of up to 100 contacts.
+</Step>
+<Step>
+Click **Enrich N contacts** above the table.
+</Step>
+<Step>
+Choose the fields and click **Start Enrichment (N fields)**.
+</Step>
+</Steps>
+
+Bulk enrichment runs in the background and only fills empty fields. It never overwrites existing data, and there is no review step. Contacts enriched successfully in the last 7 days are skipped.
+
+To follow progress, open `/crm/contacts/enrichment` in your browser. The **Enrichment Jobs** page lists each contact with a status: **Pending**, **Running**, **Completed**, **Failed**, or **Skipped**. Failed jobs have a retry button. Refresh the page to see updates.
+
+## Other AI features
+
+- **Find Similar** on companies, contacts, leads, and opportunities, and semantic results in search, use AI embeddings. See [Working with CRM records](/docs/users/crm/records#find-similar-records) and [Search](/docs/users/getting-started#search).
+- Uploaded documents get an AI summary. See [Documents](/docs/users/documents).
+- Campaign targets have their own enrichment. See [Campaigns](/docs/users/campaigns).

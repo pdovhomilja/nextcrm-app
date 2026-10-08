@@ -1,0 +1,12 @@
+{
+  "title": "CRM",
+  "icon": "Briefcase",
+  "pages": [
+    "records",
+    "accounts-contacts",
+    "leads-opportunities",
+    "contracts-products",
+    "activities-tasks",
+    "ai-enrichment"
+  ]
+}

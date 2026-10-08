@@ -1,0 +1,164 @@
+---
+title: Install with Docker Compose
+description: Run NextCRM with the bundled Postgres, MinIO and Inngest, then sign in as the first admin.
+---
+
+The repository ships a `docker-compose.yml` that runs the whole stack. On first start the container applies database migrations, creates the storage bucket and seeds the first admin account.
+
+## Quick start
+
+<Steps>
+<Step>
+
+### Get the code
+
+```sh
+git clone https://github.com/pdovhomilja/nextcrm-app.git
+cd nextcrm-app
+```
+
+</Step>
+<Step>
+
+### Create `.env`
+
+```sh
+cp .env.docker .env
+```
+
+Edit `.env` and set at least:
+
+- `ADMIN_EMAIL`: an address you can read. It becomes the first admin account.
+- `POSTGRES_PASSWORD` and `MINIO_ROOT_PASSWORD`: strong values for anything beyond a laptop. Both default to `changeme`.
+
+</Step>
+<Step>
+
+### Add the settings `docker-compose.yml` does not pass through
+
+Read the next section before you start the stack for real. For a quick local test you can skip it.
+
+</Step>
+<Step>
+
+### Start
+
+```sh
+docker compose up -d
+```
+
+Watch the startup with `docker compose logs -f app`. Open `http://localhost:3000` when the log shows `Starting NextCRM...`.
+
+</Step>
+</Steps>
+
+## Which variables reach the app
+
+Docker Compose uses `.env` only to fill in `${...}` placeholders in the compose file. The app container receives just the variables listed under `services.app.environment` in `docker-compose.yml`. A variable that is in `.env` but not in that list never reaches the app.
+
+`docker-compose.yml` passes the database, MinIO, Inngest settings, `ADMIN_EMAIL` (as `TEST_USER_EMAIL`), `OPENAI_API_KEY`, `RESEND_API_KEY`, `GOOGLE_ID`, `GOOGLE_SECRET`, `FIRECRAWL_API_KEY` and `E2B_API_KEY`. It does **not** pass:
+
+- `BETTER_AUTH_SECRET` and `EMAIL_ENCRYPTION_KEY`. The entrypoint generates random values when they are missing, on every container start.
+- `EMAIL_FROM`, which login and invitation emails use as sender.
+- `RESEND_FROM_EMAIL`, `EMAIL_HOST`, `EMAIL_USERNAME`, `EMAIL_PASSWORD`, `GOOGLE_CALENDAR_CLIENT_ID`, `GOOGLE_CALENDAR_CLIENT_SECRET`, `ANTHROPIC_API_KEY` and the other optional variables.
+
+It also hard-codes `BETTER_AUTH_URL` and `NEXT_PUBLIC_APP_URL` to `http://localhost:3000`.
+
+<Callout type="warn">
+  If `BETTER_AUTH_SECRET` and `EMAIL_ENCRYPTION_KEY` are regenerated on each start, every restart logs all users out, and everything encrypted with the old key becomes unreadable: AI provider keys saved in the admin panel, mailbox passwords, Google Calendar tokens, Calendly settings and plugin secrets. Set both to fixed values before you store anything.
+</Callout>
+
+The clean way to add variables without editing the tracked compose file is a `docker-compose.override.yml` next to it. Docker Compose merges it automatically:
+
+```yaml
+# docker-compose.override.yml
+services:
+  app:
+    environment:
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      EMAIL_ENCRYPTION_KEY: ${EMAIL_ENCRYPTION_KEY}
+      BETTER_AUTH_URL: ${APP_URL}
+      NEXT_PUBLIC_APP_URL: ${APP_URL}
+      EMAIL_FROM: ${EMAIL_FROM}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL}
+```
+
+Then add the values to `.env`:
+
+```sh
+openssl rand -base64 32   # BETTER_AUTH_SECRET
+openssl rand -hex 32      # EMAIL_ENCRYPTION_KEY (must be 64 hex characters)
+```
+
+```sh
+# .env (excerpt)
+APP_URL=https://crm.example.com
+BETTER_AUTH_SECRET=...
+EMAIL_ENCRYPTION_KEY=...
+EMAIL_FROM=crm@example.com
+RESEND_API_KEY=re_...
+RESEND_FROM_EMAIL=crm@example.com
+```
+
+Add any other variable from the [configuration reference](/docs/admins/configuration) the same way. The `docker-compose-coolify.yml` file already passes most of them and is a good template; see [Deployment](/docs/admins/deployment).
+
+## What runs
+
+| Service | Image | Exposed to the host |
+|---|---|---|
+| `app` | built from `Dockerfile` | port 3000 |
+| `postgres` | `pgvector/pgvector:pg17` | no |
+| `minio` | `pgsty/minio` | no |
+| `inngest` | `inngest/inngest:latest`, `inngest dev` | no |
+
+Only port 3000 is published. Each internal service has a commented-out `ports:` block in `docker-compose.yml` if you need direct access (5432 for Postgres, 9000/9001 for MinIO, 8288 for the Inngest dashboard).
+
+## What happens on start
+
+`docker-entrypoint.sh` runs these steps every time the app container starts:
+
+1. Waits up to 30 seconds for Postgres.
+2. Generates `BETTER_AUTH_SECRET` and `EMAIL_ENCRYPTION_KEY` if they are empty.
+3. Runs `prisma migrate deploy`.
+4. Creates the MinIO bucket if it does not exist.
+5. Counts rows in the `Users` table. If there are none, runs `prisma db seed`.
+6. Starts the server with `node server.js`.
+
+The seed fills default CRM values (industries, lead sources, sales stages and similar) and creates the admin user.
+
+## First login
+
+The seed creates one user with the email from `ADMIN_EMAIL`, role `admin`, status active and the display name "Playwright Admin". Change the name in your profile after you sign in. `ADMIN_EMAIL` is read only on the first start; changing it later has no effect.
+
+There is no password. On the sign-in page, enter the admin email and request a code.
+
+<Tabs items={["With Resend configured", "Without email (testing only)"]}>
+<Tab value="With Resend configured">
+
+Set `RESEND_API_KEY` and `EMAIL_FROM` (a sender address verified in Resend) and make sure both reach the container. The code arrives by email and expires after 5 minutes.
+
+</Tab>
+<Tab value="Without email (testing only)">
+
+Request the code on the sign-in page, then read it from the database:
+
+```sh
+docker compose exec postgres psql -U nextcrm -d nextcrm \
+  -c 'SELECT identifier, value, "expiresAt" FROM "Verification" ORDER BY "createdAt" DESC LIMIT 1;'
+```
+
+`identifier` contains the email, `value` contains the code. Replace `nextcrm` with your `POSTGRES_USER` and `POSTGRES_DB` if you changed them.
+
+</Tab>
+</Tabs>
+
+Once you are in, open **Administration** (`/admin`) and continue with [Users and roles](/docs/admins/users-and-roles).
+
+## Stopping and data
+
+```sh
+docker compose down      # stops containers, keeps data
+docker compose down -v   # stops containers and deletes all data volumes
+```
+
+Data lives in two named volumes: `postgres_data` (database) and `minio_data` (uploaded files). See [Backups](/docs/admins/backups).

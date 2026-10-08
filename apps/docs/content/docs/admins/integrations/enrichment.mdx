@@ -1,0 +1,49 @@
+---
+title: Enrichment
+description: Keys and setup for AI enrichment of contacts and targets, including the E2B sandbox template.
+---
+
+Enrichment fills in fields on contacts and targets (website, industry, social profiles and similar) from public web sources. There are two engines, and they need different keys.
+
+| Engine | Used by | Needs |
+|---|---|---|
+| Scraping + OpenAI | Contact enrichment (single and bulk), interactive target enrichment, MCP contact enrichment | OpenAI key and Firecrawl key |
+| Browser agent in an E2B sandbox | Background target enrichment (the queued "enrich" action on a target, bulk target enrichment, MCP target enrichment), and enrichment of the C-level contacts it discovers | Anthropic key, `E2B_API_KEY`, and the E2B template |
+
+Bulk target enrichment checks for the OpenAI and Firecrawl keys before it queues the job, and the queued job then uses Anthropic and E2B. To have every enrichment action work, configure all four keys.
+
+## Keys
+
+OpenAI, Firecrawl and Anthropic keys are resolved in this order: environment variable, then the system-wide key under **Administration → LLM Keys**, then the key of the user who started the enrichment (their profile, **LLMs** tab). If none is found, the UI shows a dialog explaining that a key is missing.
+
+| Key | Environment variable | Admin panel |
+|---|---|---|
+| OpenAI | `OPENAI_API_KEY` | yes |
+| Firecrawl | `FIRECRAWL_API_KEY` | yes |
+| Anthropic | `ANTHROPIC_API_KEY` | yes |
+| E2B | `E2B_API_KEY` | no, environment only |
+
+With Docker Compose, neither compose file passes `ANTHROPIC_API_KEY` to the app, so save the Anthropic key in the admin panel. Put the OpenAI key into `OPENAI_API_KEY`, because the compose files set a placeholder that would otherwise hide the admin-panel key.
+
+## E2B template
+
+The browser agent runs in an E2B sandbox created from a template. The repository contains it:
+
+- `e2b.Dockerfile`: Node.js image with `agent-browser`, Chrome and the Anthropic SDK.
+- `e2b.toml`: names the template `nextcrm-enrichment`.
+
+Build the template once in your E2B account with the E2B CLI, from the repository root:
+
+```sh
+e2b template build
+```
+
+If you give the template a different name, set `E2B_ENRICHMENT_TEMPLATE` to it. The default is `nextcrm-enrichment`.
+
+## Behaviour to expect
+
+- Background target enrichment runs as Inngest jobs, so Inngest must be running.
+- Each sandbox run has a 5-minute limit.
+- A target enriched successfully in the last 7 days is skipped unless the run is forced.
+- Contacts the agent discovers for a company are created as target contacts and enriched in separate jobs.
+- Results are recorded per run with status (running, completed, failed, skipped) and an error message when a key is missing.

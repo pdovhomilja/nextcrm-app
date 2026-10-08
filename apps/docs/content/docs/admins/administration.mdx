@@ -1,0 +1,78 @@
+---
+title: Administration panel
+description: What each page under Administration does, from AI keys to currencies and invoice settings.
+---
+
+The administration panel lives at `/admin`. Only users with the `admin` role can open it; signed-out users go to the sign-in page and everyone else is redirected to the dashboard. `/admin` opens **LLM Keys** first.
+
+| Page | Path | Purpose |
+|---|---|---|
+| LLM Keys | `/admin/llm-keys` | System-wide AI and scraping keys |
+| Users | `/admin/users` | Invite, activate, change roles, delete. See [Users and roles](/docs/admins/users-and-roles). |
+| Services | `/admin/services` | Resend API key |
+| CRM Settings | `/admin/crm-settings` | Picklist values used across CRM modules |
+| Funnel Settings | `/admin/funnel-settings` | Timing of sales automations |
+| Calendar Settings | `/admin/calendar-settings` | Calendly webhook. See [Calendar](/docs/admins/integrations/calendar). |
+| Audit Log | `/admin/audit-log` | All CRM changes, with restore. See [Audit log](/docs/admins/audit-log). |
+| Currencies | `/admin/currencies` | Currencies and exchange rates |
+| Invoices | `/admin/invoices` | Company details, number series, tax rates |
+| Plugins | `/admin/plugins` | Install and configure plugins. See [Plugins](/docs/admins/plugins). |
+
+## LLM Keys
+
+Manage keys for OpenAI, Anthropic, Firecrawl and Groq. NextCRM looks for a key in this order:
+
+1. The environment variable (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `FIRECRAWL_API_KEY`, `GROQ_API_KEY`).
+2. The system-wide key saved on this page.
+3. The user's own key, saved in their profile under **LLMs** (`/profile?tab=llms`).
+
+Each card shows where the active key comes from (environment, system-wide or not configured) and its last four characters. Saved keys are encrypted with `EMAIL_ENCRYPTION_KEY`.
+
+<Callout type="warn">
+  `docker-compose.yml` sets `OPENAI_API_KEY` to a placeholder (`sk-placeholder-replace-to-enable-ai`) when you do not provide one. The placeholder counts as an environment key, so it wins over the key you save here and OpenAI features fail. With Docker Compose, put your real OpenAI key into `OPENAI_API_KEY`. The same applies to `RESEND_API_KEY` and the **Services** page.
+</Callout>
+
+Some background jobs read `OPENAI_API_KEY` directly and never look at saved keys: record embeddings (semantic search, "Find similar") and document enrichment. Set the environment variable if you want those.
+
+## Services
+
+Shows the Resend API key from the environment and the one stored in the database, and lets you save a new database key. The environment variable takes priority. The page displays both keys in full to admins, and the database key is stored as plain text, unlike the LLM keys.
+
+## CRM Settings
+
+Edit the values offered in CRM forms. Each tab is one list: Industries, Contact Types, Lead Sources, Lead Statuses, Lead Types, Opportunity Types and Sales Stages. You can add, rename and delete values. The seed fills every list with defaults on first start.
+
+Sales stages have an extra **Automation trigger** field. The available kinds are `pre_sale`, `qualified`, `purchase_order`, `delivery` and `care`. Two of them drive background automations:
+
+- `qualified`: entering this stage starts a five-touch follow-up cadence, and the daily kill rule watches deals in it.
+- `care`: entering this stage schedules post-delivery check-ins.
+
+See [Background jobs](/docs/admins/background-jobs) for when these run.
+
+## Funnel Settings
+
+Numbers that control the sales automations:
+
+| Group | Settings |
+|---|---|
+| Kill rule | Close a deal after N days of client silence |
+| Recycle | Recycle targets N days after their sequence ends |
+| Follow-up cadence | Touch 1 in business days after the quote; touches 2 to 5 as day offsets |
+| Care & renewals | Check-in delay, referral ask delay, quarterly interval, number of quarterly check-ins, how many days ahead to surface renewals |
+
+The follow-up cadence and the care check-ins are scheduled with the values in force when a deal enters the stage. Later changes affect only deals that enter the stage afterwards.
+
+## Currencies
+
+- **Currencies:** add a currency (code, name, symbol), enable or disable it, and pick the default.
+- **Exchange rates:** edit rates by hand, or switch on **ECB auto-update**. When it is on, a background job fetches the European Central Bank's daily reference rates on weekdays.
+
+## Invoices
+
+Three tabs:
+
+- **Settings:** your company details printed on invoices (name, address, registration and tax IDs, contact data), base currency, default due days, default series, default tax rate, bank details and footer text.
+- **Series:** numbering sequences with prefix and suffix.
+- **Tax rates:** rates offered on invoice lines.
+
+Invoice PDFs are stored in object storage. Sending an invoice by email uses Resend with `EMAIL_FROM` as sender.

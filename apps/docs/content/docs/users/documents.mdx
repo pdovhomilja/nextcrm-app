@@ -1,0 +1,70 @@
+---
+title: Documents
+description: Upload files, let NextCRM summarize and classify them, and link them to accounts.
+---
+
+Open **Documents** in the sidebar. The table lists documents with their **Date**, **Document** name, **Type**, **Account**, **Status**, and **Assigned to**.
+
+## Upload documents
+
+<Steps>
+<Step>
+Click **Upload Documents**.
+</Step>
+<Step>
+Drop files into the dialog or click to browse. You can add several files at once. Accepted formats are PDF, DOCX, DOC, TXT, and images (JPG, PNG, GIF, WebP), up to 64 MB each.
+</Step>
+<Step>
+Click **Upload All**. Each file shows its progress and then **Uploaded**.
+</Step>
+</Steps>
+
+Before uploading, NextCRM checks whether the same file already exists. If it does, the file is marked as a duplicate and you choose **Upload anyway** or **Skip**.
+
+To upload documents straight to an account, open the account and use **Upload Documents** in its **Documents** card. Those files are linked to the account automatically.
+
+## Processing and AI summary
+
+After upload, each document is processed in the background. The **Status** column shows where it is:
+
+| Status | Meaning |
+| --- | --- |
+| **Pending** | Waiting to be processed. |
+| **Processing** | Text is being extracted and analyzed. |
+| **Ready** | Done. A summary and type are available. |
+| **Failed** | Processing did not finish. |
+
+Processing extracts the text, writes a short summary, and sets the document type to **Receipt**, **Contract**, **Offer**, or **Other**. It also makes the document findable in search.
+
+If a document shows **Failed**, open **Details** and click **Retry**.
+
+## Find a document
+
+- Filter the table by name: choose **Name** and type into **Filter documents...**.
+- Search the text of names and summaries: choose **Content** and type into **Search in names & summaries...**.
+- Narrow the list with the **Type** and **Status** filters. Click **Reset** to clear them.
+- Press **⌘J** anywhere in the app and type at least two characters. Matching documents appear under **Documents** in the command menu.
+- Documents also appear in the global search. See [Getting started](/docs/users/getting-started).
+
+## View a document
+
+Open the row menu and choose:
+
+- **Details** to see the status, **Summary**, **Type**, **Version**, creation date, linked **Account**, and **Version History**.
+- **View File** to open the file itself.
+
+## Work with several documents
+
+Select documents with the checkboxes in the first column. An action bar appears with:
+
+- **Link to Account**: link the selected documents to an account.
+- **Change Type**: set the type to **Receipt**, **Contract**, **Offer**, or **Other**.
+- **Delete**: delete the selected documents.
+
+<Callout type="warn">
+Deleting a document removes it and its file permanently. It cannot be restored.
+</Callout>
+
+## Documents on records and tasks
+
+Accounts, contacts, leads, and opportunities each have a **Documents** card listing the documents linked to them. To attach a document to a project task, open the task and use **Connect to task**. See [Projects and tasks](/docs/users/projects).

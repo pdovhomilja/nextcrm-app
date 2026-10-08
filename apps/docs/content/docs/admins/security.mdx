@@ -1,0 +1,54 @@
+---
+title: Security hardening
+description: A checklist for running a NextCRM instance on the internet, with the behaviours worth knowing.
+---
+
+## Checklist
+
+- [ ] Strong `POSTGRES_PASSWORD` and `MINIO_ROOT_PASSWORD`, not the default `changeme`.
+- [ ] Fixed `BETTER_AUTH_SECRET` and `EMAIL_ENCRYPTION_KEY`, stored outside the repository and included in your backup plan.
+- [ ] HTTPS in front of the app; `BETTER_AUTH_URL` and `NEXT_PUBLIC_APP_URL` set to the `https://` URL.
+- [ ] Postgres, the MinIO console and the Inngest dashboard not reachable from the internet.
+- [ ] `/api/inngest` protected (see [Background jobs](/docs/admins/background-jobs#running-inngest)).
+- [ ] `NODE_ENV=production` (the Docker image sets it).
+- [ ] As few `admin` users as possible; everyone else `manager` or `user`.
+- [ ] `MAIL_ALLOW_PRIVATE_HOSTS` and `PLUGIN_HTTP_ALLOW_PRIVATE_HOSTS` left unset unless you need them.
+- [ ] A decision on how uploaded files are readable (see [File storage behind a proxy](/docs/admins/deployment#file-storage-behind-a-proxy)).
+
+## Secrets
+
+- `.env` is listed in `.gitignore`. Do not commit it, and do not put secrets into the compose files.
+- `EMAIL_ENCRYPTION_KEY` encrypts stored AI keys, mailbox credentials, calendar tokens, Calendly settings and plugin secrets with AES-256-GCM. Anyone with the database and this key can read them.
+- The Resend key saved under **Administration → Services** is stored as plain text and shown in full to admins on that page. Prefer `RESEND_API_KEY` in the environment.
+- AI keys saved under **LLM Keys** are shown only by their last four characters.
+
+## Sign-up and user status
+
+Anyone who can reach the sign-in page can request a code for a new address, which creates a `PENDING` account. Pending and inactive users are redirected away from the app's pages. Two limits apply:
+
+- The status is checked when pages render. The shared authorization helpers used by API routes and server actions check the session and role, not the status.
+- Deactivating a user does not end their existing sessions (sessions last up to 7 days) and does not revoke their API tokens.
+
+If sign-ups from strangers are a concern, restrict access to the instance at the network level (VPN, IP allowlist or an authenticating proxy). To remove someone's access immediately, delete the user; their sessions and API tokens are deleted with them.
+
+## API tokens
+
+- Personal tokens for the MCP server start with `nxtc__`, are stored as SHA-256 hashes and act with the role of their owner.
+- A token can have an expiry date; at most 10 active tokens per user.
+- Only the owner can revoke a token. The MCP server accepts a valid token without checking the owner's status.
+
+## Inbound web-to-lead token
+
+`NEXTCRM_TOKEN` is one shared secret for the inbound endpoints `/api/crm/leads/create-lead-from-web` and `/api/crm/contacts/create-from-remote`. Anyone who has it can create leads and contacts. Leave it unset if you do not use these endpoints, and rotate it if it leaks.
+
+## Test helpers
+
+Outside `NODE_ENV=production`, NextCRM enables a BetterAuth test plugin and the endpoint `/api/auth/test-otp`, which returns login codes for any email. Never run an internet-facing instance in development mode.
+
+## Server-side requests
+
+User mailboxes (IMAP/SMTP) and plugin HTTP calls go through guards that refuse private and internal IP addresses, which blocks requests into your internal network. The two opt-outs are `MAIL_ALLOW_PRIVATE_HOSTS=true` and `PLUGIN_HTTP_ALLOW_PRIVATE_HOSTS=true`.
+
+## Audit
+
+CRM record changes and plugin administration are written to the [audit log](/docs/admins/audit-log). Records are soft-deleted and can be restored there.

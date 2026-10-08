@@ -2,6 +2,7 @@ import nextConfig from "eslint-config-next/core-web-vitals";
 
 const config = [
   ...nextConfig,
+  { ignores: ["apps/**"] },
   {
     rules: {
       // TanStack Table v9's useReactTable() is known to be incompatible with the

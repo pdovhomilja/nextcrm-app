@@ -279,7 +279,7 @@ We use Tremor charts as a tool for creating charts in NextCRM
 
 ## Documentation
 
-Available soon at: http://docs.nextcrm.io
+Read the docs at [docs.nextcrm.app](https://docs.nextcrm.app): user guide, admin guide and developer guide. Source lives in [`apps/docs`](apps/docs).
 
 ## Installation
 

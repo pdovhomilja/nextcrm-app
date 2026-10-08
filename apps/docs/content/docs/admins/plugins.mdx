@@ -1,0 +1,74 @@
+---
+title: Plugins
+description: Install, enable, configure and uninstall plugins under Administration → Plugins.
+---
+
+Plugins add features to NextCRM: rules on record writes, scheduled jobs, account tabs and panels, pages, admin sections and company registry lookups. They are trusted code that ships inside the application image. You cannot upload a plugin at runtime; the list shows the plugins included in your build.
+
+<Callout type="info">
+  The open-source repository currently ships no plugins (`plugins/` is empty), so the list is empty on a stock build. To write one, see [Plugins for developers](/docs/developers/plugins).
+</Callout>
+
+## Plugin list
+
+**Administration → Plugins** (`/admin/plugins`) lists every plugin known to this instance with its version and status:
+
+| Status | Meaning |
+|---|---|
+| Not installed | Included in the build, not set up on this instance. |
+| Enabled | Installed and running. |
+| Disabled | Installed, but its extensions are switched off. Settings and data are kept. |
+| Missing from this version | Installed earlier, but the code is no longer in the build. Its extensions do nothing. |
+
+Click a plugin to open its page.
+
+## Install
+
+<Steps>
+<Step>
+
+Open the plugin and fill in its **Settings** and **Secrets**.
+
+</Step>
+<Step>
+
+Review **Requested permissions**. These are the data and network access rights the plugin's code uses. Tick **I grant these permissions**.
+
+</Step>
+<Step>
+
+Click **Install**.
+
+</Step>
+</Steps>
+
+## Enable, disable and settings
+
+On an installed plugin's page you can:
+
+- **Enable** or **Disable** it.
+- Change settings and click **Save settings**. Secret fields show "Set (leave empty to keep)" when a value exists; leave them empty to keep the stored value.
+- See the plugin's **Log** (level and message of each entry).
+- Use any admin sections the plugin adds. They appear on its page while it is enabled.
+
+Secrets are encrypted with `EMAIL_ENCRYPTION_KEY` and never sent to the browser. The admin page only learns whether each secret is set.
+
+If stored settings no longer match the plugin's settings schema after an upgrade, invalid fields fall back to the schema defaults and a warning goes to the plugin log.
+
+## Upgrades
+
+When the build contains a newer plugin version than the one installed, the plugin page shows "Upgrade pending" with both versions. The upgrade runs automatically in the background when the app starts. A Postgres advisory lock makes sure only one app instance runs it.
+
+## Uninstall
+
+**Uninstall** opens a confirmation that tells you how many stored values on how many records will be deleted. Before you confirm, use **Download data (JSON)** to export what the plugin stored (`/api/admin/plugins/<id>/export`).
+
+Uninstalling deletes the plugin's stored values and its log. Data the plugin wrote into CRM records stays. If the plugin's code is missing from the build, uninstalling deletes its data without running the plugin's own uninstall hook.
+
+## Audit trail
+
+Installing, uninstalling, enabling, disabling and changing settings each write an entry to the [audit log](/docs/admins/audit-log) with entity type `plugin`, the plugin id and the admin who did it.
+
+## Network access
+
+Plugins make outgoing HTTP requests through a guarded client. It blocks private and internal addresses unless you set `PLUGIN_HTTP_ALLOW_PRIVATE_HOSTS=true`. The mailbox setting `MAIL_ALLOW_PRIVATE_HOSTS` does not affect plugins.

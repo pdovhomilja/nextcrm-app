@@ -1,0 +1,98 @@
+---
+title: Calendar
+description: Set up the Google OAuth app for per-user calendar sync and the Calendly webhook for booked calls.
+---
+
+## Google Calendar
+
+Users connect their own Google Calendar in their profile. As admin you provide one OAuth client for the instance. It is separate from the "Sign in with Google" client (`GOOGLE_ID` / `GOOGLE_SECRET`).
+
+<Steps>
+<Step>
+
+### Create the OAuth client
+
+In Google Cloud, enable the Google Calendar API and create an OAuth client of type **Web application**. Add this authorized redirect URI:
+
+```
+https://crm.example.com/api/profile/calendar-connections/google/callback
+```
+
+The app builds the URI from `NEXT_PUBLIC_APP_URL`, so it must match that value exactly.
+
+</Step>
+<Step>
+
+### Configure scopes
+
+NextCRM requests `https://www.googleapis.com/auth/calendar.readonly`, plus `https://www.googleapis.com/auth/calendar.events` when a user chooses read-write access. Add them to the consent screen. These are sensitive scopes: an external app in testing mode only works for the test users you list, and a Google Workspace "Internal" app only works for accounts in that Workspace.
+
+</Step>
+<Step>
+
+### Set the variables
+
+```sh
+GOOGLE_CALENDAR_CLIENT_ID=...apps.googleusercontent.com
+GOOGLE_CALENDAR_CLIENT_SECRET=...
+```
+
+`docker-compose-coolify.yml` passes both. With `docker-compose.yml`, add them through an override file.
+
+</Step>
+<Step>
+
+### Connect
+
+Each user opens **Profile → Calendar** and connects their account. NextCRM stores the refresh and access tokens encrypted with `EMAIL_ENCRYPTION_KEY`.
+
+</Step>
+</Steps>
+
+### Sync
+
+- Every 15 minutes a background job syncs all active connections into CRM calendar events.
+- Connections with read-write access also push changes from NextCRM to Google.
+- Access level is taken from the scopes Google actually granted, not from what was requested.
+
+### Connect only from the deployed instance
+
+<Callout type="warn">
+  Never run the connect flow from a local development server against the production database. The callback encrypts the tokens with the `EMAIL_ENCRYPTION_KEY` of whichever server handles it. A local server writes tokens encrypted with your local key, and the deployed instance cannot decrypt them; sync for that connection fails. The redirect URI would also point at `localhost`. Connect from the deployed instance's own URL. If it already happened, disconnect and connect again from the instance.
+</Callout>
+
+The same rule applies to everything else encrypted with `EMAIL_ENCRYPTION_KEY`: AI keys, mailbox passwords, Calendly settings and plugin secrets.
+
+## Calendly
+
+Calendly bookings can be captured as CRM calendar events through an organization webhook. You need a Calendly personal access token for an account in the organization.
+
+<Steps>
+<Step>
+
+Open **Administration → Calendar Settings** (`/admin/calendar-settings`).
+
+</Step>
+<Step>
+
+Enter the **API token** and the **Webhook signing key** and click **Save**. Both are stored encrypted. Leaving a field empty keeps the stored value.
+
+</Step>
+<Step>
+
+Click **Subscribe webhook**. NextCRM looks up your organization and creates an organization-scope subscription for `invitee.created` and `invitee.canceled`, pointing at:
+
+```
+https://crm.example.com/api/crm/calendar/webhooks/calendly
+```
+
+The page then shows the active subscription. **Re-subscribe webhook** deletes the previous subscription first.
+
+</Step>
+</Steps>
+
+The webhook endpoint checks the `Calendly-Webhook-Signature` header against the saved signing key. Without a saved key, every call is rejected with 401. Valid bookings and cancellations are queued as background jobs that create or update CRM calendar events.
+
+<Callout type="info">
+  NextCRM does not send its signing key to Calendly when it creates the subscription. If every webhook call is rejected with 401, check that the key you saved is the one Calendly signs with.
+</Callout>

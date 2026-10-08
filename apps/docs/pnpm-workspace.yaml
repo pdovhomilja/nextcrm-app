@@ -1,0 +1,7 @@
+# Standalone workspace: the docs site installs and builds on its own,
+# separate from the NextCRM app at the repository root.
+packages: []
+
+allowBuilds:
+  esbuild: true
+  sharp: true
