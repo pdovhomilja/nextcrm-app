@@ -521,4 +521,4 @@ Made with [contrib.rocks](https://contrib.rocks).
 
 ## License
 
-Licensed under the [MIT license](https://github.com/pdovhomilja/nextcrm-app/blob/main/LICENSE.md).
+Licensed under the [MIT license](https://github.com/pdovhomilja/nextcrm-app/blob/main/LICENSE).

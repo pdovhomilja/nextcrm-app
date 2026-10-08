@@ -259,7 +259,7 @@ Based on our [roadmap](https://github.com/pdovhomilja/nextcrm-app#roadmap), here
 
 ## Getting Help
 
-- **Discord**: Join our community at [https://discord.gg/dHyxhTEzUb](https://discord.gg/dHyxhTEzUb)
+- **Discord**: Join our community at [https://discord.gg/dHyxhTEyUb](https://discord.gg/dHyxhTEyUb)
 - **GitHub Discussions**: Use for questions and general discussion
 - **Issues**: For bug reports and feature requests
 - **Twitter**: [@nextcrmapp](https://twitter.com/nextcrmapp)
@@ -270,4 +270,4 @@ Contributors will be recognized in our README and release notes. Thank you for h
 
 ---
 
-By contributing to NextCRM, you agree that your contributions will be licensed under the [MIT License](LICENSE.md).
+By contributing to NextCRM, you agree that your contributions will be licensed under the [MIT License](LICENSE).
