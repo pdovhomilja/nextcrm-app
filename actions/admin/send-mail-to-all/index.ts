@@ -39,14 +39,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   }
 
   try {
-    const users = await prismadb.users.findMany({
-      /*       where: {
-        email: {
-          //contains: "pavel@softbase.cz",
-          equals: "pavel@softbase.cz",
-        },
-      }, */
-    });
+    const users = await prismadb.users.findMany();
     //console.log(users.length, "user.length");
 
     //For each user, send mail
@@ -69,7 +62,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         //send via sendmail
         await sendEmail({
           from: process.env.EMAIL_FROM as string,
-          to: user.email || "info@softbase.cz",
+          to: user.email,
           subject: title,
           text: message,
           html: await emailHtml,
