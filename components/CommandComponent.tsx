@@ -27,6 +27,7 @@ import { redirect } from "next/navigation";
 import { useRouter } from "next/navigation";
 
 import { signOut } from "@/lib/auth-client";
+import { getCommandShortcutAction } from "@/lib/command-shortcuts";
 import { useTranslations } from "next-intl";
 
 export function CommandComponent() {
@@ -49,22 +50,22 @@ export function CommandComponent() {
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
-      if (e.key === "j" && e.metaKey) {
+      const action = getCommandShortcutAction(e);
+      if (!action) return;
+      if (action !== "close") e.preventDefault();
+      if (action === "toggle") {
         setOpen((open) => !open);
       }
-      if (e.key === "Escape") {
+      if (action === "close") {
         setOpen(false);
       }
-      if (e.key === "D" && e.metaKey && e.shiftKey) {
+      if (action === "dashboard") {
         router.push("/");
         setOpen(false);
       }
-      if (e.key === "P" && e.metaKey && e.shiftKey) {
+      if (action === "profile") {
         router.push("/profile");
         setOpen(false);
-      }
-      if (e.key === "k" && e.metaKey) {
-        signOut().then(() => { window.location.href = "/sign-in"; });
       }
     };
 
@@ -76,7 +77,7 @@ export function CommandComponent() {
     <div className="hidden lg:block">
       <p className="text-sm text-muted-foreground">
         <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-          <span className="text-xs">⌘</span>J
+          <span className="text-xs">⌘</span>K
         </kbd>
       </p>
       <CommandDialog open={open} onOpenChange={setOpen}>
@@ -139,7 +140,6 @@ export function CommandComponent() {
             <CommandItem onClick={async () => { await signOut(); window.location.href = "/sign-in"; }}>
               <LogOut className="mr-2 h-4 w-4" />
               <span>{t("logout")}</span>
-              <CommandShortcut>⌘k</CommandShortcut>
             </CommandItem>
           </CommandGroup>
         </CommandList>

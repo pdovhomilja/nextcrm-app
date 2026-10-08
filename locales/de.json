@@ -89,6 +89,7 @@
   "CrmPage": {
     "title": "CRM",
     "description": "Alles, was Sie über den Verkauf wissen müssen",
+    "softDeleteDescription": "Der Datensatz wird gelöscht. Ein Administrator kann ihn über das Audit-Log wiederherstellen.",
     "accounts": {
       "pageTitle": "Unternehmen",
       "pageDescription": "Alles, was Sie über Ihre Unternehmen wissen müssen",
@@ -96,7 +97,8 @@
       "addNew": "Neues Unternehmen hinzufügen",
       "sheetTitle": "Neues Unternehmen erstellen",
       "sheetDescription": "Fügen Sie ein neues Unternehmen oder eine Organisation zu Ihrem CRM-System hinzu.",
-      "empty": "Keine zugewiesenen Unternehmen gefunden"
+      "empty": "Keine zugewiesenen Unternehmen gefunden",
+      "filterPlaceholder": "Unternehmen filtern ..."
     },
     "contacts": {
       "pageTitle": "Kontakte",

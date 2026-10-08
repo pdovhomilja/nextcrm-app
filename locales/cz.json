@@ -92,6 +92,7 @@
   "CrmPage": {
     "title": "CRM",
     "description": "Vše, co potřebujete vědět o prodeji",
+    "softDeleteDescription": "Záznam bude smazán. Administrátor ho může obnovit z auditního logu.",
     "accounts": {
       "pageTitle": "Firmy",
       "pageDescription": "Vše, co potřebujete vědět o vašich firmách",
@@ -99,7 +100,8 @@
       "addNew": "Přidat novou firmu",
       "sheetTitle": "Vytvořit novou firmu",
       "sheetDescription": "Přidejte novou firmu nebo organizaci do vašeho CRM systému.",
-      "empty": "Nebyly nalezeny žádné přiřazené firmy"
+      "empty": "Nebyly nalezeny žádné přiřazené firmy",
+      "filterPlaceholder": "Filtrovat firmy ..."
     },
     "contacts": {
       "pageTitle": "Kontakty",

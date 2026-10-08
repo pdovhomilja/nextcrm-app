@@ -138,7 +138,7 @@ export function BasicView({ data }: TargetListBasicViewProps) {
                   <User className="h-4 w-4 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <Link
-                      href={`/crm/targets/${t.target?.id}`}
+                      href={`/campaigns/targets/${t.target?.id}`}
                       className="text-sm font-medium hover:underline"
                     >
                       {t.target?.first_name} {t.target?.last_name}

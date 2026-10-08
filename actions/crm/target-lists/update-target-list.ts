@@ -38,7 +38,7 @@ export const updateTargetList = async (data: {
       where: { id },
       data: { name, description, status },
     });
-    revalidatePath("/[locale]/(routes)/crm/target-lists", "page");
+    revalidatePath("/[locale]/(routes)/campaigns/target-lists", "page");
     return { data: list };
   } catch (error) {
     return { error: "Failed to update target list" };
