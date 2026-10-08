@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { useForm } from "react-hook-form";
@@ -40,6 +40,7 @@ export function NewAccountForm({ industries, onFinish }: Props) {
   const t = useTranslations("CrmAccountForm");
   const c = useTranslations("Common");
   const p = useTranslations("Plugins");
+  const locale = useLocale();
   const { data: session } = useSession();
 
   const formSchema = z.object({
@@ -85,8 +86,14 @@ export function NewAccountForm({ industries, onFinish }: Props) {
     const number = form.getValues("company_id");
     if (!number || !registryCountry) return;
     setLookingUp(true);
-    const res = await lookupCompany(registryCountry, number);
-    setLookingUp(false);
+    let res: Awaited<ReturnType<typeof lookupCompany>>;
+    try {
+      res = await lookupCompany(registryCountry, number);
+    } catch {
+      res = { error: p("registryNotFound") };
+    } finally {
+      setLookingUp(false);
+    }
     if (res.error || !res.data) { toast.error(res.error ?? p("registryNotFound")); return; }
     const d = res.data;
     form.setValue("name", d.name, { shouldValidate: true });
@@ -95,7 +102,7 @@ export function NewAccountForm({ industries, onFinish }: Props) {
     if (d.street) form.setValue("billing_street", d.street);
     if (d.city) form.setValue("billing_city", d.city);
     if (d.postalCode) form.setValue("billing_postal_code", d.postalCode);
-    form.setValue("billing_country", d.country);
+    form.setValue("billing_country", new Intl.DisplayNames([locale], { type: "region" }).of(d.country) ?? d.country);
   };
 
   useEffect(() => {

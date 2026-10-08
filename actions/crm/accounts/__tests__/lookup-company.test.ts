@@ -22,3 +22,12 @@ it("returns the provider result or a not-found error", async () => {
   await expect(lookupCompany("CZ", "1")).resolves.toEqual({ error: "registryNotFound" });
   await expect(lookupCompany("DE", "1")).resolves.toEqual({ error: "registryNotFound" });
 });
+
+it("returns the not-found error when the plugin context cannot be built (M14)", async () => {
+  const { createPluginContext } = jest.requireMock("@/lib/plugins/context");
+  createPluginContext.mockRejectedValueOnce(new Error("state unavailable"));
+  const spy = jest.spyOn(console, "error").mockImplementation(() => {});
+  await expect(lookupCompany("cz", "12345678")).resolves.toEqual({ error: "registryNotFound" });
+  expect(spy).toHaveBeenCalled();
+  spy.mockRestore();
+});
