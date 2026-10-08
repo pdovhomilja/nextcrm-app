@@ -76,3 +76,9 @@ v8-compile-cache-*/
 
 #superpowers plugin
 .superpowers/
+
+# Internal / client material (kept locally, not published)
+/public/tmp/
+/docs/internal/
+/docs/superpowers/plans/*aqunama*
+/docs/superpowers/specs/*aqunama*
