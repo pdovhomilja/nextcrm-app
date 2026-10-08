@@ -1,6 +1,8 @@
 import type { PluginContext } from "@nextcrm/plugin-sdk";
 
 const VIES_URL = "https://ec.europa.eu/taxation_customs/vies/rest-api/check-vat-number";
+// VIES answers INVALID_INPUT for any other prefix, which would mark a valid GB/CH number as invalid.
+const VIES_COUNTRIES = new Set("AT BE BG CY CZ DE DK EE EL GR ES FI FR HR HU IE IT LT LU LV MT NL PL PT RO SE SI SK XI".split(" "));
 
 interface ViesReply {
   valid?: boolean;
@@ -13,6 +15,7 @@ export async function validateVies(vat: string, ctx: Pick<PluginContext, "http">
   const prefix = v.slice(0, 2);
   const number = v.slice(2);
   if (!/^[A-Z]{2}$/.test(prefix) || !number) return false;
+  if (!VIES_COUNTRIES.has(prefix)) throw new Error(`VIES does not cover ${prefix}`);
   const res = await ctx.http.fetch(VIES_URL, {
     method: "POST",
     headers: { Accept: "application/json", "Content-Type": "application/json" },

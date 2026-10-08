@@ -31,6 +31,13 @@ it("treats INVALID_INPUT and a missing prefix as invalid", async () => {
   expect(fetch).not.toHaveBeenCalled();
 });
 
+it("throws for prefixes VIES does not cover, without calling it", async () => {
+  const fetch = jest.fn(async (_url: string, _init?: RequestInit) => viesError("INVALID_INPUT"));
+  await expect(validateVies("GB980780684", createTestContext({ fetch }))).rejects.toThrow("VIES does not cover GB");
+  await expect(validateVies("CHE-116.281.710", createTestContext({ fetch }))).rejects.toThrow("VIES does not cover CH");
+  expect(fetch).not.toHaveBeenCalled();
+});
+
 it("throws when VIES cannot answer", async () => {
   for (const code of ["MS_UNAVAILABLE", "SERVICE_UNAVAILABLE", "TIMEOUT", "MS_MAX_CONCURRENT_REQ"]) {
     await expect(validateVies("CZ27082440", createTestContext({ fetch: async () => viesError(code) }))).rejects.toThrow(code);
