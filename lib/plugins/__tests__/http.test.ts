@@ -31,3 +31,29 @@ it("follows public redirects up to 5 hops", async () => {
   expect(res.status).toBe(200);
   expect(fetchMock.mock.calls[1][0]).toBe("https://example.com/b");
 });
+
+it("drops Authorization on cross-origin redirects, keeps it same-origin", async () => {
+  lookup.mockResolvedValue([{ address: "93.184.216.34", family: 4 }]);
+  const fetchMock = jest.fn()
+    .mockResolvedValueOnce(new Response(null, { status: 302, headers: { location: "/b" } }))
+    .mockResolvedValueOnce(new Response(null, { status: 302, headers: { location: "https://other.example.org/c" } }))
+    .mockResolvedValueOnce(new Response("ok", { status: 200 }));
+  global.fetch = fetchMock as never;
+  await createHttp(log).fetch("https://example.com/a", { headers: { Authorization: "Bearer x", Cookie: "a=b" } });
+  expect(new Headers(fetchMock.mock.calls[1][1].headers).get("authorization")).toBe("Bearer x");
+  expect(new Headers(fetchMock.mock.calls[2][1].headers).get("authorization")).toBeNull();
+  expect(new Headers(fetchMock.mock.calls[2][1].headers).get("cookie")).toBeNull();
+});
+
+it("rewrites POST + 302 to GET without body", async () => {
+  lookup.mockResolvedValue([{ address: "93.184.216.34", family: 4 }]);
+  const fetchMock = jest.fn()
+    .mockResolvedValueOnce(new Response(null, { status: 302, headers: { location: "/b" } }))
+    .mockResolvedValueOnce(new Response("ok", { status: 200 }));
+  global.fetch = fetchMock as never;
+  await createHttp(log).fetch("https://example.com/a", { method: "POST", body: "x", headers: { "Content-Type": "text/plain" } });
+  const second = fetchMock.mock.calls[1][1];
+  expect(second.method).toBe("GET");
+  expect(second.body).toBeUndefined();
+  expect(new Headers(second.headers).get("content-type")).toBeNull();
+});
