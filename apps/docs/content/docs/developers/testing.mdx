@@ -71,7 +71,7 @@ The seeded user must exist and be `ACTIVE`; `pnpm db:seed` takes care of that. T
 
 | Job | Steps |
 | --- | --- |
-| Fast checks | `prisma generate`, `tsc --noEmit`, Jest (without the DB-backed suite) |
+| Fast checks | `prisma generate`, `tsc --noEmit`, `plugins:generate --check`, Jest (without the DB-backed suite) |
 | Integration | Postgres service (pgvector, pg16), `prisma migrate deploy` on an empty database, then the DB-backed Jest suite |
 | Production build | `pnpm run build` (prisma generate, migrate deploy, next build) |
 | E2E | Postgres, migrate, seed, Inngest dev server, `playwright test --project=chromium`; uploads the report and traces |
