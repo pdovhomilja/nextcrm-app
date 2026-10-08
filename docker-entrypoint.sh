@@ -48,7 +48,19 @@ load_secret() {
 
 load_secret BETTER_AUTH_SECRET base64_32
 load_secret EMAIL_ENCRYPTION_KEY hex32
-# Shared with the bundled Inngest server, which reads the same files.
+# Shared with the bundled Inngest server, which reads the same files. That
+# server only accepts hex keys, so with it an old non-hex value (e.g. the
+# former default INNGEST_EVENT_KEY=local) is ignored and a key is generated.
+# Keys for Inngest Cloud (any other INNGEST_BASE_URL) are left alone.
+if [ "${INNGEST_BASE_URL:-}" = "http://inngest:8288" ]; then
+  for name in INNGEST_SIGNING_KEY INNGEST_EVENT_KEY; do
+    eval "current=\${$name:-}"
+    if [ -n "$current" ] && ! printf '%s' "$current" | grep -Eq '^([0-9a-fA-F]{2})+$'; then
+      echo "==> Ignoring non-hex $name from the environment."
+      unset "$name"
+    fi
+  done
+fi
 load_secret INNGEST_SIGNING_KEY hex32
 load_secret INNGEST_EVENT_KEY hex32
 
