@@ -7,7 +7,7 @@ export function normalizeIco(input: string): string | null {
   const s = input.replace(/\s+/g, "");
   if (!/^\d{1,8}$/.test(s)) return null;
   const ico = s.padStart(8, "0");
-  const sum = [...ico.slice(0, 7)].reduce((acc, d, i) => acc + Number(d) * (8 - i), 0);
+  const sum = ico.slice(0, 7).split("").reduce((acc, d, i) => acc + Number(d) * (8 - i), 0);
   return (11 - (sum % 11)) % 10 === Number(ico[7]) ? ico : null;
 }
 
