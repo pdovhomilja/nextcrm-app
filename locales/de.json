@@ -21,6 +21,7 @@
     "tasks": "Aufgaben",
     "reports": "Berichte",
     "documents": "Dokumente",
+    "invoices": "Rechnungen",
     "storage": "Speicher",
     "settings": "Einstellungen"
   },
@@ -34,6 +35,7 @@
     "opportunities": "Angebote",
     "contacts": "Kontakte",
     "leads": "Leads",
+    "contracts": "Verträge",
     "projects": "Projekte",
     "tasks": "Aufgaben",
     "myTasks": "Meine Aufgaben",
@@ -275,12 +277,31 @@
     "language": "Sprache",
     "openAiIntegration": "OpenAI-Integration",
     "tabs": {
+      "profile": "Profil",
+      "security": "Sicherheit",
+      "preferences": "Einstellungen",
+      "developer": "Entwickler",
       "emails": "Email Accounts",
+      "profileDesc": "Foto und persönliche Daten aktualisieren",
+      "securityDesc": "Passwort und Kontosicherheit verwalten",
+      "preferencesDesc": "Sprache und Anzeigeeinstellungen anpassen",
+      "developerDesc": "API-Schlüssel und Entwicklerintegrationen verwalten",
       "emailsDesc": "Manage your connected IMAP mailboxes",
       "calendar": "Kalender",
       "calendarDesc": "Verbundene Kalender verwalten",
       "llms": "LLMs",
       "llmsDesc": "LLM API-Schlüssel verwalten"
+    },
+    "cards": {
+      "photo": "Profilfoto",
+      "personalInfo": "Persönliche Daten",
+      "changePassword": "Passwort ändern",
+      "language": "Sprache",
+      "openai": "OpenAI-Integration",
+      "apiTokens": "API-Token"
+    },
+    "hero": {
+      "role": "Administrator"
     }
   },
   "ProfileForm": {
@@ -597,6 +618,113 @@
     "savedReports": {
       "placeholder": "Saved reports...",
       "shared": "shared"
+    }
+  },
+  "InvoicesPage": {
+    "title": "Rechnungen",
+    "description": "Rechnungen, Zahlungen und Abrechnung verwalten",
+    "new": "Neue Rechnung",
+    "search": "Rechnungen suchen...",
+    "status": {
+      "DRAFT": "Entwurf",
+      "ISSUED": "Ausgestellt",
+      "SENT": "Versendet",
+      "PARTIALLY_PAID": "Teilweise bezahlt",
+      "PAID": "Bezahlt",
+      "OVERDUE": "Überfällig",
+      "CANCELLED": "Storniert",
+      "DISPUTED": "Beanstandet",
+      "REFUNDED": "Erstattet",
+      "WRITTEN_OFF": "Abgeschrieben"
+    },
+    "table": {
+      "number": "Nummer",
+      "account": "Firma",
+      "issueDate": "Ausgestellt",
+      "dueDate": "Fällig",
+      "total": "Gesamt",
+      "status": "Status",
+      "type": "Typ",
+      "currency": "Währung"
+    },
+    "form": {
+      "account": "Firma",
+      "currency": "Währung",
+      "series": "Nummernkreis",
+      "dueDate": "Fälligkeitsdatum",
+      "type": "Typ",
+      "lineItems": "Positionen",
+      "addLine": "Position hinzufügen",
+      "product": "Produkt",
+      "description": "Beschreibung",
+      "quantity": "Menge",
+      "unitPrice": "Einzelpreis",
+      "discount": "Rabatt %",
+      "taxRate": "Steuersatz",
+      "total": "Gesamt",
+      "publicNotes": "Öffentliche Notizen",
+      "internalNotes": "Interne Notizen",
+      "save": "Entwurf speichern",
+      "issue": "Rechnung ausstellen",
+      "bankName": "Bankname",
+      "iban": "IBAN",
+      "swift": "SWIFT",
+      "variableSymbol": "Variables Symbol"
+    },
+    "actions": {
+      "issue": "Ausstellen",
+      "cancel": "Stornieren",
+      "duplicate": "Duplizieren",
+      "send": "Per E-Mail senden",
+      "downloadPdf": "PDF herunterladen",
+      "addPayment": "Zahlung hinzufügen",
+      "edit": "Bearbeiten",
+      "delete": "Löschen"
+    },
+    "payment": {
+      "amount": "Betrag",
+      "date": "Datum",
+      "method": "Zahlungsart",
+      "reference": "Referenz",
+      "note": "Notiz"
+    }
+  },
+  "InvoicesAdminPage": {
+    "title": "Rechnungseinstellungen",
+    "description": "Standardwerte und Optionen für Rechnungen konfigurieren",
+    "taxRates": {
+      "title": "Steuersätze",
+      "name": "Name",
+      "rate": "Satz %",
+      "isDefault": "Standard",
+      "active": "Aktiv",
+      "add": "Steuersatz hinzufügen",
+      "edit": "Steuersatz bearbeiten",
+      "delete": "Steuersatz löschen"
+    },
+    "series": {
+      "title": "Nummernkreise",
+      "name": "Name",
+      "prefix": "Präfix-Vorlage",
+      "resetPolicy": "Zurücksetzung",
+      "isDefault": "Standard",
+      "active": "Aktiv",
+      "add": "Nummernkreis hinzufügen",
+      "edit": "Nummernkreis bearbeiten",
+      "delete": "Nummernkreis löschen"
+    },
+    "settings": {
+      "title": "Allgemeine Einstellungen",
+      "baseCurrency": "Basiswährung",
+      "defaultSeries": "Standard-Nummernkreis",
+      "defaultTaxRate": "Standard-Steuersatz",
+      "defaultDueDays": "Standard-Zahlungsziel (Tage)",
+      "bankName": "Bankname",
+      "bankAccount": "Bankkonto",
+      "iban": "IBAN",
+      "swift": "SWIFT",
+      "footerText": "Fußzeilentext",
+      "save": "Einstellungen speichern"
     }
   },
   "CommandComponent": {

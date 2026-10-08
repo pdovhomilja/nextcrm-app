@@ -21,6 +21,7 @@
     "tasks": "завдання",
     "reports": "Звіти",
     "documents": "Документи",
+    "invoices": "Рахунки",
     "storage": "Зберігання",
     "settings": "Адміністрація"
   },
@@ -34,12 +35,13 @@
     "opportunities": "Угоди",
     "contacts": "Контакти",
     "leads": "Ліди",
+    "contracts": "Договори",
     "projects": "Проекти",
     "tasks": "Завдання",
     "myTasks": "Мої завдання",
     "documents": "Документи",
     "storage": "Зберігання",
-    "invoices": "Рахунк��",
+    "invoices": "Рахунки",
     "campaigns": "Кампанії",
     "targets": "Цілі"
   },
@@ -275,12 +277,31 @@
     "language": "Мова",
     "openAiIntegration": "Інтеграція OpenAI",
     "tabs": {
+      "profile": "Профіль",
+      "security": "Безпека",
+      "preferences": "Налаштування",
+      "developer": "Для розробників",
       "emails": "Email Accounts",
+      "profileDesc": "Оновіть фото та особисті дані",
+      "securityDesc": "Керуйте паролем і безпекою облікового запису",
+      "preferencesDesc": "Налаштуйте мову та параметри відображення",
+      "developerDesc": "Керуйте API-ключами та інтеграціями для розробників",
       "emailsDesc": "Manage your connected IMAP mailboxes",
       "calendar": "Календар",
       "calendarDesc": "Керування підключеними календарями",
       "llms": "LLMs",
       "llmsDesc": "Керуйте своїми LLM API-ключами"
+    },
+    "cards": {
+      "photo": "Фото профілю",
+      "personalInfo": "Особисті дані",
+      "changePassword": "Зміна пароля",
+      "language": "Мова",
+      "openai": "Інтеграція OpenAI",
+      "apiTokens": "API-токени"
+    },
+    "hero": {
+      "role": "Адміністратор"
     }
   },
   "ProfileForm": {
@@ -597,6 +618,113 @@
     "savedReports": {
       "placeholder": "Saved reports...",
       "shared": "shared"
+    }
+  },
+  "InvoicesPage": {
+    "title": "Рахунки",
+    "description": "Керуйте рахунками, платежами та білінгом",
+    "new": "Новий рахунок",
+    "search": "Пошук рахунків...",
+    "status": {
+      "DRAFT": "Чернетка",
+      "ISSUED": "Виставлено",
+      "SENT": "Надіслано",
+      "PARTIALLY_PAID": "Частково оплачено",
+      "PAID": "Оплачено",
+      "OVERDUE": "Прострочено",
+      "CANCELLED": "Скасовано",
+      "DISPUTED": "Оскаржено",
+      "REFUNDED": "Повернено",
+      "WRITTEN_OFF": "Списано"
+    },
+    "table": {
+      "number": "Номер",
+      "account": "Компанія",
+      "issueDate": "Виставлено",
+      "dueDate": "Сплатити до",
+      "total": "Разом",
+      "status": "Статус",
+      "type": "Тип",
+      "currency": "Валюта"
+    },
+    "form": {
+      "account": "Компанія",
+      "currency": "Валюта",
+      "series": "Серія рахунків",
+      "dueDate": "Термін оплати",
+      "type": "Тип",
+      "lineItems": "Позиції",
+      "addLine": "Додати позицію",
+      "product": "Продукт",
+      "description": "Опис",
+      "quantity": "Кількість",
+      "unitPrice": "Ціна за одиницю",
+      "discount": "Знижка %",
+      "taxRate": "Ставка податку",
+      "total": "Разом",
+      "publicNotes": "Публічні примітки",
+      "internalNotes": "Внутрішні примітки",
+      "save": "Зберегти чернетку",
+      "issue": "Виставити рахунок",
+      "bankName": "Назва банку",
+      "iban": "IBAN",
+      "swift": "SWIFT",
+      "variableSymbol": "Варіабельний символ"
+    },
+    "actions": {
+      "issue": "Виставити",
+      "cancel": "Скасувати",
+      "duplicate": "Дублювати",
+      "send": "Надіслати електронною поштою",
+      "downloadPdf": "Завантажити PDF",
+      "addPayment": "Додати платіж",
+      "edit": "Редагувати",
+      "delete": "Видалити"
+    },
+    "payment": {
+      "amount": "Сума",
+      "date": "Дата",
+      "method": "Спосіб оплати",
+      "reference": "Референс",
+      "note": "Примітка"
+    }
+  },
+  "InvoicesAdminPage": {
+    "title": "Налаштування рахунків",
+    "description": "Налаштуйте типові значення та параметри рахунків",
+    "taxRates": {
+      "title": "Ставки податку",
+      "name": "Назва",
+      "rate": "Ставка %",
+      "isDefault": "За замовчуванням",
+      "active": "Активна",
+      "add": "Додати ставку податку",
+      "edit": "Редагувати ставку податку",
+      "delete": "Видалити ставку податку"
+    },
+    "series": {
+      "title": "Серії рахунків",
+      "name": "Назва",
+      "prefix": "Шаблон префікса",
+      "resetPolicy": "Правило скидання",
+      "isDefault": "За замовчуванням",
+      "active": "Активна",
+      "add": "Додати серію",
+      "edit": "Редагувати серію",
+      "delete": "Видалити серію"
+    },
+    "settings": {
+      "title": "Загальні налаштування",
+      "baseCurrency": "Базова валюта",
+      "defaultSeries": "Серія за замовчуванням",
+      "defaultTaxRate": "Ставка податку за замовчуванням",
+      "defaultDueDays": "Термін оплати за замовчуванням (днів)",
+      "bankName": "Назва банку",
+      "bankAccount": "Банківський рахунок",
+      "iban": "IBAN",
+      "swift": "SWIFT",
+      "footerText": "Текст нижнього колонтитула",
+      "save": "Зберегти налаштування"
     }
   },
   "CommandComponent": {
