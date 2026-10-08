@@ -124,7 +124,7 @@ Failed calls return `isError: true` and a JSON body `{ "error": "...", "code": "
 
 | Code | Meaning |
 | --- | --- |
-| `UNAUTHORIZED` | Missing, invalid, expired or revoked token |
+| `UNAUTHORIZED` | Missing, invalid, expired or revoked token, or the token's owner is not `ACTIVE` |
 | `FORBIDDEN` | The record exists but the user may not access it |
 | `NOT_FOUND` | No such record (or soft-deleted) |
 | `INVALID_PARAMS` | Validation failed |

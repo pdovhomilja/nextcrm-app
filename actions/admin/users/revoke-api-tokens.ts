@@ -1,5 +1,4 @@
 "use server";
-import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { revokeAllApiTokens } from "@/lib/api-tokens";
 import {
@@ -8,7 +7,7 @@ import {
   AuthorizationError,
 } from "@/lib/authz";
 
-export const deactivateUser = async (userId: string) => {
+export const revokeUserApiTokens = async (userId: string) => {
   try {
     await requireRole(["admin"]);
   } catch (e) {
@@ -20,17 +19,11 @@ export const deactivateUser = async (userId: string) => {
   if (!userId) return { error: "userId is required" };
 
   try {
-    const user = await prismadb.users.update({
-      where: { id: userId },
-      data: { userStatus: "INACTIVE" },
-    });
-    // End every way back in: browser sessions and API tokens.
-    await prismadb.session.deleteMany({ where: { userId } });
-    await revokeAllApiTokens(userId);
+    const revoked = await revokeAllApiTokens(userId);
     revalidatePath("/[locale]/(routes)/admin", "page");
-    return { data: user };
+    return { data: { revoked } };
   } catch (error) {
-    console.log("[DEACTIVATE_USER]", error);
-    return { error: "Failed to deactivate user" };
+    console.log("[REVOKE_USER_API_TOKENS]", error);
+    return { error: "Failed to revoke API tokens" };
   }
 };

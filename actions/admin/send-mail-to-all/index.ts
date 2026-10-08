@@ -5,7 +5,7 @@ import { SendMailToAll } from "./schema";
 import { InputType, ReturnType } from "./types";
 
 import { prismadb } from "@/lib/prisma";
-import resendHelper from "@/lib/resend";
+import resendHelper, { getResendApiKey } from "@/lib/resend";
 import { createSafeAction } from "@/lib/create-safe-action";
 import MessageToAllUsers from "@/emails/admin/MessageToAllUser";
 import sendEmail from "@/lib/sendmail";
@@ -28,8 +28,6 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     throw e;
   }
 
-  const resend = await resendHelper();
-
   const { title, message } = data;
 
   if (!title || !message) {
@@ -39,25 +37,17 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   }
 
   try {
+    // One channel per message: Resend when a key is configured (env or DB),
+    // otherwise SMTP.
+    const resend = (await getResendApiKey()) ? await resendHelper() : null;
+
     const users = await prismadb.users.findMany({
-      /*       where: {
-        email: {
-          //contains: "pavel@softbase.cz",
-          equals: "pavel@softbase.cz",
-        },
-      }, */
+      where: { userStatus: "ACTIVE" },
     });
-    //console.log(users.length, "user.length");
 
     //For each user, send mail
     for (const user of users) {
-      const resendKey = await prismadb.systemServices.findFirst({
-        where: {
-          name: "resend_smtp",
-        },
-      });
-
-      if (!resendKey?.serviceKey || !process.env.RESEND_API_KEY) {
+      if (!resend) {
         const emailHtml = render(
           MessageToAllUsers({
             title: title,
@@ -74,6 +64,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
           text: message,
           html: await emailHtml,
         });
+        continue;
       }
 
       //send via Resend.com

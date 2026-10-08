@@ -9,16 +9,13 @@ Manage users under **Administration → Users** (`/admin/users`).
 
 NextCRM has three roles:
 
-| Role | Users | CRM records | Projects | Reports | Settings |
-|---|---|---|---|---|---|
-| `admin` | create, read, update, delete, change role, activate, deactivate | full access | full access | read, export | read, update |
-| `manager` | read | full access | full access | read, export | read |
-| `user` | read | read | read | read | read |
+| Role | Administration | CRM records and projects | Reports |
+|---|---|---|---|
+| `admin` | full access, including user management | all records | all data, including the Users report |
+| `manager` | no access | all records | all data, including the Users report |
+| `user` | no access | records they own: read, create and edit | only data from records they own; no Users report |
 
-These are the permission statements defined in `lib/auth-permissions.ts`. In addition:
-
-- Only admins can open the administration panel.
-- Admins and managers work with all CRM records. For the `user` role, edits and reports are limited to records the user owns: records assigned to them or created by them (for accounts, also accounts they watch).
+"Records they own" means records assigned to them or created by them (for accounts, also accounts they watch; for project boards, also boards shared with them). The same rules apply in the web app, the API and the MCP server; they are enforced in `lib/authz`.
 
 Older instances may still have the legacy role values `member` and `viewer`. NextCRM treats `member` as `manager` and `viewer` as `user`.
 
@@ -31,6 +28,8 @@ Every user has a status:
 | `ACTIVE` | Can use the app. |
 | `PENDING` | Signed up but not yet approved. Sees a waiting page after sign-in. |
 | `INACTIVE` | Deactivated by an admin. Sees an "inactive" page after sign-in. |
+
+Only `ACTIVE` users get through: pages, server actions, API routes and the MCP server all treat a `PENDING` or `INACTIVE` user as signed out, and API tokens of such users are rejected.
 
 ## How users get in
 
@@ -50,18 +49,17 @@ Open the row menu in the user table:
 
 - **Copy ID**
 - **Activate**: sets status `ACTIVE` and sends the user an email through SMTP.
-- **Deactivate**: sets status `INACTIVE`.
+- **Deactivate**: sets status `INACTIVE`, signs the user out on every device and revokes all of their API tokens. Activating the user again does not bring the tokens back; they create new ones.
+- **Revoke API tokens**: revokes all active API tokens of the user, without deactivating them. Use it when a token may have leaked.
 - **Set Role**: `admin`, `manager` or `user`. You cannot remove your own admin role.
 - **Delete**: removes the user after confirmation.
 
 ### Message all users
 
-**Send mail to all** sends a message with a title and body to every user in the table, whatever their status.
+**Send mail to all** sends a message with a title and body to every `ACTIVE` user. It goes through Resend when a Resend key is configured (environment or **Services** page), otherwise through the SMTP server; each user gets the message once.
 
 ## API tokens
 
 Each user can create personal API tokens for the MCP server in their profile (Developer tab). Tokens start with `nxtc__`, are stored only as a SHA-256 hash, can have an expiry date, and act with the role of the user who created them. A user can have at most 10 active tokens. See [MCP server](/docs/developers/mcp).
 
-<Callout type="warn">
-  Deactivating a user does not revoke their API tokens, and the MCP server does not check user status. Tokens can only be revoked by their owner. To cut off a departing user completely, ask them to revoke their tokens first, or delete the user (tokens are deleted with the user).
-</Callout>
+Owners revoke their own tokens in their profile. Admins can revoke all tokens of any user with **Revoke API tokens** in the user table; deactivating a user revokes them too. Tokens of a user who is not `ACTIVE` are rejected either way.
