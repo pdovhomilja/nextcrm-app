@@ -39,7 +39,7 @@ export const addTargetsToList = async (targetListId: string, targetIds: string[]
       })),
       skipDuplicates: true,
     });
-    revalidatePath("/[locale]/(routes)/crm/target-lists", "page");
+    revalidatePath("/[locale]/(routes)/campaigns/target-lists", "page");
     return { added: result.count };
   } catch (error) {
     return { error: "Failed to add targets to list" };

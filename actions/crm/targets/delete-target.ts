@@ -30,7 +30,7 @@ export const deleteTarget = async (targetId: string) => {
       where: { id: targetId },
       data: { deletedAt: new Date(), deletedBy: user.id },
     });
-    revalidatePath("/[locale]/(routes)/crm/targets", "page");
+    revalidatePath("/[locale]/(routes)/campaigns/targets", "page");
     return { success: true };
   } catch (error) {
     return { error: "Failed to delete target" };
