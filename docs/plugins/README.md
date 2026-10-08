@@ -38,4 +38,4 @@ After adding or removing a plugin run `pnpm plugins:generate --public-only` and 
 
 ## Testing
 
-Use `createTestContext` from `@nextcrm/plugin-sdk/testing` for unit tests. It gives in-memory `ctx.data`, `ctx.store`, a mockable `ctx.http.fetch`, and records `ctx.logs` and `ctx.notifications`. `ctx.t` returns the key. CI also runs the contract test (`__tests__/plugins/contract.test.ts`): manifest, sdk range, settings schema, and translations in all four locales.
+Use `createTestContext` from `@nextcrm/plugin-sdk/testing` for unit tests. It gives in-memory `ctx.data`, `ctx.store`, a mockable `ctx.http.fetch`, and records `ctx.logs` and `ctx.notifications`. `ctx.t` returns the key. CI also runs the contract test (`__tests__/plugins/contract.test.ts`): manifest, sdk range, settings schema, and translations in all four locales. It also fails on duplicate Inngest function ids (`plugin-<id>-cron-<slug>`, `plugin-<id>-on-<slug>`, `plugin-<id>-after`) and invalid cron expressions.

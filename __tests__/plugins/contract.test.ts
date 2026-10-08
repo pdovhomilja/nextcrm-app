@@ -1,7 +1,14 @@
 import { definePlugin, LOCALES, satisfiesSdkRange, z } from "@nextcrm/plugin-sdk";
 import { getRegistry, type RegisteredPlugin } from "@/lib/plugins/registry";
 import { describeSettingsSchema } from "@/lib/plugins/settings";
+import { pluginFunctionIds } from "@/lib/plugins/inngest";
 
+jest.mock("@/inngest/client", () => ({ inngest: { createFunction: jest.fn() } }));
+jest.mock("@/lib/prisma-base", () => ({ prismaBase: {} }));
+jest.mock("@/lib/audit-log", () => ({ writeAuditLog: jest.fn() }));
+jest.mock("@/lib/plugins/context", () => ({ createPluginContext: jest.fn() }));
+jest.mock("@/lib/plugins/state", () => ({ getPluginState: jest.fn(), invalidatePluginCache: jest.fn() }));
+jest.mock("@/lib/plugins/log", () => ({ writePluginLog: jest.fn() }));
 jest.mock("@/lib/email-crypto", () => ({ encrypt: (s: string) => s, decrypt: (s: string) => s }));
 
 function keys(obj: unknown, prefix = ""): string[] {
@@ -51,5 +58,39 @@ it("contract catches broken plugins", () => {
     "cz missing keys: tab.title",
     "messages/de.json missing",
     "messages/uk.json missing",
+  ]);
+});
+
+const CRON = /^(TZ=\S+\s+)?([\d*\/,\-A-Za-z?LW#]+\s+){4}[\d*\/,\-A-Za-z?LW#]+$/;
+
+export function registryProblems(registry: RegisteredPlugin[]): string[] {
+  const problems: string[] = [];
+  const seen = new Map<string, string>();
+  for (const p of registry) {
+    for (const fnId of pluginFunctionIds(p)) {
+      const other = seen.get(fnId);
+      if (other) problems.push(`duplicate Inngest function id ${fnId} (${other}, ${p.definition.id})`);
+      else seen.set(fnId, p.definition.id);
+    }
+    for (const c of p.definition.extensions.crons) {
+      if (!CRON.test(c.schedule.trim())) problems.push(`${p.definition.id}: invalid cron "${c.schedule}" (${c.id})`);
+    }
+  }
+  return problems;
+}
+
+it("registry has unique Inngest function ids and valid crons", () => expect(registryProblems(getRegistry())).toEqual([]));
+
+it("registry check catches id collisions and bad crons (M10)", () => {
+  const mk = (id: string, ext: (x: any) => void): RegisteredPlugin => ({
+    source: "public", messages: {},
+    definition: definePlugin({ id, name: id, version: "1.0.0", sdk: "^0.1.0", description: "", permissions: [], extensions: ext }),
+  });
+  const a = mk("aa", (x) => { x.cron("x-after", "0 3 * * *", () => {}); x.cron("X After", "every day", () => {}); });
+  const b = mk("aa-cron-x", (x) => x.after("account", "created", () => {}));
+  expect(registryProblems([a, b])).toEqual([
+    "duplicate Inngest function id plugin-aa-cron-x-after (aa, aa)",
+    'aa: invalid cron "every day" (X After)',
+    "duplicate Inngest function id plugin-aa-cron-x-after (aa, aa-cron-x)",
   ]);
 });

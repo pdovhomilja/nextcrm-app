@@ -11,6 +11,19 @@ import { writePluginLog } from "./log";
 
 const slug = (s: string) => s.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase();
 
+const cronFnId = (pluginId: string, cronId: string) => `plugin-${pluginId}-cron-${slug(cronId)}`;
+const onFnId = (pluginId: string, event: string) => `plugin-${pluginId}-on-${slug(event)}`;
+const afterFnId = (pluginId: string) => `plugin-${pluginId}-after`;
+
+export function pluginFunctionIds(plugin: RegisteredPlugin): string[] {
+  const { id, extensions } = plugin.definition;
+  return [
+    ...extensions.crons.map((c) => cronFnId(id, c.id)),
+    ...extensions.events.map((e) => onFnId(id, e.event)),
+    ...(extensions.afters.length ? [afterFnId(id)] : []),
+  ];
+}
+
 export async function runIfEnabled(plugin: RegisteredPlugin, fn: (ctx: PluginContext) => Promise<unknown> | unknown) {
   const state = await getPluginState(plugin.definition.id);
   if (state?.status !== "ENABLED") return { status: "skipped:disabled" as const };
@@ -31,13 +44,13 @@ export function buildPluginFunctions(registry: RegisteredPlugin[]) {
     const { id, extensions } = plugin.definition;
     for (const cron of extensions.crons) {
       fns.push(inngest.createFunction(
-        { id: `plugin-${id}-cron-${slug(cron.id)}`, name: `Plugin ${id}: ${cron.id}`, retries: 3, triggers: [{ cron: cron.schedule }] },
+        { id: cronFnId(id, cron.id), name: `Plugin ${id}: ${cron.id}`, retries: 3, triggers: [{ cron: cron.schedule }] },
         async () => runIfEnabled(plugin, (ctx) => cron.handler(ctx)),
       ));
     }
     for (const ev of extensions.events) {
       fns.push(inngest.createFunction(
-        { id: `plugin-${id}-on-${slug(ev.event)}`, name: `Plugin ${id}: on ${ev.event}`, retries: 3, triggers: [{ event: ev.event }] },
+        { id: onFnId(id, ev.event), name: `Plugin ${id}: on ${ev.event}`, retries: 3, triggers: [{ event: ev.event }] },
         async ({ event }: { event: { data: Record<string, unknown> } }) =>
           // Loop guard: skip events caused by this plugin's own ctx.data writes.
           event.data?.source === id ? { status: "skipped:self" as const } : runIfEnabled(plugin, (ctx) => ev.handler(event.data, ctx)),
@@ -45,7 +58,7 @@ export function buildPluginFunctions(registry: RegisteredPlugin[]) {
     }
     if (extensions.afters.length) {
       fns.push(inngest.createFunction(
-        { id: `plugin-${id}-after`, name: `Plugin ${id}: after write`, retries: 3, triggers: [{ event: `plugin/${id}/after` }] },
+        { id: afterFnId(id), name: `Plugin ${id}: after write`, retries: 3, triggers: [{ event: `plugin/${id}/after` }] },
         async ({ event }: { event: { data: { entity: string; operation: string; recordId: string } } }) =>
           runIfEnabled(plugin, async (ctx) => {
             for (const a of extensions.afters) {
