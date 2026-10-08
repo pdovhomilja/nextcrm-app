@@ -27,7 +27,7 @@ NextCRM is an open-source CRM built with Next.js 16, React 19, TypeScript, Postg
    <a href="#installation"><strong>Installation</strong></a> ·
    <a href="#repo-activity"><strong>Repo activity</strong></a> ·
    <a href="#license"><strong>License</strong></a> ·
-   <a href="https://discord.gg/dHyxhTEyUb"><strong>Discord</strong></a>
+   <a href="https://discord.gg/Dd4Aj6S4Dz"><strong>Discord</strong></a>
 </p>
 <br/>
 
@@ -114,7 +114,7 @@ ENV variable  →  Admin system-wide  →  User profile
 
 NextCRM now ships with a built-in [Model Context Protocol](https://modelcontextprotocol.io/) server, letting AI agents (Claude, Cursor, custom agents) read and write CRM data directly.
 
-**127 tools across 15 modules:**
+**105 tools across 16 modules:**
 
 | Module | Tools | Operations |
 |--------|-------|------------|
@@ -130,7 +130,8 @@ NextCRM now ships with a built-in [Model Context Protocol](https://modelcontextp
 | Target Lists | 7 | list, get, create, update, delete, add members, remove members |
 | Enrichment | 4 | enrich contact, enrich target, bulk contact, bulk target |
 | Email Accounts | 1 | list |
-| Campaigns | 18 | full lifecycle: CRUD, send, pause, resume, templates, steps, stats |
+| Users | 1 | list |
+| Campaigns | 19 | full lifecycle: CRUD, send, pause, resume, templates, steps, target lists, stats |
 | Projects | 18 | boards, sections, tasks, comments, documents, watch |
 | Reports | 2 | list, run |
 
@@ -205,7 +206,7 @@ Global search across all CRM entities from a single search bar — grouped resul
 - [Vercel AI SDK 6.x](https://sdk.vercel.ai/) – Unified AI interface
 - [pgvector](https://github.com/pgvector/pgvector) – PostgreSQL vector extension for similarity search (HNSW indexes)
 - [E2B](https://e2b.dev/) – Cloud sandboxes with real Chrome browser for AI-driven web research and contact enrichment
-- [MCP Server](https://modelcontextprotocol.io/) – 127 tools across 15 modules via `mcp-handler` (Vercel MCP adapter), Bearer token auth, streamable HTTP (`/api/mcp/mcp`) + legacy SSE (`/api/mcp/sse`) transports
+- [MCP Server](https://modelcontextprotocol.io/) – 105 tools across 16 modules via `mcp-handler` (Vercel MCP adapter), Bearer token auth, streamable HTTP (`/api/mcp/mcp`) + legacy SSE (`/api/mcp/sse`) transports
 
 ### Data fetching
 
@@ -238,7 +239,7 @@ Global search across all CRM entities from a single search bar — grouped resul
 7. ✅ Vector similarity search — "Find Similar" on all CRM entity detail pages
 8. ✅ Unified search — keyword + semantic search across all CRM modules
 9. ✅ CRM Targets module — sales target and target list management
-10. ✅ MCP server — 25 CRM tools for AI agent access via Bearer token auth
+10. ✅ MCP server — 105 tools for AI agent access via Bearer token auth
 11. ✅ AI enrichment — E2B sandboxed agent (real browser + Claude Sonnet) for target/contact enrichment; C-level contact discovery; 3-tier API key management (ENV → admin → user)
 12. ✅ Audit log & history — soft delete + full field-level change trail on all CRM entities; global admin audit log page
 13. ✅ CRM Activities — notes, calls, emails, meetings, tasks linked to any CRM entity; paginated feed on all detail pages
