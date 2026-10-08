@@ -1,6 +1,7 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { revokeAllApiTokens } from "@/lib/api-tokens";
 import {
   requireRole,
   AuthenticationError,
@@ -23,6 +24,9 @@ export const deactivateUser = async (userId: string) => {
       where: { id: userId },
       data: { userStatus: "INACTIVE" },
     });
+    // End every way back in: browser sessions and API tokens.
+    await prismadb.session.deleteMany({ where: { userId } });
+    await revokeAllApiTokens(userId);
     revalidatePath("/[locale]/(routes)/admin", "page");
     return { data: user };
   } catch (error) {
