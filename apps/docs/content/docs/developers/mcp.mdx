@@ -12,7 +12,7 @@ The server is one route handler, `app/api/mcp/[transport]/route.ts`, built with 
 | Transport | URL | Notes |
 | --- | --- | --- |
 | Streamable HTTP | `https://<your-host>/api/mcp/mcp` | Recommended. Current MCP spec default. |
-| SSE (legacy) | `https://<your-host>/api/mcp/sse`, messages to `/api/mcp/message` | For old clients only. Needs Redis, see below. |
+| SSE (legacy) | `https://<your-host>/api/mcp/sse`, messages to `/api/mcp/message` | For old clients only. Needs Redis; without it the endpoints answer 501, see below. |
 
 The server exposes tools only. It has no MCP resources or prompts.
 
@@ -124,7 +124,7 @@ Failed calls return `isError: true` and a JSON body `{ "error": "...", "code": "
 
 | Code | Meaning |
 | --- | --- |
-| `UNAUTHORIZED` | Missing, invalid, expired or revoked token |
+| `UNAUTHORIZED` | Missing, invalid, expired or revoked token, or the token's owner is not `ACTIVE` |
 | `FORBIDDEN` | The record exists but the user may not access it |
 | `NOT_FOUND` | No such record (or soft-deleted) |
 | `INVALID_PARAMS` | Validation failed |
@@ -144,7 +144,7 @@ Tool calls run inside `runAsActor({ type: "token", ... })`, so plugin rules see 
 
 ## Limitations
 
-- **SSE needs Redis.** `mcp-handler` keeps SSE sessions in Redis and reads the URL from `REDIS_URL` or `KV_URL`. NextCRM does not set one up. Without it, SSE requests fail. Use Streamable HTTP.
+- **SSE needs Redis.** `mcp-handler` keeps SSE sessions in Redis and reads the URL from `REDIS_URL` or `KV_URL`. NextCRM does not set one up. Without either variable, `/api/mcp/sse` and `/api/mcp/message` return `501` with a JSON error that points to `/api/mcp/mcp`. Set `REDIS_URL` to enable SSE, or use Streamable HTTP.
 - **No per-token scopes.** A token can do everything its user can.
 - **Tools only.** No MCP resources, prompts or notifications.
 - **Plugins cannot add tools** in the current plugin SDK.

@@ -35,6 +35,7 @@
     "opportunities": "Obchody",
     "contacts": "Kontakty",
     "leads": "Leady",
+    "contracts": "Smlouvy",
     "projects": "Projekty",
     "tasks": "Úkoly",
     "myTasks": "Moje úkoly",
@@ -91,6 +92,7 @@
   "CrmPage": {
     "title": "CRM",
     "description": "Vše, co potřebujete vědět o prodeji",
+    "softDeleteDescription": "Záznam bude smazán. Administrátor ho může obnovit z auditního logu.",
     "accounts": {
       "pageTitle": "Firmy",
       "pageDescription": "Vše, co potřebujete vědět o vašich firmách",
@@ -98,7 +100,8 @@
       "addNew": "Přidat novou firmu",
       "sheetTitle": "Vytvořit novou firmu",
       "sheetDescription": "Přidejte novou firmu nebo organizaci do vašeho CRM systému.",
-      "empty": "Nebyly nalezeny žádné přiřazené firmy"
+      "empty": "Nebyly nalezeny žádné přiřazené firmy",
+      "filterPlaceholder": "Filtrovat firmy ..."
     },
     "contacts": {
       "pageTitle": "Kontakty",
@@ -279,12 +282,31 @@
     "language": "Jazyk",
     "openAiIntegration": "Integrace OpenAI",
     "tabs": {
+      "profile": "Profil",
+      "security": "Zabezpečení",
+      "preferences": "Předvolby",
+      "developer": "Pro vývojáře",
       "emails": "Email Accounts",
+      "profileDesc": "Aktualizujte svou fotografii a osobní údaje",
+      "securityDesc": "Spravujte heslo a zabezpečení účtu",
+      "preferencesDesc": "Upravte jazyk a nastavení zobrazení",
+      "developerDesc": "Spravujte API klíče a integrace pro vývojáře",
       "emailsDesc": "Manage your connected IMAP mailboxes",
       "calendar": "Kalendář",
       "calendarDesc": "Správa připojených kalendářů",
       "llms": "LLMs",
       "llmsDesc": "Spravujte své klíče LLM API"
+    },
+    "cards": {
+      "photo": "Profilová fotografie",
+      "personalInfo": "Osobní údaje",
+      "changePassword": "Změna hesla",
+      "language": "Jazyk",
+      "openai": "Integrace OpenAI",
+      "apiTokens": "API tokeny"
+    },
+    "hero": {
+      "role": "Administrátor"
     }
   },
   "ProfileForm": {

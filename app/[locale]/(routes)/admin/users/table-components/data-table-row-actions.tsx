@@ -21,11 +21,12 @@ import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Copy, Edit, MoreHorizontal, Shield, Trash, UserCheck, UserX } from "lucide-react";
+import { Copy, Edit, KeyRound, MoreHorizontal, Shield, Trash, UserCheck, UserX } from "lucide-react";
 import { deleteUser } from "@/actions/admin/users/delete-user";
 import { activateUser } from "@/actions/admin/users/activate-user";
 import { deactivateUser } from "@/actions/admin/users/deactivate-user";
 import { setUserRole } from "@/actions/admin/users/set-role";
+import { revokeUserApiTokens } from "@/actions/admin/users/revoke-api-tokens";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -97,6 +98,22 @@ export function DataTableRowActions<TData>({
     }
   };
 
+  const onRevokeTokens = async () => {
+    try {
+      setLoading(true);
+      const result = await revokeUserApiTokens(data.id);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success(`Revoked ${result.data?.revoked ?? 0} API token(s).`);
+    } catch (error) {
+      toast.error("Something went wrong while revoking API tokens. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const onSetRole = async (role: "admin" | "manager" | "user") => {
     try {
       setLoading(true);
@@ -143,6 +160,10 @@ export function DataTableRowActions<TData>({
           <DropdownMenuItem onClick={() => onDeactivate()}>
             <UserX className="mr-2 w-4 h-4" />
             Deactivate
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onRevokeTokens()}>
+            <KeyRound className="mr-2 w-4 h-4" />
+            Revoke API tokens
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuSub>

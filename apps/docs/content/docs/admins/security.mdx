@@ -18,24 +18,25 @@ description: A checklist for running a NextCRM instance on the internet, with th
 ## Secrets
 
 - `.env` is listed in `.gitignore`. Do not commit it, and do not put secrets into the compose files.
-- `EMAIL_ENCRYPTION_KEY` encrypts stored AI keys, mailbox credentials, calendar tokens, Calendly settings and plugin secrets with AES-256-GCM. Anyone with the database and this key can read them.
-- The Resend key saved under **Administration → Services** is stored as plain text and shown in full to admins on that page. Prefer `RESEND_API_KEY` in the environment.
-- AI keys saved under **LLM Keys** are shown only by their last four characters.
+- `EMAIL_ENCRYPTION_KEY` encrypts stored AI keys, the Resend key, mailbox credentials, calendar tokens, Calendly settings and plugin secrets with AES-256-GCM. Anyone with the database and this key can read them.
+- AI keys saved under **LLM Keys** and the Resend key under **Services** are shown only by their last four characters. A Resend key saved by an older version as plain text is encrypted the next time it is read.
 
 ## Sign-up and user status
 
-Anyone who can reach the sign-in page can request a code for a new address, which creates a `PENDING` account. Pending and inactive users are redirected away from the app's pages. Two limits apply:
+Anyone who can reach the sign-in page can request a code for a new address, which creates a `PENDING` account. Pending and inactive users are redirected away from the app's pages, and every server action, API route and the MCP server treat them as signed out.
 
-- The status is checked when pages render. The shared authorization helpers used by API routes and server actions check the session and role, not the status.
-- Deactivating a user does not end their existing sessions (sessions last up to 7 days) and does not revoke their API tokens.
+Deactivating a user ends all of their sessions and revokes all of their API tokens at once.
 
-If sign-ups from strangers are a concern, restrict access to the instance at the network level (VPN, IP allowlist or an authenticating proxy). To remove someone's access immediately, delete the user; their sessions and API tokens are deleted with them.
+If sign-ups from strangers are a concern, restrict access to the instance at the network level (VPN, IP allowlist or an authenticating proxy).
+
+BetterAuth's built-in admin endpoints (`/api/auth/admin/*`) are disabled for every role. User management goes through **Administration → Users**.
 
 ## API tokens
 
 - Personal tokens for the MCP server start with `nxtc__`, are stored as SHA-256 hashes and act with the role of their owner.
 - A token can have an expiry date; at most 10 active tokens per user.
-- Only the owner can revoke a token. The MCP server accepts a valid token without checking the owner's status.
+- The owner can revoke a token in their profile; an admin can revoke all tokens of a user from **Administration → Users**. Deactivating a user revokes their tokens.
+- The MCP server rejects tokens of users who are not `ACTIVE`.
 
 ## Inbound web-to-lead token
 

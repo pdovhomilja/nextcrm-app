@@ -55,11 +55,7 @@ export function CancelButton() {
 3. Add the same key, translated, to `cz.json`, `de.json` and `uk.json`.
 4. Use it with `t("key")`. For values, use ICU placeholders: `"greeting": "Hello {name}"` and `t("greeting", { name })`.
 
-Core messages have no automatic fallback to English. A key missing from a locale file shows up as an error and the key path on that locale. Add every new key to all four files in the same commit. If you cannot translate it, copy the English text and say so in the PR.
-
-<Callout type="info">
-The non-English files are not complete today. `de.json` and `uk.json` lack some keys that exist in `en.json` (mostly in newer modules such as invoices). Filling these gaps is a good first contribution.
-</Callout>
+Run `pnpm i18n:check` before you open the PR. It compares every locale file (and every plugin `messages/` folder) with `en.json` and fails on missing keys; CI runs it too. A key that is still missing at runtime falls back to the English text, so users never see the raw key path. If you cannot translate a key, copy the English text and say so in the PR.
 
 ## Plugin messages
 

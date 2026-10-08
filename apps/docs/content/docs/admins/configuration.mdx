@@ -33,9 +33,8 @@ Sessions last 7 days and are refreshed every 24 hours. Password login is disable
 
 | Variable | Required | What it does |
 |---|---|---|
-| `NEXT_PUBLIC_APP_URL` | Yes | Public URL of the instance. Used for links in emails, the Google Calendar OAuth redirect URI and the Calendly webhook URL. Set it to the same value as `BETTER_AUTH_URL`. |
+| `NEXT_PUBLIC_APP_URL` | Yes | Public URL of the instance. Used for links in emails (including the unsubscribe link in campaign emails), the Google Calendar OAuth redirect URI and the Calendly webhook URL. Set it to the same value as `BETTER_AUTH_URL`. |
 | `NEXT_PUBLIC_APP_NAME` | Recommended | Product name shown in the UI and used as the sender name of system emails. |
-| `NEXTAUTH_URL` | For campaigns | Base URL used to build the unsubscribe link in campaign emails. Set it to your public URL if you send campaigns. |
 | `NEXT_PUBLIC_APP_DOMAIN` | No | Only used to build a fallback invoice sender (`invoices@<domain>`) when `EMAIL_FROM` is not set. |
 
 ## Encryption

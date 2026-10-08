@@ -10,7 +10,7 @@ Enrichment fills in fields on contacts and targets (website, industry, social pr
 | Scraping + OpenAI | Contact enrichment (single and bulk), interactive target enrichment, MCP contact enrichment | OpenAI key and Firecrawl key |
 | Browser agent in an E2B sandbox | Background target enrichment (the queued "enrich" action on a target, bulk target enrichment, MCP target enrichment), and enrichment of the C-level contacts it discovers | Anthropic key, `E2B_API_KEY`, and the E2B template |
 
-Bulk target enrichment checks for the OpenAI and Firecrawl keys before it queues the job, and the queued job then uses Anthropic and E2B. To have every enrichment action work, configure all four keys.
+Before queuing, bulk target enrichment and the MCP target tools check for the same keys the queued job uses: an Anthropic key (missing: the UI shows the missing-key dialog) and `E2B_API_KEY` (missing: the request fails with 503). To have every enrichment action work, configure all four keys.
 
 ## Keys
 

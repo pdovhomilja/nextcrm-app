@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ReportPageLayout } from "@/components/reports/ReportPageLayout";
 import { ReportChart } from "@/components/reports/ReportChart";
 import { parseSearchParamsToFilters } from "@/actions/reports/types";
+import { requireAuthenticated, getReportScope } from "@/lib/authz";
 import {
   getTasksCreatedCompleted,
   getOverdueTasks,
@@ -20,13 +21,14 @@ export default async function ActivityReportPage({ searchParams }: Props) {
     )
   );
   const filters = parseSearchParamsToFilters(params);
+  const scope = getReportScope(await requireAuthenticated());
   const t = await getTranslations("ReportsPage");
 
   const [tasksData, overdue, tasksByAssignee, activitiesByType] = await Promise.all([
-    getTasksCreatedCompleted(filters),
-    getOverdueTasks(filters),
-    getTasksByAssignee(filters),
-    getActivitiesByType(filters),
+    getTasksCreatedCompleted(filters, scope),
+    getOverdueTasks(filters, scope),
+    getTasksByAssignee(filters, scope),
+    getActivitiesByType(filters, scope),
   ]);
 
   const taskChartData = tasksData.map((d) => ({

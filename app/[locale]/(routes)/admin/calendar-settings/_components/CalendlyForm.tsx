@@ -41,7 +41,7 @@ export function CalendlyForm(props: {
           <label className="text-sm font-medium">
             Webhook signing key {props.hasSigningKey ? "(saved)" : ""}
           </label>
-          <Input name="signingKey" type="password" placeholder="Webhook signing key" />
+          <Input name="signingKey" type="password" placeholder="Optional; generated when you subscribe" />
         </div>
         <Button type="submit" disabled={savePending}>
           {savePending ? "Saving..." : "Save"}

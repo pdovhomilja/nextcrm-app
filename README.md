@@ -85,7 +85,7 @@ Every CRM entity (Accounts, Contacts, Leads, Opportunities, Contracts) now track
 
 ### 🧠 AI Enrichment — E2B Sandboxed Agent + Flexible API Key Management *(NEW)*
 
-Target and Contact enrichment now runs inside an **[E2B](https://e2b.dev/) cloud sandbox** — a full Linux environment with a real browser (Chrome) — replacing the previous Firecrawl API path:
+Background target enrichment (queued, bulk and MCP) now runs inside an **[E2B](https://e2b.dev/) cloud sandbox** — a full Linux environment with a real browser (Chrome). Contact enrichment and interactive target enrichment still use Firecrawl + OpenAI:
 
 - **Real-browser research** — the agent navigates JS-heavy sites, LinkedIn public profiles, and paginated results that a simple API call cannot reach
 - **LLM tool-use loop** — Claude Sonnet 4.6 drives the research with tools: `browser_open`, `browser_snapshot`, `browser_click`, `browser_extract`, `web_search`
@@ -95,7 +95,7 @@ Target and Contact enrichment now runs inside an **[E2B](https://e2b.dev/) cloud
 - **5-minute timeout per target** — partial results are applied even if the agent times out
 - **Fan-out** — after company enrichment, each discovered contact is enriched independently via a separate Inngest job
 
-**API keys** are managed through a **3-tier priority system** so the app runs without any keys in `.env`:
+**Enrichment API keys** (OpenAI, Firecrawl, Anthropic) are resolved through a **3-tier priority system**, so enrichment works without those keys in `.env`. Other AI features (record embeddings, document enrichment) read `OPENAI_API_KEY` from the environment only, and E2B needs `E2B_API_KEY` in the environment:
 
 ```
 ENV variable  →  Admin system-wide  →  User profile
@@ -114,7 +114,7 @@ ENV variable  →  Admin system-wide  →  User profile
 
 NextCRM now ships with a built-in [Model Context Protocol](https://modelcontextprotocol.io/) server, letting AI agents (Claude, Cursor, custom agents) read and write CRM data directly.
 
-**127 tools across 15 modules:**
+**105 tools across 16 modules:**
 
 | Module | Tools | Operations |
 |--------|-------|------------|
@@ -130,7 +130,8 @@ NextCRM now ships with a built-in [Model Context Protocol](https://modelcontextp
 | Target Lists | 7 | list, get, create, update, delete, add members, remove members |
 | Enrichment | 4 | enrich contact, enrich target, bulk contact, bulk target |
 | Email Accounts | 1 | list |
-| Campaigns | 18 | full lifecycle: CRUD, send, pause, resume, templates, steps, stats |
+| Users | 1 | list |
+| Campaigns | 19 | full lifecycle: CRUD, send, pause, resume, templates, steps, stats |
 | Projects | 18 | boards, sections, tasks, comments, documents, watch |
 | Reports | 2 | list, run |
 
@@ -204,8 +205,8 @@ Global search across all CRM entities from a single search bar — grouped resul
 - [Anthropic API](https://www.anthropic.com/) – Claude Sonnet 4.6 drives the E2B enrichment agent tool-use loop
 - [Vercel AI SDK 6.x](https://sdk.vercel.ai/) – Unified AI interface
 - [pgvector](https://github.com/pgvector/pgvector) – PostgreSQL vector extension for similarity search (HNSW indexes)
-- [E2B](https://e2b.dev/) – Cloud sandboxes with real Chrome browser for AI-driven web research and contact enrichment
-- [MCP Server](https://modelcontextprotocol.io/) – 127 tools across 15 modules via `mcp-handler` (Vercel MCP adapter), Bearer token auth, streamable HTTP (`/api/mcp/mcp`) + legacy SSE (`/api/mcp/sse`) transports
+- [E2B](https://e2b.dev/) – Cloud sandboxes with real Chrome browser for AI-driven web research and target enrichment
+- [MCP Server](https://modelcontextprotocol.io/) – 105 tools across 16 modules via `mcp-handler` (Vercel MCP adapter), Bearer token auth, streamable HTTP (`/api/mcp/mcp`) + legacy SSE (`/api/mcp/sse`, needs `REDIS_URL`) transports
 
 ### Data fetching
 
@@ -239,7 +240,7 @@ Global search across all CRM entities from a single search bar — grouped resul
 8. ✅ Unified search — keyword + semantic search across all CRM modules
 9. ✅ CRM Targets module — sales target and target list management
 10. ✅ MCP server — 25 CRM tools for AI agent access via Bearer token auth
-11. ✅ AI enrichment — E2B sandboxed agent (real browser + Claude Sonnet) for target/contact enrichment; C-level contact discovery; 3-tier API key management (ENV → admin → user)
+11. ✅ AI enrichment — E2B sandboxed agent (real browser + Claude Sonnet) for target enrichment; C-level contact discovery; 3-tier API key management (ENV → admin → user)
 12. ✅ Audit log & history — soft delete + full field-level change trail on all CRM entities; global admin audit log page
 13. ✅ CRM Activities — notes, calls, emails, meetings, tasks linked to any CRM entity; paginated feed on all detail pages
 14. ✅ Invoices module — full invoicing workflow with line items, tax engine, multi-currency, invoice series, payments, PDF export, and email delivery
@@ -331,7 +332,7 @@ Read the docs at [docs.nextcrm.app](https://docs.nextcrm.app): user guide, admin
 
    > > - BETTER_AUTH_SECRET - for auth
    > > - uploadthings - for storing files
-   > > - openAI - for embeddings and project management assistant *(optional — can be set via admin panel instead)*
+   > > - openAI - for embeddings and project management assistant *(embeddings need `OPENAI_API_KEY` in the environment; enrichment can use an admin-panel key instead)*
    > > - Firecrawl - for contact/target enrichment *(optional — can be set via admin panel instead)*
    > > - SMTP and IMAP for emails
    > > - Inngest - for background embedding jobs

@@ -36,7 +36,7 @@ Some background jobs read `OPENAI_API_KEY` directly and never look at saved keys
 
 ## Services
 
-Shows the Resend API key from the environment and the one stored in the database, and lets you save a new database key. The environment variable takes priority. The page displays both keys in full to admins, and the database key is stored as plain text, unlike the LLM keys.
+Shows the Resend API key from the environment and the one stored in the database, and lets you save a new database key. The environment variable takes priority. Both keys are shown only by their last four characters. The database key is stored encrypted with `EMAIL_ENCRYPTION_KEY`, like the LLM keys, so that variable must be set before you save one.
 
 ## CRM Settings
 

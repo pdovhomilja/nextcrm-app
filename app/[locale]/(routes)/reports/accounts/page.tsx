@@ -3,6 +3,7 @@ import { ReportPageLayout } from "@/components/reports/ReportPageLayout";
 import { ReportChart } from "@/components/reports/ReportChart";
 import { ReportTable } from "@/components/reports/ReportTable";
 import { parseSearchParamsToFilters } from "@/actions/reports/types";
+import { requireAuthenticated, getReportScope } from "@/lib/authz";
 import {
   getNewAccounts,
   getAccountsByIndustry,
@@ -20,13 +21,14 @@ export default async function AccountsReportPage({ searchParams }: Props) {
     )
   );
   const filters = parseSearchParamsToFilters(params);
+  const scope = getReportScope(await requireAuthenticated());
   const t = await getTranslations("ReportsPage");
 
   const [newAccounts, byIndustry, topByRevenue, bySize] = await Promise.all([
-    getNewAccounts(filters),
-    getAccountsByIndustry(filters),
-    getTopAccountsByRevenue(filters),
-    getAccountsBySize(filters),
+    getNewAccounts(filters, scope),
+    getAccountsByIndustry(filters, scope),
+    getTopAccountsByRevenue(filters, scope),
+    getAccountsBySize(filters, scope),
   ]);
 
   return (

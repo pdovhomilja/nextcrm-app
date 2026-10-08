@@ -16,7 +16,7 @@ const send = inngest.send as jest.Mock;
 const KEY = "sk";
 
 function sign(body: string) {
-  const t = "1721400000";
+  const t = String(Math.floor(Date.now() / 1000));
   const v1 = createHmac("sha256", KEY).update(`${t}.${body}`).digest("hex");
   return `t=${t},v1=${v1}`;
 }

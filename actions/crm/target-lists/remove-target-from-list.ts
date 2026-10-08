@@ -34,7 +34,7 @@ export const removeTargetFromList = async (targetListId: string, targetId: strin
         },
       },
     });
-    revalidatePath("/[locale]/(routes)/crm/target-lists", "page");
+    revalidatePath("/[locale]/(routes)/campaigns/target-lists", "page");
     return { success: true };
   } catch (error) {
     return { error: "Failed to remove target from list" };

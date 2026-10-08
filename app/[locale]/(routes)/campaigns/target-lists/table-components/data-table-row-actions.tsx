@@ -67,7 +67,7 @@ export function DataTableRowActions<TData>({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-[160px]">
           <DropdownMenuItem
-            onClick={() => router.push(`/crm/target-lists/${targetList?.id}`)}
+            onClick={() => router.push(`/campaigns/target-lists/${targetList?.id}`)}
           >
             View
           </DropdownMenuItem>

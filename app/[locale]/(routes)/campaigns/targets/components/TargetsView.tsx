@@ -36,7 +36,7 @@ const TargetsView = ({ data }: any) => {
         <div className="flex justify-between">
           <div>
             <CardTitle
-              onClick={() => router.push("/crm/targets")}
+              onClick={() => router.push("/campaigns/targets")}
               className="cursor-pointer"
             >
               Targets
