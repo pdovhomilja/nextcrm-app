@@ -41,12 +41,9 @@ ENV DATABASE_URL="postgresql://placeholder:[REDACTED]@placeholder:5432/placehold
     BETTER_AUTH_SECRET="build-time-placeholder-secret-replace-at-runtime" \
     BETTER_AUTH_URL="http://localhost:3000" \
     MINIO_ENDPOINT="http://placeholder:9000" \
-    MINIO_PORT="9000" \
     MINIO_BUCKET="placeholder" \
-    MINIO_USE_SSL="false" \
     MINIO_ACCESS_KEY="placeholder" \
     MINIO_SECRET_KEY="placeholder" \
-    NEXT_PUBLIC_MINIO_ENDPOINT="http://placeholder:9000" \
     EMAIL_ENCRYPTION_KEY="0000000000000000000000000000000000000000000000000000000000000000" \
     OPENAI_API_KEY="sk-placeholder-for-build" \
     RESEND_API_KEY="re_placeholder_for_build" \
@@ -122,7 +119,9 @@ RUN printf '%s\n' \
 # Merge /opt/tools packages into /app/node_modules for ESM resolution.
 # ESM ignores NODE_PATH, so packages like @prisma/adapter-pg must exist
 # as real directories. The `-n` flag prevents overwriting pnpm symlinks.
-RUN mkdir -p /app/node_modules/@prisma && \
+# /app/data holds generated secrets (see docker-entrypoint.sh); mount a volume
+# there so they survive container re-creation.
+RUN mkdir -p /app/data /app/node_modules/@prisma && \
     cp -rn /opt/tools/node_modules/@prisma/adapter-pg /app/node_modules/@prisma/ 2>/dev/null || true && \
     cp -rn /opt/tools/node_modules/pg-cloudflare /app/node_modules/ 2>/dev/null || true && \
     chown -R nextjs:nodejs /app /opt/tools
