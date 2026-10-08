@@ -41,7 +41,7 @@ function input(overrides: Partial<CalendarEventInput> = {}): CalendarEventInput 
     startAt: new Date("2026-07-21T10:00:00Z"),
     endAt: new Date("2026-07-21T10:30:00Z"),
     counterpartyEmails: ["jane@client.com"],
-    hostEmail: "rep@aqunama.com",
+    hostEmail: "rep@example.com",
     status: "scheduled",
     ...overrides,
   };

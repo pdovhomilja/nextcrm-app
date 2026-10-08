@@ -42,7 +42,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   process.env.NEXT_PUBLIC_APP_URL = "http://localhost";
   session.mockResolvedValue({ user: { id: "user1" } });
-  calendarListGet.mockResolvedValue({ data: { id: "rep@aqunama.com" } });
+  calendarListGet.mockResolvedValue({ data: { id: "rep@example.com" } });
   upsert.mockResolvedValue({});
 });
 

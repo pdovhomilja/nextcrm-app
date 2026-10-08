@@ -431,7 +431,7 @@ model crm_Opportunities_Sales_Stages {
 }
 
 /// Instance-grade funnel timing settings (singleton row). Defaults are the
-/// AQUNAMA spec values; edited at Admin -> Funnel settings.
+/// recommended funnel values; edited at Admin -> Funnel settings.
 model crm_FunnelSettings {
   id                           String    @id @default(uuid()) @db.Uuid
   kill_after_days              Int       @default(45)
@@ -1539,7 +1539,7 @@ model EmailEmbedding {
 }
 
 // ============================================
-// CALENDAR SYNC (AQUNAMA Phase 4)
+// CALENDAR SYNC
 // ============================================
 
 enum CalendarProvider {

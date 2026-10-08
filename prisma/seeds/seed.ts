@@ -86,10 +86,10 @@ async function main() {
   }
   console.log("Opportunity Sales Stages seeded");
 
-  // Connect automation kinds to the runbook stages (idempotent; matches by
+  // Connect automation kinds to the funnel stages (idempotent; matches by
   // name, skips stages an admin renamed — kinds are then set in admin UI).
   // The base seed's `crm_Opportunities_Sales_Stages.json` uses this repo's
-  // legacy stage names rather than the AQUNAMA runbook names, so the mapping
+  // legacy stage names rather than the funnel stage names, so the mapping
   // below only covers names whose automation intent is unambiguous; the
   // rest stay unmapped and are set via Admin -> Funnel settings.
   const stageKindByName: Record<string, string> = {
@@ -153,13 +153,13 @@ async function main() {
   const testUser = await prisma.users.upsert({
     where: { email: testUserEmail },
     update: {
-      name: "Playwright Admin",
+      name: "Admin",
       userStatus: "ACTIVE",
       role: "admin",
     },
     create: {
       email: testUserEmail,
-      name: "Playwright Admin",
+      name: "Admin",
       userStatus: "ACTIVE",
       role: "admin",
     },
