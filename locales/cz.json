@@ -718,5 +718,12 @@
     "dashboard": "Přehled",
     "profileSettings": "Nastavení profilu",
     "logout": "Odhlásit se"
+  },
+  "Plugins": {
+    "ruleUnavailable": "Pravidlo pluginu není dostupné. Změna nebyla uložena.",
+    "sectionUnavailable": "Tato část pluginu není dostupná.",
+    "loadFromRegistry": "Načíst z registru",
+    "registryNotFound": "Firma v registru nenalezena.",
+    "admin": { "title": "Pluginy", "notInstalled": "Nenainstalováno", "enabled": "Zapnuto", "disabled": "Vypnuto", "missing": "V této verzi chybí", "install": "Instalovat", "enable": "Zapnout", "disable": "Vypnout", "uninstall": "Odinstalovat", "save": "Uložit nastavení", "saved": "Nastavení uloženo", "permissions": "Požadovaná oprávnění", "confirmPermissions": "Uděluji tato oprávnění", "settings": "Nastavení", "secrets": "Tajné hodnoty", "secretSet": "Nastaveno (prázdné = ponechat)", "log": "Log", "export": "Stáhnout data (JSON)", "uninstallTitle": "Odinstalovat {name}?", "uninstallBody": "Smaže se {entries} uložených hodnot u {records} záznamů a log pluginu. Data, která plugin zapsal do záznamů CRM, zůstanou.", "confirmUninstall": "Odinstalovat a smazat data pluginu", "upgradePending": "Čeká aktualizace: {from} → {to}" }
   }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { z } from "zod";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 import { createAccount } from "@/actions/crm/accounts/create-account";
+import { getRegistryCountries, lookupCompany } from "@/actions/crm/accounts/lookup-company";
 import { useSession } from "@/lib/auth-client";
 
 type Props = {
@@ -38,6 +39,7 @@ type Props = {
 export function NewAccountForm({ industries, onFinish }: Props) {
   const t = useTranslations("CrmAccountForm");
   const c = useTranslations("Common");
+  const p = useTranslations("Plugins");
   const { data: session } = useSession();
 
   const formSchema = z.object({
@@ -72,6 +74,29 @@ export function NewAccountForm({ industries, onFinish }: Props) {
     resolver: zodResolver(formSchema),
     mode: "onBlur",
   });
+
+  const [registryCountries, setRegistryCountries] = useState<string[]>([]);
+  const [registryCountry, setRegistryCountry] = useState("");
+  const [lookingUp, setLookingUp] = useState(false);
+  useEffect(() => {
+    getRegistryCountries().then((cs) => { setRegistryCountries(cs); setRegistryCountry(cs[0] ?? ""); }).catch(() => {});
+  }, []);
+  const loadFromRegistry = async () => {
+    const number = form.getValues("company_id");
+    if (!number || !registryCountry) return;
+    setLookingUp(true);
+    const res = await lookupCompany(registryCountry, number);
+    setLookingUp(false);
+    if (res.error || !res.data) { toast.error(res.error ?? p("registryNotFound")); return; }
+    const d = res.data;
+    form.setValue("name", d.name, { shouldValidate: true });
+    form.setValue("company_id", d.registrationNumber);
+    if (d.vat) form.setValue("vat", d.vat);
+    if (d.street) form.setValue("billing_street", d.street);
+    if (d.city) form.setValue("billing_city", d.city);
+    if (d.postalCode) form.setValue("billing_postal_code", d.postalCode);
+    form.setValue("billing_country", d.country);
+  };
 
   useEffect(() => {
     const uid = session?.user?.id;
@@ -181,6 +206,17 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                 </FormItem>
               )}
             />
+            {registryCountries.length > 0 && (
+              <div className="flex items-center gap-2">
+                <select aria-label="Registry country" className="border rounded-md h-9 px-2 bg-background" value={registryCountry}
+                  onChange={(e) => setRegistryCountry(e.target.value)}>
+                  {registryCountries.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <Button type="button" variant="outline" size="sm" disabled={lookingUp} onClick={loadFromRegistry}>
+                  {p("loadFromRegistry")}
+                </Button>
+              </div>
+            )}
             <FormField
               control={form.control}
               name="vat"

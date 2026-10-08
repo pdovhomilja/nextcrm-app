@@ -12,6 +12,23 @@ const config = [
       "react-hooks/incompatible-library": "off",
     },
   },
+  {
+    files: ["plugins/**/*.{ts,tsx}", "plugins-private/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": ["error", { patterns: [
+        { group: ["@/*"], message: "Plugins may import only @nextcrm/plugin-sdk, their own files and npm packages." },
+      ] }],
+    },
+  },
+  {
+    files: ["app/**/*.{ts,tsx}", "actions/**/*.{ts,tsx}", "lib/**/*.{ts,tsx}", "components/**/*.{ts,tsx}", "inngest/**/*.{ts,tsx}"],
+    ignores: ["lib/plugins/plugins.generated.ts"],
+    rules: {
+      "no-restricted-imports": ["error", { patterns: [
+        { group: ["@/plugins/*", "@/plugins-private/*"], message: "Core must not import plugins; use lib/plugins/registry." },
+      ] }],
+    },
+  },
 ];
 
 export default config;

@@ -25,6 +25,8 @@
     ],
     "baseUrl": ".",
     "paths": {
+      "@nextcrm/plugin-sdk": ["./packages/plugin-sdk/src/index.ts"],
+      "@nextcrm/plugin-sdk/testing": ["./packages/plugin-sdk/src/testing.ts"],
       "@/*": [
         "./*"
       ],

@@ -607,5 +607,12 @@
     "dashboard": "Панель приладів",
     "profileSettings": "Налаштування профілю",
     "logout": "Вийти"
+  },
+  "Plugins": {
+    "ruleUnavailable": "Правило плагіна недоступне. Зміну не збережено.",
+    "sectionUnavailable": "Цей розділ плагіна недоступний.",
+    "loadFromRegistry": "Завантажити з реєстру",
+    "registryNotFound": "Компанію в реєстрі не знайдено.",
+    "admin": { "title": "Плагіни", "notInstalled": "Не встановлено", "enabled": "Увімкнено", "disabled": "Вимкнено", "missing": "Відсутній у цій версії", "install": "Встановити", "enable": "Увімкнути", "disable": "Вимкнути", "uninstall": "Видалити", "save": "Зберегти налаштування", "saved": "Налаштування збережено", "permissions": "Запитані дозволи", "confirmPermissions": "Надаю ці дозволи", "settings": "Налаштування", "secrets": "Секрети", "secretSet": "Задано (залиште порожнім, щоб зберегти)", "log": "Журнал", "export": "Завантажити дані (JSON)", "uninstallTitle": "Видалити {name}?", "uninstallBody": "Буде видалено {entries} збережених значень для {records} записів і журнал плагіна. Дані, які плагін записав у записи CRM, залишаться.", "confirmUninstall": "Видалити та стерти дані плагіна", "upgradePending": "Очікує оновлення: {from} → {to}" }
   }
 }

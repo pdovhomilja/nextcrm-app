@@ -3,6 +3,9 @@ import React from "react";
 import { BasicView } from "./components/BasicView";
 import CaseStudyCard from "./components/CaseStudyCard";
 import { getSession } from "@/lib/auth-server";
+import { requireAuthenticated } from "@/lib/authz";
+import { getAccountTabs, getAccountPanels } from "@/lib/plugins/slots";
+import { PluginSlot } from "@/lib/plugins/ui/PluginSlot";
 import { FindSimilarButton } from "@/components/crm/find-similar-button";
 
 import { getAccount } from "@/actions/crm/get-account";
@@ -53,6 +56,9 @@ const AccountDetailPage = async (props: AccountDetailPageProps) => {
   const { accountId } = params;
   const session = await getSession();
   const sessionUserRole = (session?.user as any)?.role ?? "user";
+  const actorUser = await requireAuthenticated();
+  const actor = { type: "user" as const, userId: actorUser.id, role: actorUser.role };
+  const [pluginTabs, pluginPanels] = await Promise.all([getAccountTabs(actorUser.role), getAccountPanels(actorUser.role)]);
   const account: crm_Accounts | null = await getAccount(accountId);
   const opportunities: crm_Opportunities[] = serializeDecimalsList(
     await getOpportunitiesFullByAccountId(accountId)
@@ -108,10 +114,17 @@ const AccountDetailPage = async (props: AccountDetailPageProps) => {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
+          {await Promise.all(pluginTabs.map(async ({ plugin, tab }) => {
+            const tp = await getTranslations(`plugins.${plugin.definition.id}` as never);
+            return <TabsTrigger key={`${plugin.definition.id}:${tab.id}`} value={`plugin-${plugin.definition.id}-${tab.id}`}>{tp(tab.title as never)}</TabsTrigger>;
+          }))}
         </TabsList>
         <TabsContent value="overview">
           <div className="space-y-5">
             <BasicView data={account} />
+            {pluginPanels.map(({ plugin, panel }) => (
+              <PluginSlot key={`${plugin.definition.id}:${panel.id}`} plugin={plugin} actor={actor} render={(ctx) => panel.component({ accountId: account.id, ctx })} />
+            ))}
             <CaseStudyCard
               accountId={account.id}
               candidate={account.case_study_candidate}
@@ -153,6 +166,11 @@ const AccountDetailPage = async (props: AccountDetailPageProps) => {
         <TabsContent value="history">
           <HistoryTab accountId={accountId} />
         </TabsContent>
+        {pluginTabs.map(({ plugin, tab }) => (
+          <TabsContent key={`${plugin.definition.id}:${tab.id}`} value={`plugin-${plugin.definition.id}-${tab.id}`}>
+            <PluginSlot plugin={plugin} actor={actor} render={(ctx) => tab.component({ accountId, ctx })} />
+          </TabsContent>
+        ))}
       </Tabs>
     </Container>
   );

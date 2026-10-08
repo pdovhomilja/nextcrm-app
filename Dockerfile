@@ -53,7 +53,7 @@ ENV DATABASE_URL="postgresql://placeholder:[REDACTED]@placeholder:5432/placehold
     SKIP_ENV_VALIDATION=1
 
 # Run build steps in a single layer to reduce intermediate images
-RUN pnpm prisma generate && pnpm next build
+RUN node scripts/plugins/generate-registry.mjs && pnpm prisma generate && pnpm next build
 
 # ============================================
 # Stage 3: Production runner

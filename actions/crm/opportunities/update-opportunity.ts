@@ -1,6 +1,7 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { pluginRuleErrorMessage } from "@/lib/plugins/action-errors";
 import { inngest } from "@/inngest/client";
 import { writeAuditLog, diffObjects } from "@/lib/audit-log";
 import { getSnapshotRate, getDefaultCurrency } from "@/lib/currency";
@@ -118,6 +119,8 @@ export const updateOpportunity = async (data: {
     revalidatePath("/[locale]/(routes)/crm/opportunities", "page");
     return { data: serialize(opportunity) };
   } catch (error) {
+    const ruleMessage = await pluginRuleErrorMessage(error);
+    if (ruleMessage) return { error: ruleMessage };
     console.log("[UPDATE_OPPORTUNITY]", error);
     return { error: "Failed to update opportunity" };
   }
