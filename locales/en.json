@@ -89,6 +89,7 @@
   "CrmPage": {
     "title": "CRM",
     "description": "Everything you need to know about sales",
+    "softDeleteDescription": "The record will be deleted. An administrator can restore it from the audit log.",
     "accounts": {
       "pageTitle": "Accounts",
       "pageDescription": "Everything you need to know about your accounts",
@@ -96,7 +97,8 @@
       "addNew": "Add new account",
       "sheetTitle": "Create new Account",
       "sheetDescription": "Add a new company or organization to your CRM system. Fill in the account details and industry information.",
-      "empty": "No assigned accounts found"
+      "empty": "No assigned accounts found",
+      "filterPlaceholder": "Filter accounts ..."
     },
     "contacts": {
       "pageTitle": "Contacts",

@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { UpdateContactForm } from "../components/UpdateContactForm";
 import {
   Sheet,
@@ -40,6 +41,7 @@ export function DataTableRowActions<TData>({
   contactTypes,
 }: DataTableRowActionsProps<TData>) {
   const router = useRouter();
+  const t = useTranslations("CrmPage");
   const contact = opportunitySchema.parse(row.original);
 
   const [open, setOpen] = useState(false);
@@ -72,6 +74,7 @@ export function DataTableRowActions<TData>({
         onClose={() => setOpen(false)}
         onConfirm={onDelete}
         loading={loading}
+        description={t("softDeleteDescription")}
       />
       <Sheet open={updateOpen} onOpenChange={setUpdateOpen}>
         <SheetContent className="w-full md:max-w-[771px] overflow-y-auto">
