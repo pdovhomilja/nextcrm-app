@@ -28,3 +28,29 @@ export async function lookupCompany(country: string, registrationNumber: string)
     return { error: t("registryNotFound") };
   }
 }
+
+export async function canValidateVat(): Promise<boolean> {
+  await requireAuthenticated();
+  return (await getCompanyRegistryProviders()).some((r) => typeof r.provider.validateVat === "function");
+}
+
+export type VatCheckResult = "valid" | "invalid" | "unavailable" | "noProvider" | "noPrefix";
+
+// Any enabled provider with validateVat answers, whatever its countries: countries only
+// says who can load company data. A throw means "cannot verify", never "invalid".
+export async function validateVatNumber(vat: string): Promise<{ result: VatCheckResult }> {
+  const user = await requireAuthenticated();
+  const value = vat.replace(/\s+/g, "");
+  if (!/^[A-Za-z]{2}/.test(value)) return { result: "noPrefix" };
+  const found = (await getCompanyRegistryProviders()).find((r) => typeof r.provider.validateVat === "function");
+  if (!found?.provider.validateVat) return { result: "noProvider" };
+  let ctx: Awaited<ReturnType<typeof createPluginContext>> | undefined;
+  try {
+    ctx = await createPluginContext({ plugin: found.plugin as never, actor: { type: "user", userId: user.id, role: user.role } });
+    return { result: (await found.provider.validateVat(value, ctx)) ? "valid" : "invalid" };
+  } catch (e) {
+    if (ctx) ctx.log.error(`VAT validation failed: ${String(e)}`);
+    else console.error("[VAT_VALIDATE]", e);
+    return { result: "unavailable" };
+  }
+}
