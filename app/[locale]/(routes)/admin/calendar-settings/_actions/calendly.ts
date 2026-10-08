@@ -1,5 +1,6 @@
 "use server";
 
+import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 import { requireRole, AuthenticationError, AuthorizationError } from "@/lib/authz";
 import {
@@ -48,8 +49,15 @@ export async function subscribeCalendlyWebhook(): Promise<{ ok: boolean; error?:
   if (denied) return { ok: false, error: denied.error };
 
   try {
-    const { apiToken, webhookUri: existingWebhookUri } = await getCalendlySettings();
+    const { apiToken, signingKey: savedSigningKey, webhookUri: existingWebhookUri } =
+      await getCalendlySettings();
     if (!apiToken) return { ok: false, error: "Save the API token first." };
+
+    // Calendly signs deliveries with the `signing_key` given at subscription
+    // creation. Send the saved key, or generate and save one, so the webhook
+    // route can verify every delivery.
+    const signingKey = savedSigningKey ?? randomBytes(32).toString("base64url");
+    if (!savedSigningKey) await saveCalendlySettings({ signingKey });
 
     const headers = {
       Authorization: `Bearer ${apiToken}`,
@@ -83,6 +91,7 @@ export async function subscribeCalendlyWebhook(): Promise<{ ok: boolean; error?:
         events: ["invitee.created", "invitee.canceled"],
         organization: me.resource.current_organization,
         scope: "organization",
+        signing_key: signingKey,
       }),
     });
     if (!subRes.ok) {
