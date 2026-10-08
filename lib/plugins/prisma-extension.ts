@@ -7,6 +7,7 @@ const WRITE_OPS = new Set(["create", "createMany", "update", "updateMany", "upse
 
 export interface InterceptDeps {
   hasRules(entity: Entity): Promise<boolean>;
+  hasInstalledPlugins(): Promise<boolean>;
   runBeforeRules(input: { entity: Entity; operation: BeforeOperation; recordId: string | null; data: RecordData; existing: RecordData | null }): Promise<RecordData>;
   afterTargets(entity: Entity, operation: AfterOperation): Promise<string[]>;
   sendAfter(pluginId: string, data: { entity: Entity; operation: AfterOperation; recordId: string }): void;
@@ -20,12 +21,16 @@ interface Params { model?: string; operation: string; args: any; query: (args: a
 const isSoftDelete = (data: RecordData | undefined, existing: RecordData | null) =>
   !!data && data.deletedAt != null && existing?.deletedAt == null;
 
+// After-events need the record id even when the caller's select omits it.
+const withId = (args: any) => (args.select && !args.select.id ? { ...args, select: { ...args.select, id: true } } : args);
+
 export async function interceptWrite(p: Params, deps: InterceptDeps): Promise<any> {
   const entity = p.model ? MODEL_TO_ENTITY[p.model] : undefined;
   if (!entity || !WRITE_OPS.has(p.operation)) return p.query(p.args);
   const anyAfter = async () =>
     (await deps.afterTargets(entity, "created")).length + (await deps.afterTargets(entity, "updated")).length + (await deps.afterTargets(entity, "deleted")).length > 0;
-  if (!(await deps.hasRules(entity)) && !(await anyAfter())) return p.query(p.args);
+  const isHardDelete = p.operation === "delete" || p.operation === "deleteMany";
+  if (!(await deps.hasRules(entity)) && !(await anyAfter()) && !(isHardDelete && (await deps.hasInstalledPlugins()))) return p.query(p.args);
 
   const model = p.model as string;
   const emit = async (operation: AfterOperation, ids: string[]) => {
@@ -41,7 +46,7 @@ export async function interceptWrite(p: Params, deps: InterceptDeps): Promise<an
   switch (p.operation) {
     case "create": {
       const data = await deps.runBeforeRules({ entity, operation: "beforeCreate", recordId: null, data: p.args.data, existing: null });
-      const row = await p.query({ ...p.args, data });
+      const row = await p.query(withId({ ...p.args, data }));
       await emit("created", [row.id]);
       return row;
     }
@@ -58,7 +63,7 @@ export async function interceptWrite(p: Params, deps: InterceptDeps): Promise<an
       const existing = await deps.findExisting(model, p.args.where);
       if (p.operation === "upsert" && !existing) {
         const data = await deps.runBeforeRules({ entity, operation: "beforeCreate", recordId: null, data: p.args.create, existing: null });
-        const row = await p.query({ ...p.args, create: data });
+        const row = await p.query(withId({ ...p.args, create: data }));
         await emit("created", [row.id]);
         return row;
       }
@@ -102,6 +107,11 @@ export async function interceptWrite(p: Params, deps: InterceptDeps): Promise<an
 export function withPluginRules(base: PrismaClient) {
   const deps: InterceptDeps = {
     hasRules: async (entity) => (await import("./rules")).hasRules(entity),
+    hasInstalledPlugins: async () => {
+      const { getRegistry } = await import("./registry");
+      if (!getRegistry().length) return false;   // zero-plugin instances: no query
+      return (await (await import("./state")).getPluginStates()).length > 0;
+    },
     runBeforeRules: async (input) => (await import("./rules")).runBeforeRules(input),
     afterTargets: async (entity, op) => (await import("./rules")).afterTargets(entity, op),
     sendAfter: (pluginId, data) => {
