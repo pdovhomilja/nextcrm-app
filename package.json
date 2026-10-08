@@ -9,6 +9,7 @@
   "packageManager": "pnpm@11.20.0",
   "scripts": {
     "plugins:generate": "node scripts/plugins/generate-registry.mjs",
+    "i18n:check": "node scripts/i18n-check.mjs",
     "dev": "next dev",
     "inngest:up": "docker compose -f docker-compose.dev.yml up -d",
     "inngest:down": "docker compose -f docker-compose.dev.yml down",

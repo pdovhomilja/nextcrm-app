@@ -73,6 +73,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec prisma generate
+      - name: Translations complete
+        run: pnpm i18n:check
       - name: Typecheck
         run: pnpm exec tsc --noEmit
       - name: Unit tests (DB-backed suites run in the integration job)
