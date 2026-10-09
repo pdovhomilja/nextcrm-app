@@ -138,3 +138,23 @@ it("never counts any activity as contact when the stored contact types are all i
   await expire(ctx, new Date("2026-11-01T06:00:00Z"));
   expect(accounts[0].assigned_to).toBeNull();
 });
+
+it("prunes conflict rows that no longer hold in the daily run", async () => {
+  const accounts = [
+    { id: "acc-1", company_id: "27082440", assigned_to: "rep1", deletedAt: null },
+    { id: "acc-2", company_id: "11111111", assigned_to: "rep2", deletedAt: null },   // number corrected while the hook missed it
+    { id: "acc-3", company_id: "27082440", assigned_to: "rep3", deletedAt: null },   // still a real duplicate
+  ];
+  const ctx = mk(accounts);
+  await ctx.store.set(K.num("CZ:27082440"), { accountId: "acc-1" });
+  await ctx.store.set(K.acct("acc-1"), { key: "CZ:27082440" });
+  const row = { key: "CZ:27082440", otherAccountId: "acc-1", foundAt: reg1.toISOString() };
+  await ctx.store.set(K.conflict("acc-2"), row);
+  await ctx.store.set(K.conflict("acc-3"), row);
+  await ctx.store.set(K.conflict("gone"), row);
+  await expire(ctx, new Date("2026-11-01T06:00:00Z"));
+  expect(await ctx.store.get(K.conflict("acc-2"))).toBeNull();
+  expect(await ctx.store.get(K.num("CZ:11111111"))).toEqual({ accountId: "acc-2" });
+  expect(await ctx.store.get(K.conflict("acc-3"))).toEqual(row);
+  expect(await ctx.store.get(K.conflict("gone"))).toBeNull();
+});

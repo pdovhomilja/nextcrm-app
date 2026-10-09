@@ -5,25 +5,48 @@ import { newRegistration, type Registration } from "./state";
 import { K, addHistory, clearRegistration, lastHistory, startRegistration, type Reason } from "./store";
 import type { Ctx } from "./settings";
 
+export interface Conflict { key: string; otherAccountId: string; foundAt: string }
+
 /** Points num: at this account and returns its key; null when it has no number or another account holds it. */
 export async function indexNumber(acc: RecordData, ctx: Ctx, at: Date): Promise<string | null> {
   const id = acc.id as string;
   const key = numberKey(acc, ctx.settings.defaultCountry);
+  await ctx.store.delete(K.conflict(id));   // set again below while the conflict still holds
   const old = await ctx.store.get<{ key: string }>(K.acct(id));
   if (old && old.key !== key) {
     const holder = await ctx.store.get<{ accountId: string }>(K.num(old.key));
-    if (holder?.accountId === id) await ctx.store.delete(K.num(old.key));
     await ctx.store.delete(K.acct(id));
+    if (holder?.accountId === id) {
+      await ctx.store.delete(K.num(old.key));
+      await handOver(id, ctx, at);
+    }
   }
   if (!key) return null;
   const holder = await ctx.store.get<{ accountId: string }>(K.num(key));
   if (holder && holder.accountId !== id) {
-    await ctx.store.set(K.conflict(id), { key, otherAccountId: holder.accountId, foundAt: at.toISOString() });
+    await ctx.store.set(K.conflict(id), { key, otherAccountId: holder.accountId, foundAt: at.toISOString() } satisfies Conflict);
     return null;
   }
   await ctx.store.set(K.num(key), { accountId: id });
   await ctx.store.set(K.acct(id), { key });
   return key;
+}
+
+/** Re-checks the duplicates blocked by an account that gave up its number, so they can take it over (review I7). */
+async function handOver(fromId: string, ctx: Ctx, at: Date, actor?: Actor): Promise<void> {
+  for (const entry of await ctx.store.list("conflict:")) {
+    if ((entry.value as Conflict).otherAccountId !== fromId) continue;
+    await ctx.store.delete(entry.key);
+    const dup = await ctx.data.accounts.get(entry.key.slice(9));
+    if (dup && dup.deletedAt == null) await claimNumber(dup, ctx, at, actor);
+  }
+}
+
+/** Indexes a duplicate whose conflict may be over; when it now holds its number, its owner is registered. */
+export async function claimNumber(dup: RecordData, ctx: Ctx, at: Date, actor?: Actor): Promise<void> {
+  await indexNumber(dup, ctx, at);
+  const owner = ownerOf(dup.assigned_to);
+  if (owner) await recordOwner(dup, owner, actor, "assigned", ctx, at);
 }
 
 /** Records an owner change once (retried events are no-ops) and restarts protection for the new owner. */
@@ -93,14 +116,5 @@ export async function onDeleted(input: AfterInput, ctx: Ctx, at = new Date()): P
   }
   await clearRegistration(ctx.store, id);
   await ctx.store.delete(K.conflict(id));
-  // Duplicates blocked by this account get its number now (review I7).
-  for (const entry of await ctx.store.list("conflict:")) {
-    if ((entry.value as { otherAccountId: string }).otherAccountId !== id) continue;
-    await ctx.store.delete(entry.key);
-    const dup = await ctx.data.accounts.get(entry.key.slice(9));
-    if (!dup || dup.deletedAt != null) continue;
-    await indexNumber(dup, ctx, at);
-    const owner = ownerOf(dup.assigned_to);
-    if (owner) await recordOwner(dup, owner, input.actor, "assigned", ctx, at);
-  }
+  await handOver(id, ctx, at, input.actor);
 }

@@ -1,4 +1,5 @@
-import { indexNumber, recordOwner } from "./hooks";
+import { claimNumber, indexNumber, recordOwner, type Conflict } from "./hooks";
+import { numberKey } from "./key";
 import { ownerOf } from "./rules";
 import { contactTypes, type Ctx } from "./settings";
 import { contactSince, dueDay, evaluate, isoDay, type Registration } from "./state";
@@ -7,7 +8,20 @@ import { K, addHistory, clearRegistration, type Notice } from "./store";
 const MANAGERS = ["manager", "admin"] as const;   // Ruling 7
 const DAY = 86_400_000;
 
+/** Re-checks conflict rows a missed event left behind (one account deleted, number corrected). */
+export async function pruneConflicts(ctx: Ctx, at: Date): Promise<void> {
+  for (const entry of await ctx.store.list("conflict:")) {
+    const c = entry.value as Conflict;
+    const dup = await ctx.data.accounts.get(entry.key.slice(9));
+    if (!dup || dup.deletedAt != null) { await ctx.store.delete(entry.key); continue; }
+    const holder = await ctx.store.get<{ accountId: string }>(K.num(c.key));
+    if (holder?.accountId === c.otherAccountId && numberKey(dup, ctx.settings.defaultCountry) === c.key) continue;
+    await claimNumber(dup, ctx, at);
+  }
+}
+
 export async function expire(ctx: Ctx, now: Date): Promise<void> {
+  await pruneConflicts(ctx, now);
   const today = isoDay(now);
   const freed: string[] = [];
   for (const entry of await ctx.store.list("due:")) {
