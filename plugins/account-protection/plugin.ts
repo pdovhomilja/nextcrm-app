@@ -1,6 +1,7 @@
 import { definePlugin } from "@nextcrm/plugin-sdk";
 import { settingsSchema } from "./settings";
 import { beforeCreate, beforeUpdate } from "./rules";
+import { onCreated, onDeleted, onUpdated } from "./hooks";
 
 export default definePlugin({
   id: "account-protection",
@@ -13,5 +14,8 @@ export default definePlugin({
   extensions: (x) => {
     x.rule("account", "beforeCreate", beforeCreate, { onError: "block" });
     x.rule("account", "beforeUpdate", beforeUpdate, { onError: "block" });
+    x.after("account", "created", (input, ctx) => onCreated(input, ctx));
+    x.after("account", "updated", (input, ctx) => onUpdated(input, ctx));
+    x.after("account", "deleted", (input, ctx) => onDeleted(input, ctx));
   },
 });

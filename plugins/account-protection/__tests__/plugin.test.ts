@@ -10,3 +10,7 @@ it("declares its permissions, settings and blocking rules", () => {
   ]);
   expect(Object.keys(plugin.settings.shape)).toEqual(["protectionDays", "contactDays", "contactTypes", "warnDays", "defaultCountry", "requireNumber"]);
 });
+
+it("listens to account created, updated and deleted", () => {
+  expect(plugin.extensions.afters.map((a) => `${a.entity}.${a.operation}`)).toEqual(["account.created", "account.updated", "account.deleted"]);
+});
