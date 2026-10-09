@@ -14,6 +14,7 @@
       "leads": "Leads",
       "contracts": "Verträge",
       "products": "Produkte",
+      "priceLists": "Preislisten",
       "targets": "Zielgruppen",
       "targetLists": "Ziellisten"
     },
@@ -139,6 +140,8 @@
     }
   },
   "CrmAccountForm": {
+    "priceList": "Preisliste",
+    "noPriceList": "Standard",
     "accountName": "Unternehmensname",
     "officePhone": "Bürotelefon",
     "email": "E-Mail",
@@ -332,6 +335,14 @@
     "secretKeyTooShort": "Geheimschlüssel ist zu kurz"
   },
   "AdminPage": {
+    "pricingTitle": "Preise",
+    "defaultPriceList": "Standard-Preisliste",
+    "noDefault": "Keine (Produktpreis)",
+    "productCategories": "Produktkategorien",
+    "parentCategory": "Übergeordnet",
+    "noParent": "Keine (oberste Ebene)",
+    "categoryCycle": "Eine Kategorie kann nicht unter ihrer eigenen Unterkategorie liegen.",
+    "save": "Speichern",
     "title": "Administration",
     "notAdmin": "Sie sind kein Administrator",
     "accessNotAllowed": "Zugriff nicht erlaubt",
@@ -751,5 +762,22 @@
     "vatNoPrefix": "Geben Sie die USt-IdNr. mit Ländercode ein, z. B. CZ12345678.",
     "vatNoProvider": "Keine USt-IdNr.-Prüfung verfügbar.",
     "admin": { "title": "Plugins", "notInstalled": "Nicht installiert", "enabled": "Aktiviert", "disabled": "Deaktiviert", "missing": "Fehlt in dieser Version", "install": "Installieren", "enable": "Aktivieren", "disable": "Deaktivieren", "uninstall": "Deinstallieren", "save": "Einstellungen speichern", "saved": "Einstellungen gespeichert", "permissions": "Angeforderte Berechtigungen", "confirmPermissions": "Ich erteile diese Berechtigungen", "settings": "Einstellungen", "secrets": "Geheimnisse", "secretSet": "Gesetzt (leer lassen zum Beibehalten)", "log": "Protokoll", "export": "Daten herunterladen (JSON)", "uninstallTitle": "{name} deinstallieren?", "uninstallBody": "{entries} gespeicherte Werte zu {records} Datensätzen und das Plugin-Protokoll werden gelöscht. Daten, die das Plugin in CRM-Datensätze geschrieben hat, bleiben erhalten.", "confirmUninstall": "Deinstallieren und Plugin-Daten löschen", "upgradePending": "Update ausstehend: {from} → {to}" }
+  },
+  "PriceListsPage": {
+    "title": "Preislisten", "description": "Kundenpreise mit Odoo-kompatiblen Regeln", "detailDescription": "Regeln werden von oben nach unten geprüft; die erste passende bestimmt den Preis.",
+    "new": "Neue Preisliste", "save": "Speichern", "saved": "Gespeichert", "edit": "Bearbeiten", "delete": "Löschen", "active": "Aktiv", "archived": "Archiviert",
+    "showArchived": "Archivierte anzeigen", "hideArchived": "Archivierte ausblenden", "empty": "Noch keine Preislisten.",
+    "name": "Name", "currency": "Währung", "source": "Quelle", "sourceCrm": "CRM", "sourceExternal": "Extern", "syncedExternal": "Aus einem externen System synchronisiert (schreibgeschützt)",
+    "rules": "Regeln", "updated": "Geändert", "addRule": "Regel hinzufügen", "editRule": "Regel bearbeiten", "rulesOrderHint": "Reihenfolge: Produkt, Kategorie, alle Produkte; dann höhere Mindestmenge zuerst; dann tiefere Kategorie zuerst; dann neueste zuerst.",
+    "appliesTo": "Gilt für", "targetAll": "Alle Produkte", "targetCategory": "Kategorie: {name}", "targetProduct": "Produkt: {name}", "category": "Kategorie", "product": "Produkt",
+    "minQuantity": "Mindestmenge", "validity": "Gültig", "dateStart": "Gültig ab", "dateEnd": "Gültig bis", "price": "Preis",
+    "computePrice": "Preisart", "computeFIXED": "Festpreis", "computePERCENTAGE": "Rabatt auf Basis", "computeFORMULA": "Formel",
+    "fixedPrice": "Festpreis", "percentPrice": "Rabatt %", "base": "Basis", "baseLIST_PRICE": "Listenpreis", "baseCOST": "Kosten", "basePRICE_LIST": "andere Preisliste", "basePriceList": "Basis-Preisliste",
+    "priceDiscount": "Rabatt % (negativ = Aufschlag)", "priceRound": "Runden auf", "priceSurcharge": "Zuschlag", "priceMinMargin": "Min. Marge", "priceMaxMargin": "Max. Marge",
+    "priceFixed": "{value}", "pricePercent": "{value} % auf {base}", "priceFormula": "{base} −{discount} %, rund. {round}, +{surcharge}",
+    "priceCheck": "Preisprüfung", "quantity": "Menge", "date": "Datum", "calculate": "Berechnen", "listPrice": "Listenpreis", "ruleApplied": "Regel angewendet", "noRule": "keine Regel, Listenpreis verwendet",
+    "step": { "fallback": "Listenpreis", "fixed": "Festpreis", "base": "Basis", "percentage": "Nach Rabatt", "discount": "Nach Rabatt", "round": "Nach Rundung", "surcharge": "Nach Zuschlag", "minMargin": "Nach Min.-Marge", "maxMargin": "Nach Max.-Marge" },
+    "problem": { "categoryRequired": "Kategorie wählen.", "productRequired": "Produkt wählen.", "fixedPriceRequired": "Festpreis eingeben.", "percentRequired": "Rabatt eingeben.", "percentRange": "Rabatt muss 0–100 % sein.", "baseListRequired": "Basis-Preisliste wählen.", "baseListSelf": "Eine Liste kann nicht auf sich selbst basieren.", "dateOrder": "„Gültig bis“ liegt vor „Gültig ab“.", "minQuantityNegative": "Mindestmenge darf nicht negativ sein.", "roundPositive": "Rundung muss größer als 0 sein.", "marginOrder": "Min.-Marge liegt über Max.-Marge." },
+    "error": { "Unauthorized": "Bitte erneut anmelden.", "Forbidden": "Sie können diese Preisliste nicht ändern.", "Not found": "Preisliste nicht gefunden.", "Currency is not enabled": "Diese Währung ist nicht aktiviert.", "inUse": "Die Liste wird von Konten oder anderen Listen verwendet. Bitte archivieren.", "cycle": "Diese Basisliste würde eine Schleife erzeugen.", "baseListNotFound": "Basis-Preisliste nicht gefunden.", "invalid": "Bitte markierte Felder prüfen." }
   }
 }

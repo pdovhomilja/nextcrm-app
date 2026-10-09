@@ -32,6 +32,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 import { updateAccount } from "@/actions/crm/accounts/update-account";
 import { getIndustries } from "@/actions/crm/get-industries";
+import { getPriceListOptions } from "@/actions/crm/price-lists/queries";
 import { VatCheckButton } from "./VatCheckButton";
 
 interface UpdateAccountFormProps {
@@ -54,6 +55,13 @@ export function UpdateAccountForm({
     getIndustries()
       .then((data) => setIndustries(data))
       .finally(() => setIsLoadingIndustries(false));
+  }, []);
+
+  const [priceLists, setPriceLists] = useState<{ id: string; name: string; currency: string }[]>([]);
+  useEffect(() => {
+    let alive = true;
+    getPriceListOptions().then((l) => { if (alive) setPriceLists(l); });
+    return () => { alive = false; };
   }, []);
 
   const formSchema = z.object({
@@ -81,6 +89,7 @@ export function UpdateAccountForm({
     annual_revenue: z.string().optional().nullable(),
     member_of: z.string().max(100).optional().nullable(),
     industry: z.string().optional().nullable(),
+    pricelist_id: z.string().optional().nullable(),
   });
 
   type NewAccountFormValues = z.infer<typeof formSchema>;
@@ -503,6 +512,34 @@ export function UpdateAccountForm({
                         {industries.map((industry: any) => (
                           <SelectItem key={industry.id} value={industry.id}>
                             {industry.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="pricelist_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("priceList")}</FormLabel>
+                    <Select
+                      onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
+                      value={field.value || "__none__"}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="__none__">{t("noPriceList")}</SelectItem>
+                        {priceLists.map((l) => (
+                          <SelectItem key={l.id} value={l.id}>
+                            {l.name} ({l.currency})
                           </SelectItem>
                         ))}
                       </SelectContent>

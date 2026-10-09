@@ -70,6 +70,10 @@ model crm_Accounts {
   @@index([type])
   @@index([createdAt])
   @@index([deletedAt])
+  pricelist_id String?         @db.Uuid
+  pricelist    crm_PriceLists? @relation(fields: [pricelist_id], references: [id], onDelete: SetNull)
+
+  @@index([pricelist_id])
 }
 
 model crm_Leads {
@@ -622,6 +626,7 @@ model Currency {
   products        crm_Products[]
   accountProducts crm_AccountProducts[]
   invoices        Invoices[]          @relation("InvoiceCurrency")
+  priceLists crm_PriceLists[]
 }
 
 model ExchangeRate {
@@ -1682,6 +1687,10 @@ model crm_ProductCategories {
   products crm_Products[]
 
   @@index([isActive])
+  parentId   String?                 @db.Uuid
+  parent     crm_ProductCategories?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children   crm_ProductCategories[] @relation("CategoryTree")
+  priceRules crm_PriceListRules[]
 }
 
 model crm_Products {
@@ -1723,6 +1732,7 @@ model crm_Products {
   @@index([categoryId])
   @@index([createdBy])
   @@index([deletedAt])
+  priceRules crm_PriceListRules[]
 }
 
 model crm_AccountProducts {
@@ -2064,4 +2074,80 @@ model PluginLog {
   createdAt DateTime @default(now())
 
   @@index([pluginId, createdAt])
+}
+
+enum crm_PriceList_Source {
+  CRM
+  EXTERNAL
+}
+
+enum crm_PriceRule_Target {
+  ALL
+  CATEGORY
+  PRODUCT
+}
+
+enum crm_PriceRule_Compute {
+  FIXED
+  PERCENTAGE
+  FORMULA
+}
+
+enum crm_PriceRule_Base {
+  LIST_PRICE
+  COST
+  PRICE_LIST
+}
+
+model crm_PriceLists {
+  id          String               @id @default(uuid()) @db.Uuid
+  name        String
+  currency    String               @db.VarChar(3)
+  isActive    Boolean              @default(true)
+  source      crm_PriceList_Source @default(CRM)
+  externalRef String?
+  createdBy   String?              @db.Uuid
+  updatedBy   String?              @db.Uuid
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  assigned_currency Currency             @relation(fields: [currency], references: [code])
+  rules             crm_PriceListRules[] @relation("PriceListRules")
+  baseFor           crm_PriceListRules[] @relation("PriceListRuleBase")
+  accounts          crm_Accounts[]
+
+  @@unique([source, externalRef])
+  @@index([isActive])
+}
+
+model crm_PriceListRules {
+  id              String                @id @default(uuid()) @db.Uuid
+  priceListId     String                @db.Uuid
+  appliesTo       crm_PriceRule_Target  @default(ALL)
+  categoryId      String?               @db.Uuid
+  productId       String?               @db.Uuid
+  minQuantity     Decimal               @default(0) @db.Decimal(14, 4)
+  dateStart       DateTime?
+  dateEnd         DateTime?
+  computePrice    crm_PriceRule_Compute @default(FIXED)
+  fixedPrice      Decimal?              @db.Decimal(18, 4)
+  percentPrice    Decimal?              @db.Decimal(7, 4)
+  base            crm_PriceRule_Base    @default(LIST_PRICE)
+  basePriceListId String?               @db.Uuid
+  priceDiscount   Decimal               @default(0) @db.Decimal(7, 4)
+  priceSurcharge  Decimal               @default(0) @db.Decimal(18, 4)
+  priceRound      Decimal?              @db.Decimal(18, 4)
+  priceMinMargin  Decimal?              @db.Decimal(18, 4)
+  priceMaxMargin  Decimal?              @db.Decimal(18, 4)
+  externalRef     String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  priceList     crm_PriceLists         @relation("PriceListRules", fields: [priceListId], references: [id], onDelete: Cascade)
+  basePriceList crm_PriceLists?        @relation("PriceListRuleBase", fields: [basePriceListId], references: [id], onDelete: Restrict)
+  category      crm_ProductCategories? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  product       crm_Products?          @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([priceListId, appliesTo])
+  @@index([basePriceListId])
 }

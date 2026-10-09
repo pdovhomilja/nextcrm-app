@@ -30,6 +30,7 @@ export const createAccount = async (data: {
   annual_revenue?: string;
   member_of?: string;
   industry?: string;
+  pricelist_id?: string | null;
 }) => {
   // Plain create: the row is owned by its creator, so authentication is
   // sufficient — no object-level write assert needed.
@@ -53,6 +54,7 @@ export const createAccount = async (data: {
         ...data,
         assigned_to: data.assigned_to || user.id,
         industry: data.industry || undefined,
+        pricelist_id: data.pricelist_id || undefined,
         status: "Active",
       },
     });
