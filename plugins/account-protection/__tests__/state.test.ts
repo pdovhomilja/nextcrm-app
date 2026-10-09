@@ -12,6 +12,14 @@ it("parses contact types and ignores unknown names", () => {
   expect(contactTypes(" visit, meeting ,sample,,call ")).toEqual(["visit", "meeting", "call"]);
 });
 
+it("rejects contact types with no valid type and falls back to the default when one is stored", () => {
+  expect(settingsSchema.safeParse({ contactTypes: "sample, visits" }).success).toBe(false);
+  expect(settingsSchema.safeParse({ contactTypes: "" }).success).toBe(false);
+  expect(settingsSchema.safeParse({ contactTypes: "call" }).success).toBe(true);
+  expect(contactTypes("sample, visits")).toEqual(["visit", "meeting"]);
+  expect(contactTypes("")).toEqual(["visit", "meeting"]);
+});
+
 it("computes windows and the first due day", () => {
   const r = newRegistration("CZ:1", "u1", at, S);
   expect(r).toEqual({ key: "CZ:1", ownerId: "u1", registeredAt: "2026-10-01T14:00:00.000Z",

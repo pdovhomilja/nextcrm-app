@@ -128,3 +128,13 @@ it("counts a visit from earlier on the registration day (review I4)", async () =
   expect(accounts[0].assigned_to).toBe("rep1");
   expect(await ctx.store.get<Registration>(K.reg("acc-1"))).toMatchObject({ contactAt: "2026-10-01T09:00:00.000Z" });
 });
+
+it("never counts any activity as contact when the stored contact types are all invalid", async () => {
+  const accounts = [{ id: "acc-1", name: "Alza", assigned_to: "rep1" as string | null }];
+  const activities = [{ id: "a1", type: "note", status: "completed", date: "2026-10-10T09:00:00Z", links: [{ entityType: "account", entityId: "acc-1" }] }];
+  const ctx = mk(accounts, activities);
+  (ctx as { settings: typeof S }).settings = { ...S, contactTypes: "sample" };
+  await registered(ctx, "acc-1", reg1);
+  await expire(ctx, new Date("2026-11-01T06:00:00Z"));
+  expect(accounts[0].assigned_to).toBeNull();
+});
