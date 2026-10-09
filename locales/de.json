@@ -140,6 +140,8 @@
     }
   },
   "CrmAccountForm": {
+    "priceList": "Preisliste",
+    "noPriceList": "Standard",
     "accountName": "Unternehmensname",
     "officePhone": "Bürotelefon",
     "email": "E-Mail",
@@ -333,6 +335,14 @@
     "secretKeyTooShort": "Geheimschlüssel ist zu kurz"
   },
   "AdminPage": {
+    "pricingTitle": "Preise",
+    "defaultPriceList": "Standard-Preisliste",
+    "noDefault": "Keine (Produktpreis)",
+    "productCategories": "Produktkategorien",
+    "parentCategory": "Übergeordnet",
+    "noParent": "Keine (oberste Ebene)",
+    "categoryCycle": "Eine Kategorie kann nicht unter ihrer eigenen Unterkategorie liegen.",
+    "save": "Speichern",
     "title": "Administration",
     "notAdmin": "Sie sind kein Administrator",
     "accessNotAllowed": "Zugriff nicht erlaubt",

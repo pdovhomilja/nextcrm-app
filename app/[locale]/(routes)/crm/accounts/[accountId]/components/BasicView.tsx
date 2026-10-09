@@ -23,7 +23,7 @@ import {
   User,
 } from "lucide-react";
 import moment from "moment";
-import { Clapperboard } from "lucide-react";
+import { Clapperboard, Tags } from "lucide-react";
 import { prismadb } from "@/lib/prisma";
 import Link from "next/link";
 import { EnvelopeClosedIcon, LightningBoltIcon } from "@radix-ui/react-icons";
@@ -82,6 +82,15 @@ export async function BasicView({ data }: OppsViewProps) {
                   <p className="text-sm font-medium leading-none">VAT number</p>
                   <p className="text-sm text-muted-foreground">
                     {data.vat ? data.vat : "Not assigned"}
+                  </p>
+                </div>
+              </div>
+              <div className="-mx-2 flex items-start space-x-4 rounded-md p-2 transition-all hover:bg-accent hover:text-accent-foreground">
+                <Tags className="mt-px h-5 w-5" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium leading-none">Price list</p>
+                  <p className="text-sm text-muted-foreground">
+                    {data.pricelist?.name ?? "Default"}
                   </p>
                 </div>
               </div>

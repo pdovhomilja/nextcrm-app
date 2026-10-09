@@ -143,6 +143,8 @@
     }
   },
   "CrmAccountForm": {
+    "priceList": "Ceník",
+    "noPriceList": "Výchozí",
     "accountName": "Název firmy",
     "officePhone": "Telefon do kanceláře",
     "email": "E-mail",
@@ -336,6 +338,14 @@
     "secretKeyTooShort": "Tajný klíč je příliš krátký"
   },
   "AdminPage": {
+    "pricingTitle": "Ceny",
+    "defaultPriceList": "Výchozí ceník",
+    "noDefault": "Žádný (cena produktu)",
+    "productCategories": "Kategorie produktů",
+    "parentCategory": "Nadřazená",
+    "noParent": "Žádná (nejvyšší úroveň)",
+    "categoryCycle": "Kategorie nemůže být pod vlastní podkategorií.",
+    "save": "Uložit",
     "title": "Administrace",
     "notAdmin": "Nejste administrátor",
     "accessNotAllowed": "Přístup není povolen",

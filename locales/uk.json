@@ -140,6 +140,8 @@
     }
   },
   "CrmAccountForm": {
+    "priceList": "Прайс-лист",
+    "noPriceList": "За замовчуванням",
     "accountName": "Назва компанії",
     "officePhone": "Офісний телефон",
     "email": "Електронна пошта",
@@ -333,6 +335,14 @@
     "secretKeyTooShort": "Секретний ключ занадто короткий"
   },
   "AdminPage": {
+    "pricingTitle": "Ціни",
+    "defaultPriceList": "Прайс-лист за замовчуванням",
+    "noDefault": "Немає (ціна товару)",
+    "productCategories": "Категорії товарів",
+    "parentCategory": "Батьківська",
+    "noParent": "Немає (верхній рівень)",
+    "categoryCycle": "Категорія не може бути під власною підкатегорією.",
+    "save": "Зберегти",
     "title": "Адміністрування",
     "notAdmin": "Ви не адміністратор",
     "accessNotAllowed": "Доступ не дозволено",
