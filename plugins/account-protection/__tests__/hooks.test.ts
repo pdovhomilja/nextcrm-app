@@ -192,3 +192,32 @@ it("hands the number to the duplicate when the holder's number changes", async (
   expect(await ctx.store.get(K.num("CZ:27082440"))).toEqual({ accountId: "acc-2" });
   expect(await ctx.store.get(K.num("CZ:11111111"))).toEqual({ accountId: "acc-1" });
 });
+
+it("starts a fresh window for the duplicate's owner when it takes over a freed number", async () => {
+  const holder: Record<string, unknown> = { id: "acc-1", company_id: "27082440", assigned_to: "rep1", deletedAt: null };
+  const dup: Record<string, unknown> = { id: "acc-2", company_id: "11111111", assigned_to: "rep2", deletedAt: null };
+  const ctx = ctxWith([holder, dup]);
+  await onCreated(ev("created", "acc-1"), ctx, at);
+  await onCreated(ev("created", "acc-2"), ctx, at);
+  dup.company_id = "27082440";   // a conflict with a running window (review I2 keeps it)
+  await onUpdated(ev("updated", "acc-2", { changed: ["company_id"] }), ctx, new Date("2026-10-02T00:00:00Z"));
+  const freedAt = new Date("2026-12-15T09:00:00Z");
+  holder.deletedAt = freedAt.toISOString();
+  await onDeleted(ev("deleted", "acc-1"), ctx, freedAt);
+  expect(await ctx.store.get(K.num("CZ:27082440"))).toEqual({ accountId: "acc-2" });
+  expect(await ctx.store.get<Registration>(K.reg("acc-2"))).toMatchObject({ ownerId: "rep2", key: "CZ:27082440", registeredAt: freedAt.toISOString() });
+  expect(await ctx.store.get(K.due("2027-01-14", "acc-2"))).toEqual({});
+  expect(await ctx.store.get(K.due("2026-10-31", "acc-2"))).toBeNull();
+});
+
+it("starts a fresh window when the duplicate takes over after the holder's number changed", async () => {
+  const holder: Record<string, unknown> = { id: "acc-1", company_id: "27082440", assigned_to: "rep1", deletedAt: null };
+  const ctx = ctxWith([holder, { id: "acc-2", company_id: "27082440", assigned_to: "rep2", deletedAt: null }]);
+  await onCreated(ev("created", "acc-1"), ctx, at);
+  await onCreated(ev("created", "acc-2"), ctx, at);
+  holder.company_id = "11111111";
+  const movedAt = new Date("2026-12-15T09:00:00Z");
+  await onUpdated(ev("updated", "acc-1", { changed: ["company_id"] }), ctx, movedAt);
+  expect(await ctx.store.get<Registration>(K.reg("acc-2"))).toMatchObject({ ownerId: "rep2", key: "CZ:27082440", registeredAt: movedAt.toISOString() });
+  expect(await ctx.store.get<Registration>(K.reg("acc-1"))).toMatchObject({ key: "CZ:11111111", registeredAt: at.toISOString() });
+});

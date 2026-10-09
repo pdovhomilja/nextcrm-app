@@ -42,11 +42,16 @@ async function handOver(fromId: string, ctx: Ctx, at: Date, actor?: Actor): Prom
   }
 }
 
-/** Indexes a duplicate whose conflict may be over; when it now holds its number, its owner is registered. */
+/** Indexes a duplicate whose conflict may be over. A new holder's owner gets a fresh window: the old one ran while it held nothing. */
 export async function claimNumber(dup: RecordData, ctx: Ctx, at: Date, actor?: Actor): Promise<void> {
-  await indexNumber(dup, ctx, at);
+  const id = dup.id as string;
+  const key = await indexNumber(dup, ctx, at);
   const owner = ownerOf(dup.assigned_to);
-  if (owner) await recordOwner(dup, owner, actor, "assigned", ctx, at);
+  if (!owner) return;
+  await recordOwner(dup, owner, actor, "assigned", ctx, at);
+  if (!key) return;
+  await clearRegistration(ctx.store, id);
+  await startRegistration(ctx.store, id, newRegistration(key, owner, at, ctx.settings));
 }
 
 /** Records an owner change once (retried events are no-ops) and restarts protection for the new owner. */
