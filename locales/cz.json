@@ -771,7 +771,7 @@
     "new": "Nový ceník", "save": "Uložit", "saved": "Uloženo", "edit": "Upravit", "delete": "Smazat", "active": "Aktivní", "archived": "Archivovaný",
     "showArchived": "Zobrazit archivované", "hideArchived": "Skrýt archivované", "empty": "Zatím žádné ceníky.",
     "name": "Název", "currency": "Měna", "source": "Zdroj", "sourceCrm": "CRM", "sourceExternal": "Externí", "syncedExternal": "Synchronizováno z externího systému (jen pro čtení)",
-    "rules": "Pravidla", "updated": "Změněno", "addRule": "Přidat pravidlo", "editRule": "Upravit pravidlo", "rulesOrderHint": "Pořadí vyhodnocení: produkt, kategorie (nejhlubší první), všechny produkty; vyšší minimální množství první; nejnovější první.",
+    "rules": "Pravidla", "updated": "Změněno", "addRule": "Přidat pravidlo", "editRule": "Upravit pravidlo", "rulesOrderHint": "Pořadí vyhodnocení: produkt, kategorie, všechny produkty; pak vyšší minimální množství první; pak hlubší kategorie první; pak nejnovější první.",
     "appliesTo": "Platí pro", "targetAll": "Všechny produkty", "targetCategory": "Kategorie: {name}", "targetProduct": "Produkt: {name}", "category": "Kategorie", "product": "Produkt",
     "minQuantity": "Min. množství", "validity": "Platnost", "dateStart": "Platí od", "dateEnd": "Platí do", "price": "Cena",
     "computePrice": "Typ ceny", "computeFIXED": "Pevná cena", "computePERCENTAGE": "Sleva ze základu", "computeFORMULA": "Vzorec",

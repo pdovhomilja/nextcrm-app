@@ -768,7 +768,7 @@
     "new": "New price list", "save": "Save", "saved": "Saved", "edit": "Edit", "delete": "Delete", "active": "Active", "archived": "Archived",
     "showArchived": "Show archived", "hideArchived": "Hide archived", "empty": "No price lists yet.",
     "name": "Name", "currency": "Currency", "source": "Source", "sourceCrm": "CRM", "sourceExternal": "External", "syncedExternal": "Synced from an external system (read-only)",
-    "rules": "Rules", "updated": "Updated", "addRule": "Add rule", "editRule": "Edit rule", "rulesOrderHint": "Order of evaluation: product, category (deepest first), all products; higher minimum quantity first; newest first.",
+    "rules": "Rules", "updated": "Updated", "addRule": "Add rule", "editRule": "Edit rule", "rulesOrderHint": "Order of evaluation: product, category, all products; then higher minimum quantity first; then deeper category first; then newest first.",
     "appliesTo": "Applies to", "targetAll": "All products", "targetCategory": "Category: {name}", "targetProduct": "Product: {name}", "category": "Category", "product": "Product",
     "minQuantity": "Min. quantity", "validity": "Valid", "dateStart": "Valid from", "dateEnd": "Valid to", "price": "Price",
     "computePrice": "Price type", "computeFIXED": "Fixed price", "computePERCENTAGE": "Discount from base", "computeFORMULA": "Formula",
