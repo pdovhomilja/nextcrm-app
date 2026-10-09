@@ -36,6 +36,7 @@ export const updateAccount = async (data: {
   annual_revenue?: string | null;
   member_of?: string | null;
   industry?: string;
+  pricelist_id?: string | null;
 }) => {
   const { id, ...rest } = data;
   if (!id) return { error: "id is required" };
@@ -62,6 +63,7 @@ export const updateAccount = async (data: {
         v: 0,
         updatedBy: user.id,
         ...rest,
+        ...(rest.pricelist_id === "" ? { pricelist_id: null } : {}),
       },
     });
     const changes = before ? diffObjects(
