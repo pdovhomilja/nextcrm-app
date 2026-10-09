@@ -14,3 +14,8 @@ it("declares its permissions, settings and blocking rules", () => {
 it("listens to account created, updated and deleted", () => {
   expect(plugin.extensions.afters.map((a) => `${a.entity}.${a.operation}`)).toEqual(["account.created", "account.updated", "account.deleted"]);
 });
+
+it("schedules the expiry and notice jobs and backfills on install", () => {
+  expect(plugin.extensions.crons.map((c) => [c.id, c.schedule])).toEqual([["expire", "0 6 * * *"], ["notices", "*/5 * * * *"]]);
+  expect(typeof plugin.onInstall).toBe("function");
+});

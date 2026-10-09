@@ -2,6 +2,7 @@ import { definePlugin } from "@nextcrm/plugin-sdk";
 import { settingsSchema } from "./settings";
 import { beforeCreate, beforeUpdate } from "./rules";
 import { onCreated, onDeleted, onUpdated } from "./hooks";
+import { expire, install, sendNotices } from "./jobs";
 
 export default definePlugin({
   id: "account-protection",
@@ -17,5 +18,8 @@ export default definePlugin({
     x.after("account", "created", (input, ctx) => onCreated(input, ctx));
     x.after("account", "updated", (input, ctx) => onUpdated(input, ctx));
     x.after("account", "deleted", (input, ctx) => onDeleted(input, ctx));
+    x.cron("expire", "0 6 * * *", (ctx) => expire(ctx, new Date()));
+    x.cron("notices", "*/5 * * * *", (ctx) => sendNotices(ctx, new Date()));
   },
+  onInstall: (ctx) => install(ctx, new Date()),
 });
