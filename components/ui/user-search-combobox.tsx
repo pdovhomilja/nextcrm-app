@@ -54,38 +54,38 @@ export function UserSearchCombobox({
 
   const debouncedSearch = useDebounce(search, 300);
 
+  // Reset on search change (adjusting state during render, not in an effect)
+  const [prevSearch, setPrevSearch] = useState(debouncedSearch);
+  if (debouncedSearch !== prevSearch) {
+    setPrevSearch(debouncedSearch);
+    setSkip(0);
+    setAccumulatedUsers([]);
+    setListData(null);
+  }
+
   const selectedInList = accumulatedUsers.find((u) => u.id === value);
 
   // Load list of users when open
   useEffect(() => {
     if (!open) return;
+    let cancelled = false;
     startTransition(async () => {
       const data = await searchUsers({
         search: debouncedSearch,
         skip,
         take: PAGE_SIZE,
       });
+      if (cancelled) return;
       setListData(data);
+      // Accumulate across pages
+      setAccumulatedUsers((prev) =>
+        skip === 0 ? data.users : [...prev, ...data.users]
+      );
     });
+    return () => {
+      cancelled = true;
+    };
   }, [open, debouncedSearch, skip]);
-
-  // Accumulate users across pages
-  useEffect(() => {
-    if (listData?.users) {
-      if (skip === 0) {
-        setAccumulatedUsers(listData.users);
-      } else {
-        setAccumulatedUsers((prev) => [...prev, ...listData.users]);
-      }
-    }
-  }, [listData, skip]);
-
-  // Reset on search change
-  useEffect(() => {
-    setSkip(0);
-    setAccumulatedUsers([]);
-    setListData(null);
-  }, [debouncedSearch]);
 
   // Load selected user if not in list
   useEffect(() => {
