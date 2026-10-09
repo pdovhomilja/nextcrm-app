@@ -44,8 +44,12 @@ export function ruleProblems(r: RuleFields, priceListId: string): RuleProblem[] 
   return p;
 }
 
+/** A rule ready to store: always-present columns are non-null. */
+export type CleanRule = Omit<Required<RuleFields>, "minQuantity" | "priceDiscount" | "priceSurcharge" | "base">
+  & { minQuantity: number; priceDiscount: number; priceSurcharge: number; base: Base };
+
 /** Keeps only the fields that matter for the rule's target, compute type and base (Review Focus 3). */
-export function cleanRule(r: RuleFields): Required<RuleFields> {
+export function cleanRule(r: RuleFields): CleanRule {
   const formula = r.computePrice === "FORMULA";
   const usesBase = r.computePrice !== "FIXED";
   const base = usesBase ? r.base ?? "LIST_PRICE" : "LIST_PRICE";
