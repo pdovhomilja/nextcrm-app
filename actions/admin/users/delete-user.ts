@@ -8,8 +8,9 @@ import {
 } from "@/lib/authz";
 
 export const deleteUser = async (userId: string) => {
+  let actor;
   try {
-    await requireRole(["admin"]);
+    actor = await requireRole(["admin"]);
   } catch (e) {
     if (e instanceof AuthenticationError) return { error: "Unauthorized" };
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
@@ -17,6 +18,7 @@ export const deleteUser = async (userId: string) => {
   }
 
   if (!userId) return { error: "userId is required" };
+  if (userId === actor.id) return { error: "Cannot delete yourself" };
 
   try {
     const user = await prismadb.users.delete({

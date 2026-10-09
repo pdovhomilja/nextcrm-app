@@ -77,3 +77,16 @@ describe("deactivateUser ends access", () => {
     expect(prismadb.apiToken.updateMany).not.toHaveBeenCalled();
   });
 });
+
+describe("deactivateUser self-protection", () => {
+  it("refuses to deactivate the acting admin", async () => {
+    gs.mockResolvedValue({ user: { id: "a" } } as any);
+    fu.mockResolvedValue({ id: "a", role: "admin" } as any);
+
+    const res = await deactivateUser("a");
+
+    expect(res).toEqual({ error: "Cannot deactivate yourself" });
+    expect(upd).not.toHaveBeenCalled();
+    expect(prismadb.session.deleteMany).not.toHaveBeenCalled();
+  });
+});
