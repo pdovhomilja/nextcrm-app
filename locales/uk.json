@@ -4,6 +4,7 @@
     "description": "NextCRM — це CRM з відкритим вихідним кодом, створена на основі NextJS."
   },
   "ModuleMenu": {
+    "plugins": "Плагіни",
     "dashboard": "Панель приладів",
     "crm": {
       "title": "Продажі",

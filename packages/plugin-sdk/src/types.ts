@@ -190,7 +190,7 @@ export interface EventRegistration { event: string; handler: EventHandler<any, a
 export interface CronRegistration { id: string; schedule: string; handler: JobHandler<any, any> }
 export interface AccountTabRegistration { id: string; title: string; component: ServerComponent<AccountSlotProps<any, any>>; roles: Role[] }
 export interface AccountPanelRegistration { id: string; component: ServerComponent<AccountSlotProps<any, any>>; roles: Role[] }
-export interface PageRegistration { path: string; title: string; component: ServerComponent<PageProps<any, any>>; roles: Role[] }
+export interface PageRegistration { path: string; title: string; component: ServerComponent<PageProps<any, any>>; roles: Role[]; nav?: { label: string } }
 
 export interface PluginExtensions {
   rules: RuleRegistration[];
@@ -211,7 +211,7 @@ export interface ExtensionBuilder<S, K> {
   cron(id: string, schedule: string, handler: JobHandler<S, K>): void;
   accountTab(tab: { id: string; title: string; component: ServerComponent<AccountSlotProps<S, K>>; roles?: Role[] }): void;
   accountPanel(panel: { id: string; component: ServerComponent<AccountSlotProps<S, K>>; roles?: Role[] }): void;
-  page(page: { path: string; title: string; component: ServerComponent<PageProps<S, K>>; roles?: Role[] }): void;
+  page(page: { path: string; title: string; component: ServerComponent<PageProps<S, K>>; roles?: Role[]; nav?: { label: string } }): void;
   adminSection(component: ServerComponent<AdminSectionProps<S, K>>): void;
   companyRegistry(provider: CompanyRegistryProvider<S, K>): void;
 }
