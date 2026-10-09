@@ -47,12 +47,25 @@ export interface EntityApi extends ReadApi {
   update(id: string, data: RecordData): Promise<RecordData>;
 }
 
+export interface ActivityQuery {
+  types?: string[];
+  status?: "scheduled" | "completed" | "cancelled";
+  since?: Date;
+  take?: number;
+  skip?: number;
+}
+
+export interface ActivitiesApi extends Pick<ReadApi, "find"> {
+  /** Activities linked to the record (crm_ActivityLinks), newest first, soft-deleted excluded, at most 100. */
+  findForRecord(entity: Entity, id: string, query?: ActivityQuery): Promise<RecordData[]>;
+}
+
 export interface DataApi {
   accounts: EntityApi;
   contacts: EntityApi;
   leads: EntityApi;
   opportunities: EntityApi;
-  activities: Pick<ReadApi, "find">;
+  activities: ActivitiesApi;
   users: ReadApi;
   products: ReadApi;
 }
