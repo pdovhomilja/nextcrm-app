@@ -27,7 +27,7 @@ NextCRM is an open-source CRM built with Next.js 16, React 19, TypeScript, Postg
    <a href="#installation"><strong>Installation</strong></a> ·
    <a href="#repo-activity"><strong>Repo activity</strong></a> ·
    <a href="#license"><strong>License</strong></a> ·
-   <a href="https://discord.gg/dHyxhTEyUb"><strong>Discord</strong></a>
+   <a href="https://discord.gg/Dd4Aj6S4Dz"><strong>Discord</strong></a>
 </p>
 <br/>
 
