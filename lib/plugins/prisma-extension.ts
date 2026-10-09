@@ -1,5 +1,5 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
-import type { AfterOperation, BeforeOperation, Entity, RecordData } from "@nextcrm/plugin-sdk";
+import type { Actor, AfterInput, AfterOperation, BeforeOperation, Entity, RecordData } from "@nextcrm/plugin-sdk";
 import { MODEL_TO_ENTITY } from "./rules";
 import { currentActorFrame } from "./actor";
 
@@ -10,7 +10,8 @@ export interface InterceptDeps {
   hasInstalledPlugins(): Promise<boolean>;
   runBeforeRules(input: { entity: Entity; operation: BeforeOperation; recordId: string | null; data: RecordData; existing: RecordData | null }): Promise<RecordData>;
   afterTargets(entity: Entity, operation: AfterOperation): Promise<string[]>;
-  sendAfter(pluginId: string, data: { entity: Entity; operation: AfterOperation; recordId: string }): void;
+  sendAfter(pluginId: string, data: AfterInput): void;
+  resolveActor(): Promise<Actor>;
   findExisting(model: string, where: unknown): Promise<RecordData | null>;
   findManyExisting(model: string, where: unknown): Promise<RecordData[]>;
   deleteRecordData(entity: Entity, ids: string[]): void;
@@ -20,6 +21,10 @@ interface Params { model?: string; operation: string; args: any; query: (args: a
 
 const isSoftDelete = (data: RecordData | undefined, existing: RecordData | null) =>
   !!data && data.deletedAt != null && existing?.deletedAt == null;
+
+// Keys the caller sent whose value differs from the stored row; "v" is the legacy version field every core write sets.
+const changedKeys = (data: RecordData | undefined, existing: RecordData | null): string[] =>
+  Object.keys(data ?? {}).filter((k) => k !== "v" && JSON.stringify(data![k] ?? null) !== JSON.stringify(existing?.[k] ?? null));
 
 // After-events need the record id even when the caller's select omits it.
 const withId = (args: any) => (args.select && !args.select.id ? { ...args, select: { ...args.select, id: true } } : args);
@@ -33,13 +38,17 @@ export async function interceptWrite(p: Params, deps: InterceptDeps): Promise<an
   if (!(await deps.hasRules(entity)) && !(await anyAfter()) && !(isHardDelete && (await deps.hasInstalledPlugins()))) return p.query(p.args);
 
   const model = p.model as string;
-  const emit = async (operation: AfterOperation, ids: string[]) => {
+  const emit = async (operation: AfterOperation, ids: string[], changed?: (id: string) => string[]) => {
     // Loop guard: a plugin's own writes never trigger its own after-actions.
-    const actor = currentActorFrame()?.actor;
-    const writer = actor?.type === "plugin" ? actor.pluginId : null;
-    for (const pluginId of await deps.afterTargets(entity, operation)) {
-      if (pluginId === writer) continue;
-      for (const recordId of ids) deps.sendAfter(pluginId, { entity, operation, recordId });
+    const frame = currentActorFrame()?.actor;
+    const writer = frame?.type === "plugin" ? frame.pluginId : null;
+    const targets = (await deps.afterTargets(entity, operation)).filter((id) => id !== writer);
+    if (!targets.length) return;
+    const actor = await deps.resolveActor();
+    for (const pluginId of targets) {
+      for (const recordId of ids) {
+        deps.sendAfter(pluginId, { entity, operation, recordId, actor, ...(changed ? { changed: changed(recordId) } : {}) });
+      }
     }
   };
 
@@ -72,7 +81,7 @@ export async function interceptWrite(p: Params, deps: InterceptDeps): Promise<an
       const operation: BeforeOperation = soft ? "beforeDelete" : "beforeUpdate";
       const data = await deps.runBeforeRules({ entity, operation, recordId: (existing?.id as string) ?? null, data: input, existing });
       const row = await p.query(p.operation === "upsert" ? { ...p.args, update: data } : { ...p.args, data });
-      await emit(soft ? "deleted" : "updated", [(existing?.id as string) ?? row.id]);
+      await emit(soft ? "deleted" : "updated", [(existing?.id as string) ?? row.id], soft ? undefined : () => changedKeys(input, existing));
       return row;
     }
     case "updateMany":
@@ -88,7 +97,11 @@ export async function interceptWrite(p: Params, deps: InterceptDeps): Promise<an
       }
       const res = await p.query(p.args);
       if (p.operation === "deleteMany") { deps.deleteRecordData(entity, ids); await emit("deleted", ids); }
-      else await emit(isSoftDelete(p.args.data, null) ? "deleted" : "updated", ids);
+      else if (isSoftDelete(p.args.data, null)) await emit("deleted", ids);
+      else {
+        const byId = new Map(rows.map((r) => [r.id as string, changedKeys(p.args.data, r)]));
+        await emit("updated", ids, (id) => byId.get(id) ?? []);
+      }
       return res;
     }
     case "delete": {
@@ -118,6 +131,7 @@ export function withPluginRules(base: PrismaClient) {
       void import("@/inngest/client").then(({ inngest }) => inngest.send({ name: `plugin/${pluginId}/after`, data }))
         .catch((e) => console.error("[PLUGIN_AFTER_SEND]", e));
     },
+    resolveActor: async () => (await import("./actor")).resolveActor(),
     findExisting: (model, where) => (base as any)[model].findUnique({ where }),
     findManyExisting: (model, where) => (base as any)[model].findMany({ where }),
     deleteRecordData: (entity, ids) => {

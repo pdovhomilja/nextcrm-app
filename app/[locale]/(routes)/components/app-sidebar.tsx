@@ -9,6 +9,7 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Puzzle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
@@ -79,11 +80,13 @@ interface Session {
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   dict: any;
   session: Session;
+  pluginNav?: { title: string; url: string }[];
 }
 
 export function AppSidebar({
   dict,
   session,
+  pluginNav,
   ...props
 }: AppSidebarProps) {
   const { state } = useSidebar();
@@ -107,6 +110,10 @@ export function AppSidebar({
     getDocumentsMenuItem({ title: dict?.documents || "Documents" }),
     getInvoicesMenuItem({ title: dict?.invoices || "Invoices" }),
   ];
+
+  if (pluginNav?.length) {
+    navItems.push({ title: dict?.plugins || "Plugins", icon: Puzzle, items: pluginNav });
+  }
 
   // Administration: admin users only
   if (session?.user?.role === "admin") {

@@ -88,6 +88,7 @@ export default async function AppLayout({
     documents: dict("documents"),
     invoices: dict("invoices"),
     settings: dict("settings"),
+    plugins: dict("plugins"),
   };
 
   const cookieStore = await cookies();
@@ -101,6 +102,11 @@ export default async function AppLayout({
     : defaultCurrency;
   const currencyList = enabledCurrencies.map((c: { code: string; name: string; symbol: string }) => ({ code: c.code, name: c.name, symbol: c.symbol }));
 
+  const { getPluginNavItems } = await import("@/lib/plugins/nav");
+  const { mapLegacyRole } = await import("@/lib/authz/roles");
+  const { getLocale } = await import("next-intl/server");
+  const pluginNav = await getPluginNavItems(mapLegacyRole(user?.role), (await getLocale()) as "en" | "cz" | "de" | "uk");
+
   //console.log(typeof build, "build");
   return (
     <AvatarProvider initialAvatar={user?.image}>
@@ -109,6 +115,7 @@ export default async function AppLayout({
       <AppSidebar
         dict={translations}
         session={session}
+        pluginNav={pluginNav}
       />
       <SidebarInset>
         <Header

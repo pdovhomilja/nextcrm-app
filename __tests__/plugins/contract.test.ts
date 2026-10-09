@@ -31,7 +31,7 @@ export function contractProblems(p: RegisteredPlugin): string[] {
     const missing = keys(en).filter((k) => !keys(m).includes(k));
     if (missing.length) problems.push(`${loc} missing keys: ${missing.join(", ")}`);
   }
-  const titles = [...d.extensions.accountTabs.map((t) => t.title), ...d.extensions.pages.map((pg) => pg.title)];
+  const titles = [...d.extensions.accountTabs.map((t) => t.title), ...d.extensions.pages.map((pg) => pg.title), ...d.extensions.pages.flatMap((pg) => (pg.nav ? [pg.nav.label] : []))];
   for (const title of titles) if (en && !keys(en).includes(title)) problems.push(`en missing title key: ${title}`);
   return problems;
 }

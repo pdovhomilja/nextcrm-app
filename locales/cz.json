@@ -4,6 +4,7 @@
     "description": "NextCRM je open source CRM vytvořené na frameworku NextJS."
   },
   "ModuleMenu": {
+    "plugins": "Pluginy",
     "dashboard": "Přehled",
     "crm": {
       "title": "Obchod",

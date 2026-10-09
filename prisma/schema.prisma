@@ -653,6 +653,7 @@ enum crm_Activity_Type {
   meeting
   note
   email
+  visit
 }
 
 enum crm_Activity_Status {

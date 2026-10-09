@@ -1,4 +1,4 @@
-import type { Actor, EntityApi, FindArgs, NotifyInput, PluginContext, PluginStore, RecordData, RecordStore } from "./types";
+import type { ActivityQuery, Actor, Entity, EntityApi, FindArgs, NotifyInput, PluginContext, PluginStore, RecordData, RecordStore } from "./types";
 
 type Tables = "accounts" | "contacts" | "leads" | "opportunities" | "users" | "products" | "activities";
 
@@ -38,6 +38,23 @@ function memoryStore(map: Map<string, unknown>, scope: string): RecordStore {
   };
 }
 
+function activities(rows: RecordData[]) {
+  return {
+    find: table(rows).find,
+    async findForRecord(entity: Entity, id: string, q: ActivityQuery = {}) {
+      const linked = rows.filter((r) =>
+        (r.links as { entityType: string; entityId: string }[] | undefined)?.some((l) => l.entityType === entity && l.entityId === id)
+        && r.deletedAt == null
+        && (!q.types?.length || q.types.includes(r.type as string))
+        && (!q.status || r.status === q.status)
+        && (!q.since || new Date(r.date as string) >= q.since));
+      linked.sort((a, b) => new Date(b.date as string).getTime() - new Date(a.date as string).getTime());
+      const skip = q.skip ?? 0;
+      return linked.slice(skip, skip + Math.min(q.take ?? 100, 100));
+    },
+  };
+}
+
 export function createTestContext(opts: {
   pluginId?: string;
   settings?: RecordData;
@@ -65,7 +82,7 @@ export function createTestContext(opts: {
       opportunities: table(d.opportunities ?? []),
       users: table(d.users ?? []),
       products: table(d.products ?? []),
-      activities: { find: table(d.activities ?? []).find },
+      activities: activities(d.activities ?? []),
     },
     store,
     http: {

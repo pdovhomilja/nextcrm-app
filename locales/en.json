@@ -4,6 +4,7 @@
     "description": "NextCRM is an open source CRM build on top of NextJS."
   },
   "ModuleMenu": {
+    "plugins": "Plugins",
     "dashboard": "Dashboard",
     "crm": {
       "title": "Sales",

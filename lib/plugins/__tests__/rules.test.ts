@@ -80,3 +80,10 @@ it("a hanging createPluginContext with onError block rejects within the timeout"
   await expect(runBeforeRules(input, d)).rejects.toMatchObject({ pluginId: null, messageKey: "ruleUnavailable" });
   expect(Date.now() - started).toBeLessThan(500);
 });
+
+it("gives rules the request locale so they can format dates for the user", async () => {
+  const createPluginContext = jest.fn(async () => ({}) as any);
+  const p = reg("p-one", (x) => x.rule("account", "beforeCreate", () => allow()));
+  await runBeforeRules(input, { ...deps([p]), createPluginContext, resolveLocale: async () => "cz" as const });
+  expect(createPluginContext).toHaveBeenCalledWith(expect.objectContaining({ locale: "cz" }));
+});

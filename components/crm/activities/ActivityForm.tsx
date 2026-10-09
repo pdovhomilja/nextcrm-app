@@ -22,7 +22,7 @@ import { createActivity } from "@/actions/crm/activities/create-activity";
 import { updateActivity } from "@/actions/crm/activities/update-activity";
 import type { ActivityWithLinks } from "@/actions/crm/activities/get-activities-by-entity";
 
-type ActivityType = "call" | "meeting" | "note" | "email";
+type ActivityType = "call" | "meeting" | "note" | "email" | "visit";
 type ActivityStatus = "scheduled" | "completed" | "cancelled";
 
 const DEFAULT_STATUS: Record<ActivityType, ActivityStatus> = {
@@ -30,6 +30,7 @@ const DEFAULT_STATUS: Record<ActivityType, ActivityStatus> = {
   meeting: "scheduled",
   note: "completed",
   email: "completed",
+  visit: "scheduled",
 };
 
 interface Props {
@@ -66,8 +67,8 @@ export function ActivityForm({ open, onOpenChange, entityType, entityId, activit
     }
   };
 
-  const showDuration = type === "call" || type === "meeting";
-  const showOutcome = type === "call" || type === "meeting";
+  const showDuration = type === "call" || type === "meeting" || type === "visit";
+  const showOutcome = type === "call" || type === "meeting" || type === "visit";
   const showEmailSubject = type === "email";
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -133,6 +134,7 @@ export function ActivityForm({ open, onOpenChange, entityType, entityId, activit
               <SelectContent>
                 <SelectItem value="call">Call</SelectItem>
                 <SelectItem value="meeting">Meeting</SelectItem>
+                <SelectItem value="visit">Visit</SelectItem>
                 <SelectItem value="note">Note</SelectItem>
                 <SelectItem value="email">Email</SelectItem>
               </SelectContent>

@@ -86,7 +86,18 @@ export function createDataApi(pluginId: string, permissions: Permission[]): Data
     contacts: entity("crm_Contacts", "contacts:read", "contacts:write"),
     leads: entity("crm_Leads", "leads:read", "leads:write"),
     opportunities: entity("crm_Opportunities", "opportunities:read", "opportunities:write"),
-    activities: { find: read("crm_Activities", "activities:read").find },
+    activities: {
+      find: read("crm_Activities", "activities:read").find,
+      async findForRecord(entityType, entityId, query = {}) {
+        need("activities:read");
+        const where: RecordData = { deletedAt: null, links: { some: { entityType, entityId } } };
+        if (query.types?.length) where.type = { in: query.types };
+        if (query.status) where.status = query.status;
+        if (query.since) where.date = { gte: query.since };
+        const take = Math.max(1, Math.min(query.take ?? MAX_TAKE, MAX_TAKE));
+        return (await (await db()).crm_Activities.findMany({ where, orderBy: { date: "desc" }, take, skip: query.skip })) as RecordData[];
+      },
+    },
     users: read("users", "users:read"),
     products: read("crm_Products", "products:read"),
   };
