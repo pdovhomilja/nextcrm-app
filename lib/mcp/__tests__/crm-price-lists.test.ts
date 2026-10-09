@@ -53,6 +53,13 @@ it("refuses writes to external lists and validates rules", async () => {
   await expect(tool("crm_upsert_price_list_rule").handler({ priceListId: "L", appliesTo: "PRODUCT", computePrice: "FIXED", fixedPrice: 1 } as never, "m1", manager)).rejects.toThrow("VALIDATION_ERROR: productRequired");
 });
 
+it("refuses to edit a rule through another list's id", async () => {
+  db.crm_PriceLists.findUnique.mockResolvedValue({ id: "L", source: "CRM" });
+  db.crm_PriceListRules.findUnique.mockResolvedValue({ id: "ext-rule", priceListId: "EXT" });
+  await expect(tool("crm_upsert_price_list_rule").handler({ priceListId: "L", ruleId: "ext-rule", appliesTo: "ALL", computePrice: "FIXED", fixedPrice: 1 } as never, "m1", manager)).rejects.toThrow("NOT_FOUND");
+  expect(db.crm_PriceListRules.update).not.toHaveBeenCalled();
+});
+
 it("hides accounts the rep cannot read", async () => {
   db.crm_Accounts.findFirst.mockResolvedValue(null);
   await expect(tool("crm_get_price").handler({ productId: "p", quantity: 1, accountId: "other" } as never, "u1", rep)).rejects.toThrow("NOT_FOUND");

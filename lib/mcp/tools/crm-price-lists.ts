@@ -129,6 +129,7 @@ export const crmPriceListTools = [
     async handler(args: z.infer<typeof ruleSchema>, userId: string, user: AuthzUser) {
       await writableList(user, args.priceListId);
       const { priceListId, ruleId, dateStart, dateEnd, ...rest } = args;
+      if (ruleId && (await prismadb.crm_PriceListRules.findUnique({ where: { id: ruleId } }))?.priceListId !== priceListId) notFound("PriceListRule");
       const fields: RuleFields = { ...rest, dateStart: dateStart ? new Date(dateStart) : null, dateEnd: dateEnd ? new Date(dateEnd) : null };
       const problems = ruleProblems(fields, priceListId);
       if (problems.length) validationError(problems.join(","));

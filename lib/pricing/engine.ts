@@ -7,7 +7,7 @@ const MAX_DEPTH = 10;
 const day = (d: Date) => d.toISOString().slice(0, 10);
 const set = (v: Decimal | null) => !!v && !v.isZero();   // Odoo skips 0 like unset
 
-/** Odoo 17 _get_applicable_rules order: product, deeper category, shallower category, all; then min quantity desc; then newest. */
+/** Odoo 17 pricelist item _order: product, category, all; then min quantity desc; then deeper category; then newest. */
 export function applicableRules(list: ListData, product: ProductData, categoryChain: string[], quantity: Decimal, date: Date): RuleData[] {
   const today = day(date);
   const depth = (id: string | null) => (id ? categoryChain.indexOf(id) : -1);
@@ -19,8 +19,8 @@ export function applicableRules(list: ListData, product: ProductData, categoryCh
     .filter((r) => (!r.dateStart || day(r.dateStart) <= today) && (!r.dateEnd || day(r.dateEnd) >= today))
     .sort((a, b) =>
       TARGET_RANK[a.appliesTo] - TARGET_RANK[b.appliesTo]
-      || (a.appliesTo === "CATEGORY" ? depth(a.categoryId) - depth(b.categoryId) : 0)
       || b.minQuantity.cmp(a.minQuantity)
+      || (a.appliesTo === "CATEGORY" ? depth(a.categoryId) - depth(b.categoryId) : 0)
       || b.createdAt.getTime() - a.createdAt.getTime()
       || (a.id < b.id ? 1 : a.id > b.id ? -1 : 0));
 }

@@ -72,7 +72,8 @@ export async function deletePriceList(id: string): Promise<Result<{ id: string }
     prismadb.crm_Accounts.count({ where: { pricelist_id: id } }),
     prismadb.crm_PriceListRules.count({ where: { basePriceListId: id } }),
   ]);
-  if (accounts > 0 || bases > 0) return { error: "inUse" };
+  const setting = await prismadb.crm_SystemSettings.findUnique({ where: { key: "default_pricelist_id" } });
+  if (accounts > 0 || bases > 0 || setting?.value === id) return { error: "inUse" };
   await prismadb.crm_PriceLists.delete({ where: { id } });
   await writeAuditLog({ entityType: "price_list", entityId: id, action: "deleted", changes: null, userId: w.userId });
   revalidatePath(PATH, "page");
@@ -82,6 +83,10 @@ export async function deletePriceList(id: string): Promise<Result<{ id: string }
 export async function upsertPriceListRule(priceListId: string, ruleId: string | null, input: RuleFields): Promise<Result<{ id: string }>> {
   const w = await writer(priceListId);
   if ("error" in w) return w;
+  if (ruleId) {
+    const existing = await prismadb.crm_PriceListRules.findUnique({ where: { id: ruleId } });
+    if (existing?.priceListId !== priceListId) return { error: "Not found" };
+  }
   const problems = ruleProblems(input, priceListId);
   if (problems.length) return { error: `invalid:${problems.join(",")}` };
   const data = cleanRule(input);

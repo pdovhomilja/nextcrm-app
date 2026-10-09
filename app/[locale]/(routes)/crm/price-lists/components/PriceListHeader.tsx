@@ -3,6 +3,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import AlertModal from "@/components/modals/alert-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ export function PriceListHeader({ list, canWrite, currencies }: { list: PriceLis
   const [currency, setCurrency] = useState(list.currency);
   const [isActive, setActive] = useState(list.isActive);
   const [pending, start] = useTransition();
+  const [confirming, setConfirming] = useState(false);
   const fail = (e: string) => toast.error(t(`error.${e.split(":")[0]}` as never));
   const save = () => start(async () => {
     const res = await updatePriceList(list.id, { name, currency, isActive });
@@ -26,6 +28,7 @@ export function PriceListHeader({ list, canWrite, currencies }: { list: PriceLis
   });
   const remove = () => start(async () => {
     const res = await deletePriceList(list.id);
+    setConfirming(false);
     if ("error" in res) { fail(res.error); return; }
     router.push("/crm/price-lists");
   });
@@ -40,6 +43,7 @@ export function PriceListHeader({ list, canWrite, currencies }: { list: PriceLis
   }
   return (
     <div className="flex flex-wrap items-end gap-3">
+      <AlertModal isOpen={confirming} onClose={() => setConfirming(false)} onConfirm={remove} loading={pending} />
       <Input className="max-w-xs" value={name} onChange={(e) => setName(e.target.value)} aria-label={t("name")} />
       <Select value={currency} onValueChange={setCurrency}>
         <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
@@ -47,7 +51,7 @@ export function PriceListHeader({ list, canWrite, currencies }: { list: PriceLis
       </Select>
       <label className="flex items-center gap-2 text-sm"><Switch checked={isActive} onCheckedChange={setActive} />{t("active")}</label>
       <Button disabled={pending || !name.trim()} onClick={save}>{t("save")}</Button>
-      <Button variant="outline" disabled={pending} onClick={remove}>{t("delete")}</Button>
+      <Button variant="outline" disabled={pending} onClick={() => setConfirming(true)}>{t("delete")}</Button>
     </div>
   );
 }

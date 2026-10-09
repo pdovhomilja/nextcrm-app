@@ -89,7 +89,7 @@ The engine is a pure function, `computePrice(context, input)`, over loaded data 
    - `appliesTo = CATEGORY` and `categoryId` is the product's category or one of its ancestors; or
    - `appliesTo = ALL`.
 2. Keep rules with `minQuantity ≤ quantity` and `dateStart ≤ date ≤ dateEnd` (open sides always match). `date` defaults to now. Dates compare by calendar day in UTC.
-3. Order: `PRODUCT` before `CATEGORY` before `ALL`; within `CATEGORY`, the deeper category first; then higher `minQuantity` first; then the newest rule (`createdAt` desc, then id desc).
+3. Order (Odoo 17 item `_order = "applied_on, min_quantity desc, categ_id desc, id desc"`): `PRODUCT` before `CATEGORY` before `ALL`; then higher `minQuantity` first; then, within `CATEGORY`, the deeper category first; then the newest rule (`createdAt` desc, then id desc).
 4. The first rule wins. With no rule, the price is the product's list price, converted to the list's currency.
 
 ### 3.2 Price computation

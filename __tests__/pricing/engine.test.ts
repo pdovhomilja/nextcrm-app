@@ -58,6 +58,15 @@ it("picks the highest minimum quantity that applies", () => {
   expect(price(ctx([list(rules)]), 10).ruleId).toBe("q10");
 });
 
+it("compares minimum quantity before category depth, like Odoo 17's item _order", () => {
+  const rules = [
+    rule({ id: "parent-q10", appliesTo: "CATEGORY", categoryId: "c-parent", minQuantity: d(10), fixedPrice: d(70) }),
+    rule({ id: "child-q0", appliesTo: "CATEGORY", categoryId: "c-child", fixedPrice: d(78) }),
+  ];
+  expect(price(ctx([list(rules)]), 10).ruleId).toBe("parent-q10");
+  expect(price(ctx([list(rules)]), 9).ruleId).toBe("child-q0");
+});
+
 it("prefers the newest rule on a tie", () => {
   const rules = [rule({ id: "old", fixedPrice: d(1) }), rule({ id: "new", fixedPrice: d(2), createdAt: new Date("2026-02-01T00:00:00Z") })];
   expect(price(ctx([list(rules)])).ruleId).toBe("new");

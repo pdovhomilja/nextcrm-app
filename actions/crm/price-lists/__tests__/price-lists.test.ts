@@ -6,6 +6,7 @@ jest.mock("@/lib/prisma", () => ({
     crm_PriceLists: { findUnique: jest.fn(), create: jest.fn(), update: jest.fn(), delete: jest.fn() },
     crm_PriceListRules: { findUnique: jest.fn(), findMany: jest.fn(), create: jest.fn(), update: jest.fn(), delete: jest.fn(), count: jest.fn() },
     crm_Accounts: { count: jest.fn() },
+    crm_SystemSettings: { findUnique: jest.fn() },
   },
 }));
 jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));
@@ -74,6 +75,24 @@ it("only deletes unreferenced lists", async () => {
   db.crm_Accounts.count.mockResolvedValue(0);
   db.crm_PriceLists.delete.mockResolvedValue({ id: "L" });
   await expect(deletePriceList("L")).resolves.toEqual({ data: { id: "L" } });
+});
+
+it("refuses to edit a rule through another list's id", async () => {
+  as("manager");
+  db.crm_PriceListRules.findUnique.mockResolvedValue({ id: "ext-rule", priceListId: "EXT" });
+  await expect(upsertPriceListRule("L", "ext-rule", { appliesTo: "ALL", computePrice: "FIXED", fixedPrice: 1 })).resolves.toEqual({ error: "Not found" });
+  db.crm_PriceListRules.findUnique.mockResolvedValue(null);
+  await expect(upsertPriceListRule("L", "missing", { appliesTo: "ALL", computePrice: "FIXED", fixedPrice: 1 })).resolves.toEqual({ error: "Not found" });
+  expect(db.crm_PriceListRules.update).not.toHaveBeenCalled();
+});
+
+it("refuses to delete the default price list", async () => {
+  as("manager");
+  db.crm_Accounts.count.mockResolvedValue(0);
+  db.crm_PriceListRules.count.mockResolvedValue(0);
+  db.crm_SystemSettings.findUnique.mockResolvedValue({ key: "default_pricelist_id", value: "L" });
+  await expect(deletePriceList("L")).resolves.toEqual({ error: "inUse" });
+  expect(db.crm_PriceLists.delete).not.toHaveBeenCalled();
 });
 
 it("checks a price for any signed-in role", async () => {
