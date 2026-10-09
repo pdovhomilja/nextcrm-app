@@ -263,7 +263,7 @@ Based on our [roadmap](https://github.com/pdovhomilja/nextcrm-app#roadmap), here
 
 ## Getting Help
 
-- **Discord**: Join our community at [https://discord.gg/dHyxhTEyUb](https://discord.gg/dHyxhTEyUb)
+- **Discord**: Join our community at [https://discord.gg/Dd4Aj6S4Dz](https://discord.gg/Dd4Aj6S4Dz)
 - **GitHub Discussions**: Use for questions and general discussion
 - **Issues**: For bug reports and feature requests
 - **Twitter**: [@nextcrmapp](https://twitter.com/nextcrmapp)
