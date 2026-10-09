@@ -72,9 +72,7 @@ export function fetchHeaders(
           (async () => {
             try {
               const parsed = await simpleParser(Buffer.concat(chunks));
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const toArr = (parsed.to as any)?.value ?? [];
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const ccArr = (parsed.cc as any)?.value ?? [];
               results.push({
                 uid,

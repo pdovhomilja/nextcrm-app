@@ -62,7 +62,7 @@ export function SimilarRecordsDrawer({
 
   useEffect(() => {
     if (!open) return;
-    setResult(null);
+    // No need to clear the previous result: everything below renders only when !isPending
     startTransition(async () => {
       const data = await fetchSimilar(entityType, recordId);
       setResult(data);
