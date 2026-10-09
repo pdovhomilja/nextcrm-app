@@ -21,7 +21,7 @@ export const crmActivityTools = [
     description:
       "List CRM activities created by the authenticated user, optionally filtered by linked entity",
     schema: z.object({
-      type: z.enum(["call", "meeting", "note", "email"]).optional(),
+      type: z.enum(["call", "meeting", "note", "email", "visit"]).optional(),
       status: z.enum(["scheduled", "completed", "cancelled"]).optional(),
       entityType: z.string().optional(),
       entityId: z.string().uuid().optional(),
@@ -77,9 +77,9 @@ export const crmActivityTools = [
   },
   {
     name: "crm_create_activity",
-    description: "Create a CRM activity (call/meeting/note/email) and link to entities",
+    description: "Create a CRM activity (call/meeting/note/email/visit) and link to entities",
     schema: z.object({
-      type: z.enum(["call", "meeting", "note", "email"]),
+      type: z.enum(["call", "meeting", "note", "email", "visit"]),
       title: z.string().min(1),
       description: z.string().optional(),
       date: z.string().datetime(),
