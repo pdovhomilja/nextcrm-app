@@ -45,7 +45,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^5.2.2",
     "@mendable/firecrawl-js": "^1.29.3",
-    "@modelcontextprotocol/sdk": "^1.26.0",
+    "@modelcontextprotocol/sdk": "^1.31.0",
     "@openai/agents": "^0.8.0",
     "@prisma/adapter-pg": "7.6.0",
     "@prisma/client": "7.6.0",
