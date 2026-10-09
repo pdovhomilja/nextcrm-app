@@ -5,6 +5,17 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.25.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.25.0...v0.25.1) (2026-10-09)
+
+
+### Fixed
+
+* **account-protection:** catch up after the plugin was disabled ([110b9b6](https://github.com/pdovhomilja/nextcrm-app/commit/110b9b6352ec7208f1ce83a9cdb7e445fc112e4e))
+* **account-protection:** contact types, conflicts, re-enable and freed numbers ([73598a0](https://github.com/pdovhomilja/nextcrm-app/commit/73598a06e86500200ca61a109a7215e030bc7876))
+* **account-protection:** fresh window for a duplicate that takes over a number ([489ecbf](https://github.com/pdovhomilja/nextcrm-app/commit/489ecbffd8b18892524385b1a3fae55e378c99e7))
+* **account-protection:** keep the conflicts list in step with account numbers ([2623a5e](https://github.com/pdovhomilja/nextcrm-app/commit/2623a5eba82c4e0a026b42aa5e9e5153aa62741a))
+* **account-protection:** never drop the contact type filter ([d72f02f](https://github.com/pdovhomilja/nextcrm-app/commit/d72f02fbe7f0b48d62e5cd15397cc9833990ce67))
+
 ## [0.25.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.24.1...v0.25.0) (2026-10-09)
 
 
