@@ -14,7 +14,7 @@ For a step-by-step example, see [Build a plugin](/docs/developers/plugin-tutoria
 - **One public API.** Plugins import only `@nextcrm/plugin-sdk` (in `packages/plugin-sdk`). The core never imports plugin code except through the generated registry.
 - **No database tables.** Plugins keep state in a key-value store backed by the core `PluginData` table.
 
-SDK version: `0.1.0` (`SDK_VERSION` in `packages/plugin-sdk/src/version.ts`).
+SDK version: `0.1.1` (`SDK_VERSION` in `packages/plugin-sdk/src/version.ts`).
 
 ## Repository layout
 
@@ -25,7 +25,7 @@ plugins/<id>/__tests__/*.test.ts    unit tests with createTestContext
 plugins-private/<id>/...            same structure, private plugins
 ```
 
-- `plugins/` holds public plugins and is part of the open-source repository. It is empty on `main` today.
+- `plugins/` holds public plugins and is part of the open-source repository. It contains `account-protection` and `registry-ares`; both are useful examples.
 - `plugins-private/` is for plugins that are not open source. It is meant to be a separate private repository mounted at that path (for example as a git submodule). It is not part of the public repository.
 
 ### The generated registry
@@ -88,7 +88,7 @@ The SDK re-exports `z` from zod. Use it so your schemas match the host's zod ver
 | --- | --- |
 | `accounts:read`, `contacts:read`, `leads:read`, `opportunities:read` | `get` and `find` on that entity in `ctx.data` |
 | `accounts:write`, `contacts:write`, `leads:write`, `opportunities:write` | `create` and `update` on that entity |
-| `activities:read` | `ctx.data.activities.find` |
+| `activities:read` | `ctx.data.activities.find` and `findForRecord` |
 | `users:read` | `ctx.data.users.get` and `find` (never returns the password hash) |
 | `products:read` | `ctx.data.products.get` and `find` |
 | `notify` | `ctx.notify()` |
@@ -115,13 +115,14 @@ Every handler, hook and component receives `ctx`:
 
 ### Data API
 
-`ctx.data` has `accounts`, `contacts`, `leads` and `opportunities` (`get`, `find`, `create`, `update`), `activities` (`find`), and `users` and `products` (`get`, `find`). There is no delete.
+`ctx.data` has `accounts`, `contacts`, `leads` and `opportunities` (`get`, `find`, `create`, `update`), `activities` (`find`, `findForRecord`), and `users` and `products` (`get`, `find`). There is no delete.
 
 - Records use the Prisma field names of the core models, for example `name`, `assigned_to`, `close_date`.
 - `find({ where, orderBy, take, skip })` filters only on the model's own scalar fields plus `AND`, `OR` and `NOT`. Relation filters throw `Invalid filter field: <key>`. `take` is capped at 100.
 - Reads are not limited to the actor's scope. A plugin with `accounts:read` can read every account.
 - Writes go through the normal Prisma client, so other plugins' rules run on them. Your own rules do not run on your own writes.
 - After a create or update, the data API sends `crm/<entity>.saved` with `source: <pluginId>`.
+- `activities.findForRecord(entity, id, { types?, status?, since?, take?, skip? })` returns activities linked to one record, newest first, without soft-deleted rows, at most 100. `since` filters on the activity `date`.
 
 ### Store
 
@@ -173,6 +174,7 @@ x.rule("account", "beforeUpdate", (input, ctx) => {
 - A rejected write fails with the translated message. Server actions show it to the user; MCP returns `RULE_REJECTED`.
 - Each rule has 500 ms. `onError` decides what happens if the rule throws or times out: `"allow"` (default) skips the rule, `"block"` rejects the write with the core "rule unavailable" message. Use `"block"` only when skipping the rule would break a guarantee.
 - Rules run in ascending `priority` (default 100), then by plugin id.
+- `ctx.locale` in a rule is the request's locale (`en` outside a request), so `reject` params such as dates can be formatted for the user.
 - A soft delete (setting `deletedAt`) runs `beforeDelete`.
 - Bulk writes (`createMany`, `updateMany`, `deleteMany`) run rules per row but cannot be modified. A `modify` result on a bulk write throws.
 - Nested plugin writes are capped at depth 3.
@@ -181,7 +183,7 @@ Rules apply to every write that goes through `prismadb`: server actions, API rou
 
 ### `x.after(entity, operation, handler)`
 
-Runs after a write, in the background. `operation` is `created`, `updated` or `deleted`. The handler receives `{ entity, operation, recordId }`. All after-handlers of a plugin run in one Inngest function (`plugin-<id>-after`, 3 retries). `createMany` does not emit after-events. A plugin's own writes do not trigger its own after-handlers.
+Runs after a write, in the background. `operation` is `created`, `updated` or `deleted`. The handler receives `{ entity, operation, recordId, actor, changed }`. `actor` is who made the write. `changed` is set on updates only: the keys of the update data whose value differs from the stored row. All after-handlers of a plugin run in one Inngest function (`plugin-<id>-after`, 3 retries). `createMany` does not emit after-events. A plugin's own writes do not trigger its own after-handlers.
 
 ### `x.on(event, handler)`
 
@@ -195,9 +197,9 @@ A scheduled job with a 5-field cron expression, optionally prefixed with `TZ=<zo
 
 Adds a tab or a panel to the account detail page. `title` is a message key. `component` is a React Server Component that receives `{ accountId, ctx }`. `roles` defaults to all three roles.
 
-### `x.page({ path, title, component, roles? })`
+### `x.page({ path, title, component, roles?, nav? })`
 
-A standalone page at `/<locale>/p/<pluginId>/<path>`. `path` must have at least one segment and may contain `/`. The component receives `{ path, searchParams, ctx }`. Plugin pages are not added to the navigation menu; link to them yourself.
+A standalone page at `/<locale>/p/<pluginId>/<path>`. `path` must have at least one segment and may contain `/`. The component receives `{ path, searchParams, ctx }`. With `nav: { label }` the page gets a sidebar item in a **Plugins** group. `label` is a message key. The item is shown only to the page's `roles` and only while the plugin is enabled. Without `nav`, link to the page yourself.
 
 ### `x.adminSection(component)`
 
@@ -240,7 +242,7 @@ Every lifecycle action writes an audit log entry with `entityType: "plugin"`. Th
 ## Limits in SDK 0.1
 
 - Slots exist only on accounts. No tabs or panels on contacts, leads or opportunities yet.
-- No navigation menu items.
+- Menu items only for plugin pages, in the **Plugins** group, without icons.
 - No plugin-defined database tables or custom fields in core forms.
 - Plugins cannot register MCP tools.
 - Only trusted, first-party code. No sandbox.

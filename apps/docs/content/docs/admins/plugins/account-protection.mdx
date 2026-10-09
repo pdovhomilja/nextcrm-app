@@ -1,0 +1,193 @@
+---
+title: Account protection
+description: Give each company one owner, protect new owners for a set time, and let only managers move accounts.
+---
+
+The **Account protection** plugin (`account-protection`) gives each company one owner. A company is identified by its country and registration number. A new owner gets a protection window. The owner loses the account if they log no qualifying contact in time, or when the window ends. Only managers and admins can change an account's owner, and every change is recorded.
+
+For what reps and managers see, see [Account protection for users](/docs/users/crm/account-protection).
+
+<Callout type="info">
+  The plugin ships with NextCRM but is not installed. Nothing changes until an admin installs it.
+</Callout>
+
+## Install
+
+<Steps>
+<Step>
+
+Go to **Administration → Plugins** and open **Account protection**.
+
+</Step>
+<Step>
+
+Check the [settings](#settings). Plan the first contact deadline before you install (see [First cycle after install](#first-cycle-after-install)).
+
+</Step>
+<Step>
+
+Review **Requested permissions**: `accounts:read`, `accounts:write`, `activities:read`, `users:read` and `notify`. Tick **I grant these permissions**.
+
+</Step>
+<Step>
+
+Click **Install**. The plugin is enabled right away, and a background job indexes the existing accounts.
+
+</Step>
+</Steps>
+
+For enabling, disabling and uninstalling plugins in general, see [Plugins](/docs/admins/plugins).
+
+## Settings
+
+| Setting | Default | Effect |
+|---|---|---|
+| `protectionDays` | `90` | Length of the protection window in days, counted from the moment the owner was set. Minimum 1. |
+| `contactDays` | `30` | Days the owner has to log a qualifying contact. Minimum 1. If it is larger than `protectionDays`, `protectionDays` is used, so there is no separate contact check. |
+| `contactTypes` | `visit,meeting` | Comma-separated activity types that count as a qualifying contact. Valid types: `call`, `meeting`, `note`, `email`, `visit`. Unknown names are ignored. |
+| `warnDays` | `7` | How many days ahead the **Expiring protection** page looks. |
+| `defaultCountry` | `CZ` | Two-letter country code used when an account's **Billing country** is empty or not recognised. |
+| `requireNumber` | `false` | When on, users with the `user` role must enter an **Account ID** when they create an account. Managers and admins are not affected. Edits are not checked. |
+
+<Callout type="warn">
+  If `contactTypes` contains no valid type, the type filter is dropped and any completed activity linked to the account counts as a contact.
+</Callout>
+
+Changes to `protectionDays` and `contactDays` apply to new protection windows only. Existing windows keep their dates. The other settings apply from the next check.
+
+## How a company is identified
+
+The plugin builds a number key from two account fields:
+
+- **Account ID**, with spaces removed and in upper case. An account without an **Account ID** has no key and is not protected.
+- **Billing country**. It accepts a two-letter code (`CZ`) or a country name in English, Czech, German or Ukrainian ("Czechia", "Česko", "Tschechien"). If it is empty or not recognised, `defaultCountry` is used.
+
+For Czech companies, numbers of up to 8 digits are padded with leading zeros, so `1234567` and `01234567` are the same company.
+
+Two foreign companies with the same number and an unrecognised country can end up with the same key. Check the [conflicts list](#conflicts) for such cases.
+
+Leads have no registration-number field, so the plugin applies to accounts only.
+
+## Protection windows
+
+A protection window (a registration) starts when an account with a number key gets an owner:
+
+- a user creates the account with **Assigned to** set (the new account form fills in the creator);
+- a manager or admin sets or changes the owner;
+- someone adds an **Account ID** to an account that already has an owner;
+- the plugin is installed and the account already has an owner.
+
+Each window has two dates:
+
+- **Contact deadline:** start + `contactDays`.
+- **Protected until:** start + `protectionDays`.
+
+A daily job runs at 06:00 UTC. For each account whose date has passed:
+
+1. At the contact deadline, it looks for a qualifying contact. If it finds one, the account stays protected until the **Protected until** date. If not, the owner is removed. The history reason is "no contact in time".
+2. At the **Protected until** date, the owner is removed. The history reason is "protection expired". A contact does not extend the window.
+
+The owner is removed in the first daily run after the date, so an account can keep its owner for up to a day longer.
+
+After a run that removed owners, all active managers and admins get one email, "\{count\} accounts lost their protection", with the account names. No email is sent when nothing was removed.
+
+To give an account a new window, a manager assigns an owner again. Any owner change ends the old window and starts a new one for the new owner. Editing the **Account ID** or **Billing country** does not restart the window.
+
+### Qualifying contact
+
+An activity counts as a qualifying contact when it:
+
+- is linked to the account,
+- has the status **Completed**,
+- has a type listed in `contactTypes`,
+- has a date on or after the day the window started.
+
+Activities logged on contacts or opportunities only count if they are also linked to the account. Scheduled and cancelled activities never count. A **Visit** starts as **Scheduled** in the activity form, so reps must set it to **Completed**.
+
+## Owner changes
+
+Users with the `user` role cannot change **Assigned to** on an existing account. The save is rejected with "Only a manager can change the account owner." This also applies to their MCP tokens.
+
+Managers, admins, background jobs and plugins can change the owner.
+
+A user can still choose any owner when they create an account. Only changes to existing accounts are restricted.
+
+Every owner change is written to the account's **Owner history** on the **Protection** tab: date, previous owner, new owner, who made the change ("system" for jobs) and the reason. Reasons are "created", "assigned", "released", "protection expired", "no contact in time" and "plugin installed".
+
+## Duplicates
+
+When someone creates an account, or changes an account's **Account ID** or **Billing country**, and the number key belongs to another account, the save is rejected. This applies to every role, including managers and admins. The message depends on the case:
+
+| Case | Message |
+|---|---|
+| The user already owns the other account | "You already have this company in the CRM." |
+| The other account is protected | "This company is protected until \{until\}." |
+| The other account is not protected, user role | "This company is already in the CRM. A manager has been asked to assign it to you." |
+| The other account is not protected, manager or admin | "This company is already in the CRM." |
+
+The message never names the owner or shows the other account's data.
+
+The rules run on every account write: the app's forms, MCP tools, API routes, background jobs and other plugins. MCP clients get `RULE_REJECTED` with the same message. If the check fails or takes longer than 500 ms, the save is blocked with the core "rule unavailable" message, and the error goes to the plugin log.
+
+### Manager notices
+
+When a user with the `user` role is blocked by a duplicate (and does not own the other account), the plugin queues a notice. A job sends queued notices every 5 minutes to all active managers and admins:
+
+- **Blocked: \{account\} is protected** when the other account is protected.
+- **Assign \{account\}** when the other account has no protection. The manager can assign it to the rep.
+
+Each email names the account and the rep. Each blocked attempt sends its own email. A notice that cannot be sent is retried on the next run and dropped after 24 hours, with an error in the plugin log.
+
+All plugin emails are in English.
+
+## Expiring protection page
+
+Managers and admins see **Plugins → Expiring protection** in the sidebar. The page has two lists:
+
+- **Due within \{days\} days:** accounts whose next date (contact deadline or **Protected until**) falls within `warnDays`. It can still list a contact deadline that is already met until the next daily run checks it.
+- **Freed in the last 7 days:** accounts whose owner the daily job removed.
+
+Users with the `user` role do not see the menu item or the page.
+
+## Conflicts
+
+Two accounts can share a number key:
+
+- On install, when existing accounts share a number. The oldest account (by creation date) keeps the number.
+- When two users create the same company at the same moment.
+
+The account that keeps the number is protected as usual. The other account gets no protection window.
+
+The plugin page under **Administration → Plugins** shows **Accounts sharing a registration number** with the columns **Number**, **Account** and **Kept by**. Resolve each case by hand, for example by merging the data into one account and deleting the other. When the account that keeps the number is deleted, the duplicate takes over the number. If it has an owner, it gets a window counted from its last recorded owner change, so it can lose its owner in the next daily run. A row leaves the list when either account is deleted.
+
+## Background jobs
+
+The plugin registers these Inngest functions. They run only while the plugin is enabled.
+
+| Function | Schedule | Does |
+|---|---|---|
+| `plugin-account-protection-cron-expire` | Daily at 06:00 UTC | Checks contact deadlines and protection windows, removes owners, emails managers. Clears "freed" entries older than 7 days. |
+| `plugin-account-protection-cron-notices` | Every 5 minutes | Sends queued manager notices. |
+| `plugin-account-protection-after` | On account create, update and delete | Indexes numbers, starts and ends windows, writes owner history. |
+
+The install backfill runs once in `plugin-lifecycle-install`. One account that fails in the daily job is logged and retried in the next run; the others are processed.
+
+See [Background jobs](/docs/admins/background-jobs).
+
+## First cycle after install
+
+Install starts a window for every account that has an owner and an **Account ID**, all dated on the install day. Contacts logged before that day do not count. Any account without a completed visit or meeting by day `contactDays` loses its owner in that day's run.
+
+Before you install, either ask reps to log their visits right after install, or raise `contactDays` for the first cycle and lower it later. Lowering it later affects only new windows.
+
+## Disable and uninstall
+
+**Disable** turns off the rules, jobs, tab, panel, page and menu item. Stored data is kept. Owner and number changes made while the plugin is disabled are not recorded. Windows keep their old dates, so the first daily run after you enable it again removes the owner from every account whose date passed in the meantime.
+
+**Uninstall** deletes everything the plugin stored: windows, owner history, conflicts and queued notices, plus the plugin log. Accounts keep their current owners. Use **Download data (JSON)** first if you need the owner history. A new install starts from scratch with a fresh backfill.
+
+## Limits
+
+- An account write is sent to the plugin in the background. If the job server is unreachable at that moment, the account is not indexed until its next edit.
+- For up to a day after a window ends, the duplicate message can still show "protected until" with a past date.
+- Owner changes made to an account in quick succession can be recorded as one change.

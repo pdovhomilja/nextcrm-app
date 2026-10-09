@@ -5,9 +5,12 @@ description: Install, enable, configure and uninstall plugins under Administrati
 
 Plugins add features to NextCRM: rules on record writes, scheduled jobs, account tabs and panels, pages, admin sections and company registry lookups. They are trusted code that ships inside the application image. You cannot upload a plugin at runtime; the list shows the plugins included in your build.
 
-<Callout type="info">
-  The open-source repository currently ships no plugins (`plugins/` is empty), so the list is empty on a stock build. To write one, see [Plugins for developers](/docs/developers/plugins).
-</Callout>
+The open-source build includes these plugins. None is installed by default.
+
+- **Account protection** (`account-protection`): one owner per company registration number, with protection windows and owner history. See [Account protection](/docs/admins/plugins/account-protection).
+- **Company registry (ARES, VIES)** (`registry-ares`): loads Czech companies from ARES and checks EU VAT numbers in VIES.
+
+To write a plugin, see [Plugins for developers](/docs/developers/plugins).
 
 ## Plugin list
 

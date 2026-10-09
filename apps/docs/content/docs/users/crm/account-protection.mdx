@@ -1,0 +1,98 @@
+---
+title: Account protection
+description: Keep your companies protected, see who owned them, and handle companies that are already in the CRM.
+---
+
+Account protection gives each company one owner. When you become the owner of a company, it is protected for a set time. To keep it, you log a visit or meeting with the company in time.
+
+<Callout type="info">
+  This page applies only when your admin has installed the **Account protection** plugin. The number of days and the activity types that count are set by your admin. The examples use the defaults: 90 days of protection and 30 days to log a visit or meeting. For the admin side, see [Account protection](/docs/admins/plugins/account-protection).
+</Callout>
+
+## How protection works
+
+- A company is identified by its **Account ID** (registration number) and **Billing country**. A company without an **Account ID** is not protected.
+- When you create a company with yourself in **Assigned to**, or a manager assigns it to you, protection starts.
+- You must log a qualifying contact within the contact period (default 30 days). If you don't, you lose the company.
+- With a contact logged, the company stays yours until the end of the protection period (default 90 days). Then you lose it, and a manager can assign it again.
+
+Losing a company means its owner is cleared. This happens in a daily run in the morning.
+
+## Keep a company protected
+
+Log a completed visit or meeting on the company.
+
+<Steps>
+<Step>
+Open the company and click **Log activity**.
+</Step>
+<Step>
+Choose **Visit** or **Meeting** as the **Type**.
+</Step>
+<Step>
+Enter a **Title \***, the **Date & Time \*** of the visit, and set **Status** to **Completed**. Visits and meetings start as **Scheduled**, which does not count.
+</Step>
+<Step>
+Click **Log activity**.
+</Step>
+</Steps>
+
+The activity must be linked to the company and dated on or after the day protection started. An activity logged only on a contact or an opportunity does not count unless it is also linked to the company.
+
+A contact does not extend protection past the end date. Only a manager can start a new protection period by assigning the company again.
+
+See [Activities and tasks](/docs/users/crm/activities-tasks#log-an-activity).
+
+## Check a company's protection
+
+The company page shows one line with the status:
+
+- "Protected until \{date\}": the company is protected, and a contact is logged (or not needed).
+- "Contact needed by \{date\}": log a visit or meeting by this date.
+- "Not protected: no owner": nobody owns the company.
+- "Not protected: no registration number": the company has no **Account ID**.
+
+The **Protection** tab shows more:
+
+- **Status:** the same line as above.
+- **Qualifying contact:** "Yes, on \{date\}" or "Not yet".
+- **Owner history:** every owner change with the date, the previous and new owner, who made the change, and the reason. "system" means the change was made by a background job.
+
+## When a company is already in the CRM
+
+You cannot create a second company with the same **Account ID** and country. This also applies when you change the **Account ID** or **Billing country** of an existing company. You see one of these messages:
+
+- "You already have this company in the CRM." You own the existing company. Search for it in **Companies**.
+- "This company is protected until \{until\}." Another user owns it. Your manager is told about the attempt.
+- "This company is already in the CRM. A manager has been asked to assign it to you." Nobody owns it. Your manager gets an email and can assign it to you.
+
+The messages never show who owns the company.
+
+If your admin requires it, you see "Enter the company registration number." when you create a company without an **Account ID**.
+
+## Change a company's owner
+
+Only managers and admins can change **Assigned to** on an existing company. If you try, you see "Only a manager can change the account owner." Ask your manager to reassign it.
+
+## For managers
+
+### Expiring protection
+
+Go to **Plugins → Expiring protection** in the sidebar. The page shows:
+
+- **Due within \{days\} days:** companies whose contact deadline or protection end is coming up. Use it to remind reps to log their visits.
+- **Freed in the last 7 days:** companies that lost their owner. Assign them to a rep if needed.
+
+A company can stay in the first list until the next morning run, even when its contact is already logged.
+
+### Emails you get
+
+As a manager or admin, you get emails when:
+
+- a rep tries to create a company that someone else protects ("Blocked: \{account\} is protected");
+- a rep tries to create a company that is in the CRM without an owner ("Assign \{account\}");
+- the daily run removes owners ("\{count\} accounts lost their protection"), with the list of companies.
+
+To assign a company, open it, edit it, and set **Assigned to**. The new owner gets a new protection period, and the change is added to the **Owner history**.
+
+You also cannot create a second company with the same number. You see "This company is already in the CRM." or "This company is protected until \{until\}." and can open the existing company instead.
