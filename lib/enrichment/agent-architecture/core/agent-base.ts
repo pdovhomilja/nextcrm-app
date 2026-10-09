@@ -90,13 +90,11 @@ export abstract class BaseAgent<TInput = unknown, TOutput = unknown> {
     if (message.tool_calls) {
       for (const toolCall of message.tool_calls) {
         const handoffIndex = handoffTools.findIndex(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           t => (t as any).function.name === (toolCall as any).function.name
         );
 
         if (handoffIndex >= 0) {
           const handoff = handoffs[handoffIndex];
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const handoffInput = JSON.parse((toolCall as any).function.arguments);
           
           // Execute handoff

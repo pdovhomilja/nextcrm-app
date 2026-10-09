@@ -64,7 +64,6 @@ export const reportTools = [
         dateTo: args.dateTo ? new Date(args.dateTo) : now,
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let data: any;
       switch (args.category) {
         case "sales": {

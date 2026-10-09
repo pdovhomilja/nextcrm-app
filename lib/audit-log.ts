@@ -72,7 +72,6 @@ interface WriteAuditLogParams {
 
 export async function writeAuditLog(params: WriteAuditLogParams): Promise<void> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (prismadb as any).crm_AuditLog.create({
       data: {
         entityType: params.entityType,
