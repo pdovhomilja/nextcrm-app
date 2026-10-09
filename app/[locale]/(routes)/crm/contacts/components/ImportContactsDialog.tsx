@@ -33,21 +33,27 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
-const PRODUCTS_CSV_TEMPLATE = `name,sku,type,category,description,unit_price,unit_cost,currency,tax_rate,unit
-"Cloud Hosting Basic","SKU-001","SERVICE","Software","Basic cloud hosting plan",99.00,45.00,"USD",20,"per month"
-"Ergonomic Office Chair","SKU-002","PRODUCT","Hardware","Ergonomic desk chair",299.00,150.00,"USD",20,"per unit"`;
+const CONTACTS_CSV_TEMPLATE = `first_name,last_name,mobile_phone,office_phone,email,personal_email,website,birthday,description,position,social_twitter,social_facebook,social_linkedin,social_skype,social_youtube,social_tiktok
+"John","Doe","+1 555-0101","+1 555-0102","john.doe@techcorp.com","johndoe@gmail.com","https://techcorp.com","1988-04-12","Key decision maker","CTO","@johndoe","https://facebook.com/johndoe","https://linkedin.com/in/johndoe","john.skype","https://youtube.com/c/johndoe","https://tiktok.com/@johndoe"
+"Jane","Smith","+1 555-0201","+1 555-0202","jane.smith@innovate.io","janesmith@yahoo.com","https://innovate.io","1992-09-25","VP of Product","VP Product","@janesmith","https://facebook.com/janesmith","https://linkedin.com/in/janesmith","jane.skype","",""`;
 
-interface ExtractedProduct {
-  name: string;
-  sku?: string;
-  type?: string;
-  category?: string;
+interface ExtractedContact {
+  first_name?: string;
+  last_name: string;
+  mobile_phone?: string;
+  office_phone?: string;
+  email?: string;
+  personal_email?: string;
+  website?: string;
+  birthday?: string;
   description?: string;
-  unit_price?: string;
-  unit_cost?: string;
-  currency?: string;
-  tax_rate?: string;
-  unit?: string;
+  position?: string;
+  social_twitter?: string;
+  social_facebook?: string;
+  social_linkedin?: string;
+  social_skype?: string;
+  social_youtube?: string;
+  social_tiktok?: string;
 }
 
 type ImportResult = {
@@ -56,11 +62,11 @@ type ImportResult = {
   errors: string[];
 };
 
-export function ImportProductsDialog() {
+export function ImportContactsDialog() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [extractedProducts, setExtractedProducts] = useState<ExtractedProduct[]>([]);
+  const [extractedContacts, setExtractedContacts] = useState<ExtractedContact[]>([]);
   const [extractionMethod, setExtractionMethod] = useState<string>("");
   const [isImporting, setIsImporting] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
@@ -68,7 +74,7 @@ export function ImportProductsDialog() {
 
   const reset = () => {
     setFile(null);
-    setExtractedProducts([]);
+    setExtractedContacts([]);
     setExtractionMethod("");
     setResult(null);
     setIsImporting(false);
@@ -81,11 +87,11 @@ export function ImportProductsDialog() {
   };
 
   const downloadTemplate = () => {
-    const blob = new Blob([PRODUCTS_CSV_TEMPLATE], { type: "text/csv" });
+    const blob = new Blob([CONTACTS_CSV_TEMPLATE], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "products_import_template.csv";
+    a.download = "contacts_import_template.csv";
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -100,7 +106,7 @@ export function ImportProductsDialog() {
     formData.append("file", selected);
 
     try {
-      const res = await fetch("/api/crm/products/bulk-import", {
+      const res = await fetch("/api/crm/contacts/bulk-import", {
         method: "POST",
         body: formData,
       });
@@ -112,56 +118,56 @@ export function ImportProductsDialog() {
       }
 
       setExtractionMethod(data.extractionMethod || "OCR & Document Intelligence");
-      setExtractedProducts(data.products || []);
-      toast.success(`Extracted ${data.products?.length || 0} product(s) from ${selected.name}`);
+      setExtractedContacts(data.contacts || []);
+      toast.success(`Extracted ${data.contacts?.length || 0} contact(s) from ${selected.name}`);
     } catch (err: any) {
       toast.error(err.message || "An error occurred while reading file");
     }
   };
 
-  const handleProductChange = (index: number, field: keyof ExtractedProduct, value: string) => {
-    setExtractedProducts((prev) => {
+  const handleContactChange = (index: number, field: keyof ExtractedContact, value: string) => {
+    setExtractedContacts((prev) => {
       const updated = [...prev];
       updated[index] = { ...updated[index], [field]: value };
       return updated;
     });
   };
 
-  const handleRemoveProduct = (index: number) => {
-    setExtractedProducts((prev) => prev.filter((_, i) => i !== index));
+  const handleRemoveContact = (index: number) => {
+    setExtractedContacts((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleConfirmImport = async () => {
-    if (extractedProducts.length === 0) {
-      toast.error("No valid products to import");
+    if (extractedContacts.length === 0) {
+      toast.error("No valid contacts to import");
       return;
     }
 
     setIsImporting(true);
     try {
-      const res = await fetch("/api/crm/products/bulk-import", {
+      const res = await fetch("/api/crm/contacts/bulk-import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ products: extractedProducts }),
+        body: JSON.stringify({ contacts: extractedContacts }),
       });
 
       const data = await res.json();
       if (!res.ok || data.error) {
-        setResult({ imported: 0, skipped: 0, errors: [data.error || "Failed to import products"] });
+        setResult({ imported: 0, skipped: 0, errors: [data.error || "Failed to import contacts"] });
         return;
       }
 
       setResult({
-        imported: data.importedCount || extractedProducts.length,
+        imported: data.importedCount || extractedContacts.length,
         skipped: 0,
         errors: data.errors || [],
       });
-      toast.success(`Successfully imported ${data.importedCount || extractedProducts.length} product(s)!`);
+      toast.success(`Successfully imported ${data.importedCount || extractedContacts.length} contact(s)!`);
       startTransition(() => {
         router.refresh();
       });
     } catch (err: any) {
-      setResult({ imported: 0, skipped: 0, errors: [err.message || "Error saving products"] });
+      setResult({ imported: 0, skipped: 0, errors: [err.message || "Error saving contacts"] });
     } finally {
       setIsImporting(false);
     }
@@ -175,11 +181,11 @@ export function ImportProductsDialog() {
           Import
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Import Products from CSV, Excel, PDF (OCR)</DialogTitle>
+          <DialogTitle>Import Contacts from CSV, Excel, PDF (OCR)</DialogTitle>
           <DialogDescription>
-            Upload product spreadsheets, documents, or scanned PDFs. Download the template to see the expected format.
+            Upload contact spreadsheets, documents, or scanned PDFs. Extracted details can be edited in input boxes before confirming.
           </DialogDescription>
         </DialogHeader>
 
@@ -209,85 +215,94 @@ export function ImportProductsDialog() {
           </div>
 
           {/* Editable Preview Table */}
-          {extractedProducts.length > 0 && !result && (
+          {extractedContacts.length > 0 && !result && (
             <div className="rounded-md border overflow-x-auto max-h-[360px]">
-              <Table className="min-w-[900px]">
+              <Table className="min-w-[1200px]">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-xs min-w-[150px]">Product Name *</TableHead>
-                    <TableHead className="text-xs min-w-[100px]">SKU</TableHead>
-                    <TableHead className="text-xs min-w-[100px]">Type</TableHead>
-                    <TableHead className="text-xs min-w-[100px]">Unit Price</TableHead>
-                    <TableHead className="text-xs min-w-[100px]">Unit Cost</TableHead>
-                    <TableHead className="text-xs min-w-[80px]">Currency</TableHead>
-                    <TableHead className="text-xs min-w-[100px]">Unit</TableHead>
+                    <TableHead className="text-xs min-w-[130px]">First Name</TableHead>
+                    <TableHead className="text-xs min-w-[130px]">Last Name *</TableHead>
+                    <TableHead className="text-xs min-w-[180px]">Email</TableHead>
+                    <TableHead className="text-xs min-w-[130px]">Mobile Phone</TableHead>
+                    <TableHead className="text-xs min-w-[130px]">Office Phone</TableHead>
+                    <TableHead className="text-xs min-w-[130px]">Position</TableHead>
+                    <TableHead className="text-xs min-w-[150px]">Website</TableHead>
+                    <TableHead className="text-xs min-w-[180px]">Personal Email</TableHead>
                     <TableHead className="text-xs w-[50px] text-center">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {extractedProducts.map((product, idx) => (
+                  {extractedContacts.map((contact, idx) => (
                     <TableRow key={idx}>
                       <TableCell className="p-1">
                         <Input
-                          value={product.name || ""}
-                          onChange={(e) => handleProductChange(idx, "name", e.target.value)}
+                          value={contact.first_name || ""}
+                          onChange={(e) => handleContactChange(idx, "first_name", e.target.value)}
+                          className="h-7 text-xs"
+                          placeholder="First Name"
+                        />
+                      </TableCell>
+                      <TableCell className="p-1">
+                        <Input
+                          value={contact.last_name || ""}
+                          onChange={(e) => handleContactChange(idx, "last_name", e.target.value)}
                           className="h-7 text-xs font-medium"
-                          placeholder="Product Name"
+                          placeholder="Last Name"
                         />
                       </TableCell>
                       <TableCell className="p-1">
                         <Input
-                          value={product.sku || ""}
-                          onChange={(e) => handleProductChange(idx, "sku", e.target.value)}
+                          value={contact.email || ""}
+                          onChange={(e) => handleContactChange(idx, "email", e.target.value)}
                           className="h-7 text-xs"
-                          placeholder="SKU-123"
+                          placeholder="email@example.com"
                         />
                       </TableCell>
                       <TableCell className="p-1">
                         <Input
-                          value={product.type || ""}
-                          onChange={(e) => handleProductChange(idx, "type", e.target.value)}
-                          className="h-7 text-xs uppercase"
-                          placeholder="PRODUCT"
-                        />
-                      </TableCell>
-                      <TableCell className="p-1">
-                        <Input
-                          value={product.unit_price || ""}
-                          onChange={(e) => handleProductChange(idx, "unit_price", e.target.value)}
+                          value={contact.mobile_phone || ""}
+                          onChange={(e) => handleContactChange(idx, "mobile_phone", e.target.value)}
                           className="h-7 text-xs"
-                          placeholder="99.00"
+                          placeholder="+1 555-0100"
                         />
                       </TableCell>
                       <TableCell className="p-1">
                         <Input
-                          value={product.unit_cost || ""}
-                          onChange={(e) => handleProductChange(idx, "unit_cost", e.target.value)}
+                          value={contact.office_phone || ""}
+                          onChange={(e) => handleContactChange(idx, "office_phone", e.target.value)}
                           className="h-7 text-xs"
-                          placeholder="45.00"
+                          placeholder="+1 555-0200"
                         />
                       </TableCell>
                       <TableCell className="p-1">
                         <Input
-                          value={product.currency || ""}
-                          onChange={(e) => handleProductChange(idx, "currency", e.target.value)}
-                          className="h-7 text-xs uppercase"
-                          placeholder="USD"
-                        />
-                      </TableCell>
-                      <TableCell className="p-1">
-                        <Input
-                          value={product.unit || ""}
-                          onChange={(e) => handleProductChange(idx, "unit", e.target.value)}
+                          value={contact.position || ""}
+                          onChange={(e) => handleContactChange(idx, "position", e.target.value)}
                           className="h-7 text-xs"
-                          placeholder="per unit"
+                          placeholder="CTO"
+                        />
+                      </TableCell>
+                      <TableCell className="p-1">
+                        <Input
+                          value={contact.website || ""}
+                          onChange={(e) => handleContactChange(idx, "website", e.target.value)}
+                          className="h-7 text-xs"
+                          placeholder="https://domain.com"
+                        />
+                      </TableCell>
+                      <TableCell className="p-1">
+                        <Input
+                          value={contact.personal_email || ""}
+                          onChange={(e) => handleContactChange(idx, "personal_email", e.target.value)}
+                          className="h-7 text-xs"
+                          placeholder="personal@gmail.com"
                         />
                       </TableCell>
                       <TableCell className="p-1 text-center">
                         <Button
                           size="icon"
                           variant="ghost"
-                          onClick={() => handleRemoveProduct(idx)}
+                          onClick={() => handleRemoveContact(idx)}
                           className="h-7 w-7 text-muted-foreground hover:text-destructive"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -301,9 +316,9 @@ export function ImportProductsDialog() {
           )}
 
           {/* Confirm Import Button */}
-          {extractedProducts.length > 0 && !result && (
+          {extractedContacts.length > 0 && !result && (
             <Button onClick={handleConfirmImport} disabled={isImporting}>
-              {isImporting ? "Importing..." : `Confirm Import (${extractedProducts.length} products)`}
+              {isImporting ? "Importing..." : `Confirm Import (${extractedContacts.length} contacts)`}
             </Button>
           )}
 
@@ -314,7 +329,7 @@ export function ImportProductsDialog() {
                 <div className="flex items-center gap-2 text-green-600">
                   <CheckCircle className="h-5 w-5" />
                   <span className="text-sm font-medium">
-                    {result.imported} product(s) imported successfully!
+                    {result.imported} contact(s) imported successfully!
                   </span>
                 </div>
               )}

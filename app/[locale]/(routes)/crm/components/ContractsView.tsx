@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { columns } from "../contracts/table-components/columns";
 import { ContractsDataTable } from "../contracts/table-components/data-table";
 import CreateContractForm from "../contracts/_forms/create-contract";
+import { ImportContractsDialog } from "../contracts/components/ImportContractsDialog";
 
 import type { getAllCrmData } from "@/actions/crm/get-crm-data";
 
@@ -30,7 +31,7 @@ const ContractsView = ({ data, crmData, accountId }: ContractsViewProps) => {
   const t = useTranslations("CrmPage");
 
   return (
-    <Card>
+    <Card className="mb-6">
       <CardHeader className="pb-3">
         <div className="flex justify-between">
           <CardTitle>
@@ -40,6 +41,7 @@ const ContractsView = ({ data, crmData, accountId }: ContractsViewProps) => {
           </CardTitle>
 
           <div className="flex space-x-2">
+            <ImportContractsDialog />
             <CreateContractForm
               accounts={accounts}
               accountId={accountId ?? ""}

@@ -24,13 +24,13 @@ const MainPageView = async () => {
       getContractsWithIncludes(),
     ]);
   return (
-    <>
+    <div className="space-y-6 pb-8">
       <AccountsView crmData={crmData} data={accounts} />
       <OpportunitiesView crmData={crmData} data={opportunities} />
       <ContactsView crmData={crmData} data={contacts} />
       <LeadsView crmData={crmData} data={leads} />
       <ContractsView crmData={crmData} data={contracts} />
-    </>
+    </div>
   );
 };
 

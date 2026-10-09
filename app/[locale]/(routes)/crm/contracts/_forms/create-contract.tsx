@@ -55,20 +55,30 @@ const CreateContractForm = ({
     },
   });
 
+  const contractTypes = [
+    { id: "Service Agreement", name: "Service Agreement" },
+    { id: "Supply Contract", name: "Supply Contract" },
+    { id: "NDA", name: "NDA (Non-Disclosure Agreement)" },
+    { id: "Partnership Agreement", name: "Partnership Agreement" },
+    { id: "SLA", name: "Service Level Agreement (SLA)" },
+    { id: "Licensing Agreement", name: "Licensing Agreement" },
+  ];
+
   const onAction = async (formData: FormData) => {
     const title = formData.get("title") as string;
     const value = formData.get("value") as string;
-    const startDate = new Date(formData.get("startDate") as string);
-    const endDate = new Date(formData.get("endDate") as string);
-    const renewalReminderDate = new Date(
-      formData.get("renewalReminderDate") as string
-    );
-    const customerSignedDate = new Date(
-      formData.get("customerSignedDate") as string
-    );
-    const companySignedDate = new Date(
-      formData.get("companySignedDate") as string
-    );
+    const type = formData.get("type") as string;
+    const rawStartDate = formData.get("startDate") as string;
+    const rawEndDate = formData.get("endDate") as string;
+    const rawRenewalDate = formData.get("renewalReminderDate") as string;
+    const rawCustomerSignedDate = formData.get("customerSignedDate") as string;
+    const rawCompanySignedDate = formData.get("companySignedDate") as string;
+
+    const startDate = rawStartDate ? new Date(rawStartDate) : undefined;
+    const endDate = rawEndDate ? new Date(rawEndDate) : undefined;
+    const renewalReminderDate = rawRenewalDate ? new Date(rawRenewalDate) : undefined;
+    const customerSignedDate = rawCustomerSignedDate ? new Date(rawCustomerSignedDate) : undefined;
+    const companySignedDate = rawCompanySignedDate ? new Date(rawCompanySignedDate) : undefined;
     const description = formData.get("description") as string;
     const account = formData.get("account") as string;
     const assigned_to = formData.get("assigned_to") as string;
@@ -77,19 +87,18 @@ const CreateContractForm = ({
     await execute({
       title,
       value,
-      startDate,
-      endDate,
-      renewalReminderDate,
-      customerSignedDate,
-      companySignedDate,
+      type,
+      startDate: startDate && !isNaN(startDate.getTime()) ? startDate : undefined,
+      endDate: endDate && !isNaN(endDate.getTime()) ? endDate : undefined,
+      renewalReminderDate: renewalReminderDate && !isNaN(renewalReminderDate.getTime()) ? renewalReminderDate : undefined,
+      customerSignedDate: customerSignedDate && !isNaN(customerSignedDate.getTime()) ? customerSignedDate : undefined,
+      companySignedDate: companySignedDate && !isNaN(companySignedDate.getTime()) ? companySignedDate : undefined,
       description,
       account,
       assigned_to,
       currency,
     });
   };
-
-  isLoading ? <Loader2 className="h-6 w-6  animate-spin" /> : null;
 
   return (
     <FormSheet
@@ -102,9 +111,18 @@ const CreateContractForm = ({
         <FormInput id="title" label={t("title")} type="text" errors={fieldErrors} />
         <FormInput id="value" label={t("value")} type="text" errors={fieldErrors} />
         <FormSelect
+          id="type"
+          label="Contract Type"
+          type="hidden"
+          placeholder="Select contract type"
+          data={contractTypes}
+          errors={fieldErrors}
+        />
+        <FormSelect
           id="currency"
           label={t("currency")}
           type="hidden"
+          placeholder="Select currency"
           data={currencies.map((c) => ({ id: c.code, name: `${c.symbol} ${c.code} — ${c.name}` }))}
           errors={fieldErrors}
         />
@@ -147,7 +165,8 @@ const CreateContractForm = ({
           id="account"
           label={t("account")}
           type="hidden"
-          data={accounts}
+          placeholder="Select an account"
+          data={(accounts || []).map((a) => ({ id: a.id, name: a.name }))}
           errors={fieldErrors}
           defaultValue={accountId}
           disabled={!!accountId}
@@ -164,7 +183,7 @@ const CreateContractForm = ({
         </div>
         <FormSubmit className="w-full">
           {isLoading ? (
-            <Loader2 className="h-6 w-6  animate-spin" />
+            <Loader2 className="h-6 w-6 animate-spin" />
           ) : (
             c("create")
           )}
@@ -175,3 +194,4 @@ const CreateContractForm = ({
 };
 
 export default CreateContractForm;
+

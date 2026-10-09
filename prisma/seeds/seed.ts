@@ -166,6 +166,22 @@ async function main() {
   });
   console.log(`Test user seeded: ${testUserEmail}`);
 
+  const extraUsers = [
+    { email: "sarah.jenkins@nextcrm.app", name: "Sarah Jenkins (Sales Manager)", role: "manager" },
+    { email: "alex.rivera@nextcrm.app", name: "Alex Rivera (Account Executive)", role: "user" },
+    { email: "michael.chen@nextcrm.app", name: "Michael Chen (Support Lead)", role: "user" },
+  ];
+
+  for (const u of extraUsers) {
+    await prisma.users.upsert({
+      where: { email: u.email },
+      update: { name: u.name, userStatus: "ACTIVE", role: u.role },
+      create: { email: u.email, name: u.name, userStatus: "ACTIVE", role: u.role },
+    });
+  }
+  console.log("Additional CRM team users seeded.");
+
+
   // Demo CRM dataset for e2e tests — the update/detail specs act on the
   // first table row and need at least one record per entity. Idempotent:
   // created only when missing (matched by name/email). Gated so a manual

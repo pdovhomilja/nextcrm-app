@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 
 import { createColumns } from "../contacts/table-components/columns";
 import { NewContactForm } from "../contacts/components/NewContactForm";
+import { ImportContactsDialog } from "../contacts/components/ImportContactsDialog";
 import { ContactsDataTable } from "../contacts/table-components/data-table";
 import {
   Sheet,
@@ -42,7 +43,7 @@ const ContactsView = ({ data, crmData, accountId }: ContactsViewProps) => {
   const { accounts, contactTypes } = crmData;
 
   return (
-    <Card>
+    <Card className="mb-6">
       <CardHeader className="pb-3">
         <div className="flex justify-between">
           <div>
@@ -53,6 +54,7 @@ const ContactsView = ({ data, crmData, accountId }: ContactsViewProps) => {
             </CardTitle>
           </div>
           <div className="flex space-x-2">
+            <ImportContactsDialog />
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
                 <Button size="sm" aria-label={t("contacts.addNew")} data-testid="add-contact-btn">+</Button>

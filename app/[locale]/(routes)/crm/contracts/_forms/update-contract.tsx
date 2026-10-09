@@ -50,6 +50,15 @@ const UpdateContractForm = ({
       .finally(() => setIsLoadingData(false));
   }, []);
 
+  const contractTypes = [
+    { id: "Service Agreement", name: "Service Agreement" },
+    { id: "Supply Contract", name: "Supply Contract" },
+    { id: "NDA", name: "NDA (Non-Disclosure Agreement)" },
+    { id: "Partnership Agreement", name: "Partnership Agreement" },
+    { id: "SLA", name: "Service Level Agreement (SLA)" },
+    { id: "Licensing Agreement", name: "Licensing Agreement" },
+  ];
+
   const contractStatuses = [
     { id: "NOTSTARTED", name: "Not started" },
     { id: "INPROGRESS", name: "In progress" },
@@ -72,17 +81,18 @@ const UpdateContractForm = ({
   const onAction = async (formData: FormData) => {
     const title = formData.get("title") as string;
     const value = formData.get("value") as string;
-    const startDate = new Date(formData.get("startDate") as string);
-    const endDate = new Date(formData.get("endDate") as string);
-    const renewalReminderDate = new Date(
-      formData.get("renewalReminderDate") as string
-    );
-    const customerSignedDate = new Date(
-      formData.get("customerSignedDate") as string
-    );
-    const companySignedDate = new Date(
-      formData.get("companySignedDate") as string
-    );
+    const type = formData.get("type") as string;
+    const rawStartDate = formData.get("startDate") as string;
+    const rawEndDate = formData.get("endDate") as string;
+    const rawRenewalDate = formData.get("renewalReminderDate") as string;
+    const rawCustomerSignedDate = formData.get("customerSignedDate") as string;
+    const rawCompanySignedDate = formData.get("companySignedDate") as string;
+
+    const startDate = rawStartDate ? new Date(rawStartDate) : undefined;
+    const endDate = rawEndDate ? new Date(rawEndDate) : undefined;
+    const renewalReminderDate = rawRenewalDate ? new Date(rawRenewalDate) : undefined;
+    const customerSignedDate = rawCustomerSignedDate ? new Date(rawCustomerSignedDate) : undefined;
+    const companySignedDate = rawCompanySignedDate ? new Date(rawCompanySignedDate) : undefined;
     const description = formData.get("description") as string;
     const status = formData.get("status") as any;
     const account = formData.get("account") as string;
@@ -94,11 +104,12 @@ const UpdateContractForm = ({
       v: data.v,
       title,
       value,
-      startDate,
-      endDate,
-      renewalReminderDate,
-      customerSignedDate,
-      companySignedDate,
+      type,
+      startDate: startDate && !isNaN(startDate.getTime()) ? startDate : undefined,
+      endDate: endDate && !isNaN(endDate.getTime()) ? endDate : undefined,
+      renewalReminderDate: renewalReminderDate && !isNaN(renewalReminderDate.getTime()) ? renewalReminderDate : undefined,
+      customerSignedDate: customerSignedDate && !isNaN(customerSignedDate.getTime()) ? customerSignedDate : undefined,
+      companySignedDate: companySignedDate && !isNaN(companySignedDate.getTime()) ? companySignedDate : undefined,
       description,
       status,
       account,
@@ -133,6 +144,15 @@ const UpdateContractForm = ({
             type="text"
             errors={fieldErrors}
             defaultValue={valueString}
+          />
+          <FormSelect
+            id="type"
+            label="Contract Type"
+            type="hidden"
+            placeholder="Select contract type"
+            data={contractTypes}
+            errors={fieldErrors}
+            defaultValue={data.type ?? ""}
           />
           <FormSelect
             id="currency"
@@ -198,7 +218,8 @@ const UpdateContractForm = ({
             id="account"
             label="Account"
             type="hidden"
-            data={accounts}
+            placeholder="Select an account"
+            data={(accounts || []).map((a) => ({ id: a.id, name: a.name }))}
             errors={fieldErrors}
             defaultValue={data.account}
           />

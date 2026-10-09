@@ -9,21 +9,28 @@ import { getOpportunitiesFull } from "@/actions/crm/get-opportunities-with-inclu
 import { getTranslations } from "next-intl/server";
 import { serializeDecimalsList } from "@/lib/serialize-decimals";
 
-const AccountsPage = async () => {
-  const t = await getTranslations("CrmPage");
-  const crmData = await getAllCrmData();
-  const opportunities = serializeDecimalsList(await getOpportunitiesFull());
+async function OpportunitiesContent() {
+  const [crmData, rawOpportunities] = await Promise.all([
+    getAllCrmData(),
+    getOpportunitiesFull(),
+  ]);
+  const opportunities = serializeDecimalsList(rawOpportunities);
+  return <OpportunitiesView crmData={crmData} data={opportunities} />;
+}
 
+const OpportunitiesPage = async () => {
+  const t = await getTranslations("CrmPage");
   return (
     <Container
       title={t("opportunities.pageTitle")}
       description={t("opportunities.pageDescription")}
     >
       <Suspense fallback={<CrmTableSkeleton />}>
-        <OpportunitiesView crmData={crmData} data={opportunities} />
+        <OpportunitiesContent />
       </Suspense>
     </Container>
   );
 };
 
-export default AccountsPage;
+export default OpportunitiesPage;
+

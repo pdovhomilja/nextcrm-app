@@ -33,21 +33,21 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
-const PRODUCTS_CSV_TEMPLATE = `name,sku,type,category,description,unit_price,unit_cost,currency,tax_rate,unit
-"Cloud Hosting Basic","SKU-001","SERVICE","Software","Basic cloud hosting plan",99.00,45.00,"USD",20,"per month"
-"Ergonomic Office Chair","SKU-002","PRODUCT","Hardware","Ergonomic desk chair",299.00,150.00,"USD",20,"per unit"`;
+const CONTRACTS_CSV_TEMPLATE = `title,value,currency,type,startDate,endDate,renewalReminderDate,customerSignedDate,companySignedDate,description
+"Master Services Agreement",15000,"USD","Service Agreement","2026-01-01","2027-01-01","2026-12-01","2025-12-28","2025-12-29","Annual software service contract"
+"Equipment Supply Deal",8500,"USD","Supply Contract","2026-02-15","2026-08-15","2026-07-15","2026-02-10","2026-02-12","Hardware supply and maintenance terms"`;
 
-interface ExtractedProduct {
-  name: string;
-  sku?: string;
-  type?: string;
-  category?: string;
-  description?: string;
-  unit_price?: string;
-  unit_cost?: string;
+interface ExtractedContract {
+  title: string;
+  value?: string;
   currency?: string;
-  tax_rate?: string;
-  unit?: string;
+  type?: string;
+  startDate?: string;
+  endDate?: string;
+  renewalReminderDate?: string;
+  customerSignedDate?: string;
+  companySignedDate?: string;
+  description?: string;
 }
 
 type ImportResult = {
@@ -56,11 +56,11 @@ type ImportResult = {
   errors: string[];
 };
 
-export function ImportProductsDialog() {
+export function ImportContractsDialog() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [extractedProducts, setExtractedProducts] = useState<ExtractedProduct[]>([]);
+  const [extractedContracts, setExtractedContracts] = useState<ExtractedContract[]>([]);
   const [extractionMethod, setExtractionMethod] = useState<string>("");
   const [isImporting, setIsImporting] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
@@ -68,7 +68,7 @@ export function ImportProductsDialog() {
 
   const reset = () => {
     setFile(null);
-    setExtractedProducts([]);
+    setExtractedContracts([]);
     setExtractionMethod("");
     setResult(null);
     setIsImporting(false);
@@ -81,11 +81,11 @@ export function ImportProductsDialog() {
   };
 
   const downloadTemplate = () => {
-    const blob = new Blob([PRODUCTS_CSV_TEMPLATE], { type: "text/csv" });
+    const blob = new Blob([CONTRACTS_CSV_TEMPLATE], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "products_import_template.csv";
+    a.download = "contracts_import_template.csv";
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -100,7 +100,7 @@ export function ImportProductsDialog() {
     formData.append("file", selected);
 
     try {
-      const res = await fetch("/api/crm/products/bulk-import", {
+      const res = await fetch("/api/crm/contracts/bulk-import", {
         method: "POST",
         body: formData,
       });
@@ -112,56 +112,56 @@ export function ImportProductsDialog() {
       }
 
       setExtractionMethod(data.extractionMethod || "OCR & Document Intelligence");
-      setExtractedProducts(data.products || []);
-      toast.success(`Extracted ${data.products?.length || 0} product(s) from ${selected.name}`);
+      setExtractedContracts(data.contracts || []);
+      toast.success(`Extracted ${data.contracts?.length || 0} contract(s) from ${selected.name}`);
     } catch (err: any) {
       toast.error(err.message || "An error occurred while reading file");
     }
   };
 
-  const handleProductChange = (index: number, field: keyof ExtractedProduct, value: string) => {
-    setExtractedProducts((prev) => {
+  const handleContractChange = (index: number, field: keyof ExtractedContract, value: string) => {
+    setExtractedContracts((prev) => {
       const updated = [...prev];
       updated[index] = { ...updated[index], [field]: value };
       return updated;
     });
   };
 
-  const handleRemoveProduct = (index: number) => {
-    setExtractedProducts((prev) => prev.filter((_, i) => i !== index));
+  const handleRemoveContract = (index: number) => {
+    setExtractedContracts((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleConfirmImport = async () => {
-    if (extractedProducts.length === 0) {
-      toast.error("No valid products to import");
+    if (extractedContracts.length === 0) {
+      toast.error("No valid contracts to import");
       return;
     }
 
     setIsImporting(true);
     try {
-      const res = await fetch("/api/crm/products/bulk-import", {
+      const res = await fetch("/api/crm/contracts/bulk-import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ products: extractedProducts }),
+        body: JSON.stringify({ contracts: extractedContracts }),
       });
 
       const data = await res.json();
       if (!res.ok || data.error) {
-        setResult({ imported: 0, skipped: 0, errors: [data.error || "Failed to import products"] });
+        setResult({ imported: 0, skipped: 0, errors: [data.error || "Failed to import contracts"] });
         return;
       }
 
       setResult({
-        imported: data.importedCount || extractedProducts.length,
+        imported: data.importedCount || extractedContracts.length,
         skipped: 0,
         errors: data.errors || [],
       });
-      toast.success(`Successfully imported ${data.importedCount || extractedProducts.length} product(s)!`);
+      toast.success(`Successfully imported ${data.importedCount || extractedContracts.length} contract(s)!`);
       startTransition(() => {
         router.refresh();
       });
     } catch (err: any) {
-      setResult({ imported: 0, skipped: 0, errors: [err.message || "Error saving products"] });
+      setResult({ imported: 0, skipped: 0, errors: [err.message || "Error saving contracts"] });
     } finally {
       setIsImporting(false);
     }
@@ -175,15 +175,16 @@ export function ImportProductsDialog() {
           Import
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Import Products from CSV, Excel, PDF (OCR)</DialogTitle>
+          <DialogTitle>Import Contracts from CSV, Excel, PDF (OCR)</DialogTitle>
           <DialogDescription>
-            Upload product spreadsheets, documents, or scanned PDFs. Download the template to see the expected format.
+            Upload contract spreadsheets, documents, or scanned PDFs. Extracted data can be edited in input boxes before confirming.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Download Template & File Input */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <Button variant="outline" size="sm" onClick={downloadTemplate}>
               <Download className="mr-2 h-4 w-4" />
@@ -208,86 +209,113 @@ export function ImportProductsDialog() {
             />
           </div>
 
-          {/* Editable Preview Table */}
-          {extractedProducts.length > 0 && !result && (
+          {/* Extracted Contracts Preview Table with Editable Input Boxes */}
+          {extractedContracts.length > 0 && !result && (
             <div className="rounded-md border overflow-x-auto max-h-[360px]">
-              <Table className="min-w-[900px]">
+              <Table className="min-w-[1200px]">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-xs min-w-[150px]">Product Name *</TableHead>
-                    <TableHead className="text-xs min-w-[100px]">SKU</TableHead>
-                    <TableHead className="text-xs min-w-[100px]">Type</TableHead>
-                    <TableHead className="text-xs min-w-[100px]">Unit Price</TableHead>
-                    <TableHead className="text-xs min-w-[100px]">Unit Cost</TableHead>
+                    <TableHead className="text-xs min-w-[160px]">Title *</TableHead>
+                    <TableHead className="text-xs min-w-[100px]">Value</TableHead>
                     <TableHead className="text-xs min-w-[80px]">Currency</TableHead>
-                    <TableHead className="text-xs min-w-[100px]">Unit</TableHead>
+                    <TableHead className="text-xs min-w-[140px]">Contract Type</TableHead>
+                    <TableHead className="text-xs min-w-[120px]">Start Date</TableHead>
+                    <TableHead className="text-xs min-w-[120px]">End Date</TableHead>
+                    <TableHead className="text-xs min-w-[130px]">Renewal Date</TableHead>
+                    <TableHead className="text-xs min-w-[130px]">Cust Signed Date</TableHead>
+                    <TableHead className="text-xs min-w-[130px]">Comp Signed Date</TableHead>
+                    <TableHead className="text-xs min-w-[180px]">Description</TableHead>
                     <TableHead className="text-xs w-[50px] text-center">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {extractedProducts.map((product, idx) => (
+                  {extractedContracts.map((contract, idx) => (
                     <TableRow key={idx}>
                       <TableCell className="p-1">
                         <Input
-                          value={product.name || ""}
-                          onChange={(e) => handleProductChange(idx, "name", e.target.value)}
+                          value={contract.title || ""}
+                          onChange={(e) => handleContractChange(idx, "title", e.target.value)}
                           className="h-7 text-xs font-medium"
-                          placeholder="Product Name"
+                          placeholder="Contract Title"
                         />
                       </TableCell>
                       <TableCell className="p-1">
                         <Input
-                          value={product.sku || ""}
-                          onChange={(e) => handleProductChange(idx, "sku", e.target.value)}
+                          value={contract.value || ""}
+                          onChange={(e) => handleContractChange(idx, "value", e.target.value)}
                           className="h-7 text-xs"
-                          placeholder="SKU-123"
+                          placeholder="10000"
                         />
                       </TableCell>
                       <TableCell className="p-1">
                         <Input
-                          value={product.type || ""}
-                          onChange={(e) => handleProductChange(idx, "type", e.target.value)}
-                          className="h-7 text-xs uppercase"
-                          placeholder="PRODUCT"
-                        />
-                      </TableCell>
-                      <TableCell className="p-1">
-                        <Input
-                          value={product.unit_price || ""}
-                          onChange={(e) => handleProductChange(idx, "unit_price", e.target.value)}
-                          className="h-7 text-xs"
-                          placeholder="99.00"
-                        />
-                      </TableCell>
-                      <TableCell className="p-1">
-                        <Input
-                          value={product.unit_cost || ""}
-                          onChange={(e) => handleProductChange(idx, "unit_cost", e.target.value)}
-                          className="h-7 text-xs"
-                          placeholder="45.00"
-                        />
-                      </TableCell>
-                      <TableCell className="p-1">
-                        <Input
-                          value={product.currency || ""}
-                          onChange={(e) => handleProductChange(idx, "currency", e.target.value)}
+                          value={contract.currency || ""}
+                          onChange={(e) => handleContractChange(idx, "currency", e.target.value)}
                           className="h-7 text-xs uppercase"
                           placeholder="USD"
                         />
                       </TableCell>
                       <TableCell className="p-1">
                         <Input
-                          value={product.unit || ""}
-                          onChange={(e) => handleProductChange(idx, "unit", e.target.value)}
+                          value={contract.type || ""}
+                          onChange={(e) => handleContractChange(idx, "type", e.target.value)}
                           className="h-7 text-xs"
-                          placeholder="per unit"
+                          placeholder="Service Agreement"
+                        />
+                      </TableCell>
+                      <TableCell className="p-1">
+                        <Input
+                          type="date"
+                          value={contract.startDate || ""}
+                          onChange={(e) => handleContractChange(idx, "startDate", e.target.value)}
+                          className="h-7 text-xs"
+                        />
+                      </TableCell>
+                      <TableCell className="p-1">
+                        <Input
+                          type="date"
+                          value={contract.endDate || ""}
+                          onChange={(e) => handleContractChange(idx, "endDate", e.target.value)}
+                          className="h-7 text-xs"
+                        />
+                      </TableCell>
+                      <TableCell className="p-1">
+                        <Input
+                          type="date"
+                          value={contract.renewalReminderDate || ""}
+                          onChange={(e) => handleContractChange(idx, "renewalReminderDate", e.target.value)}
+                          className="h-7 text-xs"
+                        />
+                      </TableCell>
+                      <TableCell className="p-1">
+                        <Input
+                          type="date"
+                          value={contract.customerSignedDate || ""}
+                          onChange={(e) => handleContractChange(idx, "customerSignedDate", e.target.value)}
+                          className="h-7 text-xs"
+                        />
+                      </TableCell>
+                      <TableCell className="p-1">
+                        <Input
+                          type="date"
+                          value={contract.companySignedDate || ""}
+                          onChange={(e) => handleContractChange(idx, "companySignedDate", e.target.value)}
+                          className="h-7 text-xs"
+                        />
+                      </TableCell>
+                      <TableCell className="p-1">
+                        <Input
+                          value={contract.description || ""}
+                          onChange={(e) => handleContractChange(idx, "description", e.target.value)}
+                          className="h-7 text-xs"
+                          placeholder="Notes"
                         />
                       </TableCell>
                       <TableCell className="p-1 text-center">
                         <Button
                           size="icon"
                           variant="ghost"
-                          onClick={() => handleRemoveProduct(idx)}
+                          onClick={() => handleRemoveContract(idx)}
                           className="h-7 w-7 text-muted-foreground hover:text-destructive"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -301,9 +329,9 @@ export function ImportProductsDialog() {
           )}
 
           {/* Confirm Import Button */}
-          {extractedProducts.length > 0 && !result && (
+          {extractedContracts.length > 0 && !result && (
             <Button onClick={handleConfirmImport} disabled={isImporting}>
-              {isImporting ? "Importing..." : `Confirm Import (${extractedProducts.length} products)`}
+              {isImporting ? "Importing..." : `Confirm Import (${extractedContracts.length} contracts)`}
             </Button>
           )}
 
@@ -314,7 +342,7 @@ export function ImportProductsDialog() {
                 <div className="flex items-center gap-2 text-green-600">
                   <CheckCircle className="h-5 w-5" />
                   <span className="text-sm font-medium">
-                    {result.imported} product(s) imported successfully!
+                    {result.imported} contract(s) imported successfully!
                   </span>
                 </div>
               )}

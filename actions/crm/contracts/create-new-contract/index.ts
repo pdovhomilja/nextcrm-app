@@ -17,6 +17,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   const {
     title,
     value,
+    type,
     startDate,
     endDate,
     renewalReminderDate,
@@ -28,9 +29,9 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     currency,
   } = data;
 
-  if (!title || !value) {
+  if (!title) {
     return {
-      error: "Please fill in all the required fields.",
+      error: "Contract Title is required.",
     };
   }
 
@@ -54,17 +55,19 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     const snapshotRate = currency
       ? await getSnapshotRate(currency, defaultCurrency)
       : null;
+    const numericValue = value ? parseFloat(value) : 0;
     const result = await prismadb.crm_Contracts.create({
       data: {
         v: 0,
         title,
-        value: parseFloat(value),
-        startDate,
-        endDate,
-        renewalReminderDate,
-        customerSignedDate,
-        companySignedDate,
-        description,
+        value: isNaN(numericValue) ? 0 : numericValue,
+        type: type || undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        renewalReminderDate: renewalReminderDate || undefined,
+        customerSignedDate: customerSignedDate || undefined,
+        companySignedDate: companySignedDate || undefined,
+        description: description || undefined,
         account: account || undefined,
         assigned_to: assigned_to || undefined,
         createdBy: user.id,

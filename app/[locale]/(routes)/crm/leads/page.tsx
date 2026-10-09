@@ -9,22 +9,27 @@ import { getAllCrmData } from "@/actions/crm/get-crm-data";
 import { getLeads } from "@/actions/crm/get-leads";
 import { getTranslations } from "next-intl/server";
 
+async function LeadsContent() {
+  const [crmData, leads] = await Promise.all([
+    getAllCrmData(),
+    getLeads(),
+  ]);
+  return <LeadsView crmData={crmData} data={leads} />;
+}
+
 const LeadsPage = async () => {
   const t = await getTranslations("CrmPage");
-  const crmData = await getAllCrmData();
-  const leads = await getLeads();
-
-  console.log(leads[0], "leads");
   return (
     <Container
       title={t("leads.pageTitle")}
       description={t("leads.pageDescription")}
     >
       <Suspense fallback={<CrmTableSkeleton />}>
-        <LeadsView crmData={crmData} data={leads} />
+        <LeadsContent />
       </Suspense>
     </Container>
   );
 };
 
 export default LeadsPage;
+

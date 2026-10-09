@@ -1,17 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, startTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Upload,
-  FileSpreadsheet,
-  FileText,
-  Sparkles,
-  CheckCircle2,
+  Download,
+  CheckCircle,
+  AlertTriangle,
+  XCircle,
   Trash2,
-  Loader2,
-  AlertCircle,
   FileCheck,
 } from "lucide-react";
 
@@ -23,8 +21,15 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
@@ -36,6 +41,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 
+const LEADS_CSV_TEMPLATE = `first_name,last_name,company,jobTitle,email,phone,description
+"John","Smith","Acme Corp","VP of Sales","john.smith@acme.com","+1 555-0199","Met at Tech Conference"
+"Sarah","Connor","Cyberdyne Inc","Security Director","sarah@cyberdyne.io","+1 555-0188","Inquired about Enterprise plan"`;
+
 interface ExtractedLead {
   first_name?: string;
   last_name: string;
@@ -44,7 +53,6 @@ interface ExtractedLead {
   email?: string;
   phone?: string;
   description?: string;
-  confidence?: "High" | "Medium" | "Low";
 }
 
 interface ConfigItem {
@@ -59,6 +67,12 @@ interface BulkImportLeadsModalProps {
   onFinish?: () => void;
 }
 
+type ImportResult = {
+  imported: number;
+  skipped: number;
+  errors: string[];
+};
+
 export function BulkImportLeadsModal({
   leadSources = [],
   leadStatuses = [],
@@ -67,29 +81,51 @@ export function BulkImportLeadsModal({
 }: BulkImportLeadsModalProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState<"upload" | "review" | "saving">("upload");
   const [file, setFile] = useState<File | null>(null);
-  const [isParsing, setIsParsing] = useState(false);
-  const [extractionMethod, setExtractionMethod] = useState<string>("");
   const [extractedLeads, setExtractedLeads] = useState<ExtractedLead[]>([]);
+  const [extractionMethod, setExtractionMethod] = useState<string>("");
   const [selectedSource, setSelectedSource] = useState<string>("");
   const [selectedStatus, setSelectedStatus] = useState<string>("");
   const [selectedType, setSelectedType] = useState<string>("");
+  const [isImporting, setIsImporting] = useState(false);
+  const [result, setResult] = useState<ImportResult | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  const resetModal = () => {
-    setStep("upload");
+  const reset = () => {
     setFile(null);
-    setIsParsing(false);
     setExtractedLeads([]);
     setExtractionMethod("");
+    setResult(null);
+    setIsImporting(false);
+    setSelectedSource("");
+    setSelectedStatus("");
+    setSelectedType("");
+    if (fileRef.current) fileRef.current.value = "";
   };
 
-  const handleFileChange = async (selectedFile: File) => {
-    setFile(selectedFile);
-    setIsParsing(true);
+  const handleClose = () => {
+    reset();
+    setOpen(false);
+  };
+
+  const downloadTemplate = () => {
+    const blob = new Blob([LEADS_CSV_TEMPLATE], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "leads_import_template.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0];
+    if (!selected) return;
+    setFile(selected);
+    setResult(null);
 
     const formData = new FormData();
-    formData.append("file", selectedFile);
+    formData.append("file", selected);
 
     try {
       const res = await fetch("/api/crm/leads/bulk-import", {
@@ -100,18 +136,14 @@ export function BulkImportLeadsModal({
       const data = await res.json();
       if (!res.ok || data.error) {
         toast.error(data.error || "Failed to parse file");
-        setIsParsing(false);
         return;
       }
 
-      setExtractionMethod(data.extractionMethod || "Document Intelligence");
+      setExtractionMethod(data.extractionMethod || "OCR & Document Intelligence");
       setExtractedLeads(data.leads || []);
-      setStep("review");
-      toast.success(`Detected ${data.totalDetected || 0} leads from ${selectedFile.name}`);
+      toast.success(`Loaded ${data.leads?.length || 0} lead(s) from ${selected.name}`);
     } catch (err: any) {
       toast.error(err.message || "An error occurred while reading file");
-    } finally {
-      setIsParsing(false);
     }
   };
 
@@ -133,7 +165,7 @@ export function BulkImportLeadsModal({
       return;
     }
 
-    setStep("saving");
+    setIsImporting(true);
     try {
       const res = await fetch("/api/crm/leads/bulk-import", {
         method: "POST",
@@ -148,116 +180,78 @@ export function BulkImportLeadsModal({
 
       const data = await res.json();
       if (!res.ok || data.error) {
-        toast.error(data.error || "Failed to import leads");
-        setStep("review");
+        setResult({ imported: 0, skipped: 0, errors: [data.error || "Failed to import leads"] });
         return;
       }
 
-      toast.success(`Successfully imported ${data.importedCount} leads!`);
-      setOpen(false);
-      resetModal();
-      router.refresh();
+      setResult({
+        imported: data.importedCount || extractedLeads.length,
+        skipped: 0,
+        errors: [],
+      });
+      toast.success(`Successfully imported ${data.importedCount || extractedLeads.length} leads!`);
+      startTransition(() => {
+        router.refresh();
+      });
       if (onFinish) onFinish();
     } catch (err: any) {
-      toast.error(err.message || "Error saving leads");
-      setStep("review");
+      setResult({ imported: 0, skipped: 0, errors: [err.message || "Error saving leads"] });
+    } finally {
+      setIsImporting(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={(val) => { setOpen(val); if (!val) resetModal(); }}>
+    <Dialog open={open} onOpenChange={(val) => { setOpen(val); if (!val) reset(); }}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="border-cyan-600/30 bg-cyan-950/20 text-cyan-400 hover:bg-cyan-900/40 hover:text-cyan-300 shadow-sm">
-          <Sparkles className="mr-1.5 h-4 w-4 text-cyan-400" />
-          Bulk Import
+        <Button variant="outline" size="sm">
+          <Upload className="mr-2 h-4 w-4" />
+          Import
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto border-slate-800 bg-[#0c121e] text-slate-100 shadow-2xl">
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center text-xl font-bold text-white">
-            <Upload className="mr-2 h-5 w-5 text-cyan-400" />
-            Bulk Import Leads (Excel, CSV, PDF, OCR)
-          </DialogTitle>
-          <DialogDescription className="text-slate-400">
-            Upload spreadsheets or documents to extract and bulk-import leads directly into your CRM.
+          <DialogTitle>Import Leads from CSV, Excel, PDF (OCR)</DialogTitle>
+          <DialogDescription>
+            Upload lead spreadsheets, documents, or scanned PDFs. Extracted fields can be edited in input boxes before confirming.
           </DialogDescription>
         </DialogHeader>
 
-        {step === "upload" && (
-          <div className="py-6">
-            <div className="relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-700 bg-slate-900/50 p-8 text-center transition hover:border-cyan-500/50 hover:bg-slate-900/80">
-              <input
-                type="file"
-                accept=".xlsx,.xls,.csv,.pdf,.txt"
-                className="absolute inset-0 cursor-pointer opacity-0"
-                disabled={isParsing}
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) handleFileChange(f);
-                }}
-              />
-              {isParsing ? (
-                <div className="flex flex-col items-center space-y-3">
-                  <Loader2 className="h-10 w-10 animate-spin text-cyan-400" />
-                  <p className="text-sm font-medium text-slate-200">
-                    Extracting & OCR parsing document content...
-                  </p>
-                  <p className="text-xs text-slate-400">
-                    Extracting contact fields, tables, and lead records
-                  </p>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center space-y-3">
-                  <div className="flex space-x-3">
-                    <div className="rounded-lg bg-cyan-950/60 p-3 text-cyan-400 ring-1 ring-cyan-500/30">
-                      <FileSpreadsheet className="h-7 w-7" />
-                    </div>
-                    <div className="rounded-lg bg-purple-950/60 p-3 text-purple-400 ring-1 ring-purple-500/30">
-                      <FileText className="h-7 w-7" />
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-base font-semibold text-white">
-                      Drop your file here or click to browse
-                    </p>
-                    <p className="mt-1 text-xs text-slate-400">
-                      Supports Excel (<code className="text-cyan-300">.xlsx</code>, <code className="text-cyan-300">.csv</code>), PDF documents (<code className="text-purple-300">.pdf</code>), and contact sheets
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {step === "review" && (
-          <div className="space-y-5 py-2">
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-800 bg-slate-900/80 p-3">
-              <div className="flex items-center space-x-3">
-                <FileCheck className="h-5 w-5 text-cyan-400" />
-                <div>
-                  <p className="text-sm font-semibold text-white">{file?.name}</p>
-                  <p className="text-xs text-slate-400">
-                    Found <strong className="text-cyan-300">{extractedLeads.length}</strong> leads using{" "}
-                    <Badge variant="outline" className="ml-1 border-cyan-500/30 bg-cyan-950/30 text-cyan-300">
-                      {extractionMethod}
-                    </Badge>
-                  </p>
-                </div>
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <Button variant="outline" size="sm" onClick={downloadTemplate}>
+              <Download className="mr-2 h-4 w-4" />
+              Download CSV Template
+            </Button>
+            {file && extractionMethod && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <FileCheck className="h-4 w-4 text-green-600" />
+                <span>Method: </span>
+                <Badge variant="outline">{extractionMethod}</Badge>
               </div>
-              <Button size="sm" variant="ghost" onClick={resetModal} className="text-xs text-slate-400 hover:text-white">
-                Upload different file
-              </Button>
-            </div>
+            )}
+          </div>
 
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".csv,.xlsx,.xls,.txt,.pdf"
+              onChange={handleFileChange}
+              className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+            />
+          </div>
+
+          {/* Configuration Options */}
+          {extractedLeads.length > 0 && !result && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
               <div>
-                <Label className="text-xs text-slate-300">Default Lead Source</Label>
+                <Label className="text-xs">Default Lead Source</Label>
                 <Select value={selectedSource} onValueChange={setSelectedSource}>
-                  <SelectTrigger className="mt-1 border-slate-700 bg-slate-900 text-slate-100">
+                  <SelectTrigger className="h-8 mt-1 text-xs">
                     <SelectValue placeholder="Select Source" />
                   </SelectTrigger>
-                  <SelectContent className="border-slate-800 bg-slate-900 text-slate-100">
+                  <SelectContent>
                     {leadSources.map((item) => (
                       <SelectItem key={item.id} value={item.id}>
                         {item.name}
@@ -268,12 +262,12 @@ export function BulkImportLeadsModal({
               </div>
 
               <div>
-                <Label className="text-xs text-slate-300">Default Status</Label>
+                <Label className="text-xs">Default Status</Label>
                 <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                  <SelectTrigger className="mt-1 border-slate-700 bg-slate-900 text-slate-100">
+                  <SelectTrigger className="h-8 mt-1 text-xs">
                     <SelectValue placeholder="Select Status" />
                   </SelectTrigger>
-                  <SelectContent className="border-slate-800 bg-slate-900 text-slate-100">
+                  <SelectContent>
                     {leadStatuses.map((item) => (
                       <SelectItem key={item.id} value={item.id}>
                         {item.name}
@@ -284,12 +278,12 @@ export function BulkImportLeadsModal({
               </div>
 
               <div>
-                <Label className="text-xs text-slate-300">Default Type</Label>
+                <Label className="text-xs">Default Type</Label>
                 <Select value={selectedType} onValueChange={setSelectedType}>
-                  <SelectTrigger className="mt-1 border-slate-700 bg-slate-900 text-slate-100">
+                  <SelectTrigger className="h-8 mt-1 text-xs">
                     <SelectValue placeholder="Select Type" />
                   </SelectTrigger>
-                  <SelectContent className="border-slate-800 bg-slate-900 text-slate-100">
+                  <SelectContent>
                     {leadTypes.map((item) => (
                       <SelectItem key={item.id} value={item.id}>
                         {item.name}
@@ -299,110 +293,133 @@ export function BulkImportLeadsModal({
                 </Select>
               </div>
             </div>
+          )}
 
-            <div className="rounded-lg border border-slate-800 bg-slate-950 overflow-hidden shadow-inner">
-              <div className="max-h-[360px] overflow-y-auto overflow-x-auto">
-                <table className="min-w-[960px] w-full text-left text-xs text-slate-200 border-collapse">
-                  <thead className="sticky top-0 z-10 bg-slate-900 text-slate-400 font-semibold border-b border-slate-800 shadow-sm">
-                    <tr>
-                      <th className="px-3 py-2.5 min-w-[130px]">First Name</th>
-                      <th className="px-3 py-2.5 min-w-[130px]">Last Name *</th>
-                      <th className="px-3 py-2.5 min-w-[210px]">Email</th>
-                      <th className="px-3 py-2.5 min-w-[160px]">Phone</th>
-                      <th className="px-3 py-2.5 min-w-[150px]">Company</th>
-                      <th className="px-3 py-2.5 min-w-[140px]">Job Title</th>
-                      <th className="px-3 py-2.5 w-[60px] text-center">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/60">
-                    {extractedLeads.map((lead, idx) => (
-                      <tr key={idx} className="hover:bg-slate-900/40">
-                        <td className="p-2 min-w-[130px]">
-                          <Input
-                            value={lead.first_name || ""}
-                            onChange={(e) => handleLeadChange(idx, "first_name", e.target.value)}
-                            className="h-8 border-slate-800 bg-slate-900/90 px-2.5 text-xs text-slate-100 placeholder:text-slate-500 focus-visible:ring-cyan-500/50"
-                            placeholder="First Name"
-                          />
-                        </td>
-                        <td className="p-2 min-w-[130px]">
-                          <Input
-                            value={lead.last_name || ""}
-                            onChange={(e) => handleLeadChange(idx, "last_name", e.target.value)}
-                            className="h-8 border-slate-800 bg-slate-900/90 px-2.5 text-xs text-slate-100 font-medium placeholder:text-slate-500 focus-visible:ring-cyan-500/50"
-                            placeholder="Last Name"
-                          />
-                        </td>
-                        <td className="p-2 min-w-[210px]">
-                          <Input
-                            value={lead.email || ""}
-                            onChange={(e) => handleLeadChange(idx, "email", e.target.value)}
-                            className="h-8 border-slate-800 bg-slate-900/90 px-2.5 text-xs text-slate-100 placeholder:text-slate-500 focus-visible:ring-cyan-500/50"
-                            placeholder="email@example.com"
-                          />
-                        </td>
-                        <td className="p-2 min-w-[160px]">
-                          <Input
-                            value={lead.phone || ""}
-                            onChange={(e) => handleLeadChange(idx, "phone", e.target.value)}
-                            className="h-8 border-slate-800 bg-slate-900/90 px-2.5 text-xs text-slate-100 placeholder:text-slate-500 focus-visible:ring-cyan-500/50"
-                            placeholder="Phone Number"
-                          />
-                        </td>
-                        <td className="p-2 min-w-[150px]">
-                          <Input
-                            value={lead.company || ""}
-                            onChange={(e) => handleLeadChange(idx, "company", e.target.value)}
-                            className="h-8 border-slate-800 bg-slate-900/90 px-2.5 text-xs text-slate-100 placeholder:text-slate-500 focus-visible:ring-cyan-500/50"
-                            placeholder="Company Name"
-                          />
-                        </td>
-                        <td className="p-2 min-w-[140px]">
-                          <Input
-                            value={lead.jobTitle || ""}
-                            onChange={(e) => handleLeadChange(idx, "jobTitle", e.target.value)}
-                            className="h-8 border-slate-800 bg-slate-900/90 px-2.5 text-xs text-slate-100 placeholder:text-slate-500 focus-visible:ring-cyan-500/50"
-                            placeholder="Job Title"
-                          />
-                        </td>
-                        <td className="p-2 w-[60px] text-center">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => handleRemoveLead(idx)}
-                            className="h-8 w-8 text-slate-400 hover:text-red-400 hover:bg-red-950/20"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+          {/* Preview Table with Editable Inputs */}
+          {extractedLeads.length > 0 && !result && (
+            <div className="rounded-md border overflow-x-auto max-h-[360px]">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs">First Name</TableHead>
+                    <TableHead className="text-xs">Last Name *</TableHead>
+                    <TableHead className="text-xs">Company</TableHead>
+                    <TableHead className="text-xs">Job Title</TableHead>
+                    <TableHead className="text-xs">Email</TableHead>
+                    <TableHead className="text-xs">Phone</TableHead>
+                    <TableHead className="text-xs w-[50px]">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {extractedLeads.map((lead, idx) => (
+                    <TableRow key={idx}>
+                      <TableCell className="p-1">
+                        <Input
+                          value={lead.first_name || ""}
+                          onChange={(e) => handleLeadChange(idx, "first_name", e.target.value)}
+                          className="h-7 text-xs"
+                        />
+                      </TableCell>
+                      <TableCell className="p-1">
+                        <Input
+                          value={lead.last_name || ""}
+                          onChange={(e) => handleLeadChange(idx, "last_name", e.target.value)}
+                          className="h-7 text-xs font-medium"
+                        />
+                      </TableCell>
+                      <TableCell className="p-1">
+                        <Input
+                          value={lead.company || ""}
+                          onChange={(e) => handleLeadChange(idx, "company", e.target.value)}
+                          className="h-7 text-xs"
+                        />
+                      </TableCell>
+                      <TableCell className="p-1">
+                        <Input
+                          value={lead.jobTitle || ""}
+                          onChange={(e) => handleLeadChange(idx, "jobTitle", e.target.value)}
+                          className="h-7 text-xs"
+                        />
+                      </TableCell>
+                      <TableCell className="p-1">
+                        <Input
+                          value={lead.email || ""}
+                          onChange={(e) => handleLeadChange(idx, "email", e.target.value)}
+                          className="h-7 text-xs"
+                        />
+                      </TableCell>
+                      <TableCell className="p-1">
+                        <Input
+                          value={lead.phone || ""}
+                          onChange={(e) => handleLeadChange(idx, "phone", e.target.value)}
+                          className="h-7 text-xs"
+                        />
+                      </TableCell>
+                      <TableCell className="p-1 text-center">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => handleRemoveLead(idx)}
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
-          </div>
-        )}
+          )}
 
-        {step === "saving" && (
-          <div className="flex flex-col items-center justify-center space-y-4 py-12">
-            <Loader2 className="h-10 w-10 animate-spin text-cyan-400" />
-            <p className="text-base font-semibold text-white">Saving Leads to Database...</p>
-            <p className="text-xs text-slate-400">Inserting {extractedLeads.length} leads with assigned settings</p>
-          </div>
-        )}
-
-        <DialogFooter className="border-t border-slate-800/80 pt-4">
-          <Button variant="ghost" onClick={() => setOpen(false)} disabled={step === "saving"} className="text-slate-400 hover:text-white">
-            Cancel
-          </Button>
-          {step === "review" && (
-            <Button onClick={handleConfirmImport} className="bg-cyan-600 text-white hover:bg-cyan-500 shadow-md">
-              <CheckCircle2 className="mr-1.5 h-4 w-4" />
-              Import {extractedLeads.length} Leads
+          {/* Confirm Import Button */}
+          {extractedLeads.length > 0 && !result && (
+            <Button onClick={handleConfirmImport} disabled={isImporting}>
+              {isImporting ? "Importing..." : `Confirm Import (${extractedLeads.length} leads)`}
             </Button>
           )}
-        </DialogFooter>
+
+          {/* Result Display */}
+          {result && (
+            <div className="space-y-3 pt-2">
+              {result.imported > 0 && (
+                <div className="flex items-center gap-2 text-green-600">
+                  <CheckCircle className="h-5 w-5" />
+                  <span className="text-sm font-medium">
+                    {result.imported} lead(s) imported successfully!
+                  </span>
+                </div>
+              )}
+              {result.skipped > 0 && (
+                <div className="flex items-center gap-2 text-yellow-600">
+                  <AlertTriangle className="h-5 w-5" />
+                  <span className="text-sm font-medium">
+                    {result.skipped} row(s) skipped
+                  </span>
+                </div>
+              )}
+              {result.errors.length > 0 && (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-red-600">
+                    <XCircle className="h-5 w-5" />
+                    <span className="text-sm font-medium">
+                      {result.errors.length} error(s)
+                    </span>
+                  </div>
+                  <div className="max-h-40 overflow-y-auto rounded-md border bg-red-50 p-3 text-xs text-red-700 dark:bg-red-950/20 dark:text-red-400">
+                    {result.errors.map((err, i) => (
+                      <p key={i}>{err}</p>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <Button variant="outline" onClick={handleClose}>
+                Done
+              </Button>
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

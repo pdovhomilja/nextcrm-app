@@ -8,20 +8,27 @@ import { getContacts } from "@/actions/crm/get-contacts";
 import { getAllCrmData } from "@/actions/crm/get-crm-data";
 import { getTranslations } from "next-intl/server";
 
-const AccountsPage = async () => {
+async function ContactsContent() {
+  const [crmData, contacts] = await Promise.all([
+    getAllCrmData(),
+    getContacts(),
+  ]);
+  return <ContactsView crmData={crmData} data={contacts} />;
+}
+
+const ContactsPage = async () => {
   const t = await getTranslations("CrmPage");
-  const crmData = await getAllCrmData();
-  const contacts = await getContacts();
   return (
     <Container
       title={t("contacts.pageTitle")}
       description={t("contacts.pageDescription")}
     >
       <Suspense fallback={<CrmTableSkeleton />}>
-        <ContactsView crmData={crmData} data={contacts} />
+        <ContactsContent />
       </Suspense>
     </Container>
   );
 };
 
-export default AccountsPage;
+export default ContactsPage;
+
