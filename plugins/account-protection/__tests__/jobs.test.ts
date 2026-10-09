@@ -1,6 +1,6 @@
 import type { RecordData } from "@nextcrm/plugin-sdk";
 import { createTestContext } from "@nextcrm/plugin-sdk/testing";
-import { expire, install, sendNotices } from "../jobs";
+import { expire, install, sendNotices, upgrade } from "../jobs";
 import { settingsSchema, type Ctx } from "../settings";
 import { K, queueNotice, startRegistration, type HistoryEntry } from "../store";
 import { newRegistration, type Registration } from "../state";
@@ -25,6 +25,7 @@ it("keeps an account on the deadline morning and expires it the next day without
   await expire(ctx, new Date("2026-10-31T06:00:00Z"));
   expect(accounts[0].assigned_to).toBe("rep1");
   expect(ctx.notifications).toEqual([]);
+  await ctx.store.set(K.lastRun, { at: "2026-11-01T05:55:00.000Z" });   // the notices job kept running
   await expire(ctx, new Date("2026-11-01T06:00:00Z"));
   expect(accounts[0].assigned_to).toBeNull();
   expect(await ctx.store.get(K.reg("acc-1"))).toBeNull();
@@ -157,4 +158,62 @@ it("prunes conflict rows that no longer hold in the daily run", async () => {
   expect(await ctx.store.get(K.num("CZ:11111111"))).toEqual({ accountId: "acc-2" });
   expect(await ctx.store.get(K.conflict("acc-3"))).toEqual(row);
   expect(await ctx.store.get(K.conflict("gone"))).toBeNull();
+});
+
+describe("after the plugin was disabled", () => {
+  const offAt = "2026-10-02T06:00:00.000Z";
+  async function disabledSetup() {
+    const accounts = [
+      { id: "acc-1", name: "A", assigned_to: "rep2" as string | null, deletedAt: null },   // manager changed the owner while disabled
+      { id: "acc-2", name: "B", assigned_to: "rep1" as string | null, deletedAt: null },   // contact deadline passed while disabled
+    ];
+    const ctx = mk(accounts);
+    for (const id of ["acc-1", "acc-2"]) {
+      await registered(ctx, id, reg1);
+      await ctx.store.set(K.num(`CZ:${id}`), { accountId: id });
+      await ctx.store.set(K.acct(id), { key: `CZ:${id}` });
+    }
+    await ctx.store.set(K.lastRun, { at: offAt });
+    return { ctx, accounts };
+  }
+
+  it("reconciles owners and restarts lapsed windows before the first expiry run", async () => {
+    const { ctx, accounts } = await disabledSetup();
+    const now = new Date("2026-11-15T06:00:00Z");
+    await expire(ctx, now);
+    expect(accounts.map((a) => a.assigned_to)).toEqual(["rep2", "rep1"]);
+    expect(ctx.notifications).toEqual([]);
+    const hist = (await ctx.store.list("hist:acc-1:")).map((e) => e.value as HistoryEntry);
+    expect(hist[hist.length - 1]).toMatchObject({ at: now.toISOString(), from: "rep1", to: "rep2", byType: "plugin" });
+    expect(await ctx.store.get<Registration>(K.reg("acc-1"))).toMatchObject({ ownerId: "rep2", registeredAt: now.toISOString() });
+    expect(await ctx.store.get<Registration>(K.reg("acc-2"))).toMatchObject({ ownerId: "rep1", registeredAt: now.toISOString() });
+    expect(await ctx.store.get(K.due("2026-10-31", "acc-2"))).toBeNull();
+    expect(await ctx.store.get(K.due("2026-12-15", "acc-2"))).toEqual({});
+    expect(await ctx.store.get(K.lastRun)).toEqual({ at: now.toISOString() });
+  });
+
+  it("reconciles from the five-minute notices job, so the next expiry run strips nobody", async () => {
+    const { ctx, accounts } = await disabledSetup();
+    await sendNotices(ctx, new Date("2026-11-15T05:10:00Z"));
+    expect(await ctx.store.get<Registration>(K.reg("acc-2"))).toMatchObject({ registeredAt: "2026-11-15T05:10:00.000Z" });
+    await expire(ctx, new Date("2026-11-15T06:00:00Z"));
+    expect(accounts.map((a) => a.assigned_to)).toEqual(["rep2", "rep1"]);
+  });
+
+  it("does not reconcile when the jobs kept running", async () => {
+    const { ctx, accounts } = await disabledSetup();
+    await ctx.store.set(K.lastRun, { at: "2026-11-15T05:55:00.000Z" });
+    await expire(ctx, new Date("2026-11-15T06:00:00Z"));
+    expect(accounts[1].assigned_to).toBeNull();
+  });
+});
+
+it("upgrade sets the run marker once and prunes stale conflicts", async () => {
+  const ctx = mk([]);
+  await ctx.store.set(K.conflict("gone"), { key: "CZ:27082440", otherAccountId: "acc-1", foundAt: reg1.toISOString() });
+  await upgrade(ctx, new Date("2026-11-15T06:00:00Z"));
+  expect(await ctx.store.get(K.lastRun)).toEqual({ at: "2026-11-15T06:00:00.000Z" });
+  expect(await ctx.store.get(K.conflict("gone"))).toBeNull();
+  await upgrade(ctx, new Date("2026-11-16T06:00:00Z"));
+  expect(await ctx.store.get(K.lastRun)).toEqual({ at: "2026-11-15T06:00:00.000Z" });
 });

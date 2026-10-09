@@ -18,6 +18,8 @@ it("listens to account created, updated and deleted", () => {
 it("schedules the expiry and notice jobs and backfills on install", () => {
   expect(plugin.extensions.crons.map((c) => [c.id, c.schedule])).toEqual([["expire", "0 6 * * *"], ["notices", "*/5 * * * *"]]);
   expect(typeof plugin.onInstall).toBe("function");
+  expect(typeof plugin.onUpgrade).toBe("function");
+  expect(plugin.version).toBe("0.1.1");
 });
 
 it("registers the tab, the panel, the Expiring page in the menu and an admin section", () => {

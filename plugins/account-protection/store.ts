@@ -10,6 +10,7 @@ export const K = {
   freed: (day: string, id: string) => `freed:${day}:${id}`,
   notice: (at: string, rand: string) => `notice:${at}:${rand}`,
   conflict: (id: string) => `conflict:${id}`,
+  lastRun: "meta:lastRun",
 };
 
 export type Reason = "created" | "assigned" | "released" | "expired" | "expired-no-contact" | "install";
