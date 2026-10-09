@@ -30,7 +30,14 @@ export async function indexNumber(acc: RecordData, ctx: Ctx, at: Date): Promise<
 export async function recordOwner(acc: RecordData, to: string | null, actor: Actor | undefined, reason: Reason, ctx: Ctx, at: Date): Promise<void> {
   const id = acc.id as string;
   const last = await lastHistory(ctx.store, id);
-  if (last ? last.to === to : to === null) return;
+  const key = (await ctx.store.get<{ key: string }>(K.acct(id)))?.key;
+  if (last ? last.to === to : to === null) {
+    // Already recorded: a retry only rebuilds a registration a failed attempt never wrote (review I5).
+    if (last && to && key && !(await ctx.store.get(K.reg(id)))) {
+      await startRegistration(ctx.store, id, newRegistration(key, to, new Date(last.at), ctx.settings));
+    }
+    return;
+  }
   await clearRegistration(ctx.store, id);
   await addHistory(ctx.store, id, {
     at: at.toISOString(),
@@ -40,7 +47,6 @@ export async function recordOwner(acc: RecordData, to: string | null, actor: Act
     byType: actor?.type ?? "system",
     reason,
   });
-  const key = (await ctx.store.get<{ key: string }>(K.acct(id)))?.key;
   if (to && key) await startRegistration(ctx.store, id, newRegistration(key, to, at, ctx.settings));
 }
 
@@ -57,12 +63,19 @@ export async function onUpdated(input: AfterInput, ctx: Ctx, at = new Date()): P
   if (!acc) return;
   const id = acc.id as string;
   const changed = input.changed ?? [];
+  if (changed.includes("deletedAt") && acc.deletedAt == null) {
+    // Restored after a soft delete: onDeleted removed the index and registration (review I3).
+    const key = await indexNumber(acc, ctx, at);
+    const owner = ownerOf(acc.assigned_to);
+    if (key && owner && !(await ctx.store.get(K.reg(id)))) await startRegistration(ctx.store, id, newRegistration(key, owner, at, ctx.settings));
+  }
   if (changed.includes("company_id") || changed.includes("billing_country")) {
     const key = await indexNumber(acc, ctx, at);
     const reg = await ctx.store.get<Registration>(K.reg(id));
     const owner = ownerOf(acc.assigned_to);
-    if (reg && reg.key !== key) await clearRegistration(ctx.store, id);
-    if (key && owner && (!reg || reg.key !== key)) await startRegistration(ctx.store, id, newRegistration(key, owner, at, ctx.settings));
+    // Editing the number never restarts protection: the windows stay, only the key moves (review I2).
+    if (reg) await ctx.store.set(K.reg(id), { ...reg, key: key ?? "" });
+    else if (key && owner) await startRegistration(ctx.store, id, newRegistration(key, owner, at, ctx.settings));
   }
   if (changed.includes("assigned_to")) {
     const to = ownerOf(acc.assigned_to);
@@ -70,7 +83,7 @@ export async function onUpdated(input: AfterInput, ctx: Ctx, at = new Date()): P
   }
 }
 
-export async function onDeleted(input: AfterInput, ctx: Ctx): Promise<void> {
+export async function onDeleted(input: AfterInput, ctx: Ctx, at = new Date()): Promise<void> {
   const id = input.recordId;
   const indexed = await ctx.store.get<{ key: string }>(K.acct(id));
   if (indexed) {
@@ -80,4 +93,14 @@ export async function onDeleted(input: AfterInput, ctx: Ctx): Promise<void> {
   }
   await clearRegistration(ctx.store, id);
   await ctx.store.delete(K.conflict(id));
+  // Duplicates blocked by this account get its number now (review I7).
+  for (const entry of await ctx.store.list("conflict:")) {
+    if ((entry.value as { otherAccountId: string }).otherAccountId !== id) continue;
+    await ctx.store.delete(entry.key);
+    const dup = await ctx.data.accounts.get(entry.key.slice(9));
+    if (!dup || dup.deletedAt != null) continue;
+    await indexNumber(dup, ctx, at);
+    const owner = ownerOf(dup.assigned_to);
+    if (owner) await recordOwner(dup, owner, input.actor, "assigned", ctx, at);
+  }
 }

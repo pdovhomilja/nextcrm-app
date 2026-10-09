@@ -1,6 +1,6 @@
 import { numberKey } from "../key";
 import { contactTypes, type Ctx } from "../settings";
-import { formatDay, isoDay, summarize, type Registration, type Summary } from "../state";
+import { contactSince, formatDay, isoDay, summarize, type Registration, type Summary } from "../state";
 import { K } from "../store";
 
 const DAY = 86_400_000;
@@ -8,7 +8,7 @@ const DAY = 86_400_000;
 export async function liveContact(ctx: Ctx, accountId: string, reg: Registration): Promise<string | null> {
   if (reg.contactAt) return reg.contactAt;
   const [a] = await ctx.data.activities.findForRecord("account", accountId, {
-    types: contactTypes(ctx.settings.contactTypes), status: "completed", since: new Date(reg.registeredAt), take: 1,
+    types: contactTypes(ctx.settings.contactTypes), status: "completed", since: contactSince(reg), take: 1,
   });
   return a ? new Date(a.date as string).toISOString() : null;
 }

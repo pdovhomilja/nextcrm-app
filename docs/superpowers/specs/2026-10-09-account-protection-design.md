@@ -183,6 +183,7 @@ Each rule does one or two store reads and stays well inside the 500 ms budget. N
 
 - **Race between two creates** with the same number in the same instant: both can pass the before-rule. The after hook records a `conflict:` for a manager to resolve. A unique constraint in core would prevent it, but it would put protection logic in core.
 - **Owner changes made while the plugin is disabled** are not in the history. The next owner change or registration starts fresh from the current owner.
+- **A lost after event:** core sends after events fire-and-forget. If Inngest is unreachable at that moment, the account is not indexed or registered until its next edit. A daily reconcile of all accounts is a core reliability feature and is out of v1 (final review, 2026-10-09).
 - **Country from free text:** an unrecognised `billing_country` falls back to `defaultCountry`, which can merge two foreign companies with the same number. The admin conflicts list shows such cases.
 
 ## 8. Follow-ups

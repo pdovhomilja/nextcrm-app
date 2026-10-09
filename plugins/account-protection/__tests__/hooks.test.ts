@@ -76,7 +76,23 @@ it("moves the number index and the registration on a number change", async () =>
   await onUpdated(ev("updated", "acc-1", { changed: ["company_id"] }), ctx, new Date("2026-10-05T00:00:00Z"));
   expect(await ctx.store.get(K.num("CZ:27082440"))).toBeNull();
   expect(await ctx.store.get(K.num("CZ:12345678"))).toEqual({ accountId: "acc-1" });
-  expect(await ctx.store.get<Registration>(K.reg("acc-1"))).toMatchObject({ key: "CZ:12345678", registeredAt: "2026-10-05T00:00:00.000Z" });
+  expect(await ctx.store.get<Registration>(K.reg("acc-1"))).toMatchObject({ key: "CZ:12345678", registeredAt: "2026-10-01T14:00:00.000Z" });
+});
+
+it("does not restart protection when a rep edits the number away and back (review I2)", async () => {
+  const acc = { id: "acc-1", company_id: "27082440", billing_country: "CZ", assigned_to: "rep1" };
+  const ctx = ctxWith([acc]);
+  await onCreated(ev("created", "acc-1"), ctx, at);
+  acc.billing_country = "Germany";
+  await onUpdated(ev("updated", "acc-1", { changed: ["billing_country"] }), ctx, new Date("2026-10-25T00:00:00Z"));
+  acc.billing_country = "CZ";
+  await onUpdated(ev("updated", "acc-1", { changed: ["billing_country"] }), ctx, new Date("2026-10-25T00:01:00Z"));
+  (acc as { company_id: string }).company_id = "";
+  await onUpdated(ev("updated", "acc-1", { changed: ["company_id"] }), ctx, new Date("2026-10-25T00:02:00Z"));
+  acc.company_id = "27082440";
+  await onUpdated(ev("updated", "acc-1", { changed: ["company_id"] }), ctx, new Date("2026-10-25T00:03:00Z"));
+  expect(await ctx.store.get<Registration>(K.reg("acc-1"))).toMatchObject({ key: "CZ:27082440", registeredAt: "2026-10-01T14:00:00.000Z", contactDeadline: "2026-10-31T14:00:00.000Z" });
+  expect(await ctx.store.get(K.due("2026-10-31", "acc-1"))).toEqual({});
 });
 
 it("frees the number and the registration on delete, keeping history", async () => {
@@ -87,4 +103,53 @@ it("frees the number and the registration on delete, keeping history", async () 
   expect(await ctx.store.get(K.reg("acc-1"))).toBeNull();
   expect(await ctx.store.get(K.due("2026-10-31", "acc-1"))).toBeNull();
   expect(await history(ctx, "acc-1")).toHaveLength(1);
+});
+
+it("re-indexes a restored account and flags a number taken while it was deleted (review I3)", async () => {
+  const acc: Record<string, unknown> = { id: "acc-1", company_id: "27082440", assigned_to: "rep1", deletedAt: null };
+  const other = { id: "acc-2", company_id: "11111111", assigned_to: "rep2", deletedAt: null };
+  const ctx = ctxWith([acc, other]);
+  await onCreated(ev("created", "acc-1"), ctx, at);
+  await onCreated(ev("created", "acc-2"), ctx, at);
+  acc.deletedAt = "2026-10-02T00:00:00Z";
+  await onDeleted(ev("deleted", "acc-1"), ctx);
+  acc.deletedAt = null;
+  await onUpdated(ev("updated", "acc-1", { changed: ["deletedAt", "deletedBy"] }), ctx, new Date("2026-10-05T00:00:00Z"));
+  expect(await ctx.store.get(K.num("CZ:27082440"))).toEqual({ accountId: "acc-1" });
+  expect(await ctx.store.get<Registration>(K.reg("acc-1"))).toMatchObject({ ownerId: "rep1", registeredAt: "2026-10-05T00:00:00.000Z" });
+
+  acc.deletedAt = "2026-10-06T00:00:00Z";
+  await onDeleted(ev("deleted", "acc-1"), ctx);
+  other.company_id = "27082440";
+  await onUpdated(ev("updated", "acc-2", { changed: ["company_id"] }), ctx, new Date("2026-10-07T00:00:00Z"));
+  acc.deletedAt = null;
+  await onUpdated(ev("updated", "acc-1", { changed: ["deletedAt", "deletedBy"] }), ctx, new Date("2026-10-08T00:00:00Z"));
+  expect(await ctx.store.get(K.num("CZ:27082440"))).toEqual({ accountId: "acc-2" });
+  expect(await ctx.store.get(K.conflict("acc-1"))).toMatchObject({ otherAccountId: "acc-2" });
+  expect(await ctx.store.get(K.reg("acc-1"))).toBeNull();
+});
+
+it("rebuilds a missing registration when a partly failed event is retried (review I5)", async () => {
+  const ctx = ctxWith([{ id: "acc-1", company_id: "27082440", assigned_to: "rep1" }]);
+  // First attempt wrote the index and history, then failed before the registration.
+  await ctx.store.set(K.num("CZ:27082440"), { accountId: "acc-1" });
+  await ctx.store.set(K.acct("acc-1"), { key: "CZ:27082440" });
+  await ctx.store.set(K.hist("acc-1", at.toISOString()), { at: at.toISOString(), from: null, to: "rep1", byUserId: "m1", byType: "user", reason: "created" });
+  await onCreated(ev("created", "acc-1"), ctx, new Date("2026-10-01T14:03:00Z"));
+  expect(await ctx.store.get<Registration>(K.reg("acc-1"))).toMatchObject({ ownerId: "rep1", registeredAt: at.toISOString() });
+  expect(await history(ctx, "acc-1")).toHaveLength(1);
+});
+
+it("hands the number to the duplicate when the holder is deleted (review I7)", async () => {
+  const ctx = ctxWith([
+    { id: "acc-1", company_id: "27082440", assigned_to: "rep1", deletedAt: null },
+    { id: "acc-2", company_id: "27082440", assigned_to: "rep2", deletedAt: null },
+  ]);
+  await onCreated(ev("created", "acc-1"), ctx, at);
+  await onCreated(ev("created", "acc-2"), ctx, at);
+  expect(await ctx.store.get(K.conflict("acc-2"))).toMatchObject({ otherAccountId: "acc-1" });
+  await onDeleted(ev("deleted", "acc-1"), ctx, new Date("2026-10-03T00:00:00Z"));
+  expect(await ctx.store.get(K.num("CZ:27082440"))).toEqual({ accountId: "acc-2" });
+  expect(await ctx.store.get(K.conflict("acc-2"))).toBeNull();
+  expect(await ctx.store.get<Registration>(K.reg("acc-2"))).toMatchObject({ ownerId: "rep2", key: "CZ:27082440" });
 });

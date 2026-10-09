@@ -24,6 +24,9 @@ export function newRegistration(key: string, ownerId: string, at: Date, s: Pick<
   };
 }
 
+/** Contact counts from the start of the registration day (spec §2: "on or after the registration date"). */
+export const contactSince = (r: Registration) => new Date(`${isoDay(r.registeredAt)}T00:00:00.000Z`);
+
 export function dueDay(r: Registration): string {
   return isoDay(!r.contactAt && r.contactDeadline < r.protectedUntil ? r.contactDeadline : r.protectedUntil);
 }

@@ -1,7 +1,7 @@
 import { indexNumber, recordOwner } from "./hooks";
 import { ownerOf } from "./rules";
 import { contactTypes, type Ctx } from "./settings";
-import { dueDay, evaluate, isoDay, type Registration } from "./state";
+import { contactSince, dueDay, evaluate, isoDay, type Registration } from "./state";
 import { K, addHistory, clearRegistration, type Notice } from "./store";
 
 const MANAGERS = ["manager", "admin"] as const;   // Ruling 7
@@ -20,7 +20,7 @@ export async function expire(ctx: Ctx, now: Date): Promise<void> {
       let verdict: string = evaluate(reg, now);
       if (verdict === "check-contact") {
         const [contact] = await ctx.data.activities.findForRecord("account", accountId, {
-          types: contactTypes(ctx.settings.contactTypes), status: "completed", since: new Date(reg.registeredAt), take: 1,
+          types: contactTypes(ctx.settings.contactTypes), status: "completed", since: contactSince(reg), take: 1,
         });
         if (contact) {
           const updated: Registration = { ...reg, contactAt: new Date(contact.date as string).toISOString() };

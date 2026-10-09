@@ -118,3 +118,13 @@ it("backfills on install: oldest account wins a shared number, owners get regist
   expect(await ctx.store.get(K.num("CZ:11111111"))).toEqual({ accountId: "acc-4" });
   expect((await ctx.store.list("hist:")).map((e) => (e.value as HistoryEntry).reason)).toEqual(["install", "install", "install"]);
 });
+
+it("counts a visit from earlier on the registration day (review I4)", async () => {
+  const accounts = [{ id: "acc-1", name: "Alza", assigned_to: "rep1" }];
+  const activities = [{ id: "a1", type: "visit", status: "completed", date: "2026-10-01T09:00:00Z", links: [{ entityType: "account", entityId: "acc-1" }] }];
+  const ctx = mk(accounts, activities);
+  await registered(ctx, "acc-1", reg1);   // registered 14:00 the same day
+  await expire(ctx, new Date("2026-11-01T06:00:00Z"));
+  expect(accounts[0].assigned_to).toBe("rep1");
+  expect(await ctx.store.get<Registration>(K.reg("acc-1"))).toMatchObject({ contactAt: "2026-10-01T09:00:00.000Z" });
+});

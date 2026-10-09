@@ -1,4 +1,4 @@
-import type { AfterOperation, Entity, RecordData, RuleInput, RuleRegistration } from "@nextcrm/plugin-sdk";
+import type { AfterOperation, Entity, Locale, RecordData, RuleInput, RuleRegistration } from "@nextcrm/plugin-sdk";
 import type { RegisteredPlugin } from "./registry";
 import { currentActorFrame } from "./actor";
 import { PluginRuleError } from "./errors";
@@ -15,8 +15,9 @@ const MAX_DEPTH = 3;
 
 export interface RuleDeps {
   getEnabledPlugins: () => Promise<RegisteredPlugin[]>;
-  createPluginContext: (args: { plugin: RegisteredPlugin; actor: any }) => Promise<any>;
+  createPluginContext: (args: { plugin: RegisteredPlugin; actor: any; locale?: Locale }) => Promise<any>;
   resolveActor: () => Promise<any>;
+  resolveLocale?: () => Promise<Locale>;
   timeoutMs: number;
 }
 
@@ -24,8 +25,19 @@ const defaultDeps = async (): Promise<RuleDeps> => ({
   getEnabledPlugins: (await import("./state")).getEnabledPlugins,
   createPluginContext: (await import("./context")).createPluginContext,
   resolveActor: (await import("./actor")).resolveActor,
+  resolveLocale,
   timeoutMs: 500,
 });
+
+// Rules format user-facing text (dates, numbers); outside a request there is no locale, so en.
+async function resolveLocale(): Promise<Locale> {
+  try {
+    const { getLocale } = await import("next-intl/server");
+    return (await getLocale()) as Locale;
+  } catch {
+    return "en";
+  }
+}
 
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -56,12 +68,13 @@ export async function runBeforeRules(input: RuleInput, deps?: RuleDeps): Promise
   matches.sort((a, b) => a.rule.priority - b.rule.priority || a.plugin.definition.id.localeCompare(b.plugin.definition.id));
 
   const actor = await d.resolveActor();
+  const locale = d.resolveLocale ? await d.resolveLocale() : "en";
   let data = { ...input.data };
   for (const { plugin, rule } of matches) {
     const id = plugin.definition.id;
     let result;
     try {
-      const run = async () => rule.handler({ ...input, data }, await d.createPluginContext({ plugin, actor }));
+      const run = async () => rule.handler({ ...input, data }, await d.createPluginContext({ plugin, actor, locale }));
       result = await withTimeout(run(), d.timeoutMs);
     } catch (e) {
       writePluginLog(id, "error", `Rule ${input.entity}.${input.operation} failed: ${String(e)}`);
