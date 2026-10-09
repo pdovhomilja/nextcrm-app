@@ -2,7 +2,7 @@ import { definePlugin } from "@nextcrm/plugin-sdk";
 import { settingsSchema } from "./settings";
 import { beforeCreate, beforeUpdate } from "./rules";
 import { onCreated, onDeleted, onUpdated } from "./hooks";
-import { expire, install, sendNotices } from "./jobs";
+import { expire, install, sendNotices, upgrade } from "./jobs";
 import { ProtectionTab } from "./ui/ProtectionTab";
 import { ProtectionPanel } from "./ui/ProtectionPanel";
 import { ExpiringPage } from "./ui/ExpiringPage";
@@ -11,7 +11,7 @@ import { ConflictsSection } from "./ui/ConflictsSection";
 export default definePlugin({
   id: "account-protection",
   name: "Account protection",
-  version: "0.1.0",
+  version: "0.1.1",
   sdk: "^0.1.1",
   description: "One owner per company registration number, with protection windows, owner history and a daily expiry job.",
   permissions: ["accounts:read", "accounts:write", "activities:read", "users:read", "notify"],
@@ -30,4 +30,5 @@ export default definePlugin({
     x.adminSection(ConflictsSection);
   },
   onInstall: (ctx) => install(ctx, new Date()),
+  onUpgrade: (ctx) => upgrade(ctx, new Date()),
 });

@@ -44,14 +44,10 @@ For enabling, disabling and uninstalling plugins in general, see [Plugins](/docs
 |---|---|---|
 | `protectionDays` | `90` | Length of the protection window in days, counted from the moment the owner was set. Minimum 1. |
 | `contactDays` | `30` | Days the owner has to log a qualifying contact. Minimum 1. If it is larger than `protectionDays`, `protectionDays` is used, so there is no separate contact check. |
-| `contactTypes` | `visit,meeting` | Comma-separated activity types that count as a qualifying contact. Valid types: `call`, `meeting`, `note`, `email`, `visit`. Unknown names are ignored. |
+| `contactTypes` | `visit,meeting` | Comma-separated activity types that count as a qualifying contact. Valid types: `call`, `meeting`, `note`, `email`, `visit`. Unknown names are ignored. A value with no valid type cannot be saved. If one is stored anyway, `visit,meeting` is used. |
 | `warnDays` | `7` | How many days ahead the **Expiring protection** page looks. |
 | `defaultCountry` | `CZ` | Two-letter country code used when an account's **Billing country** is empty or not recognised. |
 | `requireNumber` | `false` | When on, users with the `user` role must enter an **Account ID** when they create an account. Managers and admins are not affected. Edits are not checked. |
-
-<Callout type="warn">
-  If `contactTypes` contains no valid type, the type filter is dropped and any completed activity linked to the account counts as a contact.
-</Callout>
 
 Changes to `protectionDays` and `contactDays` apply to new protection windows only. Existing windows keep their dates. The other settings apply from the next check.
 
@@ -75,7 +71,9 @@ A protection window (a registration) starts when an account with a number key ge
 - a user creates the account with **Assigned to** set (the new account form fills in the creator);
 - a manager or admin sets or changes the owner;
 - someone adds an **Account ID** to an account that already has an owner;
-- the plugin is installed and the account already has an owner.
+- the plugin is installed and the account already has an owner;
+- the account takes over a number from another account (see [Conflicts](#conflicts));
+- the plugin is enabled again (see [Disable and uninstall](#disable-and-uninstall)).
 
 Each window has two dates:
 
@@ -158,7 +156,13 @@ Two accounts can share a number key:
 
 The account that keeps the number is protected as usual. The other account gets no protection window.
 
-The plugin page under **Administration → Plugins** shows **Accounts sharing a registration number** with the columns **Number**, **Account** and **Kept by**. Resolve each case by hand, for example by merging the data into one account and deleting the other. When the account that keeps the number is deleted, the duplicate takes over the number. If it has an owner, it gets a window counted from its last recorded owner change, so it can lose its owner in the next daily run. A row leaves the list when either account is deleted.
+The plugin page under **Administration → Plugins** shows **Accounts sharing a registration number** with the columns **Number**, **Account** and **Kept by**. Resolve each case by hand, for example by merging the data into one account and deleting the other, or by correcting the **Account ID** or **Billing country** of the wrong one.
+
+- When you correct or clear the duplicate's **Account ID** or **Billing country**, its row leaves the list. With a new number that no other account holds, it keeps that number.
+- When the account that keeps the number is deleted, or its **Account ID** or **Billing country** changes, the duplicate takes over the number and its row leaves the list. If it has an owner, a fresh window starts for that owner at that moment.
+- When the duplicate is deleted, its row leaves the list.
+
+The daily job also re-checks the list and removes rows that no longer apply.
 
 ## Background jobs
 
@@ -166,7 +170,7 @@ The plugin registers these Inngest functions. They run only while the plugin is 
 
 | Function | Schedule | Does |
 |---|---|---|
-| `plugin-account-protection-cron-expire` | Daily at 06:00 UTC | Checks contact deadlines and protection windows, removes owners, emails managers. Clears "freed" entries older than 7 days. |
+| `plugin-account-protection-cron-expire` | Daily at 06:00 UTC | Checks contact deadlines and protection windows, removes owners, emails managers. Re-checks the conflicts list. Clears "freed" entries older than 7 days. |
 | `plugin-account-protection-cron-notices` | Every 5 minutes | Sends queued manager notices. |
 | `plugin-account-protection-after` | On account create, update and delete | Indexes numbers, starts and ends windows, writes owner history. |
 
@@ -182,7 +186,14 @@ Before you install, either ask reps to log their visits right after install, or 
 
 ## Disable and uninstall
 
-**Disable** turns off the rules, jobs, tab, panel, page and menu item. Stored data is kept. Owner and number changes made while the plugin is disabled are not recorded. Windows keep their old dates, so the first daily run after you enable it again removes the owner from every account whose date passed in the meantime.
+**Disable** turns off the rules, jobs, tab, panel, page and menu item. Stored data is kept. Nobody loses an owner while the plugin is disabled.
+
+When you enable it again, the plugin catches up before it removes any owner. Its jobs notice that they have not run for more than an hour (the notice job runs every 5 minutes, so this happens within minutes of enabling). For each account it tracks:
+
+- If the owner was changed while the plugin was disabled, the change is added to the **Owner history** (reason "assigned" or "released", made by "system") and a fresh window starts for the new owner.
+- If the contact deadline or the **Protected until** date passed while the plugin was disabled, the window starts again from that moment, because the owner had no chance to keep it.
+
+Number changes made while the plugin was disabled are picked up on the account's next edit. The same catch-up runs after the job server was down for more than an hour.
 
 **Uninstall** deletes everything the plugin stored: windows, owner history, conflicts and queued notices, plus the plugin log. Accounts keep their current owners. Use **Download data (JSON)** first if you need the owner history. A new install starts from scratch with a fresh backfill.
 

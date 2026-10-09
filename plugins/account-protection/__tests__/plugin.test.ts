@@ -18,6 +18,8 @@ it("listens to account created, updated and deleted", () => {
 it("schedules the expiry and notice jobs and backfills on install", () => {
   expect(plugin.extensions.crons.map((c) => [c.id, c.schedule])).toEqual([["expire", "0 6 * * *"], ["notices", "*/5 * * * *"]]);
   expect(typeof plugin.onInstall).toBe("function");
+  expect(typeof plugin.onUpgrade).toBe("function");
+  expect(plugin.version).toBe("0.1.1");
 });
 
 it("registers the tab, the panel, the Expiring page in the menu and an admin section", () => {
@@ -26,4 +28,13 @@ it("registers the tab, the panel, the Expiring page in the menu and an admin sec
   expect(e.accountPanels.map((p) => p.id)).toEqual(["protection"]);
   expect(e.pages.map((p) => [p.path, p.title, p.roles, p.nav])).toEqual([["expiring", "expiring.title", ["manager", "admin"], { label: "expiring.nav" }]]);
   expect(e.adminSections).toHaveLength(1);
+});
+
+it("keeps contactTypes a plain text field the platform resets to the default when the stored value is invalid", () => {
+  // The platform renders and reads settings field by field: invalid stored value → safeParse(undefined) → default.
+  const field = plugin.settings.shape.contactTypes;
+  expect(field._zod.def.type).toBe("default");
+  expect(field._zod.def.innerType._zod.def.type).toBe("string");
+  expect(field.safeParse("sample").success).toBe(false);
+  expect(field.safeParse(undefined).data).toBe("visit,meeting");
 });

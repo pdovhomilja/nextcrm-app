@@ -18,6 +18,8 @@ Account protection gives each company one owner. When you become the owner of a 
 
 Losing a company means its owner is cleared. This happens in a daily run in the morning.
 
+If your admin turns account protection off for a while, nobody loses a company while it is off. When it is turned on again, a company whose owner changed in the meantime gets a new protection period for the new owner, and a period that ran out in the meantime starts again.
+
 ## Keep a company protected
 
 Log a completed visit or meeting on the company.
@@ -96,3 +98,7 @@ As a manager or admin, you get emails when:
 To assign a company, open it, edit it, and set **Assigned to**. The new owner gets a new protection period, and the change is added to the **Owner history**.
 
 You also cannot create a second company with the same number. You see "This company is already in the CRM." or "This company is protected until \{until\}." and can open the existing company instead.
+
+### Companies sharing a number
+
+Your admin sees companies that share a number in the plugin's conflicts list. When the company that holds the number is deleted, or its **Account ID** or **Billing country** changes, the other company takes over the number, and its owner gets a new protection period from that moment. When the other company's **Account ID** is corrected instead, it leaves the list.
