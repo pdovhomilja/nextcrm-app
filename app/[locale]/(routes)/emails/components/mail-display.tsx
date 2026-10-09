@@ -54,13 +54,11 @@ export function MailDisplay({ mail, activeAccountId }: MailDisplayProps) {
   const today = new Date();
   const router = useRouter();
 
-  const [fullEmail, setFullEmail] = useState<Awaited<ReturnType<typeof getEmail>> | null>(null);
+  const [fetchedEmail, setFullEmail] = useState<Awaited<ReturnType<typeof getEmail>> | null>(null);
+  const fullEmail = mail?.id ? fetchedEmail : null;
 
   useEffect(() => {
-    if (!mail?.id) {
-      setFullEmail(null);
-      return;
-    }
+    if (!mail?.id) return;
     let cancelled = false;
     getEmail(mail.id)
       .then((data) => { if (!cancelled) setFullEmail(data); })

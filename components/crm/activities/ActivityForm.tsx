@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import {
   Sheet,
@@ -60,11 +60,12 @@ export function ActivityForm({ open, onOpenChange, entityType, entityId, activit
   const [saving, setSaving] = useState(false);
 
   // Auto-set status when type changes (only in create mode)
-  useEffect(() => {
+  const handleTypeChange = (newType: ActivityType) => {
+    setType(newType);
     if (!isEdit) {
-      setStatus(DEFAULT_STATUS[type]);
+      setStatus(DEFAULT_STATUS[newType]);
     }
-  }, [type, isEdit]);
+  };
 
   const showDuration = type === "call" || type === "meeting" || type === "visit";
   const showOutcome = type === "call" || type === "meeting" || type === "visit";
@@ -126,7 +127,7 @@ export function ActivityForm({ open, onOpenChange, entityType, entityId, activit
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div className="space-y-1">
             <Label htmlFor="activity-type">Type</Label>
-            <Select value={type} onValueChange={(v) => setType(v as ActivityType)}>
+            <Select value={type} onValueChange={(v) => handleTypeChange(v as ActivityType)}>
               <SelectTrigger id="activity-type">
                 <SelectValue />
               </SelectTrigger>

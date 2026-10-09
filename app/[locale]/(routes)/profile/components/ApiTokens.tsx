@@ -43,7 +43,13 @@ export function ApiTokens() {
     if (res.data) setTokens(res.data as TokenRow[]);
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    let cancelled = false;
+    getApiTokens().then((res) => {
+      if (!cancelled && res.data) setTokens(res.data as TokenRow[]);
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   async function handleCreate() {
     if (!name.trim()) return;

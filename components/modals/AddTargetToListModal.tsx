@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getTargets } from "@/actions/crm/get-targets";
@@ -40,24 +40,24 @@ const AddTargetToListModal = ({
   onOpenChange,
 }: AddTargetToListModalProps) => {
   const router = useRouter();
-  const [targets, setTargets] = useState<Target[]>([]);
+  const [allTargets, setAllTargets] = useState<Target[]>([]);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isFetching, setIsFetching] = useState(false);
+  const [isFetching, startFetching] = useTransition();
 
   useEffect(() => {
     if (!open) return;
-    setIsFetching(true);
-    getTargets()
-      .then((all) => {
-        setTargets(all.filter((t) => !existingTargetIds.includes(t.id)));
-      })
-      .catch(() => {
+    startFetching(async () => {
+      try {
+        setAllTargets(await getTargets());
+      } catch {
         toast.error("Failed to load targets");
-      })
-      .finally(() => setIsFetching(false));
+      }
+    });
   }, [open]);
+
+  const targets = allTargets.filter((t) => !existingTargetIds.includes(t.id));
 
   const filtered = targets.filter((t) => {
     const q = search.toLowerCase();

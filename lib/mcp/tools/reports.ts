@@ -17,10 +17,16 @@ export const reportTools = [
     }),
     async handler(
       args: { category?: string; limit: number; offset: number },
-      _userId: string
+      _userId: string,
+      user: AuthzUser
     ) {
+      // Same visibility as the web report pages: managers and admins see all
+      // saved configs, users only their own and shared ones.
       const where = {
         ...(args.category && { category: args.category }),
+        ...(user.role !== "admin" && user.role !== "manager" && {
+          OR: [{ createdBy: user.id }, { isShared: true }],
+        }),
       };
       const [data, total] = await Promise.all([
         prismadb.crm_Report_Config.findMany({
@@ -64,7 +70,6 @@ export const reportTools = [
         dateTo: args.dateTo ? new Date(args.dateTo) : now,
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let data: any;
       switch (args.category) {
         case "sales": {

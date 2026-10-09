@@ -2,7 +2,7 @@
 
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { ElementRef, useEffect, useRef, useState } from "react";
+import { ElementRef, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -32,15 +32,13 @@ const CreateContractForm = ({
 }) => {
   const router = useRouter();
   const closeRef = useRef<ElementRef<"button">>(null);
-  const [assignedTo, setAssignedTo] = useState<string>("");
+  const [pickedAssignee, setPickedAssignee] = useState<string>("");
   const { data: session } = useSession();
   const t = useTranslations("CrmContractForm");
   const c = useTranslations("Common");
 
-  useEffect(() => {
-    const uid = session?.user?.id;
-    if (uid) setAssignedTo((prev) => prev || uid);
-  }, [session]);
+  // Defaults to the current user until someone else is picked
+  const assignedTo = pickedAssignee || session?.user?.id || "";
 
   //console.log(accountId, "accountId");
 
@@ -156,7 +154,7 @@ const CreateContractForm = ({
           <label className="text-sm font-medium">{c("assignedTo")}</label>
           <UserSearchCombobox
             value={assignedTo}
-            onChange={setAssignedTo}
+            onChange={setPickedAssignee}
             placeholder={c("selectUser")}
             disabled={isLoading}
             name="assigned_to"
