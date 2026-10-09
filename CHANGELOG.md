@@ -5,6 +5,20 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.26.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.25.1...v0.26.0) (2026-10-09)
+
+
+### Added
+
+* **pricing:** core price lists (Odoo 17-compatible engine) ([65ef6b7](https://github.com/pdovhomilja/nextcrm-app/commit/65ef6b7247143480d4964b9fdfb7159568a10d64))
+
+
+### Fixed
+
+* **pricing:** final review fixes ([a096a40](https://github.com/pdovhomilja/nextcrm-app/commit/a096a40bc11df7b57d21c3a7eb073d2e292cca42))
+* **pricing:** rule order hint matches Odoo 17 order ([17aed27](https://github.com/pdovhomilja/nextcrm-app/commit/17aed2758d7516e02ddcfebafbb90d03e60ac476))
+* **pricing:** strip pnpm output from the price-list migration ([e906a82](https://github.com/pdovhomilja/nextcrm-app/commit/e906a82f20c344e10ff7b465a643a0ca76a23b4c))
+
 ## [0.25.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.25.0...v0.25.1) (2026-10-09)
 
 
