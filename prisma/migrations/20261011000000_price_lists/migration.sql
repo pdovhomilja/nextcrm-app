@@ -1,5 +1,3 @@
-Already up to date
-Done in 225ms using pnpm v11.20.0
 -- CreateEnum
 CREATE TYPE "crm_PriceList_Source" AS ENUM ('CRM', 'EXTERNAL');
 

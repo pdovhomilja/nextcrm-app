@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { Prisma, crm_PriceList_Source, crm_PriceRule_Base, crm_PriceRule_Compute, crm_PriceRule_Target } from "@prisma/client";
 
 it("generates the pricing enums", () => {
@@ -13,4 +14,9 @@ it("generates the pricing columns", () => {
   expect(Prisma.Crm_PriceListRulesScalarFieldEnum.basePriceListId).toBe("basePriceListId");
   expect(Prisma.Crm_AccountsScalarFieldEnum.pricelist_id).toBe("pricelist_id");
   expect(Prisma.Crm_ProductCategoriesScalarFieldEnum.parentId).toBe("parentId");
+});
+
+it("ships a migration that is plain SQL", () => {
+  const sql = readFileSync("prisma/migrations/20261011000000_price_lists/migration.sql", "utf8");
+  expect(sql.startsWith("-- CreateEnum")).toBe(true);
 });
