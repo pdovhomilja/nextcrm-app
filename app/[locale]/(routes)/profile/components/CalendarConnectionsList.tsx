@@ -156,6 +156,7 @@ export function CalendarConnectionsList() {
               <div className="flex gap-2">
                 {c.isActive && c.scopeLevel !== "readwrite" && (
                   <Button asChild size="sm" variant="secondary">
+                    {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- API route that redirects to Google OAuth; needs a full page navigation */}
                     <a href="/api/profile/calendar-connections/google/authorize?level=readwrite">
                       Enable two-way sync
                     </a>
