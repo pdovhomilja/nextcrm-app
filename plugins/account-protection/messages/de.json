@@ -1,0 +1,47 @@
+{
+  "name": "Kundenschutz",
+  "rules": {
+    "protected": "Dieses Unternehmen ist bis {until} geschützt.",
+    "alreadyInCrm": "Dieses Unternehmen ist bereits im CRM. Ein Manager wurde gebeten, es Ihnen zuzuweisen.",
+    "exists": "Dieses Unternehmen ist bereits im CRM.",
+    "ownAccount": "Sie haben dieses Unternehmen bereits im CRM.",
+    "numberRequired": "Geben Sie die Registernummer des Unternehmens ein.",
+    "ownerManagersOnly": "Nur ein Manager kann den Verantwortlichen des Kontos ändern."
+  },
+  "tab": {
+    "title": "Schutz",
+    "status": "Status",
+    "protected": "Geschützt bis {date}",
+    "contactNeeded": "Kontakt nötig bis {date}",
+    "free": "Nicht geschützt: kein Verantwortlicher",
+    "noNumber": "Nicht geschützt: keine Registernummer",
+    "contact": "Nachgewiesener Kontakt",
+    "contactYes": "Ja, am {date}",
+    "contactNo": "Noch nicht",
+    "history": "Verlauf der Verantwortlichen",
+    "historyEmpty": "Noch keine Änderungen.",
+    "nobody": "niemand",
+    "system": "System",
+    "reason": { "created": "angelegt", "assigned": "zugewiesen", "released": "freigegeben", "expired": "Schutz abgelaufen", "expired-no-contact": "kein Kontakt in der Frist", "install": "Plugin installiert" }
+  },
+  "expiring": {
+    "title": "Ablaufender Schutz",
+    "nav": "Ablaufender Schutz",
+    "due": "Läuft in {days} Tagen ab",
+    "freed": "In den letzten 7 Tagen freigegeben",
+    "empty": "Keine Einträge."
+  },
+  "admin": {
+    "conflicts": "Konten mit derselben Registernummer",
+    "conflictsEmpty": "Keine Konflikte.",
+    "key": "Nummer",
+    "account": "Konto",
+    "other": "Behalten"
+  },
+  "mail": {
+    "expiredSubject": "Schutz für {count} Konten abgelaufen",
+    "expiredText": "Diese Konten haben keinen Verantwortlichen mehr:",
+    "blocked-protected": { "subject": "Blockiert: {account} ist geschützt", "text": "{user} wollte {account} anlegen, das von einem anderen Verantwortlichen geschützt ist." },
+    "blocked-free": { "subject": "{account} zuweisen", "text": "{user} wollte {account} anlegen. Das Unternehmen ist bereits ohne Verantwortlichen im CRM. Weisen Sie es im Konto zu, falls passend." }
+  }
+}

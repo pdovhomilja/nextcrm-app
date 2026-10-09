@@ -1,0 +1,47 @@
+{
+  "name": "Ochrana účtů",
+  "rules": {
+    "protected": "Tato firma je chráněná do {until}.",
+    "alreadyInCrm": "Tato firma už v CRM je. Požádali jsme manažera, aby vám ji přidělil.",
+    "exists": "Tato firma už v CRM je.",
+    "ownAccount": "Tuto firmu už v CRM máte.",
+    "numberRequired": "Zadejte IČO firmy.",
+    "ownerManagersOnly": "Vlastníka účtu může změnit jen manažer."
+  },
+  "tab": {
+    "title": "Ochrana",
+    "status": "Stav",
+    "protected": "Chráněno do {date}",
+    "contactNeeded": "Kontakt nutný do {date}",
+    "free": "Nechráněno: bez vlastníka",
+    "noNumber": "Nechráněno: chybí IČO",
+    "contact": "Doložený kontakt",
+    "contactYes": "Ano, {date}",
+    "contactNo": "Zatím ne",
+    "history": "Historie vlastníků",
+    "historyEmpty": "Zatím žádné změny vlastníka.",
+    "nobody": "nikdo",
+    "system": "systém",
+    "reason": { "created": "založení", "assigned": "přidělení", "released": "uvolnění", "expired": "vypršení ochrany", "expired-no-contact": "bez kontaktu ve lhůtě", "install": "instalace pluginu" }
+  },
+  "expiring": {
+    "title": "Vypršení ochrany",
+    "nav": "Vypršení ochrany",
+    "due": "Vyprší do {days} dnů",
+    "freed": "Uvolněno za posledních 7 dnů",
+    "empty": "Nic tu není."
+  },
+  "admin": {
+    "conflicts": "Účty se stejným IČO",
+    "conflictsEmpty": "Žádné konflikty.",
+    "key": "Číslo",
+    "account": "Účet",
+    "other": "Ponechán"
+  },
+  "mail": {
+    "expiredSubject": "Ochrana vypršela u {count} účtů",
+    "expiredText": "Tyto účty už nemají vlastníka:",
+    "blocked-protected": { "subject": "Zablokováno: {account} je chráněný", "text": "Uživatel {user} se pokusil založit {account}, který chrání jiný vlastník." },
+    "blocked-free": { "subject": "Přidělte {account}", "text": "Uživatel {user} se pokusil založit {account}. Firma už je v CRM bez vlastníka. Pokud je to v pořádku, přidělte ji v účtu." }
+  }
+}

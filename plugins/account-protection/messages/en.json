@@ -1,0 +1,47 @@
+{
+  "name": "Account protection",
+  "rules": {
+    "protected": "This company is protected until {until}.",
+    "alreadyInCrm": "This company is already in the CRM. A manager has been asked to assign it to you.",
+    "exists": "This company is already in the CRM.",
+    "ownAccount": "You already have this company in the CRM.",
+    "numberRequired": "Enter the company registration number.",
+    "ownerManagersOnly": "Only a manager can change the account owner."
+  },
+  "tab": {
+    "title": "Protection",
+    "status": "Status",
+    "protected": "Protected until {date}",
+    "contactNeeded": "Contact needed by {date}",
+    "free": "Not protected: no owner",
+    "noNumber": "Not protected: no registration number",
+    "contact": "Qualifying contact",
+    "contactYes": "Yes, on {date}",
+    "contactNo": "Not yet",
+    "history": "Owner history",
+    "historyEmpty": "No owner changes recorded yet.",
+    "nobody": "nobody",
+    "system": "system",
+    "reason": { "created": "created", "assigned": "assigned", "released": "released", "expired": "protection expired", "expired-no-contact": "no contact in time", "install": "plugin installed" }
+  },
+  "expiring": {
+    "title": "Expiring protection",
+    "nav": "Expiring protection",
+    "due": "Due within {days} days",
+    "freed": "Freed in the last 7 days",
+    "empty": "Nothing here."
+  },
+  "admin": {
+    "conflicts": "Accounts sharing a registration number",
+    "conflictsEmpty": "No conflicts.",
+    "key": "Number",
+    "account": "Account",
+    "other": "Kept by"
+  },
+  "mail": {
+    "expiredSubject": "{count} accounts lost their protection",
+    "expiredText": "These accounts no longer have an owner:",
+    "blocked-protected": { "subject": "Blocked: {account} is protected", "text": "{user} tried to create {account}, which is protected by another owner." },
+    "blocked-free": { "subject": "Assign {account}", "text": "{user} tried to create {account}. It is already in the CRM without an owner. Assign it in the account if appropriate." }
+  }
+}
