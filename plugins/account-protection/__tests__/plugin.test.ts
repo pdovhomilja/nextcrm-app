@@ -19,3 +19,11 @@ it("schedules the expiry and notice jobs and backfills on install", () => {
   expect(plugin.extensions.crons.map((c) => [c.id, c.schedule])).toEqual([["expire", "0 6 * * *"], ["notices", "*/5 * * * *"]]);
   expect(typeof plugin.onInstall).toBe("function");
 });
+
+it("registers the tab, the panel, the Expiring page in the menu and an admin section", () => {
+  const e = plugin.extensions;
+  expect(e.accountTabs.map((t) => [t.id, t.title, t.roles])).toEqual([["protection", "tab.title", ["user", "manager", "admin"]]]);
+  expect(e.accountPanels.map((p) => p.id)).toEqual(["protection"]);
+  expect(e.pages.map((p) => [p.path, p.title, p.roles, p.nav])).toEqual([["expiring", "expiring.title", ["manager", "admin"], { label: "expiring.nav" }]]);
+  expect(e.adminSections).toHaveLength(1);
+});

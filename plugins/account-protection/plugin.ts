@@ -3,6 +3,10 @@ import { settingsSchema } from "./settings";
 import { beforeCreate, beforeUpdate } from "./rules";
 import { onCreated, onDeleted, onUpdated } from "./hooks";
 import { expire, install, sendNotices } from "./jobs";
+import { ProtectionTab } from "./ui/ProtectionTab";
+import { ProtectionPanel } from "./ui/ProtectionPanel";
+import { ExpiringPage } from "./ui/ExpiringPage";
+import { ConflictsSection } from "./ui/ConflictsSection";
 
 export default definePlugin({
   id: "account-protection",
@@ -20,6 +24,10 @@ export default definePlugin({
     x.after("account", "deleted", (input, ctx) => onDeleted(input, ctx));
     x.cron("expire", "0 6 * * *", (ctx) => expire(ctx, new Date()));
     x.cron("notices", "*/5 * * * *", (ctx) => sendNotices(ctx, new Date()));
+    x.accountTab({ id: "protection", title: "tab.title", component: ProtectionTab });
+    x.accountPanel({ id: "protection", component: ProtectionPanel });
+    x.page({ path: "expiring", title: "expiring.title", component: ExpiringPage, roles: ["manager", "admin"], nav: { label: "expiring.nav" } });
+    x.adminSection(ConflictsSection);
   },
   onInstall: (ctx) => install(ctx, new Date()),
 });
