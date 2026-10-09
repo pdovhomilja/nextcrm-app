@@ -5,6 +5,14 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.24.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.24.0...v0.24.1) (2026-10-09)
+
+
+### Fixed
+
+* **deps:** release 0.24.1 with next 16.3.8 ([0e5d22e](https://github.com/pdovhomilja/nextcrm-app/commit/0e5d22e9a6d6920dc0d0c9db659ff81a83c9f287))
+* **deps:** update next to 16.3.8 and @modelcontextprotocol/sdk to 1.31.0 ([9da6cfa](https://github.com/pdovhomilja/nextcrm-app/commit/9da6cfacbb6d91d38b0a718f8296b68f614a5b91))
+
 ## [0.24.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.23.1...v0.24.0) (2026-10-09)
 
 
