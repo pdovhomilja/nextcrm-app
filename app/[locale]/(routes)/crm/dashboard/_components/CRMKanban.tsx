@@ -225,7 +225,7 @@ const CRMKanban = ({
       serverDataRef.current = data;
       setColumns(initColumns(data, salesStages));
     }
-  }, [data]);
+  }, [data, salesStages]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
