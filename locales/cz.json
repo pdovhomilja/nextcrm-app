@@ -14,6 +14,7 @@
       "leads": "Leady",
       "contracts": "Smlouvy",
       "products": "Produkty",
+      "priceLists": "Ceníky",
       "targets": "Cílové osoby",
       "targetLists": "Seznamy cílů"
     },
@@ -754,5 +755,22 @@
     "vatNoPrefix": "Zadejte DIČ s kódem země, např. CZ12345678.",
     "vatNoProvider": "Ověření DIČ není k dispozici.",
     "admin": { "title": "Pluginy", "notInstalled": "Nenainstalováno", "enabled": "Zapnuto", "disabled": "Vypnuto", "missing": "V této verzi chybí", "install": "Instalovat", "enable": "Zapnout", "disable": "Vypnout", "uninstall": "Odinstalovat", "save": "Uložit nastavení", "saved": "Nastavení uloženo", "permissions": "Požadovaná oprávnění", "confirmPermissions": "Uděluji tato oprávnění", "settings": "Nastavení", "secrets": "Tajné hodnoty", "secretSet": "Nastaveno (prázdné = ponechat)", "log": "Log", "export": "Stáhnout data (JSON)", "uninstallTitle": "Odinstalovat {name}?", "uninstallBody": "Smaže se {entries} uložených hodnot u {records} záznamů a log pluginu. Data, která plugin zapsal do záznamů CRM, zůstanou.", "confirmUninstall": "Odinstalovat a smazat data pluginu", "upgradePending": "Čeká aktualizace: {from} → {to}" }
+  },
+  "PriceListsPage": {
+    "title": "Ceníky", "description": "Ceny pro zákazníky, pravidla kompatibilní s Odoo", "detailDescription": "Pravidla se procházejí shora dolů; cenu určí první, které platí.",
+    "new": "Nový ceník", "save": "Uložit", "saved": "Uloženo", "edit": "Upravit", "delete": "Smazat", "active": "Aktivní", "archived": "Archivovaný",
+    "showArchived": "Zobrazit archivované", "hideArchived": "Skrýt archivované", "empty": "Zatím žádné ceníky.",
+    "name": "Název", "currency": "Měna", "source": "Zdroj", "sourceCrm": "CRM", "sourceExternal": "Externí", "syncedExternal": "Synchronizováno z externího systému (jen pro čtení)",
+    "rules": "Pravidla", "updated": "Změněno", "addRule": "Přidat pravidlo", "editRule": "Upravit pravidlo", "rulesOrderHint": "Pořadí vyhodnocení: produkt, kategorie (nejhlubší první), všechny produkty; vyšší minimální množství první; nejnovější první.",
+    "appliesTo": "Platí pro", "targetAll": "Všechny produkty", "targetCategory": "Kategorie: {name}", "targetProduct": "Produkt: {name}", "category": "Kategorie", "product": "Produkt",
+    "minQuantity": "Min. množství", "validity": "Platnost", "dateStart": "Platí od", "dateEnd": "Platí do", "price": "Cena",
+    "computePrice": "Typ ceny", "computeFIXED": "Pevná cena", "computePERCENTAGE": "Sleva ze základu", "computeFORMULA": "Vzorec",
+    "fixedPrice": "Pevná cena", "percentPrice": "Sleva %", "base": "Základ", "baseLIST_PRICE": "ceníková cena produktu", "baseCOST": "náklad", "basePRICE_LIST": "jiný ceník", "basePriceList": "Základní ceník",
+    "priceDiscount": "Sleva % (záporná = přirážka)", "priceRound": "Zaokrouhlit na", "priceSurcharge": "Příplatek", "priceMinMargin": "Min. marže", "priceMaxMargin": "Max. marže",
+    "priceFixed": "{value}", "pricePercent": "{value} % z {base}", "priceFormula": "{base} −{discount} %, zaokr. {round}, +{surcharge}",
+    "priceCheck": "Kontrola ceny", "quantity": "Množství", "date": "Datum", "calculate": "Spočítat", "listPrice": "Ceníková cena", "ruleApplied": "použito pravidlo", "noRule": "žádné pravidlo, použita ceníková cena",
+    "step": { "fallback": "Ceníková cena", "fixed": "Pevná cena", "base": "Základ", "percentage": "Po slevě", "discount": "Po slevě", "round": "Po zaokrouhlení", "surcharge": "Po příplatku", "minMargin": "Po min. marži", "maxMargin": "Po max. marži" },
+    "problem": { "categoryRequired": "Vyberte kategorii.", "productRequired": "Vyberte produkt.", "fixedPriceRequired": "Zadejte pevnou cenu.", "percentRequired": "Zadejte slevu.", "percentRange": "Sleva musí být 0–100 %.", "baseListRequired": "Vyberte základní ceník.", "baseListSelf": "Ceník nemůže vycházet sám ze sebe.", "dateOrder": "„Platí do“ je před „Platí od“.", "minQuantityNegative": "Min. množství nesmí být záporné.", "roundPositive": "Zaokrouhlení musí být větší než 0.", "marginOrder": "Min. marže je vyšší než max. marže." },
+    "error": { "Unauthorized": "Přihlaste se znovu.", "Forbidden": "Tento ceník nemůžete měnit.", "Not found": "Ceník nenalezen.", "Currency is not enabled": "Tato měna není povolená.", "inUse": "Ceník používají firmy nebo jiné ceníky. Archivujte ho.", "cycle": "Takový základní ceník by vytvořil smyčku.", "baseListNotFound": "Základní ceník nenalezen.", "invalid": "Zkontrolujte vyznačená pole." }
   }
 }

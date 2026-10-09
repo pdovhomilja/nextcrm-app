@@ -14,6 +14,7 @@
       "leads": "Ліди",
       "contracts": "Договори",
       "products": "Продукти",
+      "priceLists": "Прайс-листи",
       "targets": "Цільові особи",
       "targetLists": "Списки цілей"
     },
@@ -751,5 +752,22 @@
     "vatNoPrefix": "Введіть ПДВ-номер з кодом країни, напр. CZ12345678.",
     "vatNoProvider": "Перевірка ПДВ-номера недоступна.",
     "admin": { "title": "Плагіни", "notInstalled": "Не встановлено", "enabled": "Увімкнено", "disabled": "Вимкнено", "missing": "Відсутній у цій версії", "install": "Встановити", "enable": "Увімкнути", "disable": "Вимкнути", "uninstall": "Видалити", "save": "Зберегти налаштування", "saved": "Налаштування збережено", "permissions": "Запитані дозволи", "confirmPermissions": "Надаю ці дозволи", "settings": "Налаштування", "secrets": "Секрети", "secretSet": "Задано (залиште порожнім, щоб зберегти)", "log": "Журнал", "export": "Завантажити дані (JSON)", "uninstallTitle": "Видалити {name}?", "uninstallBody": "Буде видалено {entries} збережених значень для {records} записів і журнал плагіна. Дані, які плагін записав у записи CRM, залишаться.", "confirmUninstall": "Видалити та стерти дані плагіна", "upgradePending": "Очікує оновлення: {from} → {to}" }
+  },
+  "PriceListsPage": {
+    "title": "Прайс-листи", "description": "Ціни для клієнтів із правилами, сумісними з Odoo", "detailDescription": "Правила перевіряються згори донизу; ціну визначає перше, що підходить.",
+    "new": "Новий прайс-лист", "save": "Зберегти", "saved": "Збережено", "edit": "Редагувати", "delete": "Видалити", "active": "Активний", "archived": "Архівний",
+    "showArchived": "Показати архівні", "hideArchived": "Сховати архівні", "empty": "Прайс-листів ще немає.",
+    "name": "Назва", "currency": "Валюта", "source": "Джерело", "sourceCrm": "CRM", "sourceExternal": "Зовнішнє", "syncedExternal": "Синхронізовано із зовнішньої системи (лише читання)",
+    "rules": "Правила", "updated": "Змінено", "addRule": "Додати правило", "editRule": "Редагувати правило", "rulesOrderHint": "Порядок: товар, категорія (найглибша першою), усі товари; більша мінімальна кількість першою; найновіше першим.",
+    "appliesTo": "Застосовується до", "targetAll": "Усі товари", "targetCategory": "Категорія: {name}", "targetProduct": "Товар: {name}", "category": "Категорія", "product": "Товар",
+    "minQuantity": "Мін. кількість", "validity": "Діє", "dateStart": "Діє з", "dateEnd": "Діє до", "price": "Ціна",
+    "computePrice": "Тип ціни", "computeFIXED": "Фіксована ціна", "computePERCENTAGE": "Знижка від бази", "computeFORMULA": "Формула",
+    "fixedPrice": "Фіксована ціна", "percentPrice": "Знижка %", "base": "База", "baseLIST_PRICE": "прайсова ціна", "baseCOST": "собівартість", "basePRICE_LIST": "інший прайс-лист", "basePriceList": "Базовий прайс-лист",
+    "priceDiscount": "Знижка % (від'ємна = націнка)", "priceRound": "Округлити до", "priceSurcharge": "Доплата", "priceMinMargin": "Мін. маржа", "priceMaxMargin": "Макс. маржа",
+    "priceFixed": "{value}", "pricePercent": "{value} % від {base}", "priceFormula": "{base} −{discount} %, окр. {round}, +{surcharge}",
+    "priceCheck": "Перевірка ціни", "quantity": "Кількість", "date": "Дата", "calculate": "Розрахувати", "listPrice": "Прайсова ціна", "ruleApplied": "застосовано правило", "noRule": "правила немає, використано прайсову ціну",
+    "step": { "fallback": "Прайсова ціна", "fixed": "Фіксована ціна", "base": "База", "percentage": "Після знижки", "discount": "Після знижки", "round": "Після округлення", "surcharge": "Після доплати", "minMargin": "Після мін. маржі", "maxMargin": "Після макс. маржі" },
+    "problem": { "categoryRequired": "Виберіть категорію.", "productRequired": "Виберіть товар.", "fixedPriceRequired": "Введіть фіксовану ціну.", "percentRequired": "Введіть знижку.", "percentRange": "Знижка має бути 0–100 %.", "baseListRequired": "Виберіть базовий прайс-лист.", "baseListSelf": "Прайс-лист не може базуватися на собі.", "dateOrder": "«Діє до» раніше за «Діє з».", "minQuantityNegative": "Мін. кількість не може бути від'ємною.", "roundPositive": "Округлення має бути більше 0.", "marginOrder": "Мін. маржа більша за макс. маржу." },
+    "error": { "Unauthorized": "Увійдіть знову.", "Forbidden": "Ви не можете змінювати цей прайс-лист.", "Not found": "Прайс-лист не знайдено.", "Currency is not enabled": "Ця валюта не ввімкнена.", "inUse": "Прайс-лист використовують компанії або інші списки. Заархівуйте його.", "cycle": "Такий базовий список створив би петлю.", "baseListNotFound": "Базовий прайс-лист не знайдено.", "invalid": "Перевірте позначені поля." }
   }
 }

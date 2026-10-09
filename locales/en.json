@@ -14,6 +14,7 @@
       "leads": "Leads",
       "contracts": "Contracts",
       "products": "Products",
+      "priceLists": "Price lists",
       "targets": "Targets",
       "targetLists": "Target Lists"
     },
@@ -751,5 +752,22 @@
     "vatNoPrefix": "Enter the VAT number with its country code, e.g. CZ12345678.",
     "vatNoProvider": "No VAT check is available.",
     "admin": { "title": "Plugins", "notInstalled": "Not installed", "enabled": "Enabled", "disabled": "Disabled", "missing": "Missing from this version", "install": "Install", "enable": "Enable", "disable": "Disable", "uninstall": "Uninstall", "save": "Save settings", "saved": "Settings saved", "permissions": "Requested permissions", "confirmPermissions": "I grant these permissions", "settings": "Settings", "secrets": "Secrets", "secretSet": "Set (leave empty to keep)", "log": "Log", "export": "Download data (JSON)", "uninstallTitle": "Uninstall {name}?", "uninstallBody": "{entries} stored values on {records} records and the plugin log will be deleted. Data the plugin wrote into CRM records stays.", "confirmUninstall": "Uninstall and delete plugin data", "upgradePending": "Upgrade pending: {from} → {to}" }
+  },
+  "PriceListsPage": {
+    "title": "Price lists", "description": "Prices per customer, with rules compatible with Odoo", "detailDescription": "Rules are checked top to bottom; the first match sets the price.",
+    "new": "New price list", "save": "Save", "saved": "Saved", "edit": "Edit", "delete": "Delete", "active": "Active", "archived": "Archived",
+    "showArchived": "Show archived", "hideArchived": "Hide archived", "empty": "No price lists yet.",
+    "name": "Name", "currency": "Currency", "source": "Source", "sourceCrm": "CRM", "sourceExternal": "External", "syncedExternal": "Synced from an external system (read-only)",
+    "rules": "Rules", "updated": "Updated", "addRule": "Add rule", "editRule": "Edit rule", "rulesOrderHint": "Order of evaluation: product, category (deepest first), all products; higher minimum quantity first; newest first.",
+    "appliesTo": "Applies to", "targetAll": "All products", "targetCategory": "Category: {name}", "targetProduct": "Product: {name}", "category": "Category", "product": "Product",
+    "minQuantity": "Min. quantity", "validity": "Valid", "dateStart": "Valid from", "dateEnd": "Valid to", "price": "Price",
+    "computePrice": "Price type", "computeFIXED": "Fixed price", "computePERCENTAGE": "Discount from base", "computeFORMULA": "Formula",
+    "fixedPrice": "Fixed price", "percentPrice": "Discount %", "base": "Based on", "baseLIST_PRICE": "list price", "baseCOST": "cost", "basePRICE_LIST": "another price list", "basePriceList": "Base price list",
+    "priceDiscount": "Discount % (negative = markup)", "priceRound": "Round to", "priceSurcharge": "Extra fee", "priceMinMargin": "Min. margin", "priceMaxMargin": "Max. margin",
+    "priceFixed": "{value}", "pricePercent": "{value} % off {base}", "priceFormula": "{base} −{discount} %, round {round}, +{surcharge}",
+    "priceCheck": "Price check", "quantity": "Quantity", "date": "Date", "calculate": "Calculate", "listPrice": "List price", "ruleApplied": "rule applied", "noRule": "no rule, list price used",
+    "step": { "fallback": "List price", "fixed": "Fixed price", "base": "Base", "percentage": "After discount", "discount": "After discount", "round": "After rounding", "surcharge": "After extra fee", "minMargin": "After min. margin", "maxMargin": "After max. margin" },
+    "problem": { "categoryRequired": "Choose a category.", "productRequired": "Choose a product.", "fixedPriceRequired": "Enter the fixed price.", "percentRequired": "Enter the discount.", "percentRange": "The discount must be 0–100 %.", "baseListRequired": "Choose the base price list.", "baseListSelf": "A list can't be based on itself.", "dateOrder": "'Valid to' is before 'Valid from'.", "minQuantityNegative": "Min. quantity can't be negative.", "roundPositive": "Rounding must be above 0.", "marginOrder": "Min. margin is above max. margin." },
+    "error": { "Unauthorized": "Please sign in again.", "Forbidden": "You can't change this price list.", "Not found": "Price list not found.", "Currency is not enabled": "This currency isn't enabled.", "inUse": "This list is used by accounts or other lists. Archive it instead.", "cycle": "That base list would make the lists depend on each other in a loop.", "baseListNotFound": "Base price list not found.", "invalid": "Check the highlighted fields." }
   }
 }
