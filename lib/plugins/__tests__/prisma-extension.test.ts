@@ -10,6 +10,7 @@ const mkDeps = (over: Partial<Parameters<typeof interceptWrite>[1]> = {}) => ({
   findExisting: jest.fn(async () => ({ id: "a1", name: "Old", deletedAt: null })),
   findManyExisting: jest.fn(async () => [{ id: "a1" }, { id: "a2" }]),
   deleteRecordData: jest.fn(),
+  resolveActor: jest.fn(async () => ({ type: "system" }) as any),
   ...over,
 });
 
@@ -37,7 +38,7 @@ it("runs beforeCreate with patched data and emits after", async () => {
   const res = await interceptWrite({ model: "crm_Accounts", operation: "create", args: { data: { name: "X" } }, query }, deps);
   expect(query).toHaveBeenCalledWith({ data: { name: "Patched" } });
   expect(res).toMatchObject({ id: "new", name: "Patched" });
-  expect(deps.sendAfter).toHaveBeenCalledWith("p-one", { entity: "account", operation: "created", recordId: "new" });
+  expect(deps.sendAfter).toHaveBeenCalledWith("p-one", { entity: "account", operation: "created", recordId: "new", actor: { type: "system" } });
 });
 
 it("treats setting deletedAt as beforeDelete / deleted", async () => {
@@ -75,7 +76,7 @@ it("upsert without an existing row runs beforeCreate and emits created", async (
   const query = jest.fn(async (a: any) => ({ id: "new", ...a.create }));
   await interceptWrite({ model: "crm_Accounts", operation: "upsert", args: { where: { id: "x" }, create: { name: "C" }, update: { name: "U" } }, query }, deps);
   expect(deps.runBeforeRules).toHaveBeenCalledWith(expect.objectContaining({ operation: "beforeCreate", data: { name: "C" } }));
-  expect(deps.sendAfter).toHaveBeenCalledWith("p-one", { entity: "account", operation: "created", recordId: "new" });
+  expect(deps.sendAfter).toHaveBeenCalledWith("p-one", { entity: "account", operation: "created", recordId: "new", actor: { type: "system" } });
 });
 
 it("deleteMany runs rules per row, cleans plugin data and emits deleted for every id", async () => {
@@ -84,14 +85,14 @@ it("deleteMany runs rules per row, cleans plugin data and emits deleted for ever
   expect(deps.runBeforeRules).toHaveBeenCalledTimes(2);
   expect(deps.runBeforeRules).toHaveBeenCalledWith(expect.objectContaining({ operation: "beforeDelete", recordId: "a2" }));
   expect(deps.deleteRecordData).toHaveBeenCalledWith("account", ["a1", "a2"]);
-  expect(deps.sendAfter).toHaveBeenCalledWith("p-one", { entity: "account", operation: "deleted", recordId: "a1" });
-  expect(deps.sendAfter).toHaveBeenCalledWith("p-one", { entity: "account", operation: "deleted", recordId: "a2" });
+  expect(deps.sendAfter).toHaveBeenCalledWith("p-one", { entity: "account", operation: "deleted", recordId: "a1", actor: { type: "system" } });
+  expect(deps.sendAfter).toHaveBeenCalledWith("p-one", { entity: "account", operation: "deleted", recordId: "a2", actor: { type: "system" } });
 });
 
 it("uses the existing row's id when the write selects no id", async () => {
   const deps = mkDeps({ afterTargets: jest.fn(async () => ["p-one"]) });
   await interceptWrite({ model: "crm_Accounts", operation: "update", args: { where: { id: "a1" }, data: { name: "N" }, select: { name: true } }, query: async () => ({ name: "N" }) }, deps);
-  expect(deps.sendAfter).toHaveBeenCalledWith("p-one", { entity: "account", operation: "updated", recordId: "a1" });
+  expect(deps.sendAfter).toHaveBeenCalledWith("p-one", { entity: "account", operation: "updated", recordId: "a1", actor: { type: "system" }, changed: ["name"] });
   await interceptWrite({ model: "crm_Accounts", operation: "delete", args: { where: { id: "a1" }, select: { name: true } }, query: async () => ({ name: "Old" }) }, deps);
   expect(deps.deleteRecordData).toHaveBeenCalledWith("account", ["a1"]);
 });
@@ -102,7 +103,7 @@ it("does not send after-events back to the plugin that made the write; other plu
   await runAsActor({ type: "plugin", pluginId: "p-one" }, () =>
     interceptWrite({ model: "crm_Accounts", operation: "update", args: { where: { id: "a1" }, data: { name: "N" } }, query: async () => ({ id: "a1" }) }, deps));
   expect(deps.sendAfter).toHaveBeenCalledTimes(1);
-  expect(deps.sendAfter).toHaveBeenCalledWith("p-two", { entity: "account", operation: "updated", recordId: "a1" });
+  expect(deps.sendAfter).toHaveBeenCalledWith("p-two", { entity: "account", operation: "updated", recordId: "a1", actor: { type: "system" }, changed: ["name"] });
 });
 
 it("cleans plugin data on hard delete when only stores are used (M2)", async () => {
@@ -125,5 +126,35 @@ it("forces id into select so created after-events carry the record id (M4)", asy
   const query = jest.fn(async (args: any) => ({ id: args.select?.id ? "new1" : undefined, name: "N" }));
   await interceptWrite({ model: "crm_Accounts", operation: "create", args: { data: { name: "N" }, select: { name: true } }, query }, deps);
   expect(query.mock.calls[0][0].select).toEqual({ name: true, id: true });
-  expect(deps.sendAfter).toHaveBeenCalledWith("p1", { entity: "account", operation: "created", recordId: "new1" });
+  expect(deps.sendAfter).toHaveBeenCalledWith("p1", { entity: "account", operation: "created", recordId: "new1", actor: { type: "system" } });
+});
+
+it("sends the actor and the changed fields on update", async () => {
+  const deps = mkDeps({
+    afterTargets: jest.fn(async () => ["p-one"]),
+    resolveActor: jest.fn(async () => ({ type: "user", userId: "u1", role: "manager" }) as any),
+    findExisting: jest.fn(async () => ({ id: "a1", name: "Old", assigned_to: "u2", company_id: "1", deletedAt: null })),
+  });
+  await interceptWrite({ model: "crm_Accounts", operation: "update",
+    args: { where: { id: "a1" }, data: { v: 0, name: "Old", assigned_to: "u3", company_id: "1" } }, query: async () => ({ id: "a1" }) }, deps);
+  expect(deps.sendAfter).toHaveBeenCalledWith("p-one", {
+    entity: "account", operation: "updated", recordId: "a1",
+    actor: { type: "user", userId: "u1", role: "manager" }, changed: ["assigned_to"],
+  });
+});
+
+it("sends changed fields per row on updateMany", async () => {
+  const deps = mkDeps({
+    afterTargets: jest.fn(async () => ["p-one"]),
+    findManyExisting: jest.fn(async () => [{ id: "a1", assigned_to: "u1" }, { id: "a2", assigned_to: "u9" }]),
+  });
+  await interceptWrite({ model: "crm_Accounts", operation: "updateMany", args: { where: {}, data: { assigned_to: "u9" } }, query: async () => ({ count: 2 }) }, deps);
+  expect(deps.sendAfter).toHaveBeenCalledWith("p-one", expect.objectContaining({ recordId: "a1", changed: ["assigned_to"] }));
+  expect(deps.sendAfter).toHaveBeenCalledWith("p-one", expect.objectContaining({ recordId: "a2", changed: [] }));
+});
+
+it("does not resolve the actor when no plugin listens", async () => {
+  const deps = mkDeps({ hasRules: jest.fn(async () => true), afterTargets: jest.fn(async () => []) });
+  await interceptWrite({ model: "crm_Accounts", operation: "create", args: { data: {} }, query: async () => ({ id: "n" }) }, deps);
+  expect(deps.resolveActor).not.toHaveBeenCalled();
 });

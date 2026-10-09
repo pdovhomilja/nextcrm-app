@@ -135,7 +135,15 @@ export type RuleHandler<S = RecordData, K = RecordData> =
 
 export interface RuleOptions { onError?: "block" | "allow"; priority?: number }
 
-export interface AfterInput { entity: Entity; operation: AfterOperation; recordId: string }
+export interface AfterInput {
+  entity: Entity;
+  operation: AfterOperation;
+  recordId: string;
+  /** Who made the write. */
+  actor?: Actor;
+  /** Updates only: keys of the update data whose value differs from the stored row ("v" excluded). */
+  changed?: string[];
+}
 export type AfterHandler<S = RecordData, K = RecordData> =
   (input: AfterInput, ctx: PluginContext<S, K>) => Promise<void> | void;
 
