@@ -12,6 +12,13 @@ import { OrderError, type OrderState, type OrderStatus } from "./types";
 /** Statuses a plugin may create an EXTERNAL order in (spec § 3.3, plan Ruling 6). */
 const CREATE_STATUSES = new Set(["SENT", "CONFIRMED", "DELIVERED", "INVOICED", "PAID", "CANCELLED"]);
 
+/** ISO day → UTC midnight; refuses anything that is not a real calendar day. */
+function orderDay(value: string): Date {
+  const d = new Date(`${value}T00:00:00Z`);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== value) throw new Error(`Invalid orderDate: ${value}`);
+  return d;
+}
+
 /** EXTERNAL lines carry the external system's price as both list and unit price (spec § 3.3). */
 async function externalLines(lines: OrderLineInput[]) {
   return Promise.all(lines.map(async (l, position) => {
@@ -30,6 +37,7 @@ async function externalLines(lines: OrderLineInput[]) {
 
 export async function pluginCreateOrder(pluginId: string, input: ExternalOrderInput) {
   if (!CREATE_STATUSES.has(input.status)) throw new Error(`Plugins cannot create an order as ${input.status}`);
+  const orderDate = input.orderDate !== undefined ? orderDay(input.orderDate) : undefined;
   const account = await prismadb.crm_Accounts.findFirst({ where: { id: input.accountId, deletedAt: null } });
   if (!account) throw new Error(`Account not found: ${input.accountId}`);
   const lines = await externalLines(input.lines);
@@ -39,6 +47,7 @@ export async function pluginCreateOrder(pluginId: string, input: ExternalOrderIn
     return tx.crm_Orders.create({
       data: {
         number, seriesId, source: "EXTERNAL", externalRef: input.externalRef, status: input.status,
+        ...(orderDate ? { orderDate } : {}),
         accountId: account.id, ownerId: account.assigned_to ?? null, priceListId: null, currency,
         note: input.note ?? null, ...orderTotals(lines), lines: { create: lines },
       },
@@ -51,13 +60,14 @@ export async function pluginCreateOrder(pluginId: string, input: ExternalOrderIn
 export async function pluginUpdateOrder(pluginId: string, id: string, input: OrderUpdateInput) {
   const order = await prismadb.crm_Orders.findUnique({ where: { id } });
   if (!order) throw new Error(`Order not found: ${id}`);
-  if (input.lines && order.source !== "EXTERNAL") throw new Error("Plugins may replace lines on only EXTERNAL orders");
+  if ((input.lines || input.orderDate !== undefined) && order.source !== "EXTERNAL") throw new Error("Plugins may replace lines or set the order date on only EXTERNAL orders");
   const to = input.status as OrderStatus | undefined;
   const moving = !!to && to !== order.status;
   if (moving && !canPluginSet(order as unknown as OrderState, to!)) throw new Error(`Plugins cannot set ${to} on a ${order.status} order`);
   const extra: Record<string, unknown> = {};
   if (input.externalRef !== undefined) extra.externalRef = input.externalRef;
   if (input.note !== undefined) extra.note = input.note;
+  if (input.orderDate !== undefined) extra.orderDate = orderDay(input.orderDate);
   const lines = input.lines ? await externalLines(input.lines) : null;
   if (lines) Object.assign(extra, orderTotals(lines));
   if (!moving && !Object.keys(extra).length) return order;

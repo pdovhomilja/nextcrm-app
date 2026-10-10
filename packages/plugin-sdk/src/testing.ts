@@ -3,7 +3,8 @@ import type { ActivityQuery, Actor, Entity, EntityApi, FindArgs, NotifyInput, Or
 type Tables = "accounts" | "contacts" | "leads" | "opportunities" | "orders" | "users" | "products" | "activities";
 
 function matches(row: RecordData, where?: RecordData) {
-  return !where || Object.entries(where).every(([k, v]) => row[k] === v);
+  return !where || Object.entries(where).every(([k, v]) =>
+    v && typeof v === "object" && Array.isArray((v as { in?: unknown[] }).in) ? (v as { in: unknown[] }).in.includes(row[k]) : row[k] === v);
 }
 
 function table(rows: RecordData[]): EntityApi {
@@ -12,6 +13,8 @@ function table(rows: RecordData[]): EntityApi {
     async get(id) { return rows.find((r) => r.id === id) ?? null; },
     async find(args: FindArgs = {}) {
       const out = rows.filter((r) => matches(r, args.where));
+      const [[field, dir] = []] = Object.entries((Array.isArray(args.orderBy) ? args.orderBy[0] : args.orderBy) ?? {});
+      if (field) out.sort((a, b) => (String(a[field]) < String(b[field]) ? -1 : String(a[field]) > String(b[field]) ? 1 : 0) * (dir === "desc" ? -1 : 1));
       return out.slice(args.skip ?? 0, (args.skip ?? 0) + (args.take ?? out.length));
     },
     async create(data) { const row = { id: `test-${++seq}`, ...data }; rows.push(row); return row; },
