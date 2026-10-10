@@ -35,7 +35,16 @@
     "compareProgress": "Порівняння: {done} з {total} прайс-листів",
     "compareResult": "Останнє порівняння: {date}",
     "compareClean": "Розбіжностей немає.",
-    "compareFailed": "Порівняння не вдалося: {error}"
+    "compareFailed": "Порівняння не вдалося: {error}",
+    "orders": "Замовлення",
+    "ordersOff": "Надсилання замовлень вимкнено. Увімкніть sendOrders у налаштуваннях, щоб замовлення зі статусом READY надходили в Odoo.",
+    "ordersCounts": "Очікують надсилання {waiting} · надіслано за останні 7 днів {sent} · не вдалося {failed}",
+    "ordersPaused": "Надсилання призупинено з {date}: {reason}. Виправте права користувача Odoo й натисніть «Перевірити з'єднання».",
+    "ordersCreated": "Створено в Odoo",
+    "createdKind": {
+      "customer": "клієнт",
+      "delivery": "адреса доставки"
+    }
   },
   "needsOwner": {
     "title": "Імпортовані облікові записи без відповідального",
@@ -55,9 +64,35 @@
   },
   "mail": {
     "failingSubject": "Синхронізація з Odoo не вдається",
-    "failingText": "Синхронізація з Odoo тричі поспіль завершилася помилкою. Остання помилка: {error}"
+    "failingText": "Синхронізація з Odoo тричі поспіль завершилася помилкою. Остання помилка: {error}",
+    "pausedSubject": "Odoo відмовився приймати замовлення",
+    "pausedText": "Надсилання замовлень в Odoo призупинено: {error}. Виправте права користувача Odoo й натисніть «Перевірити з'єднання».",
+    "orderFailedSubject": "Замовлення {number} не надіслано в Odoo",
+    "orderFailedText": "Не вдалося надіслати замовлення {number} в Odoo: {error}. Усуньте причину й натисніть «Повторити» в замовленні."
   },
   "product": {
     "linked": "Товар Odoo #{id}"
+  },
+  "order": {
+    "linked": "Замовлення в Odoo {name}",
+    "state": "Стан в Odoo: {state}",
+    "createdCustomer": "Клієнта створено в Odoo",
+    "createdDelivery": "Адресу доставки створено в Odoo",
+    "priceDiffs": "Ціна відрізняється від Odoo",
+    "priceDiff": "{sku}: CRM {crm}, Odoo {odoo}",
+    "totalDiffers": "Сума замовлення в Odoo становить {odoo}; вона відрізняється від суми цього замовлення.",
+    "deliveries": "Доставки",
+    "invoices": "Рахунки",
+    "invoice": "{number} · сплатити до {due} · {amount}, залишок {residual} · {state}",
+    "waiting": "Очікує Odoo з {date}",
+    "lastError": "Остання помилка: {error}",
+    "failed": "Не надіслано: {reason}"
+  },
+  "orders": {
+    "noAccount": "Обліковий запис замовлення не має назви",
+    "notOdooProduct": "Товар {product} не походить з Odoo",
+    "noPriceList": "Клієнт не має прайс-листа в Odoo",
+    "currency": "Валюта замовлення {order} відрізняється від валюти прайс-листа Odoo {list}",
+    "otherLines": "Уже є в Odoo як {name} з іншими рядками; попросіть скасувати його в Odoo й натисніть «Повторити»"
   }
 }

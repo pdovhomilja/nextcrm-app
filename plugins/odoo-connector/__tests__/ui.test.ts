@@ -55,3 +55,40 @@ it("does not call a list applied when it was removed from the setting (review I2
   await ctx.store.set(K.pricelist(245), { priceListId: "L", name: "Gold", ruleCount: 1, syncedAt: "x", isActive: false });
   expect((await panelData(ctx, "a1"))?.priceList).toEqual({ name: "Gold", imported: false });
 });
+
+import { orderPanelData, ordersData } from "../ui/data";
+import plugin from "../plugin";
+import { mkOrders, order } from "./orders-helpers";
+
+describe("order screens", () => {
+  it("has no panel for an order the connector never touched", async () => {
+    const { ctx } = mkOrders();
+    expect(await orderPanelData(ctx, "o1")).toBeNull();
+  });
+
+  it("links the Odoo order and passes on waiting and failure details", async () => {
+    const { ctx } = mkOrders();
+    await ctx.store.set(K.order("o1"), { odooId: 900, name: "S00900", state: "sale", sentAt: "2026-10-13T08:00:00.000Z", total: 242, totalDiffers: false, priceDiffs: [], deliveries: [], invoices: [], created: ["customer"], checkedAt: "x" });
+    expect(await orderPanelData(ctx, "o1")).toMatchObject({ link: { name: "S00900", url: "https://odoo.example.com/odoo/action-sale.action_orders/900", created: ["customer"] }, waiting: null, failed: null });
+    await ctx.store.set(K.send("o2"), { attempts: 1, lastError: "Odoo error 503", waitingSince: "2026-10-13T08:00:00.000Z" });
+    expect(await orderPanelData(ctx, "o2")).toMatchObject({ link: null, waiting: { lastError: "Odoo error 503" } });
+  });
+
+  it("counts waiting, sent in 7 days and failed orders, with pause and created records", async () => {
+    const { ctx } = mkOrders({ orders: [order(), order({ id: "o2", number: "N2", status: "SYNC_FAILED" }), order({ id: "o3", status: "SENT", externalRef: "1" })] });
+    const at = new Date("2026-10-13T08:00:00Z");
+    await ctx.store.set(K.order("o3"), { sentAt: "2026-10-12T08:00:00.000Z" });
+    await ctx.store.set(K.order("o4"), { sentAt: "2026-10-01T08:00:00.000Z" });
+    await ctx.store.set(K.failed("o2"), { reason: "orders.notOdooProduct", at: "x" });
+    await ctx.store.set(K.sendPaused, { at: "y", reason: "403" });
+    await ctx.store.set(K.created, [{ at: "z", kind: "customer", odooId: 5, name: "Bubble", orderNumber: "N2" }]);
+    expect(await ordersData(ctx, at)).toEqual({
+      enabled: true, waiting: 1, sent: 1, failed: [{ orderId: "o2", number: "N2", reason: "orders.notOdooProduct", at: "x" }],
+      paused: { at: "y", reason: "403" }, created: [{ at: "z", kind: "customer", odooId: 5, name: "Bubble", orderNumber: "N2" }],
+    });
+  });
+
+  it("registers the order panel", () => {
+    expect(plugin.extensions.orderPanels.map((p) => p.id)).toEqual(["odoo"]);
+  });
+});

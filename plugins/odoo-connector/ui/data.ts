@@ -1,5 +1,5 @@
 import { chosenLists, type Ctx } from "../settings";
-import type { AccountLink, CompareResult, PriceListLink, RunSummary } from "../store";
+import type { AccountLink, CompareResult, CreatedRecord, FailedState, OrderLink, PriceListLink, RunSummary, SendState } from "../store";
 import { K } from "../store";
 
 export async function needsOwner(ctx: Ctx): Promise<{ accountId: string; name: string; salesperson: string | null }[]> {
@@ -50,4 +50,32 @@ export async function productPanelData(ctx: Ctx, productId: string) {
   if (!(await ctx.store.get(K.product(odooId)))) return null;
   const last = await ctx.store.get<RunSummary>(K.lastRun);
   return { odooId, url: `${ctx.settings.url.replace(/\/+$/, "")}/web#model=product.product&id=${odooId}&view_type=form`, syncedAt: last?.ok ? last.at : null };
+}
+
+export async function orderPanelData(ctx: Ctx, orderId: string) {
+  const link = await ctx.store.get<OrderLink>(K.order(orderId));
+  const waiting = await ctx.store.get<SendState>(K.send(orderId));
+  const failed = await ctx.store.get<FailedState>(K.failed(orderId));
+  if (!link && !waiting && !failed) return null;
+  return {
+    link: link ? { ...link, url: `${ctx.settings.url.replace(/\/+$/, "")}/odoo/action-sale.action_orders/${link.odooId}` } : null,
+    waiting, failed,
+  };
+}
+
+export async function ordersData(ctx: Ctx, now: Date) {
+  const waiting = ctx.settings.sendOrders ? (await ctx.data.orders.find({ where: { status: "READY", externalRef: null }, take: 500 })).length : 0;
+  const since = now.getTime() - 7 * 86_400_000;
+  const sent = (await ctx.store.list("order:")).filter((e) => Date.parse((e.value as OrderLink).sentAt) >= since).length;
+  const failed: ({ orderId: string; number: string } & FailedState)[] = [];
+  for (const e of await ctx.store.list("failed:")) {
+    const orderId = e.key.slice(7);
+    const o = await ctx.data.orders.get(orderId);
+    failed.push({ orderId, number: String(o?.number ?? orderId), ...(e.value as FailedState) });
+  }
+  return {
+    enabled: ctx.settings.sendOrders, waiting, sent, failed,
+    paused: await ctx.store.get<{ at: string; reason: string }>(K.sendPaused),
+    created: (await ctx.store.get<CreatedRecord[]>(K.created)) ?? [],
+  };
 }

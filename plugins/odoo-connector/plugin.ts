@@ -8,6 +8,7 @@ import { AdminSection } from "./ui/AdminSection";
 import { NeedsOwnerPage } from "./ui/NeedsOwnerPage";
 import { AccountPanel } from "./ui/AccountPanel";
 import { ProductPanel } from "./ui/ProductPanel";
+import { OrderPanel } from "./ui/OrderPanel";
 
 export default definePlugin({
   id: "odoo-connector",
@@ -27,6 +28,7 @@ export default definePlugin({
     x.adminAction({ id: "compare", label: "admin.compare", handler: (ctx) => queueJob(ctx, "compare", new Date()) });
     x.accountPanel({ id: "odoo", component: AccountPanel });
     x.productPanel({ id: "odoo", component: ProductPanel });
+    x.orderPanel({ id: "odoo", component: OrderPanel });
     x.page({ path: "needs-owner", title: "needsOwner.title", component: NeedsOwnerPage, roles: ["manager", "admin"], nav: { label: "needsOwner.nav" } });
     x.adminSection(AdminSection);
   },
