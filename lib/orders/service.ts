@@ -155,8 +155,13 @@ export async function updateDraft(user: AuthzUser, id: string, input: HeaderInpu
   const header = headerData(input);
   const lines = await Promise.all(input.lines.map((l, i) => priceLine(order, l, i)));
   await saveDraft(order, lines, user.id, header);
-  const changes = [...Object.keys(header).map((field) => ({ field, old: (order as Record<string, unknown>)[field] ?? null, new: header[field] })),
-    { field: "lines", old: order.lines.length, new: lines.length }];
+  const plain = (v: unknown) => (v instanceof Date ? v.toISOString() : v ?? null);
+  const changes = [
+    ...Object.keys(header)
+      .filter((field) => plain((order as Record<string, unknown>)[field]) !== plain(header[field]))
+      .map((field) => ({ field, old: (order as Record<string, unknown>)[field] ?? null, new: header[field] })),
+    { field: "lines", old: order.lines.length, new: lines.length },
+  ];
   await writeAuditLog({ entityType: "order", entityId: id, action: "updated", changes: changes as never, userId: user.id });
   return { id };
 }

@@ -119,3 +119,10 @@ it("deletes drafts only", async () => {
   db.crm_Orders.findFirst.mockResolvedValue(draft({ status: "CANCELLED" }));
   await expect(deleteDraft(rep, "o1")).rejects.toMatchObject({ code: "forbidden" });
 });
+
+it("audits only the header fields that changed", async () => {
+  db.crm_Orders.findFirst.mockResolvedValue(draft({ note: "rush", contactId: null, shipping_city: "Praha", requestedDeliveryDate: new Date("2026-10-20T00:00:00Z") }));
+  await updateDraft(rep, "o1", { note: "rush", contactId: null, shipping_city: "Brno", requestedDeliveryDate: "2026-10-20", lines: [] });
+  const changes = (writeAuditLog as jest.Mock).mock.calls.at(-1)[0].changes;
+  expect(changes).toEqual([{ field: "shipping_city", old: "Praha", new: "Brno" }, { field: "lines", old: 0, new: 0 }]);
+});
