@@ -70,5 +70,5 @@ jobs:
           COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
           UUIDS: ${{ vars.COOLIFY_DEPLOY_UUIDS }}
         run: |
-          curl -fsS -H "Authorization: Bearer $COOLIFY_TOKEN" \
+          curl -fsS -X POST -H "Authorization: Bearer $COOLIFY_TOKEN" \
             "${COOLIFY_URL%/}/api/v1/deploy?uuid=${UUIDS}&force=false"
