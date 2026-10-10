@@ -81,12 +81,14 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   dict: any;
   session: Session;
   pluginNav?: { title: string; url: string }[];
+  appName: string;
 }
 
 export function AppSidebar({
   dict,
   session,
   pluginNav,
+  appName,
   ...props
 }: AppSidebarProps) {
   const { state } = useSidebar();
@@ -157,7 +159,7 @@ export function AppSidebar({
               !isExpanded ? "w-0 opacity-0" : "w-auto opacity-100",
             )}
           >
-            {process.env.NEXT_PUBLIC_APP_NAME || "NextCRM"}
+            {appName}
           </h1>
         </div>
       </SidebarHeader>

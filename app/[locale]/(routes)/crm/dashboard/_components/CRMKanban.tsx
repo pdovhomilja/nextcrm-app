@@ -163,7 +163,7 @@ function OpportunityCard({ opportunity, router, onThumbsDown, stage, salesStages
               src={
                 opportunity.assigned_to_user?.avatar
                   ? opportunity.assigned_to_user.avatar
-                  : `${process.env.NEXT_PUBLIC_APP_URL}/images/nouser.png`
+                  : "/images/nouser.png"
               }
             />
           </Avatar>
