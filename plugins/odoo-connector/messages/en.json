@@ -3,6 +3,7 @@
   "admin": {
     "test": "Test connection",
     "syncNow": "Sync now",
+    "running": "A sync is already running.",
     "connected": "Connected to Odoo {version} as {user}",
     "dryRun": "Dry run is on: the sync only logs what it would change. Turn it off in the settings to import.",
     "lastRun": "Last run",
@@ -12,7 +13,7 @@
     "failed": "Failed: {error}",
     "conflicts": "Customers matching more than one account",
     "conflictsEmpty": "No conflicts.",
-    "reason": { "number": "same registration number", "vat": "same VAT number" }
+    "reason": { "number": "same registration number", "vat": "same VAT number", "linked": "already linked to another Odoo partner" }
   },
   "needsOwner": {
     "title": "Imported accounts without an owner",

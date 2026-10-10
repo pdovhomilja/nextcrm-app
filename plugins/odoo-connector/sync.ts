@@ -26,6 +26,8 @@ interface Run {
   fields: string[];
   countries: Map<number, string>;
   owners: Map<number, string | null>;
+  started: number;
+  done: Set<number>;
 }
 
 const CUSTOMER = [["customer_rank", ">", 0], ["parent_id", "=", false]];
@@ -35,12 +37,8 @@ async function ownerFor(r: Run, user: M2O | undefined): Promise<string | null> {
   if (!r.owners.has(user[0])) {
     const [u] = await r.client.call<{ login?: string; email?: string | false }[]>("res.users", "read", { ids: [user[0]], fields: ["login", "email"] });
     const email = (typeof u?.email === "string" && u.email) || u?.login || null;
-    let id: string | null = null;
-    for (const candidate of email ? Array.from(new Set([email, email.toLowerCase()])) : []) {
-      const [row] = await r.ctx.data.users.find({ where: { email: candidate, userStatus: "ACTIVE" }, take: 1 });
-      if (row) { id = row.id as string; break; }
-    }
-    r.owners.set(user[0], id);
+    const [row] = email ? await r.ctx.data.users.find({ where: { email: { equals: email, mode: "insensitive" }, userStatus: "ACTIVE" }, take: 1 }) : [];
+    r.owners.set(user[0], row ? (row.id as string) : null);
   }
   return r.owners.get(user[0]) ?? null;
 }
@@ -49,6 +47,7 @@ async function syncCustomer(r: Run, p: OdooPartner): Promise<void> {
   const { ctx, dry } = r;
   const link = await ctx.store.get<{ accountId: string }>(K.partner(p.id));
   if (p.active === false || !p.customer_rank) {
+    if (!dry) await ctx.store.delete(K.conflict(p.id));
     if (link && !dry) {
       const prev = await ctx.store.get<AccountLink>(K.account(link.accountId));
       await ctx.store.set(K.account(link.accountId), { partnerId: p.id, salesperson: prev?.salesperson ?? null, syncedAt: r.now.toISOString(), archived: p.active === false, notCustomer: !p.customer_rank } satisfies AccountLink);
@@ -60,7 +59,8 @@ async function syncCustomer(r: Run, p: OdooPartner): Promise<void> {
   const match = await matchAccount(ctx, p.id, fields);
   if (match.kind === "conflict") {
     r.counts.conflicts++;
-    if (!dry) await ctx.store.set(K.conflict(p.id), { partnerId: p.id, name: fields.name, reason: match.reason, candidates: match.candidates, foundAt: r.now.toISOString() } satisfies Conflict);
+    if (dry) ctx.log.info("Dry run: would conflict", { partnerId: p.id, reason: match.reason, candidates: match.candidates });
+    else await ctx.store.set(K.conflict(p.id), { partnerId: p.id, name: fields.name, reason: match.reason, candidates: match.candidates, foundAt: r.now.toISOString() } satisfies Conflict);
     return;
   }
   if (!dry) await ctx.store.delete(K.conflict(p.id));
@@ -71,7 +71,7 @@ async function syncCustomer(r: Run, p: OdooPartner): Promise<void> {
     salesperson = owner ? null : p.user_id ? p.user_id[1] : null;
     r.counts.created++;
     if (dry) { ctx.log.info("Dry run: would create account", { partnerId: p.id, ...fields, assigned_to: owner }); return; }
-    accountId = (await ctx.data.accounts.create({ ...fields, assigned_to: owner })).id as string;
+    accountId = (await ctx.data.accounts.create({ ...fields, assigned_to: owner, status: "Active" })).id as string;
   } else {
     accountId = match.accountId;
     const diff = changedFields((await ctx.data.accounts.get(accountId)) ?? {}, fields);
@@ -95,7 +95,7 @@ async function syncPerson(r: Run, p: OdooPartner): Promise<void> {
   const fields = contactFields(p);
   const link = await ctx.store.get<{ contactId: string }>(K.contact(p.id));
   let current = link ? await ctx.data.contacts.get(link.contactId) : null;
-  if (!current && fields.email) [current] = await ctx.data.contacts.find({ where: { accountsIDs: parent.accountId, email: fields.email }, take: 1 });
+  if (!current && fields.email) [current] = await ctx.data.contacts.find({ where: { accountsIDs: parent.accountId, email: { equals: fields.email, mode: "insensitive" } }, take: 1 });
   if (!current) {
     r.counts.created++;
     if (dry) { ctx.log.info("Dry run: would create contact", { partnerId: p.id, accountId: parent.accountId, ...fields }); return; }
@@ -113,14 +113,23 @@ async function syncPerson(r: Run, p: OdooPartner): Promise<void> {
   if (!dry) await ctx.store.set(K.contact(p.id), { contactId: current.id as string });
 }
 
-/** One partner's failure is logged and counted; a rejected key stops the run (spec § 3.1). */
+const dispatch = (r: Run, p: OdooPartner) => (p.parent_id ? syncPerson(r, p) : syncCustomer(r, p));
+
+/**
+ * One partner's failure is logged, counted and marked for retry on the next run, even if Odoo does not change it
+ * (review C1); a rejected key stops the run (spec § 3.1). A partner is handled once per run.
+ */
 async function guarded(r: Run, p: OdooPartner, fn: (r: Run, p: OdooPartner) => Promise<void>) {
+  if (r.done.has(p.id)) return;
+  r.done.add(p.id);
   try {
     await fn(r, p);
+    if (!r.dry) await r.ctx.store.delete(K.retry(p.id));
   } catch (e) {
     if (e instanceof OdooAuthError) throw e;
     r.counts.failed++;
     r.ctx.log.error(`Partner ${p.id} failed: ${e instanceof Error ? e.message : String(e)}`, { partnerId: p.id });
+    if (!r.dry) await r.ctx.store.set(K.retry(p.id), {});
   }
 }
 
@@ -131,6 +140,8 @@ async function pages(r: Run, domain: unknown[], order: string, fn: (r: Run, p: O
     });
     for (const p of rows) await guarded(r, p, fn);
     if (opts.onPage) await opts.onPage(rows);
+    // A long import keeps its lock, so a second run cannot start next to it.
+    await r.ctx.store.set(K.lock, { until: new Date(r.now.getTime() + Date.now() - r.started + LOCK_MS).toISOString() });
     if (rows.length < PAGE) return;
   }
 }
@@ -148,19 +159,26 @@ async function firstImport(r: Run): Promise<string | null> {
   return top;
 }
 
+/**
+ * Changed partners since the cursor, then the ones Odoo did not change but the CRM still owes: unlinked customers
+ * (conflicts, failed creates), partners marked for retry, and the people of customers linked in this run.
+ * The cursor moves only when the whole run succeeds (review I2).
+ */
 async function incremental(r: Run, cursor: string): Promise<string | null> {
   const since = odooTime(new Date(fromOdoo(cursor).getTime() - OVERLAP_MS));
   let top: string | null = cursor;
-  const save = async (rows: OdooPartner[]) => {
-    top = newest(rows, top);
-    if (!r.dry && top) await r.ctx.store.set(K.cursor, { at: top });
-  };
+  const track = async (rows: OdooPartner[]) => { top = newest(rows, top); };
   const linked = await linkedIds(r.ctx);
-  await pages(r, [["write_date", ">", since], ["parent_id", "=", false], "|", ["customer_rank", ">", 0], ["id", "in", linked]], "write_date asc, id asc", syncCustomer, { archived: true, onPage: save });
+  await pages(r, [["write_date", ">", since], ["parent_id", "=", false], "|", ["customer_rank", ">", 0], ["id", "in", linked]], "write_date asc, id asc", syncCustomer, { archived: true, onPage: track });
+  await pages(r, [...CUSTOMER, ["active", "=", true], ["id", "not in", linked]], "id asc", syncCustomer);
+  const retry = (await r.ctx.store.list("retry:")).map((e) => Number(e.key.slice(6)));
+  if (retry.length) await pages(r, [["id", "in", retry]], "id asc", dispatch, { archived: true });
   const parents = await linkedIds(r.ctx);
   if (parents.length) {
-    await pages(r, [["write_date", ">", since], ["type", "=", "contact"], ["parent_id", "in", parents]], "write_date asc, id asc", syncPerson, { archived: true, onPage: save });
+    await pages(r, [["write_date", ">", since], ["type", "=", "contact"], ["parent_id", "in", parents]], "write_date asc, id asc", syncPerson, { archived: true, onPage: track });
   }
+  const fresh = parents.filter((id) => !linked.includes(id));
+  if (fresh.length) await pages(r, [["parent_id", "in", fresh], ["type", "=", "contact"], ["active", "=", true]], "id asc", syncPerson);
   return top;
 }
 
@@ -174,11 +192,11 @@ export async function runSync(ctx: Ctx, client: OdooClient, now: Date): Promise<
   const dry = ctx.settings.dryRun;
   if (lock && Date.parse(lock.until) > now.getTime()) {
     ctx.log.info("Sync skipped: another run is in progress");
-    return { at: now.toISOString(), ok: true, dryRun: dry, ...zero() };
+    return { at: now.toISOString(), ok: false, dryRun: dry, ...zero(), error: ctx.t("admin.running") };
   }
   await ctx.store.set(K.lock, { until: new Date(now.getTime() + LOCK_MS).toISOString() });
-  const r: Run = { ctx, client, now, dry, counts: zero(), fields: [], countries: new Map(), owners: new Map() };
   const started = Date.now();
+  const r: Run = { ctx, client, now, dry, counts: zero(), fields: [], countries: new Map(), owners: new Map(), started, done: new Set() };
   let summary: RunSummary;
   try {
     const available = await client.call<Record<string, unknown>>("res.partner", "fields_get", { attributes: ["type"] });
@@ -204,8 +222,12 @@ export async function runSync(ctx: Ctx, client: OdooClient, now: Date): Promise<
   return summary;
 }
 
-/** Ruling 2: the cron runs every 5 minutes; a sync starts when syncMinutes have passed since the last one. */
+/**
+ * Ruling 2: the cron runs every 5 minutes; a sync starts when syncMinutes have passed since the last one.
+ * In dry run the schedule is paused; "Sync now" still runs (review).
+ */
 export async function scheduledSync(ctx: Ctx, now: Date, client: OdooClient = jsonClient(ctx)): Promise<boolean> {
+  if (ctx.settings.dryRun) return false;
   const last = await ctx.store.get<RunSummary>(K.lastRun);
   if (last && now.getTime() - Date.parse(last.at) < ctx.settings.syncMinutes * 60_000 - SLACK_MS) return false;
   await runSync(ctx, client, now);

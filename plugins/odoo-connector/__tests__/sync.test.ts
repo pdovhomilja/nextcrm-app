@@ -40,7 +40,7 @@ it("records a conflict and touches neither account (Review Focus 2)", async () =
   expect(accounts.map((a) => a.name)).toEqual(["A", "B"]);
 });
 
-it("is idempotent and restores Odoo's value over a CRM edit (Review Focus 1, 3)", async () => {
+it("is idempotent; Odoo's value replaces a CRM edit when the partner next changes in Odoo (Review Focus 1, 3)", async () => {
   const accounts: RecordData[] = [];
   const partners = [company(1, { company_registry: "27082440" })];
   const { ctx, client } = mk(partners, accounts);

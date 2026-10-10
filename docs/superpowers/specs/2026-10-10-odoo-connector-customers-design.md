@@ -67,7 +67,7 @@ Secret: `apiKey` (encrypted by the platform). `dryRun` defaults to on, so the fi
 
 - JSON-2 API: `POST {url}/json/2/{model}/{method}` with `Authorization: bearer {apiKey}`, `X-Odoo-Database: {database}`, JSON body of keyword arguments. Only `search_read`, `read` and `res.users/context_get` (connection test) are called in part 1.
 - Through `ctx.http.fetch` (host re-checked per redirect, credentials never sent cross-origin, private hosts refused unless the instance allows them).
-- Timeout 30 s. Network errors and 5xx: 3 attempts with 2 s, 4 s backoff. 401/403: no retry; the run stops and logs "Odoo rejected the API key". Other 4xx: no retry; logged with Odoo's error message.
+- Timeout 30 s. Network errors and 5xx: 3 attempts with 2 s, 4 s backoff. 401: no retry; the run stops and logs "Odoo rejected the API key". 403: no retry; the run stops and logs "Odoo denied access: <Odoo's message>" (final review). Other 4xx: no retry; logged with Odoo's error message.
 - The client sits behind an interface (`OdooClient`), so an XML-RPC implementation can replace it if an Odoo host blocks JSON-2 (risk § 6).
 
 ### 3.2 What comes in
@@ -79,9 +79,9 @@ Secret: `apiKey` (encrypted by the platform). `dryRun` defaults to on, so the fi
 ### 3.3 Runs
 
 - **First import** (`onInstall`, and by the cron whenever no cursor exists yet — the platform has no enable hook, so a plugin installed with `dryRun` on, or with a wrong key, imports on its first good run): customers page by page (100 per call, ordered by `id`), then people; the cursor is set to the newest `write_date` seen.
-- **Incremental** (cron every 5 minutes, runs when `syncMinutes` have passed): partners matching § 3.2 *or* now archived/no longer customers, with `write_date > cursor − 2 minutes`, ordered by `write_date, id`, 100 per page; the cursor moves after each page. A failed page stops the run; the next run resumes from the cursor. Re-processing a partner is idempotent.
+- **Incremental** (cron every 5 minutes, runs when `syncMinutes` have passed): partners matching § 3.2 *or* now archived/no longer customers, with `write_date > cursor − 2 minutes`, ordered by `write_date, id`, 100 per page. Then the partners Odoo did not change but the CRM still owes: unlinked active customers (conflicts, failed creates), partners whose last sync failed (`retry:<id>`), and the people of customers linked in this run. The cursor moves only when the whole run succeeds; a failed run is repeated from the old cursor (final review). Re-processing a partner is idempotent.
 - **Sync now:** an admin button that runs the incremental job immediately.
-- **Run lock:** a store key with an expiry (10 minutes) prevents overlapping runs.
+- **Run lock:** a store key with an expiry (10 minutes, renewed after each page) prevents overlapping runs. In dry run the scheduled sync is paused; only Sync now runs (final review).
 
 ### 3.4 Matching and fields (customers → accounts)
 
@@ -94,7 +94,7 @@ Links are stored both ways (`partner:<odooId>` → accountId, `account:<accountI
 
 Two or more accounts matching in step 2 or 3 → no link, a `conflict:<odooId>` entry (partner, candidate accounts, reason) for the admin list, and the partner is skipped until resolved (an admin links it by editing one of the accounts so only one matches, or deletes the duplicate).
 
-Synced fields (Odoo wins), written only when the Odoo value differs from the account's:
+Synced fields (Odoo wins), written only when the Odoo value differs from the account's; an empty Odoo value never clears a filled CRM value (Pavel, 2026-10-10):
 
 | Odoo | Account |
 |---|---|

@@ -67,7 +67,10 @@ export function contactFields(p: OdooPartner) {
 }
 export type ContactFields = ReturnType<typeof contactFields>;
 
-/** Only the keys whose value differs from the stored row (null and undefined are the same). */
+/**
+ * Only the keys whose value differs from the stored row. An empty Odoo value never clears a filled CRM value
+ * (Pavel 2026-10-10): Odoo wins only where it has something.
+ */
 export function changedFields<T extends Record<string, unknown>>(current: Record<string, unknown>, next: T): Partial<T> {
-  return Object.fromEntries(Object.entries(next).filter(([k, v]) => (current[k] ?? null) !== (v ?? null))) as Partial<T>;
+  return Object.fromEntries(Object.entries(next).filter(([k, v]) => v != null && (current[k] ?? null) !== v)) as Partial<T>;
 }

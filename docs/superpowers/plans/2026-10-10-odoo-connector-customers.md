@@ -43,7 +43,7 @@
 
 1. **The same Odoo customer is synced twice** (two runs, a retry, an overlapping cursor window): no duplicate account, no duplicate contact. Tests in Task 5 (idempotent re-run) and Task 6.
 2. **Two CRM accounts share the customer's registration number:** no link, a conflict, no update to either account. Test in Task 4 and Task 5.
-3. **A CRM user edits a synced field** (e.g. the name), then Odoo is unchanged: the next sync writes the Odoo value back only if Odoo's value differs from the account's — i.e. it restores it. Reasonable for "Odoo wins"; pinned by a test in Task 5 so the behaviour is deliberate.
+3. **A CRM user edits a synced field** (e.g. the name): the edit stays until the partner next changes in Odoo; then the sync writes Odoo's value over it (only partners changed since the cursor are read). An empty Odoo value never clears a filled CRM field (Pavel, 2026-10-10). Pinned by a test in Task 5 so the behaviour is deliberate.
 4. **Odoo rejects the key mid-run** (401 on page 3): the run stops, nothing after page 2 is processed, the cursor stays at the last good page, the log says why. Test in Task 5.
 5. **A CRM account linked to a partner is deleted in the CRM:** the next sync does not crash and does not resurrect it silently — it matches again (number/VAT/new). Test in Task 5.
 
@@ -871,7 +871,7 @@ it("records a conflict and touches neither account (Review Focus 2)", async () =
   expect(accounts.map((a) => a.name)).toEqual(["A", "B"]);
 });
 
-it("is idempotent and restores Odoo's value over a CRM edit (Review Focus 1, 3)", async () => {
+it("is idempotent; Odoo's value replaces a CRM edit when the partner next changes in Odoo (Review Focus 1, 3)", async () => {
   const accounts: RecordData[] = [];
   const partners = [company(1, { company_registry: "27082440" })];
   const { ctx, client } = mk(partners, accounts);

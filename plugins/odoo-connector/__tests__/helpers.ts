@@ -17,6 +17,7 @@ export function odoo(partners: RecordData[], users: RecordData[] = [{ id: 9, log
       if (op === "!=") return (x === undefined ? false : x) !== v;
       if (op === ">") return (x ?? "") > v;
       if (op === "in") return v.includes(x);
+      if (op === "not in") return !v.includes(x);
       throw new Error(op);
     };
     for (let i = 0; i < domain.length; i++) {

@@ -3,6 +3,7 @@ export const K = {
   account: (id: string) => `account:${id}`,           // → AccountLink
   contact: (id: number) => `contact:${id}`,           // → { contactId }
   conflict: (id: number) => `conflict:${id}`,         // → Conflict
+  retry: (id: number) => `retry:${id}`,               // → {} a partner whose last sync failed
   cursor: "meta:cursor",                              // → { at: Odoo write_date }
   lastRun: "meta:lastRun",                            // → RunSummary
   failures: "meta:failures",                          // → { count }
@@ -17,7 +18,7 @@ export interface AccountLink {
   notCustomer?: boolean;
 }
 
-export interface Conflict { partnerId: number; name: string; reason: "number" | "vat"; candidates: string[]; foundAt: string }
+export interface Conflict { partnerId: number; name: string; reason: "number" | "vat" | "linked"; candidates: string[]; foundAt: string }
 
 export interface RunSummary {
   at: string;

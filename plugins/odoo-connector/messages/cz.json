@@ -3,6 +3,7 @@
   "admin": {
     "test": "Otestovat spojení",
     "syncNow": "Synchronizovat teď",
+    "running": "Synchronizace už běží.",
     "connected": "Spojeno s Odoo {version} jako {user}",
     "dryRun": "Zkušební režim je zapnutý: synchronizace jen zapisuje do logu, co by změnila. Pro import ho vypněte v nastavení.",
     "lastRun": "Poslední běh",
@@ -12,7 +13,7 @@
     "failed": "Chyba: {error}",
     "conflicts": "Zákazníci odpovídající více účtům",
     "conflictsEmpty": "Žádné konflikty.",
-    "reason": { "number": "stejné IČO", "vat": "stejné DIČ" }
+    "reason": { "number": "stejné IČO", "vat": "stejné DIČ", "linked": "už propojeno s jiným partnerem v Odoo" }
   },
   "needsOwner": {
     "title": "Importované účty bez vlastníka",

@@ -30,14 +30,17 @@ export function jsonClient(ctx: Ctx, sleep: Sleep = realSleep): OdooClient {
         await sleep(BACKOFF[attempt]);
         continue;
       }
-      if (res.status === 401 || res.status === 403) throw new OdooAuthError(res.status);
+      if (res.status === 401) throw new OdooAuthError(res.status);
       if (res.status >= 500) {
         if (attempt >= BACKOFF.length) throw new OdooError(`Odoo error ${res.status}`, res.status);
         await sleep(BACKOFF[attempt]);
         continue;
       }
       const data = await res.json().catch(() => null);
-      if (!res.ok) throw new OdooError(`Odoo error ${res.status}: ${(data as { message?: string } | null)?.message ?? res.statusText}`, res.status);
+      const message = (data as { message?: string } | null)?.message ?? res.statusText;
+      // 403 is a missing access right (e.g. on countries or users), not a bad key.
+      if (res.status === 403) throw new OdooError(`Odoo denied access: ${message}`, 403);
+      if (!res.ok) throw new OdooError(`Odoo error ${res.status}: ${message}`, res.status);
       return data;
     }
   }
