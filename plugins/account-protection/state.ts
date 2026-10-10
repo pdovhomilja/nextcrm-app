@@ -9,19 +9,51 @@ export interface Registration {
   contactDeadline: string;
   protectedUntil: string;
   contactAt?: string;
+  /** The registration's own window (registeredAt + protectionDays); missing on 0.1.x records → protectedUntil. */
+  baseUntil?: string;
+  /** orderDate (ISO day) of the newest qualifying order. */
+  lastOrderAt?: string;
 }
 
 export const isoDay = (d: Date | string) => new Date(d).toISOString().slice(0, 10);
 
 export function newRegistration(key: string, ownerId: string, at: Date, s: Pick<Settings, "protectionDays" | "contactDays">): Registration {
   const contactDays = Math.min(s.contactDays, s.protectionDays);   // Ruling 5
+  const protectedUntil = new Date(at.getTime() + s.protectionDays * DAY).toISOString();
   return {
     key,
     ownerId,
     registeredAt: at.toISOString(),
     contactDeadline: new Date(at.getTime() + contactDays * DAY).toISOString(),
-    protectedUntil: new Date(at.getTime() + s.protectionDays * DAY).toISOString(),
+    protectedUntil,
+    baseUntil: protectedUntil,
   };
+}
+
+/** UTC midnight of `day` plus whole calendar months; the 31st becomes the month's last day. */
+export function addMonthsUtc(day: string, months: number): Date {
+  const [y, m, d] = day.slice(0, 10).split("-").map(Number);
+  const first = new Date(Date.UTC(y, m - 1 + months, 1));
+  const lastDay = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0)).getUTCDate();
+  return new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth(), Math.min(d, lastDay)));
+}
+
+/**
+ * Rule 3 (spec § 3.2): protection runs at least `orderMonths` from the newest qualifying order and never below
+ * the registration's own window; an order dated on or after the registration day, or one that still extends
+ * protection, counts as contact (rule 2).
+ */
+export function withOrders(reg: Registration, lastOrderDay: string | null, orderMonths: number): Registration {
+  const baseUntil = reg.baseUntil ?? reg.protectedUntil;
+  const fromOrder = lastOrderDay && orderMonths > 0 ? addMonthsUtc(lastOrderDay, orderMonths).toISOString() : null;
+  const next: Registration = { ...reg, baseUntil, protectedUntil: fromOrder && fromOrder > baseUntil ? fromOrder : baseUntil };
+  if (lastOrderDay) next.lastOrderAt = lastOrderDay;
+  else delete next.lastOrderAt;
+  // An order since the registration day is the contact (rule 2); an older order that still extends protection
+  // waives the contact deadline too, so a new owner of an ordering customer is not freed on day 30 (Pavel 2026-10-10).
+  const protects = !!fromOrder && fromOrder > baseUntil;
+  if (!next.contactAt && lastOrderDay && (lastOrderDay >= isoDay(reg.registeredAt) || protects)) next.contactAt = `${lastOrderDay}T00:00:00.000Z`;
+  return next;
 }
 
 /** Contact counts from the start of the registration day (spec §2: "on or after the registration date"). */

@@ -27,8 +27,7 @@ beforeEach(() => {
   db.crm_Orders.updateMany.mockResolvedValue({ count: 1 });
 });
 
-it("is SDK 0.2.0 with the order entity", () => {
-  expect(SDK_VERSION).toBe("0.2.0");
+it("maps crm_Orders to the order entity", () => {
   expect(MODEL_TO_ENTITY.crm_Orders).toBe("order");
 });
 
@@ -81,6 +80,27 @@ it("refuses to create EXTERNAL orders in statuses plugins may not set (review I5
   const api = createDataApi("conn", ["orders:write"]);
   for (const status of ["DRAFT", "PENDING_APPROVAL", "READY", "SYNC_FAILED"]) {
     await expect(api.orders.create({ accountId: "acc", externalRef: "SO2", status: status as never, lines: [] })).rejects.toThrow(`cannot create an order as ${status}`);
+  }
+  expect(db.crm_Orders.create).not.toHaveBeenCalled();
+});
+
+it("is SDK 0.2.1 (additive order dates)", () => expect(SDK_VERSION).toBe("0.2.1"));
+
+it("takes the external order date on create and update, EXTERNAL only", async () => {
+  const api = createDataApi("conn", ["orders:write"]);
+  await api.orders.create({ accountId: "acc", externalRef: "SO7", status: "CONFIRMED", orderDate: "2025-03-31", lines: [] });
+  expect(db.crm_Orders.create.mock.calls[0][0].data.orderDate).toEqual(new Date("2025-03-31T00:00:00Z"));
+  db.crm_Orders.findUnique.mockResolvedValue({ id: "o1", status: "CONFIRMED", source: "EXTERNAL", createdBy: null, externalRef: "SO7" });
+  await api.orders.update("o1", { orderDate: "2025-04-01" });
+  expect(db.crm_Orders.update.mock.calls.at(-1)[0].data).toMatchObject({ orderDate: new Date("2025-04-01T00:00:00Z") });
+  db.crm_Orders.findUnique.mockResolvedValue({ id: "o2", status: "CONFIRMED", source: "CRM", createdBy: "rep", externalRef: "SO8" });
+  await expect(api.orders.update("o2", { orderDate: "2025-04-01" })).rejects.toThrow("only EXTERNAL orders");
+});
+
+it("refuses malformed order dates (Review Focus 5)", async () => {
+  const api = createDataApi("conn", ["orders:write"]);
+  for (const orderDate of ["2026-13-40", "yesterday", "2026-02-30"]) {
+    await expect(api.orders.create({ accountId: "acc", externalRef: "SO9", status: "CONFIRMED", orderDate, lines: [] })).rejects.toThrow("Invalid orderDate");
   }
   expect(db.crm_Orders.create).not.toHaveBeenCalled();
 });

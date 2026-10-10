@@ -2,7 +2,7 @@ import type { AccountSlotProps } from "@nextcrm/plugin-sdk";
 import type { Settings } from "../settings";
 import { formatDay } from "../state";
 import type { HistoryEntry } from "../store";
-import { loadSummary, summaryText } from "./common";
+import { loadSummary, orderText, summaryText } from "./common";
 
 export async function ProtectionTab({ accountId, ctx }: AccountSlotProps<Settings>) {
   const { summary, reg, contactAt } = await loadSummary(ctx, accountId);
@@ -23,6 +23,12 @@ export async function ProtectionTab({ accountId, ctx }: AccountSlotProps<Setting
           <>
             <dt className="text-muted-foreground">{ctx.t("tab.contact")}</dt>
             <dd>{contactAt ? ctx.t("tab.contactYes", { date: formatDay(contactAt, ctx.locale) }) : ctx.t("tab.contactNo")}</dd>
+            {orderText(ctx, reg) && (
+              <>
+                <dt className="text-muted-foreground">{ctx.t("tab.order")}</dt>
+                <dd>{orderText(ctx, reg)}</dd>
+              </>
+            )}
           </>
         )}
       </dl>

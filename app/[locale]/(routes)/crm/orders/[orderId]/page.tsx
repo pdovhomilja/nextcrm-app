@@ -33,6 +33,7 @@ export default async function OrderPage(props: { params: Promise<{ orderId: stri
           <StatusBadge status={order.status} />
           <Link className="underline" href={`/crm/accounts/${order.accountId}`}>{order.accountName}</Link>
           {order.ownerName && <span>{t("owner")}: {order.ownerName}</span>}
+          {order.orderDate && <span>{t("date")}: {order.orderDate}</span>}
           {order.status === "PENDING_APPROVAL" && order.approvalRequestedAt && <span>{t("approvalPending", { date: order.approvalRequestedAt.slice(0, 10) })}</span>}
           {order.approvedAt && <span>{t("approved", { date: order.approvedAt.slice(0, 10) })}</span>}
           {order.status === "DRAFT" && order.approvalNote && <span className="text-destructive">{t("rejected", { note: order.approvalNote })}</span>}

@@ -55,12 +55,16 @@ export interface ExternalOrderInput {
   externalRef: string;
   status: Exclude<PluginOrderStatus, "SYNC_FAILED">;
   currency?: string;
+  /** ISO day (YYYY-MM-DD) of the order in the external system; defaults to today. */
+  orderDate?: string;
   note?: string | null;
   lines: OrderLineInput[];
 }
 export interface OrderUpdateInput {
   status?: PluginOrderStatus;
   externalRef?: string;
+  /** EXTERNAL orders only. */
+  orderDate?: string;
   note?: string | null;
   /** EXTERNAL orders only: replaces all lines. */
   lines?: OrderLineInput[];

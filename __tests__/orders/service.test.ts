@@ -131,3 +131,8 @@ it("reports a number collision clearly instead of a raw database error (review I
   db.crm_Orders.create.mockRejectedValueOnce(Object.assign(new Error("Unique constraint failed"), { code: "P2002", meta: { target: ["number"] } }));
   await expect(createOrder(rep, { accountId: "acc", lines: [] })).rejects.toMatchObject({ code: "numberTaken" });
 });
+
+it("never lets a user set the order date (no backdating)", async () => {
+  await createOrder(rep, { accountId: "acc", lines: [], orderDate: "2020-01-01" } as never);
+  expect(db.crm_Orders.create.mock.calls[0][0].data).not.toHaveProperty("orderDate");
+});

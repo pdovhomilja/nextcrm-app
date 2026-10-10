@@ -18,6 +18,7 @@
     "contact": "Nachgewiesener Kontakt",
     "contactYes": "Ja, am {date}",
     "contactNo": "Noch nicht",
+    "order": "Bestellungen", "lastOrder": "Letzte bestätigte Bestellung am {date}", "noOrder": "Noch keine bestätigte Bestellung",
     "history": "Verlauf der Verantwortlichen",
     "historyEmpty": "Noch keine Änderungen.",
     "nobody": "niemand",

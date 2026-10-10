@@ -32,3 +32,9 @@ export async function dueWithin(ctx: Ctx, now: Date): Promise<{ accountId: strin
     .filter((e) => e.day <= horizon)
     .map(({ accountId, day }) => ({ accountId, day }));
 }
+
+/** Ruling 3: the last confirmed order whenever one exists; "none yet" only while rule 3 is on. */
+export function orderText(ctx: Ctx, reg: Registration): string | null {
+  if (reg.lastOrderAt) return ctx.t("tab.lastOrder", { date: formatDay(reg.lastOrderAt, ctx.locale) });
+  return ctx.settings.orderMonths > 0 ? ctx.t("tab.noOrder") : null;
+}

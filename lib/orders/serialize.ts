@@ -28,6 +28,7 @@ export function serializeOrder(order: Row, actor?: OrderActor) {
     externalRef: (order.externalRef ?? null) as string | null, accountId: order.accountId as string, accountName: (order.account?.name ?? null) as string | null,
     contactId: (order.contactId ?? null) as string | null, ownerId: (order.ownerId ?? null) as string | null, ownerName: (order.owner?.name ?? null) as string | null,
     priceListId: (order.priceListId ?? null) as string | null, priceListName: (order.priceList?.name ?? null) as string | null, currency: order.currency as string,
+    orderDate: order.orderDate instanceof Date ? order.orderDate.toISOString().slice(0, 10) : ((order.orderDate ?? null) as string | null),
     shipping_street: order.shipping_street ?? null, shipping_city: order.shipping_city ?? null, shipping_state: order.shipping_state ?? null,
     shipping_postal_code: order.shipping_postal_code ?? null, shipping_country: order.shipping_country ?? null,
     requestedDeliveryDate: order.requestedDeliveryDate instanceof Date ? order.requestedDeliveryDate.toISOString().slice(0, 10) : null,
