@@ -11,6 +11,7 @@ export const productsSchema = z.object({
   sku: z.string().nullable(),
   type: z.string(),
   status: z.string(),
+  source: z.string().default("CRM"),
   unit_price: decimalLike,
   unit_cost: decimalLike.nullable(),
   currency: z.string(),

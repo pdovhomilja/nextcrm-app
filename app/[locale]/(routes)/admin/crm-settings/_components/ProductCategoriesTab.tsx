@@ -25,7 +25,7 @@ export function ProductCategoriesTab() {
   }, []);
   const save = (input: { id?: string; name: string; parentId: string | null; isActive: boolean }) => start(async () => {
     const res = await saveProductCategory(input);
-    if ("error" in res) { toast.error(res.error === "cycle" ? t("categoryCycle") : res.error); return; }
+    if ("error" in res) { toast.error(res.error === "external" ? t("categoryExternal") : res.error === "externalParent" ? t("categoryExternalParent") : res.error === "cycle" ? t("categoryCycle") : res.error); return; }
     setCats(await listProductCategories());
   });
   return (
@@ -39,17 +39,17 @@ export function ProductCategoriesTab() {
         <TableBody>
           {cats.map((c) => (
             <TableRow key={c.id}>
-              <TableCell>{c.name} <span className="text-xs text-muted-foreground">({c.productCount})</span></TableCell>
+              <TableCell>{c.name} <span className="text-xs text-muted-foreground">({c.productCount})</span>{c.source === "EXTERNAL" && <span className="ml-2 text-xs text-muted-foreground">{t("categoryExternal")}</span>}</TableCell>
               <TableCell>
-                <Select value={c.parentId ?? NONE} onValueChange={(v) => save({ id: c.id, name: c.name, parentId: v === NONE ? null : v, isActive: c.isActive })}>
+                <Select disabled={c.source === "EXTERNAL"} value={c.parentId ?? NONE} onValueChange={(v) => save({ id: c.id, name: c.name, parentId: v === NONE ? null : v, isActive: c.isActive })}>
                   <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value={NONE}>{t("noParent")}</SelectItem>
-                    {categoryOptionsFor(c.id, cats).map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
+                    {categoryOptionsFor(c.id, cats).filter((o) => cats.find((x) => x.id === o.id)?.source !== "EXTERNAL").map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </TableCell>
-              <TableCell><Switch checked={c.isActive} onCheckedChange={(v) => save({ id: c.id, name: c.name, parentId: c.parentId, isActive: v })} /></TableCell>
+              <TableCell><Switch disabled={c.source === "EXTERNAL"} checked={c.isActive} onCheckedChange={(v) => save({ id: c.id, name: c.name, parentId: c.parentId, isActive: v })} /></TableCell>
             </TableRow>
           ))}
         </TableBody>

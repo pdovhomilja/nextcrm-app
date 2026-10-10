@@ -7,7 +7,7 @@ jest.mock("@/lib/prisma", () => ({
   prismadb: {
     crm_PriceLists: { findUnique: jest.fn() },
     crm_SystemSettings: { upsert: jest.fn(), deleteMany: jest.fn(), findUnique: jest.fn() },
-    crm_ProductCategories: { findMany: jest.fn(), create: jest.fn(), update: jest.fn() },
+    crm_ProductCategories: { findMany: jest.fn(), findUnique: jest.fn().mockResolvedValue(null), create: jest.fn(), update: jest.fn() },
   },
 }));
 jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));

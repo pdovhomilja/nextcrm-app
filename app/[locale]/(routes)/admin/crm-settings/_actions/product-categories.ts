@@ -18,7 +18,7 @@ async function admin() {
 export async function listProductCategories() {
   if (!(await admin())) return [];
   const rows = await prismadb.crm_ProductCategories.findMany({ orderBy: [{ order: "asc" }, { name: "asc" }], include: { _count: { select: { products: true } } } });
-  return rows.map((r) => ({ id: r.id, name: r.name, parentId: r.parentId, isActive: r.isActive, productCount: r._count.products }));
+  return rows.map((r) => ({ id: r.id, name: r.name, parentId: r.parentId, isActive: r.isActive, source: r.source, productCount: r._count.products }));
 }
 
 export async function saveProductCategory(input: { id?: string; name: string; parentId: string | null; isActive: boolean }): Promise<{ data: { id: string } } | { error: string }> {
@@ -26,6 +26,8 @@ export async function saveProductCategory(input: { id?: string; name: string; pa
   if (!user) return { error: "Forbidden" };
   const { id, ...data } = input;
   if (!schema.safeParse(data).success) return { error: "invalid:name" };
+  if (id && (await prismadb.crm_ProductCategories.findUnique({ where: { id } }))?.source === "EXTERNAL") return { error: "external" };
+  if (data.parentId && (await prismadb.crm_ProductCategories.findUnique({ where: { id: data.parentId } }))?.source === "EXTERNAL") return { error: "externalParent" };
   if (id && data.parentId) {
     const all = await prismadb.crm_ProductCategories.findMany({ select: { id: true, parentId: true } });
     if (createsCategoryCycle(id, data.parentId, new Map(all.map((c) => [c.id, c.parentId])))) return { error: "cycle" };

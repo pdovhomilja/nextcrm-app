@@ -298,6 +298,11 @@ enum crm_Product_Status {
   ARCHIVED
 }
 
+enum crm_Product_Source {
+  CRM
+  EXTERNAL
+}
+
 enum crm_Billing_Period {
   MONTHLY
   QUARTERLY
@@ -1682,10 +1687,12 @@ model crm_ProductCategories {
   description String?
   order       Int      @default(0)
   isActive    Boolean  @default(true)
+  source      crm_Product_Source @default(CRM)
+  externalRef String?
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-  createdBy String    @db.Uuid
+  createdBy String?   @db.Uuid
   updatedBy String?   @db.Uuid
 
   products crm_Products[]
@@ -1695,6 +1702,8 @@ model crm_ProductCategories {
   parent     crm_ProductCategories?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
   children   crm_ProductCategories[] @relation("CategoryTree")
   priceRules crm_PriceListRules[]
+
+  @@unique([source, externalRef])
 }
 
 model crm_Products {
@@ -1715,10 +1724,13 @@ model crm_Products {
 
   categoryId String? @db.Uuid
 
+  source      crm_Product_Source @default(CRM)
+  externalRef String?
+
   v         Int       @default(0) @map("__v")
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-  createdBy String    @db.Uuid
+  createdBy String?   @db.Uuid
   updatedBy String?   @db.Uuid
   deletedAt DateTime?
   deletedBy String?   @db.Uuid
@@ -1738,6 +1750,8 @@ model crm_Products {
   @@index([createdBy])
   @@index([deletedAt])
   priceRules crm_PriceListRules[]
+
+  @@unique([source, externalRef])
 }
 
 model crm_AccountProducts {

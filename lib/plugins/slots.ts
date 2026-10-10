@@ -1,4 +1,4 @@
-import type { AccountPanelRegistration, AccountTabRegistration, CompanyRegistryProvider, OrderPanelRegistration, PageRegistration, Role } from "@nextcrm/plugin-sdk";
+import type { AccountPanelRegistration, AccountTabRegistration, CompanyRegistryProvider, OrderPanelRegistration, PageRegistration, ProductPanelRegistration, Role } from "@nextcrm/plugin-sdk";
 import type { RegisteredPlugin } from "./registry";
 import { getEnabledPlugins } from "./state";
 
@@ -22,6 +22,14 @@ export async function getOrderPanels(role: Role) {
   const out: { plugin: RegisteredPlugin; panel: OrderPanelRegistration }[] = [];
   for (const plugin of await getEnabledPlugins()) {
     for (const panel of plugin.definition.extensions.orderPanels) if (panel.roles.includes(role)) out.push({ plugin, panel });
+  }
+  return out;
+}
+
+export async function getProductPanels(role: Role) {
+  const out: { plugin: RegisteredPlugin; panel: ProductPanelRegistration }[] = [];
+  for (const plugin of await getEnabledPlugins()) {
+    for (const panel of plugin.definition.extensions.productPanels) if (panel.roles.includes(role)) out.push({ plugin, panel });
   }
   return out;
 }

@@ -22,12 +22,13 @@ export interface OdooPartner {
   active?: boolean;
   customer_rank?: number;
   write_date: string;
+  property_product_pricelist?: M2O;
 }
 
 /** Wanted fields; the sync keeps only those this Odoo has (Ruling 3). */
 export const PARTNER_FIELDS = [
   "id", "name", "is_company", "company_registry", "vat", "street", "street2", "city", "zip", "state_id", "country_id",
-  "email", "phone", "mobile", "function", "user_id", "parent_id", "type", "active", "customer_rank", "write_date",
+  "email", "phone", "mobile", "function", "user_id", "parent_id", "type", "active", "customer_rank", "write_date", "property_product_pricelist",
 ];
 
 const str = (v: unknown): string | null => (typeof v === "string" && v.trim() ? v.trim() : null);

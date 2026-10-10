@@ -90,7 +90,10 @@ The SDK re-exports `z` from zod. Use it so your schemas match the host's zod ver
 | `accounts:write`, `contacts:write`, `leads:write`, `opportunities:write` | `create` and `update` on that entity |
 | `activities:read` | `ctx.data.activities.find` and `findForRecord` |
 | `users:read` | `ctx.data.users.get` and `find` (never returns the password hash) |
-| `products:read` | `ctx.data.products.get` and `find` |
+| `products:read` | `ctx.data.products.get`, `find` and `findExternal`; `ctx.data.prices.get` |
+| `products:write` | `ctx.data.products.upsertExternal` and `ctx.data.productCategories.upsertExternal` |
+| `priceLists:read` | `ctx.data.priceLists.findExternal` |
+| `priceLists:write` | `ctx.data.priceLists.replaceExternal` |
 | `notify` | `ctx.notify()` |
 | `http` | `ctx.http.fetch()` |
 
@@ -123,6 +126,19 @@ Every handler, hook and component receives `ctx`:
 - Writes go through the normal Prisma client, so other plugins' rules run on them. Your own rules do not run on your own writes.
 - After a create or update, the data API sends `crm/<entity>.saved` with `source: <pluginId>`.
 - `activities.findForRecord(entity, id, { types?, status?, since?, take?, skip? })` returns activities linked to one record, newest first, without soft-deleted rows, at most 100. `since` filters on the activity `date`.
+
+#### Catalog (SDK 0.2.3)
+
+A plugin that syncs a catalog from another system writes only **external** rows, keyed by that system's id (`ref`). Users cannot edit external products, categories or price lists in the CRM. Decimals are passed as strings.
+
+- `products.upsertExternal(ref, fields)` creates or updates the external product with that ref (name, sku, description, type, status, unit_price, unit_cost, currency, tax_rate, unit, categoryRef) and returns `{ id, created }`. An SKU used by another product fails the call.
+- `products.findExternal()` lists external products as `{ id, ref, status }`.
+- `productCategories.upsertExternal(ref, { name, parentRef })` creates or updates an external category; the parent must already exist.
+- `priceLists.findExternal()` lists external price lists.
+- `priceLists.replaceExternal(ref, { name, currency, isActive }, rules)` writes the list and replaces all its rules in one transaction. Rules refer to products, categories and base lists by ref; an unknown ref fails the whole call and leaves the list unchanged. Write base lists first.
+- `prices.get({ priceListId, productId, quantity })` prices a product with the CRM's pricing engine and returns `{ price, currency, ruleId }`.
+
+There is no delete: archive a product with `status: "ARCHIVED"`.
 
 ### Store
 
@@ -196,6 +212,8 @@ A scheduled job with a 5-field cron expression, optionally prefixed with `TZ=<zo
 ### `x.accountTab({ id, title, component, roles? })` and `x.accountPanel({ id, component, roles? })`
 
 Adds a tab or a panel to the account detail page. `title` is a message key. `component` is a React Server Component that receives `{ accountId, ctx }`. `roles` defaults to all three roles.
+
+`x.orderPanel({ id, component, roles? })` and `x.productPanel({ id, component, roles? })` add a panel to the order or product detail page; the component receives `{ orderId, ctx }` or `{ productId, ctx }`.
 
 ### `x.page({ path, title, component, roles?, nav? })`
 

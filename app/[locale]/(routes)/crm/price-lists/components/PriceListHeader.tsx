@@ -38,6 +38,7 @@ export function PriceListHeader({ list, canWrite, currencies }: { list: PriceLis
         <span>{list.currency}</span>
         {!list.isActive && <Badge variant="secondary">{t("archived")}</Badge>}
         {list.source === "EXTERNAL" && <Badge>{t("syncedExternal")}</Badge>}
+        {list.usedAsBase && !list.isActive && <Badge variant="outline">{t("baseList")}</Badge>}
       </div>
     );
   }
