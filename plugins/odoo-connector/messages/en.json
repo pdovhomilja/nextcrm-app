@@ -3,6 +3,10 @@
   "admin": {
     "test": "Test connection",
     "syncNow": "Sync now",
+    "queued": "Queued: it starts within 5 minutes.",
+    "loadLists": "Load price lists",
+    "listsLoaded": "Loaded {count} price lists from Odoo.",
+    "compare": "Compare with Odoo",
     "running": "A sync is already running.",
     "connected": "Connected to Odoo {version} as {user}",
     "dryRun": "Dry run is on: the sync only logs what it would change. Turn it off in the settings to import.",

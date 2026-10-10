@@ -10,6 +10,8 @@ export const K = {
   pricelist: (id: number) => `pricelist:${id}`,       // → PriceListLink
   skipped: (id: number) => `skipped:${id}`,           // → { ruleId, reason }[] rules core cannot represent
   catalogCursor: "meta:catalogCursor",                // → { at: Odoo write_date }
+  job: (name: "sync" | "compare") => `job:${name}`,   // → { requestedAt }
+  odooLists: "meta:odooLists",                         // → { at, lists } loaded for the admin section
   cursor: "meta:cursor",                              // → { at: Odoo write_date }
   lastRun: "meta:lastRun",                            // → RunSummary
   failures: "meta:failures",                          // → { count }

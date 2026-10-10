@@ -6,7 +6,7 @@ it("declares a read-only Odoo connector", () => {
   expect(Object.keys(plugin.settings.shape)).toEqual(["url", "database", "syncMinutes", "defaultCountry", "dryRun", "priceLists"]);
   expect(Object.keys(plugin.secrets.shape)).toEqual(["apiKey"]);
   expect(plugin.extensions.crons.map((c) => [c.id, c.schedule])).toEqual([["sync", "*/5 * * * *"]]);
-  expect(plugin.extensions.adminActions.map((a) => a.id)).toEqual(["test", "sync"]);
+  expect(plugin.extensions.adminActions.map((a) => a.id)).toEqual(["test", "sync", "lists", "compare"]);
   expect(plugin.extensions.pages.map((p) => [p.path, p.roles, p.nav?.label])).toEqual([["needs-owner", ["manager", "admin"], "needsOwner.nav"]]);
   expect(plugin.extensions.accountPanels.map((p) => p.id)).toEqual(["odoo"]);
   expect(typeof plugin.onInstall).toBe("function");

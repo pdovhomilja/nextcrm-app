@@ -3,6 +3,10 @@
   "admin": {
     "test": "Verbindung testen",
     "syncNow": "Jetzt synchronisieren",
+    "queued": "In der Warteschlange: Start innerhalb von 5 Minuten.",
+    "loadLists": "Preislisten laden",
+    "listsLoaded": "{count} Preislisten aus Odoo geladen.",
+    "compare": "Mit Odoo vergleichen",
     "running": "Eine Synchronisierung läuft bereits.",
     "connected": "Verbunden mit Odoo {version} als {user}",
     "dryRun": "Testlauf ist an: Die Synchronisierung protokolliert nur, was sie ändern würde. Zum Importieren in den Einstellungen ausschalten.",

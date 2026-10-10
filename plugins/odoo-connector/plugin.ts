@@ -1,7 +1,8 @@
 import { definePlugin } from "@nextcrm/plugin-sdk";
 import { secretsSchema, settingsSchema } from "./settings";
 import { jsonClient, testConnection } from "./odoo";
-import { runSync, scheduledSync, summaryText } from "./sync";
+import { runSync, scheduledSync } from "./sync";
+import { loadPriceLists, queueJob, runQueued } from "./jobs";
 import { AdminSection } from "./ui/AdminSection";
 import { NeedsOwnerPage } from "./ui/NeedsOwnerPage";
 import { AccountPanel } from "./ui/AccountPanel";
@@ -16,9 +17,11 @@ export default definePlugin({
   settings: settingsSchema,
   secrets: secretsSchema,
   extensions: (x) => {
-    x.cron("sync", "*/5 * * * *", async (ctx) => { await scheduledSync(ctx, new Date()); });
+    x.cron("sync", "*/5 * * * *", async (ctx) => { const now = new Date(); await runQueued(ctx, now); await scheduledSync(ctx, now); });
     x.adminAction({ id: "test", label: "admin.test", handler: (ctx) => testConnection(ctx) });
-    x.adminAction({ id: "sync", label: "admin.syncNow", handler: async (ctx) => summaryText(ctx, await runSync(ctx, jsonClient(ctx), new Date())) });
+    x.adminAction({ id: "sync", label: "admin.syncNow", handler: (ctx) => queueJob(ctx, "sync", new Date()) });
+    x.adminAction({ id: "lists", label: "admin.loadLists", handler: (ctx) => loadPriceLists(ctx) });
+    x.adminAction({ id: "compare", label: "admin.compare", handler: (ctx) => queueJob(ctx, "compare", new Date()) });
     x.accountPanel({ id: "odoo", component: AccountPanel });
     x.page({ path: "needs-owner", title: "needsOwner.title", component: NeedsOwnerPage, roles: ["manager", "admin"], nav: { label: "needsOwner.nav" } });
     x.adminSection(AdminSection);

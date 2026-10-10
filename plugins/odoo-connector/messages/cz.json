@@ -3,6 +3,10 @@
   "admin": {
     "test": "Otestovat spojení",
     "syncNow": "Synchronizovat teď",
+    "queued": "Zařazeno: spustí se do 5 minut.",
+    "loadLists": "Načíst ceníky",
+    "listsLoaded": "Načteno {count} ceníků z Odoo.",
+    "compare": "Porovnat s Odoo",
     "running": "Synchronizace už běží.",
     "connected": "Spojeno s Odoo {version} jako {user}",
     "dryRun": "Zkušební režim je zapnutý: synchronizace jen zapisuje do logu, co by změnila. Pro import ho vypněte v nastavení.",
