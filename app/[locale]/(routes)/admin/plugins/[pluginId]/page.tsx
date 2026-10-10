@@ -15,6 +15,8 @@ import { PluginSettingsForm } from "../_components/PluginSettingsForm";
 import { PluginStatusControls } from "../_components/PluginStatusControls";
 import { UninstallDialog } from "../_components/UninstallDialog";
 import { PluginLogTable } from "../_components/PluginLogTable";
+import { PluginAdminActions } from "../_components/PluginAdminActions";
+import { translatePluginMessage } from "@/lib/plugins/i18n";
 
 export default async function PluginDetailPage({ params }: { params: Promise<{ pluginId: string }> }) {
   const { pluginId } = await params;
@@ -25,6 +27,7 @@ export default async function PluginDetailPage({ params }: { params: Promise<{ p
   const plugin = findPlugin(pluginId);
   const state = await getPluginState(pluginId);
   const summary = state ? await getUninstallSummary(pluginId) : null;
+  const locale = (await getLocale()) as Locale;
 
   return (
     <div className="space-y-4">
@@ -38,6 +41,9 @@ export default async function PluginDetailPage({ params }: { params: Promise<{ p
           {row.status === "MISSING" && <p>{t("missing")}</p>}
           <div className="flex flex-wrap gap-2">
             {state && plugin && <PluginStatusControls pluginId={pluginId} enabled={state.status === "ENABLED"} />}
+            {state?.status === "ENABLED" && plugin && plugin.definition.extensions.adminActions.length > 0 && (
+              <PluginAdminActions pluginId={pluginId} actions={plugin.definition.extensions.adminActions.map((a) => ({ id: a.id, label: translatePluginMessage(pluginId, a.label, undefined, locale) }))} />
+            )}
             {state && summary && <UninstallDialog pluginId={pluginId} name={row.name} entries={summary.entries} records={summary.records} />}
           </div>
         </CardContent>

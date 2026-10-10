@@ -1,0 +1,36 @@
+{
+  "name": "Odoo connector",
+  "admin": {
+    "test": "Test connection",
+    "syncNow": "Sync now",
+    "running": "A sync is already running.",
+    "connected": "Connected to Odoo {version} as {user}",
+    "dryRun": "Dry run is on: the sync only logs what it would change. Turn it off in the settings to import.",
+    "lastRun": "Last run",
+    "never": "not yet",
+    "nextRun": "Next run",
+    "counts": "{created} created, {updated} updated, {unchanged} unchanged, {skipped} skipped, {conflicts} conflicts, {failed} failed",
+    "failed": "Failed: {error}",
+    "conflicts": "Customers matching more than one account",
+    "conflictsEmpty": "No conflicts.",
+    "reason": { "number": "same registration number", "vat": "same VAT number", "linked": "already linked to another Odoo partner" }
+  },
+  "needsOwner": {
+    "title": "Imported accounts without an owner",
+    "nav": "Needs owner",
+    "empty": "Every imported account has an owner.",
+    "account": "Account",
+    "salesperson": "Salesperson in Odoo"
+  },
+  "panel": {
+    "linked": "Linked to Odoo partner #{id}",
+    "synced": "Last synced {date} UTC",
+    "fields": "Odoo controls: name, registration number, VAT, billing address, email, phone.",
+    "archived": "Archived in Odoo.",
+    "notCustomer": "No longer a customer in Odoo."
+  },
+  "mail": {
+    "failingSubject": "Odoo sync is failing",
+    "failingText": "The Odoo sync failed three times in a row. Last error: {error}"
+  }
+}

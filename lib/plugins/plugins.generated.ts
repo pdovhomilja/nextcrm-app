@@ -5,6 +5,11 @@ import public_account_protection_en from "@/plugins/account-protection/messages/
 import public_account_protection_cz from "@/plugins/account-protection/messages/cz.json";
 import public_account_protection_de from "@/plugins/account-protection/messages/de.json";
 import public_account_protection_uk from "@/plugins/account-protection/messages/uk.json";
+import public_odoo_connector from "@/plugins/odoo-connector/plugin";
+import public_odoo_connector_en from "@/plugins/odoo-connector/messages/en.json";
+import public_odoo_connector_cz from "@/plugins/odoo-connector/messages/cz.json";
+import public_odoo_connector_de from "@/plugins/odoo-connector/messages/de.json";
+import public_odoo_connector_uk from "@/plugins/odoo-connector/messages/uk.json";
 import public_registry_ares from "@/plugins/registry-ares/plugin";
 import public_registry_ares_en from "@/plugins/registry-ares/messages/en.json";
 import public_registry_ares_cz from "@/plugins/registry-ares/messages/cz.json";
@@ -13,5 +18,6 @@ import public_registry_ares_uk from "@/plugins/registry-ares/messages/uk.json";
 
 export const generatedPlugins: GeneratedPluginEntry[] = [
   { source: "public", definition: public_account_protection, messages: { en: public_account_protection_en, cz: public_account_protection_cz, de: public_account_protection_de, uk: public_account_protection_uk } },
+  { source: "public", definition: public_odoo_connector, messages: { en: public_odoo_connector_en, cz: public_odoo_connector_cz, de: public_odoo_connector_de, uk: public_odoo_connector_uk } },
   { source: "public", definition: public_registry_ares, messages: { en: public_registry_ares_en, cz: public_registry_ares_cz, de: public_registry_ares_de, uk: public_registry_ares_uk } },
 ];

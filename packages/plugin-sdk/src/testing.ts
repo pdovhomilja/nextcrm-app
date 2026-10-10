@@ -2,9 +2,20 @@ import type { ActivityQuery, Actor, Entity, EntityApi, FindArgs, NotifyInput, Or
 
 type Tables = "accounts" | "contacts" | "leads" | "opportunities" | "orders" | "users" | "products" | "activities";
 
+function matchValue(actual: unknown, v: unknown): boolean {
+  if (v === null) return actual == null; // an unset column is null in the database
+  if (typeof v !== "object") return actual === v;
+  const f = v as { in?: unknown[]; equals?: unknown; mode?: string };
+  if (Array.isArray(f.in)) return f.in.includes(actual);
+  if ("equals" in f) {
+    return f.mode === "insensitive" && typeof actual === "string" && typeof f.equals === "string"
+      ? actual.toLowerCase() === f.equals.toLowerCase() : actual === f.equals;
+  }
+  return actual === v;
+}
+
 function matches(row: RecordData, where?: RecordData) {
-  return !where || Object.entries(where).every(([k, v]) =>
-    v && typeof v === "object" && Array.isArray((v as { in?: unknown[] }).in) ? (v as { in: unknown[] }).in.includes(row[k]) : row[k] === v);
+  return !where || Object.entries(where).every(([k, v]) => matchValue(row[k], v));
 }
 
 function table(rows: RecordData[]): EntityApi {
