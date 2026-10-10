@@ -3,7 +3,8 @@ import { numberKey } from "./key";
 import { ownerOf } from "./rules";
 import { contactTypes, type Ctx } from "./settings";
 import { contactSince, dueDay, evaluate, isoDay, newRegistration, type Registration } from "./state";
-import { K, addHistory, clearRegistration, lastHistory, startRegistration, type Notice } from "./store";
+import { K, addHistory, clearRegistration, lastHistory, type Notice } from "./store";
+import { recomputeFromOrders, register } from "./orders";
 
 const MANAGERS = ["manager", "admin"] as const;   // Ruling 7
 const DAY = 86_400_000;
@@ -35,7 +36,7 @@ export async function resume(ctx: Ctx, now: Date): Promise<void> {
         const reg = await ctx.store.get<Registration>(K.reg(id));
         if (reg && (lapsed(reg.protectedUntil) || (!reg.contactAt && lapsed(reg.contactDeadline)))) {
           await clearRegistration(ctx.store, id);
-          await startRegistration(ctx.store, id, newRegistration(reg.key, reg.ownerId, now, ctx.settings));
+          await register(ctx, id, newRegistration(reg.key, reg.ownerId, now, ctx.settings));
         }
       } catch (e) {
         ctx.log.error(`Catch-up after a pause failed for account ${id}: ${String(e)}`);
@@ -67,8 +68,11 @@ export async function expire(ctx: Ctx, now: Date): Promise<void> {
     const accountId = entry.key.slice(15);
     if (day > today) continue;
     try {
-      const reg = await ctx.store.get<Registration>(K.reg(accountId));
-      if (!reg) { await ctx.store.delete(entry.key); continue; }
+      const stored = await ctx.store.get<Registration>(K.reg(accountId));
+      if (!stored) { await ctx.store.delete(entry.key); continue; }
+      // Rule 3: an order may extend protection or count as contact; recompute moves the due entry itself.
+      const reg = (await recomputeFromOrders(accountId, ctx)) ?? stored;
+      if (dueDay(reg) > today) continue;
       let verdict: string = evaluate(reg, now);
       if (verdict === "check-contact") {
         const [contact] = await ctx.data.activities.findForRecord("account", accountId, {
@@ -142,8 +146,12 @@ export async function install(ctx: Ctx, at: Date): Promise<void> {
   }
 }
 
-/** 0.1.1: installs from 0.1.0 have no run marker, so a later re-enable could not be detected; also prune stale conflicts. */
+/**
+ * 0.1.1: installs from 0.1.0 have no run marker, so a later re-enable could not be detected; also prune stale conflicts.
+ * 0.2.0: registrations gain baseUntil and order-based protection (rule 3).
+ */
 export async function upgrade(ctx: Ctx, at: Date): Promise<void> {
   if (!(await ctx.store.get(K.lastRun))) await ctx.store.set(K.lastRun, { at: at.toISOString() });
   await pruneConflicts(ctx, at);
+  for (const entry of await ctx.store.list("reg:")) await recomputeFromOrders(entry.key.slice(4), ctx);
 }
