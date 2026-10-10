@@ -80,6 +80,7 @@ export default async function AppLayout({
       contracts: dict("crm.contracts"),
       products: dict("crm.products"),
       priceLists: dict("crm.priceLists"),
+      orders: dict("crm.orders"),
       targets: dict("crm.targets"),
       targetLists: dict("crm.targetLists"),
     },

@@ -158,3 +158,11 @@ it("does not resolve the actor when no plugin listens", async () => {
   await interceptWrite({ model: "crm_Accounts", operation: "create", args: { data: {} }, query: async () => ({ id: "n" }) }, deps);
   expect(deps.resolveActor).not.toHaveBeenCalled();
 });
+
+it("emits nothing when a conditional updateMany matched no row (orders review I3)", async () => {
+  const deps = mkDeps({ afterTargets: jest.fn(async () => ["conn"]), findManyExisting: jest.fn(async () => [{ id: "o1", status: "PENDING_APPROVAL" }]) });
+  await interceptWrite({ model: "crm_Orders", operation: "updateMany", args: { where: { id: "o1", status: "PENDING_APPROVAL" }, data: { status: "READY" } }, query: async () => ({ count: 0 }) }, deps);
+  expect(deps.sendAfter).not.toHaveBeenCalled();
+  await interceptWrite({ model: "crm_Orders", operation: "updateMany", args: { where: { id: "o1", status: "PENDING_APPROVAL" }, data: { status: "READY" } }, query: async () => ({ count: 1 }) }, deps);
+  expect(deps.sendAfter).toHaveBeenCalledWith("conn", expect.objectContaining({ entity: "order", operation: "updated", recordId: "o1", changed: ["status"] }));
+});

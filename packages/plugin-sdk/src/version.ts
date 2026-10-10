@@ -1,4 +1,4 @@
-export const SDK_VERSION = "0.1.1";
+export const SDK_VERSION = "0.2.0";
 
 const SEMVER = /^(\d+)\.(\d+)\.(\d+)$/;
 

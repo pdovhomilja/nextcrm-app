@@ -6,7 +6,7 @@ export type Locale = (typeof LOCALES)[number];
 
 export type Role = "user" | "manager" | "admin";
 
-export const ENTITIES = ["account", "contact", "lead", "opportunity"] as const;
+export const ENTITIES = ["account", "contact", "lead", "opportunity", "order"] as const;
 export type Entity = (typeof ENTITIES)[number];
 
 export type BeforeOperation = "beforeCreate" | "beforeUpdate" | "beforeDelete";
@@ -17,6 +17,7 @@ export const PERMISSIONS = [
   "contacts:read", "contacts:write",
   "leads:read", "leads:write",
   "opportunities:read", "opportunities:write",
+  "orders:read", "orders:write",
   "activities:read", "users:read", "products:read",
   "notify", "http",
 ] as const;
@@ -47,6 +48,29 @@ export interface EntityApi extends ReadApi {
   update(id: string, data: RecordData): Promise<RecordData>;
 }
 
+export type PluginOrderStatus = "SENT" | "CONFIRMED" | "DELIVERED" | "INVOICED" | "PAID" | "SYNC_FAILED" | "CANCELLED";
+export interface OrderLineInput { productId: string; quantity: number | string; unitPrice: number | string }
+export interface ExternalOrderInput {
+  accountId: string;
+  externalRef: string;
+  status: Exclude<PluginOrderStatus, "SYNC_FAILED">;
+  currency?: string;
+  note?: string | null;
+  lines: OrderLineInput[];
+}
+export interface OrderUpdateInput {
+  status?: PluginOrderStatus;
+  externalRef?: string;
+  note?: string | null;
+  /** EXTERNAL orders only: replaces all lines. */
+  lines?: OrderLineInput[];
+}
+/** Orders: `get` includes `lines`; plugins create only EXTERNAL orders and set only forward or failure statuses. */
+export interface OrdersApi extends ReadApi {
+  create(data: ExternalOrderInput): Promise<RecordData>;
+  update(id: string, data: OrderUpdateInput): Promise<RecordData>;
+}
+
 export interface ActivityQuery {
   types?: string[];
   status?: "scheduled" | "completed" | "cancelled";
@@ -65,6 +89,7 @@ export interface DataApi {
   contacts: EntityApi;
   leads: EntityApi;
   opportunities: EntityApi;
+  orders: OrdersApi;
   activities: ActivitiesApi;
   users: ReadApi;
   products: ReadApi;
@@ -158,6 +183,11 @@ export interface AccountSlotProps<S = RecordData, K = RecordData> {
   ctx: PluginContext<S, K>;
 }
 
+export interface OrderSlotProps<S = RecordData, K = RecordData> {
+  orderId: string;
+  ctx: PluginContext<S, K>;
+}
+
 export interface PageProps<S = RecordData, K = RecordData> {
   path: string[];
   searchParams: Record<string, string | string[] | undefined>;
@@ -190,6 +220,7 @@ export interface EventRegistration { event: string; handler: EventHandler<any, a
 export interface CronRegistration { id: string; schedule: string; handler: JobHandler<any, any> }
 export interface AccountTabRegistration { id: string; title: string; component: ServerComponent<AccountSlotProps<any, any>>; roles: Role[] }
 export interface AccountPanelRegistration { id: string; component: ServerComponent<AccountSlotProps<any, any>>; roles: Role[] }
+export interface OrderPanelRegistration { id: string; component: ServerComponent<OrderSlotProps<any, any>>; roles: Role[] }
 export interface PageRegistration { path: string; title: string; component: ServerComponent<PageProps<any, any>>; roles: Role[]; nav?: { label: string } }
 
 export interface PluginExtensions {
@@ -199,6 +230,7 @@ export interface PluginExtensions {
   crons: CronRegistration[];
   accountTabs: AccountTabRegistration[];
   accountPanels: AccountPanelRegistration[];
+  orderPanels: OrderPanelRegistration[];
   pages: PageRegistration[];
   adminSections: ServerComponent<AdminSectionProps<any, any>>[];
   companyRegistries: CompanyRegistryProvider<any, any>[];
@@ -211,6 +243,7 @@ export interface ExtensionBuilder<S, K> {
   cron(id: string, schedule: string, handler: JobHandler<S, K>): void;
   accountTab(tab: { id: string; title: string; component: ServerComponent<AccountSlotProps<S, K>>; roles?: Role[] }): void;
   accountPanel(panel: { id: string; component: ServerComponent<AccountSlotProps<S, K>>; roles?: Role[] }): void;
+  orderPanel(panel: { id: string; component: ServerComponent<OrderSlotProps<S, K>>; roles?: Role[] }): void;
   page(page: { path: string; title: string; component: ServerComponent<PageProps<S, K>>; roles?: Role[]; nav?: { label: string } }): void;
   adminSection(component: ServerComponent<AdminSectionProps<S, K>>): void;
   companyRegistry(provider: CompanyRegistryProvider<S, K>): void;

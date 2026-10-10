@@ -51,3 +51,9 @@ describe("definePlugin", () => {
     expect(modify({ name: "X" })).toEqual({ kind: "modify", patch: { name: "X" } });
   });
 });
+
+it("registers order panels with default roles", () => {
+  const def = definePlugin({ ...base, extensions: (x) => x.orderPanel({ id: "sync", component: () => null }) });
+  expect(def.extensions.orderPanels).toEqual([expect.objectContaining({ id: "sync", roles: ["user", "manager", "admin"] })]);
+  expect(() => definePlugin({ ...base, extensions: (x) => { x.orderPanel({ id: "a", component: () => null }); x.orderPanel({ id: "a", component: () => null }); } })).toThrow("Duplicate order panel id");
+});

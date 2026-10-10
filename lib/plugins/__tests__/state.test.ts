@@ -4,7 +4,7 @@ const findMany = jest.fn();
 let mockEmptyRegistry = false;
 jest.mock("@/lib/prisma-base", () => ({ prismaBase: { installedPlugin: { findMany: (...a: unknown[]) => findMany(...a) } } }));
 jest.mock("@/lib/plugins/registry", () => {
-  const mk = (id: string) => ({ source: "public", messages: {}, definition: definePlugin({ id, name: id.toUpperCase(), version: "1.0.0", sdk: "^0.1.0", description: "d", permissions: [], extensions: () => {} }) });
+  const mk = (id: string) => ({ source: "public", messages: {}, definition: definePlugin({ id, name: id.toUpperCase(), version: "1.0.0", sdk: "^0.2.0", description: "d", permissions: [], extensions: () => {} }) });
   const reg = [mk("alpha"), mk("beta"), mk("gamma")];
   return { getRegistry: () => (mockEmptyRegistry ? [] : reg), findPlugin: (id: string) => reg.find((p) => p.definition.id === id) };
 });

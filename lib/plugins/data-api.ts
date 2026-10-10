@@ -22,6 +22,7 @@ const SAVED_EVENT: Record<string, string> = {
   crm_Contacts: "crm/contact.saved",
   crm_Leads: "crm/lead.saved",
   crm_Opportunities: "crm/opportunity.saved",
+  crm_Orders: "crm/order.saved",
 };
 
 const LOGICAL = new Set(["AND", "OR", "NOT"]);
@@ -86,6 +87,27 @@ export function createDataApi(pluginId: string, permissions: Permission[]): Data
     contacts: entity("crm_Contacts", "contacts:read", "contacts:write"),
     leads: entity("crm_Leads", "leads:read", "leads:write"),
     opportunities: entity("crm_Opportunities", "opportunities:read", "opportunities:write"),
+    orders: {
+      ...read("crm_Orders", "orders:read"),
+      async get(id) {
+        need("orders:read");
+        return (await (await db()).crm_Orders.findUnique({ where: { id }, include: { lines: true } })) as RecordData | null;
+      },
+      async create(data) {
+        need("orders:write");
+        const { pluginCreateOrder } = await import("@/lib/orders/plugin-writes");
+        const row = (await runAsActor({ type: "plugin", pluginId }, () => pluginCreateOrder(pluginId, data))) as unknown as RecordData;
+        await emitSaved(pluginId, "crm_Orders", row.id as string);
+        return row;
+      },
+      async update(id, data) {
+        need("orders:write");
+        const { pluginUpdateOrder } = await import("@/lib/orders/plugin-writes");
+        const row = (await runAsActor({ type: "plugin", pluginId }, () => pluginUpdateOrder(pluginId, id, data))) as unknown as RecordData;
+        await emitSaved(pluginId, "crm_Orders", id);
+        return row;
+      },
+    },
     activities: {
       find: read("crm_Activities", "activities:read").find,
       async findForRecord(entityType, entityId, query = {}) {

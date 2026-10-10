@@ -6,7 +6,7 @@ const delegate = {
 };
 const send = jest.fn().mockRejectedValue(new Error("inngest down"));
 const writePluginLog = jest.fn();
-jest.mock("@/lib/prisma", () => ({ prismadb: { users: delegate, crm_Accounts: delegate, crm_Contacts: delegate, crm_Leads: delegate, crm_Opportunities: delegate, crm_Activities: delegate, crm_Products: delegate } }));
+jest.mock("@/lib/prisma", () => ({ prismadb: { users: delegate, crm_Accounts: delegate, crm_Contacts: delegate, crm_Leads: delegate, crm_Opportunities: delegate, crm_Orders: delegate, crm_Activities: delegate, crm_Products: delegate } }));
 jest.mock("@/inngest/client", () => ({ inngest: { send: (...a: unknown[]) => send(...a) } }));
 jest.mock("@/lib/plugins/log", () => ({ writePluginLog: (...a: unknown[]) => writePluginLog(...a) }));
 
