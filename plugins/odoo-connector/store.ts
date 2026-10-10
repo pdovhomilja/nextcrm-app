@@ -12,6 +12,8 @@ export const K = {
   catalogCursor: "meta:catalogCursor",                // → { at: Odoo write_date }
   job: (name: "sync" | "compare") => `job:${name}`,   // → { requestedAt }
   odooLists: "meta:odooLists",                         // → { at, lists } loaded for the admin section
+  compareLast: "compare:last",                         // → CompareResult
+  compareProgress: "compare:progress",                 // → { done, total }
   cursor: "meta:cursor",                              // → { at: Odoo write_date }
   lastRun: "meta:lastRun",                            // → RunSummary
   failures: "meta:failures",                          // → { count }
@@ -35,6 +37,14 @@ export interface CatalogCounts {
 }
 
 export interface Conflict { partnerId: number; name: string; reason: "number" | "vat" | "linked"; candidates: string[]; foundAt: string }
+
+export interface CompareResult {
+  at: string;
+  ok: boolean;
+  error?: string;
+  lists: { odooId: number; name: string; checked: number; failed: number }[];
+  mismatches: { list: string; product: string; quantity: number; crm: string; odoo: string; diff: string; reason: "rate" | "rule" }[];
+}
 
 export interface RunSummary {
   at: string;
