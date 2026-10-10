@@ -36,7 +36,7 @@ A `docker-compose.override.yml` you created is not part of the repository, so `g
 
 ## Coolify
 
-Redeploy the resource. Coolify pulls the configured branch, rebuilds the image and starts it; migrations run on start as above. To pin a release, point the resource at a tag or commit instead of a branch.
+Redeploy the resource. `docker-compose-coolify.yml` runs the published release image (`ghcr.io/pdovhomilja/nextcrm-app`), so Coolify pulls the newest release and starts it; migrations run on start as above. To pin a release, set `NEXTCRM_VERSION` to its tag (for example `v0.26.0`) and redeploy.
 
 ## Plugins
 
