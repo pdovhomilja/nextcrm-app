@@ -6,7 +6,7 @@ export default definePlugin({
   id: "registry-ares",
   name: "Company registry (ARES, VIES)",
   version: "0.1.0",
-  sdk: "^0.1.0",
+  sdk: "^0.2.0",
   description: "Loads Czech companies from ARES and checks EU VAT numbers in VIES.",
   permissions: ["http"],
   extensions: (x) => {

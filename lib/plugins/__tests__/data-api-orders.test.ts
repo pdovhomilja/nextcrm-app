@@ -1,0 +1,66 @@
+jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
+const db: Record<string, any> = {
+  crm_Orders: { findUnique: jest.fn(), findMany: jest.fn(), create: jest.fn(), updateMany: jest.fn(), update: jest.fn() },
+  crm_OrderLines: { deleteMany: jest.fn(), createMany: jest.fn() },
+  crm_Accounts: { findFirst: jest.fn() },
+  crm_Products: { findFirst: jest.fn() },
+  $queryRaw: jest.fn(),
+};
+db.$transaction = jest.fn(async (fn: (tx: unknown) => unknown) => fn(db));
+jest.mock("@/lib/prisma", () => ({ prismadb: db }));
+jest.mock("@/inngest/client", () => ({ inngest: { send: jest.fn().mockResolvedValue(undefined) } }));
+jest.mock("@/lib/audit-log", () => ({ writeAuditLog: jest.fn() }));
+jest.mock("@/lib/currency", () => ({ getDefaultCurrency: jest.fn().mockResolvedValue("CZK") }));
+jest.mock("@/lib/resend", () => ({ __esModule: true, default: jest.fn() }));
+
+import { Decimal } from "decimal.js";
+import { createDataApi } from "@/lib/plugins/data-api";
+import { MODEL_TO_ENTITY } from "@/lib/plugins/rules";
+import { SDK_VERSION } from "@nextcrm/plugin-sdk";
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  db.crm_Accounts.findFirst.mockResolvedValue({ id: "acc", assigned_to: "rep", pricelist_id: null });
+  db.crm_Products.findFirst.mockResolvedValue({ id: "p1", name: "Tea", sku: "T", unit: "pcs", tax_rate: new Decimal(12) });
+  db.$queryRaw.mockResolvedValue([{ id: "s1", template: "ORD-{YYYY}-{####}", counter: 5, currentYear: 2026 }]);
+  db.crm_Orders.create.mockImplementation(async ({ data }: any) => ({ id: "o1", ...data }));
+  db.crm_Orders.updateMany.mockResolvedValue({ count: 1 });
+});
+
+it("is SDK 0.2.0 with the order entity", () => {
+  expect(SDK_VERSION).toBe("0.2.0");
+  expect(MODEL_TO_ENTITY.crm_Orders).toBe("order");
+});
+
+it("needs the orders permissions", async () => {
+  const api = createDataApi("conn", []);
+  await expect(api.orders.get("o1")).rejects.toThrow();
+  await expect(api.orders.create({ accountId: "acc", externalRef: "SO1", status: "CONFIRMED", lines: [] })).rejects.toThrow();
+});
+
+it("creates EXTERNAL orders with plugin prices that are never below list", async () => {
+  const api = createDataApi("conn", ["orders:write"]);
+  await api.orders.create({ accountId: "acc", externalRef: "SO1", status: "CONFIRMED", lines: [{ productId: "p1", quantity: 2, unitPrice: "10.5" }] });
+  const data = db.crm_Orders.create.mock.calls[0][0].data;
+  expect(data).toMatchObject({ source: "EXTERNAL", externalRef: "SO1", status: "CONFIRMED", ownerId: "rep", number: expect.stringMatching(/^ORD-\d{4}-0005$/), currency: "CZK" });
+  expect(data.lines.create[0]).toMatchObject({ unitPriceOverridden: false });
+  expect(data.lines.create[0].listPrice.toFixed(2)).toBe("10.50");
+  expect(data.lines.create[0].unitPrice.toFixed(2)).toBe("10.50");
+});
+
+it("lets a plugin move READY → SENT but not approve or touch drafts (Review Focus 4)", async () => {
+  const api = createDataApi("conn", ["orders:write"]);
+  db.crm_Orders.findUnique.mockResolvedValue({ id: "o1", status: "READY", source: "CRM", createdBy: "rep", externalRef: null });
+  await api.orders.update("o1", { status: "SENT", externalRef: "SO1" });
+  expect(db.crm_Orders.updateMany.mock.calls[0][0]).toMatchObject({ where: { id: "o1", status: "READY" }, data: { status: "SENT", externalRef: "SO1", updatedBy: null } });
+  db.crm_Orders.findUnique.mockResolvedValue({ id: "o1", status: "DRAFT", source: "CRM", createdBy: "rep", externalRef: null });
+  await expect(api.orders.update("o1", { status: "SENT" })).rejects.toThrow("cannot set SENT on a DRAFT order");
+  db.crm_Orders.findUnique.mockResolvedValue({ id: "o1", status: "PENDING_APPROVAL", source: "CRM", createdBy: "rep", externalRef: null });
+  await expect(api.orders.update("o1", { status: "READY" as never })).rejects.toThrow();
+});
+
+it("refuses line changes on CRM orders", async () => {
+  const api = createDataApi("conn", ["orders:write"]);
+  db.crm_Orders.findUnique.mockResolvedValue({ id: "o1", status: "SENT", source: "CRM", createdBy: "rep", externalRef: "SO1" });
+  await expect(api.orders.update("o1", { lines: [] })).rejects.toThrow("only EXTERNAL orders");
+});

@@ -1,6 +1,6 @@
-import type { ActivityQuery, Actor, Entity, EntityApi, FindArgs, NotifyInput, PluginContext, PluginStore, RecordData, RecordStore } from "./types";
+import type { ActivityQuery, Actor, Entity, EntityApi, FindArgs, NotifyInput, OrdersApi, PluginContext, PluginStore, RecordData, RecordStore } from "./types";
 
-type Tables = "accounts" | "contacts" | "leads" | "opportunities" | "users" | "products" | "activities";
+type Tables = "accounts" | "contacts" | "leads" | "opportunities" | "orders" | "users" | "products" | "activities";
 
 function matches(row: RecordData, where?: RecordData) {
   return !where || Object.entries(where).every(([k, v]) => row[k] === v);
@@ -80,6 +80,7 @@ export function createTestContext(opts: {
       contacts: table(d.contacts ?? []),
       leads: table(d.leads ?? []),
       opportunities: table(d.opportunities ?? []),
+      orders: table(d.orders ?? []) as unknown as OrdersApi,
       users: table(d.users ?? []),
       products: table(d.products ?? []),
       activities: activities(d.activities ?? []),

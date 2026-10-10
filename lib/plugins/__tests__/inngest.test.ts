@@ -24,7 +24,7 @@ const after = jest.fn();
 const plugin = {
   source: "public" as const, messages: {},
   definition: definePlugin({
-    id: "demo", name: "Demo", version: "1.0.0", sdk: "^0.1.0", description: "", permissions: [],
+    id: "demo", name: "Demo", version: "1.0.0", sdk: "^0.2.0", description: "", permissions: [],
     extensions: (x) => {
       x.cron("nightly", "0 3 * * *", cron);
       x.on("crm/account.saved", onSaved);

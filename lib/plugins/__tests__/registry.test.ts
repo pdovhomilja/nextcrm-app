@@ -3,7 +3,7 @@ import { definePlugin } from "@nextcrm/plugin-sdk";
 import { buildRegistry } from "@/lib/plugins/registry";
 
 const make = (id: string) =>
-  definePlugin({ id, name: id, version: "1.0.0", sdk: "^0.1.0", description: "", permissions: [], extensions: () => {} });
+  definePlugin({ id, name: id, version: "1.0.0", sdk: "^0.2.0", description: "", permissions: [], extensions: () => {} });
 
 describe("plugin registry", () => {
   it("builds a registry and rejects duplicate ids", () => {

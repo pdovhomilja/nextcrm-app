@@ -13,7 +13,7 @@ const onUninstall = jest.fn();
 const plugin = {
   source: "public" as const, messages: {},
   definition: definePlugin({
-    id: "demo", name: "Demo", version: "1.0.0", sdk: "^0.1.0", description: "", permissions: [],
+    id: "demo", name: "Demo", version: "1.0.0", sdk: "^0.2.0", description: "", permissions: [],
     settings: z.object({ days: z.number().default(90) }), secrets: z.object({ apiKey: z.string() }),
     extensions: () => {}, onUninstall,
   }),
@@ -51,7 +51,7 @@ it("rolls back the install when the install event cannot be sent (M12)", async (
 it("refuses unknown, duplicate and incompatible plugins", async () => {
   getPluginState.mockResolvedValue(undefined);
   await expect(installPlugin("nope", "u1", { settings: {}, secrets: {} })).rejects.toThrow("Plugin not found");
-  await expect(installPlugin("old-sdk", "u1", { settings: {}, secrets: { apiKey: "k" } })).rejects.toThrow("Incompatible SDK: requires ^9.0.0, running 0.1.1");
+  await expect(installPlugin("old-sdk", "u1", { settings: {}, secrets: { apiKey: "k" } })).rejects.toThrow("Incompatible SDK: requires ^9.0.0, running 0.2.0");
   getPluginState.mockResolvedValue({ id: "demo" });
   await expect(installPlugin("demo", "u1", { settings: {}, secrets: {} })).rejects.toThrow("Plugin already installed");
 });

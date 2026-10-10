@@ -26,7 +26,7 @@ import { PluginPermissionError } from "@/lib/plugins/errors";
 const plugin = {
   source: "public" as const, messages: {},
   definition: definePlugin({
-    id: "demo", name: "Demo", version: "1.0.0", sdk: "^0.1.0", description: "", permissions: ["accounts:read"],
+    id: "demo", name: "Demo", version: "1.0.0", sdk: "^0.2.0", description: "", permissions: ["accounts:read"],
     settings: z.object({ days: z.number().default(90) }), extensions: () => {},
   }),
 };
