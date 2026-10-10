@@ -871,7 +871,7 @@
     "series": "Nummernkreis",
     "seriesName": "Name",
     "template": "Vorlage",
-    "templateHelp": "{YYYY} ist das Jahr, {####} der Zähler mit führenden Nullen",
+    "templateHelp": "'{YYYY}' ist das Jahr, '{####}' der Zähler mit führenden Nullen",
     "reset": "Zähler zurücksetzen",
     "resetYEARLY": "Jedes Jahr",
     "resetNEVER": "Nie",
@@ -880,7 +880,7 @@
     "emails": "Manager per E-Mail informieren, wenn eine Bestellung eine Genehmigung braucht",
     "save": "Speichern",
     "saved": "Gespeichert",
-    "invalid": "Prüfen Sie die Vorlage: Sie braucht einen Zähler wie {####}."
+    "invalid": "Prüfen Sie die Vorlage: Sie braucht einen Zähler wie '{####}'."
   },
   "PriceListsPage": {
     "title": "Preislisten", "description": "Kundenpreise mit Odoo-kompatiblen Regeln", "detailDescription": "Regeln werden von oben nach unten geprüft; die erste passende bestimmt den Preis.",

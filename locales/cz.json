@@ -874,7 +874,7 @@
     "series": "Číselná řada",
     "seriesName": "Název",
     "template": "Šablona",
-    "templateHelp": "{YYYY} je rok, {####} pořadové číslo s nulami",
+    "templateHelp": "'{YYYY}' je rok, '{####}' pořadové číslo s nulami",
     "reset": "Nulovat počítadlo",
     "resetYEARLY": "Každý rok",
     "resetNEVER": "Nikdy",
@@ -883,7 +883,7 @@
     "emails": "Posílat manažerům e-mail, když objednávka čeká na schválení",
     "save": "Uložit",
     "saved": "Uloženo",
-    "invalid": "Zkontrolujte šablonu: potřebuje pořadové číslo, např. {####}."
+    "invalid": "Zkontrolujte šablonu: potřebuje pořadové číslo, např. '{####}'."
   },
   "PriceListsPage": {
     "title": "Ceníky", "description": "Ceny pro zákazníky, pravidla kompatibilní s Odoo", "detailDescription": "Pravidla se procházejí shora dolů; cenu určí první, které platí.",

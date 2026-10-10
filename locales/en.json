@@ -871,7 +871,7 @@
     "series": "Number series",
     "seriesName": "Name",
     "template": "Template",
-    "templateHelp": "{YYYY} is the year, {####} the counter with leading zeros",
+    "templateHelp": "'{YYYY}' is the year, '{####}' the counter with leading zeros",
     "reset": "Restart counter",
     "resetYEARLY": "Every year",
     "resetNEVER": "Never",
@@ -880,7 +880,7 @@
     "emails": "Email managers when an order needs approval",
     "save": "Save",
     "saved": "Saved",
-    "invalid": "Check the template: it needs a counter like {####}."
+    "invalid": "Check the template: it needs a counter like '{####}'."
   },
   "PriceListsPage": {
     "title": "Price lists", "description": "Prices per customer, with rules compatible with Odoo", "detailDescription": "Rules are checked top to bottom; the first match sets the price.",
