@@ -3,7 +3,7 @@ title: Odoo connector
 description: Import customers, their people and the product catalog with price lists from an Odoo ERP and keep them current.
 ---
 
-The **Odoo connector** plugin (`odoo-connector`) reads customers from an Odoo ERP and keeps them in the CRM as accounts, with their people as contacts. It also brings in Odoo's product catalog and chosen price lists, so the CRM prices exactly like Odoo. It only reads from Odoo: it never creates or changes anything there.
+The **Odoo connector** plugin (`odoo-connector`) reads customers from an Odoo ERP and keeps them in the CRM as accounts, with their people as contacts. It also brings in Odoo's product catalog and chosen price lists, so the CRM prices exactly like Odoo. It reads from Odoo, and writes there only when you turn on sending orders: then READY orders become draft sale orders in Odoo (see [Orders](#orders)).
 
 ## What it does
 
@@ -14,7 +14,7 @@ The **Odoo connector** plugin (`odoo-connector`) reads customers from an Odoo ER
 ## Before you start
 
 - Odoo 18 or later (the plugin uses Odoo's JSON-2 API).
-- An Odoo user for the CRM with an API key. It needs read access to contacts (partners), countries, users, products, product categories, taxes, price lists and sales orders (to compare prices). It needs no write access.
+- An Odoo user for the CRM with an API key. It needs read access to contacts (partners), countries, users, products, product categories, taxes, price lists, sales orders, deliveries and invoices. It needs write access only for sending orders: create on contacts and sales orders.
 
 ## Install and settings
 
@@ -28,6 +28,7 @@ Install it under **Admin → Plugins → Odoo connector**.
 | `defaultCountry` | `CZ` | Two-letter country code for customers without a country in Odoo. |
 | `dryRun` | on | While on, the sync only writes to the plugin log what it would create or change, and the scheduled sync is paused: use **Sync now**. |
 | `priceLists` | empty | The Odoo price lists to import: their Odoo ids, separated by commas, for example `242, 245`. See [Catalog](#catalog). |
+| `sendOrders` | off | Send orders in READY to Odoo as draft sale orders. While off, the connector never writes to Odoo. |
 
 The secret `apiKey` holds the Odoo user's API key. It is stored encrypted.
 
@@ -85,3 +86,37 @@ Rules the CRM cannot use are listed on the admin page under **Rules the CRM cann
 ## Failures
 
 **Sync now** and **Compare with Odoo** are queued and start within 5 minutes. A failing sync is logged in the plugin log with the reason, for example when Odoo rejects the API key, or denies access to a model the Odoo user cannot read (the log names it). The next run repeats everything since the last good run; a customer or person that failed on its own is tried again on every run until it succeeds. After three failed runs in a row, admins get one email.
+
+## Orders
+
+With `sendOrders` on (and dry run off), an order that becomes **READY** goes to Odoo within seconds; a check every 5 minutes picks up anything missed.
+
+What the connector does in Odoo, and nothing else:
+- finds the customer (by the account's link, registration number, then VAT; by exact name when the account has neither) or **creates** it and links the account;
+- uses the customer or one of its delivery addresses when the order's delivery address matches, or **creates** a delivery address;
+- **creates** a draft sale order: the CRM order number in *Source document* (`origin`), the CRM unit prices, the account's Odoo price list (or the customer's), the salesperson by email, the rep's name and the order note in the note.
+
+Odoo confirms the order; the connector never confirms, edits or cancels it.
+
+The Odoo user needs **create** on contacts (`res.partner`) and sales orders (`sale.order`, `sale.order.line`) and **read** on everything else the connector reads. No delete, no accounting rights.
+
+### Status
+
+| Odoo | Order status |
+|---|---|
+| quotation | SENT |
+| confirmed | CONFIRMED |
+| everything shipped | DELIVERED |
+| fully invoiced | INVOICED |
+| fully invoiced and every invoice paid | PAID |
+| cancelled or deleted | CANCELLED |
+
+Statuses are read on every sync (`syncMinutes`). They only move forward; partly shipped or partly paid orders keep the earlier status and the **Odoo** panel on the order shows the details: deliveries, invoices with what is left to pay, a "Price differs from Odoo" list when Odoo's price list would charge more than 1 more or less than the order, and a note when someone changed the order's total in Odoo.
+
+### When sending fails
+
+- **Odoo unreachable:** the order stays READY and goes out when Odoo is back; the panel shows since when it waits.
+- **Odoo refuses access** (wrong key or missing rights): sending pauses for every order and admins get one notification. Fix the rights, then click **Test connection**.
+- **Odoo refuses the order:** after 5 refusals, or at once for a product that does not come from Odoo, a currency that differs from the Odoo price list, or an order already in Odoo with other lines, the order becomes **SYNC_FAILED** and admins are notified. Fix the cause and click **Retry** on the order.
+
+Sending is safe to repeat: whatever fails in between, each order exists once in Odoo.
