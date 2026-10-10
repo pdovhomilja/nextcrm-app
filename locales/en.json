@@ -335,7 +335,12 @@
     "orgIdTooLong": "Organization ID is too long",
     "secretKeyTooShort": "Secret key is too short"
   },
+  "ProductsPage": {
+    "external": "From an external system (read-only)"
+  },
   "AdminPage": {
+    "categoryExternal": "Synced from an external system (read-only)",
+    "categoryExternalParent": "A category cannot be placed under a synced category",
     "pricingTitle": "Pricing",
     "defaultPriceList": "Default price list",
     "noDefault": "None (product price)",

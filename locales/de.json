@@ -335,7 +335,12 @@
     "orgIdTooLong": "Organisations-ID ist zu lang",
     "secretKeyTooShort": "Geheimschlüssel ist zu kurz"
   },
+  "ProductsPage": {
+    "external": "Aus einem externen System (schreibgeschützt)"
+  },
   "AdminPage": {
+    "categoryExternal": "Aus einem externen System synchronisiert (schreibgeschützt)",
+    "categoryExternalParent": "Eine Kategorie kann nicht unter eine synchronisierte Kategorie gelegt werden",
     "pricingTitle": "Preise",
     "defaultPriceList": "Standard-Preisliste",
     "noDefault": "Keine (Produktpreis)",

@@ -1,4 +1,6 @@
+import { getTranslations } from "next-intl/server";
 import Container from "@/app/[locale]/(routes)/components/ui/Container";
+import { Badge } from "@/components/ui/badge";
 import { getProduct } from "@/actions/crm/products/get-product";
 import { getProductCategories } from "@/actions/crm/products/get-product-categories";
 import { getAllCrmData } from "@/actions/crm/get-crm-data";
@@ -17,6 +19,7 @@ interface ProductDetailPageProps {
 const ProductPage = async (props: ProductDetailPageProps) => {
   const params = await props.params;
   const { productId } = params;
+  const t = await getTranslations("ProductsPage");
 
   const [product, categories, crmData] = await Promise.all([
     getProduct(productId),
@@ -62,12 +65,16 @@ const ProductPage = async (props: ProductDetailPageProps) => {
       title={`Product: ${product.name}`}
       description={`Status: ${product.status}`}
     >
-      <div className="flex justify-end mb-4">
-        <EditProductButton
-          product={productForEdit}
-          categories={categories}
-          currencies={currencies}
-        />
+      <div className="mb-4 flex items-center justify-end gap-3">
+        {product.source === "EXTERNAL" ? (
+          <Badge variant="secondary">{t("external")}</Badge>
+        ) : (
+          <EditProductButton
+            product={productForEdit}
+            categories={categories}
+            currencies={currencies}
+          />
+        )}
       </div>
       <Tabs defaultValue="basic">
         <TabsList>

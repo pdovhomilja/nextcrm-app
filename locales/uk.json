@@ -335,7 +335,12 @@
     "orgIdTooLong": "ID організації занадто довгий",
     "secretKeyTooShort": "Секретний ключ занадто короткий"
   },
+  "ProductsPage": {
+    "external": "Із зовнішньої системи (лише читання)"
+  },
   "AdminPage": {
+    "categoryExternal": "Синхронізовано із зовнішньої системи (лише читання)",
+    "categoryExternalParent": "Категорію не можна розмістити під синхронізованою категорією",
     "pricingTitle": "Ціни",
     "defaultPriceList": "Прайс-лист за замовчуванням",
     "noDefault": "Немає (ціна товару)",

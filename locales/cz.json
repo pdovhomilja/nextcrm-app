@@ -338,7 +338,12 @@
     "orgIdTooLong": "ID organizace je příliš dlouhé",
     "secretKeyTooShort": "Tajný klíč je příliš krátký"
   },
+  "ProductsPage": {
+    "external": "Z externího systému (jen pro čtení)"
+  },
   "AdminPage": {
+    "categoryExternal": "Synchronizováno z externího systému (jen pro čtení)",
+    "categoryExternalParent": "Kategorii nelze zařadit pod synchronizovanou kategorii",
     "pricingTitle": "Ceny",
     "defaultPriceList": "Výchozí ceník",
     "noDefault": "Žádný (cena produktu)",

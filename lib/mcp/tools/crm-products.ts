@@ -9,6 +9,7 @@ import {
   notFound,
   forbidden,
 } from "../helpers";
+import { assertProductWritable } from "@/lib/authz/scopes/products";
 
 // The product catalog is org-wide; writes are manager/admin-only, matching the
 // server actions' requireRole(["manager", "admin"]) (GHSA-wv63-cq38-qg58).
@@ -140,6 +141,7 @@ export const crmProductTools = [
         where: { id: args.id, deletedAt: null },
       });
       if (!existing) notFound("Product");
+      assertProductWritable(existing);
       const { id, ...updateData } = args;
       const product = await prismadb.crm_Products.update({
         where: { id },
@@ -158,6 +160,7 @@ export const crmProductTools = [
         where: { id: args.id, deletedAt: null },
       });
       if (!existing) notFound("Product");
+      assertProductWritable(existing);
       const product = await prismadb.crm_Products.update({
         where: { id: args.id },
         data: { deletedAt: new Date(), deletedBy: userId, status: "ARCHIVED" as any },
