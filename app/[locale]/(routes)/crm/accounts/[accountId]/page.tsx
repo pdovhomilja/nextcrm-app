@@ -44,6 +44,7 @@ import AccountProductsView from "./components/AccountProductsView";
 import { ActivitiesSection } from "./components/ActivitiesSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HistoryTab } from "./components/HistoryTab";
+import { AccountOrdersTab } from "./components/AccountOrdersTab";
 
 interface AccountDetailPageProps {
   params: Promise<{
@@ -72,6 +73,7 @@ const AccountDetailPage = async (props: AccountDetailPageProps) => {
   const tasks: crm_Accounts_Tasks[] = await getAccountsTasks(accountId);
   const invoices = await getInvoicesByAccountId(accountId);
   const t = await getTranslations("InvoicesPage");
+  const to = await getTranslations("OrdersPage");
   const invoiceStatusLabels: Record<string, string> = {
     DRAFT: t("status.DRAFT"),
     ISSUED: t("status.ISSUED"),
@@ -114,6 +116,7 @@ const AccountDetailPage = async (props: AccountDetailPageProps) => {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
+          <TabsTrigger value="orders">{to("ordersTab")}</TabsTrigger>
           {await Promise.all(pluginTabs.map(async ({ plugin, tab }) => {
             const tp = await getTranslations(`plugins.${plugin.definition.id}` as never);
             return <TabsTrigger key={`${plugin.definition.id}:${tab.id}`} value={`plugin-${plugin.definition.id}-${tab.id}`}>{tp(tab.title as never)}</TabsTrigger>;
@@ -165,6 +168,9 @@ const AccountDetailPage = async (props: AccountDetailPageProps) => {
         </TabsContent>
         <TabsContent value="history">
           <HistoryTab accountId={accountId} />
+        </TabsContent>
+        <TabsContent value="orders">
+          <AccountOrdersTab accountId={accountId} />
         </TabsContent>
         {pluginTabs.map(({ plugin, tab }) => (
           <TabsContent key={`${plugin.definition.id}:${tab.id}`} value={`plugin-${plugin.definition.id}-${tab.id}`}>
