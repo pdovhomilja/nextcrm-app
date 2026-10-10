@@ -1,11 +1,11 @@
-import type { RecordData } from "@nextcrm/plugin-sdk";
+import type { AfterInput, RecordData } from "@nextcrm/plugin-sdk";
 import { odooPrice } from "./compare";
 import type { M2O } from "./map";
 import { findOrCreateCustomer, findOrCreateDelivery, salesperson } from "./odoo-partners";
-import type { OdooClient } from "./odoo";
-import { FinalError } from "./orders-errors";
+import { jsonClient, type OdooClient } from "./odoo";
+import { FinalError, failKind } from "./orders-errors";
 import type { Ctx } from "./settings";
-import { K, type CreatedRecord, type OrderLink, type PriceListLink } from "./store";
+import { K, type CreatedRecord, type OrderLink, type PriceListLink, type SendState } from "./store";
 
 const CLAIM_MS = 10 * 60_000;
 const TOLERANCE = 1;
@@ -114,15 +114,35 @@ async function send(ctx: Ctx, client: OdooClient, order: RecordData, now: Date):
   ctx.log.info(`Order ${number} sent to Odoo as ${sale.name}`, { orderId: id, odooId: sale.id });
 }
 
-/** Task 4: every failure is final. Task 5 sorts them into unreachable, denied and refused (spec § 5). */
+const MAX_ATTEMPTS = 5;
+
+/** Spec § 5: unreachable waits, denied pauses everything, refused counts; 5 refusals or a final error → SYNC_FAILED. */
 async function failed(ctx: Ctx, order: RecordData, e: unknown, now: Date): Promise<void> {
   const id = order.id as string;
+  const number = String(order.number);
   const reason = e instanceof Error ? e.message : String(e);
-  try { await ctx.data.orders.update(id, { status: "SYNC_FAILED" }); } catch (err) { ctx.log.warn(`Order ${String(order.number)}: ${String(err)}`); }
+  const kind = e instanceof FinalError ? "final" : failKind(e);
+  const prev = (await ctx.store.get<SendState>(K.send(id))) ?? { attempts: 0, lastError: null, waitingSince: null };
+  if (kind === "unreachable" || kind === "denied") {
+    await ctx.store.set(K.send(id), { ...prev, lastError: reason, waitingSince: prev.waitingSince ?? now.toISOString() } satisfies SendState);
+    ctx.log.warn(`Order ${number} waits for Odoo: ${reason}`, { orderId: id });
+    if (kind === "denied" && !(await ctx.store.get(K.sendPaused))) {
+      await ctx.store.set(K.sendPaused, { at: now.toISOString(), reason });
+      await ctx.notify({ roles: ["admin"], subject: ctx.t("mail.pausedSubject"), text: ctx.t("mail.pausedText", { error: reason }) });
+    }
+    return;
+  }
+  const attempts = kind === "final" ? MAX_ATTEMPTS : prev.attempts + 1;
+  if (attempts < MAX_ATTEMPTS) {
+    await ctx.store.set(K.send(id), { ...prev, attempts, lastError: reason } satisfies SendState);
+    ctx.log.warn(`Order ${number}: Odoo refused attempt ${attempts} of ${MAX_ATTEMPTS}: ${reason}`, { orderId: id });
+    return;
+  }
+  try { await ctx.data.orders.update(id, { status: "SYNC_FAILED" }); } catch (err) { ctx.log.warn(`Order ${number}: ${String(err)}`); }
   await ctx.store.set(K.failed(id), { reason, at: now.toISOString() });
   await ctx.store.delete(K.send(id));
-  ctx.log.error(`Order ${String(order.number)} could not be sent: ${reason}`, { orderId: id });
-  await ctx.notify({ roles: ["admin"], subject: ctx.t("mail.orderFailedSubject", { number: String(order.number) }), text: ctx.t("mail.orderFailedText", { number: String(order.number), error: reason }) });
+  ctx.log.error(`Order ${number} could not be sent: ${reason}`, { orderId: id });
+  await ctx.notify({ roles: ["admin"], subject: ctx.t("mail.orderFailedSubject", { number }), text: ctx.t("mail.orderFailedText", { number, error: reason }) });
 }
 
 const sendable = (o: RecordData | null) => !!o && o.status === "READY" && !o.externalRef;
@@ -145,4 +165,17 @@ export async function sendOrder(ctx: Ctx, client: OdooClient, orderId: string, n
   } finally {
     await ctx.store.delete(K.sending(orderId));
   }
+}
+
+/** Spec § 4.1: every cron run sends READY orders without an Odoo id, oldest first. Not in dry run (plan Ruling 5). */
+export async function sweepOrders(ctx: Ctx, client: OdooClient, now: Date): Promise<number> {
+  if (!ctx.settings.sendOrders || ctx.settings.dryRun) return 0;
+  const rows = await ctx.data.orders.find({ where: { status: "READY", externalRef: null }, orderBy: { createdAt: "asc" }, take: 50 });
+  for (const o of rows) await sendOrder(ctx, client, o.id as string, now);
+  return rows.length;
+}
+
+/** Plan Ruling 1: core's after-write hook fires for Submit, Approve and Retry; sendOrder ignores everything but READY. */
+export async function onOrderUpdated(input: AfterInput, ctx: Ctx): Promise<void> {
+  await sendOrder(ctx, jsonClient(ctx), input.recordId, new Date());
 }
