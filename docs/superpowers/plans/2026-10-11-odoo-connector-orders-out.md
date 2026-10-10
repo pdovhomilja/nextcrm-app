@@ -771,6 +771,13 @@ describe("sending", () => {
     expect(await ctx.store.get(K.order("o1"))).toMatchObject({ odooId: 1000, name: "S01000", state: "draft", sentAt: now.toISOString(), priceDiffs: [], created: [] });
   });
 
+  it("falls back to the customer's Odoo salesperson when the owner has no Odoo user", async () => {
+    const { ctx, client, calls } = mkOrders({ sales: { partners: [{ ...customer, user_id: [12, "Key Account"] }], users: [] } });
+    await linked(ctx);
+    await sendOrder(ctx, client, "o1", now);
+    expect(calls.find((c) => c.path === "/json/2/sale.order/create")!.body.vals_list[0].user_id).toBe(12);
+  });
+
   it("uses the order's price list when it was imported from Odoo", async () => {
     const { ctx, client, calls } = mkOrders({ sales: { partners: [customer] }, orders: [order({ priceListId: "L245" })] });
     await linked(ctx);
@@ -909,6 +916,11 @@ async function priceListFor(ctx: Ctx, client: OdooClient, order: RecordData, par
   return { id, currencyId: (l.currency_id as [number, string])[0] };
 }
 
+async function partnerUser(client: OdooClient, partnerId: number): Promise<number | false> {
+  const [p] = await client.call<{ user_id?: M2O }[]>("res.partner", "read", { ids: [partnerId], fields: ["user_id"] });
+  return p?.user_id ? p.user_id[0] : false;
+}
+
 async function sameLines(client: OdooClient, saleId: number, want: OdooLine[]): Promise<boolean> {
   const have = await client.call<{ product_id: M2O; product_uom_qty: number; price_unit: number }[]>("sale.order.line", "search_read", {
     domain: [["order_id", "=", saleId], ["display_type", "=", false]], fields: ["product_id", "product_uom_qty", "price_unit"],
@@ -949,6 +961,7 @@ async function send(ctx: Ctx, client: OdooClient, order: RecordData, now: Date):
   const user = await salesperson(ctx, client, (order.ownerId as string | null) ?? null);
   const customer = await findOrCreateCustomer(ctx, client, account, user, now);
   if (customer.created) await remember(ctx, now, "customer", customer.partnerId, String(account.name), number);
+  const seller = user || (await partnerUser(client, customer.partnerId));   // spec § 4.2: else the customer's salesperson
   const shipping = await findOrCreateDelivery(ctx, client, customer.partnerId, order);
   if (shipping.created) await remember(ctx, now, "delivery", shipping.shippingId, String(account.name), number);
   const list = await priceListFor(ctx, client, order, customer.partnerId);
@@ -965,7 +978,7 @@ async function send(ctx: Ctx, client: OdooClient, order: RecordData, now: Date):
     const day = order.requestedDeliveryDate ? `${new Date(order.requestedDeliveryDate as string).toISOString().slice(0, 10)} 00:00:00` : false;
     const [saleId] = await client.call<number[]>("sale.order", "create", { vals_list: [{
       partner_id: customer.partnerId, partner_shipping_id: shipping.shippingId, pricelist_id: list.id, origin: number,
-      user_id: user, commitment_date: day, note, order_line: odooLines.map((l) => [0, 0, l]),
+      user_id: seller, commitment_date: day, note, order_line: odooLines.map((l) => [0, 0, l]),
     }] }, { once: true });
     const [row] = await client.call<{ name: string }[]>("sale.order", "read", { ids: [saleId], fields: ["name"] });
     sale = { id: saleId, name: row?.name ?? String(saleId) };
