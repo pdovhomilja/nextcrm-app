@@ -21,6 +21,7 @@ Success, on an instance with the plugin enabled:
 1. **Qualifying statuses:** CONFIRMED, DELIVERED, INVOICED, PAID. DRAFT, PENDING_APPROVAL, READY, SENT, CANCELLED and SYNC_FAILED do not count, so a rep cannot keep a company by entering an order and cancelling it.
 2. **Cancellation recomputes:** protection follows the newest qualifying order still present; it never drops below the registration's own window.
 3. **Order date in core:** `crm_Orders.orderDate`, settable by plugins on EXTERNAL orders.
+4. **A recent order waives the contact deadline** (final review, 2026-10-10): an order dated before the registration that still extends protection counts as contact, so a new owner of an ordering customer (or an account registered at install/upgrade) is not freed on day 30.
 
 ### 1.2 Not in scope
 
@@ -56,7 +57,7 @@ The plugin version goes 0.1.1 → 0.2.0 (new setting, new permission, new hooks)
 
 `protectedUntil = max(baseUntil, lastOrderAt + orderMonths)`. Months are added as UTC calendar months (31 January + 1 month = 28/29 February), and the result is the start of that UTC day, compared the same way as today's `protectedUntil`. With `orderMonths = 0`, `protectedUntil = baseUntil`.
 
-`contactAt` is set from an order when the newest qualifying order's `orderDate` is on or after the registration day and no earlier contact is recorded. An order never clears a `contactAt` set by an activity.
+`contactAt` is set from an order when no earlier contact is recorded and the newest qualifying order's `orderDate` is on or after the registration day, or the order still extends protection (`lastOrderAt + orderMonths > baseUntil`, decision 4). An order never clears a `contactAt` set by an activity.
 
 ### 3.3 Qualifying order
 

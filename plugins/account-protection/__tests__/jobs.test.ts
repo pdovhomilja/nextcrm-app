@@ -8,7 +8,7 @@ import { newRegistration, type Registration } from "../state";
 const S = settingsSchema.parse({});
 type TestCtx = Ctx & { notifications: { roles?: string[]; subject: string; text: string }[]; logs: { level: string; message: string }[] };
 const mk = (accounts: RecordData[], activities: RecordData[] = [], users: RecordData[] = [], orders: RecordData[] = []) =>
-  createTestContext({ pluginId: "account-protection", actor: { type: "plugin", pluginId: "account-protection" }, settings: S, data: { accounts, activities, users, orders } }) as unknown as TestCtx;
+  createTestContext({ pluginId: "account-protection", actor: { type: "plugin", pluginId: "account-protection" }, settings: { ...S }, data: { accounts, activities, users, orders } }) as unknown as TestCtx;
 
 async function registered(ctx: Ctx, id: string, at: Date) {
   const reg = newRegistration(`CZ:${id}`, "rep1", at, S);
@@ -273,4 +273,28 @@ it("applies a changed orderMonths to every registration in the next daily run (m
   const reg = await ctx.store.get<Registration>(K.reg("acc-1"));
   expect(reg?.protectedUntil).toBe(reg?.baseUntil);
   expect((await ctx.store.list("due:")).map((e) => e.key)).toEqual([`due:${reg?.baseUntil?.slice(0, 10)}:acc-1`]);
+});
+
+it("keeps a new owner's account when the customer's recent order predates the registration (review I1)", async () => {
+  const accounts = [{ id: "acc-1", name: "Alza", assigned_to: "rep1" as string | null }];
+  const ctx = mk(accounts, [], [], [{ id: "o1", accountId: "acc-1", status: "PAID", orderDate: "2026-09-01" }]);
+  await registered(ctx, "acc-1", reg1);
+  await ctx.store.set(K.lastRun, { at: "2026-11-01T05:55:00.000Z" });
+  await expire(ctx, new Date("2026-11-01T06:00:00Z"));
+  expect(accounts[0].assigned_to).toBe("rep1");
+  expect((await ctx.store.get<Registration>(K.reg("acc-1")))?.protectedUntil).toBe("2027-09-01T00:00:00.000Z");
+});
+
+it("finishes the upgrade when one registration fails, so the plugin is not disabled (review, upgrade isolation)", async () => {
+  const ctx = mk([{ id: "acc-1" }, { id: "acc-2" }], [], [], [
+    { id: "o1", accountId: "acc-1", status: "PAID", orderDate: "2026-09-15" },
+    { id: "o2", accountId: "acc-2", status: "PAID", orderDate: "2026-09-15" },
+  ]);
+  await startRegistration(ctx.store, "acc-1", newRegistration("CZ:acc-1", "rep1", reg1, S));
+  await startRegistration(ctx.store, "acc-2", newRegistration("CZ:acc-2", "rep1", reg1, S));
+  const set = ctx.store.set.bind(ctx.store);
+  ctx.store.set = async (key: string, value: unknown) => { if (key === K.reg("acc-1")) throw new Error("store down"); return set(key, value); };
+  await expect(upgrade(ctx, new Date("2026-10-13T08:00:00Z"))).resolves.toBeUndefined();
+  expect((await ctx.store.get<Registration>(K.reg("acc-2")))?.lastOrderAt).toBe("2026-09-15");
+  expect(ctx.logs.some((l) => l.level === "error" && l.message.includes("acc-1"))).toBe(true);
 });

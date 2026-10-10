@@ -105,9 +105,9 @@ Activities logged on contacts or opportunities only count if they are also linke
 
 ### Orders
 
-A confirmed order (status Confirmed, Delivered, Invoiced or Paid) on the account keeps it protected until at least the order date plus `orderMonths`, and never shortens the window. An order dated on or after the day the window started also counts as the qualifying contact. Draft, pending, ready, sent, cancelled and failed orders do not count, so entering an order and cancelling it does not keep a company. When the order that set the date is cancelled, protection falls back to the previous confirmed order or to the window itself. The daily job checks orders again before it removes an owner, and a new owner of an ordering customer keeps the order-based date.
+A confirmed order (status Confirmed, Delivered, Invoiced or Paid) on the account keeps it protected until at least the order date plus `orderMonths`, and never shortens the window. A confirmed order also counts as the qualifying contact when it is dated on or after the day the window started, or when it still extends protection (for example, a new owner takes over a customer who ordered recently). Draft, pending, ready, sent, cancelled and failed orders do not count, so entering an order and cancelling it before it is confirmed does nothing. A confirmed order that is cancelled later stops extending the window, but the contact it provided stays. When the order that set the date is cancelled, protection falls back to the previous confirmed order or to the window itself. The daily job checks orders again before it removes an owner, and a new owner of an ordering customer keeps the order-based date.
 
-The plugin needs the `orders:read` permission for this (added in plugin version 0.2.0). Accept it when you upgrade the plugin; without it, orders are ignored and a warning is logged.
+The plugin reads orders with the `orders:read` permission, granted automatically from plugin version 0.2.0. If orders cannot be read, they are ignored and a warning is logged.
 
 ## Owner changes
 

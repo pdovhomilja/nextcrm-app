@@ -84,8 +84,10 @@ describe("orders (rule 3)", () => {
     expect([back.protectedUntil, back.lastOrderAt]).toEqual([reg.protectedUntil, undefined]);
   });
 
-  it("counts an order as contact only from the registration day (Review Focus 1)", () => {
-    expect(withOrders(reg, "2026-09-30", 12).contactAt).toBeUndefined();
+  it("counts an order as contact from the registration day, or when it still protects (Pavel 2026-10-10)", () => {
+    expect(withOrders(reg, "2025-01-01", 12).contactAt).toBeUndefined();   // too old to extend protection
+    expect(withOrders(reg, "2026-09-30", 0).contactAt).toBeUndefined();    // rule 3 off: only orders since registration count
+    expect(withOrders(reg, "2026-09-30", 12).contactAt).toBe("2026-09-30T00:00:00.000Z");   // recent order before registration waives contact
     expect(withOrders(reg, "2026-10-01", 12).contactAt).toBe("2026-10-01T00:00:00.000Z");
     expect(withOrders({ ...reg, contactAt: "2026-10-05T09:00:00.000Z" }, "2026-10-20", 12).contactAt).toBe("2026-10-05T09:00:00.000Z");
   });

@@ -70,7 +70,7 @@ it("gives a new owner the order-based protection straight away", async () => {
   await onUpdated({ entity: "account", operation: "updated", recordId: "acc-1", changed: ["assigned_to"] }, ctx, at);
   const reg = await ctx.store.get<Registration>(K.reg("acc-1"));
   expect([reg?.ownerId, reg?.lastOrderAt, reg?.protectedUntil]).toEqual(["rep2", "2026-09-01", "2027-09-01T00:00:00.000Z"]);
-  expect(reg?.contactAt).toBeUndefined();   // the order predates this registration
+  expect(reg?.contactAt).toBe("2026-09-01T00:00:00.000Z");   // a recent order waives the new owner's contact deadline
 });
 
 it("register() starts and recomputes", async () => {

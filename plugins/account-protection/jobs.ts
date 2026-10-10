@@ -159,5 +159,12 @@ export async function install(ctx: Ctx, at: Date): Promise<void> {
 export async function upgrade(ctx: Ctx, at: Date): Promise<void> {
   if (!(await ctx.store.get(K.lastRun))) await ctx.store.set(K.lastRun, { at: at.toISOString() });
   await pruneConflicts(ctx, at);
-  for (const entry of await ctx.store.list("reg:")) await recomputeFromOrders(entry.key.slice(4), ctx);
+  for (const entry of await ctx.store.list("reg:")) {
+    try {
+      await recomputeFromOrders(entry.key.slice(4), ctx);
+    } catch (e) {
+      // A throwing upgrade disables the plugin; one bad registration must not do that. The daily job retries it.
+      ctx.log.error(`Upgrade recompute failed for account ${entry.key.slice(4)}: ${String(e)}`);
+    }
+  }
 }
