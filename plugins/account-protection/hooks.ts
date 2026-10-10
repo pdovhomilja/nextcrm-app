@@ -2,7 +2,8 @@ import type { Actor, AfterInput, RecordData } from "@nextcrm/plugin-sdk";
 import { numberKey } from "./key";
 import { ownerOf } from "./rules";
 import { newRegistration, type Registration } from "./state";
-import { K, addHistory, clearRegistration, lastHistory, startRegistration, type Reason } from "./store";
+import { K, addHistory, clearRegistration, lastHistory, type Reason } from "./store";
+import { register } from "./orders";
 import type { Ctx } from "./settings";
 
 export interface Conflict { key: string; otherAccountId: string; foundAt: string }
@@ -51,7 +52,7 @@ export async function claimNumber(dup: RecordData, ctx: Ctx, at: Date, actor?: A
   await recordOwner(dup, owner, actor, "assigned", ctx, at);
   if (!key) return;
   await clearRegistration(ctx.store, id);
-  await startRegistration(ctx.store, id, newRegistration(key, owner, at, ctx.settings));
+  await register(ctx, id, newRegistration(key, owner, at, ctx.settings));
 }
 
 /** Records an owner change once (retried events are no-ops) and restarts protection for the new owner. */
@@ -62,7 +63,7 @@ export async function recordOwner(acc: RecordData, to: string | null, actor: Act
   if (last ? last.to === to : to === null) {
     // Already recorded: a retry only rebuilds a registration a failed attempt never wrote (review I5).
     if (last && to && key && !(await ctx.store.get(K.reg(id)))) {
-      await startRegistration(ctx.store, id, newRegistration(key, to, new Date(last.at), ctx.settings));
+      await register(ctx, id, newRegistration(key, to, new Date(last.at), ctx.settings));
     }
     return;
   }
@@ -75,7 +76,7 @@ export async function recordOwner(acc: RecordData, to: string | null, actor: Act
     byType: actor?.type ?? "system",
     reason,
   });
-  if (to && key) await startRegistration(ctx.store, id, newRegistration(key, to, at, ctx.settings));
+  if (to && key) await register(ctx, id, newRegistration(key, to, at, ctx.settings));
 }
 
 export async function onCreated(input: AfterInput, ctx: Ctx, at = new Date()): Promise<void> {
@@ -95,7 +96,7 @@ export async function onUpdated(input: AfterInput, ctx: Ctx, at = new Date()): P
     // Restored after a soft delete: onDeleted removed the index and registration (review I3).
     const key = await indexNumber(acc, ctx, at);
     const owner = ownerOf(acc.assigned_to);
-    if (key && owner && !(await ctx.store.get(K.reg(id)))) await startRegistration(ctx.store, id, newRegistration(key, owner, at, ctx.settings));
+    if (key && owner && !(await ctx.store.get(K.reg(id)))) await register(ctx, id, newRegistration(key, owner, at, ctx.settings));
   }
   if (changed.includes("company_id") || changed.includes("billing_country")) {
     const key = await indexNumber(acc, ctx, at);
@@ -103,7 +104,7 @@ export async function onUpdated(input: AfterInput, ctx: Ctx, at = new Date()): P
     const owner = ownerOf(acc.assigned_to);
     // Editing the number never restarts protection: the windows stay, only the key moves (review I2).
     if (reg) await ctx.store.set(K.reg(id), { ...reg, key: key ?? "" });
-    else if (key && owner) await startRegistration(ctx.store, id, newRegistration(key, owner, at, ctx.settings));
+    else if (key && owner) await register(ctx, id, newRegistration(key, owner, at, ctx.settings));
   }
   if (changed.includes("assigned_to")) {
     const to = ownerOf(acc.assigned_to);

@@ -3,7 +3,7 @@ import plugin from "../plugin";
 it("declares its permissions, settings and blocking rules", () => {
   expect(plugin.id).toBe("account-protection");
   expect(plugin.sdk).toBe("^0.2.0");
-  expect(plugin.permissions).toEqual(["accounts:read", "accounts:write", "activities:read", "users:read", "notify"]);
+  expect(plugin.permissions).toEqual(["accounts:read", "accounts:write", "activities:read", "orders:read", "users:read", "notify"]);
   expect(plugin.extensions.rules.map((r) => [r.entity, r.operation, r.onError])).toEqual([
     ["account", "beforeCreate", "block"],
     ["account", "beforeUpdate", "block"],
@@ -12,14 +12,14 @@ it("declares its permissions, settings and blocking rules", () => {
 });
 
 it("listens to account created, updated and deleted", () => {
-  expect(plugin.extensions.afters.map((a) => `${a.entity}.${a.operation}`)).toEqual(["account.created", "account.updated", "account.deleted"]);
+  expect(plugin.extensions.afters.map((a) => `${a.entity}.${a.operation}`)).toEqual(["account.created", "account.updated", "account.deleted", "order.created", "order.updated"]);
 });
 
 it("schedules the expiry and notice jobs and backfills on install", () => {
   expect(plugin.extensions.crons.map((c) => [c.id, c.schedule])).toEqual([["expire", "0 6 * * *"], ["notices", "*/5 * * * *"]]);
   expect(typeof plugin.onInstall).toBe("function");
   expect(typeof plugin.onUpgrade).toBe("function");
-  expect(plugin.version).toBe("0.1.1");
+  expect(plugin.version).toBe("0.2.0");
 });
 
 it("registers the tab, the panel, the Expiring page in the menu and an admin section", () => {
