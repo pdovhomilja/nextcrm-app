@@ -3,10 +3,20 @@ set -e
 
 echo "==> NextCRM Docker Entrypoint"
 
+# Connection for pg_isready/psql: the DB_* variables when set (compose files),
+# otherwise DATABASE_URL without its query string (libpq rejects Prisma
+# parameters such as ?schema=).
+if [ -n "${DB_HOST:-}" ]; then
+  PG_CONN="host=$DB_HOST port=${DB_PORT:-5432} user=$DB_USER dbname=$DB_NAME"
+  export PGPASSWORD="$DB_PASSWORD"
+else
+  PG_CONN="${DATABASE_URL%%\?*}"
+fi
+
 # --- 1. Wait for Postgres ---
 echo "==> Waiting for PostgreSQL..."
 RETRIES=30
-until pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -q 2>/dev/null; do
+until pg_isready -d "$PG_CONN" -q 2>/dev/null; do
   RETRIES=$((RETRIES - 1))
   if [ "$RETRIES" -le 0 ]; then
     echo "ERROR: PostgreSQL did not become ready in time."
@@ -122,10 +132,13 @@ fi
 # --- 5. Conditional database seed ---
 # Use psql to count users directly (reliable) rather than prisma db execute
 # (which emits noisy output hard to parse).
+# Migrations have run, so the table exists: a failing query means a wrong
+# connection, and seeding a database we cannot read would be wrong too.
 echo "==> Checking if database needs seeding..."
-USER_COUNT=$(PGPASSWORD="$DB_PASSWORD" psql \
-  -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" \
-  -tAc 'SELECT COUNT(*) FROM "Users";' 2>/dev/null || echo "0")
+if ! USER_COUNT=$(psql -d "$PG_CONN" -tAc 'SELECT COUNT(*) FROM "Users";'); then
+  echo "ERROR: could not count users, not seeding. Check DATABASE_URL / DB_* variables."
+  exit 1
+fi
 
 # Strip whitespace
 USER_COUNT=$(echo "$USER_COUNT" | tr -d '[:space:]')
