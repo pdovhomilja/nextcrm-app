@@ -3,7 +3,7 @@ import plugin from "../plugin";
 it("declares a read-only Odoo connector", () => {
   expect([plugin.id, plugin.version, plugin.sdk]).toEqual(["odoo-connector", "0.1.0", "^0.2.2"]);
   expect(plugin.permissions).toEqual(["http", "accounts:read", "accounts:write", "contacts:read", "contacts:write", "users:read", "notify"]);
-  expect(Object.keys(plugin.settings.shape)).toEqual(["url", "database", "syncMinutes", "defaultCountry", "dryRun"]);
+  expect(Object.keys(plugin.settings.shape)).toEqual(["url", "database", "syncMinutes", "defaultCountry", "dryRun", "priceLists"]);
   expect(Object.keys(plugin.secrets.shape)).toEqual(["apiKey"]);
   expect(plugin.extensions.crons.map((c) => [c.id, c.schedule])).toEqual([["sync", "*/5 * * * *"]]);
   expect(plugin.extensions.adminActions.map((a) => a.id)).toEqual(["test", "sync"]);

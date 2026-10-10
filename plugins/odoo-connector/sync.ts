@@ -3,7 +3,8 @@ import { PARTNER_FIELDS, accountFields, changedFields, contactFields } from "./m
 import { matchAccount } from "./match";
 import { OdooAuthError, jsonClient, type OdooClient } from "./odoo";
 import type { Ctx } from "./settings";
-import { K, type AccountLink, type Conflict, type RunSummary } from "./store";
+import { syncCatalog } from "./catalog";
+import { K, type AccountLink, type CatalogCounts, type Conflict, type RunSummary } from "./store";
 
 const PAGE = 100;
 const OVERLAP_MS = 2 * 60_000;
@@ -28,6 +29,7 @@ interface Run {
   owners: Map<number, string | null>;
   started: number;
   done: Set<number>;
+  catalog?: CatalogCounts;
 }
 
 const CUSTOMER = [["customer_rank", ">", 0], ["parent_id", "=", false]];
@@ -50,7 +52,7 @@ async function syncCustomer(r: Run, p: OdooPartner): Promise<void> {
     if (!dry) await ctx.store.delete(K.conflict(p.id));
     if (link && !dry) {
       const prev = await ctx.store.get<AccountLink>(K.account(link.accountId));
-      await ctx.store.set(K.account(link.accountId), { partnerId: p.id, salesperson: prev?.salesperson ?? null, syncedAt: r.now.toISOString(), archived: p.active === false, notCustomer: !p.customer_rank } satisfies AccountLink);
+      await ctx.store.set(K.account(link.accountId), { partnerId: p.id, salesperson: prev?.salesperson ?? null, syncedAt: r.now.toISOString(), archived: p.active === false, notCustomer: !p.customer_rank, odooPriceList: prev?.odooPriceList ?? null } satisfies AccountLink);
     }
     r.counts.skipped++;
     return;
@@ -85,7 +87,7 @@ async function syncCustomer(r: Run, p: OdooPartner): Promise<void> {
     salesperson = (await ctx.store.get<AccountLink>(K.account(accountId)))?.salesperson ?? null;
   }
   await ctx.store.set(K.partner(p.id), { accountId });
-  await ctx.store.set(K.account(accountId), { partnerId: p.id, syncedAt: r.now.toISOString(), salesperson } satisfies AccountLink);
+  await ctx.store.set(K.account(accountId), { partnerId: p.id, syncedAt: r.now.toISOString(), salesperson, odooPriceList: p.property_product_pricelist || null } satisfies AccountLink);
 }
 
 async function syncPerson(r: Run, p: OdooPartner): Promise<void> {
@@ -204,13 +206,14 @@ export async function runSync(ctx: Ctx, client: OdooClient, now: Date): Promise<
     r.countries = new Map((await client.call<{ id: number; code: string }[]>("res.country", "search_read", { domain: [], fields: ["code"] })).map((c) => [c.id, c.code]));
     const cursor = await ctx.store.get<{ at: string }>(K.cursor);
     const top = cursor ? await incremental(r, cursor.at) : await firstImport(r);
+    r.catalog = await syncCatalog({ ctx, client, dry, now });
     if (!dry && top) await ctx.store.set(K.cursor, { at: top });
-    summary = { at: now.toISOString(), ok: true, dryRun: dry, ...r.counts };
+    summary = { at: now.toISOString(), ok: true, dryRun: dry, ...r.counts, catalog: r.catalog };
     await ctx.store.set(K.failures, { count: 0 });
     ctx.log.info(`Sync finished${dry ? " (dry run)" : ""}`, { ...r.counts, ms: Date.now() - started });
   } catch (e) {
     const error = e instanceof Error ? e.message : String(e);
-    summary = { at: now.toISOString(), ok: false, dryRun: dry, ...r.counts, error };
+    summary = { at: now.toISOString(), ok: false, dryRun: dry, ...r.counts, catalog: r.catalog, error };
     ctx.log.error(`Sync failed: ${error}`, { ...r.counts });
     const failures = ((await ctx.store.get<{ count: number }>(K.failures))?.count ?? 0) + 1;
     await ctx.store.set(K.failures, { count: failures });
