@@ -30,7 +30,7 @@ export interface AccountLink {
 }
 
 export interface ProductLink { productId: string; tmplId: number | null; categoryRef: string | null }
-export interface PriceListLink { priceListId: string; name: string; ruleCount: number; syncedAt: string }
+export interface PriceListLink { priceListId: string; name: string; ruleCount: number; syncedAt: string; isActive?: boolean }
 export interface CatalogCounts {
   categories: number; productsCreated: number; productsUpdated: number; productsFailed: number;
   listsReplaced: number; listsMissing: number[]; accountLists: number;
@@ -43,7 +43,7 @@ export interface CompareResult {
   ok: boolean;
   error?: string;
   lists: { odooId: number; name: string; checked: number; failed: number }[];
-  mismatches: { list: string; product: string; quantity: number; crm: string; odoo: string; diff: string; reason: "rate" | "rule" }[];
+  mismatches: { list: string; product: string; quantity: number; crm: string; odoo: string; diff: string; reason: "rate" | "rule"; error?: string }[];
 }
 
 export interface RunSummary {

@@ -21,7 +21,7 @@ export async function panelData(ctx: Ctx, accountId: string) {
     syncedAt: link.syncedAt,
     archived: !!link.archived,
     notCustomer: !!link.notCustomer,
-    priceList: link.odooPriceList ? { name: link.odooPriceList[1], imported: !!(await ctx.store.get(K.pricelist(link.odooPriceList[0]))) } : null,
+    priceList: link.odooPriceList ? { name: link.odooPriceList[1], imported: !!(await ctx.store.get<PriceListLink>(K.pricelist(link.odooPriceList[0])))?.isActive } : null,
   };
 }
 

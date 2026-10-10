@@ -90,6 +90,7 @@ export function odoo(partners: RecordData[], users: RecordData[] = [{ id: 9, log
     ...extra,
     "res.country/search_read": () => [{ id: 56, code: "CZ" }],
     "res.users/read": (b) => users.filter((u) => b.ids.includes(u.id)),
+    "res.partner/read": (b) => partners.filter((p) => b.ids.includes(p.id)).map((p) => Object.fromEntries(["id", ...(b.fields ?? [])].map((f: string) => [f, p[f] ?? false]))),
     "res.partner/search_read": (b) => {
       const activeTest = b.context?.active_test !== false;
       const rows = partners.filter((p) => (!activeTest || p.active !== false) && domainMatch(p, b.domain));
@@ -122,7 +123,7 @@ export function mkCatalog(partners: RecordData[], catalog: FakeCatalog, settings
 }
 
 /** A context with one imported list (Odoo 245) and two imported products (Odoo 500 with a 1000-piece template rule, 501 without). */
-export function mkCompare(opts: { price: number | undefined; crm?: Record<string, { price: string; currency: string; ruleId: string | null }>; priceLists?: string }) {
+export function mkCompare(opts: { price: number | undefined; crm?: Record<string, { price: string; currency: string; ruleId: string | null; ruleBase?: string | null } | Error>; priceLists?: string; productCurrency?: string }) {
   const calls: { path: string; body: any; headers: Record<string, string> }[] = [];
   const catalog: FakeCatalog = {
     categories: [], variants: [], taxes: [],
@@ -135,14 +136,18 @@ export function mkCompare(opts: { price: number | undefined; crm?: Record<string
     "sale.order.line/onchange": () => ({ value: opts.price === undefined ? {} : { price_unit: opts.price } }),
   }, calls);
   const products: RecordData[] = [
-    { id: "p500", source: "EXTERNAL", externalRef: "500", status: "ACTIVE", name: "Lid", currency: "CZK", deletedAt: null },
-    { id: "p501", source: "EXTERNAL", externalRef: "501", status: "ACTIVE", name: "Straw", currency: "CZK", deletedAt: null },
+    { id: "p500", source: "EXTERNAL", externalRef: "500", status: "ACTIVE", name: "Lid", currency: opts.productCurrency ?? "CZK", deletedAt: null },
+    { id: "p501", source: "EXTERNAL", externalRef: "501", status: "ACTIVE", name: "Straw", currency: opts.productCurrency ?? "CZK", deletedAt: null },
   ];
   const ctx = createTestContext({
     pluginId: "odoo-connector",
     settings: settingsSchema.parse({ url: "https://odoo.example.com", database: "db", dryRun: false, priceLists: opts.priceLists ?? "245" }),
     secrets: { apiKey: "k" }, fetch, data: { products },
-    prices: async ({ productId, quantity }) => opts.crm?.[`${productId.slice(1)}:${quantity}`] ?? { price: String(opts.price), currency: "CZK", ruleId: null },
+    prices: async ({ productId, quantity }) => {
+      const q = opts.crm?.[`${productId.slice(1)}:${quantity}`];
+      if (q instanceof Error) throw q;
+      return q ? { ruleBase: null, ...q } : { price: String(opts.price), currency: "CZK", ruleId: null, ruleBase: null };
+    },
   }) as unknown as TestCtx;
   void ctx.store.set("pricelist:245", { priceListId: "L245", name: "Gold CZK", ruleCount: 1, syncedAt: "2026-10-10T08:00:00Z" });
   void ctx.store.set("product:500", { productId: "p500", tmplId: 912, categoryRef: "7" });

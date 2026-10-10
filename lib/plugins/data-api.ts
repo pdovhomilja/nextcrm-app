@@ -158,7 +158,8 @@ export function createDataApi(pluginId: string, permissions: Permission[]): Data
         need("products:read");
         const { getPrice } = await import("@/lib/pricing/get-price");
         const r = await getPrice({ priceListId: input.priceListId, productId: input.productId, quantity: input.quantity });
-        return { price: r.price.toString(), currency: r.currency, ruleId: r.ruleId };
+        const rule = r.ruleId ? await (await db()).crm_PriceListRules.findUnique({ where: { id: r.ruleId } }) as { base: string } | null : null;
+        return { price: r.price.toString(), currency: r.currency, ruleId: r.ruleId, ruleBase: rule?.base ?? null };
       },
     },
   };

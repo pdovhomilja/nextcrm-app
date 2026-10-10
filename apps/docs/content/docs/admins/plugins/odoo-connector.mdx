@@ -71,7 +71,9 @@ Every sync also brings in the catalog:
 
 Products, categories and these price lists are read-only in the CRM: change them in Odoo. To choose lists, click **Load price lists** on the plugin's admin page: it shows every Odoo list with its id. Put the ids in `priceLists` and save.
 
-Rules the CRM cannot use are listed on the admin page under **Rules the CRM cannot use**. An Odoo variant whose SKU a CRM product already uses is not imported; the plugin log names it and the next syncs try again until one of the two SKUs changes.
+A list you remove from `priceLists` stays in the CRM as an inactive list, so older orders keep it, and is no longer given to accounts. A list is skipped, with a line in the plugin log, when a list it builds on can't be read with the Odoo user's access, or when it builds on more than 10 other lists.
+
+Rules the CRM cannot use are listed on the admin page under **Rules the CRM cannot use**. The same list notes rules Odoo ranks differently from the CRM (a rule on one product variant next to a rule on the whole product). An Odoo variant whose SKU a CRM product already uses is not imported; the plugin log names it and the next syncs try again until one of the two SKUs changes.
 
 ## Compare with Odoo
 

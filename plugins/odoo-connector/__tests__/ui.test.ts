@@ -48,3 +48,10 @@ describe("catalog screens", () => {
     expect((await panelData(ctx, "a1"))?.priceList).toEqual({ name: "Other", imported: false });
   });
 });
+
+it("does not call a list applied when it was removed from the setting (review I2)", async () => {
+  const { ctx } = mk([], [], {});
+  await ctx.store.set(K.account("a1"), { partnerId: 1, syncedAt: "2026-10-10T10:00:00Z", salesperson: null, odooPriceList: [245, "Gold"] });
+  await ctx.store.set(K.pricelist(245), { priceListId: "L", name: "Gold", ruleCount: 1, syncedAt: "x", isActive: false });
+  expect((await panelData(ctx, "a1"))?.priceList).toEqual({ name: "Gold", imported: false });
+});

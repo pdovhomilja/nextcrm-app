@@ -80,3 +80,12 @@ it("refuses a base list that is not EXTERNAL", async () => {
   await expect(replaceExternalPriceList("odoo", "245", { name: "Gold", currency: "CZK", isActive: true }, [r])).rejects.toThrow("Unknown base price list ref: 234");
   expect(db.crm_PriceListRules.deleteMany).not.toHaveBeenCalled();
 });
+
+it("stamps rules in array order so later rules win ties, like Odoo's id desc (review I4)", async () => {
+  db.crm_PriceLists.findUnique.mockResolvedValue({ id: "L1", source: "EXTERNAL" });
+  db.crm_PriceLists.update.mockResolvedValue({ id: "L1" });
+  const all = { ...rule, appliesTo: "ALL" as const, productRef: null };
+  await replaceExternalPriceList("odoo", "245", { name: "Gold", currency: "CZK", isActive: true }, [{ ...all, externalRef: "7" }, { ...all, externalRef: "12" }]);
+  const [a, b] = db.crm_PriceListRules.createMany.mock.calls[0][0].data;
+  expect(b.createdAt.getTime()).toBeGreaterThan(a.createdAt.getTime());
+});

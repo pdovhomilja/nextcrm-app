@@ -113,7 +113,8 @@ export interface PriceListsApi {
   /** Writes the list and replaces all its rules in one transaction; an unknown ref fails the whole call. */
   replaceExternal(ref: string, list: { name: string; currency: string; isActive: boolean }, rules: ExternalRuleInput[]): Promise<{ id: string }>;
 }
-export interface PriceQuote { price: string; currency: string; ruleId: string | null }
+/** `ruleBase` is the base (LIST_PRICE, COST, PRICE_LIST) of the rule that priced it, null when no rule did. */
+export interface PriceQuote { price: string; currency: string; ruleId: string | null; ruleBase: string | null }
 export interface PricesApi { get(input: { priceListId: string; productId: string; quantity: string }): Promise<PriceQuote> }
 
 export interface DataApi {

@@ -65,7 +65,9 @@ export async function replaceExternalPriceList(pluginId: string, ref: string, li
       ? await tx.crm_PriceLists.update({ where: { id: existing.id }, data: { ...list, updatedBy: null } })
       : await tx.crm_PriceLists.create({ data: { ...list, source: "EXTERNAL", externalRef: ref, createdBy: null } });
     await tx.crm_PriceListRules.deleteMany({ where: { priceListId: row.id } });
-    if (resolved.length) await tx.crm_PriceListRules.createMany({ data: resolved.map((r) => ({ ...r, priceListId: row.id })) });
+    // Later rules win ties (the engine's last tiebreak is newest createdAt), so callers pass rules in their system's order.
+    const t0 = Date.now();
+    if (resolved.length) await tx.crm_PriceListRules.createMany({ data: resolved.map((r, i) => ({ ...r, priceListId: row.id, createdAt: new Date(t0 + i) })) });
     return { id: row.id };
   });
 }

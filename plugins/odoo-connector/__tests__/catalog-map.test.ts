@@ -53,6 +53,6 @@ it("skips rules core cannot represent, with a reason", () => {
 
 it("lists base lists and orders lists bases first; a cycle is reported (Review Focus 2)", () => {
   expect(baseRefs([r({ base: "pricelist", base_pricelist_id: [234, "A"] }), r({ base: "list_price" })])).toEqual([234]);
-  expect(orderLists(new Map([[245, [234]], [234, [233]], [233, []]]))).toEqual({ order: [233, 234, 245], cyclic: [] });
-  expect(orderLists(new Map([[1, [2]], [2, [1]], [3, []]]))).toEqual({ order: [3], cyclic: [1, 2] });
+  expect(orderLists(new Map([[245, [234]], [234, [233]], [233, []]]))).toEqual({ order: [233, 234, 245], cyclic: [], tooDeep: [] });
+  expect(orderLists(new Map([[1, [2]], [2, [1]], [3, []]]))).toEqual({ order: [3], cyclic: [1, 2], tooDeep: [] });
 });

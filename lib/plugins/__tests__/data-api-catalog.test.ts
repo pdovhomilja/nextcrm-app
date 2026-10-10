@@ -8,7 +8,7 @@ const writes = {
 jest.mock("@/lib/catalog/plugin-writes", () => writes);
 const getPrice = jest.fn();
 jest.mock("@/lib/pricing/get-price", () => ({ getPrice: (...a: unknown[]) => getPrice(...a) }));
-jest.mock("@/lib/prisma", () => ({ prismadb: {} }));
+jest.mock("@/lib/prisma", () => ({ prismadb: { crm_PriceListRules: { findUnique: jest.fn().mockResolvedValue({ base: "LIST_PRICE" }) } } }));
 jest.mock("@/inngest/client", () => ({ inngest: { send: jest.fn().mockResolvedValue(undefined) } }));
 jest.mock("@/lib/plugins/log", () => ({ writePluginLog: jest.fn() }));
 
@@ -39,7 +39,7 @@ it("needs priceLists:write to replace and priceLists:read to list", async () => 
 it("prices a product through core getPrice with products:read, decimals as strings", async () => {
   getPrice.mockResolvedValue({ price: new Decimal("1.51"), currency: "CZK", ruleId: "r1", listPrice: new Decimal("1.67"), steps: [] });
   const out = await createDataApi("demo", ["products:read"]).prices.get({ priceListId: "L1", productId: "p1", quantity: "1000" });
-  expect(out).toEqual({ price: "1.51", currency: "CZK", ruleId: "r1" });
+  expect(out).toEqual({ price: "1.51", currency: "CZK", ruleId: "r1", ruleBase: "LIST_PRICE" });
   expect(getPrice).toHaveBeenCalledWith({ priceListId: "L1", productId: "p1", quantity: "1000" });
   await expect(createDataApi("demo", []).prices.get({ priceListId: "L1", productId: "p1", quantity: "1" })).rejects.toThrow("products:read");
 });
@@ -52,12 +52,12 @@ it("registers product panels", () => {
 
 it("gives plugin tests an in-memory catalog", async () => {
   const products: Record<string, unknown>[] = [];
-  const ctx = createTestContext({ data: { products }, prices: async () => ({ price: "2", currency: "CZK", ruleId: null }) });
+  const ctx = createTestContext({ data: { products }, prices: async () => ({ price: "2", currency: "CZK", ruleId: null, ruleBase: null }) });
   expect(await ctx.data.products.upsertExternal("332", f)).toMatchObject({ created: true });
   expect(await ctx.data.products.upsertExternal("332", { ...f, name: "Cup 2" })).toMatchObject({ created: false });
   expect(products).toEqual([expect.objectContaining({ source: "EXTERNAL", externalRef: "332", name: "Cup 2" })]);
   await ctx.data.productCategories.upsertExternal("7", { name: "Tea", parentRef: null });
   const { id } = await ctx.data.priceLists.replaceExternal("245", { name: "G", currency: "CZK", isActive: true }, []);
   expect(await ctx.data.priceLists.findExternal()).toEqual([expect.objectContaining({ id, ref: "245", isActive: true })]);
-  expect(await ctx.data.prices.get({ priceListId: id, productId: "x", quantity: "1" })).toEqual({ price: "2", currency: "CZK", ruleId: null });
+  expect(await ctx.data.prices.get({ priceListId: id, productId: "x", quantity: "1" })).toEqual({ price: "2", currency: "CZK", ruleId: null, ruleBase: null });
 });

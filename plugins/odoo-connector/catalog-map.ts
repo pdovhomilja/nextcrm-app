@@ -18,6 +18,8 @@ export const VARIANT_FIELDS = ["id", "display_name", "default_code", "descriptio
 export const RULE_FIELDS = ["id", "applied_on", "product_tmpl_id", "product_id", "categ_id", "min_quantity", "date_start", "date_end", "compute_price", "fixed_price", "percent_price", "base", "base_pricelist_id", "price_discount", "price_markup", "price_surcharge", "price_round", "price_min_margin", "price_max_margin", "write_date"];
 
 const s = (n: number) => String(n);
+/** Odoo datetimes are UTC "YYYY-MM-DD HH:MM:SS". */
+const utc = (v: string | false) => (v ? `${v.replace(" ", "T")}Z` : null);
 const orNull = (n: number) => (n ? String(n) : null);
 
 export function categoryOrder(cats: OdooCategory[]): OdooCategory[] {
@@ -56,8 +58,8 @@ export function mapRules(items: OdooRule[], variantsOf: (tmplId: number) => numb
     if (!base) { skipped.push({ ruleId: it.id, reason: `base ${it.base}` }); continue; }
     const common: Omit<ExternalRuleInput, "appliesTo" | "productRef" | "categoryRef" | "externalRef"> = {
       minQuantity: s(it.min_quantity ?? 0),
-      dateStart: it.date_start || null,
-      dateEnd: it.date_end || null,
+      dateStart: utc(it.date_start),
+      dateEnd: utc(it.date_end),
       computePrice: compute,
       fixedPrice: compute === "FIXED" ? s(it.fixed_price) : null,
       percentPrice: compute === "PERCENTAGE" ? s(it.percent_price) : null,
@@ -80,6 +82,16 @@ export function mapRules(items: OdooRule[], variantsOf: (tmplId: number) => numb
       }
     } else skipped.push({ ruleId: it.id, reason: `applied_on ${it.applied_on}` });
   }
+  // Odoo ranks a variant rule above a template rule; core ranks both as PRODUCT, so flag the overlap for the admin.
+  const variantRule = new Map(rules.filter((r) => r.appliesTo === "PRODUCT" && !r.externalRef!.includes(":")).map((r) => [r.productRef!, r.externalRef!]));
+  for (const r of rules) {
+    const [tmplRule] = r.externalRef!.split(":");
+    if (r.externalRef!.includes(":") && variantRule.has(r.productRef!) && !skipped.some((x) => x.ruleId === Number(tmplRule))) {
+      skipped.push({ ruleId: Number(tmplRule), reason: `variant rule ${variantRule.get(r.productRef!)} on the same product: the CRM may pick a different rule than Odoo` });
+    }
+  }
+  // Odoo's last tiebreak is the newest rule (id desc); core lets later rules win ties, so order by Odoo id.
+  rules.sort((a, b) => Number(a.externalRef!.split(":")[0]) - Number(b.externalRef!.split(":")[0]));
   return { rules, skipped };
 }
 
@@ -87,8 +99,11 @@ export function baseRefs(items: OdooRule[]): number[] {
   return Array.from(new Set(items.filter((i) => i.base === "pricelist" && i.base_pricelist_id).map((i) => (i.base_pricelist_id as [number, string])[0])));
 }
 
-/** Topological order, bases first; lists on or behind a cycle are returned as cyclic. */
-export function orderLists(deps: Map<number, number[]>): { order: number[]; cyclic: number[] } {
+/**
+ * Topological order, bases first; lists on or behind a cycle are returned as cyclic, and lists whose chain
+ * (the list and every list it builds on) is larger than `maxChain` as tooDeep — core cannot price through them.
+ */
+export function orderLists(deps: Map<number, number[]>, maxChain = Infinity): { order: number[]; cyclic: number[]; tooDeep: number[] } {
   const order: number[] = [];
   const state = new Map<number, "visiting" | "done" | "bad">();
   const visit = (id: number): boolean => {
@@ -102,5 +117,12 @@ export function orderLists(deps: Map<number, number[]>): { order: number[]; cycl
     return ok;
   };
   for (const id of Array.from(deps.keys()).sort((a, b) => a - b)) visit(id);
-  return { order, cyclic: Array.from(state.entries()).filter(([, v]) => v === "bad").map(([k]) => k).sort((a, b) => a - b) };
+  const chain = new Map<number, Set<number>>();
+  for (const id of order) chain.set(id, new Set([id, ...(deps.get(id) ?? []).flatMap((b) => Array.from(chain.get(b) ?? []))]));
+  const tooDeep = order.filter((id) => chain.get(id)!.size > maxChain).sort((a, b) => a - b);
+  return {
+    order: order.filter((id) => !tooDeep.includes(id)),
+    cyclic: Array.from(state.entries()).filter(([, v]) => v === "bad").map(([k]) => k).sort((a, b) => a - b),
+    tooDeep,
+  };
 }
