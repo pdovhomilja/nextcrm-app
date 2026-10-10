@@ -24,12 +24,12 @@ describe("status table (spec § 4.3)", () => {
     ["in payment", sale({ invoice_status: "invoiced", invoice_ids: [1] }), [inv({ payment_state: "in_payment" })], "PAID"],
     ["reversed invoice ignored", sale({ invoice_status: "invoiced", invoice_ids: [1, 2] }), [inv({ payment_state: "reversed" }), inv({ id: 2, payment_state: "paid" })], "PAID"],
     ["paid partial invoice is not PAID", sale({ invoice_status: "to invoice", invoice_ids: [1] }), [inv({ payment_state: "paid" })], "CONFIRMED"],
-  ] as const)("%s", (_n, s, moves, want) => expect(targetStatus(s as OdooSale | null, moves as OdooMove[])).toBe(want));
+  ] as const)("%s", (_n, s, moves, want) => expect(targetStatus(s as OdooSale | null, moves as unknown as OdooMove[])).toBe(want));
 });
 
 describe("reading back", () => {
   const setup = async (o: Record<string, unknown>, s: Partial<OdooSale> | null, moves: OdooMove[] = [], pickings: Record<string, unknown>[] = []) => {
-    const m = mkOrders({ orders: [order({ status: "SENT", externalRef: "900", ...o })], sales: { orders: s ? [sale(s)] : [], moves, pickings } });
+    const m = mkOrders({ orders: [order({ status: "SENT", externalRef: "900", ...o })], sales: { orders: s ? [sale(s) as never] : [], moves: moves as never[], pickings } });
     await m.ctx.store.set(K.order("o1"), link());
     return m;
   };
