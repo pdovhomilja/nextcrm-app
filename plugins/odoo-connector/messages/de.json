@@ -1,0 +1,35 @@
+{
+  "name": "Odoo-Anbindung",
+  "admin": {
+    "test": "Verbindung testen",
+    "syncNow": "Jetzt synchronisieren",
+    "connected": "Verbunden mit Odoo {version} als {user}",
+    "dryRun": "Testlauf ist an: Die Synchronisierung protokolliert nur, was sie ändern würde. Zum Importieren in den Einstellungen ausschalten.",
+    "lastRun": "Letzter Lauf",
+    "never": "noch nicht",
+    "nextRun": "Nächster Lauf",
+    "counts": "{created} angelegt, {updated} geändert, {unchanged} unverändert, {skipped} übersprungen, {conflicts} Konflikte, {failed} Fehler",
+    "failed": "Fehlgeschlagen: {error}",
+    "conflicts": "Kunden, die zu mehreren Konten passen",
+    "conflictsEmpty": "Keine Konflikte.",
+    "reason": { "number": "gleiche Registernummer", "vat": "gleiche USt-IdNr." }
+  },
+  "needsOwner": {
+    "title": "Importierte Konten ohne Verantwortlichen",
+    "nav": "Ohne Verantwortlichen",
+    "empty": "Alle importierten Konten haben einen Verantwortlichen.",
+    "account": "Konto",
+    "salesperson": "Verkäufer in Odoo"
+  },
+  "panel": {
+    "linked": "Verknüpft mit Odoo-Partner #{id}",
+    "synced": "Zuletzt synchronisiert {date} UTC",
+    "fields": "Odoo steuert: Name, Registernummer, USt-IdNr., Rechnungsadresse, E-Mail, Telefon.",
+    "archived": "In Odoo archiviert.",
+    "notCustomer": "In Odoo kein Kunde mehr."
+  },
+  "mail": {
+    "failingSubject": "Odoo-Synchronisierung schlägt fehl",
+    "failingText": "Die Odoo-Synchronisierung ist dreimal hintereinander fehlgeschlagen. Letzter Fehler: {error}"
+  }
+}

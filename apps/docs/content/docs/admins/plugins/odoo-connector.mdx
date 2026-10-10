@@ -1,0 +1,64 @@
+---
+title: Odoo connector
+description: Import customers and their people from an Odoo ERP and keep them current.
+---
+
+The **Odoo connector** plugin (`odoo-connector`) reads customers from an Odoo ERP and keeps them in the CRM as accounts, with their people as contacts. It only reads from Odoo: it never creates or changes anything there.
+
+## What it does
+
+- Every Odoo customer (a company or a person with a customer rank above zero, no parent, active) becomes an account. An existing account is reused when it matches (see below); otherwise a new one is created.
+- People under those customers (child contacts of type "contact") become contacts on the account.
+- After the first import, the plugin checks Odoo for changed partners every `syncMinutes` minutes and updates the CRM.
+
+## Before you start
+
+- Odoo 18 or later (the plugin uses Odoo's JSON-2 API).
+- An Odoo user for the CRM with an API key. It needs read access to contacts (partners), countries and users. It needs no write access.
+
+## Install and settings
+
+Install it under **Admin → Plugins → Odoo connector**.
+
+| Setting | Default | Effect |
+|---|---|---|
+| `url` | none | The Odoo address, starting with `https://`, for example `https://odoo.example.com`. |
+| `database` | none | The Odoo database name. |
+| `syncMinutes` | `15` | Minutes between syncs, 5 to 1440. The check runs every 5 minutes, so a sync can start up to 5 minutes later. |
+| `defaultCountry` | `CZ` | Two-letter country code for customers without a country in Odoo. |
+| `dryRun` | on | While on, the sync only writes to the plugin log what it would create or change. |
+
+The secret `apiKey` holds the Odoo user's API key. It is stored encrypted.
+
+## Dry run first
+
+A new install starts in dry run. Use **Test connection** to check the address, database and key: it shows the Odoo version and the API user's name. Then click **Sync now** and read the plugin log: it lists every account and contact the sync would create or update. When the list looks right, turn `dryRun` off in the settings and click **Sync now** again.
+
+## How customers are matched
+
+For each Odoo customer the plugin tries, in this order:
+
+1. an account it already linked to this customer;
+2. an account with the same country and registration number (spaces are ignored; Czech numbers are compared with leading zeros to 8 digits);
+3. an account with the same VAT number;
+4. otherwise it creates a new account.
+
+When two or more accounts match in step 2 or 3, the plugin links neither and lists the customer under **Customers matching more than one account** on the plugin's admin page. Fix it in the CRM (correct or remove the duplicate) and the next sync links it.
+
+## Owners
+
+A new account gets an owner when the customer's salesperson in Odoo has the same email as an active CRM user. Otherwise the account has no owner and appears on the **Needs owner** page (under Plugins in the menu, for managers and admins), with the Odoo salesperson's name. A sync never changes the owner of an account that already exists.
+
+## What Odoo controls
+
+Odoo wins for these account fields: name, registration number, VAT number, billing street, city, postal code, region, country, email and phone. When one of them changes in Odoo, the next sync writes it to the account, even if someone edited it in the CRM.
+
+The sync never touches anything else: the owner of an existing account, the shipping address, the price list, notes, activities and all other fields. The account's **Odoo** panel shows the link to the Odoo partner and when it was last synced.
+
+## Archived customers
+
+When a customer is archived in Odoo, or stops being a customer, nothing is deleted in the CRM. The account's Odoo panel shows the change. If the customer becomes active again, it syncs as before.
+
+## Failures
+
+A failing sync is logged in the plugin log with the reason, for example when Odoo rejects the API key. The next run continues from where the last good run stopped. After three failed runs in a row, admins get one email.

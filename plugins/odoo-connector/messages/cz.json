@@ -1,0 +1,35 @@
+{
+  "name": "Napojení na Odoo",
+  "admin": {
+    "test": "Otestovat spojení",
+    "syncNow": "Synchronizovat teď",
+    "connected": "Spojeno s Odoo {version} jako {user}",
+    "dryRun": "Zkušební režim je zapnutý: synchronizace jen zapisuje do logu, co by změnila. Pro import ho vypněte v nastavení.",
+    "lastRun": "Poslední běh",
+    "never": "zatím ne",
+    "nextRun": "Další běh",
+    "counts": "{created} vytvořeno, {updated} upraveno, {unchanged} beze změny, {skipped} přeskočeno, {conflicts} konfliktů, {failed} chyb",
+    "failed": "Chyba: {error}",
+    "conflicts": "Zákazníci odpovídající více účtům",
+    "conflictsEmpty": "Žádné konflikty.",
+    "reason": { "number": "stejné IČO", "vat": "stejné DIČ" }
+  },
+  "needsOwner": {
+    "title": "Importované účty bez vlastníka",
+    "nav": "Bez vlastníka",
+    "empty": "Všechny importované účty mají vlastníka.",
+    "account": "Účet",
+    "salesperson": "Obchodník v Odoo"
+  },
+  "panel": {
+    "linked": "Propojeno s partnerem Odoo #{id}",
+    "synced": "Naposledy synchronizováno {date} UTC",
+    "fields": "Odoo řídí: název, IČO, DIČ, fakturační adresu, e-mail, telefon.",
+    "archived": "V Odoo archivováno.",
+    "notCustomer": "V Odoo už není zákazník."
+  },
+  "mail": {
+    "failingSubject": "Synchronizace s Odoo selhává",
+    "failingText": "Synchronizace s Odoo třikrát po sobě selhala. Poslední chyba: {error}"
+  }
+}
