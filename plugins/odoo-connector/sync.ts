@@ -4,6 +4,7 @@ import { matchAccount } from "./match";
 import { OdooAuthError, jsonClient, type OdooClient } from "./odoo";
 import type { Ctx } from "./settings";
 import { syncCatalog } from "./catalog";
+import { syncOrderStatuses } from "./orders-status";
 import { K, type AccountLink, type CatalogCounts, type Conflict, type RunSummary } from "./store";
 
 const PAGE = 100;
@@ -30,6 +31,7 @@ interface Run {
   started: number;
   done: Set<number>;
   catalog?: CatalogCounts;
+  orders?: { checked: number; moved: number };
 }
 
 const CUSTOMER = [["customer_rank", ">", 0], ["parent_id", "=", false]];
@@ -207,13 +209,19 @@ export async function runSync(ctx: Ctx, client: OdooClient, now: Date): Promise<
     const cursor = await ctx.store.get<{ at: string }>(K.cursor);
     const top = cursor ? await incremental(r, cursor.at) : await firstImport(r);
     r.catalog = await syncCatalog({ ctx, client, dry, now });
+    try {
+      r.orders = await syncOrderStatuses({ ctx, client, dry, now });
+    } catch (e) {
+      if (e instanceof OdooAuthError) throw e;
+      ctx.log.error(`Order statuses failed: ${e instanceof Error ? e.message : String(e)}`);
+    }
     if (!dry && top) await ctx.store.set(K.cursor, { at: top });
-    summary = { at: now.toISOString(), ok: true, dryRun: dry, ...r.counts, catalog: r.catalog };
+    summary = { at: now.toISOString(), ok: true, dryRun: dry, ...r.counts, catalog: r.catalog, orders: r.orders };
     await ctx.store.set(K.failures, { count: 0 });
     ctx.log.info(`Sync finished${dry ? " (dry run)" : ""}`, { ...r.counts, ms: Date.now() - started });
   } catch (e) {
     const error = e instanceof Error ? e.message : String(e);
-    summary = { at: now.toISOString(), ok: false, dryRun: dry, ...r.counts, catalog: r.catalog, error };
+    summary = { at: now.toISOString(), ok: false, dryRun: dry, ...r.counts, catalog: r.catalog, orders: r.orders, error };
     ctx.log.error(`Sync failed: ${error}`, { ...r.counts });
     const failures = ((await ctx.store.get<{ count: number }>(K.failures))?.count ?? 0) + 1;
     await ctx.store.set(K.failures, { count: failures });
