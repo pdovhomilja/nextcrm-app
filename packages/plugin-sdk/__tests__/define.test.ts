@@ -57,3 +57,9 @@ it("registers order panels with default roles", () => {
   expect(def.extensions.orderPanels).toEqual([expect.objectContaining({ id: "sync", roles: ["user", "manager", "admin"] })]);
   expect(() => definePlugin({ ...base, extensions: (x) => { x.orderPanel({ id: "a", component: () => null }); x.orderPanel({ id: "a", component: () => null }); } })).toThrow("Duplicate order panel id");
 });
+
+it("registers admin actions with unique ids", () => {
+  const def = definePlugin({ ...base, extensions: (x) => x.adminAction({ id: "sync", label: "admin.sync", handler: async () => "done" }) });
+  expect(def.extensions.adminActions.map((a) => [a.id, a.label])).toEqual([["sync", "admin.sync"]]);
+  expect(() => definePlugin({ ...base, extensions: (x) => { x.adminAction({ id: "a", label: "l", handler: async () => {} }); x.adminAction({ id: "a", label: "l", handler: async () => {} }); } })).toThrow("Duplicate admin action id");
+});

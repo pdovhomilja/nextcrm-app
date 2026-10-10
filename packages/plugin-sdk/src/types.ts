@@ -226,6 +226,8 @@ export interface AccountTabRegistration { id: string; title: string; component: 
 export interface AccountPanelRegistration { id: string; component: ServerComponent<AccountSlotProps<any, any>>; roles: Role[] }
 export interface OrderPanelRegistration { id: string; component: ServerComponent<OrderSlotProps<any, any>>; roles: Role[] }
 export interface PageRegistration { path: string; title: string; component: ServerComponent<PageProps<any, any>>; roles: Role[]; nav?: { label: string } }
+/** A button on the plugin's admin page; the host runs the handler with the plugin's context and shows the returned text. */
+export interface AdminActionRegistration { id: string; label: string; handler: (ctx: PluginContext<any, any>) => Promise<string | void> }
 
 export interface PluginExtensions {
   rules: RuleRegistration[];
@@ -237,6 +239,7 @@ export interface PluginExtensions {
   orderPanels: OrderPanelRegistration[];
   pages: PageRegistration[];
   adminSections: ServerComponent<AdminSectionProps<any, any>>[];
+  adminActions: AdminActionRegistration[];
   companyRegistries: CompanyRegistryProvider<any, any>[];
 }
 
@@ -250,6 +253,7 @@ export interface ExtensionBuilder<S, K> {
   orderPanel(panel: { id: string; component: ServerComponent<OrderSlotProps<S, K>>; roles?: Role[] }): void;
   page(page: { path: string; title: string; component: ServerComponent<PageProps<S, K>>; roles?: Role[]; nav?: { label: string } }): void;
   adminSection(component: ServerComponent<AdminSectionProps<S, K>>): void;
+  adminAction(action: { id: string; label: string; handler: (ctx: PluginContext<S, K>) => Promise<string | void> }): void;
   companyRegistry(provider: CompanyRegistryProvider<S, K>): void;
 }
 
