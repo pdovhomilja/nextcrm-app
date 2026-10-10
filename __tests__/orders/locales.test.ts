@@ -5,7 +5,7 @@ const PLACEHOLDERS = new Set(["date", "note", "amount", "number"]);
 /** next-intl parses ICU: a bare {YYYY} is a variable, so literal braces must be quoted as '{YYYY}'. */
 function unquotedBraces(text: string): string[] {
   const unquoted = text.replace(/'[^']*'/g, "");
-  return [...unquoted.matchAll(/\{([^}]*)\}/g)].map((m) => m[1]).filter((name) => !PLACEHOLDERS.has(name));
+  return Array.from(unquoted.matchAll(/\{([^}]*)\}/g)).map((m) => m[1]).filter((name) => !PLACEHOLDERS.has(name));
 }
 
 function strings(value: unknown): string[] {

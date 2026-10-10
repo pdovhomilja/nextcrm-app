@@ -77,10 +77,10 @@ export const crmOrderTools = [
   },
   {
     name: "crm_decide_order_approval",
-    description: "Approve or reject an order waiting for approval (manager or admin; a note is required to reject)",
-    schema: z.object({ id: z.string(), decision: z.enum(["APPROVED", "REJECTED"]), note: z.string().nullable().optional() }),
-    async handler(args: { id: string; decision: "APPROVED" | "REJECTED"; note?: string | null }, _userId: string, user: AuthzUser) {
-      return guard(async () => itemResponse(await decideApproval(user, args.id, args.decision, args.note)));
+    description: "Approve or reject an order waiting for approval (manager or admin; a note is required to reject). Pass the order's updatedAt from crm_get_order to approve exactly the version you reviewed.",
+    schema: z.object({ id: z.string(), decision: z.enum(["APPROVED", "REJECTED"]), note: z.string().nullable().optional(), updatedAt: z.string().optional() }),
+    async handler(args: { id: string; decision: "APPROVED" | "REJECTED"; note?: string | null; updatedAt?: string }, _userId: string, user: AuthzUser) {
+      return guard(async () => itemResponse(await decideApproval(user, args.id, args.decision, args.note, args.updatedAt)));
     },
   },
   {

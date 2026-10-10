@@ -37,7 +37,7 @@ export default async function OrderPage(props: { params: Promise<{ orderId: stri
           {order.approvedAt && <span>{t("approved", { date: order.approvedAt.slice(0, 10) })}</span>}
           {order.status === "DRAFT" && order.approvalNote && <span className="text-destructive">{t("rejected", { note: order.approvalNote })}</span>}
         </div>
-        <OrderActions order={order} />
+        <OrderActions key={`${order.status}:${order.updatedAt}`} order={order} editorOpen={editable && !!form} />
         <Tabs defaultValue="order">
           <TabsList>
             <TabsTrigger value="order">{t("lines")}</TabsTrigger>
@@ -45,7 +45,7 @@ export default async function OrderPage(props: { params: Promise<{ orderId: stri
           </TabsList>
           <TabsContent value="order" className="space-y-6">
             {editable && form ? (
-              <OrderEditor mode="edit" orderId={order.id} accountId={order.accountId} currency={order.currency} priceListName={order.priceListName}
+              <OrderEditor key={order.updatedAt} mode="edit" orderId={order.id} canSubmit={order.allowedActions?.includes("submit") ?? false} accountId={order.accountId} currency={order.currency} priceListName={order.priceListName}
                 contacts={form.contacts} products={products}
                 header={{ contactId: order.contactId, shipping_street: order.shipping_street, shipping_city: order.shipping_city, shipping_state: order.shipping_state,
                   shipping_postal_code: order.shipping_postal_code, shipping_country: order.shipping_country, requestedDeliveryDate: order.requestedDeliveryDate, note: order.note }}

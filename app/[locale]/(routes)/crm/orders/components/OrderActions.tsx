@@ -9,19 +9,20 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { changeOrderStatus, decideOrderApproval, deleteOrder, submitOrder } from "@/actions/crm/orders/orders";
 import type { OrderDetail } from "@/actions/crm/orders/queries";
+import { actionsOutsideEditor } from "./editor-state";
 
 type Confirm = null | "delete" | "cancel" | "reject";
 
-export function OrderActions({ order }: { order: OrderDetail }) {
+export function OrderActions({ order, editorOpen = false }: { order: OrderDetail; editorOpen?: boolean }) {
   const t = useTranslations("OrdersPage");
   const router = useRouter();
   const [pending, start] = useTransition();
   const [confirm, setConfirm] = useState<Confirm>(null);
   const [note, setNote] = useState("");
   const [to, setTo] = useState<string>(order.nextStatuses?.[0] ?? "");
-  const allowed = new Set(order.allowedActions ?? []);
+  const allowed = new Set(actionsOutsideEditor(order.allowedActions ?? [], editorOpen));
   const done = (res: { error: string } | { data: unknown }, after?: () => void) => {
-    if ("error" in res) { toast.error(res.error.startsWith("pricing:") ? res.error.slice(8) : t(`error.${res.error}` as never)); return; }
+    if ("error" in res) { toast.error(/^(pricing|rule):/.test(res.error) ? res.error.slice(res.error.indexOf(":") + 1) : t(`error.${res.error}` as never)); return; }
     after ? after() : router.refresh();
   };
   const act = (fn: () => Promise<{ error: string } | { data: unknown }>, after?: () => void) => start(async () => { done(await fn(), after); setConfirm(null); });
@@ -32,13 +33,13 @@ export function OrderActions({ order }: { order: OrderDetail }) {
         onConfirm={() => confirm === "delete"
           ? act(() => deleteOrder(order.id), () => router.push("/crm/orders"))
           : confirm === "reject"
-            ? act(() => decideOrderApproval(order.id, "REJECTED", note))
+            ? act(() => decideOrderApproval(order.id, "REJECTED", note, order.updatedAt))
             : act(() => changeOrderStatus(order.id, "cancel"))} />
       {allowed.has("submit") && <Button disabled={pending} onClick={() => act(() => submitOrder(order.id))}>{t("submit")}</Button>}
       {allowed.has("approve") && (
         <>
           <Input className="w-64" placeholder={t("rejectNote")} value={note} onChange={(e) => setNote(e.target.value)} />
-          <Button disabled={pending} onClick={() => act(() => decideOrderApproval(order.id, "APPROVED", note))}>{t("approve")}</Button>
+          <Button disabled={pending} onClick={() => act(() => decideOrderApproval(order.id, "APPROVED", note, order.updatedAt))}>{t("approve")}</Button>
           <Button disabled={pending} variant="destructive" onClick={() => setConfirm("reject")}>{t("reject")}</Button>
         </>
       )}

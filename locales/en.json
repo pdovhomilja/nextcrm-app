@@ -862,6 +862,7 @@
       "contactNotOnAccount": "That contact belongs to another account.",
       "invalid": "Check the entered values.",
       "noSeries": "There is no active number series for orders. Ask an admin.",
+      "numberTaken": "This order number already exists. Ask an admin to check the number series.",
       "pricing": "The price could not be calculated.",
       "Unauthorized": "Please sign in again."
     }

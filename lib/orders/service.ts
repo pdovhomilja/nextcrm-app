@@ -122,17 +122,23 @@ export async function createOrder(user: AuthzUser, input: { accountId: string; l
   const header = headerData(input);
   const order = await prismadb.$transaction(async (tx) => {
     const { number, seriesId } = await allocateNumber(tx, "order");
-    return tx.crm_Orders.create({
-      data: {
-        ...header,
-        ...shippingFrom(account as unknown as Record<string, unknown>, input),
-        number, seriesId, accountId: account.id, ownerId: account.assigned_to ?? null,
-        priceListId: ctx.priceListId, currency: ctx.currency,
-        ...orderTotals(lines),
-        createdBy: user.id, updatedBy: user.id,
-        lines: { create: lines },
-      },
-    });
+    try {
+      return await tx.crm_Orders.create({
+        data: {
+          ...header,
+          ...shippingFrom(account as unknown as Record<string, unknown>, input),
+          number, seriesId, accountId: account.id, ownerId: account.assigned_to ?? null,
+          priceListId: ctx.priceListId, currency: ctx.currency,
+          ...orderTotals(lines),
+          createdBy: user.id, updatedBy: user.id,
+          lines: { create: lines },
+        },
+      });
+    } catch (e) {
+      // The series template can be changed so that it reproduces an existing number.
+      if ((e as { code?: string }).code === "P2002") throw new OrderError("numberTaken");
+      throw e;
+    }
   });
   await writeAuditLog({ entityType: "order", entityId: order.id, action: "created", changes: null, userId: user.id });
   return { id: order.id, number: order.number };

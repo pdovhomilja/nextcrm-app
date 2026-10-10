@@ -23,3 +23,8 @@ export function editorTotals(rows: EditorLine[]) {
 
 export const lineIsBelow = (r: EditorLine) => isBelowList({ unitPrice: effective(r), listPrice: dec(r.listPrice) });
 export const lineTotal = (r: EditorLine) => lineAmounts({ quantity: dec(r.quantity), unitPrice: effective(r), vatRate: dec(r.vatRate) }).lineTotal.toFixed(2);
+
+/** With the editor open, Submit lives in the editor (it saves first), so it is dropped from the action bar. */
+export function actionsOutsideEditor<T extends string>(allowed: T[], editorOpen: boolean): T[] {
+  return editorOpen ? allowed.filter((a) => a !== "submit") : allowed;
+}

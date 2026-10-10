@@ -108,3 +108,20 @@ it("withdraws, reopens (clearing approval), cancels, retries and advances", asyn
   db.crm_Orders.findFirst.mockResolvedValue(order({ status: "SYNC_FAILED" }));
   await expect(changeStatus(manager, "o1", "retry")).resolves.toEqual({ status: "READY" });
 });
+
+it("re-prices and changes status in one conditional write (review I1)", async () => {
+  db.crm_Orders.findFirst.mockResolvedValue(order({ lines: [line({ unitPrice: new Decimal(45), unitPriceOverridden: true })] }));
+  await submitOrder(rep, "o1");
+  expect(db.crm_Orders.updateMany).toHaveBeenCalledTimes(1);
+  expect(db.crm_Orders.updateMany.mock.calls[0][0]).toMatchObject({ where: { id: "o1", status: "DRAFT" }, data: { status: "PENDING_APPROVAL", subtotal: expect.anything() } });
+});
+
+it("refuses an approval for a version the manager did not see (review I2)", async () => {
+  const seen = new Date("2026-10-10T08:00:00Z");
+  db.crm_Orders.findFirst.mockResolvedValue(order({ status: "PENDING_APPROVAL", updatedAt: new Date("2026-10-10T08:05:00Z") }));
+  await expect(decideApproval(manager, "o1", "APPROVED", null, seen.toISOString())).rejects.toMatchObject({ code: "changed" });
+  expect(db.crm_Orders.updateMany).not.toHaveBeenCalled();
+  db.crm_Orders.findFirst.mockResolvedValue(order({ status: "PENDING_APPROVAL", updatedAt: seen }));
+  await decideApproval(manager, "o1", "APPROVED", null, seen.toISOString());
+  expect(statusUpdate()).toMatchObject({ where: { id: "o1", status: "PENDING_APPROVAL", updatedAt: seen } });
+});

@@ -64,3 +64,23 @@ it("refuses line changes on CRM orders", async () => {
   db.crm_Orders.findUnique.mockResolvedValue({ id: "o1", status: "SENT", source: "CRM", createdBy: "rep", externalRef: "SO1" });
   await expect(api.orders.update("o1", { lines: [] })).rejects.toThrow("only EXTERNAL orders");
 });
+
+it("leaves lines alone when the status change is refused, and writes lines + status together (review I4)", async () => {
+  const api = createDataApi("conn", ["orders:write"]);
+  db.crm_Orders.findUnique.mockResolvedValue({ id: "o1", status: "DRAFT", source: "EXTERNAL", createdBy: null, externalRef: "SO1" });
+  await expect(api.orders.update("o1", { status: "SENT", lines: [{ productId: "p1", quantity: 1, unitPrice: 5 }] })).rejects.toThrow();
+  expect(db.crm_OrderLines.deleteMany).not.toHaveBeenCalled();
+  db.crm_Orders.findUnique.mockResolvedValue({ id: "o1", status: "SENT", source: "EXTERNAL", createdBy: null, externalRef: "SO1" });
+  db.crm_Orders.updateMany.mockResolvedValue({ count: 0 });
+  await expect(api.orders.update("o1", { status: "CONFIRMED", lines: [{ productId: "p1", quantity: 1, unitPrice: 5 }] })).rejects.toThrow();
+  expect(db.$transaction).toHaveBeenCalled();
+  expect(db.crm_OrderLines.createMany).not.toHaveBeenCalled();
+});
+
+it("refuses to create EXTERNAL orders in statuses plugins may not set (review I5)", async () => {
+  const api = createDataApi("conn", ["orders:write"]);
+  for (const status of ["DRAFT", "PENDING_APPROVAL", "READY", "SYNC_FAILED"]) {
+    await expect(api.orders.create({ accountId: "acc", externalRef: "SO2", status: status as never, lines: [] })).rejects.toThrow(`cannot create an order as ${status}`);
+  }
+  expect(db.crm_Orders.create).not.toHaveBeenCalled();
+});

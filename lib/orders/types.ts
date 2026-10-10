@@ -38,7 +38,7 @@ export interface HeaderInput {
 
 export const ORDER_ERROR_CODES = [
   "notFound", "forbidden", "changed", "noLines", "productInactive",
-  "noteRequired", "contactNotOnAccount", "invalid", "noSeries", "pricing",
+  "noteRequired", "contactNotOnAccount", "invalid", "noSeries", "numberTaken", "pricing",
 ] as const;
 export type OrderErrorCode = (typeof ORDER_ERROR_CODES)[number];
 

@@ -38,3 +38,9 @@ it("saves for admins only and needs a counter token", async () => {
   expect(db.numberSeries.update).toHaveBeenCalledWith({ where: { id: "s1" }, data: { name: "Orders", template: "OBJ-{YYYY}-{#####}", resetPolicy: "YEARLY", active: true } });
   expect(db.crm_SystemSettings.upsert).toHaveBeenCalledWith(expect.objectContaining({ where: { key: "orders_approval_emails" }, update: { value: "false" } }));
 });
+
+it("refuses a yearly template without the year, so numbers cannot repeat next year (review I9)", async () => {
+  as("admin");
+  await expect(saveOrderSettings({ ...input, template: "OBJ-{#####}", resetPolicy: "YEARLY" })).resolves.toEqual({ error: "invalid" });
+  await expect(saveOrderSettings({ ...input, template: "OBJ-{#####}", resetPolicy: "NEVER" })).resolves.toEqual({ data: { ok: true } });
+});

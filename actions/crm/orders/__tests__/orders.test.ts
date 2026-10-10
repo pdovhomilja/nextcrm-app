@@ -3,6 +3,7 @@ jest.mock("@/lib/prisma", () => ({ prismadb: { users: { findUnique: jest.fn() } 
 jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));
 jest.mock("@/lib/orders/service", () => ({ createOrder: jest.fn(), updateDraft: jest.fn(), deleteDraft: jest.fn(), quoteLine: jest.fn() }));
 jest.mock("@/lib/orders/workflow", () => ({ submitOrder: jest.fn(), decideApproval: jest.fn(), changeStatus: jest.fn() }));
+jest.mock("@/lib/plugins/action-errors", () => ({ pluginRuleErrorMessage: jest.fn(async (e: unknown) => ((e as Error)?.message === "rule" ? "Company is protected until 1 Dec" : null)) }));
 
 import { readFileSync } from "node:fs";
 import { getSession } from "@/lib/auth-server";
@@ -39,4 +40,10 @@ it("has a translation for every error key in all four locales", () => {
     const errors = JSON.parse(readFileSync(`locales/${loc}.json`, "utf8")).OrdersPage.error;
     for (const code of [...ORDER_ERROR_CODES, "Unauthorized"]) expect([loc, code, typeof errors[code]]).toEqual([loc, code, "string"]);
   }
+});
+
+it("turns plugin rule rejections into a message instead of crashing (review I6)", async () => {
+  signIn("user");
+  (wf.submitOrder as jest.Mock).mockRejectedValue(new Error("rule"));
+  await expect(submitOrder("o1")).resolves.toEqual({ error: "rule:Company is protected until 1 Dec" });
 });

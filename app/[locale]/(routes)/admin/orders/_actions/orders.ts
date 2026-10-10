@@ -12,7 +12,7 @@ const schema = z.object({
   resetPolicy: z.enum(["YEARLY", "NEVER"]),
   active: z.boolean(),
   emails: z.boolean(),
-});
+}).refine((v) => v.resetPolicy !== "YEARLY" || v.template.includes("{YYYY}"), { path: ["template"] });
 
 async function defaultSeries() {
   return prismadb.numberSeries.findFirst({ where: { scope: "order", isDefault: true }, orderBy: { createdAt: "asc" } });

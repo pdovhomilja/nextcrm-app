@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { createOrder, quoteLine, updateOrder } from "@/actions/crm/orders/orders";
+import { createOrder, quoteLine, submitOrder, updateOrder } from "@/actions/crm/orders/orders";
 import type { ProductOption } from "@/actions/crm/orders/queries";
 import { editorTotals, lineIsBelow, lineTotal, toLineInputs, type EditorLine } from "./editor-state";
 
@@ -27,6 +27,7 @@ type Props = {
   products: ProductOption[];
   header: Header;
   lines: EditorLine[];
+  canSubmit?: boolean;
 };
 
 const ADDRESS: [keyof Header, string][] = [["shipping_street", "street"], ["shipping_city", "city"], ["shipping_state", "state"], ["shipping_postal_code", "postalCode"], ["shipping_country", "country"]];
@@ -40,7 +41,7 @@ export function OrderEditor(props: Props) {
   const [rows, setRows] = useState<EditorLine[]>(props.lines);
   const [pending, start] = useTransition();
   const totals = editorTotals(rows);
-  const fail = (e: string) => toast.error(e.startsWith("pricing:") ? e.slice(8) : t(`error.${e}` as never));
+  const fail = (e: string) => toast.error(/^(pricing|rule):/.test(e) ? e.slice(e.indexOf(":") + 1) : t(`error.${e}` as never));
   const set = (k: keyof Header, v: string) => setHeader((h) => ({ ...h, [k]: v || null }));
   const patch = (key: string, p: Partial<EditorLine>) => setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...p } : r)));
 
@@ -50,10 +51,14 @@ export function OrderEditor(props: Props) {
     patch(key, { productId, productName: res.data.productName, listPrice: res.data.listPrice, vatRate: res.data.vatRate });
   });
 
-  const save = () => start(async () => {
+  const save = (andSubmit = false) => start(async () => {
     const input = { ...header, lines: toLineInputs(rows) };
     const res = props.mode === "new" ? await createOrder({ accountId: props.accountId, ...input }) : await updateOrder(props.orderId!, input);
     if ("error" in res) { fail(res.error); return; }
+    if (andSubmit) {
+      const sub = await submitOrder(props.orderId!);
+      if ("error" in sub) { fail(sub.error); router.refresh(); return; }
+    }
     toast.success(t("saved"));
     if (props.mode === "new") router.push(`/crm/orders/${res.data.id}`);
     else router.refresh();
@@ -135,7 +140,10 @@ export function OrderEditor(props: Props) {
         <div className="flex justify-between font-semibold"><span>{t("grandTotal")}</span><span>{totals.grandTotal} {props.currency}</span></div>
       </div>
 
-      <Button disabled={pending} onClick={save}>{props.mode === "new" ? t("create") : t("save")}</Button>
+      <div className="flex gap-2">
+        <Button disabled={pending} variant={props.mode === "edit" ? "outline" : "default"} onClick={() => save()}>{props.mode === "new" ? t("create") : t("save")}</Button>
+        {props.mode === "edit" && props.canSubmit && <Button disabled={pending} onClick={() => save(true)}>{t("submit")}</Button>}
+      </div>
     </div>
   );
 }

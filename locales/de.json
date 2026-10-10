@@ -862,6 +862,7 @@
       "contactNotOnAccount": "Dieser Kontakt gehört zu einem anderen Konto.",
       "invalid": "Prüfen Sie die eingegebenen Werte.",
       "noSeries": "Es gibt keinen aktiven Nummernkreis für Bestellungen. Wenden Sie sich an einen Admin.",
+      "numberTaken": "Diese Bestellnummer existiert bereits. Bitten Sie einen Admin, den Nummernkreis zu prüfen.",
       "pricing": "Der Preis konnte nicht berechnet werden.",
       "Unauthorized": "Bitte melden Sie sich erneut an."
     }

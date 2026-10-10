@@ -126,3 +126,8 @@ it("audits only the header fields that changed", async () => {
   const changes = (writeAuditLog as jest.Mock).mock.calls.at(-1)[0].changes;
   expect(changes).toEqual([{ field: "shipping_city", old: "Praha", new: "Brno" }, { field: "lines", old: 0, new: 0 }]);
 });
+
+it("reports a number collision clearly instead of a raw database error (review I9)", async () => {
+  db.crm_Orders.create.mockRejectedValueOnce(Object.assign(new Error("Unique constraint failed"), { code: "P2002", meta: { target: ["number"] } }));
+  await expect(createOrder(rep, { accountId: "acc", lines: [] })).rejects.toMatchObject({ code: "numberTaken" });
+});

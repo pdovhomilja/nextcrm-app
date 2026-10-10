@@ -865,6 +865,7 @@
       "contactNotOnAccount": "Tento kontakt patří k jinému účtu.",
       "invalid": "Zkontrolujte zadané hodnoty.",
       "noSeries": "Pro objednávky není aktivní číselná řada. Obraťte se na správce.",
+      "numberTaken": "Toto číslo objednávky už existuje. Požádejte správce o kontrolu číselné řady.",
       "pricing": "Cenu nešlo spočítat.",
       "Unauthorized": "Přihlaste se prosím znovu."
     }

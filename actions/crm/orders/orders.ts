@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
 import type { AuthzUser } from "@/lib/authz";
+import { pluginRuleErrorMessage } from "@/lib/plugins/action-errors";
 import * as svc from "@/lib/orders/service";
 import * as wf from "@/lib/orders/workflow";
 import { OrderError, type HeaderInput, type LineInput, type OrderStatus, type StatusAction } from "@/lib/orders/types";
@@ -17,6 +18,8 @@ async function run<T>(fn: (user: AuthzUser) => Promise<T>): Promise<Result<T>> {
     return { data };
   } catch (e) {
     if (e instanceof OrderError) return { error: e.code === "pricing" ? `pricing:${e.message}` : e.code };
+    const ruleMessage = await pluginRuleErrorMessage(e);
+    if (ruleMessage) return { error: `rule:${ruleMessage}` };
     throw e;
   }
 }
@@ -33,8 +36,8 @@ export async function deleteOrder(id: string) {
 export async function submitOrder(id: string) {
   return run((u) => wf.submitOrder(u, id));
 }
-export async function decideOrderApproval(id: string, decision: "APPROVED" | "REJECTED", note?: string | null) {
-  return run((u) => wf.decideApproval(u, id, decision, note));
+export async function decideOrderApproval(id: string, decision: "APPROVED" | "REJECTED", note?: string | null, seenAt?: string | null) {
+  return run((u) => wf.decideApproval(u, id, decision, note, seenAt));
 }
 export async function changeOrderStatus(id: string, action: StatusAction, to?: OrderStatus) {
   return run((u) => wf.changeStatus(u, id, action, to));
