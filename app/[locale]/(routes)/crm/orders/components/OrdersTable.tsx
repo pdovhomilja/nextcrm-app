@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "./StatusBadge";
 
-type Row = { id: string; number: string; accountName: string | null; ownerName: string | null; status: string; grandTotal: string; currency: string; createdAt: string; source: string };
+type Row = { id: string; number: string; accountName: string | null; ownerName: string | null; status: string; grandTotal: string; currency: string; createdAt: string; orderDate: string | null; source: string };
 
 export function OrdersTable({ rows, hideAccount = false }: { rows: Row[]; hideAccount?: boolean }) {
   const t = useTranslations("OrdersPage");
@@ -27,7 +27,7 @@ export function OrdersTable({ rows, hideAccount = false }: { rows: Row[]; hideAc
             <TableCell>{r.ownerName ?? "—"}</TableCell>
             <TableCell><StatusBadge status={r.status} /></TableCell>
             <TableCell className="text-right">{r.grandTotal} {r.currency}</TableCell>
-            <TableCell>{r.createdAt.slice(0, 10)}</TableCell>
+            <TableCell>{r.orderDate ?? r.createdAt.slice(0, 10)}</TableCell>
             <TableCell>{t(`source${r.source}` as never)}</TableCell>
           </TableRow>
         ))}

@@ -2211,6 +2211,7 @@ model crm_Orders {
   ownerId               String?          @db.Uuid
   priceListId           String?          @db.Uuid
   currency              String           @db.VarChar(3)
+  orderDate             DateTime         @default(now()) @db.Date
   shipping_street       String?
   shipping_city         String?
   shipping_state        String?
@@ -2243,6 +2244,7 @@ model crm_Orders {
   @@index([ownerId])
   @@index([status])
   @@index([createdAt])
+  @@index([accountId, orderDate])
 }
 
 model crm_OrderLines {
