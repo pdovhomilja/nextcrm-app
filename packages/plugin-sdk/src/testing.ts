@@ -1,6 +1,6 @@
-import type { ActivityQuery, Actor, Entity, EntityApi, FindArgs, NotifyInput, OrdersApi, PluginContext, PluginStore, RecordData, RecordStore } from "./types";
+import type { ActivityQuery, Actor, Entity, EntityApi, ExternalProductInput, ExternalRuleInput, FindArgs, NotifyInput, OrdersApi, PluginContext, PluginStore, PriceQuote, RecordData, RecordStore } from "./types";
 
-type Tables = "accounts" | "contacts" | "leads" | "opportunities" | "orders" | "users" | "products" | "activities";
+type Tables = "accounts" | "contacts" | "leads" | "opportunities" | "orders" | "users" | "products" | "activities" | "productCategories" | "priceLists" | "priceListRules";
 
 function matchValue(actual: unknown, v: unknown): boolean {
   if (v === null) return actual == null; // an unset column is null in the database
@@ -69,6 +69,49 @@ function activities(rows: RecordData[]) {
   };
 }
 
+function externalProducts(rows: RecordData[]) {
+  const t = table(rows);
+  return {
+    ...t,
+    async upsertExternal(ref: string, f: ExternalProductInput) {
+      const row = rows.find((r) => r.source === "EXTERNAL" && r.externalRef === ref);
+      if (row) { Object.assign(row, f); return { id: row.id as string, created: false }; }
+      const created = await t.create({ ...f, source: "EXTERNAL", externalRef: ref, deletedAt: null });
+      return { id: created.id as string, created: true };
+    },
+    async findExternal() {
+      return rows.filter((r) => r.source === "EXTERNAL" && r.deletedAt == null).map((r) => ({ id: r.id as string, ref: r.externalRef as string, status: r.status as string }));
+    },
+  };
+}
+
+function externalCategories(rows: RecordData[]) {
+  const t = table(rows);
+  return {
+    async upsertExternal(ref: string, f: { name: string; parentRef: string | null }) {
+      const row = rows.find((r) => r.externalRef === ref);
+      if (row) { Object.assign(row, f); return { id: row.id as string }; }
+      return { id: (await t.create({ ...f, source: "EXTERNAL", externalRef: ref })).id as string };
+    },
+  };
+}
+
+function externalLists(lists: RecordData[], rules: RecordData[]) {
+  const t = table(lists);
+  return {
+    async findExternal() {
+      return lists.map((l) => ({ id: l.id as string, ref: l.externalRef as string, name: l.name as string, currency: l.currency as string, isActive: l.isActive as boolean }));
+    },
+    async replaceExternal(ref: string, list: { name: string; currency: string; isActive: boolean }, next: ExternalRuleInput[]) {
+      let row = lists.find((l) => l.externalRef === ref);
+      if (row) Object.assign(row, list); else row = await t.create({ ...list, source: "EXTERNAL", externalRef: ref });
+      for (let i = rules.length - 1; i >= 0; i--) if (rules[i].priceListId === row.id) rules.splice(i, 1);
+      rules.push(...next.map((r) => ({ ...r, priceListId: row!.id })));
+      return { id: row.id as string };
+    },
+  };
+}
+
 export function createTestContext(opts: {
   pluginId?: string;
   settings?: RecordData;
@@ -76,6 +119,7 @@ export function createTestContext(opts: {
   actor?: Actor;
   data?: Partial<Record<Tables, RecordData[]>>;
   fetch?: (url: string, init?: RequestInit) => Promise<Response>;
+  prices?: (input: { priceListId: string; productId: string; quantity: string }) => Promise<PriceQuote>;
 } = {}): PluginContext & { logs: { level: string; message: string }[]; notifications: NotifyInput[] } {
   const d = opts.data ?? {};
   const map = new Map<string, unknown>();
@@ -96,7 +140,15 @@ export function createTestContext(opts: {
       opportunities: table(d.opportunities ?? []),
       orders: table(d.orders ?? []) as unknown as OrdersApi,
       users: table(d.users ?? []),
-      products: table(d.products ?? []),
+      products: externalProducts(d.products ?? []),
+      productCategories: externalCategories(d.productCategories ?? []),
+      priceLists: externalLists(d.priceLists ?? [], d.priceListRules ?? []),
+      prices: {
+        async get(input) {
+          if (!opts.prices) throw new Error("No prices mock configured");
+          return opts.prices(input);
+        },
+      },
       activities: activities(d.activities ?? []),
     },
     store,

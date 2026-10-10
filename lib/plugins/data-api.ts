@@ -121,7 +121,46 @@ export function createDataApi(pluginId: string, permissions: Permission[]): Data
       },
     },
     users: read("users", "users:read"),
-    products: read("crm_Products", "products:read"),
+    products: {
+      ...read("crm_Products", "products:read"),
+      async upsertExternal(ref, fields) {
+        need("products:write");
+        const { upsertExternalProduct } = await import("@/lib/catalog/plugin-writes");
+        return runAsActor({ type: "plugin", pluginId }, () => upsertExternalProduct(pluginId, ref, fields));
+      },
+      async findExternal() {
+        need("products:read");
+        const { findExternalProducts } = await import("@/lib/catalog/plugin-writes");
+        return findExternalProducts();
+      },
+    },
+    productCategories: {
+      async upsertExternal(ref, fields) {
+        need("products:write");
+        const { upsertExternalCategory } = await import("@/lib/catalog/plugin-writes");
+        return runAsActor({ type: "plugin", pluginId }, () => upsertExternalCategory(pluginId, ref, fields));
+      },
+    },
+    priceLists: {
+      async findExternal() {
+        need("priceLists:read");
+        const { findExternalPriceLists } = await import("@/lib/catalog/plugin-writes");
+        return findExternalPriceLists();
+      },
+      async replaceExternal(ref, list, rules) {
+        need("priceLists:write");
+        const { replaceExternalPriceList } = await import("@/lib/catalog/plugin-writes");
+        return runAsActor({ type: "plugin", pluginId }, () => replaceExternalPriceList(pluginId, ref, list, rules));
+      },
+    },
+    prices: {
+      async get(input) {
+        need("products:read");
+        const { getPrice } = await import("@/lib/pricing/get-price");
+        const r = await getPrice({ priceListId: input.priceListId, productId: input.productId, quantity: input.quantity });
+        return { price: r.price.toString(), currency: r.currency, ruleId: r.ruleId };
+      },
+    },
   };
 }
 

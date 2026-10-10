@@ -30,10 +30,10 @@ export function definePlugin<S extends z.ZodObject<any>, K extends z.ZodObject<a
   }
 
   const ext: PluginExtensions = {
-    rules: [], afters: [], events: [], crons: [], accountTabs: [], accountPanels: [], orderPanels: [],
+    rules: [], afters: [], events: [], crons: [], accountTabs: [], accountPanels: [], orderPanels: [], productPanels: [],
     pages: [], adminSections: [], adminActions: [], companyRegistries: [],
   };
-  const ids = { cron: new Set<string>(), event: new Set<string>(), tab: new Set<string>(), panel: new Set<string>(), orderPanel: new Set<string>(), page: new Set<string>(), adminAction: new Set<string>() };
+  const ids = { cron: new Set<string>(), event: new Set<string>(), tab: new Set<string>(), panel: new Set<string>(), orderPanel: new Set<string>(), productPanel: new Set<string>(), page: new Set<string>(), adminAction: new Set<string>() };
 
   const x: ExtensionBuilder<z.infer<S>, z.infer<K>> = {
     rule: (entity, operation, handler, options) =>
@@ -44,6 +44,7 @@ export function definePlugin<S extends z.ZodObject<any>, K extends z.ZodObject<a
     accountTab: (tab) => { unique(ids.tab, tab.id, "Duplicate account tab id"); ext.accountTabs.push({ ...tab, roles: tab.roles ?? ALL_ROLES }); },
     accountPanel: (panel) => { unique(ids.panel, panel.id, "Duplicate account panel id"); ext.accountPanels.push({ ...panel, roles: panel.roles ?? ALL_ROLES }); },
     orderPanel: (panel) => { unique(ids.orderPanel, panel.id, "Duplicate order panel id"); ext.orderPanels.push({ ...panel, roles: panel.roles ?? ALL_ROLES }); },
+    productPanel: (panel) => { unique(ids.productPanel, panel.id, "Duplicate product panel id"); ext.productPanels.push({ ...panel, roles: panel.roles ?? ALL_ROLES }); },
     page: (page) => { unique(ids.page, page.path, "Duplicate page path"); ext.pages.push({ ...page, roles: page.roles ?? ALL_ROLES }); },
     adminSection: (component) => ext.adminSections.push(component),
     adminAction: (action) => { unique(ids.adminAction, action.id, "Duplicate admin action id"); ext.adminActions.push(action); },

@@ -1,20 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { prismadb } from "@/lib/prisma";
+import type { ExternalProductInput, ExternalRuleInput } from "@nextcrm/plugin-sdk";
 import { writeAuditLog } from "@/lib/audit-log";
-
-export interface ExternalProductInput {
-  name: string; sku: string | null; description: string | null; type: "PRODUCT" | "SERVICE";
-  status: "ACTIVE" | "ARCHIVED"; unit_price: string; unit_cost: string | null; currency: string;
-  tax_rate: string | null; unit: string | null; categoryRef: string | null;
-}
-export interface ExternalRuleInput {
-  appliesTo: "ALL" | "CATEGORY" | "PRODUCT"; productRef: string | null; categoryRef: string | null;
-  minQuantity: string; dateStart: string | null; dateEnd: string | null;
-  computePrice: "FIXED" | "PERCENTAGE" | "FORMULA"; fixedPrice: string | null; percentPrice: string | null;
-  base: "LIST_PRICE" | "COST" | "PRICE_LIST"; basePriceListRef: string | null;
-  priceDiscount: string; priceSurcharge: string; priceRound: string | null; priceMinMargin: string | null; priceMaxMargin: string | null;
-  externalRef: string | null;
-}
 
 const ext = (externalRef: string) => ({ source_externalRef: { source: "EXTERNAL" as const, externalRef } });
 

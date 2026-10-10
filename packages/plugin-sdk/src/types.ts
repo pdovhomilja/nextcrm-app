@@ -18,7 +18,7 @@ export const PERMISSIONS = [
   "leads:read", "leads:write",
   "opportunities:read", "opportunities:write",
   "orders:read", "orders:write",
-  "activities:read", "users:read", "products:read",
+  "activities:read", "users:read", "products:read", "products:write", "priceLists:read", "priceLists:write",
   "notify", "http",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
@@ -88,6 +88,34 @@ export interface ActivitiesApi extends Pick<ReadApi, "find"> {
   findForRecord(entity: Entity, id: string, query?: ActivityQuery): Promise<RecordData[]>;
 }
 
+export interface ExternalProductInput {
+  name: string; sku: string | null; description: string | null; type: "PRODUCT" | "SERVICE";
+  status: "ACTIVE" | "ARCHIVED"; unit_price: string; unit_cost: string | null; currency: string;
+  tax_rate: string | null; unit: string | null; categoryRef: string | null;
+}
+export interface ExternalRuleInput {
+  appliesTo: "ALL" | "CATEGORY" | "PRODUCT"; productRef: string | null; categoryRef: string | null;
+  minQuantity: string; dateStart: string | null; dateEnd: string | null;
+  computePrice: "FIXED" | "PERCENTAGE" | "FORMULA"; fixedPrice: string | null; percentPrice: string | null;
+  base: "LIST_PRICE" | "COST" | "PRICE_LIST"; basePriceListRef: string | null;
+  priceDiscount: string; priceSurcharge: string; priceRound: string | null; priceMinMargin: string | null; priceMaxMargin: string | null;
+  externalRef: string | null;
+}
+/** Plugins write only EXTERNAL rows, keyed by the external system's id (catalog spec § 2.3). */
+export interface ProductsApi extends ReadApi {
+  upsertExternal(ref: string, fields: ExternalProductInput): Promise<{ id: string; created: boolean }>;
+  findExternal(): Promise<{ id: string; ref: string; status: string }[]>;
+}
+export interface ProductCategoriesApi { upsertExternal(ref: string, fields: { name: string; parentRef: string | null }): Promise<{ id: string }> }
+export interface ExternalPriceList { id: string; ref: string; name: string; currency: string; isActive: boolean }
+export interface PriceListsApi {
+  findExternal(): Promise<ExternalPriceList[]>;
+  /** Writes the list and replaces all its rules in one transaction; an unknown ref fails the whole call. */
+  replaceExternal(ref: string, list: { name: string; currency: string; isActive: boolean }, rules: ExternalRuleInput[]): Promise<{ id: string }>;
+}
+export interface PriceQuote { price: string; currency: string; ruleId: string | null }
+export interface PricesApi { get(input: { priceListId: string; productId: string; quantity: string }): Promise<PriceQuote> }
+
 export interface DataApi {
   accounts: EntityApi;
   contacts: EntityApi;
@@ -96,7 +124,10 @@ export interface DataApi {
   orders: OrdersApi;
   activities: ActivitiesApi;
   users: ReadApi;
-  products: ReadApi;
+  products: ProductsApi;
+  productCategories: ProductCategoriesApi;
+  priceLists: PriceListsApi;
+  prices: PricesApi;
 }
 
 export interface StoreEntry { key: string; value: unknown }
@@ -192,6 +223,11 @@ export interface OrderSlotProps<S = RecordData, K = RecordData> {
   ctx: PluginContext<S, K>;
 }
 
+export interface ProductSlotProps<S = RecordData, K = RecordData> {
+  productId: string;
+  ctx: PluginContext<S, K>;
+}
+
 export interface PageProps<S = RecordData, K = RecordData> {
   path: string[];
   searchParams: Record<string, string | string[] | undefined>;
@@ -225,6 +261,7 @@ export interface CronRegistration { id: string; schedule: string; handler: JobHa
 export interface AccountTabRegistration { id: string; title: string; component: ServerComponent<AccountSlotProps<any, any>>; roles: Role[] }
 export interface AccountPanelRegistration { id: string; component: ServerComponent<AccountSlotProps<any, any>>; roles: Role[] }
 export interface OrderPanelRegistration { id: string; component: ServerComponent<OrderSlotProps<any, any>>; roles: Role[] }
+export interface ProductPanelRegistration { id: string; component: ServerComponent<ProductSlotProps<any, any>>; roles: Role[] }
 export interface PageRegistration { path: string; title: string; component: ServerComponent<PageProps<any, any>>; roles: Role[]; nav?: { label: string } }
 /** A button on the plugin's admin page; the host runs the handler with the plugin's context and shows the returned text. */
 export interface AdminActionRegistration { id: string; label: string; handler: (ctx: PluginContext<any, any>) => Promise<string | void> }
@@ -237,6 +274,7 @@ export interface PluginExtensions {
   accountTabs: AccountTabRegistration[];
   accountPanels: AccountPanelRegistration[];
   orderPanels: OrderPanelRegistration[];
+  productPanels: ProductPanelRegistration[];
   pages: PageRegistration[];
   adminSections: ServerComponent<AdminSectionProps<any, any>>[];
   adminActions: AdminActionRegistration[];
@@ -251,6 +289,7 @@ export interface ExtensionBuilder<S, K> {
   accountTab(tab: { id: string; title: string; component: ServerComponent<AccountSlotProps<S, K>>; roles?: Role[] }): void;
   accountPanel(panel: { id: string; component: ServerComponent<AccountSlotProps<S, K>>; roles?: Role[] }): void;
   orderPanel(panel: { id: string; component: ServerComponent<OrderSlotProps<S, K>>; roles?: Role[] }): void;
+  productPanel(panel: { id: string; component: ServerComponent<ProductSlotProps<S, K>>; roles?: Role[] }): void;
   page(page: { path: string; title: string; component: ServerComponent<PageProps<S, K>>; roles?: Role[]; nav?: { label: string } }): void;
   adminSection(component: ServerComponent<AdminSectionProps<S, K>>): void;
   adminAction(action: { id: string; label: string; handler: (ctx: PluginContext<S, K>) => Promise<string | void> }): void;
