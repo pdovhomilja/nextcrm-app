@@ -18,6 +18,7 @@
     "contact": "Qualifying contact",
     "contactYes": "Yes, on {date}",
     "contactNo": "Not yet",
+    "order": "Orders", "lastOrder": "Last confirmed order on {date}", "noOrder": "No confirmed order yet",
     "history": "Owner history",
     "historyEmpty": "No owner changes recorded yet.",
     "nobody": "nobody",

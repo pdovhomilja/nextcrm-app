@@ -48,6 +48,7 @@ For enabling, disabling and uninstalling plugins in general, see [Plugins](/docs
 | `warnDays` | `7` | How many days ahead the **Expiring protection** page looks. |
 | `defaultCountry` | `CZ` | Two-letter country code used when an account's **Billing country** is empty or not recognised. |
 | `requireNumber` | `false` | When on, users with the `user` role must enter an **Account ID** when they create an account. Managers and admins are not affected. Edits are not checked. |
+| `orderMonths` | `12` | Protection runs at least this many months from the last confirmed order (status Confirmed, Delivered, Invoiced or Paid). `0` turns this off; orders still count as contact. |
 
 Changes to `protectionDays` and `contactDays` apply to new protection windows only. Existing windows keep their dates. The other settings apply from the next check.
 
@@ -101,6 +102,12 @@ An activity counts as a qualifying contact when it:
 - has a date on or after the day the window started.
 
 Activities logged on contacts or opportunities only count if they are also linked to the account. Scheduled and cancelled activities never count. A **Visit** starts as **Scheduled** in the activity form, so reps must set it to **Completed**.
+
+### Orders
+
+A confirmed order (status Confirmed, Delivered, Invoiced or Paid) on the account keeps it protected until at least the order date plus `orderMonths`, and never shortens the window. An order dated on or after the day the window started also counts as the qualifying contact. Draft, pending, ready, sent, cancelled and failed orders do not count, so entering an order and cancelling it does not keep a company. When the order that set the date is cancelled, protection falls back to the previous confirmed order or to the window itself. The daily job checks orders again before it removes an owner, and a new owner of an ordering customer keeps the order-based date.
+
+The plugin needs the `orders:read` permission for this (added in plugin version 0.2.0). Accept it when you upgrade the plugin; without it, orders are ignored and a warning is logged.
 
 ## Owner changes
 
@@ -172,7 +179,7 @@ The plugin registers these Inngest functions. They run only while the plugin is 
 |---|---|---|
 | `plugin-account-protection-cron-expire` | Daily at 06:00 UTC | Checks contact deadlines and protection windows, removes owners, emails managers. Re-checks the conflicts list. Clears "freed" entries older than 7 days. |
 | `plugin-account-protection-cron-notices` | Every 5 minutes | Sends queued manager notices. |
-| `plugin-account-protection-after` | On account create, update and delete | Indexes numbers, starts and ends windows, writes owner history. |
+| `plugin-account-protection-after` | On account create, update and delete; on order create and update | Indexes numbers, starts and ends windows, writes owner history, recomputes protection from confirmed orders. |
 
 The install backfill runs once in `plugin-lifecycle-install`. One account that fails in the daily job is logged and retried in the next run; the others are processed.
 

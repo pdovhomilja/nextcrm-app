@@ -18,6 +18,7 @@
     "contact": "Doložený kontakt",
     "contactYes": "Ano, {date}",
     "contactNo": "Zatím ne",
+    "order": "Objednávky", "lastOrder": "Poslední potvrzená objednávka {date}", "noOrder": "Zatím žádná potvrzená objednávka",
     "history": "Historie vlastníků",
     "historyEmpty": "Zatím žádné změny vlastníka.",
     "nobody": "nikdo",
