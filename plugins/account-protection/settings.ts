@@ -15,6 +15,7 @@ export const settingsSchema = z.object({
   warnDays: z.number().int().min(1).default(7),
   defaultCountry: z.string().length(2).default("CZ"),
   requireNumber: z.boolean().default(false),
+  orderMonths: z.number().int().min(0).default(12),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;
