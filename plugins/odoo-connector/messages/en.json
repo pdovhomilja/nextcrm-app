@@ -68,7 +68,9 @@
     "pausedSubject": "Odoo refused to take orders",
     "pausedText": "Sending orders to Odoo is paused: {error}. Fix the Odoo user's access rights, then click Test connection.",
     "orderFailedSubject": "Order {number} was not sent to Odoo",
-    "orderFailedText": "Order {number} could not be sent to Odoo: {error}. Fix the cause, then click Retry on the order."
+    "orderFailedText": "Order {number} could not be sent to Odoo: {error}. Fix the cause, then click Retry on the order.",
+    "stuckSubject": "Order {number} has been waiting for Odoo for a day",
+    "stuckText": "Order {number} has been waiting to be sent to Odoo since {since}. Last error: {error}. The connector keeps trying; check Odoo."
   },
   "product": {
     "linked": "Odoo product #{id}"

@@ -33,6 +33,7 @@ export function evalDomain(row: RecordData, domain: any[], related: (field: stri
     if (op === "=") return (x === undefined ? false : x) === v;
     if (op === "!=") return (x === undefined ? false : x) !== v;
     if (op === "=ilike") return typeof x === "string" && x.toLowerCase() === String(v).toLowerCase();
+    if (op === "ilike") return typeof x === "string" && x.toLowerCase().includes(String(v).toLowerCase());
     if (op === ">") return (x ?? "") > v;
     if (op === "in") return v.includes(x);
     if (op === "not in") return !v.includes(x);

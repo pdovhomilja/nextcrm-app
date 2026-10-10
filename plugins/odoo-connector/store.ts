@@ -75,6 +75,6 @@ export interface OrderLink {
   created: ("customer" | "delivery")[];
   checkedAt: string;
 }
-export interface SendState { attempts: number; lastError: string | null; waitingSince: string | null }
+export interface SendState { attempts: number; lastError: string | null; waitingSince: string | null; stuckNotified?: boolean }
 export interface FailedState { reason: string; at: string }
 export interface CreatedRecord { at: string; kind: "customer" | "delivery"; odooId: number; name: string; orderNumber: string }

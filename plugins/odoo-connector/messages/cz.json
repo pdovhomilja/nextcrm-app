@@ -68,7 +68,9 @@
     "pausedSubject": "Odoo odmítlo přijímat objednávky",
     "pausedText": "Odesílání objednávek do Odoo je pozastavené: {error}. Opravte práva uživatele v Odoo a klikněte na Otestovat připojení.",
     "orderFailedSubject": "Objednávka {number} nebyla odeslána do Odoo",
-    "orderFailedText": "Objednávku {number} se nepodařilo odeslat do Odoo: {error}. Odstraňte příčinu a klikněte u objednávky na Zkusit znovu."
+    "orderFailedText": "Objednávku {number} se nepodařilo odeslat do Odoo: {error}. Odstraňte příčinu a klikněte u objednávky na Zkusit znovu.",
+    "stuckSubject": "Objednávka {number} čeká na Odoo už den",
+    "stuckText": "Objednávka {number} čeká na odeslání do Odoo od {since}. Poslední chyba: {error}. Konektor to dál zkouší; zkontrolujte Odoo."
   },
   "product": {
     "linked": "Produkt v Odoo č. {id}"

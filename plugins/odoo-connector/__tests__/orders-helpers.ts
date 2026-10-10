@@ -14,6 +14,10 @@ export interface FakeSales {
   /** Odoo's price for sale.order.line/onchange; null = Odoo returns no price. */
   price: number | null;
   nextId: number;
+  /** Fields sale.order/fields_get reports (an Odoo without Inventory has no delivery_status or picking_ids). */
+  saleFields?: string[];
+  /** How Odoo stores a VAT number it is given (base_vat reformats it). */
+  vatFormat?: (vat: string) => string;
 }
 
 const M2O = new Set(["country_id", "parent_id", "user_id", "partner_id", "partner_shipping_id", "pricelist_id", "product_id", "order_id", "currency_id"]);
@@ -41,11 +45,14 @@ export function salesHandlers(s: FakeSales) {
     "res.partner/read": (b: any) => pick(s.partners.filter((p) => b.ids.includes(p.id)), b.fields),
     "res.partner/create": (b: any) => guard("res.partner/create", () => b.vals_list.map((v: RecordData) => {
       const id = s.nextId++;
-      s.partners.push({ id, active: true, type: "contact", parent_id: false, property_product_pricelist: [234, "Retail (CZK)"], ...norm(v) });
+      const row: RecordData = { id, active: true, type: "contact", parent_id: false, property_product_pricelist: [234, "Retail (CZK)"], ...norm(v) };
+      if (s.vatFormat && typeof row.vat === "string") row.vat = s.vatFormat(row.vat);
+      s.partners.push(row);
       return id;
     })),
     "product.pricelist/read": (b: any) => pick(s.lists.filter((l) => b.ids.includes(l.id)), b.fields),
     "sale.order/search_read": search(s.orders),
+    "sale.order/fields_get": () => Object.fromEntries((s.saleFields ?? ["id", "name", "state", "delivery_status", "invoice_status", "amount_total", "invoice_ids", "picking_ids"]).map((f) => [f, {}])),
     "sale.order/read": (b: any) => pick(s.orders.filter((o) => b.ids.includes(o.id)), b.fields),
     "sale.order/create": (b: any) => guard("sale.order/create", () => b.vals_list.map((v: RecordData) => {
       const id = s.nextId++;

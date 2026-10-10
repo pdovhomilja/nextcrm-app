@@ -1,6 +1,7 @@
 import type { RecordData } from "@nextcrm/plugin-sdk";
 import type { M2O } from "./map";
-import type { OdooClient } from "./odoo";
+import { normalizeNumber, normalizeVat } from "./match";
+import { OdooError, type OdooClient } from "./odoo";
 import type { Ctx } from "./settings";
 import { K, type AccountLink } from "./store";
 
@@ -31,37 +32,57 @@ async function link(ctx: Ctx, accountId: string, partnerId: number, list: M2O | 
   await ctx.store.set(K.account(accountId), { partnerId, syncedAt: now.toISOString(), salesperson: null, odooPriceList: list || null } satisfies AccountLink);
 }
 
+const CLAIM_MS = 30 * 60_000;
+
+/** Review I3: one creator per account or customer at a time; a held claim means "wait", like Odoo being unreachable. */
+async function exclusive<T>(ctx: Ctx, key: string, fn: () => Promise<T>): Promise<T> {
+  if (!(await ctx.store.claim(key, CLAIM_MS))) throw new OdooError(`Another order is creating ${key} in Odoo`, 0);
+  try { return await fn(); } finally { await ctx.store.delete(key); }
+}
+
+type Found = { id: number; property_product_pricelist?: M2O; company_registry?: string | false; vat?: string | false };
+
 /**
  * Spec § 4.2 step 1. Repeat-safe: a partner created by an earlier attempt is found again by registration number,
- * VAT, or (plan Ruling 3) exact name and country when the account has neither.
+ * VAT (both normalized like part 1's matching, review I2), or (plan Ruling 3) exact name and country when the account has neither.
  */
 export async function findOrCreateCustomer(ctx: Ctx, client: OdooClient, account: RecordData, user: number | false, now: Date): Promise<{ partnerId: number; created: boolean }> {
   const accountId = account.id as string;
   const linked = await ctx.store.get<AccountLink>(K.account(accountId));
   if (linked) return { partnerId: linked.partnerId, created: false };
-  const country = await countryId(client, String(account.billing_country || ctx.settings.defaultCountry));
-  const base = [["parent_id", "=", false], ["active", "=", true]];
-  const tries: unknown[][] = [];
-  if (val(account.company_id)) tries.push([...base, ["company_registry", "=", account.company_id], ["country_id", "=", country]]);
-  if (val(account.vat)) tries.push([...base, ["vat", "=", account.vat]]);
-  if (!val(account.company_id) && !val(account.vat)) tries.push([...base, ["name", "=", account.name], ["country_id", "=", country]]);
-  for (const domain of tries) {
-    const [p] = await client.call<{ id: number; property_product_pricelist?: M2O }[]>("res.partner", "search_read", { domain, fields: ["id", "property_product_pricelist"], limit: 1, order: "id asc" });
-    if (p) { await link(ctx, accountId, p.id, p.property_product_pricelist, now); return { partnerId: p.id, created: false }; }
-  }
-  const [id] = await client.call<number[]>("res.partner", "create", { vals_list: [{
-    name: account.name, is_company: true, company_registry: val(account.company_id), vat: val(account.vat),
-    street: val(account.billing_street), city: val(account.billing_city), zip: val(account.billing_postal_code), country_id: country,
-    email: val(account.email), phone: val(account.office_phone), customer_rank: 1, user_id: user,
-  }] }, { once: true });
-  const [p] = await client.call<{ id: number; property_product_pricelist?: M2O }[]>("res.partner", "read", { ids: [id], fields: ["property_product_pricelist"] });
-  await link(ctx, accountId, id, p?.property_product_pricelist, now);
-  return { partnerId: id, created: true };
+  return exclusive(ctx, `customer:${accountId}`, async () => {
+    const code = String(account.billing_country || ctx.settings.defaultCountry).toUpperCase();
+    const country = await countryId(client, code);
+    const base = [["parent_id", "=", false], ["active", "=", true]];
+    const number = normalizeNumber(code, val(account.company_id) || null);
+    const vat = normalizeVat(val(account.vat) || null);
+    const tries: { domain: unknown[]; keep: (p: Found) => boolean }[] = [];
+    if (number) tries.push({ domain: [...base, ["company_registry", "ilike", number.replace(/^0+/, "")], ["country_id", "=", country]], keep: (p) => normalizeNumber(code, val(p.company_registry) || null) === number });
+    if (vat) tries.push({ domain: [...base, ["vat", "ilike", vat.replace(/^[A-Z]{2}/, "")]], keep: (p) => normalizeVat(val(p.vat) || null) === vat });
+    if (!number && !vat) tries.push({ domain: [...base, ["name", "=", account.name], ["country_id", "=", country]], keep: () => true });
+    for (const t of tries) {
+      const rows = await client.call<Found[]>("res.partner", "search_read", { domain: t.domain, fields: ["id", "property_product_pricelist", "company_registry", "vat"], order: "id asc" });
+      const p = rows.find(t.keep);
+      if (p) { await link(ctx, accountId, p.id, p.property_product_pricelist, now); return { partnerId: p.id, created: false }; }
+    }
+    const [id] = await client.call<number[]>("res.partner", "create", { vals_list: [{
+      name: account.name, is_company: true, company_registry: val(account.company_id), vat: val(account.vat),
+      street: val(account.billing_street), city: val(account.billing_city), zip: val(account.billing_postal_code), country_id: country,
+      email: val(account.email), phone: val(account.office_phone), customer_rank: 1, user_id: user,
+    }] }, { once: true });
+    const [p] = await client.call<{ id: number; property_product_pricelist?: M2O }[]>("res.partner", "read", { ids: [id], fields: ["property_product_pricelist"] });
+    await link(ctx, accountId, id, p?.property_product_pricelist, now);
+    return { partnerId: id, created: true };
+  });
 }
 
 /** Spec § 4.2 step 2: the customer or one of its delivery children with the same address, else a new delivery child. */
 export async function findOrCreateDelivery(ctx: Ctx, client: OdooClient, partnerId: number, order: RecordData): Promise<{ shippingId: number; created: boolean }> {
   if (!val(order.shipping_street) && !val(order.shipping_city)) return { shippingId: partnerId, created: false };
+  return exclusive(ctx, `delivery:${partnerId}`, () => deliveryFor(ctx, client, partnerId, order));
+}
+
+async function deliveryFor(ctx: Ctx, client: OdooClient, partnerId: number, order: RecordData): Promise<{ shippingId: number; created: boolean }> {
   const want = { street: order.shipping_street, city: order.shipping_city, zip: order.shipping_postal_code };
   const rows = await client.call<{ id: number; street: string | false; city: string | false; zip: string | false }[]>("res.partner", "search_read", {
     domain: ["|", ["id", "=", partnerId], "&", ["parent_id", "=", partnerId], ["type", "=", "delivery"]], fields: ["id", "street", "city", "zip"], order: "id asc",

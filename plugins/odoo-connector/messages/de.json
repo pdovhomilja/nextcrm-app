@@ -68,7 +68,9 @@
     "pausedSubject": "Odoo nimmt keine Aufträge an",
     "pausedText": "Das Senden von Aufträgen an Odoo ist pausiert: {error}. Korrigieren Sie die Rechte des Odoo-Benutzers und klicken Sie auf Verbindung testen.",
     "orderFailedSubject": "Auftrag {number} wurde nicht an Odoo gesendet",
-    "orderFailedText": "Auftrag {number} konnte nicht an Odoo gesendet werden: {error}. Beheben Sie die Ursache und klicken Sie beim Auftrag auf Erneut versuchen."
+    "orderFailedText": "Auftrag {number} konnte nicht an Odoo gesendet werden: {error}. Beheben Sie die Ursache und klicken Sie beim Auftrag auf Erneut versuchen.",
+    "stuckSubject": "Auftrag {number} wartet seit einem Tag auf Odoo",
+    "stuckText": "Auftrag {number} wartet seit {since} auf den Versand an Odoo. Letzter Fehler: {error}. Der Connector versucht es weiter; prüfen Sie Odoo."
   },
   "product": {
     "linked": "Odoo-Produkt #{id}"
