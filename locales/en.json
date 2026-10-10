@@ -892,7 +892,7 @@
     "title": "Price lists", "description": "Prices per customer, with rules compatible with Odoo", "detailDescription": "Rules are checked top to bottom; the first match sets the price.",
     "new": "New price list", "save": "Save", "saved": "Saved", "edit": "Edit", "delete": "Delete", "active": "Active", "archived": "Archived",
     "showArchived": "Show archived", "hideArchived": "Hide archived", "empty": "No price lists yet.",
-    "name": "Name", "currency": "Currency", "source": "Source", "sourceCrm": "CRM", "sourceExternal": "External", "syncedExternal": "Synced from an external system (read-only)",
+    "name": "Name", "currency": "Currency", "source": "Source", "sourceCrm": "CRM", "sourceExternal": "External", "syncedExternal": "Synced from an external system (read-only)", "baseList": "Base for other lists",
     "rules": "Rules", "updated": "Updated", "addRule": "Add rule", "editRule": "Edit rule", "rulesOrderHint": "Order of evaluation: product, category, all products; then higher minimum quantity first; then deeper category first; then newest first.",
     "appliesTo": "Applies to", "targetAll": "All products", "targetCategory": "Category: {name}", "targetProduct": "Product: {name}", "category": "Category", "product": "Product",
     "minQuantity": "Min. quantity", "validity": "Valid", "dateStart": "Valid from", "dateEnd": "Valid to", "price": "Price",

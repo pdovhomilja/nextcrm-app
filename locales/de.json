@@ -892,7 +892,7 @@
     "title": "Preislisten", "description": "Kundenpreise mit Odoo-kompatiblen Regeln", "detailDescription": "Regeln werden von oben nach unten geprüft; die erste passende bestimmt den Preis.",
     "new": "Neue Preisliste", "save": "Speichern", "saved": "Gespeichert", "edit": "Bearbeiten", "delete": "Löschen", "active": "Aktiv", "archived": "Archiviert",
     "showArchived": "Archivierte anzeigen", "hideArchived": "Archivierte ausblenden", "empty": "Noch keine Preislisten.",
-    "name": "Name", "currency": "Währung", "source": "Quelle", "sourceCrm": "CRM", "sourceExternal": "Extern", "syncedExternal": "Aus einem externen System synchronisiert (schreibgeschützt)",
+    "name": "Name", "currency": "Währung", "source": "Quelle", "sourceCrm": "CRM", "sourceExternal": "Extern", "syncedExternal": "Aus einem externen System synchronisiert (schreibgeschützt)", "baseList": "Basis für andere Listen",
     "rules": "Regeln", "updated": "Geändert", "addRule": "Regel hinzufügen", "editRule": "Regel bearbeiten", "rulesOrderHint": "Reihenfolge: Produkt, Kategorie, alle Produkte; dann höhere Mindestmenge zuerst; dann tiefere Kategorie zuerst; dann neueste zuerst.",
     "appliesTo": "Gilt für", "targetAll": "Alle Produkte", "targetCategory": "Kategorie: {name}", "targetProduct": "Produkt: {name}", "category": "Kategorie", "product": "Produkt",
     "minQuantity": "Mindestmenge", "validity": "Gültig", "dateStart": "Gültig ab", "dateEnd": "Gültig bis", "price": "Preis",

@@ -1,9 +1,9 @@
 ---
 title: Odoo connector
-description: Import customers and their people from an Odoo ERP and keep them current.
+description: Import customers, their people and the product catalog with price lists from an Odoo ERP and keep them current.
 ---
 
-The **Odoo connector** plugin (`odoo-connector`) reads customers from an Odoo ERP and keeps them in the CRM as accounts, with their people as contacts. It only reads from Odoo: it never creates or changes anything there.
+The **Odoo connector** plugin (`odoo-connector`) reads customers from an Odoo ERP and keeps them in the CRM as accounts, with their people as contacts. It also brings in Odoo's product catalog and chosen price lists, so the CRM prices exactly like Odoo. It only reads from Odoo: it never creates or changes anything there.
 
 ## What it does
 
@@ -14,7 +14,7 @@ The **Odoo connector** plugin (`odoo-connector`) reads customers from an Odoo ER
 ## Before you start
 
 - Odoo 18 or later (the plugin uses Odoo's JSON-2 API).
-- An Odoo user for the CRM with an API key. It needs read access to contacts (partners), countries and users. It needs no write access.
+- An Odoo user for the CRM with an API key. It needs read access to contacts (partners), countries, users, products, product categories, taxes, price lists and sales orders (to compare prices). It needs no write access.
 
 ## Install and settings
 
@@ -27,6 +27,7 @@ Install it under **Admin → Plugins → Odoo connector**.
 | `syncMinutes` | `15` | Minutes between syncs, 5 to 1440. The check runs every 5 minutes, so a sync can start up to 5 minutes later. |
 | `defaultCountry` | `CZ` | Two-letter country code for customers without a country in Odoo. |
 | `dryRun` | on | While on, the sync only writes to the plugin log what it would create or change, and the scheduled sync is paused: use **Sync now**. |
+| `priceLists` | empty | The Odoo price lists to import: their Odoo ids, separated by commas, for example `242, 245`. See [Catalog](#catalog). |
 
 The secret `apiKey` holds the Odoo user's API key. It is stored encrypted.
 
@@ -59,6 +60,26 @@ The sync never touches anything else: the owner of an existing account, the ship
 
 When a customer is archived in Odoo, or stops being a customer, nothing is deleted in the CRM. The account's Odoo panel shows the change. If the customer becomes active again, it syncs as before.
 
+## Catalog
+
+Every sync also brings in the catalog:
+
+- **Categories:** all Odoo product categories, as a tree.
+- **Products:** every sellable Odoo product variant becomes a product, with its SKU, price, cost, sales tax, unit and category. A variant that is archived or no longer sold in Odoo is archived in the CRM, never deleted.
+- **Price lists:** the lists in `priceLists`, with all their rules. Lists they build on (for example a base list that is archived in Odoo) come along automatically as inactive lists, marked **Base for other lists**; reps don't pick them, but prices are computed through them.
+- **Account price lists:** a linked account gets its Odoo customer's price list, when that list is imported. The account's Odoo panel shows the Odoo list, or that it is not imported.
+
+Products, categories and these price lists are read-only in the CRM: change them in Odoo. To choose lists, click **Load price lists** on the plugin's admin page: it shows every Odoo list with its id. Put the ids in `priceLists` and save.
+
+Rules the CRM cannot use are listed on the admin page under **Rules the CRM cannot use**. An Odoo variant whose SKU a CRM product already uses is not imported; the plugin log names it and the next syncs try again until one of the two SKUs changes.
+
+## Compare with Odoo
+
+**Compare with Odoo** checks that the CRM prices like Odoo. For each list in `priceLists` it picks up to 20 products, covering the kinds of rules on the list, and prices each at quantity 1, at the minimum quantity of the rule that prices it, and one below. Odoo prices the same lines without saving anything. The admin page then shows, per list, how many prices matched, and every difference with the reason:
+
+- **price rule:** the CRM and Odoo apply a rule differently. Report it.
+- **exchange rate:** Odoo converted the product price into the list currency with its rate of the day, and the CRM's rate for that day differs. Keep the CRM's exchange rates in line with Odoo's.
+
 ## Failures
 
-A failing sync is logged in the plugin log with the reason, for example when Odoo rejects the API key, or denies access to a model the Odoo user cannot read (the log names it). The next run repeats everything since the last good run; a customer or person that failed on its own is tried again on every run until it succeeds. After three failed runs in a row, admins get one email.
+**Sync now** and **Compare with Odoo** are queued and start within 5 minutes. A failing sync is logged in the plugin log with the reason, for example when Odoo rejects the API key, or denies access to a model the Odoo user cannot read (the log names it). The next run repeats everything since the last good run; a customer or person that failed on its own is tried again on every run until it succeeds. After three failed runs in a row, admins get one email.

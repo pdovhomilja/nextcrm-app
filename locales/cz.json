@@ -895,7 +895,7 @@
     "title": "Ceníky", "description": "Ceny pro zákazníky, pravidla kompatibilní s Odoo", "detailDescription": "Pravidla se procházejí shora dolů; cenu určí první, které platí.",
     "new": "Nový ceník", "save": "Uložit", "saved": "Uloženo", "edit": "Upravit", "delete": "Smazat", "active": "Aktivní", "archived": "Archivovaný",
     "showArchived": "Zobrazit archivované", "hideArchived": "Skrýt archivované", "empty": "Zatím žádné ceníky.",
-    "name": "Název", "currency": "Měna", "source": "Zdroj", "sourceCrm": "CRM", "sourceExternal": "Externí", "syncedExternal": "Synchronizováno z externího systému (jen pro čtení)",
+    "name": "Název", "currency": "Měna", "source": "Zdroj", "sourceCrm": "CRM", "sourceExternal": "Externí", "syncedExternal": "Synchronizováno z externího systému (jen pro čtení)", "baseList": "Základ pro jiné ceníky",
     "rules": "Pravidla", "updated": "Změněno", "addRule": "Přidat pravidlo", "editRule": "Upravit pravidlo", "rulesOrderHint": "Pořadí vyhodnocení: produkt, kategorie, všechny produkty; pak vyšší minimální množství první; pak hlubší kategorie první; pak nejnovější první.",
     "appliesTo": "Platí pro", "targetAll": "Všechny produkty", "targetCategory": "Kategorie: {name}", "targetProduct": "Produkt: {name}", "category": "Kategorie", "product": "Produkt",
     "minQuantity": "Min. množství", "validity": "Platnost", "dateStart": "Platí od", "dateEnd": "Platí do", "price": "Cena",

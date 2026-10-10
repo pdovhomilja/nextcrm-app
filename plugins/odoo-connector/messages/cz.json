@@ -17,7 +17,25 @@
     "failed": "Chyba: {error}",
     "conflicts": "Zákazníci odpovídající více účtům",
     "conflictsEmpty": "Žádné konflikty.",
-    "reason": { "number": "stejné IČO", "vat": "stejné DIČ", "linked": "už propojeno s jiným partnerem v Odoo" }
+    "reason": {
+      "number": "stejné IČO",
+      "vat": "stejné DIČ",
+      "linked": "už propojeno s jiným partnerem v Odoo",
+      "rate": "kurz měny",
+      "rule": "cenové pravidlo"
+    },
+    "catalog": "Katalog",
+    "catalogCounts": "Kategorie {categories} · produkty založeny {productsCreated}, upraveny {productsUpdated}, chyba {productsFailed} · ceníky nahrazeny {listsReplaced} · ceníky účtů nastaveny {accountLists}",
+    "priceListsHelp": "Ceníky vyberte v nastavení priceLists: ID ceníků z Odoo oddělená čárkou, např. 242, 245. Ceníky, ze kterých vycházejí, se načtou automaticky.",
+    "listsLoadedAt": "Ceníky v Odoo (načteno {date})",
+    "listsNotLoaded": "Ceníky z Odoo zobrazíte tlačítkem Načíst ceníky.",
+    "skippedRules": "Pravidla, která CRM neumí použít",
+    "syncQueued": "Synchronizace čeká ve frontě.",
+    "compareQueued": "Porovnání čeká ve frontě.",
+    "compareProgress": "Porovnávám: {done} z {total} ceníků",
+    "compareResult": "Poslední porovnání: {date}",
+    "compareClean": "Žádné rozdíly.",
+    "compareFailed": "Porovnání selhalo: {error}"
   },
   "needsOwner": {
     "title": "Importované účty bez vlastníka",
@@ -31,10 +49,15 @@
     "synced": "Naposledy synchronizováno {date} UTC",
     "fields": "Odoo řídí: název, IČO, DIČ, fakturační adresu, e-mail, telefon.",
     "archived": "V Odoo archivováno.",
-    "notCustomer": "V Odoo už není zákazník."
+    "notCustomer": "V Odoo už není zákazník.",
+    "priceList": "Ceník z Odoo: {name}",
+    "priceListMissing": "Ceník {name} z Odoo není načtený"
   },
   "mail": {
     "failingSubject": "Synchronizace s Odoo selhává",
     "failingText": "Synchronizace s Odoo třikrát po sobě selhala. Poslední chyba: {error}"
+  },
+  "product": {
+    "linked": "Produkt v Odoo č. {id}"
   }
 }

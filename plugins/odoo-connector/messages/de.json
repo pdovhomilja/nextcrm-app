@@ -17,7 +17,25 @@
     "failed": "Fehlgeschlagen: {error}",
     "conflicts": "Kunden, die zu mehreren Konten passen",
     "conflictsEmpty": "Keine Konflikte.",
-    "reason": { "number": "gleiche Registernummer", "vat": "gleiche USt-IdNr.", "linked": "bereits mit einem anderen Odoo-Partner verknüpft" }
+    "reason": {
+      "number": "gleiche Registernummer",
+      "vat": "gleiche USt-IdNr.",
+      "linked": "bereits mit einem anderen Odoo-Partner verknüpft",
+      "rate": "Wechselkurs",
+      "rule": "Preisregel"
+    },
+    "catalog": "Katalog",
+    "catalogCounts": "Kategorien {categories} · Produkte angelegt {productsCreated}, aktualisiert {productsUpdated}, fehlgeschlagen {productsFailed} · Preislisten ersetzt {listsReplaced} · Preislisten von Konten gesetzt {accountLists}",
+    "priceListsHelp": "Wählen Sie Preislisten in der Einstellung priceLists: Odoo-Listen-IDs durch Kommas getrennt, z. B. 242, 245. Listen, auf denen sie aufbauen, werden automatisch importiert.",
+    "listsLoadedAt": "Odoo-Preislisten (geladen {date})",
+    "listsNotLoaded": "Klicken Sie auf Preislisten laden, um die Preislisten in Odoo zu sehen.",
+    "skippedRules": "Regeln, die das CRM nicht verwenden kann",
+    "syncQueued": "Synchronisierung ist in der Warteschlange.",
+    "compareQueued": "Vergleich ist in der Warteschlange.",
+    "compareProgress": "Vergleiche: {done} von {total} Preislisten",
+    "compareResult": "Letzter Vergleich: {date}",
+    "compareClean": "Keine Unterschiede.",
+    "compareFailed": "Vergleich fehlgeschlagen: {error}"
   },
   "needsOwner": {
     "title": "Importierte Konten ohne Verantwortlichen",
@@ -31,10 +49,15 @@
     "synced": "Zuletzt synchronisiert {date} UTC",
     "fields": "Odoo steuert: Name, Registernummer, USt-IdNr., Rechnungsadresse, E-Mail, Telefon.",
     "archived": "In Odoo archiviert.",
-    "notCustomer": "In Odoo kein Kunde mehr."
+    "notCustomer": "In Odoo kein Kunde mehr.",
+    "priceList": "Preisliste aus Odoo: {name}",
+    "priceListMissing": "Odoo-Preisliste {name} ist nicht importiert"
   },
   "mail": {
     "failingSubject": "Odoo-Synchronisierung schlägt fehl",
     "failingText": "Die Odoo-Synchronisierung ist dreimal hintereinander fehlgeschlagen. Letzter Fehler: {error}"
+  },
+  "product": {
+    "linked": "Odoo-Produkt #{id}"
   }
 }

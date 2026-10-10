@@ -17,7 +17,25 @@
     "failed": "Failed: {error}",
     "conflicts": "Customers matching more than one account",
     "conflictsEmpty": "No conflicts.",
-    "reason": { "number": "same registration number", "vat": "same VAT number", "linked": "already linked to another Odoo partner" }
+    "reason": {
+      "number": "same registration number",
+      "vat": "same VAT number",
+      "linked": "already linked to another Odoo partner",
+      "rate": "exchange rate",
+      "rule": "price rule"
+    },
+    "catalog": "Catalog",
+    "catalogCounts": "Categories {categories} · products created {productsCreated}, updated {productsUpdated}, failed {productsFailed} · price lists replaced {listsReplaced} · account price lists set {accountLists}",
+    "priceListsHelp": "Choose price lists in the setting priceLists: Odoo list ids separated by commas, e.g. 242, 245. Lists they build on are imported automatically.",
+    "listsLoadedAt": "Odoo price lists (loaded {date})",
+    "listsNotLoaded": "Click Load price lists to see the price lists in Odoo.",
+    "skippedRules": "Rules the CRM cannot use",
+    "syncQueued": "Sync is queued.",
+    "compareQueued": "Compare is queued.",
+    "compareProgress": "Comparing: {done} of {total} price lists",
+    "compareResult": "Last compare: {date}",
+    "compareClean": "No differences.",
+    "compareFailed": "Compare failed: {error}"
   },
   "needsOwner": {
     "title": "Imported accounts without an owner",
@@ -31,10 +49,15 @@
     "synced": "Last synced {date} UTC",
     "fields": "Odoo controls: name, registration number, VAT, billing address, email, phone.",
     "archived": "Archived in Odoo.",
-    "notCustomer": "No longer a customer in Odoo."
+    "notCustomer": "No longer a customer in Odoo.",
+    "priceList": "Price list from Odoo: {name}",
+    "priceListMissing": "Odoo price list {name} is not imported"
   },
   "mail": {
     "failingSubject": "Odoo sync is failing",
     "failingText": "The Odoo sync failed three times in a row. Last error: {error}"
+  },
+  "product": {
+    "linked": "Odoo product #{id}"
   }
 }
