@@ -7,6 +7,7 @@ import {
 } from "@/lib/authz";
 import { getPendingApprovals } from "@/actions/crm/opportunities/get-pending-approvals";
 import ApprovalsTable from "./components/ApprovalsTable";
+import { OrderApprovals } from "./components/OrderApprovals";
 
 const ApprovalsPage = async () => {
   try {
@@ -23,7 +24,10 @@ const ApprovalsPage = async () => {
       title="Quote approvals"
       description="Deals waiting for a quote/SOW decision"
     >
-      <ApprovalsTable rows={rows} />
+      <>
+        <ApprovalsTable rows={rows} />
+        <OrderApprovals />
+      </>
     </Container>
   );
 };

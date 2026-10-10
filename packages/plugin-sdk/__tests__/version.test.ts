@@ -11,7 +11,7 @@ describe("version helpers", () => {
     expect(compareVersions("0.1.0", "0.2.0")).toBe(-1);
   });
   it("checks caret ranges like npm", () => {
-    expect(SDK_VERSION).toBe("0.1.1");
+    expect(SDK_VERSION).toBe("0.2.0");
     expect(satisfiesSdkRange("^0.1.0", "0.1.5")).toBe(true);
     expect(satisfiesSdkRange("^0.1.0", "0.2.0")).toBe(false);   // 0.x: minor is breaking
     expect(satisfiesSdkRange("^1.2.0", "1.9.0")).toBe(true);

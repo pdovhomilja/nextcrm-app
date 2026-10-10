@@ -12,7 +12,7 @@ export default definePlugin({
   id: "account-protection",
   name: "Account protection",
   version: "0.1.1",
-  sdk: "^0.1.1",
+  sdk: "^0.2.0",
   description: "One owner per company registration number, with protection windows, owner history and a daily expiry job.",
   permissions: ["accounts:read", "accounts:write", "activities:read", "users:read", "notify"],
   settings: settingsSchema,

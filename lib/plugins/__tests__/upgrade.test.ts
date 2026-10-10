@@ -12,7 +12,7 @@ jest.mock("@/lib/plugins/state", () => ({ invalidatePluginCache: jest.fn() }));
 jest.mock("@/lib/plugins/log", () => ({ writePluginLog: jest.fn() }));
 const onUpgrade = jest.fn();
 const failing = jest.fn(async () => { throw new Error("bad"); });
-const mk = (id: string, version: string, fn: any) => ({ source: "public", messages: {}, definition: definePlugin({ id, name: id, version, sdk: "^0.1.0", description: "", permissions: [], extensions: () => {}, onUpgrade: fn }) });
+const mk = (id: string, version: string, fn: any) => ({ source: "public", messages: {}, definition: definePlugin({ id, name: id, version, sdk: "^0.2.0", description: "", permissions: [], extensions: () => {}, onUpgrade: fn }) });
 let emptyRegistry = false;
 jest.mock("@/lib/plugins/registry", () => ({ getRegistry: () => emptyRegistry ? [] : [mk("up", "1.1.0", onUpgrade), mk("same", "1.0.0", onUpgrade), mk("broken", "2.0.0", failing)] }));
 

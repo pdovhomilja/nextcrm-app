@@ -14,7 +14,8 @@ export type AuditEntityType =
   | "plugin"
   | "price_list"
   | "price_list_rule"
-  | "product_category";
+  | "product_category"
+  | "order";
 
 export type AuditAction =
   | "created"

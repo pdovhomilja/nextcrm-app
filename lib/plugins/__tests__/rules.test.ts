@@ -9,7 +9,7 @@ jest.mock("@/lib/plugins/i18n", () => ({ translatePluginMessage: (p: string | nu
 
 const reg = (id: string, build: Parameters<typeof definePlugin>[0]["extensions"]) => ({
   source: "public" as const, messages: {},
-  definition: definePlugin({ id, name: id, version: "1.0.0", sdk: "^0.1.0", description: "", permissions: [], extensions: build }),
+  definition: definePlugin({ id, name: id, version: "1.0.0", sdk: "^0.2.0", description: "", permissions: [], extensions: build }),
 });
 
 const input: RuleInput = { entity: "account", operation: "beforeCreate", recordId: null, data: { name: "Acme" }, existing: null };

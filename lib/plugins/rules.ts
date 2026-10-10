@@ -9,6 +9,7 @@ export const MODEL_TO_ENTITY: Record<string, Entity> = {
   crm_Contacts: "contact",
   crm_Leads: "lead",
   crm_Opportunities: "opportunity",
+  crm_Orders: "order",
 };
 
 const MAX_DEPTH = 3;

@@ -1,7 +1,7 @@
 import { definePlugin } from "@nextcrm/plugin-sdk";
 const Comp = () => null;
 const plugins = [
-  { source: "public", messages: {}, definition: definePlugin({ id: "p-one", name: "One", version: "1.0.0", sdk: "^0.1.0", description: "", permissions: [],
+  { source: "public", messages: {}, definition: definePlugin({ id: "p-one", name: "One", version: "1.0.0", sdk: "^0.2.0", description: "", permissions: [],
     extensions: (x) => {
       x.accountTab({ id: "all", title: "t.all", component: Comp });
       x.accountTab({ id: "mgr", title: "t.mgr", component: Comp, roles: ["manager", "admin"] });

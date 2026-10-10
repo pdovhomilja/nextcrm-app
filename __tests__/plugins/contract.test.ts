@@ -47,13 +47,13 @@ it("contract catches broken plugins", () => {
     source: "public",
     messages: { en: { tab: { title: "T" } }, cz: {} },
     definition: definePlugin({
-      id: "broken", name: "B", version: "1.0.0", sdk: "^0.2.0", description: "", permissions: [],
+      id: "broken", name: "B", version: "1.0.0", sdk: "^0.3.0", description: "", permissions: [],
       settings: z.object({ list: z.array(z.string()) }),
       extensions: (x) => x.accountTab({ id: "t", title: "tab.title", component: () => null }),
     }),
   };
   expect(contractProblems(broken)).toEqual([
-    "sdk ^0.2.0 not satisfied",
+    "sdk ^0.3.0 not satisfied",
     "settings: Unsupported settings field type: array (list)",
     "cz missing keys: tab.title",
     "messages/de.json missing",

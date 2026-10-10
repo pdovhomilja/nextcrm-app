@@ -61,6 +61,7 @@ model crm_Accounts {
   emails             EmailsToAccounts[]
   accountProducts    crm_AccountProducts[]
   invoices           Invoices[]
+  orders crm_Orders[]
 
   @@index([assigned_to])
   @@index([industry])
@@ -546,6 +547,7 @@ model crm_Contacts {
   target_contact_links  crm_Target_Contact[]     @relation("target_contact_link")
   deletedAt             DateTime?
   deletedBy             String?   @db.Uuid
+  orders crm_Orders[]
 
   @@index([assigned_to])
   @@index([accountsIDs])
@@ -627,6 +629,7 @@ model Currency {
   accountProducts crm_AccountProducts[]
   invoices        Invoices[]          @relation("InvoiceCurrency")
   priceLists crm_PriceLists[]
+  orders crm_Orders[]
 }
 
 model ExchangeRate {
@@ -1039,6 +1042,7 @@ model Users {
   invoicePayments              Invoice_Payments[]    @relation("InvoicePaymentCreatedBy")
   invoiceAttachments           Invoice_Attachments[] @relation("InvoiceAttachmentUploadedBy")
   invoiceActivity              Invoice_Activity[]    @relation("InvoiceActivityActor")
+  ordersOwned crm_Orders[] @relation("OrderOwner")
 
   @@index([email])
   @@index([userStatus])
@@ -1726,6 +1730,7 @@ model crm_Products {
   opportunityLineItems crm_OpportunityLineItems[]
   contractLineItems    crm_ContractLineItems[]
   invoiceLineItems     Invoice_LineItems[]
+  orderLines crm_OrderLines[]
 
   @@index([status])
   @@index([type])
@@ -2115,6 +2120,7 @@ model crm_PriceLists {
   rules             crm_PriceListRules[] @relation("PriceListRules")
   baseFor           crm_PriceListRules[] @relation("PriceListRuleBase")
   accounts          crm_Accounts[]
+  orders crm_Orders[]
 
   @@unique([source, externalRef])
   @@index([isActive])
@@ -2150,4 +2156,116 @@ model crm_PriceListRules {
 
   @@index([priceListId, appliesTo])
   @@index([basePriceListId])
+}
+
+enum crm_Order_Status {
+  DRAFT
+  PENDING_APPROVAL
+  READY
+  SENT
+  CONFIRMED
+  DELIVERED
+  INVOICED
+  PAID
+  CANCELLED
+  SYNC_FAILED
+}
+
+enum crm_Order_Source {
+  CRM
+  EXTERNAL
+}
+
+enum NumberSeries_Reset {
+  YEARLY
+  NEVER
+}
+
+model NumberSeries {
+  id          String             @id @default(uuid()) @db.Uuid
+  scope       String
+  name        String
+  template    String
+  resetPolicy NumberSeries_Reset @default(YEARLY)
+  currentYear Int?
+  counter     Int                @default(0)
+  isDefault   Boolean            @default(false)
+  active      Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  orders crm_Orders[]
+
+  @@index([scope, isDefault])
+}
+
+model crm_Orders {
+  id                    String           @id @default(uuid()) @db.Uuid
+  number                String           @unique
+  seriesId              String           @db.Uuid
+  status                crm_Order_Status @default(DRAFT)
+  source                crm_Order_Source @default(CRM)
+  externalRef           String?
+  accountId             String           @db.Uuid
+  contactId             String?          @db.Uuid
+  ownerId               String?          @db.Uuid
+  priceListId           String?          @db.Uuid
+  currency              String           @db.VarChar(3)
+  shipping_street       String?
+  shipping_city         String?
+  shipping_state        String?
+  shipping_postal_code  String?
+  shipping_country      String?
+  requestedDeliveryDate DateTime?        @db.Date
+  note                  String?
+  subtotal              Decimal          @default(0) @db.Decimal(14, 2)
+  vatTotal              Decimal          @default(0) @db.Decimal(14, 2)
+  grandTotal            Decimal          @default(0) @db.Decimal(14, 2)
+  approvalRequestedAt   DateTime?
+  approvedAt            DateTime?
+  approvedBy            String?          @db.Uuid
+  approvalNote          String?
+  createdBy             String?          @db.Uuid
+  updatedBy             String?          @db.Uuid
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  series            NumberSeries    @relation(fields: [seriesId], references: [id], onDelete: Restrict)
+  account           crm_Accounts    @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  contact           crm_Contacts?   @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  owner             Users?          @relation("OrderOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  priceList         crm_PriceLists? @relation(fields: [priceListId], references: [id], onDelete: SetNull)
+  assigned_currency Currency        @relation(fields: [currency], references: [code], onDelete: Restrict)
+  lines             crm_OrderLines[]
+
+  @@unique([source, externalRef])
+  @@index([accountId])
+  @@index([ownerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model crm_OrderLines {
+  id                  String  @id @default(uuid()) @db.Uuid
+  orderId             String  @db.Uuid
+  position            Int
+  productId           String  @db.Uuid
+  productName         String
+  sku                 String?
+  unit                String?
+  quantity            Decimal @db.Decimal(14, 4)
+  listPrice           Decimal @db.Decimal(18, 2)
+  priceRuleId         String?
+  unitPrice           Decimal @db.Decimal(18, 2)
+  unitPriceOverridden Boolean @default(false)
+  vatRate             Decimal @default(0) @db.Decimal(5, 2)
+  lineSubtotal        Decimal @db.Decimal(14, 2)
+  lineVat             Decimal @db.Decimal(14, 2)
+  lineTotal           Decimal @db.Decimal(14, 2)
+
+  order   crm_Orders   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product crm_Products @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@index([productId])
 }

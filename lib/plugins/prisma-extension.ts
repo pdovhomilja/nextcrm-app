@@ -96,6 +96,8 @@ export async function interceptWrite(p: Params, deps: InterceptDeps): Promise<an
         if (JSON.stringify(out) !== JSON.stringify(input)) throw new Error("Plugin rules cannot modify bulk writes");
       }
       const res = await p.query(p.args);
+      // A conditional write that matched nothing (e.g. a lost status race) changed nothing: no after-events.
+      if (!res?.count) return res;
       if (p.operation === "deleteMany") { deps.deleteRecordData(entity, ids); await emit("deleted", ids); }
       else if (isSoftDelete(p.args.data, null)) await emit("deleted", ids);
       else {
