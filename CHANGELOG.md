@@ -5,6 +5,25 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.29.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.28.0...v0.29.0) (2026-10-10)
+
+
+### Added
+
+* **odoo-connector:** customer sync with cursor, dry run and alerts ([ce62f23](https://github.com/pdovhomilja/nextcrm-app/commit/ce62f23dc1e86f4938810162d6f34d3e7caabdce))
+* **odoo-connector:** JSON-2 client and settings ([8bab954](https://github.com/pdovhomilja/nextcrm-app/commit/8bab95443feef89a6d133d36ea93123508def377))
+* **odoo-connector:** matching by link, number and VAT ([f42fb21](https://github.com/pdovhomilja/nextcrm-app/commit/f42fb216e1fb45ff9d647767c581d2c022c5c1ef))
+* **odoo-connector:** part 1, connection and customers ([0f60559](https://github.com/pdovhomilja/nextcrm-app/commit/0f60559b66ff2e8a58b9d6b66e9167c55c323df7))
+* **odoo-connector:** partner to account and contact mapping ([d58a5e8](https://github.com/pdovhomilja/nextcrm-app/commit/d58a5e8a1bca6f972620443525c3eff0a14a6768))
+* **odoo-connector:** people sync to contacts ([b617d4d](https://github.com/pdovhomilja/nextcrm-app/commit/b617d4d3eb13e1ba493d3c3d558cebc39a75e65a))
+* **odoo-connector:** plugin definition, screens, messages and docs ([151ab4a](https://github.com/pdovhomilja/nextcrm-app/commit/151ab4a38c836d411314c8784dd4af369e33a5e8))
+* **plugins:** SDK 0.2.2 admin actions ([fef2900](https://github.com/pdovhomilja/nextcrm-app/commit/fef290017a2d854d6a8d04cd7726ad29c084f41a))
+
+
+### Fixed
+
+* **odoo-connector:** final review fixes ([ba4fe30](https://github.com/pdovhomilja/nextcrm-app/commit/ba4fe30cadb3423b64520cc5a53e15b0ba15ee63))
+
 ## [0.28.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.27.0...v0.28.0) (2026-10-10)
 
 
