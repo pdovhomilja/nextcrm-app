@@ -5,6 +5,34 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.27.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.26.0...v0.27.0) (2026-10-10)
+
+
+### Added
+
+* **orders:** account tab, approvals queue and admin settings ([96b0a55](https://github.com/pdovhomilja/nextcrm-app/commit/96b0a555b88171a97434507050e2b96f8719dc77))
+* **orders:** atomic number allocation and read scope ([9406513](https://github.com/pdovhomilja/nextcrm-app/commit/940651352b060175c094dd36ff91a19c84fb1ef9))
+* **orders:** core orders with price-list pricing and approval ([05b950a](https://github.com/pdovhomilja/nextcrm-app/commit/05b950afd4fc78c9a125866f537e96a288075d3b))
+* **orders:** create, edit, delete and line pricing ([58f2910](https://github.com/pdovhomilja/nextcrm-app/commit/58f2910976ad3b45d8644d98ca757c1012c1bb76))
+* **orders:** line and order totals ([3c70096](https://github.com/pdovhomilja/nextcrm-app/commit/3c70096af96ff523f339da9c0e84dcf8548735fc))
+* **orders:** MCP tools ([27d0552](https://github.com/pdovhomilja/nextcrm-app/commit/27d0552ee8fb275cb157a21b83c536c90f66dcbb))
+* **orders:** order screens, menu and translations ([2628d91](https://github.com/pdovhomilja/nextcrm-app/commit/2628d912aef121e3c4c7a72c7bc67fbbc62db372))
+* **orders:** schema, migration and number series seed ([92f21ac](https://github.com/pdovhomilja/nextcrm-app/commit/92f21ace95e94ad5a3d3415c2997ffa65b191329))
+* **orders:** server actions and read queries ([4427bef](https://github.com/pdovhomilja/nextcrm-app/commit/4427bef249f043f4659b13ee957a5075820b279c))
+* **orders:** status transition rules ([c2d8d11](https://github.com/pdovhomilja/nextcrm-app/commit/c2d8d11145ccdfb720b5497c84c3919b8891501e))
+* **orders:** submit, approval and status changes ([2938dd3](https://github.com/pdovhomilja/nextcrm-app/commit/2938dd308e08b2c755cbfe2c39836b7923fda78a))
+* **plugins:** SDK 0.2.0 with the order entity and order panel ([b805cff](https://github.com/pdovhomilja/nextcrm-app/commit/b805cff129607d0946c531d7bd2364577c00f1a2))
+
+
+### Fixed
+
+* **deploy:** build one image per release and deploy it from CI ([a6074ed](https://github.com/pdovhomilja/nextcrm-app/commit/a6074ed0729730efcd6b491e6ad61b838f20d198))
+* **deploy:** build one image per release and deploy it from CI ([ce01335](https://github.com/pdovhomilja/nextcrm-app/commit/ce01335abb4b6b57e3eabe556748876c8775d6ba))
+* **docker:** connect via DATABASE_URL when DB_* is unset; never seed blind ([53b6aa5](https://github.com/pdovhomilja/nextcrm-app/commit/53b6aa5bb089a2210c6048a2337345835bac8154))
+* **orders:** audit only header fields that changed ([51f23c3](https://github.com/pdovhomilja/nextcrm-app/commit/51f23c3b4df67d5ec162486cb7b568bef2bf5bc1))
+* **orders:** final review fixes ([c65b033](https://github.com/pdovhomilja/nextcrm-app/commit/c65b0337f1a21d062508b697205bdea244d17167))
+* **orders:** quote literal braces in admin help texts (ICU) ([f1e2a12](https://github.com/pdovhomilja/nextcrm-app/commit/f1e2a1203cb7260d41bbfb391f96083ad7b04d59))
+
 ## [0.26.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.25.1...v0.26.0) (2026-10-09)
 
 

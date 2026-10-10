@@ -10,6 +10,7 @@
 #
 # Required (deploy fails without them): POSTGRES_PASSWORD,
 # MINIO_ROOT_PASSWORD, BETTER_AUTH_SECRET, EMAIL_ENCRYPTION_KEY.
+# NEXTCRM_VERSION is optional: the release tag to run (default latest).
 # INNGEST_SIGNING_KEY / INNGEST_EVENT_KEY are optional: when unset, the app
 # generates them on first start and keeps them in the app_data volume.
 # Set the secrets once and never change them: a new BETTER_AUTH_SECRET logs
@@ -93,9 +94,11 @@ services:
 
   # --- NextCRM Application ---
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # The release image, built once per release by GitHub Actions. Pin a
+    # version with NEXTCRM_VERSION=v0.26.0; "always" makes a redeploy fetch
+    # the image currently tagged, so latest really is the latest release.
+    image: ghcr.io/pdovhomilja/nextcrm-app:${NEXTCRM_VERSION:-latest}
+    pull_policy: always
     restart: unless-stopped
     expose:
       - "3000"

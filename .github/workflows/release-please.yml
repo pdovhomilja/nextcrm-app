@@ -12,6 +12,9 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      version: ${{ steps.release.outputs.version }}
     steps:
       # Do not set release-type here: it switches the action to simple mode,
       # which ignores release-please-config.json and its changelog-sections.
@@ -22,3 +25,50 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+  # One image per release, built here instead of once per instance on the
+  # Coolify server. Instances pull ghcr.io/<repo>:latest (or a pinned vX.Y.Z).
+  # The image carries no NEXT_PUBLIC_* values: every instance sets its own at
+  # runtime, so client components must not read instance-specific ones.
+  image:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:v${{ needs.release-please.outputs.version }}
+            ghcr.io/${{ github.repository }}:latest
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.version=${{ needs.release-please.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Redeploys the Coolify resources listed in the COOLIFY_DEPLOY_UUIDS
+      # repository variable (comma-separated). Skipped when it is unset, e.g.
+      # in forks. COOLIFY_URL is a variable, COOLIFY_TOKEN a secret with the
+      # "deploy" ability.
+      - name: Deploy to Coolify
+        if: vars.COOLIFY_DEPLOY_UUIDS != ''
+        env:
+          COOLIFY_URL: ${{ vars.COOLIFY_URL }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+          UUIDS: ${{ vars.COOLIFY_DEPLOY_UUIDS }}
+        run: |
+          curl -fsS -H "Authorization: Bearer $COOLIFY_TOKEN" \
+            "${COOLIFY_URL%/}/api/v1/deploy?uuid=${UUIDS}&force=false"

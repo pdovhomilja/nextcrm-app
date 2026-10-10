@@ -1,8 +1,11 @@
 name: CI
 
+# Not on push to main: branch protection requires PRs to be up to date with
+# main, so the PR run already tested exactly what lands there. Images are
+# built and deployed only on a release (release-please.yml).
 on:
   push:
-    branches: [dev, main]
+    branches: [dev]
   pull_request:
     branches: [dev, main]
 
