@@ -62,17 +62,23 @@ export async function expire(ctx: Ctx, now: Date): Promise<void> {
   await resume(ctx, now);
   await pruneConflicts(ctx, now);
   const today = isoDay(now);
+  // Rule 3: recompute every registration from its orders first, so a changed orderMonths and a lost
+  // order event take effect within a day; this also moves due entries before they are read below.
+  for (const r of await ctx.store.list("reg:")) {
+    try {
+      await recomputeFromOrders(r.key.slice(4), ctx);
+    } catch (e) {
+      ctx.log.error(`Order recompute failed for account ${r.key.slice(4)}: ${String(e)}`);
+    }
+  }
   const freed: string[] = [];
   for (const entry of await ctx.store.list("due:")) {
     const day = entry.key.slice(4, 14);
     const accountId = entry.key.slice(15);
     if (day > today) continue;
     try {
-      const stored = await ctx.store.get<Registration>(K.reg(accountId));
-      if (!stored) { await ctx.store.delete(entry.key); continue; }
-      // Rule 3: an order may extend protection or count as contact; recompute moves the due entry itself.
-      const reg = (await recomputeFromOrders(accountId, ctx)) ?? stored;
-      if (dueDay(reg) > today) continue;
+      const reg = await ctx.store.get<Registration>(K.reg(accountId));
+      if (!reg) { await ctx.store.delete(entry.key); continue; }
       let verdict: string = evaluate(reg, now);
       if (verdict === "check-contact") {
         const [contact] = await ctx.data.activities.findForRecord("account", accountId, {

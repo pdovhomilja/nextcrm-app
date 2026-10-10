@@ -259,3 +259,18 @@ describe("orders (rule 3)", () => {
     expect([reg?.baseUntil, reg?.lastOrderAt, reg?.protectedUntil]).toEqual([baseUntil, "2026-09-15", "2027-09-15T00:00:00.000Z"]);
   });
 });
+
+it("applies a changed orderMonths to every registration in the next daily run (manual check)", async () => {
+  const accounts = [{ id: "acc-1", name: "Alza", assigned_to: "rep1" as string | null }];
+  const orders = [{ id: "o1", accountId: "acc-1", status: "PAID", orderDate: "2026-10-05" }];
+  const ctx = mk(accounts, [], [], orders);
+  await registered(ctx, "acc-1", reg1);
+  await expire(ctx, new Date("2026-10-06T06:00:00Z"));
+  expect((await ctx.store.get<Registration>(K.reg("acc-1")))?.protectedUntil).toBe("2027-10-05T00:00:00.000Z");
+  (ctx.settings as { orderMonths: number }).orderMonths = 0;
+  await ctx.store.set(K.lastRun, { at: "2026-10-07T05:55:00.000Z" });
+  await expire(ctx, new Date("2026-10-07T06:00:00Z"));
+  const reg = await ctx.store.get<Registration>(K.reg("acc-1"));
+  expect(reg?.protectedUntil).toBe(reg?.baseUntil);
+  expect((await ctx.store.list("due:")).map((e) => e.key)).toEqual([`due:${reg?.baseUntil?.slice(0, 10)}:acc-1`]);
+});
