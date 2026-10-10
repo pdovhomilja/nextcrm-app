@@ -1,0 +1,7 @@
+# Runs the published release image instead of building from source.
+# For platforms that can only deploy from Git (e.g. a Coolify application
+# with the Dockerfile build pack): the "build" is a pull of this tag.
+# release-please bumps the version below in every release PR.
+# x-release-please-start-version
+FROM ghcr.io/pdovhomilja/nextcrm-app:v0.27.0
+# x-release-please-end

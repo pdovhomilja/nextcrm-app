@@ -13,6 +13,8 @@
     { "type": "test", "hidden": true }
   ],
   "packages": {
-    ".": {}
+    ".": {
+      "extra-files": [{ "type": "generic", "path": "Dockerfile.release" }]
+    }
   }
 }
