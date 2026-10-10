@@ -3,5 +3,5 @@
 # with the Dockerfile build pack): the "build" is a pull of this tag.
 # release-please bumps the version below in every release PR.
 # x-release-please-start-version
-FROM ghcr.io/pdovhomilja/nextcrm-app:v0.28.0
+FROM ghcr.io/pdovhomilja/nextcrm-app:v0.29.0
 # x-release-please-end
