@@ -1,5 +1,5 @@
 import type { M2O, OdooPartner } from "./map";
-import { PARTNER_FIELDS, accountFields, changedFields } from "./map";
+import { PARTNER_FIELDS, accountFields, changedFields, contactFields } from "./map";
 import { matchAccount } from "./match";
 import { OdooAuthError, jsonClient, type OdooClient } from "./odoo";
 import type { Ctx } from "./settings";
@@ -88,6 +88,31 @@ async function syncCustomer(r: Run, p: OdooPartner): Promise<void> {
   await ctx.store.set(K.account(accountId), { partnerId: p.id, syncedAt: r.now.toISOString(), salesperson } satisfies AccountLink);
 }
 
+async function syncPerson(r: Run, p: OdooPartner): Promise<void> {
+  const { ctx, dry } = r;
+  const parent = p.parent_id ? await ctx.store.get<{ accountId: string }>(K.partner(p.parent_id[0])) : null;
+  if (p.active === false || !parent) { r.counts.skipped++; return; }
+  const fields = contactFields(p);
+  const link = await ctx.store.get<{ contactId: string }>(K.contact(p.id));
+  let current = link ? await ctx.data.contacts.get(link.contactId) : null;
+  if (!current && fields.email) [current] = await ctx.data.contacts.find({ where: { accountsIDs: parent.accountId, email: fields.email }, take: 1 });
+  if (!current) {
+    r.counts.created++;
+    if (dry) { ctx.log.info("Dry run: would create contact", { partnerId: p.id, accountId: parent.accountId, ...fields }); return; }
+    const row = await ctx.data.contacts.create({ ...fields, accountsIDs: parent.accountId });
+    await ctx.store.set(K.contact(p.id), { contactId: row.id as string });
+    return;
+  }
+  const diff = changedFields(current, fields);
+  if (!Object.keys(diff).length) r.counts.unchanged++;
+  else {
+    r.counts.updated++;
+    if (dry) { ctx.log.info("Dry run: would update contact", { partnerId: p.id, contactId: current.id, ...diff }); return; }
+    await ctx.data.contacts.update(current.id as string, diff);
+  }
+  if (!dry) await ctx.store.set(K.contact(p.id), { contactId: current.id as string });
+}
+
 /** One partner's failure is logged and counted; a rejected key stops the run (spec § 3.1). */
 async function guarded(r: Run, p: OdooPartner, fn: (r: Run, p: OdooPartner) => Promise<void>) {
   try {
@@ -116,6 +141,10 @@ const newest = (rows: OdooPartner[], prev: string | null) => rows.reduce<string 
 async function firstImport(r: Run): Promise<string | null> {
   let top: string | null = null;
   await pages(r, [...CUSTOMER, ["active", "=", true]], "id asc", syncCustomer, { onPage: async (rows) => { top = newest(rows, top); } });
+  const parents = await linkedIds(r.ctx);
+  if (parents.length) {
+    await pages(r, [["parent_id", "in", parents], ["type", "=", "contact"], ["active", "=", true]], "id asc", syncPerson, { onPage: async (rows) => { top = newest(rows, top); } });
+  }
   return top;
 }
 
@@ -128,6 +157,10 @@ async function incremental(r: Run, cursor: string): Promise<string | null> {
   };
   const linked = await linkedIds(r.ctx);
   await pages(r, [["write_date", ">", since], ["parent_id", "=", false], "|", ["customer_rank", ">", 0], ["id", "in", linked]], "write_date asc, id asc", syncCustomer, { archived: true, onPage: save });
+  const parents = await linkedIds(r.ctx);
+  if (parents.length) {
+    await pages(r, [["write_date", ">", since], ["type", "=", "contact"], ["parent_id", "in", parents]], "write_date asc, id asc", syncPerson, { archived: true, onPage: save });
+  }
   return top;
 }
 
