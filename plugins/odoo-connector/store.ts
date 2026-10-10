@@ -18,6 +18,12 @@ export const K = {
   lastRun: "meta:lastRun",                            // → RunSummary
   failures: "meta:failures",                          // → { count }
   lock: "meta:lock",                                  // → { until: ISO }
+  order: (id: string) => `order:${id}`,               // → OrderLink, a CRM order sent to Odoo
+  send: (id: string) => `send:${id}`,                 // → SendState while READY and not yet sent
+  failed: (id: string) => `failed:${id}`,             // → FailedState while SYNC_FAILED
+  sending: (id: string) => `sending:${id}`,           // → claim, one sender per order
+  sendPaused: "meta:sendPaused",                      // → { at, reason } after Odoo refused access
+  created: "meta:created",                            // → CreatedRecord[] newest first, at most 20
 };
 
 export interface AccountLink {
@@ -57,5 +63,18 @@ export interface RunSummary {
   conflicts: number;
   failed: number;
   catalog?: CatalogCounts;
+  orders?: { checked: number; moved: number };
   error?: string;
 }
+
+export interface OrderLink {
+  odooId: number; name: string; state: string; sentAt: string; total: number | null; totalDiffers: boolean;
+  priceDiffs: { sku: string; crm: number; odoo: number }[];
+  deliveries: { name: string; state: string; date: string | null }[];
+  invoices: { number: string; type: string; date: string | null; due: string | null; amount: number; residual: number; paymentState: string }[];
+  created: ("customer" | "delivery")[];
+  checkedAt: string;
+}
+export interface SendState { attempts: number; lastError: string | null; waitingSince: string | null }
+export interface FailedState { reason: string; at: string }
+export interface CreatedRecord { at: string; kind: "customer" | "delivery"; odooId: number; name: string; orderNumber: string }

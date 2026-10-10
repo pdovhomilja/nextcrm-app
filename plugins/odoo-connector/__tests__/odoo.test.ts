@@ -2,6 +2,7 @@ import { createTestContext } from "@nextcrm/plugin-sdk/testing";
 import { jsonClient, OdooAuthError, testConnection } from "../odoo";
 import { settingsSchema, type Ctx } from "../settings";
 import { fakeOdoo } from "./fake-odoo";
+import { K } from "../store";
 
 const S = settingsSchema.parse({ url: "https://odoo.example.com/", database: "db1" });
 const mk = (fetch: any) => createTestContext({ pluginId: "odoo-connector", settings: S, secrets: { apiKey: "k1" }, fetch }) as unknown as Ctx;
@@ -48,4 +49,40 @@ it("tests the connection: version and user name", async () => {
     "/web/webclient/version_info": () => ({ jsonrpc: "2.0", result: { server_version: "19.0+e" } }),
   }));
   await expect(testConnection(ctx, jsonClient(ctx, noSleep))).resolves.toBe("admin.connected");
+});
+
+describe("write-once calls", () => {
+  const mkCtx = (handlers: Record<string, any>, calls: any[]) => createTestContext({
+    pluginId: "odoo-connector", settings: settingsSchema.parse({ url: "https://odoo.example.com", database: "db" }), secrets: { apiKey: "k" },
+    fetch: fakeOdoo(handlers, calls),
+  }) as unknown as Ctx;
+
+  it("never retries a once call after a 5xx", async () => {
+    const calls: any[] = [];
+    const c = jsonClient(mkCtx({ "sale.order/create": () => new Response("{}", { status: 502 }) }, calls), noSleep);
+    await expect(c.call("sale.order", "create", { vals_list: [{}] }, { once: true })).rejects.toMatchObject({ status: 502 });
+    expect(calls).toHaveLength(1);
+  });
+
+  it("still retries reads after a 5xx", async () => {
+    const calls: any[] = [];
+    const c = jsonClient(mkCtx({ "sale.order/search_read": () => new Response("{}", { status: 502 }) }, calls), noSleep);
+    await expect(c.call("sale.order", "search_read", {})).rejects.toMatchObject({ status: 502 });
+    expect(calls).toHaveLength(3);
+  });
+
+  it("never retries a once call after a network error", async () => {
+    let n = 0;
+    const ctx = createTestContext({ pluginId: "odoo-connector", settings: settingsSchema.parse({ url: "https://odoo.example.com", database: "db" }), secrets: { apiKey: "k" },
+      fetch: async () => { n++; throw new Error("ECONNRESET"); } }) as unknown as Ctx;
+    await expect(jsonClient(ctx, noSleep).call("res.partner", "create", {}, { once: true })).rejects.toMatchObject({ status: 0 });
+    expect(n).toBe(1);
+  });
+
+  it("Test connection clears a send pause", async () => {
+    const ctx = mkCtx({ "res.users/context_get": () => ({ uid: 2 }), "res.users/read": () => [{ name: "Admin" }], "/web/webclient/version_info": () => ({ result: { server_version: "19.0" } }) }, []);
+    await ctx.store.set(K.sendPaused, { at: "x", reason: "403" });
+    await testConnection(ctx, jsonClient(ctx, noSleep));
+    expect(await ctx.store.get(K.sendPaused)).toBeNull();
+  });
 });
