@@ -11,7 +11,7 @@ export async function AccountTab({ accountId, ctx }: AccountSlotProps<Settings, 
       <section>
         <h3 className="mb-1 font-medium">{ctx.t("tab.orders")}</h3>
         {d.orders.length === 0 ? <p className="text-muted-foreground">{ctx.t("tab.ordersEmpty")}</p> : (
-          <table className="w-full text-xs">
+          <table className="w-full text-xs [&_td]:pr-3 [&_th]:pr-3">
             <thead><tr className="text-left"><th>{ctx.t("tab.number")}</th><th>{ctx.t("tab.odoo")}</th><th>{ctx.t("tab.date")}</th><th className="text-right">{ctx.t("tab.total")}</th><th>{ctx.t("tab.status")}</th></tr></thead>
             <tbody>{d.orders.map((o) => (
               <tr key={o.orderId}><td><a className="underline" href={`/crm/orders/${o.orderId}`}>{o.number}</a></td><td>{o.odooName}</td><td>{o.date}</td><td className="text-right">{o.total.toFixed(2)} {o.currency}</td><td>{o.status}</td></tr>
@@ -25,7 +25,7 @@ export async function AccountTab({ accountId, ctx }: AccountSlotProps<Settings, 
         {d.invoices.length === 0 ? <p className="text-muted-foreground">{ctx.t("tab.invoicesEmpty")}</p> : (
           <>
             <p className="font-medium">{ctx.t("tab.owed", { amounts: d.owed.map((x) => `${x.amount.toFixed(2)} ${x.currency}`).join(", ") })}</p>
-            <table className="w-full text-xs">
+            <table className="w-full text-xs [&_td]:pr-3 [&_th]:pr-3">
               <thead><tr className="text-left"><th>{ctx.t("tab.number")}</th><th>{ctx.t("tab.date")}</th><th>{ctx.t("tab.due")}</th><th className="text-right">{ctx.t("tab.total")}</th><th className="text-right">{ctx.t("tab.left")}</th></tr></thead>
               <tbody>{d.invoices.map((i) => (
                 <tr key={i.number} className={i.overdueDays > 0 ? "text-destructive" : ""}>
