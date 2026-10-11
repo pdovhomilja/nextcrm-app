@@ -31,6 +31,18 @@ function scoped(pluginId: string, entityType: string, entityId: string): RecordS
       });
       return rows.map((r) => ({ key: r.key, value: r.value }));
     },
+    async claim(key, ms) {
+      // One statement, database clock: insert the lock, or take it over only when the stored one has expired.
+      const rows = await prismaBase.$queryRaw<{ key: string }[]>`
+        INSERT INTO "PluginData" ("id", "pluginId", "entityType", "entityId", "key", "value", "updatedAt")
+        VALUES (gen_random_uuid(), ${pluginId}, ${entityType}, ${entityId}, ${key},
+                jsonb_build_object('until', to_char((now() + ${ms}::int * interval '1 millisecond') AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')), now())
+        ON CONFLICT ("pluginId", "entityType", "entityId", "key") DO UPDATE
+          SET "value" = EXCLUDED."value", "updatedAt" = now()
+          WHERE ("PluginData"."value"->>'until') IS NULL OR ("PluginData"."value"->>'until')::timestamptz <= now()
+        RETURNING "key"`;
+      return rows.length > 0;
+    },
   };
 }
 

@@ -49,6 +49,12 @@ function memoryStore(map: Map<string, unknown>, scope: string): RecordStore {
         .filter(([key]) => key.startsWith(`${scope}|${prefix}`))
         .map(([key, value]) => ({ key: key.slice(scope.length + 1), value }));
     },
+    async claim(key, ms) {
+      const held = map.get(k(key)) as { until?: string } | undefined;
+      if (held?.until && Date.parse(held.until) > Date.now()) return false;
+      map.set(k(key), { until: new Date(Date.now() + ms).toISOString() });
+      return true;
+    },
   };
 }
 

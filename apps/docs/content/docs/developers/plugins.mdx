@@ -158,6 +158,8 @@ await rec.set("score", 42);             // attached to one CRM record
 - `forRecord(entity, id)` scopes keys to one account, contact, lead or opportunity. When that record is hard-deleted, its plugin data is deleted too.
 - Uninstalling deletes all of the plugin's store entries and logs. Admins can download a JSON export first (`/api/admin/plugins/<id>/export`).
 
+`ctx.store.claim(key, ms)` takes a lock atomically: it returns `true` when the caller now holds `key` for `ms` milliseconds and `false` while another run holds it. Release it with `ctx.store.delete(key)`; an unreleased claim expires on its own. Use it when two jobs (an event handler and a cron, say) could otherwise do the same external write twice. Since SDK 0.2.4.
+
 ### Settings and secrets
 
 `settings` and `secrets` are flat `z.object`s whose fields are strings, numbers, booleans or enums. Fields may be optional or have defaults. Arrays and nested objects are rejected. The admin UI builds the settings form from the schema.

@@ -35,7 +35,16 @@
     "compareProgress": "Comparing: {done} of {total} price lists",
     "compareResult": "Last compare: {date}",
     "compareClean": "No differences.",
-    "compareFailed": "Compare failed: {error}"
+    "compareFailed": "Compare failed: {error}",
+    "orders": "Orders",
+    "ordersOff": "Sending orders is off. Turn on sendOrders in the settings to send READY orders to Odoo.",
+    "ordersCounts": "Waiting to be sent {waiting} · sent in the last 7 days {sent} · failed {failed}",
+    "ordersPaused": "Sending is paused since {date}: {reason}. Fix the Odoo user's access rights, then click Test connection.",
+    "ordersCreated": "Created in Odoo",
+    "createdKind": {
+      "customer": "customer",
+      "delivery": "delivery address"
+    }
   },
   "needsOwner": {
     "title": "Imported accounts without an owner",
@@ -55,9 +64,37 @@
   },
   "mail": {
     "failingSubject": "Odoo sync is failing",
-    "failingText": "The Odoo sync failed three times in a row. Last error: {error}"
+    "failingText": "The Odoo sync failed three times in a row. Last error: {error}",
+    "pausedSubject": "Odoo refused to take orders",
+    "pausedText": "Sending orders to Odoo is paused: {error}. Fix the Odoo user's access rights, then click Test connection.",
+    "orderFailedSubject": "Order {number} was not sent to Odoo",
+    "orderFailedText": "Order {number} could not be sent to Odoo: {error}. Fix the cause, then click Retry on the order.",
+    "stuckSubject": "Order {number} has been waiting for Odoo for a day",
+    "stuckText": "Order {number} has been waiting to be sent to Odoo since {since}. Last error: {error}. The connector keeps trying; check Odoo."
   },
   "product": {
     "linked": "Odoo product #{id}"
+  },
+  "order": {
+    "linked": "Odoo order {name}",
+    "state": "State in Odoo: {state}",
+    "createdCustomer": "Customer created in Odoo",
+    "createdDelivery": "Delivery address created in Odoo",
+    "priceDiffs": "Price differs from Odoo",
+    "priceDiff": "{sku}: CRM {crm}, Odoo {odoo}",
+    "totalDiffers": "The Odoo order total is {odoo}; it differs from this order's total.",
+    "deliveries": "Deliveries",
+    "invoices": "Invoices",
+    "invoice": "{number} · due {due} · {amount}, left to pay {residual} · {state}",
+    "waiting": "Waiting for Odoo since {date}",
+    "lastError": "Last error: {error}",
+    "failed": "Not sent: {reason}"
+  },
+  "orders": {
+    "noAccount": "The order's account has no name",
+    "notOdooProduct": "Product {product} does not come from Odoo",
+    "noPriceList": "The customer has no price list in Odoo",
+    "currency": "Order currency {order} differs from the Odoo price list currency {list}",
+    "otherLines": "Already in Odoo as {name} with other lines; ask Odoo to cancel it, then click Retry"
   }
 }

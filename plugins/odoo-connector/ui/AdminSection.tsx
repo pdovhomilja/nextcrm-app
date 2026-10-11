@@ -2,12 +2,13 @@ import type { AdminSectionProps } from "@nextcrm/plugin-sdk";
 import type { Settings, Secrets } from "../settings";
 import { K, type Conflict, type RunSummary } from "../store";
 import { summaryText } from "../sync";
-import { catalogData } from "./data";
+import { catalogData, ordersData } from "./data";
 
 export async function AdminSection({ ctx }: AdminSectionProps<Settings, Secrets>) {
   const last = await ctx.store.get<RunSummary>(K.lastRun);
   const conflicts = (await ctx.store.list("conflict:")).map((e) => e.value as Conflict);
   const c = await catalogData(ctx);
+  const o = await ordersData(ctx, new Date());
   const time = (iso: string) => iso.slice(0, 16).replace("T", " ");
   const next = last ? new Date(Date.parse(last.at) + ctx.settings.syncMinutes * 60_000) : null;
   return (
@@ -63,6 +64,20 @@ export async function AdminSection({ ctx }: AdminSectionProps<Settings, Secrets>
                 )}
               </>
             )}
+          </div>
+        )}
+      </div>
+      <div className="space-y-2">
+        <h3 className="font-medium">{ctx.t("admin.orders")}</h3>
+        {!o.enabled ? <p className="text-muted-foreground">{ctx.t("admin.ordersOff")}</p> : <p>{ctx.t("admin.ordersCounts", { waiting: o.waiting, sent: o.sent, failed: o.failed.length })}</p>}
+        {o.paused && <p className="text-destructive">{ctx.t("admin.ordersPaused", { date: time(o.paused.at), reason: o.paused.reason })}</p>}
+        {o.failed.length > 0 && (
+          <ul className="text-xs">{o.failed.map((f) => <li key={f.orderId}><a className="underline" href={`/crm/orders/${f.orderId}`}>{f.number}</a> · {f.reason}</li>)}</ul>
+        )}
+        {o.created.length > 0 && (
+          <div>
+            <h4 className="font-medium">{ctx.t("admin.ordersCreated")}</h4>
+            <ul className="text-xs">{o.created.map((c) => <li key={`${c.kind}:${c.odooId}`}>{time(c.at)} · {ctx.t(`admin.createdKind.${c.kind}`)} · {c.name} (#{c.odooId}) · {c.orderNumber}</li>)}</ul>
           </div>
         )}
       </div>

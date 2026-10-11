@@ -138,6 +138,8 @@ export interface RecordStore {
   set(key: string, value: unknown): Promise<void>;
   delete(key: string): Promise<void>;
   list(prefix?: string): Promise<StoreEntry[]>;
+  /** Atomic lock: true when this caller now holds `key` for `ms` milliseconds; false while someone else holds it. Release with delete(key). */
+  claim(key: string, ms: number): Promise<boolean>;
 }
 
 export interface PluginStore extends RecordStore {

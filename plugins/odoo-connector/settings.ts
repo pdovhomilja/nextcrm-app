@@ -7,6 +7,7 @@ export const settingsSchema = z.object({
   defaultCountry: z.string().length(2).default("CZ"),
   dryRun: z.boolean().default(true),
   priceLists: z.string().default(""),
+  sendOrders: z.boolean().default(false),
 });
 export const secretsSchema = z.object({ apiKey: z.string().min(1) });
 

@@ -3,28 +3,32 @@ import { secretsSchema, settingsSchema } from "./settings";
 import { jsonClient, testConnection } from "./odoo";
 import { runSync, scheduledSync } from "./sync";
 import { loadPriceLists, queueJob, runQueued } from "./jobs";
+import { onOrderUpdated, sweepOrders } from "./orders-out";
 import { AdminSection } from "./ui/AdminSection";
 import { NeedsOwnerPage } from "./ui/NeedsOwnerPage";
 import { AccountPanel } from "./ui/AccountPanel";
 import { ProductPanel } from "./ui/ProductPanel";
+import { OrderPanel } from "./ui/OrderPanel";
 
 export default definePlugin({
   id: "odoo-connector",
   name: "Odoo connector",
-  version: "0.2.0",
-  sdk: "^0.2.3",
-  description: "Imports customers, their people and the product catalog with price lists from an Odoo ERP and keeps them current. Reads only.",
-  permissions: ["http", "accounts:read", "accounts:write", "contacts:read", "contacts:write", "users:read", "notify", "products:read", "products:write", "priceLists:read", "priceLists:write"],
+  version: "0.3.0",
+  sdk: "^0.2.4",
+  description: "Imports customers, their people and the product catalog with price lists from an Odoo ERP and keeps them current; sends READY orders to Odoo as draft sale orders and brings their status back.",
+  permissions: ["http", "accounts:read", "accounts:write", "contacts:read", "contacts:write", "users:read", "notify", "products:read", "products:write", "priceLists:read", "priceLists:write", "orders:read", "orders:write"],
   settings: settingsSchema,
   secrets: secretsSchema,
   extensions: (x) => {
-    x.cron("sync", "*/5 * * * *", async (ctx) => { const now = new Date(); await runQueued(ctx, now); await scheduledSync(ctx, now); });
+    x.cron("sync", "*/5 * * * *", async (ctx) => { const now = new Date(); await runQueued(ctx, now); await sweepOrders(ctx, jsonClient(ctx), now); await scheduledSync(ctx, now); });
+    x.after("order", "updated", (input, ctx) => onOrderUpdated(input, ctx));
     x.adminAction({ id: "test", label: "admin.test", handler: (ctx) => testConnection(ctx) });
     x.adminAction({ id: "sync", label: "admin.syncNow", handler: (ctx) => queueJob(ctx, "sync", new Date()) });
     x.adminAction({ id: "lists", label: "admin.loadLists", handler: (ctx) => loadPriceLists(ctx) });
     x.adminAction({ id: "compare", label: "admin.compare", handler: (ctx) => queueJob(ctx, "compare", new Date()) });
     x.accountPanel({ id: "odoo", component: AccountPanel });
     x.productPanel({ id: "odoo", component: ProductPanel });
+    x.orderPanel({ id: "odoo", component: OrderPanel });
     x.page({ path: "needs-owner", title: "needsOwner.title", component: NeedsOwnerPage, roles: ["manager", "admin"], nav: { label: "needsOwner.nav" } });
     x.adminSection(AdminSection);
   },

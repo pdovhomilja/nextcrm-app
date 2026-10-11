@@ -158,7 +158,7 @@ function sameProduct(row: Record<string, unknown> | null, f: ExternalProductInpu
     && num(row.tax_rate, f.tax_rate) && (row.unit ?? null) === f.unit && link.categoryRef === f.categoryRef;
 }
 
-async function availableFields(client: OdooClient, model: string, wanted: string[]) {
+export async function availableFields(client: OdooClient, model: string, wanted: string[]) {
   const available = await client.call<Record<string, unknown>>(model, "fields_get", { attributes: ["type"] });
   return wanted.filter((f) => f in available);
 }

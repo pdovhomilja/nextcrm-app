@@ -19,7 +19,7 @@ import { createDataApi } from "@/lib/plugins/data-api";
 
 const f = { name: "Cup", sku: "S1", description: null, type: "PRODUCT" as const, status: "ACTIVE" as const, unit_price: "1", unit_cost: null, currency: "CZK", tax_rate: null, unit: null, categoryRef: null };
 
-it("is SDK 0.2.3 (additive)", () => expect(SDK_VERSION).toBe("0.2.3"));
+it("is SDK 0.2.4 (additive)", () => expect(SDK_VERSION).toBe("0.2.4"));
 
 it("needs products:write for external product and category upserts", async () => {
   await expect(createDataApi("demo", ["products:read"]).products.upsertExternal("1", f)).rejects.toThrow("products:write");
