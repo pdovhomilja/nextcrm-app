@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { format } from "date-fns";
 
 import {
   Archive,
@@ -22,7 +21,6 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -106,14 +104,6 @@ export function MailDisplay({
     : null;
 
   const canCompose = Boolean(composeMail?.fromEmail && mailboxView !== "trash");
-
-  const senderName = fullEmail?.fromName ?? fullEmail?.fromEmail ?? "?";
-  const senderInitials = senderName
-    .split(" ")
-    .map((c) => c[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
 
   async function runAction(fn: () => Promise<void>) {
     if (!mail?.id || busy) return;
@@ -315,49 +305,34 @@ export function MailDisplay({
 
       {mail ? (
         <div className="flex min-h-0 flex-1 flex-col">
-          <div className="flex items-start gap-3 px-4 py-4">
-            <Avatar className="h-10 w-10 border border-border/50 shadow-sm">
-              <AvatarImage alt={senderName} />
-              <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
-                {senderInitials}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0 flex-1 space-y-1">
-              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                <p className="font-semibold leading-tight">
-                  {fullEmail?.fromName ?? fullEmail?.fromEmail ?? "(unknown)"}
-                </p>
-                {!mail.isRead && (
-                  <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
-                    Unread
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-foreground/90">{fullEmail?.subject ?? "(no subject)"}</p>
-              <p className="text-xs text-muted-foreground">
-                <span className="font-medium text-foreground/70">From</span> {fullEmail?.fromEmail ?? ""}
-              </p>
-              {Array.isArray(fullEmail?.toRecipients) && fullEmail.toRecipients.length > 0 && (
-                <p className="text-xs text-muted-foreground line-clamp-2">
-                  <span className="font-medium text-foreground/70">To</span>{" "}
-                  {(fullEmail.toRecipients as { name?: string; email: string }[])
-                    .map((r) => r.name ?? r.email)
-                    .join(", ")}
-                </p>
+          <div className="border-b border-border/40 px-4 py-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="min-w-0 flex-1 text-base font-semibold leading-snug">
+                {fullEmail?.subject ?? "(no subject)"}
+              </h2>
+              {!mail.isRead && (
+                <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                  Unread
+                </span>
               )}
             </div>
-            {fullEmail?.sentAt && (
-              <time className="shrink-0 text-[11px] text-muted-foreground">
-                {format(new Date(fullEmail.sentAt), "PPp")}
-              </time>
+            {Array.isArray(fullEmail?.toRecipients) && fullEmail.toRecipients.length > 0 && (
+              <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
+                To{" "}
+                {(fullEmail.toRecipients as { name?: string; email: string }[])
+                  .map((r) => r.name ?? r.email)
+                  .join(", ")}
+              </p>
             )}
           </div>
-          <Separator className="opacity-40" />
-          <div className="min-h-0 flex-1 overflow-auto bg-gradient-to-b from-muted/10 to-background">
+          <div className="min-h-0 flex-1 overflow-auto bg-muted/5">
             {fullEmail ? (
               <EmailConversationBody
                 bodyText={fullEmail.bodyText}
                 bodyHtml={fullEmail.bodyHtml}
+                fromName={fullEmail.fromName}
+                fromEmail={fullEmail.fromEmail}
+                sentAt={fullEmail.sentAt}
               />
             ) : (
               <p className="p-4 text-sm text-muted-foreground">Loading…</p>

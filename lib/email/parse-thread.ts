@@ -1,11 +1,13 @@
+import { parseOnWroteLabel, type ParsedQuoteHeader } from "./parse-on-wrote-label";
+
 export type ThreadPart = {
   kind: "message" | "quote" | "forward";
-  label?: string;
   body: string;
   depth: number;
+  /** Parsed from "On … wrote" line (quoted / forwarded blocks). */
+  header?: ParsedQuoteHeader;
 };
 
-/** Gmail / Apple Mail: "On Sun, Oct 11, 2026 at 9:23 PM … wrote:" */
 const ON_WROTE_LINE =
   /(?:^|\n)\s*On\s+(.+?)\s+wrote:\s*(?:\n|$)/i;
 
@@ -62,9 +64,6 @@ function findNextSplit(text: string): Split | null {
   return candidates[0];
 }
 
-/**
- * Splits plain-text email into the latest reply and visually distinct quoted blocks.
- */
 export function parsePlainTextThread(raw: string, depth = 0): ThreadPart[] {
   const text = normalizeNewlines(raw).trim();
   if (!text) return [];
@@ -83,20 +82,33 @@ export function parsePlainTextThread(raw: string, depth = 0): ThreadPart[] {
   }
 
   const sub = parsePlainTextThread(tail, depth + 1);
-  const label = cut.kind === "forward" ? "Forwarded message" : cut.label;
   const kind = cut.kind === "forward" ? "forward" : "quote";
+  const header =
+    cut.kind === "quote" && cut.label
+      ? parseOnWroteLabel(cut.label)
+      : cut.kind === "forward"
+        ? {
+            fromName: "Forwarded message",
+            sentAt: null as Date | null,
+          }
+        : undefined;
 
   if (sub.length === 0) {
-    out.push({ kind, label, body: cleanQuoteBody(tail), depth: depth + 1 });
+    out.push({
+      kind,
+      body: cleanQuoteBody(tail),
+      depth: depth + 1,
+      header,
+    });
     return out;
   }
 
   const [first, ...rest] = sub;
   out.push({
     kind,
-    label,
     body: cleanQuoteBody(first.body),
     depth: depth + 1,
+    header,
   });
   out.push(...rest);
   return out;
