@@ -45,14 +45,20 @@ export function invoiceRows(moves: OdooMove[]): OrderLink["invoices"] {
 export async function syncOrderStatuses(a: { ctx: Ctx; client: OdooClient; dry: boolean; now: Date }): Promise<{ checked: number; moved: number }> {
   const { ctx, client, dry, now } = a;
   const out = { checked: 0, moved: 0 };
-  const open: { orderId: string; link: OrderLink; order: RecordData }[] = [];
+  const open: { orderId: string; link: OrderLink; order: RecordData; final?: boolean }[] = [];
+  // 0.4.1: an imported order still owes lines until its missing products exist, even once it is PAID or CANCELLED.
+  const linesOwed = (l: OrderLink) => !!l.imported && (l.missing === undefined || l.missing > 0);
   for (const e of await ctx.store.list("order:")) {
     const orderId = e.key.slice(6);
     const link = e.value as OrderLink;
-    if (link.done) continue;
+    if (link.done && !linesOwed(link)) continue;
     const order = await ctx.data.orders.get(orderId);
     if (!order) continue;
-    if (FINAL.has(String(order.status))) { if (!dry) await ctx.store.set(K.order(orderId), { ...link, done: true }); continue; }
+    if (FINAL.has(String(order.status))) {
+      if (linesOwed(link)) open.push({ orderId, link: { ...link, done: true }, order, final: true });
+      else if (!dry && !link.done) await ctx.store.set(K.order(orderId), { ...link, done: true });
+      continue;
+    }
     open.push({ orderId, link, order });
   }
   if (!open.length) return out;
@@ -120,6 +126,10 @@ export async function syncOrderStatuses(a: { ctx: Ctx; client: OdooClient; dry: 
         await tell(ctx, { roles: ["admin"], subject: ctx.t("mail.movedSubject", { number }), text: ctx.t("mail.movedText", { number, name: o.link.name }) });
         link.movedNotified = true;
       }
+    }
+    if (o.final) {   // finished: only the lines are refreshed, the status never changes again
+      if (!dry) await ctx.store.set(K.order(o.orderId), link);
+      continue;
     }
     if (dry) {
       if (forward) ctx.log.info("Dry run: would set order status", { orderId: o.orderId, from: current, to: target });
