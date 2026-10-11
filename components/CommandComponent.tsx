@@ -79,7 +79,7 @@ export function CommandComponent() {
         type="button"
         variant="outline"
         size="sm"
-        className="hidden h-8 gap-2 border-border/70 bg-background/80 px-2.5 text-muted-foreground shadow-none hover:bg-muted/60 md:inline-flex"
+        className="hidden h-8 gap-2 rounded-lg border-0 bg-transparent px-2 text-muted-foreground shadow-none hover:bg-accent/80 md:inline-flex"
         onClick={() => setOpen(true)}
         aria-label={`Search (${mod}+K)`}
       >
@@ -91,7 +91,7 @@ export function CommandComponent() {
         type="button"
         variant="ghost"
         size="icon"
-        className="h-9 w-9 rounded-full md:hidden"
+        className="header-icon-btn md:hidden"
         onClick={() => setOpen(true)}
         aria-label="Search"
       >

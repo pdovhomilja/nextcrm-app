@@ -17,7 +17,7 @@ export function HeaderMailButton({ unreadCount = 0 }: Props) {
     <Button
       variant="ghost"
       size="icon"
-      className="relative h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
+      className="header-icon-btn relative"
       asChild
     >
       <Link href="/emails" aria-label={label} title={label}>

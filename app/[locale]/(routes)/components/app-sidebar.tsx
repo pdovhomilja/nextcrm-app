@@ -139,7 +139,7 @@ export function AppSidebar({
   return (
     <Sidebar
       collapsible="icon"
-      className="border-sidebar-border/80 shadow-[1px_0_0_0_hsl(var(--sidebar-border))]"
+      className="border-r border-sidebar-border/70 bg-sidebar/95 backdrop-blur-md"
       {...props}
     >
       {/* Header with Logo and Branding */}
@@ -150,7 +150,7 @@ export function AppSidebar({
             isExpanded ? "gap-x-4" : "justify-center",
           )}
         >
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary/10 ring-1 ring-primary/15">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 ring-1 ring-primary/20 shadow-sm">
             {/* The logo is served from the supplied branded asset URL. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img

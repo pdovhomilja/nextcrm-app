@@ -52,7 +52,7 @@ export function HeaderChatPanel() {
         <Button
           variant="ghost"
           size="icon"
-          className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
+          className="header-icon-btn"
           aria-label="Team chat and calls"
           title="Team chat, video, and email"
         >

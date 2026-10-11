@@ -138,10 +138,8 @@ export default async function AppLayout({
           - This allows the footer to scroll with the page content
           - Footer will appear at the bottom of the content, not fixed at viewport bottom
         */}
-        <div className="flex h-full min-w-0 w-full flex-grow flex-col overflow-y-auto bg-muted/20">
-          <div className="min-w-0 w-full flex-grow py-4 sm:py-5">
-            <div className="min-w-0 w-full px-3 sm:px-5">{children}</div>
-          </div>
+        <div className="app-main-scroll">
+          <div className="app-content-wrap">{children}</div>
           <Footer />
         </div>
       </SidebarInset>

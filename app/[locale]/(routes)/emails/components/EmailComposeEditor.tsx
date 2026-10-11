@@ -11,9 +11,11 @@ import { useEffect } from "react";
 type Props = {
   content: string;
   onChange: (html: string, plainText: string) => void;
+  variant?: "email" | "chat";
 };
 
-export function EmailComposeEditor({ content, onChange }: Props) {
+export function EmailComposeEditor({ content, onChange, variant = "email" }: Props) {
+  const isChat = variant === "chat";
   const editor = useEditor({
     extensions: [StarterKit, Underline, Link.configure({ openOnClick: false })],
     content: content || "<p></p>",
@@ -36,9 +38,21 @@ export function EmailComposeEditor({ content, onChange }: Props) {
   if (!editor) return null;
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border/70 bg-background">
-      <div className="flex flex-wrap gap-0.5 border-b border-border/50 bg-muted/30 p-1.5">
-        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => editor.chain().focus().toggleBold().run()}>
+    <div
+      className={
+        isChat
+          ? "overflow-hidden bg-transparent"
+          : "overflow-hidden rounded-lg border border-border/70 bg-background"
+      }
+    >
+      <div
+        className={
+          isChat
+            ? "flex flex-wrap gap-0.5 px-2 py-1.5"
+            : "flex flex-wrap gap-0.5 border-b border-border/50 bg-muted/30 p-1.5"
+        }
+      >
+        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => editor.chain().focus().toggleBold().run()}>
           <Bold className="h-4 w-4" />
         </Button>
         <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => editor.chain().focus().toggleItalic().run()}>
@@ -65,7 +79,11 @@ export function EmailComposeEditor({ content, onChange }: Props) {
       </div>
       <EditorContent
         editor={editor}
-        className="prose prose-sm max-w-none min-h-[180px] px-3 py-2 focus:outline-none [&_.ProseMirror]:min-h-[160px] [&_.ProseMirror]:outline-none"
+        className={
+          isChat
+            ? "prose prose-sm max-w-none px-3 py-2 focus:outline-none [&_.ProseMirror]:max-h-[140px] [&_.ProseMirror]:min-h-[72px] [&_.ProseMirror]:overflow-y-auto [&_.ProseMirror]:outline-none"
+            : "prose prose-sm max-w-none min-h-[180px] px-3 py-2 focus:outline-none [&_.ProseMirror]:min-h-[160px] [&_.ProseMirror]:outline-none"
+        }
       />
     </div>
   );

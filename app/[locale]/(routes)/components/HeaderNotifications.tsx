@@ -28,7 +28,7 @@ export function HeaderNotifications({ totalCount, items }: Props) {
         <Button
           variant="ghost"
           size="icon"
-          className="relative h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
+          className="header-icon-btn relative"
           aria-label={showBadge ? `${totalCount} notifications` : "Notifications"}
         >
           <Bell className="h-[1.15rem] w-[1.15rem]" />
