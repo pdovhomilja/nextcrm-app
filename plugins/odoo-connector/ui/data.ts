@@ -54,8 +54,9 @@ export async function productPanelData(ctx: Ctx, productId: string) {
 
 export async function orderPanelData(ctx: Ctx, orderId: string) {
   const link = await ctx.store.get<OrderLink>(K.order(orderId));
-  const waiting = await ctx.store.get<SendState>(K.send(orderId));
-  const failed = await ctx.store.get<FailedState>(K.failed(orderId));
+  const status = (await ctx.data.orders.get(orderId))?.status;
+  const waiting = status === "READY" ? await ctx.store.get<SendState>(K.send(orderId)) : null;
+  const failed = status === "SYNC_FAILED" ? await ctx.store.get<FailedState>(K.failed(orderId)) : null;
   if (!link && !waiting && !failed) return null;
   return {
     link: link ? { ...link, url: `${ctx.settings.url.replace(/\/+$/, "")}/odoo/action-sale.action_orders/${link.odooId}` } : null,

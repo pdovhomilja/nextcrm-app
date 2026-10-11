@@ -4,7 +4,7 @@ import type { M2O } from "./map";
 import { findOrCreateCustomer, findOrCreateDelivery, salesperson } from "./odoo-partners";
 import { jsonClient, type OdooClient } from "./odoo";
 import { FinalError, failKind } from "./orders-errors";
-import type { Ctx } from "./settings";
+import { localTime, tell, type Ctx } from "./settings";
 import { K, type CreatedRecord, type OrderLink, type PriceListLink, type SendState } from "./store";
 
 const CLAIM_MS = 30 * 60_000;   // review I6: longer than any send, even with slow Odoo
@@ -135,10 +135,10 @@ async function failed(ctx: Ctx, order: RecordData, e: unknown, now: Date): Promi
     const stuck = kind === "unreachable" && !prev.stuckNotified && now.getTime() - Date.parse(waitingSince) > STUCK_MS;
     await ctx.store.set(K.send(id), { ...prev, lastError: reason, waitingSince, ...(stuck ? { stuckNotified: true } : {}) } satisfies SendState);
     ctx.log.warn(`Order ${number} waits for Odoo: ${reason}`, { orderId: id });
-    if (stuck) await ctx.notify({ roles: ["admin"], subject: ctx.t("mail.stuckSubject", { number }), text: ctx.t("mail.stuckText", { number, since: waitingSince.slice(0, 16).replace("T", " "), error: reason }) });
+    if (stuck) await tell(ctx, { roles: ["admin"], subject: ctx.t("mail.stuckSubject", { number }), text: ctx.t("mail.stuckText", { number, since: localTime(ctx, waitingSince), error: reason }) });
     if (kind === "denied" && !(await ctx.store.get(K.sendPaused))) {
       await ctx.store.set(K.sendPaused, { at: now.toISOString(), reason });
-      await ctx.notify({ roles: ["admin"], subject: ctx.t("mail.pausedSubject"), text: ctx.t("mail.pausedText", { error: reason }) });
+      await tell(ctx, { roles: ["admin"], subject: ctx.t("mail.pausedSubject"), text: ctx.t("mail.pausedText", { error: reason }) });
     }
     return kind;
   }
@@ -152,7 +152,7 @@ async function failed(ctx: Ctx, order: RecordData, e: unknown, now: Date): Promi
   await ctx.store.set(K.failed(id), { reason, at: now.toISOString() });
   await ctx.store.delete(K.send(id));
   ctx.log.error(`Order ${number} could not be sent: ${reason}`, { orderId: id });
-  await ctx.notify({ roles: ["admin"], subject: ctx.t("mail.orderFailedSubject", { number }), text: ctx.t("mail.orderFailedText", { number, error: reason }) });
+  await tell(ctx, { roles: ["admin"], subject: ctx.t("mail.orderFailedSubject", { number }), text: ctx.t("mail.orderFailedText", { number, error: reason }) });
   return kind === "final" ? "final" : "refused";
 }
 
@@ -198,5 +198,9 @@ export async function sweepOrders(ctx: Ctx, client: OdooClient, now: Date): Prom
 
 /** Plan Ruling 1: core's after-write hook fires for Submit, Approve and Retry; sendOrder ignores everything but READY. */
 export async function onOrderUpdated(input: AfterInput, ctx: Ctx): Promise<void> {
+  // An order that leaves READY or SYNC_FAILED (reopened, cancelled) drops its old state, so a resubmit starts at attempt 1.
+  const o = await ctx.data.orders.get(input.recordId);
+  if (o && o.status !== "READY") await ctx.store.delete(K.send(input.recordId));
+  if (o && o.status !== "SYNC_FAILED") await ctx.store.delete(K.failed(input.recordId));
   await sendOrder(ctx, jsonClient(ctx), input.recordId, new Date());
 }

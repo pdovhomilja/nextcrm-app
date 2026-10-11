@@ -74,6 +74,9 @@ export interface OrderLink {
   invoices: { number: string; type: string; date: string | null; due: string | null; amount: number; residual: number; paymentState: string }[];
   created: ("customer" | "delivery")[];
   checkedAt: string;
+  done?: boolean;          // PAID or CANCELLED in the CRM: no longer read
+  back?: string;           // the earlier status Odoo went back to, logged once
+  missingNotified?: boolean;
 }
 export interface SendState { attempts: number; lastError: string | null; waitingSince: string | null; stuckNotified?: boolean }
 export interface FailedState { reason: string; at: string }

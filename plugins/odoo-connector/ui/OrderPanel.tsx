@@ -1,8 +1,6 @@
 import type { OrderSlotProps } from "@nextcrm/plugin-sdk";
-import type { Settings, Secrets } from "../settings";
+import { localTime, type Settings, type Secrets } from "../settings";
 import { orderPanelData } from "./data";
-
-const time = (iso: string) => iso.slice(0, 16).replace("T", " ");
 
 export async function OrderPanel({ orderId, ctx }: OrderSlotProps<Settings, Secrets>) {
   const d = await orderPanelData(ctx, orderId);
@@ -14,7 +12,7 @@ export async function OrderPanel({ orderId, ctx }: OrderSlotProps<Settings, Secr
       {l && (
         <>
           <a className="underline" href={l.url} target="_blank" rel="noreferrer">{ctx.t("order.linked", { name: l.name })}</a>
-          <div className="text-muted-foreground">{ctx.t("order.state", { state: l.state })}</div>
+          {l.state === "missing" ? <div className="text-amber-600">{ctx.t("order.missing")}</div> : <div className="text-muted-foreground">{ctx.t("order.state", { state: l.state })}</div>}
           {l.created.includes("customer") && <div>{ctx.t("order.createdCustomer")}</div>}
           {l.created.includes("delivery") && <div>{ctx.t("order.createdDelivery")}</div>}
           {l.priceDiffs.length > 0 && (
@@ -42,7 +40,7 @@ export async function OrderPanel({ orderId, ctx }: OrderSlotProps<Settings, Secr
       )}
       {d.waiting && (
         <div>
-          <div>{ctx.t("order.waiting", { date: time(d.waiting.waitingSince ?? new Date().toISOString()) })}</div>
+          <div>{ctx.t("order.waiting", { date: localTime(ctx, d.waiting.waitingSince ?? new Date().toISOString()) })}</div>
           {d.waiting.lastError && <div className="text-xs text-muted-foreground">{ctx.t("order.lastError", { error: d.waiting.lastError })}</div>}
         </div>
       )}

@@ -29,6 +29,7 @@ Install it under **Admin → Plugins → Odoo connector**.
 | `dryRun` | on | While on, the sync only writes to the plugin log what it would create or change, and the scheduled sync is paused: use **Sync now**. |
 | `priceLists` | empty | The Odoo price lists to import: their Odoo ids, separated by commas, for example `242, 245`. See [Catalog](#catalog). |
 | `sendOrders` | off | Send orders in READY to Odoo as draft sale orders. While off, the connector never writes to Odoo. |
+| `timeZone` | `UTC` | The time zone the plugin's screens and emails show times in, for example `Europe/Prague`. |
 
 The secret `apiKey` holds the Odoo user's API key. It is stored encrypted.
 
@@ -109,13 +110,15 @@ The Odoo user needs **create** on contacts (`res.partner`) and sales orders (`sa
 | everything shipped | DELIVERED |
 | fully invoiced | INVOICED |
 | fully invoiced and every invoice paid | PAID |
-| cancelled or deleted | CANCELLED |
+| cancelled | CANCELLED |
 
 Statuses are read on every sync (`syncMinutes`). They only move forward; partly shipped or partly paid orders keep the earlier status and the **Odoo** panel on the order shows the details: deliveries, invoices with what is left to pay, a "Price differs from Odoo" list when Odoo's price list would charge more than 1 more or less than the order, and a note when someone changed the order's total in Odoo.
 
+When the connector can no longer find the Odoo order, the order keeps its status and the panel says "Not found in Odoo"; admins get one email. Odoo gives the same answer for a deleted order and for one the API user lost access to, so the connector never cancels on its own: if the Odoo order was deleted, cancel the CRM order by hand.
+
 ### When sending fails
 
-- **Odoo unreachable:** the order stays READY and goes out when Odoo is back; the panel shows since when it waits.
+- **Odoo unreachable:** the order stays READY and goes out when Odoo is back; the panel shows since when it waits. An order reopened or cancelled while it waits starts afresh when it is submitted again.
 - **Odoo refuses access** (wrong key or missing rights): sending pauses for every order and admins get one notification. Fix the rights, then click **Test connection**.
 - **Odoo refuses the order:** after 5 refusals, or at once for a product that does not come from Odoo, a currency that differs from the Odoo price list, or an order already in Odoo with other lines, the order becomes **SYNC_FAILED** and admins are notified. Fix the cause and click **Retry** on the order.
 
