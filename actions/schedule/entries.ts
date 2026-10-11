@@ -95,7 +95,7 @@ export async function createScheduleEntry(input: {
     throw new Error("Invalid date range");
   }
 
-  const attendeeIds = [...new Set(input.attendeeIds ?? [])].filter((id) => id !== userId);
+  const attendeeIds = Array.from(new Set(input.attendeeIds ?? [])).filter((id) => id !== userId);
   let meetRoom: string | null = null;
   let chatRoomKey: string | null = null;
   let activityId: string | null = null;
