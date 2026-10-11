@@ -5,6 +5,27 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.30.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.29.0...v0.30.0) (2026-10-10)
+
+
+### Added
+
+* **catalog:** core upsert and replace calls for external catalog data ([2c7f5bf](https://github.com/pdovhomilja/nextcrm-app/commit/2c7f5bfcfb20c9924f60c52af053ed9144b4cd4d))
+* **catalog:** external products and categories are read-only ([bf91343](https://github.com/pdovhomilja/nextcrm-app/commit/bf91343d11408f0186288fe1d70b453beabba6f7))
+* **catalog:** product and category source (CRM | EXTERNAL) ([0fb8222](https://github.com/pdovhomilja/nextcrm-app/commit/0fb8222a948236212b808e769ad021ffb46d6c03))
+* **odoo-connector:** catalog mapping for categories, variants and price rules ([caa03b0](https://github.com/pdovhomilja/nextcrm-app/commit/caa03b07a840a5ff81e4a7793c12a49e7ca77b8b))
+* **odoo-connector:** catalog screens, product panel, docs; v0.2.0 ([5ef65d5](https://github.com/pdovhomilja/nextcrm-app/commit/5ef65d59c9a517cff1fd373f6c9dabc0c57d86d1))
+* **odoo-connector:** catalog sync of categories, products, price lists and account lists ([cecb226](https://github.com/pdovhomilja/nextcrm-app/commit/cecb226f6b896b0b60bb50d8b3759b5b60a18959))
+* **odoo-connector:** compare CRM prices with Odoo (read-only onchange) ([2f89923](https://github.com/pdovhomilja/nextcrm-app/commit/2f899230b808af7b5fd654b21d80c8821b973724))
+* **odoo-connector:** import the product catalog and price lists, compare with Odoo ([aea2efb](https://github.com/pdovhomilja/nextcrm-app/commit/aea2efb66af204d29acec3d1961dbbd782f749fc))
+* **odoo-connector:** queued Sync now and Compare jobs, Load price lists ([c7c5257](https://github.com/pdovhomilja/nextcrm-app/commit/c7c52572e0369f205382999a6f060cd29c9fbada))
+* **plugins:** SDK 0.2.3 catalog writes, prices and product panel ([6479dfc](https://github.com/pdovhomilja/nextcrm-app/commit/6479dfc74adbd8a83c80b6f0b67902d9f971569c))
+
+
+### Fixed
+
+* **odoo-connector:** final review fixes for the catalog ([5c8fdd5](https://github.com/pdovhomilja/nextcrm-app/commit/5c8fdd568de0d349159496f6000277fb2b92f871))
+
 ## [0.29.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.28.0...v0.29.0) (2026-10-10)
 
 
