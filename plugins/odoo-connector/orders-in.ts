@@ -80,7 +80,8 @@ export async function ensureProducts(ctx: Ctx, client: OdooClient, lines: OdooLi
   for (const v of variants) {
     const f = variantFields({ ...v, taxes_id: v.taxes_id ?? [] }, (t) => (t.length === 1 ? taxes.get(t[0]) ?? null : null));
     try {
-      const res = await ctx.data.products.upsertExternal(String(v.id), f);
+      const res = await ctx.data.products.upsertExternal(String(v.id), f, { adoptBySku: true });
+      if (res.adopted) ctx.log.info(`Took over CRM product ${f.sku} (${f.name})`, { odooId: v.id, productId: res.id });
       await ctx.store.set(K.product(v.id), { productId: res.id, tmplId: v.product_tmpl_id ? v.product_tmpl_id[0] : null, categoryRef: f.categoryRef } satisfies ProductLink);
     } catch (e) {
       ctx.log.warn(`Product ${v.display_name} from an imported order not created: ${e instanceof Error ? e.message : String(e)}`, { odooId: v.id });
@@ -156,7 +157,7 @@ export async function importOrders(a: { ctx: Ctx; client: OdooClient; dry: boole
         odooId: s.id, name: s.name, state: s.state, sentAt: now.toISOString(), total: s.amount_total,
         totalDiffers: row.grandTotal !== undefined && Math.abs(s.amount_total - Number(row.grandTotal)) > TOLERANCE,
         priceDiffs: [], deliveries: [], invoices: invoiceRows(mine), created: [], checkedAt: now.toISOString(),
-        imported: true, partnerId, writeDate: s.write_date, ...(FINAL.has(status) ? { done: true } : {}),
+        imported: true, partnerId, writeDate: s.write_date, missing, ...(FINAL.has(status) ? { done: true } : {}),
       };
       await ctx.store.set(K.order(orderId), link);
       await ctx.store.set(K.odooOrder(s.id), { orderId });

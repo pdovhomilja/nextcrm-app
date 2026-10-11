@@ -55,7 +55,8 @@ export async function syncCatalog({ ctx, client, dry, now }: { ctx: Ctx; client:
       if (known && !(await ctx.store.get(K.retryProduct(v.id))) && sameProduct(await ctx.data.products.get(known.productId), f, known)) continue;
       if (dry) { counts[known ? "productsUpdated" : "productsCreated"]++; ctx.log.info(`Dry run: would ${known ? "update" : "create"} product`, { odooId: v.id, ...f }); continue; }
       try {
-        const res = await ctx.data.products.upsertExternal(String(v.id), f);
+        const res = await ctx.data.products.upsertExternal(String(v.id), f, { adoptBySku: true });
+        if (res.adopted) ctx.log.info(`Took over CRM product ${f.sku} (${f.name})`, { odooId: v.id, productId: res.id });
         counts[res.created ? "productsCreated" : "productsUpdated"]++;
         await ctx.store.set(K.product(v.id), { productId: res.id, tmplId: v.product_tmpl_id ? v.product_tmpl_id[0] : null, categoryRef: f.categoryRef } satisfies ProductLink);
         await ctx.store.delete(K.retryProduct(v.id));
