@@ -1,14 +1,15 @@
-/** Company mailbox domain (e.g. vensailabs.in). */
+/** Company mailbox domain (set ORG_EMAIL_DOMAIN in env). */
 export function getOrgEmailDomain(): string {
   const explicit = process.env.ORG_EMAIL_DOMAIN?.trim().toLowerCase();
   if (explicit) return explicit.replace(/^@/, "");
 
   const from = process.env.RESEND_FROM_EMAIL?.trim().toLowerCase();
   if (from?.includes("@")) {
-    return from.split("@")[1] ?? "vensailabs.in";
+    const domain = from.split("@")[1];
+    if (domain) return domain;
   }
 
-  return "vensailabs.in";
+  return "example.com";
 }
 
 export function slugifyUsername(input: string): string {

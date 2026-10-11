@@ -353,7 +353,7 @@ export function EmailAccountsList(props: EmailAccountsListProps) {
                 type="email"
                 value={form.username}
                 onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))}
-                placeholder="hello@vensailabs.in"
+                placeholder="hello@yourcompany.com"
               />
             </div>
           </div>

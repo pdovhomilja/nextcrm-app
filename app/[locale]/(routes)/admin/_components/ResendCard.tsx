@@ -10,8 +10,14 @@ import {
 import { prismadb } from "@/lib/prisma";
 
 import { Input } from "@/components/ui/input";
-import CopyKeyComponent from "./copy-key";
 import { setResendKey } from "@/actions/admin/system/set-resend-key";
+
+function maskConfiguredSecret(value: string | undefined | null): string {
+  if (!value?.trim()) return "not enabled";
+  const v = value.trim();
+  if (v.length <= 8) return "configured (hidden)";
+  return `configured (${v.slice(0, 2)}…${v.slice(-4)})`;
+}
 
 const ResendCard = async () => {
   const resend_key = await prismadb.systemServices.findFirst({
@@ -30,28 +36,8 @@ const ResendCard = async () => {
             <code className="text-[10px]">.env.local</code> only (recommended). The form below is
             legacy — not required when env is set.
           </p>
-          <p>ENV API key:</p>
-          <p>
-            {process.env.RESEND_API_KEY ? (
-              <CopyKeyComponent
-                keyValue={process.env.RESEND_API_KEY}
-                message="Resend - API Key"
-              />
-            ) : (
-              "not enabled"
-            )}
-          </p>
-          <p>API key from DB:</p>
-          <p>
-            {resend_key?.serviceKey ? (
-              <CopyKeyComponent
-                keyValue={resend_key?.serviceKey}
-                message="Resend - API Key"
-              />
-            ) : (
-              "not enabled"
-            )}
-          </p>
+          <p>ENV API key: {maskConfiguredSecret(process.env.RESEND_API_KEY)}</p>
+          <p>Legacy DB key: {maskConfiguredSecret(resend_key?.serviceKey)}</p>
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
