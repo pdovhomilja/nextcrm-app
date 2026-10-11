@@ -5,6 +5,13 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.31.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.30.0...v0.31.0) (2026-10-11)
+
+
+### Added
+
+* **odoo-connector:** send orders to Odoo and bring statuses back (part 3a) ([4de4261](https://github.com/pdovhomilja/nextcrm-app/commit/4de426112e4aca93a0323411da5271029963ff38))
+
 ## [0.30.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.29.0...v0.30.0) (2026-10-10)
 
 
