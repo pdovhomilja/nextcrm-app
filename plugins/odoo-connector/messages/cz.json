@@ -97,7 +97,9 @@
     "waiting": "Čeká na Odoo od {date}",
     "lastError": "Poslední chyba: {error}",
     "failed": "Neodesláno: {reason}",
-    "missing": "V Odoo nenalezena (smazána, nebo ji uživatel API nevidí)"
+    "missing": "V Odoo nenalezena (smazána, nebo ji uživatel API nevidí)",
+    "imported": "Importováno z Odoo",
+    "moved": "V Odoo se změnil zákazník"
   },
   "orders": {
     "noAccount": "Účet objednávky nemá název",
@@ -106,5 +108,27 @@
     "currency": "Měna objednávky {order} se liší od měny ceníku v Odoo {list}",
     "otherLines": "V Odoo už je jako {name} s jinými řádky; požádejte o její zrušení v Odoo a klikněte na Zkusit znovu",
     "linesMissing": "Nezobrazené řádky: {count} (produkty nejsou v CRM)"
+  },
+  "tab": {
+    "title": "Odoo",
+    "notLinked": "Není propojeno se zákazníkem v Odoo",
+    "asOf": "Stav k {date}",
+    "notYet": "Z Odoo zatím nenačteno",
+    "orders": "Objednávky",
+    "ordersEmpty": "Žádné objednávky v Odoo",
+    "allOrders": "Všechny objednávky v Odoo",
+    "invoices": "Neuhrazené faktury",
+    "invoicesEmpty": "Nic k úhradě",
+    "owed": "Dluží: {amounts}",
+    "overdue": "{days} dní po splatnosti",
+    "totals": "Potvrzené objednávky bez DPH",
+    "year": "{year}: {amount} {currency}",
+    "number": "Číslo",
+    "odoo": "Odoo",
+    "date": "Datum",
+    "due": "Splatnost",
+    "total": "Celkem",
+    "left": "Zbývá uhradit",
+    "status": "Stav"
   }
 }

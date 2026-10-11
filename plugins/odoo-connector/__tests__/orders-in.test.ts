@@ -23,7 +23,7 @@ const customer = { id: 50, name: "Bubble s.r.o.", parent_id: false, active: true
 
 async function run(m: ReturnType<typeof mkOrders>, dry = false) {
   const linked = await linkedCustomers(m.ctx);
-  const orders = await confirmedOrders(m.client, [...linked.keys()]);
+  const orders = await confirmedOrders(m.client, Array.from(linked.keys()));
   const commercial = await commercialOf(m.client, orders.map((o) => o.partner_id[0]));
   return importOrders({ ctx: m.ctx, client: m.client, dry, now, orders, commercial, linked });
 }

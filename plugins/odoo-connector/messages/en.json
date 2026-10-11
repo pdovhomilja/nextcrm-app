@@ -97,7 +97,9 @@
     "waiting": "Waiting for Odoo since {date}",
     "lastError": "Last error: {error}",
     "failed": "Not sent: {reason}",
-    "missing": "Not found in Odoo (deleted, or the API user can't see it)"
+    "missing": "Not found in Odoo (deleted, or the API user can't see it)",
+    "imported": "Imported from Odoo",
+    "moved": "Customer changed in Odoo"
   },
   "orders": {
     "noAccount": "The order's account has no name",
@@ -106,5 +108,27 @@
     "currency": "Order currency {order} differs from the Odoo price list currency {list}",
     "otherLines": "Already in Odoo as {name} with other lines; ask Odoo to cancel it, then click Retry",
     "linesMissing": "{count} lines not shown: products not in the CRM"
+  },
+  "tab": {
+    "title": "Odoo",
+    "notLinked": "Not linked to an Odoo customer",
+    "asOf": "As of {date}",
+    "notYet": "Not read from Odoo yet",
+    "orders": "Orders",
+    "ordersEmpty": "No orders in Odoo",
+    "allOrders": "All orders in Odoo",
+    "invoices": "Open invoices",
+    "invoicesEmpty": "Nothing to pay",
+    "owed": "Owed: {amounts}",
+    "overdue": "{days} days overdue",
+    "totals": "Confirmed orders without VAT",
+    "year": "{year}: {amount} {currency}",
+    "number": "Number",
+    "odoo": "Odoo",
+    "date": "Date",
+    "due": "Due",
+    "total": "Total",
+    "left": "Left to pay",
+    "status": "Status"
   }
 }

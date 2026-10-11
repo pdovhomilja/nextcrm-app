@@ -13,7 +13,7 @@ export async function syncCustomerInfo(a: { ctx: Ctx; client: OdooClient; dry: b
   const { ctx, client, dry, now, linked } = a;
   if (dry || !linked.size) return;
   const rows = await client.call<OdooInvoice[]>("account.move", "search_read", {
-    domain: [["move_type", "in", ["out_invoice", "out_refund"]], ["state", "=", "posted"], ["payment_state", "in", ["not_paid", "partial"]], ["commercial_partner_id", "in", [...linked.keys()]]],
+    domain: [["move_type", "in", ["out_invoice", "out_refund"]], ["state", "=", "posted"], ["payment_state", "in", ["not_paid", "partial"]], ["commercial_partner_id", "in", Array.from(linked.keys())]],
     fields: INV_FIELDS, order: "invoice_date_due asc, id asc",
   });
   const invoices = new Map<number, OpenInvoice[]>();
@@ -35,8 +35,8 @@ export async function syncCustomerInfo(a: { ctx: Ctx; client: OdooClient; dry: b
     m.set(key, (m.get(key) ?? 0) + o.amount_untaxed);
     totals.set(p, m);
   }
-  for (const [partnerId, accountId] of linked) {
-    const t = [...(totals.get(partnerId) ?? new Map<string, number>())].map(([k, amount]) => {
+  for (const [partnerId, accountId] of Array.from(linked)) {
+    const t = Array.from(totals.get(partnerId) ?? new Map<string, number>()).map(([k, amount]) => {
       const [year, currency] = k.split("|");
       return { year: Number(year), currency, amount: round2(amount) };
     }).sort((x, y) => y.year - x.year || x.currency.localeCompare(y.currency));

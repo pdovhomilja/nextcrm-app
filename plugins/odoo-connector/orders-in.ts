@@ -7,7 +7,7 @@ import { MOVE_FIELDS, invoiceRows, targetStatus, type OdooMove, type OdooSale } 
 import type { Ctx } from "./settings";
 import { K, type OrderLink, type ProductLink } from "./store";
 
-export interface OdooOrderIn extends OdooSale { partner_id: M2O; origin: string | false; date_order: string; currency_id: M2O; note: string | false; write_date: string; amount_untaxed: number }
+export interface OdooOrderIn extends OdooSale { partner_id: [number, string]; origin: string | false; date_order: string; currency_id: M2O; note: string | false; write_date: string; amount_untaxed: number }
 export interface OdooLineIn { id: number; order_id: M2O; product_id: M2O; product_uom_qty: number; price_unit: number; display_type: string | false; is_downpayment?: boolean }
 
 const PER_RUN = 200;
@@ -135,7 +135,7 @@ export async function importOrders(a: { ctx: Ctx; client: OdooClient; dry: boole
 export async function syncOrdersIn(a: { ctx: Ctx; client: OdooClient; dry: boolean; now: Date }): Promise<number> {
   const linked = await linkedCustomers(a.ctx);
   if (!linked.size) return 0;
-  const orders = await confirmedOrders(a.client, [...linked.keys()]);
+  const orders = await confirmedOrders(a.client, Array.from(linked.keys()));
   const commercial = await commercialOf(a.client, orders.map((o) => o.partner_id[0]));
   const imported = await importOrders({ ...a, orders, commercial, linked });
   await syncCustomerInfo({ ...a, linked, orders, commercial });

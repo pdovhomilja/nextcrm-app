@@ -123,3 +123,17 @@ When the connector can no longer find the Odoo order, the order keeps its status
 - **Odoo refuses the order:** after 5 refusals, or at once for a product that does not come from Odoo, a currency that differs from the Odoo price list, or an order already in Odoo with other lines, the order becomes **SYNC_FAILED** and admins are notified. Fix the cause and click **Retry** on the order.
 
 Sending is safe to repeat: whatever fails in between, each order exists once in Odoo.
+
+## Orders from Odoo
+
+Every sync also brings in the **confirmed** Odoo orders of customers linked to an account, including everything from before the link. Quotations and orders cancelled before they were imported stay out. An imported order:
+
+- is read-only in the CRM, numbered from the CRM's order series, owned by the account's owner, with the Odoo order date, currency and note;
+- has the product lines of products the CRM knows, at Odoo's unit price. Notes, section headings and down payments are skipped; a product the CRM does not have is left out and the order note says how many lines are not shown. VAT comes from the CRM product, so the CRM total can differ slightly; the order's **Odoo** panel then shows Odoo's total;
+- follows Odoo's status like an order sent from the CRM, and its lines are updated when they change in Odoo.
+
+Orders the CRM sent to Odoo are never imported again. If an imported order moves to another customer in Odoo, the CRM order keeps its account, its panel says "Customer changed in Odoo" and admins get one email. At most 200 orders are imported per sync; a large first import spreads over several syncs. An order that cannot be imported (for example its currency does not exist in the CRM) is listed on the admin page and tried again on every sync.
+
+### The Odoo tab on the account
+
+Linked accounts get an **Odoo** tab: the account's orders that exist in Odoo (newest 50, with the Odoo number, total without VAT and status), the open invoices and credit notes with what is owed (overdue ones in red), and the confirmed orders without VAT for this year and last year. The tab shows the data of the last sync ("As of …") and opens even when Odoo is down.

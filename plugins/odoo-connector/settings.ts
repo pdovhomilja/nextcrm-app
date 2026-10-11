@@ -32,6 +32,11 @@ export function localTime(ctx: Ctx, iso: string): string {
   return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute} (${tz})`;
 }
 
+/** The calendar day (YYYY-MM-DD) of a moment in the instance's time zone. */
+export function localDay(ctx: Ctx, d: Date): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: ctx.settings.timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+}
+
 /** Admin emails never fail the run that sends them: a mail outage is logged and the run carries on. */
 export async function tell(ctx: Ctx, input: Parameters<Ctx["notify"]>[0]): Promise<void> {
   try { await ctx.notify(input); } catch (e) { ctx.log.warn(`Email "${input.subject}" not sent: ${e instanceof Error ? e.message : String(e)}`); }

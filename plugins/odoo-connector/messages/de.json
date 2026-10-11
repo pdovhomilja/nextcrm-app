@@ -97,7 +97,9 @@
     "waiting": "Wartet seit {date} auf Odoo",
     "lastError": "Letzter Fehler: {error}",
     "failed": "Nicht gesendet: {reason}",
-    "missing": "In Odoo nicht gefunden (gelöscht, oder der API-Benutzer sieht ihn nicht)"
+    "missing": "In Odoo nicht gefunden (gelöscht, oder der API-Benutzer sieht ihn nicht)",
+    "imported": "Aus Odoo importiert",
+    "moved": "Kunde in Odoo geändert"
   },
   "orders": {
     "noAccount": "Das Konto des Auftrags hat keinen Namen",
@@ -106,5 +108,27 @@
     "currency": "Auftragswährung {order} weicht von der Währung der Odoo-Preisliste {list} ab",
     "otherLines": "Bereits in Odoo als {name} mit anderen Positionen; lassen Sie ihn in Odoo stornieren und klicken Sie auf Erneut versuchen",
     "linesMissing": "{count} Positionen nicht angezeigt: Produkte nicht im CRM"
+  },
+  "tab": {
+    "title": "Odoo",
+    "notLinked": "Nicht mit einem Odoo-Kunden verknüpft",
+    "asOf": "Stand {date}",
+    "notYet": "Noch nicht aus Odoo gelesen",
+    "orders": "Aufträge",
+    "ordersEmpty": "Keine Aufträge in Odoo",
+    "allOrders": "Alle Aufträge in Odoo",
+    "invoices": "Offene Rechnungen",
+    "invoicesEmpty": "Nichts offen",
+    "owed": "Offen: {amounts}",
+    "overdue": "{days} Tage überfällig",
+    "totals": "Bestätigte Aufträge ohne MwSt.",
+    "year": "{year}: {amount} {currency}",
+    "number": "Nummer",
+    "odoo": "Odoo",
+    "date": "Datum",
+    "due": "Fällig",
+    "total": "Gesamt",
+    "left": "Offen",
+    "status": "Status"
   }
 }
