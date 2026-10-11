@@ -5,18 +5,21 @@ import { format, formatDistanceToNow, isToday, isYesterday } from "date-fns";
 import {
   Hash,
   MonitorUp,
+  Paperclip,
   Phone,
   SendHorizontal,
   Sparkles,
   Video,
   VideoOff,
 } from "lucide-react";
+import { sendChatMessage, type ChatAttachmentDTO } from "@/actions/chat/messages";
 import {
-  getChatMessages,
-  sendChatMessage,
-  type ChatMessageDTO,
-} from "@/actions/chat/messages";
-import { JitsiMeetEmbed } from "@/components/meet/JitsiMeetEmbed";
+  chatMessagesKey,
+  useAppendChatMessage,
+  useChatMessagesLive,
+} from "@/hooks/use-chat-messages-live";
+import { useQueryClient } from "@tanstack/react-query";
+import { JitsiMeetEmbed, openJitsiMeetInNewTab } from "@/components/meet/JitsiMeetEmbed";
 import { EmailComposeEditor } from "@/app/[locale]/(routes)/emails/components/EmailComposeEditor";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -26,7 +29,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { markChatRoomRead } from "@/actions/chat/unread";
 import { avatarGradientClass, initials } from "@/lib/chat/avatar-style";
+import { uploadChatFile } from "@/lib/chat/upload-file";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -64,50 +69,57 @@ export function ChatWorkspace({
   isGeneral = false,
   peerName,
 }: Props) {
-  const [messages, setMessages] = React.useState<ChatMessageDTO[]>([]);
+  const qc = useQueryClient();
+  const { data: messages = [] } = useChatMessagesLive(roomKey);
+  const appendMessage = useAppendChatMessage(roomKey);
   const [draftHtml, setDraftHtml] = React.useState("<p></p>");
   const [draftPlain, setDraftPlain] = React.useState("");
   const [sending, setSending] = React.useState(false);
   const [callOpen, setCallOpen] = React.useState(initialCallOpen);
+  const [pendingFile, setPendingFile] = React.useState<ChatAttachmentDTO>(null);
+  const [uploading, setUploading] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const bottomRef = React.useRef<HTMLDivElement>(null);
-  const messagesRef = React.useRef(messages);
-  messagesRef.current = messages;
 
   React.useEffect(() => {
     setCallOpen(initialCallOpen);
   }, [initialCallOpen, roomKey]);
 
   React.useEffect(() => {
-    void getChatMessages(roomKey).then(setMessages);
-  }, [roomKey]);
-
-  React.useEffect(() => {
-    const t = setInterval(async () => {
-      const lastAt = messagesRef.current.at(-1)?.createdAt;
-      const data = await getChatMessages(roomKey, lastAt);
-      if (!data.length) return;
-      setMessages((prev) => {
-        const ids = new Set(prev.map((m) => m.id));
-        return [...prev, ...data.filter((m) => !ids.has(m.id))];
-      });
-    }, 4000);
-    return () => clearInterval(t);
-  }, [roomKey]);
+    void markChatRoomRead(roomKey);
+  }, [roomKey, messages.length]);
 
   React.useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length, roomKey]);
 
   async function handleSend() {
-    if (!draftPlain.trim()) return;
+    if (!draftPlain.trim() && !pendingFile) return;
     setSending(true);
     try {
-      const msg = await sendChatMessage(roomKey, draftHtml);
-      setMessages((prev) => [...prev, msg]);
+      const msg = await sendChatMessage(roomKey, draftHtml, pendingFile);
+      appendMessage(msg);
+      void qc.invalidateQueries({ queryKey: chatMessagesKey(roomKey) });
+      void qc.invalidateQueries({ queryKey: ["live-summary"] });
       setDraftHtml("<p></p>");
       setDraftPlain("");
+      setPendingFile(null);
+      void markChatRoomRead(roomKey);
     } finally {
       setSending(false);
+    }
+  }
+
+  async function onPickFile(file: File | null) {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const uploaded = await uploadChatFile(file);
+      setPendingFile(uploaded);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -199,18 +211,27 @@ export function ChatWorkspace({
 
         {callOpen && (
           <div className="shrink-0 border-b border-border/40 bg-zinc-950/95 px-4 py-3 sm:px-5">
-            <div className="mb-2 flex items-center justify-between gap-2 text-xs text-zinc-300">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-300">
               <span className="inline-flex items-center gap-1.5">
                 <Sparkles className="h-3.5 w-3.5 text-amber-300" />
-                Meeting room · mic, camera & screen share in the bar below
+                Mic, camera & screen share in the meeting toolbar
               </span>
-              <button
-                type="button"
-                className="text-zinc-400 underline-offset-2 hover:text-white hover:underline"
-                onClick={() => setCallOpen(false)}
-              >
-                Close
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  className="text-amber-200/90 underline-offset-2 hover:text-white hover:underline"
+                  onClick={() => openJitsiMeetInNewTab(meetRoom, displayName)}
+                >
+                  Open in new tab (recommended if stuck waiting)
+                </button>
+                <button
+                  type="button"
+                  className="text-zinc-400 underline-offset-2 hover:text-white hover:underline"
+                  onClick={() => setCallOpen(false)}
+                >
+                  Close
+                </button>
+              </div>
             </div>
             <JitsiMeetEmbed
               roomName={meetRoom}
@@ -289,8 +310,38 @@ export function ChatWorkspace({
                               )}
                               dangerouslySetInnerHTML={{ __html: m.htmlBody }}
                             />
-                          ) : (
+                          ) : m.body ? (
                             <p className="whitespace-pre-wrap text-left">{m.body}</p>
+                          ) : null}
+                          {m.attachment && (
+                            <div className="mt-2 text-left">
+                              {m.attachment.mime.startsWith("image/") ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src={m.attachment.url}
+                                  alt={m.attachment.name}
+                                  className="max-h-48 rounded-lg border border-border/40"
+                                />
+                              ) : m.attachment.mime.startsWith("video/") ? (
+                                <video
+                                  src={m.attachment.url}
+                                  controls
+                                  className="max-h-48 max-w-full rounded-lg"
+                                />
+                              ) : (
+                                <a
+                                  href={m.attachment.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={cn(
+                                    "inline-flex text-sm underline underline-offset-2",
+                                    mine ? "text-primary-foreground" : "text-primary"
+                                  )}
+                                >
+                                  {m.attachment.name}
+                                </a>
+                              )}
+                            </div>
                           )}
                         </div>
                         <p
@@ -317,16 +368,40 @@ export function ChatWorkspace({
             <EmailComposeEditor
               variant="chat"
               content={draftHtml}
+              onEnterSubmit={() => void handleSend()}
               onChange={(html, plain) => {
                 setDraftHtml(html);
                 setDraftPlain(plain);
               }}
             />
-            <div className="flex items-center justify-end gap-2 border-t border-border/40 bg-muted/20 px-3 py-2">
+            <div className="flex items-center justify-between gap-2 border-t border-border/40 bg-muted/20 px-3 py-2">
+              <div className="flex min-w-0 items-center gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  accept="image/*,video/*,application/pdf,.doc,.docx,.txt"
+                  onChange={(e) => void onPickFile(e.target.files?.[0] ?? null)}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0 rounded-lg"
+                  disabled={uploading}
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Attach image, video, or PDF"
+                >
+                  <Paperclip className="h-4 w-4" />
+                </Button>
+                {pendingFile && (
+                  <span className="truncate text-xs text-muted-foreground">{pendingFile.name}</span>
+                )}
+              </div>
               <Button
                 size="sm"
                 className="gap-1.5 rounded-xl px-4 shadow-sm"
-                disabled={sending || !draftPlain.trim()}
+                disabled={sending || uploading || (!draftPlain.trim() && !pendingFile)}
                 onClick={() => void handleSend()}
               >
                 <SendHorizontal className="h-4 w-4" />

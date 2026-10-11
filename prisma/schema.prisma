@@ -615,6 +615,7 @@ enum crm_Contracts_Status {
 enum ExchangeRateSource {
   MANUAL
   ECB
+  FRANKFURTER
 }
 
 model Currency {
@@ -696,6 +697,7 @@ model crm_Activities {
   updated_by_user Users?              @relation("activity_updated_by", fields: [updatedBy], references: [id])
   links       crm_ActivityLinks[]
   calendar_events crm_CalendarEvents[]
+  scheduleEntries TeamScheduleEntry[]
 
   @@index([date])
   @@index([type])
@@ -1034,6 +1036,7 @@ model Users {
   linkedInConnection   LinkedInConnection?
   emails               Email[]
   teamChatMessages     TeamChatMessage[]
+  teamChatReads        TeamChatRead[]
   enrichments_triggered          crm_Contact_Enrichment[]  @relation("enrichment_triggered_by")
   target_enrichments_triggered   crm_Target_Enrichment[]   @relation("target_enrichment_triggered_by")
   created_campaigns              crm_campaigns[]           @relation("created_campaigns")
@@ -1051,6 +1054,7 @@ model Users {
   invoiceAttachments           Invoice_Attachments[] @relation("InvoiceAttachmentUploadedBy")
   invoiceActivity              Invoice_Activity[]    @relation("InvoiceActivityActor")
   ordersOwned crm_Orders[] @relation("OrderOwner")
+  scheduleOrganized TeamScheduleEntry[] @relation("ScheduleOrganizer")
 
   @@index([email])
   @@index([userStatus])
@@ -1557,17 +1561,55 @@ model Email {
 }
 
 model TeamChatMessage {
-  id        String   @id @default(uuid()) @db.Uuid
-  roomKey   String
-  userId    String   @db.Uuid
-  body      String   @db.Text
-  htmlBody  String?  @db.Text
-  createdAt DateTime @default(now())
+  id             String   @id @default(uuid()) @db.Uuid
+  roomKey        String
+  userId         String   @db.Uuid
+  body           String   @db.Text
+  htmlBody       String?  @db.Text
+  attachmentUrl  String?
+  attachmentName String?
+  attachmentMime String?
+  createdAt      DateTime @default(now())
 
   user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([roomKey, createdAt])
   @@index([userId])
+}
+
+model TeamChatRead {
+  userId     String   @db.Uuid
+  roomKey    String
+  lastReadAt DateTime @default(now())
+
+  user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roomKey])
+  @@index([userId])
+}
+
+model TeamScheduleEntry {
+  id          String   @id @default(uuid()) @db.Uuid
+  kind        String
+  title       String
+  description String?  @db.Text
+  startAt     DateTime
+  endAt       DateTime
+  organizerId String   @db.Uuid
+  attendeeIds Json     @default("[]")
+  meetRoom    String?
+  chatRoomKey String?
+  activityId  String?  @db.Uuid
+  leaveStatus String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  organizer Users           @relation("ScheduleOrganizer", fields: [organizerId], references: [id], onDelete: Cascade)
+  activity  crm_Activities? @relation(fields: [activityId], references: [id], onDelete: SetNull)
+
+  @@index([startAt])
+  @@index([organizerId])
+  @@index([kind])
 }
 
 model EmailEmbedding {

@@ -2,7 +2,8 @@ import { getSessionAnyStatus } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 
-import Header from "./components/Header";
+import { HeaderLive } from "./components/HeaderLive";
+import { EmailsLiveRefresh } from "./components/EmailsLiveRefresh";
 import Footer from "./components/Footer";
 
 import { Metadata } from "next";
@@ -109,9 +110,13 @@ export default async function AppLayout({
   const { getPluginNavItems } = await import("@/lib/plugins/nav");
   const { mapLegacyRole } = await import("@/lib/authz/roles");
   const { getLocale } = await import("next-intl/server");
-  const { getHeaderNotifications } = await import("@/actions/notifications/header-notifications");
   const pluginNav = await getPluginNavItems(mapLegacyRole(user?.role), (await getLocale()) as "en" | "cz" | "de" | "uk");
-  const headerNotifications = await getHeaderNotifications();
+  const { getHeaderNotifications } = await import("@/actions/notifications/header-notifications");
+  const { getChatUnreadCount } = await import("@/actions/chat/unread");
+  const [headerNotifications, chatUnreadCount] = await Promise.all([
+    getHeaderNotifications(),
+    getChatUnreadCount(),
+  ]);
 
   //console.log(typeof build, "build");
   return (
@@ -125,13 +130,23 @@ export default async function AppLayout({
         appName={getAppName()}
       />
       <SidebarInset>
-        <Header
-          id={session.user.id as string}
-          lang={session.user.userLanguage as string}
-          unreadEmailCount={headerNotifications.emailUnreadCount}
-          notificationCount={headerNotifications.totalCount}
-          notifications={headerNotifications.items}
+        <HeaderLive
+          user={{
+            id: session.user.id as string,
+            name: session.user.name,
+            email: session.user.email,
+            image: session.user.image,
+            role: session.user.role,
+          }}
+          initialLive={{
+            emailUnreadCount: headerNotifications.emailUnreadCount,
+            chatUnreadCount,
+            notificationCount: headerNotifications.totalCount,
+            items: headerNotifications.items,
+            at: new Date().toISOString(),
+          }}
         />
+        <EmailsLiveRefresh />
         {/*
           Task Group 3.3: Footer Relocation
           - Footer has been moved inside the scrollable content area

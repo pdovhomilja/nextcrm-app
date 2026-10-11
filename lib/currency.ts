@@ -34,9 +34,12 @@ export async function getDefaultCurrency(): Promise<string> {
   return setting?.value || "EUR";
 }
 
+/** Supported display / pricing currencies (admin manages rates under Administration → Currencies). */
+export const CORE_CURRENCY_CODES = ["EUR", "USD", "INR"] as const;
+
 export async function getEnabledCurrencies() {
   return prismadb.currency.findMany({
-    where: { isEnabled: true },
+    where: { isEnabled: true, code: { in: [...CORE_CURRENCY_CODES] } },
     orderBy: { code: "asc" },
   });
 }

@@ -60,7 +60,13 @@ export function ExchangeRatesTable({
               )}
             </TableCell>
             <TableCell>
-              <Badge variant={r.source === "ECB" ? "default" : "secondary"}>{r.source}</Badge>
+              <Badge
+                variant={
+                  r.source === "ECB" || r.source === "FRANKFURTER" ? "default" : "secondary"
+                }
+              >
+                {r.source}
+              </Badge>
             </TableCell>
             <TableCell className="text-muted-foreground text-sm">
               {new Date(r.updatedAt).toLocaleDateString()}

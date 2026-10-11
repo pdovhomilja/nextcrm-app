@@ -10,6 +10,7 @@ import { getTranslations, getMessages } from "next-intl/server";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/app/providers/ThemeProvider";
+import { QueryProvider } from "@/app/providers/QueryProvider";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
@@ -67,7 +68,7 @@ export default async function RootLayout(props: Props) {
       <body className={inter.className + " min-h-screen"}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            {children}
+            <QueryProvider>{children}</QueryProvider>
           </ThemeProvider>
         </NextIntlClientProvider>
         <Toaster />

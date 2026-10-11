@@ -17,7 +17,9 @@ import {
 import type { TeamMember } from "@/actions/team/get-team-directory";
 import { getTeamDirectory } from "@/actions/team/get-team-directory";
 
-export function HeaderChatPanel() {
+type Props = { unreadCount?: number };
+
+export function HeaderChatPanel({ unreadCount = 0 }: Props) {
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const [team, setTeam] = React.useState<TeamMember[]>([]);
@@ -52,11 +54,14 @@ export function HeaderChatPanel() {
         <Button
           variant="ghost"
           size="icon"
-          className="header-icon-btn"
+          className="header-icon-btn relative"
           aria-label="Team chat and calls"
           title="Team chat, video, and email"
         >
           <MessageCircle className="h-[1.15rem] w-[1.15rem]" />
+          {unreadCount > 0 && (
+            <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-destructive ring-2 ring-background" />
+          )}
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="flex w-full flex-col sm:max-w-md">

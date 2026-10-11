@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
     "application/pdf", "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "text/plain",
+    "video/mp4", "video/webm", "video/quicktime",
   ]);
   if (!ALLOWED_CONTENT_TYPES.has(contentType)) {
     return NextResponse.json({ error: "Content type not allowed" }, { status: 400 });

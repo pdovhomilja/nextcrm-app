@@ -6,20 +6,40 @@ import Link from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
 import { Bold, Italic, Underline as UnderlineIcon, Link as LinkIcon, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 type Props = {
   content: string;
   onChange: (html: string, plainText: string) => void;
   variant?: "email" | "chat";
+  /** Chat: Enter sends, Shift+Enter new line */
+  onEnterSubmit?: () => void;
 };
 
-export function EmailComposeEditor({ content, onChange, variant = "email" }: Props) {
+export function EmailComposeEditor({
+  content,
+  onChange,
+  variant = "email",
+  onEnterSubmit,
+}: Props) {
   const isChat = variant === "chat";
+  const submitRef = useRef(onEnterSubmit);
+  submitRef.current = onEnterSubmit;
+
   const editor = useEditor({
     extensions: [StarterKit, Underline, Link.configure({ openOnClick: false })],
     content: content || "<p></p>",
     immediatelyRender: false,
+    editorProps: {
+      handleKeyDown: (_view, event) => {
+        if (isChat && event.key === "Enter" && !event.shiftKey) {
+          event.preventDefault();
+          submitRef.current?.();
+          return true;
+        }
+        return false;
+      },
+    },
     onUpdate({ editor: ed }) {
       const html = ed.getHTML();
       const plain = ed.getText();
@@ -85,6 +105,9 @@ export function EmailComposeEditor({ content, onChange, variant = "email" }: Pro
             : "prose prose-sm max-w-none min-h-[180px] px-3 py-2 focus:outline-none [&_.ProseMirror]:min-h-[160px] [&_.ProseMirror]:outline-none"
         }
       />
+      {isChat && (
+        <p className="px-3 pb-1 text-[10px] text-muted-foreground">Enter to send · Shift+Enter for new line</p>
+      )}
     </div>
   );
 }

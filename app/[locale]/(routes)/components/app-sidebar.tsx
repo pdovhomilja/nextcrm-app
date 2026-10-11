@@ -14,12 +14,12 @@ import {
 import { Puzzle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NavMain } from "./nav-main";
-import { NavUser } from "./nav-user";
 import getDashboardMenuItem from "./menu-items/Dashboard";
 import getCrmMenuItem from "./menu-items/Crm";
 import getProjectsMenuItem from "./menu-items/Projects";
 import getEmailsMenuItem from "./menu-items/Emails";
 import getChatMenuItem from "./menu-items/Chat";
+import getScheduleMenuItem from "./menu-items/Schedule";
 import getReportsMenuItem from "./menu-items/Reports";
 import getDocumentsMenuItem from "./menu-items/Documents";
 import getInvoicesMenuItem from "./menu-items/Invoices";
@@ -102,7 +102,7 @@ export function AppSidebar({
     getCrmMenuItem({ localizations: dict.crm, role: session?.user?.role ?? undefined }),
     getCampaignsMenuItem({
       localizations: {
-        title: "Campaigns",
+        title: "Email marketing",
         campaigns: "All Campaigns",
         templates: "Templates",
         targets: "Targets",
@@ -112,6 +112,7 @@ export function AppSidebar({
     getProjectsMenuItem({ title: dict?.projects || "Projects" }),
     getEmailsMenuItem({ title: dict?.emails || "Emails" }),
     getChatMenuItem({ title: dict?.chat || "Team chat" }),
+    getScheduleMenuItem({ title: "Schedule" }),
     getReportsMenuItem({ title: dict?.reports || "Reports" }),
     getDocumentsMenuItem({ title: dict?.documents || "Documents" }),
     getInvoicesMenuItem({ title: dict?.invoices || "Invoices" }),
@@ -127,14 +128,6 @@ export function AppSidebar({
       getAdministrationMenuItem({ title: dict?.settings || "Administration" }),
     );
   }
-
-  // Prepare user data for NavUser component
-  const userData = {
-    id: session.user.id,
-    name: session.user.name,
-    email: session.user.email,
-    avatar: session.user.image,
-  };
 
   return (
     <Sidebar
@@ -180,10 +173,10 @@ export function AppSidebar({
         <NavMain items={navItems} dict={dict} />
       </SidebarContent>
 
-      {/* Footer with NavUser and Build Version */}
       <SidebarFooter>
-        {/* Task 3.1: NavUser component with user profile and actions */}
-        <NavUser user={userData} />
+        <p className="px-2 pb-1 text-center text-[10px] text-muted-foreground">
+          Profile & settings are in the top bar
+        </p>
       </SidebarFooter>
 
       {/* Rail for toggling sidebar on desktop */}

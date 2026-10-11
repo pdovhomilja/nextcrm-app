@@ -11,20 +11,42 @@ async function requireUserId() {
   return session.user.id as string;
 }
 
-function assertRoomAccess(roomKey: string, userId: string) {
+async function assertRoomAccess(roomKey: string, userId: string) {
   if (roomKey.startsWith("dm:")) {
     const parts = roomKey.split(":");
     if (parts.length !== 3 || ![parts[1], parts[2]].includes(userId)) {
       throw new Error("Forbidden");
     }
+    return;
+  }
+  if (roomKey.startsWith("conf:")) {
+    const id = roomKey.slice(5);
+    const entry = await prismadb.teamScheduleEntry.findUnique({
+      where: { id },
+      select: { organizerId: true, attendeeIds: true },
+    });
+    if (!entry) throw new Error("Forbidden");
+    const attendees = Array.isArray(entry.attendeeIds)
+      ? entry.attendeeIds.filter((x): x is string => typeof x === "string")
+      : [];
+    if (entry.organizerId !== userId && !attendees.includes(userId)) {
+      throw new Error("Forbidden");
+    }
   }
 }
+
+export type ChatAttachmentDTO = {
+  url: string;
+  name: string;
+  mime: string;
+} | null;
 
 export type ChatMessageDTO = {
   id: string;
   roomKey: string;
   body: string;
   htmlBody: string | null;
+  attachment: ChatAttachmentDTO;
   createdAt: string;
   user: { id: string; name: string; email: string };
 };
@@ -32,7 +54,7 @@ export type ChatMessageDTO = {
 export async function getChatMessages(roomKeyRaw: string, afterIso?: string) {
   const userId = await requireUserId();
   const roomKey = parseRoomKey(roomKeyRaw);
-  assertRoomAccess(roomKey, userId);
+  await assertRoomAccess(roomKey, userId);
 
   const afterDate = afterIso ? new Date(afterIso) : null;
   const validAfter = afterDate && !Number.isNaN(afterDate.getTime()) ? afterDate : null;
@@ -62,6 +84,9 @@ function mapRows(
     roomKey: string;
     body: string;
     htmlBody: string | null;
+    attachmentUrl: string | null;
+    attachmentName: string | null;
+    attachmentMime: string | null;
     createdAt: Date;
     user: { id: string; name: string | null; email: string };
   }[]
@@ -71,6 +96,14 @@ function mapRows(
     roomKey: r.roomKey,
     body: r.body,
     htmlBody: r.htmlBody,
+    attachment:
+      r.attachmentUrl && r.attachmentName
+        ? {
+            url: r.attachmentUrl,
+            name: r.attachmentName,
+            mime: r.attachmentMime ?? "application/octet-stream",
+          }
+        : null,
     createdAt: r.createdAt.toISOString(),
     user: {
       id: r.user.id,
@@ -80,18 +113,33 @@ function mapRows(
   }));
 }
 
-export async function sendChatMessage(roomKeyRaw: string, htmlBody: string) {
+export async function sendChatMessage(
+  roomKeyRaw: string,
+  htmlBody: string,
+  attachment?: ChatAttachmentDTO
+) {
   const userId = await requireUserId();
   const roomKey = parseRoomKey(roomKeyRaw);
-  assertRoomAccess(roomKey, userId);
+  await assertRoomAccess(roomKey, userId);
 
   const html = htmlBody.trim();
-  if (!html || html === "<p></p>") throw new Error("Message is empty");
+  const hasText = html && html !== "<p></p>";
+  const hasFile = Boolean(attachment?.url);
 
-  const body = stripHtmlToPlain(html);
+  if (!hasText && !hasFile) throw new Error("Message is empty");
+
+  const body = hasText ? stripHtmlToPlain(html) : attachment?.name ?? "Attachment";
 
   const msg = await prismadb.teamChatMessage.create({
-    data: { roomKey, userId, body, htmlBody: html },
+    data: {
+      roomKey,
+      userId,
+      body,
+      htmlBody: hasText ? html : null,
+      attachmentUrl: attachment?.url ?? null,
+      attachmentName: attachment?.name ?? null,
+      attachmentMime: attachment?.mime ?? null,
+    },
     include: { user: { select: { id: true, name: true, email: true } } },
   });
 
@@ -100,6 +148,14 @@ export async function sendChatMessage(roomKeyRaw: string, htmlBody: string) {
     roomKey: msg.roomKey,
     body: msg.body,
     htmlBody: msg.htmlBody,
+    attachment:
+      msg.attachmentUrl && msg.attachmentName
+        ? {
+            url: msg.attachmentUrl,
+            name: msg.attachmentName,
+            mime: msg.attachmentMime ?? "application/octet-stream",
+          }
+        : null,
     createdAt: msg.createdAt.toISOString(),
     user: {
       id: msg.user.id,

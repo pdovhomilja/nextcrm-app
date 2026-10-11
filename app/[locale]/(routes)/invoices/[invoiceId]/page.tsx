@@ -16,6 +16,7 @@ import { StatusBadge } from "../components/status-badge";
 import { InvoiceActions } from "./components/invoice-actions";
 import { PaymentList } from "./components/payment-list";
 import { ActivityLog } from "./components/activity-log";
+import { DocumentPdfPreview } from "@/components/pdf/DocumentPdfPreview";
 
 interface Props {
   params: Promise<{ invoiceId: string }>;
@@ -85,6 +86,25 @@ export default async function InvoiceDetailPage({ params }: Props) {
       </div>
 
       <Separator />
+
+      <DocumentPdfPreview
+        title="PDF preview (letterhead)"
+        description={
+          invoice.type === "PROFORMA"
+            ? "Quotation / proforma — uses company letterhead from Admin → Invoices → Settings"
+            : "Tax invoice / bill — issued PDF with your letterhead"
+        }
+        pdfUrl={
+          invoice.pdfStorageKey && invoice.status !== "DRAFT"
+            ? `/api/invoices/${invoice.id}/pdf`
+            : null
+        }
+        emptyHint={
+          invoice.status === "DRAFT"
+            ? "Issue this document to generate a letterhead PDF preview."
+            : "Generate PDF from the actions above, then preview appears here."
+        }
+      />
 
       {/* Two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -8,6 +8,8 @@ import { HistoryTab } from "./components/HistoryTab";
 import { BasicView } from "./components/BasicView";
 import { ActivitiesSection } from "./components/ActivitiesSection";
 import LineItemsSection from "./components/LineItemsSection";
+import { DocumentPdfPreview } from "@/components/pdf/DocumentPdfPreview";
+import Link from "next/link";
 
 interface ContractDetailPageProps {
   params: Promise<{ contractId: string }>;
@@ -57,6 +59,20 @@ const ContractPage = async (props: ContractDetailPageProps) => {
         </TabsList>
         <TabsContent value="overview">
           <div className="space-y-5">
+            <DocumentPdfPreview
+              title="Proposal / quotation PDF"
+              description="Letterhead PDFs are generated from Invoices (Proforma = quote). Link this contract to an account, then create a proforma."
+              pdfUrl={null}
+              emptyHint={
+                <>
+                  Create a{" "}
+                  <Link href="/invoices/new" className="font-medium text-primary underline-offset-2 hover:underline">
+                    proforma invoice (quotation)
+                  </Link>{" "}
+                  for the same customer to preview letterhead PDF. Full proposal builder is on the roadmap.
+                </>
+              }
+            />
             <BasicView data={contract} />
             <LineItemsSection
               contractId={contractId}

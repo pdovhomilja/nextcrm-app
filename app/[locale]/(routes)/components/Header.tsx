@@ -3,6 +3,7 @@ import FulltextSearch from "./FulltextSearch";
 import { HeaderMailButton } from "./HeaderMailButton";
 import { HeaderNotifications } from "./HeaderNotifications";
 import { HeaderChatPanel } from "./HeaderChatPanel";
+import { HeaderProfileMenu } from "./HeaderProfileMenu";
 import type { HeaderNotificationItem } from "@/actions/notifications/header-notifications";
 
 import { Separator } from "@/components/ui/separator";
@@ -10,20 +11,30 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { SetLanguage } from "@/components/SetLanguage";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { CommandComponent } from "@/components/CommandComponent";
-import SupportComponent from "@/components/support";
-import { CurrencySwitcher } from "@/components/CurrencySwitcher";
+
+type HeaderUser = {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  role?: string | null;
+};
 
 type Props = {
   id: string;
   lang: string;
+  user: HeaderUser;
   unreadEmailCount?: number;
+  chatUnreadCount?: number;
   notificationCount?: number;
   notifications?: HeaderNotificationItem[];
 };
 
 const Header = ({
   id,
+  user,
   unreadEmailCount = 0,
+  chatUnreadCount = 0,
   notificationCount = 0,
   notifications = [],
 }: Props) => {
@@ -39,17 +50,24 @@ const Header = ({
 
       <div className="flex shrink-0 items-center gap-0.5 rounded-2xl border border-border/50 bg-muted/25 p-0.5 sm:gap-1 sm:p-1">
         <HeaderMailButton unreadCount={unreadEmailCount} />
-        <HeaderChatPanel />
+        <HeaderChatPanel unreadCount={chatUnreadCount} />
         <HeaderNotifications totalCount={notificationCount} items={notifications} />
         <Separator orientation="vertical" className="mx-0.5 hidden h-5 sm:block" />
         <CommandComponent />
         <SetLanguage userId={id} />
-        <div className="hidden items-center md:flex">
+        <div className="hidden md:flex">
           <Feedback />
-          <CurrencySwitcher />
         </div>
         <ThemeToggle />
-        <SupportComponent />
+        <HeaderProfileMenu
+          user={{
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            avatar: user.image,
+            role: user.role,
+          }}
+        />
       </div>
     </header>
   );

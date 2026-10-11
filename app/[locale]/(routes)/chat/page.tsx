@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth-server";
 import { getTeamDirectory } from "@/actions/team/get-team-directory";
 import { dmRoomKey, GENERAL_CHAT_ROOM, parseRoomKey } from "@/lib/chat/room-keys";
-import { teamRoomName } from "@/lib/jitsi/meet-url";
+import { dmMeetRoomSuffix, teamRoomName } from "@/lib/jitsi/meet-url";
 import { ChatShell } from "./components/ChatShell";
 
 export default async function ChatPage({
@@ -27,12 +27,14 @@ export default async function ChatPage({
   const roomTitle =
     roomKey === GENERAL_CHAT_ROOM
       ? "General"
-      : (team.find((m) => roomKey.includes(m.id))?.name ?? "Direct message");
+      : roomKey.startsWith("conf:")
+        ? "Conference"
+        : (team.find((m) => roomKey.includes(m.id))?.name ?? "Direct message");
 
   const meetRoom =
     roomKey === GENERAL_CHAT_ROOM
       ? teamRoomName("general")
-      : teamRoomName("dm", roomKey.replace(/[^a-zA-Z0-9]/g, "-"));
+      : teamRoomName("dm", dmMeetRoomSuffix(roomKey));
 
   return (
     <ChatShell
