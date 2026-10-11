@@ -3,7 +3,7 @@ import type { M2O } from "./map";
 import { normalizeNumber, normalizeVat } from "./match";
 import { OdooError, type OdooClient } from "./odoo";
 import type { Ctx } from "./settings";
-import { K, type AccountLink } from "./store";
+import { K, type AccountLink, type PriceListLink } from "./store";
 
 const fold = (v: unknown) => String(v ?? "").trim().toLowerCase().replace(/\s+/g, " ");
 const val = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : false);
@@ -65,10 +65,13 @@ export async function findOrCreateCustomer(ctx: Ctx, client: OdooClient, account
       const p = rows.find(t.keep);
       if (p) { await link(ctx, accountId, p.id, p.property_product_pricelist, now); return { partnerId: p.id, created: false }; }
     }
+    // Live check: without this Odoo gives the new customer its default list, not the account's.
+    const list = account.pricelist_id ? (await ctx.store.list("pricelist:")).find((e) => (e.value as PriceListLink).priceListId === account.pricelist_id) : undefined;
     const [id] = await client.call<number[]>("res.partner", "create", { vals_list: [{
       name: account.name, is_company: true, company_registry: val(account.company_id), vat: val(account.vat),
       street: val(account.billing_street), city: val(account.billing_city), zip: val(account.billing_postal_code), country_id: country,
       email: val(account.email), phone: val(account.office_phone), customer_rank: 1, user_id: user,
+      ...(list ? { property_product_pricelist: Number(list.key.slice("pricelist:".length)) } : {}),
     }] }, { once: true });
     const [p] = await client.call<{ id: number; property_product_pricelist?: M2O }[]>("res.partner", "read", { ids: [id], fields: ["property_product_pricelist"] });
     await link(ctx, accountId, id, p?.property_product_pricelist, now);

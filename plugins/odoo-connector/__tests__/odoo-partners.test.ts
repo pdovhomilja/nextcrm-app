@@ -36,6 +36,14 @@ describe("customer", () => {
     expect(sales.partners).toHaveLength(1);
   });
 
+  it("gives a created customer the Odoo list behind the account's CRM price list (live check)", async () => {
+    const { ctx, client, calls } = mkOrders();
+    await ctx.store.set(K.pricelist(235), { priceListId: "pl-crm", name: "Retail", ruleCount: 1, syncedAt: "x" });
+    await findOrCreateCustomer(ctx, client, account({ pricelist_id: "pl-crm" }), 9, now);
+    const create = calls.find((c) => c.path === "/json/2/res.partner/create")!;
+    expect(create.body.vals_list[0].property_product_pricelist).toBe(235);
+  });
+
   it("finds a name-only customer it created before (Review Focus 2)", async () => {
     const acc = account({ company_id: null, vat: null });
     const { ctx, client, sales } = mkOrders({ sales: { fail: { "res.partner/create": "after" } } });
