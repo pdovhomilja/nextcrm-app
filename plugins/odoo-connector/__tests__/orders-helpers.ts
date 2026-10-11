@@ -70,7 +70,7 @@ export function salesHandlers(s: FakeSales) {
       return id;
     })),
     "sale.order.line/search_read": (b: any) => guard("sale.order.line/search_read", () => search(s.lines)(b)),
-    "sale.order.line/fields_get": () => Object.fromEntries(["id", "order_id", "product_id", "product_uom_qty", "price_unit", "display_type", "is_downpayment"].map((f) => [f, {}])),
+    "sale.order.line/fields_get": () => Object.fromEntries(["id", "order_id", "product_id", "product_uom_qty", "price_unit", "discount", "display_type", "is_downpayment"].map((f) => [f, {}])),
     "sale.order.line/onchange": () => ({ value: s.price === null ? {} : { price_unit: s.price } }),
     "stock.picking/search_read": search(s.pickings),
     "account.move/search_read": search(s.moves),

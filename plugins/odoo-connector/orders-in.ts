@@ -8,13 +8,13 @@ import type { Ctx } from "./settings";
 import { K, type OrderLink, type ProductLink } from "./store";
 
 export interface OdooOrderIn extends OdooSale { partner_id: [number, string]; origin: string | false; date_order: string; currency_id: M2O; note: string | false; write_date: string; amount_untaxed: number }
-export interface OdooLineIn { id: number; order_id: M2O; product_id: M2O; product_uom_qty: number; price_unit: number; display_type: string | false; is_downpayment?: boolean }
+export interface OdooLineIn { id: number; order_id: M2O; product_id: M2O; product_uom_qty: number; price_unit: number; discount?: number; display_type: string | false; is_downpayment?: boolean }
 
 const PER_RUN = 200;
 const TOLERANCE = 1;
 const FINAL = new Set(["PAID", "CANCELLED"]);
 const IN_FIELDS = ["id", "name", "state", "partner_id", "origin", "date_order", "currency_id", "note", "write_date", "amount_total", "amount_untaxed", "delivery_status", "invoice_status", "invoice_ids", "picking_ids"];
-const LINE_FIELDS = ["order_id", "product_id", "product_uom_qty", "price_unit", "display_type", "is_downpayment"];
+const LINE_FIELDS = ["order_id", "product_id", "product_uom_qty", "price_unit", "discount", "display_type", "is_downpayment"];
 
 /** Customers linked to a CRM account: Odoo partner id → account id. */
 export async function linkedCustomers(ctx: Ctx): Promise<Map<number, string>> {
@@ -53,7 +53,8 @@ export async function crmLines(ctx: Ctx, lines: OdooLineIn[]): Promise<{ lines: 
     if (l.display_type || l.is_downpayment || !l.product_id) continue;
     const link = await ctx.store.get<ProductLink>(K.product(l.product_id[0]));
     if (!link) { missing++; continue; }
-    out.push({ productId: link.productId, quantity: l.product_uom_qty, unitPrice: l.price_unit });
+    // Review I2: Odoo keeps the list price and the discount apart; the CRM line carries the price actually charged.
+    out.push({ productId: link.productId, quantity: l.product_uom_qty, unitPrice: l.price_unit * (1 - (l.discount || 0) / 100) });
   }
   return { lines: out, missing };
 }
@@ -68,23 +69,28 @@ export function noteFor(ctx: Ctx, html: string | false | undefined, missing: num
   return [plain(html), missing ? ctx.t("orders.linesMissing", { count: missing }) : ""].filter(Boolean).join("\n") || null;
 }
 
-/** Spec § 3.1: orders linked before 0.4.0 get their index entry. */
-async function indexLinks(ctx: Ctx) {
+/** Spec § 3.1: orders linked before 0.4.0 get their index entry, once (review I4: not on every run). */
+async function indexLinks(ctx: Ctx, now: Date) {
+  if (await ctx.store.get(K.indexed)) return;
   for (const e of await ctx.store.list("order:")) {
     const l = e.value as OrderLink;
     if (l.odooId && !(await ctx.store.get(K.odooOrder(l.odooId)))) await ctx.store.set(K.odooOrder(l.odooId), { orderId: e.key.slice(6) });
   }
+  await ctx.store.set(K.indexed, { at: now.toISOString() });
 }
 
 /** Spec §§ 4.2–4.3: imports confirmed Odoo orders the CRM does not have yet, at most 200 per run. Returns how many were imported. */
 export async function importOrders(a: { ctx: Ctx; client: OdooClient; dry: boolean; now: Date; orders: OdooOrderIn[]; commercial: Map<number, number>; linked: Map<number, string> }): Promise<number> {
   const { ctx, client, dry, now } = a;
-  if (!dry) await indexLinks(ctx);
+  if (!dry) await indexLinks(ctx, now);
   const known = new Set<number>([
     ...(await ctx.store.list("odooOrder:")).map((e) => Number(e.key.slice(10))),
     ...(await ctx.store.list("order:")).map((e) => (e.value as OrderLink).odooId),
   ]);
-  const batch = a.orders.filter((s) => !known.has(s.id)).slice(0, PER_RUN);
+  // Review I1: orders that failed before go last, so they can never crowd out new ones.
+  const failed = new Set((await ctx.store.list("importFailed:")).map((e) => Number(e.key.slice(13))));
+  const fresh = a.orders.filter((s) => !known.has(s.id));
+  const batch = [...fresh.filter((s) => !failed.has(s.id)), ...fresh.filter((s) => failed.has(s.id))].slice(0, PER_RUN);
   if (!batch.length) return 0;
   const lines = await readLines(client, batch.map((s) => s.id));
   const moveIds = batch.flatMap((s) => s.invoice_ids ?? []);
@@ -106,7 +112,9 @@ export async function importOrders(a: { ctx: Ctx; client: OdooClient; dry: boole
         ctx.log.info(`Dry run: would import Odoo order ${s.name}`, { accountId, lines: crm.length, status });
         continue;
       }
-      const row = await ctx.data.orders.create({
+      // Review I3: a run that died after creating the order left it without a link; link it instead of failing on the unique ref forever.
+      const [existing] = await ctx.data.orders.find({ where: { source: "EXTERNAL", externalRef: String(s.id) }, take: 1 });
+      const row = existing ?? await ctx.data.orders.create({
         accountId, externalRef: String(s.id), status: status as never, currency: s.currency_id ? s.currency_id[1] : undefined,
         orderDate: s.date_order.slice(0, 10), note: noteFor(ctx, s.note, missing), lines: crm,
       });

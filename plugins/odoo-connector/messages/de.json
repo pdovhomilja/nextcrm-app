@@ -78,7 +78,7 @@
     "missingSubject": "Auftrag {number}: Odoo-Auftrag nicht gefunden",
     "missingText": "Der Connector findet den Odoo-Auftrag {name} zum CRM-Auftrag {number} nicht mehr. Er wurde in Odoo gelöscht, oder der Odoo-API-Benutzer hat keinen Zugriff mehr darauf. Der CRM-Auftrag behält seinen Status; stornieren Sie ihn von Hand, falls der Odoo-Auftrag gelöscht wurde.",
     "movedSubject": "Auftrag {number}: Kunde in Odoo geändert",
-    "movedText": "Der Odoo-Auftrag {name} (CRM-Auftrag {number}) gehört in Odoo jetzt einem anderen Kunden. Der CRM-Auftrag bleibt bei seinem Account; verschieben oder stornieren Sie ihn bei Bedarf von Hand."
+    "movedText": "Der Odoo-Auftrag {name} (CRM-Auftrag {number}) gehört in Odoo jetzt einem anderen Kunden. Der CRM-Auftrag bleibt bei seinem Account und folgt weiter dem Odoo-Auftrag; prüfen Sie in Odoo, ob die Änderung stimmt."
   },
   "product": {
     "linked": "Odoo-Produkt #{id}"

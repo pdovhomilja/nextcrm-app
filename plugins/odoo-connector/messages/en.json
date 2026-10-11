@@ -78,7 +78,7 @@
     "missingSubject": "Order {number}: Odoo order not found",
     "missingText": "The connector can no longer find Odoo order {name} for CRM order {number}. It was deleted in Odoo, or the Odoo API user lost access to it. The CRM order keeps its status; cancel it by hand if the Odoo order was deleted.",
     "movedSubject": "Order {number}: customer changed in Odoo",
-    "movedText": "Odoo order {name} (CRM order {number}) now belongs to another customer in Odoo. The CRM order keeps its account; move or cancel it by hand if needed."
+    "movedText": "Odoo order {name} (CRM order {number}) now belongs to another customer in Odoo. The CRM order keeps its account and still follows the Odoo order; check in Odoo whether the change is right."
   },
   "product": {
     "linked": "Odoo product #{id}"

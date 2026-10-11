@@ -28,6 +28,7 @@ export const K = {
   importFailed: (id: number) => `importFailed:${id}`, // → ImportFailed while an Odoo order cannot be imported
   customer: (accountId: string) => `customer:${accountId}`, // → CustomerInfo for the account tab
   imported: "meta:imported",                          // → { lastRun } orders imported on the last run
+  indexed: "meta:indexed",                            // → { at } the 0.4.0 order index was built from order: links
 };
 
 export interface AccountLink {

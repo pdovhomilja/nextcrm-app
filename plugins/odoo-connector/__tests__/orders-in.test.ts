@@ -18,7 +18,7 @@ const odooOrder = (over: Record<string, unknown> = {}) => ({
   currency_id: [9, "CZK"], note: "<p>Leave at the gate</p>", write_date: "2026-03-05 10:30:00", amount_total: 242, amount_untaxed: 200,
   delivery_status: false, invoice_status: "no", invoice_ids: [], picking_ids: [], ...over,
 });
-const line = (over: Record<string, unknown> = {}) => ({ id: 1, order_id: [900, "S00900"], product_id: [700, "Scoop"], product_uom_qty: 2, price_unit: 100, display_type: false, is_downpayment: false, ...over });
+const line = (over: Record<string, unknown> = {}) => ({ id: 1, order_id: [900, "S00900"], product_id: [700, "Scoop"], product_uom_qty: 2, price_unit: 100, discount: 0, display_type: false, is_downpayment: false, ...over });
 const customer = { id: 50, name: "Bubble s.r.o.", parent_id: false, active: true, type: "contact" };
 
 async function run(m: ReturnType<typeof mkOrders>, dry = false) {
@@ -206,4 +206,46 @@ describe("in the sync", () => {
     expect(d.sent).toBe(0);
     expect(d.imported).toEqual({ total: 1, lastRun: 1, failed: [{ odooId: 77, name: "S00077", reason: "Currency not found: XYZ", at: "x" }] });
   });
+});
+
+describe("final review fixes", () => {
+  it("I1: orders that keep failing never block newer ones", async () => {
+    const bad = Array.from({ length: 200 }, (_, i) => odooOrder({ id: 100 + i, name: `S${100 + i}` }));
+    const m = setup({ orders: [...bad, odooOrder({ id: 5000, name: "S05000" })], lines: [] });
+    const create = m.ctx.data.orders.create.bind(m.ctx.data.orders);
+    m.ctx.data.orders.create = async (d: any) => { if (d.externalRef !== "5000") throw new Error("Currency not found: XYZ"); return create(d); };
+    await run(m);
+    expect(await run(m)).toBe(1);
+    expect(m.data.orders.map((o) => o.externalRef)).toEqual(["5000"]);
+  });
+
+  it("I2: Odoo line discounts are applied to the unit price", async () => {
+    const m = setup({ lines: [line({ price_unit: 100, discount: 15 })] });
+    await run(m);
+    expect(m.data.orders[0].lines).toEqual([{ productId: "p1", quantity: 2, unitPrice: 85 }]);
+  });
+
+  it("I3: an order created before its link was stored is linked, not created again", async () => {
+    const m = setup({}, { orders: [{ id: "x1", number: "ORD-9", source: "EXTERNAL", externalRef: "900", status: "CONFIRMED", accountId: "a1" }] });
+    expect(await run(m)).toBe(1);
+    expect(m.data.orders).toHaveLength(1);
+    expect(await m.ctx.store.get(K.odooOrder(900))).toEqual({ orderId: "x1" });
+    expect(await m.ctx.store.get<OrderLink>(K.order("x1"))).toMatchObject({ odooId: 900, imported: true });
+  });
+
+  it("I4: the 0.4.0 index is built once, not on every run", async () => {
+    const m = setup({ orders: [] });
+    await m.ctx.store.set(K.order("o9"), { odooId: 900, name: "S00900" });
+    await run(m);
+    const get = jest.spyOn(m.ctx.store, "get");
+    await run(m);
+    expect(get.mock.calls.filter(([k]) => String(k).startsWith("odooOrder:"))).toHaveLength(0);
+  });
+});
+
+it("review: the 'customer changed' email asks for nothing users cannot do on an imported order", () => {
+  for (const lang of ["en", "cz", "de", "uk"]) {
+    const text = require(`../messages/${lang}.json`).mail.movedText as string;
+    expect(text).not.toMatch(/cancel|zrušte|stornieren|скасуйте/i);
+  }
 });
