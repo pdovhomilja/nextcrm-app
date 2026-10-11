@@ -44,7 +44,8 @@
     "createdKind": {
       "customer": "Kunde",
       "delivery": "Lieferadresse"
-    }
+    },
+    "orderCounts": "Aufträge geprüft {checked}, weitergesetzt {moved}"
   },
   "needsOwner": {
     "title": "Importierte Konten ohne Verantwortlichen",
@@ -70,7 +71,9 @@
     "orderFailedSubject": "Auftrag {number} wurde nicht an Odoo gesendet",
     "orderFailedText": "Auftrag {number} konnte nicht an Odoo gesendet werden: {error}. Beheben Sie die Ursache und klicken Sie beim Auftrag auf Erneut versuchen.",
     "stuckSubject": "Auftrag {number} wartet seit einem Tag auf Odoo",
-    "stuckText": "Auftrag {number} wartet seit {since} auf den Versand an Odoo. Letzter Fehler: {error}. Der Connector versucht es weiter; prüfen Sie Odoo."
+    "stuckText": "Auftrag {number} wartet seit {since} auf den Versand an Odoo. Letzter Fehler: {error}. Der Connector versucht es weiter; prüfen Sie Odoo.",
+    "missingSubject": "Auftrag {number}: Odoo-Auftrag nicht gefunden",
+    "missingText": "Der Connector findet den Odoo-Auftrag {name} zum CRM-Auftrag {number} nicht mehr. Er wurde in Odoo gelöscht, oder der Odoo-API-Benutzer hat keinen Zugriff mehr darauf. Der CRM-Auftrag behält seinen Status; stornieren Sie ihn von Hand, falls der Odoo-Auftrag gelöscht wurde."
   },
   "product": {
     "linked": "Odoo-Produkt #{id}"
@@ -88,7 +91,8 @@
     "invoice": "{number} · fällig {due} · {amount}, offen {residual} · {state}",
     "waiting": "Wartet seit {date} auf Odoo",
     "lastError": "Letzter Fehler: {error}",
-    "failed": "Nicht gesendet: {reason}"
+    "failed": "Nicht gesendet: {reason}",
+    "missing": "In Odoo nicht gefunden (gelöscht, oder der API-Benutzer sieht ihn nicht)"
   },
   "orders": {
     "noAccount": "Das Konto des Auftrags hat keinen Namen",

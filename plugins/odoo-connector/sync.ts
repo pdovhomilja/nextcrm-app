@@ -2,7 +2,7 @@ import type { M2O, OdooPartner } from "./map";
 import { PARTNER_FIELDS, accountFields, changedFields, contactFields } from "./map";
 import { matchAccount } from "./match";
 import { OdooAuthError, jsonClient, type OdooClient } from "./odoo";
-import type { Ctx } from "./settings";
+import { tell, type Ctx } from "./settings";
 import { syncCatalog } from "./catalog";
 import { syncOrderStatuses } from "./orders-status";
 import { K, type AccountLink, type CatalogCounts, type Conflict, type RunSummary } from "./store";
@@ -187,8 +187,9 @@ async function incremental(r: Run, cursor: string): Promise<string | null> {
 }
 
 export function summaryText(ctx: Ctx, s: RunSummary): string {
-  return s.ok ? ctx.t("admin.counts", { created: s.created, updated: s.updated, unchanged: s.unchanged, skipped: s.skipped, conflicts: s.conflicts, failed: s.failed })
-    : ctx.t("admin.failed", { error: s.error ?? "?" });
+  if (!s.ok) return ctx.t("admin.failed", { error: s.error ?? "?" });
+  const counts = ctx.t("admin.counts", { created: s.created, updated: s.updated, unchanged: s.unchanged, skipped: s.skipped, conflicts: s.conflicts, failed: s.failed });
+  return s.orders?.checked ? `${counts} · ${ctx.t("admin.orderCounts", { checked: s.orders.checked, moved: s.orders.moved })}` : counts;
 }
 
 export async function runSync(ctx: Ctx, client: OdooClient, now: Date): Promise<RunSummary> {
@@ -225,7 +226,7 @@ export async function runSync(ctx: Ctx, client: OdooClient, now: Date): Promise<
     ctx.log.error(`Sync failed: ${error}`, { ...r.counts });
     const failures = ((await ctx.store.get<{ count: number }>(K.failures))?.count ?? 0) + 1;
     await ctx.store.set(K.failures, { count: failures });
-    if (failures === 3) await ctx.notify({ roles: ["admin"], subject: ctx.t("mail.failingSubject"), text: ctx.t("mail.failingText", { error }) });
+    if (failures === 3) await tell(ctx, { roles: ["admin"], subject: ctx.t("mail.failingSubject"), text: ctx.t("mail.failingText", { error }) });
   } finally {
     await ctx.store.delete(K.lock);
   }

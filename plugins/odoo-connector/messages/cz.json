@@ -44,7 +44,8 @@
     "createdKind": {
       "customer": "zákazník",
       "delivery": "doručovací adresa"
-    }
+    },
+    "orderCounts": "objednávky zkontrolováno {checked}, posunuto {moved}"
   },
   "needsOwner": {
     "title": "Importované účty bez vlastníka",
@@ -70,7 +71,9 @@
     "orderFailedSubject": "Objednávka {number} nebyla odeslána do Odoo",
     "orderFailedText": "Objednávku {number} se nepodařilo odeslat do Odoo: {error}. Odstraňte příčinu a klikněte u objednávky na Zkusit znovu.",
     "stuckSubject": "Objednávka {number} čeká na Odoo už den",
-    "stuckText": "Objednávka {number} čeká na odeslání do Odoo od {since}. Poslední chyba: {error}. Konektor to dál zkouší; zkontrolujte Odoo."
+    "stuckText": "Objednávka {number} čeká na odeslání do Odoo od {since}. Poslední chyba: {error}. Konektor to dál zkouší; zkontrolujte Odoo.",
+    "missingSubject": "Objednávka {number}: objednávka v Odoo nenalezena",
+    "missingText": "Konektor už nenachází objednávku Odoo {name} pro objednávku CRM {number}. V Odoo byla smazána, nebo k ní uživatel API ztratil přístup. Objednávka v CRM si ponechává svůj stav; pokud byla objednávka v Odoo smazána, zrušte ji ručně."
   },
   "product": {
     "linked": "Produkt v Odoo č. {id}"
@@ -88,7 +91,8 @@
     "invoice": "{number} · splatnost {due} · {amount}, zbývá uhradit {residual} · {state}",
     "waiting": "Čeká na Odoo od {date}",
     "lastError": "Poslední chyba: {error}",
-    "failed": "Neodesláno: {reason}"
+    "failed": "Neodesláno: {reason}",
+    "missing": "V Odoo nenalezena (smazána, nebo ji uživatel API nevidí)"
   },
   "orders": {
     "noAccount": "Účet objednávky nemá název",

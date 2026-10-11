@@ -13,7 +13,7 @@ import { OrderPanel } from "./ui/OrderPanel";
 export default definePlugin({
   id: "odoo-connector",
   name: "Odoo connector",
-  version: "0.3.0",
+  version: "0.3.1",
   sdk: "^0.2.4",
   description: "Imports customers, their people and the product catalog with price lists from an Odoo ERP and keeps them current; sends READY orders to Odoo as draft sale orders and brings their status back.",
   permissions: ["http", "accounts:read", "accounts:write", "contacts:read", "contacts:write", "users:read", "notify", "products:read", "products:write", "priceLists:read", "priceLists:write", "orders:read", "orders:write"],
