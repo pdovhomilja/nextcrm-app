@@ -47,6 +47,7 @@ import {
   unarchiveEmail,
 } from "@/actions/emails/mailbox-actions";
 import { ComposeModal } from "@/app/[locale]/(routes)/emails/components/ComposeModal";
+import { EmailConversationBody } from "@/app/[locale]/(routes)/emails/components/EmailConversationBody";
 import type { MailboxView } from "@/lib/email/mailbox-views";
 import { cn } from "@/lib/utils";
 
@@ -352,20 +353,14 @@ export function MailDisplay({
             )}
           </div>
           <Separator className="opacity-40" />
-          <div className="min-h-0 flex-1 overflow-auto bg-gradient-to-b from-muted/15 to-background">
-            {fullEmail?.bodyHtml ? (
-              <iframe
-                srcDoc={fullEmail.bodyHtml}
-                sandbox="allow-popups allow-popups-to-escape-sandbox"
-                referrerPolicy="no-referrer"
-                className="min-h-[280px] w-full border-0 bg-background"
-                style={{ height: "100%", minHeight: "280px" }}
-                title="Email body"
+          <div className="min-h-0 flex-1 overflow-auto bg-gradient-to-b from-muted/10 to-background">
+            {fullEmail ? (
+              <EmailConversationBody
+                bodyText={fullEmail.bodyText}
+                bodyHtml={fullEmail.bodyHtml}
               />
             ) : (
-              <pre className="whitespace-pre-wrap p-4 text-sm font-sans leading-relaxed">
-                {fullEmail?.bodyText ?? (fullEmail ? "(No content)" : "Loading…")}
-              </pre>
+              <p className="p-4 text-sm text-muted-foreground">Loading…</p>
             )}
           </div>
         </div>
