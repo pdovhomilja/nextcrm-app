@@ -8,7 +8,7 @@ import { createStore } from "@/lib/plugins/store";
 
 beforeEach(() => mockQueryRaw.mockReset());
 
-it("is SDK 0.2.4 (additive)", () => expect(SDK_VERSION).toBe("0.2.4"));
+it("is SDK 0.2.5 (additive)", () => expect(SDK_VERSION).toBe("0.2.5"));
 
 it("claims through one INSERT … ON CONFLICT statement and reports whether a row came back", async () => {
   mockQueryRaw.mockResolvedValueOnce([{ key: "sending:o1" }]).mockResolvedValueOnce([]);

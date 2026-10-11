@@ -123,10 +123,10 @@ export function createDataApi(pluginId: string, permissions: Permission[]): Data
     users: read("users", "users:read"),
     products: {
       ...read("crm_Products", "products:read"),
-      async upsertExternal(ref, fields) {
+      async upsertExternal(ref, fields, opts) {
         need("products:write");
         const { upsertExternalProduct } = await import("@/lib/catalog/plugin-writes");
-        return runAsActor({ type: "plugin", pluginId }, () => upsertExternalProduct(pluginId, ref, fields));
+        return runAsActor({ type: "plugin", pluginId }, () => upsertExternalProduct(pluginId, ref, fields, opts));
       },
       async findExternal() {
         need("products:read");
