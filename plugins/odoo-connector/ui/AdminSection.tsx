@@ -70,6 +70,13 @@ export async function AdminSection({ ctx }: AdminSectionProps<Settings, Secrets>
       <div className="space-y-2">
         <h3 className="font-medium">{ctx.t("admin.orders")}</h3>
         {!o.enabled ? <p className="text-muted-foreground">{ctx.t("admin.ordersOff")}</p> : <p>{ctx.t("admin.ordersCounts", { waiting: o.waiting, sent: o.sent, failed: o.failed.length })}</p>}
+        <p>{ctx.t("admin.importedCounts", { total: o.imported.total, last: o.imported.lastRun })}</p>
+        {o.imported.failed.length > 0 && (
+          <div>
+            <h4 className="font-medium">{ctx.t("admin.importFailed")}</h4>
+            <ul className="text-xs">{o.imported.failed.map((f) => <li key={f.odooId}>{f.name} · {f.reason}</li>)}</ul>
+          </div>
+        )}
         {o.paused && <p className="text-destructive">{ctx.t("admin.ordersPaused", { date: time(o.paused.at), reason: o.paused.reason })}</p>}
         {o.failed.length > 0 && (
           <ul className="text-xs">{o.failed.map((f) => <li key={f.orderId}><a className="underline" href={`/crm/orders/${f.orderId}`}>{f.number}</a> · {f.reason}</li>)}</ul>

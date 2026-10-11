@@ -5,6 +5,7 @@ import { OdooAuthError, jsonClient, type OdooClient } from "./odoo";
 import { tell, type Ctx } from "./settings";
 import { syncCatalog } from "./catalog";
 import { syncOrderStatuses } from "./orders-status";
+import { syncOrdersIn } from "./orders-in";
 import { K, type AccountLink, type CatalogCounts, type Conflict, type RunSummary } from "./store";
 
 const PAGE = 100;
@@ -189,7 +190,10 @@ async function incremental(r: Run, cursor: string): Promise<string | null> {
 export function summaryText(ctx: Ctx, s: RunSummary): string {
   if (!s.ok) return ctx.t("admin.failed", { error: s.error ?? "?" });
   const counts = ctx.t("admin.counts", { created: s.created, updated: s.updated, unchanged: s.unchanged, skipped: s.skipped, conflicts: s.conflicts, failed: s.failed });
-  return s.orders?.checked ? `${counts} · ${ctx.t("admin.orderCounts", { checked: s.orders.checked, moved: s.orders.moved })}` : counts;
+  const parts = [counts];
+  if (s.orders?.checked) parts.push(ctx.t("admin.orderCounts", { checked: s.orders.checked, moved: s.orders.moved }));
+  if (s.orders?.imported) parts.push(ctx.t("admin.orderImported", { imported: s.orders.imported }));
+  return parts.join(" · ");
 }
 
 export async function runSync(ctx: Ctx, client: OdooClient, now: Date): Promise<RunSummary> {
@@ -215,6 +219,13 @@ export async function runSync(ctx: Ctx, client: OdooClient, now: Date): Promise<
     } catch (e) {
       if (e instanceof OdooAuthError) throw e;
       ctx.log.error(`Order statuses failed: ${e instanceof Error ? e.message : String(e)}`);
+    }
+    try {
+      const imported = await syncOrdersIn({ ctx, client, dry, now });
+      r.orders = { ...(r.orders ?? { checked: 0, moved: 0 }), imported };
+    } catch (e) {
+      if (e instanceof OdooAuthError) throw e;
+      ctx.log.error(`Orders from Odoo failed: ${e instanceof Error ? e.message : String(e)}`);
     }
     if (!dry && top) await ctx.store.set(K.cursor, { at: top });
     summary = { at: now.toISOString(), ok: true, dryRun: dry, ...r.counts, catalog: r.catalog, orders: r.orders };

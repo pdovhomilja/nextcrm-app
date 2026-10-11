@@ -45,7 +45,10 @@
       "customer": "Kunde",
       "delivery": "Lieferadresse"
     },
-    "orderCounts": "Aufträge geprüft {checked}, weitergesetzt {moved}"
+    "orderCounts": "Aufträge geprüft {checked}, weitergesetzt {moved}",
+    "orderImported": "importiert {imported}",
+    "importedCounts": "Aus Odoo importiert: insgesamt {total}, beim letzten Lauf {last}",
+    "importFailed": "Nicht aus Odoo importiert"
   },
   "needsOwner": {
     "title": "Importierte Konten ohne Verantwortlichen",

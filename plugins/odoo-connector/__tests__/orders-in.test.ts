@@ -172,3 +172,38 @@ describe("keeping imported orders current", () => {
     expect(m.data.orders[0].status).toBe("CONFIRMED");
   });
 });
+
+import { runSync, summaryText } from "../sync";
+import { ordersData } from "../ui/data";
+
+describe("in the sync", () => {
+  it("imports during the sync, stores customer info and reports the count", async () => {
+    const m = setup();
+    const catalog = jest.spyOn(require("../catalog"), "syncCatalog").mockResolvedValue(undefined);
+    const summary = await runSync(m.ctx, m.client, now);
+    catalog.mockRestore();
+    expect(summary.orders?.imported).toBe(1);
+    expect(await m.ctx.store.get(K.imported)).toEqual({ lastRun: 1 });
+    expect(await m.ctx.store.get(K.customer("a1"))).toMatchObject({ at: now.toISOString() });
+    expect(summaryText(m.ctx, summary)).toContain("admin.orderImported");
+  });
+
+  it("a failing import is logged and never fails the sync", async () => {
+    const m = setup({ fail: { "sale.order.line/search_read": 500 } });
+    const catalog = jest.spyOn(require("../catalog"), "syncCatalog").mockResolvedValue(undefined);
+    const summary = await runSync(m.ctx, m.client, now);
+    catalog.mockRestore();
+    expect(summary.ok).toBe(true);
+    expect(m.ctx.logs.some((l) => l.level === "error" && l.message.startsWith("Orders from Odoo failed"))).toBe(true);
+  });
+
+  it("does not count imported orders as sent; lists imports and failures", async () => {
+    const m = setup();
+    await run(m);
+    await m.ctx.store.set(K.importFailed(77), { name: "S00077", reason: "Currency not found: XYZ", at: "x" });
+    await m.ctx.store.set(K.imported, { lastRun: 1 });
+    const d = await ordersData(m.ctx, now);
+    expect(d.sent).toBe(0);
+    expect(d.imported).toEqual({ total: 1, lastRun: 1, failed: [{ odooId: 77, name: "S00077", reason: "Currency not found: XYZ", at: "x" }] });
+  });
+});

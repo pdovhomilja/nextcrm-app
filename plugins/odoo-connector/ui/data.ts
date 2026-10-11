@@ -1,5 +1,5 @@
 import { chosenLists, type Ctx } from "../settings";
-import type { AccountLink, CompareResult, CreatedRecord, FailedState, OrderLink, PriceListLink, RunSummary, SendState } from "../store";
+import type { AccountLink, CompareResult, CreatedRecord, FailedState, ImportFailed, OrderLink, PriceListLink, RunSummary, SendState } from "../store";
 import { K } from "../store";
 
 export async function needsOwner(ctx: Ctx): Promise<{ accountId: string; name: string; salesperson: string | null }[]> {
@@ -67,7 +67,9 @@ export async function orderPanelData(ctx: Ctx, orderId: string) {
 export async function ordersData(ctx: Ctx, now: Date) {
   const waiting = ctx.settings.sendOrders ? (await ctx.data.orders.find({ where: { status: "READY", externalRef: null }, take: 500 })).length : 0;
   const since = now.getTime() - 7 * 86_400_000;
-  const sent = (await ctx.store.list("order:")).filter((e) => Date.parse((e.value as OrderLink).sentAt) >= since).length;
+  const links = await ctx.store.list("order:");
+  const sent = links.filter((e) => !(e.value as OrderLink).imported && Date.parse((e.value as OrderLink).sentAt) >= since).length;
+  const importFailed = (await ctx.store.list("importFailed:")).map((e) => ({ odooId: Number(e.key.slice(13)), ...(e.value as ImportFailed) }));
   const failed: ({ orderId: string; number: string } & FailedState)[] = [];
   for (const e of await ctx.store.list("failed:")) {
     const orderId = e.key.slice(7);
@@ -78,5 +80,6 @@ export async function ordersData(ctx: Ctx, now: Date) {
     enabled: ctx.settings.sendOrders, waiting, sent, failed,
     paused: await ctx.store.get<{ at: string; reason: string }>(K.sendPaused),
     created: (await ctx.store.get<CreatedRecord[]>(K.created)) ?? [],
+    imported: { total: links.filter((e) => (e.value as OrderLink).imported).length, lastRun: (await ctx.store.get<{ lastRun: number }>(K.imported))?.lastRun ?? 0, failed: importFailed },
   };
 }

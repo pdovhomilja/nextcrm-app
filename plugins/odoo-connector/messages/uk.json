@@ -45,7 +45,10 @@
       "customer": "клієнт",
       "delivery": "адреса доставки"
     },
-    "orderCounts": "замовлень перевірено {checked}, переміщено {moved}"
+    "orderCounts": "замовлень перевірено {checked}, переміщено {moved}",
+    "orderImported": "імпортовано {imported}",
+    "importedCounts": "Імпортовано з Odoo: всього {total}, під час останнього запуску {last}",
+    "importFailed": "Не імпортовано з Odoo"
   },
   "needsOwner": {
     "title": "Імпортовані облікові записи без відповідального",

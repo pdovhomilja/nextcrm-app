@@ -45,7 +45,10 @@
       "customer": "zákazník",
       "delivery": "doručovací adresa"
     },
-    "orderCounts": "objednávky zkontrolováno {checked}, posunuto {moved}"
+    "orderCounts": "objednávky zkontrolováno {checked}, posunuto {moved}",
+    "orderImported": "importováno {imported}",
+    "importedCounts": "Importováno z Odoo: celkem {total}, při posledním běhu {last}",
+    "importFailed": "Neimportováno z Odoo"
   },
   "needsOwner": {
     "title": "Importované účty bez vlastníka",

@@ -2,6 +2,7 @@ import type { OrderLineInput } from "@nextcrm/plugin-sdk";
 import { availableFields } from "./catalog";
 import type { M2O } from "./map";
 import { OdooAuthError, type OdooClient } from "./odoo";
+import { syncCustomerInfo } from "./customer-info";
 import { MOVE_FIELDS, invoiceRows, targetStatus, type OdooMove, type OdooSale } from "./orders-status";
 import type { Ctx } from "./settings";
 import { K, type OrderLink, type ProductLink } from "./store";
@@ -127,5 +128,17 @@ export async function importOrders(a: { ctx: Ctx; client: OdooClient; dry: boole
       if (!dry) await ctx.store.set(K.importFailed(s.id), { name: s.name, reason, at: now.toISOString() });
     }
   }
+  return imported;
+}
+
+/** Spec § 4.1: after the status check, every sync: import new orders, then refresh the account tab's data. */
+export async function syncOrdersIn(a: { ctx: Ctx; client: OdooClient; dry: boolean; now: Date }): Promise<number> {
+  const linked = await linkedCustomers(a.ctx);
+  if (!linked.size) return 0;
+  const orders = await confirmedOrders(a.client, [...linked.keys()]);
+  const commercial = await commercialOf(a.client, orders.map((o) => o.partner_id[0]));
+  const imported = await importOrders({ ...a, orders, commercial, linked });
+  await syncCustomerInfo({ ...a, linked, orders, commercial });
+  if (!a.dry) await a.ctx.store.set(K.imported, { lastRun: imported });
   return imported;
 }

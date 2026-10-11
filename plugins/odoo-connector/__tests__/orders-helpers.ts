@@ -69,7 +69,7 @@ export function salesHandlers(s: FakeSales) {
       for (const [, , l] of order_line) s.lines.push({ id: s.nextId++, order_id: [id, "x"], display_type: false, ...norm(l) });
       return id;
     })),
-    "sale.order.line/search_read": search(s.lines),
+    "sale.order.line/search_read": (b: any) => guard("sale.order.line/search_read", () => search(s.lines)(b)),
     "sale.order.line/fields_get": () => Object.fromEntries(["id", "order_id", "product_id", "product_uom_qty", "price_unit", "display_type", "is_downpayment"].map((f) => [f, {}])),
     "sale.order.line/onchange": () => ({ value: s.price === null ? {} : { price_unit: s.price } }),
     "stock.picking/search_read": search(s.pickings),

@@ -45,7 +45,10 @@
       "customer": "customer",
       "delivery": "delivery address"
     },
-    "orderCounts": "orders checked {checked}, moved {moved}"
+    "orderCounts": "orders checked {checked}, moved {moved}",
+    "orderImported": "imported {imported}",
+    "importedCounts": "Imported from Odoo: {total} in total, {last} on the last run",
+    "importFailed": "Not imported from Odoo"
   },
   "needsOwner": {
     "title": "Imported accounts without an owner",
