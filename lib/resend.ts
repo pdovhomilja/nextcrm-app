@@ -1,20 +1,17 @@
 import { Resend } from "resend";
-import { prismadb } from "./prisma";
 
-export default async function resendHelper() {
-  const resendKey = await prismadb.systemServices.findFirst({
-    where: {
-      name: "resend_smtp",
-    },
-  });
-
-  const apiKey = process.env.RESEND_API_KEY || resendKey?.serviceKey;
+export async function getResendApiKey(): Promise<string> {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
 
   if (!apiKey) {
-    throw new Error("Resend API key is not configured. Please add it in Admin settings or set RESEND_API_KEY environment variable.");
+    throw new Error(
+      "RESEND_API_KEY is not set. Add it in Vercel Environment Variables or .env.local."
+    );
   }
 
-  const resend = new Resend(apiKey);
+  return apiKey;
+}
 
-  return resend;
+export default async function resendHelper() {
+  return new Resend(await getResendApiKey());
 }

@@ -2,6 +2,9 @@ import React, { Suspense } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Mail, Settings } from "lucide-react";
 import { MailComponent } from "./components/mail";
 import Container from "../components/ui/Container";
 import EmailsSkeleton from "@/components/skeletons/emails-skeleton";
@@ -79,17 +82,33 @@ const EmailRoute = async ({
   if (!connectedAccounts || connectedAccounts.length === 0) {
     return (
       <Container title={t("emails")} description="Your connected mailboxes">
-        <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
-          <p className="text-muted-foreground text-sm">
-            You don&apos;t have any mailbox registered yet.
-          </p>
-          <Link
-            href="/profile"
-            className="text-sm font-medium underline underline-offset-4"
-          >
-            Go to your profile to set up your first mailbox
-          </Link>
-        </div>
+        <Card className="mx-auto mt-8 max-w-md border-dashed shadow-sm">
+          <CardContent className="flex flex-col items-center gap-5 py-12 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <Mail className="h-7 w-7" />
+            </div>
+            <div className="space-y-2">
+              <p className="font-medium">Connect a mailbox</p>
+              <p className="text-sm text-muted-foreground">
+                Mail runs on Resend only. An admin adds mailboxes under Email mailboxes; you can also
+                add one in profile once assigned.
+              </p>
+            </div>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button asChild variant="default" className="gap-2">
+                <Link href="/profile">
+                  <Settings className="h-4 w-4" />
+                  Profile settings
+                </Link>
+              </Button>
+              {session.user.role === "admin" && (
+                <Button asChild variant="secondary">
+                  <Link href="/admin/email-accounts">Admin mailboxes</Link>
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </Container>
     );
   }

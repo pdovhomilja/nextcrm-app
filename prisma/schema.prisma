@@ -972,6 +972,7 @@ model Users {
   account_name     String?
   avatar           String?
   email            String       @unique
+  workEmail        String?      @unique
   emailVerified    Boolean      @default(false)
   image            String?
   role             AppRole      @default(user)
@@ -1450,10 +1451,17 @@ model ApiToken {
 // EMAIL FEATURE
 // ============================================
 
+enum EmailSendProvider {
+  SMTP
+  RESEND
+}
+
 model EmailAccount {
   id                String    @id @default(uuid()) @db.Uuid
   userId            String    @db.Uuid
   label             String
+  sendProvider      EmailSendProvider @default(SMTP)
+  fromName          String?
   imapHost          String
   imapPort          Int
   imapSsl           Boolean   @default(true)
@@ -1462,7 +1470,7 @@ model EmailAccount {
   smtpSsl           Boolean   @default(true)
   allowSelfSignedTls Boolean  @default(false)
   username          String
-  passwordEncrypted String
+  passwordEncrypted String?
   isActive          Boolean   @default(true)
   sentFolderName    String    @default("Sent")
   lastSyncedAt      DateTime?

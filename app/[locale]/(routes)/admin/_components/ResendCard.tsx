@@ -26,9 +26,9 @@ const ResendCard = async () => {
         <CardTitle>Resend.com - API Key</CardTitle>
         <CardDescription className="text-xs space-y-2">
           <p>
-            Bulk email campaigns (Campaigns → New campaign) send through Resend via Inngest. Set{" "}
-            <code className="text-[10px]">RESEND_API_KEY</code> or save a key here, and verify{" "}
-            <code className="text-[10px]">RESEND_FROM_EMAIL</code> for your domain in Resend.
+            Use <code className="text-[10px]">RESEND_API_KEY</code> in Vercel /{" "}
+            <code className="text-[10px]">.env.local</code> only (recommended). The form below is
+            legacy — not required when env is set.
           </p>
           <p>ENV API key:</p>
           <p>
