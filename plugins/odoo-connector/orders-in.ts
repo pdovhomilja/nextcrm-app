@@ -2,6 +2,7 @@ import type { OrderLineInput } from "@nextcrm/plugin-sdk";
 import { availableFields } from "./catalog";
 import type { M2O } from "./map";
 import { OdooAuthError, type OdooClient } from "./odoo";
+import { VARIANT_FIELDS, variantFields, type OdooVariant } from "./catalog-map";
 import { syncCustomerInfo } from "./customer-info";
 import { MOVE_FIELDS, invoiceRows, targetStatus, type OdooMove, type OdooSale } from "./orders-status";
 import type { Ctx } from "./settings";
@@ -59,6 +60,34 @@ export async function crmLines(ctx: Ctx, lines: OdooLineIn[]): Promise<{ lines: 
   return { lines: out, missing };
 }
 
+/**
+ * Pavel 2026-10-11 (live check, option A): Odoo archives each expiry batch's variant, and the catalog imports only active ones,
+ * so history lost about a quarter of its value. Variants on imported lines that the CRM lacks come in as archived products,
+ * linked like catalog products (the catalog keeps them current from then on).
+ */
+export async function ensureProducts(ctx: Ctx, client: OdooClient, lines: OdooLineIn[]): Promise<void> {
+  const ids: number[] = [];
+  for (const l of lines) {
+    if (l.display_type || l.is_downpayment || !l.product_id || ids.includes(l.product_id[0])) continue;
+    if (!(await ctx.store.get(K.product(l.product_id[0])))) ids.push(l.product_id[0]);
+  }
+  if (!ids.length) return;
+  const fields = await availableFields(client, "product.product", VARIANT_FIELDS);
+  const variants = await client.call<OdooVariant[]>("product.product", "read", { ids, fields });
+  const taxIds = Array.from(new Set(variants.flatMap((v) => v.taxes_id ?? [])));
+  const taxes = new Map((taxIds.length ? await client.call<{ id: number; amount: number; amount_type: string }[]>("account.tax", "read", { ids: taxIds, fields: ["amount", "amount_type"] }) : [])
+    .map((t) => [t.id, t.amount_type === "percent" ? String(t.amount) : null]));
+  for (const v of variants) {
+    const f = variantFields({ ...v, taxes_id: v.taxes_id ?? [] }, (t) => (t.length === 1 ? taxes.get(t[0]) ?? null : null));
+    try {
+      const res = await ctx.data.products.upsertExternal(String(v.id), f);
+      await ctx.store.set(K.product(v.id), { productId: res.id, tmplId: v.product_tmpl_id ? v.product_tmpl_id[0] : null, categoryRef: f.categoryRef } satisfies ProductLink);
+    } catch (e) {
+      ctx.log.warn(`Product ${v.display_name} from an imported order not created: ${e instanceof Error ? e.message : String(e)}`, { odooId: v.id });
+    }
+  }
+}
+
 const plain = (html: string | false | undefined) => (html ? String(html) : "")
   .replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>\s*<p[^>]*>/gi, "\n").replace(/<[^>]+>/g, "")
   .replace(/&nbsp;/g, " ").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&")
@@ -93,6 +122,7 @@ export async function importOrders(a: { ctx: Ctx; client: OdooClient; dry: boole
   const batch = [...fresh.filter((s) => !failed.has(s.id)), ...fresh.filter((s) => failed.has(s.id))].slice(0, PER_RUN);
   if (!batch.length) return 0;
   const lines = await readLines(client, batch.map((s) => s.id));
+  if (!dry) await ensureProducts(ctx, client, lines);
   const moveIds = batch.flatMap((s) => s.invoice_ids ?? []);
   const moves = moveIds.length ? await client.call<OdooMove[]>("account.move", "search_read", { domain: [["id", "in", moveIds]], fields: MOVE_FIELDS }) : [];
   let imported = 0;

@@ -2,7 +2,7 @@ import type { RecordData } from "@nextcrm/plugin-sdk";
 import { availableFields } from "./catalog";
 import type { M2O } from "./map";
 import type { OdooClient } from "./odoo";
-import { commercialOf, crmLines, noteFor, readLines } from "./orders-in";
+import { commercialOf, crmLines, ensureProducts, noteFor, readLines } from "./orders-in";
 import { tell, type Ctx } from "./settings";
 import { K, type OrderLink } from "./store";
 
@@ -73,6 +73,7 @@ export async function syncOrderStatuses(a: { ctx: Ctx; client: OdooClient; dry: 
   const commercial = await commercialOf(client, imp.map((o) => byId.get(o.link.odooId)!.partner_id).filter((p): p is [number, string] => !!p).map((p) => p[0]));
   const changed = imp.filter((o) => byId.get(o.link.odooId)!.write_date !== o.link.writeDate).map((o) => o.link.odooId);
   const freshLines = dry ? [] : await readLines(client, changed);
+  if (freshLines.length) await ensureProducts(ctx, client, freshLines);
   for (const o of open) {
     out.checked++;
     const sale = byId.get(o.link.odooId);

@@ -14,6 +14,9 @@ export interface FakeSales {
   /** Odoo's price for sale.order.line/onchange; null = Odoo returns no price. */
   price: number | null;
   nextId: number;
+  /** product.product rows (any active state) for archived variants on imported orders. */
+  variants?: RecordData[];
+  taxes?: RecordData[];
   /** Fields sale.order/fields_get reports (an Odoo without Inventory has no delivery_status or picking_ids). */
   saleFields?: string[];
   /** How Odoo stores a VAT number it is given (base_vat reformats it). */
@@ -70,6 +73,9 @@ export function salesHandlers(s: FakeSales) {
       return id;
     })),
     "sale.order.line/search_read": (b: any) => guard("sale.order.line/search_read", () => search(s.lines)(b)),
+    "product.product/fields_get": () => Object.fromEntries(["id", "display_name", "default_code", "description_sale", "type", "active", "sale_ok", "lst_price", "standard_price", "currency_id", "taxes_id", "uom_id", "categ_id", "product_tmpl_id", "write_date"].map((f) => [f, {}])),
+    "product.product/read": (b: any) => pick((s.variants ?? []).filter((v) => b.ids.includes(v.id)), b.fields),
+    "account.tax/read": (b: any) => pick((s.taxes ?? []).filter((t) => b.ids.includes(t.id)), b.fields),
     "sale.order.line/fields_get": () => Object.fromEntries(["id", "order_id", "product_id", "product_uom_qty", "price_unit", "discount", "display_type", "is_downpayment"].map((f) => [f, {}])),
     "sale.order.line/onchange": () => ({ value: s.price === null ? {} : { price_unit: s.price } }),
     "stock.picking/search_read": search(s.pickings),

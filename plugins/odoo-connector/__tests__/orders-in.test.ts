@@ -249,3 +249,23 @@ it("review: the 'customer changed' email asks for nothing users cannot do on an 
     expect(text).not.toMatch(/cancel|zrušte|stornieren|скасуйте/i);
   }
 });
+
+describe("archived Odoo products on imported orders (Pavel 2026-10-11, option A)", () => {
+  const variant = { id: 799, display_name: "[511013_1] EXP K Bob Jahoda 31.08.2026", default_code: "511013_1", description_sale: false, type: "consu", active: false, sale_ok: true, lst_price: 35.96, standard_price: 20, currency_id: [9, "CZK"], taxes_id: [3], uom_id: [1, "ks"], categ_id: [9, "Bob"], product_tmpl_id: [70, "x"], write_date: "2026-01-01 00:00:00" };
+
+  it("imports the archived variant as an archived CRM product and keeps the line", async () => {
+    const m = setup({ lines: [line(), line({ id: 2, product_id: [799, "EXP K Bob"], product_uom_qty: 15, price_unit: 35.96 })], variants: [variant], taxes: [{ id: 3, amount: 12, amount_type: "percent" }] });
+    await run(m);
+    const link = await m.ctx.store.get<{ productId: string }>(K.product(799));
+    expect(link).toMatchObject({ productId: expect.any(String), tmplId: 70 });
+    expect(await m.ctx.data.products.get(link!.productId)).toMatchObject({ name: "[511013_1] EXP K Bob Jahoda 31.08.2026", sku: "511013_1", status: "ARCHIVED", tax_rate: "12" });
+    expect(m.data.orders[0].lines).toEqual([{ productId: "p1", quantity: 2, unitPrice: 100 }, { productId: link!.productId, quantity: 15, unitPrice: 35.96 }]);
+    expect(m.data.orders[0].note).toBe("Leave at the gate");
+  });
+
+  it("dry run creates no product", async () => {
+    const m = setup({ lines: [line({ product_id: [799, "EXP K Bob"] })], variants: [variant], taxes: [] });
+    await run(m, true);
+    expect(await m.ctx.store.get(K.product(799))).toBeNull();
+  });
+});
