@@ -5,6 +5,14 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.31.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.31.0...v0.31.1) (2026-10-11)
+
+
+### Fixed
+
+* **odoo-connector:** order follow-ups from part 3a ([af5c6a9](https://github.com/pdovhomilja/nextcrm-app/commit/af5c6a9d1fe1378a340314796c47d98732a0b1f5))
+* **odoo-connector:** order follow-ups from part 3a ([a3c79c4](https://github.com/pdovhomilja/nextcrm-app/commit/a3c79c4285714ddd505b5cbffbfbcf4a7e45d476))
+
 ## [0.31.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.30.0...v0.31.0) (2026-10-11)
 
 
