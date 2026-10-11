@@ -133,3 +133,42 @@ describe("importing Odoo orders", () => {
     expect(m.ctx.logs.filter((l) => l.message.startsWith("Dry run: would import"))).toHaveLength(1);
   });
 });
+
+import { syncOrderStatuses } from "../orders-status";
+
+describe("keeping imported orders current", () => {
+  const imported = async (sales: Record<string, unknown> = {}) => {
+    const m = setup(sales);
+    await run(m);
+    return m;
+  };
+
+  it("replaces the lines when the Odoo order changed, not otherwise", async () => {
+    const m = await imported();
+    const update = jest.spyOn(m.ctx.data.orders, "update");
+    await syncOrderStatuses({ ctx: m.ctx, client: m.client, dry: false, now });
+    expect(update).not.toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ lines: expect.anything() }));
+    Object.assign(m.sales.orders[0], { write_date: "2026-03-06 09:00:00" });
+    m.sales.lines[0].product_uom_qty = 5;
+    await syncOrderStatuses({ ctx: m.ctx, client: m.client, dry: false, now });
+    expect(m.data.orders[0].lines).toEqual([{ productId: "p1", quantity: 5, unitPrice: 100 }]);
+    expect((await m.ctx.store.get<OrderLink>(K.order(m.data.orders[0].id as string)))!.writeDate).toBe("2026-03-06 09:00:00");
+  });
+
+  it("a changed customer in Odoo keeps the account, flags the panel and emails admins once", async () => {
+    const m = await imported({ partners: [customer, { id: 60, name: "Other", parent_id: false, active: true }] });
+    Object.assign(m.sales.orders[0], { partner_id: [60, "Other"] });
+    await syncOrderStatuses({ ctx: m.ctx, client: m.client, dry: false, now });
+    await syncOrderStatuses({ ctx: m.ctx, client: m.client, dry: false, now });
+    expect(m.data.orders[0].accountId).toBe("a1");
+    expect((await m.ctx.store.get<OrderLink>(K.order(m.data.orders[0].id as string)))!.movedNotified).toBe(true);
+    expect(m.ctx.notifications.map((n) => n.subject)).toEqual(["mail.movedSubject"]);
+  });
+
+  it("an imported order that disappears from Odoo is not cancelled", async () => {
+    const m = await imported();
+    m.sales.orders.length = 0;
+    await syncOrderStatuses({ ctx: m.ctx, client: m.client, dry: false, now });
+    expect(m.data.orders[0].status).toBe("CONFIRMED");
+  });
+});

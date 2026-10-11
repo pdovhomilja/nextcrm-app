@@ -1,12 +1,15 @@
 import type { RecordData } from "@nextcrm/plugin-sdk";
 import { availableFields } from "./catalog";
+import type { M2O } from "./map";
 import type { OdooClient } from "./odoo";
+import { commercialOf, crmLines, noteFor, readLines } from "./orders-in";
 import { tell, type Ctx } from "./settings";
 import { K, type OrderLink } from "./store";
 
 export interface OdooSale {
   id: number; name: string; state: string; delivery_status?: string | false; invoice_status?: string | false;
   amount_total: number; invoice_ids?: number[]; picking_ids?: number[];
+  partner_id?: M2O | false; write_date?: string; note?: string | false;
 }
 export interface OdooMove {
   id: number; name: string; move_type: string; state: string; payment_state: string;
@@ -14,7 +17,7 @@ export interface OdooMove {
 }
 interface OdooPicking { id: number; name: string; state: string; date_done: string | false }
 
-const SALE_FIELDS = ["id", "name", "state", "delivery_status", "invoice_status", "amount_total", "invoice_ids", "picking_ids"];
+const SALE_FIELDS = ["id", "name", "state", "delivery_status", "invoice_status", "amount_total", "invoice_ids", "picking_ids", "partner_id", "write_date", "note"];
 export const MOVE_FIELDS = ["id", "name", "move_type", "state", "payment_state", "invoice_date", "invoice_date_due", "amount_total", "amount_residual"];
 const RANK: Record<string, number> = { SENT: 1, CONFIRMED: 2, DELIVERED: 3, INVOICED: 4, PAID: 5 };
 const TOLERANCE = 1;
@@ -65,6 +68,11 @@ export async function syncOrderStatuses(a: { ctx: Ctx; client: OdooClient; dry: 
   const picks = pickIds.length ? await client.call<OdooPicking[]>("stock.picking", "search_read", {
     domain: [["id", "in", pickIds], ["picking_type_code", "=", "outgoing"]], fields: ["id", "name", "state", "date_done"],
   }) : [];
+  // Spec § 4.4: imported orders follow Odoo's lines and notice a changed customer.
+  const imp = open.filter((o) => o.link.imported && byId.has(o.link.odooId));
+  const commercial = await commercialOf(client, imp.map((o) => byId.get(o.link.odooId)!.partner_id).filter((p): p is [number, string] => !!p).map((p) => p[0]));
+  const changed = imp.filter((o) => byId.get(o.link.odooId)!.write_date !== o.link.writeDate).map((o) => o.link.odooId);
+  const freshLines = dry ? [] : await readLines(client, changed);
   for (const o of open) {
     out.checked++;
     const sale = byId.get(o.link.odooId);
@@ -95,6 +103,19 @@ export async function syncOrderStatuses(a: { ctx: Ctx; client: OdooClient; dry: 
       checkedAt: now.toISOString(),
       back, missingNotified: undefined,
     };
+    if (o.link.imported && !dry) {
+      if (sale.write_date && sale.write_date !== o.link.writeDate) {
+        const { lines, missing } = await crmLines(ctx, freshLines.filter((l) => l.order_id && l.order_id[0] === sale.id));
+        try { await ctx.data.orders.update(o.orderId, { lines, note: noteFor(ctx, sale.note, missing) }); link.writeDate = sale.write_date; }
+        catch (e) { ctx.log.warn(`Order ${number}: lines not updated: ${e instanceof Error ? e.message : String(e)}`, { orderId: o.orderId }); }
+      }
+      const owner = sale.partner_id ? (commercial.get(sale.partner_id[0]) ?? sale.partner_id[0]) : null;
+      if (owner !== null && owner !== o.link.partnerId && !o.link.movedNotified) {
+        ctx.log.warn(`Odoo order ${o.link.name} now belongs to another customer; the CRM order keeps its account`, { orderId: o.orderId });
+        await tell(ctx, { roles: ["admin"], subject: ctx.t("mail.movedSubject", { number }), text: ctx.t("mail.movedText", { number, name: o.link.name }) });
+        link.movedNotified = true;
+      }
+    }
     if (dry) {
       if (forward) ctx.log.info("Dry run: would set order status", { orderId: o.orderId, from: current, to: target });
       continue;
