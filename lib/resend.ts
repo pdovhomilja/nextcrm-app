@@ -62,10 +62,10 @@ export default async function resendHelper() {
   const apiKey = await getResendApiKey();
 
   if (!apiKey) {
-    throw new Error("Resend API key is not configured. Please add it in Admin settings or set RESEND_API_KEY environment variable.");
+    throw new Error(
+      "RESEND_API_KEY is not set. Add it in Vercel Environment Variables or .env.local."
+    );
   }
 
-  const resend = new Resend(apiKey);
-
-  return resend;
+  return new Resend(apiKey);
 }

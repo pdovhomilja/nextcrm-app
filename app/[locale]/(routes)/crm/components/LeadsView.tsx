@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/sheet";
 
 import { NewLeadForm } from "../leads/components/NewLeadForm";
+import { BulkImportLeadsModal } from "../leads/components/BulkImportLeadsModal";
 import { LeadDataTable } from "../leads/table-components/data-table";
 
 import type { getAllCrmData } from "@/actions/crm/get-crm-data";
@@ -51,6 +52,11 @@ const LeadsView = ({ data, crmData, accountId }: LeadsViewProps) => {
             </CardTitle>
           </div>
           <div className="flex space-x-2">
+            <BulkImportLeadsModal
+              leadSources={leadSources}
+              leadStatuses={leadStatuses}
+              leadTypes={leadTypes}
+            />
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
                 <Button size="sm" aria-label={t("leads.addNew")} data-testid="add-lead-btn">+</Button>

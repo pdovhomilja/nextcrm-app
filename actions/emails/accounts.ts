@@ -2,7 +2,11 @@
 import { getSession } from "@/lib/auth-server";
 
 import { prismadb } from "@/lib/prisma";
+import { EmailSendProvider } from "@prisma/client";
 import { encrypt } from "@/lib/email-crypto";
+import resendHelper from "@/lib/resend";
+import { formatResendFromAddress } from "@/lib/email/resend-mail";
+import { serializeDecimalsList } from "@/lib/serialize-decimals";
 import {
   isAllowedImapPort,
   isAllowedSmtpPort,
@@ -18,59 +22,112 @@ async function requireSession() {
 }
 
 export async function getEmailAccounts() {
-  const userId = await requireSession();
-  return prismadb.emailAccount.findMany({
-    where: { userId },
-    select: {
-      id: true,
-      label: true,
-      imapHost: true,
-      imapPort: true,
-      imapSsl: true,
-      smtpHost: true,
-      smtpPort: true,
-      smtpSsl: true,
-      username: true,
-      isActive: true,
-      allowSelfSignedTls: true,
-      sentFolderName: true,
-      lastSyncedAt: true,
-      createdAt: true,
-    },
-    orderBy: { createdAt: "asc" },
-  });
+  try {
+    const userId = await requireSession();
+    const accounts = await prismadb.emailAccount.findMany({
+      where: { userId },
+      select: {
+        id: true,
+        label: true,
+        imapHost: true,
+        imapPort: true,
+        imapSsl: true,
+        smtpHost: true,
+        smtpPort: true,
+        smtpSsl: true,
+        username: true,
+        sendProvider: true,
+        fromName: true,
+        isActive: true,
+        allowSelfSignedTls: true,
+        sentFolderName: true,
+        lastSyncedAt: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "asc" },
+    });
+    return serializeDecimalsList(accounts);
+  } catch (error) {
+    console.error("[getEmailAccounts] Error:", error);
+    return [];
+  }
 }
 
-type CreateInput = {
+const RESEND_SEND_ONLY_HOST = "resend.send-only";
+
+export type CreateEmailAccountInput = {
+  sendProvider?: EmailSendProvider;
+  fromName?: string;
   label: string;
-  imapHost: string;
-  imapPort: number;
-  imapSsl: boolean;
-  smtpHost: string;
-  smtpPort: number;
-  smtpSsl: boolean;
+  imapHost?: string;
+  imapPort?: number;
+  imapSsl?: boolean;
+  smtpHost?: string;
+  smtpPort?: number;
+  smtpSsl?: boolean;
   allowSelfSignedTls?: boolean;
   username: string;
-  password: string;
+  password?: string;
   sentFolderName?: string;
 };
 
-export async function createEmailAccount(input: CreateInput) {
-  const userId = await requireSession();
-
-  // Validate required string fields
+export async function createEmailAccountForUser(userId: string, input: CreateEmailAccountInput) {
   if (!input.label?.trim()) throw new Error("Label is required");
+  if (!input.username?.trim()) throw new Error("Username is required");
+
+  const sendProvider =
+    input.sendProvider ??
+    (input.imapHost?.trim() || input.smtpHost?.trim()
+      ? EmailSendProvider.SMTP
+      : EmailSendProvider.RESEND);
+
+  if (sendProvider === EmailSendProvider.RESEND) {
+    if (!input.username.includes("@")) {
+      throw new Error("From email must be a valid address (verified in Resend)");
+    }
+    try {
+      formatResendFromAddress({
+        fromEmail: input.username,
+        fromName: input.fromName,
+        label: input.label,
+      });
+    } catch (e) {
+      throw e instanceof Error ? e : new Error("Invalid Resend from address");
+    }
+    await resendHelper();
+
+    const passwordEncrypted = input.password?.trim() ? encrypt(input.password) : null;
+    return prismadb.emailAccount.create({
+      data: {
+        userId,
+        label: input.label.trim(),
+        sendProvider: EmailSendProvider.RESEND,
+        fromName: input.fromName?.trim() || null,
+        username: input.username.trim(),
+        passwordEncrypted,
+        imapHost: RESEND_SEND_ONLY_HOST,
+        imapPort: 993,
+        imapSsl: true,
+        smtpHost: RESEND_SEND_ONLY_HOST,
+        smtpPort: 465,
+        smtpSsl: true,
+        allowSelfSignedTls: false,
+        ...(input.sentFolderName && { sentFolderName: input.sentFolderName }),
+      },
+      select: { id: true, label: true },
+    });
+  }
+
   if (!input.imapHost?.trim()) throw new Error("IMAP host is required");
   if (!input.smtpHost?.trim()) throw new Error("SMTP host is required");
-  if (!input.username?.trim()) throw new Error("Username is required");
   if (!input.password?.trim()) throw new Error("Password is required");
-  // Restrict to real mail ports so a stored account cannot be used to reach
-  // internal services (Postgres/MinIO/Inngest/metadata) on later connects.
-  if (!isAllowedImapPort(input.imapPort)) throw new Error("Unsupported IMAP port");
-  if (!isAllowedSmtpPort(input.smtpPort)) throw new Error("Unsupported SMTP port");
+  if (input.imapPort == null || !isAllowedImapPort(input.imapPort)) {
+    throw new Error("Unsupported IMAP port");
+  }
+  if (input.smtpPort == null || !isAllowedSmtpPort(input.smtpPort)) {
+    throw new Error("Unsupported SMTP port");
+  }
 
-  // Store-time SSRF defense: a private/internal mail host cannot even be saved,
-  // protecting the later connect sinks (sendEmail, background sync) at the source.
   try {
     await assertPublicHost(input.imapHost);
     await assertPublicHost(input.smtpHost);
@@ -84,12 +141,13 @@ export async function createEmailAccount(input: CreateInput) {
     data: {
       userId,
       label: input.label,
+      sendProvider: EmailSendProvider.SMTP,
       imapHost: input.imapHost,
       imapPort: input.imapPort,
-      imapSsl: input.imapSsl,
+      imapSsl: input.imapSsl ?? true,
       smtpHost: input.smtpHost,
       smtpPort: input.smtpPort,
-      smtpSsl: input.smtpSsl,
+      smtpSsl: input.smtpSsl ?? true,
       allowSelfSignedTls: input.allowSelfSignedTls ?? false,
       username: input.username,
       passwordEncrypted,
@@ -97,6 +155,30 @@ export async function createEmailAccount(input: CreateInput) {
     },
     select: { id: true, label: true },
   });
+}
+
+export async function testResendMailbox(input: {
+  username: string;
+  fromName?: string;
+  label?: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  await requireSession();
+  try {
+    formatResendFromAddress({
+      fromEmail: input.username,
+      fromName: input.fromName,
+      label: input.label,
+    });
+    await resendHelper();
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Resend check failed" };
+  }
+}
+
+export async function createEmailAccount(input: CreateEmailAccountInput) {
+  const userId = await requireSession();
+  return createEmailAccountForUser(userId, input);
 }
 
 export async function deleteEmailAccount(id: string) {

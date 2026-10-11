@@ -1,10 +1,5 @@
 import { S3Client } from "@aws-sdk/client-s3";
 
-if (!process.env.MINIO_ENDPOINT) throw new Error("MINIO_ENDPOINT is not defined");
-if (!process.env.MINIO_ACCESS_KEY) throw new Error("MINIO_ACCESS_KEY is not defined");
-if (!process.env.MINIO_SECRET_KEY) throw new Error("MINIO_SECRET_KEY is not defined");
-if (!process.env.MINIO_BUCKET) throw new Error("MINIO_BUCKET is not defined");
-
 /**
  * URL browsers use to reach the bucket. In Docker MINIO_ENDPOINT is an
  * internal hostname (http://minio:9000) that only the app can resolve, so

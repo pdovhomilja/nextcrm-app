@@ -76,7 +76,7 @@ export const emailLinkCrm = inngest.createFunction(
         },
       });
 
-      if (emailAccount) {
+      if (emailAccount?.passwordEncrypted) {
         const folderName =
           email.folder === "SENT"
             ? (emailAccount.sentFolderName || "Sent")

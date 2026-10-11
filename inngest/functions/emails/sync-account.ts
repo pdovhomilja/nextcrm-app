@@ -1,7 +1,7 @@
 import { inngest } from "@/inngest/client";
 import { prismadb } from "@/lib/prisma";
 import { decrypt } from "@/lib/email-crypto";
-import { EmailFolder } from "@prisma/client";
+import { EmailFolder, EmailSendProvider } from "@prisma/client";
 import Imap from "imap";
 import { connectImap, fetchHeaders, type ParsedHeader } from "@/inngest/lib/imap-utils";
 
@@ -44,6 +44,12 @@ export const emailSyncAccount = inngest.createFunction(
       prismadb.emailAccount.findUnique({ where: { id: accountId } })
     );
     if (!account) return { skipped: "account not found" };
+    if (account.sendProvider === EmailSendProvider.RESEND) {
+      return { skipped: "Resend send-only mailbox" };
+    }
+    if (!account.passwordEncrypted) {
+      return { skipped: "no mailbox credentials" };
+    }
 
     const sentFolder = account.sentFolderName || "Sent";
 

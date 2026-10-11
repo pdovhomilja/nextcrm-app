@@ -21,12 +21,13 @@ import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Copy, Edit, KeyRound, MoreHorizontal, Shield, Trash, UserCheck, UserX } from "lucide-react";
+import { Copy, KeyRound, MoreHorizontal, Shield, Trash, UserCheck, UserX } from "lucide-react";
 import { deleteUser } from "@/actions/admin/users/delete-user";
 import { activateUser } from "@/actions/admin/users/activate-user";
 import { deactivateUser } from "@/actions/admin/users/deactivate-user";
 import { setUserRole } from "@/actions/admin/users/set-role";
 import { revokeUserApiTokens } from "@/actions/admin/users/revoke-api-tokens";
+import { AdminResetPasswordDialog } from "../components/AdminResetPasswordDialog";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -39,6 +40,7 @@ export function DataTableRowActions<TData>({
   const data = adminUserSchema.parse(row.original);
 
   const [open, setOpen] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const onCopy = (id: string) => {
@@ -139,6 +141,13 @@ export function DataTableRowActions<TData>({
         onConfirm={onDelete}
         loading={loading}
       />
+      <AdminResetPasswordDialog
+        userId={data.id}
+        userName={data.name || data.email}
+        personalEmail={data.email}
+        open={passwordOpen}
+        onOpenChange={setPasswordOpen}
+      />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant={"ghost"} className="h-8 w-8 p-0">
@@ -151,6 +160,10 @@ export function DataTableRowActions<TData>({
           <DropdownMenuItem onClick={() => onCopy(data?.id)}>
             <Copy className="mr-2 w-4 h-4" />
             Copy ID
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setPasswordOpen(true)}>
+            <KeyRound className="mr-2 w-4 h-4" />
+            Reset password
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => onActivate()}>

@@ -19,11 +19,14 @@ const ResendCard = async () => {
     <Card className="min-w-[350px] max-w-[450px]">
       <CardHeader className="text-lg">
         <CardTitle>Resend.com - API Key</CardTitle>
-        <CardDescription className="text-xs">
-          <p>ENV API key:</p>
-          <p>{resend_key.envKey ?? "not enabled"}</p>
-          <p>API key from DB:</p>
-          <p>{resend_key.dbKey ?? "not enabled"}</p>
+        <CardDescription className="text-xs space-y-2">
+          <p>
+            Use <code className="text-[10px]">RESEND_API_KEY</code> in Vercel /{" "}
+            <code className="text-[10px]">.env.local</code> only (recommended). The form below is
+            legacy — not required when env is set.
+          </p>
+          <p>ENV API key: {resend_key.envKey ?? "not enabled"}</p>
+          <p>Legacy DB key: {resend_key.dbKey ?? "not enabled"}</p>
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">

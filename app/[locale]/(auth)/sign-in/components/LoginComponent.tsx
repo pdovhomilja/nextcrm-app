@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 
 import { Icons } from "@/components/ui/icons";
@@ -23,19 +24,27 @@ import {
 } from "@/components/ui/input-otp";
 
 type Step = "email" | "otp";
+type EmailAuthMode = "otp" | "password";
 
 export function LoginComponent() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState<Step>("email");
+  const [emailAuthMode, setEmailAuthMode] = useState<EmailAuthMode>("password");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
+
+  useEffect(() => {
+    router.prefetch("/en");
+  }, [router]);
 
   const loginWithGoogle = async () => {
     setIsLoading(true);
     try {
       await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/",
+        callbackURL: "/en",
       });
     } catch (error) {
       toast.error("Something went wrong with Google sign-in.");
@@ -68,6 +77,31 @@ export function LoginComponent() {
     }
   };
 
+  const signInWithPassword = async () => {
+    if (!email || !password) {
+      toast.error("Enter your personal email and password.");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const { error } = await authClient.signIn.email({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+      if (error) {
+        toast.error(error.message || "Invalid email or password.");
+        return;
+      }
+      toast.success("Login successful.");
+      router.push("/en");
+      router.refresh();
+    } catch {
+      toast.error("Sign-in failed.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const verifyOtp = async () => {
     if (otp.length !== 6) {
       toast.error("Please enter the 6-digit code.");
@@ -84,7 +118,8 @@ export function LoginComponent() {
         return;
       }
       toast.success("Login successful.");
-      window.location.href = "/";
+      router.push("/en");
+      router.refresh();
     } catch (error) {
       toast.error("Verification failed.");
     } finally {
@@ -93,17 +128,17 @@ export function LoginComponent() {
   };
 
   return (
-    <Card className="shadow-lg my-5">
-      <CardHeader className="space-y-1">
+    <Card className="my-5 w-full max-w-[336px] border-slate-800 bg-[#111827] text-white shadow-2xl">
+      <CardHeader className="space-y-1 pb-4">
         <CardTitle className="text-2xl">Login</CardTitle>
         <CardDescription>Choose your sign-in method</CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-4">
+      <CardContent className="grid gap-4 pb-7">
         <Button
           variant="outline"
           onClick={loginWithGoogle}
           disabled={isLoading}
-          className="w-full"
+          className="w-full border-slate-700 bg-[#080e1c] text-white hover:bg-slate-800 hover:text-white"
         >
           <Icons.google className="mr-2 h-4 w-4" />
           Continue with Google
@@ -122,22 +157,77 @@ export function LoginComponent() {
 
         {step === "email" && (
           <div className="grid gap-3">
+            <div className="flex gap-2 rounded-md bg-[#080e1c] p-1">
+              <Button
+                type="button"
+                size="sm"
+                variant={emailAuthMode === "password" ? "default" : "ghost"}
+                className="flex-1"
+                onClick={() => setEmailAuthMode("password")}
+              >
+                Password
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={emailAuthMode === "otp" ? "default" : "ghost"}
+                className="flex-1"
+                onClick={() => setEmailAuthMode("otp")}
+              >
+                Email code
+              </Button>
+            </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Personal email</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="name@domain.com"
+                placeholder="you@gmail.com"
+                className="border-slate-700 bg-[#080e1c] text-white placeholder:text-slate-400"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
-                onKeyDown={(e) => e.key === "Enter" && sendOtp()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    if (emailAuthMode === "password") signInWithPassword();
+                    else sendOtp();
+                  }
+                }}
               />
             </div>
-            <Button onClick={sendOtp} disabled={isLoading || !email}>
-              <MailIcon className="mr-2 h-4 w-4" />
-              Send verification code
-            </Button>
+            {emailAuthMode === "password" ? (
+              <>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    autoComplete="current-password"
+                    className="border-slate-700 bg-[#080e1c] text-white placeholder:text-slate-400"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isLoading}
+                    onKeyDown={(e) => e.key === "Enter" && signInWithPassword()}
+                  />
+                </div>
+                <Button
+                  className="bg-[#1784a5] text-slate-950 hover:bg-[#249bbd]"
+                  onClick={signInWithPassword}
+                  disabled={isLoading || !email || !password}
+                >
+                  Sign in with password
+                </Button>
+              </>
+            ) : (
+              <Button
+                className="bg-[#1784a5] text-slate-950 hover:bg-[#249bbd]"
+                onClick={sendOtp}
+                disabled={isLoading || !email}
+              >
+                <MailIcon className="mr-2 h-4 w-4" />
+                Send verification code
+              </Button>
+            )}
           </div>
         )}
 

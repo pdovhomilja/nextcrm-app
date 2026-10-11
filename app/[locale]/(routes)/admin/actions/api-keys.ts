@@ -88,7 +88,8 @@ export async function upsertSystemApiKey(
     }),
   ]);
 
-  revalidatePath("/(en)/admin/llm-keys");
+  // Revalidate the localized route pattern; route groups are omitted from URLs.
+  revalidatePath("/[locale]/admin/llm-keys", "page");
 }
 
 export async function deleteSystemApiKey(provider: ApiKeyProvider): Promise<void> {
@@ -98,5 +99,6 @@ export async function deleteSystemApiKey(provider: ApiKeyProvider): Promise<void
     where: { scope: "SYSTEM", provider },
   });
 
-  revalidatePath("/(en)/admin/llm-keys");
+  // Revalidate the localized route pattern; route groups are omitted from URLs.
+  revalidatePath("/[locale]/admin/llm-keys", "page");
 }

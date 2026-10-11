@@ -16,8 +16,8 @@ export type CalendarScopeLevel = "readonly" | "readwrite";
 
 export function getGoogleOAuthClient(): OAuth2Client {
   return new google.auth.OAuth2(
-    process.env.GOOGLE_CALENDAR_CLIENT_ID,
-    process.env.GOOGLE_CALENDAR_CLIENT_SECRET,
+    process.env.GOOGLE_CALENDAR_CLIENT_ID ?? process.env.GOOGLE_ID,
+    process.env.GOOGLE_CALENDAR_CLIENT_SECRET ?? process.env.GOOGLE_SECRET,
     `${process.env.NEXT_PUBLIC_APP_URL}/api/profile/calendar-connections/google/callback`
   );
 }
@@ -47,5 +47,11 @@ export function getCalendarClientForConnection(connection: {
 }): calendar_v3.Calendar {
   const auth = getGoogleOAuthClient();
   auth.setCredentials({ refresh_token: decrypt(connection.refreshTokenEncrypted) });
-  return google.calendar({ version: "v3", auth });
+  return google.calendar({
+    version: "v3",
+    auth,
+    // The API key identifies the Google Cloud project; OAuth still authorizes
+    // each CRM user's private calendar access.
+    key: process.env.GCP_API_KEY,
+  });
 }

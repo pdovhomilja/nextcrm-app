@@ -994,6 +994,7 @@ model Users {
   account_name     String?
   avatar           String?
   email            String       @unique
+  workEmail        String?      @unique
   emailVerified    Boolean      @default(false)
   image            String?
   role             AppRole      @default(user)
@@ -1030,6 +1031,7 @@ model Users {
   apiTokens            ApiToken[]
   emailAccounts        EmailAccount[]
   calendarConnections  CalendarConnection[]
+  linkedInConnection   LinkedInConnection?
   emails               Email[]
   enrichments_triggered          crm_Contact_Enrichment[]  @relation("enrichment_triggered_by")
   target_enrichments_triggered   crm_Target_Enrichment[]   @relation("target_enrichment_triggered_by")
@@ -1472,10 +1474,17 @@ model ApiToken {
 // EMAIL FEATURE
 // ============================================
 
+enum EmailSendProvider {
+  SMTP
+  RESEND
+}
+
 model EmailAccount {
   id                String    @id @default(uuid()) @db.Uuid
   userId            String    @db.Uuid
   label             String
+  sendProvider      EmailSendProvider @default(SMTP)
+  fromName          String?
   imapHost          String
   imapPort          Int
   imapSsl           Boolean   @default(true)
@@ -1484,7 +1493,7 @@ model EmailAccount {
   smtpSsl           Boolean   @default(true)
   allowSelfSignedTls Boolean  @default(false)
   username          String
-  passwordEncrypted String
+  passwordEncrypted String?
   isActive          Boolean   @default(true)
   sentFolderName    String    @default("Sent")
   lastSyncedAt      DateTime?
@@ -1559,6 +1568,21 @@ model EmailEmbedding {
 
 enum CalendarProvider {
   google
+}
+
+model LinkedInConnection {
+  id                    String    @id @default(uuid()) @db.Uuid
+  userId                String    @unique @db.Uuid
+  accessTokenEncrypted  String
+  refreshTokenEncrypted String?
+  tokenExpiresAt        DateTime?
+  scope                 String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model CalendarConnection {

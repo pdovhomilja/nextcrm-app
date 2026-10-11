@@ -40,8 +40,9 @@ export function ProviderKeyCard({ status }: ProviderKeyCardProps) {
         setKeyValue("");
         setEditing(false);
         toast.success(`${meta.name} key saved`);
-      } catch {
-        toast.error("Failed to save key");
+      } catch (error) {
+        console.error("[v0] Failed to save provider key", error);
+        toast.error("Unable to save the key. Check the server configuration and try again.");
       }
     });
   }

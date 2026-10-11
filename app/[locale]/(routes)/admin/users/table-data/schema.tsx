@@ -10,6 +10,8 @@ export const adminUserSchema = z.object({
   role: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
   email: z.string(),
+  workEmail: z.string().nullable().optional(),
+  username: z.string().nullable().optional(),
   userStatus: z.string(),
   userLanguage: z.string(),
 });

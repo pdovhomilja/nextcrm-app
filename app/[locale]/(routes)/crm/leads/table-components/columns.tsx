@@ -107,7 +107,7 @@ export const createColumns = (
       <DataTableColumnHeader column={column} title="E-mail" />
     ),
 
-    cell: ({ row }) => <div className="w-[150px]">{row.getValue("email")}</div>,
+    cell: ({ row }) => <div className="min-w-[180px] max-w-[240px] truncate">{row.getValue("email") || "—"}</div>,
     enableSorting: true,
     enableHiding: true,
   },
@@ -117,7 +117,7 @@ export const createColumns = (
       <DataTableColumnHeader column={column} title="Phone" />
     ),
 
-    cell: ({ row }) => <div className="w-[150px]">{row.getValue("phone")}</div>,
+    cell: ({ row }) => <div className="min-w-[140px] max-w-[180px] truncate">{row.getValue("phone") || "—"}</div>,
     enableSorting: false,
     enableHiding: false,
   },

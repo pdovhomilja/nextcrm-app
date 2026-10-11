@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, forwardRef } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -21,12 +21,15 @@ type Props = {
   trigger?: React.ReactNode;
 };
 
-export function ComposeModal({
-  accountId,
-  mode = "new",
-  replyTo,
-  trigger,
-}: Props) {
+export const ComposeModal = forwardRef<HTMLDivElement, Props>(function ComposeModal(
+  {
+    accountId,
+    mode = "new",
+    replyTo,
+    trigger,
+  }: Props,
+  ref
+) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [sending, setSending] = useState(false);
@@ -74,39 +77,41 @@ export function ComposeModal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger ?? <Button size="sm">Compose</Button>}
-      </DialogTrigger>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>
-            {mode === "reply" ? "Reply" : mode === "forward" ? "Forward" : "New Email"}
-          </DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div className="space-y-1">
-            <Label>To</Label>
-            <Input value={to} onChange={(e) => setTo(e.target.value)} placeholder="recipient@example.com" />
+    <div ref={ref} className="inline-block">
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          {trigger ?? <Button size="sm">Compose</Button>}
+        </DialogTrigger>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {mode === "reply" ? "Reply" : mode === "forward" ? "Forward" : "New Email"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label>To</Label>
+              <Input value={to} onChange={(e) => setTo(e.target.value)} placeholder="recipient@example.com" />
+            </div>
+            <div className="space-y-1">
+              <Label>CC</Label>
+              <Input value={cc} onChange={(e) => setCc(e.target.value)} placeholder="cc@example.com" />
+            </div>
+            <div className="space-y-1">
+              <Label>Subject</Label>
+              <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label>Message</Label>
+              <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={8} />
+            </div>
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            <Button onClick={handleSend} disabled={sending} className="w-full">
+              {sending ? "Sending…" : "Send"}
+            </Button>
           </div>
-          <div className="space-y-1">
-            <Label>CC</Label>
-            <Input value={cc} onChange={(e) => setCc(e.target.value)} placeholder="cc@example.com" />
-          </div>
-          <div className="space-y-1">
-            <Label>Subject</Label>
-            <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
-          </div>
-          <div className="space-y-1">
-            <Label>Message</Label>
-            <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={8} />
-          </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button onClick={handleSend} disabled={sending} className="w-full">
-            {sending ? "Sending…" : "Send"}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
-}
+});

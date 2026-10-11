@@ -13,8 +13,8 @@ const CrmDashboardPage = async () => {
 
   return (
     <Container
-      title="CRM Dashboard"
-      description="In development. After this compoment is finished, there will be a optimistic update of the data."
+      title="Your revenue workspace"
+      description="A focused view of relationships, opportunities, and the next best action for your team."
     >
       <div className="w-full h-full  overflow-hidden">
         <CRMKanban

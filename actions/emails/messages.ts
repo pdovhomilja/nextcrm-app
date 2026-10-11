@@ -3,9 +3,11 @@ import { getSession } from "@/lib/auth-server";
 
 import { prismadb } from "@/lib/prisma";
 import { decrypt } from "@/lib/email-crypto";
+import { serializeDecimals, serializeDecimalsList } from "@/lib/serialize-decimals";
 import { assertPublicHost, HostNotAllowedError } from "@/lib/net/host-guard";
 import nodemailer from "nodemailer";
-import { EmailFolder } from "@prisma/client";
+import { EmailFolder, EmailSendProvider } from "@prisma/client";
+import { sendMailViaResend } from "@/lib/email/resend-mail";
 
 const PAGE_SIZE = 50;
 const MAX_COUNT = 10_000;
@@ -22,121 +24,137 @@ export async function getEmails(
   page: number,
   search?: string
 ) {
-  const userId = await requireSession();
+  try {
+    const userId = await requireSession();
 
-  const baseWhere = {
-    userId,
-    emailAccountId: accountId,
-    folder,
-    isDeleted: false,
-  } as const;
+    const baseWhere = {
+      userId,
+      emailAccountId: accountId,
+      folder,
+      isDeleted: false,
+    } as const;
 
-  // Build where clause with optional text search fallback
-  const where =
-    search && search.length >= 3
-      ? {
-          ...baseWhere,
-          OR: [
-            { subject: { contains: search, mode: "insensitive" as const } },
-            { fromEmail: { contains: search, mode: "insensitive" as const } },
-            { fromName: { contains: search, mode: "insensitive" as const } },
-          ],
-        }
-      : baseWhere;
+    // Build where clause with optional text search fallback
+    const where =
+      search && search.length >= 3
+        ? {
+            ...baseWhere,
+            OR: [
+              { subject: { contains: search, mode: "insensitive" as const } },
+              { fromEmail: { contains: search, mode: "insensitive" as const } },
+              { fromName: { contains: search, mode: "insensitive" as const } },
+            ],
+          }
+        : baseWhere;
 
-  const [emails, rawCount] = await Promise.all([
-    prismadb.email.findMany({
-      where,
-      orderBy: { sentAt: "desc" },
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
-      select: {
-        id: true,
-        subject: true,
-        fromName: true,
-        fromEmail: true,
-        sentAt: true,
-        isRead: true,
-        folder: true,
-      },
-    }),
-    prismadb.email.count({ where }),
-  ]);
+    const [emails, rawCount] = await Promise.all([
+      prismadb.email.findMany({
+        where,
+        orderBy: { sentAt: "desc" },
+        skip: (page - 1) * PAGE_SIZE,
+        take: PAGE_SIZE,
+        select: {
+          id: true,
+          subject: true,
+          fromName: true,
+          fromEmail: true,
+          sentAt: true,
+          isRead: true,
+          folder: true,
+        },
+      }),
+      prismadb.email.count({ where }),
+    ]);
 
-  const total = Math.min(rawCount, MAX_COUNT);
-  return { emails, total, page, totalPages: Math.ceil(total / PAGE_SIZE) };
+    const total = Math.min(rawCount, MAX_COUNT);
+    return {
+      emails: serializeDecimalsList(emails),
+      total,
+      page,
+      totalPages: Math.ceil(total / PAGE_SIZE),
+    };
+  } catch (error) {
+    console.error("[getEmails] Error:", error);
+    return { emails: [], total: 0, page: 1, totalPages: 0 };
+  }
+
 }
 
 export async function getEmail(id: string) {
-  const userId = await requireSession();
-  const email = await prismadb.email.findFirst({
-    where: { id, userId, isDeleted: false },
-    include: {
-      contacts: { include: { contact: { select: { id: true, first_name: true, last_name: true } } } },
-      accounts: { include: { account: { select: { id: true, name: true } } } },
-    },
-  });
-  if (!email) throw new Error("Not found");
+  try {
+    const userId = await requireSession();
+    const email = await prismadb.email.findFirst({
+      where: { id, userId, isDeleted: false },
+      include: {
+        contacts: { include: { contact: { select: { id: true, first_name: true, last_name: true } } } },
+        accounts: { include: { account: { select: { id: true, name: true } } } },
+      },
+    });
+    if (!email) throw new Error("Not found");
 
-  // Lazy body fetch for emails not yet CRM-linked at sync time
-  if (!email.bodyText && !email.bodyHtml && email.imapUid) {
-    try {
-      const account = await prismadb.emailAccount.findUnique({
-        where: { id: email.emailAccountId },
-        select: {
-          username: true,
-          passwordEncrypted: true,
-          imapHost: true,
-          imapPort: true,
-          imapSsl: true,
-          allowSelfSignedTls: true,
-          sentFolderName: true,
-        },
-      });
-
-      if (account) {
-        const { fetchBodyByUid } = await import("@/inngest/lib/imap-utils");
-        const folderName = email.folder === "SENT" ? (account.sentFolderName || "Sent") : "INBOX";
-        const body = await fetchBodyByUid(
-          {
-            username: account.username,
-            password: decrypt(account.passwordEncrypted),
-            imapHost: account.imapHost,
-            imapPort: account.imapPort,
-            imapSsl: account.imapSsl,
-            allowSelfSignedTls: account.allowSelfSignedTls,
+    // Lazy body fetch for emails not yet CRM-linked at sync time
+    if (!email.bodyText && !email.bodyHtml && email.imapUid) {
+      try {
+        const account = await prismadb.emailAccount.findUnique({
+          where: { id: email.emailAccountId },
+          select: {
+            username: true,
+            passwordEncrypted: true,
+            imapHost: true,
+            imapPort: true,
+            imapSsl: true,
+            allowSelfSignedTls: true,
+            sentFolderName: true,
           },
-          folderName,
-          email.imapUid
-        );
+        });
 
-        if (body.bodyText || body.bodyHtml) {
-          await prismadb.email.update({
-            where: { id },
-            data: { bodyText: body.bodyText ?? null, bodyHtml: body.bodyHtml ?? null },
-          });
-          // Patch in-memory so caller gets the body immediately (before any send that may throw)
-          email.bodyText = body.bodyText ?? null;
-          email.bodyHtml = body.bodyHtml ?? null;
-          // Trigger embed only if already CRM-linked (avoids embedding unrelated emails)
-          const isLinked = email.contacts.length > 0 || email.accounts.length > 0;
-          if (isLinked) {
-            const { inngest } = await import("@/inngest/client");
-            inngest.send({ name: "email/embed-email", data: { emailId: id } });
+        if (account?.passwordEncrypted) {
+          const { fetchBodyByUid } = await import("@/inngest/lib/imap-utils");
+          const folderName = email.folder === "SENT" ? (account.sentFolderName || "Sent") : "INBOX";
+          const body = await fetchBodyByUid(
+            {
+              username: account.username,
+              password: decrypt(account.passwordEncrypted),
+              imapHost: account.imapHost,
+              imapPort: account.imapPort,
+              imapSsl: account.imapSsl,
+              allowSelfSignedTls: account.allowSelfSignedTls,
+            },
+            folderName,
+            email.imapUid
+          );
+
+          if (body.bodyText || body.bodyHtml) {
+            await prismadb.email.update({
+              where: { id },
+              data: { bodyText: body.bodyText ?? null, bodyHtml: body.bodyHtml ?? null },
+            });
+            // Patch in-memory so caller gets the body immediately (before any send that may throw)
+            email.bodyText = body.bodyText ?? null;
+            email.bodyHtml = body.bodyHtml ?? null;
+            // Trigger embed only if already CRM-linked (avoids embedding unrelated emails)
+            const isLinked = email.contacts.length > 0 || email.accounts.length > 0;
+            if (isLinked) {
+              const { inngest } = await import("@/inngest/client");
+              inngest.send({ name: "email/embed-email", data: { emailId: id } });
+            }
           }
         }
+      } catch {
+        // Body fetch failed — return email without body; display will show a fallback
       }
-    } catch {
-      // Body fetch failed — return email without body; display will show a fallback
     }
-  }
 
-  // Mark as read (fire-and-forget)
-  if (!email.isRead) {
-    prismadb.email.update({ where: { id }, data: { isRead: true } }).catch(() => {});
-  }
+    // Mark as read (fire-and-forget)
+    if (!email.isRead) {
+      prismadb.email.update({ where: { id }, data: { isRead: true } }).catch(() => {});
+    }
 
-  return email;
+    return serializeDecimals(email);
+  } catch (error) {
+    console.error("[getEmail] Error:", error);
+    return null;
+  }
 }
 
 export async function deleteEmail(id: string) {
@@ -165,47 +183,63 @@ export async function sendEmail(input: SendInput) {
   });
   if (!account) throw new Error("Account not found");
 
-  let pinned: { address: string; hostname: string };
-  try {
-    pinned = await assertPublicHost(account.smtpHost);
-  } catch (e) {
-    if (e instanceof HostNotAllowedError) throw new Error("Mail host is not allowed");
-    throw e;
+  let rfcMessageId: string;
+
+  if (account.sendProvider === EmailSendProvider.RESEND) {
+    const sent = await sendMailViaResend({
+      fromEmail: account.username,
+      fromName: account.fromName,
+      label: account.label,
+      to: input.to,
+      cc: input.cc,
+      bcc: input.bcc,
+      subject: input.subject,
+      text: input.body,
+      inReplyTo: input.inReplyTo,
+      references: input.references,
+    });
+    rfcMessageId = sent?.id ? `resend-${sent.id}` : `local-${crypto.randomUUID()}@nextcrm`;
+  } else {
+    if (!account.passwordEncrypted) throw new Error("Mailbox password is missing");
+
+    let pinned: { address: string; hostname: string };
+    try {
+      pinned = await assertPublicHost(account.smtpHost);
+    } catch (e) {
+      if (e instanceof HostNotAllowedError) throw new Error("Mail host is not allowed");
+      throw e;
+    }
+
+    const password = decrypt(account.passwordEncrypted);
+
+    const transporter = nodemailer.createTransport({
+      host: pinned.address,
+      port: account.smtpPort,
+      secure: account.smtpSsl,
+      auth: { user: account.username, pass: password },
+      ...({ servername: account.smtpHost } as { servername: string }),
+      tls: { rejectUnauthorized: !account.allowSelfSignedTls },
+    });
+
+    const info = await transporter.sendMail({
+      from: account.username,
+      to: input.to.join(", "),
+      cc: input.cc?.join(", "),
+      bcc: input.bcc?.join(", "),
+      subject: input.subject,
+      text: input.body,
+      inReplyTo: input.inReplyTo,
+      references: input.references,
+    });
+    rfcMessageId = info.messageId ?? `local-${crypto.randomUUID()}@nextcrm`;
   }
-
-  const password = decrypt(account.passwordEncrypted);
-
-  const transporter = nodemailer.createTransport({
-    host: pinned.address,
-    port: account.smtpPort,
-    secure: account.smtpSsl,
-    auth: { user: account.username, pass: password },
-    // servername for TLS SNI (host is a pinned IP). Added via a typed spread so
-    // the object literal keeps only the well-known SMTP props and TS resolves the
-    // SMTP overload correctly.
-    ...({ servername: account.smtpHost } as { servername: string }),
-    // Verify the certificate against the SNI hostname; self-signed servers opt
-    // out per account.
-    tls: { rejectUnauthorized: !account.allowSelfSignedTls },
-  });
-
-  const info = await transporter.sendMail({
-    from: account.username,
-    to: input.to.join(", "),
-    cc: input.cc?.join(", "),
-    bcc: input.bcc?.join(", "),
-    subject: input.subject,
-    text: input.body,
-    inReplyTo: input.inReplyTo,
-    references: input.references,
-  });
 
   // Write sent message to DB immediately so it appears in Sent view
   await prismadb.email.create({
     data: {
       emailAccountId: input.accountId,
       userId,
-      rfcMessageId: info.messageId ?? `local-${crypto.randomUUID()}@nextcrm`,
+      rfcMessageId,
       folder: EmailFolder.SENT,
       subject: input.subject,
       fromEmail: account.username,
