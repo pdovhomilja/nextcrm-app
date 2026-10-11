@@ -5,6 +5,15 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.33.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.32.0...v0.33.0) (2026-10-11)
+
+
+### Added
+
+* **odoo-connector:** take over hand-made CRM products with the same SKU ([174a42c](https://github.com/pdovhomilja/nextcrm-app/commit/174a42c2fbdf4c6744ebbadd6e2eda31d97f1562))
+* **odoo-connector:** take over hand-made CRM products with the same SKU; re-copy missing order lines (0.4.1) ([f8c0059](https://github.com/pdovhomilja/nextcrm-app/commit/f8c00593e58ce4aa38818106eb440d7beaf55bd5))
+* **plugins:** SDK 0.2.5, products.upsertExternal can take over a CRM product with the same SKU ([c41760c](https://github.com/pdovhomilja/nextcrm-app/commit/c41760cb51ff66b6af5d8f62a284ae9b2006b55f))
+
 ## [0.32.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.31.1...v0.32.0) (2026-10-11)
 
 
