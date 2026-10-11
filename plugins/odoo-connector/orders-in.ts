@@ -90,7 +90,8 @@ export async function ensureProducts(ctx: Ctx, client: OdooClient, lines: OdooLi
 
 const plain = (html: string | false | undefined) => (html ? String(html) : "")
   .replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>\s*<p[^>]*>/gi, "\n").replace(/<[^>]+>/g, "")
-  .replace(/&nbsp;/g, " ").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&")
+  // CodeQL: angle brackets never survive (encoded or left by nested tags), so the note can never carry markup.
+  .replace(/&nbsp;/g, " ").replace(/&lt;|&gt;/g, "").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&").replace(/[<>]/g, "")
   .replace(/\n{2,}/g, "\n").trim();
 
 /** Odoo's note as plain text, plus how many lines were left out. */

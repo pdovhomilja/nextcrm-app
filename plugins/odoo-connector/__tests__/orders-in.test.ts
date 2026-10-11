@@ -269,3 +269,10 @@ describe("archived Odoo products on imported orders (Pavel 2026-10-11, option A)
     expect(await m.ctx.store.get(K.product(799))).toBeNull();
   });
 });
+
+it("CodeQL: a note never comes out with markup, even from encoded or nested tags", async () => {
+  const m = setup({ orders: [odooOrder({ note: "<p>a &lt;script&gt;alert(1)&lt;/script&gt; <scr<script>ipt>b</p>" })] });
+  await run(m);
+  expect(m.data.orders[0].note).not.toMatch(/[<>]/);
+  expect(m.data.orders[0].note).toBe("a scriptalert(1)/script iptb");
+});
