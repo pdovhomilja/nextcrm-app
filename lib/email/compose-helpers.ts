@@ -55,5 +55,5 @@ export function buildReplyAllRecipients(
     .map((r) => r.email?.trim())
     .filter((e): e is string => Boolean(e && e.toLowerCase() !== me));
 
-  return { to: [...toSet], cc: [...new Set(cc)] };
+  return { to: Array.from(toSet), cc: Array.from(new Set(cc)) };
 }
