@@ -2,20 +2,31 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Star } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Mail } from "@/app/[locale]/(routes)/emails/data";
 import { useMail } from "@/app/[locale]/(routes)/emails/use-mail";
+import { setEmailStarred } from "@/actions/emails/mailbox-actions";
 
 interface MailListProps {
   items: Mail[];
   page: number;
   totalPages: number;
+  selectedIds: string[];
+  onSelectedIdsChange: (ids: string[]) => void;
 }
 
-export function MailList({ items, page, totalPages }: MailListProps) {
+export function MailList({
+  items,
+  page,
+  totalPages,
+  selectedIds,
+  onSelectedIdsChange,
+}: MailListProps) {
   const [mail, setMail] = useMail();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -26,63 +37,76 @@ export function MailList({ items, page, totalPages }: MailListProps) {
     router.push(`?${p.toString()}`);
   }
 
+  function toggleRow(id: string) {
+    onSelectedIdsChange(
+      selectedIds.includes(id) ? selectedIds.filter((x) => x !== id) : [...selectedIds, id]
+    );
+  }
+
+  async function toggleStar(e: React.MouseEvent, item: Mail) {
+    e.stopPropagation();
+    const next = !item.isStarred;
+    await setEmailStarred(item.id, next);
+    router.refresh();
+  }
+
   return (
-    <ScrollArea className="h-full">
-      <div className="flex flex-col gap-2 p-4 pt-0">
+    <ScrollArea className="h-[min(68vh,720px)]">
+      <div className="flex flex-col gap-1 p-2">
         {items.map((item) => (
-          <button
+          <div
             key={item.id}
+            role="button"
+            tabIndex={0}
             className={cn(
-              "flex flex-col items-start gap-2 rounded-lg border p-3 text-left text-sm transition-all hover:bg-accent",
-              mail.selected === item.id && "bg-muted"
+              "flex gap-2 rounded-xl border border-transparent p-2 text-left text-sm transition-colors hover:border-border/80 hover:bg-muted/60",
+              mail.selected === item.id && "border-primary/25 bg-primary/5 shadow-sm",
+              !item.isRead && mail.selected !== item.id && "bg-background font-medium"
             )}
-            onClick={() =>
-              setMail({
-                ...mail,
-                selected: item.id,
-              })
-            }
+            onClick={() => setMail({ ...mail, selected: item.id })}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") setMail({ ...mail, selected: item.id });
+            }}
           >
-            <div className="flex w-full flex-col gap-1">
-              <div className="flex items-center">
-                <div className="flex items-center gap-2">
-                  <div className="font-semibold">
-                    {item.fromName ?? item.fromEmail ?? "Unknown"}
-                  </div>
-                  {!item.isRead && (
-                    <span className="flex h-2 w-2 rounded-full bg-blue-600" />
-                  )}
+            <Checkbox
+              checked={selectedIds.includes(item.id)}
+              onCheckedChange={() => toggleRow(item.id)}
+              onClick={(e) => e.stopPropagation()}
+              className="mt-1 shrink-0"
+              aria-label={`Select ${item.subject ?? "message"}`}
+            />
+            <button
+              type="button"
+              className="mt-0.5 shrink-0 text-muted-foreground hover:text-amber-500"
+              onClick={(e) => toggleStar(e, item)}
+              aria-label={item.isStarred ? "Unstar" : "Star"}
+            >
+              <Star
+                className={cn("h-4 w-4", item.isStarred && "fill-amber-400 text-amber-500")}
+              />
+            </button>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <div className="truncate font-semibold">
+                  {item.fromName ?? item.fromEmail ?? "Unknown"}
                 </div>
-                <div
-                  className={cn(
-                    "ml-auto text-xs",
-                    mail.selected === item.id
-                      ? "text-foreground"
-                      : "text-muted-foreground"
-                  )}
-                >
+                {!item.isRead && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />}
+                <div className="ml-auto shrink-0 text-xs text-muted-foreground">
                   {item.sentAt
-                    ? formatDistanceToNow(new Date(item.sentAt), {
-                        addSuffix: true,
-                      })
+                    ? formatDistanceToNow(new Date(item.sentAt), { addSuffix: true })
                     : ""}
                 </div>
               </div>
-              <div className="text-xs font-medium">
+              <div className="truncate text-xs font-medium text-foreground/90">
                 {item.subject ?? "(no subject)"}
               </div>
             </div>
-          </button>
+          </div>
         ))}
       </div>
       {totalPages > 1 && (
         <div className="flex items-center justify-between border-t px-4 py-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={page <= 1}
-            onClick={() => navigate(page - 1)}
-          >
+          <Button variant="ghost" size="sm" disabled={page <= 1} onClick={() => navigate(page - 1)}>
             Previous
           </Button>
           <span className="text-xs text-muted-foreground">

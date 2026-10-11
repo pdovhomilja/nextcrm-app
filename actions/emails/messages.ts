@@ -84,7 +84,7 @@ export async function getEmail(id: string) {
   try {
     const userId = await requireSession();
     const email = await prismadb.email.findFirst({
-      where: { id, userId, isDeleted: false },
+      where: { id, userId },
       include: {
         contacts: { include: { contact: { select: { id: true, first_name: true, last_name: true } } } },
         accounts: { include: { account: { select: { id: true, name: true } } } },
@@ -157,11 +157,10 @@ export async function getEmail(id: string) {
   }
 }
 
+/** @deprecated Use trashEmail from mailbox-actions */
 export async function deleteEmail(id: string) {
-  const userId = await requireSession();
-  const email = await prismadb.email.findFirst({ where: { id, userId, isDeleted: false } });
-  if (!email) throw new Error("Not found");
-  await prismadb.email.update({ where: { id }, data: { isDeleted: true } });
+  const { trashEmail } = await import("@/actions/emails/mailbox-actions");
+  await trashEmail(id);
 }
 
 type SendInput = {
@@ -251,4 +250,20 @@ export async function sendEmail(input: SendInput) {
       isRead: true,
     },
   });
+}
+
+export async function getUnreadInboxCount(): Promise<number> {
+  try {
+    const userId = await requireSession();
+    return await prismadb.email.count({
+      where: {
+        userId,
+        folder: EmailFolder.INBOX,
+        isRead: false,
+        isDeleted: false,
+      },
+    });
+  } catch {
+    return 0;
+  }
 }

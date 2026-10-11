@@ -101,7 +101,7 @@ services:
       DB_NAME: ${POSTGRES_DB:-nextcrm}
 
       # App + auth (public URL of this instance, e.g. https://crm.example.com)
-      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-NextCRM}
+      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-VenSai CRM}
       NEXT_PUBLIC_APP_URL: ${APP_URL:-http://localhost:3000}
       BETTER_AUTH_URL: ${APP_URL:-http://localhost:3000}
       # Set once, never change. When empty, the entrypoint generates them on
@@ -121,7 +121,7 @@ services:
       # generated on first start and shared with it (see the inngest service).
       INNGEST_DEV: "0"
       INNGEST_ID: ${INNGEST_ID:-nextcrm}
-      INNGEST_APP_NAME: ${INNGEST_APP_NAME:-NextCRM}
+      INNGEST_APP_NAME: ${INNGEST_APP_NAME:-VenSai CRM}
       INNGEST_EVENT_KEY: ${INNGEST_EVENT_KEY:-}
       INNGEST_SIGNING_KEY: ${INNGEST_SIGNING_KEY:-}
       INNGEST_BASE_URL: ${INNGEST_BASE_URL:-http://inngest:8288}

@@ -1,7 +1,7 @@
 {
   "RootLayout": {
-    "title": "NextCRM",
-    "description": "NextCRM je open source CRM vytvořené na frameworku NextJS."
+    "title": "VenSai CRM",
+    "description": "VenSai CRM — prodej, projekty a týmový e-mail na jednom místě."
   },
   "ModuleMenu": {
     "plugins": "Pluginy",
@@ -30,7 +30,7 @@
   },
   "DashboardPage": {
     "containerTitle": "Přehled",
-    "containerDescription": "Vítejte v NextCRM, zde můžete vidět všechny důležité informace o vašem podniku.",
+    "containerDescription": "Vítejte ve VenSai CRM — zde uvidíte všechny důležité informace o vašem podniku.",
     "totalRevenue": "Celkový obrat",
     "expectedRevenue": "Očekávaný obrat",
     "activeUsers": "Aktivní uživatelé",
@@ -751,7 +751,7 @@
     }
   },
   "CommandComponent": {
-    "shortcutHint": "Stiskněte ⌘J pro otevření příkazové nabídky",
+    "shortcutHint": "Ctrl+K (na Macu Cmd+K) otevře vyhledávání",
     "placeholder": "Zadejte příkaz nebo vyhledávejte...",
     "noResults": "Žádné výsledky nenalezeny.",
     "settings": "Nastavení",

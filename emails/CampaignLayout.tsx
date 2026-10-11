@@ -51,7 +51,7 @@ export const CampaignLayout = ({
             <Section>
               <Text className="text-slate-500 text-xs leading-[20px]">
                 You are receiving this email from{" "}
-                <strong>{process.env.NEXT_PUBLIC_APP_NAME ?? "NextCRM"}</strong>
+                <strong>{process.env.NEXT_PUBLIC_APP_NAME ?? "VenSai CRM"}</strong>
                 .{" "}
                 <Link
                   href={unsubscribeUrl}

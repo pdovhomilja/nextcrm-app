@@ -1531,6 +1531,9 @@ model Email {
   bodyHtml        String?
   sentAt          DateTime?
   isRead          Boolean     @default(false)
+  isSpam          Boolean     @default(false)
+  isArchived      Boolean     @default(false)
+  isStarred       Boolean     @default(false)
   isDeleted       Boolean     @default(false)
   updatedAt       DateTime    @updatedAt
   createdAt       DateTime    @default(now())
@@ -1548,6 +1551,8 @@ model Email {
   @@index([isDeleted])
   @@index([sentAt])
   @@index([userId, folder, isDeleted, isRead])
+  @@index([userId, emailAccountId, isSpam, isDeleted])
+  @@index([userId, emailAccountId, isArchived, isDeleted])
 }
 
 model EmailEmbedding {

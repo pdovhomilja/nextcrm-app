@@ -12,6 +12,7 @@ import { getTranslations } from "next-intl/server";
 import { AvatarProvider } from "@/context/avatar-context";
 import { CurrencyProvider } from "@/context/currency-context";
 import { getEnabledCurrencies, getDefaultCurrency } from "@/lib/currency";
+import { getAppName } from "@/lib/app-name";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -108,7 +109,9 @@ export default async function AppLayout({
   const { getPluginNavItems } = await import("@/lib/plugins/nav");
   const { mapLegacyRole } = await import("@/lib/authz/roles");
   const { getLocale } = await import("next-intl/server");
+  const { getHeaderNotifications } = await import("@/actions/notifications/header-notifications");
   const pluginNav = await getPluginNavItems(mapLegacyRole(user?.role), (await getLocale()) as "en" | "cz" | "de" | "uk");
+  const headerNotifications = await getHeaderNotifications();
 
   //console.log(typeof build, "build");
   return (
@@ -119,12 +122,15 @@ export default async function AppLayout({
         dict={translations}
         session={session}
         pluginNav={pluginNav}
-        appName={process.env.NEXT_PUBLIC_APP_NAME || "NextCRM"}
+        appName={getAppName()}
       />
       <SidebarInset>
         <Header
           id={session.user.id as string}
           lang={session.user.userLanguage as string}
+          unreadEmailCount={headerNotifications.emailUnreadCount}
+          notificationCount={headerNotifications.totalCount}
+          notifications={headerNotifications.items}
         />
         {/*
           Task Group 3.3: Footer Relocation
@@ -132,11 +138,9 @@ export default async function AppLayout({
           - This allows the footer to scroll with the page content
           - Footer will appear at the bottom of the content, not fixed at viewport bottom
         */}
-        <div className="flex flex-col flex-grow overflow-y-auto h-full w-full min-w-0">
-          <div className="flex-grow py-5 w-full min-w-0">
-            <div className="w-full px-4 min-w-0">
-              {children}
-            </div>
+        <div className="flex h-full min-w-0 w-full flex-grow flex-col overflow-y-auto bg-muted/20">
+          <div className="min-w-0 w-full flex-grow py-4 sm:py-5">
+            <div className="min-w-0 w-full px-3 sm:px-5">{children}</div>
           </div>
           <Footer />
         </div>

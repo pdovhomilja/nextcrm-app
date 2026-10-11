@@ -7,6 +7,7 @@ import { ac, admin, manager, user } from "@/lib/auth-permissions";
 import { newUserNotify } from "@/lib/new-user-notify";
 import resendHelper from "@/lib/resend";
 import { getBetterAuthTrustedOrigins } from "@/lib/auth-base-url";
+import { getAppName } from "@/lib/app-name";
 
 const googleClientId = process.env.GOOGLE_ID || process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_SECRET || process.env.GOOGLE_CLIENT_SECRET;
@@ -93,7 +94,7 @@ export const auth = betterAuth({
         try {
           const resend = await resendHelper();
           await resend.emails.send({
-            from: `${process.env.NEXT_PUBLIC_APP_NAME || "NextCRM"} <${process.env.EMAIL_FROM || "noreply@domain.com"}>`,
+            from: `${getAppName()} <${process.env.EMAIL_FROM || "noreply@domain.com"}>`,
             to: email,
             subject: `Your verification code: ${otp}`,
             text: `Your one-time verification code is: ${otp}\n\nThis code expires in 5 minutes.\n\nIf you did not request this, please ignore this email.`,

@@ -1,7 +1,7 @@
 {
   "RootLayout": {
-    "title": "NextCRM",
-    "description": "NextCRM — це CRM з відкритим вихідним кодом, створена на основі NextJS."
+    "title": "VenSai CRM",
+    "description": "VenSai CRM — продажі, проєкти та командна пошта в одному місці."
   },
   "ModuleMenu": {
     "plugins": "Плагіни",
@@ -31,7 +31,7 @@
   "DashboardPage": {
     "containerTitle": "Панель приладів",
     "totalRevenue": "Загальна виручка",
-    "containerDescription": "Ласкаво просимо до NextCRM, тут Ви можете побачити всю важливу інформацію про ваш бізнес.",
+    "containerDescription": "Ласкаво просимо до VenSai CRM — тут ви побачите всю важливу інформацію про ваш бізнес.",
     "expectedRevenue": "Очікуваний дохід",
     "activeUsers": "Активні користувачі",
     "accounts": "Компанії",
@@ -748,7 +748,7 @@
     }
   },
   "CommandComponent": {
-    "shortcutHint": "Натисніть ⌘J, щоб відкрити командне меню",
+    "shortcutHint": "Ctrl+K (Cmd+K на Mac) — відкрити пошук",
     "placeholder": "Введіть команду або пошук...",
     "noResults": "Результатів не знайдено.",
     "settings": "Налаштування",

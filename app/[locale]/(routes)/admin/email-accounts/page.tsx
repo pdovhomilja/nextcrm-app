@@ -16,7 +16,7 @@ export default async function AdminEmailAccountsPage() {
   return (
     <Container
       title="Email mailboxes"
-      description="Team inboxes on Resend only — API for sending, webhook for receiving. No mail server needed."
+      description="Create team mailboxes here. Users read and send mail under E-mails in the sidebar (/emails)."
     >
       <div className="mx-auto max-w-4xl space-y-8 pb-8">
         <EmailMailboxStats accounts={accounts} />

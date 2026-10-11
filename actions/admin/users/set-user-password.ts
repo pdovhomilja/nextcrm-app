@@ -14,6 +14,7 @@ import {
   upsertCredentialAccount,
 } from "@/lib/auth-credentials";
 import EmployeeWelcomeEmail from "@/emails/EmployeeWelcome";
+import { getAppName } from "@/lib/app-name";
 
 export async function setUserPassword(input: {
   userId: string;
@@ -57,7 +58,7 @@ export async function setUserPassword(input: {
     try {
       const resend = await resendHelper();
       const appUrl = getPublicAppUrl();
-      const appName = process.env.NEXT_PUBLIC_APP_NAME || "NextCRM";
+      const appName = getAppName();
       const fromAddress = process.env.EMAIL_FROM || process.env.RESEND_FROM_EMAIL;
 
       await resend.emails.send({

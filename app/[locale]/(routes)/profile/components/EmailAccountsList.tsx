@@ -41,6 +41,7 @@ import {
   User,
   Zap,
 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -258,10 +259,20 @@ export function EmailAccountsList(props: EmailAccountsListProps) {
             All send and receive traffic uses Resend — no separate mail server required.
           </p>
         </div>
-        <Button className="gap-2 shadow-sm" onClick={() => setOpen(true)}>
-          <Plus className="h-4 w-4" />
-          Add Resend mailbox
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {!isAdmin && resendAccounts.some((a) => a.isActive) && (
+            <Button asChild variant="secondary" className="gap-2">
+              <Link href="/emails">
+                <ArrowDownLeft className="h-4 w-4" />
+                Open inbox
+              </Link>
+            </Button>
+          )}
+          <Button className="gap-2 shadow-sm" onClick={() => setOpen(true)}>
+            <Plus className="h-4 w-4" />
+            Add Resend mailbox
+          </Button>
+        </div>
       </div>
 
       {resendAccounts.length === 0 && legacyAccounts.length === 0 ? (

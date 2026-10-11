@@ -1,5 +1,9 @@
 import Feedback from "./Feedback";
 import FulltextSearch from "./FulltextSearch";
+import { HeaderMailButton } from "./HeaderMailButton";
+import { HeaderNotifications } from "./HeaderNotifications";
+import { HeaderChatPanel } from "./HeaderChatPanel";
+import type { HeaderNotificationItem } from "@/actions/notifications/header-notifications";
 
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -12,6 +16,9 @@ import { CurrencySwitcher } from "@/components/CurrencySwitcher";
 type Props = {
   id: string;
   lang: string;
+  unreadEmailCount?: number;
+  notificationCount?: number;
+  notifications?: HeaderNotificationItem[];
 };
 
 /**
@@ -32,26 +39,37 @@ type Props = {
  * Note: User profile functionality (avatar, name, email, user actions) is now
  * handled by the NavUser component in the sidebar footer (Task 3.1).
  */
-const Header = ({ id, lang }: Props) => {
+const Header = ({
+  id,
+  lang,
+  unreadEmailCount = 0,
+  notificationCount = 0,
+  notifications = [],
+}: Props) => {
   return (
-    <>
-      <div className="flex h-16 shrink-0 items-center justify-between gap-2 px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-        <div className="flex items-center gap-2">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border/60 bg-background/85 px-4 backdrop-blur-md supports-[backdrop-filter]:bg-background/70">
+      <div className="flex min-w-0 flex-1 items-center gap-2">
+        <SidebarTrigger className="-ml-1 shrink-0" />
+        <Separator orientation="vertical" className="mr-1 hidden h-4 sm:block" />
+        <div className="min-w-0 flex-1 max-w-xl">
           <FulltextSearch />
         </div>
-        <div className="flex items-center gap-2">
-          <CommandComponent />
-          <SetLanguage userId={id} />
+      </div>
+      <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
+        <HeaderMailButton unreadCount={unreadEmailCount} />
+        <HeaderChatPanel />
+        <HeaderNotifications totalCount={notificationCount} items={notifications} />
+        <Separator orientation="vertical" className="mx-1 hidden h-4 sm:block" />
+        <CommandComponent />
+        <SetLanguage userId={id} />
+        <div className="hidden items-center gap-0.5 md:flex">
           <Feedback />
           <CurrencySwitcher />
-          <ThemeToggle />
-          <SupportComponent />
         </div>
+        <ThemeToggle />
+        <SupportComponent />
       </div>
-      <Separator />
-    </>
+    </header>
   );
 };
 

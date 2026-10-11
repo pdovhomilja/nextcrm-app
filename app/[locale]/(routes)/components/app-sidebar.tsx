@@ -135,7 +135,11 @@ export function AppSidebar({
   };
 
   return (
-    <Sidebar collapsible="icon" className="border-sidebar-border/70" {...props}>
+    <Sidebar
+      collapsible="icon"
+      className="border-sidebar-border/80 shadow-[1px_0_0_0_hsl(var(--sidebar-border))]"
+      {...props}
+    >
       {/* Header with Logo and Branding */}
       <SidebarHeader>
         <div
@@ -144,7 +148,7 @@ export function AppSidebar({
             isExpanded ? "gap-x-4" : "justify-center",
           )}
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-cyan-400/20">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary/10 ring-1 ring-primary/15">
             {/* The logo is served from the supplied branded asset URL. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -160,8 +164,10 @@ export function AppSidebar({
               !isExpanded ? "w-0 opacity-0" : "w-auto opacity-100",
             )}
           >
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">HCTPL</p>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">VenSai CRM</h1>
+            <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              Workspace
+            </p>
+            <h1 className="text-base font-semibold tracking-tight text-foreground">{appName}</h1>
           </div>
         </div>
       </SidebarHeader>

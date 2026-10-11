@@ -1,8 +1,9 @@
 import { Inngest } from "inngest";
+import { DEFAULT_APP_NAME } from "@/lib/app-name";
 
 export const inngest = new Inngest({
   id: process.env.INNGEST_ID || "nextcrm",
-  name: process.env.INNGEST_APP_NAME || "NextCRM",
+  name: process.env.INNGEST_APP_NAME || DEFAULT_APP_NAME,
   eventKey: process.env.INNGEST_EVENT_KEY,
   signingKey: process.env.INNGEST_SIGNING_KEY,
 });

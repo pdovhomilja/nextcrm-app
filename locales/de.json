@@ -1,7 +1,7 @@
 {
   "RootLayout": {
-    "title": "NextCRM",
-    "description": "Willkommen bei NextCRM CRM mit Prisma und Next.js 13"
+    "title": "VenSai CRM",
+    "description": "VenSai CRM — Vertrieb, Projekte und Team-E-Mail an einem Ort."
   },
   "ModuleMenu": {
     "plugins": "Plugins",
@@ -31,7 +31,7 @@
   "DashboardPage": {
     "containerTitle": "Dashboard",
     "totalRevenue": "Gesamtumsatz",
-    "containerDescription": "Willkommen bei NextCRM, hier können Sie alle wichtigen Informationen über Ihr Unternehmen sehen.",
+    "containerDescription": "Willkommen bei VenSai CRM — hier sehen Sie alle wichtigen Informationen über Ihr Unternehmen.",
     "expectedRevenue": "Erwarteter Umsatz",
     "activeUsers": "Aktive Benutzer",
     "accounts": "Unternehmen",
@@ -748,7 +748,7 @@
     }
   },
   "CommandComponent": {
-    "shortcutHint": "Drücken Sie ⌘J, um das Befehlsmenü zu öffnen",
+    "shortcutHint": "Strg+K (Cmd+K auf dem Mac) öffnet die Suche",
     "placeholder": "Befehl eingeben oder suchen...",
     "noResults": "Keine Ergebnisse gefunden.",
     "settings": "Einstellungen",

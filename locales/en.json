@@ -1,7 +1,7 @@
 {
   "RootLayout": {
-    "title": "NextCRM",
-    "description": "NextCRM is an open source CRM build on top of NextJS."
+    "title": "VenSai CRM",
+    "description": "VenSai CRM — sales, projects, and team mail in one place."
   },
   "ModuleMenu": {
     "plugins": "Plugins",
@@ -31,7 +31,7 @@
   "DashboardPage": {
     "containerTitle": "Dashboard",
     "totalRevenue": "Total revenue",
-    "containerDescription": "Welcome to NextCRM, here you can see all important information about your business.",
+    "containerDescription": "Welcome to VenSai CRM — here you can see all important information about your business.",
     "expectedRevenue": "Expected revenue",
     "activeUsers": "Active users",
     "accounts": "Companies",
@@ -748,7 +748,7 @@
     }
   },
   "CommandComponent": {
-    "shortcutHint": "Press ⌘J to open command menu",
+    "shortcutHint": "Press Ctrl+K (Cmd+K on Mac) to open search",
     "placeholder": "Type a command or search...",
     "noResults": "No results found.",
     "settings": "Settings",

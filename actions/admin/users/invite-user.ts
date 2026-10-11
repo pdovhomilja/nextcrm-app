@@ -21,6 +21,7 @@ import {
 } from "@/lib/auth-credentials";
 import { createEmailAccountForUser } from "@/actions/emails/accounts";
 import EmployeeWelcomeEmail from "@/emails/EmployeeWelcome";
+import { getAppName } from "@/lib/app-name";
 
 export type InviteEmployeeInput = {
   name: string;
@@ -132,7 +133,7 @@ export const inviteUser = async (data: InviteEmployeeInput) => {
     }
 
     const appUrl = getPublicAppUrl();
-    const appName = process.env.NEXT_PUBLIC_APP_NAME || "NextCRM";
+    const appName = getAppName();
     const fromAddress = process.env.EMAIL_FROM || process.env.RESEND_FROM_EMAIL;
 
     await resend.emails.send({

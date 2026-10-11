@@ -1,16 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  Calculator,
-  Calendar,
-  CreditCard,
-  FileText,
-  LogOut,
-  Settings,
-  Smile,
-  User,
-} from "lucide-react";
+import { FileText, LogOut, Search, Settings, User } from "lucide-react";
 import { searchDocuments, type DocumentSearchResult } from "@/actions/documents/search-documents";
 
 import {
@@ -23,12 +14,20 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "@/components/ui/command";
-import { redirect } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
 import { signOut } from "@/lib/auth-client";
 import { getCommandShortcutAction } from "@/lib/command-shortcuts";
+import { useModKeyLabel } from "@/hooks/use-mod-key";
+import { KbdShortcut } from "@/components/KbdShortcut";
 import { useTranslations } from "next-intl";
+
+function ModCommandShortcut({ keys }: { keys: string[] }) {
+  const mod = useModKeyLabel();
+  const label = keys.map((k) => (k === "mod" ? mod : k)).join(" + ");
+  return <CommandShortcut>{label}</CommandShortcut>;
+}
 
 export function CommandComponent() {
   const [open, setOpen] = React.useState(false);
@@ -36,6 +35,7 @@ export function CommandComponent() {
   const [docResults, setDocResults] = React.useState<DocumentSearchResult[]>([]);
   const router = useRouter();
   const t = useTranslations("CommandComponent");
+  const mod = useModKeyLabel();
 
   React.useEffect(() => {
     if (!searchQuery || searchQuery.length < 2) {
@@ -74,12 +74,29 @@ export function CommandComponent() {
   }, [router]);
 
   return (
-    <div className="hidden lg:block">
-      <p className="text-sm text-muted-foreground">
-        <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-          <span className="text-xs">⌘</span>K
-        </kbd>
-      </p>
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="hidden h-8 gap-2 border-border/70 bg-background/80 px-2.5 text-muted-foreground shadow-none hover:bg-muted/60 md:inline-flex"
+        onClick={() => setOpen(true)}
+        aria-label={`Search (${mod}+K)`}
+      >
+        <Search className="h-3.5 w-3.5 shrink-0 opacity-70" />
+        <span className="hidden text-xs lg:inline">Search</span>
+        <KbdShortcut keys={["mod", "K"]} className="hidden lg:inline-flex" />
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="h-9 w-9 rounded-full md:hidden"
+        onClick={() => setOpen(true)}
+        aria-label="Search"
+      >
+        <Search className="h-[1.15rem] w-[1.15rem]" />
+      </Button>
       <CommandDialog open={open} onOpenChange={setOpen}>
         <CommandInput
           placeholder={t("placeholder")}
@@ -88,20 +105,6 @@ export function CommandComponent() {
         />
         <CommandList>
           <CommandEmpty>{t("noResults")}</CommandEmpty>
-          {/*           <CommandGroup heading="Suggestions">
-            <CommandItem>
-              <Calendar className="mr-2 h-4 w-4" />
-              <span>Calendar</span>
-            </CommandItem>
-            <CommandItem>
-              <Smile className="mr-2 h-4 w-4" />
-              <span>Search Emoji</span>
-            </CommandItem>
-            <CommandItem>
-              <Calculator className="mr-2 h-4 w-4" />
-              <span>Calculator</span>
-            </CommandItem>
-          </CommandGroup> */}
           {docResults.length > 0 && (
             <CommandGroup heading="Documents">
               {docResults.map((doc) => (
@@ -127,23 +130,38 @@ export function CommandComponent() {
           )}
           <CommandSeparator />
           <CommandGroup heading={t("settings")}>
-            <CommandItem onClick={() => redirect("/")}>
+            <CommandItem
+              onSelect={() => {
+                router.push("/");
+                setOpen(false);
+              }}
+            >
               <User className="mr-2 h-4 w-4" />
               <span>{t("dashboard")}</span>
-              <CommandShortcut>Shift + ⌘ + D</CommandShortcut>
+              <ModCommandShortcut keys={["Shift", "mod", "D"]} />
             </CommandItem>
-            <CommandItem onClick={() => redirect("/profile")}>
+            <CommandItem
+              onSelect={() => {
+                router.push("/profile");
+                setOpen(false);
+              }}
+            >
               <Settings className="mr-2 h-4 w-4" />
               <span>{t("profileSettings")}</span>
-              <CommandShortcut>Shift + ⌘ + P</CommandShortcut>
+              <ModCommandShortcut keys={["Shift", "mod", "P"]} />
             </CommandItem>
-            <CommandItem onClick={async () => { await signOut(); window.location.href = "/sign-in"; }}>
+            <CommandItem
+              onSelect={async () => {
+                await signOut();
+                window.location.href = "/sign-in";
+              }}
+            >
               <LogOut className="mr-2 h-4 w-4" />
               <span>{t("logout")}</span>
             </CommandItem>
           </CommandGroup>
         </CommandList>
       </CommandDialog>
-    </div>
+    </>
   );
 }

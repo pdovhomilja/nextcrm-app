@@ -1,22 +1,6 @@
-import { Wrench } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { NavItem } from "../nav-main";
-
-/**
- * Administration Module Menu Item - Task Group 2.7
- *
- * Converted from Link component to navigation item object.
- * Returns a NavItem object for Administration navigation.
- *
- * Administration module is a simple navigation item (not a collapsible group)
- * pointing to the admin panel at /admin.
- *
- * IMPORTANT: This menu item should ONLY be visible to admin users.
- * Role-based visibility check (session.user.role === "admin") is implemented
- * in the app-sidebar.tsx component, not here.
- *
- * @param title - Localized label for Administration module
- * @returns NavItem object for Administration navigation
- */
+import { ADMIN_NAV_ITEMS } from "@/lib/admin-nav";
 
 type Props = {
   title: string;
@@ -25,8 +9,11 @@ type Props = {
 export const getAdministrationMenuItem = ({ title }: Props): NavItem => {
   return {
     title,
-    url: "/admin",
-    icon: Wrench,
+    icon: ShieldCheck,
+    items: ADMIN_NAV_ITEMS.map((item) => ({
+      title: item.title,
+      url: item.url,
+    })),
   };
 };
 

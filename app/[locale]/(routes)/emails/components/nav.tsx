@@ -4,7 +4,6 @@ import Link from "next/link";
 import { LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
@@ -24,64 +23,51 @@ interface NavProps {
 
 export function Nav({ links, isCollapsed }: NavProps) {
   return (
-    <div
-      data-collapsed={isCollapsed}
-      className="group flex flex-col gap-4 py-2 data-[collapsed=true]:py-2"
-    >
-      <nav className="grid gap-1 px-2 group-[[data-collapsed=true]]:px-2">
-        {links.map((link, index) =>
-          isCollapsed ? (
-            <Tooltip key={index} delayDuration={0}>
-              <TooltipTrigger asChild>
-                <Link
-                  href={link.href}
-                  className={cn(
-                    buttonVariants({ variant: link.variant, size: "icon" }),
-                    "h-8 w-8",
-                    link.variant === "default" &&
-                      "dark:bg-muted dark:text-muted-foreground"
-                  )}
-                >
-                  <link.icon className="h-4 w-4" />
-                  <span className="sr-only">{link.title}</span>
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="flex items-center gap-4">
+    <nav className="flex flex-col gap-0.5 px-2 py-2">
+      {links.map((link) => {
+        const active = link.variant === "default";
+        const inner = (
+          <Link
+            href={link.href}
+            className={cn(
+              "group flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm font-medium transition-all",
+              active
+                ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
+                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+              isCollapsed && "justify-center px-2"
+            )}
+          >
+            <link.icon className={cn("h-4 w-4 shrink-0", active && "opacity-95")} />
+            {!isCollapsed && <span className="truncate">{link.title}</span>}
+            {!isCollapsed && link.label && (
+              <span
+                className={cn(
+                  "ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums",
+                  active ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"
+                )}
+              >
+                {link.label}
+              </span>
+            )}
+          </Link>
+        );
+
+        if (isCollapsed) {
+          return (
+            <Tooltip key={link.title} delayDuration={0}>
+              <TooltipTrigger asChild>{inner}</TooltipTrigger>
+              <TooltipContent side="right" className="flex items-center gap-2">
                 {link.title}
                 {link.label && (
-                  <span className="ml-auto text-muted-foreground">
-                    {link.label}
-                  </span>
+                  <span className="text-muted-foreground">{link.label}</span>
                 )}
               </TooltipContent>
             </Tooltip>
-          ) : (
-            <Link
-              key={index}
-              href={link.href}
-              className={cn(
-                buttonVariants({ variant: link.variant, size: "sm" }),
-                link.variant === "default" && "dark:bg-muted dark:text-white",
-                "justify-start"
-              )}
-            >
-              <link.icon className="mr-2 h-4 w-4" />
-              {link.title}
-              {link.label && (
-                <span
-                  className={cn(
-                    "ml-auto",
-                    link.variant === "default" &&
-                      "text-background dark:text-white"
-                  )}
-                >
-                  {link.label}
-                </span>
-              )}
-            </Link>
-          )
-        )}
-      </nav>
-    </div>
+          );
+        }
+
+        return <div key={link.title}>{inner}</div>;
+      })}
+    </nav>
   );
 }
