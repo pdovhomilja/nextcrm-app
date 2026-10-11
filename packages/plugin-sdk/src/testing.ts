@@ -79,9 +79,15 @@ function externalProducts(rows: RecordData[]) {
   const t = table(rows);
   return {
     ...t,
-    async upsertExternal(ref: string, f: ExternalProductInput) {
+    async upsertExternal(ref: string, f: ExternalProductInput, opts: { adoptBySku?: boolean } = {}) {
       const row = rows.find((r) => r.source === "EXTERNAL" && r.externalRef === ref);
       if (row) { Object.assign(row, f); return { id: row.id as string, created: false }; }
+      const clash = f.sku ? rows.find((r) => r.sku === f.sku) : undefined;
+      if (clash && opts.adoptBySku && clash.source !== "EXTERNAL" && clash.deletedAt == null) {
+        Object.assign(clash, f, { source: "EXTERNAL", externalRef: ref });
+        return { id: clash.id as string, created: false, adopted: true };
+      }
+      if (clash) throw new Error(`SKU used by a ${clash.source === "EXTERNAL" ? "different external" : "CRM"} product: ${f.sku}`);
       const created = await t.create({ ...f, source: "EXTERNAL", externalRef: ref, deletedAt: null });
       return { id: created.id as string, created: true };
     },

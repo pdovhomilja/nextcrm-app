@@ -28,7 +28,7 @@ it("needs activities:read", async () => {
   await expect(api.activities.findForRecord("account", "acc-1")).rejects.toBeInstanceOf(PluginPermissionError);
 });
 
-it("bumps the SDK to 0.2.4", () => expect(SDK_VERSION).toBe("0.2.4"));
+it("bumps the SDK to 0.2.5", () => expect(SDK_VERSION).toBe("0.2.5"));
 
 it("test context filters activities by link, type, status and date", async () => {
   const ctx = createTestContext({ data: { activities: [

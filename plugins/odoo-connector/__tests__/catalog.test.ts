@@ -97,3 +97,14 @@ it("keeps an account's list when the customer's Odoo list is not imported", asyn
   expect(data.accounts[0].pricelist_id).toBeUndefined();
   expect((await ctx.store.get<{ odooPriceList: unknown }>(K.account(data.accounts[0].id as string)))?.odooPriceList).toEqual([250, "Other"]);
 });
+
+it("takes over a hand-made CRM product with the same SKU instead of failing (Pavel 2026-10-12, OXO)", async () => {
+  const c = cat();
+  const { ctx, client, data } = mkCatalog([company(1)], c, {});
+  data.products.push({ id: "crm-1", source: "CRM", externalRef: null, sku: "800017", name: "Víčko bílé", status: "ACTIVE", deletedAt: null });
+  const s = await runSync(ctx, client, now);
+  expect(s.catalog).toMatchObject({ productsCreated: 1, productsUpdated: 1, productsFailed: 0 });
+  expect(data.products.find((p) => p.id === "crm-1")).toMatchObject({ source: "EXTERNAL", externalRef: "500", name: "[800017] Lid" });
+  expect(await ctx.store.get(K.product(500))).toMatchObject({ productId: "crm-1" });
+  expect((ctx as any).logs.some((l: { message: string }) => l.message.startsWith("Took over CRM product 800017"))).toBe(true);
+});

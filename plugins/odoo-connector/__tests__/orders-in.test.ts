@@ -276,3 +276,40 @@ it("CodeQL: a note never comes out with markup, even from encoded or nested tags
   expect(m.data.orders[0].note).not.toMatch(/[<>]/);
   expect(m.data.orders[0].note).toBe("a scriptalert(1)/script b");
 });
+
+describe("hand-made CRM products and missing lines (Pavel 2026-10-12, OXO)", () => {
+  const variant = { id: 799, display_name: "[511013] K Bob Jahoda", default_code: "511013", description_sale: false, type: "consu", active: true, sale_ok: true, lst_price: 35.96, standard_price: 20, currency_id: [9, "CZK"], taxes_id: [], uom_id: [1, "ks"], categ_id: false, product_tmpl_id: [70, "x"], write_date: "2026-01-01 00:00:00" };
+
+  it("the order import takes over a hand-made product with the same SKU", async () => {
+    const m = setup({ lines: [line({ product_id: [799, "K Bob"] })], variants: [variant], taxes: [] }, { products: [{ id: "p1", source: "EXTERNAL", externalRef: "700", sku: "800009", name: "Scoop", status: "ACTIVE", deletedAt: null }, { id: "hand-1", source: "CRM", sku: "511013", name: "Popping boba jahoda", status: "ACTIVE", deletedAt: null }] });
+    await run(m);
+    expect(m.data.orders[0].lines).toEqual([{ productId: "hand-1", quantity: 2, unitPrice: 100 }]);
+    expect(m.data.products.find((p) => p.id === "hand-1")).toMatchObject({ source: "EXTERNAL", externalRef: "799" });
+  });
+
+  it("an imported order re-copies its missing lines once the product exists, without an Odoo change", async () => {
+    const m = setup({ lines: [line(), line({ id: 2, product_id: [799, "K Bob"], product_uom_qty: 3, price_unit: 10 })] });
+    await run(m);
+    expect(m.data.orders[0].note).toBe("Leave at the gate\norders.linesMissing");
+    m.data.products.push({ id: "p799", source: "EXTERNAL", externalRef: "799", sku: "511013", name: "K Bob", status: "ACTIVE", deletedAt: null });
+    await m.ctx.store.set(K.product(799), { productId: "p799", tmplId: 70, categoryRef: null });
+    await syncOrderStatuses({ ctx: m.ctx, client: m.client, dry: false, now });
+    expect(m.data.orders[0].lines).toEqual([{ productId: "p1", quantity: 2, unitPrice: 100 }, { productId: "p799", quantity: 3, unitPrice: 10 }]);
+    expect(m.data.orders[0].note).toBe("Leave at the gate");
+    const update = jest.spyOn(m.ctx.data.orders, "update");
+    await syncOrderStatuses({ ctx: m.ctx, client: m.client, dry: false, now });
+    expect(update).not.toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ lines: expect.anything() }));
+  });
+
+  it("orders imported by 0.4.0 (no missing count stored) are re-copied once", async () => {
+    const m = setup();
+    await run(m);
+    const id = m.data.orders[0].id as string;
+    const { missing: _m, ...old } = (await m.ctx.store.get<any>(K.order(id)));
+    await m.ctx.store.set(K.order(id), old);
+    m.sales.lines[0].product_uom_qty = 4;
+    await syncOrderStatuses({ ctx: m.ctx, client: m.client, dry: false, now });
+    expect(m.data.orders[0].lines).toEqual([{ productId: "p1", quantity: 4, unitPrice: 100 }]);
+    expect((await m.ctx.store.get<any>(K.order(id))).missing).toBe(0);
+  });
+});

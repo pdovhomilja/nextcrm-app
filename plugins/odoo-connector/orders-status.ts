@@ -71,7 +71,9 @@ export async function syncOrderStatuses(a: { ctx: Ctx; client: OdooClient; dry: 
   // Spec § 4.4: imported orders follow Odoo's lines and notice a changed customer.
   const imp = open.filter((o) => o.link.imported && byId.has(o.link.odooId));
   const commercial = await commercialOf(client, imp.map((o) => byId.get(o.link.odooId)!.partner_id).filter((p): p is [number, string] => !!p).map((p) => p[0]));
-  const changed = imp.filter((o) => byId.get(o.link.odooId)!.write_date !== o.link.writeDate).map((o) => o.link.odooId);
+  // Also re-read orders with lines left out (their products may exist now) and 0.4.0 imports that never counted them.
+  const recopy = (o: { link: OrderLink }) => byId.get(o.link.odooId)!.write_date !== o.link.writeDate || o.link.missing === undefined || o.link.missing > 0;
+  const changed = imp.filter(recopy).map((o) => o.link.odooId);
   const freshLines = dry ? [] : await readLines(client, changed);
   if (freshLines.length) await ensureProducts(ctx, client, freshLines);
   for (const o of open) {
@@ -105,9 +107,11 @@ export async function syncOrderStatuses(a: { ctx: Ctx; client: OdooClient; dry: 
       back, missingNotified: undefined,
     };
     if (o.link.imported && !dry) {
-      if (sale.write_date && sale.write_date !== o.link.writeDate) {
+      if (changed.includes(sale.id)) {
         const { lines, missing } = await crmLines(ctx, freshLines.filter((l) => l.order_id && l.order_id[0] === sale.id));
-        try { await ctx.data.orders.update(o.orderId, { lines, note: noteFor(ctx, sale.note, missing) }); link.writeDate = sale.write_date; }
+        // Write only when Odoo changed, the count was never stored, or a missing product has appeared since.
+        const write = sale.write_date !== o.link.writeDate || o.link.missing === undefined || missing < (o.link.missing ?? 0);
+        try { if (write) await ctx.data.orders.update(o.orderId, { lines, note: noteFor(ctx, sale.note, missing) }); link.writeDate = sale.write_date; link.missing = missing; }
         catch (e) { ctx.log.warn(`Order ${number}: lines not updated: ${e instanceof Error ? e.message : String(e)}`, { orderId: o.orderId }); }
       }
       const owner = sale.partner_id ? (commercial.get(sale.partner_id[0]) ?? sale.partner_id[0]) : null;

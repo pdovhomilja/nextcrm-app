@@ -86,6 +86,7 @@ export interface OrderLink {
   partnerId?: number;      // the Odoo customer at import
   writeDate?: string;      // Odoo write_date when the lines were last copied
   movedNotified?: boolean; // the Odoo order now belongs to another customer; admins told
+  missing?: number;        // product lines left out because the product is not in the CRM (0.4.1; absent on 0.4.0 imports)
 }
 export interface SendState { attempts: number; lastError: string | null; waitingSince: string | null; stuckNotified?: boolean }
 export interface FailedState { reason: string; at: string }

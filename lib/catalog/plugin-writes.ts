@@ -21,15 +21,21 @@ export async function upsertExternalCategory(pluginId: string, ref: string, f: {
   return { id: row.id };
 }
 
-export async function upsertExternalProduct(pluginId: string, ref: string, f: ExternalProductInput) {
+export async function upsertExternalProduct(pluginId: string, ref: string, f: ExternalProductInput, opts: { adoptBySku?: boolean } = {}) {
   const catId = await categoryId(f.categoryRef);
   const existing = await prismadb.crm_Products.findUnique({ where: ext(ref) });
-  if (f.sku) {
-    const clash = await prismadb.crm_Products.findFirst({ where: { sku: f.sku, NOT: { source: "EXTERNAL", externalRef: ref } } });
-    if (clash) throw new Error(`SKU used by a ${clash.source === "CRM" ? "CRM" : "different external"} product: ${f.sku}`);
-  }
   const { categoryRef: _c, ...fields } = f;
   const data = { ...fields, categoryId: catId };
+  if (f.sku) {
+    const clash = await prismadb.crm_Products.findFirst({ where: { sku: f.sku, NOT: { source: "EXTERNAL", externalRef: ref } } });
+    // SDK 0.2.5: a live CRM product with the same SKU becomes this plugin's product (same id, so orders and rules keep pointing at it).
+    if (clash && !existing && opts.adoptBySku && clash.source === "CRM" && !clash.deletedAt) {
+      await prismadb.crm_Products.update({ where: { id: clash.id }, data: { ...data, source: "EXTERNAL", externalRef: ref, updatedBy: null, v: { increment: 1 } } });
+      await writeAuditLog({ entityType: "product", entityId: clash.id, action: "updated", changes: [{ field: "source", old: "CRM", new: `EXTERNAL (${pluginId} ${ref})` }] as never, userId: null });
+      return { id: clash.id, created: false, adopted: true };
+    }
+    if (clash) throw new Error(`SKU used by a ${clash.source === "CRM" ? "CRM" : "different external"} product: ${f.sku}`);
+  }
   if (existing) {
     await prismadb.crm_Products.update({ where: { id: existing.id }, data: { ...data, updatedBy: null, v: { increment: 1 } } });
     return { id: existing.id, created: false };
