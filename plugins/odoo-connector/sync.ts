@@ -31,7 +31,7 @@ interface Run {
   started: number;
   done: Set<number>;
   catalog?: CatalogCounts;
-  orders?: { checked: number; moved: number };
+  orders?: { checked: number; moved: number; imported?: number };
 }
 
 const CUSTOMER = [["customer_rank", ">", 0], ["parent_id", "=", false]];
