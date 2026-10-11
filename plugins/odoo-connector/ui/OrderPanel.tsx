@@ -13,6 +13,8 @@ export async function OrderPanel({ orderId, ctx }: OrderSlotProps<Settings, Secr
         <>
           <a className="underline" href={l.url} target="_blank" rel="noreferrer">{ctx.t("order.linked", { name: l.name })}</a>
           {l.state === "missing" ? <div className="text-amber-600">{ctx.t("order.missing")}</div> : <div className="text-muted-foreground">{ctx.t("order.state", { state: l.state })}</div>}
+          {l.imported && <div className="text-muted-foreground">{ctx.t("order.imported")}</div>}
+          {l.movedNotified && <div className="text-amber-600">{ctx.t("order.moved")}</div>}
           {l.created.includes("customer") && <div>{ctx.t("order.createdCustomer")}</div>}
           {l.created.includes("delivery") && <div>{ctx.t("order.createdDelivery")}</div>}
           {l.priceDiffs.length > 0 && (

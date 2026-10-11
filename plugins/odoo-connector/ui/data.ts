@@ -1,5 +1,5 @@
-import { chosenLists, type Ctx } from "../settings";
-import type { AccountLink, CompareResult, CreatedRecord, FailedState, OrderLink, PriceListLink, RunSummary, SendState } from "../store";
+import { chosenLists, localDay, type Ctx } from "../settings";
+import type { AccountLink, CompareResult, CreatedRecord, CustomerInfo, FailedState, ImportFailed, OpenInvoice, OrderLink, PriceListLink, RunSummary, SendState } from "../store";
 import { K } from "../store";
 
 export async function needsOwner(ctx: Ctx): Promise<{ accountId: string; name: string; salesperson: string | null }[]> {
@@ -67,7 +67,9 @@ export async function orderPanelData(ctx: Ctx, orderId: string) {
 export async function ordersData(ctx: Ctx, now: Date) {
   const waiting = ctx.settings.sendOrders ? (await ctx.data.orders.find({ where: { status: "READY", externalRef: null }, take: 500 })).length : 0;
   const since = now.getTime() - 7 * 86_400_000;
-  const sent = (await ctx.store.list("order:")).filter((e) => Date.parse((e.value as OrderLink).sentAt) >= since).length;
+  const links = await ctx.store.list("order:");
+  const sent = links.filter((e) => !(e.value as OrderLink).imported && Date.parse((e.value as OrderLink).sentAt) >= since).length;
+  const importFailed = (await ctx.store.list("importFailed:")).map((e) => ({ odooId: Number(e.key.slice(13)), ...(e.value as ImportFailed) }));
   const failed: ({ orderId: string; number: string } & FailedState)[] = [];
   for (const e of await ctx.store.list("failed:")) {
     const orderId = e.key.slice(7);
@@ -78,5 +80,35 @@ export async function ordersData(ctx: Ctx, now: Date) {
     enabled: ctx.settings.sendOrders, waiting, sent, failed,
     paused: await ctx.store.get<{ at: string; reason: string }>(K.sendPaused),
     created: (await ctx.store.get<CreatedRecord[]>(K.created)) ?? [],
+    imported: { total: links.filter((e) => (e.value as OrderLink).imported).length, lastRun: (await ctx.store.get<{ lastRun: number }>(K.imported))?.lastRun ?? 0, failed: importFailed },
+  };
+}
+
+const DAY = 86_400_000;
+const day = (v: unknown) => (v instanceof Date ? v.toISOString() : String(v)).slice(0, 10);
+
+/** Spec § 4.6: built from storage and CRM data only; no Odoo call. */
+export async function accountTabData(ctx: Ctx, accountId: string, now: Date) {
+  const link = await ctx.store.get<AccountLink>(K.account(accountId));
+  if (!link) return null;
+  const info = await ctx.store.get<CustomerInfo>(K.customer(accountId));
+  const orders: { orderId: string; number: string; odooName: string; date: string; total: number; currency: string; status: string; imported: boolean }[] = [];
+  for (const o of await ctx.data.orders.find({ where: { accountId }, orderBy: { orderDate: "desc" }, take: 500 })) {
+    const l = await ctx.store.get<OrderLink>(K.order(o.id as string));
+    if (!l) continue;
+    orders.push({ orderId: o.id as string, number: String(o.number), odooName: l.name, date: day(o.orderDate), total: Number(o.subtotal), currency: String(o.currency), status: String(o.status), imported: !!l.imported });
+    if (orders.length === 50) break;
+  }
+  const today = localDay(ctx, now);
+  const invoices = (info?.invoices ?? []).map((i: OpenInvoice) => ({
+    ...i, sign: (i.type === "out_refund" ? -1 : 1) as 1 | -1,
+    overdueDays: i.due && i.due < today ? Math.round((Date.parse(today) - Date.parse(i.due)) / DAY) : 0,
+  }));
+  const owed = new Map<string, number>();
+  for (const i of invoices) owed.set(i.currency, Math.round(((owed.get(i.currency) ?? 0) + i.sign * i.residual) * 100) / 100);
+  const base = ctx.settings.url.replace(/\/+$/, "");
+  return {
+    partnerId: link.partnerId, url: `${base}/odoo/contacts/${link.partnerId}`, at: info?.at ?? null,
+    orders, invoices, owed: Array.from(owed).map(([currency, amount]) => ({ currency, amount })), totals: info?.totals ?? [],
   };
 }

@@ -111,6 +111,7 @@ async function send(ctx: Ctx, client: OdooClient, order: RecordData, now: Date):
     created: [...(customer.created ? ["customer" as const] : []), ...(shipping.created ? ["delivery" as const] : [])], checkedAt: now.toISOString(),
   };
   await ctx.store.set(K.order(id), link);
+  await ctx.store.set(K.odooOrder(sale.id), { orderId: id });
   await ctx.store.delete(K.send(id));
   const diffs = await priceDiffs(ctx, client, list, lines, odooLines);
   if (diffs.length) await ctx.store.set(K.order(id), { ...((await ctx.store.get<OrderLink>(K.order(id))) ?? link), priceDiffs: diffs });

@@ -45,7 +45,10 @@
       "customer": "Kunde",
       "delivery": "Lieferadresse"
     },
-    "orderCounts": "Aufträge geprüft {checked}, weitergesetzt {moved}"
+    "orderCounts": "Aufträge geprüft {checked}, weitergesetzt {moved}",
+    "orderImported": "importiert {imported}",
+    "importedCounts": "Aus Odoo importiert: insgesamt {total}, beim letzten Lauf {last}",
+    "importFailed": "Nicht aus Odoo importiert"
   },
   "needsOwner": {
     "title": "Importierte Konten ohne Verantwortlichen",
@@ -73,7 +76,9 @@
     "stuckSubject": "Auftrag {number} wartet seit einem Tag auf Odoo",
     "stuckText": "Auftrag {number} wartet seit {since} auf den Versand an Odoo. Letzter Fehler: {error}. Der Connector versucht es weiter; prüfen Sie Odoo.",
     "missingSubject": "Auftrag {number}: Odoo-Auftrag nicht gefunden",
-    "missingText": "Der Connector findet den Odoo-Auftrag {name} zum CRM-Auftrag {number} nicht mehr. Er wurde in Odoo gelöscht, oder der Odoo-API-Benutzer hat keinen Zugriff mehr darauf. Der CRM-Auftrag behält seinen Status; stornieren Sie ihn von Hand, falls der Odoo-Auftrag gelöscht wurde."
+    "missingText": "Der Connector findet den Odoo-Auftrag {name} zum CRM-Auftrag {number} nicht mehr. Er wurde in Odoo gelöscht, oder der Odoo-API-Benutzer hat keinen Zugriff mehr darauf. Der CRM-Auftrag behält seinen Status; stornieren Sie ihn von Hand, falls der Odoo-Auftrag gelöscht wurde.",
+    "movedSubject": "Auftrag {number}: Kunde in Odoo geändert",
+    "movedText": "Der Odoo-Auftrag {name} (CRM-Auftrag {number}) gehört in Odoo jetzt einem anderen Kunden. Der CRM-Auftrag bleibt bei seinem Account und folgt weiter dem Odoo-Auftrag; prüfen Sie in Odoo, ob die Änderung stimmt."
   },
   "product": {
     "linked": "Odoo-Produkt #{id}"
@@ -92,13 +97,38 @@
     "waiting": "Wartet seit {date} auf Odoo",
     "lastError": "Letzter Fehler: {error}",
     "failed": "Nicht gesendet: {reason}",
-    "missing": "In Odoo nicht gefunden (gelöscht, oder der API-Benutzer sieht ihn nicht)"
+    "missing": "In Odoo nicht gefunden (gelöscht, oder der API-Benutzer sieht ihn nicht)",
+    "imported": "Aus Odoo importiert",
+    "moved": "Kunde in Odoo geändert"
   },
   "orders": {
     "noAccount": "Das Konto des Auftrags hat keinen Namen",
     "notOdooProduct": "Produkt {product} stammt nicht aus Odoo",
     "noPriceList": "Der Kunde hat in Odoo keine Preisliste",
     "currency": "Auftragswährung {order} weicht von der Währung der Odoo-Preisliste {list} ab",
-    "otherLines": "Bereits in Odoo als {name} mit anderen Positionen; lassen Sie ihn in Odoo stornieren und klicken Sie auf Erneut versuchen"
+    "otherLines": "Bereits in Odoo als {name} mit anderen Positionen; lassen Sie ihn in Odoo stornieren und klicken Sie auf Erneut versuchen",
+    "linesMissing": "{count} Positionen nicht angezeigt: Produkte nicht im CRM"
+  },
+  "tab": {
+    "title": "Odoo",
+    "notLinked": "Nicht mit einem Odoo-Kunden verknüpft",
+    "asOf": "Stand {date}",
+    "notYet": "Noch nicht aus Odoo gelesen",
+    "orders": "Aufträge",
+    "ordersEmpty": "Keine Aufträge in Odoo",
+    "allOrders": "Alle Aufträge in Odoo",
+    "invoices": "Offene Rechnungen",
+    "invoicesEmpty": "Nichts offen",
+    "owed": "Offen: {amounts}",
+    "overdue": "{days} Tage überfällig",
+    "totals": "Bestätigte Aufträge ohne MwSt.",
+    "year": "{year}: {amount} {currency}",
+    "number": "Nummer",
+    "odoo": "Odoo",
+    "date": "Datum",
+    "due": "Fällig",
+    "total": "Gesamt",
+    "left": "Offen",
+    "status": "Status"
   }
 }

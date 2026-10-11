@@ -77,7 +77,7 @@ describe("reading back", () => {
     const { ctx, client } = await setup({}, {});
     const catalog = jest.spyOn(require("../catalog"), "syncCatalog").mockResolvedValue(undefined);
     const summary = await runSync(ctx, client, now);
-    expect(summary.orders).toEqual({ checked: 1, moved: 1 });
+    expect(summary.orders).toEqual({ checked: 1, moved: 1, imported: 0 });
     catalog.mockRestore();
   });
 });

@@ -84,7 +84,7 @@ describe("order screens", () => {
     await ctx.store.set(K.created, [{ at: "z", kind: "customer", odooId: 5, name: "Bubble", orderNumber: "N2" }]);
     expect(await ordersData(ctx, at)).toEqual({
       enabled: true, waiting: 1, sent: 1, failed: [{ orderId: "o2", number: "N2", reason: "orders.notOdooProduct", at: "x" }],
-      paused: { at: "y", reason: "403" }, created: [{ at: "z", kind: "customer", odooId: 5, name: "Bubble", orderNumber: "N2" }],
+      paused: { at: "y", reason: "403" }, created: [{ at: "z", kind: "customer", odooId: 5, name: "Bubble", orderNumber: "N2" }], imported: { total: 0, lastRun: 0, failed: [] },
     });
   });
 

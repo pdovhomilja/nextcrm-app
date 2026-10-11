@@ -130,7 +130,7 @@ describe("status sync", () => {
   it("the run summary still carries the counts", async () => {
     const { ctx, client } = await setup("SENT", {});
     const catalog = jest.spyOn(require("../catalog"), "syncCatalog").mockResolvedValue(undefined);
-    expect((await runSync(ctx, client, now)).orders).toEqual({ checked: 1, moved: 1 });
+    expect((await runSync(ctx, client, now)).orders).toEqual({ checked: 1, moved: 1, imported: 0 });
     catalog.mockRestore();
   });
 });
