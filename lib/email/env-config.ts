@@ -46,7 +46,10 @@ export function getEmailEnvironmentStatus(): {
     {
       key: "RESEND_INBOUND_WEBHOOK_SECRET",
       label: "Resend inbound webhook signing secret (whsec_…)",
-      configured: Boolean(process.env.RESEND_INBOUND_WEBHOOK_SECRET?.trim()),
+      configured: Boolean(
+        process.env.RESEND_INBOUND_WEBHOOK_SECRET?.trim() ||
+          process.env.RESEND_WEBHOOK_SECRET?.trim()
+      ),
       required: true,
     },
     {

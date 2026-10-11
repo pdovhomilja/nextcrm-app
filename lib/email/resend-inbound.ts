@@ -58,13 +58,19 @@ export async function fetchResendReceivedEmail(emailId: string): Promise<ResendR
     const detail = await res.text();
     throw new Error(`Resend receiving API ${res.status}: ${detail}`);
   }
-  return (await res.json()) as ResendReceivedEmail;
+  const json = (await res.json()) as ResendReceivedEmail & { id?: string };
+  return { ...json, id: json.id ?? emailId };
 }
 
 /** All addresses this inbound message was delivered to (Resend To + received_for). */
 export function collectInboundRecipientAddresses(
   payload: ResendReceivedEmail,
-  webhookMeta?: { to?: string[]; received_for?: string[] }
+  webhookMeta?: {
+    to?: string[];
+    received_for?: string[];
+    cc?: string[];
+    bcc?: string[];
+  }
 ): string[] {
   const set = new Set<string>();
   for (const list of [
@@ -72,6 +78,10 @@ export function collectInboundRecipientAddresses(
     webhookMeta?.received_for,
     payload.to,
     webhookMeta?.to,
+    payload.cc,
+    webhookMeta?.cc,
+    payload.bcc,
+    webhookMeta?.bcc,
   ]) {
     for (const addr of list ?? []) {
       set.add(normalizeEmailAddress(addr));

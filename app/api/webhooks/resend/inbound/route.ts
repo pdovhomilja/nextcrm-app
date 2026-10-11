@@ -1,18 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { inngest } from "@/inngest/client";
 import { Webhook } from "svix";
+import { ingestResendInboundEmail } from "@/lib/email/resend-inbound";
+import { getResendInboundWebhookSecret } from "@/lib/email/resend-webhook-secret";
 
 type ResendInboundWebhookEvent = {
   type: string;
   data?: {
     email_id?: string;
     to?: string[];
+    cc?: string[];
+    bcc?: string[];
     received_for?: string[];
   };
 };
 
 function verifyInboundWebhook(req: NextRequest, rawBody: string): boolean {
-  const secret = process.env.RESEND_INBOUND_WEBHOOK_SECRET?.trim();
+  const secret = getResendInboundWebhookSecret();
   if (!secret) return false;
 
   const svixId = req.headers.get("svix-id");
@@ -28,7 +31,8 @@ function verifyInboundWebhook(req: NextRequest, rawBody: string): boolean {
         "svix-signature": svixSignature,
       });
       return true;
-    } catch {
+    } catch (err) {
+      console.error("[resend-inbound] Svix verification failed:", err);
       return false;
     }
   }
@@ -40,8 +44,11 @@ function verifyInboundWebhook(req: NextRequest, rawBody: string): boolean {
 }
 
 export async function POST(req: NextRequest) {
-  if (!process.env.RESEND_INBOUND_WEBHOOK_SECRET?.trim()) {
-    return NextResponse.json({ error: "RESEND_INBOUND_WEBHOOK_SECRET is not configured" }, { status: 503 });
+  if (!getResendInboundWebhookSecret()) {
+    return NextResponse.json(
+      { error: "RESEND_INBOUND_WEBHOOK_SECRET (or RESEND_WEBHOOK_SECRET) is not configured" },
+      { status: 503 }
+    );
   }
 
   const rawBody = await req.text();
@@ -66,16 +73,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing email_id" }, { status: 400 });
   }
 
-  await inngest.send({
-    name: "email/resend-inbound",
-    data: {
-      resendEmailId: emailId,
-      to: event.data?.to,
-      received_for: event.data?.received_for,
-    },
-  });
+  const webhookMeta = {
+    to: event.data?.to,
+    cc: event.data?.cc,
+    bcc: event.data?.bcc,
+    received_for: event.data?.received_for,
+  };
 
-  return NextResponse.json({ ok: true, queued: true });
+  try {
+    const result = await ingestResendInboundEmail(emailId, webhookMeta);
+    if (!result.stored && result.reason === "no_matching_mailbox") {
+      console.warn("[resend-inbound] No CRM mailbox for recipients:", result.recipients);
+      return NextResponse.json({
+        ok: true,
+        warning: "no_matching_mailbox",
+        recipients: result.recipients,
+      });
+    }
+    return NextResponse.json({ ok: true, ...result });
+  } catch (err) {
+    console.error("[resend-inbound] Ingest failed:", err);
+    return NextResponse.json({ error: "Ingest failed" }, { status: 500 });
+  }
 }
 
 export async function GET() {
