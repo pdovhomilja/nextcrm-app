@@ -9,6 +9,7 @@ export type ResendSendPayload = {
   bcc?: string[];
   subject: string;
   text: string;
+  html?: string;
   replyTo?: string;
   inReplyTo?: string;
   references?: string;
@@ -50,6 +51,7 @@ export async function sendMailViaResend(payload: ResendSendPayload) {
     bcc: payload.bcc?.length ? payload.bcc : undefined,
     subject: payload.subject,
     text: payload.text,
+    html: payload.html,
     replyTo: payload.replyTo,
     headers: Object.keys(headers).length ? headers : undefined,
   });

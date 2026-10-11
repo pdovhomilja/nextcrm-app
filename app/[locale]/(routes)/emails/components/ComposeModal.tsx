@@ -11,14 +11,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { sendEmail } from "@/actions/emails/messages";
+import { EmailComposeEditor } from "@/app/[locale]/(routes)/emails/components/EmailComposeEditor";
 import { useRouter } from "next/navigation";
 import type { Mail } from "@/app/[locale]/(routes)/emails/data";
 import {
   buildForwardedBody,
   buildReplyAllRecipients,
   emailPlainBody,
+  plainTextToComposeHtml,
 } from "@/lib/email/compose-helpers";
 
 type Mode = "new" | "reply" | "reply-all" | "forward";
@@ -44,7 +45,7 @@ function initialFields(
   initialTo?: string
 ) {
   if (!replyTo || mode === "new") {
-    return { to: initialTo?.trim() ?? "", cc: "", subject: "", body: "" };
+    return { to: initialTo?.trim() ?? "", cc: "", subject: "", body: "", bodyHtml: "<p></p>" };
   }
 
   if (mode === "reply") {
@@ -105,6 +106,7 @@ export const ComposeModal = forwardRef<HTMLDivElement, Props>(function ComposeMo
   const [cc, setCc] = useState("");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  const [bodyHtml, setBodyHtml] = useState("<p></p>");
 
   useEffect(() => {
     if (!open) return;
@@ -113,6 +115,7 @@ export const ComposeModal = forwardRef<HTMLDivElement, Props>(function ComposeMo
     setCc(fields.cc);
     setSubject(fields.subject);
     setBody(fields.body);
+    setBodyHtml(plainTextToComposeHtml(fields.body));
     setError(null);
   }, [open, mode, replyTo, mailboxAddress, initialTo]);
 
@@ -126,6 +129,7 @@ export const ComposeModal = forwardRef<HTMLDivElement, Props>(function ComposeMo
         cc: cc.split(",").map((e) => e.trim()).filter(Boolean),
         subject,
         body,
+        bodyHtml,
         inReplyTo: mode === "reply" || mode === "reply-all" ? replyTo?.rfcMessageId : undefined,
         references: mode === "reply" || mode === "reply-all" ? replyTo?.rfcMessageId : undefined,
       });
@@ -194,7 +198,13 @@ export const ComposeModal = forwardRef<HTMLDivElement, Props>(function ComposeMo
             </div>
             <div className="space-y-1">
               <Label>Message</Label>
-              <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={12} className="font-mono text-sm" />
+              <EmailComposeEditor
+                content={bodyHtml}
+                onChange={(html, plain) => {
+                  setBodyHtml(html);
+                  setBody(plain);
+                }}
+              />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button

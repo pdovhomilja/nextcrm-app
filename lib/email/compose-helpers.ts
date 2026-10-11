@@ -1,5 +1,17 @@
 import type { EmailRecipient, Mail } from "@/app/[locale]/(routes)/emails/data";
 
+export function plainTextToComposeHtml(plain: string): string {
+  if (!plain.trim()) return "<p></p>";
+  const escaped = plain
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  return escaped
+    .split("\n")
+    .map((line) => `<p>${line || "<br>"}</p>`)
+    .join("");
+}
+
 export function stripHtmlToPlain(html: string): string {
   return html
     .replace(/<style[\s\S]*?<\/style>/gi, "")

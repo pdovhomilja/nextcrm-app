@@ -25,8 +25,12 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@nextcrm/plugin-sdk": ["./packages/plugin-sdk/src/index.ts"],
-      "@nextcrm/plugin-sdk/testing": ["./packages/plugin-sdk/src/testing.ts"],
+      "@nextcrm/plugin-sdk": [
+        "./packages/plugin-sdk/src/index.ts"
+      ],
+      "@nextcrm/plugin-sdk/testing": [
+        "./packages/plugin-sdk/src/testing.ts"
+      ],
       "@/*": [
         "./*"
       ],
@@ -38,7 +42,9 @@
   "include": [
     "next-env.d.ts",
     "**/*.ts",
-    "**/*.tsx"
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

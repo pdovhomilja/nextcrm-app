@@ -170,6 +170,7 @@ type SendInput = {
   bcc?: string[];
   subject: string;
   body: string;
+  bodyHtml?: string;
   inReplyTo?: string;   // parent's Message-ID
   references?: string;  // parent's References + parent's Message-ID (space-separated)
 };
@@ -194,6 +195,7 @@ export async function sendEmail(input: SendInput) {
       bcc: input.bcc,
       subject: input.subject,
       text: input.body,
+      html: input.bodyHtml,
       inReplyTo: input.inReplyTo,
       references: input.references,
     });
@@ -227,6 +229,7 @@ export async function sendEmail(input: SendInput) {
       bcc: input.bcc?.join(", "),
       subject: input.subject,
       text: input.body,
+      html: input.bodyHtml,
       inReplyTo: input.inReplyTo,
       references: input.references,
     });
@@ -246,6 +249,7 @@ export async function sendEmail(input: SendInput) {
       ccRecipients: input.cc?.map((e) => ({ email: e })) ?? [],
       bccRecipients: input.bcc?.map((e) => ({ email: e })) ?? [],
       bodyText: input.body,
+      bodyHtml: input.bodyHtml ?? null,
       sentAt: new Date(),
       isRead: true,
     },

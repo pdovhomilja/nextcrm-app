@@ -1033,6 +1033,7 @@ model Users {
   calendarConnections  CalendarConnection[]
   linkedInConnection   LinkedInConnection?
   emails               Email[]
+  teamChatMessages     TeamChatMessage[]
   enrichments_triggered          crm_Contact_Enrichment[]  @relation("enrichment_triggered_by")
   target_enrichments_triggered   crm_Target_Enrichment[]   @relation("target_enrichment_triggered_by")
   created_campaigns              crm_campaigns[]           @relation("created_campaigns")
@@ -1553,6 +1554,20 @@ model Email {
   @@index([userId, folder, isDeleted, isRead])
   @@index([userId, emailAccountId, isSpam, isDeleted])
   @@index([userId, emailAccountId, isArchived, isDeleted])
+}
+
+model TeamChatMessage {
+  id        String   @id @default(uuid()) @db.Uuid
+  roomKey   String
+  userId    String   @db.Uuid
+  body      String   @db.Text
+  htmlBody  String?  @db.Text
+  createdAt DateTime @default(now())
+
+  user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([roomKey, createdAt])
+  @@index([userId])
 }
 
 model EmailEmbedding {
