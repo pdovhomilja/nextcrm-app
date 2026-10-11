@@ -88,11 +88,13 @@ export async function ensureProducts(ctx: Ctx, client: OdooClient, lines: OdooLi
   }
 }
 
-const plain = (html: string | false | undefined) => (html ? String(html) : "")
-  .replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>\s*<p[^>]*>/gi, "\n").replace(/<[^>]+>/g, "")
-  // CodeQL: angle brackets never survive (encoded or left by nested tags), so the note can never carry markup.
-  .replace(/&nbsp;/g, " ").replace(/&lt;|&gt;/g, "").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&").replace(/[<>]/g, "")
-  .replace(/\n{2,}/g, "\n").trim();
+function plain(html: string | false | undefined): string {
+  let t = (html ? String(html) : "").replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>\s*<p[^>]*>/gi, "\n");
+  // CodeQL: strip tags until none are left (nested tags), then drop any angle bracket, so the note can never carry markup.
+  for (let prev = ""; prev !== t;) { prev = t; t = t.replace(/<[^<>]*>/g, ""); }
+  return t.replace(/&nbsp;/g, " ").replace(/&lt;|&gt;/g, "").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&").replace(/[<>]/g, "")
+    .replace(/\n{2,}/g, "\n").trim();
+}
 
 /** Odoo's note as plain text, plus how many lines were left out. */
 export function noteFor(ctx: Ctx, html: string | false | undefined, missing: number): string | null {
