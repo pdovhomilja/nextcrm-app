@@ -7,7 +7,7 @@ export type ParsedQuoteHeader = {
 
 const EMAIL_IN_ANGLE = /<([^<>\s]+@[^<>\s]+)>/;
 
-/** Parses Gmail-style "On Sun, Oct 11, 2026 at 9:23 PM Name <email> wrote" tail. */
+/** Parses Gmail-style "Sun, Oct 11, 2026 at 9:23 PM Name <email>" (after leading "On" is stripped). */
 export function parseOnWroteLabel(rawLabel: string): ParsedQuoteHeader {
   let label = rawLabel.replace(/\u202f/g, " ").trim();
 
@@ -18,7 +18,7 @@ export function parseOnWroteLabel(rawLabel: string): ParsedQuoteHeader {
   }
 
   const dateMatch = label.match(
-    /^((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),?\s+\w{3}\s+\d{1,2},?\s+\d{4}\s+at\s+\d{1,2}:\d{2}(?:\s*(?:AM|PM))?)/i
+    /^((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),?\s+\w+\s+\d{1,2},?\s+\d{4}\s+at\s+\d{1,2}:\d{2}(?:\s*(?:AM|PM))?)/i
   );
   const dateLabel = dateMatch?.[1]?.trim();
   if (dateLabel) {
@@ -35,12 +35,9 @@ export function parseOnWroteLabel(rawLabel: string): ParsedQuoteHeader {
 
   let sentAt: Date | null = null;
   if (dateLabel) {
-    const tryParse = new Date(dateLabel.replace(/ at /i, " "));
-    if (!Number.isNaN(tryParse.getTime())) sentAt = tryParse;
-    else {
-      const try2 = new Date(dateLabel);
-      if (!Number.isNaN(try2.getTime())) sentAt = try2;
-    }
+    const normalized = dateLabel.replace(/\s+at\s+/i, " ");
+    const d = new Date(normalized);
+    if (!Number.isNaN(d.getTime())) sentAt = d;
   }
 
   return { fromName, fromEmail, dateLabel, sentAt };

@@ -4,18 +4,22 @@ export type ThreadPart = {
   kind: "message" | "quote" | "forward";
   body: string;
   depth: number;
-  /** Parsed from "On … wrote" line (quoted / forwarded blocks). */
   header?: ParsedQuoteHeader;
 };
 
+/** Gmail / Apple Mail — use [\s\S] so name + `<email>` before `wrote:` is captured. */
 const ON_WROTE_LINE =
-  /(?:^|\n)\s*On\s+(.+?)\s+wrote:\s*(?:\n|$)/i;
+  /(?:^|\n)\s*On\s+([\s\S]+?)\s+wrote:\s*(?:\n|$)/i;
 
 const FORWARDED_BLOCK =
   /(?:^|\n)\s*-{3,}\s*Forwarded message\s*-{3,}\s*\n/i;
 
+export function plainTextHasQuoteMarkers(text: string): boolean {
+  return ON_WROTE_LINE.test(text) || FORWARDED_BLOCK.test(text);
+}
+
 function normalizeNewlines(text: string): string {
-  return text.replace(/\r\n/g, "\n").replace(/\u2028/g, "\n");
+  return text.replace(/\r\n/g, "\n").replace(/\u2028/g, "\n").replace(/\u202f/g, " ");
 }
 
 function cleanQuoteBody(body: string): string {
@@ -23,6 +27,7 @@ function cleanQuoteBody(body: string): string {
     .split("\n")
     .map((line) => line.replace(/^>\s?/, ""))
     .join("\n")
+    .replace(/(?:^|\n)\s*On\s+[\s\S]+?\s+wrote:\s*(?:\n|$)/gi, "")
     .trim();
 }
 
@@ -87,10 +92,7 @@ export function parsePlainTextThread(raw: string, depth = 0): ThreadPart[] {
     cut.kind === "quote" && cut.label
       ? parseOnWroteLabel(cut.label)
       : cut.kind === "forward"
-        ? {
-            fromName: "Forwarded message",
-            sentAt: null as Date | null,
-          }
+        ? { fromName: "Forwarded message", sentAt: null as Date | null }
         : undefined;
 
   if (sub.length === 0) {

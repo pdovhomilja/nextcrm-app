@@ -1,14 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { format } from "date-fns";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { format, formatDistanceToNow } from "date-fns";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { parsePlainTextThread } from "@/lib/email/parse-thread";
+import {
+  parsePlainTextThread,
+  plainTextHasQuoteMarkers,
+} from "@/lib/email/parse-thread";
 import { stripHtmlToPlain } from "@/lib/email/compose-helpers";
 import type { ParsedQuoteHeader } from "@/lib/email/parse-on-wrote-label";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 
 type Props = {
   bodyText?: string | null;
@@ -16,77 +18,149 @@ type Props = {
   fromName?: string | null;
   fromEmail?: string | null;
   sentAt?: Date | string | null;
+  toLabel?: string;
+};
+
+type ThreadMessage = {
+  id: string;
+  name: string;
+  email?: string;
+  when: string;
+  body: string;
 };
 
 function initials(name: string) {
   return name
     .split(/\s+/)
+    .filter(Boolean)
     .map((p) => p[0])
     .join("")
     .toUpperCase()
     .slice(0, 2);
 }
 
-function formatWhen(sentAt: Date | string | null | undefined, fallback?: string) {
+function formatGmailWhen(sentAt: Date | string | null | undefined, fallback?: string) {
   if (sentAt) {
     const d = sentAt instanceof Date ? sentAt : new Date(sentAt);
-    if (!Number.isNaN(d.getTime())) return format(d, "MMM d, yyyy, h:mm a");
+    if (!Number.isNaN(d.getTime())) {
+      return `${format(d, "EEE, MMM d, h:mm a")} (${formatDistanceToNow(d, { addSuffix: true })})`;
+    }
   }
-  return fallback ?? "";
+  if (fallback) return fallback;
+  return "";
 }
 
-function MessageBubble({
+function headerToMessage(h: ParsedQuoteHeader | undefined, body: string, id: string): ThreadMessage {
+  const when = h?.sentAt
+    ? formatGmailWhen(h.sentAt)
+    : h?.dateLabel ?? "";
+  return {
+    id,
+    name: h?.fromName ?? "Unknown",
+    email: h?.fromEmail,
+    when,
+    body,
+  };
+}
+
+function snippet(body: string, max = 72) {
+  const one = body.replace(/\s+/g, " ").trim();
+  if (one.length <= max) return one;
+  return `${one.slice(0, max)}…`;
+}
+
+function GmailMessageHeader({
   name,
   email,
   when,
-  body,
-  compact,
+  toLabel,
+  size = "default",
 }: {
   name: string;
   email?: string;
-  when?: string;
-  body: string;
-  compact?: boolean;
+  when: string;
+  toLabel?: string;
+  size?: "default" | "sm";
 }) {
   return (
-    <article
-      className={cn(
-        "rounded-2xl border border-border/50 bg-card shadow-sm",
-        compact ? "px-3 py-2.5" : "px-4 py-3"
-      )}
-    >
-      <header className="mb-2 flex items-start gap-3">
-        <Avatar className={cn("border border-border/40", compact ? "h-8 w-8" : "h-9 w-9")}>
-          <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
-            {initials(name)}
-          </AvatarFallback>
-        </Avatar>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-            <span className="font-semibold text-foreground">{name}</span>
-            {email && (
-              <span className="truncate text-xs text-muted-foreground">&lt;{email}&gt;</span>
+    <div className="flex items-start gap-3">
+      <Avatar
+        className={cn(
+          "shrink-0 border border-border/50",
+          size === "sm" ? "h-8 w-8" : "h-10 w-10"
+        )}
+      >
+        <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
+          {initials(name)}
+        </AvatarFallback>
+      </Avatar>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+              <span className={cn("font-semibold text-foreground", size === "sm" ? "text-sm" : "text-[15px]")}>
+                {name}
+              </span>
+              {email && (
+                <span className="max-w-[200px] truncate text-xs text-muted-foreground sm:max-w-none">
+                  &lt;{email}&gt;
+                </span>
+              )}
+            </div>
+            {toLabel && (
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                to {toLabel}
+              </p>
             )}
           </div>
           {when && (
-            <time className="text-[11px] text-muted-foreground">{when}</time>
+            <time className="shrink-0 whitespace-nowrap text-[11px] leading-tight text-muted-foreground sm:text-xs">
+              {when}
+            </time>
           )}
         </div>
-      </header>
-      <div className="whitespace-pre-wrap pl-0 text-sm leading-relaxed text-foreground/90 sm:pl-12">
-        {body}
       </div>
-    </article>
+    </div>
   );
 }
 
-function metaFromHeader(h?: ParsedQuoteHeader) {
-  if (!h) return { name: "Unknown", email: undefined, when: undefined };
-  return {
-    name: h.fromName,
-    email: h.fromEmail,
-    when: formatWhen(h.sentAt, h.dateLabel),
-  };
+function CollapsedQuoteRow({
+  message,
+  expanded,
+  onToggle,
+}: {
+  message: ThreadMessage;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className="border-t border-border/50">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-muted/40"
+      >
+        <Avatar className="h-8 w-8 shrink-0 border border-border/40">
+          <AvatarFallback className="bg-muted text-[10px] font-semibold text-muted-foreground">
+            {initials(message.name)}
+          </AvatarFallback>
+        </Avatar>
+        <div className="min-w-0 flex-1 flex items-baseline gap-2 overflow-hidden">
+          <span className="shrink-0 text-sm font-medium text-foreground">{message.name}</span>
+          <span className="truncate text-sm text-muted-foreground">{snippet(message.body)}</span>
+        </div>
+        <span className="hidden shrink-0 text-xs text-muted-foreground sm:inline">{message.when.split(" (")[0]}</span>
+        <ChevronDown
+          className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform", expanded && "rotate-180")}
+        />
+      </button>
+      {expanded && (
+        <div className="border-t border-border/30 bg-muted/20 px-4 py-3 pl-[3.25rem]">
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">{message.body}</p>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function EmailConversationBody({
@@ -95,17 +169,23 @@ export function EmailConversationBody({
   fromName,
   fromEmail,
   sentAt,
+  toLabel,
 }: Props) {
-  const [showEarlier, setShowEarlier] = React.useState(false);
+  const [expandedQuoteId, setExpandedQuoteId] = React.useState<string | null>(null);
 
-  const plain =
-    bodyText?.trim() ||
-    (bodyHtml?.trim() ? stripHtmlToPlain(bodyHtml) : "");
+  let plain = bodyText?.trim() ?? "";
+  if (!plain && bodyHtml?.trim()) {
+    plain = stripHtmlToPlain(bodyHtml);
+  } else if (bodyHtml?.trim() && !plainTextHasQuoteMarkers(plain)) {
+    const fromHtml = stripHtmlToPlain(bodyHtml);
+    if (plainTextHasQuoteMarkers(fromHtml)) plain = fromHtml;
+  }
 
   const parts = parsePlainTextThread(plain);
-  const hasThread = parts.length > 1 || parts.some((p) => p.kind !== "message");
+  const useThreadUi =
+    parts.length > 1 || plainTextHasQuoteMarkers(plain) || parts.some((p) => p.kind !== "message");
 
-  if (bodyHtml?.trim() && !hasThread) {
+  if (bodyHtml?.trim() && !useThreadUi) {
     const IFRAME_STYLES = `
       body { font-family: ui-sans-serif, system-ui, sans-serif; padding: 16px; margin: 0; line-height: 1.55; color: #18181b; font-size: 14px; }
       blockquote { margin: 14px 0; padding: 12px 14px; border-left: 3px solid #0ea5e9; background: #f4f4f5; border-radius: 0 10px 10px 0; }
@@ -127,65 +207,41 @@ export function EmailConversationBody({
     return <p className="p-4 text-sm text-muted-foreground">(No content)</p>;
   }
 
-  const latest = parts[0];
-  const earlier = parts.slice(1);
-  const latestName = fromName?.trim() || fromEmail?.split("@")[0] || "You";
-  const latestWhen = formatWhen(sentAt ?? null);
+  const latestBody = parts[0]?.body ?? "";
+  const latestName = fromName?.trim() || fromEmail?.split("@")[0] || "Sender";
+  const latestWhen = formatGmailWhen(sentAt ?? null);
+
+  const quotedMessages: ThreadMessage[] = parts.slice(1).map((part, i) =>
+    headerToMessage(part.header, part.body, `quote-${i}`)
+  );
 
   return (
-    <div className="space-y-3 p-4">
-      <MessageBubble
-        name={latestName}
-        email={fromEmail ?? undefined}
-        when={latestWhen}
-        body={latest.body}
-      />
+    <div className="divide-y divide-border/50">
+      <section className="px-4 py-4">
+        <GmailMessageHeader
+          name={latestName}
+          email={fromEmail ?? undefined}
+          when={latestWhen}
+          toLabel={toLabel}
+        />
+        <div className="mt-4 whitespace-pre-wrap pl-0 text-sm leading-relaxed text-foreground sm:pl-[3.25rem]">
+          {latestBody || "(No content)"}
+        </div>
+      </section>
 
-      {earlier.length > 0 && (
-        <>
-          {!showEarlier ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="mx-auto flex w-full max-w-md items-center justify-center gap-1 rounded-full border border-dashed border-border/70 bg-muted/30 text-xs text-muted-foreground hover:bg-muted/50"
-              onClick={() => setShowEarlier(true)}
-            >
-              <ChevronDown className="h-3.5 w-3.5" />
-              Show {earlier.length} earlier {earlier.length === 1 ? "message" : "messages"}
-            </Button>
-          ) : (
-            <>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="mx-auto flex items-center gap-1 text-xs text-muted-foreground"
-                onClick={() => setShowEarlier(false)}
-              >
-                <ChevronUp className="h-3.5 w-3.5" />
-                Hide earlier messages
-              </Button>
-              <div className="relative space-y-3 pl-2 before:absolute before:bottom-2 before:left-[1.15rem] before:top-2 before:w-px before:bg-border/60">
-                {earlier.map((part, i) => {
-                  const meta = metaFromHeader(part.header);
-                  return (
-                    <div key={`${part.kind}-${i}`} className="relative pl-8">
-                      <span className="absolute left-[0.65rem] top-4 h-2 w-2 rounded-full border-2 border-background bg-muted-foreground/40" />
-                      <MessageBubble
-                        compact
-                        name={meta.name}
-                        email={meta.email}
-                        when={meta.when}
-                        body={part.body}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            </>
-          )}
-        </>
+      {quotedMessages.length > 0 && (
+        <section className="rounded-b-lg bg-muted/10">
+          {quotedMessages.map((msg) => (
+            <CollapsedQuoteRow
+              key={msg.id}
+              message={msg}
+              expanded={expandedQuoteId === msg.id}
+              onToggle={() =>
+                setExpandedQuoteId((id) => (id === msg.id ? null : msg.id))
+              }
+            />
+          ))}
+        </section>
       )}
     </div>
   );

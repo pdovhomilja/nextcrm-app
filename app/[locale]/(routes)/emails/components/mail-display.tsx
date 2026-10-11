@@ -316,14 +316,6 @@ export function MailDisplay({
                 </span>
               )}
             </div>
-            {Array.isArray(fullEmail?.toRecipients) && fullEmail.toRecipients.length > 0 && (
-              <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
-                To{" "}
-                {(fullEmail.toRecipients as { name?: string; email: string }[])
-                  .map((r) => r.name ?? r.email)
-                  .join(", ")}
-              </p>
-            )}
           </div>
           <div className="min-h-0 flex-1 overflow-auto bg-muted/5">
             {fullEmail ? (
@@ -333,6 +325,13 @@ export function MailDisplay({
                 fromName={fullEmail.fromName}
                 fromEmail={fullEmail.fromEmail}
                 sentAt={fullEmail.sentAt}
+                toLabel={
+                  Array.isArray(fullEmail.toRecipients) && fullEmail.toRecipients.length > 0
+                    ? (fullEmail.toRecipients as { name?: string; email: string }[])
+                        .map((r) => r.name ?? r.email)
+                        .join(", ")
+                    : undefined
+                }
               />
             ) : (
               <p className="p-4 text-sm text-muted-foreground">Loading…</p>
