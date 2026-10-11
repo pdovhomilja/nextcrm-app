@@ -30,8 +30,11 @@ function createClient(endpoint: string) {
 export const MINIO_BUCKET = process.env.MINIO_BUCKET;
 export const MINIO_PUBLIC_URL = minioPublicEndpoint();
 
+const minioInternalEndpoint =
+  process.env.MINIO_ENDPOINT?.trim() || MINIO_PUBLIC_URL || "http://127.0.0.1:9000";
+
 /** For server-side reads and writes (internal endpoint). */
-export const minioClient = createClient(process.env.MINIO_ENDPOINT);
+export const minioClient = createClient(minioInternalEndpoint);
 
 /**
  * For presigned URLs handed to browsers. A SigV4 signature covers the host,

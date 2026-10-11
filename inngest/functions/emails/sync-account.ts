@@ -47,7 +47,8 @@ export const emailSyncAccount = inngest.createFunction(
     if (account.sendProvider === EmailSendProvider.RESEND) {
       return { skipped: "Resend send-only mailbox" };
     }
-    if (!account.passwordEncrypted) {
+    const encryptedPassword = account.passwordEncrypted;
+    if (!encryptedPassword) {
       return { skipped: "no mailbox credentials" };
     }
 
@@ -58,7 +59,7 @@ export const emailSyncAccount = inngest.createFunction(
     const { inboxUids, sentUids, newInboxHighest, newSentHighest } = await step.run(
       "search-uids",
       async () => {
-        const pwd = decrypt(account.passwordEncrypted);
+        const pwd = decrypt(encryptedPassword);
         const acc = { username: account.username, password: pwd, imapHost: account.imapHost, imapPort: account.imapPort, imapSsl: account.imapSsl, allowSelfSignedTls: account.allowSelfSignedTls };
         const [inbox, sent] = await Promise.all([
           connectImap(acc).then(async (imap) => {
@@ -91,7 +92,7 @@ export const emailSyncAccount = inngest.createFunction(
 
     // Step: fetch headers only — separate connections per folder to avoid box-state conflicts
     const { inboxHeaders, sentHeaders } = await step.run("fetch-headers", async () => {
-      const pwd = decrypt(account.passwordEncrypted);
+      const pwd = decrypt(encryptedPassword);
       const acc = { username: account.username, password: pwd, imapHost: account.imapHost, imapPort: account.imapPort, imapSsl: account.imapSsl, allowSelfSignedTls: account.allowSelfSignedTls };
       const [inbox, sent] = await Promise.all([
         inboxUids.length > 0

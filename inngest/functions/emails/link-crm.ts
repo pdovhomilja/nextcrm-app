@@ -77,6 +77,7 @@ export const emailLinkCrm = inngest.createFunction(
       });
 
       if (emailAccount?.passwordEncrypted) {
+        const encryptedPassword = emailAccount.passwordEncrypted;
         const folderName =
           email.folder === "SENT"
             ? (emailAccount.sentFolderName || "Sent")
@@ -88,7 +89,7 @@ export const emailLinkCrm = inngest.createFunction(
             const body = await fetchBodyByUid(
               {
                 username: emailAccount.username,
-                password: decrypt(emailAccount.passwordEncrypted),
+                password: decrypt(encryptedPassword),
                 imapHost: emailAccount.imapHost,
                 imapPort: emailAccount.imapPort,
                 imapSsl: emailAccount.imapSsl,

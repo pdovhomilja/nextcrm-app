@@ -77,7 +77,7 @@ export function collectInboundRecipientAddresses(
       set.add(normalizeEmailAddress(addr));
     }
   }
-  return [...set];
+  return Array.from(set);
 }
 
 type ResendMailboxMatch = {
