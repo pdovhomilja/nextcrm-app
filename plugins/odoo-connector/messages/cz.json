@@ -99,6 +99,7 @@
     "notOdooProduct": "Produkt {product} nepochází z Odoo",
     "noPriceList": "Zákazník nemá v Odoo ceník",
     "currency": "Měna objednávky {order} se liší od měny ceníku v Odoo {list}",
-    "otherLines": "V Odoo už je jako {name} s jinými řádky; požádejte o její zrušení v Odoo a klikněte na Zkusit znovu"
+    "otherLines": "V Odoo už je jako {name} s jinými řádky; požádejte o její zrušení v Odoo a klikněte na Zkusit znovu",
+    "linesMissing": "Nezobrazené řádky: {count} (produkty nejsou v CRM)"
   }
 }

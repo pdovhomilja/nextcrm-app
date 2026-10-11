@@ -15,7 +15,7 @@ export interface OdooMove {
 interface OdooPicking { id: number; name: string; state: string; date_done: string | false }
 
 const SALE_FIELDS = ["id", "name", "state", "delivery_status", "invoice_status", "amount_total", "invoice_ids", "picking_ids"];
-const MOVE_FIELDS = ["id", "name", "move_type", "state", "payment_state", "invoice_date", "invoice_date_due", "amount_total", "amount_residual"];
+export const MOVE_FIELDS = ["id", "name", "move_type", "state", "payment_state", "invoice_date", "invoice_date_due", "amount_total", "amount_residual"];
 const RANK: Record<string, number> = { SENT: 1, CONFIRMED: 2, DELIVERED: 3, INVOICED: 4, PAID: 5 };
 const TOLERANCE = 1;
 const FINAL = new Set(["PAID", "CANCELLED"]);
@@ -31,6 +31,11 @@ export function targetStatus(sale: OdooSale, moves: OdooMove[]): string {
   if (invoiced) return "INVOICED";
   if (sale.delivery_status === "full") return "DELIVERED";
   return "CONFIRMED";
+}
+
+/** Posted invoices as the order panel shows them. */
+export function invoiceRows(moves: OdooMove[]): OrderLink["invoices"] {
+  return moves.filter((m) => m.state === "posted").map((m) => ({ number: m.name, type: m.move_type, date: m.invoice_date || null, due: m.invoice_date_due || null, amount: m.amount_total, residual: m.amount_residual, paymentState: m.payment_state }));
 }
 
 /** Spec § 4.3: every sent order that is not PAID or CANCELLED, re-read in full each cycle; finished ones are marked done and skipped. */
@@ -86,7 +91,7 @@ export async function syncOrderStatuses(a: { ctx: Ctx; client: OdooClient; dry: 
       total: sale.amount_total,
       totalDiffers: Math.abs(sale.amount_total - Number(o.order.grandTotal)) > TOLERANCE,
       deliveries: picks.filter((p) => sale.picking_ids!.includes(p.id)).map((p) => ({ name: p.name, state: p.state, date: p.date_done || null })),
-      invoices: mine.filter((m) => m.state === "posted").map((m) => ({ number: m.name, type: m.move_type, date: m.invoice_date || null, due: m.invoice_date_due || null, amount: m.amount_total, residual: m.amount_residual, paymentState: m.payment_state })),
+      invoices: invoiceRows(mine),
       checkedAt: now.toISOString(),
       back, missingNotified: undefined,
     };

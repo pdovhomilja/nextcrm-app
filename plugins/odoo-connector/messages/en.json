@@ -99,6 +99,7 @@
     "notOdooProduct": "Product {product} does not come from Odoo",
     "noPriceList": "The customer has no price list in Odoo",
     "currency": "Order currency {order} differs from the Odoo price list currency {list}",
-    "otherLines": "Already in Odoo as {name} with other lines; ask Odoo to cancel it, then click Retry"
+    "otherLines": "Already in Odoo as {name} with other lines; ask Odoo to cancel it, then click Retry",
+    "linesMissing": "{count} lines not shown: products not in the CRM"
   }
 }

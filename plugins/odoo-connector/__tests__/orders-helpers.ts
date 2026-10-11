@@ -42,7 +42,7 @@ export function salesHandlers(s: FakeSales) {
     "res.partner/fields_get": () => Object.fromEntries(["id", "name", "parent_id", "customer_rank", "active", "write_date"].map((f) => [f, {}])),
     "res.users/search_read": search(s.users),
     "res.partner/search_read": search(s.partners),
-    "res.partner/read": (b: any) => pick(s.partners.filter((p) => b.ids.includes(p.id)), b.fields),
+    "res.partner/read": (b: any) => pick(s.partners.filter((p) => b.ids.includes(p.id)).map((p) => ({ ...p, commercial_partner_id: p.commercial_partner_id ?? (p.parent_id ? p.parent_id : [p.id, String(p.name ?? p.id)]) })), b.fields),
     "res.partner/create": (b: any) => guard("res.partner/create", () => b.vals_list.map((v: RecordData) => {
       const id = s.nextId++;
       const row: RecordData = { id, active: true, type: "contact", parent_id: false, property_product_pricelist: [234, "Retail (CZK)"], ...norm(v) };
@@ -51,8 +51,16 @@ export function salesHandlers(s: FakeSales) {
       return id;
     })),
     "product.pricelist/read": (b: any) => pick(s.lists.filter((l) => b.ids.includes(l.id)), b.fields),
-    "sale.order/search_read": search(s.orders),
-    "sale.order/fields_get": () => Object.fromEntries((s.saleFields ?? ["id", "name", "state", "delivery_status", "invoice_status", "amount_total", "invoice_ids", "picking_ids"]).map((f) => [f, {}])),
+    "sale.order/search_read": (b: any) => {
+      const commercial = (o: RecordData) => {
+        const pid = Array.isArray(o.partner_id) ? (o.partner_id as [number, string])[0] : (o.partner_id as number);
+        const p = s.partners.find((x) => x.id === pid);
+        return p?.parent_id ? (p.parent_id as [number, string])[0] : pid;
+      };
+      const hit = s.orders.filter((o) => evalDomain(o, b.domain ?? [], (f, r) => (f === "partner_id.commercial_partner_id" ? commercial(r) : r[f])));
+      return pick(hit.slice(0, b.limit ?? hit.length), b.fields);
+    },
+    "sale.order/fields_get": () => Object.fromEntries((s.saleFields ?? ["id", "name", "state", "delivery_status", "invoice_status", "amount_total", "invoice_ids", "picking_ids", "partner_id", "origin", "date_order", "currency_id", "note", "write_date", "amount_untaxed"]).map((f) => [f, {}])),
     "sale.order/read": (b: any) => pick(s.orders.filter((o) => b.ids.includes(o.id)), b.fields),
     "sale.order/create": (b: any) => guard("sale.order/create", () => b.vals_list.map((v: RecordData) => {
       const id = s.nextId++;
@@ -62,6 +70,7 @@ export function salesHandlers(s: FakeSales) {
       return id;
     })),
     "sale.order.line/search_read": search(s.lines),
+    "sale.order.line/fields_get": () => Object.fromEntries(["id", "order_id", "product_id", "product_uom_qty", "price_unit", "display_type", "is_downpayment"].map((f) => [f, {}])),
     "sale.order.line/onchange": () => ({ value: s.price === null ? {} : { price_unit: s.price } }),
     "stock.picking/search_read": search(s.pickings),
     "account.move/search_read": search(s.moves),
