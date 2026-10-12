@@ -23,8 +23,10 @@ export async function notifyApprovers(order: { id: string; number: string }) {
   try {
     if (!(await enabled())) return;
     const users = await prismadb.users.findMany({ where: { role: { in: ["manager", "admin"] }, userStatus: "ACTIVE" }, select: { email: true } });
-    await send(users.map((u) => u.email).filter(Boolean) as string[], `Order ${order.number} needs approval`,
-      `Order ${order.number} has prices below the price list and waits for approval.\n${APP_URL()}/crm/orders/${order.id}`);
+    for (const email of users.map((u) => u.email).filter(Boolean) as string[]) {
+      await send([email], `Order ${order.number} needs approval`,
+        `Order ${order.number} has prices below the price list and waits for approval.\n${APP_URL()}/crm/orders/${order.id}`);
+    }
   } catch (error) {
     console.error("[orders] notification failed:", error);
   }
