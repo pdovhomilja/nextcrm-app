@@ -1,0 +1,183 @@
+---
+title: Build a plugin
+description: Create, test and install a small NextCRM plugin step by step.
+---
+
+This tutorial builds `opportunity-guard`, a plugin that:
+
+- rejects new opportunities without a close date (a rule), and
+- shows the number of active opportunities on each account page (an account panel).
+
+Read the [plugin system reference](/docs/developers/plugins) for the full API. You need a working [local setup](/docs/developers/local-setup) with Inngest running.
+
+<Steps>
+<Step>
+
+### Create the folder
+
+```text
+plugins/opportunity-guard/
+  plugin.tsx
+  messages/en.json
+  messages/cz.json
+  messages/de.json
+  messages/uk.json
+  __tests__/plugin.test.ts
+```
+
+The folder name must equal the plugin `id`. Use `plugin.tsx` because the panel returns JSX; a plugin without components can use `plugin.ts`.
+
+</Step>
+<Step>
+
+### Write the manifest
+
+```tsx
+// plugins/opportunity-guard/plugin.tsx
+import { definePlugin, allow, reject, z } from "@nextcrm/plugin-sdk";
+
+export default definePlugin({
+  id: "opportunity-guard",
+  name: "Opportunity guard",
+  version: "0.1.0",
+  sdk: "^0.1.0",
+  description: "Requires a close date on new opportunities and shows open deals on accounts.",
+  permissions: ["opportunities:read"],
+  settings: z.object({
+    requireCloseDate: z.boolean().default(true),
+  }),
+  extensions: (x) => {
+    x.rule("opportunity", "beforeCreate", (input, ctx) => {
+      if (ctx.settings.requireCloseDate && !input.data.close_date) {
+        return reject("closeDateRequired");
+      }
+      return allow();
+    });
+
+    x.accountPanel({
+      id: "active-deals",
+      component: async ({ accountId, ctx }) => {
+        const deals = await ctx.data.opportunities.find({
+          where: { account: accountId, status: "ACTIVE", deletedAt: null },
+          take: 100,
+        });
+        return <p>{ctx.t("activeDeals", { count: deals.length })}</p>;
+      },
+    });
+  },
+});
+```
+
+Notes:
+
+- The rule needs no permission. The panel reads opportunities, so the plugin declares `opportunities:read`.
+- `where` may only use the opportunity's own scalar fields (`account`, `status`, `deletedAt`).
+- The panel is a Server Component. It runs on the server with the current user as `ctx.actor`.
+
+</Step>
+<Step>
+
+### Add translations
+
+Every locale file must have the same keys as `en.json`, or the contract test fails.
+
+```json
+// plugins/opportunity-guard/messages/en.json
+{
+  "closeDateRequired": "Set an expected close date before you create the opportunity.",
+  "activeDeals": "Active opportunities: {count}"
+}
+```
+
+Create `cz.json`, `de.json` and `uk.json` with the same keys, translated.
+
+</Step>
+<Step>
+
+### Write a unit test
+
+`createTestContext` from `@nextcrm/plugin-sdk/testing` gives you an in-memory `ctx`: `data` tables you seed, a `store`, a mockable `http.fetch`, and recorded `logs` and `notifications`. `ctx.t` returns the key unchanged.
+
+```ts
+// plugins/opportunity-guard/__tests__/plugin.test.ts
+import { createTestContext } from "@nextcrm/plugin-sdk/testing";
+import plugin from "../plugin";
+
+const rule = plugin.extensions.rules[0];
+const input = (data: Record<string, unknown>) => ({
+  entity: "opportunity" as const,
+  operation: "beforeCreate" as const,
+  recordId: null,
+  data,
+  existing: null,
+});
+
+describe("opportunity-guard", () => {
+  it("rejects an opportunity without a close date", async () => {
+    const ctx = createTestContext({ settings: { requireCloseDate: true } });
+    expect(await rule.handler(input({ name: "Deal" }), ctx)).toEqual({
+      kind: "reject",
+      messageKey: "closeDateRequired",
+    });
+  });
+
+  it("allows it when the setting is off", async () => {
+    const ctx = createTestContext({ settings: { requireCloseDate: false } });
+    expect(await rule.handler(input({ name: "Deal" }), ctx)).toEqual({ kind: "allow" });
+  });
+});
+```
+
+Note that `createTestContext` does not apply the `where` operators of the real data API. Its `find` matches only plain equality on the fields you pass.
+
+</Step>
+<Step>
+
+### Register the plugin
+
+```bash
+pnpm plugins:generate --public-only
+```
+
+This rewrites `lib/plugins/plugins.generated.ts` with an import of your plugin and its messages. Commit that file together with the plugin.
+
+</Step>
+<Step>
+
+### Run the checks
+
+```bash
+pnpm test plugins/opportunity-guard     # your unit tests
+pnpm test __tests__/plugins             # contract and boundary tests
+pnpm exec tsc --noEmit
+pnpm lint
+```
+
+The contract test (`__tests__/plugins/contract.test.ts`) runs for every registered plugin. It checks the SDK range, the settings and secrets schemas, that all four message files exist with the keys from `en.json`, that tab and page titles are message keys, and that Inngest function ids are unique and crons valid. The boundary test checks imports.
+
+</Step>
+<Step>
+
+### Install it locally
+
+1. Make sure Inngest is running (`pnpm inngest:up`). Installing sends the `plugin/installed` event; if it cannot be sent, the install is rolled back.
+2. Start the app with `pnpm dev` and sign in as an admin (the seeded test user is one).
+3. Open `/en/admin/plugins`, choose **Opportunity guard**, review the permissions and settings, and install.
+4. Create an opportunity without a close date. The save fails and the action returns the translated rule message.
+5. Open an account. The panel shows the count.
+
+The plugin's admin page shows its status, settings and the last 200 log lines. Use `ctx.log.info(...)` while you develop.
+
+</Step>
+</Steps>
+
+## Ship a change
+
+1. Change the code.
+2. Bump `version` in the manifest.
+3. If stored data must change, add an idempotent `onUpgrade(ctx, fromVersion)`. It runs once per instance in the background after the next server start.
+4. Run the checks again and open a PR.
+
+## Private plugins
+
+A plugin that must not be open source goes into `plugins-private/<id>/` with the same structure. `plugins-private/` is a separate private repository mounted into the checkout. Run `pnpm plugins:generate` without `--public-only` locally to include it, but commit only the public-only version of the generated file. The Docker build generates the registry with private plugins included.

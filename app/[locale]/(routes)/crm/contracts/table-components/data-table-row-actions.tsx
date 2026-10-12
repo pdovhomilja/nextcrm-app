@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import AlertModal from "@/components/modals/alert-modal";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { deleteContract } from "@/actions/crm/contracts/delete-contract";
 import UpdateContractForm from "../_forms/update-contract";
@@ -30,6 +31,7 @@ export function DataTableRowActions<TData>({
   row,
 }: DataTableRowActionsProps<TData>) {
   const router = useRouter();
+  const t = useTranslations("CrmPage");
   const contract = contractsSchema.parse(row.original);
 
   const [open, setOpen] = useState(false);
@@ -57,6 +59,7 @@ export function DataTableRowActions<TData>({
         onClose={() => setOpen(false)}
         onConfirm={onDelete}
         loading={loading}
+        description={t("softDeleteDescription")}
       />
 
       <UpdateContractForm

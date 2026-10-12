@@ -1,0 +1,5 @@
+# Example env files use placeholder names only — not real credentials.
+paths-ignore:
+  - ".env.example"
+  - ".env.local.example"
+  - ".env.docker"

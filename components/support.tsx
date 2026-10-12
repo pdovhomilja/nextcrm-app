@@ -8,8 +8,10 @@ import { DiscordLogoIcon, GitHubLogoIcon } from "@radix-ui/react-icons";
 const SupportComponent = () => {
   return (
     <Popover>
-      <PopoverTrigger className="border rounded-md p-3">
-        <HelpCircle className="cursor-pointer w-4 h-4" />
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground">
+          <HelpCircle className="h-[1.15rem] w-[1.15rem]" />
+        </Button>
       </PopoverTrigger>
       <PopoverContent
         className="flex flex-col space-y-2 mt-3 min-w-[400px]"

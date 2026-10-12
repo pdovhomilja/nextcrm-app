@@ -1,0 +1,71 @@
+---
+title: Contracts and products
+description: Record signed contracts, keep the product catalog, and track what each company has bought.
+---
+
+## Add a contract
+
+<Steps>
+<Step>
+Go to **Sales** → **Contracts** and click **+**. Or click **+** on the **Contracts** card of a company page.
+</Step>
+<Step>
+Fill in **Title**, **Value**, **Currency**, **Start date**, and **End date**.
+</Step>
+<Step>
+Add **Customer signed date** and **Company signed date** when you have them.
+</Step>
+<Step>
+Set a **Renewal reminder date** if the contract renews.
+</Step>
+<Step>
+Choose the **Account** and the **Assigned to** user, then click **Create**.
+</Step>
+</Steps>
+
+Contract statuses are **Not started**, **In progress**, and **Signed**.
+
+Once a week NextCRM checks for upcoming renewal reminder dates (within the next 30 days by default) and creates a renewal task for the user the contract is assigned to, due on that date. See [Automatic follow-up](/docs/users/crm/leads-opportunities#automatic-follow-up).
+
+## The contract page
+
+The **Overview** tab shows the contract details, **Line Items**, and **Activities**.
+
+Line items work as on opportunities: click **+** to add a product or a custom item with quantity, unit price, and discount. To reuse the quote from a deal, click **Copy from Opportunity**, pick the deal under **-- Select an opportunity --**, and click **Copy**.
+
+## The product catalog
+
+**Sales** → **Products** lists every product and service. Filter by **Type** (**Product** or **Service**) and **Status** (**Draft**, **Active**, or **Archived**). Click a product to see its **Basic** details, the **Accounts** that have it, and its **History**.
+
+Only managers and admins can add, edit, import, or delete products.
+
+### Add a product (managers and admins)
+
+Click **+** to open **Create Product**. Fill in **Name**, **SKU**, **Type**, **Status**, **Unit Price**, **Unit Cost**, **Currency**, **Tax Rate (%)**, **Unit**, **Category**, and **Description**. For subscriptions, turn on **Recurring billing** and choose a **Billing Period**: **Monthly**, **Quarterly**, **Annually**, or **One Time**.
+
+### Import products from CSV (managers and admins)
+
+<Steps>
+<Step>
+On the products list, click **Import**.
+</Step>
+<Step>
+Click **Download CSV Template** to get a file with the expected columns.
+</Step>
+<Step>
+Fill in the template and choose it in the file field. A preview of the first rows appears.
+</Step>
+<Step>
+Click **Confirm Import**. The dialog reports how many products were imported, how many rows were skipped, and any errors. Click **Done**.
+</Step>
+</Steps>
+
+## Assign a product to a company
+
+The **Products** card on a company page shows what the company has, with **Product**, **Type**, **Qty**, **Price**, **Start**, **End**, and **Status**.
+
+To add one, click **+** on the card to open **Assign Product**. Choose the **Product**, then set **Quantity**, **Custom Price (optional)**, **Currency**, **Status** (**Active** or **Pending**), **Start Date**, **End Date (optional)**, **Renewal Date (optional)**, and **Notes**.
+
+To end an assignment, click **Cancel** in its row.
+
+Only active products can be assigned. A **Renewal Date** also creates a renewal task for the company's assigned user when the date comes close.

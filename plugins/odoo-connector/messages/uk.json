@@ -1,0 +1,100 @@
+{
+  "name": "Підключення до Odoo",
+  "admin": {
+    "test": "Перевірити з'єднання",
+    "syncNow": "Синхронізувати зараз",
+    "queued": "У черзі: запуститься протягом 5 хвилин.",
+    "loadLists": "Завантажити прайс-листи",
+    "listsLoaded": "Завантажено {count} прайс-листів з Odoo.",
+    "compare": "Порівняти з Odoo",
+    "running": "Синхронізація вже виконується.",
+    "connected": "Підключено до Odoo {version} як {user}",
+    "dryRun": "Тестовий режим увімкнено: синхронізація лише записує в журнал, що змінила б. Щоб імпортувати, вимкніть його в налаштуваннях.",
+    "lastRun": "Останній запуск",
+    "never": "ще не було",
+    "nextRun": "Наступний запуск",
+    "counts": "{created} створено, {updated} оновлено, {unchanged} без змін, {skipped} пропущено, {conflicts} конфліктів, {failed} помилок",
+    "failed": "Помилка: {error}",
+    "conflicts": "Клієнти, що відповідають кільком обліковим записам",
+    "conflictsEmpty": "Конфліктів немає.",
+    "reason": {
+      "number": "однаковий реєстраційний номер",
+      "vat": "однаковий номер ПДВ",
+      "linked": "вже пов’язано з іншим партнером Odoo",
+      "rate": "обмінний курс",
+      "rule": "цінове правило"
+    },
+    "catalog": "Каталог",
+    "catalogCounts": "Категорії {categories} · товари створено {productsCreated}, оновлено {productsUpdated}, помилки {productsFailed} · прайс-листи замінено {listsReplaced} · прайс-листи рахунків встановлено {accountLists}",
+    "priceListsHelp": "Оберіть прайс-листи в налаштуванні priceLists: ідентифікатори списків Odoo через кому, напр. 242, 245. Списки, на яких вони базуються, імпортуються автоматично.",
+    "listsLoadedAt": "Прайс-листи Odoo (завантажено {date})",
+    "listsNotLoaded": "Натисніть «Завантажити прайс-листи», щоб побачити прайс-листи в Odoo.",
+    "skippedRules": "Правила, які CRM не може використати",
+    "syncQueued": "Синхронізація в черзі.",
+    "compareQueued": "Порівняння в черзі.",
+    "compareProgress": "Порівняння: {done} з {total} прайс-листів",
+    "compareResult": "Останнє порівняння: {date}",
+    "compareClean": "Розбіжностей немає.",
+    "compareFailed": "Порівняння не вдалося: {error}",
+    "orders": "Замовлення",
+    "ordersOff": "Надсилання замовлень вимкнено. Увімкніть sendOrders у налаштуваннях, щоб замовлення зі статусом READY надходили в Odoo.",
+    "ordersCounts": "Очікують надсилання {waiting} · надіслано за останні 7 днів {sent} · не вдалося {failed}",
+    "ordersPaused": "Надсилання призупинено з {date}: {reason}. Виправте права користувача Odoo й натисніть «Перевірити з'єднання».",
+    "ordersCreated": "Створено в Odoo",
+    "createdKind": {
+      "customer": "клієнт",
+      "delivery": "адреса доставки"
+    }
+  },
+  "needsOwner": {
+    "title": "Імпортовані облікові записи без відповідального",
+    "nav": "Без відповідального",
+    "empty": "Усі імпортовані облікові записи мають відповідального.",
+    "account": "Обліковий запис",
+    "salesperson": "Продавець в Odoo"
+  },
+  "panel": {
+    "linked": "Пов'язано з партнером Odoo #{id}",
+    "synced": "Остання синхронізація {date} UTC",
+    "fields": "Odoo керує: назва, реєстраційний номер, номер ПДВ, адреса для рахунків, e-mail, телефон.",
+    "archived": "Архівовано в Odoo.",
+    "notCustomer": "В Odoo більше не клієнт.",
+    "priceList": "Прайс-лист з Odoo: {name}",
+    "priceListMissing": "Прайс-лист Odoo {name} не імпортовано"
+  },
+  "mail": {
+    "failingSubject": "Синхронізація з Odoo не вдається",
+    "failingText": "Синхронізація з Odoo тричі поспіль завершилася помилкою. Остання помилка: {error}",
+    "pausedSubject": "Odoo відмовився приймати замовлення",
+    "pausedText": "Надсилання замовлень в Odoo призупинено: {error}. Виправте права користувача Odoo й натисніть «Перевірити з'єднання».",
+    "orderFailedSubject": "Замовлення {number} не надіслано в Odoo",
+    "orderFailedText": "Не вдалося надіслати замовлення {number} в Odoo: {error}. Усуньте причину й натисніть «Повторити» в замовленні.",
+    "stuckSubject": "Замовлення {number} уже добу очікує Odoo",
+    "stuckText": "Замовлення {number} очікує надсилання в Odoo з {since}. Остання помилка: {error}. Конектор продовжує спроби; перевірте Odoo."
+  },
+  "product": {
+    "linked": "Товар Odoo #{id}"
+  },
+  "order": {
+    "linked": "Замовлення в Odoo {name}",
+    "state": "Стан в Odoo: {state}",
+    "createdCustomer": "Клієнта створено в Odoo",
+    "createdDelivery": "Адресу доставки створено в Odoo",
+    "priceDiffs": "Ціна відрізняється від Odoo",
+    "priceDiff": "{sku}: CRM {crm}, Odoo {odoo}",
+    "totalDiffers": "Сума замовлення в Odoo становить {odoo}; вона відрізняється від суми цього замовлення.",
+    "deliveries": "Доставки",
+    "invoices": "Рахунки",
+    "invoice": "{number} · сплатити до {due} · {amount}, залишок {residual} · {state}",
+    "waiting": "Очікує Odoo з {date}",
+    "lastError": "Остання помилка: {error}",
+    "failed": "Не надіслано: {reason}"
+  },
+  "orders": {
+    "noAccount": "Обліковий запис замовлення не має назви",
+    "notOdooProduct": "Товар {product} не походить з Odoo",
+    "noPriceList": "Клієнт не має прайс-листа в Odoo",
+    "currency": "Валюта замовлення {order} відрізняється від валюти прайс-листа Odoo {list}",
+    "otherLines": "Уже є в Odoo як {name} з іншими рядками; попросіть скасувати його в Odoo й натисніть «Повторити»"
+  }
+}

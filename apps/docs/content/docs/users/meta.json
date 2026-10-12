@@ -1,0 +1,17 @@
+{
+  "title": "User guide",
+  "icon": "Users",
+  "pages": [
+    "index",
+    "getting-started",
+    "crm",
+    "emails",
+    "projects",
+    "documents",
+    "invoices",
+    "campaigns",
+    "reports",
+    "profile"
+  ],
+  "root": true
+}

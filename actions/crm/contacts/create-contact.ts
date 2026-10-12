@@ -1,6 +1,7 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { pluginRuleErrorMessage } from "@/lib/plugins/action-errors";
 import sendEmail from "@/lib/sendmail";
 import { inngest } from "@/inngest/client";
 import { writeAuditLog } from "@/lib/audit-log";
@@ -83,10 +84,10 @@ export const createContact = async (data: {
         where: { id: assigned_to },
       });
 
-      if (notifyRecipient) {
+      if (notifyRecipient?.email) {
         await sendEmail({
           from: process.env.EMAIL_FROM as string,
-          to: notifyRecipient.email || "info@softbase.cz",
+          to: notifyRecipient.email,
           subject:
             notifyRecipient.userLanguage === "en"
               ? `New contact ${data.first_name} ${data.last_name} has been added to the system and assigned to you.`
@@ -110,6 +111,8 @@ export const createContact = async (data: {
     revalidatePath("/[locale]/crm/contacts", "page");
     return { data: contact };
   } catch (error) {
+    const ruleMessage = await pluginRuleErrorMessage(error);
+    if (ruleMessage) return { error: ruleMessage };
     console.log("[CREATE_CONTACT]", error);
     return { error: "Failed to create contact" };
   }

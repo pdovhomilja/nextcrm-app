@@ -25,6 +25,12 @@
     ],
     "baseUrl": ".",
     "paths": {
+      "@nextcrm/plugin-sdk": [
+        "./packages/plugin-sdk/src/index.ts"
+      ],
+      "@nextcrm/plugin-sdk/testing": [
+        "./packages/plugin-sdk/src/testing.ts"
+      ],
       "@/*": [
         "./*"
       ],
@@ -41,6 +47,7 @@
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "apps"
   ]
 }

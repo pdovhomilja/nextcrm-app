@@ -15,6 +15,8 @@ export const deleteProduct = async (id: string) => {
   }
 
   try {
+    const existing = await prismadb.crm_Products.findUnique({ where: { id } });
+    if (existing?.source === "EXTERNAL") return { error: "Managed by an external system" };
     await prismadb.crm_Products.update({
       where: { id },
       data: {

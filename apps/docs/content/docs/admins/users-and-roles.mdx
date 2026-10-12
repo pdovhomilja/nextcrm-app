@@ -1,0 +1,65 @@
+---
+title: Users and roles
+description: Invite and activate users, assign roles, and understand what each role can do.
+---
+
+Manage users under **Administration → Users** (`/admin/users`).
+
+## Roles
+
+NextCRM has three roles:
+
+| Role | Administration | CRM records and projects | Reports |
+|---|---|---|---|
+| `admin` | full access, including user management | all records | all data, including the Users report |
+| `manager` | no access | all records | all data, including the Users report |
+| `user` | no access | records they own: read, create and edit | only data from records they own; no Users report |
+
+"Records they own" means records assigned to them or created by them (for accounts, also accounts they watch; for project boards, also boards shared with them). The same rules apply in the web app, the API and the MCP server; they are enforced in `lib/authz`.
+
+Older instances may still have the legacy role values `member` and `viewer`. NextCRM treats `member` as `manager` and `viewer` as `user`.
+
+## User status
+
+Every user has a status:
+
+| Status | Meaning |
+|---|---|
+| `ACTIVE` | Can use the app. |
+| `PENDING` | Signed up but not yet approved. Sees a waiting page after sign-in. |
+| `INACTIVE` | Deactivated by an admin. Sees an "inactive" page after sign-in. |
+
+Only `ACTIVE` users get through: pages, server actions, API routes and the MCP server all treat a `PENDING` or `INACTIVE` user as signed out, and API tokens of such users are rejected.
+
+## How users get in
+
+### Invitation
+
+At the top of the Users page, enter a name, email and language and send the invitation. NextCRM creates the user with role `user` and status `ACTIVE` and sends an invitation email through Resend. Inviting fails with an error if no Resend key is configured.
+
+### Self sign-up
+
+Anyone who reaches the sign-in page can request a code for a new email address, or use "Sign in with Google" if it is configured. A new account is created with status `PENDING`. All admins get a notification email through the SMTP server (`EMAIL_HOST`); the notification links to `/admin/users`. Approve the user by activating them.
+
+If there are no users at all, the first account that signs up becomes `admin` and `ACTIVE`. With Docker the seed already creates the first admin, so this only matters for manual installs.
+
+## Managing a user
+
+Open the row menu in the user table:
+
+- **Copy ID**
+- **Activate**: sets status `ACTIVE` and sends the user an email through SMTP.
+- **Deactivate**: sets status `INACTIVE`, signs the user out on every device and revokes all of their API tokens. Activating the user again does not bring the tokens back; they create new ones. You cannot deactivate yourself.
+- **Revoke API tokens**: revokes all active API tokens of the user, without deactivating them. Use it when a token may have leaked.
+- **Set Role**: `admin`, `manager` or `user`. You cannot remove your own admin role.
+- **Delete**: removes the user after confirmation. You cannot delete yourself.
+
+### Message all users
+
+**Send mail to all** sends a message with a title and body to every `ACTIVE` user. It goes through Resend when a Resend key is configured (environment or **Services** page), otherwise through the SMTP server; each user gets the message once.
+
+## API tokens
+
+Each user can create personal API tokens for the MCP server in their profile (Developer tab). Tokens start with `nxtc__`, are stored only as a SHA-256 hash, can have an expiry date, and act with the role of the user who created them. A user can have at most 10 active tokens. See [MCP server](/docs/developers/mcp).
+
+Owners revoke their own tokens in their profile. Admins can revoke all tokens of any user with **Revoke API tokens** in the user table; deactivating a user revokes them too. Tokens of a user who is not `ACTIVE` are rejected either way.

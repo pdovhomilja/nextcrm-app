@@ -27,7 +27,7 @@ NextCRM is an open-source CRM built with Next.js 16, React 19, TypeScript, Postg
    <a href="#installation"><strong>Installation</strong></a> ·
    <a href="#repo-activity"><strong>Repo activity</strong></a> ·
    <a href="#license"><strong>License</strong></a> ·
-   <a href="https://discord.gg/dHyxhTEyUb"><strong>Discord</strong></a>
+   <a href="https://discord.gg/Dd4Aj6S4Dz"><strong>Discord</strong></a>
 </p>
 <br/>
 
@@ -85,7 +85,7 @@ Every CRM entity (Accounts, Contacts, Leads, Opportunities, Contracts) now track
 
 ### 🧠 AI Enrichment — E2B Sandboxed Agent + Flexible API Key Management *(NEW)*
 
-Target and Contact enrichment now runs inside an **[E2B](https://e2b.dev/) cloud sandbox** — a full Linux environment with a real browser (Chrome) — replacing the previous Firecrawl API path:
+Background target enrichment (queued, bulk and MCP) now runs inside an **[E2B](https://e2b.dev/) cloud sandbox** — a full Linux environment with a real browser (Chrome). Contact enrichment and interactive target enrichment still use Firecrawl + OpenAI:
 
 - **Real-browser research** — the agent navigates JS-heavy sites, LinkedIn public profiles, and paginated results that a simple API call cannot reach
 - **LLM tool-use loop** — Claude Sonnet 4.6 drives the research with tools: `browser_open`, `browser_snapshot`, `browser_click`, `browser_extract`, `web_search`
@@ -95,7 +95,7 @@ Target and Contact enrichment now runs inside an **[E2B](https://e2b.dev/) cloud
 - **5-minute timeout per target** — partial results are applied even if the agent times out
 - **Fan-out** — after company enrichment, each discovered contact is enriched independently via a separate Inngest job
 
-**API keys** are managed through a **3-tier priority system** so the app runs without any keys in `.env`:
+**Enrichment API keys** (OpenAI, Firecrawl, Anthropic) are resolved through a **3-tier priority system**, so enrichment works without those keys in `.env`. Other AI features (record embeddings, document enrichment) read `OPENAI_API_KEY` from the environment only, and E2B needs `E2B_API_KEY` in the environment:
 
 ```
 ENV variable  →  Admin system-wide  →  User profile
@@ -114,7 +114,7 @@ ENV variable  →  Admin system-wide  →  User profile
 
 NextCRM now ships with a built-in [Model Context Protocol](https://modelcontextprotocol.io/) server, letting AI agents (Claude, Cursor, custom agents) read and write CRM data directly.
 
-**127 tools across 15 modules:**
+**105 tools across 16 modules:**
 
 | Module | Tools | Operations |
 |--------|-------|------------|
@@ -130,7 +130,8 @@ NextCRM now ships with a built-in [Model Context Protocol](https://modelcontextp
 | Target Lists | 7 | list, get, create, update, delete, add members, remove members |
 | Enrichment | 4 | enrich contact, enrich target, bulk contact, bulk target |
 | Email Accounts | 1 | list |
-| Campaigns | 18 | full lifecycle: CRUD, send, pause, resume, templates, steps, stats |
+| Users | 1 | list |
+| Campaigns | 19 | full lifecycle: CRUD, send, pause, resume, templates, steps, stats |
 | Projects | 18 | boards, sections, tasks, comments, documents, watch |
 | Reports | 2 | list, run |
 
@@ -195,7 +196,7 @@ Global search across all CRM entities from a single search bar — grouped resul
 
 - [PostgreSQL 17+](https://www.postgresql.org/) – Powerful open-source relational database with **pgvector** extension for AI embeddings
 - [Resend](https://resend.com/) – A powerful email framework for streamlined email development together with [react.email](https://react.email)
-- [UploadThing](https://uploadthing.com/) + S3-compatible storage (DigitalOcean Spaces) – for document file storage
+- [MinIO](https://min.io/) or any S3-compatible storage – for document file storage
 - [Inngest](https://www.inngest.com/) – Background job queue for async embedding and AI workflows
 
 ### AI & MCP
@@ -204,8 +205,8 @@ Global search across all CRM entities from a single search bar — grouped resul
 - [Anthropic API](https://www.anthropic.com/) – Claude Sonnet 4.6 drives the E2B enrichment agent tool-use loop
 - [Vercel AI SDK 6.x](https://sdk.vercel.ai/) – Unified AI interface
 - [pgvector](https://github.com/pgvector/pgvector) – PostgreSQL vector extension for similarity search (HNSW indexes)
-- [E2B](https://e2b.dev/) – Cloud sandboxes with real Chrome browser for AI-driven web research and contact enrichment
-- [MCP Server](https://modelcontextprotocol.io/) – 127 tools across 15 modules via `mcp-handler` (Vercel MCP adapter), Bearer token auth, streamable HTTP (`/api/mcp/mcp`) + legacy SSE (`/api/mcp/sse`) transports
+- [E2B](https://e2b.dev/) – Cloud sandboxes with real Chrome browser for AI-driven web research and target enrichment
+- [MCP Server](https://modelcontextprotocol.io/) – 105 tools across 16 modules via `mcp-handler` (Vercel MCP adapter), Bearer token auth, streamable HTTP (`/api/mcp/mcp`) + legacy SSE (`/api/mcp/sse`, needs `REDIS_URL`) transports
 
 ### Data fetching
 
@@ -239,7 +240,7 @@ Global search across all CRM entities from a single search bar — grouped resul
 8. ✅ Unified search — keyword + semantic search across all CRM modules
 9. ✅ CRM Targets module — sales target and target list management
 10. ✅ MCP server — 25 CRM tools for AI agent access via Bearer token auth
-11. ✅ AI enrichment — E2B sandboxed agent (real browser + Claude Sonnet) for target/contact enrichment; C-level contact discovery; 3-tier API key management (ENV → admin → user)
+11. ✅ AI enrichment — E2B sandboxed agent (real browser + Claude Sonnet) for target enrichment; C-level contact discovery; 3-tier API key management (ENV → admin → user)
 12. ✅ Audit log & history — soft delete + full field-level change trail on all CRM entities; global admin audit log page
 13. ✅ CRM Activities — notes, calls, emails, meetings, tasks linked to any CRM entity; paginated feed on all detail pages
 14. ✅ Invoices module — full invoicing workflow with line items, tax engine, multi-currency, invoice series, payments, PDF export, and email delivery
@@ -279,7 +280,7 @@ We use Tremor charts as a tool for creating charts in NextCRM
 
 ## Documentation
 
-Available soon at: http://docs.nextcrm.io
+Read the docs at [docs.nextcrm.app](https://docs.nextcrm.app): user guide, admin guide and developer guide. Source lives in [`apps/docs`](apps/docs).
 
 ## Installation
 
@@ -330,11 +331,11 @@ Available soon at: http://docs.nextcrm.io
    **.env.local**
 
    > > - BETTER_AUTH_SECRET - for auth
-   > > - uploadthings - for storing files
-   > > - openAI - for embeddings and project management assistant *(optional — can be set via admin panel instead)*
+   > > - MinIO / S3 (`MINIO_*`) - for storing files
+   > > - openAI - for embeddings and project management assistant *(embeddings need `OPENAI_API_KEY` in the environment; enrichment can use an admin-panel key instead)*
    > > - Firecrawl - for contact/target enrichment *(optional — can be set via admin panel instead)*
-   > > - SMTP and IMAP for emails
-   > > - Inngest - for background embedding jobs
+   > > - Resend (`RESEND_API_KEY`, `EMAIL_FROM`) and optional SMTP (`EMAIL_HOST`, …) for emails
+   > > - Inngest - for background jobs (`INNGEST_DEV=1` with the local dev server from `pnpm inngest:up`)
    > > - `EMAIL_ENCRYPTION_KEY` - required for encrypting API keys stored in the database
 
 1. Init Prisma
@@ -392,10 +393,10 @@ Open [http://localhost:3000](http://localhost:3000) — the app is ready, the sc
 |---|---|---|
 | `app` | NextCRM (Next.js standalone build) | `localhost:3000` |
 | `postgres` | PostgreSQL 17 with pgvector | internal only |
-| `minio` | S3-compatible object storage | internal only |
-| `inngest` | Background job runner | internal only |
+| `minio` | S3-compatible object storage | `127.0.0.1:9000` |
+| `inngest` | Background job runner (self-hosted, signed requests) | internal only |
 
-Only port `3000` is exposed to the host. Everything else stays on the internal Docker network — secure by default. Uncomment the relevant `ports:` blocks in `docker-compose.yml` if you need direct access (e.g. for psql or the MinIO console).
+The app is published on port `3000`. MinIO's S3 port is published on `127.0.0.1:9000` because browsers upload and download files directly from MinIO; on a server, give MinIO its own domain and set `MINIO_PUBLIC_URL` to it. Postgres and Inngest stay on the internal Docker network. Uncomment the relevant `ports:` blocks in `docker-compose.yml` if you need direct access (e.g. for psql or the MinIO console).
 
 ### Configuring environment variables
 
@@ -416,9 +417,18 @@ docker compose up -d
 ```
 
 > [!WARNING]
-> The bundled Postgres and MinIO containers ship with a placeholder password (`changeme`) so the stack works on first run. The internal services are not exposed to the host network — only the app on port 3000 is reachable — so this is safe for local experimentation. **For any deployment beyond your laptop**, set strong values for `POSTGRES_PASSWORD` and `MINIO_ROOT_PASSWORD` in your `.env` file before starting the stack.
+> The bundled Postgres and MinIO containers ship with a placeholder password (`changeme`) so the stack works on first run. Postgres is not exposed to the host and MinIO only on `127.0.0.1`, so this is safe for local experimentation. **For any deployment beyond your laptop**, set strong values for `POSTGRES_PASSWORD` and `MINIO_ROOT_PASSWORD` in your `.env` file before starting the stack.
 
-The `.env.docker` file lists every supported variable with comments. Beyond the internal service passwords, you only need to add values for **optional external integrations** you want to enable:
+On a server, also set the two public URLs:
+
+```bash
+APP_URL=https://crm.example.com          # what people open; used for auth and links
+MINIO_PUBLIC_URL=https://files.example.com  # what browsers use to reach MinIO
+```
+
+**Secrets.** `BETTER_AUTH_SECRET`, `EMAIL_ENCRYPTION_KEY`, `INNGEST_SIGNING_KEY` and `INNGEST_EVENT_KEY` are generated on first start and stored in the `app_data` volume, so they survive restarts and upgrades. You can set them in `.env` instead; a value in the environment always wins. Never change them once set: a new `BETTER_AUTH_SECRET` logs everyone out, a new `EMAIL_ENCRYPTION_KEY` makes stored mailbox passwords and API keys unreadable.
+
+The `.env.docker` file lists every supported variable with comments. Beyond the internal service passwords, you only need to add values for **optional external integrations** you want to enable. API keys left empty can also be entered in the admin panel; an environment value always wins over the admin panel:
 
 ```bash
 # Example .env
@@ -426,6 +436,7 @@ OPENAI_API_KEY=sk-your-real-key       # enables AI features
 GOOGLE_ID=...apps.googleusercontent.com  # enables Google OAuth
 GOOGLE_SECRET=GOCSPX-...
 RESEND_API_KEY=re_...                 # enables transactional email
+EMAIL_FROM=noreply@yourdomain.com     # verified Resend sender for login codes
 FIRECRAWL_API_KEY=fc-...              # enables contact enrichment
 ```
 
@@ -433,10 +444,12 @@ FIRECRAWL_API_KEY=fc-...              # enables contact enrichment
 
 ### Persistent data
 
-Database and uploaded files persist across restarts via two named volumes:
+Data persists across restarts in four named volumes:
 
 - `postgres_data` — your database
 - `minio_data` — uploaded files
+- `app_data` — generated secrets (`/app/data/secrets`); back it up with the database
+- `inngest_data` — background job state (queued runs, schedules)
 
 ```sh
 docker compose down        # stops services, keeps data
@@ -452,14 +465,14 @@ docker compose up -d --build
 
 The entrypoint runs `prisma migrate deploy` on every start, so new schema changes are applied automatically. The seed only runs on first install (when no users exist), so your data is safe across upgrades.
 
-### Coolify, Dokku, Portainer, etc.
+### Coolify, Portainer, etc.
 
-This setup works out of the box with self-hosting platforms:
+This setup works with self-hosting platforms:
 
-- **Coolify** — point it at this repo, choose "Docker Compose" build pack, set your env vars in Coolify's UI
+- **Coolify** — point it at this repo, choose "Docker Compose" build pack with `/docker-compose-coolify.yml`, set your env vars in Coolify's UI (required ones are listed at the top of that file). Assign your domain to the `app` service (port 3000) and a second domain to `minio` (port 9000), then set `APP_URL` and `MINIO_PUBLIC_URL` to them.
 - **Portainer / Dockge** — paste `docker-compose.yml` into a stack, add env vars in the UI
 
-In all cases, env vars set through the platform UI override the placeholders in `docker-compose.yml` the same way a `.env` file does locally.
+In all cases, env vars set through the platform UI override the defaults in `docker-compose.yml` the same way a `.env` file does locally.
 
 ### First login
 
@@ -467,7 +480,7 @@ After first start, the seeded admin account uses whatever you set in `ADMIN_EMAI
 
 **With email provider configured (recommended)**
 
-Set `RESEND_API_KEY` (or another supported provider) in `.env`, then enter your `ADMIN_EMAIL` on the sign-in page and check your inbox for the OTP.
+Set `RESEND_API_KEY` and `EMAIL_FROM` in `.env`, then enter your `ADMIN_EMAIL` on the sign-in page and check your inbox for the OTP.
 
 **Without email provider (first-run testing)**
 
@@ -475,10 +488,10 @@ Read the OTP directly from the database:
 
 ```sh
 docker compose exec postgres psql -U nextcrm -d nextcrm \
-  -c 'SELECT identifier, value, "expiresAt" FROM "Verification" ORDER BY "createdAt" DESC LIMIT 1;'
+  -c 'SELECT identifier, value, "expiresAt" FROM verification ORDER BY "createdAt" DESC LIMIT 1;'
 ```
 
-(`identifier` is the email, `value` is the OTP code.)
+(`identifier` ends with the email; `value` is the OTP code followed by `:` and the attempt count, e.g. `606331:0`.)
 
 Use that OTP on the sign-in page. After login, configure an email provider from the Admin panel so future logins work normally.
 
@@ -521,4 +534,4 @@ Made with [contrib.rocks](https://contrib.rocks).
 
 ## License
 
-Licensed under the [MIT license](https://github.com/pdovhomilja/nextcrm-app/blob/main/LICENSE.md).
+Licensed under the [MIT license](https://github.com/pdovhomilja/nextcrm-app/blob/main/LICENSE).

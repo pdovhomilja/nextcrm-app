@@ -1,7 +1,11 @@
 import { createHmac, timingSafeEqual } from "crypto";
 
 // Calendly signs webhooks with: Calendly-Webhook-Signature: t=<unix>,v1=<hex>
-// where v1 = HMAC-SHA256(signingKey, `${t}.${rawBody}`).
+// where v1 = HMAC-SHA256(signingKey, `${t}.${rawBody}`). Deliveries whose
+// timestamp is more than 3 minutes off are rejected (Calendly's recommended
+// replay tolerance).
+const TOLERANCE_SECONDS = 180;
+
 export function verifyCalendlySignature(
   rawBody: string,
   header: string | null,
@@ -14,6 +18,7 @@ export function verifyCalendlySignature(
   const t = parts["t"];
   const v1 = parts["v1"];
   if (!t || !v1) return false;
+  if (!(Math.abs(Date.now() / 1000 - Number(t)) <= TOLERANCE_SECONDS)) return false;
 
   const expected = createHmac("sha256", signingKey)
     .update(`${t}.${rawBody}`)

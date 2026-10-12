@@ -1,0 +1,161 @@
+---
+title: Local setup
+description: Run NextCRM on your machine with a Docker Postgres, the Inngest dev server and pnpm dev.
+---
+
+This page sets up the "host dev" workflow: the app runs on your machine with `pnpm dev`, and only Postgres and Inngest run in Docker. If you only want to run NextCRM, not develop it, use the full Docker stack described in the admin guide instead.
+
+## Prerequisites
+
+| Tool | Version | Source |
+| --- | --- | --- |
+| Node.js | 22.12.0 or newer | `engines.node` in `package.json` |
+| pnpm | 10 or newer (the repo pins `pnpm@11.20.0`) | `engines.pnpm` and `packageManager` |
+| Docker | Docker Desktop or Docker Engine with Compose | used by `docker-compose.dev.yml` |
+| Git | any recent version | |
+
+Corepack picks up the pinned pnpm version from `packageManager` if you have it enabled (`corepack enable`).
+
+## Set up
+
+<Steps>
+<Step>
+
+### Clone and install
+
+```bash
+git clone https://github.com/pdovhomilja/nextcrm-app.git
+cd nextcrm-app
+pnpm install
+```
+
+Contributors should fork first and clone their fork. See [Contributing](/docs/developers/contributing).
+
+</Step>
+<Step>
+
+### Create the env files
+
+```bash
+cp .env.example .env
+cp .env.local.example .env.local
+```
+
+On Windows PowerShell use `Copy-Item .env.example .env` and `Copy-Item .env.local.example .env.local`.
+
+The split matters:
+
+- `.env` holds `DATABASE_URL`. The Prisma CLI reads only `.env` (through `prisma.config.ts`), so a URL in `.env.local` is invisible to `prisma migrate` and `prisma db seed`.
+- `.env.local` holds everything else: `BETTER_AUTH_SECRET`, Inngest settings, API keys.
+
+The default `DATABASE_URL` in `.env.example` already points at the dev database:
+
+```bash
+DATABASE_URL="postgresql://nextcrm:nextcrm@localhost:5433/nextcrm"
+```
+
+For a working local instance, set at least these in `.env.local`:
+
+```bash
+BETTER_AUTH_SECRET=   # openssl rand -base64 32
+BETTER_AUTH_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+EMAIL_ENCRYPTION_KEY= # openssl rand -hex 32 (encrypts stored API keys and plugin secrets)
+INNGEST_ID=nextcrm
+INNGEST_APP_NAME=NextCRM
+INNGEST_DEV=1
+INNGEST_BASE_URL=http://localhost:8288
+```
+
+`INNGEST_DEV=1` makes the Inngest SDK talk to the local dev server instead of Inngest Cloud. All other variables are described in the [configuration reference](/docs/admins/configuration).
+
+</Step>
+<Step>
+
+### Start Postgres and Inngest
+
+```bash
+pnpm db:up       # Postgres (pgvector/pgvector:pg17) on 127.0.0.1:5433
+pnpm db:wait     # block until Postgres accepts connections
+pnpm inngest:up  # Inngest dev server on http://localhost:8288 (also starts Postgres)
+```
+
+`pnpm db:wait` is not optional on a first run. `db:up` returns when the container is created, not when Postgres is ready, and the first start runs `initdb`.
+
+The Inngest dev server runs with `--no-discovery` and syncs only `http://host.docker.internal:3000/api/inngest`, so the app must run on port 3000.
+
+</Step>
+<Step>
+
+### Apply migrations and seed
+
+```bash
+pnpm exec prisma generate
+pnpm db:migrate  # prisma migrate deploy
+pnpm db:seed     # lookup tables, currencies, test admin user, demo CRM data
+```
+
+`pnpm db:seed` sets `SEED_DEMO_DATA=1`, so it also creates a small demo dataset (one account, contact, lead and so on). The seed always creates an active admin user with the email from `TEST_USER_EMAIL`, or `test@nextcrm.app` if unset.
+
+<Callout type="warn">
+`db:migrate`, `db:seed` and `db:reset` run `scripts/assert-local-db.sh` first. The guard refuses to run unless `DATABASE_URL` points at `localhost`, `127.0.0.1` or `::1`. This stops you from seeding demo data into a shared database by accident.
+</Callout>
+
+</Step>
+<Step>
+
+### Run the app
+
+```bash
+pnpm dev
+```
+
+Open `http://localhost:3000`. The Inngest dashboard at `http://localhost:8288` shows registered functions and runs.
+
+</Step>
+</Steps>
+
+## Sign in locally
+
+NextCRM uses passwordless email OTP (Better Auth). You do not need a working email provider in development. Outside production, the Better Auth `testUtils` plugin captures every OTP, and a dev-only route returns it:
+
+```bash
+curl -X POST localhost:3000/api/auth/email-otp/send-verification-otp \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"test@nextcrm.app","type":"sign-in"}'
+
+curl "localhost:3000/api/auth/test-otp?email=test@nextcrm.app"
+# {"otp":"123456"}
+```
+
+You can also request the code from the sign-in page and then call the second command. `/api/auth/test-otp` returns 404 when `NODE_ENV` is `production`.
+
+If `RESEND_API_KEY` is set, OTP emails are really sent through Resend.
+
+## Database scripts
+
+| Script | What it does |
+| --- | --- |
+| `pnpm db:up` | Start the dev Postgres container |
+| `pnpm db:down` | Stop the dev Postgres container (data kept) |
+| `pnpm db:wait` | Wait until Postgres is ready |
+| `pnpm db:migrate` | Guard, then `prisma migrate deploy` |
+| `pnpm db:seed` | Guard, then `prisma db seed` with demo data |
+| `pnpm db:reset` | Guard, delete the dev Postgres volume, then up, wait, migrate, seed |
+| `pnpm inngest:up` | Start Inngest and Postgres |
+| `pnpm inngest:down` | `docker compose down` for both services (volumes kept) |
+| `pnpm inngest:logs` | Follow the logs of both services |
+
+`pnpm db:reset` only touches the Postgres service. Inngest run history survives.
+
+Run `pnpm exec prisma generate` after a fresh install and after every schema change to refresh the Prisma client. `pnpm build` runs it too. See [Data model](/docs/developers/data-model) for adding migrations.
+
+## Optional services
+
+You can work on most of the app without external services. Add keys only for what you work on. The OpenAI, Anthropic and Firecrawl keys can also be set in the admin panel instead of env vars (see [AI features](/docs/developers/ai-features)).
+
+- **AI and embeddings:** `OPENAI_API_KEY`. See [AI features](/docs/developers/ai-features).
+- **Target enrichment:** `ANTHROPIC_API_KEY`, `E2B_API_KEY`, `E2B_ENRICHMENT_TEMPLATE`.
+- **Contact enrichment:** `OPENAI_API_KEY` and `FIRECRAWL_API_KEY`.
+- **File storage:** the `MINIO_*` variables (any S3-compatible store).
+- **Email:** `RESEND_API_KEY` and `EMAIL_FROM`.

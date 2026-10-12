@@ -87,33 +87,28 @@ return serializeDecimalsList(invoices);
 
 ## 4. Git Workflow & Release Management
 
-This project uses a **trunk-based flow with `dev` as the integration branch** and `main` as the release branch. There are no long-lived feature branches.
-
-### Branches
-
-- **`dev`** — integration branch. All local development happens directly here. Deployed to the **remote dev environment** for integration testing.
-- **`main`** — release branch. Deployed to production. Updated only via PR from `dev`.
+This project uses **short-lived feature branches off `main`**. `main` is the release branch and is deployed to production.
 
 ### Development loop
 
-1. **Work locally on `dev`** — commit feature, fix, and refactor work directly to the `dev` branch. Do not create feature branches for routine work.
-2. **Push to `origin/dev`** — triggers the remote dev deployment. Verify the feature works end-to-end in the deployed dev environment, not just locally.
-3. **Open PR `dev → main`** — only after remote dev is green. This PR is the release gate.
+1. **Branch from the latest `main`** — one branch per change, named by type: `feat/…`, `fix/…`, `docs/…`, `chore/…`.
+2. **Push the branch** and open a PR **into `main`**. CI must be green before merge.
+3. **Merge after review.** Delete the branch once it is merged.
 
 ```bash
-# After work is committed locally on dev:
-git push origin dev
-
-# After validating remote dev deploy:
-gh pr create --base main --head dev --title "<type>: <summary>" --body "..."
+git fetch origin
+git checkout -b fix/<summary> origin/main
+# ...commit work...
+git push -u origin fix/<summary>
+gh pr create --base main --title "<type>: <summary>" --body "..."
 ```
 
 ### Rules for agents
 
-- **Default base branch for PRs is `main`**, head branch is `dev`. Do NOT use `--base dev` unless the user explicitly asks for a feature-branch-style PR.
-- **Never force-push `dev` or `main`.** If mistakes land on `dev`, create a follow-up commit.
-- **Never commit directly to `main`.** Changes reach `main` only via a reviewed `dev → main` PR.
+- **PRs target `main`**, head is your feature branch.
+- **Never force-push `main`.** If a mistake lands on `main`, fix it with a follow-up PR.
+- **Never commit directly to `main`.** Changes reach `main` only via a reviewed PR.
 - **Release automation**: `release-please` runs on `main` to manage version bumps and changelog generation. Do not manually edit `CHANGELOG.md` or `package.json` version fields.
-- When the user says "create a PR" without further context, assume `dev → main`.
+- When the user says "create a PR" without further context, open it from the current feature branch into `main`.
 
 ---

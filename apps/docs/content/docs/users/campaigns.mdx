@@ -1,0 +1,136 @@
+---
+title: Campaigns
+description: Build target lists, write email templates, and send email campaigns with follow-ups.
+---
+
+Campaigns send marketing email to people on your target lists. Open **Campaigns** in the sidebar. It has four pages: **All Campaigns**, **Templates**, **Targets**, and **Target Lists**.
+
+The usual order is: add targets, group them into a target list, write a template, then create a campaign for that list.
+
+<Callout type="info">
+With the user role you see only the campaigns, templates, targets, and target lists you created. Managers and admins see everyone's.
+</Callout>
+
+## Targets
+
+A target is a person or company you want to reach. Targets are separate from CRM contacts until you convert them.
+
+To add a target, open **Targets** and click **+ New Target**. Fill in the fields you know (name, email, phone, company, position, websites, social profiles, city, country, and so on) and save.
+
+To import targets from a file:
+
+<Steps>
+<Step>
+On **Targets**, click **Import CSV / Excel** and then **Select file**. Use a `.csv` or `.xlsx` file.
+</Step>
+<Step>
+Map your file's columns to target fields. AI pre-fills suggestions; change any mapping or set it to skip. Click **Next**.
+</Step>
+<Step>
+Check the preview and start the import. Each row needs at least a last name or a company. Rows without either are skipped and listed in the result.
+</Step>
+</Steps>
+
+To export targets, click **Export** and choose **Export CSV** or **Export Excel**. If you selected rows, only those are exported. Otherwise the export contains the rows that match your current filter.
+
+### Target detail
+
+Click a target to open it. From there you can:
+
+- **Enrich with AI**: start a background search that fills in missing details. See [Enriching targets](#enriching-targets).
+- **Convert to deal**: create a company account, a contact, and an opportunity from the target, then open the new opportunity. Converting the same target again reuses the records already created.
+- **Add Contact**: add a person at the target's company (name, email, phone, LinkedIn URL).
+
+### Enriching targets
+
+Enrichment looks up public information about a target on the web and fills in empty fields. It never overwrites data you already entered. A target needs an email or a company name before it can be enriched.
+
+- One target: open it and click **Enrich with AI**. The job runs in the background.
+- Several targets: select rows in the **Targets** table and click **Enrich N targets**. Pick the fields to fill and start. You can enrich up to 100 targets at once.
+
+To follow progress, open `/campaigns/targets/enrichment` (the **Target Enrichment Jobs** page). It lists each job with its status, fields, start time, and who started it. Click **Retry** on a job that failed.
+
+<Callout type="warn">
+Enrichment needs an AI provider key. If no key is set for your organization, add your own under [Profile → LLMs](/docs/users/profile) or ask an admin.
+</Callout>
+
+## Target lists
+
+A target list is the audience for a campaign.
+
+1. Open **Target Lists** and click **+ New List**.
+2. Enter a **Name** and an optional **Description**, then click **Create**.
+3. Open the list and click **+ Add Target**. Search by name, email, or company, tick the targets, and click **Add Selected**.
+
+To take a target off a list, click the trash icon next to it. You can also export a list's targets with **Export**.
+
+## Templates
+
+A template holds the subject line and body of an email so you can reuse it.
+
+To create a template, open **Templates** and click **+ New Template**. Enter a **Template Name**, an optional **Description**, and a **Subject Line**, then write the body under **Email Body**. Switch to **Preview** to see the rendered email. Click **Save Template**.
+
+To draft the body with AI, describe the email under **Generate with AI** and click **Generate**. This uses an OpenAI key; if none is available, add one under [Profile → LLMs](/docs/users/profile).
+
+You can personalise subject and body with merge tags. NextCRM replaces them with each recipient's data:
+
+| Tag | Replaced with |
+| --- | --- |
+| `{{first_name}}` | First name |
+| `{{last_name}}` | Last name |
+| `{{email}}` | Email |
+| `{{company}}` | Company |
+| `{{position}}` | Position |
+
+## Create a campaign
+
+Open **All Campaigns** and click **+ New Campaign**. The wizard has four steps.
+
+<Steps>
+<Step>
+**Details.** Enter a **Campaign Name** (required), and optionally a **Description**, **From Name**, and **Reply-to Email**.
+</Step>
+<Step>
+**Template.** Either **Generate with AI** from a short description, or **Choose Existing** to pick a saved template. Check the **Subject Line** and **Email Content**.
+</Step>
+<Step>
+**Audience.** Select one or more target lists. The step shows how many targets each list holds.
+</Step>
+<Step>
+**Schedule.** Under **When to send**, pick **Send now** or **Schedule for later** and set the date and time. Optionally click **+ Add follow-up** to add more emails (see below). Click **Submit Campaign**.
+</Step>
+</Steps>
+
+<Callout type="warn">
+Only managers and admins can send or schedule a campaign. If you have the user role, ask a manager to send it for you.
+</Callout>
+
+### Follow-up steps
+
+Each follow-up has:
+
+- **Delay (days after previous)**: how long to wait after the previous email.
+- **Send to**: **All recipients** or **Non-openers only**.
+- **Template** and **Subject** for the follow-up email.
+
+Follow-ups go only to recipients whose first email was sent and who have not unsubscribed.
+
+### Unsubscribes
+
+Every campaign email contains an unsubscribe link. A target who unsubscribes is never emailed again by any campaign. If you import the same email address later, it stays unsubscribed.
+
+## Track a campaign
+
+The **All Campaigns** table shows each campaign's status (draft, scheduled, sending, sent, paused), scheduled time, recipient count, and template. Filter by name or status.
+
+Click a campaign to see:
+
+- Totals for **Sent**, **Delivered**, **Open Rate**, **Click Rate**, and **Bounced**.
+- **Campaign Steps**: each email in the sequence with its own sent and opened counts.
+- **Recipients**: everyone the campaign was sent to. Search by name or email and filter by status.
+
+To stop a scheduled or sending campaign, click **Pause** on its detail page.
+
+To delete a campaign, open the row menu in **All Campaigns** and choose **Delete**.
+
+For totals across all campaigns, see [Reports](/docs/users/reports).

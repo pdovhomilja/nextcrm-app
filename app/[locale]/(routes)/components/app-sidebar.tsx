@@ -11,13 +11,15 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Puzzle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NavMain } from "./nav-main";
-import { NavUser } from "./nav-user";
 import getDashboardMenuItem from "./menu-items/Dashboard";
 import getCrmMenuItem from "./menu-items/Crm";
 import getProjectsMenuItem from "./menu-items/Projects";
 import getEmailsMenuItem from "./menu-items/Emails";
+import getChatMenuItem from "./menu-items/Chat";
+import getScheduleMenuItem from "./menu-items/Schedule";
 import getReportsMenuItem from "./menu-items/Reports";
 import getDocumentsMenuItem from "./menu-items/Documents";
 import getInvoicesMenuItem from "./menu-items/Invoices";
@@ -81,11 +83,15 @@ interface Session {
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   dict: any;
   session: Session;
+  pluginNav?: { title: string; url: string }[];
+  appName: string;
 }
 
 export function AppSidebar({
   dict,
   session,
+  pluginNav,
+  appName,
   ...props
 }: AppSidebarProps) {
   const { state } = useSidebar();
@@ -96,7 +102,7 @@ export function AppSidebar({
     getCrmMenuItem({ localizations: dict.crm, role: session?.user?.role ?? undefined }),
     getCampaignsMenuItem({
       localizations: {
-        title: "Campaigns",
+        title: "Email marketing",
         campaigns: "All Campaigns",
         templates: "Templates",
         targets: "Targets",
@@ -105,10 +111,16 @@ export function AppSidebar({
     }),
     getProjectsMenuItem({ title: dict?.projects || "Projects" }),
     getEmailsMenuItem({ title: dict?.emails || "Emails" }),
+    getChatMenuItem({ title: dict?.chat || "Team chat" }),
+    getScheduleMenuItem({ title: "Schedule" }),
     getReportsMenuItem({ title: dict?.reports || "Reports" }),
     getDocumentsMenuItem({ title: dict?.documents || "Documents" }),
     getInvoicesMenuItem({ title: dict?.invoices || "Invoices" }),
   ];
+
+  if (pluginNav?.length) {
+    navItems.push({ title: dict?.plugins || "Plugins", icon: Puzzle, items: pluginNav });
+  }
 
   // Administration: admin users only
   if (session?.user?.role === "admin") {
@@ -117,16 +129,12 @@ export function AppSidebar({
     );
   }
 
-  // Prepare user data for NavUser component
-  const userData = {
-    id: session.user.id,
-    name: session.user.name,
-    email: session.user.email,
-    avatar: session.user.image,
-  };
-
   return (
-    <Sidebar collapsible="icon" className="border-sidebar-border/70" {...props}>
+    <Sidebar
+      collapsible="icon"
+      className="border-r border-sidebar-border/70 bg-sidebar/95 backdrop-blur-md"
+      {...props}
+    >
       {/* Header with Logo and Branding */}
       <SidebarHeader>
         <div
@@ -135,7 +143,7 @@ export function AppSidebar({
             isExpanded ? "gap-x-4" : "justify-center",
           )}
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-cyan-400/20">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 ring-1 ring-primary/20 shadow-sm">
             {/* The logo is served from the supplied branded asset URL. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -151,8 +159,10 @@ export function AppSidebar({
               !isExpanded ? "w-0 opacity-0" : "w-auto opacity-100",
             )}
           >
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">HCTPL</p>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">VenSai CRM</h1>
+            <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              Workspace
+            </p>
+            <h1 className="text-base font-semibold tracking-tight text-foreground">{appName}</h1>
           </div>
         </div>
       </SidebarHeader>
@@ -163,10 +173,10 @@ export function AppSidebar({
         <NavMain items={navItems} dict={dict} />
       </SidebarContent>
 
-      {/* Footer with NavUser and Build Version */}
       <SidebarFooter>
-        {/* Task 3.1: NavUser component with user profile and actions */}
-        <NavUser user={userData} />
+        <p className="px-2 pb-1 text-center text-[10px] text-muted-foreground">
+          Profile & settings are in the top bar
+        </p>
       </SidebarFooter>
 
       {/* Rail for toggling sidebar on desktop */}

@@ -37,16 +37,17 @@ export default function SearchResult() {
   const locale = (params?.locale as string) ?? "en";
 
   const [results, setResults] = useState<UnifiedSearchResults | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  // Key of the last finished search; loading while it differs from the current one
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const searchKey = `${locale}:${query.trim()}`;
+  const isLoading = loadedKey !== searchKey;
 
   useEffect(() => {
-    if (!query || query.trim().length < 2) {
-      setResults(null);
-      return;
-    }
-    setIsLoading(true);
+    if (!query || query.trim().length < 2) return;
+    let cancelled = false;
     unifiedSearch(query.trim(), locale)
       .then((res) => {
+        if (cancelled) return;
         if ("error" in res) {
           console.error("[UNIFIED_SEARCH]", res.error);
           return;
@@ -54,8 +55,13 @@ export default function SearchResult() {
         setResults(res);
       })
       .catch((err) => console.error(err))
-      .finally(() => setIsLoading(false));
-  }, [query, locale]);
+      .finally(() => {
+        if (!cancelled) setLoadedKey(searchKey);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [query, locale, searchKey]);
 
   if (!query)
     return <p className="text-muted-foreground">Enter a search term above.</p>;

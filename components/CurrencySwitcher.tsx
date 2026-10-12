@@ -9,7 +9,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+/** Use on pricing, invoices, and CRM price lists — not in the global header. */
+export function DisplayCurrencyPicker() {
+  return <CurrencySwitcherInner />;
+}
+
+/** @deprecated Use DisplayCurrencyPicker in pricing contexts only */
 export function CurrencySwitcher() {
+  return <CurrencySwitcherInner />;
+}
+
+function CurrencySwitcherInner() {
   const { displayCurrency, currencies, setDisplayCurrency } = useCurrency();
   const current = currencies.find((c) => c.code === displayCurrency);
 

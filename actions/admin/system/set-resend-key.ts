@@ -4,6 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prismadb } from "@/lib/prisma";
 import { requireRole } from "@/lib/authz";
+import { encryptResendKey } from "@/lib/resend";
 
 const schema = z.object({
   id: z.string(),
@@ -25,14 +26,16 @@ export async function setResendKey(formData: FormData): Promise<void> {
     serviceKey: formData.get("serviceKey"),
   });
 
+  const serviceKey = encryptResendKey(parsed.serviceKey);
+
   if (!parsed.id) {
     await prismadb.systemServices.create({
-      data: { v: 0, name: "resend_smtp", serviceKey: parsed.serviceKey },
+      data: { v: 0, name: "resend_smtp", serviceKey },
     });
   } else {
     await prismadb.systemServices.update({
       where: { id: parsed.id },
-      data: { serviceKey: parsed.serviceKey },
+      data: { serviceKey },
     });
   }
 

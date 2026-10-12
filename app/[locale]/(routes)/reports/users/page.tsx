@@ -3,6 +3,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ReportPageLayout } from "@/components/reports/ReportPageLayout";
 import { ReportChart } from "@/components/reports/ReportChart";
 import { parseSearchParamsToFilters } from "@/actions/reports/types";
+import { redirect } from "next/navigation";
+import { requireAuthenticated, getReportScope } from "@/lib/authz";
 import {
   getActiveUsersByYear,
   getActiveUsersLifetime,
@@ -13,6 +15,10 @@ import {
 type Props = { searchParams: Promise<Record<string, string | undefined>> };
 
 export default async function UsersReportPage({ searchParams }: Props) {
+  // Same rule as the CSV/PDF export: the user directory is not for role "user".
+  if (!getReportScope(await requireAuthenticated()).allowUserDirectory) {
+    redirect("/reports");
+  }
   const resolvedParams = await searchParams;
   const params = new URLSearchParams(
     Object.entries(resolvedParams).filter(

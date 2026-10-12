@@ -1,0 +1,126 @@
+---
+title: Architecture
+description: How the NextCRM codebase is organised and how a request flows through it.
+---
+
+NextCRM is a single Next.js 16 App Router application. There is no separate backend service. Server Components read data, server actions write it, and a small set of API routes serves webhooks, file downloads, auth, Inngest and MCP.
+
+## Stack
+
+| Layer | Technology |
+| --- | --- |
+| Framework | Next.js 16 (App Router), React 19, TypeScript |
+| Database | PostgreSQL with the pgvector extension, Prisma 7 with the `@prisma/adapter-pg` driver adapter |
+| Auth | Better Auth (email OTP, Google OAuth, admin plugin) |
+| Background jobs | Inngest |
+| i18n | next-intl (`en`, `cz`, `de`, `uk`) |
+| UI | Tailwind CSS v4, shadcn/ui (Radix UI) |
+| Email | Resend and React Email |
+| AI | OpenAI (embeddings), Anthropic (enrichment agent), E2B sandboxes, Firecrawl |
+| MCP | `mcp-handler` with `@modelcontextprotocol/sdk` |
+
+## Project structure
+
+```text
+app/
+  [locale]/            Localised UI routes
+    (auth)/            sign-in, pending, inactive
+    (routes)/          Signed-in app: crm, projects, invoices, campaigns, documents,
+                       emails, reports, profile, admin, p/ (plugin pages) ...
+  api/                 Route handlers: auth, inngest, mcp, webhooks, PDF and export
+actions/               Server actions, grouped by module (crm, invoices, projects, ...)
+components/            Shared React components; components/ui holds shadcn/ui
+lib/                   Server-side libraries
+  authz/               Role and object-level permission helpers
+  mcp/                 MCP auth, tool runner, tool definitions (lib/mcp/tools)
+  plugins/             Plugin host: registry, lifecycle, rules, store, context
+  enrichment/          Enrichment agent and strategies
+  prisma.ts            Prisma client with plugin rules applied (use this one)
+  prisma-base.ts       Raw Prisma client singleton
+  auth.ts              Better Auth server config
+  audit-log.ts         Audit log writer and diff helper
+inngest/
+  client.ts            Inngest client
+  functions/           Background functions (embeddings, enrichment, email, campaigns, ...)
+i18n/                  next-intl routing, request config, navigation helpers
+locales/               Message files: en.json, cz.json, de.json, uk.json
+prisma/
+  schema.prisma        The single schema file
+  migrations/          SQL migrations, applied with prisma migrate deploy
+  seeds/               Seed script (seed.ts) and helpers
+  initial-data/        JSON lookup data used by the seed
+packages/plugin-sdk/   @nextcrm/plugin-sdk, the public plugin API
+plugins/               Public plugins (one folder per plugin)
+emails/                React Email templates
+e2b/                   E2B sandbox template for the enrichment agent
+scripts/               Dev scripts (DB guard, plugin registry generator, migrations)
+__tests__/             Jest suites (also lib/**/__tests__ and others)
+tests/                 Playwright end-to-end tests
+proxy.ts               Request middleware: session cookie check and locale routing
+instrumentation.ts     Server start hook (runs plugin upgrades)
+```
+
+`@/*` maps to the repository root, so imports look like `@/lib/prisma` or `@/actions/crm/accounts/update-account`. `@nextcrm/plugin-sdk` maps to `packages/plugin-sdk/src` through `tsconfig.json` and `jest.config.ts`.
+
+## Request flow
+
+### Middleware
+
+`proxy.ts` runs first (Next.js 16 renamed `middleware.ts` to `proxy.ts`):
+
+- `/api/inngest` and `/api/auth` pass straight through.
+- A short list of admin API paths returns `401` without a session cookie. The role itself is checked in the handler.
+- Page requests without a session cookie redirect to `/sign-in`, except the auth pages.
+- Everything else goes to the next-intl middleware, which resolves the locale prefix.
+
+The middleware only checks that a cookie exists. Every page, action and route still checks the session and permissions itself.
+
+### Reading data: Server Components
+
+Pages under `app/[locale]/(routes)` are async Server Components. They call functions from `actions/` (for example `actions/crm/get-accounts.ts`) or query Prisma, and pass plain data to Client Components.
+
+Prisma returns `Decimal` objects for numeric columns. These cannot cross the server to client boundary. Wrap results with `serializeDecimals()` or `serializeDecimalsList()` from `lib/serialize-decimals.ts` before passing them to a Client Component or returning them from a server action.
+
+### Writing data: server actions
+
+Mutations are server actions (`"use server"`) in `actions/`. A typical write action does this, in order:
+
+1. Authenticate with `requireAuthenticated()` from `@/lib/authz`.
+2. Check object access with an `assertCanWrite…` helper.
+3. Load the previous row, write with `prismadb`, and compute a diff with `diffObjects()`.
+4. Write an audit log entry with `writeAuditLog()`.
+5. Send an Inngest event, for example `crm/account.saved`, which triggers embedding and plugin handlers.
+6. Call `revalidatePath()` and return `{ data }` or `{ error }`.
+
+Actions return `{ error: "..." }` instead of throwing for expected failures. If a plugin rule rejects the write, `pluginRuleErrorMessage(error)` from `lib/plugins/action-errors.ts` turns the rule error into a translated message.
+
+`actions/crm/accounts/update-account.ts` is a good reference implementation.
+
+### API routes
+
+Route handlers in `app/api` are used where a server action does not fit:
+
+| Path | Purpose |
+| --- | --- |
+| `/api/auth/[...all]` | Better Auth handler |
+| `/api/auth/test-otp` | Returns captured OTPs outside production |
+| `/api/inngest` | Inngest serve endpoint (`GET`, `POST`, `PUT`) |
+| `/api/mcp/[transport]` | MCP server. See [MCP server](/docs/developers/mcp) |
+| `/api/invoices/[invoiceId]/pdf` | Invoice PDF |
+| `/api/reports/export` | Report export |
+| `/api/upload/presigned-url` | Presigned upload URL for object storage |
+| `/api/campaigns/webhooks/resend`, `/api/crm/calendar/webhooks/calendly` | Incoming webhooks |
+| `/api/crm/...`, `/api/campaigns/...` | Enrichment triggers and a few CRM endpoints |
+| `/api/admin/...` | Admin-only endpoints (invoice series, tax rates, plugin data export) |
+| `/api/profile/calendar-connections/...` | Calendar OAuth and connections |
+
+Route handlers use the same `@/lib/authz` helpers as actions and map errors with `unauthorizedResponse()`, `forbiddenResponse()` and `notFoundOrForbiddenResponse()`.
+
+### Background work
+
+Anything slow or external (embeddings, enrichment, email sync, campaign sending, scheduled reports) runs as an Inngest function. Actions and routes only send an event. See [Background jobs](/docs/developers/background-jobs).
+
+### Two Prisma clients
+
+- `prismadb` from `@/lib/prisma` is the client to use in app code. It is `prismaBase` wrapped with the plugin rules extension, so writes to accounts, contacts, leads and opportunities run plugin rules and emit plugin after-events.
+- `prismaBase` from `@/lib/prisma-base` is the raw client. The plugin host uses it for its own tables. Do not use it in feature code, or plugin rules will be bypassed.

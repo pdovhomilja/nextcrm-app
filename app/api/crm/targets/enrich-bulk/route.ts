@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { inngest } from "@/inngest/client";
-import { getApiKey } from "@/lib/api-keys";
+import { missingTargetEnrichmentKey } from "@/lib/enrichment/target-enrichment-keys";
 import { FIELD_MAP } from "@/lib/enrichment/presets/target-fields";
 import type { EnrichmentField } from "@/lib/enrichment/types";
 import {
@@ -42,10 +42,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const firecrawlApiKey = await getApiKey("FIRECRAWL", user.id);
-  const openaiApiKey = await getApiKey("OPENAI", user.id);
-  if (!firecrawlApiKey || !openaiApiKey) {
+  const missingKey = await missingTargetEnrichmentKey(user.id);
+  if (missingKey === "ANTHROPIC") {
     return NextResponse.json({ error: "NO_API_KEY" }, { status: 402 });
+  }
+  if (missingKey === "E2B_API_KEY") {
+    return NextResponse.json(
+      { error: "E2B_API_KEY is not set on the server; bulk target enrichment needs it." },
+      { status: 503 }
+    );
   }
 
   const authorized = await filterAuthorizedTargetIds(user, targetIds);

@@ -70,7 +70,7 @@ function buildSupplier(settings: SettingsForPdf): PdfParty {
     name:
       settings?.companyName ??
       process.env.NEXT_PUBLIC_APP_NAME ??
-      "NextCRM",
+      "VenSai CRM",
     street: settings?.companyAddress ?? undefined,
     city: settings?.companyCity ?? undefined,
     zip: settings?.companyZip ?? undefined,

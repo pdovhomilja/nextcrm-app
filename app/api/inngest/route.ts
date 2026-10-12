@@ -9,6 +9,7 @@ import { emailSyncAll } from "@/inngest/functions/emails/sync-all";
 import { emailSyncAccount } from "@/inngest/functions/emails/sync-account";
 import { embedEmail } from "@/inngest/functions/emails/embed-email";
 import { emailLinkCrm } from "@/inngest/functions/emails/link-crm";
+import { emailResendInbound } from "@/inngest/functions/emails/resend-inbound";
 import { enrichContact } from "@/inngest/functions/enrich-contact";
 import { enrichContactsBulk } from "@/inngest/functions/enrich-contacts-bulk";
 import { enrichTarget } from "@/inngest/functions/enrich-target";
@@ -31,6 +32,8 @@ import { calendarOutboundSync } from "@/inngest/functions/calendar/outbound-sync
 import { enrichDocument } from "@/inngest/functions/documents/enrich-document";
 import { generateDocumentThumbnail } from "@/inngest/functions/documents/generate-thumbnail";
 import { syncExchangeRates } from "@/inngest/functions/ecb/sync-exchange-rates";
+import { frankfurterSyncRates } from "@/inngest/functions/frankfurter/sync-rates";
+import { getPluginFunctions } from "@/lib/plugins/inngest";
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
@@ -44,6 +47,7 @@ export const { GET, POST, PUT } = serve({
     emailSyncAccount,
     embedEmail,
     emailLinkCrm,
+    emailResendInbound,
     enrichContact,
     enrichContactsBulk,
     enrichTarget,
@@ -66,5 +70,7 @@ export const { GET, POST, PUT } = serve({
     enrichDocument,
     generateDocumentThumbnail,
     syncExchangeRates,
+    frankfurterSyncRates,
+    ...getPluginFunctions(),
   ],
 });

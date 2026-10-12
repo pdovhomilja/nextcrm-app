@@ -1,6 +1,6 @@
 import { PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { minioClient, MINIO_BUCKET } from "@/lib/minio";
+import { minioClient, minioPresignClient, MINIO_BUCKET } from "@/lib/minio";
 
 function invoiceKey(invoiceId: string) {
   return `invoices/${invoiceId}.pdf`;
@@ -31,7 +31,7 @@ export async function getInvoicePdfPresignedUrl(
   expirySeconds = 300,
 ): Promise<string> {
   return getSignedUrl(
-    minioClient,
+    minioPresignClient,
     new GetObjectCommand({ Bucket: MINIO_BUCKET, Key: key }),
     { expiresIn: expirySeconds },
   );

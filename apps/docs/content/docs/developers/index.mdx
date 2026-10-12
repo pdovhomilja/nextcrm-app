@@ -1,0 +1,37 @@
+---
+title: Developer guide
+description: Build, extend and integrate NextCRM. Local setup, architecture, data model, permissions, jobs, AI, MCP and plugins.
+---
+
+This section is for developers who contribute to NextCRM, write plugins, or connect other systems and AI agents to it.
+
+NextCRM is a single Next.js 16 App Router app with React 19, Prisma 7 on PostgreSQL with pgvector, Better Auth, Inngest for background jobs and next-intl for four UI languages. Server Components read data, server actions write it, and every entry point checks permissions through one shared library.
+
+## Get started
+
+<Cards>
+  <Card title="Local setup" href="/docs/developers/local-setup" description="Prerequisites, env files, Docker Postgres and Inngest, migrations, seed, dev login." />
+  <Card title="Architecture" href="/docs/developers/architecture" description="Project structure and how a request flows through middleware, Server Components, actions and routes." />
+  <Card title="Contributing" href="/docs/developers/contributing" description="Branches, pull requests, conventional commits, releases and code conventions." />
+</Cards>
+
+## Core concepts
+
+<Cards>
+  <Card title="Data model" href="/docs/developers/data-model" description="Key Prisma models, IDs, soft delete, the audit log, and adding a migration." />
+  <Card title="Auth and permissions" href="/docs/developers/auth-permissions" description="Better Auth, the user, manager and admin roles, scope helpers and API tokens." />
+  <Card title="Internationalization" href="/docs/developers/i18n" description="Adding strings and locales with next-intl." />
+  <Card title="Background jobs" href="/docs/developers/background-jobs" description="Inngest events, scheduled functions and how to add one." />
+  <Card title="AI features" href="/docs/developers/ai-features" description="Embeddings, vector search, E2B enrichment and API key resolution." />
+</Cards>
+
+## Extend and integrate
+
+<Cards>
+  <Card title="MCP server" href="/docs/developers/mcp" description="Connect Claude Code and other MCP clients with a bearer token. Tool catalogue and limits." />
+  <Card title="Plugin system" href="/docs/developers/plugins" description="SDK reference: manifest, permissions, extension points, store and lifecycle." />
+  <Card title="Build a plugin" href="/docs/developers/plugin-tutorial" description="Create, test and install a plugin step by step." />
+  <Card title="Testing and CI" href="/docs/developers/testing" description="Jest, Playwright, linting, type checks and the CI pipeline." />
+</Cards>
+
+For running NextCRM in production and the full list of environment variables, see the [admin guide](/docs/admins/configuration).

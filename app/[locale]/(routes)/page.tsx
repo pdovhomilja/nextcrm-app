@@ -77,10 +77,10 @@ const DashboardPage = async () => {
     <Container
       title={dict("containerTitle")}
       description={
-        "Welcome to NextCRM cockpit, here you can see your company overview"
+        "Welcome to VenSai CRM — here you can see your company overview"
       }
     >
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <Suspense fallback={<LoadingBox />}>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -129,7 +129,7 @@ const DashboardPage = async () => {
           content={campaigns}
         />
         <DashboardCard
-          href="/crm/targets"
+          href="/campaigns/targets"
           title={dict("targets")}
           IconComponent={Target}
           content={targets}
@@ -208,15 +208,17 @@ const DashboardCard = ({
   IconComponent: any;
   content: number;
 }) => (
-  <Link href={href || "#"}>
+  <Link href={href || "#"} className="block h-full">
     <Suspense fallback={<LoadingBox />}>
-      <Card>
+      <Card className="stat-card-hover h-full">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">{title}</CardTitle>
-          <IconComponent className="w-4 h-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <IconComponent className="h-4 w-4" />
+          </span>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-medium">{content}</div>
+          <div className="text-3xl font-semibold tracking-tight tabular-nums">{content}</div>
         </CardContent>
       </Card>
     </Suspense>

@@ -20,6 +20,8 @@ type Props = {
     opportunities: string;
     contracts: string;
     products: string;
+    priceLists: string;
+    orders: string;
   };
   /** Current user's role — the Approvals queue is manager/admin only. */
   role?: string;
@@ -65,6 +67,14 @@ export const getCrmMenuItem = ({ localizations, role }: Props): NavItem => {
       {
         title: localizations.products,
         url: "/crm/products",
+      },
+      {
+        title: localizations.priceLists,
+        url: "/crm/price-lists",
+      },
+      {
+        title: localizations.orders,
+        url: "/crm/orders",
       },
       ...(role === "manager" || role === "admin"
         ? [{ title: "Approvals", url: "/crm/approvals" }]

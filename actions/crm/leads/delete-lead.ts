@@ -1,6 +1,7 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { pluginRuleErrorMessage } from "@/lib/plugins/action-errors";
 import { writeAuditLog } from "@/lib/audit-log";
 import {
   requireAuthenticated,
@@ -41,6 +42,8 @@ export const deleteLead = async (leadId: string) => {
     revalidatePath("/[locale]/(routes)/crm/leads", "page");
     return { success: true };
   } catch (error) {
+    const ruleMessage = await pluginRuleErrorMessage(error);
+    if (ruleMessage) return { error: ruleMessage };
     console.log("[DELETE_LEAD]", error);
     return { error: "Failed to delete lead" };
   }

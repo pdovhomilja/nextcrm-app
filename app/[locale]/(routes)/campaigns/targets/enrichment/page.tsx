@@ -94,7 +94,7 @@ export default async function TargetEnrichmentJobsPage() {
                 <TableRow key={record.id} className={record.status === "RUNNING" ? "bg-muted/30" : ""}>
                   <TableCell>
                     <Link
-                      href={`/crm/targets/${record.target.id}`}
+                      href={`/campaigns/targets/${record.target.id}`}
                       className="font-medium hover:underline"
                     >
                       {record.target.first_name} {record.target.last_name}

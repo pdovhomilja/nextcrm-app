@@ -1,7 +1,7 @@
 import { inngest } from "@/inngest/client";
 import { prismadb } from "@/lib/prisma";
 import { decrypt } from "@/lib/email-crypto";
-import { EmailFolder } from "@prisma/client";
+import { EmailFolder, EmailSendProvider } from "@prisma/client";
 import Imap from "imap";
 import { connectImap, fetchHeaders, type ParsedHeader } from "@/inngest/lib/imap-utils";
 
@@ -44,6 +44,13 @@ export const emailSyncAccount = inngest.createFunction(
       prismadb.emailAccount.findUnique({ where: { id: accountId } })
     );
     if (!account) return { skipped: "account not found" };
+    if (account.sendProvider === EmailSendProvider.RESEND) {
+      return { skipped: "Resend send-only mailbox" };
+    }
+    const encryptedPassword = account.passwordEncrypted;
+    if (!encryptedPassword) {
+      return { skipped: "no mailbox credentials" };
+    }
 
     const sentFolder = account.sentFolderName || "Sent";
 
@@ -52,7 +59,7 @@ export const emailSyncAccount = inngest.createFunction(
     const { inboxUids, sentUids, newInboxHighest, newSentHighest } = await step.run(
       "search-uids",
       async () => {
-        const pwd = decrypt(account.passwordEncrypted);
+        const pwd = decrypt(encryptedPassword);
         const acc = { username: account.username, password: pwd, imapHost: account.imapHost, imapPort: account.imapPort, imapSsl: account.imapSsl, allowSelfSignedTls: account.allowSelfSignedTls };
         const [inbox, sent] = await Promise.all([
           connectImap(acc).then(async (imap) => {
@@ -85,7 +92,7 @@ export const emailSyncAccount = inngest.createFunction(
 
     // Step: fetch headers only — separate connections per folder to avoid box-state conflicts
     const { inboxHeaders, sentHeaders } = await step.run("fetch-headers", async () => {
-      const pwd = decrypt(account.passwordEncrypted);
+      const pwd = decrypt(encryptedPassword);
       const acc = { username: account.username, password: pwd, imapHost: account.imapHost, imapPort: account.imapPort, imapSsl: account.imapSsl, allowSelfSignedTls: account.allowSelfSignedTls };
       const [inbox, sent] = await Promise.all([
         inboxUids.length > 0

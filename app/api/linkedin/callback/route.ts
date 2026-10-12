@@ -4,11 +4,24 @@ import {
   exchangeLinkedInAuthorizationCode,
   hasDirectLinkedInOAuth,
   persistLinkedInTokens,
+  resolveLinkedInOriginFromRequest,
 } from "@/lib/linkedin-oauth";
-import { getLinkedInAppOrigin } from "@/lib/linkedin-connect";
 
 const STATE_COOKIE = "linkedin_oauth_state";
+const ORIGIN_COOKIE = "linkedin_oauth_origin";
 const COOKIE_PATH = "/api/linkedin";
+
+function clearOAuthCookies(response: NextResponse) {
+  const cleared = {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 0,
+    path: COOKIE_PATH,
+  };
+  response.cookies.set(STATE_COOKIE, "", cleared);
+  response.cookies.set(ORIGIN_COOKIE, "", cleared);
+}
 
 function redirectAdmin(origin: string, params: Record<string, string>) {
   const url = new URL("/en/admin/linkedin", origin);
@@ -16,18 +29,26 @@ function redirectAdmin(origin: string, params: Record<string, string>) {
     url.searchParams.set(key, value);
   }
   const response = NextResponse.redirect(url);
-  response.cookies.set(STATE_COOKIE, "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 0,
-    path: COOKIE_PATH,
-  });
+  clearOAuthCookies(response);
   return response;
 }
 
+function failureReason(error: unknown): string {
+  const message = error instanceof Error ? error.message : "unknown";
+  if (message.includes("EMAIL_ENCRYPTION_KEY")) return "missing-encryption-key";
+  if (message.includes("LinkedInConnection") || message.includes("does not exist")) {
+    return "database-migration";
+  }
+  if (message.includes("LinkedIn token exchange failed")) {
+    return `token-exchange:${encodeURIComponent(message.slice(0, 120))}`;
+  }
+  return "token-exchange";
+}
+
 export async function GET(request: NextRequest) {
-  const origin = await getLinkedInAppOrigin();
+  const requestOrigin = resolveLinkedInOriginFromRequest(request);
+  const origin =
+    request.cookies.get(ORIGIN_COOKIE)?.value?.replace(/\/$/, "") ?? requestOrigin;
   const url = new URL(request.url);
 
   if (url.searchParams.has("error")) {
@@ -53,8 +74,11 @@ export async function GET(request: NextRequest) {
       await persistLinkedInTokens(session.user.id, tokens);
       return redirectAdmin(origin, { connected: "1" });
     } catch (error) {
-      console.error("[linkedin/callback] Token exchange failed:", error);
-      return redirectAdmin(origin, { connected: "error", reason: "token-exchange" });
+      console.error("[linkedin/callback] OAuth failed:", error);
+      return redirectAdmin(origin, {
+        connected: "error",
+        reason: failureReason(error),
+      });
     }
   }
 

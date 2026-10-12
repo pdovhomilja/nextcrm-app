@@ -2,6 +2,7 @@ import { getUsers } from "@/actions/get-users";
 import React from "react";
 import Container from "../../components/ui/Container";
 import { InviteForm } from "./components/IviteForm";
+import { getOrgEmailDomain } from "@/lib/org-work-email";
 import { Separator } from "@/components/ui/separator";
 
 import { getSession } from "@/lib/auth-server";
@@ -14,6 +15,7 @@ import { getTranslations } from "next-intl/server";
 
 const AdminUsersPage = async () => {
   const users: Users[] = await getUsers();
+  const orgDomain = getOrgEmailDomain();
   const t = await getTranslations("AdminPage");
 
   const session = await getSession();
@@ -40,7 +42,7 @@ const AdminUsersPage = async () => {
         <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">
           {t("users.inviteHeading")}
         </h4>
-        <InviteForm />
+        <InviteForm orgDomain={orgDomain} />
       </div>
       <Separator />
       <div>

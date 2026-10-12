@@ -10,7 +10,12 @@ export type AuditEntityType =
   | "product"
   | "account_product"
   | "opportunity_line_item"
-  | "contract_line_item";
+  | "contract_line_item"
+  | "plugin"
+  | "price_list"
+  | "price_list_rule"
+  | "product_category"
+  | "order";
 
 export type AuditAction =
   | "created"
@@ -20,7 +25,13 @@ export type AuditAction =
   | "relation_added"
   | "relation_removed"
   | "imported"
-  | "cancelled";
+  | "cancelled"
+  | "installed"
+  | "uninstalled"
+  | "enabled"
+  | "disabled"
+  | "settings_changed"
+  | "upgraded";
 
 export interface AuditChange {
   field: string;
@@ -65,7 +76,6 @@ interface WriteAuditLogParams {
 
 export async function writeAuditLog(params: WriteAuditLogParams): Promise<void> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (prismadb as any).crm_AuditLog.create({
       data: {
         entityType: params.entityType,

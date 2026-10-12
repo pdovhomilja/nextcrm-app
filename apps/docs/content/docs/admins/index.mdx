@@ -1,0 +1,73 @@
+---
+title: Admin guide
+description: Install, configure, run and maintain your own NextCRM instance.
+---
+
+This guide is for people who host and administer NextCRM: installing it, configuring integrations, managing users, and keeping the instance backed up and up to date.
+
+A NextCRM instance is the Next.js app plus PostgreSQL with pgvector, S3-compatible storage and Inngest. The repository's Docker Compose files run all four. Login is passwordless by email code, so plan to set up Resend early.
+
+## Get it running
+
+<Cards>
+  <Card title="Requirements" href="/docs/admins/requirements">
+    What the instance needs, and which services are optional.
+  </Card>
+  <Card title="Install with Docker Compose" href="/docs/admins/install-docker">
+    Quick start, which variables reach the app, first admin login.
+  </Card>
+  <Card title="Configuration reference" href="/docs/admins/configuration">
+    Every environment variable the code reads, grouped by area.
+  </Card>
+  <Card title="Deployment" href="/docs/admins/deployment">
+    Coolify, Portainer, build packs, reverse proxy, file storage.
+  </Card>
+</Cards>
+
+## Run it
+
+<Cards>
+  <Card title="Administration panel" href="/docs/admins/administration">
+    AI keys, services, CRM picklists, funnel timing, currencies, invoices.
+  </Card>
+  <Card title="Users and roles" href="/docs/admins/users-and-roles">
+    Invitations, approvals, roles, API tokens.
+  </Card>
+  <Card title="Plugins" href="/docs/admins/plugins">
+    Install, configure, upgrade and uninstall plugins.
+  </Card>
+  <Card title="Audit log" href="/docs/admins/audit-log">
+    Change history and restoring deleted records.
+  </Card>
+  <Card title="Background jobs" href="/docs/admins/background-jobs">
+    What runs in Inngest and how to run Inngest in production.
+  </Card>
+</Cards>
+
+## Integrations
+
+<Cards>
+  <Card title="Email" href="/docs/admins/integrations/email">
+    Resend for login codes and system mail, SMTP for notifications, user mailboxes.
+  </Card>
+  <Card title="Calendar" href="/docs/admins/integrations/calendar">
+    Google Calendar OAuth app and the Calendly webhook.
+  </Card>
+  <Card title="Enrichment" href="/docs/admins/integrations/enrichment">
+    OpenAI, Firecrawl, Anthropic and the E2B sandbox template.
+  </Card>
+</Cards>
+
+## Keep it healthy
+
+<Cards>
+  <Card title="Backups and restore" href="/docs/admins/backups">
+    Database, uploaded files and the secrets that unlock them.
+  </Card>
+  <Card title="Upgrading" href="/docs/admins/upgrading">
+    Moving to a new release; migrations run on start.
+  </Card>
+  <Card title="Security hardening" href="/docs/admins/security">
+    Checklist and behaviours to know before going public.
+  </Card>
+</Cards>

@@ -6,7 +6,8 @@ import { decrypt } from "@/lib/email-crypto";
 import { serializeDecimals, serializeDecimalsList } from "@/lib/serialize-decimals";
 import { assertPublicHost, HostNotAllowedError } from "@/lib/net/host-guard";
 import nodemailer from "nodemailer";
-import { EmailFolder } from "@prisma/client";
+import { EmailFolder, EmailSendProvider } from "@prisma/client";
+import { sendMailViaResend } from "@/lib/email/resend-mail";
 
 const PAGE_SIZE = 50;
 const MAX_COUNT = 10_000;
@@ -83,7 +84,7 @@ export async function getEmail(id: string) {
   try {
     const userId = await requireSession();
     const email = await prismadb.email.findFirst({
-      where: { id, userId, isDeleted: false },
+      where: { id, userId },
       include: {
         contacts: { include: { contact: { select: { id: true, first_name: true, last_name: true } } } },
         accounts: { include: { account: { select: { id: true, name: true } } } },
@@ -107,7 +108,7 @@ export async function getEmail(id: string) {
           },
         });
 
-        if (account) {
+        if (account?.passwordEncrypted) {
           const { fetchBodyByUid } = await import("@/inngest/lib/imap-utils");
           const folderName = email.folder === "SENT" ? (account.sentFolderName || "Sent") : "INBOX";
           const body = await fetchBodyByUid(
@@ -156,11 +157,10 @@ export async function getEmail(id: string) {
   }
 }
 
+/** @deprecated Use trashEmail from mailbox-actions */
 export async function deleteEmail(id: string) {
-  const userId = await requireSession();
-  const email = await prismadb.email.findFirst({ where: { id, userId, isDeleted: false } });
-  if (!email) throw new Error("Not found");
-  await prismadb.email.update({ where: { id }, data: { isDeleted: true } });
+  const { trashEmail } = await import("@/actions/emails/mailbox-actions");
+  await trashEmail(id);
 }
 
 type SendInput = {
@@ -170,6 +170,7 @@ type SendInput = {
   bcc?: string[];
   subject: string;
   body: string;
+  bodyHtml?: string;
   inReplyTo?: string;   // parent's Message-ID
   references?: string;  // parent's References + parent's Message-ID (space-separated)
 };
@@ -182,47 +183,65 @@ export async function sendEmail(input: SendInput) {
   });
   if (!account) throw new Error("Account not found");
 
-  let pinned: { address: string; hostname: string };
-  try {
-    pinned = await assertPublicHost(account.smtpHost);
-  } catch (e) {
-    if (e instanceof HostNotAllowedError) throw new Error("Mail host is not allowed");
-    throw e;
+  let rfcMessageId: string;
+
+  if (account.sendProvider === EmailSendProvider.RESEND) {
+    const sent = await sendMailViaResend({
+      fromEmail: account.username,
+      fromName: account.fromName,
+      label: account.label,
+      to: input.to,
+      cc: input.cc,
+      bcc: input.bcc,
+      subject: input.subject,
+      text: input.body,
+      html: input.bodyHtml,
+      inReplyTo: input.inReplyTo,
+      references: input.references,
+    });
+    rfcMessageId = sent?.id ? `resend-${sent.id}` : `local-${crypto.randomUUID()}@nextcrm`;
+  } else {
+    if (!account.passwordEncrypted) throw new Error("Mailbox password is missing");
+
+    let pinned: { address: string; hostname: string };
+    try {
+      pinned = await assertPublicHost(account.smtpHost);
+    } catch (e) {
+      if (e instanceof HostNotAllowedError) throw new Error("Mail host is not allowed");
+      throw e;
+    }
+
+    const password = decrypt(account.passwordEncrypted);
+
+    const transporter = nodemailer.createTransport({
+      host: pinned.address,
+      port: account.smtpPort,
+      secure: account.smtpSsl,
+      auth: { user: account.username, pass: password },
+      ...({ servername: account.smtpHost } as { servername: string }),
+      tls: { rejectUnauthorized: !account.allowSelfSignedTls },
+    });
+
+    const info = await transporter.sendMail({
+      from: account.username,
+      to: input.to.join(", "),
+      cc: input.cc?.join(", "),
+      bcc: input.bcc?.join(", "),
+      subject: input.subject,
+      text: input.body,
+      html: input.bodyHtml,
+      inReplyTo: input.inReplyTo,
+      references: input.references,
+    });
+    rfcMessageId = info.messageId ?? `local-${crypto.randomUUID()}@nextcrm`;
   }
-
-  const password = decrypt(account.passwordEncrypted);
-
-  const transporter = nodemailer.createTransport({
-    host: pinned.address,
-    port: account.smtpPort,
-    secure: account.smtpSsl,
-    auth: { user: account.username, pass: password },
-    // servername for TLS SNI (host is a pinned IP). Added via a typed spread so
-    // the object literal keeps only the well-known SMTP props and TS resolves the
-    // SMTP overload correctly.
-    ...({ servername: account.smtpHost } as { servername: string }),
-    // Verify the certificate against the SNI hostname; self-signed servers opt
-    // out per account.
-    tls: { rejectUnauthorized: !account.allowSelfSignedTls },
-  });
-
-  const info = await transporter.sendMail({
-    from: account.username,
-    to: input.to.join(", "),
-    cc: input.cc?.join(", "),
-    bcc: input.bcc?.join(", "),
-    subject: input.subject,
-    text: input.body,
-    inReplyTo: input.inReplyTo,
-    references: input.references,
-  });
 
   // Write sent message to DB immediately so it appears in Sent view
   await prismadb.email.create({
     data: {
       emailAccountId: input.accountId,
       userId,
-      rfcMessageId: info.messageId ?? `local-${crypto.randomUUID()}@nextcrm`,
+      rfcMessageId,
       folder: EmailFolder.SENT,
       subject: input.subject,
       fromEmail: account.username,
@@ -230,8 +249,25 @@ export async function sendEmail(input: SendInput) {
       ccRecipients: input.cc?.map((e) => ({ email: e })) ?? [],
       bccRecipients: input.bcc?.map((e) => ({ email: e })) ?? [],
       bodyText: input.body,
+      bodyHtml: input.bodyHtml ?? null,
       sentAt: new Date(),
       isRead: true,
     },
   });
+}
+
+export async function getUnreadInboxCount(): Promise<number> {
+  try {
+    const userId = await requireSession();
+    return await prismadb.email.count({
+      where: {
+        userId,
+        folder: EmailFolder.INBOX,
+        isRead: false,
+        isDeleted: false,
+      },
+    });
+  } catch {
+    return 0;
+  }
 }

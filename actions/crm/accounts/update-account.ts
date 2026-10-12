@@ -1,6 +1,7 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { pluginRuleErrorMessage } from "@/lib/plugins/action-errors";
 import { inngest } from "@/inngest/client";
 import { writeAuditLog, diffObjects } from "@/lib/audit-log";
 import {
@@ -35,6 +36,7 @@ export const updateAccount = async (data: {
   annual_revenue?: string | null;
   member_of?: string | null;
   industry?: string;
+  pricelist_id?: string | null;
 }) => {
   const { id, ...rest } = data;
   if (!id) return { error: "id is required" };
@@ -61,6 +63,7 @@ export const updateAccount = async (data: {
         v: 0,
         updatedBy: user.id,
         ...rest,
+        ...(rest.pricelist_id === "" ? { pricelist_id: null } : {}),
       },
     });
     const changes = before ? diffObjects(
@@ -78,6 +81,8 @@ export const updateAccount = async (data: {
     revalidatePath("/[locale]/(routes)/crm/accounts", "page");
     return { data: account };
   } catch (error) {
+    const ruleMessage = await pluginRuleErrorMessage(error);
+    if (ruleMessage) return { error: ruleMessage };
     console.log("[UPDATE_ACCOUNT]", error);
     return { error: "Failed to update account" };
   }

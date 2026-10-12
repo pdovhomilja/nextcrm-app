@@ -1,0 +1,21 @@
+{
+  "title": "Admin guide",
+  "icon": "ShieldCheck",
+  "pages": [
+    "index",
+    "requirements",
+    "install-docker",
+    "configuration",
+    "deployment",
+    "administration",
+    "users-and-roles",
+    "plugins",
+    "audit-log",
+    "integrations",
+    "background-jobs",
+    "backups",
+    "upgrading",
+    "security"
+  ],
+  "root": true
+}

@@ -1,5 +1,6 @@
 import { inngest } from "@/inngest/client";
 import { prismadb } from "@/lib/prisma";
+import { EmailSendProvider } from "@prisma/client";
 
 export const emailSyncAll = inngest.createFunction(
   {
@@ -9,7 +10,7 @@ export const emailSyncAll = inngest.createFunction(
   },
   async () => {
     const accounts = await prismadb.emailAccount.findMany({
-      where: { isActive: true },
+      where: { isActive: true, sendProvider: EmailSendProvider.SMTP },
       select: { id: true },
     });
 

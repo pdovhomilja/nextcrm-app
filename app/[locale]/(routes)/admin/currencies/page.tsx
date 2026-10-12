@@ -3,6 +3,7 @@ import { getCurrencies, getExchangeRatesAdmin, getEcbAutoUpdate } from "./_actio
 import { CurrencyTable } from "./_components/CurrencyTable";
 import { ExchangeRatesTable } from "./_components/ExchangeRatesTable";
 import { ECBToggle } from "./_components/ECBToggle";
+import { FrankfurterSyncButton } from "./_components/FrankfurterSyncButton";
 
 export default async function CurrenciesPage() {
   const [currencies, rates, ecbEnabled] = await Promise.all([
@@ -13,6 +14,12 @@ export default async function CurrenciesPage() {
 
   return (
     <div className="space-y-6">
+      <p className="text-sm text-muted-foreground">
+        VenSai uses <strong>EUR</strong>, <strong>USD</strong>, and <strong>INR</strong> for pricing and reports.
+        Set exchange rates here; users pick display currency on price lists and invoice screens (not in the top bar).
+        Frankfurter.app (free) covers EUR, USD, INR; ECB auto-update covers Eurozone pairs when enabled.
+      </p>
+      <FrankfurterSyncButton />
       <Card>
         <CardHeader>
           <CardTitle>Currencies</CardTitle>

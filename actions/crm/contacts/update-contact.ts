@@ -1,6 +1,7 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { pluginRuleErrorMessage } from "@/lib/plugins/action-errors";
 import { inngest } from "@/inngest/client";
 import { writeAuditLog, diffObjects } from "@/lib/audit-log";
 import {
@@ -95,6 +96,8 @@ export const updateContact = async (data: {
     revalidatePath("/[locale]/(routes)/crm/contacts", "page");
     return { data: contact };
   } catch (error) {
+    const ruleMessage = await pluginRuleErrorMessage(error);
+    if (ruleMessage) return { error: ruleMessage };
     console.log("[UPDATE_CONTACT]", error);
     return { error: "Failed to update contact" };
   }

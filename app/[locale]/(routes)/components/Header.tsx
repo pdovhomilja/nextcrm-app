@@ -1,57 +1,75 @@
 import Feedback from "./Feedback";
 import FulltextSearch from "./FulltextSearch";
+import { HeaderMailButton } from "./HeaderMailButton";
+import { HeaderNotifications } from "./HeaderNotifications";
+import { HeaderChatPanel } from "./HeaderChatPanel";
+import { HeaderProfileMenu } from "./HeaderProfileMenu";
+import type { HeaderNotificationItem } from "@/actions/notifications/header-notifications";
 
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { SetLanguage } from "@/components/SetLanguage";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { CommandComponent } from "@/components/CommandComponent";
-import SupportComponent from "@/components/support";
-import { CurrencySwitcher } from "@/components/CurrencySwitcher";
+
+type HeaderUser = {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  role?: string | null;
+};
 
 type Props = {
   id: string;
   lang: string;
+  user: HeaderUser;
+  unreadEmailCount?: number;
+  chatUnreadCount?: number;
+  notificationCount?: number;
+  notifications?: HeaderNotificationItem[];
 };
 
-/**
- * Header Component - Task Group 3.2
- *
- * Reorganized header for new layout with shadcn dashboard-01 pattern.
- *
- * Layout Structure:
- * - Left side: SidebarTrigger (mobile menu), FulltextSearch
- * - Right side: CommandComponent, SetLanguage, Feedback, ThemeToggle, SupportComponent
- *
- * Changes from previous version:
- * - Removed AvatarDropdown (functionality moved to nav-user section in sidebar)
- * - Removed unused props: name, email, avatar (now only used by nav-user)
- * - Optimized spacing and alignment for new layout
- * - SidebarTrigger added in Task 2.8.0 for mobile menu control
- *
- * Note: User profile functionality (avatar, name, email, user actions) is now
- * handled by the NavUser component in the sidebar footer (Task 3.1).
- */
-const Header = ({ id, lang }: Props) => {
+const Header = ({
+  id,
+  user,
+  unreadEmailCount = 0,
+  chatUnreadCount = 0,
+  notificationCount = 0,
+  notifications = [],
+}: Props) => {
   return (
-    <>
-      <div className="flex h-16 shrink-0 items-center justify-between gap-2 px-4 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-        <div className="flex items-center gap-2">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
+    <header className="sticky top-0 z-30 flex h-[3.25rem] shrink-0 items-center gap-3 border-b border-border/50 bg-background/75 px-3 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 sm:px-5">
+      <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+        <SidebarTrigger className="-ml-0.5 h-9 w-9 shrink-0 rounded-xl" />
+        <Separator orientation="vertical" className="hidden h-5 sm:block" />
+        <div className="min-w-0 flex-1">
           <FulltextSearch />
         </div>
-        <div className="flex items-center gap-2">
-          <CommandComponent />
-          <SetLanguage userId={id} />
-          <Feedback />
-          <CurrencySwitcher />
-          <ThemeToggle />
-          <SupportComponent />
-        </div>
       </div>
-      <Separator />
-    </>
+
+      <div className="flex shrink-0 items-center gap-0.5 rounded-2xl border border-border/50 bg-muted/25 p-0.5 sm:gap-1 sm:p-1">
+        <HeaderMailButton unreadCount={unreadEmailCount} />
+        <HeaderChatPanel unreadCount={chatUnreadCount} />
+        <HeaderNotifications totalCount={notificationCount} items={notifications} />
+        <Separator orientation="vertical" className="mx-0.5 hidden h-5 sm:block" />
+        <CommandComponent />
+        <SetLanguage userId={id} />
+        <div className="hidden md:flex">
+          <Feedback />
+        </div>
+        <ThemeToggle />
+        <HeaderProfileMenu
+          user={{
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            avatar: user.image,
+            role: user.role,
+          }}
+        />
+      </div>
+    </header>
   );
 };
 

@@ -81,9 +81,11 @@ export function NavMain({ items, dict }: NavMainProps) {
   }
 
   return (
-    <SidebarGroup>
-      <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-      <SidebarMenu>
+    <SidebarGroup className="px-2 py-1">
+      <SidebarGroupLabel className="px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
+        Platform
+      </SidebarGroupLabel>
+      <SidebarMenu className="gap-0.5">
         {items.map((item) => {
           // Check if this is a collapsible group with sub-items
           if (item.items && item.items.length > 0) {

@@ -1,0 +1,89 @@
+---
+title: Invoices
+description: Create draft invoices, issue them, send them by email, and record payments.
+---
+
+Open **Invoices** in the sidebar. The list shows **Number**, **Account**, **Issued**, **Due**, **Total**, and **Status**. Click a column header to sort by it. Overdue invoices are highlighted. Click an invoice number to open it.
+
+## Create an invoice
+
+<Steps>
+<Step>
+Click **New Invoice**.
+</Step>
+<Step>
+Choose the **Type** (**INVOICE**, **CREDIT NOTE**, or **PROFORMA**), the **Account**, the **Invoice Series**, and the **Currency**. Set the **Due Date**.
+</Step>
+<Step>
+Optionally fill in bank details: **Variable Symbol**, **Bank Name**, **IBAN**, and **SWIFT**.
+</Step>
+<Step>
+Under **Line Items**, click **Add Line** for each item. Pick a **Product** or type a **Description**, then set **Quantity**, **Unit Price**, **Discount %**, and **Tax Rate**. The line **Total** is calculated for you.
+</Step>
+<Step>
+Add **Public Notes** (printed on the PDF) and **Internal Notes** (for your team) if needed.
+</Step>
+<Step>
+Click **Save Draft**.
+</Step>
+</Steps>
+
+You need an account and at least one line item to save.
+
+## Invoice lifecycle
+
+A new invoice is a draft. Drafts have no number yet and show **DRAFT** in place of the number.
+
+| Status | How it gets there |
+| --- | --- |
+| **Draft** | You saved a new invoice. |
+| **Issued** | You clicked **Issue** on a draft. The invoice gets its number from the series and a PDF is generated. |
+| **Sent** | You sent an issued invoice by email. |
+| **Partially Paid** | Payments recorded so far are less than the total. |
+| **Paid** | Payments cover the full total. |
+| **Cancelled** | You cancelled a draft. |
+
+<Callout type="warn">
+Once issued, an invoice can no longer be edited or cancelled. Check the draft before you click **Issue**. To correct an issued invoice, use **Duplicate** to start a new draft from it.
+</Callout>
+
+## Actions on an invoice
+
+The buttons at the top of the invoice detail page depend on its status.
+
+- **Edit**, **Issue**, **Cancel**: drafts only. Editing opens the same form, with **Update Draft** to save.
+- **Send by Email**: issued or sent invoices. Enter the recipient in **To** (prefilled with the account's email), and optionally a **Subject (optional)** and **Message (optional)**. The PDF is attached.
+- **Add Payment**: issued, sent, partially paid, or overdue invoices.
+- **Duplicate**: copies the invoice into a new draft.
+- **Download PDF**: opens the PDF.
+- **Regenerate PDF**: issued invoices. Re-renders the PDF with the current company settings.
+
+## Record a payment
+
+<Steps>
+<Step>
+Open the invoice and click **Add Payment**.
+</Step>
+<Step>
+Enter the **Amount** and **Date**. Choose a **Method**: Bank Transfer, Cash, Card, Check, PayPal, or Other.
+</Step>
+<Step>
+Optionally add a **Reference** (for example the transaction ID) and a **Note**. Click **Record Payment**.
+</Step>
+</Steps>
+
+The status changes to **Partially Paid** or **Paid** depending on the remaining balance. Recorded payments appear in the **Payments** section.
+
+## Invoice detail page
+
+Besides the actions, the detail page shows:
+
+- **Details**: account, address, issue and due dates, variable symbol, and series.
+- **Financial Summary**: **Subtotal**, **Discount**, **VAT**, **Grand Total**, **Paid**, and **Balance Due**, plus bank details.
+- **Line Items**, **Public Notes**, and **Internal Notes**.
+- **Payments**: the payments recorded so far.
+- **Activity**: a log of what happened to the invoice.
+
+Invoices for an account also appear on that account's detail page. See [Accounts and contacts](/docs/users/crm/accounts-contacts).
+
+Invoice series, tax rates, and company details on the PDF are set by an admin. See the [admin guide](/docs/admins).

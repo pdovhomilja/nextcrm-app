@@ -1,0 +1,22 @@
+---
+title: Audit log
+description: Review every change to CRM records and restore deleted ones.
+---
+
+NextCRM records changes to accounts, contacts, leads, opportunities and contracts. Each entry stores the entity, the action, a before/after diff of changed fields, the user and the time. Users see the history of a single record on its **History** tab. Admins see everything under **Administration → Audit Log** (`/admin/audit-log`).
+
+## Filters
+
+- **Entity:** Account, Contact, Lead, Opportunity, Contract, or all.
+- **Action:** Created, Updated, Deleted, Restored, Relation added, Relation removed, or all.
+- **Date range:** from and to.
+
+The table is paginated. With "All entities" selected you also see entries written by other parts of the system, for example plugin installs and setting changes.
+
+## Deleted records and restore
+
+CRM records are soft-deleted: deleting sets a `deletedAt` timestamp and hides the record from normal views, but the row stays in the database. Entries with the action Deleted have a restore button in the admin audit log. Restoring brings the record back and writes a Restored entry.
+
+## Retention
+
+Nothing in NextCRM deletes audit entries. The table (`crm_AuditLog`) grows with use and is included in a normal database backup.

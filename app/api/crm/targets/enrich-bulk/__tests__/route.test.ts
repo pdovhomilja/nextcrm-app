@@ -16,6 +16,7 @@ import { NextRequest } from "next/server";
 import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { inngest } from "@/inngest/client";
+import { getApiKey } from "@/lib/api-keys";
 import { POST } from "../route";
 
 const mockedGetSession = getSession as jest.MockedFunction<typeof getSession>;
@@ -35,7 +36,10 @@ function makeReq(body: unknown) {
   });
 }
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+  jest.clearAllMocks();
+  process.env.E2B_API_KEY = "e2b_test";
+});
 
 describe("POST /api/crm/targets/enrich-bulk", () => {
   it("401 unauth", async () => {
@@ -73,5 +77,33 @@ describe("POST /api/crm/targets/enrich-bulk", () => {
         }),
       }),
     );
+  });
+
+  it("checks the keys the queued job uses (Anthropic + E2B), not OpenAI/Firecrawl", async () => {
+    mockedGetSession.mockResolvedValue({ user: { id: "m" } } as any);
+    mockedUser.mockResolvedValue({ id: "m", role: "manager" } as any);
+    mockedFindMany.mockResolvedValue([{ id: "a" }] as any);
+    await POST(makeReq({ targetIds: ["a"], fields: [{ name: "company_website" }] }));
+    const providers = (getApiKey as jest.Mock).mock.calls.map((c) => c[0]);
+    expect(providers).toEqual(["ANTHROPIC"]);
+  });
+
+  it("402 NO_API_KEY when no Anthropic key resolves", async () => {
+    mockedGetSession.mockResolvedValue({ user: { id: "m" } } as any);
+    mockedUser.mockResolvedValue({ id: "m", role: "manager" } as any);
+    (getApiKey as jest.Mock).mockResolvedValueOnce(null);
+    const res = await POST(makeReq({ targetIds: ["a"], fields: [{ name: "company_website" }] }));
+    expect(res.status).toBe(402);
+    expect(await res.json()).toEqual({ error: "NO_API_KEY" });
+    expect(mockedSend).not.toHaveBeenCalled();
+  });
+
+  it("503 when E2B_API_KEY is not set", async () => {
+    delete process.env.E2B_API_KEY;
+    mockedGetSession.mockResolvedValue({ user: { id: "m" } } as any);
+    mockedUser.mockResolvedValue({ id: "m", role: "manager" } as any);
+    const res = await POST(makeReq({ targetIds: ["a"], fields: [{ name: "company_website" }] }));
+    expect(res.status).toBe(503);
+    expect(mockedSend).not.toHaveBeenCalled();
   });
 });

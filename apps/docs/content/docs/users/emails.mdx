@@ -1,0 +1,73 @@
+---
+title: Email
+description: Connect your own mailbox over IMAP and SMTP, read and send mail in NextCRM, and link messages to contacts and companies.
+---
+
+NextCRM works with your existing mailbox. You connect it once in your profile, and NextCRM copies your inbox and sent mail every 15 minutes. Each user connects their own mailboxes; nobody else sees them.
+
+## Connect a mailbox
+
+<Steps>
+<Step>
+Open **Profile Settings** from the menu under your name, then the **Email Accounts** tab.
+</Step>
+<Step>
+Click **Add Email Account**.
+</Step>
+<Step>
+Pick **Connect Gmail** or **Other IMAP**.
+</Step>
+<Step>
+Fill in the form. For Gmail, the server fields are filled in for you.
+</Step>
+<Step>
+Click **Test Connection**. When it succeeds, click **Save**.
+</Step>
+</Steps>
+
+<Tabs items={["Gmail", "Other IMAP"]}>
+<Tab value="Gmail">
+Gmail needs a **16-character App Password**, not your regular password. Create one in your Google Account under Security → App Passwords (the dialog links there), then paste it into **App Password (16 characters)**. Your Google Account must have 2-Step Verification turned on to create App Passwords.
+
+Enter your Gmail address in **Username / Email**. The **Sent Folder Name** is preset to `[Gmail]/Sent Mail`.
+</Tab>
+<Tab value="Other IMAP">
+Ask your email provider or IT for the server details, then fill in:
+
+- **Label (e.g. Work Gmail)**: a name for this mailbox in NextCRM.
+- **IMAP Host** and **IMAP Port**, **SMTP Host** and **SMTP Port**.
+- **Username / Email** and **Password**.
+- **Sent Folder Name**: enter your server's name for sent mail, or click **Discover folders** to pick it from a list.
+- **IMAP SSL** and **SMTP SSL**: leave on unless your provider says otherwise.
+- **Allow self-signed TLS certificates**: off by default. Turn it on only for a mail server your company runs with a self-signed certificate.
+</Tab>
+</Tabs>
+
+## What gets synced
+
+- The first sync copies the last six months of your **Inbox** and your sent folder. Later syncs fetch only new messages.
+- Syncing runs every 15 minutes for active mailboxes. To sync right away, click **Sync** next to the mailbox in **Email Accounts**.
+- To pause a mailbox, click its **Active** badge. It changes to **Inactive** and stops syncing. Click it again to resume.
+- **Delete** removes the mailbox from NextCRM together with all its synced emails. Nothing is deleted on your mail server.
+
+## Automatic linking to the CRM
+
+For each synced message, NextCRM compares the From, To, and Cc addresses with the email addresses of your contacts and companies. When an address matches, the message is linked to that contact or company. Bcc addresses are never used.
+
+Keep contact and company email fields filled in so this works. Messages from a client also count as client activity for the automatic deal follow-up (see [Automatic follow-up](/docs/users/crm/leads-opportunities#automatic-follow-up)).
+
+## Read and send mail
+
+Open **E-mails** in the sidebar. If you have no mailbox yet, the page links to your profile.
+
+- **Switch mailbox:** use the account selector at the top left.
+- **Folders:** **Inbox** and **Sent**.
+- **Filter:** **All mail** or **Unread**. Opening a message marks it as read.
+- **Read:** click a message in the list to show it on the right.
+- **New message:** click **Compose**, fill in **To**, **CC**, **Subject**, and **Message**, and click **Send**. The mail goes out through the selected mailbox's SMTP server and appears under **Sent**.
+- **Reply** and **Forward:** use the icons above an open message.
+- **Move to trash:** hides the message in NextCRM. It stays on your mail server.
+
+<Callout type="info">
+Some icons above a message, such as **Archive**, **Move to junk**, **Snooze**, and **Reply all**, have no function yet.
+</Callout>

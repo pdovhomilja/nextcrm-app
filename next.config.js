@@ -6,6 +6,9 @@ const withNextIntl = require("next-intl/plugin")(
 const nextConfig = {
   output: "standalone",
   serverExternalPackages: ["pdf-parse", "pdfjs-dist"],
+  experimental: {
+    optimizePackageImports: ["lucide-react", "date-fns", "@radix-ui/react-icons"],
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "localhost" },

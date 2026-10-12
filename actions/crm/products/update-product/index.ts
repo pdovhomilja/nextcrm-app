@@ -25,6 +25,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     if (!existing || existing.deletedAt) {
       return { error: "Product not found" };
     }
+    if (existing.source === "EXTERNAL") return { error: "Managed by an external system" };
 
     if (updateData.sku && updateData.sku !== existing.sku) {
       const skuExists = await prismadb.crm_Products.findUnique({ where: { sku: updateData.sku } });

@@ -1,0 +1,100 @@
+{
+  "name": "Odoo connector",
+  "admin": {
+    "test": "Test connection",
+    "syncNow": "Sync now",
+    "queued": "Queued: it starts within 5 minutes.",
+    "loadLists": "Load price lists",
+    "listsLoaded": "Loaded {count} price lists from Odoo.",
+    "compare": "Compare with Odoo",
+    "running": "A sync is already running.",
+    "connected": "Connected to Odoo {version} as {user}",
+    "dryRun": "Dry run is on: the sync only logs what it would change. Turn it off in the settings to import.",
+    "lastRun": "Last run",
+    "never": "not yet",
+    "nextRun": "Next run",
+    "counts": "{created} created, {updated} updated, {unchanged} unchanged, {skipped} skipped, {conflicts} conflicts, {failed} failed",
+    "failed": "Failed: {error}",
+    "conflicts": "Customers matching more than one account",
+    "conflictsEmpty": "No conflicts.",
+    "reason": {
+      "number": "same registration number",
+      "vat": "same VAT number",
+      "linked": "already linked to another Odoo partner",
+      "rate": "exchange rate",
+      "rule": "price rule"
+    },
+    "catalog": "Catalog",
+    "catalogCounts": "Categories {categories} · products created {productsCreated}, updated {productsUpdated}, failed {productsFailed} · price lists replaced {listsReplaced} · account price lists set {accountLists}",
+    "priceListsHelp": "Choose price lists in the setting priceLists: Odoo list ids separated by commas, e.g. 242, 245. Lists they build on are imported automatically.",
+    "listsLoadedAt": "Odoo price lists (loaded {date})",
+    "listsNotLoaded": "Click Load price lists to see the price lists in Odoo.",
+    "skippedRules": "Rules the CRM cannot use",
+    "syncQueued": "Sync is queued.",
+    "compareQueued": "Compare is queued.",
+    "compareProgress": "Comparing: {done} of {total} price lists",
+    "compareResult": "Last compare: {date}",
+    "compareClean": "No differences.",
+    "compareFailed": "Compare failed: {error}",
+    "orders": "Orders",
+    "ordersOff": "Sending orders is off. Turn on sendOrders in the settings to send READY orders to Odoo.",
+    "ordersCounts": "Waiting to be sent {waiting} · sent in the last 7 days {sent} · failed {failed}",
+    "ordersPaused": "Sending is paused since {date}: {reason}. Fix the Odoo user's access rights, then click Test connection.",
+    "ordersCreated": "Created in Odoo",
+    "createdKind": {
+      "customer": "customer",
+      "delivery": "delivery address"
+    }
+  },
+  "needsOwner": {
+    "title": "Imported accounts without an owner",
+    "nav": "Needs owner",
+    "empty": "Every imported account has an owner.",
+    "account": "Account",
+    "salesperson": "Salesperson in Odoo"
+  },
+  "panel": {
+    "linked": "Linked to Odoo partner #{id}",
+    "synced": "Last synced {date} UTC",
+    "fields": "Odoo controls: name, registration number, VAT, billing address, email, phone.",
+    "archived": "Archived in Odoo.",
+    "notCustomer": "No longer a customer in Odoo.",
+    "priceList": "Price list from Odoo: {name}",
+    "priceListMissing": "Odoo price list {name} is not imported"
+  },
+  "mail": {
+    "failingSubject": "Odoo sync is failing",
+    "failingText": "The Odoo sync failed three times in a row. Last error: {error}",
+    "pausedSubject": "Odoo refused to take orders",
+    "pausedText": "Sending orders to Odoo is paused: {error}. Fix the Odoo user's access rights, then click Test connection.",
+    "orderFailedSubject": "Order {number} was not sent to Odoo",
+    "orderFailedText": "Order {number} could not be sent to Odoo: {error}. Fix the cause, then click Retry on the order.",
+    "stuckSubject": "Order {number} has been waiting for Odoo for a day",
+    "stuckText": "Order {number} has been waiting to be sent to Odoo since {since}. Last error: {error}. The connector keeps trying; check Odoo."
+  },
+  "product": {
+    "linked": "Odoo product #{id}"
+  },
+  "order": {
+    "linked": "Odoo order {name}",
+    "state": "State in Odoo: {state}",
+    "createdCustomer": "Customer created in Odoo",
+    "createdDelivery": "Delivery address created in Odoo",
+    "priceDiffs": "Price differs from Odoo",
+    "priceDiff": "{sku}: CRM {crm}, Odoo {odoo}",
+    "totalDiffers": "The Odoo order total is {odoo}; it differs from this order's total.",
+    "deliveries": "Deliveries",
+    "invoices": "Invoices",
+    "invoice": "{number} · due {due} · {amount}, left to pay {residual} · {state}",
+    "waiting": "Waiting for Odoo since {date}",
+    "lastError": "Last error: {error}",
+    "failed": "Not sent: {reason}"
+  },
+  "orders": {
+    "noAccount": "The order's account has no name",
+    "notOdooProduct": "Product {product} does not come from Odoo",
+    "noPriceList": "The customer has no price list in Odoo",
+    "currency": "Order currency {order} differs from the Odoo price list currency {list}",
+    "otherLines": "Already in Odoo as {name} with other lines; ask Odoo to cancel it, then click Retry"
+  }
+}

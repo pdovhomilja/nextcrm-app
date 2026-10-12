@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { getSession } from "@/lib/auth-server";
+import { getSessionAnyStatus } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -7,7 +7,7 @@ import TryAgain from "./components/TryAgain";
 import { Users } from "@prisma/client";
 
 const PendingPage = async () => {
-  const session = await getSession();
+  const session = await getSessionAnyStatus();
   const bootstrapAdminEmail = (
     process.env.BOOTSTRAP_ADMIN_EMAIL || "jayandraa5@gmail.com"
   ).trim().toLowerCase();

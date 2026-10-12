@@ -1,8 +1,8 @@
 "use client";
 
 import { z } from "zod";
-import { useEffect } from "react";
-import { useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { useForm } from "react-hook-form";
@@ -27,7 +27,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
+import { getPriceListOptions } from "@/actions/crm/price-lists/queries";
 import { createAccount } from "@/actions/crm/accounts/create-account";
+import { getRegistryCountries, lookupCompany } from "@/actions/crm/accounts/lookup-company";
+import { VatCheckButton } from "./VatCheckButton";
 import { useSession } from "@/lib/auth-client";
 
 type Props = {
@@ -38,6 +41,8 @@ type Props = {
 export function NewAccountForm({ industries, onFinish }: Props) {
   const t = useTranslations("CrmAccountForm");
   const c = useTranslations("Common");
+  const p = useTranslations("Plugins");
+  const locale = useLocale();
   const { data: session } = useSession();
 
   const formSchema = z.object({
@@ -64,14 +69,51 @@ export function NewAccountForm({ industries, onFinish }: Props) {
     annual_revenue: z.string().optional(),
     member_of: z.string().max(100).optional(),
     industry: z.string().optional(),
+    pricelist_id: z.string().optional(),
   });
 
   type NewAccountFormValues = z.infer<typeof formSchema>;
+
+  const [priceLists, setPriceLists] = useState<{ id: string; name: string; currency: string }[]>([]);
+  useEffect(() => {
+    let alive = true;
+    getPriceListOptions().then((l) => { if (alive) setPriceLists(l); });
+    return () => { alive = false; };
+  }, []);
 
   const form = useForm<NewAccountFormValues>({
     resolver: zodResolver(formSchema),
     mode: "onBlur",
   });
+
+  const [registryCountries, setRegistryCountries] = useState<string[]>([]);
+  const [registryCountry, setRegistryCountry] = useState("");
+  const [lookingUp, setLookingUp] = useState(false);
+  useEffect(() => {
+    getRegistryCountries().then((cs) => { setRegistryCountries(cs); setRegistryCountry(cs[0] ?? ""); }).catch(() => {});
+  }, []);
+  const loadFromRegistry = async () => {
+    const number = form.getValues("company_id");
+    if (!number || !registryCountry) return;
+    setLookingUp(true);
+    let res: Awaited<ReturnType<typeof lookupCompany>>;
+    try {
+      res = await lookupCompany(registryCountry, number);
+    } catch {
+      res = { error: p("registryNotFound") };
+    } finally {
+      setLookingUp(false);
+    }
+    if (res.error || !res.data) { toast.error(res.error ?? p("registryNotFound")); return; }
+    const d = res.data;
+    form.setValue("name", d.name, { shouldValidate: true });
+    form.setValue("company_id", d.registrationNumber);
+    if (d.vat) form.setValue("vat", d.vat);
+    if (d.street) form.setValue("billing_street", d.street);
+    if (d.city) form.setValue("billing_city", d.city);
+    if (d.postalCode) form.setValue("billing_postal_code", d.postalCode);
+    form.setValue("billing_country", new Intl.DisplayNames([locale], { type: "region" }).of(d.country) ?? d.country);
+  };
 
   useEffect(() => {
     const uid = session?.user?.id;
@@ -181,6 +223,17 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                 </FormItem>
               )}
             />
+            {registryCountries.length > 0 && (
+              <div className="flex items-center gap-2">
+                <select aria-label="Registry country" className="border rounded-md h-9 px-2 bg-background" value={registryCountry}
+                  onChange={(e) => setRegistryCountry(e.target.value)}>
+                  {registryCountries.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <Button type="button" variant="outline" size="sm" disabled={lookingUp} onClick={loadFromRegistry}>
+                  {p("loadFromRegistry")}
+                </Button>
+              </div>
+            )}
             <FormField
               control={form.control}
               name="vat"
@@ -194,6 +247,7 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                       {...field}
                     />
                   </FormControl>
+                  <VatCheckButton vat={field.value} />
                   <FormMessage />
                 </FormItem>
               )}
@@ -441,6 +495,34 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                         {industries.map((industry) => (
                           <SelectItem key={industry.id} value={industry.id}>
                             {industry.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="pricelist_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("priceList")}</FormLabel>
+                    <Select
+                      onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
+                      value={field.value || "__none__"}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="__none__">{t("noPriceList")}</SelectItem>
+                        {priceLists.map((l) => (
+                          <SelectItem key={l.id} value={l.id}>
+                            {l.name} ({l.currency})
                           </SelectItem>
                         ))}
                       </SelectContent>

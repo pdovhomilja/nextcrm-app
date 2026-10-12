@@ -39,7 +39,7 @@ export const createTargetList = async (data: {
       },
       include: { targets: true },
     });
-    revalidatePath("/[locale]/(routes)/crm/target-lists", "page");
+    revalidatePath("/[locale]/(routes)/campaigns/target-lists", "page");
     return { data: list };
   } catch (error) {
     return { error: "Failed to create target list" };

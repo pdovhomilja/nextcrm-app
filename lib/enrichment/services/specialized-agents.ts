@@ -339,7 +339,6 @@ export class SpecializedAgentService {
         }
         
         if (agentToUse) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const result = await (agentToUse as any).run(`Find ${field.description} for: ${JSON.stringify(context)}`, {
             apiKey: this.apiKey,
           });

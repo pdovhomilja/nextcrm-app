@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { getSession } from "@/lib/auth-server";
+import { getSessionAnyStatus } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -20,7 +20,7 @@ const PendingPage = async () => {
     },
   });
 
-  const session = await getSession();
+  const session = await getSessionAnyStatus();
 
   if (session?.user.userStatus !== "INACTIVE") {
     return redirect("/");

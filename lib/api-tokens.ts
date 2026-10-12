@@ -77,6 +77,14 @@ export async function revokeApiToken(
   });
 }
 
+export async function revokeAllApiTokens(userId: string): Promise<number> {
+  const { count } = await prismadb.apiToken.updateMany({
+    where: { userId, revokedAt: null },
+    data: { revokedAt: new Date() },
+  });
+  return count;
+}
+
 export async function listApiTokens(userId: string) {
   return prismadb.apiToken.findMany({
     where: { userId },

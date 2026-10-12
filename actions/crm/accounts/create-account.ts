@@ -1,6 +1,7 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { pluginRuleErrorMessage } from "@/lib/plugins/action-errors";
 import { inngest } from "@/inngest/client";
 import { writeAuditLog } from "@/lib/audit-log";
 import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
@@ -29,6 +30,7 @@ export const createAccount = async (data: {
   annual_revenue?: string;
   member_of?: string;
   industry?: string;
+  pricelist_id?: string | null;
 }) => {
   // Plain create: the row is owned by its creator, so authentication is
   // sufficient — no object-level write assert needed.
@@ -52,6 +54,7 @@ export const createAccount = async (data: {
         ...data,
         assigned_to: data.assigned_to || user.id,
         industry: data.industry || undefined,
+        pricelist_id: data.pricelist_id || undefined,
         status: "Active",
       },
     });
@@ -66,6 +69,8 @@ export const createAccount = async (data: {
     revalidatePath("/[locale]/(routes)/crm/accounts", "page");
     return { data: account };
   } catch (error) {
+    const ruleMessage = await pluginRuleErrorMessage(error);
+    if (ruleMessage) return { error: ruleMessage };
     console.log("[CREATE_ACCOUNT]", error);
     return { error: "Failed to create account" };
   }

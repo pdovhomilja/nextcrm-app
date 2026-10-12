@@ -12,8 +12,16 @@ export { LINKEDIN_SCOPES } from "@/lib/linkedin-scopes";
 export const LINKEDIN_CONNECTOR_UID = "linkedin/vensai-crm-linkedin";
 
 export async function getLinkedInAppOrigin() {
+  const requestHeaders = await headers();
+  const host =
+    requestHeaders.get("x-forwarded-host")?.split(",")[0]?.trim() ??
+    requestHeaders.get("host");
+  if (host) {
+    const proto = requestHeaders.get("x-forwarded-proto")?.split(",")[0]?.trim() ?? "https";
+    return `${proto}://${host}`.replace(/\/$/, "");
+  }
   if (process.env.NODE_ENV !== "production" && process.env.V0_RUNTIME_URL) {
-    return process.env.V0_RUNTIME_URL;
+    return process.env.V0_RUNTIME_URL.replace(/\/$/, "");
   }
   if (process.env.NEXT_PUBLIC_APP_URL) {
     return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
@@ -24,9 +32,7 @@ export async function getLinkedInAppOrigin() {
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
-  const requestHeaders = await headers();
-  const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
-  return `${requestHeaders.get("x-forwarded-proto") ?? "https"}://${host}`;
+  return "http://localhost:3000";
 }
 
 export async function getLinkedInSubject(userId: string) {

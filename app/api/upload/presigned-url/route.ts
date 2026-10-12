@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-server";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { minioClient, MINIO_BUCKET, MINIO_PUBLIC_URL } from "@/lib/minio";
+import { minioPresignClient, MINIO_BUCKET, MINIO_PUBLIC_URL } from "@/lib/minio";
 import { randomUUID } from "crypto";
 
 const ALLOWED_FOLDERS = ["avatars", "images", "documents", "uploads"] as const;
@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
     "application/pdf", "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "text/plain",
+    "video/mp4", "video/webm", "video/quicktime",
   ]);
   if (!ALLOWED_CONTENT_TYPES.has(contentType)) {
     return NextResponse.json({ error: "Content type not allowed" }, { status: 400 });
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
 
   // Presigned URL valid for 10 minutes
   try {
-    const presignedUrl = await getSignedUrl(minioClient, command, { expiresIn: 600 });
+    const presignedUrl = await getSignedUrl(minioPresignClient, command, { expiresIn: 600 });
 
     // The public URL where the file will be accessible after upload
     const fileUrl = `${MINIO_PUBLIC_URL}/${MINIO_BUCKET}/${key}`;

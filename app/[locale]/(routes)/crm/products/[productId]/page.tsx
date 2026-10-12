@@ -1,4 +1,9 @@
+import { getTranslations } from "next-intl/server";
 import Container from "@/app/[locale]/(routes)/components/ui/Container";
+import { Badge } from "@/components/ui/badge";
+import { requireAuthenticated } from "@/lib/authz";
+import { getProductPanels } from "@/lib/plugins/slots";
+import { PluginSlot } from "@/lib/plugins/ui/PluginSlot";
 import { getProduct } from "@/actions/crm/products/get-product";
 import { getProductCategories } from "@/actions/crm/products/get-product-categories";
 import { getAllCrmData } from "@/actions/crm/get-crm-data";
@@ -17,6 +22,9 @@ interface ProductDetailPageProps {
 const ProductPage = async (props: ProductDetailPageProps) => {
   const params = await props.params;
   const { productId } = params;
+  const t = await getTranslations("ProductsPage");
+  const user = await requireAuthenticated();
+  const panels = await getProductPanels(user.role);
 
   const [product, categories, crmData] = await Promise.all([
     getProduct(productId),
@@ -62,12 +70,16 @@ const ProductPage = async (props: ProductDetailPageProps) => {
       title={`Product: ${product.name}`}
       description={`Status: ${product.status}`}
     >
-      <div className="flex justify-end mb-4">
-        <EditProductButton
-          product={productForEdit}
-          categories={categories}
-          currencies={currencies}
-        />
+      <div className="mb-4 flex items-center justify-end gap-3">
+        {product.source === "EXTERNAL" ? (
+          <Badge variant="secondary">{t("external")}</Badge>
+        ) : (
+          <EditProductButton
+            product={productForEdit}
+            categories={categories}
+            currencies={currencies}
+          />
+        )}
       </div>
       <Tabs defaultValue="basic">
         <TabsList>
@@ -86,6 +98,13 @@ const ProductPage = async (props: ProductDetailPageProps) => {
               tax_rate: serializedProduct.tax_rate as unknown as number | null,
             }}
           />
+          {panels.length > 0 && (
+            <section className="mt-4 space-y-2">
+              {panels.map(({ plugin, panel }) => (
+                <PluginSlot key={`${plugin.definition.id}:${panel.id}`} plugin={plugin} actor={{ type: "user", userId: user.id, role: user.role }} render={(ctx) => panel.component({ productId, ctx })} />
+              ))}
+            </section>
+          )}
         </TabsContent>
         <TabsContent value="accounts">
           <AccountsTab

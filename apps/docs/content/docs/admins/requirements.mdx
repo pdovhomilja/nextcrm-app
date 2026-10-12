@@ -1,0 +1,53 @@
+---
+title: Requirements
+description: What a NextCRM instance needs to run, and which external services are optional.
+---
+
+NextCRM is one Next.js application plus three backing services. The Docker Compose files in the repository bundle all of them.
+
+## Core components
+
+| Component | Purpose | Bundled in Docker Compose |
+|---|---|---|
+| NextCRM app | Next.js standalone server on port 3000 | `app` (built from `Dockerfile`) |
+| PostgreSQL 17 with pgvector | All application data, plus vector embeddings for semantic search | `postgres` (`pgvector/pgvector:pg17`) |
+| S3-compatible object storage | Uploaded documents, avatars, invoice PDFs | `minio` |
+| Inngest | Background jobs and scheduled tasks | `inngest` (dev server) |
+
+The app refuses to start without storage settings: `lib/minio.ts` throws if `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY` or `MINIO_BUCKET` is missing.
+
+## Host
+
+- Docker Engine with the Compose plugin (`docker compose`).
+- One open port for the app (3000 by default), or a reverse proxy in front of it.
+- Outbound internet access if you use email, AI, enrichment, Google or Calendly integrations.
+
+## Running without Docker
+
+If you build from source instead of using the Dockerfile:
+
+- Node.js 22.12 or newer (`engines.node` in `package.json`).
+- pnpm 11 (the `packageManager` field pins the exact version; enable it with `corepack enable`).
+- PostgreSQL 17 with the pgvector extension available. A migration runs `CREATE EXTENSION IF NOT EXISTS vector`, so the database user needs permission to create it, or the extension must already exist.
+- Your own S3-compatible storage and Inngest.
+
+See [Deployment](/docs/admins/deployment) for build-pack deployments and [Local setup](/docs/developers/local-setup) for development.
+
+## Required versus optional services
+
+Only the four core components are required. Everything else is optional and switches a feature on:
+
+| Service | Enables |
+|---|---|
+| Resend | Login codes (email OTP), user invitations, invoice emails, campaigns, scheduled reports |
+| SMTP server | Admin notifications about new users, activation emails, record assignment notifications |
+| OpenAI | Embeddings and semantic search, document enrichment, AI features, contact enrichment |
+| Firecrawl | Contact and target enrichment (together with OpenAI) |
+| Anthropic + E2B | Background target enrichment in a sandboxed browser |
+| Google OAuth app | "Sign in with Google" |
+| Google OAuth app (Calendar) | Per-user Google Calendar sync |
+| Calendly | Booked-call capture via webhook |
+
+<Callout type="warn">
+  Login is passwordless. Users sign in with a one-time code sent by email through Resend. Without a working Resend setup, nobody can receive login codes. See [Email](/docs/admins/integrations/email).
+</Callout>

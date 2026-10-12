@@ -4,6 +4,7 @@ import { ReportPageLayout } from "@/components/reports/ReportPageLayout";
 import { ReportChart } from "@/components/reports/ReportChart";
 import { ReportTable } from "@/components/reports/ReportTable";
 import { parseSearchParamsToFilters } from "@/actions/reports/types";
+import { requireAuthenticated, getReportScope } from "@/lib/authz";
 import {
   getNewLeads,
   getLeadSources,
@@ -22,15 +23,16 @@ export default async function LeadsReportPage({ searchParams }: Props) {
     )
   );
   const filters = parseSearchParamsToFilters(params);
+  const scope = getReportScope(await requireAuthenticated());
   const t = await getTranslations("ReportsPage");
 
   const [newLeads, leadSources, conversion, newContacts, contactsByAccount] =
     await Promise.all([
-      getNewLeads(filters),
-      getLeadSources(filters),
-      getConversionRate(filters),
-      getNewContacts(filters),
-      getContactsByAccount(filters),
+      getNewLeads(filters, scope),
+      getLeadSources(filters, scope),
+      getConversionRate(filters, scope),
+      getNewContacts(filters, scope),
+      getContactsByAccount(filters, scope),
     ]);
 
   return (

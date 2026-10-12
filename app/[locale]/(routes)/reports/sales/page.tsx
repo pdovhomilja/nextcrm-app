@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ReportPageLayout } from "@/components/reports/ReportPageLayout";
 import { ReportChart } from "@/components/reports/ReportChart";
 import { parseSearchParamsToFilters } from "@/actions/reports/types";
+import { requireAuthenticated, getReportScope } from "@/lib/authz";
 import {
   getRevenue,
   getPipelineValue,
@@ -26,6 +27,7 @@ export default async function SalesReportPage({ searchParams }: Props) {
     )
   );
   const filters = parseSearchParamsToFilters(params);
+  const scope = getReportScope(await requireAuthenticated());
   const t = await getTranslations("ReportsPage");
 
   const cookieStore = await cookies();
@@ -34,13 +36,13 @@ export default async function SalesReportPage({ searchParams }: Props) {
 
   const [revenue, pipeline, oppsByStage, oppsByMonth, winLoss, avgDeal, cycleLength] =
     await Promise.all([
-      getRevenue(filters, displayCurrency),
-      getPipelineValue(filters, displayCurrency),
-      getOppsByStage(filters),
-      getOppsByMonth(filters),
-      getWinLossRate(filters),
-      getAvgDealSize(filters, displayCurrency),
-      getSalesCycleLength(filters),
+      getRevenue(filters, displayCurrency, scope),
+      getPipelineValue(filters, displayCurrency, scope),
+      getOppsByStage(filters, scope),
+      getOppsByMonth(filters, scope),
+      getWinLossRate(filters, scope),
+      getAvgDealSize(filters, displayCurrency, scope),
+      getSalesCycleLength(filters, scope),
     ]);
 
   return (

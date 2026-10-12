@@ -1,0 +1,100 @@
+{
+  "name": "Napojení na Odoo",
+  "admin": {
+    "test": "Otestovat spojení",
+    "syncNow": "Synchronizovat teď",
+    "queued": "Zařazeno: spustí se do 5 minut.",
+    "loadLists": "Načíst ceníky",
+    "listsLoaded": "Načteno {count} ceníků z Odoo.",
+    "compare": "Porovnat s Odoo",
+    "running": "Synchronizace už běží.",
+    "connected": "Spojeno s Odoo {version} jako {user}",
+    "dryRun": "Zkušební režim je zapnutý: synchronizace jen zapisuje do logu, co by změnila. Pro import ho vypněte v nastavení.",
+    "lastRun": "Poslední běh",
+    "never": "zatím ne",
+    "nextRun": "Další běh",
+    "counts": "{created} vytvořeno, {updated} upraveno, {unchanged} beze změny, {skipped} přeskočeno, {conflicts} konfliktů, {failed} chyb",
+    "failed": "Chyba: {error}",
+    "conflicts": "Zákazníci odpovídající více účtům",
+    "conflictsEmpty": "Žádné konflikty.",
+    "reason": {
+      "number": "stejné IČO",
+      "vat": "stejné DIČ",
+      "linked": "už propojeno s jiným partnerem v Odoo",
+      "rate": "kurz měny",
+      "rule": "cenové pravidlo"
+    },
+    "catalog": "Katalog",
+    "catalogCounts": "Kategorie {categories} · produkty založeny {productsCreated}, upraveny {productsUpdated}, chyba {productsFailed} · ceníky nahrazeny {listsReplaced} · ceníky účtů nastaveny {accountLists}",
+    "priceListsHelp": "Ceníky vyberte v nastavení priceLists: ID ceníků z Odoo oddělená čárkou, např. 242, 245. Ceníky, ze kterých vycházejí, se načtou automaticky.",
+    "listsLoadedAt": "Ceníky v Odoo (načteno {date})",
+    "listsNotLoaded": "Ceníky z Odoo zobrazíte tlačítkem Načíst ceníky.",
+    "skippedRules": "Pravidla, která CRM neumí použít",
+    "syncQueued": "Synchronizace čeká ve frontě.",
+    "compareQueued": "Porovnání čeká ve frontě.",
+    "compareProgress": "Porovnávám: {done} z {total} ceníků",
+    "compareResult": "Poslední porovnání: {date}",
+    "compareClean": "Žádné rozdíly.",
+    "compareFailed": "Porovnání selhalo: {error}",
+    "orders": "Objednávky",
+    "ordersOff": "Odesílání objednávek je vypnuté. Zapněte sendOrders v nastavení, aby objednávky ve stavu READY odcházely do Odoo.",
+    "ordersCounts": "Čeká na odeslání {waiting} · odesláno za posledních 7 dní {sent} · selhalo {failed}",
+    "ordersPaused": "Odesílání je pozastavené od {date}: {reason}. Opravte práva uživatele v Odoo a klikněte na Otestovat připojení.",
+    "ordersCreated": "Založeno v Odoo",
+    "createdKind": {
+      "customer": "zákazník",
+      "delivery": "doručovací adresa"
+    }
+  },
+  "needsOwner": {
+    "title": "Importované účty bez vlastníka",
+    "nav": "Bez vlastníka",
+    "empty": "Všechny importované účty mají vlastníka.",
+    "account": "Účet",
+    "salesperson": "Obchodník v Odoo"
+  },
+  "panel": {
+    "linked": "Propojeno s partnerem Odoo #{id}",
+    "synced": "Naposledy synchronizováno {date} UTC",
+    "fields": "Odoo řídí: název, IČO, DIČ, fakturační adresu, e-mail, telefon.",
+    "archived": "V Odoo archivováno.",
+    "notCustomer": "V Odoo už není zákazník.",
+    "priceList": "Ceník z Odoo: {name}",
+    "priceListMissing": "Ceník {name} z Odoo není načtený"
+  },
+  "mail": {
+    "failingSubject": "Synchronizace s Odoo selhává",
+    "failingText": "Synchronizace s Odoo třikrát po sobě selhala. Poslední chyba: {error}",
+    "pausedSubject": "Odoo odmítlo přijímat objednávky",
+    "pausedText": "Odesílání objednávek do Odoo je pozastavené: {error}. Opravte práva uživatele v Odoo a klikněte na Otestovat připojení.",
+    "orderFailedSubject": "Objednávka {number} nebyla odeslána do Odoo",
+    "orderFailedText": "Objednávku {number} se nepodařilo odeslat do Odoo: {error}. Odstraňte příčinu a klikněte u objednávky na Zkusit znovu.",
+    "stuckSubject": "Objednávka {number} čeká na Odoo už den",
+    "stuckText": "Objednávka {number} čeká na odeslání do Odoo od {since}. Poslední chyba: {error}. Konektor to dál zkouší; zkontrolujte Odoo."
+  },
+  "product": {
+    "linked": "Produkt v Odoo č. {id}"
+  },
+  "order": {
+    "linked": "Objednávka v Odoo {name}",
+    "state": "Stav v Odoo: {state}",
+    "createdCustomer": "Zákazník byl založen v Odoo",
+    "createdDelivery": "Doručovací adresa byla založena v Odoo",
+    "priceDiffs": "Cena se liší od Odoo",
+    "priceDiff": "{sku}: CRM {crm}, Odoo {odoo}",
+    "totalDiffers": "Celková částka objednávky v Odoo je {odoo}; liší se od částky této objednávky.",
+    "deliveries": "Dodání",
+    "invoices": "Faktury",
+    "invoice": "{number} · splatnost {due} · {amount}, zbývá uhradit {residual} · {state}",
+    "waiting": "Čeká na Odoo od {date}",
+    "lastError": "Poslední chyba: {error}",
+    "failed": "Neodesláno: {reason}"
+  },
+  "orders": {
+    "noAccount": "Účet objednávky nemá název",
+    "notOdooProduct": "Produkt {product} nepochází z Odoo",
+    "noPriceList": "Zákazník nemá v Odoo ceník",
+    "currency": "Měna objednávky {order} se liší od měny ceníku v Odoo {list}",
+    "otherLines": "V Odoo už je jako {name} s jinými řádky; požádejte o její zrušení v Odoo a klikněte na Zkusit znovu"
+  }
+}

@@ -1,11 +1,10 @@
 import { inngest } from "@/inngest/client";
 import { prismadb } from "@/lib/prisma";
-import { Resend } from "resend";
+import resendHelper from "@/lib/resend";
 import { resolveMergeTags } from "@/lib/campaigns/merge-tags";
 import { renderCampaignEmail } from "@/lib/campaigns/render-email";
 import { sendStepSkipReason } from "@/lib/campaigns/recipient-filters";
-
-const resend = new Resend(process.env.RESEND_API_KEY || "re_placeholder_for_build");
+import { buildUnsubscribeUrl } from "@/lib/campaigns/unsubscribe-url";
 
 export const campaignSendStep = inngest.createFunction(
   {
@@ -36,7 +35,7 @@ export const campaignSendStep = inngest.createFunction(
     const skipReason = sendStepSkipReason(sendRecord);
     if (skipReason) return { skipped: true, reason: skipReason };
 
-    const unsubscribeUrl = `${process.env.NEXTAUTH_URL}/api/campaigns/unsubscribe?token=${sendRecord.unsubscribe_token}`;
+    const unsubscribeUrl = buildUnsubscribeUrl(sendRecord.unsubscribe_token);
 
     const html = await renderCampaignEmail({
       contentHtml: resolveMergeTags(sendRecord.step.template.content_html, sendRecord.target, true),
@@ -48,6 +47,7 @@ export const campaignSendStep = inngest.createFunction(
       : process.env.RESEND_FROM_EMAIL!;
 
     const result = await step.run("send-email", async () => {
+      const resend = await resendHelper();
       return resend.emails.send({
         from: fromAddress,
         to: sendRecord.email,

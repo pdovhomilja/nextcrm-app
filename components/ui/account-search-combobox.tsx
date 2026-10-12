@@ -54,52 +54,52 @@ export function AccountSearchCombobox({
 
   const debouncedSearch = useDebounce(search, 300);
 
+  // Reset on search change (adjusting state during render, not in an effect)
+  const [prevSearch, setPrevSearch] = useState(debouncedSearch);
+  if (debouncedSearch !== prevSearch) {
+    setPrevSearch(debouncedSearch);
+    setSkip(0);
+    setAccumulatedAccounts([]);
+    setListData(null);
+  }
+
   const selectedInList = accumulatedAccounts.find((a) => a.id === value);
 
   // Load list when open
   useEffect(() => {
     if (!open) return;
+    let cancelled = false;
     startTransition(async () => {
       const data = await searchAccounts({
         search: debouncedSearch,
         skip,
         take: PAGE_SIZE,
       });
+      if (cancelled) return;
       setListData(data);
+      // Accumulate across pages
+      setAccumulatedAccounts((prev) =>
+        skip === 0 ? data.accounts : [...prev, ...data.accounts]
+      );
     });
+    return () => {
+      cancelled = true;
+    };
   }, [open, debouncedSearch, skip]);
-
-  // Accumulate across pages
-  useEffect(() => {
-    if (listData?.accounts) {
-      if (skip === 0) {
-        setAccumulatedAccounts(listData.accounts);
-      } else {
-        setAccumulatedAccounts((prev) => [...prev, ...listData.accounts]);
-      }
-    }
-  }, [listData, skip]);
-
-  // Reset on search change
-  useEffect(() => {
-    setSkip(0);
-    setAccumulatedAccounts([]);
-    setListData(null);
-  }, [debouncedSearch]);
 
   // Load selected account name if not in list
   useEffect(() => {
-    if (!value || selectedInList) {
-      if (!value) setSelectedAccount(null);
-      return;
-    }
+    if (!value || selectedInList) return;
     startTransition(async () => {
       const account = await getAccountById(value);
       setSelectedAccount(account);
     });
   }, [value, selectedInList]);
 
-  const displayAccount = selectedInList ?? selectedAccount ?? null;
+  // Ignore a fetched account that no longer matches the value (e.g. after clearing)
+  const displayAccount =
+    selectedInList ??
+    (selectedAccount?.id === value ? selectedAccount : null);
 
   const handleSelect = (accountId: string) => {
     onChange(accountId === value ? "" : accountId);

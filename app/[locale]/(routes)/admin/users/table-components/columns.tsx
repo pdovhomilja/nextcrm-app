@@ -63,12 +63,22 @@ export const columns: ColumnDef<AdminUser>[] = [
     enableHiding: true,
   },
   {
+    accessorKey: "workEmail",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Work email" />
+    ),
+    cell: ({ row }) => (
+      <div className="text-sm">{row.original.workEmail ?? "—"}</div>
+    ),
+    enableSorting: true,
+    enableHiding: true,
+  },
+  {
     accessorKey: "email",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="E-mail" />
+      <DataTableColumnHeader column={column} title="Personal (login)" />
     ),
-
-    cell: ({ row }) => <div className="">{row.getValue("email")}</div>,
+    cell: ({ row }) => <div className="text-sm">{row.getValue("email")}</div>,
     enableSorting: true,
     enableHiding: true,
   },

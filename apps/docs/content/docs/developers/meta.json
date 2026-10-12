@@ -1,0 +1,20 @@
+{
+  "title": "Developer guide",
+  "icon": "Code",
+  "pages": [
+    "index",
+    "local-setup",
+    "architecture",
+    "data-model",
+    "auth-permissions",
+    "i18n",
+    "background-jobs",
+    "ai-features",
+    "mcp",
+    "plugins",
+    "plugin-tutorial",
+    "testing",
+    "contributing"
+  ],
+  "root": true
+}

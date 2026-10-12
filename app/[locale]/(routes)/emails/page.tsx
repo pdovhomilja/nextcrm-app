@@ -2,28 +2,43 @@ import React, { Suspense } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Mail, Settings } from "lucide-react";
 import { MailComponent } from "./components/mail";
+import { EmailComposeFromQuery } from "./components/EmailComposeFromQuery";
 import Container from "../components/ui/Container";
 import EmailsSkeleton from "@/components/skeletons/emails-skeleton";
 import { getSession } from "@/lib/auth-server";
 import { getTranslations } from "next-intl/server";
 import { getEmailAccounts } from "@/actions/emails/accounts";
-import { getEmails } from "@/actions/emails/messages";
-import { EmailFolder } from "@prisma/client";
+import {
+  getMailboxCounts,
+  getMailboxEmails,
+} from "@/actions/emails/mailbox-actions";
+import { parseMailboxView } from "@/lib/email/mailbox-views";
 
-type EmailsListResult = Awaited<ReturnType<typeof getEmails>>;
+type EmailsListResult = Awaited<ReturnType<typeof getMailboxEmails>>;
 
 const emptyEmailsResult: EmailsListResult = {
   emails: [],
   total: 0,
   page: 1,
   totalPages: 0,
+  view: "inbox",
 };
 
 const EmailRoute = async ({
   searchParams,
 }: {
-  searchParams: Promise<{ accountId?: string; folder?: string; search?: string; page?: string }>;
+  searchParams: Promise<{
+    accountId?: string;
+    box?: string;
+    folder?: string;
+    search?: string;
+    page?: string;
+    filter?: string;
+  }>;
 }) => {
   const session = await getSession();
 
@@ -79,51 +94,107 @@ const EmailRoute = async ({
   if (!connectedAccounts || connectedAccounts.length === 0) {
     return (
       <Container title={t("emails")} description="Your connected mailboxes">
-        <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
-          <p className="text-muted-foreground text-sm">
-            You don&apos;t have any mailbox registered yet.
-          </p>
-          <Link
-            href="/profile"
-            className="text-sm font-medium underline underline-offset-4"
-          >
-            Go to your profile to set up your first mailbox
-          </Link>
-        </div>
+        <Card className="mx-auto mt-8 max-w-md border-dashed shadow-sm">
+          <CardContent className="flex flex-col items-center gap-5 py-12 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <Mail className="h-7 w-7" />
+            </div>
+            <div className="space-y-2">
+              <p className="font-medium">Set up a mailbox first</p>
+              <ol className="text-left text-sm text-muted-foreground space-y-1.5 list-decimal list-inside">
+                <li>
+                  <strong className="text-foreground">Admin:</strong> Admin → Email mailboxes — create
+                  a mailbox and assign it to a user (or invite an employee; a mailbox is created
+                  automatically).
+                </li>
+                <li>
+                  <strong className="text-foreground">You:</strong> Profile → Email accounts — confirm
+                  your work address mailbox is active.
+                </li>
+                <li>Come back here — Inbox, Sent, and Compose appear in the left column.</li>
+              </ol>
+            </div>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button asChild variant="default" className="gap-2">
+                <Link href="/profile">
+                  <Settings className="h-4 w-4" />
+                  Profile → Email accounts
+                </Link>
+              </Button>
+              {session.user.role === "admin" && (
+                <Button asChild variant="secondary">
+                  <Link href="/admin/email-accounts">Admin → Email mailboxes</Link>
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </Container>
     );
   }
 
   const activeAccountId = params.accountId ?? connectedAccounts[0]?.id;
-  const activeFolder = params.folder === "SENT" ? EmailFolder.SENT : EmailFolder.INBOX;
-
+  const activeMailboxAddress =
+    connectedAccounts.find((a) => a.id === activeAccountId)?.username ?? "";
+  const mailboxView = parseMailboxView(
+    params.box ?? (params.folder === "SENT" ? "sent" : params.folder?.toLowerCase())
+  );
+  const unreadOnly = params.filter === "unread";
   const activePage = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
 
   let emailsResult: EmailsListResult = emptyEmailsResult;
+  let mailboxCounts = {
+    inboxUnread: 0,
+    inboxTotal: 0,
+    starred: 0,
+    spam: 0,
+    archive: 0,
+    trash: 0,
+  };
   if (activeAccountId) {
     try {
-      emailsResult = await getEmails(
-        activeAccountId,
-        activeFolder,
-        activePage,
-        params.search
-      );
+      [emailsResult, mailboxCounts] = await Promise.all([
+        getMailboxEmails(
+          activeAccountId,
+          mailboxView,
+          activePage,
+          params.search,
+          unreadOnly
+        ),
+        getMailboxCounts(activeAccountId),
+      ]);
     } catch (error) {
       console.error("[EmailRoute] Failed to load emails:", error);
     }
   }
 
   return (
-    <Container
-      title={t("emails")}
-      description="Your connected mailboxes"
-    >
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-2 px-0.5">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+            {t("emails")}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Inbox, unread, spam, archive, and trash — fast and lightweight.
+          </p>
+        </div>
+      </div>
+      {activeAccountId && (
+        <Suspense fallback={null}>
+          <EmailComposeFromQuery
+            accountId={activeAccountId}
+            mailboxAddress={activeMailboxAddress}
+          />
+        </Suspense>
+      )}
       <Suspense fallback={<EmailsSkeleton />}>
         <MailComponent
           accounts={connectedAccounts}
           mails={emailsResult.emails}
           activeAccountId={activeAccountId ?? null}
-          activeFolder={activeFolder}
+          mailboxView={mailboxView}
+          mailboxCounts={mailboxCounts}
           page={emailsResult.page}
           totalPages={emailsResult.totalPages}
           defaultLayout={validatedLayout}
@@ -131,7 +202,7 @@ const EmailRoute = async ({
           navCollapsedSize={8}
         />
       </Suspense>
-    </Container>
+    </div>
   );
 };
 

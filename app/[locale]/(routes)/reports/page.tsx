@@ -1,6 +1,7 @@
 import Container from "../components/ui/Container";
 import { getDashboardKPIs } from "@/actions/reports/dashboard";
 import { parseSearchParamsToFilters } from "@/actions/reports/types";
+import { requireAuthenticated, getReportScope } from "@/lib/authz";
 import { KPICard } from "@/components/reports/KPICard";
 import { DateRangePicker } from "@/components/reports/DateRangePicker";
 import { Suspense } from "react";
@@ -20,10 +21,11 @@ export default async function ReportsPage({ searchParams }: Props) {
     )
   );
   const filters = parseSearchParamsToFilters(params);
+  const scope = getReportScope(await requireAuthenticated());
   const cookieStore = await cookies();
   const defaultCurrency = await getDefaultCurrency();
   const displayCurrency = cookieStore.get("display_currency")?.value || defaultCurrency;
-  const kpis = await getDashboardKPIs(filters, displayCurrency);
+  const kpis = await getDashboardKPIs(filters, displayCurrency, scope);
   const t = await getTranslations("ReportsPage");
   const dateParams = params.toString();
 

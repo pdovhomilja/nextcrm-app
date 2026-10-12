@@ -13,7 +13,7 @@ export default function ScheduledReport({ reportName = "Report", dateRange = "" 
           {dateRange && <Text style={{ color: "#666" }}>Date range: {dateRange}</Text>}
           <Hr />
           <Text>Your scheduled report is attached to this email.</Text>
-          <Text style={{ color: "#999", fontSize: "12px" }}>This is an automated report from NextCRM.</Text>
+          <Text style={{ color: "#999", fontSize: "12px" }}>This is an automated report from VenSai CRM.</Text>
         </Container>
       </Body>
     </Html>

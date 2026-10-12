@@ -1,0 +1,100 @@
+{
+  "name": "Odoo-Anbindung",
+  "admin": {
+    "test": "Verbindung testen",
+    "syncNow": "Jetzt synchronisieren",
+    "queued": "In der Warteschlange: Start innerhalb von 5 Minuten.",
+    "loadLists": "Preislisten laden",
+    "listsLoaded": "{count} Preislisten aus Odoo geladen.",
+    "compare": "Mit Odoo vergleichen",
+    "running": "Eine Synchronisierung läuft bereits.",
+    "connected": "Verbunden mit Odoo {version} als {user}",
+    "dryRun": "Testlauf ist an: Die Synchronisierung protokolliert nur, was sie ändern würde. Zum Importieren in den Einstellungen ausschalten.",
+    "lastRun": "Letzter Lauf",
+    "never": "noch nicht",
+    "nextRun": "Nächster Lauf",
+    "counts": "{created} angelegt, {updated} geändert, {unchanged} unverändert, {skipped} übersprungen, {conflicts} Konflikte, {failed} Fehler",
+    "failed": "Fehlgeschlagen: {error}",
+    "conflicts": "Kunden, die zu mehreren Konten passen",
+    "conflictsEmpty": "Keine Konflikte.",
+    "reason": {
+      "number": "gleiche Registernummer",
+      "vat": "gleiche USt-IdNr.",
+      "linked": "bereits mit einem anderen Odoo-Partner verknüpft",
+      "rate": "Wechselkurs",
+      "rule": "Preisregel"
+    },
+    "catalog": "Katalog",
+    "catalogCounts": "Kategorien {categories} · Produkte angelegt {productsCreated}, aktualisiert {productsUpdated}, fehlgeschlagen {productsFailed} · Preislisten ersetzt {listsReplaced} · Preislisten von Konten gesetzt {accountLists}",
+    "priceListsHelp": "Wählen Sie Preislisten in der Einstellung priceLists: Odoo-Listen-IDs durch Kommas getrennt, z. B. 242, 245. Listen, auf denen sie aufbauen, werden automatisch importiert.",
+    "listsLoadedAt": "Odoo-Preislisten (geladen {date})",
+    "listsNotLoaded": "Klicken Sie auf Preislisten laden, um die Preislisten in Odoo zu sehen.",
+    "skippedRules": "Regeln, die das CRM nicht verwenden kann",
+    "syncQueued": "Synchronisierung ist in der Warteschlange.",
+    "compareQueued": "Vergleich ist in der Warteschlange.",
+    "compareProgress": "Vergleiche: {done} von {total} Preislisten",
+    "compareResult": "Letzter Vergleich: {date}",
+    "compareClean": "Keine Unterschiede.",
+    "compareFailed": "Vergleich fehlgeschlagen: {error}",
+    "orders": "Aufträge",
+    "ordersOff": "Das Senden von Aufträgen ist aus. Schalten Sie sendOrders in den Einstellungen ein, damit Aufträge im Status READY an Odoo gehen.",
+    "ordersCounts": "Warten auf Versand {waiting} · gesendet in den letzten 7 Tagen {sent} · fehlgeschlagen {failed}",
+    "ordersPaused": "Der Versand ist seit {date} pausiert: {reason}. Korrigieren Sie die Rechte des Odoo-Benutzers und klicken Sie auf Verbindung testen.",
+    "ordersCreated": "In Odoo angelegt",
+    "createdKind": {
+      "customer": "Kunde",
+      "delivery": "Lieferadresse"
+    }
+  },
+  "needsOwner": {
+    "title": "Importierte Konten ohne Verantwortlichen",
+    "nav": "Ohne Verantwortlichen",
+    "empty": "Alle importierten Konten haben einen Verantwortlichen.",
+    "account": "Konto",
+    "salesperson": "Verkäufer in Odoo"
+  },
+  "panel": {
+    "linked": "Verknüpft mit Odoo-Partner #{id}",
+    "synced": "Zuletzt synchronisiert {date} UTC",
+    "fields": "Odoo steuert: Name, Registernummer, USt-IdNr., Rechnungsadresse, E-Mail, Telefon.",
+    "archived": "In Odoo archiviert.",
+    "notCustomer": "In Odoo kein Kunde mehr.",
+    "priceList": "Preisliste aus Odoo: {name}",
+    "priceListMissing": "Odoo-Preisliste {name} ist nicht importiert"
+  },
+  "mail": {
+    "failingSubject": "Odoo-Synchronisierung schlägt fehl",
+    "failingText": "Die Odoo-Synchronisierung ist dreimal hintereinander fehlgeschlagen. Letzter Fehler: {error}",
+    "pausedSubject": "Odoo nimmt keine Aufträge an",
+    "pausedText": "Das Senden von Aufträgen an Odoo ist pausiert: {error}. Korrigieren Sie die Rechte des Odoo-Benutzers und klicken Sie auf Verbindung testen.",
+    "orderFailedSubject": "Auftrag {number} wurde nicht an Odoo gesendet",
+    "orderFailedText": "Auftrag {number} konnte nicht an Odoo gesendet werden: {error}. Beheben Sie die Ursache und klicken Sie beim Auftrag auf Erneut versuchen.",
+    "stuckSubject": "Auftrag {number} wartet seit einem Tag auf Odoo",
+    "stuckText": "Auftrag {number} wartet seit {since} auf den Versand an Odoo. Letzter Fehler: {error}. Der Connector versucht es weiter; prüfen Sie Odoo."
+  },
+  "product": {
+    "linked": "Odoo-Produkt #{id}"
+  },
+  "order": {
+    "linked": "Odoo-Auftrag {name}",
+    "state": "Status in Odoo: {state}",
+    "createdCustomer": "Kunde in Odoo angelegt",
+    "createdDelivery": "Lieferadresse in Odoo angelegt",
+    "priceDiffs": "Preis weicht von Odoo ab",
+    "priceDiff": "{sku}: CRM {crm}, Odoo {odoo}",
+    "totalDiffers": "Die Auftragssumme in Odoo ist {odoo}; sie weicht von der Summe dieses Auftrags ab.",
+    "deliveries": "Lieferungen",
+    "invoices": "Rechnungen",
+    "invoice": "{number} · fällig {due} · {amount}, offen {residual} · {state}",
+    "waiting": "Wartet seit {date} auf Odoo",
+    "lastError": "Letzter Fehler: {error}",
+    "failed": "Nicht gesendet: {reason}"
+  },
+  "orders": {
+    "noAccount": "Das Konto des Auftrags hat keinen Namen",
+    "notOdooProduct": "Produkt {product} stammt nicht aus Odoo",
+    "noPriceList": "Der Kunde hat in Odoo keine Preisliste",
+    "currency": "Auftragswährung {order} weicht von der Währung der Odoo-Preisliste {list} ab",
+    "otherLines": "Bereits in Odoo als {name} mit anderen Positionen; lassen Sie ihn in Odoo stornieren und klicken Sie auf Erneut versuchen"
+  }
+}

@@ -163,7 +163,7 @@ function OpportunityCard({ opportunity, router, onThumbsDown, stage, salesStages
               src={
                 opportunity.assigned_to_user?.avatar
                   ? opportunity.assigned_to_user.avatar
-                  : `${process.env.NEXT_PUBLIC_APP_URL}/images/nouser.png`
+                  : "/images/nouser.png"
               }
             />
           </Avatar>
@@ -225,7 +225,7 @@ const CRMKanban = ({
       serverDataRef.current = data;
       setColumns(initColumns(data, salesStages));
     }
-  }, [data]);
+  }, [data, salesStages]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),

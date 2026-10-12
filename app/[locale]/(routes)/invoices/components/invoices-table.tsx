@@ -60,6 +60,32 @@ function formatCurrency(amount: string, currency: string, locale: string) {
   }).format(num);
 }
 
+function SortHeader({
+  field,
+  sortField,
+  sortDir,
+  onSort,
+  children,
+}: {
+  field: SortField;
+  sortField: SortField;
+  sortDir: SortDir;
+  onSort: (field: SortField) => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <TableHead
+      className="cursor-pointer select-none"
+      onClick={() => onSort(field)}
+    >
+      {children}
+      {sortField === field && (
+        <span className="ml-1">{sortDir === "asc" ? "↑" : "↓"}</span>
+      )}
+    </TableHead>
+  );
+}
+
 export function InvoicesTable({
   invoices,
   statusLabels,
@@ -118,40 +144,23 @@ export function InvoicesTable({
     return false;
   };
 
-  const SortHeader = ({
-    field,
-    children,
-  }: {
-    field: SortField;
-    children: React.ReactNode;
-  }) => (
-    <TableHead
-      className="cursor-pointer select-none"
-      onClick={() => toggleSort(field)}
-    >
-      {children}
-      {sortField === field && (
-        <span className="ml-1">{sortDir === "asc" ? "\u2191" : "\u2193"}</span>
-      )}
-    </TableHead>
-  );
-
   const labels = tableLabels ?? {};
+  const sortProps = { sortField, sortDir, onSort: toggleSort };
 
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <SortHeader field="number">{labels.number ?? "Number"}</SortHeader>
-          <SortHeader field="account">{labels.account ?? "Account"}</SortHeader>
-          <SortHeader field="issueDate">
+          <SortHeader {...sortProps} field="number">{labels.number ?? "Number"}</SortHeader>
+          <SortHeader {...sortProps} field="account">{labels.account ?? "Account"}</SortHeader>
+          <SortHeader {...sortProps} field="issueDate">
             {labels.issueDate ?? "Issued"}
           </SortHeader>
-          <SortHeader field="dueDate">{labels.dueDate ?? "Due"}</SortHeader>
-          <SortHeader field="grandTotal">
+          <SortHeader {...sortProps} field="dueDate">{labels.dueDate ?? "Due"}</SortHeader>
+          <SortHeader {...sortProps} field="grandTotal">
             {labels.total ?? "Total"}
           </SortHeader>
-          <SortHeader field="status">{labels.status ?? "Status"}</SortHeader>
+          <SortHeader {...sortProps} field="status">{labels.status ?? "Status"}</SortHeader>
         </TableRow>
       </TableHeader>
       <TableBody>

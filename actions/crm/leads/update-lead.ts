@@ -1,6 +1,7 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { pluginRuleErrorMessage } from "@/lib/plugins/action-errors";
 import sendEmail from "@/lib/sendmail";
 import { inngest } from "@/inngest/client";
 import { writeAuditLog, diffObjects } from "@/lib/audit-log";
@@ -92,10 +93,10 @@ export const updateLead = async (data: {
         where: { id: assigned_to },
       });
 
-      if (notifyRecipient) {
+      if (notifyRecipient?.email) {
         await sendEmail({
           from: process.env.EMAIL_FROM as string,
-          to: notifyRecipient.email || "info@softbase.cz",
+          to: notifyRecipient.email,
           subject:
             notifyRecipient.userLanguage === "en"
               ? `New lead ${firstName} ${lastName} has been added to the system and assigned to you.`
@@ -120,6 +121,8 @@ export const updateLead = async (data: {
     revalidatePath("/[locale]/(routes)/crm/leads", "page");
     return { data: lead };
   } catch (error) {
+    const ruleMessage = await pluginRuleErrorMessage(error);
+    if (ruleMessage) return { error: ruleMessage };
     console.log("[UPDATE_LEAD]", error);
     return { error: "Failed to update lead" };
   }

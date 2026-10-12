@@ -1,4 +1,4 @@
-import type { Prisma, PrismaClient } from "@prisma/client";
+import type { DbClient } from "@/lib/prisma";
 
 export function formatNumber(template: string, year: number, counter: number): string {
   return template
@@ -8,7 +8,7 @@ export function formatNumber(template: string, year: number, counter: number): s
     );
 }
 
-type TxClient = Prisma.TransactionClient | PrismaClient;
+type TxClient = Pick<DbClient, "invoice_Series">;
 
 export async function consumeNextNumber(
   tx: TxClient,

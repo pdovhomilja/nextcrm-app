@@ -56,7 +56,7 @@ export function BulkEnrichTargetsModal({ targetIds, open, onOpenChange }: BulkEn
         <DialogHeader>
           <DialogTitle>Enrich {targetIds.length} targets</DialogTitle>
           <DialogDescription>
-            Select fields to enrich. Firecrawl will run in the background.
+            Select fields to enrich. Enrichment will run in the background.
             Only empty fields will be filled — existing data is never overwritten.
           </DialogDescription>
         </DialogHeader>

@@ -9,6 +9,7 @@ export const getAccount = async (accountId: string) => {
     include: {
       contacts: true,
       opportunities: true,
+      pricelist: { select: { name: true } },
       // Documents relationship through DocumentsToAccounts junction table
       documents: {
         include: {

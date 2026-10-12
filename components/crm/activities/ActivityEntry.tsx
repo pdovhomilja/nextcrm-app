@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Phone, Users, FileText, Mail, Pencil, Trash2 } from "lucide-react";
+import { Phone, Users, FileText, Mail, MapPin, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ const TYPE_ICONS = {
   meeting: Users,
   note: FileText,
   email: Mail,
+  visit: MapPin,
 } as const;
 
 const TYPE_LABELS = {
@@ -37,6 +38,7 @@ const TYPE_LABELS = {
   meeting: "Meeting",
   note: "Note",
   email: "Email",
+  visit: "Visit",
 } as const;
 
 const STATUS_VARIANTS = {

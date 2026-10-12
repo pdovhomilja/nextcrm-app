@@ -2,331 +2,346 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { addDays, nextSaturday } from "date-fns";
-import { format, addHours } from "date-fns";
 
 import {
   Archive,
-  ArchiveX,
-  Clock,
+  ArchiveRestore,
   Forward,
+  MailOpen,
   MoreVertical,
   Reply,
   ReplyAll,
+  ShieldAlert,
+  ShieldCheck,
   Trash2,
 } from "lucide-react";
 
 import {
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { Mail } from "@/app/[locale]/(routes)/emails/data";
-import { getEmail, deleteEmail } from "@/actions/emails/messages";
+import { getEmail } from "@/actions/emails/messages";
+import {
+  archiveEmail,
+  deleteEmailPermanent,
+  moveEmailFromSpam,
+  moveEmailToSpam,
+  restoreEmailFromTrash,
+  setEmailRead,
+  trashEmail,
+  unarchiveEmail,
+} from "@/actions/emails/mailbox-actions";
 import { ComposeModal } from "@/app/[locale]/(routes)/emails/components/ComposeModal";
+import { EmailConversationBody } from "@/app/[locale]/(routes)/emails/components/EmailConversationBody";
+import type { MailboxView } from "@/lib/email/mailbox-views";
+import { cn } from "@/lib/utils";
 
 interface MailDisplayProps {
   mail: Mail | null;
   activeAccountId: string | null;
+  mailboxAddress?: string;
+  mailboxView: MailboxView;
 }
 
-export function MailDisplay({ mail, activeAccountId }: MailDisplayProps) {
-  const today = new Date();
+export function MailDisplay({
+  mail,
+  activeAccountId,
+  mailboxAddress = "",
+  mailboxView,
+}: MailDisplayProps) {
   const router = useRouter();
-
-  const [fullEmail, setFullEmail] = useState<Awaited<ReturnType<typeof getEmail>> | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [fetchedEmail, setFullEmail] = useState<Awaited<ReturnType<typeof getEmail>> | null>(null);
+  const fullEmail = mail?.id ? fetchedEmail : null;
 
   useEffect(() => {
     if (!mail?.id) {
       setFullEmail(null);
       return;
     }
+    setFullEmail(null);
     let cancelled = false;
     getEmail(mail.id)
-      .then((data) => { if (!cancelled) setFullEmail(data); })
-      .catch(() => { if (!cancelled) setFullEmail(null); });
-    return () => { cancelled = true; };
+      .then((data) => {
+        if (!cancelled) setFullEmail(data);
+      })
+      .catch(() => {
+        if (!cancelled) setFullEmail(null);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [mail?.id]);
 
-  const senderName = fullEmail?.fromName ?? fullEmail?.fromEmail ?? "?";
-  const senderInitials = senderName
-    .split(" ")
-    .map((c) => c[0])
-    .join("")
-    .toUpperCase();
+  const composeMail: Mail | null = fullEmail
+    ? {
+        id: fullEmail.id,
+        subject: fullEmail.subject,
+        fromName: fullEmail.fromName,
+        fromEmail: fullEmail.fromEmail,
+        sentAt: fullEmail.sentAt,
+        isRead: fullEmail.isRead,
+        folder: fullEmail.folder,
+        rfcMessageId: fullEmail.rfcMessageId,
+        toRecipients: fullEmail.toRecipients as Mail["toRecipients"],
+        ccRecipients: fullEmail.ccRecipients as Mail["ccRecipients"],
+        bodyText: fullEmail.bodyText,
+        bodyHtml: fullEmail.bodyHtml,
+      }
+    : null;
 
-  async function handleDelete() {
-    if (!mail?.id) return;
+  const canCompose = Boolean(composeMail?.fromEmail && mailboxView !== "trash");
+
+  async function runAction(fn: () => Promise<void>) {
+    if (!mail?.id || busy) return;
+    setBusy(true);
     try {
-      await deleteEmail(mail.id);
+      await fn();
       router.refresh();
     } catch (e) {
-      console.error("Failed to delete email", e);
+      console.error(e);
+    } finally {
+      setBusy(false);
     }
   }
 
+  const iconBtn = "h-8 w-8 rounded-full text-muted-foreground hover:text-foreground";
+
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-center p-2">
-        <div className="flex items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" disabled={!mail}>
-                <Archive className="h-4 w-4" />
-                <span className="sr-only">Archive</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Archive</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" disabled={!mail}>
-                <ArchiveX className="h-4 w-4" />
-                <span className="sr-only">Move to junk</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Move to junk</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                disabled={!mail}
-                onClick={handleDelete}
-              >
-                <Trash2 className="h-4 w-4" />
-                <span className="sr-only">Move to trash</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Move to trash</TooltipContent>
-          </Tooltip>
-          <Separator orientation="vertical" className="mx-1 h-6" />
-          <Tooltip>
-            <Popover>
-              <PopoverTrigger asChild>
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="flex flex-wrap items-center gap-1 border-b border-border/40 px-2 py-1.5">
+        <div className="flex items-center gap-0.5">
+          {mailboxView === "trash" ? (
+            <>
+              <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" disabled={!mail}>
-                    <Clock className="h-4 w-4" />
-                    <span className="sr-only">Snooze</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={iconBtn}
+                    disabled={!mail || busy}
+                    onClick={() => runAction(() => restoreEmailFromTrash(mail!.id))}
+                  >
+                    <ArchiveRestore className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-              </PopoverTrigger>
-              <PopoverContent className="flex w-[535px] p-0">
-                <div className="flex flex-col gap-2 border-r px-2 py-4">
-                  <div className="px-4 text-sm font-medium">Snooze until</div>
-                  <div className="grid min-w-[250px] gap-1">
-                    <Button
-                      variant="ghost"
-                      className="justify-start font-normal"
-                    >
-                      Later today{" "}
-                      <span className="ml-auto text-muted-foreground">
-                        {format(addHours(today, 4), "E, h:m b")}
-                      </span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="justify-start font-normal"
-                    >
-                      Tomorrow
-                      <span className="ml-auto text-muted-foreground">
-                        {format(addDays(today, 1), "E, h:m b")}
-                      </span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="justify-start font-normal"
-                    >
-                      This weekend
-                      <span className="ml-auto text-muted-foreground">
-                        {format(nextSaturday(today), "E, h:m b")}
-                      </span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="justify-start font-normal"
-                    >
-                      Next week
-                      <span className="ml-auto text-muted-foreground">
-                        {format(addDays(today, 7), "E, h:m b")}
-                      </span>
-                    </Button>
-                  </div>
-                </div>
-                <div className="p-2">
-                  <Calendar />
-                </div>
-              </PopoverContent>
-            </Popover>
-            <TooltipContent>Snooze</TooltipContent>
-          </Tooltip>
-        </div>
-        <div className="ml-auto flex items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <ComposeModal
-                accountId={activeAccountId ?? ""}
-                mode="reply"
-                replyTo={fullEmail ? (fullEmail as unknown as Mail) : undefined}
-                trigger={
-                  <Button variant="ghost" size="icon" disabled={!mail}>
-                    <Reply className="h-4 w-4" />
-                    <span className="sr-only">Reply</span>
+                <TooltipContent>Restore</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(iconBtn, "hover:text-destructive")}
+                    disabled={!mail || busy}
+                    onClick={() => runAction(() => deleteEmailPermanent(mail!.id))}
+                  >
+                    <Trash2 className="h-4 w-4" />
                   </Button>
-                }
-              />
-            </TooltipTrigger>
-            <TooltipContent>Reply</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" disabled={!mail}>
-                <ReplyAll className="h-4 w-4" />
-                <span className="sr-only">Reply all</span>
+                </TooltipTrigger>
+                <TooltipContent>Delete forever</TooltipContent>
+              </Tooltip>
+            </>
+          ) : mailboxView === "spam" ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={iconBtn}
+                  disabled={!mail || busy}
+                  onClick={() => runAction(() => moveEmailFromSpam(mail!.id))}
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Not spam</TooltipContent>
+            </Tooltip>
+          ) : mailboxView === "archive" ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={iconBtn}
+                  disabled={!mail || busy}
+                  onClick={() => runAction(() => unarchiveEmail(mail!.id))}
+                >
+                  <ArchiveRestore className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Move to inbox</TooltipContent>
+            </Tooltip>
+          ) : (
+            <>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={iconBtn}
+                    disabled={!mail || busy || mailboxView === "sent"}
+                    onClick={() => runAction(() => archiveEmail(mail!.id))}
+                  >
+                    <Archive className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Archive</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={iconBtn}
+                    disabled={!mail || busy || mailboxView === "sent"}
+                    onClick={() => runAction(() => moveEmailToSpam(mail!.id))}
+                  >
+                    <ShieldAlert className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Report spam</TooltipContent>
+              </Tooltip>
+            </>
+          )}
+          {mailboxView !== "trash" && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(iconBtn, "hover:text-destructive")}
+                  disabled={!mail || busy}
+                  onClick={() => runAction(() => trashEmail(mail!.id))}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Trash</TooltipContent>
+            </Tooltip>
+          )}
+        </div>
+
+        <div className="ml-auto flex items-center gap-0.5">
+          <ComposeModal
+            accountId={activeAccountId ?? ""}
+            mailboxAddress={mailboxAddress}
+            mode="reply"
+            replyTo={composeMail}
+            trigger={
+              <Button variant="ghost" size="icon" className={iconBtn} disabled={!mail || !canCompose}>
+                <Reply className="h-4 w-4" />
               </Button>
-            </TooltipTrigger>
-            <TooltipContent>Reply all</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <ComposeModal
-                accountId={activeAccountId ?? ""}
-                mode="forward"
-                replyTo={fullEmail ? (fullEmail as unknown as Mail) : undefined}
-                trigger={
-                  <Button variant="ghost" size="icon" disabled={!mail}>
-                    <Forward className="h-4 w-4" />
-                    <span className="sr-only">Forward</span>
-                  </Button>
-                }
-              />
-            </TooltipTrigger>
-            <TooltipContent>Forward</TooltipContent>
-          </Tooltip>
+            }
+          />
+          <ComposeModal
+            accountId={activeAccountId ?? ""}
+            mailboxAddress={mailboxAddress}
+            mode="reply-all"
+            replyTo={composeMail}
+            trigger={
+              <Button variant="ghost" size="icon" className={iconBtn} disabled={!mail || !canCompose}>
+                <ReplyAll className="h-4 w-4" />
+              </Button>
+            }
+          />
+          <ComposeModal
+            accountId={activeAccountId ?? ""}
+            mailboxAddress={mailboxAddress}
+            mode="forward"
+            replyTo={composeMail}
+            trigger={
+              <Button variant="ghost" size="icon" className={iconBtn} disabled={!mail || !canCompose}>
+                <Forward className="h-4 w-4" />
+              </Button>
+            }
+          />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className={iconBtn} disabled={!mail}>
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                disabled={!mail || busy}
+                onClick={() => runAction(() => setEmailRead(mail!.id, false))}
+              >
+                <MailOpen className="mr-2 h-4 w-4" />
+                Mark as unread
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={!mail || busy}
+                onClick={() => runAction(() => setEmailRead(mail!.id, true))}
+              >
+                Mark as read
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {mailboxView !== "spam" && mailboxView !== "trash" && mailboxView !== "sent" && (
+                <DropdownMenuItem
+                  disabled={!mail || busy}
+                  onClick={() => runAction(() => moveEmailToSpam(mail!.id))}
+                >
+                  Report spam
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-        <Separator orientation="vertical" className="mx-2 h-6" />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" disabled={!mail}>
-              <MoreVertical className="h-4 w-4" />
-              <span className="sr-only">More</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>Mark as unread</DropdownMenuItem>
-            <DropdownMenuItem>Star thread</DropdownMenuItem>
-            <DropdownMenuItem>Add label</DropdownMenuItem>
-            <DropdownMenuItem>Mute thread</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
-      <Separator />
+
       {mail ? (
-        <div className="flex flex-1 flex-col">
-          <div className="flex items-start p-4">
-            <div className="flex items-start gap-4 text-sm">
-              <Avatar>
-                <AvatarImage alt={senderName} />
-                <AvatarFallback>{senderInitials}</AvatarFallback>
-              </Avatar>
-              <div className="grid gap-1">
-                <div className="font-semibold">
-                  {fullEmail?.fromName ?? fullEmail?.fromEmail ?? "(unknown)"}
-                </div>
-                <div className="line-clamp-1 text-xs">
-                  {fullEmail?.subject ?? "(no subject)"}
-                </div>
-                <div className="line-clamp-1 text-xs">
-                  <span className="font-medium">From:</span>{" "}
-                  {fullEmail?.fromEmail ?? ""}
-                </div>
-                {Array.isArray(fullEmail?.toRecipients) && fullEmail.toRecipients.length > 0 && (
-                  <div className="line-clamp-1 text-xs">
-                    <span className="font-medium">To:</span>{" "}
-                    {(fullEmail.toRecipients as { name?: string; email: string }[])
-                      .map((r) => r.name ?? r.email).join(", ")}
-                  </div>
-                )}
-                {Array.isArray(fullEmail?.ccRecipients) && fullEmail.ccRecipients.length > 0 && (
-                  <div className="line-clamp-1 text-xs">
-                    <span className="font-medium">CC:</span>{" "}
-                    {(fullEmail.ccRecipients as { name?: string; email: string }[])
-                      .map((r) => r.name ?? r.email).join(", ")}
-                  </div>
-                )}
-              </div>
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="border-b border-border/40 px-4 py-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="min-w-0 flex-1 text-base font-semibold leading-snug">
+                {fullEmail?.subject ?? "(no subject)"}
+              </h2>
+              {!mail.isRead && (
+                <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                  Unread
+                </span>
+              )}
             </div>
-            {fullEmail?.sentAt && (
-              <div className="ml-auto text-xs text-muted-foreground">
-                {format(new Date(fullEmail.sentAt), "PPpp")}
-              </div>
-            )}
           </div>
-          <Separator />
-          <div className="flex-1 overflow-auto">
-            {fullEmail?.bodyHtml ? (
-              <iframe
-                srcDoc={fullEmail.bodyHtml}
-                sandbox="allow-popups allow-popups-to-escape-sandbox"
-                referrerPolicy="no-referrer"
-                className="w-full border-0"
-                style={{ height: "600px", maxHeight: "600px" }}
-                title="Email body"
+          <div className="min-h-0 flex-1 overflow-auto bg-muted/5">
+            {fullEmail ? (
+              <EmailConversationBody
+                bodyText={fullEmail.bodyText}
+                bodyHtml={fullEmail.bodyHtml}
+                fromName={fullEmail.fromName}
+                fromEmail={fullEmail.fromEmail}
+                sentAt={fullEmail.sentAt}
+                toLabel={
+                  Array.isArray(fullEmail.toRecipients) && fullEmail.toRecipients.length > 0
+                    ? (fullEmail.toRecipients as { name?: string; email: string }[])
+                        .map((r) => r.name ?? r.email)
+                        .join(", ")
+                    : undefined
+                }
               />
             ) : (
-              <pre className="whitespace-pre-wrap p-4 text-sm font-sans">
-                {fullEmail?.bodyText ?? (fullEmail ? "(No content)" : "Loading...")}
-              </pre>
+              <p className="p-4 text-sm text-muted-foreground">Loading…</p>
             )}
-          </div>
-          <Separator className="mt-auto" />
-          <div className="p-4">
-            <form>
-              <div className="grid gap-4">
-                <Textarea
-                  className="p-4"
-                  placeholder={`Reply to ${fullEmail?.fromName ?? fullEmail?.fromEmail ?? "..."}...`}
-                />
-                <div className="flex items-center">
-                  <Label
-                    htmlFor="mute"
-                    className="flex items-center gap-2 text-xs font-normal"
-                  >
-                    <Switch id="mute" aria-label="Mute thread" /> Mute this
-                    thread
-                  </Label>
-                  <Button size="sm" className="ml-auto">
-                    Send
-                  </Button>
-                </div>
-              </div>
-            </form>
           </div>
         </div>
       ) : (
-        <div className="p-8 text-center text-muted-foreground">
-          No message selected
+        <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center text-muted-foreground">
+          <MailOpen className="h-10 w-10 opacity-30" />
+          <p className="text-sm">Select a message</p>
         </div>
       )}
     </div>
