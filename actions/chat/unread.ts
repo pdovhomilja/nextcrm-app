@@ -29,16 +29,18 @@ export async function getChatUnreadCount(): Promise<number> {
   if (!session?.user?.id) return 0;
   const userId = session.user.id as string;
 
-  const peers = await prismadb.users.findMany({
-    where: { userStatus: "ACTIVE" },
-    select: { id: true },
-    take: 100,
-  });
-  const confEntries = await prismadb.teamScheduleEntry.findMany({
-    where: { chatRoomKey: { not: null } },
-    select: { chatRoomKey: true, organizerId: true, attendeeIds: true },
-    take: 100,
-  });
+  const [peers, confEntries] = await Promise.all([
+    prismadb.users.findMany({
+      where: { userStatus: "ACTIVE" },
+      select: { id: true },
+      take: 100,
+    }),
+    prismadb.teamScheduleEntry.findMany({
+      where: { chatRoomKey: { not: null } },
+      select: { chatRoomKey: true, organizerId: true, attendeeIds: true },
+      take: 100,
+    }),
+  ]);
   const confRooms = confEntries
     .filter(
       (e) =>
@@ -47,12 +49,15 @@ export async function getChatUnreadCount(): Promise<number> {
     .map((e) => e.chatRoomKey!)
     .filter(Boolean);
   const roomKeys = [
-    ...accessibleRoomKeys(
-      userId,
-      peers.map((p) => p.id)
-    ),
-    ...confRooms,
+    ...new Set([
+      ...accessibleRoomKeys(
+        userId,
+        peers.map((p) => p.id)
+      ),
+      ...confRooms,
+    ]),
   ];
+  if (roomKeys.length === 0) return 0;
 
   const reads = await prismadb.teamChatRead.findMany({
     where: { userId, roomKey: { in: roomKeys } },
@@ -60,17 +65,17 @@ export async function getChatUnreadCount(): Promise<number> {
   });
   const readMap = new Map(reads.map((r) => [r.roomKey, r.lastReadAt]));
 
-  let total = 0;
-  for (const roomKey of roomKeys) {
-    const since = readMap.get(roomKey) ?? new Date(0);
-    const n = await prismadb.teamChatMessage.count({
-      where: {
+  const grouped = await prismadb.teamChatMessage.groupBy({
+    by: ["roomKey"],
+    where: {
+      userId: { not: userId },
+      OR: roomKeys.map((roomKey) => ({
         roomKey,
-        userId: { not: userId },
-        createdAt: { gt: since },
-      },
-    });
-    total += n;
-  }
-  return total;
+        createdAt: { gt: readMap.get(roomKey) ?? new Date(0) },
+      })),
+    },
+    _count: { _all: true },
+  });
+
+  return grouped.reduce((sum, row) => sum + row._count._all, 0);
 }

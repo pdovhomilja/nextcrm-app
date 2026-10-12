@@ -1,5 +1,8 @@
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
+    users: {
+      findFirst: jest.fn(),
+    },
     verification: {
       findFirst: jest.fn(),
       update: jest.fn(),
@@ -18,6 +21,7 @@ import { sendOtpEmail } from "@/lib/auth-otp-mail";
 import { prismadb } from "@/lib/prisma";
 import { issueSignInOtp } from "@/lib/auth-otp-issue";
 
+const findUser = prismadb.users.findFirst as jest.Mock;
 const findFirst = prismadb.verification.findFirst as jest.Mock;
 const update = prismadb.verification.update as jest.Mock;
 const deleteMany = prismadb.verification.deleteMany as jest.Mock;
@@ -26,6 +30,7 @@ const send = sendOtpEmail as jest.Mock;
 
 beforeEach(() => {
   jest.clearAllMocks();
+  findUser.mockResolvedValue({ email: "person@gmail.com", userStatus: "ACTIVE" });
   send.mockResolvedValue(undefined);
   update.mockResolvedValue({});
   deleteMany.mockResolvedValue({ count: 0 });
@@ -38,7 +43,11 @@ describe("issueSignInOtp", () => {
 
     const result = await issueSignInOtp("Person@Gmail.com");
 
-    expect(result).toEqual({ ok: true, retryAfterSeconds: 30 });
+    expect(result).toEqual({
+      ok: true,
+      retryAfterSeconds: 30,
+      authEmail: "person@gmail.com",
+    });
     expect(send).toHaveBeenCalledWith("person@gmail.com", expect.stringMatching(/^\d{6}$/));
     expect(send.mock.invocationCallOrder[0]).toBeLessThan(create.mock.invocationCallOrder[0]);
     expect(create).toHaveBeenCalledWith({
@@ -73,7 +82,11 @@ describe("issueSignInOtp", () => {
 
     const result = await issueSignInOtp("person@gmail.com");
 
-    expect(result).toEqual({ ok: true, retryAfterSeconds: 30 });
+    expect(result).toEqual({
+      ok: true,
+      retryAfterSeconds: 30,
+      authEmail: "person@gmail.com",
+    });
     expect(send).toHaveBeenCalledWith("person@gmail.com", "654321");
     expect(create).not.toHaveBeenCalled();
     expect(update).toHaveBeenCalledWith({
@@ -98,6 +111,38 @@ describe("issueSignInOtp", () => {
     expect(result).toEqual(
       expect.objectContaining({
         error: expect.stringMatching(/Wait \d+s/),
+      })
+    );
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it("sends a work-email code to that inbox and stores it on the personal login", async () => {
+    findFirst.mockResolvedValue(null);
+    findUser.mockResolvedValue({ email: "person@gmail.com", userStatus: "ACTIVE" });
+
+    const result = await issueSignInOtp("person@vensailabs.in");
+
+    expect(result).toEqual({
+      ok: true,
+      retryAfterSeconds: 30,
+      authEmail: "person@gmail.com",
+    });
+    expect(send).toHaveBeenCalledWith("person@vensailabs.in", expect.stringMatching(/^\d{6}$/));
+    expect(create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        identifier: "sign-in-otp-person@gmail.com",
+      }),
+    });
+  });
+
+  it("rejects an address that is not a personal or work email", async () => {
+    findUser.mockResolvedValue(null);
+
+    const result = await issueSignInOtp("missing@vensailabs.in");
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        error: expect.stringMatching(/No account uses this email/),
       })
     );
     expect(send).not.toHaveBeenCalled();

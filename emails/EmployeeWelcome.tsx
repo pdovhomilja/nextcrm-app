@@ -35,7 +35,7 @@ export function EmployeeWelcomeEmail({
   return (
     <Html>
       <Head />
-      <Preview>Your {appName} account — sign in with your personal email</Preview>
+      <Preview>Your {appName} account — sign in with your personal or work email</Preview>
       <Tailwind>
         <Body className="mx-auto my-auto bg-white font-sans">
           <Container className="mx-auto my-[40px] w-[480px] rounded-md border border-solid border-slate-200 p-[24px]">
@@ -44,15 +44,18 @@ export function EmployeeWelcomeEmail({
             </Heading>
             <Text className="text-sm leading-6 text-black">Hi {displayName},</Text>
             <Text className="text-sm leading-6 text-black">
-              {invitedByName} created your CRM account. Your company address{" "}
-              <strong>{workEmail}</strong> is set up for mail in the CRM. Sign in with your{" "}
-              <strong>personal email</strong> below.
+              {invitedByName} created your CRM account. Sign in with your personal email or
+              your company address <strong>{workEmail}</strong>. Both use the same password.
             </Text>
             <Section className="my-4 rounded-md bg-slate-50 px-4 py-3">
               <Text className="m-0 text-xs uppercase tracking-wide text-slate-500">
-                Login email (personal)
+                Personal email
               </Text>
               <Text className="m-0 mt-1 text-sm font-medium text-black">{personalEmail}</Text>
+              <Text className="mb-0 mt-3 text-xs uppercase tracking-wide text-slate-500">
+                Work email
+              </Text>
+              <Text className="m-0 mt-1 text-sm font-medium text-black">{workEmail}</Text>
               <Text className="mb-0 mt-3 text-xs uppercase tracking-wide text-slate-500">
                 Temporary password
               </Text>

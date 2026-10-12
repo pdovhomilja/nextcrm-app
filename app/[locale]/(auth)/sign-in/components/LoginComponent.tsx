@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { resolveSignInEmail } from "@/actions/auth/resolve-sign-in-email";
 import { sendSignInOtp } from "@/actions/auth/send-sign-in-otp";
 import { authClient } from "@/lib/auth-client";
 
@@ -27,19 +27,23 @@ import {
 type Step = "email" | "otp";
 type EmailAuthMode = "otp" | "password";
 
+const LOCALES = ["en", "cz", "de", "uk"];
+
+function finishLogin() {
+  const first = window.location.pathname.split("/").filter(Boolean)[0];
+  const locale = first && LOCALES.includes(first) ? first : "en";
+  window.location.assign(`/${locale}`);
+}
+
 export function LoginComponent() {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState<Step>("email");
   const [emailAuthMode, setEmailAuthMode] = useState<EmailAuthMode>("password");
   const [email, setEmail] = useState("");
+  const [authEmail, setAuthEmail] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [resendIn, setResendIn] = useState(0);
-
-  useEffect(() => {
-    router.prefetch("/en");
-  }, [router]);
 
   useEffect(() => {
     if (resendIn <= 0) return;
@@ -76,6 +80,7 @@ export function LoginComponent() {
         if (result.retryAfterSeconds) setResendIn(result.retryAfterSeconds);
         return;
       }
+      setAuthEmail(result.authEmail);
       setStep("otp");
       setResendIn(result.retryAfterSeconds);
       toast.success(
@@ -92,13 +97,18 @@ export function LoginComponent() {
 
   const signInWithPassword = async () => {
     if (!email || !password) {
-      toast.error("Enter your personal email and password.");
+      toast.error("Enter your email and password.");
       return;
     }
     setIsLoading(true);
     try {
+      const resolved = await resolveSignInEmail(email);
+      if ("error" in resolved) {
+        toast.error(resolved.error);
+        return;
+      }
       const { error } = await authClient.signIn.email({
-        email: email.trim().toLowerCase(),
+        email: resolved.authEmail,
         password,
       });
       if (error) {
@@ -106,8 +116,7 @@ export function LoginComponent() {
         return;
       }
       toast.success("Login successful.");
-      router.push("/en");
-      router.refresh();
+      finishLogin();
     } catch {
       toast.error("Sign-in failed.");
     } finally {
@@ -123,7 +132,7 @@ export function LoginComponent() {
     setIsLoading(true);
     try {
       const { error } = await authClient.signIn.emailOtp({
-        email: email.trim().toLowerCase(),
+        email: (authEmail || email).trim().toLowerCase(),
         otp,
       });
       if (error) {
@@ -131,8 +140,7 @@ export function LoginComponent() {
         return;
       }
       toast.success("Login successful.");
-      router.push("/en");
-      router.refresh();
+      finishLogin();
     } catch (error) {
       toast.error("Verification failed.");
     } finally {
@@ -209,11 +217,11 @@ export function LoginComponent() {
               </Button>
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="email">Personal email</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="you@gmail.com"
+                placeholder="you@gmail.com or you@company.com"
                 className="border-slate-700 bg-[#080e1c] text-white placeholder:text-slate-400"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}

@@ -1,5 +1,6 @@
 import { randomInt } from "crypto";
 
+import { resolveLoginIdentity } from "@/lib/auth-login-email";
 import { OTP_EXPIRES_SECONDS, sendOtpEmail } from "@/lib/auth-otp-mail";
 import { prismadb } from "@/lib/prisma";
 
@@ -7,7 +8,7 @@ export const OTP_RESEND_COOLDOWN_SECONDS = 30;
 const MAX_ATTEMPTS = 5;
 
 export type IssueSignInOtpResult =
-  | { ok: true; retryAfterSeconds: number }
+  | { ok: true; retryAfterSeconds: number; authEmail: string }
   | { error: string; retryAfterSeconds?: number };
 
 function signInOtpIdentifier(email: string) {
@@ -28,22 +29,18 @@ function generateOtp() {
   return randomInt(0, 1_000_000).toString().padStart(6, "0");
 }
 
-function isEmail(value: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
-
 /**
- * Emails a sign-in code, then stores it.
+ * Emails a sign-in code, then stores it against the account email Better Auth
+ * verifies. A work address still delivers the code to that inbox.
  * A failed send leaves any previous code in place.
  * A resend within the expiry window emails that same code again.
  */
 export async function issueSignInOtp(rawEmail: string): Promise<IssueSignInOtpResult> {
-  const email = rawEmail.trim().toLowerCase();
-  if (!isEmail(email)) {
-    return { error: "Enter a valid email address." };
-  }
+  const identity = await resolveLoginIdentity(rawEmail);
+  if ("error" in identity) return identity;
 
-  const identifier = signInOtpIdentifier(email);
+  const { authEmail, deliverTo } = identity;
+  const identifier = signInOtpIdentifier(authEmail);
   const now = new Date();
   const existing = await prismadb.verification.findFirst({
     where: { identifier },
@@ -77,7 +74,7 @@ export async function issueSignInOtp(rawEmail: string): Promise<IssueSignInOtpRe
   const otp = reusable && parsed ? parsed.otp : generateOtp();
 
   try {
-    await sendOtpEmail(email, otp);
+    await sendOtpEmail(deliverTo, otp);
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Could not send the verification email.";
@@ -107,5 +104,5 @@ export async function issueSignInOtp(rawEmail: string): Promise<IssueSignInOtpRe
     });
   }
 
-  return { ok: true, retryAfterSeconds: OTP_RESEND_COOLDOWN_SECONDS };
+  return { ok: true, retryAfterSeconds: OTP_RESEND_COOLDOWN_SECONDS, authEmail };
 }
