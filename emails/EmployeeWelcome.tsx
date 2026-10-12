@@ -44,8 +44,9 @@ export function EmployeeWelcomeEmail({
             </Heading>
             <Text className="text-sm leading-6 text-black">Hi {displayName},</Text>
             <Text className="text-sm leading-6 text-black">
-              {invitedByName} created your CRM account. Sign in with your personal email or
-              your company address <strong>{workEmail}</strong>. Both use the same password.
+              {invitedByName} created your CRM account. Sign in with your personal email or company
+              address <strong>{workEmail}</strong> using the temporary password below, or choose{" "}
+              <strong>Email code</strong> on the login page for a one-time code.
             </Text>
             <Section className="my-4 rounded-md bg-slate-50 px-4 py-3">
               <Text className="m-0 text-xs uppercase tracking-wide text-slate-500">
@@ -64,8 +65,8 @@ export function EmployeeWelcomeEmail({
               </Text>
             </Section>
             <Text className="text-xs leading-5 text-slate-600">
-              Change this password after your first login. Your admin can reset it anytime from Admin
-              → Users.
+              After you sign in with this password or an email code, you will be asked to choose a new
+              password before using the CRM.
             </Text>
             <Section className="my-6 text-center">
               <Button

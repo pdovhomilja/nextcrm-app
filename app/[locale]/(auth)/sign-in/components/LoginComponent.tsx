@@ -4,8 +4,8 @@ import React, { useState, useEffect } from "react";
 import { resolveSignInEmail } from "@/actions/auth/resolve-sign-in-email";
 import { sendSignInOtp } from "@/actions/auth/send-sign-in-otp";
 import { authClient } from "@/lib/auth-client";
+import { localeFromPathname, postLoginPath } from "@/lib/auth-post-login";
 
-import { Icons } from "@/components/ui/icons";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,12 +27,13 @@ import {
 type Step = "email" | "otp";
 type EmailAuthMode = "otp" | "password";
 
-const LOCALES = ["en", "cz", "de", "uk"];
-
-function finishLogin() {
-  const first = window.location.pathname.split("/").filter(Boolean)[0];
-  const locale = first && LOCALES.includes(first) ? first : "en";
-  window.location.assign(`/${locale}`);
+async function finishLogin() {
+  const locale = localeFromPathname(window.location.pathname);
+  const { data } = await authClient.getSession({
+    fetchOptions: { cache: "no-store" },
+  });
+  const user = data?.user as { mustChangePassword?: boolean } | undefined;
+  window.location.assign(postLoginPath(locale, user ?? {}));
 }
 
 export function LoginComponent() {
@@ -52,20 +53,6 @@ export function LoginComponent() {
     }, 1000);
     return () => clearInterval(timer);
   }, [resendIn]);
-
-  const loginWithGoogle = async () => {
-    setIsLoading(true);
-    try {
-      await authClient.signIn.social({
-        provider: "google",
-        callbackURL: "/en",
-      });
-    } catch (error) {
-      toast.error("Something went wrong with Google sign-in.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const sendOtp = async () => {
     if (!email) {
@@ -116,7 +103,7 @@ export function LoginComponent() {
         return;
       }
       toast.success("Login successful.");
-      finishLogin();
+      await finishLogin();
     } catch {
       toast.error("Sign-in failed.");
     } finally {
@@ -140,7 +127,7 @@ export function LoginComponent() {
         return;
       }
       toast.success("Login successful.");
-      finishLogin();
+      await finishLogin();
     } catch (error) {
       toast.error("Verification failed.");
     } finally {
@@ -161,31 +148,6 @@ export function LoginComponent() {
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 pb-7">
-        {step === "email" && (
-          <>
-            <Button
-              variant="outline"
-              onClick={loginWithGoogle}
-              disabled={isLoading}
-              className="w-full border-slate-700 bg-[#080e1c] text-white hover:bg-slate-800 hover:text-white"
-            >
-              <Icons.google className="mr-2 h-4 w-4" />
-              Continue with Google
-            </Button>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-slate-700" />
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="bg-[#111827] px-2 text-slate-400">
-                  Or continue with email
-                </span>
-              </div>
-            </div>
-          </>
-        )}
-
         {step === "email" && (
           <div className="grid gap-3">
             <div className="flex gap-2 rounded-md bg-[#080e1c] p-1">

@@ -67,6 +67,10 @@ export default async function AppLayout({
     return redirect("/inactive");
   }
 
+  if ((user as { mustChangePassword?: boolean }).mustChangePassword) {
+    return redirect("/change-password");
+  }
+
   // Parallelize layout data fetching to eliminate waterfall delay
   const [dict, cookieStore, enabledCurrencies, defaultCurrency] = await Promise.all([
     getTranslations("ModuleMenu"),

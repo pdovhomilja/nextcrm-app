@@ -38,10 +38,12 @@ export async function setUserPassword(input: {
   });
   if (!user) return { error: "User not found" };
 
-  const password =
+  const customPassword =
     input.password?.trim() && input.password.trim().length >= 8
       ? input.password.trim()
-      : generateTemporaryPassword();
+      : null;
+  const password = customPassword ?? generateTemporaryPassword();
+  const forceChangeOnNextLogin = !customPassword || input.emailUser !== false;
 
   if (password.length < 8) {
     return { error: "Password must be at least 8 characters" };
@@ -49,6 +51,10 @@ export async function setUserPassword(input: {
 
   try {
     await upsertCredentialAccount(user.id, user.email, password);
+    await prismadb.users.update({
+      where: { id: user.id },
+      data: { mustChangePassword: forceChangeOnNextLogin },
+    });
   } catch (e) {
     console.error("[SET_USER_PASSWORD]", e);
     return { error: "Failed to update password" };

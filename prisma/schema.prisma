@@ -1006,6 +1006,8 @@ model Users {
   name             String?
   password         String?
   username         String?
+  phone            String?
+  mustChangePassword Boolean      @default(false)
   userStatus       ActiveStatus @default(PENDING)
   userLanguage     Language     @default(en)
   banned           Boolean      @default(false)
