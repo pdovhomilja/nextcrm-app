@@ -1,5 +1,6 @@
 jest.mock("@/lib/authz", () => ({
   requireAuthenticated: jest.fn(async () => ({ id: "u1", role: "user" })),
+  requireFeature: () => jest.requireMock("@/lib/authz").requireAuthenticated(),
   assertCanWriteAccount: jest.fn(),
   AuthenticationError: class AuthenticationError extends Error {},
   AuthorizationError: class AuthorizationError extends Error {},

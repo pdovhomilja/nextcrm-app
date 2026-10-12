@@ -4,6 +4,7 @@ jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
 // is covered by targets-write-scope.test.ts).
 jest.mock("@/lib/authz", () => ({
   requireAuthenticated: jest.fn(),
+  requireFeature: () => jest.requireMock("@/lib/authz").requireAuthenticated(),
   assertCanWriteTarget: jest.fn(),
   AuthenticationError: class AuthenticationError extends Error {},
   AuthorizationError: class AuthorizationError extends Error {},

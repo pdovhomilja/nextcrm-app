@@ -113,9 +113,11 @@ export default async function AppLayout({
   const pluginNav = await getPluginNavItems(mapLegacyRole(user?.role), (await getLocale()) as "en" | "cz" | "de" | "uk");
   const { getHeaderNotifications } = await import("@/actions/notifications/header-notifications");
   const { getChatUnreadCount } = await import("@/actions/chat/unread");
-  const [headerNotifications, chatUnreadCount] = await Promise.all([
+  const { getUserPermissions } = await import("@/lib/authz/feature-access");
+  const [headerNotifications, chatUnreadCount, permissions] = await Promise.all([
     getHeaderNotifications(),
     getChatUnreadCount(),
+    getUserPermissions(session.user.id as string, session.user.role),
   ]);
 
   //console.log(typeof build, "build");
@@ -128,6 +130,7 @@ export default async function AppLayout({
         session={session}
         pluginNav={pluginNav}
         appName={getAppName()}
+        permissions={permissions}
       />
       <SidebarInset>
         <HeaderLive

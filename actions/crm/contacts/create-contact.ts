@@ -6,7 +6,7 @@ import sendEmail from "@/lib/sendmail";
 import { inngest } from "@/inngest/client";
 import { writeAuditLog } from "@/lib/audit-log";
 import {
-  requireAuthenticated,
+  requireFeature,
   assertCanWriteAccount,
   AuthenticationError,
   AuthorizationError,
@@ -48,9 +48,10 @@ export const createContact = async (data: {
 
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireFeature("contacts", "create");
   } catch (e) {
     if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    if (e instanceof AuthorizationError) return { error: "You don't have permission to do this." };
     throw e;
   }
   try {

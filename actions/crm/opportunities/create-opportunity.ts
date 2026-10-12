@@ -8,7 +8,7 @@ import { writeAuditLog } from "@/lib/audit-log";
 import { getSnapshotRate, getDefaultCurrency } from "@/lib/currency";
 import { handleStageTransition } from "@/lib/crm/stage-transition";
 import {
-  requireAuthenticated,
+  requireFeature,
   assertCanWriteAccount,
   AuthenticationError,
   AuthorizationError,
@@ -49,9 +49,10 @@ export const createOpportunity = async (data: {
 
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireFeature("opportunities", "create");
   } catch (e) {
     if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    if (e instanceof AuthorizationError) return { error: "You don't have permission to do this." };
     throw e;
   }
   try {

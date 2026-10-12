@@ -5,7 +5,7 @@ import { pluginRuleErrorMessage } from "@/lib/plugins/action-errors";
 import { inngest } from "@/inngest/client";
 import { writeAuditLog, diffObjects } from "@/lib/audit-log";
 import {
-  requireAuthenticated,
+  requireFeature,
   assertCanWriteAccount,
   AuthenticationError,
   AuthorizationError,
@@ -43,9 +43,10 @@ export const updateAccount = async (data: {
 
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireFeature("accounts", "edit");
   } catch (e) {
     if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    if (e instanceof AuthorizationError) return { error: "You don't have permission to do this." };
     throw e;
   }
   try {

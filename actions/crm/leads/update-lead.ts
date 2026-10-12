@@ -6,7 +6,7 @@ import sendEmail from "@/lib/sendmail";
 import { inngest } from "@/inngest/client";
 import { writeAuditLog, diffObjects } from "@/lib/audit-log";
 import {
-  requireAuthenticated,
+  requireFeature,
   assertCanWriteLead,
   AuthenticationError,
   AuthorizationError,
@@ -51,9 +51,10 @@ export const updateLead = async (data: {
 
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireFeature("leads", "edit");
   } catch (e) {
     if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    if (e instanceof AuthorizationError) return { error: "You don't have permission to do this." };
     throw e;
   }
   try {
