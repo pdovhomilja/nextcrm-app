@@ -48,15 +48,15 @@ export async function getChatUnreadCount(): Promise<number> {
     )
     .map((e) => e.chatRoomKey!)
     .filter(Boolean);
-  const roomKeys = [
-    ...new Set([
+  const roomKeys = Array.from(
+    new Set([
       ...accessibleRoomKeys(
         userId,
         peers.map((p) => p.id)
       ),
       ...confRooms,
-    ]),
-  ];
+    ])
+  );
   if (roomKeys.length === 0) return 0;
 
   const reads = await prismadb.teamChatRead.findMany({
