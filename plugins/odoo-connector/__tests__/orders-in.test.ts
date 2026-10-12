@@ -313,3 +313,22 @@ describe("hand-made CRM products and missing lines (Pavel 2026-10-12, OXO)", () 
     expect((await m.ctx.store.get<any>(K.order(id))).missing).toBe(0);
   });
 });
+
+it("a finished (PAID) imported order still gets its missing lines once the product exists (OXO 0.33.0)", async () => {
+  const m = setup({ orders: [odooOrder({ invoice_status: "invoiced", invoice_ids: [7] })], moves: [{ id: 7, name: "INV/7", move_type: "out_invoice", state: "posted", payment_state: "paid", invoice_date: "2026-03-06", invoice_date_due: "2026-03-20", amount_total: 242, amount_residual: 0 }] as never[],
+    lines: [line(), line({ id: 2, product_id: [799, "K Bob"], product_uom_qty: 3, price_unit: 10 })] });
+  await run(m);
+  const id = m.data.orders[0].id as string;
+  expect(m.data.orders[0].status).toBe("PAID");
+  const { missing: _x, ...old } = (await m.ctx.store.get<any>(K.order(id)));
+  await m.ctx.store.set(K.order(id), old);   // as stored by 0.4.0: done, no missing count
+  m.data.products.push({ id: "p799", source: "EXTERNAL", externalRef: "799", sku: "511013", name: "K Bob", status: "ACTIVE", deletedAt: null });
+  await m.ctx.store.set(K.product(799), { productId: "p799", tmplId: 70, categoryRef: null });
+  await syncOrderStatuses({ ctx: m.ctx, client: m.client, dry: false, now });
+  expect(m.data.orders[0].lines).toEqual([{ productId: "p1", quantity: 2, unitPrice: 100 }, { productId: "p799", quantity: 3, unitPrice: 10 }]);
+  expect(m.data.orders[0].status).toBe("PAID");
+  expect(await m.ctx.store.get<any>(K.order(id))).toMatchObject({ done: true, missing: 0 });
+  const get = jest.spyOn(m.ctx.data.orders, "get");
+  await syncOrderStatuses({ ctx: m.ctx, client: m.client, dry: false, now });
+  expect(get).not.toHaveBeenCalled();
+});
