@@ -51,17 +51,17 @@ export function MailList({
   }
 
   return (
-    <ScrollArea className="h-[min(68vh,720px)]">
-      <div className="flex flex-col gap-1 p-2">
+    <ScrollArea className="h-full min-h-0">
+      <div className="flex flex-col gap-0.5 p-2 pb-3">
         {items.map((item) => (
           <div
             key={item.id}
             role="button"
             tabIndex={0}
             className={cn(
-              "flex gap-2 rounded-xl border border-transparent p-2 text-left text-sm transition-colors hover:border-border/80 hover:bg-muted/60",
-              mail.selected === item.id && "border-primary/25 bg-primary/5 shadow-sm",
-              !item.isRead && mail.selected !== item.id && "bg-background font-medium"
+              "flex gap-2 rounded-lg border border-transparent px-2.5 py-2.5 text-left text-sm transition-colors hover:bg-muted/50",
+              mail.selected === item.id && "border-primary/20 bg-primary/[0.07] shadow-sm",
+              !item.isRead && mail.selected !== item.id && "bg-background/80 font-medium"
             )}
             onClick={() => setMail({ ...mail, selected: item.id })}
             onKeyDown={(e) => {
@@ -97,7 +97,12 @@ export function MailList({
                     : ""}
                 </div>
               </div>
-              <div className="truncate text-xs font-medium text-foreground/90">
+              <div
+                className={cn(
+                  "truncate text-xs text-muted-foreground",
+                  !item.isRead && "font-medium text-foreground/90"
+                )}
+              >
                 {item.subject ?? "(no subject)"}
               </div>
             </div>
